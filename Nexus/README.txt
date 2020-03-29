@@ -27,7 +27,7 @@ Main Features
     Support for restful server architecture
         - RequestHandler (utopia.nexus.http), along with custom Resources (utopia.nexus.http) handle traversal
         in hierarchical resource structures.
-            - NotFound (404) is also handled automatically
+            - NotFound (404) and MethodNotAllowed (405) are also handled automatically
             - You can add individual feature implementations as resources either directly under the
             RequestHandler or under another resource.
 
