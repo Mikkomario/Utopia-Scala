@@ -465,7 +465,7 @@ beginning or your App.
 When you wish to instantiate typeless values, please enable implicit value conversions by importing 
 **utopia.flow.generic.ValueConversions._**
 
-#### Be aware of these extensions
+#### Extensions you should be aware of
 - utopia.flow.util.**CollectionExtensions**
     - Collection utility updates, like support for multimaps and optional return values instead of throwing
     indexOutOfBounds
@@ -512,7 +512,7 @@ sure that class is included in the classpath.
 
 If you want to log errors or make all parsing errors fatal, please change **ErrorHandling**.defaultPrinciple.
 
-#### Be aware of these extensions
+#### Extensions you should be aware of
 - utopia.vault.sql.**Extensions**
     - Allows you to use values (or value convertible items) as condition elements
     - Usually works in combination with utopia.flow.generic.**ValueConversions**
@@ -582,4 +582,98 @@ If you want to support multipart requests, please add the following annotation o
 - **Request** - You need to form a **Request** instance for every http interaction you do
 - **BufferedResponse** - When you need to deal with server responses (status, response body, etc.)
 
-TO BE CONTINUED
+### Utopia Inception
+You will need to focus on inception mostly at the point where you are familiar with the handling system and want to 
+create your own implementation. You will probably get quite far by simply utilizing the existing **Handler** 
+implementations.
+
+#### Classes you should be aware of
+- **HandlerRelay** - Used for collecting and keeping track of multiple mutable **Handlers**
+- **Handleable** - A common trait for most of the event-related receivers. You need to select between the mutable and 
+the immutable implementation or build your own.
+
+### Utopia Genesis
+#### What you should know before using Genesis
+You can get started quickly by utilizing **DefaultSetup** class. You can also create your own implementation of 
+**Setup**, in case I would still recommend you to refer to **DefaultSetup** source code.
+
+#### Extensions you should be aware of
+- utopia.genesis.util.**Extensions**
+    - Provides approximately equals -feature (~==) for doubles
+    
+#### You should get familiar with these classes
+- **Vector3D** & **Point** - Your standard way of representing points in 2D and 3D space.
+- **Size** & **Bounds** - These size representations are used especially often when dealing with UI components
+- **Axis** & **Axis2D** - Many shapes and features refer to this enumeration
+- **Transformation** - When you need to deal with affine transformations (translation, rotation, scaling, etc.)
+- **Color** - When you need to deal with colors (replaces java.awt.Color)
+- **Image** - When you need to draw images
+- **Drawable** - Implement this when you need an object to be drawn in real-time
+- **KeyStateListener** - Implement this when you wish to receive keyboard events
+- **MouseButtonStateListener** - Implement this when you wish to listen to mouse button events
+- **MouseMoveListener** - Implement this when you wish to listen to mouse move events
+- **Actor** - Implement this when you need an object to receive real-time action or 'tick' events
+
+### Utopia Reflection
+#### Extensions you should be aware of
+- utopia.reflection.shape.**LengthExtensions**
+    - Allows you to generate **StackLength** instances simply by writing 4.upscaling, 2.downscaling, 8.upTo(10) etc.
+- utopia.reflection.localization.**LocalString**
+    - Allows one to skip localization for specific strings by calling .noLanguageLocalizationSkipped, 
+    .local etc. on a string.
+    
+#### You should get familiar with these classes
+- **SingleFrameSetup** - Lets you get started with your test App as smoothly as possible 
+(replaces **DefaultSetup** from Genesis)
+- **ComponentContextBuilder** & **ComponentContext** - You will most likely need these to specify common component 
+creation parameters (eg. Font used). Seek for .contextual -constructors in components to utilize these.
+- **Stack** - You go-to container when presenting multiple components together
+- **StackLength**, **StackSize** & **StackInsets** - Basic building blocks for dynamic sizes used in most components
+- **StackLayout** & **Alignment** - These enumerations are used for specifying content placement in **Stacks** and 
+other components.
+- **Font** - Replaces java.awt.Font
+- **LocalizedString**, **Localizer** & **NoLocalization** - When you need to present localized text
+- **TextLabel** - Along with other **Label** classes, these basic components let you draw text, images, etc.
+- **TextButton** & **TextAndImageButton** - When you need to create interactive buttons
+- **TextField**, **DropDown** & **Switch** - These, among other components, allow user to input data to your program.
+- **Framing** - Very useful when you want to surround a component with margins. Often also works by calling 
+.framed(...) on a component.
+- **ScrollView** - When you need a scrollable view. Check **ScrollArea** when you need 2D scrolling.
+- **Dialog**, **Frame** & **PopUp** - In case you need to display multiple windows during a program
+- **Refreshable** - One of the many input traits that allows you to display content on a UI component.
+- **ComponentLike** - All components extend this trait so you should at least know what it contains.
+- **Stackable** & **CachingStackable** - In case you need to write your own components that support stack layout system.
+- **CustomDrawer** - In case you need to implement your own custom drawer. It's useful to check the sub-classes as well.
+- **ContainerContentManager** - When you need to present a changing list of items in a **Stack** or another container.
+
+#### Example code to get you started
+The following code-template is an easy way to get started with your App and tests:
+
+    // Set up typeless values
+    GenesisDataType.setup()
+
+    // Set up localization context
+    implicit val localizer: Localizer = NoLocalization // You can specify your own Localizer here
+
+    // Creates component context
+    val actorHandler = ActorHandler()
+    val baseCB = ComponentContextBuilder(actorHandler, ...)
+
+    implicit val baseContext: ComponentContext = baseCB.result
+
+    val content = ... // Create your frame content here
+
+    implicit val exc: ExecutionContext = new ThreadPool("<your program name>").executionContext
+    new SingleFrameSetup(actorHandler, Frame.windowed(content, "<your program name>", Program)).start()
+
+### Utopia Conflict
+#### Extensions you should be aware of
+- utopia.conflict.collision.**Extensions**
+    - Enables collision checking methods in both **Polygonics** and **Circles**
+    
+#### You should get familiar with these classes
+- **DefaultSetup** - This **Setup** implementation replaces **DefaultSetup** in Genesis (contains collision handling).
+- **Collidable** - Extend this if you want other objects to collide with your class instance
+- **CollisionListener** - Extend this if you want to receive collision events
+- **CollisionHandler** - Used for checking collisions between items and for delivering collision events. You should 
+have one in your **Setup**
