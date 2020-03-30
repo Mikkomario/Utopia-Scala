@@ -513,7 +513,7 @@ sure that class is included in the classpath.
 If you want to log errors or make all parsing errors fatal, please change **ErrorHandling**.defaultPrinciple.
 
 #### Be aware of these extensions
-- utopia.vault.sql.Extensions
+- utopia.vault.sql.**Extensions**
     - Allows you to use values (or value convertible items) as condition elements
     - Usually works in combination with utopia.flow.generic.**ValueConversions**
     
@@ -530,5 +530,56 @@ When you need to read model data from the database
 reading model data from the database
 - **Select**, **SelectAll**, **Update**, **Insert** & **Delete** - When you need to create SQL queries
 - **Where** & **Limit** - When you need to limit SQL queries
+
+### Utopia Access
+####You should get familiar with these classes
+- **Method** - It's good to understand the most common http methods and their functions
+- **Status** - If you're developing server-side applications, get to know the most common statuses. On client side, 
+research into statuses your server is probable to use.
+- **Headers** - Useful to know when you need to specify authentication or type of content, for example.
+
+### Utopia Nexus
+#### What you should know before using Nexus
+If you're creating a REST-server, you will most likely need to create an **implicit ServerSettings** instance, and a 
+**RequestHandler** that uses a **Context** instance you specify (you can use **BaseContext** if you don't need custom 
+functionality).
+
+#### You should get familiar with these classes
+- **RequestHandler** - your main interface when creating REST-servers
+- **Resource** - All of your custom REST-nodes should extend this trait
+- **ResourceSearchResult** - You will need this enumeration in your **Resource** implementations.
+- **Result** - In REST-context, you normally specify operation result (Success, Failure, etc.) with **Result**. You can 
+convert a **Result** to a **Response** by calling .toResponse
+- **Request** - You will need information from **Request** when forming a **Response** or a **Result**
+
+### Utopia Nexus for Tomcat
+#### What you should know before using Nexus for Tomcat
+Tomcat will require you to implement a sub-class of javax.servlet.http.**HttpServlet**. In your servlet class, 
+please import utopia.nexus.servlet.**HttpExtensions**._
+
+There's an example implementation at utopia.nexus.test.servlet.**EchoServlet** 
+and a test web.xml file "web-example.xml".
+
+By default, Tomcat doesn't support the http **PATCH** method, but you can work around this by overriding service(...) 
+method in HttpServlet.
+
+In your servlet implementation, you will first need to convert the **HttpServletRequest** to a **Request** by calling 
+.toRequest. When you've successfully formed a **Response**, you can pass it to tomcat by calling .update(...) on that 
+response.
+
+If you want to support multipart requests, please add the following annotation over your servlet class definition:
+    
+    @MultipartConfig(
+            fileSizeThreshold   = 1048576,  // 1 MB
+            maxFileSize         = 10485760, // 10 MB
+            maxRequestSize      = 20971520, // 20 MB
+            location            = "D:/Uploads" // Replace this with your desired file upload directory path (optional)
+    )
+
+### Utopia Disciple
+#### You should get familiar with these classes
+- **Gateway** - This is your main interface for performing http requests and for specifying global request settings
+- **Request** - You need to form a **Request** instance for every http interaction you do
+- **BufferedResponse** - When you need to deal with server responses (status, response body, etc.)
 
 TO BE CONTINUED
