@@ -502,6 +502,10 @@ When you wish to instantiate typeless values, please enable implicit value conve
 - **TryCache** - When you need to cache function results that may fail
 
 ### Utopia Vault
+#### Required external libraries
+You will need an external JDBC driver implementation in your classpath for **Vault** to work. I usually use 
+**MariaDB Java Client** myself.
+
 #### What you should know before using Vault
 Unless you're using a local test database with root user and no password, please specify connection settings
 with **Connection**.settings = ConnectionSettings(...) or **Connection**.modifySettings(...)
@@ -553,6 +557,11 @@ convert a **Result** to a **Response** by calling .toResponse
 - **Request** - You will need information from **Request** when forming a **Response** or a **Result**
 
 ### Utopia Nexus for Tomcat
+#### Required external libraries
+**Nexus for Tomcat** requires **servlet.api**.jar in order to work. You can acquire one from your 
+Tomcat's lib directory. Also, when using Tomcat with scala, you will need to add **Scala library** 
+and **Scala reflect** -jars to either Tomcat lib directory or into your webapp's lib directory. 
+
 #### What you should know before using Nexus for Tomcat
 Tomcat will require you to implement a sub-class of javax.servlet.http.**HttpServlet**. In your servlet class, 
 please import utopia.nexus.servlet.**HttpExtensions**._
@@ -577,6 +586,14 @@ If you want to support multipart requests, please add the following annotation o
     )
 
 ### Utopia Disciple
+#### Required external libraries
+**Utopia Disciple** requires following jars from **Apache HttpClient**. The listed versions (v4.5) are what I've used in 
+development. You can likely replace them with later versions just as well.
+- httpclient-4.5.5.jar
+- httpcore-4.4.9.jar
+- commons-codec-1.10.jar
+- commons-logging-1.2.jar
+
 #### You should get familiar with these classes
 - **Gateway** - This is your main interface for performing http requests and for specifying global request settings
 - **Request** - You need to form a **Request** instance for every http interaction you do
