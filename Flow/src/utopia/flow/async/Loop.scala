@@ -87,7 +87,7 @@ trait Loop extends Runnable with Breakable
         }
         
         // Finishes this loop
-        promise.success(Unit)
+        promise.success(())
     }
     
     def stop() = 

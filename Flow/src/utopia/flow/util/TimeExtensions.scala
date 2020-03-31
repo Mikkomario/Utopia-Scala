@@ -139,7 +139,7 @@ object TimeExtensions
 		/**
 		  * @return A finite version of this duration. None for infinite durations.
 		  */
-		def finite = if (d.isFinite()) Some(FiniteDuration(d.length, d.unit)) else None
+		def finite = if (d.isFinite) Some(FiniteDuration(d.length, d.unit)) else None
 		
 		/**
 		  * @return This duration in milliseconds, but with double precision (converted from nanoseconds)

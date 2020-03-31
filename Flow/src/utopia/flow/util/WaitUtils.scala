@@ -21,7 +21,7 @@ object WaitUtils
     /**
      * Waits the duration of the specified wait target
      */
-    def wait(target: WaitTarget, lock: AnyRef) { target.waitWith(lock) }
+    def wait(target: WaitTarget, lock: AnyRef) = target.waitWith(lock)
     
     /**
      * Waits for a certain amount of time (blocking), then releases the lock
@@ -37,18 +37,18 @@ object WaitUtils
      * Waits until the lock is notified
      * @see #notify(AnyRef)
      */
-    def waitUntilNotified(lock: AnyRef) { wait(UntilNotified, lock) }
+    def waitUntilNotified(lock: AnyRef) = wait(UntilNotified, lock)
     
     /**
      * Notifies the lock, so that threads waiting on it will be released
      * @see #waitUntilNotified(AnyRef)
      */
-    def notify(lock: AnyRef) { lock.synchronized { lock.notifyAll() } }
+    def notify(lock: AnyRef) = lock.synchronized { lock.notifyAll() }
     
     /**
      * Waits until the specified time has been reached
      */
-    def waitUntil(targetTime: Instant, lock: AnyRef) { wait(Until(targetTime), lock) }
+    def waitUntil(targetTime: Instant, lock: AnyRef) = wait(Until(targetTime), lock)
     
     /**
      * Performs an operation asynchronously after a delay

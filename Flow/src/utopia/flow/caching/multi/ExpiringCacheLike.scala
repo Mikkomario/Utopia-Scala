@@ -14,7 +14,7 @@ trait ExpiringCacheLike[-Key, +Value] extends MultiCacheLike[Key, Value, Expirin
 	/**
 	  * @return The currently used caches
 	  */
-	protected def currentCaches: Traversable[ExpiringSingleCacheLike[Value]]
+	protected def currentCaches: Iterable[ExpiringSingleCacheLike[Value]]
 	
 	
 	// IMPLEMENTED	----------------

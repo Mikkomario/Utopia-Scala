@@ -39,7 +39,7 @@ trait Storable extends ModelConvertible
     /**
      * The model properties of this storable instance
      */
-    def valueProperties: Traversable[(String, Value)]
+    def valueProperties: Iterable[(String, Value)]
     
     
     // COMPUTED PROPERTIES    ------------------------
@@ -181,7 +181,7 @@ trait Storable extends ModelConvertible
      * @param propertyNames the names of the properties that are updated / pushed to the database
      * @return whether any update was performed
      */
-    def updateProperties(propertyNames: Traversable[String])(implicit connection: Connection) = 
+    def updateProperties(propertyNames: Iterable[String])(implicit connection: Connection) =
     {
         val update = indexCondition.map { cond => updateStatementForProperties(propertyNames) + Where(cond) }
         update.foreach
@@ -210,7 +210,7 @@ trait Storable extends ModelConvertible
      * Creates an update statement that updates only the specified properties
      * @param propertyNames the names of the properties that will be included in the update segment
      */
-    def updateStatementForProperties(propertyNames: Traversable[String]) = 
+    def updateStatementForProperties(propertyNames: Iterable[String]) =
     {
         def updatedProperties = valueProperties.filter { case (name, _) => 
                 propertyNames.exists(name.equalsIgnoreCase) }

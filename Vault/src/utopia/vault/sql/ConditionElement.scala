@@ -64,9 +64,9 @@ trait ConditionElement
      * Creates an in condition that returns true if one of the provided element values matches 
      * this element's value
      */
-    def in(elements: Traversable[ConditionElement]) =
+    def in(elements: IterableOnce[ConditionElement]) =
     {
-        val rangeSegment = SqlSegment.combine(elements.map { _.toSqlSegment }.toSeq, { _ + ", " + _ })
+        val rangeSegment = SqlSegment.combine(elements.iterator.map { _.toSqlSegment }.toSeq, { _ + ", " + _ })
         val inSegment = rangeSegment.copy(sql = "(" + rangeSegment.sql + ")")
         
         Condition(toSqlSegment + "IN" + inSegment)
@@ -78,7 +78,8 @@ trait ConditionElement
       * @tparam V Type of value
       * @return A condition that accepts any of the provided value in this condition element
       */
-    def in[V](elements: Traversable[V])(implicit transform: V => ConditionElement): Condition = in(elements.map(transform))
+    def in[V](elements: IterableOnce[V])(implicit transform: V => ConditionElement): Condition =
+        in(elements.iterator.map(transform))
     
     /**
       * Creates a simple condition based on two condition elements. This element is used as the first operand.

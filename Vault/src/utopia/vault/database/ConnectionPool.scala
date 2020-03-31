@@ -30,7 +30,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 	
 	private val connections = VolatileList[ReusableConnection]()
 	private val waitLock = new AnyRef()
-	private val timeoutCompletion: Volatile[Future[Any]] = new Volatile(Future.successful(Unit))
+	private val timeoutCompletion: Volatile[Future[Any]] = new Volatile(Future.successful(()))
 	private val closeFutures = VolatileList[Future[Unit]]()
 	
 	private val maxClientThresholds =
@@ -253,7 +253,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 				if (!connectionClosePromise.isCompleted)
 				{
 					connection.close()
-					connectionClosePromise.success(Unit)
+					connectionClosePromise.success(())
 				}
 			}
 		}

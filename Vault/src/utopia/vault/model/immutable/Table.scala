@@ -82,7 +82,7 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
     /**
      * Finds the columns matching the provided property names
      */
-    def apply(propertyNames: Traversable[String]) = columns.filter {
+    def apply(propertyNames: Iterable[String]) = columns.filter {
             column => propertyNames.exists { _ == column.name } }
     
     /**

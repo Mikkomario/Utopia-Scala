@@ -50,10 +50,10 @@ object References
       * 1) referencing table, 2) name of the referencing property, 3) referenced table,
       * 4) name of the referenced property.
       */
-    def setup(sets: Traversable[(Table, String, Table, String)]): Unit =
+    def setup(sets: IterableOnce[(Table, String, Table, String)]): Unit =
     {
         // Converts the tuple data into a reference set
-        val references = sets.flatMap { case (table1, name1, table2, name2) => Reference(table1, name1, table2, name2) }.toSet
+        val references = sets.iterator.flatMap { case (table1, name1, table2, name2) => Reference(table1, name1, table2, name2) }.toSet
         references.groupBy { _.from.table.databaseName }.foreach { case (dbName, refs) => setup(dbName, refs) }
     }
     

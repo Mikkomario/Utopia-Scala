@@ -77,10 +77,10 @@ object ConversionHandler
         }
     }
     
-    private def _cast(value: Value, targetTypes: Traversable[DataType]) =
+    private def _cast(value: Value, targetTypes: IterableOnce[DataType]) =
     {
-        val routes = targetTypes.flatMap { optimalRouteTo(value.dataType, _) }
-            
+        val routes = targetTypes.iterator.flatMap { optimalRouteTo(value.dataType, _) }.toVector
+        
         // Only works if at least a single conversion was found
         if (routes.isEmpty)
             None

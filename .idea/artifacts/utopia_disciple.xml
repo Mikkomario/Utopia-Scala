@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="utopia-disciple">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_disciple</output-path>
+    <root id="archive" name="utopia-disciple.jar">
+      <element id="module-output" name="Disciple" />
+      <element id="module-source" name="Disciple" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/Disciple/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>

@@ -45,7 +45,7 @@ object DataTypeTest extends App
     val i = 213.toValue
     val d = 123.4567891234.toValue
     val f = 123.45f.toValue
-    val l = 9999999999l.toValue
+    val l = 9999999999L.toValue
     val b = true.toValue
     val time = Instant.now().toValue
     val lDate = LocalDate.now().toValue

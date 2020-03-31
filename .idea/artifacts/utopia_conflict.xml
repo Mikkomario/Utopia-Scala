@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="utopia-conflict">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_conflict</output-path>
+    <root id="archive" name="utopia-conflict.jar">
+      <element id="module-output" name="Conflict" />
+      <element id="module-source" name="Conflict" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/Conflict/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>

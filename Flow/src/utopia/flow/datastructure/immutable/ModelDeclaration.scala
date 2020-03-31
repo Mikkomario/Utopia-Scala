@@ -60,7 +60,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
     /**
      * Creates a new declaration with the provided declarations included
      */
-    def ++(declarations: Traversable[PropertyDeclaration]) = new ModelDeclaration(
+    def ++(declarations: IterableOnce[PropertyDeclaration]) = new ModelDeclaration(
             this.declarations ++ declarations)
     
     /**
@@ -76,7 +76,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
     /**
      * Creates a new declaration without any of the provided declarations
      */
-    def --(declarations: Traversable[PropertyDeclaration]) = new ModelDeclaration(
+    def --(declarations: IterableOnce[PropertyDeclaration]) = new ModelDeclaration(
             this.declarations -- declarations)
     
     /**

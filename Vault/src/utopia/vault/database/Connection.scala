@@ -239,7 +239,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      * @tparam A Type of map result
      * @return Reduction result. None if no data was read.
      */
-    def flatMapReduce[A](statement: SqlSegment)(map: Row => TraversableOnce[A])(reduce: (A, A) => A) =
+    def flatMapReduce[A](statement: SqlSegment)(map: Row => IterableOnce[A])(reduce: (A, A) => A) =
     {
         var currentResult: Option[A] = None
         readInParts(statement, rows =>
@@ -462,18 +462,18 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
             // Reads the object data from each row, parses them into constants and creates a model 
             // The models are mapped to each table separately
             // NB: view.force is added in order to create a concrete map
-            rowBuffer += Row(columnIndices.mapValues { data =>
+            rowBuffer += Row(columnIndices.view.mapValues { data =>
                 Model.withConstants(data.map { case (column, sqlType, index) => Constant(column.name,
-                Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) }) }.view.force)
+                Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) }) }.toMap)
         }
         
         rowBuffer.result()
     }
     
-    private def generatedKeysFromResult(statement: Statement, tables: Traversable[Table]) = 
+    private def generatedKeysFromResult(statement: Statement, tables: IterableOnce[Table]) =
     {
         // Retrieves keys as ints if all of the tables (that use indexing) use int as key type
-        val useInt = tables.forall { _.primaryColumn.forall { _.dataType == IntType } }
+        val useInt = tables.iterator.forall { _.primaryColumn.forall { _.dataType == IntType } }
         val results = statement.getGeneratedKeys
         val keyBuffer = Vector.newBuilder[Value]
         

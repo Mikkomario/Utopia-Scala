@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="utopia-nexus">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_nexus</output-path>
+    <root id="archive" name="utopia-nexus.jar">
+      <element id="module-output" name="Nexus" />
+      <element id="module-source" name="Nexus" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/Nexus/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>
