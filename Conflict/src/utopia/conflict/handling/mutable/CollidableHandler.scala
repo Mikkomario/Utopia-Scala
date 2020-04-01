@@ -6,7 +6,7 @@ import utopia.inception.handling.mutable.Handler
 
 object CollidableHandler
 {
-	def apply(elements: TraversableOnce[Collidable] = Vector()) = new CollidableHandler(elements)
+	def apply(elements: IterableOnce[Collidable] = Vector()) = new CollidableHandler(elements)
 	
 	def apply(element: Collidable) = new CollidableHandler(Vector(element))
 	
@@ -18,5 +18,5 @@ object CollidableHandler
   * @author Mikko Hilpinen
   * @since 18.4.2019, v1+
   */
-class CollidableHandler(initialElements: TraversableOnce[Collidable]) extends Handler[Collidable](initialElements)
+class CollidableHandler(initialElements: IterableOnce[Collidable]) extends Handler[Collidable](initialElements)
 	with handling.CollidableHandler

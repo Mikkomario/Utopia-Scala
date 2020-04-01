@@ -35,13 +35,13 @@ trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiStackContai
 	  * Adds a segment to the underlying stack
 	  * @param segment A segment
 	  */
-	protected def addSegmentToStack(segment: Segment)
+	protected def addSegmentToStack(segment: Segment): Unit
 	
 	/**
 	  * Removes a segment from the underlying stack
 	  * @param segment A segment
 	  */
-	protected def removeSegmentFromStack(segment: Segment)
+	protected def removeSegmentFromStack(segment: Segment): Unit
 	
 	def direction: Axis2D
 	

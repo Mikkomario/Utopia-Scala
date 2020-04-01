@@ -6,7 +6,7 @@ import utopia.inception.handling.mutable.DeepHandler
 
 object MouseButtonStateHandler
 {
-	def apply(elements: TraversableOnce[handling.MouseButtonStateListener] = Vector()) = new MouseButtonStateHandler(elements)
+	def apply(elements: IterableOnce[handling.MouseButtonStateListener] = Vector()) = new MouseButtonStateHandler(elements)
 	
 	def apply(element: handling.MouseButtonStateListener) = new MouseButtonStateHandler(Vector(element))
 	
@@ -20,5 +20,5 @@ object MouseButtonStateHandler
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
-class MouseButtonStateHandler(initialElements: TraversableOnce[handling.MouseButtonStateListener])
+class MouseButtonStateHandler(initialElements: IterableOnce[handling.MouseButtonStateListener])
 	extends DeepHandler[handling.MouseButtonStateListener](initialElements) with handling.MouseButtonStateHandler

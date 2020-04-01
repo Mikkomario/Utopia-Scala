@@ -7,7 +7,7 @@ import utopia.inception.handling.immutable
 
 object CollisionHandler
 {
-	def apply(collidableHandler: handling.CollidableHandler, elements: TraversableOnce[CollisionListener] = Vector()) =
+	def apply(collidableHandler: handling.CollidableHandler, elements: IterableOnce[CollisionListener] = Vector()) =
 		new CollisionHandler(collidableHandler, elements)
 	
 	def apply(collidableHandler: handling.CollidableHandler, first: CollisionListener, more: CollisionListener*) =
@@ -18,7 +18,7 @@ object CollisionHandler
 	  * @param listeners Collision listeners
 	  * @return A collision handler that keeps track of both
 	  */
-	def apply(collidables: TraversableOnce[Collidable], listeners: TraversableOnce[CollisionListener]) =
+	def apply(collidables: IterableOnce[Collidable], listeners: IterableOnce[CollisionListener]) =
 		new CollisionHandler(CollidableHandler(collidables), listeners)
 }
 
@@ -27,5 +27,5 @@ object CollisionHandler
   * @author Mikko Hilpinen
   * @since 18.4.2019, v1+
   */
-class CollisionHandler(val collidableHandler: handling.CollidableHandler, initialElements: TraversableOnce[CollisionListener] = Vector())
+class CollisionHandler(val collidableHandler: handling.CollidableHandler, initialElements: IterableOnce[CollisionListener] = Vector())
 	extends Handler[CollisionListener](initialElements) with handling.CollisionHandler with immutable.Handleable

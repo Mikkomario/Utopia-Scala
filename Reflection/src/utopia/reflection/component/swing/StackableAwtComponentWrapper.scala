@@ -13,7 +13,7 @@ object StackableAwtComponentWrapper
      * @param component wrapped component
      * @param getSize a function for retrieving component size
      */
-    def apply(component: Component, getSize: () => StackSize, update: () => Unit = () => Unit): StackableAwtComponentWrapper =
+    def apply(component: Component, getSize: () => StackSize, update: () => Unit = () => ()): StackableAwtComponentWrapper =
 		new StackWrapper(component, getSize, update)
     
     /**

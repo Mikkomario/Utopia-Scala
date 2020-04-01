@@ -2,7 +2,7 @@ package utopia.nexus.servlet
 
 import utopia.flow.util.NullSafe._
 
-import collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import utopia.access.http.ContentCategory._
 import javax.servlet.http.HttpServletResponse
 import utopia.nexus.http.Response
@@ -85,7 +85,7 @@ object HttpExtensions
             {
                 val path = r.getRequestURI.toOption.flatMap(Path.parse)
 
-                val paramValues = r.getParameterNames.asScala.map { pName => 
+                val paramValues = r.getParameterNames.asScala.map { pName =>
                         (pName, parseQueryParam(r.getParameter(pName))) }.flatMap { case (name, value) =>
                     value.toOption.map { name -> _ } }
                 val parameters = Model(paramValues.toVector)

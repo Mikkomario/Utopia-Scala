@@ -14,5 +14,5 @@ class BaseContext(val request: Request, val resultParser: ResultParser = UseRawJ
         (implicit val settings: ServerSettings) extends Context
 {
     // Doesn't need to close anything
-    def close() = Unit
+    def close() = ()
 }

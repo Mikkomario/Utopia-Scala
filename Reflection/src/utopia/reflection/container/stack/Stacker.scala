@@ -1,5 +1,6 @@
 package utopia.reflection.container.stack
 
+import scala.math.Ordering.Double.TotalOrdering
 import utopia.flow.datastructure.mutable.Pointer
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.Bounds
@@ -206,7 +207,7 @@ object Stacker
 	}
 	
 	@scala.annotation.tailrec
-	private def adjustLength(targets: Traversable[LengthAdjust], adjustment: Double): Double =
+	private def adjustLength(targets: Iterable[LengthAdjust], adjustment: Double): Double =
 	{
 		// Finds out how much each item should be adjusted
 		val adjustmentPerComponent = adjustment / targets.size

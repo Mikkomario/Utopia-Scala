@@ -101,9 +101,9 @@ class MouseEventGenerator(c: Component, val moveHandler: MouseMoveListener,
                 buttonStatus))
         }
         
-        override def mouseClicked(e: MouseEvent) = Unit
-        override def mouseEntered(e: MouseEvent) = Unit
-        override def mouseExited(e: MouseEvent) = Unit
+        override def mouseClicked(e: MouseEvent) = ()
+        override def mouseEntered(e: MouseEvent) = ()
+        override def mouseExited(e: MouseEvent) = ()
     }
     
     private class MouseWheelEventReceiver extends MouseWheelListener

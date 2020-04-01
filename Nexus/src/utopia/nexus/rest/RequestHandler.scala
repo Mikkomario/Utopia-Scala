@@ -18,7 +18,7 @@ import utopia.nexus.result.Result.Success
  * @author Mikko Hilpinen
  * @since 9.9.2017
  */
-class RequestHandler[C <: Context](val childResources: Traversable[Resource[C]], val path: Option[Path] = None,
+class RequestHandler[C <: Context](val childResources: Iterable[Resource[C]], val path: Option[Path] = None,
                                    val makeContext: Request => C)
 {
     // COMPUTED PROPERTIES    -------------

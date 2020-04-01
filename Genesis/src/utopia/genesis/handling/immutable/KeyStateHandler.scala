@@ -16,7 +16,7 @@ object KeyStateHandler
 	  * @param parent Handleable this handler is dependent from (default = None = independent)
 	  * @return A new handler
 	  */
-	def apply(elements: TraversableOnce[KeyStateListener], parent: Option[Handleable] = None) = new KeyStateHandler(elements)
+	def apply(elements: IterableOnce[KeyStateListener], parent: Option[Handleable] = None) = new KeyStateHandler(elements)
 	
 	/**
 	  * @param element an element for this handler
@@ -36,5 +36,5 @@ object KeyStateHandler
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
-class KeyStateHandler(initialElements: TraversableOnce[KeyStateListener])
+class KeyStateHandler(initialElements: IterableOnce[KeyStateListener])
 	extends Handler[KeyStateListener](initialElements) with handling.KeyStateHandler with Handleable

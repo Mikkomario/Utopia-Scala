@@ -354,10 +354,10 @@ object CollectionExtensions
         }
     }
     
-    implicit class RichTraversable[A](val t: Iterable[A]) extends AnyVal
+    implicit class RichIterable[A](val t: Iterable[A]) extends AnyVal
     {
         /**
-         * @return Duplicate items within this traversable
+         * @return Duplicate items within this Iterable
          */
         def duplicates: Set[A] =
         {
@@ -376,10 +376,10 @@ object CollectionExtensions
         def findMap[B](map: A => Option[B]) = t.view.map(map).find { _.isDefined }.flatten
     
         /**
-          * Finds the maximum value in this traversable
+          * Finds the maximum value in this Iterable
           * @param cmp Ordering (implicit)
           * @tparam B Ordering type
-          * @return Maximum item or None if this traversable was empty
+          * @return Maximum item or None if this Iterable was empty
           */
         def maxOption[B >: A](implicit cmp: Ordering[B]): Option[A] =
         {
@@ -390,10 +390,10 @@ object CollectionExtensions
         }
         
         /**
-          * Finds the minimum value in this traversable
+          * Finds the minimum value in this Iterable
           * @param cmp Ordering (implicit)
           * @tparam B Ordering type
-          * @return Minimum item or None if this traversable was empty
+          * @return Minimum item or None if this Iterable was empty
           */
         def minOption[B >: A](implicit cmp: Ordering[B]): Option[A] =
         {
@@ -408,7 +408,7 @@ object CollectionExtensions
          * @param map A mapping function
          * @param cmp Implicit ordering
          * @tparam B Type of map result
-         * @return Maximum item based on map result. None if this traversable was empty
+         * @return Maximum item based on map result. None if this Iterable was empty
          */
         def maxByOption[B](map: A => B)(implicit cmp: Ordering[B]): Option[A] =
         {
@@ -423,7 +423,7 @@ object CollectionExtensions
          * @param map A mapping function
          * @param cmp Implicit ordering
          * @tparam B Type of map result
-         * @return Minimum item based on map result. None if this traversable was empty
+         * @return Minimum item based on map result. None if this Iterable was empty
          */
         def minByOption[B](map: A => B)(implicit cmp: Ordering[B]): Option[A] =
         {
@@ -461,7 +461,7 @@ object CollectionExtensions
         }
         
         /**
-         * Maps the contents of this traversable. Mapping may fail, interrupting all remaining mappings
+         * Maps the contents of this Iterable. Mapping may fail, interrupting all remaining mappings
          * @param f A mapping function. May fail.
          * @param factory Implicit factory for final collection
          * @tparam B Type of map result
@@ -487,7 +487,7 @@ object CollectionExtensions
         /**
           * Compares this set of items with another set. Lists items that have been added and removed, plus the changes
           * between items that have stayed
-          * @param another Another traversable
+          * @param another Another Iterable
           * @param connectBy A function for providing the unique key based on which items are connected
           *                  (should be unique within each collection). Items sharing this key are connected.
           * @param merge A function for merging two connected items. Takes connection key, item in this collection and
@@ -514,10 +514,10 @@ object CollectionExtensions
         }
     }
     
-    implicit class RichTraversableLike[A, CC[X], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
+    implicit class RichIterableLike[A, CC[X], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
     {
         /**
-          * Divides the items in this traversable into two groups, based on boolean result
+          * Divides the items in this Iterable into two groups, based on boolean result
           * @param f A function that separates the items
           * @param factory An implicit factory
           * @return The 'false' group, followed by the 'true' group
@@ -542,7 +542,7 @@ object CollectionExtensions
         def repeatingIterator(): Iterator[A] = new RepeatingIterator[A, CC](t)
     }
     
-    implicit class RichTraversableLike2[A, CC[X] <: IterableOps[X, CC, CC[X]], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
+    implicit class RichIterableLike2[A, CC[X] <: IterableOps[X, CC, CC[X]], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
     {
         /**
          * Iterates through the items in this iterable along with another iterable's items. Will stop when either
@@ -602,6 +602,31 @@ object CollectionExtensions
     {
         def toMultiMap[Values]()(implicit factory: Factory[V, Values]): Map[K, Values] =
             new MultiMapConvertible(list).toMultiMap(_._1, _._2)
+    }
+    
+    implicit class RichRange(val range: Range) extends AnyVal
+    {
+        /**
+         * This function works like foldLeft, except that it stores each step (including the start) into a vector
+         * @param start The starting step
+         * @param map A function for calculating the next step, takes the previous result + the next item in this range
+         * @param factory A factory for final collection (implicit)
+         * @tparam B The type of steps
+         * @return All of the steps mapped into a collection
+         */
+        def foldMapToVector[B](start: B)(map: (B, Int) => B)(implicit factory: Factory[B, Vector[B]]): Vector[B] =
+        {
+            val builder = factory.newBuilder
+            var last = start
+            builder += last
+        
+            range.foreach { item =>
+                last = map(last, item)
+                builder += last
+            }
+        
+            builder.result()
+        }
     }
     
     private class RepeatingIterator[A, CC[X]](val c: IterableOps[A, CC, _]) extends Iterator[A]

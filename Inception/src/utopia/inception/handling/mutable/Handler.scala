@@ -7,7 +7,7 @@ import utopia.inception.handling.HandlerType
 
 object Handler
 {
-    def apply[A <: handling.Handleable](hType: HandlerType, elements: TraversableOnce[A] = Vector()) = new Handler(elements)
+    def apply[A <: handling.Handleable](hType: HandlerType, elements: IterableOnce[A] = Vector()) = new Handler(elements)
     {
         val handlerType = hType
     }
@@ -23,7 +23,7 @@ object Handler
  * @since 20.10.2016 (Rewritten: 5.4.2019, v2+)
   * @tparam A The type of object handled by this handler
  */
-abstract class Handler[A <: handling.Handleable](initialElements: TraversableOnce[A]) extends handling.Handler[A]
+abstract class Handler[A <: handling.Handleable](initialElements: IterableOnce[A]) extends handling.Handler[A]
 {
     // ATTRIBUTES   -------------------
     
@@ -46,7 +46,7 @@ abstract class Handler[A <: handling.Handleable](initialElements: TraversableOnc
      * Adds the contents of a collection to this handler
      * @param elements The elements to be added to this handler
      */
-    def ++=(elements: TraversableOnce[A]) = this.elements ++= elements
+    def ++=(elements: IterableOnce[A]) = this.elements ++= elements
     /**
      * Adds two or more elements to this handler
      */
@@ -60,7 +60,7 @@ abstract class Handler[A <: handling.Handleable](initialElements: TraversableOnc
      * Removes the provided elements from this handler
      * @param elements The elements to be removed from this handler
      */
-    def --=(elements: Traversable[Any]) = this.elements --= elements
+    def --=(elements: Iterable[Any]) = this.elements --= elements
     /**
      * Removes two or more elements from this handler
      */

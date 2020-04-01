@@ -27,12 +27,4 @@ trait Context extends AutoCloseable
 	 * The parser used for parsing result data
 	 */
 	def resultParser: ResultParser
-	
-	
-	// IMPLEMENTED    ---------------------
-	
-	/**
-	 * Closes / finalises the context before it is discarded
-	 */
-	override def close()
 }

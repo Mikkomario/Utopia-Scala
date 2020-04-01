@@ -203,6 +203,6 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 		
 		override def calculatedStackSize = StackSize.fixed(_worldSize * scaling)
 		
-		override def updateLayout() = Unit
+		override def updateLayout() = ()
 	}
 }

@@ -1,21 +1,16 @@
 package utopia.reflection.component
 
-import scala.collection.generic.CanBuildFrom
+import scala.collection.SpecificIterableFactory
 
 object Refreshable
 {
-	implicit class MultiRefreshable[A, C <: Traversable[A]](val r: Refreshable[C]) extends AnyVal
+	implicit class MultiRefreshable[A, C <: Iterable[A]](val r: Refreshable[C]) extends AnyVal
 	{
 		/**
 		  * Removes all items from this pool
-		  * @param cbf Implicit canbuildfrom
-		  * @tparam C2 Arbitrary collection type
+		  * @param factory Implicit specific iterable factory
 		  */
-		def clear[C2]()(implicit cbf: CanBuildFrom[C2, A, C]) =
-		{
-			val builder = cbf()
-			r.content = builder.result()
-		}
+		def clear()(implicit factory: SpecificIterableFactory[A, C]) = r.content = factory.empty
 	}
 }
 

@@ -20,7 +20,7 @@ trait Drawable extends Handleable
      * should always be set back to original after drawing
      * @param drawer The drawer object used for drawing this instance
      */
-    def draw(drawer: Drawer)
+    def draw(drawer: Drawer): Unit
     
     /**
      * The drawing depth of the drawable instance. The higher the depth, the 'deeper' it will be

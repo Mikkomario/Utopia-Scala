@@ -22,7 +22,7 @@ object ValueConversions
     implicit def unwrapConvertible[C1](c: C1)(implicit f: C1 => ValueConvertible): Value = c.toValue
     
     /*
-    implicit def automapCollection[V, C <: TraversableOnce[V], To](c: C)(implicit f: V => ValueConvertible, cbf: CanBuildFrom[_, Value, To]): To =
+    implicit def automapCollection[V, C <: IterableOnce[V], To](c: C)(implicit f: V => ValueConvertible, cbf: CanBuildFrom[_, Value, To]): To =
     {
         val builder = cbf()
         c.foreach { builder += f(_) }

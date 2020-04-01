@@ -379,7 +379,7 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
         {
             // Performs a closing action, if one is queued
             uponCloseAction.pop().foreach { _() }
-            closePromise.trySuccess(Unit)
+            closePromise.trySuccess(())
             
             // Removes this window from the stack hierarchy (may preserve a portion of the content by detaching it first)
             detachFromMainStackHierarchy()

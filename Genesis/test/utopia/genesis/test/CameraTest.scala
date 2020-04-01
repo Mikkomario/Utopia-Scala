@@ -27,7 +27,7 @@ object CameraTest extends App
             // Draws a number on each grid square
             for (x <- 0 until grid.squareAmounts.x.toInt; y <- 0 until grid.squareAmounts.y.toInt)
             {
-                drawer.drawTextCentered((y * grid.squareAmounts.x.toInt + x + 1) + "", font, 
+                drawer.drawTextCentered((y * grid.squareAmounts.x.toInt + x + 1).toString, font,
                         Bounds(grid.squarePosition(x, y), grid.squareSize))
             }
         }

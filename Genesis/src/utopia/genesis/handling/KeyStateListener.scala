@@ -68,7 +68,7 @@ trait KeyStateListener extends Handleable
     /**
      * This method will be called when the keyboard state changes
      */
-    def onKeyState(event: KeyStateEvent)
+    def onKeyState(event: KeyStateEvent): Unit
     
     /**
      * This listener will only be called for events accepted by this filter. By default the filter

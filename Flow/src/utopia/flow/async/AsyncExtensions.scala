@@ -127,7 +127,7 @@ object AsyncExtensions
 	implicit class ManyFutures[A](val futures: IterableOnce[Future[A]]) extends AnyVal
 	{
 		/**
-		  * Waits until all of the futures inside this traversable item have completed
+		  * Waits until all of the futures inside this Iterable item have completed
 		  * @param factory A factory
 		  * @tparam C Resulting collection type
 		  * @return The results of the waiting (each item as a try)
@@ -140,7 +140,7 @@ object AsyncExtensions
 		}
 		
 		/**
-		  * Waits until all of the futures inside this traversable item have completed
+		  * Waits until all of the futures inside this Iterable item have completed
 		  * @param factory A factory
 		  * @tparam C Resulting collection type
 		  * @return The successful results of the waiting (no failures will be included)

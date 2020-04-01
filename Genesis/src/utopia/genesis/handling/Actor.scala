@@ -20,7 +20,7 @@ trait Actor extends Handleable
      * state allows it.
      * @param duration The duration since the last act
      */
-    def act(duration: FiniteDuration)
+    def act(duration: FiniteDuration): Unit
     
     
     // COMPUTED ------------------

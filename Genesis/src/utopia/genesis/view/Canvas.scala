@@ -5,7 +5,6 @@ import utopia.genesis.shape.Vector3D
 import utopia.genesis.view.ScalingPolicy.Project
 import java.awt.Color
 import java.awt.Graphics
-import java.awt.Graphics2D
 import java.awt.event.{ComponentAdapter, ComponentEvent}
 
 import utopia.genesis.view.ScalingPolicy.Crop
@@ -76,7 +75,7 @@ class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size, val 
     
     // IMPLEMENTED METHODS    --------
     
-    override def paintComponent(g: Graphics)
+    override def paintComponent(g: Graphics) =
     {
         super.paintComponent(g)
 
@@ -122,9 +121,9 @@ class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size, val 
     /**
       * Stops any automatic refresh on this canvas
       */
-    def stopAutoRefresh() = refreshLoop.map { _.stop() } getOrElse Future.successful(Unit)
+    def stopAutoRefresh() = refreshLoop.map { _.stop() } getOrElse Future.successful(())
     
-    private def updateScaling()
+    private def updateScaling() =
     {
         val size = Size of getSize()
         

@@ -6,7 +6,7 @@ import utopia.inception.handling.mutable.DeepHandler
 
 object MouseWheelHandler
 {
-	def apply(elements: TraversableOnce[handling.MouseWheelListener] = Vector()) = new MouseWheelHandler(elements)
+	def apply(elements: IterableOnce[handling.MouseWheelListener] = Vector()) = new MouseWheelHandler(elements)
 	
 	def apply(element: handling.MouseWheelListener) = new MouseWheelHandler(Vector(element))
 	
@@ -20,5 +20,5 @@ object MouseWheelHandler
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
-class MouseWheelHandler(initialElements: TraversableOnce[handling.MouseWheelListener])
+class MouseWheelHandler(initialElements: IterableOnce[handling.MouseWheelListener])
 	extends DeepHandler[handling.MouseWheelListener](initialElements) with handling.MouseWheelHandler

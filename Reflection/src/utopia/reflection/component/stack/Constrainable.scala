@@ -20,7 +20,7 @@ trait Constrainable extends StackSizeCalculating
 	/**
 	  * @param newConstraints New modifiers for this component's stack size
 	  */
-	def constraints_=(newConstraints: Vector[StackSizeModifier])
+	def constraints_=(newConstraints: Vector[StackSizeModifier]): Unit
 	
 	
 	// COMPUTED	-----------------------

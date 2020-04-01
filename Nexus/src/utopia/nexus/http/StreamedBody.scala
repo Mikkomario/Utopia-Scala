@@ -34,7 +34,7 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
       * @return A buffered version of this body where the stream is read into a string
       */
     def bufferedToString = buffered { reader =>
-        Try(Stream.continually(reader.readLine()).takeWhile(_ != null).mkString("\n")) }
+        Try { Iterator.continually(reader.readLine()).takeWhile(_ != null).mkString("\n") } }
     
     /**
       * @return A buffered version of this body where contents are parsed from a JSON into a value

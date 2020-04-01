@@ -19,7 +19,7 @@ trait Transformable
 	/**
 	  * @param newTransformation New transformation state for this item
 	  */
-	def transformation_=(newTransformation: Transformation)
+	def transformation_=(newTransformation: Transformation): Unit
 	
 	
 	// COMPUTED	-------------------------

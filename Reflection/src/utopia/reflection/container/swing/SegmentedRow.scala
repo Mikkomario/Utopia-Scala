@@ -43,7 +43,7 @@ object SegmentedRow
 	  * @param layout Row layout (default = Fit)
 	  * @return A new row
 	  */
-	def withItems[C <: AwtStackable](master: Segmented, items: TraversableOnce[C], direction: Axis2D = X,
+	def withItems[C <: AwtStackable](master: Segmented, items: IterableOnce[C], direction: Axis2D = X,
 									 margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixed(0),
 									 layout: StackLayout = Fit) =
 	{
@@ -61,7 +61,7 @@ object SegmentedRow
 	  * @param layout Row layout (default = Fit)
 	  * @return A new row, already registered to the specified group
 	  */
-	def partOfGroupWithItems[C <: AwtStackable](group: SegmentedGroup, items: TraversableOnce[C], margin: StackLength = StackLength.any,
+	def partOfGroupWithItems[C <: AwtStackable](group: SegmentedGroup, items: IterableOnce[C], margin: StackLength = StackLength.any,
 												cap: StackLength = StackLength.fixed(0), layout: StackLayout = Fit) =
 	{
 		val row = withItems(group, items, group.direction, margin, cap, layout)

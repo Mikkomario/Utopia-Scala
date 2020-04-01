@@ -211,7 +211,7 @@ v1.3  ---------------------------------------
 
         A failed join will now throw an exception
 
-        .in(...) (when creating conditions) will now accept any traversable group and not just seqs
+        .in(...) (when creating conditions) will now accept any Iterable group and not just seqs
 
         FromResultFactory, FromRowFactory and StorableFactory were moved to utopia.vault.nosql.factory
 

@@ -5,7 +5,7 @@ import utopia.inception.handling.mutable.DeepHandler
 
 object KeyStateHandler
 {
-	def apply(elements: TraversableOnce[handling.KeyStateListener] = Vector()) = new KeyStateHandler(elements)
+	def apply(elements: IterableOnce[handling.KeyStateListener] = Vector()) = new KeyStateHandler(elements)
 	
 	def apply(element: handling.KeyStateListener) = new KeyStateHandler(Vector(element))
 	
@@ -19,5 +19,5 @@ object KeyStateHandler
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
-class KeyStateHandler(initialElements: TraversableOnce[handling.KeyStateListener])
+class KeyStateHandler(initialElements: IterableOnce[handling.KeyStateListener])
 	extends DeepHandler[handling.KeyStateListener](initialElements) with handling.KeyStateHandler

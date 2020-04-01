@@ -91,7 +91,7 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
                     "upload_" + LocalDateTime.now()) + (if (request.body.size > 1) "_" + counter.next() else "")))
             
             val uploadResults = request.body.zip(partNames).map { case (b, partName) => upload(b, partName, remainingPath) }
-            val successes = partNames.zip(uploadResults).filter(_._2.isSuccess).toMap.mapValues(_.get)
+            val successes = partNames.zip(uploadResults).filter(_._2.isSuccess).toMap.view.mapValues(_.get)
             
             if (successes.isEmpty)
             {
@@ -107,7 +107,7 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
                 
                 val location = if (resultUrls.size == 1) resultUrls.head._2 else myPath.toServerUrl(context.settings)
                 
-                Response.fromModel(Model.fromMap(resultUrls)).withModifiedHeaders(_.withLocation(location))
+                Response.fromModel(Model.fromMap(resultUrls.toMap)).withModifiedHeaders(_.withLocation(location))
             }
         }
     }

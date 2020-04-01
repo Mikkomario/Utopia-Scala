@@ -64,9 +64,9 @@ class StackSpace(override val stackSize: StackSize) extends JWrapper with StackL
 	
 	override def toString = s"StackSpace($stackSize)"
 	
-	override def updateLayout() = Unit
+	override def updateLayout() = ()
 	
-	override def resetCachedSize() = Unit
+	override def resetCachedSize() = ()
 	
 	override def drawable = component
 }

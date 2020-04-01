@@ -80,13 +80,13 @@ object Vector3D extends FromModelFactory[Vector3D]
      * @throws UnsupportedOperationException If the collection is empty
      */
     @throws(classOf[UnsupportedOperationException])
-    def average(vectors: Traversable[Vector3D]) = vectors.reduceLeft { _ + _ } / vectors.size
+    def average(vectors: Iterable[Vector3D]) = vectors.reduceLeft { _ + _ } / vectors.size
     
     /**
      * Calculates the average point of the provided vectors
      * @return The average point of the provided vectors. None if collection is empty
      */
-    def averageOption(vectors: Traversable[Vector3D]) = 
+    def averageOption(vectors: Iterable[Vector3D]) =
     {
         if (vectors.isEmpty)
             None
@@ -106,7 +106,7 @@ object Vector3D extends FromModelFactory[Vector3D]
      * creates a vector that has the smallest available value on each axis from all the candidates.
      * None if the provided collection is empty
      */
-    def topLeft(vectors: Traversable[Vector3D]): Option[Vector3D] = vectors.reduceOption { _ topLeft _ }
+    def topLeft(vectors: IterableOnce[Vector3D]): Option[Vector3D] = vectors.iterator.reduceOption { _ topLeft _ }
     
     /**
      * The bottom right corner of a bounds between the two vertices. In other words,
@@ -120,7 +120,7 @@ object Vector3D extends FromModelFactory[Vector3D]
      * creates a vector that has the largest available value on each axis from all the candidates.
      * None if the provided collection is empty
      */
-    def bottomRight(vectors: Traversable[Vector3D]): Option[Vector3D] = vectors.reduceOption { _ bottomRight _ }
+    def bottomRight(vectors: IterableOnce[Vector3D]): Option[Vector3D] = vectors.iterator.reduceOption { _ bottomRight _ }
 	
     /**
      * Combines two vectors into a third vector using a binary operator
