@@ -207,7 +207,7 @@ object References
      * @param table Targeted table
      * @return All tables directly or indirectly referencing the specified table
      */
-    def tablesAffectedBy(table: Table) = tablesAffectedBy(table, Set())
+    def tablesAffectedBy(table: Table): Set[Table] = tablesAffectedBy(table, Set())
     
     private def tablesAffectedBy(table: Table, ignoredTables: Set[Table]): Set[Table] =
     {
