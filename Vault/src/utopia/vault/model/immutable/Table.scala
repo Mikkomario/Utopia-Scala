@@ -77,6 +77,7 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
      * Finds a column with the provided property name associated with it. If you are unsure whether
      * such a column exists in the table, use find instead
      */
+    // FIXME: Add a more clear thrown exception
     def apply(propertyName: String) = find(propertyName).get
     
     /**
