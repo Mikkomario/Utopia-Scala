@@ -64,7 +64,8 @@ trait Storable extends ModelConvertible
         val i = index
         if (i.isDefined)
             table.primaryColumn.map(_ <=> index)
-        else None
+        else
+            None
     }
     
     /**
@@ -158,6 +159,18 @@ trait Storable extends ModelConvertible
                 }
         }
     }
+    
+    /**
+      * Performs an update based on this model, but applies a specific condition
+      * @param condition Condition applied to this update
+      * @param writeNulls Whether empty (null) values should be pushed to the DB (default = false)
+      * @param writeIndex Whether index value (if present) should be pushed to the DB (default = false)
+      * @param connection Database connection (implicit)
+      * @return Number of updated rows
+      */
+    def updateWhere(condition: Condition, writeNulls: Boolean = false, writeIndex: Boolean = false)
+                   (implicit connection: Connection) =
+        connection(toUpdateStatement(writeNulls, writeIndex) + Where(condition)).updatedRowCount
     
     /**
      * Creates an update sql segment based on this storable instance. This update segment can then 

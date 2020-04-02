@@ -1,55 +1,137 @@
 package utopia.vault.database
 
-import java.time.Period
-import utopia.flow.util.TimeExtensions._
+import java.time.{Instant, Period}
 
-import utopia.vault.model.immutable.Table
-import utopia.vault.sql.Condition
+import utopia.flow.generic.ValueConversions._
+import utopia.vault.sql.Extensions._
+import utopia.flow.util.TimeExtensions._
+import utopia.flow.util.CollectionExtensions._
+import utopia.vault.model.immutable.{Reference, Table}
+import utopia.vault.sql.{Condition, Delete, Join, SqlTarget, Where}
 
 /**
  * Used for clearing deprecated data from the database
  * @author Mikko Hilpinen
  * @since 2.4.2020, v1.5
  */
-class ClearOldData(rules: Iterable[(Table, Period, Option[Condition])])
+class ClearOldData(rules: Iterable[((Table, String), Iterable[(Period, Option[Condition])])])
 {
 	// ATTRIBUTES	---------------------------
 	
 	// Forms the actual deletion rules based on those provided + existing table references
 	private val finalRules =
 	{
-		val baseRulesByTable = rules.groupBy { _._1 }
-		baseRulesByTable.map { case (table, baseRules) =>
+		val nonEmptyRules =  rules.filterNot { _._2.isEmpty }.toMap
+		nonEmptyRules.map { case (target, periods) =>
+			val (table, propertyName) = target
 			// Checks if there exist any rules for tables referencing the table in question
 			val tree = References.referenceTree(table)
-			val referencingRulesWithPaths = baseRulesByTable.flatMap { case (childTable, childRules) =>
-				lazy val basePeriod = basePeriodFrom(childRules)
+			val restrictingChildren = nonEmptyRules.flatMap { case (childTarget, _) =>
+				val childTable = childTarget._1
 				tree.filterWithPaths { _.content == childTable }.map { childPath =>
-					val conditionalPeriods = conditionalPeriodsFrom(childRules)
-					childPath -> TableDeletionRule(childTable, basePeriod, conditionalPeriods)
+					// Converts the table path to a reference path
+					referencePathFrom(table, childPath)
 				}
-			}
+			}.toVector
 			// Creates the deletion rule for the primary table
-			val basePeriod = basePeriodFrom(baseRules)
-			val conditionalPeriods = conditionalPeriodsFrom(baseRules)
-			TableDeletionRule(table, basePeriod, conditionalPeriods, referencingRulesWithPaths)
+			val basePeriod = basePeriodFrom(periods)
+			val conditionalPeriods = conditionalPeriodsFrom(periods)
+			TableDeletionRule(table, propertyName, basePeriod, conditionalPeriods, restrictingChildren)
 		}.toVector
 	}
 	
 	
 	// OTHER	------------------------------
 	
-	// TODO: Implement the actual deletion process
+	/**
+	  * Performs the deletion operation
+	  * @param connection Database connection used for the deletions
+	  */
+	def apply()(implicit connection: Connection) = deleteIteration(Instant.now(), finalRules, Set())
 	
-	// FIXME: Change to return option and to only consider non-conditional rules
-	private def basePeriodFrom(rules: Iterable[(_, Period, Option[Condition])]) =
-		rules.filter { _._3.isEmpty }.map { _._2 }.maxOption.getOrElse { rules.map { _._2 }.max }
+	@scala.annotation.tailrec
+	private def deleteIteration(deletionTime: Instant, remainingRules: Vector[TableDeletionRule],
+								handledTables: Set[Table])(implicit connection: Connection): Unit =
+	{
+		// During this iteration, can only handle tables that don't refer to unhandled tables
+		val (nextIterationTargets, thisIterationTargets) = remainingRules.divideBy { rule =>
+			rule.restrictiveChildTables.forall(handledTables.contains)
+		}
+		
+		thisIterationTargets.foreach { rule =>
+			// Checks the general deletion rule first
+			rule.baseLiveDuration.foreach { baseDuration =>
+				val baseDurationCondition = rule.timeColumn < (deletionTime - baseDuration)
+				performDeleteOn(rule, baseDurationCondition)
+			}
+			// Then checks individual conditions
+			rule.conditionalPeriods.toVector.sortBy { _._2 }.foreach { case (condition, maxDuration) =>
+				val durationCondition = rule.timeColumn < (deletionTime - maxDuration)
+				performDeleteOn(rule, durationCondition && condition)
+			}
+		}
+		
+		// Performs the next iteration, if necessary
+		// Will not continue if there exist only looping references
+		if (nextIterationTargets.nonEmpty && thisIterationTargets.nonEmpty)
+			deleteIteration(deletionTime, nextIterationTargets, handledTables ++ thisIterationTargets.map { _.table })
+	}
 	
-	private def conditionalPeriodsFrom(rules: Iterable[(_, Period, Option[Condition])]) =
-		rules.filter { _._3.isDefined }.map {
-			case (_, conditionalPeriod: Period, condition: Option[Condition]) => condition.get -> conditionalPeriod }.toMap
+	private def performDeleteOn(rule: TableDeletionRule, baseDeletionCondition: Condition)(implicit connection: Connection) =
+	{
+		// Checks whether child status should be checked as well
+		val restrictions = rule.restrictiveChildPaths
+		if (restrictions.isEmpty)
+		{
+			// If no restricting tables exist, simply deletes old data
+			connection(Delete(rule.table) + Where(baseDeletionCondition))
+		}
+		else
+		{
+			// If there were restrictions, performs a join and only deletes tables where the join fails
+			val target = targetFrom(rule.table, restrictions)
+			val noJoinConditions = restrictions.map { _.last.to.column.isNull }
+			
+			connection(Delete(target, Vector(rule.table)) + Where(baseDeletionCondition && noJoinConditions))
+		}
+	}
+	
+	private def basePeriodFrom(rules: Iterable[(Period, Option[Condition])]) =
+		rules.filter { _._2.isEmpty }.map { _._1 }.maxOption
+	
+	private def conditionalPeriodsFrom(rules: Iterable[(Period, Option[Condition])]) =
+		rules.filter { _._2.isDefined }.map {
+			case (conditionalPeriod: Period, condition: Option[Condition]) => condition.get -> conditionalPeriod }.toMap
+	
+	private def referencePathFrom(primaryTable: Table, childPath: Seq[Table]) =
+	{
+		var lastTable = primaryTable
+		childPath.map { nextTable =>
+			val reference = References.fromTo(lastTable, nextTable).head
+			lastTable = nextTable
+			reference
+		}.toVector
+	}
+	
+	// Expects childPaths to be nonEmpty
+	private def targetFrom(primaryTable: Table, childPaths: Iterable[Seq[Reference]]) =
+	{
+		val joins = childPaths.flatMap { _.map { reference => Join(reference.from.column, reference.to) } }
+		joins.foldLeft(primaryTable: SqlTarget) { _ + _ }
+	}
 }
 
-// FIXME: Not all tables should have unconditional deletion time. Change it to Option and fix calculations
-private case class TableDeletionRule(table: Table, baseLiveDuration: Period, conditionalPeriods: Map[Condition, Period] = Map(),
-								childDeletionRules: Map[Vector[Table], TableDeletionRule] = Map())
+// TODO: Handle additional, static restrictions (direct & not-null only)
+private case class TableDeletionRule(table: Table, timePropertyName: String, baseLiveDuration: Option[Period] = None,
+									 conditionalPeriods: Map[Condition, Period] = Map(),
+									 restrictiveChildPaths: Vector[Vector[Reference]] = Vector())
+{
+	lazy val timeColumn = table(timePropertyName)
+	
+	lazy val restrictiveChildTables = restrictiveChildPaths.map { _.last.to.table }.toSet
+	
+	def maxDuration = baseLiveDuration.getOrElse(conditionalPeriods.values.max)
+	
+	def additionalConditionsRestricting(proposedDuration: Period) =
+		conditionalPeriods.filter { _._2 > proposedDuration }.keys
+}
