@@ -110,4 +110,15 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
       * @return Whether this node or any node under this node contains the specified content
       */
     def contains(content: A): Boolean = this.content == content || children.exists { _.contains(content) }
+    
+    /**
+     * Finds the first child node from this entire tree that matches the specified condition. Returns the whole path
+     * to that node
+     * @param filter A search condition
+     * @return Path to the first node matching the specified condition, if such a node exists
+     */
+    def findWithPath(filter: NodeType => Boolean): Option[Vector[NodeType]] =
+    {
+        children.find(filter).map { Vector(_) }.orElse { children.findMap { c => c.findWithPath(filter).map { c +: _ } } }
+    }
 }

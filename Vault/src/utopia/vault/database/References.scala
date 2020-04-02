@@ -1,9 +1,11 @@
 package utopia.vault.database
 
+import utopia.flow.datastructure.immutable.Tree
 import utopia.flow.generic.EnvironmentNotSetupException
 import utopia.vault.model.immutable.{Column, Reference, ReferencePoint, Table}
 
 import scala.collection.immutable.{HashMap, HashSet}
+import scala.collection.mutable
 
 /**
  * The references object keeps track of all references between different tables in a multiple
@@ -198,6 +200,62 @@ object References
      * Finds all tables that contain references to the specified table
      */
     def tablesReferencing(table: Table) = to(table).map(_.from.table)
+    
+    /**
+     * Lists all of the tables that either directly or indirectly refer to the specified table. Will not include the
+     * specified table itself, even if it refers to itself.
+     * @param table Targeted table
+     * @return All tables directly or indirectly referencing the specified table
+     */
+    def tablesAffectedBy(table: Table) = tablesAffectedBy(table, Set())
+    
+    private def tablesAffectedBy(table: Table, ignoredTables: Set[Table]): Set[Table] =
+    {
+        var newIgnored = ignoredTables + table
+        // Finds all tables directly referencing specified table (ignores tables that are already recorded)
+        val newReferencing = tablesReferencing(table) -- newIgnored
+        
+        if (newReferencing.nonEmpty)
+        {
+            // Finds all tables referencing those directly referenced tables (recursive)
+            val additionalTablesBuilder = mutable.Set[Table]()
+            newReferencing.foreach { referencingTable =>
+                val moreTables = tablesAffectedBy(referencingTable, newIgnored)
+                if (moreTables.nonEmpty)
+                {
+                    additionalTablesBuilder ++= moreTables
+                    // Expands the number of ignored tables each time new ones are found
+                    newIgnored ++= moreTables
+                }
+            }
+            
+            newReferencing ++ additionalTablesBuilder
+        }
+        else
+            newReferencing
+    }
+    
+    /**
+     * Forms a tree based on table references where the root is the specified table and node children are based on
+     * references. No table is added twice to a single branch, although a table may exist in multiple branches
+     * at the same time.
+     * @param root Table that will form the reference tree root
+     * @return A reference tree where the specified table is the root and tables referencing that table are below it
+     */
+    def referenceTree(root: Table): Tree[Table] = referenceTree(root, Set())
+    
+    private def referenceTree(root: Table, ignoredTables: Set[Table]): Tree[Table] =
+    {
+        val newIgnored = ignoredTables + root
+        // Finds all tables directly referencing specified table (except those ignored)
+        val referencing = tablesReferencing(root) -- newIgnored
+        
+        // Transforms each referencing table into a tree of tables (ignoring tables already in the tree)
+        val referencingTrees = referencing.map { referenceTree(_, newIgnored) }
+        
+        // Returns the whole tree
+        Tree(root, referencingTrees.toVector)
+    }
     
     /**
      * Clears all reference data concerning a single database
