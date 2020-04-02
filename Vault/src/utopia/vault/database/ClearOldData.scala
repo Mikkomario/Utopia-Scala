@@ -41,6 +41,7 @@ class ClearOldData(rules: Iterable[(Table, Period, Option[Condition])])
 	
 	// TODO: Implement the actual deletion process
 	
+	// FIXME: Change to return option and to only consider non-conditional rules
 	private def basePeriodFrom(rules: Iterable[(_, Period, Option[Condition])]) =
 		rules.filter { _._3.isEmpty }.map { _._2 }.maxOption.getOrElse { rules.map { _._2 }.max }
 	
@@ -49,5 +50,6 @@ class ClearOldData(rules: Iterable[(Table, Period, Option[Condition])])
 			case (_, conditionalPeriod: Period, condition: Option[Condition]) => condition.get -> conditionalPeriod }.toMap
 }
 
+// FIXME: Not all tables should have unconditional deletion time. Change it to Option and fix calculations
 private case class TableDeletionRule(table: Table, baseLiveDuration: Period, conditionalPeriods: Map[Condition, Period] = Map(),
 								childDeletionRules: Map[Vector[Table], TableDeletionRule] = Map())
