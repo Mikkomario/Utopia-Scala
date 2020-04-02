@@ -77,8 +77,12 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
      * Finds a column with the provided property name associated with it. If you are unsure whether
      * such a column exists in the table, use find instead
      */
-    // FIXME: Add a more clear thrown exception
-    def apply(propertyName: String) = find(propertyName).get
+    def apply(propertyName: String) = find(propertyName) match
+    {
+        case Some(prop) => prop
+        case None => throw new NoSuchElementException(
+            s"Table '$name' doesn't contain property '$propertyName'. Available properties: [${columns.map { _.name }.mkString(", ")}]")
+    }
     
     /**
      * Finds the columns matching the provided property names
@@ -109,7 +113,12 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
      * Finds a column with the specified column name. If you are unsure whether such a column
      * exists, please used findColumnWithColumnName instead
      */
-    def columnWithColumnName(columnName: String) = findColumnWithColumnName(columnName).get
+    def columnWithColumnName(columnName: String) = findColumnWithColumnName(columnName) match
+    {
+        case Some(column) => column
+        case None => throw new NoSuchElementException(
+            s"Table '$name' doesn't contain column named '$columnName'. Available columns: [${columns.map { _.columnName }.mkString(", ")}]")
+    }
     
     /**
      * Checks whether this table contains a matching column

@@ -3,3 +3,4 @@
 ### New Methods
 - template.TreeLike
     - findWithPath(...)
+    - filterWithPaths(...)

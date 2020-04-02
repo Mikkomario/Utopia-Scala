@@ -117,8 +117,22 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
      * @param filter A search condition
      * @return Path to the first node matching the specified condition, if such a node exists
      */
-    def findWithPath(filter: NodeType => Boolean): Option[Vector[NodeType]] =
+    def findWithPath(filter: NodeType => Boolean): Option[Vector[A]] =
     {
-        children.find(filter).map { Vector(_) }.orElse { children.findMap { c => c.findWithPath(filter).map { c +: _ } } }
+        children.find(filter).map { c => Vector(c.content) }.orElse { children.findMap { c => c.findWithPath(filter).map { c.content +: _ } } }
+    }
+    
+    /**
+      * Finds the top nodes under this node (whether they be direct children or grandchildren etc.) that satisfy the
+      * specified filter. Includes the "path" to all of the selected nodes as well. If a node is selected, it's children are
+      * not tested anymore. All of the returned values are within separate trees.
+      * @param filter A filter function
+      * @return Paths to all of the nodes that satisfy the specified filter function
+      */
+    def filterWithPaths(filter: NodeType => Boolean): Vector[Vector[A]] =
+    {
+        val (notAccepted, accepted) = children.divideBy(filter)
+        // Adds accepted children as is and finds potential matches under the non-accepted children
+        accepted.map { c => Vector(c.content) } ++ notAccepted.flatMap { _.filterWithPaths(filter) }.filterNot { _.isEmpty }
     }
 }

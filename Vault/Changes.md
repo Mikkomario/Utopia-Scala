@@ -12,3 +12,6 @@
     - referenceTree(Table)
 - UniqueAccess
     - pull
+### Small Changes
+- Exceptions thrown when trying to access a non-existing property or column in a table now have more informative 
+messages

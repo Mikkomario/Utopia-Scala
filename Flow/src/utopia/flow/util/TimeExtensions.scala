@@ -23,6 +23,8 @@ object TimeExtensions
 {
 	implicit class ExtendedInstant(val i: Instant) extends AnyVal
 	{
+		// OTHER	--------------------------
+		
 		/**
 		 * Converts this instant to a string using specified formatter. If the formatter doesn't support instant
 		 * naturally, converts this instant to local date time before converting to string
@@ -362,6 +364,15 @@ object TimeExtensions
 			
 			weeksBuffer.result()
 		}
+	}
+	
+	implicit class ExtendedPeriod(val p: Period) extends RichComparable[Period]
+	{
+		// IMPLEMENTED	-----------------------
+		
+		// Uses some rounding in comparing (not exact with months vs days). 1 month is considered to be 30.44 days
+		override def compareTo(o: Period) = ((p.getYears * 12 + p.getMonths) * 30.44 -
+			((o.getYears * 12 + o.getMonths) * 30.44)).toInt
 	}
 	
 	implicit class TimeNumber[T](val i: T) extends AnyVal
