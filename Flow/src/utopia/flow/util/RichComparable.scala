@@ -9,6 +9,21 @@ object RichComparable
     {
         def compareTo(other: T) = c.compareTo(other)
     }
+	
+	implicit class IndirectComparable[A, B](val c: A)(implicit f: A => Comparable[B]) extends RichComparable[B]
+	{
+		override def compareTo(o: B) = f(c).compareTo(o)
+	}
+	
+	implicit class ComparableInt(val i: Int) extends RichComparable[Int]
+	{
+		override def compareTo(o: Int) = i - o
+	}
+	
+	implicit class ComparableDouble(val d: Double) extends RichComparable[Double]
+	{
+		override def compareTo(o: Double) = if (d < o) -1 else if (d > o) 1 else 0
+	}
     
     /**
      * Finds the smaller of the two provided values

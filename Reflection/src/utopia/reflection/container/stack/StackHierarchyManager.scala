@@ -357,7 +357,7 @@ private case class StackId(parts: Vector[Int])
 
 private class RevalidateLoop(val validationInterval: Duration) extends Loop
 {
-	override protected def runOnce() =
+	override def runOnce() =
 	{
 		// Performs the validation in Swing graphics thread
 		SwingUtilities.invokeAndWait(() => StackHierarchyManager.revalidate())
@@ -367,5 +367,5 @@ private class RevalidateLoop(val validationInterval: Duration) extends Loop
 			WaitUtils.waitUntilNotified(waitLock)
 	}
 	
-	override protected def nextWaitTarget = WaitDuration(validationInterval)
+	override def nextWaitTarget = WaitDuration(validationInterval)
 }

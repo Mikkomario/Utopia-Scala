@@ -121,7 +121,6 @@ class ClearOldData(rules: Iterable[((Table, String), Iterable[(Period, Option[Co
 	}
 }
 
-// TODO: Handle additional, static restrictions (direct & not-null only)
 private case class TableDeletionRule(table: Table, timePropertyName: String, baseLiveDuration: Option[Period] = None,
 									 conditionalPeriods: Map[Condition, Period] = Map(),
 									 restrictiveChildPaths: Vector[Vector[Reference]] = Vector())

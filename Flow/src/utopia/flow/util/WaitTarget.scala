@@ -39,6 +39,11 @@ object WaitTarget
         
         def breakable: Until = if (breaksOnNotify) this else Until(time)
     }
+    
+    /**
+      * A zero length wait duration
+      */
+    val zero = WaitDuration(Duration.Zero)
 }
 
 /**
