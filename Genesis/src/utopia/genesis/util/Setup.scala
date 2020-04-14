@@ -33,7 +33,7 @@ trait Setup
 	  * Registers specified objects to the handlers in this setup
 	  * @param objects The objects that will be registered
 	  */
-	def registerObjects(objects: TraversableOnce[Handleable]) = handlers ++= objects
+	def registerObjects(objects: IterableOnce[Handleable]) = handlers ++= objects
 	
 	/**
 	  * Registers specified objects to the handlers in this setup

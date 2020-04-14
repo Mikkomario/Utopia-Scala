@@ -51,7 +51,7 @@ class TryLoop[A](val durationBetweenAttempts: Duration, maxAttempts: Int)(operat
 	
 	// IMPLEMENTED  -------------------------
 	
-	override protected def runOnce() =
+	override def runOnce() =
 	{
 		if (!promise.isCompleted)
 		{
@@ -83,5 +83,5 @@ class TryLoop[A](val durationBetweenAttempts: Duration, maxAttempts: Int)(operat
 		super.stop()
 	}
 	
-	override protected val nextWaitTarget = WaitTarget.WaitDuration(durationBetweenAttempts)
+	override val nextWaitTarget = WaitTarget.WaitDuration(durationBetweenAttempts)
 }

@@ -16,7 +16,7 @@ object MouseButtonStateHandler
 	  * @param parent Handleable this handler is dependent from (default = None = independent)
 	  * @return A new handler
 	  */
-	def apply(elements: TraversableOnce[MouseButtonStateListener], parent: Option[Handleable] = None) = new MouseButtonStateHandler(elements)
+	def apply(elements: IterableOnce[MouseButtonStateListener], parent: Option[Handleable] = None) = new MouseButtonStateHandler(elements)
 	
 	/**
 	  * @param element an element for this handler
@@ -36,5 +36,5 @@ object MouseButtonStateHandler
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
-class MouseButtonStateHandler(initialElements: TraversableOnce[MouseButtonStateListener])
+class MouseButtonStateHandler(initialElements: IterableOnce[MouseButtonStateListener])
 	extends Handler[MouseButtonStateListener](initialElements) with handling.MouseButtonStateHandler with Handleable

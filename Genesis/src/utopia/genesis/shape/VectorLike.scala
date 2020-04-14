@@ -13,7 +13,7 @@ object VectorLike
 	  * @tparam A The result type
 	  * @return The average of the provided VectorLike elements
 	  */
-	def average[A <: VectorLike[A]](elements: Traversable[A]) =
+	def average[A <: VectorLike[A]](elements: Iterable[A]) =
 	{
 		val total = elements.reduce { _ + _ }
 		total / elements.size

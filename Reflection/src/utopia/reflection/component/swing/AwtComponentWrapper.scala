@@ -185,7 +185,7 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     /**
      * Transforms this wrapper into a Stackable
      */
-    def withStackSize(getSize: () => StackSize, update: () => Unit = () => Unit): AwtComponentWrapperWrapper with Stackable =
+    def withStackSize(getSize: () => StackSize, update: () => Unit = () => ()): AwtComponentWrapperWrapper with Stackable =
         new AwtComponentWrapperWrapperWithStackable(this, getSize, update)
     
     /**
@@ -231,15 +231,15 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     {
         private var currentButtonStatus = MouseButtonStatus.empty
         
-        override def mouseClicked(e: MouseEvent) = Unit
+        override def mouseClicked(e: MouseEvent) = ()
         
         override def mousePressed(e: MouseEvent) = updateMouseButtonStatus(e, newStatus = true)
         
         override def mouseReleased(e: MouseEvent) = updateMouseButtonStatus(e, newStatus = false)
         
-        override def mouseEntered(e: MouseEvent) = Unit
+        override def mouseEntered(e: MouseEvent) = ()
         
-        override def mouseExited(e: MouseEvent) = Unit
+        override def mouseExited(e: MouseEvent) = ()
         
         private def updateMouseButtonStatus(e: MouseEvent, newStatus: Boolean) =
         {

@@ -68,7 +68,7 @@ object Popup
 	
 	private class HideOnFocusLostListener(popup: Window[_]) extends WindowFocusListener
 	{
-		override def windowGainedFocus(e: WindowEvent) = Unit
+		override def windowGainedFocus(e: WindowEvent) = ()
 		
 		override def windowLostFocus(e: WindowEvent) =
 		{

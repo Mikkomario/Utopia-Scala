@@ -27,7 +27,7 @@ trait CollidableHandler extends Handler[Collidable]
      * of checked collision groups otherwise
      * @return All collisions in the checked groups along with their collidable participants
      */
-    def checkForCollisions(shape: CollisionShape, limitToGroups: Option[Traversable[CollisionGroup]] = None) = 
+    def checkForCollisions(shape: CollisionShape, limitToGroups: Option[Iterable[CollisionGroup]] = None) =
     {
         // TODO: Consider whether this should return view or vector
         handleView().flatMap

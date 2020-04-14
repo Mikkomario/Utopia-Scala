@@ -39,7 +39,7 @@ class ActorLoop(private val handler: ActorHandler, val apsRange: Range = 15 to 6
 	/**
 	  * Calls act(...) of all associated Actors
 	  */
-	override protected def runOnce() =
+	override def runOnce() =
 	{
 		val actStarted = Instant.now()
 		// MaxAPS may affect calculations so that the real time lapse is not used
@@ -53,5 +53,5 @@ class ActorLoop(private val handler: ActorHandler, val apsRange: Range = 15 to 6
 	/**
 	  * The time between the end of the current run and the start of the next one
 	  */
-	override protected def nextWaitTarget = Until(lastActStarted + minInterval)
+	override def nextWaitTarget = Until(lastActStarted + minInterval)
 }

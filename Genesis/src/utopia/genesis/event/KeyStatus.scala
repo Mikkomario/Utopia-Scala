@@ -163,7 +163,7 @@ case class KeyStatus private(private val status: Map[Int, Set[KeyLocation]])
             if (oldLocations.size > 1)
                 new KeyStatus(status + (index -> oldLocations.filterNot { _ == location }))
             else
-                new KeyStatus(status.filterKeys { _ != index })
+                new KeyStatus(status - index)
         }
     }
     
@@ -172,14 +172,14 @@ case class KeyStatus private(private val status: Map[Int, Set[KeyLocation]])
       * @param location Target key location (default = standard)
       * @return A copy of this key status with specified key down
       */
-    def withKeyDown(index: Int, location: KeyLocation = KeyLocation.Standard) = withStatus(index, location, true)
+    def withKeyDown(index: Int, location: KeyLocation = KeyLocation.Standard) = withStatus(index, location, newStatus = true)
     
     /**
       * @param index Target key index
       * @param location Target key location (default = standard)
       * @return A copy of this key status with specified key released / up
       */
-    def withKeyReleased(index: Int, location: KeyLocation = KeyLocation.Standard) = withStatus(index, location, false)
+    def withKeyReleased(index: Int, location: KeyLocation = KeyLocation.Standard) = withStatus(index, location, newStatus = false)
     
     /**
       * @param previous Previous key status

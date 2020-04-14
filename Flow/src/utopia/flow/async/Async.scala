@@ -48,7 +48,7 @@ object Async
     	        WaitUtils.wait(interval, lock)
     	    }
     	}
-	    Unit
+	    ()
 	}
 	
 	/**

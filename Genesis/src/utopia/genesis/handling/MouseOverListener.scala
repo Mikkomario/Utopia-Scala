@@ -27,7 +27,7 @@ trait MouseOverListener extends MouseMoveListener with Actor
      * This method will be repeatedly called while the mouse cursor remains over a specified area
      * @param duration The duration since the last update
      */
-    def onMouseOver(duration: FiniteDuration)
+    def onMouseOver(duration: FiniteDuration): Unit
     
     /**
      * This method is used for determining whether a specified coordinate is considered to be

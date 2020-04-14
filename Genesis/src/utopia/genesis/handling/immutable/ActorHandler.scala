@@ -2,7 +2,6 @@ package utopia.genesis.handling.immutable
 
 import utopia.genesis.handling
 import utopia.genesis.handling.Actor
-import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.{Handleable, Handler}
 
 object ActorHandler
@@ -17,7 +16,7 @@ object ActorHandler
 	  * @param parent Parent handleable (default = None)
 	  * @return A new handler with specified 'actors', dependent from 'Parent'
 	  */
-	def apply(actors: TraversableOnce[Actor], parent: Option[Handleable] = None) = new ActorHandler(actors)
+	def apply(actors: IterableOnce[Actor], parent: Option[Handleable] = None) = new ActorHandler(actors)
 	
 	/**
 	  * @param actor A single actor
@@ -37,5 +36,5 @@ object ActorHandler
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
-class ActorHandler(initialElements: TraversableOnce[Actor] = Vector()) extends
+class ActorHandler(initialElements: IterableOnce[Actor] = Vector()) extends
 	Handler[Actor](initialElements) with handling.ActorHandler with Handleable

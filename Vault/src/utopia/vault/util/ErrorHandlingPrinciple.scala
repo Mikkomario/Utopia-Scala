@@ -19,7 +19,7 @@ object ErrorHandlingPrinciple
 	/**
 	  * Ignores all errors silently, which may cause unpredictable behavior
 	  */
-	case object Ignore extends ErrorHandlingPrinciple { def handle(error: Throwable) = Unit }
+	case object Ignore extends ErrorHandlingPrinciple { def handle(error: Throwable) = () }
 	
 	/**
 	  * Throws all errors, which is likely to cause the program to crash

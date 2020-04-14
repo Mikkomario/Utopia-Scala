@@ -45,7 +45,7 @@ object Request extends FromModelFactory[Request]
  */
 class Request(val method: Method, val targetUrl: String, val path: Option[Path] = None, 
         val parameters: Model[Constant] = Model(Vector()), val headers: Headers = Headers(), 
-        val body: Seq[StreamedBody] = Vector(), rawCookies: Traversable[Cookie] = Vector())
+        val body: Seq[StreamedBody] = Vector(), rawCookies: Iterable[Cookie] = Vector())
 {
     // ATTRIBUTES    ---------------------------
     
@@ -72,7 +72,7 @@ class Request(val method: Method, val targetUrl: String, val path: Option[Path] 
         if (headers.nonEmpty)
             sb ++= s", headers=$headers"
         if (cookies.nonEmpty)
-            sb ++= s", cookies: ${ Model.fromMap(cookies.mapValues { _.toModel }) }"
+            sb ++= s", cookies: ${ Model.fromMap(cookies.view.mapValues { _.toModel }.toMap) }"
         if (body.nonEmpty)
         {
             sb ++= " with a body"

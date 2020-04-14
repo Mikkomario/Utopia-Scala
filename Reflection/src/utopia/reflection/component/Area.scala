@@ -17,10 +17,10 @@ trait Area
     // ABSTRACT    ------------------------
     
     def position: Point
-    def position_=(p: Point)
+    def position_=(p: Point): Unit
     
     def size: Size
-    def size_=(s: Size)
+    def size_=(s: Size): Unit
     
     
     // COMPUTED    -----------------------

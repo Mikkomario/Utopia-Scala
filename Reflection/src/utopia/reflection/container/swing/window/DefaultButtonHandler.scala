@@ -27,7 +27,7 @@ object DefaultButtonHandler
   * @param defaultButton The button that will be triggered on enter
   * @param allButtons All buttons in a window
   */
-class DefaultButtonHandler(val defaultButton: ButtonLike, val allButtons: Traversable[ButtonLike])(
+class DefaultButtonHandler(val defaultButton: ButtonLike, val allButtons: Iterable[ButtonLike])(
 	triggerCondition: => Boolean) extends KeyStateListener
 {
 	override def parent = None

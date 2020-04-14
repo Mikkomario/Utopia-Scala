@@ -90,9 +90,9 @@ class Switch(val targetWidth: StackLength, val color: Color, actorHandler: Actor
 	
 	override def drawable = label
 	
-	override def updateLayout() = Unit
+	override def updateLayout() = ()
 	
-	override def resetCachedSize() = Unit
+	override def resetCachedSize() = ()
 	
 	
 	// NESTED CLASSES	-------------

@@ -9,7 +9,7 @@ object ActorHandler
       * @param actors Initial actors in the new handler
       * @return A new handler with specified actors
       */
-    def apply(actors: TraversableOnce[handling.Actor] = Vector()) = new ActorHandler(actors)
+    def apply(actors: IterableOnce[handling.Actor] = Vector()) = new ActorHandler(actors)
     
     /**
       * @param actor The initial actor
@@ -29,4 +29,4 @@ object ActorHandler
  * @author Mikko Hilpinen
  * @since 23.12.2016
  */
-class ActorHandler(initialElements: TraversableOnce[handling.Actor]) extends DeepHandler[handling.Actor](initialElements) with handling.ActorHandler
+class ActorHandler(initialElements: IterableOnce[handling.Actor]) extends DeepHandler[handling.Actor](initialElements) with handling.ActorHandler

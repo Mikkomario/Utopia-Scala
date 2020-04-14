@@ -43,7 +43,7 @@ object Stack
       * @tparam C The type of items in the stack
       * @return A new stack
       */
-    def withItems[C <: AwtStackable](items: TraversableOnce[C], direction: Axis2D, margin: StackLength = defaultMargin,
+    def withItems[C <: AwtStackable](items: IterableOnce[C], direction: Axis2D, margin: StackLength = defaultMargin,
                                      cap: StackLength = defaultCap, layout: StackLayout = Fit) =
     {
         val stack = new Stack[C](direction, margin, cap, layout)
@@ -82,7 +82,7 @@ object Stack
       * @tparam C The type of items in this stack
       * @return A new stack
       */
-    def rowWithItems[C <: AwtStackable](items: TraversableOnce[C], margin: StackLength = defaultMargin,
+    def rowWithItems[C <: AwtStackable](items: IterableOnce[C], margin: StackLength = defaultMargin,
                                         cap: StackLength = defaultCap, layout: StackLayout = Fit) =
         withItems(items, X, margin, cap, layout)
     
@@ -95,7 +95,7 @@ object Stack
       * @tparam C The type of items in this stack
       * @return A new stack
       */
-    def columnWithItems[C <: AwtStackable](items: TraversableOnce[C], margin: StackLength = defaultMargin,
+    def columnWithItems[C <: AwtStackable](items: IterableOnce[C], margin: StackLength = defaultMargin,
                                            cap: StackLength = defaultCap, layout: StackLayout = Fit) =
         withItems(items, Y, margin, cap, layout)
     

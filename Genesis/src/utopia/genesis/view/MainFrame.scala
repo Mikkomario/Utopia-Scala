@@ -96,7 +96,7 @@ class MainFrame(initialContent: Component, val originalSize: Size, title: String
      */
     def display() = setVisible(true)
     
-    private def updateContentSize()
+    private def updateContentSize() =
     {
         val insets = getInsets
         val actualSize = (Size of getSize()) - (Size of insets)
@@ -134,11 +134,11 @@ class MainFrame(initialContent: Component, val originalSize: Size, title: String
         }
     }
     
-    private def setPadding(size: Dimension, directions: String*)
+    private def setPadding(size: Dimension, directions: String*) = 
     {
         // Removes any padding that is not set
         paddings.foreach { case (dir, padding) => if (!directions.contains(dir)) remove(padding) }
-        paddings = paddings.filterKeys { directions.contains(_) }
+        paddings = paddings.view.filterKeys { directions.contains(_) }.toMap
         
         // Modifies / adds the paddings
         for (direction <- directions)

@@ -105,7 +105,7 @@ private class ContentUpdateLoop(val target: Refreshable[Vector[Int]]) extends Lo
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def runOnce() =
+	override def runOnce() =
 	{
 		val turnAround =
 		{
@@ -140,5 +140,5 @@ private class ContentUpdateLoop(val target: Refreshable[Vector[Int]]) extends Lo
 			nextWait = nextWait * 0.9
 	}
 	
-	override protected def nextWaitTarget = WaitTarget.WaitDuration(nextWait)
+	override def nextWaitTarget = WaitTarget.WaitDuration(nextWait)
 }

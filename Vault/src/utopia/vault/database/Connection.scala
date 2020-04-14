@@ -16,9 +16,11 @@ import utopia.flow.datastructure.immutable.Model
 import utopia.flow.datastructure.immutable.Constant
 
 import scala.collection.immutable.HashSet
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import utopia.flow.generic.IntType
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.AutoClose._
 import utopia.vault.model.immutable.{Result, Row, Table}
 import utopia.vault.sql.{Limit, Offset, SqlSegment}
 
@@ -51,25 +53,14 @@ object Connection
      * after the operation completes, even in error situations. No errors are catched though
      * @param f The function that is performed and which uses a database connection
      */
-    def doTransaction[T](f: Connection => T) = 
-    {
-        val connection = new Connection()
-        try 
-        {
-            f(connection)
-        }
-        finally
-        {
-            connection.close()
-        }
-    }
+    def doTransaction[T](f: Connection => T) = new Connection().consume(f)
     
     /**
      * Creates a temporary database connection for a specific operation. The connection is closed 
      * after the operation completes. Any errors are catched and the resulting try reflects the 
      * success / failure state of the operation
      */
-    def tryTransaction[T](f: Connection => T) = doTransaction(connection => { Try(f(connection)) })
+    def tryTransaction[T](f: Connection => T) = Try { doTransaction(f) }
     
     /**
       * Modifies the settings used in database connections
@@ -163,36 +154,35 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
             Result.empty
         else 
         {
-            var statement: Option[PreparedStatement] = None
-            var results: Option[ResultSet] = None
-            try
+            Try
             {
                 // Creates the statement
-                statement = Some(connection.prepareStatement(sql,
-                        if (returnGeneratedKeys) Statement.RETURN_GENERATED_KEYS else Statement.NO_GENERATED_KEYS))
-                
-                // Inserts provided values
-                setValues(statement.get, values)
-                
-                // Executes the statement and retrieves the result
-                val foundResult = statement.get.execute()
-                if (foundResult)
-                    results = Some(statement.get.getResultSet)
-                
-                // Parses data out of the result
-                // May skip some data in case it is not requested
-                Result(if (selectedTables.isEmpty || results.isEmpty) Vector() else rowsFromResult(results.get, selectedTables),
-                    if (returnGeneratedKeys) generatedKeysFromResult(statement.get, selectedTables) else Vector(),
-                    if (foundResult) 0 else statement.get.getUpdateCount)
-            }
-            catch
+                connection.prepareStatement(sql,
+                    if (returnGeneratedKeys) Statement.RETURN_GENERATED_KEYS else Statement.NO_GENERATED_KEYS).consume { statement =>
+        
+                    // Inserts provided values
+                    setValues(statement, values)
+        
+                    // Executes the statement and retrieves the result (if available)
+                    val foundResult = statement.execute()
+                    val generatedKeys = if (returnGeneratedKeys) generatedKeysFromResult(statement, selectedTables) else Vector()
+                    if (foundResult)
+                    {
+                        statement.getResultSet.consume { results =>
+                            // Parses data out of the result
+                            // May skip some data in case it is not requested
+                            Result(if (selectedTables.isEmpty) Vector() else rowsFromResult(results, selectedTables),
+                                generatedKeys, statement.getUpdateCount)
+                        }
+                    }
+                    else
+                        Result(Vector(), generatedKeys) // Even when no results are found, an empty result is returned
+                }
+            } match
             {
-                case e: SQLException => throw new DBException(s"DB query failed.\nSql: $sql\nValues:[${values.mkString(", ")}]", e)
-            }
-            finally
-            {
-                results.foreach { _.close() }
-                statement.foreach { _.close() }
+                case Success(result) => result
+                case Failure(error) => throw new DBException(
+                    s"DB query failed.\nSql: $sql\nValues:[${values.mkString(", ")}]", error)
             }
         }
     }
@@ -205,7 +195,8 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      * @param statement a (select) statement. <b>Must not include limit or offset</b>
      * @param operation Operation performed for each row
      */
-    def foreach(statement: SqlSegment)(operation: Row => Unit) = readInParts(statement, _.foreach(operation))
+    def foreach(statement: SqlSegment)(operation: Row => Unit) = readInParts(statement){
+        _.foreach(operation) }
     
     /**
      * Maps read rows and reduces them into a single value. This should be used when handling queries which may
@@ -219,14 +210,13 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     def mapReduce[A](statement: SqlSegment)(map: Row => A)(reduce: (A, A) => A) =
     {
         var currentResult: Option[A] = None
-        readInParts(statement, rows =>
-        {
+        readInParts(statement) { rows =>
             if (rows.nonEmpty)
             {
                 val result = rows.map(map).reduce(reduce)
                 currentResult = Some(currentResult.map { reduce(_, result) }.getOrElse(result))
             }
-        })
+        }
         currentResult
     }
     
@@ -239,18 +229,17 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      * @tparam A Type of map result
      * @return Reduction result. None if no data was read.
      */
-    def flatMapReduce[A](statement: SqlSegment)(map: Row => TraversableOnce[A])(reduce: (A, A) => A) =
+    def flatMapReduce[A](statement: SqlSegment)(map: Row => IterableOnce[A])(reduce: (A, A) => A) =
     {
         var currentResult: Option[A] = None
-        readInParts(statement, rows =>
-        {
+        readInParts(statement) { rows =>
             val mapped = rows.flatMap(map)
             if (mapped.nonEmpty)
             {
                 val result = mapped.reduce(reduce)
                 currentResult = Some(currentResult.map { reduce(_, result) }.getOrElse(result))
             }
-        })
+        }
         currentResult
     }
     
@@ -265,7 +254,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     def fold[A](statement: SqlSegment)(start: A)(f: (A, Row) => A) =
     {
         var currentResult = start
-        readInParts(statement, rows => currentResult = rows.foldLeft(currentResult)(f))
+        readInParts(statement) { rows => currentResult = rows.foldLeft(currentResult)(f) }
         currentResult
     }
     
@@ -279,53 +268,41 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      */
     @throws(classOf[EnvironmentNotSetupException])
     @throws(classOf[NoConnectionException])
-    def open()
+    def open() =
     {
         // Only opens a new connection if there is no open connection available
         if (!isOpen)
         {   
             // Database name must be specified at this point
             if (dbName.isEmpty)
-            {
                 throw NoConnectionException("Database name hasn't been specified")
-            }
             
-            try
+            Try
             {
                 // Sets up the driver
                 if (Connection.settings.driver.isDefined && Connection.driver.isEmpty)
                 {
                     Connection.driver = Some(
-                            Class.forName(Connection.settings.driver.get).newInstance())
+                        Class.forName(Connection.settings.driver.get).newInstance())
                 }
-                
+    
                 // Instantiates the connection
                 _connection = Some(DriverManager.getConnection(
-                        Connection.settings.connectionTarget + dbName.get + Connection.settings.charsetString,
-                        Connection.settings.user, Connection.settings.password))
-            }
-            catch 
-            {
-                case e: Exception => throw NoConnectionException(
-                        s"Failed to open a database connection with settings ${Connection.settings} and database '$dbName'", e)
-            }
+                    Connection.settings.connectionTarget + dbName.get + Connection.settings.charsetString,
+                    Connection.settings.user, Connection.settings.password))
+            }.failure.foreach { e => throw NoConnectionException(
+                s"Failed to open a database connection with settings ${Connection.settings} and database '$dbName'", e) }
         }
     }
     
     /**
      * Closes this database connection. This should be called before the connection is discarded
      */
-    override def close()
+    override def close() =
     {
-        try
-        {
-            _connection.foreach { _.close() }
-            _connection = None
-        }
-        catch 
-        {
-            case _: Exception => // Exceptions here are ignored
-        }
+        // Exceptions during closing are ignored
+        Try { _connection.foreach { _.close() } }
+        _connection = None
     }
     
     /**
@@ -334,22 +311,11 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     @throws(classOf[EnvironmentNotSetupException])
     @throws(classOf[NoConnectionException])
     @throws(classOf[SQLException])
-    def execute(sql: String) = 
+    def execute(sql: String): Unit =
     {
         // Empty statements are not executed
-        if (!sql.isEmpty)
-        {
-            var statement: Option[Statement] = None
-            try
-            {
-                statement = Some(connection.createStatement())
-                statement.foreach { _.executeUpdate(sql) }
-            }
-            finally
-            {
-                statement.foreach { _.close() }
-            }
-        }
+        if (sql.nonEmpty)
+            connection.createStatement().consume { _.executeUpdate(sql) }
     }
     
     /**
@@ -369,49 +335,38 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     {
         // Empty statements are not executed
         if (sql.isEmpty)
-        {
             Vector[Map[String, String]]()
-        }
         else 
         {
-            var statement: Option[PreparedStatement] = None
-            var results: Option[ResultSet] = None
-            try
-            {
-                // Creates the statement
-                statement = Some(connection.prepareStatement(sql))
-                
+            // Creates the statement
+            connection.prepareStatement(sql).consume { statement =>
                 // Inserts provided values
-                setValues(statement.get, values)
-                
+                setValues(statement, values)
+    
                 // Executes the statement and retrieves the result
-                results = Some(statement.get.executeQuery())
-                val meta = results.get.getMetaData
-                
-                val columnIndices = Vector.range(1, meta.getColumnCount + 1).map { index => 
+                statement.executeQuery().consume { results =>
+                    val meta = results.getMetaData
+    
+                    val columnIndices = Vector.range(1, meta.getColumnCount + 1).map { index =>
                         (meta.getColumnName(index), index) }
-                
-                // Parses data out of the result
-                val buffer = Vector.newBuilder[Map[String, String]]
-                while (results.get.next())
-                {
-                    buffer += columnIndices.flatMap { case (name, index) => 
-                            stringFromResult(results.get, index).map { (name, _) } }.toMap
+    
+                    // Parses data out of the result
+                    val buffer = Vector.newBuilder[Map[String, String]]
+                    while (results.next())
+                    {
+                        buffer += columnIndices.flatMap { case (name, index) =>
+                            stringFromResult(results, index).map { (name, _) } }.toMap
+                    }
+    
+                    buffer.result()
                 }
-                
-                buffer.result()
-            }
-            finally
-            {
-                results.foreach { _.close() }
-                statement.foreach { _.close() }
             }
         }
     }
     
     private def printIfDebugging(message: => String) = if (Connection.settings.debugPrintsEnabled) println(message)
     
-    private def readInParts(statement: SqlSegment, operation: Vector[Row] => Unit) =
+    private def readInParts(statement: SqlSegment)(operation: Vector[Row] => Unit) =
     {
         val rowsPerIteration = Connection.settings.maximumAmountOfRowsCached
         var rowsRead = 0
@@ -428,14 +383,12 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     
     private def setValues(statement: PreparedStatement, values: Seq[Value]) = 
     {
-        values.indices.foreach
-        {
-            i =>
-                val conversionResult = Connection.sqlValueConverter(values(i))
-                if (conversionResult.isDefined)
-                    statement.setObject(i + 1, conversionResult.get._1, conversionResult.get._2)
-                else
-                    statement.setNull(i + 1, Types.NULL)
+        values.indices.foreach { i =>
+            val conversionResult = Connection.sqlValueConverter(values(i))
+            if (conversionResult.isDefined)
+                statement.setObject(i + 1, conversionResult.get._1, conversionResult.get._2)
+            else
+                statement.setNull(i + 1, Types.NULL)
         }
     }
     
@@ -462,18 +415,18 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
             // Reads the object data from each row, parses them into constants and creates a model 
             // The models are mapped to each table separately
             // NB: view.force is added in order to create a concrete map
-            rowBuffer += Row(columnIndices.mapValues { data =>
+            rowBuffer += Row(columnIndices.view.mapValues { data =>
                 Model.withConstants(data.map { case (column, sqlType, index) => Constant(column.name,
-                Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) }) }.view.force)
+                Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) }) }.toMap)
         }
         
         rowBuffer.result()
     }
     
-    private def generatedKeysFromResult(statement: Statement, tables: Traversable[Table]) = 
+    private def generatedKeysFromResult(statement: Statement, tables: IterableOnce[Table]) =
     {
         // Retrieves keys as ints if all of the tables (that use indexing) use int as key type
-        val useInt = tables.forall { _.primaryColumn.forall { _.dataType == IntType } }
+        val useInt = tables.iterator.forall { _.primaryColumn.forall { _.dataType == IntType } }
         val results = statement.getGeneratedKeys
         val keyBuffer = Vector.newBuilder[Value]
         

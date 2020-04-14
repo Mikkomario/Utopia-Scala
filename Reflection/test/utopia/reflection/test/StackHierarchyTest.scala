@@ -48,7 +48,7 @@ object StackHierarchyTest extends App
         
         // IMPLEMENTED  -----------------
         
-        override def updateLayout() = Unit
+        override def updateLayout() = ()
     
         override def calculatedStackSize =
         {

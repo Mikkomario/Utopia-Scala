@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="utopia-inception">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_inception</output-path>
+    <root id="archive" name="utopia-inception.jar">
+      <element id="module-output" name="Inception" />
+      <element id="module-source" name="Inception" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/Inception/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>

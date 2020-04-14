@@ -62,7 +62,7 @@ trait MultiStackContainer[C <: Stackable] extends MultiContainer[C] with StackCo
 	 * Replaces current components with new ones
 	 * @param newComponents New components for this container
 	 */
-	def replace(newComponents: Traversable[C]) =
+	def replace(newComponents: Iterable[C]) =
 	{
 		replaceWithoutRevalidating(newComponents)
 		
@@ -75,7 +75,7 @@ trait MultiStackContainer[C <: Stackable] extends MultiContainer[C] with StackCo
 	 * items properly before revalidated, however
 	 * @param newComponents New components for this container
 	 */
-	def replaceWithoutRevalidating(newComponents: Traversable[C]) =
+	def replaceWithoutRevalidating(newComponents: Iterable[C]) =
 	{
 		// Removes all existing components, unregisters only those not present in new set
 		val remainingComponentsBuilder = new VectorBuilder[C]

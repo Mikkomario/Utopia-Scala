@@ -7,10 +7,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="scala-sdk-2.12.8" level="application" />
     <orderEntry type="module" module-name="Access" />
     <orderEntry type="module" module-name="Flow" />
     <orderEntry type="module" module-name="Nexus" />
     <orderEntry type="library" name="servlet-api" level="project" />
+    <orderEntry type="library" name="scala-sdk-2.13.1" level="application" />
   </component>
 </module>

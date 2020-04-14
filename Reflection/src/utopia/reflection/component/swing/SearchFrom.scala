@@ -267,7 +267,7 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 			else
 			{
 				val searchWords = currentSearchString.words.map { _.toLowerCase }
-				currentOptions.filterKeys { k =>
+				currentOptions.view.filterKeys { k =>
 					val lower = k.toLowerCase
 					searchWords.forall(lower.contains)
 				}.values.toVector

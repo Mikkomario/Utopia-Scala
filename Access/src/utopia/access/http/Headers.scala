@@ -1,5 +1,6 @@
 package utopia.access.http
 
+import scala.math.Ordering.Double.TotalOrdering
 import scala.collection.immutable.Map
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.datastructure.immutable.Model
@@ -357,7 +358,7 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      */
     def getAcceptedCharset(options: Seq[Charset]) = 
     {
-        val accepted = acceptedCharsets.filterKeys(options.contains)
+        val accepted = acceptedCharsets.view.filterKeys(options.contains)
         if (accepted.isEmpty)
             None
         else
@@ -368,7 +369,7 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * @param options Available language options
      * @return The most preferred language from the specified options. None if none of them is accepted.
      */
-    def getAcceptedLanguage(options: Seq[String]) = acceptedLanguages.filterKeys { lang =>
+    def getAcceptedLanguage(options: Seq[String]) = acceptedLanguages.view.filterKeys { lang =>
         options.exists { _ ~== lang } }.maxByOption { _._2 }.map { _._1 }
     
     /**

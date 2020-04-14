@@ -16,7 +16,7 @@ trait Resource[-C <: Context]
     /**
      * The methods this resource supports
      */
-    def allowedMethods: Traversable[Method]
+    def allowedMethods: Iterable[Method]
     
     /**
      * Performs an operation on this resource and forms a response. The resource may expect that 

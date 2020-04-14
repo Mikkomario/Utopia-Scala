@@ -48,8 +48,6 @@ trait Handler[A <: Handleable] extends Iterable[A]
 	
 	override def foreach[U](f: A => U) = aliveElements.foreach(f)
 	
-	override def seq = aliveElements
-	
 	override def isEmpty = aliveElements.isEmpty
 	
 	override def iterator = aliveElements.iterator
@@ -94,7 +92,7 @@ trait Handler[A <: Handleable] extends Iterable[A]
 	  * @param operation An operation for a single element that also returns whether the next element should be accepted
 	  * @param allowSkip Whether target element's desire to not be handled should be respected
 	  */
-	def handleWhile(operation: A => Boolean, allowSkip: Boolean = true) { handleView(allowSkip).find { !operation(_) } }
+	def handleWhile(operation: A => Boolean, allowSkip: Boolean = true): Unit = { handleView(allowSkip).find { !operation(_) } }
 	
 	/**
 	  * Performs an operation on the target items until a suitable result is found

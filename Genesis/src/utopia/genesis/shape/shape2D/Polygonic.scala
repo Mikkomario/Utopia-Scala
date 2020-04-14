@@ -2,6 +2,7 @@ package utopia.genesis.shape.shape2D
 
 import java.awt.Shape
 
+import scala.math.Ordering.Double.TotalOrdering
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.RotationDirection.Clockwise
 import utopia.genesis.shape.{Rotation, Vector3D}

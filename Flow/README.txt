@@ -147,7 +147,7 @@ v1.6  -------------------------------------
 
         ModelDeclaration now contains validate(Model) method which makes sure specified model matches the declaration.
 
-        CollectionExtensions now contains .bestMatch(...) function for traversable items. This allows advanced searching
+        CollectionExtensions now contains .bestMatch(...) function for Iterable items. This allows advanced searching
         based on hierarchical conditions.
 
         withTimeout(FiniteDuration) and resultWithTimeout(FiniteDuration) were added through AsyncExtensions to Future.
@@ -213,7 +213,7 @@ v1.5  ------------------------------------
             - allContent added to TreeLike
 
         AsyncExtensions updated
-            - Traversable items containing futures can now be treated like a future themselves with
+            - Iterable items containing futures can now be treated like a future themselves with
             waitFor, waitForSuccesses, future and futureSuccesses
             - Additional support for Future[Try[...]]
 

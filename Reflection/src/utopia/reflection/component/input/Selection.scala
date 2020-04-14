@@ -12,7 +12,7 @@ object Selection
 		def isDefined = s.selected.isDefined
 	}
 	
-	implicit class MultiSelect(val s: Selection[_ <: Traversable[_], _]) extends AnyVal
+	implicit class MultiSelect(val s: Selection[_ <: Iterable[_], _]) extends AnyVal
 	{
 		/**
 		  * @return Whether there is currently an item selected

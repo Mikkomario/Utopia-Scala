@@ -34,7 +34,7 @@ trait ContentManager[A, C <: Refreshable[A]] extends RefreshableWithPointer[Vect
 	  * Removes unnecessary displays
 	  * @param dropped The displays to be dropped
 	  */
-	protected def dropDisplays(dropped: Vector[C])
+	protected def dropDisplays(dropped: Vector[C]): Unit
 	
 	/**
 	  * This method will be called at the end of each refresh

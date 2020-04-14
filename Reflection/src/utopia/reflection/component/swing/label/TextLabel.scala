@@ -101,7 +101,7 @@ class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColo
 	
 	override def toString = s"Label($text)"
 	
-	override def updateLayout() = Unit
+	override def updateLayout() = ()
 	
 	
 	// OTHER	----------------------

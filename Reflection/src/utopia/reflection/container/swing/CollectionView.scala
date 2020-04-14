@@ -210,7 +210,7 @@ class CollectionView[C <: AwtStackable](rowDirection: Direction2D, initialRowSpl
 				layout = insideRowLayout)
 		}
 		
-		override def resetCachedSize() = Unit
+		override def resetCachedSize() = ()
 		
 		override def stackId = hashCode()
 		

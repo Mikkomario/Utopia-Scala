@@ -22,7 +22,7 @@ object HandlerRelay
       * @param handlers Handlers
       * @return A relay with specified handlers
       */
-    def apply(handlers: TraversableOnce[AnyHandler]) = new HandlerRelay(handlers)
+    def apply(handlers: IterableOnce[AnyHandler]) = new HandlerRelay(handlers)
     
     /**
       * @param handler A handler
@@ -45,7 +45,7 @@ object HandlerRelay
  * @author Mikko Hilpinen
  * @since 22.10.2016
  */
-class HandlerRelay(initialHandlers: TraversableOnce[AnyHandler])
+class HandlerRelay(initialHandlers: IterableOnce[AnyHandler])
 {
     // TYPES    -------------------
     
@@ -54,7 +54,7 @@ class HandlerRelay(initialHandlers: TraversableOnce[AnyHandler])
     
     // ATTRIBUTES    --------------
     
-    private var _handlers: Map[HandlerType, AnyHandler] = initialHandlers.map { h => h.handlerType -> h }.toMap
+    private var _handlers: Map[HandlerType, AnyHandler] = initialHandlers.iterator.map { h => h.handlerType -> h }.toMap
     
     /**
       * @return A mapping of handlers, each tied to their handler type
@@ -80,7 +80,7 @@ class HandlerRelay(initialHandlers: TraversableOnce[AnyHandler])
      * Adds a number of elements to suitable handlers in this relay
      * @param elements The elements to be added
      */
-    def ++=(elements: TraversableOnce[Handleable]) = elements.foreach(+=)
+    def ++=(elements: IterableOnce[Handleable]) = elements.iterator.foreach(+=)
     
     /**
      * Adds two or more elements to suitable handlers in this relay
@@ -95,7 +95,7 @@ class HandlerRelay(initialHandlers: TraversableOnce[AnyHandler])
     /**
      * Removes multiple elements from each handler in this relay
      */
-    def --=(elements: Traversable[Handleable]) = handlers.foreach { _ --= elements }
+    def --=(elements: Iterable[Handleable]) = handlers.foreach { _ --= elements }
     
     /**
      * Removes two or more elements from the handlers in this relay
@@ -117,12 +117,12 @@ class HandlerRelay(initialHandlers: TraversableOnce[AnyHandler])
       */
     def register(handler: AnyHandler) = _handlers += handler.handlerType -> handler
     
-    def register(handlers: TraversableOnce[AnyHandler]) = _handlers ++= handlers.map { h => h.handlerType -> h }
+    def register(handlers: IterableOnce[AnyHandler]) = _handlers ++= handlers.iterator.map { h => h.handlerType -> h }
     
     def register(first: AnyHandler, second: AnyHandler, more: AnyHandler*): Unit = register(Vector(first, second) ++ more)
     
     def remove(handler: AnyHandler) = _handlers = _handlers.filterNot { case (_, existing) => existing == handler }
     
-    def remove(handlers: Traversable[AnyHandler]) = _handlers = _handlers.filterNot {
+    def remove(handlers: Iterable[AnyHandler]) = _handlers = _handlers.filterNot {
             case (_, existing) => handlers.exists { _ == existing } }
 }

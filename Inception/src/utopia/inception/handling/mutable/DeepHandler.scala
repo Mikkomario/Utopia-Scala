@@ -5,7 +5,7 @@ import utopia.inception.handling.HandlerType
 
 object DeepHandler
 {
-	def apply[A <: handling.Handleable](hType: HandlerType, elements: TraversableOnce[A] = Vector()) = new DeepHandler(elements)
+	def apply[A <: handling.Handleable](hType: HandlerType, elements: IterableOnce[A] = Vector()) = new DeepHandler(elements)
 	{
 		val handlerType = hType
 	}
@@ -17,7 +17,7 @@ object DeepHandler
   * @param initialElements The elements initially placed in this handler
   * @tparam A The type of object handled by this handler
   */
-abstract class DeepHandler[A <: handling.Handleable](initialElements: TraversableOnce[A])
+abstract class DeepHandler[A <: handling.Handleable](initialElements: IterableOnce[A])
 	extends Handler[A](initialElements) with Handleable with Killable
 {
 	// INITIAL CODE	----------------

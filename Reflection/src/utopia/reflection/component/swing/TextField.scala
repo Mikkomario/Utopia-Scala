@@ -303,7 +303,7 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 	
 	override protected def updateVisibility(visible: Boolean) = super[JWrapper].isVisible_=(visible)
 	
-	override def updateLayout() = Unit
+	override def updateLayout() = ()
 	
 	// Empty strings and strings with only whitespaces are treated as None
 	override def value =

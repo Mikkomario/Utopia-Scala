@@ -41,7 +41,7 @@ trait MultiLinkedStorableFactory[+Parent, Child] extends FromResultFactory[Paren
 		result.grouped(table, childFactory.table).toVector.flatMap { case (id, data) =>
 			val (myRow, childRows) = data
 			val model = myRow(table)
-			childRows.tryMap { row => childFactory(row) }.flatMap { children => apply(id, model, children) } match
+			childRows.tryMap[Child, Vector[Child]] { row => childFactory(row) }.flatMap { children => apply(id, model, children) } match
 			{
 				case Success(parent) => Some(parent)
 				case Failure(error) => ErrorHandling.modelParsePrinciple.handle(error); None

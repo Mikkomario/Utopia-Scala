@@ -10,7 +10,7 @@ object CollidableHandler
 	  * @param elements Elements for the handler
 	  * @return A new handler
 	  */
-	def apply(elements: TraversableOnce[Collidable] = Vector()) = new CollidableHandler(elements)
+	def apply(elements: IterableOnce[Collidable] = Vector()) = new CollidableHandler(elements)
 	
 	/**
 	  * @param element A single element for the handler
@@ -32,5 +32,5 @@ object CollidableHandler
   * @author Mikko Hilpinen
   * @since 18.4.2019, v1+
   */
-class CollidableHandler(initialElements: TraversableOnce[Collidable]) extends Handler[Collidable](initialElements)
+class CollidableHandler(initialElements: IterableOnce[Collidable]) extends Handler[Collidable](initialElements)
 	with handling.CollidableHandler
