@@ -35,5 +35,9 @@ object CollectionTest extends App
 	
 	assert(words.mapFirstWhere { _.startsWith("C") } { _.toUpperCase } == Vector("Apina", "Banaani", "CAR", "David"))
 	
+	val splitResult = words.splitToSegments(2)
+	assert(splitResult.size == 2)
+	assert(splitResult.forall { _.size == 2 })
+	
 	println("Success!")
 }

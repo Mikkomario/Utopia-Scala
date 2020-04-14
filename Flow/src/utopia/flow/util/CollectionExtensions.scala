@@ -3,7 +3,7 @@ package utopia.flow.util
 import scala.language.implicitConversions
 import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
 import scala.collection.generic.IsSeq
-import scala.collection.immutable.HashSet
+import scala.collection.immutable.{HashSet, VectorBuilder}
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -139,6 +139,32 @@ object CollectionExtensions
                     coll
                 else
                     buildFrom.fromSpecific(coll)(seqOps.iterator.take(index) ++ seqOps.iterator.drop(index + 1))
+            }
+        }
+    
+        /**
+          * Splits this collection into a number of smaller pieces. Preserves order.
+          * @param maxLength Maximum length of each segment
+          * @param buildFrom A build from (implicit)
+          * @return This sequence split into possibly larger number of smaller sequences
+          */
+        def splitToSegments(maxLength: Int)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Vector[Repr] = {
+            val seqOps = seq(coll)
+            if (seqOps.size <= maxLength)
+                Vector(buildFrom.fromSpecific(coll)(seqOps))
+            else
+            {
+                val factory = buildFrom.toFactory(coll)
+                val builder = new VectorBuilder[Repr]
+                val iter = seqOps.iterator
+                while (iter.hasNext)
+                {
+                    val segmentBuilder = factory.newBuilder
+                    iter.forNext(maxLength) { segmentBuilder += _ }
+                    builder += segmentBuilder.result()
+                }
+                
+                builder.result()
             }
         }
     }
@@ -577,6 +603,29 @@ object CollectionExtensions
             val ourPart = inBoth.map { k => k -> merge(m(k), another(k)) }.toMap
             
             myPart ++ theirPart ++ ourPart
+        }
+    }
+    
+    implicit class RichIterator[A](val i: Iterator[A]) extends AnyVal
+    {
+        /**
+          * Performs the specified operation for the next 'n' items. This will advance the iterator n-steps
+          * (although limited by number of available items)
+          * @param n The maximum number of iterations / items handled
+          * @param operation Operation called for each handled item
+          * @tparam U Arbitrary operation result type (not used)
+          * @return Whether the full 'n' items were handled. If false, the end of this iterator was reached.
+          */
+        def forNext[U](n: Int)(operation: A => U) =
+        {
+            var consumed = 0
+            while (i.hasNext && consumed < n)
+            {
+                operation(i.next())
+                consumed += 1
+            }
+            
+            consumed == n
         }
     }
     

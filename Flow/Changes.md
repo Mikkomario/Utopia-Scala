@@ -16,3 +16,8 @@
 - template.TreeLike
     - findWithPath(...)
     - filterWithPaths(...)
+- CollectionExtensions
+    - Seq
+        - splitToSegments(Int)
+    - Iterator
+        - forNext(Int)(...)
