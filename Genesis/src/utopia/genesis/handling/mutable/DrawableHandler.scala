@@ -12,7 +12,7 @@ object DrawableHandler
 	  * @param customizer A function that customizes drawers used by this handler (default = None = no customization)
 	  * @return A new handler
 	  */
-	def apply(elements: TraversableOnce[handling.Drawable] = Vector(), drawDepth: Int = DepthRange.default,
+	def apply(elements: IterableOnce[handling.Drawable] = Vector(), drawDepth: Int = DepthRange.default,
 			  customizer: Option[Drawer => Drawer] = None) = new DrawableHandler(elements, drawDepth, customizer)
 	
 	/**
@@ -33,7 +33,7 @@ object DrawableHandler
   * @param drawDepth The drawing depth of this handler
   * @param customizer A function for customizing drawers used by this handler. None means that no customizing is done
   */
-class DrawableHandler(initialElements: TraversableOnce[handling.Drawable], override val drawDepth: Int,
+class DrawableHandler(initialElements: IterableOnce[handling.Drawable], override val drawDepth: Int,
 					  val customizer: Option[Drawer => Drawer])
 	extends DeepHandler[handling.Drawable](initialElements) with handling.DrawableHandler
 {

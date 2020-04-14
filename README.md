@@ -1,10 +1,23 @@
 # Utopia
 *Makes programming easy while still letting you dive deep*
 
+## Requirements
+You will only need **Scala sdk v2.13** and **Java jdk 8** to use *Utopia*. Some specific modules may 
+require additional libraries but most of *Utopia* is built on Scala and Java source code.
+
+### Why Scala?
+Based on my personal programming experience, I've found Scala to be the most scalable and 
+flexible language and most suited for this kind of a generic framework and **core philosophy**.
+
+*Utopia* relies heavily on strong typing and generics and benefits greatly from implicits. 
+Based on my current experience, only Java, Scala and possibly Kotlin provide a suitable 
+foundation (although I haven't used Kotlin yet). *Utopia* started out as a Java project 
+but I've found Scala to work better in every area.
+
 ## Core Philosophy
 The main purpose of the Utopia library is two-fold:
-1) I want programming to be both easy and fast for you
-2) I want to allow you to operate on higher abstraction levels when you need it
+1) I want programming to be both **easy** and **fast** for you
+2) I want to allow you to operate on **higher abstraction levels** when you need it
 
 ### Why?
 Many libraries and frameworks **feel awesome when you first start to use them**.   
@@ -40,11 +53,17 @@ to the user. Due to their customizable nature, these tools can be used in variou
 Finally we have concrete implementations that are specific to the business case they exist in (this is what you 
 normally deal with when programming).
 
-In **Utopia**, I've made my best to provide you with these higher abstraction level solutions the way that's 
+The lower / more concrete you go on abstraction layers, the easier everything gets but the 
+less freedom you have. Working on very high abstraction layers if often more difficult and you 
+have to write a lot of code yourself. Working on lower abstraction layers if often straightforward 
+but you are limited to the built-in options.
+
+In *Utopia*, I've made my best to provide you with these higher abstraction level solutions the way that's 
 useful for you, while also acknowledging that you may come to a place where you wish to override some of my 
 implementations. Let's say you're not so happy about how a specific UI component performs, you can write your own and 
 replace my implementation with it - as long as you follow the very high level guidelines placed. The higher you want to 
-customize, the more you will need to write yourself - but when you want, you can!
+customize, the more you will need to write yourself - but when you want, you can! In other words, you're not locked out from the 
+higher abstraction layers when you need to edit them.
 
 ### Use of External Libraries
 This abstraction level concept is also why **I've opted to use as few external libraries as possible**.  
@@ -53,7 +72,7 @@ providing you with a easy-to-use foundation.
 
 For example, the JSON interface I've written is not very efficient. 
 If you wish to use a standardized JSON interface instead, that's completely possible. And If you wish to utilize that 
-with typeless values and other features offered by **Utopia**, you can do what I've done and write a similar interface 
+with typeless values and other features offered by *Utopia*, you can do what I've done and write a similar interface 
 yourself.
 
 The times I have opted to use external libraries (Utopia Disciple and Utopia Nexus for Tomcat), you can find out that 
@@ -65,7 +84,7 @@ Many people, especially early on, have criticized me for taking on such a projec
 However, I've found this library to be of very much practical use to me and I honestly think it can be a 
 blessing to you as well.
 
-Here's why you should and should not use **Utopia**.  
+Here's why you should and should not use *Utopia*.  
 
 **Pros:**
 - Utopia tools have greatly improved **my programming efficiency** in terms of **speed** and **code quality**. 
@@ -73,40 +92,40 @@ There is so much work you get to skip by utilizing these simple tools.
 - Usually when people **don't** use this library, they end up taking shortcuts that often lead to lower code quality. 
 It takes a great deal of discipline to take the "high road" when you're faced with your urgent business requirements 
 and when you're not specifically trying to create a scalable framework.
-- Using **Utopia** has made my job a lot **easier**, to the extent that I can forget many of the tools 
+- Using *Utopia* has made my job a lot **easier**, to the extent that I can forget many of the tools 
 I would otherwise need every day. For example, you don't really need to know SQL in order to use the **Vault** module 
 and operate with databases.
-- **Utopia** is designed to be relatively **beginner-friendly**. With Genesis, for example, you can create a visual test 
+- *Utopia* is designed to be relatively **beginner-friendly**. With Genesis, for example, you can create a visual test 
 program with just a few lines of code.
-- **Utopia** consists of a number of modules for different purposes and there's a **synergy effect** that takes 
-place between these modules. I would say that usually frameworks don't play together as well as **Utopia** does, 
+- *Utopia* consists of a number of modules for different purposes and there's a **synergy effect** that takes 
+place between these modules. I would say that usually frameworks don't play together as well as *Utopia* does, 
 mainly because they focus on a rather limited area and therefore can't share lay a new foundation for the other tools. 
 
 **Cons:** 
-- **Utopia will spoil you**. Once you get used to the privileges you've acquired by using **Utopia**, it feels 
+- **Utopia will spoil you**. Once you get used to the privileges you've acquired by using *Utopia*, it feels 
 quite bad to work with areas and languages where you don't have those features available.
-- At the moment I develop **Utopia** by myself. This means that everything takes time to develop. 
+- At the moment **I develop *Utopia* by myself**. This means that everything takes time to develop. 
 If you need a specific area covered or a feature developed you may contact me or **contribute**
     - I don't have a testing team or a quality assurance team to make sure everything works smoothly. 
     I test new features and fix the bugs as I encounter them.
     - In case I was to quit developing this library (not intending to), you would have to perform some updates yourself.
-- Historically, many **Utopia** modules have undergone **major changes** over time. When I learn new ways of doing things 
+- Historically, many *Utopia* modules have undergone **major changes** over time. When I learn new ways of doing things 
 and my skills develop, I often revisit and revision my old code. This means that if you wish to stay up-to-date with 
 the library, you will have to deal with some compile errors caused by changes in the library.
 - Your specific business case may have some requirements this library doesn't cover 
 (Eg. advanced information security or code efficiency in terms of speed). In these cases you should 
 consider either using another library or helping me overcome the issue.
-- At the time of writing, **Utopia** has very few resources in form of tutorials and instructions. I intend 
+- At the time of writing, *Utopia* has very few resources in form of tutorials and instructions. I intend 
 to remedy this in the near future and I would appreciate it if you would contact me for more information.
 
 One thing you should also consider is that **I've prioritized readability and ease-of-use over speed and memory 
 optimization**. I believe that, in general, our hardware will continue to advance at a much faster rate than our 
 programming capacity and skill. If you specifically need high-level performance and optimization to meet a specific 
-business need (Eg. big data analytics), I recommend you to rely less on **Utopia** tools in that area. In less 
+business need (Eg. big data analytics), I recommend you to rely less on *Utopia* tools in that area. In less 
 critical areas (performance-wise), I would recommend you to use these tools, however.
 
 ## High-Level Module Descriptions
-**Utopia** project consists of a number of modules. Below is a short description of the purpose of each module.
+*Utopia* project consists of a number of modules. Below is a short description of the purpose of each module.
 
 ### Utopia Flow
 *A foundation that makes everything run smoothly*  
@@ -203,7 +222,7 @@ You probably don't need to use **Conflict** in your normal business software, bu
 game or a physics-based software, this will most likely help you a lot in getting started.
 
 ## Module Hierarchy
-**Utopia** modules have following dependency-hierarchy. Modules lower at the list depend from those higher in the list.
+*Utopia* modules have following dependency-hierarchy. Modules lower at the list depend from those higher in the list.
 - Utopia Flow
     - Utopia Vault
     - Utopia Access
@@ -215,7 +234,7 @@ game or a physics-based software, this will most likely help you a lot in gettin
             - Utopia Reflection
             - Utopia Conflict
            
-Basically every other **Utopia** module is dependent from **Flow**. All http-related modules are dependent from 
+Basically every other *Utopia* module is dependent from **Flow**. All http-related modules are dependent from 
 **Access** and all 2D visual modules are dependent from **Inception** and **Genesis**.
 
 ## Main Features per Module

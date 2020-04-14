@@ -3,7 +3,7 @@ package utopia.vault.nosql.factory
 import utopia.vault.sql.Extensions._
 import utopia.flow.datastructure.immutable.Value
 import utopia.vault.database.Connection
-import utopia.vault.model.immutable.{Result, Row, Table}
+import utopia.vault.model.immutable.{Result, Table}
 import utopia.vault.sql.{Condition, Exists, JoinType, OrderBy, SelectAll, SqlTarget, Where}
 
 /**
@@ -68,7 +68,7 @@ trait FromResultFactory[+A]
 	  * @param connection DB Connection (implicit)
 	  * @return All items with specified row ids
 	  */
-	def withIds(ids: Traversable[Value], order: Option[OrderBy] = None)(implicit connection: Connection) =
+	def withIds(ids: IterableOnce[Value], order: Option[OrderBy] = None)(implicit connection: Connection) =
 	{
 		table.primaryColumn match
 		{

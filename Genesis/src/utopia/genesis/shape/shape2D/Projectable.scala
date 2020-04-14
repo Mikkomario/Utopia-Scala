@@ -1,5 +1,6 @@
 package utopia.genesis.shape.shape2D
 
+import scala.math.Ordering.Double.TotalOrdering
 import utopia.genesis.util.Extensions._
 import utopia.genesis.shape.Axis
 import utopia.genesis.shape.Vector3D

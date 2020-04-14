@@ -173,7 +173,7 @@ trait Stackable extends ComponentLike
 	  * in the main stack hierarchy.
 	  * @param newAttachmentStatus Whether this stackable instance is now connected to the main stack hierarchy
 	  */
-	def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean)
+	def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean): Unit
 	
 	
 	// COMPUTED	---------------------

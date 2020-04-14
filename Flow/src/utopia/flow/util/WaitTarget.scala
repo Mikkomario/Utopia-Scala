@@ -39,6 +39,11 @@ object WaitTarget
         
         def breakable: Until = if (breaksOnNotify) this else Until(time)
     }
+    
+    /**
+      * A zero length wait duration
+      */
+    val zero = WaitDuration(Duration.Zero)
 }
 
 /**
@@ -69,7 +74,7 @@ sealed trait WaitTarget
     /**
      * Whether this wait target has a maximum duration
      */
-    def isInfinite = targetTime.left.exists { !_.isFinite() }
+    def isInfinite = targetTime.left.exists { !_.isFinite }
     
     /**
      * Whether this wait target only stops when the lock is notified
@@ -172,10 +177,7 @@ sealed trait WaitTarget
      * Notifies a lock, possibly breaking any wait that is waiting on that lock. Unbreakable waits 
      * won't be affected.
      */
-    def notify(lock: AnyRef)
-    {
-        lock.synchronized { lock.notifyAll() }
-    }
+    def notify(lock: AnyRef) = lock.synchronized { lock.notifyAll() }
     
     /**
      * Creates a new wait instance based on this wait target

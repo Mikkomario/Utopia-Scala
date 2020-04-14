@@ -3,6 +3,8 @@ package utopia.genesis.color
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.color.RGBChannel._
 
+import scala.math.Ordering.Double.TotalOrdering
+
 /**
   * This trait represents a color with red, blue and green
   * @author Mikko Hilpinen
@@ -59,12 +61,12 @@ trait RGBLike[Repr <: RGBLike[Repr]]
 	/**
 	  * @return The color values of this RGB [0, 255] each
 	  */
-	def values = ratios.mapValues { r => (r * RGB.maxValue).toInt }
+	def values = ratios.view.mapValues { r => (r * RGB.maxValue).toInt }.toMap
 	
 	/**
 	  * @return An inverted version of this RGB (where black is white)
 	  */
-	def inverted = withRatios(ratios.mapValues { 1 - _ })
+	def inverted = withRatios(ratios.view.mapValues { 1 - _ }.toMap)
 	
 	/**
 	  * @return The top ratio of this color's channels [0, 1]
@@ -158,5 +160,5 @@ trait RGBLike[Repr <: RGBLike[Repr]]
 	  * @param f A mapping function for single rgb ratios
 	  * @return A copy of this color with mapped rgb ratios
 	  */
-	def mapRatios(f: Double => Double) = withRatios(ratios.mapValues(f))
+	def mapRatios(f: Double => Double) = withRatios(ratios.view.mapValues(f).toMap)
 }

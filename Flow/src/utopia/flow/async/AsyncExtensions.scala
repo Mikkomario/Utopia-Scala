@@ -2,7 +2,7 @@ package utopia.flow.async
 
 import utopia.flow.util.{SingleWait, WaitTarget}
 
-import scala.collection.generic.CanBuildFrom
+import scala.collection.Factory
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Try
@@ -124,54 +124,54 @@ object AsyncExtensions
 		def containsFailure = f.isCompleted && waitForResult().isFailure
 	}
 	
-	implicit class ManyFutures[A](val futures: TraversableOnce[Future[A]]) extends AnyVal
+	implicit class ManyFutures[A](val futures: IterableOnce[Future[A]]) extends AnyVal
 	{
 		/**
-		  * Waits until all of the futures inside this traversable item have completed
-		  * @param cbf A can build from
+		  * Waits until all of the futures inside this Iterable item have completed
+		  * @param factory A factory
 		  * @tparam C Resulting collection type
 		  * @return The results of the waiting (each item as a try)
 		  */
-		def waitFor[C]()(implicit cbf: CanBuildFrom[_, Try[A], C]) =
+		def waitFor[C]()(implicit factory: Factory[Try[A], C]) =
 		{
-			val buffer = cbf()
-			buffer ++= futures.map { _.waitFor() }
+			val buffer = factory.newBuilder
+			buffer ++= futures.iterator.map { _.waitFor() }
 			buffer.result()
 		}
 		
 		/**
-		  * Waits until all of the futures inside this traversable item have completed
-		  * @param cbf A can build from
+		  * Waits until all of the futures inside this Iterable item have completed
+		  * @param factory A factory
 		  * @tparam C Resulting collection type
 		  * @return The successful results of the waiting (no failures will be included)
 		  */
-		def waitForSuccesses[C]()(implicit cbf: CanBuildFrom[_, A, C]) =
+		def waitForSuccesses[C]()(implicit factory: Factory[A, C]) =
 		{
-			val buffer = cbf()
-			buffer ++= futures.flatMap { _.waitFor().toOption }
+			val buffer = factory.newBuilder
+			buffer ++= futures.iterator.flatMap { _.waitFor().toOption }
 			buffer.result()
 		}
 		
 		/**
 		  * @param context Execution context
-		  * @param cbf A can build from
+		  * @param factory A factory
 		  * @tparam C result collection type
 		  * @return A future of the completion of all of these items. Resulting collection contains all results wrapped in try
 		  */
-		def future[C](implicit context: ExecutionContext, cbf: CanBuildFrom[_, Try[A], C]): Future[C] = Future { waitFor() }
+		def future[C](implicit context: ExecutionContext, factory: Factory[Try[A], C]): Future[C] = Future { waitFor() }
 		
 		/**
 		  * @param context Execution context
-		  * @param cbf A can build from
+		  * @param factory A factory
 		  * @tparam C result collection type
 		  * @return A future of the completion of all of these items. Resulting collection contains only successful completions
 		  */
-		def futureSuccesses[C](implicit context: ExecutionContext, cbf: CanBuildFrom[_, A, C]): Future[C] = Future { waitForSuccesses() }
+		def futureSuccesses[C](implicit context: ExecutionContext, factory: Factory[A, C]): Future[C] = Future { waitForSuccesses() }
 		
 		/**
 		 * @param context Execution context
 		 * @return A future of the completion of all of these items. Will not check or return the results of those operations.
 		 */
-		def futureCompletion(implicit context: ExecutionContext) = Future { futures.foreach { _.waitFor() } }
+		def futureCompletion(implicit context: ExecutionContext) = Future { futures.iterator.foreach { _.waitFor() } }
 	}
 }

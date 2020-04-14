@@ -39,8 +39,8 @@ object Path
      */
     def parse(pathString: String) = 
     {
-        val path = Path(pathString.split("/").filterNot { _.isEmpty() })
-        if (path.parts.isEmpty) None else Some(path)
+        val newParts = pathString.split("/").filterNot { _.isEmpty() }
+        if (newParts.isEmpty) None else Some(Path(newParts.toVector))
     }
 }
 

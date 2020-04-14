@@ -283,7 +283,7 @@ trait InsetsLike[L, +S, +Repr]
      * @param axis Target axis
      * @return Total length of these insets along specified axis
      */
-    def along(axis: Axis2D) = amounts.filterKeys { _.axis == axis }.values.reduceOption(combine).getOrElse(makeZero)
+    def along(axis: Axis2D) = amounts.view.filterKeys { _.axis == axis }.values.reduceOption(combine).getOrElse(makeZero)
     
     /**
       * @param axis Target axis
@@ -311,7 +311,7 @@ trait InsetsLike[L, +S, +Repr]
       * @param axis Targeted axis
       * @return A copy of these insets with values only on the specified axis (Eg. for X-axis would only contain left and right)
       */
-    def onlyAxis(axis: Axis2D) = makeCopy(amounts.filterKeys { _.axis == axis })
+    def onlyAxis(axis: Axis2D) = makeCopy(amounts.view.filterKeys { _.axis == axis }.toMap)
     
     /**
       * @param axis Targeted axis
@@ -393,7 +393,8 @@ trait InsetsLike[L, +S, +Repr]
       * @param f Mapping function
       * @return A copy of these insets with mapped sides
       */
-    def mapSides(sides: TraversableOnce[Direction2D])(f: L => L) = makeCopy(amounts ++ sides.map { d => d -> f(apply(d)) })
+    def mapSides(sides: IterableOnce[Direction2D])(f: L => L) = makeCopy(amounts ++
+        sides.iterator.map { d => d -> f(apply(d)) })
     
     /**
       * Maps sides along the specified axis

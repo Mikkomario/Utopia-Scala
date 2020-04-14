@@ -1,8 +1,9 @@
 package utopia.flow.util
 
-import collection.{GenIterable, IterableLike, SeqLike, TraversableLike, mutable}
-import scala.collection.generic.CanBuildFrom
-import scala.collection.immutable.HashSet
+import scala.language.implicitConversions
+import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
+import scala.collection.generic.IsSeq
+import scala.collection.immutable.{HashSet, VectorBuilder}
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -12,26 +13,182 @@ import scala.util.{Failure, Success, Try}
 **/
 object CollectionExtensions
 {
-    implicit class RichSeq[A](val s: Seq[A]) extends AnyVal
+    class SeqOperations[Repr, S <: IsSeq[Repr]](coll: Repr, seq: S)
     {
         /**
-          * Same as apply except returns None on non-existing indices
-          * @param index Target index
-          * @return Value from index or None if no such index exists
-          */
-        def getOption(index: Int) = if (s.isDefinedAt(index)) Some(s(index)) else None
-        
+         * Filters a seq so that only distinct values remain. Uses a special function to determine equality
+         * @param equals A function that determines whether two values are equal
+         * @param buildFrom Builder for the new collection
+         * @return A collection with only distinct values (when considering the provided 'equals' function)
+         */
+        def distinctWith(equals: (seq.A, seq.A) => Boolean)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
+        {
+            val seqOps = seq(coll)
+            val builder = buildFrom.newBuilder(coll)
+            val collected = mutable.HashSet[seq.A]()
+            
+            seqOps.foreach { item =>
+                if (!collected.exists { e => equals(e, item) })
+                {
+                    builder += item
+                    collected += item
+                }
+            }
+            
+            builder.result()
+        }
+    
         /**
-          * Same as apply except returns a default value on non-existing indices
-          * @param index Target index
-          * @param default Default value
-          * @return Value from index or default value if no such index exists
+         * Filters a seq so that only distinct values remain. Compares the values by mapping them.
+         * @param f A mapping function to produce comparable values
+         * @param buildFrom A builder (implicit) to build the final collection
+         * @tparam B Map target type
+         * @return A collection with only distinct values (based on mapping)
+         */
+        def distinctBy[B](f: seq.A => B)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
+            distinctWith { (a, b) => f(a) == f(b) }
+    
+        /**
+         * This function works like foldLeft, except that it stores each step (including the start) into a seq
+         * @param start The starting step
+         * @param map A function for calculating the next step, takes the previous result + the next item in this seq
+         * @param buildFrom A buildfrom for final collection (implicit)
+         * @tparam B The type of steps
+         * @tparam That The type of final collection
+         * @return All of the steps mapped into a collection
+         */
+        def foldMapLeft[B, That](start: B)(map: (B, seq.A) => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
+        {
+            val builder = buildFrom.newBuilder(coll)
+            var last = start
+            builder += last
+    
+            val seqOps = seq(coll)
+            seqOps.foreach { item =>
+                last = map(last, item)
+                builder += last
+            }
+    
+            builder.result()
+        }
+    
+        /**
+         * Maps a single item in this sequence
+         * @param index The index that should be mapped
+         * @param f A mapping function
+         * @param buildFrom A can build from (implicit)
+         * @return A copy of this sequence with the specified index mapped
+         */
+        def mapIndex[B >: seq.A, That](index: Int)(f: seq.A => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
+        {
+            val seqOps = seq(coll)
+            buildFrom.fromSpecific(coll)(new AbstractView[B] {
+                override def iterator: AbstractIterator[B] = new AbstractIterator[B]
+                {
+                    val it = seqOps.iterator
+                    var nextIndex = 0
+                    
+                    override def hasNext = it.hasNext
+                    
+                    // Passes items from the original iterator, except at specified index
+                    override def next() =
+                    {
+                        val result =
+                        {
+                            if (nextIndex == index)
+                                f(it.next())
+                            else
+                                it.next()
+                        }
+                        nextIndex += 1
+                        result
+                    }
+                }
+            })
+        }
+    
+        /**
+         * Maps the first item that matches provided condition, leaves the other items as they were
+         * @param find A function for finding the mapped item
+         * @param map A mapping function for that item
+         * @param buildFrom A can build from for resulting collection (implicit)
+         * @return A copy of this sequence with specified item mapped. Returns this if no such item was found.
+         */
+        def mapFirstWhere(find: seq.A => Boolean)(map: seq.A => seq.A)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
+        {
+            seq(coll).indexWhereOption(find) match
+            {
+                case Some(index) => mapIndex(index)(map)
+                case None => coll
+            }
+        }
+    
+        /**
+         * @param index Targeted index
+         * @param buildFrom A build from (implicit)
+         * @return A copy of this sequence without specified index
+         */
+        def withoutIndex(index: Int)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
+        {
+            if (index < 0)
+                coll
+            else
+            {
+                val seqOps = seq(coll)
+                if (index >= seqOps.size)
+                    coll
+                else
+                    buildFrom.fromSpecific(coll)(seqOps.iterator.take(index) ++ seqOps.iterator.drop(index + 1))
+            }
+        }
+    
+        /**
+          * Splits this collection into a number of smaller pieces. Preserves order.
+          * @param maxLength Maximum length of each segment
+          * @param buildFrom A build from (implicit)
+          * @return This sequence split into possibly larger number of smaller sequences
           */
-        def getOrElse(index: Int, default: => A) = if (s.isDefinedAt(index)) s(index) else default
+        def splitToSegments(maxLength: Int)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Vector[Repr] = {
+            val seqOps = seq(coll)
+            if (seqOps.size <= maxLength)
+                Vector(buildFrom.fromSpecific(coll)(seqOps))
+            else
+            {
+                val factory = buildFrom.toFactory(coll)
+                val builder = new VectorBuilder[Repr]
+                val iter = seqOps.iterator
+                while (iter.hasNext)
+                {
+                    val segmentBuilder = factory.newBuilder
+                    iter.forNext(maxLength) { segmentBuilder += _ }
+                    builder += segmentBuilder.result()
+                }
+                
+                builder.result()
+            }
+        }
     }
     
-    implicit class RichSeqLike[A, Repr](val seq: SeqLike[A, Repr]) extends AnyVal
+    implicit def seqOperations[Repr](coll: Repr)(implicit seq: IsSeq[Repr]): SeqOperations[Repr, seq.type] =
+        new SeqOperations(coll, seq)
+    
+    implicit class RichSeqLike[A, CC[X], Repr](val seq: SeqOps[A, CC, Repr]) extends AnyVal
     {
+        /**
+         * Same as apply except returns None on non-existing indices
+         * @param index Target index
+         * @return Value from index or None if no such index exists
+         */
+        def getOption(index: Int) = if (seq.isDefinedAt(index)) Some(seq(index)) else None
+    
+        /**
+         * Same as apply except returns a default value on non-existing indices
+         * @param index Target index
+         * @param default Default value
+         * @return Value from index or default value if no such index exists
+         */
+        def getOrElse(index: Int, default: => A) = if (seq.isDefinedAt(index)) seq(index) else default
+        
         /**
          * Finds the index of the first item that matches the predicate
          * @param find a function for finding the correct item
@@ -71,72 +228,13 @@ object CollectionExtensions
             else
                 None
         }
-    
-        /**
-          * Filters a seq so that only distinct values remain. Uses a special function to determine equality
-          * @param equals A function that determines whether two values are equal
-          * @param cbf A canbuildfrom (implicit) to build the final collection
-          * @tparam To The type of final collection
-          * @return A collection with only distinct values (when considering the provided 'equals' function)
-          */
-        def distinctWith[To](equals: (A, A) => Boolean)(implicit cbf: CanBuildFrom[_, A, To]) =
-        {
-            val builder = cbf.apply()
-            val collected = mutable.HashSet[A]()
-            
-            seq.foreach
-            {
-                item =>
-                    if (!collected.exists { equals(_, item) })
-                    {
-                        collected += item
-                        builder += item
-                    }
-            }
-            
-            builder.result()
-        }
-    
-        /**
-          * Filters a seq so that only distinct values remain. Compares the values by mapping them.
-          * @param f A mapping function to produce comparable values
-          * @param cbf A canbuildfrom (implicit) to build the final collection
-          * @tparam B Map targe type
-          * @tparam To Type of resulting collection
-          * @return A collection with only distinct values (based on mapping)
-          */
-        def distinctBy[B, To](f: A => B)(implicit cbf: CanBuildFrom[_, A, To]) = distinctWith[To] { (a, b) => f(a) == f(b) }
-    
+        
         /**
           * @return A version of this seq with consecutive items paired. Each item will be present twice in the returned
           *         collection, except the first and the last item
           */
         def paired = (1 until seq.size).map { i => (seq(i - 1), seq(i)) }
     
-        /**
-          * This function works like foldLeft, except that it stores each step (including the start) into a seq
-          * @param start The starting step
-          * @param map A function for calculating the next step, takes the previous result + the next item in this seq
-          * @param cbf A canbuildfrom for final collection (implicit)
-          * @tparam B The type of steps
-          * @tparam To The type of final collection
-          * @return All of the steps mapped into a collection
-          */
-        def foldMapLeft[B, To](start: B)(map: (B, A) => B)(implicit cbf: CanBuildFrom[_, B, To]) =
-        {
-            val builder = cbf()
-            var last = start
-            builder += last
-            
-            seq.foreach
-            {
-                item =>
-                    last = map(last, item)
-                    builder += last
-            }
-            
-            builder.result()
-        }
     
         /**
          * Drops items from the right as long as the specified condition returns true
@@ -155,7 +253,7 @@ object CollectionExtensions
           * @tparam B Type of another sequence's content
           * @return Whether these two sequences are equal when using specified equality function
           */
-        def compareWith[B](another: SeqLike[B, _])(equals: (A, B) => Boolean) = seq.size == another.size &&
+        def compareWith[B, CC2[X]](another: SeqOps[B, CC2, _])(equals: (A, B) => Boolean) = seq.size == another.size &&
             seq.indices.forall { i => equals(seq(i), another(i)) }
     
         /**
@@ -186,69 +284,6 @@ object CollectionExtensions
          * @return Mapped data in a sequence (same order as in this sequence)
          */
         def mapWithIndex[B](f: (A, Int) => B) = seq.indices.map { i => f(seq(i), i) }
-    }
-    
-    implicit class RichSeqLike2[A, Repr <: SeqLike[A, _]](val seq: SeqLike[A, Repr]) extends AnyVal
-    {
-        /**
-         * Maps the first item that matches provided condition, leaves the other items as they were
-         * @param find A function for finding the mapped item
-         * @param map A mapping function for that item
-         * @param cbf A can build from for resulting collection (implicit)
-         * @return A copy of this sequence with specified item mapped. Returns this if no such item was found.
-         */
-        def mapFirstWhere(find: A => Boolean)(map: A => A)(implicit cbf: CanBuildFrom[_, A, Repr]) =
-        {
-            seq.indexWhereOption(find) match
-            {
-                case Some(mapIndex) =>
-                    val builder = cbf()
-                    builder ++= seq.take(mapIndex)
-                    builder += map(seq(mapIndex))
-                    builder ++= seq.drop(mapIndex + 1)
-                    builder.result()
-                case None => seq.repr
-            }
-        }
-    
-        /**
-         * @param index Targeted index
-         * @param cbf A can build from (implicit)
-         * @return A copy of this sequence without specified index
-         */
-        def withoutIndex(index: Int)(implicit cbf: CanBuildFrom[_, A, Repr]) =
-        {
-            if (index < 0 || index >= seq.size)
-                seq.repr
-            else
-            {
-                val builder = cbf()
-                builder ++= seq.take(index)
-                builder ++= seq.drop(index + 1)
-                builder.result()
-            }
-        }
-    
-        /**
-         * Maps a single item in this sequence
-         * @param index The index that should be mapped
-         * @param f A mapping function
-         * @param cbf A can build from (implicit)
-         * @return A copy of this sequence with the specified index mapped
-         */
-        def mapIndex(index: Int)(f: A => A)(implicit cbf: CanBuildFrom[_, A, Repr]) =
-        {
-            if (index < 0 || index > seq.size)
-                seq.repr
-            else
-            {
-                val builder = cbf()
-                builder ++= seq.take(index)
-                builder += f(seq(index))
-                builder ++= seq.drop(index + 1)
-                builder.result()
-            }
-        }
     }
     
     implicit class RichOption[A](val o: Option[A]) extends AnyVal
@@ -345,10 +380,10 @@ object CollectionExtensions
         }
     }
     
-    implicit class RichTraversable[A](val t: Traversable[A]) extends AnyVal
+    implicit class RichIterable[A](val t: Iterable[A]) extends AnyVal
     {
         /**
-         * @return Duplicate items within this traversable
+         * @return Duplicate items within this Iterable
          */
         def duplicates: Set[A] =
         {
@@ -367,10 +402,10 @@ object CollectionExtensions
         def findMap[B](map: A => Option[B]) = t.view.map(map).find { _.isDefined }.flatten
     
         /**
-          * Finds the maximum value in this traversable
+          * Finds the maximum value in this Iterable
           * @param cmp Ordering (implicit)
           * @tparam B Ordering type
-          * @return Maximum item or None if this traversable was empty
+          * @return Maximum item or None if this Iterable was empty
           */
         def maxOption[B >: A](implicit cmp: Ordering[B]): Option[A] =
         {
@@ -381,10 +416,10 @@ object CollectionExtensions
         }
         
         /**
-          * Finds the minimum value in this traversable
+          * Finds the minimum value in this Iterable
           * @param cmp Ordering (implicit)
           * @tparam B Ordering type
-          * @return Minimum item or None if this traversable was empty
+          * @return Minimum item or None if this Iterable was empty
           */
         def minOption[B >: A](implicit cmp: Ordering[B]): Option[A] =
         {
@@ -399,7 +434,7 @@ object CollectionExtensions
          * @param map A mapping function
          * @param cmp Implicit ordering
          * @tparam B Type of map result
-         * @return Maximum item based on map result. None if this traversable was empty
+         * @return Maximum item based on map result. None if this Iterable was empty
          */
         def maxByOption[B](map: A => B)(implicit cmp: Ordering[B]): Option[A] =
         {
@@ -414,7 +449,7 @@ object CollectionExtensions
          * @param map A mapping function
          * @param cmp Implicit ordering
          * @tparam B Type of map result
-         * @return Minimum item based on map result. None if this traversable was empty
+         * @return Minimum item based on map result. None if this Iterable was empty
          */
         def minByOption[B](map: A => B)(implicit cmp: Ordering[B]): Option[A] =
         {
@@ -425,28 +460,24 @@ object CollectionExtensions
         }
     
         /**
-          * Finds the item(s) that best match the specified conditions
-          * @param matchers Search conditions used. The conditions that are introduced first are considered more
-          *                 important than those which are introduced the last.
-          * @param cbf A builder for the final result (implicit)
-          * @tparam To Target collection type
-          * @return The items in this collection that best match the specified conditions
-          */
-        def bestMatch[To](matchers: Seq[A => Boolean])(implicit cbf: CanBuildFrom[_, A, To]): To =
+         * Finds the item(s) that best match the specified conditions
+         * @param matchers Search conditions used. The conditions that are introduced first are considered more
+         *                 important than those which are introduced the last.
+         * @param factory A factory for the final result (implicit)
+         * @tparam That Target collection type
+         * @return The items in this collection that best match the specified conditions
+         */
+        def bestMatch[That](matchers: Seq[A => Boolean])(implicit factory: Factory[A, That]): That =
         {
             // If there is only a single option, that is the best match. If there are 0 options, there's no best match
             // If there are no matchers left, cannot make a distinction between items
             if (t.size < 2 || matchers.isEmpty)
-            {
-                val buffer = cbf()
-                buffer ++= t
-                buffer.result()
-            }
+                factory.fromSpecific(t)
             else
             {
                 val nextMatcher = matchers.head
                 val matched = t.filter(nextMatcher.apply)
-                
+            
                 // If matcher found some results, limits to those. if not, cannot use that group
                 if (matched.nonEmpty)
                     matched.bestMatch(matchers.drop(1))
@@ -454,18 +485,18 @@ object CollectionExtensions
                     bestMatch(matchers.drop(1))
             }
         }
-    
+        
         /**
-         * Maps the contents of this traversable. Mapping may fail, interrupting all remaining mappings
+         * Maps the contents of this Iterable. Mapping may fail, interrupting all remaining mappings
          * @param f A mapping function. May fail.
-         * @param cbf Implicit can build from for final collection
+         * @param factory Implicit factory for final collection
          * @tparam B Type of map result
          * @tparam To Type of final collection
          * @return Mapped collection if all mappings succeeded. Failure otherwise.
          */
-        def tryMap[B, To](f: A => Try[B])(implicit cbf: CanBuildFrom[_, B, To]): Try[To] =
+        def tryMap[B, To](f: A => Try[B])(implicit factory: Factory[B, To]): Try[To] =
         {
-            val buffer = cbf()
+            val buffer = factory.newBuilder
             // Maps items until the mapping function fails
             t.view.map { a =>
                 val result = f(a)
@@ -482,7 +513,7 @@ object CollectionExtensions
         /**
           * Compares this set of items with another set. Lists items that have been added and removed, plus the changes
           * between items that have stayed
-          * @param another Another traversable
+          * @param another Another Iterable
           * @param connectBy A function for providing the unique key based on which items are connected
           *                  (should be unique within each collection). Items sharing this key are connected.
           * @param merge A function for merging two connected items. Takes connection key, item in this collection and
@@ -493,7 +524,7 @@ object CollectionExtensions
           * @return 1) Items only present in this collection, 2) Merged items shared between these two collections,
           *         3) Items only present in the other collection
           */
-        def listChanges[B >: A, K, Merge](another: Traversable[B])(connectBy: B => K)(merge: (K, A, B) => Merge) =
+        def listChanges[B >: A, K, Merge](another: Iterable[B])(connectBy: B => K)(merge: (K, A, B) => Merge) =
         {
             val meByKey = t.map { a => connectBy(a) -> a }.toMap
             val theyByKey = another.map { a => connectBy(a) -> a }.toMap
@@ -509,48 +540,45 @@ object CollectionExtensions
         }
     }
     
-    implicit class RichTraversableLike[A, Repr](val t: TraversableLike[A, Repr]) extends AnyVal
+    implicit class RichIterableLike[A, CC[X], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
     {
         /**
-          * Divides the items in this traversable into two groups, based on boolean result
+          * Divides the items in this Iterable into two groups, based on boolean result
           * @param f A function that separates the items
-          * @param cbf An implicit can build from
+          * @param factory An implicit factory
           * @return The 'false' group, followed by the 'true' group
           */
-        def divideBy(f: A => Boolean)(implicit cbf: CanBuildFrom[_, A, Repr]) =
+        def divideBy(f: A => Boolean)(implicit factory: Factory[A, Repr]) =
         {
             val groups = t.groupBy(f)
-            groups.getOrElse(false, cbf.apply().result()) -> groups.getOrElse(true, cbf.apply().result())
+            groups.getOrElse(false, factory.newBuilder.result()) -> groups.getOrElse(true, factory.newBuilder.result())
         }
-    }
-    
-    implicit class RichIterableLike[A, Repr](val t: IterableLike[A, Repr]) extends AnyVal
-    {
-        /**
-          * Iterates through the items in this iterable along with another iterable's items. Will stop when either
-          * iterable runs out of items
-          * @param another Another iterable
-          * @param f A function that handles the items
-          * @param bf A can build from (implicit)
-          * @tparam B The type of another iterable's items
-          * @tparam U Arbitrary result type
-          */
-        def foreachWith[B, U](another: GenIterable[B])(f: (A, B) => U)
-                                      (implicit bf: CanBuildFrom[Repr, (A, B), Traversable[(A, B)]]) =
-            t.zip(another).foreach { p => f(p._1, p._2) }
-    
+        
         /**
          * Performs an operation for each item in this collection. Stops if an operation fails.
          * @param f A function that takes an item and performs an operation that may fail
          * @return Failure if any of the operations failed, success otherwise.
          */
-        def tryForEach(f: A => Try[Any]): Try[Any] = t.view.map(f).find { _.isFailure }.getOrElse(Success(Unit))
+        def tryForEach(f: A => Try[Any]): Try[Any] = t.view.map(f).find { _.isFailure }.getOrElse(Success[Unit](()))
         
         /**
-          * @return An iterator that keeps repeating over and over (iterator continues infinitely or until this
-          *         collection is empty)
-          */
-        def repeatingIterator(): Iterator[A] = new RepeatingIterator[A](t)
+         * @return An iterator that keeps repeating over and over (iterator continues infinitely or until this
+         *         collection is empty)
+         */
+        def repeatingIterator(): Iterator[A] = new RepeatingIterator[A, CC](t)
+    }
+    
+    implicit class RichIterableLike2[A, CC[X] <: IterableOps[X, CC, CC[X]], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
+    {
+        /**
+         * Iterates through the items in this iterable along with another iterable's items. Will stop when either
+         * iterable runs out of items
+         * @param another Another iterable
+         * @param f A function that handles the items
+         * @tparam B The type of another iterable's items
+         * @tparam U Arbitrary result type
+         */
+        def foreachWith[B, U](another: Iterable[B])(f: (A, B) => U) = t.zip(another).foreach { p => f(p._1, p._2) }
     }
     
     implicit class RichMap[K, V](val m: Map[K, V]) extends AnyVal
@@ -578,33 +606,79 @@ object CollectionExtensions
         }
     }
     
+    implicit class RichIterator[A](val i: Iterator[A]) extends AnyVal
+    {
+        /**
+          * Performs the specified operation for the next 'n' items. This will advance the iterator n-steps
+          * (although limited by number of available items)
+          * @param n The maximum number of iterations / items handled
+          * @param operation Operation called for each handled item
+          * @tparam U Arbitrary operation result type (not used)
+          * @return Whether the full 'n' items were handled. If false, the end of this iterator was reached.
+          */
+        def forNext[U](n: Int)(operation: A => U) =
+        {
+            var consumed = 0
+            while (i.hasNext && consumed < n)
+            {
+                operation(i.next())
+                consumed += 1
+            }
+            
+            consumed == n
+        }
+    }
+    
     /**
      * This implicit class is used for extending collection map conversion
      */
-    implicit class MultiMapConvertible[T](val list: TraversableOnce[T]) extends AnyVal
+    implicit class MultiMapConvertible[T](val list: IterableOnce[T]) extends AnyVal
     {
         // Referenced from: https://stackoverflow.com/questions/22090371/scala-grouping-list-of-tuples [10.10.2018]
         def toMultiMap[Key, Value, Values](key: T => Key, value: T => Value)
-                (implicit cbfv: CanBuildFrom[Nothing, Value, Values]): Map[Key, Values] = 
+                (implicit factory: Factory[Value, Values]): Map[Key, Values] =
         {
             val b = mutable.Map.empty[Key, mutable.Builder[Value, Values]]
-	        list.foreach { elem => b.getOrElseUpdate(key(elem), cbfv()) += value(elem) }
-	        b.map { case (k, vb) => (k, vb.result()) } (collection.breakOut)
+	        list.iterator.foreach { elem => b.getOrElseUpdate(key(elem), factory.newBuilder) += value(elem) }
+	        b.map { case (k, vb) => (k, vb.result()) }.to(collection.immutable.Map)
         }
     }
     
     /**
      * This extension allows tuple lists to be transformed into multi maps directly
      */
-    implicit class RichTupleList[K, V](val list: TraversableOnce[(K, V)]) extends AnyVal
+    implicit class RichTupleList[K, V](val list: IterableOnce[(K, V)]) extends AnyVal
     {
-        def toMultiMap[Values]()(implicit cbfv: CanBuildFrom[Nothing, V, Values]): Map[K, Values] = 
-        {
+        def toMultiMap[Values]()(implicit factory: Factory[V, Values]): Map[K, Values] =
             new MultiMapConvertible(list).toMultiMap(_._1, _._2)
+    }
+    
+    implicit class RichRange(val range: Range) extends AnyVal
+    {
+        /**
+         * This function works like foldLeft, except that it stores each step (including the start) into a vector
+         * @param start The starting step
+         * @param map A function for calculating the next step, takes the previous result + the next item in this range
+         * @param factory A factory for final collection (implicit)
+         * @tparam B The type of steps
+         * @return All of the steps mapped into a collection
+         */
+        def foldMapToVector[B](start: B)(map: (B, Int) => B)(implicit factory: Factory[B, Vector[B]]): Vector[B] =
+        {
+            val builder = factory.newBuilder
+            var last = start
+            builder += last
+        
+            range.foreach { item =>
+                last = map(last, item)
+                builder += last
+            }
+        
+            builder.result()
         }
     }
     
-    private class RepeatingIterator[A](val c: IterableLike[A, _]) extends Iterator[A]
+    private class RepeatingIterator[A, CC[X]](val c: IterableOps[A, CC, _]) extends Iterator[A]
     {
         // ATTRIBUTES   -----------------
         
@@ -613,14 +687,14 @@ object CollectionExtensions
         
         // IMPLEMENTED  -----------------
         
-        override def hasNext = iterator().hasNext
+        override def hasNext = iter().hasNext
     
-        override def next() = iterator().next()
+        override def next() = iter().next()
         
         
         // OTHER    -------------------
         
-        private def iterator() =
+        private def iter() =
         {
             if (currentIterator.forall { !_.hasNext } )
                 currentIterator = Some(c.iterator)

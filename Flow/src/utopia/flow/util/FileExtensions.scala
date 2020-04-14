@@ -164,7 +164,7 @@ object FileExtensions
 			if (isDirectory)
 				Try { Files.list(p).consume { _.filter(p => filter(p)).forEach(p => operation(p)) } }
 			else
-				Success(Unit)
+				Success(())
 		}
 		
 		/**
@@ -450,7 +450,7 @@ object FileExtensions
 		 * @return This path, failure if couldn't create directories
 		 */
 		def createParentDirectories() = parentOption.map { dir => Try[Unit] { Files.createDirectories(dir) } }
-			.getOrElse(Success(Unit)).map { _ => p }
+			.getOrElse(Success(())).map { _ => p }
 		
 		/**
 		 * @param another Another file

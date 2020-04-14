@@ -1,8 +1,7 @@
 package utopia.flow.collection
 
-import scala.collection.generic.CanBuildFrom
 import scala.collection.immutable.VectorBuilder
-import scala.collection.{IterableLike, mutable}
+import scala.collection.{Factory, IterableFactory, IterableOps, SpecificIterableFactory, mutable}
 import scala.ref.WeakReference
 
 object WeakList
@@ -28,7 +27,7 @@ object WeakList
 	  * @tparam A The type of items
 	  * @return A new weak list with specified items
 	  */
-	def apply[A <: AnyRef](items: TraversableOnce[A]) = new WeakList(items.map { WeakReference(_) }.toVector)
+	def apply[A <: AnyRef](items: IterableOnce[A]) = new WeakList(items.iterator.map { WeakReference(_) }.toVector)
 	
 	/**
 	  * Creates a new weak list with multiple items
@@ -44,6 +43,7 @@ object WeakList
         new WeakList[A](items.map { WeakReference(_) })
     }
     
+	
     // IMPLICIT --------------------
     
     /**
@@ -51,7 +51,7 @@ object WeakList
       * @tparam A type of item contained in the final list
       * @return A can build from that will build weak lists of target type
       */
-    implicit def canBuildFrom[A <: AnyRef]: CanBuildFrom[WeakList[_], A, WeakList[A]] = new WeakListCanBuildFrom[A]()
+    implicit def factory[A <: AnyRef]: Factory[A, WeakList[A]] = new WeakListFactory[A]
 }
 
 /**
@@ -61,7 +61,8 @@ object WeakList
 * @author Mikko Hilpinen
 * @since 31.3.2019
 **/
-class WeakList[+A <: AnyRef](private val refs: Vector[WeakReference[A]]) extends IterableLike[A, WeakList[A]]
+class WeakList[A <: AnyRef](private val refs: Vector[WeakReference[A]])
+	extends IterableOps[A, Iterable, WeakList[A]] with Iterable[A]
 {
     // COMPUTED    -----------------
 	
@@ -72,14 +73,18 @@ class WeakList[+A <: AnyRef](private val refs: Vector[WeakReference[A]]) extends
     
     
     // IMPLEMENTED    --------------
-    
-    override def seq = this
+	
+	override def empty = WeakList[A]()
+	
+	override protected def newSpecificBuilder = new WeakListBuilder[A]
+	
+	override protected def fromSpecific(coll: IterableOnce[A]) = WeakList(coll)
+	
+	override def seq = this
     
     override def iterator = refs.view.flatMap { _.get }.iterator
     
-    override def foreach[U](f: A => U) { refs.foreach { _.get.foreach(f) } }
-    
-    override protected[this] def newBuilder = new WeakListBuilder[A]()
+    override def foreach[U](f: A => U) = refs.foreach { _.get.foreach(f) }
     
     
     // OPERATORS    ----------------------
@@ -91,12 +96,12 @@ class WeakList[+A <: AnyRef](private val refs: Vector[WeakReference[A]]) extends
       */
     def :+[B >: A <: AnyRef](item: B) = new WeakList(refs :+ WeakReference(item))
     
-    /**
+    /*
       * @param items new items
       * @tparam B Type of resulting list
       * @return A new list with specified items added (weakly referenced)
       */
-    def ++[B >: A <: AnyRef](items: TraversableOnce[B]) = new WeakList(refs ++ items.map { WeakReference(_) })
+    // def ++[B >: A <: AnyRef](items: IterableOnce[B]) = new WeakList(refs ++ items.map { WeakReference(_) })
 }
 
 class WeakListBuilder[A <: AnyRef] extends mutable.Builder[A, WeakList[A]]
@@ -107,21 +112,23 @@ class WeakListBuilder[A <: AnyRef] extends mutable.Builder[A, WeakList[A]]
     
     
     // IMPLEMENTED    --------------------
-    
-    override def +=(elem: A): WeakListBuilder.this.type =
-    {
-        builder += WeakReference(elem)
-        this
-    }
 	
-    override def clear() { builder.clear() }
+	override def addOne(elem: A) =
+	{
+		builder += WeakReference(elem)
+		this
+	}
+	
+	override def clear() = builder.clear()
     
     override def result() = new WeakList(builder.result())
 }
 
-class WeakListCanBuildFrom[A <: AnyRef] extends CanBuildFrom[WeakList[_], A, WeakList[A]]
+class WeakListFactory[A <: AnyRef] extends SpecificIterableFactory[A, WeakList[A]]
 {
-    override def apply(from: WeakList[_]) = apply()
-    
-    override def apply() = new WeakListBuilder[A]()
+	override def empty = WeakList[A]()
+	
+	override def newBuilder = new WeakListBuilder[A]
+	
+	override def fromSpecific(it: IterableOnce[A]) = WeakList(it)
 }

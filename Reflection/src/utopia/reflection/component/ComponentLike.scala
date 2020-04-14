@@ -240,7 +240,7 @@ trait ComponentLike extends Area
         children.foreach(operation)
     }
     
-    private def distributeEvent[E](event: E, positionsFromEvent: E => Traversable[Point],
+    private def distributeEvent[E](event: E, positionsFromEvent: E => Iterable[Point],
                                    translateEvent: (E, Point) => E, childAccept: (ComponentLike, E) => Unit) =
     {
         // If has chilren, informs them. Event position is modified and only events within this component's area

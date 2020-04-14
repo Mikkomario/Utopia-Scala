@@ -14,7 +14,7 @@ object Handler
 	  * @tparam A The handled elements
 	  * @return A new handler with specified elements
 	  */
-	def apply[A <: Handleable](hType: HandlerType, elements: TraversableOnce[A] = Vector()) = new Handler(elements)
+	def apply[A <: Handleable](hType: HandlerType, elements: IterableOnce[A] = Vector()) = new Handler(elements)
 	{
 		val handlerType = hType
 	}
@@ -44,7 +44,7 @@ object Handler
   * @author Mikko Hilpinen
   * @since 5.4.2019, v2+
   */
-abstract class Handler[A <: utopia.inception.handling.Handleable](initialElements: TraversableOnce[A])
+abstract class Handler[A <: utopia.inception.handling.Handleable](initialElements: IterableOnce[A])
 	extends utopia.inception.handling.Handler[A] with Mortal
 {
 	// ATTRIBUTES	--------------------

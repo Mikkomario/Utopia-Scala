@@ -25,10 +25,10 @@ object Model
      * @param generator The attribute generator
      * @return A generated model
      */
-    def apply[Attribute <: Variable](content: TraversableOnce[(String, Value)], generator: PropertyGenerator[Attribute]) =
+    def apply[Attribute <: Variable](content: IterableOnce[(String, Value)], generator: PropertyGenerator[Attribute]) =
     {
         val model = new Model(generator)
-        content.foreach { case (name, value) => model(name) = value }
+        content.iterator.foreach { case (name, value) => model(name) = value }
         model
     }
     
@@ -37,7 +37,7 @@ object Model
       * @param content The attribute name value pairs used for generating the model's attributes
       * @return A generated model
       */
-    def apply(content: TraversableOnce[(String, Value)]): Model[Variable] = apply(content, new SimpleVariableGenerator())
+    def apply(content: IterableOnce[(String, Value)]): Model[Variable] = apply(content, new SimpleVariableGenerator())
 }
 
 /**
@@ -135,7 +135,7 @@ class Model[Attribute <: Variable](val attributeGenerator: PropertyGenerator[Att
      * Adds a number of attributes to this model
      * @param attributes The attributes added to this model
      */
-    def ++=(attributes: Traversable[Attribute]) = attributes.foreach { this += _ }
+    def ++=(attributes: IterableOnce[Attribute]) = attributes.iterator.foreach { this += _ }
     
     /**
      * Removes an attribute from this model

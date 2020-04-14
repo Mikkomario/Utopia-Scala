@@ -151,11 +151,11 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
       *         The secondary maps contain rows for each of the secondary tables (although the list may be empty).
       *         Only unique rows are preserved (based on row index)
       */
-    def grouped(primaryTable: Table, secondaryTables: Traversable[Table]) =
+    def grouped(primaryTable: Table, secondaryTables: Iterable[Table]) =
     {
         rows.filter { _.containsDataForTable(primaryTable) }.groupBy { _.indexForTable(primaryTable) }
-            .mapValues { rows => rows.head -> secondaryTables.map { table => table -> rows.filter { _.containsDataForTable(table) }
-                .distinctBy { _.indexForTable(table) } }.toMap }
+            .view.mapValues { rows => rows.head -> secondaryTables.map { table => table -> rows.filter { _.containsDataForTable(table) }
+                .distinctBy { _.indexForTable(table) } }.toMap }.toMap
     }
     
     /**
@@ -169,8 +169,8 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
     def grouped(primaryTable: Table, secondaryTable: Table) =
     {
         rows.filter { _.containsDataForTable(primaryTable) }.groupBy { _.indexForTable(primaryTable) }
-            .mapValues { rows => rows.head -> rows.filter { _.containsDataForTable(secondaryTable) }
-                .distinctBy { _.indexForTable(secondaryTable) } }
+            .view.mapValues { rows => rows.head -> rows.filter { _.containsDataForTable(secondaryTable) }
+                .distinctBy { _.indexForTable(secondaryTable) } }.toMap
     }
     
     /**

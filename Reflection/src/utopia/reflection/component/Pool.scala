@@ -2,7 +2,7 @@ package utopia.reflection.component
 
 object Pool
 {
-	implicit class MultiPool(val p: Pool[Traversable[_]]) extends AnyVal
+	implicit class MultiPool(val p: Pool[Iterable[_]]) extends AnyVal
 	{
 		/**
 		  * @return The current item count in this pool

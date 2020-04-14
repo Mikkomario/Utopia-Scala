@@ -1,5 +1,6 @@
 package utopia.conflict.collision
 
+import scala.math.Ordering.Double.TotalOrdering
 import utopia.genesis.shape.shape2D.{Circle, Line, Polygon, Polygonic}
 import utopia.genesis.shape.{Angle, Vector3D}
 

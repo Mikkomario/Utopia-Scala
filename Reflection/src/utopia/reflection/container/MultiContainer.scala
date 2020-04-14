@@ -24,7 +24,7 @@ trait MultiContainer[C <: ComponentLike] extends Container[C]
 	/**
 	 * Adds multiple items to this container
 	 */
-	def ++=(components: TraversableOnce[C]) = components.foreach(+=)
+	def ++=(components: IterableOnce[C]) = components.iterator.foreach(+=)
 	
 	/**
 	 * Adds multiple items to this container
@@ -34,7 +34,7 @@ trait MultiContainer[C <: ComponentLike] extends Container[C]
 	/**
 	 * Removes multiple items from this container
 	 */
-	def --=(components: TraversableOnce[C]) = components.foreach(-=)
+	def --=(components: IterableOnce[C]) = components.iterator.foreach(-=)
 	
 	/**
 	 * Removes multiple items from this container

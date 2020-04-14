@@ -20,7 +20,7 @@ object StringExtensions
 		/**
 		 * @return Words that belong to this string. <b>This includes all non-whitespace characters but not newline characters</b>
 		 */
-		def words = s.lines.toVector.flatMap { _.split(" ").toVector.map { _.trim }.filter { _.nonEmpty } }
+		def words = s.linesIterator.toVector.flatMap { _.split(" ").toVector.map { _.trim }.filter { _.nonEmpty } }
 		
 		/**
 		 * @return The first word in this string (may include any characters except whitespace)
@@ -36,16 +36,6 @@ object StringExtensions
 		 * @return A non-empty copy of this string or None
 		 */
 		def notEmpty = if (s.isEmpty) None else Some(s)
-		
-		/**
-		 * @return This string cast to an integer, None if this string couldn't be parsed
-		 */
-		def toIntOption = Try(s.toInt).toOption
-		
-		/**
-		 * @return This string cast to a double, None if this string couldn't be parsed
-		 */
-		def toDoubleOption = Try(s.toDouble).toOption
 		
 		/**
 		 * @return A copy of this string without any non-letter characters
@@ -67,7 +57,7 @@ object StringExtensions
 		 * @param strings A number of strings
 		 * @return Whether this string contains all of the provided sub-strings (case-sensitive)
 		 */
-		def containsAll(strings: TraversableOnce[String]) = strings.forall(s.contains)
+		def containsAll(strings: IterableOnce[String]) = strings.iterator.forall(s.contains)
 		
 		/**
 		 * @param first A string
@@ -81,10 +71,10 @@ object StringExtensions
 		 * @param strings A number of strings
 		 * @return Whether this string contains all of the provided sub-strings (case-insensitive)
 		 */
-		def containsAllIgnoreCase(strings: TraversableOnce[String]) =
+		def containsAllIgnoreCase(strings: IterableOnce[String]) =
 		{
 			val lower = s.toLowerCase
-			strings.forall { searched => lower.contains(searched.toLowerCase) }
+			strings.iterator.forall { searched => lower.contains(searched.toLowerCase) }
 		}
 		
 		/**

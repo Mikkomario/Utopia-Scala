@@ -16,7 +16,7 @@ object MouseMoveHandler
 	  * @param parent Handleable this handler is dependent from (default = None = independent)
 	  * @return A new handler
 	  */
-	def apply(elements: TraversableOnce[MouseMoveListener], parent: Option[Handleable] = None) = new MouseMoveHandler(elements)
+	def apply(elements: IterableOnce[MouseMoveListener], parent: Option[Handleable] = None) = new MouseMoveHandler(elements)
 	
 	/**
 	  * @param element an element for this handler
@@ -36,5 +36,5 @@ object MouseMoveHandler
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
-class MouseMoveHandler(initialElements: TraversableOnce[MouseMoveListener])
+class MouseMoveHandler(initialElements: IterableOnce[MouseMoveListener])
 	extends Handler[MouseMoveListener](initialElements) with handling.MouseMoveHandler with Handleable

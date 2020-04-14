@@ -2,6 +2,7 @@ package utopia.flow.datastructure.template
 
 import utopia.flow.util.CollectionExtensions._
 
+import scala.math.Ordering.Double.TotalOrdering
 import scala.collection.immutable.VectorBuilder
 
 /**

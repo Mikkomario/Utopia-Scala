@@ -27,7 +27,7 @@ object Model
       * @param constants The constants for the model
       * @return A new model
       */
-    def withConstants(constants: Traversable[Constant]) = new Model(constants, new SimpleConstantGenerator())
+    def withConstants(constants: Iterable[Constant]) = new Model(constants, new SimpleConstantGenerator())
     
     /**
      * Creates a new model with input format that is more friendly to literals
@@ -35,8 +35,7 @@ object Model
      * @param generator The attribute generator that will generate the attributes
      * @return The newly generated model
      */
-    def apply[Attribute <: Constant](content: Traversable[(String, Value)], 
-            generator: PropertyGenerator[Attribute]) =
+    def apply[Attribute <: Constant](content: Iterable[(String, Value)], generator: PropertyGenerator[Attribute]) =
             new Model(content.map { case (name, value) => generator(name, Some(value)) }, generator)
     
     /**
@@ -44,7 +43,7 @@ object Model
       * @param content A list of name-value pairs that will be used as attributes
       * @return A new model with specified attributes
       */
-    def apply(content: Traversable[(String, Value)]): Model[Constant] = apply(content, new SimpleConstantGenerator())
+    def apply(content: Iterable[(String, Value)]): Model[Constant] = apply(content, new SimpleConstantGenerator())
     
     /**
       * @param attName Attribute name
@@ -95,7 +94,7 @@ object Model
  * @author Mikko Hilpinen
  * @since 29.11.2016
  */
-class Model[+Attribute <: Constant](content: Traversable[Attribute], val attributeGenerator: PropertyGenerator[Attribute])
+class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeGenerator: PropertyGenerator[Attribute])
     extends template.Model[Attribute] with Equatable with ValueConvertible
 {
     // ATTRIBUTES    --------------
@@ -133,7 +132,7 @@ class Model[+Attribute <: Constant](content: Traversable[Attribute], val attribu
     /**
      * Creates a new model with the provided attributes added
      */
-    def ++[B >: Attribute <: Constant](attributes: TraversableOnce[B]) = withAttributes(this.attributes ++ attributes)
+    def ++[B >: Attribute <: Constant](attributes: IterableOnce[B]) = withAttributes(this.attributes ++ attributes)
     
     /**
      * Creates a new model that contains the attributes from both of the models. The new model 
@@ -169,7 +168,7 @@ class Model[+Attribute <: Constant](content: Traversable[Attribute], val attribu
     /**
      * Creates a new model with the same generator but different attributes
      */
-    def withAttributes[B >: Attribute <: Constant](attributes: Traversable[B]) =
+    def withAttributes[B >: Attribute <: Constant](attributes: Iterable[B]) =
             new Model[B](attributes, attributeGenerator)
     
     /**
@@ -194,7 +193,7 @@ class Model[+Attribute <: Constant](content: Traversable[Attribute], val attribu
       * @param renames The attribute name changes (old -> new)
       * @return A copy of this model with renamed attributes
       */
-    def renamed(renames: Traversable[(String, String)]) = withAttributes(attributes.map {
+    def renamed(renames: Iterable[(String, String)]) = withAttributes(attributes.map {
         a => renames.find { _._1 == a.name }.map { n => a.withName(n._2) } getOrElse a })
     
     /**

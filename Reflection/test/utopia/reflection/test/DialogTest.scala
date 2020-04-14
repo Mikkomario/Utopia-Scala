@@ -26,8 +26,8 @@ object DialogTest extends App
 		
 		override def stackId = hashCode()
 		
-		override def updateLayout() = Unit
-		override def resetCachedSize() = Unit
+		override def updateLayout() = ()
+		override def resetCachedSize() = ()
 	}
 	
 	private implicit val language: String = "en"

@@ -28,7 +28,7 @@ trait TextComponent extends Stackable with Alignable
 	/**
 	  * @param newContext New text drawing context
 	  */
-	def drawContext_=(newContext: TextDrawContext)
+	def drawContext_=(newContext: TextDrawContext): Unit
 	
 	
 	// IMPLEMENTED	----------------------

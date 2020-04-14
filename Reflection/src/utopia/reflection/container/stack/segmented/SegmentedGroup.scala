@@ -1,6 +1,6 @@
 package utopia.reflection.container.stack.segmented
 
-import utopia.flow.util.CollectionExtensions.RichTraversable
+import scala.math.Ordering.Double.TotalOrdering
 import utopia.genesis.shape.Axis2D
 import utopia.reflection.shape.StackLength
 
@@ -65,7 +65,7 @@ class SegmentedGroup(override val direction: Axis2D) extends Segmented
 	  * Registers multiple new segmented items to this group
 	  * @param many New items
 	  */
-	def register(many: TraversableOnce[Segmented]) =
+	def register(many: IterableOnce[Segmented]) =
 	{
 		items ++= many
 		items.foreach { _.addSegmentChangedListener(changeListener) }

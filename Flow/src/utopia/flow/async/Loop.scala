@@ -44,12 +44,12 @@ trait Loop extends Runnable with Breakable
     /**
      * Performs the operation in this loop once
      */
-    protected def runOnce(): Unit
+    def runOnce(): Unit
     
     /**
      * The time between the end of the current run and the start of the next one
      */
-    protected def nextWaitTarget: WaitTarget
+    def nextWaitTarget: WaitTarget
     
     
     // COMPUTED    -----------------
@@ -72,9 +72,15 @@ trait Loop extends Runnable with Breakable
     
 	// IMPLEMENTED    --------------
     
-    def run() = 
+    def run(): Unit = run(waitFirst = false)
+    
+    def run(waitFirst: Boolean) =
     {
         startedFlag.set()
+        
+        // May perform a single wait before performing the first iteration
+        if (waitFirst)
+            nextWaitTarget.waitWith(waitLock)
         
         while (!isBroken)
         {
@@ -87,7 +93,7 @@ trait Loop extends Runnable with Breakable
         }
         
         // Finishes this loop
-        promise.success(Unit)
+        promise.success(())
     }
     
     def stop() = 
@@ -105,7 +111,7 @@ trait Loop extends Runnable with Breakable
     /**
      * Starts this loop in an asynchronous context
      */
-    def startAsync()(implicit context: ExecutionContext) = 
+    def startAsync()(implicit context: ExecutionContext) =
     {
         if (!hasStarted)
             context.execute(this)

@@ -11,7 +11,7 @@ object JStackableWrapper
      * @param component wrapped component
      * @param getSize a function for retrieving component size
      */
-    def apply(component: JComponent, getSize: () => StackSize, update: () => Unit = () => Unit): JStackableWrapper =
+    def apply(component: JComponent, getSize: () => StackSize, update: () => Unit = () => ()): JStackableWrapper =
         new JStackWrapper(component, getSize, update)
     
     /**

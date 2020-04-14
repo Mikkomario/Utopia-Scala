@@ -1,5 +1,6 @@
 package utopia.genesis.image
 
+import scala.math.Ordering.Double.TotalOrdering
 import java.awt.image.{BufferedImage, BufferedImageOp}
 import java.io.FileNotFoundException
 import java.nio.file.{Files, Path}

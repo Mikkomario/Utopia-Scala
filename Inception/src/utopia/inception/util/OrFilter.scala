@@ -18,7 +18,7 @@ object OrFilter
  * @author Mikko Hilpinen
  * @since 17.10.2016
  */
-class OrFilter[-T](val filters: Traversable[Filter[T]]) extends Filter[T]
+class OrFilter[-T](val filters: Iterable[Filter[T]]) extends Filter[T]
 {
 	override def apply(item: T) = filters.exists { _(item) }
 }

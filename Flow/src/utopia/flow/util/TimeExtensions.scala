@@ -4,7 +4,7 @@ import java.time.chrono.ChronoLocalDate
 import java.time.format.DateTimeFormatter
 
 import scala.language.implicitConversions
-import java.time.{DayOfWeek, Duration, Instant, LocalDate, LocalDateTime, Month, Period, Year, YearMonth, ZoneId}
+import java.time.{DayOfWeek, Duration, Instant, LocalDate, LocalDateTime, LocalTime, Month, Period, Year, YearMonth, ZoneId}
 import java.time.temporal.TemporalAmount
 
 import scala.concurrent.duration
@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit
 
 import scala.collection.immutable.VectorBuilder
 import scala.util.Try
+import utopia.flow.util.RichComparable._
 
 /**
 * This object contains some extensions for java's time classes
@@ -23,6 +24,8 @@ object TimeExtensions
 {
 	implicit class ExtendedInstant(val i: Instant) extends AnyVal
 	{
+		// OTHER	--------------------------
+		
 		/**
 		 * Converts this instant to a string using specified formatter. If the formatter doesn't support instant
 		 * naturally, converts this instant to local date time before converting to string
@@ -108,12 +111,34 @@ object TimeExtensions
 	    def >(other: Instant) = i.isAfter(other)
 	}
 	
-	implicit class ExtendedLocalDateTime(val d: LocalDateTime) extends AnyVal
+	implicit class ExtendedLocalDateTime(val d: LocalDateTime) extends RichComparable[LocalDateTime]
 	{
+		// IMPLEMENTED	--------------------------
+		
+		override def compareTo(o: LocalDateTime) = d.toLocalDate.compareOr(o.toLocalDate) { d.toLocalTime.compareTo(o.toLocalTime) }
+		
+		
+		// COMPUTED	------------------------------
+		
 		/**
 		 * @return Converts this date time to an instant. Expects this date time to be in system default zone
 		 */
 		def toInstantInDefaultZone = d.toInstant(ZoneId.systemDefault().getRules.getOffset(d))
+		
+		
+		// OTHER	------------------------------
+		
+		/**
+		  * @param period A period of time
+		  * @return Date time 'period' into future from this datetime
+		  */
+		def +(period: Period) = d.plus(period)
+		
+		/**
+		  * @param period A period of time
+		  * @return Date time 'period' into the past from this datetime
+		  */
+		def -(period: Period) = d.minus(period)
 	}
 	
 	implicit class ExtendedDuration(val d: Duration) extends AnyVal
@@ -139,7 +164,7 @@ object TimeExtensions
 		/**
 		  * @return A finite version of this duration. None for infinite durations.
 		  */
-		def finite = if (d.isFinite()) Some(FiniteDuration(d.length, d.unit)) else None
+		def finite = if (d.isFinite) Some(FiniteDuration(d.length, d.unit)) else None
 		
 		/**
 		  * @return This duration in milliseconds, but with double precision (converted from nanoseconds)
@@ -205,6 +230,15 @@ object TimeExtensions
 		def yearMonth = d.year + d.month
 		
 		/**
+		  * @return A date previous to this day
+		  */
+		def yesterday = d.minusDays(1)
+		/**
+		  * @return A date after this day
+		  */
+		def tomorrow = d.plusDays(1)
+		
+		/**
 		 * @return Converts this date to an instant. The time is expected to be 00:00. Expects this date time
 		 *         to be in system default zone
 		 */
@@ -226,6 +260,12 @@ object TimeExtensions
 		 * @return a datetime based on this date and added time duration
 		 */
 		def +(duration: Duration) = d.atStartOfDay().plus(duration)
+		
+		/**
+		  * @param time A time element
+		  * @return This date at specified time
+		  */
+		def +(time: LocalTime) = d.atTime(time)
 		
 		/**
 		 * Subtracts a number of days to this date. Eg. 2.1.2001 + 3 hours would be 2.1.2001 03:00.
@@ -256,6 +296,12 @@ object TimeExtensions
 		def -(duration: FiniteDuration): LocalDateTime = this - (duration: Duration)
 		
 		/**
+		  * @param time A time element
+		  * @return A date time received from subtracting specified time amount from this date's 00:00
+		  */
+		def -(time: LocalTime): LocalDateTime = this - time.toDuration
+		
+		/**
 		 * @param other Another date
 		 * @return Whether this date comes before specified date
 		 */
@@ -278,6 +324,14 @@ object TimeExtensions
 		 * @return Whether this date comes after or is equal to specified date
 		 */
 		def >=(other: ChronoLocalDate) = !d.isBefore(other)
+	}
+	
+	implicit class ExtendedLocalTime(val t: LocalTime) extends AnyVal
+	{
+		/**
+		  * @return A duration based on this time element (from the beginning of day)
+		  */
+		def toDuration = t.toNanoOfDay.nanos
 	}
 	
 	implicit class ExtendedYear(val y: Year) extends AnyVal
@@ -362,6 +416,15 @@ object TimeExtensions
 			
 			weeksBuffer.result()
 		}
+	}
+	
+	implicit class ExtendedPeriod(val p: Period) extends RichComparable[Period]
+	{
+		// IMPLEMENTED	-----------------------
+		
+		// Uses some rounding in comparing (not exact with months vs days). 1 month is considered to be 30.44 days
+		override def compareTo(o: Period) = ((p.getYears * 12 + p.getMonths) * 30.44 -
+			((o.getYears * 12 + o.getMonths) * 30.44)).toInt
 	}
 	
 	implicit class TimeNumber[T](val i: T) extends AnyVal

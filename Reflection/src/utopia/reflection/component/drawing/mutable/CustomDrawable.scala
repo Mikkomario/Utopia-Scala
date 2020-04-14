@@ -22,7 +22,7 @@ trait CustomDrawable
 	  * Updates this component's custom drawers
 	  * @param drawers The new custom drawers for this component
 	  */
-	def customDrawers_=(drawers: Vector[CustomDrawer])
+	def customDrawers_=(drawers: Vector[CustomDrawer]): Unit
 	/**
 	  * @return The area where this drawable does custom drawing
 	  */

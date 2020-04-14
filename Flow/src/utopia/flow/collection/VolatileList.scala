@@ -3,9 +3,8 @@ package utopia.flow.collection
 import utopia.flow.async.Volatile
 import utopia.flow.util.CollectionExtensions._
 
-import scala.collection.generic.CanBuildFrom
 import scala.collection.immutable.VectorBuilder
-import scala.collection.mutable
+import scala.collection.{SeqFactory, mutable}
 
 object VolatileList
 {
@@ -19,7 +18,7 @@ object VolatileList
      */
     def apply[T](item: T) = new VolatileList[T](Vector(item))
     
-	def apply[T](items: TraversableOnce[T]) = new VolatileList(items.toVector)
+	def apply[T](items: IterableOnce[T]) = new VolatileList[T](items.iterator.to(Vector))
 	
     /**
      * Creates a new list with multiple items
@@ -30,7 +29,7 @@ object VolatileList
 	  * @tparam A The target type
 	  * @return A can build from for Volatile lists of target type
 	  */
-	def canBuildFrom[A]: CanBuildFrom[VolatileList[_], A, VolatileList[A]] = new VolatileListCanBuildFrom[A]()
+	implicit def factory[A]: VolatileListFactory = new VolatileListFactory
 }
 
 /**
@@ -38,10 +37,11 @@ object VolatileList
 * @author Mikko Hilpinen
 * @since 28.3.2019
 **/
-class VolatileList[T] private(list: Vector[T]) extends Volatile(list) with mutable.SeqLike[T, VolatileList[T]] with mutable.Seq[T]
+class VolatileList[T] private(list: Vector[T]) extends Volatile(list)
+	with mutable.SeqOps[T, VolatileList, VolatileList[T]] with mutable.Seq[T]
 {
     // IMPLEMENTED    ---------------
-    
+	
 	def iterator = get.iterator
 	
 	def apply(idx: Int) = get(idx)
@@ -50,15 +50,15 @@ class VolatileList[T] private(list: Vector[T]) extends Volatile(list) with mutab
 	
 	override def update(idx: Int, elem: T): Unit = update { _.updated(idx, elem) }
 	
-	override protected def newBuilder = new VolatileListBuilder[T]()
+	override def empty = VolatileList()
+	
+	override protected def fromSpecific(coll: IterableOnce[T]) = VolatileList(coll)
+	
+	override protected def newSpecificBuilder = new VolatileListBuilder[T]
+	
+	override def iterableFactory = VolatileList.factory[T]
 	
 	override def seq = this
-	
-	override def transform(f: T => T) =
-	{
-		update { _.map(f) }
-		this
-	}
 	
 	
 	// OPERATORS    ----------------
@@ -76,7 +76,7 @@ class VolatileList[T] private(list: Vector[T]) extends Volatile(list) with mutab
 	/**
 	 * Adds multiple new items to this list
 	 */
-	def ++=(items: TraversableOnce[T]) = update { _ ++ items }
+	def ++=(items: IterableOnce[T]) = update { _ ++ items }
 	
 	/**
 	 * Adds multiple new items to this list
@@ -91,7 +91,7 @@ class VolatileList[T] private(list: Vector[T]) extends Volatile(list) with mutab
 	/**
 	 * Removes multiple items from this list
 	 */
-	def --=(items: Traversable[Any]) = update { _ filterNot { my => items.exists(_ == my) } }
+	def --=(items: Iterable[Any]) = update { _ filterNot { my => items.exists(_ == my) } }
 	
 	
 	// OTHER    --------------------
@@ -128,20 +128,22 @@ class VolatileListBuilder[A] extends mutable.Builder[A, VolatileList[A]]
 	
 	// IMPLEMENTED    --------------------
 	
-	override def +=(elem: A): VolatileListBuilder.this.type =
+	override def addOne(elem: A) =
 	{
 		builder += elem
 		this
 	}
 	
-	override def clear() { builder.clear() }
+	override def clear() = builder.clear()
 	
 	override def result() = VolatileList(builder.result())
 }
 
-class VolatileListCanBuildFrom[A] extends CanBuildFrom[VolatileList[_], A, VolatileList[A]]
+class VolatileListFactory extends SeqFactory[VolatileList]
 {
-	override def apply(from: VolatileList[_]) = apply()
+	override def from[A](source: IterableOnce[A]) = VolatileList[A](source)
 	
-	override def apply() = new VolatileListBuilder[A]()
+	override def empty[A] = VolatileList[A]()
+	
+	override def newBuilder[A] = new VolatileListBuilder[A]
 }

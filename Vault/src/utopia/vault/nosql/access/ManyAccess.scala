@@ -15,7 +15,7 @@ object ManyAccess
 	  * @tparam A Type of accessed model
 	  * @return All items that can be accessed through the specified access point
 	  */
-	def autoAccess[A](accessor: ManyAccess[A, _])(implicit connection: Connection): Vector[A] = accessor.all
+	implicit def autoAccess[A](accessor: ManyAccess[A, _])(implicit connection: Connection): Vector[A] = accessor.all
 }
 
 /**

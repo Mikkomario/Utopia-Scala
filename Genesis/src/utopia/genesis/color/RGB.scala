@@ -89,14 +89,14 @@ object RGB
 	  * @param ratios Ratios per channel [0, 1]
 	  * @return A new RGB color
 	  */
-	def withRatios(ratios: Map[RGBChannel, Double]) = new RGB(ratios.mapValues(inRange).view.force)
+	def withRatios(ratios: Map[RGBChannel, Double]) = new RGB(ratios.view.mapValues(inRange).toMap)
 	
 	/**
 	  * Creates a new RGB with color values
 	  * @param values Values per channel [0, 255]
 	  * @return A new RGB color
 	  */
-	def withValues(values: Map[RGBChannel, Int]) = withRatios(values.mapValues { _.toDouble / maxValue })
+	def withValues(values: Map[RGBChannel, Int]) = withRatios(values.view.mapValues { _.toDouble / maxValue }.toMap)
 	
 	/**
 	  * Creates a new RGB with color values
@@ -182,7 +182,7 @@ case class RGB private(override val ratios: Map[RGBChannel, Double]) extends RGB
 	  * @param multiplier A multiplier
 	  * @return A multiplied version of this color
 	  */
-	def *(multiplier: Double) = RGB.withRatios(ratios.mapValues { _ * multiplier })
+	def *(multiplier: Double) = RGB.withRatios(ratios.view.mapValues { _ * multiplier }.toMap)
 	
 	/**
 	  * Divides the color values in this color

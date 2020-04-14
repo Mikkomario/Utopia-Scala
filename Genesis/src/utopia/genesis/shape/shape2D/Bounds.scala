@@ -59,7 +59,7 @@ object Bounds extends FromModelFactory[Bounds]
      * Creates a set of bounds that contains all of the provided bounds. Returns none if the provided 
      * collection is empty.
      */
-    def aroundOption(bounds: Traversable[Bounds]) = 
+    def aroundOption(bounds: Iterable[Bounds]) =
     {
         if (bounds.isEmpty)
             None
@@ -77,7 +77,7 @@ object Bounds extends FromModelFactory[Bounds]
     /**
      * Creates a bounds instance that contains all specified bounds. Will throw on empty collection
      */
-    def around(bounds: Traversable[Bounds]) = aroundOption(bounds).get
+    def around(bounds: Iterable[Bounds]) = aroundOption(bounds).get
     
     /**
      * Creates a rectangle around line so that the line becomes one of the rectangle's diagonals

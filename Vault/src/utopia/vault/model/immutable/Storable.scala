@@ -39,7 +39,7 @@ trait Storable extends ModelConvertible
     /**
      * The model properties of this storable instance
      */
-    def valueProperties: Traversable[(String, Value)]
+    def valueProperties: Iterable[(String, Value)]
     
     
     // COMPUTED PROPERTIES    ------------------------
@@ -64,7 +64,8 @@ trait Storable extends ModelConvertible
         val i = index
         if (i.isDefined)
             table.primaryColumn.map(_ <=> index)
-        else None
+        else
+            None
     }
     
     /**
@@ -160,6 +161,18 @@ trait Storable extends ModelConvertible
     }
     
     /**
+      * Performs an update based on this model, but applies a specific condition
+      * @param condition Condition applied to this update
+      * @param writeNulls Whether empty (null) values should be pushed to the DB (default = false)
+      * @param writeIndex Whether index value (if present) should be pushed to the DB (default = false)
+      * @param connection Database connection (implicit)
+      * @return Number of updated rows
+      */
+    def updateWhere(condition: Condition, writeNulls: Boolean = false, writeIndex: Boolean = false)
+                   (implicit connection: Connection) =
+        connection(toUpdateStatement(writeNulls, writeIndex) + Where(condition)).updatedRowCount
+    
+    /**
      * Creates an update sql segment based on this storable instance. This update segment can then 
      * be combined with a condition in order to update row data to match that of this storable instance.
      * @param writeNulls whether null / empty value assignments should be included in the update segment. 
@@ -181,7 +194,7 @@ trait Storable extends ModelConvertible
      * @param propertyNames the names of the properties that are updated / pushed to the database
      * @return whether any update was performed
      */
-    def updateProperties(propertyNames: Traversable[String])(implicit connection: Connection) = 
+    def updateProperties(propertyNames: Iterable[String])(implicit connection: Connection) =
     {
         val update = indexCondition.map { cond => updateStatementForProperties(propertyNames) + Where(cond) }
         update.foreach
@@ -210,7 +223,7 @@ trait Storable extends ModelConvertible
      * Creates an update statement that updates only the specified properties
      * @param propertyNames the names of the properties that will be included in the update segment
      */
-    def updateStatementForProperties(propertyNames: Traversable[String]) = 
+    def updateStatementForProperties(propertyNames: Iterable[String]) =
     {
         def updatedProperties = valueProperties.filter { case (name, _) => 
                 propertyNames.exists(name.equalsIgnoreCase) }

@@ -56,12 +56,12 @@ object BezierPath
 		
 		// Calculates the real upper diagonal. Each value requires the previous one.
 		val firstUpperDiagonal = baseUpperDiagonal.head / mainDiagonal.head
-		val upperDiagonal = (1 until (n - 1)).foldMapLeft(firstUpperDiagonal) { (last, i) =>
+		val upperDiagonal: Vector[Double] = (1 until (n - 1)).foldMapToVector(firstUpperDiagonal) { (last, i) =>
 			baseUpperDiagonal(i) / (mainDiagonal(i) - lowerDiagonal(i - 1) * last) }
 		
 		// Calculates the real target. Again, each value is dependent from the one before
 		val firstTarget = baseTarget.head / mainDiagonal.head
-		val target = (1 until n).foldMapLeft(firstTarget)
+		val target: Vector[P] = (1 until n).foldMapToVector(firstTarget)
 		{
 			(last, i) =>
 				val scale = 1 / (mainDiagonal(i) - lowerDiagonal(i - 1) * upperDiagonal(i - 1))
@@ -70,7 +70,7 @@ object BezierPath
 		
 		// Calculates the first control points from end to beginning
 		val lastControl1 = target.last
-		val controlPoints1 = ((n - 2) to 0 by -1).foldMapLeft(lastControl1) { (next, i) =>
+		val controlPoints1: Vector[P] = ((n - 2) to 0 by -1).foldMapToVector(lastControl1) { (next, i) =>
 			target(i) - next * upperDiagonal(i) }.reverse
 		
 		// Calculates the second control points from the first (last one calculated separately)

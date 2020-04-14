@@ -1,5 +1,6 @@
 package utopia.genesis.test
 
+import scala.math.Ordering.Double.TotalOrdering
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.shape.Vector3D
 import utopia.genesis.shape.shape2D.{Circle, Line, Point}

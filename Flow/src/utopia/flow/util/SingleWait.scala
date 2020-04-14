@@ -53,7 +53,7 @@ class SingleWait(val target: WaitTarget) extends Runnable with Breakable
         {
             // If not, performs the wait and then completes the promise
             target.breakable.waitWith(lock)
-            promise.success(Unit)
+            promise.success(())
         }
 	}
 	

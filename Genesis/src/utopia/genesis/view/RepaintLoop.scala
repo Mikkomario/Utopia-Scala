@@ -37,7 +37,7 @@ class RepaintLoop(comp: Component, val maxFPS: FPS = FPS.default) extends Loop
 	/**
 	  * Paints the target component
 	  */
-	override protected def runOnce() =
+	override def runOnce() =
 	{
 		// Waits until component is displayable
 		while (!isBroken && component.get.exists { c => !c.isDisplayable || !c.isShowing })
@@ -62,7 +62,7 @@ class RepaintLoop(comp: Component, val maxFPS: FPS = FPS.default) extends Loop
 	/**
 	  * The time between the end of the current run and the start of the next one
 	  */
-	override protected def nextWaitTarget = Until(lastDrawTime + maxFPS.interval)
+	override def nextWaitTarget = Until(lastDrawTime + maxFPS.interval)
 	
 	
 	// NESTED CLASSES	-----------------

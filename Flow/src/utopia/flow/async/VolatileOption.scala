@@ -1,5 +1,7 @@
 package utopia.flow.async
 
+import utopia.flow.datastructure.mutable.Lazy
+
 object VolatileOption
 {
     /**
@@ -18,9 +20,11 @@ object VolatileOption
 * @author Mikko Hilpinen
 * @since 29.3.2019
 **/
-class VolatileOption[T](value: Option[T]) extends Volatile[Option[T]](value) with Traversable[T]
+class VolatileOption[T](value: Option[T]) extends Volatile[Option[T]](value) with Iterable[T]
 {
 	// IMPLEMENTED    ---------------
+    
+    override def iterator: Iterator[T] = new OptionIterator
     
     override def foreach[U](f: T => U) = get.foreach(f)
     
@@ -71,4 +75,28 @@ class VolatileOption[T](value: Option[T]) extends Volatile[Option[T]](value) wit
      * @return This option's value after operation
      */
     def setOneIfEmptyAndGet(getValue: () => T) = updateIfAndGet { _.isEmpty } { _ => Some(getValue()) }.get
+    
+    
+    // NESTED   ---------------------
+    
+    private class OptionIterator extends Iterator[T]
+    {
+        // ATTRIBUTES   -------------
+        
+        private val cachedNext = Lazy { get }
+        private var isConsumed = false
+        
+        override def hasNext = !isConsumed && cachedNext.get.isDefined
+        
+        override def next() =
+        {
+            if (isConsumed)
+                throw new NoSuchElementException("Called next() twice for OptionIterator")
+            else
+            {
+                isConsumed = true
+                cachedNext.get.get
+            }
+        }
+    }
 }

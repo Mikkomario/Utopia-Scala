@@ -137,7 +137,7 @@ class XmlReader(streamReader: Reader) extends AutoCloseable
         if (isAtDocumentEnd) 
             Model.empty 
         else 
-            Model(parseAttributes().mapValues(XmlReader.valueFromString).toVector)
+            Model(parseAttributes().view.mapValues(XmlReader.valueFromString))
     }
     
     private def currentEvent = 
@@ -371,7 +371,7 @@ private class UnfinishedElement(val name: String, val attributes: Map[String, St
     
     def toXmlElement: XmlElement = 
     {
-        val attributesModel = Model(attributes.mapValues(XmlReader.valueFromString).toVector)
+        val attributesModel = Model(attributes.view.mapValues(XmlReader.valueFromString))
         new XmlElement(name, if (text.isEmpty) Value.emptyWithType(StringType) else
                 XmlReader.valueFromString(text), attributesModel, children.map(_.toXmlElement))
     }

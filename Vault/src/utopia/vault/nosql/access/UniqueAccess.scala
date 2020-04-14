@@ -36,7 +36,14 @@ trait UniqueAccess[+A] extends Access[Option[A]]
 	 * @param connection Implicit database connection
 	 * @return The unique item accessed through this access point. None if no item was found.
 	 */
+	@deprecated("Replaced with pull", "v1.5")
 	def get(implicit connection: Connection) = read(globalCondition)
+	
+	/**
+	  * @param connection Implicit database connection
+	  * @return The unique item accessed through this access point. None if no item was found.
+	  */
+	def pull(implicit connection: Connection) = read(globalCondition)
 	
 	/**
 	 * @param connection DB Connection (implicit)
@@ -69,5 +76,5 @@ object UniqueAccess
 	  * @tparam A Type of accessed item
 	  * @return Accessor's unique result from DB. None if no result was found.
 	  */
-	def autoAccess[A](accessor: UniqueAccess[A])(implicit connection: Connection): Option[A] = accessor.get
+	implicit def autoAccess[A](accessor: UniqueAccess[A])(implicit connection: Connection): Option[A] = accessor.pull
 }

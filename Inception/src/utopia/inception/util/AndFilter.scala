@@ -17,7 +17,7 @@ object AndFilter
  * @author Mikko Hilpinen
  * @since 21.1.2017
  */
-class AndFilter[-T](val filters: Traversable[Filter[T]]) extends Filter[T]
+class AndFilter[-T](val filters: Iterable[Filter[T]]) extends Filter[T]
 {
 	override def apply(item: T) = filters.forall { _(item) }
 }

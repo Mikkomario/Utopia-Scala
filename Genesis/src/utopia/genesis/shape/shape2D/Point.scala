@@ -13,7 +13,7 @@ import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
 import utopia.genesis.util.ApproximatelyEquatable
-import utopia.genesis.shape.{Axis, Axis2D, Vector3D, VectorLike}
+import utopia.genesis.shape.{Axis2D, Vector3D, VectorLike}
 import utopia.genesis.shape.Axis._
 
 import scala.util.Success
@@ -68,12 +68,12 @@ object Point extends FromModelFactory[Point]
     /**
      * A combination of the points with minimum x and y coordinates. None if collection is empty
      */
-    def topLeftOption(points: TraversableOnce[Point]) = points.reduceLeftOption { _ topLeft _ }
+    def topLeftOption(points: IterableOnce[Point]) = points.iterator.reduceLeftOption { _ topLeft _ }
     
     /**
      * A combination of the points with minimum x and y coordinates
      */
-    def topLeft(points: TraversableOnce[Point]): Point = topLeftOption(points).getOrElse(origin)
+    def topLeft(points: IterableOnce[Point]): Point = topLeftOption(points).getOrElse(origin)
     
     /**
      * A combination of the points with maximum x and y coordinates
@@ -84,12 +84,12 @@ object Point extends FromModelFactory[Point]
     /**
      * A combination of the points with maximum x and y coordinates. None if collection is empty
      */
-    def bottomRightOption(points: TraversableOnce[Point]) = points.reduceLeftOption { _ bottomRight _ }
+    def bottomRightOption(points: IterableOnce[Point]) = points.iterator.reduceLeftOption { _ bottomRight _ }
     
     /**
      * A combination of the points with maximum x and y coordinates
      */
-    def bottomRight(points: TraversableOnce[Point]): Point = bottomRightOption(points).getOrElse(origin)
+    def bottomRight(points: IterableOnce[Point]): Point = bottomRightOption(points).getOrElse(origin)
 }
 
 /**

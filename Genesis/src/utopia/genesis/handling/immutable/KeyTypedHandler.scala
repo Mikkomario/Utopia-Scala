@@ -8,7 +8,7 @@ object KeyTypedHandler
 {
 	val empty = new KeyStateHandler(Vector())
 	
-	def apply(elements: TraversableOnce[KeyTypedListener], parent: Option[Handleable] = None) = new KeyTypedHandler(elements)
+	def apply(elements: IterableOnce[KeyTypedListener], parent: Option[Handleable] = None) = new KeyTypedHandler(elements)
 	
 	def apply(element: KeyTypedListener) = new KeyTypedHandler(Vector(element))
 	
@@ -19,5 +19,5 @@ object KeyTypedHandler
   * This is an immutable implementation of the KeyTypedHandler trait
   * @param initialElements Elements placed in this handler
   */
-class KeyTypedHandler(initialElements: TraversableOnce[KeyTypedListener])
+class KeyTypedHandler(initialElements: IterableOnce[KeyTypedListener])
 	extends Handler[KeyTypedListener](initialElements) with handling.KeyTypedHandler with Handleable
