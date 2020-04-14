@@ -1,5 +1,5 @@
-# Changes - Utopia Flow
-## v1.7 (beta)
+# Utopia Flow - List of Changes
+## v1.7
 
 ### Major Changes
 - Module is now based on **Scala 2.13.1** and not 2.12.18
