@@ -2,7 +2,7 @@ package utopia.flow.util
 
 import scala.language.implicitConversions
 import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
-import scala.collection.generic.IsSeq
+import scala.collection.generic.{IsIterableOnce, IsSeq}
 import scala.collection.immutable.{HashSet, VectorBuilder}
 import scala.util.{Failure, Success, Try}
 
@@ -485,30 +485,6 @@ object CollectionExtensions
                     bestMatch(matchers.drop(1))
             }
         }
-        
-        /**
-         * Maps the contents of this Iterable. Mapping may fail, interrupting all remaining mappings
-         * @param f A mapping function. May fail.
-         * @param factory Implicit factory for final collection
-         * @tparam B Type of map result
-         * @tparam To Type of final collection
-         * @return Mapped collection if all mappings succeeded. Failure otherwise.
-         */
-        def tryMap[B, To](f: A => Try[B])(implicit factory: Factory[B, To]): Try[To] =
-        {
-            val buffer = factory.newBuilder
-            // Maps items until the mapping function fails
-            t.view.map { a =>
-                val result = f(a)
-                result.toOption.foreach { buffer += _ }
-                result
-            }.find { _.isFailure } match
-            {
-                case Some(failure) => Failure(failure.failure.get)
-                // On success (no failure found), returns all mapped items
-                case None => Success(buffer.result())
-            }
-        }
     
         /**
           * Compares this set of items with another set. Lists items that have been added and removed, plus the changes
@@ -629,28 +605,76 @@ object CollectionExtensions
         }
     }
     
-    /**
-     * This implicit class is used for extending collection map conversion
-     */
-    implicit class MultiMapConvertible[T](val list: IterableOnce[T]) extends AnyVal
+    class IterableOnceOperations[Repr, I <: IsIterableOnce[Repr]](coll: Repr, iter: I)
     {
         // Referenced from: https://stackoverflow.com/questions/22090371/scala-grouping-list-of-tuples [10.10.2018]
-        def toMultiMap[Key, Value, Values](key: T => Key, value: T => Value)
-                (implicit factory: Factory[Value, Values]): Map[Key, Values] =
+        /**
+          * Converts this iterable item to a map with possibly multiple values per key
+          * @param toKey A function for mapping items to keys
+          * @param toValue A function for mapping items to values
+          * @param bf Implicit build from for the final values collections
+          * @tparam Key Type of key in the final map
+          * @tparam Value Type of individual values in the final map
+          * @tparam Values Type of values collections in the final map
+          * @return A multi map based on this iteration mapping
+          */
+        def toMultiMap[Key, Value, Values](toKey: iter.A => Key)(toValue: iter.A => Value)(
+            implicit bf: BuildFrom[Repr, Value, Values]): Map[Key, Values] = toMultiMap { a => toKey(a) -> toValue(a) }
+    
+        /**
+          * Converts this iterable item to a map with possibly multiple values per key
+          * @param f A function for mapping items to key value pairs
+          * @param bf Implicit build from for the final values collections
+          * @tparam Key Type of key in the final map
+          * @tparam Value Type of individual values in the final map
+          * @tparam Values Type of values collections in the final map
+          * @return A multi map based on this iteration mapping
+          */
+        def toMultiMap[Key, Value, Values](f: iter.A => (Key, Value))(implicit bf: BuildFrom[Repr, Value, Values]): Map[Key, Values] =
         {
-            val b = mutable.Map.empty[Key, mutable.Builder[Value, Values]]
-	        list.iterator.foreach { elem => b.getOrElseUpdate(key(elem), factory.newBuilder) += value(elem) }
-	        b.map { case (k, vb) => (k, vb.result()) }.to(collection.immutable.Map)
+            val buffer = mutable.Map.empty[Key, mutable.Builder[Value, Values]]
+            val iterOps = iter(coll)
+            iterOps.iterator.foreach { item =>
+                val (key, value) = f(item)
+                buffer.getOrElseUpdate(key, bf.newBuilder(coll)) += value
+            }
+            buffer.view.mapValues { _.result() }.toMap
+        }
+    
+        /**
+          * Maps the contents of this Iterable. Mapping may fail, interrupting all remaining mappings
+          * @param f A mapping function. May fail.
+          * @param bf A build from for the final collection (implicit)
+          * @tparam B Type of map result
+          * @tparam To Type of final collection
+          * @return Mapped collection if all mappings succeeded. Failure otherwise.
+          */
+        def tryMap[B, To](f: iter.A => Try[B])(implicit bf: BuildFrom[Repr, B, To]): Try[To] =
+        {
+            val buffer = bf.newBuilder(coll)
+            // Maps items until the mapping function fails
+            val iterOps = iter(coll)
+            val finalResult = iterOps.iterator.map(f).find { result =>
+                result.toOption.foreach { buffer += _ }
+                result.isFailure
+            }.getOrElse(Success(()))
+            
+            finalResult.map { _ => buffer.result() }
         }
     }
+    
+    implicit def iterableOnceOperations[Repr](coll: Repr)(implicit iter: IsIterableOnce[Repr]): IterableOnceOperations[Repr, iter.type] =
+        new IterableOnceOperations(coll, iter)
     
     /**
      * This extension allows tuple lists to be transformed into multi maps directly
      */
-    implicit class RichTupleList[K, V](val list: IterableOnce[(K, V)]) extends AnyVal
+    implicit class RichTupleVector[K, V](val list: Vector[(K, V)]) extends AnyVal
     {
-        def toMultiMap[Values]()(implicit factory: Factory[V, Values]): Map[K, Values] =
-            new MultiMapConvertible(list).toMultiMap(_._1, _._2)
+        /**
+          * @return This collection as a multi map
+          */
+        def asMultiMap: Map[K, Vector[V]] = list.toMultiMap[K, V, Vector[V]] { t => t }
     }
     
     implicit class RichRange(val range: Range) extends AnyVal
