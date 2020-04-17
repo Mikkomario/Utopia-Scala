@@ -181,6 +181,8 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	
 	// IMPLEMENTED	----------------
 	
+	override def repr = this
+	
 	override def toString = s"Image ($size ${(alpha * 100).toInt}% Alpha)"
 	
 	

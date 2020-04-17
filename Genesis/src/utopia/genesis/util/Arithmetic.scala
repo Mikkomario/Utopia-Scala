@@ -8,6 +8,8 @@ object Arithmetic
 	
 	implicit class ArithMeticDouble(val d: Double) extends Arithmetic[ArithMeticDouble, ArithMeticDouble] with Distance
 	{
+		override def repr = this
+		
 		override def length = d
 		
 		override def -(another: ArithMeticDouble) = d - another

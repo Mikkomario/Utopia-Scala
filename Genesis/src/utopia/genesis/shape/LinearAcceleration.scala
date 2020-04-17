@@ -41,6 +41,8 @@ case class LinearAcceleration(override val amount: LinearVelocity, override val 
 	
 	// IMPLEMENTED	-------------------
 	
+	override def repr = this
+	
 	override def *(mod: Double) = LinearAcceleration(amount * mod, duration)
 	
 	override def +(another: LinearAcceleration) = LinearAcceleration(amount + another(duration), duration)
@@ -54,8 +56,6 @@ case class LinearAcceleration(override val amount: LinearVelocity, override val 
 	def isPositive = amount.isPositive
 	
 	override protected def zero = LinearAcceleration.zero
-	
-	override protected def self = this
 	
 	override def ~==(other: LinearAcceleration) = perMilliSecond ~== other.perMilliSecond
 	

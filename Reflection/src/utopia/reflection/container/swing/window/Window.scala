@@ -7,6 +7,7 @@ import utopia.flow.datastructure.mutable.Lazy
 import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
+import utopia.genesis.shape.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.{Axis, Axis2D, Vector3D}
 import utopia.genesis.shape.shape2D.{Point, Size}
 import utopia.genesis.view.{ConvertingKeyListener, MouseEventGenerator}
@@ -312,7 +313,12 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
                 val movement = Axis2D.values.map { axis =>
                     val move = resizeAlignment.directionAlong(axis) match
                     {
-                        case Some(moveDirection) => if (moveDirection.isPositiveDirection) increase.along(axis) else 0.0
+                        case Some(moveDirection) =>
+                            moveDirection.sign match
+                            {
+                                case Positive => increase.along(axis)
+                                case Negative => 0.0
+                            }
                         case None => increase.along(axis) / 2.0
                     }
                     (axis: Axis) -> move

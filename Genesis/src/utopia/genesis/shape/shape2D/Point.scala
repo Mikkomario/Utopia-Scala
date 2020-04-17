@@ -120,7 +120,7 @@ case class Point(override val x: Double, override val y: Double) extends VectorL
     
     override def ~==(other: Point) = (x ~== other.x) && (y ~== other.y)
 	
-	override protected def repr = this
+	override def repr = this
 	
 	override def toString = s"($x, $y)"
 	

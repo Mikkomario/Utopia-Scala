@@ -2,6 +2,7 @@ package utopia.reflection.container.swing
 
 import utopia.flow.datastructure.mutable.Lazy
 import utopia.genesis.color.Color
+import utopia.genesis.shape.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Direction2D, Point, Size}
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.stack.{CachingStackable, StackLeaf}
@@ -61,10 +62,14 @@ class CollectionView[C <: AwtStackable](rowDirection: Direction2D, initialRowSpl
 	{
 		if (forceEqualRowLength)
 			Fit
-		else if (rowDirection.isPositiveDirection)
-			Leading
 		else
-			Trailing
+		{
+			rowDirection.sign match
+			{
+				case Positive => Leading
+				case Negative => Trailing
+			}
+		}
 	}
 	
 	private def rowSizes = rowsWithSizes.get.map { _._2 }
@@ -156,12 +161,10 @@ class CollectionView[C <: AwtStackable](rowDirection: Direction2D, initialRowSpl
 		// COMPUTED	-----------------------
 		
 		// Row order may be opposite (down to up or right to left) on certain directions
-		def items =
+		def items = rowDirection.sign match
 		{
-			if (rowDirection.isPositiveDirection)
-				itemsBuilder.result()
-			else
-				itemsBuilder.result().reverse
+			case Positive => itemsBuilder.result()
+			case Negative => itemsBuilder.result().reverse
 		}
 		
 		

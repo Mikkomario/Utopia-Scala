@@ -41,6 +41,8 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	
 	// IMPLEMENTED	--------------------
 	
+	override def repr = this
+	
 	override def *(mod: Double) = LinearVelocity(amount * mod, duration)
 	
 	override def toString = s"$perMilliSecond/ms"
@@ -54,8 +56,6 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	def isPositive = amount >= 0
 	
 	override protected def zero = LinearVelocity.zero
-	
-	override protected def self = this
 	
 	override def ~==(other: LinearVelocity) = perMilliSecond ~== other.perMilliSecond
 	

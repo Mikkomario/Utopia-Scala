@@ -1,6 +1,7 @@
 package utopia.reflection.container.stack
 
 import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Point}
 import utopia.reflection.component.ComponentWrapper
 import utopia.reflection.component.stack.{CachingStackable, Stackable}
@@ -50,7 +51,12 @@ trait AlignFrameLike[C <: Stackable] extends SingleStackContainer[C] with Compon
 				
 				axis -> (align.directionAlong(axis) match
 				{
-					case Some(dir) => if (dir.isPositiveDirection) myLength - targetLength else 0
+					case Some(dir) =>
+						dir.sign match
+						{
+							case Positive => myLength - targetLength
+							case Negative => 0
+						}
 					case None => (myLength - targetLength) / 2
 				})
 			}.toMap)

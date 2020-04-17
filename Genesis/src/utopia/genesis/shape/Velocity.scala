@@ -57,6 +57,8 @@ case class Velocity(transition: Vector3D, override val duration: Duration) exten
 	
 	// IMPLEMENTED	-------------
 	
+	override def repr = this
+	
 	override def amount = transition
 	
 	override def *(mod: Double) = Velocity(transition * mod, duration)

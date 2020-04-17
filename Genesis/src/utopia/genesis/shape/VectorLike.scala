@@ -42,11 +42,6 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Re
 	  */
 	def buildCopy(dimensions: Vector[Double]): Repr
 	
-	/**
-	  * @return This instance as 'Repr'
-	  */
-	protected def repr: Repr
-	
 	
 	// IMPLEMENTED	-----------------
 	

@@ -55,6 +55,8 @@ case class Acceleration(override val amount: Velocity, override val duration: Du
 	
 	// IMPLEMENTED	-------------------
 	
+	override def repr = this
+	
 	override def -(another: Acceleration) = this + (-another)
 	
 	override def *(mod: Double) = Acceleration(amount * mod, duration)
