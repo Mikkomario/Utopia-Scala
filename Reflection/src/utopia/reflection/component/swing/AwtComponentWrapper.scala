@@ -2,15 +2,17 @@ package utopia.reflection.component.swing
 
 import java.awt.Component
 import java.awt.event.MouseEvent
+import java.awt.image.BufferedImage
 
-import javax.swing.SwingUtilities
+import javax.swing.{CellRendererPane, SwingUtilities}
 import utopia.flow.async.VolatileFlag
 import utopia.flow.datastructure.mutable.Lazy
 import utopia.flow.util.NullSafe._
 import utopia.genesis.color.Color
 import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus}
 import utopia.genesis.handling.mutable._
-import utopia.genesis.shape.shape2D.{Point, Size}
+import utopia.genesis.image.Image
+import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.reflection.component.stack.{CachingStackable, StackLeaf, Stackable}
 import utopia.reflection.component.ComponentLike
 import utopia.reflection.event.{ResizeEvent, ResizeListener}
@@ -61,6 +63,31 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     
     
     // COMPUTED ---------------------------
+    
+    /**
+      * @return An image of this component's paint result. Please note that this draws the image with this component's
+      *         current size. If this component doesn't have a size, no image is drawn.
+      */
+    def toImage =
+    {
+        // Prepares the image
+        val currentSize = size
+        if (currentSize.isPositive)
+        {
+            val image = new BufferedImage(currentSize.width.toInt, currentSize.height.toInt, BufferedImage.TYPE_INT_ARGB)
+    
+            // Draws the image using cell renderer panel
+            val cellRenderedPanel = new CellRendererPane
+            cellRenderedPanel.add(component)
+            cellRenderedPanel.paintComponent(image.createGraphics(), component, cellRenderedPanel,
+                Bounds(Point.origin, currentSize).toAwt)
+    
+            // Returns wrapped image
+            Image.from(image)
+        }
+        else
+            Image.empty
+    }
     
     private def parentsInWindow = new ParentsIterator
     
