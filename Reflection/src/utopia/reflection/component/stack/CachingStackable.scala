@@ -47,5 +47,5 @@ trait CachingStackable extends Stackable with Constrainable
 	
 	override def resetCachedSize() = cachedStackSize.reset()
 	
-	override def stackId = hashCode()
+	override val stackId = hashCode()
 }

@@ -11,7 +11,7 @@ import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.Direction2D
 import utopia.reflection.component.swing.DropDown
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.swing.{CollectionView, Stack}
+import utopia.reflection.container.swing.{AnimatedSizeContainer, CollectionView, Stack}
 import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
@@ -63,8 +63,8 @@ object DropDownTest2 extends App
 	categorySelect.content = data.keySet.toVector.sorted
 	
 	val stack = Stack.buildColumnWithContext() { stack =>
-		stack += categorySelect
-		stack += characterSelect
+		stack += AnimatedSizeContainer(categorySelect, actorHandler)
+		stack += AnimatedSizeContainer(characterSelect, actorHandler)
 	}
 	val content = stack.framed(16.any x 16.any, Color.white)
 	

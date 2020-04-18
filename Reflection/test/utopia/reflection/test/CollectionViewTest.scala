@@ -42,7 +42,7 @@ object CollectionViewTest extends App
 	implicit val baseContext: ComponentContext = baseCB.result
 	
 	val collection = new CollectionView[AwtStackable](Direction2D.Left, 320, 16.downscaling)
-	val content = collection.alignedToSide(Direction2D.Left, useLowPriorityLength = true).framed(16.any x 16.any, Color.white)
+	val content = collection.alignedToSide(Direction2D.Left, useLowPriorityLength = true).framed(16.any x 16.any, Color.white).withAnimatedSize(actorHandler)
 	
 	implicit val exc: ExecutionContext = new ThreadPool("Reflection").executionContext
 	new SingleFrameSetup(actorHandler, Frame.windowed(content, "Collection View Test", Program)).start()

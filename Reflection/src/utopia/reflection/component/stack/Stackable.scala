@@ -1,16 +1,20 @@
 package utopia.reflection.component.stack
 
+import utopia.flow.util.TimeExtensions._
 import utopia.genesis.color.Color
+import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis2D
 import utopia.reflection.component.ComponentLike
 import utopia.reflection.component.swing.AwtComponentRelated
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.stack.{StackHierarchyManager, StackLayout}
-import utopia.reflection.container.swing.{AlignFrame, Framing, Stack}
+import utopia.reflection.container.swing.{AlignFrame, AnimatedSizeContainer, Framing, Stack}
 import utopia.reflection.shape.{Alignment, StackInsets, StackLength, StackSize}
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.shape2D.Direction2D
 import utopia.reflection.shape.Alignment.Center
+
+import scala.concurrent.duration.FiniteDuration
 
 object Stackable
 {
@@ -122,6 +126,14 @@ object Stackable
 		 * @return This item wrapped in a frame that places it at the center
 		 */
 		def alignedToCenter = aligned(Center)
+		
+		/**
+		  * @param actorHandler An actor handler to deliver action events
+		  * @param transitionDuration Duration of each size transition
+		  * @return This component wrapped in a component that animates its size adjustments
+		  */
+		def withAnimatedSize(actorHandler: ActorHandler, transitionDuration: FiniteDuration = 0.25.seconds) =
+			AnimatedSizeContainer(s, actorHandler, transitionDuration)
 	}
 }
 
