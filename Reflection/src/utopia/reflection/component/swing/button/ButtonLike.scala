@@ -119,8 +119,6 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 		
 		override def onKeyState(event: KeyStateEvent) = trigger()
 		
-		override def parent = None
-		
 		// Only allows handling while in focus
 		override def allowsHandlingFrom(handlerType: HandlerType) = isInFocus
 	}
@@ -173,8 +171,6 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 			else
 				state = state.copy(isMouseOver = false)
 		}
-		
-		override def parent = None
 		
 		override def allowsHandlingFrom(handlerType: HandlerType) = isEnabled
 	}

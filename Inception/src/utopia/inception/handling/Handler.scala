@@ -59,18 +59,18 @@ trait Handler[A <: Handleable] extends Iterable[A]
 	  * @param element A target element
 	  * @return Whether the specified element should be removed from this handler, whether not already
 	  */
-	def considersDead(element: Handleable): Boolean = element.parent.exists(considersDead) || (element match
+	def considersDead(element: Handleable): Boolean = element match
 	{
 		case mortal: Mortal => mortal.isDead
 		case _ => false
-	})
+	}
 	
 	/**
 	  * @param element A target element
 	  * @return Whether the specified element allows being handled by this handler at this time. The caller may
 	  * disregard this plea, however.
 	  */
-	def allowsHandling(element: Handleable): Boolean = element.parent.forall(allowsHandling) && element.allowsHandlingFrom(handlerType)
+	def allowsHandling(element: Handleable): Boolean = element.allowsHandlingFrom(handlerType)
 	
 	/**
 	  * A view for handling operations, may take into account target element's desire to not allow handling

@@ -1,10 +1,12 @@
 # Utopia Flow - List of Changes
 ## v1.8 (beta)
 ### Breaking Changes
-- Collection Extensions: 
+- CollectionExtensions: 
     - toMultiMap(f1, f2) and toMultiMap() were replaced with toMultiMap(f1)(f2), toMultiMap(...) and asMultiMap
         - Use of asMultiMap is discouraged since it currently only supports tuple vectors
         - New toMultiMap methods support all IterableOnce instances
+- Generator
+    - .apply method in Generator object now takes two parameter lists instead of one
         
 ### Fixes
 - **tryMap**(...) in CollectionExtensions now uses buildFrom and not Factory. This should result in better result 

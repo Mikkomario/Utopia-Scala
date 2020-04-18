@@ -17,9 +17,14 @@ case class ProjectilePath(curvatureModifier: Double = 0.0, end: Double = 1.0) ex
 	// IMPLEMENTED	----------------------------
 	
 	// Uses function y = (2x - (0.01 - c) * x^2) / (1 + 100c)
-	// Where c is a curvature modifier [0, 1[
-	def apply(progress: Double) = ((2 * progress - (0.01 - curvatureModifier) * math.pow(progress, 2)) /
-		(1 + curvatureModifier * 100)) * end
+	// Where c is a curvature modifier [0, 1[ and both x and y are percentages [0, 100]
+	def apply(progress: Double) =
+	{
+		val progressPercent = progress * 100
+		val resultPercent = (2 * progressPercent - (0.01 - curvatureModifier) * math.pow(progressPercent, 2)) /
+			(1 + curvatureModifier * 100)
+		resultPercent / 100.0 * end
+	}
 	
 	
 	// OTHER	--------------------------------

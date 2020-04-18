@@ -20,11 +20,6 @@ trait Handleable extends utopia.inception.handling.Handleable
     var handlingStates: Map[HandlerType, Boolean] = new HashMap[HandlerType, Boolean]()
     
     /**
-      * The current parent instance of this handleable
-      */
-    var parent: Option[utopia.inception.handling.Handleable] = None
-    
-    /**
       * This is the state used when a handling state hasn't been specified for a specific handler
       */
     var defaultHandlingState = true

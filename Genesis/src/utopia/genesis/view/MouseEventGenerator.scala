@@ -40,8 +40,6 @@ class MouseEventGenerator(c: Component, val moveHandler: MouseMoveListener,
     
     // IMPLEMENTED METHODS    --------
     
-    override def parent = None
-    
     // This generator dies once component is no longer reachable
     override def isDead = component.get.isEmpty
     

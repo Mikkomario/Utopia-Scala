@@ -11,11 +11,6 @@ import utopia.inception.handling.HandlerType
 trait Handleable extends handling.Handleable
 {
 	/**
-	  * @return Immutable handleable items are not dependent from any parent
-	  */
-	override def parent = None
-	
-	/**
 	  * @param handlerType The type of handler doing the handling
 	  * @return Immutable handleable instances always allow handling
 	  */

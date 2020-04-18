@@ -109,8 +109,6 @@ class Switch(val targetWidth: StackLength, val color: Color, actorHandler: Actor
 			Some(ConsumeEvent("Switch activation"))
 		}
 		
-		override def parent = None
-		
 		// Only enabled items are interactive
 		override def allowsHandlingFrom(handlerType: HandlerType) = isEnabled
 	}
@@ -186,8 +184,6 @@ class Switch(val targetWidth: StackLength, val color: Color, actorHandler: Actor
 		
 		// Dies after component is no longer displayable
 		override def isDead = wasDisplayed && !component.isDisplayable
-		
-		override def parent = None
 		
 		// Only allows handling when update is required
 		override def allowsHandlingFrom(handlerType: HandlerType) = if (isOn) x < 1 else x > 0

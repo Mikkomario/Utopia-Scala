@@ -79,9 +79,12 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
             // Draws the image using cell renderer panel
             val cellRenderedPanel = new CellRendererPane
             cellRenderedPanel.add(component)
+            val boundsBefore = bounds
             cellRenderedPanel.paintComponent(image.createGraphics(), component, cellRenderedPanel,
-                Bounds(Point.origin, currentSize).toAwt)
-    
+                boundsBefore.withPosition(Point.origin).toAwt)
+            cellRenderedPanel.remove(component)
+            component.setBounds(boundsBefore.toAwt)
+            
             // Returns wrapped image
             Image.from(image)
         }

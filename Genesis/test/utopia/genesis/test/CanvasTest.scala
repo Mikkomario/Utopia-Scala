@@ -21,8 +21,6 @@ object CanvasTest extends App
 {
     private class TestDrawable(val shape: ShapeConvertible, override val drawDepth: Int) extends Drawable
     {
-		override def parent = None
-	
 		override def allowsHandlingFrom(handlerType: HandlerType) = true
 	
 		override def draw(drawer: Drawer) = drawer.withEdgePaint(Color.RED).draw(shape)

@@ -49,7 +49,7 @@ object DropDownTest2 extends App
 	val data = HashMap("Fighter" -> Vector("Aragorn", "Gimli", "Boromir"), "Archer" -> Vector("Legolas"),
 		"Wizard" -> Vector("Gandalf", "Radagast"))
 	
-	val ddIcon = Image.readOrEmpty("test-images/arrow-back-48dp.png")
+	val ddIcon = Image.readOrEmpty("Reflection/test-images/arrow-back-48dp.png")
 	val categorySelect = DropDown.contextualWithTextOnly[String](
 		TextLabel.contextual("No content available", isHint = true), ddIcon, "Select Class")
 	val characterSelect = DropDown.contextualWithTextOnly[String](
