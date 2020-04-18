@@ -9,8 +9,9 @@
     - .apply method in Generator object now takes two parameter lists instead of one
         
 ### Fixes
-- **tryMap**(...) in CollectionExtensions now uses buildFrom and not Factory. This should result in better result 
+- tryMap(...) in CollectionExtensions now uses buildFrom and not Factory. This should result in better result 
 collection types when used.
+- LocalDate is now properly converted to JSON (previously converted to Instant first)
 
 ### New Methods
 - CollectionExtensions

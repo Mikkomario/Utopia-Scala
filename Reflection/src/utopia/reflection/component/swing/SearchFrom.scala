@@ -136,8 +136,8 @@ object SearchFrom
 	def noResultsLabel(noResultsText: LocalizedString, searchStringPointer: Changing[Option[String]])
 					  (implicit context: ComponentContext) =
 	{
-		val label = TextLabel.contextual(noResultsText.interpolate(searchStringPointer.value.getOrElse("")))
-		searchStringPointer.addListener { e => label.text = noResultsText.interpolate(e.newValue.getOrElse("")) }
+		val label = TextLabel.contextual(noResultsText.interpolated(searchStringPointer.value.getOrElse("")))
+		searchStringPointer.addListener { e => label.text = noResultsText.interpolated(e.newValue.getOrElse("")) }
 		label
 	}
 }

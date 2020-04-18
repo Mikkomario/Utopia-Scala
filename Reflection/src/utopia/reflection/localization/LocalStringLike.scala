@@ -41,17 +41,15 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	  * @param args The parsed arguments
 	  * @return A version of this string with parameter segments replaced with provided values
 	  */
-	def interpolate(args: Seq[Any]): Repr
+	def interpolated(args: Seq[Any]): Repr
 	
 	/**
-	  * Creates an interpolated version of this string where segments marked with %s, %S, %i or %d are replaced with
-	  * provided arguments parsed into correct format. %s means raw string format. %S means uppercase string format.
-	  * %i means integer format. %d means decimal format.
-	  * @param firstArg The first parsed argument
-	  * @param moreArgs More parsed arguments
-	  * @return A version of this string with parameter segments replaced with provided values
+	  * Creates an interpolated version of this string where each ${key} is replaced with a matching value from
+	  * the specified map
+	  * @param args Interpolation arguments (key value pairs)
+	  * @return An interpolated version of this string
 	  */
-	def interpolate(firstArg: Any, moreArgs: Any*): Repr = interpolate(firstArg +: moreArgs)
+	def interpolated(args: Map[String, Any]): Repr
 	
 	
 	// COMPUTED	--------------

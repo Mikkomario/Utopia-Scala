@@ -19,12 +19,12 @@ object Result
     }
     
     /**
-     * This result may be returned when no change is made on server side for a POST / PUT / DELETE 
-     * request
+     * This result should be returned for requests that have specified if modified since -header and content
+	  * hasn't been modified
      */
-    case object NoOperation extends Result
+    case object NotModified extends Result
     {
-        def status = NotModified
+        def status = Status.NotModified
         def description = None
         def data = Value.empty
         def headers = Headers.empty
