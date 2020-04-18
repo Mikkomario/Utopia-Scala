@@ -30,7 +30,7 @@ trait SingleContainer[C <: ComponentLike] extends Container[C]
 			// Removes any previous content first
 			components.foreach(remove)
 			// Then adds the new content
-			add(content)
+			add(content, 0)
 		}
 	}
 }

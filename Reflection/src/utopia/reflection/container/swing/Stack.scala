@@ -217,7 +217,7 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
     
     override def isVisible_=(isVisible: Boolean) = super[CachingStackable].isVisible_=(isVisible)
     
-    protected def add(component: C) = panel += component
+    protected def add(component: C, index: Int) = panel.insert(component, index)
     
     protected def remove(component: C) = panel -= component
     

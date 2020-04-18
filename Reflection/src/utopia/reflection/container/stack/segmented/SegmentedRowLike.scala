@@ -20,7 +20,6 @@ trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiStackContai
 	// ATTRIBUTES	-----------------
 	
 	private val listeningMaster = new VolatileFlag()
-	private var lastIndex = -1
 	private var segments = Vector[Segment]()
 	
 	
@@ -35,7 +34,7 @@ trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiStackContai
 	  * Adds a segment to the underlying stack
 	  * @param segment A segment
 	  */
-	protected def addSegmentToStack(segment: Segment): Unit
+	protected def addSegmentToStack(segment: Segment, index: Int): Unit
 	
 	/**
 	  * Removes a segment from the underlying stack
@@ -64,29 +63,35 @@ trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiStackContai
 	
 	override def components = segments.map { _.item }
 	
-	override protected def add(component: C) =
+	override protected def add(component: C, index: Int) =
 	{
-		// Wraps the item first
-		val index = lastIndex + 1
-		lastIndex = index
-		
-		val segment = new Segment(index, component)
-		
-		segments :+= segment
-		addSegmentToStack(segment)
+		// Wraps the item into segment
+		val max = segmentCount
+		if (index >= max)
+		{
+			val segment = new Segment(max, component)
+			segments :+= segment
+			addSegmentToStack(segment, index)
+		}
+		else
+		{
+			// May need to adjust indices of other segments
+			segments.drop(index).foreach { _.index += 1 }
+			val segment = new Segment(index, component)
+			segments = segments.inserted(segment, index)
+			addSegmentToStack(segment, index)
+		}
 	}
 	
 	override protected def remove(component: C) =
 	{
 		// Finds the segment first
-		segments.find { _.item == component }.foreach
-		{
-			segment =>
-				segments = segments.filterNot { _ == segment }
-				// May update indexing
-				if (segment.index == lastIndex)
-					lastIndex = segments.lastOption.map { _.index } getOrElse -1
-				removeSegmentFromStack(segment)
+		segments.indexWhereOption { _.item == component }.foreach { index =>
+			val removedSegment = segments(index)
+			segments = segments.withoutIndex(index)
+			// May update indexing
+			segments.drop(index).foreach { _.index -= 1 }
+			removeSegmentFromStack(removedSegment)
 		}
 	}
 	
@@ -109,11 +114,11 @@ trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiStackContai
 		}
 	}
 	
-	protected class Segment(val index: Int, val item: C) extends ComponentWrapper with Stackable
+	protected class Segment(var index: Int, val item: C) extends ComponentWrapper with Stackable
 	{
 		// COMPUTED	-----------------
 		
-		def isLast = index == lastIndex
+		def isLast = index == segmentCount - 1
 		
 		def isFirst = index == 0
 		

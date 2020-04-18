@@ -15,10 +15,10 @@ trait MultiStackContainer[C <: Stackable] extends MultiContainer[C] with StackCo
 {
 	// IMPLEMENTED	---------------------
 	
-	override def +=(component: C) =
+	override def insert(component: C, index: Int) =
 	{
 		// Adds the component, but also registers it to stack hierarchy manager
-		addWithoutRevalidating(component)
+		addWithoutRevalidating(component, index)
 		
 		// Revalidates the component hierarchy
 		revalidate()
@@ -41,9 +41,9 @@ trait MultiStackContainer[C <: Stackable] extends MultiContainer[C] with StackCo
 	 * items properly before revalidated, however
 	 * @param component A new component for this container
 	 */
-	def addWithoutRevalidating(component: C) =
+	def addWithoutRevalidating(component: C, index: Int) =
 	{
-		super.+=(component)
+		super.insert(component, index)
 		component.attachToStackHierarchyUnder(this)
 	}
 	
@@ -89,10 +89,10 @@ trait MultiStackContainer[C <: Stackable] extends MultiContainer[C] with StackCo
 		val remainingComponents = remainingComponentsBuilder.result()
 		
 		// Adds the new components and registers missing links
-		newComponents.foreach { c =>
+		newComponents.zipWithIndex.foreach { case (c, i) =>
 			if (!remainingComponents.contains(c))
 				c.attachToStackHierarchyUnder(this)
-			super.+=(c)
+			super.insert(c, i)
 		}
 	}
 }

@@ -3,6 +3,7 @@ package utopia.reflection.container.swing
 import java.awt.{Container, Graphics}
 
 import javax.swing.{JComponent, JPanel, SwingUtilities}
+import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.reflection.component.ComponentLike
 import utopia.reflection.component.drawing.mutable.{CustomDrawable, CustomDrawableWrapper}
@@ -31,9 +32,9 @@ class Panel[C <: ComponentLike with AwtComponentRelated] extends MultiContainer[
 	
 	override def components = _components
 	
-	override protected def add(component: C) =
+	override protected def add(component: C, index: Int) =
 	{
-	    _components :+= component
+	    _components = _components.inserted(component, index)
 		// Adds the component to the underlying panel in GUI thread
 		SwingUtilities.invokeLater(() => panel.add(component.component))
 	}

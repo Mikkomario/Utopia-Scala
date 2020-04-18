@@ -64,10 +64,10 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
     
     override def components = _components map { _.source }
     
-    override def +=(component: C) =
+    override def insert(component: C, index: Int) =
     {
-        _components :+= new StackItem(component)
-        super.+=(component)
+        _components = _components.inserted(new StackItem[C](component), index)
+        super.insert(component, index)
     }
     
     override def -=(component: C) =
@@ -96,17 +96,6 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
       * @return Current index of the component. None if there's no such component in this stack
       */
     def indexOf(component: Any) = _components.indexWhereOption { _.source == component }
-    
-    /**
-      * Inserts an item at a specific index in this stack
-      * @param component The new component to be added
-      * @param index The index where the component will be added
-      */
-    def insert(component: C, index: Int) =
-    {
-        _components = (_components.take(index) :+ new StackItem(component)) ++ _components.drop(index)
-        super.+=(component)
-    }
     
     /**
       * Replaces a component with a new version

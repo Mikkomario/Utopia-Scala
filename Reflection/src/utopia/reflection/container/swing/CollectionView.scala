@@ -1,6 +1,7 @@
 package utopia.reflection.container.swing
 
 import utopia.flow.datastructure.mutable.Lazy
+import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.shape.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Direction2D, Point, Size}
@@ -108,9 +109,9 @@ class CollectionView[C <: AwtStackable](rowDirection: Direction2D, initialRowSpl
 	
 	override def components = items
 	
-	override protected def add(component: C) =
+	override protected def add(component: C, index: Int) =
 	{
-		items :+= component
+		items = items.inserted(component, index)
 		panel += component
 	}
 	

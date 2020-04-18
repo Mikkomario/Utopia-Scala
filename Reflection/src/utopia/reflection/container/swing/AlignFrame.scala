@@ -86,7 +86,7 @@ class AlignFrame[C <: AwtStackable](initialComponent: C, initialAlignment: Align
 	
 	override def drawable = panel
 	
-	override protected def add(component: C) = panel += component
+	override protected def add(component: C, index: Int) = panel.insert(component, index)
 	
 	override protected def remove(component: C) = panel -= component
 	

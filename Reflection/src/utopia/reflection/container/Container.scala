@@ -13,8 +13,10 @@ trait Container[C <: ComponentLike] extends ContainerLike[C]
     
 	/**
 	 * Adds a new item to this container
+	  * @param component Component to add
+	  * @param index Index where the component should be added
 	 */
-	protected def add(component: C): Unit
+	protected def add(component: C, index: Int): Unit
 	
 	/**
 	 * Removes an item from this container

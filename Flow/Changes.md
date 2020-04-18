@@ -12,6 +12,10 @@
 - **tryMap**(...) in CollectionExtensions now uses buildFrom and not Factory. This should result in better result 
 collection types when used.
 
+### New Methods
+- CollectionExtensions
+    - Added .slice(Range) to SeqOps
+
 ## v1.7
 
 ### Major Changes

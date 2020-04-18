@@ -102,7 +102,7 @@ class SegmentedRow[C <: AwtStackable](val master: Segmented, override val direct
 	
 	override def drawable = stack
 	
-	override protected def addSegmentToStack(segment: Segment) = stack += new AwtComponentSegment(segment)
+	override protected def addSegmentToStack(segment: Segment, index: Int) = stack.insert(new AwtComponentSegment(segment), index)
 	
 	override protected def removeSegmentFromStack(segment: Segment) = stack.filterNot { _.component == segment.item.component }
 	

@@ -1,5 +1,6 @@
 package utopia.reflection.container
 
+import utopia.flow.util.CollectionExtensions._
 import utopia.reflection.component.ComponentLike
 
 /**
@@ -14,7 +15,7 @@ trait MultiContainer[C <: ComponentLike] extends Container[C]
 	/**
 	  * Adds a new item to this container
 	  */
-	def +=(component: C) = add(component)
+	def +=(component: C, index: Int = components.size) = insert(component, index)
 	
 	/**
 	  * Removes an item from this container
@@ -24,7 +25,7 @@ trait MultiContainer[C <: ComponentLike] extends Container[C]
 	/**
 	 * Adds multiple items to this container
 	 */
-	def ++=(components: IterableOnce[C]) = components.iterator.foreach(+=)
+	def ++=(components: IterableOnce[C]) = components.iterator.foreach { this += _ }
 	
 	/**
 	 * Adds multiple items to this container
@@ -43,6 +44,26 @@ trait MultiContainer[C <: ComponentLike] extends Container[C]
 	
 	
 	// OTHER    -------------------
+	
+	/**
+	  * Inserts a component to a specific position
+	  * @param component Component to add
+	  * @param index Index where the component should be added
+	  */
+	def insert(component: C, index: Int) = add(component, index)
+	
+	/**
+	  * Inserts multiple components to a specific position
+	  * @param components Components to add
+	  * @param index Index where the components should be added
+	  */
+	def insertMany(components: Seq[C], index: Int) = components.foreachWithIndex { (c, i) => insert(c, index + i) }
+	
+	/**
+	  * Removes specified range of components from this container
+	  * @param range Range of indices to remove
+	  */
+	def removeComponentsIn(range: Range) = components.slice(range).reverseIterator.foreach(-=)
 	
 	/**
 	 * Removes all items from this container

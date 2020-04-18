@@ -23,15 +23,6 @@ class AnimatedStack(actorHandler: ActorHandler, direction: Axis2D, margin: Stack
 					transitionDuration: FiniteDuration = 0.25.seconds)(implicit exc: ExecutionContext)
 	extends Stack[AwtStackable](direction, margin, cap, layout)
 {
-	override def +=(component: AwtStackable) =
-	{
-		// First adds a transition and then switches it to the actual component
-		val appearance = new AnimatedTransition(component, direction, duration = transitionDuration)
-		actorHandler += appearance
-		super.+=(appearance)
-		appearance.start().foreach { _ => indexOf(appearance).foreach { super.insert(component, _) } }
-	}
-	
 	override def -=(component: AwtStackable) =
 	{
 		// Replaces the component with a temporary transition

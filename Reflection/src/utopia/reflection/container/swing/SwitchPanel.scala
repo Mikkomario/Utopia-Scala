@@ -66,7 +66,7 @@ class SwitchPanel[C <: Stackable with AwtComponentRelated] extends SingleStackCo
 	
 	override def components = panel.components
 	
-	override protected def add(component: C) = panel += component
+	override protected def add(component: C, index: Int) = panel.insert(component, index)
 	
 	override protected def remove(component: C) = panel -= component
 	

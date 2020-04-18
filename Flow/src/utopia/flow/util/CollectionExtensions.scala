@@ -167,6 +167,18 @@ object CollectionExtensions
                 builder.result()
             }
         }
+    
+        /**
+          * Performs specified operation for each item in this sequence. Called function will also receive item index
+          * in this sequence
+          * @param f A function called for each item
+          * @tparam U Arbitrary result type
+          */
+        def foreachWithIndex[U](f: (seq.A, Int) => U) =
+        {
+            val seqOps = seq(coll)
+            seqOps.zipWithIndex.foreach { case(item, index) => f(item, index) }
+        }
     }
     
     implicit def seqOperations[Repr](coll: Repr)(implicit seq: IsSeq[Repr]): SeqOperations[Repr, seq.type] =
@@ -296,6 +308,22 @@ object CollectionExtensions
          * @return Mapped data in a sequence (same order as in this sequence)
          */
         def mapWithIndex[B](f: (A, Int) => B) = seq.indices.map { i => f(seq(i), i) }
+    }
+    
+    implicit class RichSeqLike2[A, CC[X] <: SeqOps[X, CC, CC[X]], Repr <: SeqOps[A, CC, CC[A]]](val seq: SeqOps[A, CC, Repr]) extends AnyVal
+    {
+        def inserted[B >: A](item: B, index: Int): CC[B] =
+        {
+            if (index <= 0)
+                seq.prepended(item)
+            else if (index >= seq.size)
+                seq.appended(item)
+            else
+            {
+                val (beginning, end) = seq.splitAt(index)
+                (beginning :+ item) ++ end
+            }
+        }
     }
     
     implicit class RichOption[A](val o: Option[A]) extends AnyVal
