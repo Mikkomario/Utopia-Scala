@@ -248,6 +248,18 @@ object CollectionExtensions
         }
     
         /**
+          * @param range Range to slice from this sequence
+          * @return Slice of this sequence
+          */
+        def slice(range: Range): Repr =
+        {
+            if (range.nonEmpty)
+                seq.slice(range.head, range.last + 1)
+            else
+                seq.empty
+        }
+    
+        /**
           * @param another Another sequence
           * @param equals Equality function
           * @tparam B Type of another sequence's content

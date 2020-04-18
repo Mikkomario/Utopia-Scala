@@ -14,6 +14,7 @@ import utopia.genesis.image.Image
 import utopia.genesis.shape.path.ProjectilePath
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.shape.{Alignment, StackInsets, StackSize}
+import utopia.reflection.util.ComponentToImage
 
 import scala.concurrent.Promise
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -33,7 +34,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   * @param finalSize Estimated size of the component when it is finally presented (optional). If None, optimal stack
   *                  size of the component is used instead. Defaults to None.
   */
-class AnimatedTransition(original: AwtComponentWrapper with Stackable, transitionAxis: Axis2D,
+class AnimatedTransition(original: AwtComponentRelated with Stackable, transitionAxis: Axis2D,
 						 transitionDirection: Direction1D = Positive, duration: FiniteDuration = 0.25.seconds,
 						 useFading: Boolean = true, finalSize: Option[Size] = None)
 	extends AwtComponentWrapperWrapper with Stackable with CustomDrawable with Actor with StackLeaf
@@ -43,8 +44,7 @@ class AnimatedTransition(original: AwtComponentWrapper with Stackable, transitio
 	
 	private val curve = ProjectilePath()
 	private val targetSize = finalSize.getOrElse(original.stackSize.optimal)
-	original.size = targetSize // Size needs to be set for image capture
-	private val baseImage = original.toImage
+	private val baseImage = ComponentToImage(original, targetSize)
 	
 	private var state: TransitionState = NotStarted
 	private var passedDuration = Duration.Zero

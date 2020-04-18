@@ -54,6 +54,8 @@ object ScrollViewTest extends App
 		label
 	}
 	
+	val actorHandler = ActorHandler()
+	
 	// Creates the main stack
 	val stack = Stack.column[ItemLabel[Int]](8.fixed, 4.fixed)
 	stack.background = Color.yellow.minusHue(33).darkened(1.2)
@@ -62,8 +64,6 @@ object ScrollViewTest extends App
 	val selectionDrawer = CustomDrawer(DrawLevel.Foreground) { (d, b) =>
 		d.withColor(Color.black.withAlpha(0.33), Color.black.withAlpha(0.8)).withStroke(2).draw(b)
 	}
-	
-	val actorHandler = ActorHandler()
 	
 	val contentManager = new StackSelectionManager[Int, ItemLabel[Int]](stack, selectionDrawer)(makeLabel)
 	contentManager.addValueListener(i => println("Selected " + i.newValue))

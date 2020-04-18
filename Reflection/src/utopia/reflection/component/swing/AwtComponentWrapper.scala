@@ -2,21 +2,20 @@ package utopia.reflection.component.swing
 
 import java.awt.Component
 import java.awt.event.MouseEvent
-import java.awt.image.BufferedImage
 
-import javax.swing.{CellRendererPane, SwingUtilities}
+import javax.swing.SwingUtilities
 import utopia.flow.async.VolatileFlag
 import utopia.flow.datastructure.mutable.Lazy
 import utopia.flow.util.NullSafe._
 import utopia.genesis.color.Color
 import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus}
 import utopia.genesis.handling.mutable._
-import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.genesis.shape.shape2D.{Point, Size}
 import utopia.reflection.component.stack.{CachingStackable, StackLeaf, Stackable}
 import utopia.reflection.component.ComponentLike
 import utopia.reflection.event.{ResizeEvent, ResizeListener}
 import utopia.reflection.shape.StackSize
+import utopia.reflection.util.ComponentToImage
 
 object AwtComponentWrapper
 {
@@ -68,29 +67,7 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
       * @return An image of this component's paint result. Please note that this draws the image with this component's
       *         current size. If this component doesn't have a size, no image is drawn.
       */
-    def toImage =
-    {
-        // Prepares the image
-        val currentSize = size
-        if (currentSize.isPositive)
-        {
-            val image = new BufferedImage(currentSize.width.toInt, currentSize.height.toInt, BufferedImage.TYPE_INT_ARGB)
-    
-            // Draws the image using cell renderer panel
-            val cellRenderedPanel = new CellRendererPane
-            cellRenderedPanel.add(component)
-            val boundsBefore = bounds
-            cellRenderedPanel.paintComponent(image.createGraphics(), component, cellRenderedPanel,
-                boundsBefore.withPosition(Point.origin).toAwt)
-            cellRenderedPanel.remove(component)
-            component.setBounds(boundsBefore.toAwt)
-            
-            // Returns wrapped image
-            Image.from(image)
-        }
-        else
-            Image.empty
-    }
+    def toImage = ComponentToImage(this)
     
     private def parentsInWindow = new ParentsIterator
     
@@ -184,6 +161,12 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     
     
     // OTHER    -------------------------
+    
+    /**
+      * @param imageSize Size of the resulting image
+      * @return An image with this component painted on it
+      */
+    def toImageWithSize(imageSize: Size) = ComponentToImage(this, imageSize)
     
     /**
       * Enables awt event-conversion for received mouse button events in this component. Use this when the component

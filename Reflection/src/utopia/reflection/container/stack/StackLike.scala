@@ -92,6 +92,12 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
     // OTHER    -----------------------
     
     /**
+      * @param component A component within this stack
+      * @return Current index of the component. None if there's no such component in this stack
+      */
+    def indexOf(component: Any) = _components.indexWhereOption { _.source == component }
+    
+    /**
       * Inserts an item at a specific index in this stack
       * @param component The new component to be added
       * @param index The index where the component will be added
@@ -101,6 +107,13 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
         _components = (_components.take(index) :+ new StackItem(component)) ++ _components.drop(index)
         super.+=(component)
     }
+    
+    /**
+      * Replaces a component with a new version
+      * @param oldComponent Old component
+      * @param newComponent New component
+      */
+    def replace(oldComponent: Any, newComponent: C) = indexOf(oldComponent).foreach { insert(newComponent, _) }
     
     /**
       * Drops the last n items from this stack
