@@ -12,7 +12,7 @@ import utopia.reflection.container.swing.Stack
 import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.controller.data.ContainerContentManager2
+import utopia.reflection.controller.data.ContainerContentManager
 import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.{Border, StackInsets}
@@ -46,7 +46,7 @@ object StackContentManagementTest extends App
 	
 	// Creates the main content
 	val stack = Stack.column[ItemLabel[Int]]()
-	val manager = new ContainerContentManager2[Int, Stack[ItemLabel[Int]], ItemLabel[Int]](stack)({ i =>
+	val manager = new ContainerContentManager[Int, Stack[ItemLabel[Int]], ItemLabel[Int]](stack)({ i =>
 		val label = ItemLabel.contextual(i)
 		label.addContentListener { e => println(s"Label content changed: $e") }
 		label

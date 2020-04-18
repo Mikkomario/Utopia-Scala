@@ -12,11 +12,6 @@ import utopia.reflection.component.{Refreshable, RefreshableWithPointer}
   */
 trait ContentManager[A, C <: Refreshable[A]] extends RefreshableWithPointer[Vector[A]]
 {
-	// ATTRIBUTES	------------------
-	
-	private var updatingOnly: Option[A] = None
-	
-	
 	// ABSTRACT	----------------------
 	
 	/**
@@ -27,14 +22,15 @@ trait ContentManager[A, C <: Refreshable[A]] extends RefreshableWithPointer[Vect
 	/**
 	  * Adds new displays for new values
 	  * @param values New values that need to be displayed
+	  * @param index Index where to add these displays
 	  */
-	protected def addDisplaysFor(values: Vector[A]): Unit
+	protected def addDisplaysFor(values: Vector[A], index: Int): Unit
 	
 	/**
 	  * Removes unnecessary displays
-	  * @param dropped The displays to be dropped
+	  * @param range Range of indices to drop
 	  */
-	protected def dropDisplays(dropped: Vector[C]): Unit
+	protected def dropDisplaysAt(range: Range): Unit
 	
 	/**
 	  * This method will be called at the end of each refresh
@@ -81,9 +77,7 @@ trait ContentManager[A, C <: Refreshable[A]] extends RefreshableWithPointer[Vect
 	def replace(oldItem: A, newItem: A) =
 	{
 		content.indexWhereOption { itemsAreEqual(oldItem, _) }.foreach { targetIndex =>
-			updatingOnly = Some(newItem)
 			content = content.updated(targetIndex, newItem)
-			updatingOnly = None
 		}
 	}
 	
@@ -93,19 +87,14 @@ trait ContentManager[A, C <: Refreshable[A]] extends RefreshableWithPointer[Vect
 	  */
 	def updateSingle(item: A) =
 	{
-		updatingOnly = Some(item)
 		content.indexWhereOption { itemsAreEqual(item, _) } match
 		{
 			case Some(index) =>
-				val oldContent = content
-				val newContent = content.updated(index, item)
-				content = newContent
-				// Will have to manually trigger change event if the two content's are equal
-				if (oldContent == newContent)
-					ContentUpdateListener.onChangeEvent(new ChangeEvent[Vector[A]](oldContent, newContent))
+				val targetedDisplay = displays(index)
+				targetedDisplay.content = item
+				content = content.updated(index, item)
 			case None => content :+= item
 		}
-		updatingOnly = None
 	}
 	
 	
@@ -115,27 +104,94 @@ trait ContentManager[A, C <: Refreshable[A]] extends RefreshableWithPointer[Vect
 	{
 		override def onChangeEvent(event: ChangeEvent[Vector[A]]) =
 		{
-			val d = displays
-			val newContent = event.newValue
-			
-			// Existing rows are updated (may skip update if targeting only a single row)
-			updatingOnly match
-			{
-				// The individual target row is found with content's index
-				case Some(onlyTarget) => newContent.optionIndexOf(onlyTarget).filter { _ < d.size }
-					.foreach { i => d(i).content = onlyTarget }
-				case None => d.foreachWith(newContent) { _.content = _ }
-			}
-			
-			val size = d.size
-			
-			// Unnecessary rows are removed and new rows may be added
-			if (size > newContent.size)
-				dropDisplays(d.drop(newContent.size))
-			else if (size < newContent.size)
-				addDisplaysFor(newContent.drop(size))
-			
+			setContent(event.newValue)
 			finalizeRefresh()
+		}
+		
+		private def setContent(newValues: Vector[A]) =
+		{
+			val d = displays
+			val oldContentSize = d.size
+			val newContentSize = newValues.size
+			
+			val sizeDifference = newContentSize - oldContentSize
+			
+			// Finds similar start and end portions (if present)
+			val identicalStart = d.zip(newValues).takeWhile { case (display, newVal) =>
+				itemsAreEqual(display.content, newVal) }
+			val identicalEnd = d.zip(newValues.drop(sizeDifference)).reverseIterator.takeWhile {
+				case (display, newVal) => itemsAreEqual(display.content, newVal) }.toVector
+			
+			val skipFirst = identicalStart.size
+			val skipLast = identicalEnd.size
+			
+			// Size difference is positive => new items added somewhere
+			if (sizeDifference > 0)
+			{
+				// Case: New items are added to the end
+				if (skipFirst == oldContentSize)
+					addDisplaysFor(newValues.takeRight(sizeDifference), oldContentSize)
+				// Case: New items are added to the beginning
+				else if (skipLast == oldContentSize)
+					addDisplaysFor(newValues.take(sizeDifference), 0)
+				// Case: New items are added to the middle
+				else if (skipFirst + skipLast == oldContentSize)
+					addDisplaysFor(newValues.slice(skipFirst, skipFirst + sizeDifference), skipFirst)
+				// Case: New items added in multiple locations
+				else
+				{
+					// Adds items either to the beginning of collection or to the end of the updated area
+					val insertToEnd = identicalStart.nonEmpty || identicalEnd.isEmpty
+					val updateRange = skipFirst until (oldContentSize - skipLast)
+					val updatedValues = if (insertToEnd) newValues.slice(updateRange) else newValues.takeRight(updateRange.size)
+					val insertedValues = if (insertToEnd) newValues.takeRight(sizeDifference) else newValues.take(sizeDifference)
+					val insertIndex = if (insertToEnd) updateRange.last + 1 else 0
+					
+					// Updates first, then adds new displays
+					update(updateRange, updatedValues)
+					addDisplaysFor(insertedValues, insertIndex)
+				}
+			}
+			// Size difference is negative => old items removed somewhere
+			else if (sizeDifference < 0)
+			{
+				// Case: Items removed from the end
+				if (skipFirst == newContentSize)
+					dropDisplaysAt(newContentSize until oldContentSize)
+				// Case: Items removed from the beginning
+				else if (skipLast == newContentSize)
+					dropDisplaysAt(0 until sizeDifference)
+				// Case: Items removed from the middle
+				else if (skipFirst + skipLast == newContentSize)
+					dropDisplaysAt(skipFirst until (skipFirst + sizeDifference))
+				// Case: Items removed from multiple places
+				else
+				{
+					// Drops rows either from the beginning of the collection or at the end of the updated area
+					val dropFromEnd = identicalStart.nonEmpty || identicalEnd.isEmpty
+					val updatedRange = skipFirst until (newContentSize - skipLast)
+					
+					// Drops first, then updates
+					if (dropFromEnd)
+						dropDisplaysAt((oldContentSize - skipLast - sizeDifference) until (oldContentSize - skipLast))
+					else
+						dropDisplaysAt(0 until sizeDifference)
+					
+					update(updatedRange, newValues.slice(updatedRange))
+				}
+			}
+			// Sizes are identical => content swapped somewhere
+			else
+			{
+				// Updates the content between identical areas
+				val updateRange = skipFirst until (newContentSize - skipLast)
+				update(updateRange, newValues.slice(updateRange))
+			}
+		}
+		
+		private def update(targetRange: Range, items: Vector[A]) =
+		{
+			displays.slice(targetRange).foreachWith(items) { (d, i) => d.content = i }
 		}
 	}
 }

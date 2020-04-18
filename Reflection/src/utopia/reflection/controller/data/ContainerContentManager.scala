@@ -32,9 +32,9 @@ class ContainerContentManager[A, Container <: MultiStackContainer[Display], Disp
 	
 	override def displays = container.components
 	
-	override protected def addDisplaysFor(values: Vector[A]) = container ++= values.map(makeItem)
+	override protected def addDisplaysFor(values: Vector[A], index: Int) = container.insertMany(values.map(makeItem), index)
 	
-	override protected def dropDisplays(dropped: Vector[Display]) = container --= dropped
+	override protected def dropDisplaysAt(range: Range) = container.removeComponentsIn(range)
 	
 	override protected def finalizeRefresh() = container.revalidate()
 }
