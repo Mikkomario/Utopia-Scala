@@ -62,8 +62,14 @@ trait MultiContainer[C <: ComponentLike] extends Container[C]
 	/**
 	  * Removes specified range of components from this container
 	  * @param range Range of indices to remove
+	  * @return Components that were removed from this container
 	  */
-	def removeComponentsIn(range: Range) = components.slice(range).reverseIterator.foreach(-=)
+	def removeComponentsIn(range: Range) =
+	{
+		val componentsToRemove = components.slice(range)
+		componentsToRemove.reverseIterator.foreach(-=)
+		componentsToRemove
+	}
 	
 	/**
 	 * Removes all items from this container

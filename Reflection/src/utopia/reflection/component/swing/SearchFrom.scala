@@ -17,7 +17,6 @@ import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.{Alignment, StackInsets, StackLength}
 import utopia.reflection.util.ComponentContext
 
-import scala.collection.immutable.HashMap
 import scala.concurrent.ExecutionContext
 
 object SearchFrom
@@ -179,7 +178,7 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 	private val defaultWidth = searchField.targetWidth
 	
 	private var currentSearchString = ""
-	private var currentOptions: Map[String, A] = HashMap()
+	private var currentOptions: Vector[(String, A)] = Vector()
 	
 	
 	// INITIAL CODE	-----------------------------
@@ -204,7 +203,7 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 	
 	// When content updates, changes selection options and updates field size
 	addContentListener({ e =>
-		currentOptions = e.newValue.map { a => itemToSearchString(a) -> a }.toMap
+		currentOptions = e.newValue.map { a => itemToSearchString(a) -> a }
 		updateDisplayedOptions()
 		searchField.targetWidth = (if (content.isEmpty) defaultWidth else currentSearchStackSize.width) +
 			searchIcon.map { _.width + searchIconInsets.horizontal.optimal }.getOrElse(0.0)
@@ -267,10 +266,10 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 			else
 			{
 				val searchWords = currentSearchString.words.map { _.toLowerCase }
-				currentOptions.view.filterKeys { k =>
+				currentOptions.filter { case (k, _) =>
 					val lower = k.toLowerCase
 					searchWords.forall(lower.contains)
-				}.values.toVector
+				}.map { _._2 }
 			}
 		}
 	}
