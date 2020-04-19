@@ -178,6 +178,12 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     def lastModified = timeHeader("Last-Modified")
     
     /**
+      * @return The 'if modified since' -header which is used when the client wants to only update its cached data,
+      *         in case there are changes.
+      */
+    def ifModifiedSince = timeHeader("If-Modified-Since")
+    
+    /**
      * Creates a new set of headers with the updated message date / time
      */
     def withCurrentDate = withDate(Instant.now())
@@ -437,6 +443,12 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * Creates a new header with the time when the resource was last modified
      */
     def withLastModified(time: Instant) = withTimeHeader("Last-Modified", time)
+    
+    /**
+      * @param timeThreshold A time threshold for the 'if-modified-since' -header
+      * @return A copy of these headers with specified if-modified-since threshold
+      */
+    def withIfModifiedSince(timeThreshold: Instant) = withTimeHeader("If-Modified-Since", timeThreshold)
     
     /**
      * Creates a new header with a specified location information
