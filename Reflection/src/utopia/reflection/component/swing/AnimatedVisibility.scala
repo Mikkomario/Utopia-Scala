@@ -26,7 +26,7 @@ class AnimatedVisibility[C <: AwtStackable](comp: C, actorHandler: ActorHandler,
 	private val panel = new SwitchPanel[AwtStackable]
 	
 	private var targetState = isShownInitially
-	private val lastTransition = Volatile(Future.successful[Unit](()))
+	private val lastTransition = Volatile(Future.successful(isShownInitially))
 	
 	
 	// INITIAL CODE	---------------------
@@ -46,6 +46,9 @@ class AnimatedVisibility[C <: AwtStackable](comp: C, actorHandler: ActorHandler,
 	  * Changes whether the component should be shown or not. The actual visibility of the component is altered
 	  * via a transition, so the visual effects may not be immediate
 	  * @param newState Whether component should be shown
+	  * @return A future of the transition completion, with the new shown state of this component
+	  *         (component shown status may have been altered during the transition so that the returned state
+	  *         doesn't always match 'newState')
 	  */
 	def isShown_=(newState: Boolean) =
 	{
@@ -55,7 +58,10 @@ class AnimatedVisibility[C <: AwtStackable](comp: C, actorHandler: ActorHandler,
 			// Otherwise starts a new transition
 			targetState = newState
 			lastTransition.setIf { _.isCompleted } { startTransition(newState) }
+			lastTransition.get
 		}
+		else
+			Future.successful(newState)
 	}
 	
 	
@@ -68,7 +74,8 @@ class AnimatedVisibility[C <: AwtStackable](comp: C, actorHandler: ActorHandler,
 	
 	// OTHER	-------------------------
 	
-	private def startTransition(target: Boolean): Future[Unit] =
+	// Returns the reached visibility target
+	private def startTransition(target: Boolean): Future[Boolean] =
 	{
 		// Creates the transition
 		val transition = new AnimatedTransition(comp, transitionAxis, Direction1D.matching(target), duration, useFading)
@@ -88,7 +95,7 @@ class AnimatedVisibility[C <: AwtStackable](comp: C, actorHandler: ActorHandler,
 				else
 					panel.clear()
 				
-				Future.successful[Unit](())
+				Future.successful(target)
 			}
 			else
 			{

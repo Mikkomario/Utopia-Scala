@@ -62,11 +62,8 @@ object AnimatedTransitionTest extends App
 		transitionWrapper.isShown = true
 		// Hides it again after 5 seconds
 		WaitUtils.delayed(5.seconds) {
-			transitionWrapper.isShown = false
-			// Finally closes program after 1 second of disappearance
-			WaitUtils.delayed(1.seconds) {
-				frame.close()
-			}
+			// Closes frame once visibility has been changed
+			(transitionWrapper.isShown = false).foreach { _ => frame.close() }
 		}
 	}
 }
