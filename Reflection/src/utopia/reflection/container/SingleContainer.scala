@@ -33,4 +33,9 @@ trait SingleContainer[C <: ComponentLike] extends Container[C]
 			add(content, 0)
 		}
 	}
+	
+	/**
+	  * Removes all content from this container
+	  */
+	def clear() = components.foreach(remove)
 }

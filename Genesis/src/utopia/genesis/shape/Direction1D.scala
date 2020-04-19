@@ -118,4 +118,11 @@ object Direction1D
 	  * @return Negative direction
 	  */
 	def decrease = Negative
+	
+	/**
+	  * Converts a boolean value to a direction
+	  * @param isPositive Boolean value that represents direction sign (true = positive)
+	  * @return A direction matching the specified boolean
+	  */
+	def matching(isPositive: Boolean) = if (isPositive) Positive else Negative
 }

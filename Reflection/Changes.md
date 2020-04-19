@@ -14,6 +14,13 @@ multiple parameter lists.
 - AnimatedSizeContainer
     - By wrapping components with this container, you will be able to 
     use animated content resizes.
+- AnimatedVisibility
+    - By wrapping a component in AnimatedVisibility, you can animate component 
+    show & hide events.
+- AnimatedTransition
+    - An appearance / disappearance transition for a component. 
+    Used in AnimatedVisibility, which is oftentimes easier to use. 
+        - AnimatedTransition is better, however, when you only need a singular transition.
 
 ### New Methods
 - AwtComponentWrapper: toImage

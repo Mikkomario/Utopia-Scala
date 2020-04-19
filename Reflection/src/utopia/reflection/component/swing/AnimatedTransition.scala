@@ -150,8 +150,6 @@ class AnimatedTransition(original: AwtComponentRelated with Stackable, transitio
 	{
 		if (state == NotStarted)
 		{
-			println(s"Target size is $targetSize")
-			
 			// Starts transition & revalidation loop
 			state = Ongoing
 			revalidate()

@@ -36,6 +36,18 @@ class Volatile[T](@volatile private var _value: T) extends Changing[T]
     def set(newValue: T) = this.synchronized { setValue(newValue) }
     
     /**
+      * Sets a new value to this container, but only if the specified condition is met
+      * @param condition Condition checked on the value
+      * @param newValue New value set for this volatile, if the condition is met. The value is call by name, so it's
+      *                 only evaluated if the condition is met.
+      */
+    def setIf(condition: T => Boolean)(newValue: => T) = this.synchronized
+    {
+        if (condition(_value))
+            setValue(newValue)
+    }
+    
+    /**
      * Safely updates the value in this container
      */
     def update(mutate: T => T) = this.synchronized { setValue(mutate(_value)) }
