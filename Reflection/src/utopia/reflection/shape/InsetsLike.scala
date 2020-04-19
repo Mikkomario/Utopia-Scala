@@ -270,6 +270,12 @@ trait InsetsLike[L, +S, +Repr]
       */
     def -(other: InsetsLike[L, _, _]) = makeCopy(amounts.mergedWith[L](other.amounts, (a, b) => combine(a, multiply(b, -1))))
     
+    /**
+      * @param direction Direction to drop from these insets
+      * @return A copy of these insets without an inset for the specified direction
+      */
+    def -(direction: Direction2D) = makeCopy(amounts - direction)
+    
     
     // OTHER    ------------------
     

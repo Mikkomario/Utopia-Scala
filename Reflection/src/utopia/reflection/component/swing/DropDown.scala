@@ -4,6 +4,7 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
+import utopia.genesis.shape.shape2D.Direction2D.Up
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, BorderDrawer, TextDrawContext}
 import utopia.reflection.component.{Focusable, Refreshable}
 import utopia.reflection.component.drawing.template.CustomDrawer
@@ -102,7 +103,7 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
  selectionDrawer: CustomDrawer, focusColor: Color, selectionPrompt: Prompt, defaultFont: Font,
  defaultTextColor: Color = Color.textBlack, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
  textAlignment: Alignment = Alignment.Left, textInsets: StackInsets = StackInsets.any,
- imageInsets: StackInsets = StackInsets.any, borderColor: Color = Color.textBlack,
+ imageInsets: StackInsets = StackInsets.any, borderColor: Color = Color.textBlackDisabled,
  borderWidth: Double = 1.0, betweenDisplaysMargin: StackLength = StackLength.any, displayStackLayout: StackLayout = Fit,
  override val contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
  valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None), textHasMinWidth: Boolean = true,
@@ -147,10 +148,12 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
 	
 	// Adds border drawing to the view
 	{
-		val basicBorderDrawer = new BorderDrawer(Border.symmetric(borderWidth, borderColor))
-		view.addCustomDrawer(basicBorderDrawer)
+		// Draws border around the view
+		view.addCustomDrawer(new BorderDrawer(Border.symmetric(borderWidth, borderColor)))
+		// Draws border at the right side of text
 		textLabel.addCustomDrawer(new BorderDrawer(Border(Insets.right(borderWidth), borderColor)))
-		popupContentView.addCustomDrawer(basicBorderDrawer)
+		// Draws border at each side, except for top of pop-up
+		popupContentView.addCustomDrawer(new BorderDrawer(Border(Insets.symmetric(borderWidth) - Up, borderColor)))
 	}
 	
 	// Updates the item display whenever value changes

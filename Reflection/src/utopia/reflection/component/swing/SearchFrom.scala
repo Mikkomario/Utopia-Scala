@@ -173,6 +173,10 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 	extends DropDownFieldLike[A, C](selectionDrawer, betweenDisplaysMargin, displayStackLayout,
 		valuePointer = selectedValuePointer) with SwingComponentRelated
 {
+	// TODO: Consider adding border to pop-up content view
+	// Draws border at each side, except for top of pop-up
+	// popupContentView.addCustomDrawer(new BorderDrawer(Border(Insets.symmetric(borderWidth) - Up, borderColor)))
+	
 	// ATTRIBUTES	----------------------------
 	
 	private val defaultWidth = searchField.targetWidth
