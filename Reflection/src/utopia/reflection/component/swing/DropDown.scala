@@ -34,7 +34,11 @@ object DropDown
 	  * @param contentPointer Pointer that holds current selection options (default = new pointer)
 	  * @param valuePointer Pointer that holds currently selected value (default = new pointer)
 	  * @param shouldDisplayPopUpOnFocusGain Whether this component should always open selection pop-up on focus gain (default = true)
-	  * @param equalsCheck Function for checking equality between selection options (default = a == b)
+	  * @param sameInstanceCheck Function for checking whether two selection options represent the same item
+	  *                          (default = standard equals (== -operator))
+	  * @param contentIsStateless Whether the specified items don't represent states of other objects but are
+	  *                           independent values (default = true). Set to false only when specifying
+	  *                           'sameInstanceCheck' as other than default.
 	  * @param makeDisplayFunction Function for producing new selection displays
 	  * @param context Component creation context
 	  * @param exc Implicit execution context
@@ -49,7 +53,7 @@ object DropDown
 	 contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
 	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
-	 equalsCheck: (A, A) => Boolean = (a: A, b: A) => a == b)
+	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 	(makeDisplayFunction: A => C)
 	(implicit context: ComponentContext, exc: ExecutionContext) =
 	{
@@ -58,7 +62,8 @@ object DropDown
 			context.font, context.textColor, displayFunction, context.textAlignment, context.insets,
 			context.insets.mapVertical { _.withLowPriority }, borderColor,
 			context.borderWidth, context.stackMargin, displayStackLayout, contentPointer, valuePointer,
-			context.textHasMinWidth, context.allowImageUpscaling, shouldDisplayPopUpOnFocusGain, equalsCheck)(makeDisplayFunction)
+			context.textHasMinWidth, context.allowImageUpscaling, shouldDisplayPopUpOnFocusGain, sameInstanceCheck,
+			contentIsStateless)(makeDisplayFunction)
 		context.background.foreach { dd.background = _ }
 		dd
 	}
@@ -73,8 +78,12 @@ object DropDown
 	  * @param contentPointer Pointer that holds current selection options (default = new pointer)
 	  * @param valuePointer Pointer that holds currently selected value (default = new pointer)
 	  * @param shouldDisplayPopUpOnFocusGain Whether this component should always open selection pop-up on focus gain (default = true)
-	  * @param equalsCheck Function for checking equality between selection options (default = a == b)
-	  * @param context Component creation context
+	  * @param sameInstanceCheck             Function for checking whether two selection options represent the same item
+	  *                                      (default = standard equals (== -operator))
+	  * @param contentIsStateless Whether the specified items don't represent states of other objects but are
+	  *                                      independent values (default = true). Set to false only when specifying
+	  *                                      'sameInstanceCheck' as other than default.
+	  * @param context                       Component creation context
 	  * @param exc Implicit execution context
 	  * @tparam A Type of selected item
 	  * @return A new drop down field
@@ -85,11 +94,12 @@ object DropDown
 	 contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
 	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
-	 equalsCheck: (A, A) => Boolean = (a: A, b: A) => a == b)(implicit context: ComponentContext, exc: ExecutionContext) =
+	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
+	(implicit context: ComponentContext, exc: ExecutionContext) =
 	{
 		def makeDisplay(item: A) = ItemLabel.contextual(item, displayFunction)
 		contextual(noResultsView, icon, selectionPromptText, displayFunction, borderColor, Fit, contentPointer,
-			valuePointer, shouldDisplayPopUpOnFocusGain, equalsCheck)(makeDisplay)
+			valuePointer, shouldDisplayPopUpOnFocusGain, sameInstanceCheck, contentIsStateless)(makeDisplay)
 	}
 }
 
@@ -108,9 +118,10 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
  override val contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
  valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None), textHasMinWidth: Boolean = true,
  allowImageUpscaling: Boolean = false, shouldDisplayPopUpOnFocusGain: Boolean = true,
- equalsCheck: (A, A) => Boolean = (a: A, b: A) => a == b)
+ sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 (makeDisplayFunction: A => C)(implicit exc: ExecutionContext)
-	extends DropDownFieldLike[A, C](selectionDrawer, betweenDisplaysMargin, displayStackLayout, contentPointer, valuePointer)
+	extends DropDownFieldLike[A, C](selectionDrawer, betweenDisplaysMargin, displayStackLayout, contentPointer,
+		valuePointer, contentIsStateless)
 {
 	// ATTRIBUTES	------------------------------
 	
@@ -174,7 +185,7 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
 	
 	override def requestFocusInWindow() = view.component.requestFocusInWindow()
 	
-	override protected def checkEquals(first: A, second: A) = equalsCheck(first, second)
+	override protected def representSameInstance(first: A, second: A) = sameInstanceCheck(first, second)
 	
 	override protected def makeDisplay(item: A) = makeDisplayFunction(item)
 	

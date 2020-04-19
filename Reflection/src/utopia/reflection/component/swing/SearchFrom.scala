@@ -30,8 +30,10 @@ object SearchFrom
 	  * @param contentPointer Content pointer used (default = new pointer)
 	  * @param selectedValuePointer Pointer that holds the currently selected item (default = new pointer)
 	  * @param shouldDisplayPopUpOnFocusGain Whether pop-up window should be opened whenever this field gains focus (default = true)
-	  * @param checkEquals Function for checking item equality (default = use standard equals)
-	  * @param makeDisplay Function for creating display components
+	  * @param sameInstanceCheck  Function for checking whether two items represent the same option (default = use standard equals)
+	  * @param contentIsStateless Whether each displayed item should be considered an individual instance and not a state
+	  *                           of some other instance. If you didn't specify sameInstanceCheck, don't specify this either.
+	  * @param makeDisplay        Function for creating display components
 	  * @param itemToSearchString Function for converting selectable items to search / display strings
 	  * @param context Component creation context (implicit)
 	  * @param exc Execution context (implicit)
@@ -44,32 +46,35 @@ object SearchFrom
 	 contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
 	 selectedValuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
-	 checkEquals: (A, A) => Boolean = (a: A, b: A) => a == b)(makeDisplay: A => C)(itemToSearchString: A => String)
+	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
+	(makeDisplay: A => C)(itemToSearchString: A => String)
 	(implicit context: ComponentContext, exc: ExecutionContext) =
 	{
 		val field = new SearchFrom[A, C](searchField, noResultsView, context.actorHandler,
 			new BackgroundDrawer(context.highlightColor, Normal), context.stackMargin, displayStackLayout, searchIcon,
-			context.insets, contentPointer, selectedValuePointer, shouldDisplayPopUpOnFocusGain, checkEquals)(
-			makeDisplay)(itemToSearchString)
+			context.insets, contentPointer, selectedValuePointer, shouldDisplayPopUpOnFocusGain, sameInstanceCheck,
+			contentIsStateless)(makeDisplay)(itemToSearchString)
 		context.setBorderAndBackground(field)
 		field
 	}
 	
 	/**
 	  * Creates a new search from field using component creation context
-	  * @param noResultsView View displayed when no result exist of none are found with current filter
-	  * @param selectionPrompt Prompt text displayed on the search field
-	  * @param displayStackLayout Stack layout used for the selection display items (default = Fit)
-	  * @param searchIcon Icon displayed at the right side of the search field (optional)
-	  * @param contentPointer     Content pointer used (default = new pointer)
-	  * @param selectedValuePointer Pointer that holds the currently selected item (default = new pointer)
-	  * @param searchFieldPointer Pointer that holds the search field's current value / text (default = new pointer)
+	  * @param noResultsView                 View displayed when no result exist of none are found with current filter
+	  * @param selectionPrompt               Prompt text displayed on the search field
+	  * @param displayStackLayout            Stack layout used for the selection display items (default = Fit)
+	  * @param searchIcon                    Icon displayed at the right side of the search field (optional)
+	  * @param contentPointer                Content pointer used (default = new pointer)
+	  * @param selectedValuePointer          Pointer that holds the currently selected item (default = new pointer)
+	  * @param searchFieldPointer            Pointer that holds the search field's current value / text (default = new pointer)
 	  * @param shouldDisplayPopUpOnFocusGain Whether pop-up window should be opened whenever this field gains focus (default = true)
-	  * @param checkEquals Function for checking item equality (default = use standard equals)
-	  * @param makeDisplay        Function for creating display components
-	  * @param itemToSearchString Function for converting selectable items to search / display strings
-	  * @param context Component creation context (implicit)
-	  * @param exc Execution context (implicit)
+	  * @param sameInstanceCheck             Function for checking whether two items represent the same option (default = use standard equals)
+	  * @param contentIsStateless Whether each displayed item should be considered an individual instance and not a state
+	  *                                      of some other instance. If you didn't specify sameInstanceCheck, don't specify this either.
+	  * @param makeDisplay                   Function for creating display components
+	  * @param itemToSearchString            Function for converting selectable items to search / display strings
+	  * @param context                       Component creation context (implicit)
+	  * @param exc                           Execution context (implicit)
 	  * @tparam A Type of selected item
 	  * @tparam C Type of display used
 	  * @return A new search from field
@@ -80,28 +85,31 @@ object SearchFrom
 	 selectedValuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 	 searchFieldPointer: PointerWithEvents[Option[String]] = new PointerWithEvents[Option[String]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
-	 checkEquals: (A, A) => Boolean = (a: A, b: A) => a == b)(makeDisplay: A => C)(itemToSearchString: A => String)
+	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
+	(makeDisplay: A => C)(itemToSearchString: A => String)
 	(implicit context: ComponentContext, exc: ExecutionContext) =
 	{
 		val searchField = TextField.contextual(prompt = Some(selectionPrompt), valuePointer = searchFieldPointer)
 		wrapFieldWithContext(searchField, noResultsView, displayStackLayout, searchIcon, contentPointer, selectedValuePointer,
-			shouldDisplayPopUpOnFocusGain, checkEquals)(makeDisplay)(itemToSearchString)
+			shouldDisplayPopUpOnFocusGain, sameInstanceCheck, contentIsStateless)(makeDisplay)(itemToSearchString)
 	}
 	
 	/**
 	  * Creates a new search from field that displays items as text
-	  * @param noResultsView View displayed when no results are available or none were found with current filter
-	  * @param displayFunction Display function used for transforming items to text
-	  * @param selectionPrompt Prompt that is displayed
-	  * @param searchIcon Icon displayed at the right side of the search field (optional)
-	  * @param displayStackLayout Stack layout used in selection items display (default = Fit)
-	  * @param contentPointer Content pointer used (default = new pointer)
-	  * @param selectedValuePointer Pointer for currently selected value (default = new pointer)
-	  * @param searchFieldPointer Pointer for search field's current text (default = new pointer)
+	  * @param noResultsView                 View displayed when no results are available or none were found with current filter
+	  * @param displayFunction               Display function used for transforming items to text
+	  * @param selectionPrompt               Prompt that is displayed
+	  * @param searchIcon                    Icon displayed at the right side of the search field (optional)
+	  * @param displayStackLayout            Stack layout used in selection items display (default = Fit)
+	  * @param contentPointer                Content pointer used (default = new pointer)
+	  * @param selectedValuePointer          Pointer for currently selected value (default = new pointer)
+	  * @param searchFieldPointer            Pointer for search field's current text (default = new pointer)
 	  * @param shouldDisplayPopUpOnFocusGain Whether pop-up window should be opened whenever this field gains focus (default = true)
-	  * @param checkEquals Function for checking item equality (default = use standard equals)
-	  * @param context Component creation context (implicit)
-	  * @param exc Execution context (implicit)
+	  * @param sameInstanceCheck             Function for checking whether two items represent the same option (default = use standard equals)
+	  * @param contentIsStateless Whether each displayed item should be considered an individual instance and not a state
+	  *                                      of some other instance. If you didn't specify sameInstanceCheck, don't specify this either.
+	  * @param context                       Component creation context (implicit)
+	  * @param exc                           Execution context (implicit)
 	  * @tparam A Type of selected item
 	  * @return A new search from field
 	  */
@@ -112,7 +120,8 @@ object SearchFrom
 								  selectedValuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 								  searchFieldPointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None),
 								  shouldDisplayPopUpOnFocusGain: Boolean = true,
-								  checkEquals: (A, A) => Boolean = (a: A, b: A) => a == b)
+								  sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b,
+								  contentIsStateless: Boolean = true)
 								 (implicit context: ComponentContext, exc: ExecutionContext) =
 	{
 		def makeField(item: A) = ItemLabel.contextual(item, displayFunction)
@@ -120,7 +129,7 @@ object SearchFrom
 		
 		contextual(noResultsView, selectionPrompt, displayStackLayout, searchIcon,
 			contentPointer, selectedValuePointer, searchFieldPointer, shouldDisplayPopUpOnFocusGain,
-			checkEquals)(makeField)(itemToSearchString)
+			sameInstanceCheck, contentIsStateless)(makeField)(itemToSearchString)
 	}
 	
 	// TODO: Add one more constructor that displays text + icon
@@ -156,8 +165,10 @@ object SearchFrom
   * @param contentPointer Pointer for selection pool (default = new pointer)
   * @param selectedValuePointer Pointer for currently selected value (default = new pointer)
   * @param shouldDisplayPopUpOnFocusGain Whether Pop-up should be opened whenever field gains focus
-  * @param equalsCheck Function for comparing two selectable items, whether they represent the same option
+  * @param sameInstanceCheck Function for comparing two selectable items, whether they represent the same option
   *                    (default = { a == b })
+  * @param contentIsStateless Whether each displayed item should be considered an individual instance and not a state
+  *                           of some other instance. If you didn't specify sameInstanceCheck, don't specify this either.
   * @param makeDisplayFunction Function for creating new selection displays. Takes the initially displayed item.
   * @param itemToSearchString Function for converting a selectable item to searchable string. Used when filtering items.
   */
@@ -167,11 +178,12 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
  searchIcon: Option[Image] = None, searchIconInsets: StackInsets = StackInsets.any,
  override val contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
  selectedValuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
- shouldDisplayPopUpOnFocusGain: Boolean = true, equalsCheck: (A, A) => Boolean = (a: A, b: A) => a == b)
+ shouldDisplayPopUpOnFocusGain: Boolean = true, sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b,
+ contentIsStateless: Boolean = true)
 (makeDisplayFunction: A => C)(itemToSearchString: A => String)
 (implicit exc: ExecutionContext)
 	extends DropDownFieldLike[A, C](selectionDrawer, betweenDisplaysMargin, displayStackLayout,
-		valuePointer = selectedValuePointer) with SwingComponentRelated
+		valuePointer = selectedValuePointer, contentIsStateless = contentIsStateless) with SwingComponentRelated
 {
 	// TODO: Consider adding border to pop-up content view
 	// Draws border at each side, except for top of pop-up
@@ -252,7 +264,7 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 	
 	override def component = searchField.component
 	
-	override protected def checkEquals(first: A, second: A) = equalsCheck(first, second)
+	override protected def representSameInstance(first: A, second: A) = sameInstanceCheck(first, second)
 	
 	override protected def makeDisplay(item: A) = makeDisplayFunction(item)
 	

@@ -38,12 +38,30 @@ trait ContentManager[A, C <: Refreshable[A]] extends RefreshableWithPointer[Vect
 	protected def finalizeRefresh(): Unit
 	
 	/**
-	  * Checks whether these two items should be considered equal by this content manager's standards
+	  * Checks whether these two items should be considered equal by this content manager's standards. If this
+	  * method returns true, content updated may be completely skipped.
 	  * @param a First item
 	  * @param b Second item
 	  * @return Whether the two items should be considered equal in this context
 	  */
 	protected def itemsAreEqual(a: A, b: A): Boolean
+	
+	/**
+	  * Checks whether these two items represent same or different state of a the same item whereas itemsAreEqual checks
+	  * whether the two states are exactly equal (or equal display-wise). For content managers with immutable stateless
+	  * content, this is same as calling itemsAreEqual.
+	  * @param a First item
+	  * @param b Second item
+	  * @return Whether these two items represent same or different versions of the same instance
+	  */
+	protected def representSameItem(a: A, b: A): Boolean
+	
+	/**
+	  * @return Whether the contents managed by this manager don't have any states - that each managed item represents
+	  *         an individual immutable object and not a state of some other object. True if the managed items
+	  *         don't represent any other item (representsSameItem is same as itemsAreEqual). False otherwise.
+	  */
+	protected def contentIsStateless: Boolean
 	
 	
 	// OTHER	--------------------
@@ -67,31 +85,39 @@ trait ContentManager[A, C <: Refreshable[A]] extends RefreshableWithPointer[Vect
 	  * @param item A searched item
 	  * @return The display currently showing the provided item. None if no such display was found.
 	  */
-	def displayFor(item: A): Option[C] = displayMatching(item)(itemsAreEqual)
+	def displayFor(item: A): Option[C] =
+	{
+		// May perform additional filtering in case there are duplicates
+		val options = displays.filter { d => representSameItem(item, d.content) }
+		if (options.size < 2)
+			options.headOption
+		else
+			options.find { d => itemsAreEqual(item, d.content) }.orElse(options.headOption)
+	}
 	
 	/**
-	  * Replaces a single item in content
+	  * Replaces a single item in content with a new version. This is only useful when content has mutable states.
 	  * @param oldItem Item to be replaced
 	  * @param newItem The item that will replace the old item
 	  */
 	def replace(oldItem: A, newItem: A) =
 	{
-		content.indexWhereOption { itemsAreEqual(oldItem, _) }.foreach { targetIndex =>
+		content.indexWhereOption { representSameItem(oldItem, _) }.foreach { targetIndex =>
 			content = content.updated(targetIndex, newItem)
 		}
 	}
 	
 	/**
-	  * Updates a single item in this display's content (only useful for mutable entities)
+	  * Updates a single item in this display's content (only useful when managed content has mutable state)
 	  * @param item Item to be updated
 	  */
 	def updateSingle(item: A) =
 	{
-		content.indexWhereOption { itemsAreEqual(item, _) } match
+		content.indexWhereOption { representSameItem(item, _) } match
 		{
 			case Some(index) =>
-				val targetedDisplay = displays(index)
-				targetedDisplay.content = item
+				// val targetedDisplay = displays(index)
+				// targetedDisplay.content = item
 				content = content.updated(index, item)
 			case None => content :+= item
 		}
@@ -120,7 +146,7 @@ trait ContentManager[A, C <: Refreshable[A]] extends RefreshableWithPointer[Vect
 			
 			// Finds similar start and end portions (if present)
 			val identicalStart = d.zip(newValues).takeWhile { case (display, newVal) =>
-				itemsAreEqual(display.content, newVal) }
+				representSameItem(display.content, newVal) }
 			val identicalEnd =
 			{
 				// Compared parts (old vs new) must have identical size
@@ -137,7 +163,7 @@ trait ContentManager[A, C <: Refreshable[A]] extends RefreshableWithPointer[Vect
 						d.zip(newValues)
 				}
 				comparedPart.reverseIterator.takeWhile {
-					case (display, newVal) => itemsAreEqual(display.content, newVal) }.toVector
+					case (display, newVal) => representSameItem(display.content, newVal) }.toVector
 			}
 			
 			val skipFirst = identicalStart.size
@@ -234,6 +260,14 @@ trait ContentManager[A, C <: Refreshable[A]] extends RefreshableWithPointer[Vect
 				// Updates the content between identical areas
 				val updateRange = skipFirst until (newContentSize - skipLast)
 				update(updateRange, newValues.slice(updateRange))
+			}
+			
+			// May also update the state of identical items, in case their mutable state was altered (optional)
+			if (!contentIsStateless)
+			{
+				(identicalStart.iterator ++ identicalEnd.iterator).filterNot {
+					case (display, value) => itemsAreEqual(display.content, value) }.foreach {
+					case (display, value) => display.content = value }
 			}
 		}
 		

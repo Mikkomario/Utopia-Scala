@@ -6,16 +6,14 @@ import utopia.flow.async.{Loop, ThreadPool}
 import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.reflection.component.drawing.immutable.BorderDrawer
-import utopia.reflection.component.swing.label.{ImageLabel, ItemLabel, TextLabel}
+import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.container.swing.Stack
-import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.controller.data.ContainerContentManager
 import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape.{Border, StackInsets}
+import utopia.reflection.shape.StackInsets
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
 import utopia.reflection.util.{ComponentContext, ComponentContextBuilder, SingleFrameSetup}
@@ -46,12 +44,11 @@ object StackContentManagementTest extends App
 	
 	// Creates the main content
 	val stack = Stack.column[ItemLabel[Int]]()
-	val manager = new ContainerContentManager[Int, Stack[ItemLabel[Int]], ItemLabel[Int]](stack)({ i =>
+	val manager = ContainerContentManager.forStatelessItems[Int, ItemLabel[Int]](stack, Vector(1, 4, 6)) { i =>
 		val label = ItemLabel.contextual(i)
 		label.addContentListener { e => println(s"Label content changed: $e") }
 		label
-	})
-	manager.content = Vector(1, 4, 6)
+	}
 	
 	val content = stack.framed(64.any x 16.any, Color.white)
 	

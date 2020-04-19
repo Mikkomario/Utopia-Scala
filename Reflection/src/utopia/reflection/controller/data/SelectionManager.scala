@@ -96,7 +96,8 @@ trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with
 	private def updateSelection(newValue: Option[A]): Unit =
 	{
 		val oldSelected = _selectedDisplay
-		_selectedDisplay = newValue.flatMap { v => displays.find { d => itemsAreEqual(v, d.content) } }
+		// Finds the new display holding that value
+		_selectedDisplay = newValue.flatMap(displayFor)
 		
 		if (oldSelected != _selectedDisplay)
 			updateSelectionDisplay(oldSelected, _selectedDisplay)
@@ -115,12 +116,21 @@ trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with
 	{
 		override def onChangeEvent(event: ChangeEvent[Vector[A]]) =
 		{
-			// Tries to preserve selection after refresh
+			// Tries to preserve selection after refresh (finds value that matches the previous selection and selects it)
 			value.foreach { currentValue =>
-				if (event.newValue.exists { newV => itemsAreEqual(currentValue, newV) })
-					updateSelection(value)
-				else
-					value = None
+				val newSelectedValue =
+				{
+					val candidates = event.newValue.filter { representSameItem(_, currentValue) }
+					if (candidates.size < 2)
+						candidates.headOption
+					else
+						candidates.find { itemsAreEqual(_, currentValue) }.orElse(candidates.headOption)
+				}
+				newSelectedValue match
+				{
+					case Some(_) => value = newSelectedValue
+					case None => value = None
+				}
 			}
 		}
 	}

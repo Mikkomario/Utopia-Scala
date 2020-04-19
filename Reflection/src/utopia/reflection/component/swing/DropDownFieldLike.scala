@@ -37,7 +37,8 @@ import scala.concurrent.ExecutionContext
 abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 (selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any, displayStackLayout: StackLayout = Fit,
  protected val currentSelectionOptionsPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
- override val valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None))
+ override val valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+ contentIsStateless: Boolean = false)
 (implicit exc: ExecutionContext)
 	extends StackableAwtComponentWrapperWrapper with SelectableWithPointers[Option[A], Vector[A]] with Focusable
 {
@@ -49,7 +50,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	  * @param second The second item
 	  * @return Whether these items represent the same option
 	  */
-	protected def checkEquals(first: A, second: A): Boolean
+	protected def representSameInstance(first: A, second: A): Boolean
 	
 	/**
 	  * Creates a new selection display
@@ -77,8 +78,9 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	// ATTRIBUTES	----------------------------
 	
 	private val searchStack = Stack.column[C](margin = betweenDisplaysMargin, layout = displayStackLayout)
-	private val displaysManager = new StackSelectionManager[A, C](searchStack, selectionDrawer, checkEquals,
-		currentSelectionOptionsPointer)(makeDisplay)
+	private val displaysManager = new StackSelectionManager[A, C](searchStack, selectionDrawer,
+		currentSelectionOptionsPointer, representSameInstance,
+		if (contentIsStateless) None else Some((a, b) => a == b))(makeDisplay)
 	/**
 	  * The view component that contains the currently displayed content for the pop-up (will be placed within each created pop-up)
 	  */

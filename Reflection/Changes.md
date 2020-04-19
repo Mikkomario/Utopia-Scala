@@ -5,6 +5,12 @@
     - All custom containers need to be adjusted accordingly
 - ContainerManager now only updates non-equal rows on content update 
 and will insert rows where new content is inserted in the vector
+    - All subclasses of ContainerManager need to be inspected since there are multiple 
+    changes and new methods (most notably two different equality check levels).
+    - All usages of ContainerManager, SelectionManager, and DropDownLike components 
+    should also be re-examined in case equality checks or other features need to be adjusted.
+        - Many classes received contentIsStateless -parameter which determines one or two 
+        equality checks should be made (defaults to 1)
 - DisplayFunction.interpolating -methods now use new string interpolation style and 
 multiple parameter lists.
 - LocalStringLike.interpolate renamed to .interpolated
