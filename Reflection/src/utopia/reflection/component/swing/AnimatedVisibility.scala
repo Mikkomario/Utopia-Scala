@@ -74,6 +74,22 @@ class AnimatedVisibility[C <: AwtStackable](comp: C, actorHandler: ActorHandler,
 	
 	// OTHER	-------------------------
 	
+	/**
+	  * Specifies component visibility without triggering transition animations
+	  * @param newState New visibility state
+	  */
+	def setStateWithoutTransition(newState: Boolean) =
+	{
+		if (targetState != newState)
+		{
+			targetState = newState
+			if (newState)
+				panel.set(comp)
+			else
+				panel.clear()
+		}
+	}
+	
 	// Returns the reached visibility target
 	private def startTransition(target: Boolean): Future[Boolean] =
 	{
