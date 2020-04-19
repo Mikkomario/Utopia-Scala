@@ -95,13 +95,19 @@ class ImageAndTextLabel[A](override val contentPointer: PointerWithEvents[A], in
 					case Alignment.Right => X -> Vector(textLabel, wrappedImageLabel)
 					case _ => Y -> Vector(wrappedImageLabel, textLabel)
 				}
-				
 		}
-		val layout = alignment.horizontal match
-		{
-			case Alignment.Left => Leading
-			case Alignment.Right => Trailing
-			case _ => StackLayout.Center
+		val layout = {
+			if (direction == X)
+				StackLayout.Center
+			else
+			{
+				alignment.horizontal match
+				{
+					case Alignment.Left => Leading
+					case Alignment.Right => Trailing
+					case _ => StackLayout.Center
+				}
+			}
 		}
 		Stack.withItems(items, direction, StackLength.fixedZero, layout = layout)
 	}

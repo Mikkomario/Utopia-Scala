@@ -119,21 +119,21 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
     {
         // Caches components so that indexes won't change in between
         val c = components
-        c.optionIndexOf(item).map
-        {
-            i =>
-                if (c.size == 1)
-                    Bounds(Point.origin, size)
-                else
-                {
-                    // Includes half of the area between items (if there is no item, uses cap)
-                    val top = if (i > 0) (item.coordinateAlong(direction) - c(i - 1).maxCoordinateAlong(direction)) / 2 else
-                        item.coordinateAlong(direction)
-                    val bottom = if (i < c.size - 1) (c(i + 1).coordinateAlong(direction) - item.maxCoordinateAlong(direction)) / 2 else
-                        length - item.maxCoordinateAlong(direction)
+        c.optionIndexOf(item).map { i =>
+            if (c.size == 1)
+                Bounds(Point.origin, size)
+            else
+            {
+                // Includes half of the area between items (if there is no item, uses cap)
+                val top = if (i > 0) (item.coordinateAlong(direction) - c(i - 1).maxCoordinateAlong(direction)) / 2 else
+                    item.coordinateAlong(direction)
+                val bottom = if (i < c.size - 1) (c(i + 1).coordinateAlong(direction) - item.maxCoordinateAlong(direction)) / 2 else
+                    length - item.maxCoordinateAlong(direction)
                 
-                    Bounds(item.position - (top, direction), item.size + (top + bottom, direction))
-                }
+                // Also includes the whole stack breadth
+                Bounds(item.position - (top, direction), item.size.withDimension(breadth, direction.perpendicular) +
+                    (top + bottom, direction))
+            }
         }
     }
     
