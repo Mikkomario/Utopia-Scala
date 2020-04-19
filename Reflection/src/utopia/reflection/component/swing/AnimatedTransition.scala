@@ -3,17 +3,18 @@ package utopia.reflection.component.swing
 import utopia.genesis.handling.Actor
 import utopia.genesis.shape.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.{Axis2D, Direction1D}
-import utopia.genesis.shape.shape2D.Size
+import utopia.genesis.shape.shape2D.{Bounds, Size}
 import utopia.inception.handling.{HandlerType, Mortal}
 import utopia.reflection.component.drawing.mutable.{CustomDrawable, CustomDrawableWrapper}
-import utopia.reflection.component.drawing.template.ImageDrawer
+import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.stack.{StackLeaf, Stackable}
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.image.Image
 import utopia.genesis.shape.path.ProjectilePath
+import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.shape.{Alignment, StackInsets, StackSize}
+import utopia.reflection.shape.StackSize
 import utopia.reflection.util.ComponentToImage
 
 import scala.concurrent.Promise
@@ -161,22 +162,21 @@ class AnimatedTransition(original: AwtComponentRelated with Stackable, transitio
 	
 	// NESTED	---------------------------------
 	
-	private object Drawer extends ImageDrawer
+	private object Drawer extends CustomDrawer
 	{
-		override def image = state match
+		private def image = state match
 		{
 			case NotStarted => Image.empty
-			case Ongoing => baseImage.withSize(size).withAlpha(currentAlpha)
-			case Finished => baseImage.withSize(size)
+			case Ongoing => baseImage.withAlpha(currentAlpha)
+			case Finished => baseImage
 		}
 		
-		override def useUpscaling = false
-		
-		override def insets = StackInsets.zero
-		
-		override def alignment = Alignment.Center
-		
 		override def drawLevel = Normal
+		
+		override def draw(drawer: Drawer, bounds: Bounds) =
+		{
+			image.withSize(bounds.size, preserveShape = false).drawWith(drawer, bounds.position)
+		}
 	}
 	
 	private sealed trait TransitionState

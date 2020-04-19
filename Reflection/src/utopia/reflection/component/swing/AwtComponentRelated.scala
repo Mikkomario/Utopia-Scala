@@ -41,6 +41,37 @@ trait AwtComponentRelated
 		window
 	}
 	
+	/**
+	  * @return Whether this component is currently being displayed as a part of a visible component hierarchy
+	  *         (visible hierarchy in visible window)
+	  */
+	def isInVisibleHierarchy: Boolean =
+	{
+		if (component.isVisible)
+		{
+			var foundInvisible = false
+			var foundVisibleWindow = false
+			var nextParent = component.getParent
+			
+			while (nextParent != null && !foundInvisible && !foundVisibleWindow)
+			{
+				if (nextParent.isVisible)
+				{
+					if (nextParent.isInstanceOf[java.awt.Window])
+						foundVisibleWindow = true
+					else
+						nextParent = nextParent.getParent
+				}
+				else
+					foundInvisible = true
+			}
+			
+			foundVisibleWindow
+		}
+		else
+			false
+	}
+	
 	
 	// OTHER	--------------------
 	

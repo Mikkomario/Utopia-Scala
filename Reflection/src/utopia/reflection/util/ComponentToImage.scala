@@ -21,7 +21,27 @@ object ComponentToImage
 	  * @param component Component to draw
 	  * @return An image of this component's paint result.
 	  */
-	def apply(component: AwtComponentRelated with Area): Image = apply(component, component.size)
+	def apply(component: AwtComponentRelated with Area): Image =
+	{
+		val imageSize = component.size
+		
+		// For visible displayed components, may simply draw them to an image
+		if (component.isInVisibleHierarchy)
+		{
+			if (imageSize.isPositive)
+			{
+				val image = new BufferedImage(imageSize.width.toInt, imageSize.height.toInt, BufferedImage.TYPE_INT_ARGB)
+				val graphics = image.getGraphics
+				component.component.paint(graphics)
+				graphics.dispose()
+				Image.from(image)
+			}
+			else
+				Image.empty
+		}
+		else
+			apply(component, imageSize)
+	}
 	
 	/**
 	  * Draws an image of the specified component.
