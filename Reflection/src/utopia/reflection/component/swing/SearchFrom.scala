@@ -11,7 +11,7 @@ import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, ImageDra
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.swing.label.{ItemLabel, TextLabel}
 import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.Fit
+import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
 import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.{Alignment, StackInsets, StackLength}
@@ -115,7 +115,7 @@ object SearchFrom
 	  */
 	def contextualWithTextOnly[A](noResultsView: AwtStackable, selectionPrompt: LocalizedString,
 								  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-								  displayStackLayout: StackLayout = Fit, searchIcon: Option[Image] = None,
+								  displayStackLayout: StackLayout = Leading, searchIcon: Option[Image] = None,
 								  contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
 								  selectedValuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 								  searchFieldPointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None),
@@ -173,7 +173,7 @@ object SearchFrom
   * @param itemToSearchString Function for converting a selectable item to searchable string. Used when filtering items.
   */
 class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
-(searchField: TextField, override protected val noResultsView: AwtStackable, override protected val actorHandler: ActorHandler,
+(searchField: TextField, override protected val noResultsView: AwtStackable, actorHandler: ActorHandler,
  selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any, displayStackLayout: StackLayout = Fit,
  searchIcon: Option[Image] = None, searchIconInsets: StackInsets = StackInsets.any,
  override val contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
@@ -182,7 +182,7 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
  contentIsStateless: Boolean = true)
 (makeDisplayFunction: A => C)(itemToSearchString: A => String)
 (implicit exc: ExecutionContext)
-	extends DropDownFieldLike[A, C](selectionDrawer, betweenDisplaysMargin, displayStackLayout,
+	extends DropDownFieldLike[A, C](actorHandler, selectionDrawer, betweenDisplaysMargin, displayStackLayout,
 		valuePointer = selectedValuePointer, contentIsStateless = contentIsStateless) with SwingComponentRelated
 {
 	// TODO: Consider adding border to pop-up content view

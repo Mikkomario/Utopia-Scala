@@ -128,7 +128,11 @@ trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with
 				}
 				newSelectedValue match
 				{
-					case Some(_) => value = newSelectedValue
+					case Some(newFoundValue) =>
+						value = newSelectedValue
+						// May need to manually trigger selection display update
+						if (currentValue == newFoundValue)
+							updateSelection(value)
 					case None => value = None
 				}
 			}

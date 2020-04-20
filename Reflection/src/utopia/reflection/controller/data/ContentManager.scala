@@ -200,7 +200,7 @@ trait ContentManager[A, C <: Refreshable[A]] extends RefreshableWithPointer[Vect
 					val updateRange = skipFirst until (oldContentSize - skipLast)
 					val updatedValues = if (insertToEnd) newValues.slice(updateRange) else
 						newValues.dropRight(skipLast).takeRight(updateRange.size)
-					val insertedValues = if (insertToEnd) newValues.takeRight(sizeDifference) else newValues.take(sizeDifference)
+					val insertedValues = if (insertToEnd) newValues.dropRight(skipLast).takeRight(sizeDifference) else newValues.take(sizeDifference)
 					val insertIndex = if (insertToEnd) updateRange.last + 1 else 0
 					
 					// Updates first, then adds new displays

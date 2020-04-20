@@ -109,7 +109,7 @@ object DropDown
   * @since 14.3.2020, v1
   */
 class DropDown[A, C <: AwtStackable with Refreshable[A]]
-(override protected val actorHandler: ActorHandler, override protected val noResultsView: AwtStackable, icon: Image,
+(actorHandler: ActorHandler, override protected val noResultsView: AwtStackable, icon: Image,
  selectionDrawer: CustomDrawer, focusColor: Color, selectionPrompt: Prompt, defaultFont: Font,
  defaultTextColor: Color = Color.textBlack, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
  textAlignment: Alignment = Alignment.Left, textInsets: StackInsets = StackInsets.any,
@@ -120,7 +120,7 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
  allowImageUpscaling: Boolean = false, shouldDisplayPopUpOnFocusGain: Boolean = true,
  sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 (makeDisplayFunction: A => C)(implicit exc: ExecutionContext)
-	extends DropDownFieldLike[A, C](selectionDrawer, betweenDisplaysMargin, displayStackLayout, contentPointer,
+	extends DropDownFieldLike[A, C](actorHandler, selectionDrawer, betweenDisplaysMargin, displayStackLayout, contentPointer,
 		valuePointer, contentIsStateless)
 {
 	// ATTRIBUTES	------------------------------

@@ -7,6 +7,7 @@ import utopia.genesis.color.Color
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateHandlerType, KeyStateListener, MouseButtonStateHandlerType, MouseButtonStateListener}
+import utopia.genesis.shape.Axis.Y
 import utopia.genesis.shape.shape2D.Point
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
@@ -17,7 +18,7 @@ import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.container.swing.window.{Popup, Window}
-import utopia.reflection.container.swing.{Stack, SwitchPanel}
+import utopia.reflection.container.swing.{AnimatedStack, Stack, SwitchPanel}
 import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.reflection.shape.{StackLength, StackSize, StackSizeModifier}
 
@@ -27,6 +28,7 @@ import scala.concurrent.ExecutionContext
   * A common trait for custom drop down selection components
   * @author Mikko Hilpinen
   * @since 8.3.2020, v1
+  * @param actorHandler Actor handler used for delivering action events for pop-up and key event handling
   * @param selectionDrawer A custom drawer that highlights the selected item in selection pop-up
   * @param betweenDisplaysMargin Margin placed between selection displays (default = any margin)
   * @param displayStackLayout Stack layout used in selection displays stack (default = fit)
@@ -35,7 +37,7 @@ import scala.concurrent.ExecutionContext
   * @param exc Implicit execution context (used in pop-up)
   */
 abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
-(selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any, displayStackLayout: StackLayout = Fit,
+(actorHandler: ActorHandler, selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any, displayStackLayout: StackLayout = Fit,
  protected val currentSelectionOptionsPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
  override val valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
  contentIsStateless: Boolean = false)
@@ -69,15 +71,11 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	  */
 	protected def noResultsView: AwtStackable
 	
-	/**
-	  * @return Actor handler used for delivering action events for pop-up and key event handling
-	  */
-	protected def actorHandler: ActorHandler
-	
 	
 	// ATTRIBUTES	----------------------------
 	
-	private val searchStack = Stack.column[C](margin = betweenDisplaysMargin, layout = displayStackLayout)
+	private val searchStack = // new AnimatedStack[C](actorHandler, Y, betweenDisplaysMargin, layout = displayStackLayout)
+		Stack.column[C](margin = betweenDisplaysMargin, layout = displayStackLayout)
 	private val displaysManager = new ContainerSelectionManager[A, C](searchStack, selectionDrawer,
 		currentSelectionOptionsPointer, representSameInstance,
 		if (contentIsStateless) None else Some((a, b) => a == b))(makeDisplay)

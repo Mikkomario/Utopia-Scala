@@ -121,6 +121,7 @@ trait AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 		// Wraps the component in an animation
 		val wrapper = new AnimatedVisibility[C](component, actorHandler, transitionAxis, animationDuration, fadingIsEnabled)
 		// Adds the wrapper to the container and starts the animation
+		// FIXME: Indexing fails during component removal
 		container.insert(wrapper, index)
 		wrapper.isShown = true
 	}
@@ -149,6 +150,6 @@ trait AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 				this += component
 			else
 				container += new AnimatedVisibility[C](component, actorHandler, transitionAxis, animationDuration,
-					fadingIsEnabled, isShownInitially = true)
+					fadingIsEnabled, isShownInitially = true) // FIXME: Remove this once content tracking changes
 	}
 }
