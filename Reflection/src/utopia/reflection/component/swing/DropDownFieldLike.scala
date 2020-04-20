@@ -18,7 +18,7 @@ import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.container.swing.window.{Popup, Window}
 import utopia.reflection.container.swing.{Stack, SwitchPanel}
-import utopia.reflection.controller.data.StackSelectionManager
+import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.reflection.shape.{StackLength, StackSize, StackSizeModifier}
 
 import scala.concurrent.ExecutionContext
@@ -78,7 +78,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	// ATTRIBUTES	----------------------------
 	
 	private val searchStack = Stack.column[C](margin = betweenDisplaysMargin, layout = displayStackLayout)
-	private val displaysManager = new StackSelectionManager[A, C](searchStack, selectionDrawer,
+	private val displaysManager = new ContainerSelectionManager[A, C](searchStack, selectionDrawer,
 		currentSelectionOptionsPointer, representSameInstance,
 		if (contentIsStateless) None else Some((a, b) => a == b))(makeDisplay)
 	/**

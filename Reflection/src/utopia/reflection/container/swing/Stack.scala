@@ -28,7 +28,7 @@ object Stack
     // ATTRIBUTES   ----------------
     
     private val defaultMargin = StackLength.any
-    private val defaultCap = StackLength.fixed(0)
+    private val defaultCap = StackLength.fixedZero
     
     
     // OTHER    --------------------
@@ -188,7 +188,7 @@ object Stack
   * @param layout The layout of this stack's components perpendicular to the 'direction' (default = Fit)
 **/
 class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override val margin: StackLength = StackLength.any,
-                                     override val cap: StackLength = StackLength.fixed(0), override val layout: StackLayout = Fit)
+                                     override val cap: StackLength = StackLength.fixedZero, override val layout: StackLayout = Fit)
     extends StackLike[C] with AwtComponentWrapperWrapper with CachingStackable with SwingComponentRelated
         with AwtContainerRelated with CustomDrawableWrapper
 {

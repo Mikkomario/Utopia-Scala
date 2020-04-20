@@ -17,8 +17,8 @@ import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.container.stack.{BoxScrollBarDrawer, StackHierarchyManager}
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.container.swing.{ScrollView, Stack}
-import utopia.reflection.controller.data.StackSelectionManager
+import utopia.reflection.container.swing.{AnimatedStack, ScrollView, Stack}
+import utopia.reflection.controller.data.{ContainerSelectionManager, StackSelectionManager}
 import utopia.reflection.localization.{DisplayFunction, Localizer, NoLocalization}
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.{StackInsets, StackLengthLimit}
@@ -36,6 +36,7 @@ import scala.concurrent.duration.Duration
 object ScrollViewTest extends App
 {
 	GenesisDataType.setup()
+	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 	
 	// Sets up localization context
 	implicit val defaultLanguageCode: String = "EN"
@@ -57,7 +58,7 @@ object ScrollViewTest extends App
 	val actorHandler = ActorHandler()
 	
 	// Creates the main stack
-	val stack = Stack.column[ItemLabel[Int]](8.fixed, 4.fixed)
+	val stack = new AnimatedStack[ItemLabel[Int]](actorHandler, Y, 8.fixed, 4.fixed) // Stack.column[ItemLabel[Int]](8.fixed, 4.fixed)
 	stack.background = Color.yellow.minusHue(33).darkened(1.2)
 	
 	// Adds content management
@@ -65,7 +66,7 @@ object ScrollViewTest extends App
 		d.withColor(Color.black.withAlpha(0.33), Color.black.withAlpha(0.8)).withStroke(2).draw(b)
 	}
 	
-	val contentManager = new StackSelectionManager[Int, ItemLabel[Int]](stack, selectionDrawer)(makeLabel)
+	val contentManager = new ContainerSelectionManager[Int, ItemLabel[Int]](stack, selectionDrawer)(makeLabel)
 	contentManager.addValueListener(i => println("Selected " + i.newValue))
 	contentManager.enableKeyHandling(actorHandler)
 	contentManager.enableMouseHandling(false)
@@ -80,7 +81,6 @@ object ScrollViewTest extends App
 	
 	// Creates the frame and displays it
 	val actionLoop = new ActorLoop(actorHandler)
-	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 	
 	val frame = Frame.windowed(scrollView, "Scroll View Test", User)
 	frame.setToExitOnClose()

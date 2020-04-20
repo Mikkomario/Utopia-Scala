@@ -10,20 +10,22 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.immutable.Handleable
-import utopia.reflection.component.Refreshable
+import utopia.reflection.component.{AreaOfItems, ComponentLike, Refreshable}
 import utopia.reflection.component.drawing.mutable.CustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.stack.Stackable
-import utopia.reflection.container.stack.StackLike
+import utopia.reflection.container.MultiContainer
 
 import scala.concurrent.duration.Duration
 
-object StackSelectionManager
+object ContainerSelectionManager
 {
+	private type SelectStack[X <: ComponentLike] = MultiContainer[X] with Stackable with CustomDrawable with AreaOfItems[X]
+	
 	/**
 	  * Creates a content manager for immutable items that don't represent state of any other object. No two different
 	  * items will be linked in any way.
-	  * @param stack Stack that will hold the displays
+	  * @param container Container that will hold the displays
 	  * @param selectionAreaDrawer A drawer that will highlight the selected area
 	  * @param contentPointer Pointer to the displayed content
 	  * @param equalsCheck Function for checking item equality (default = standard equals (== -operator))
@@ -33,14 +35,14 @@ object StackSelectionManager
 	  * @return New content manager
 	  */
 	def forStatelessItemsPointer[A, Display <: Stackable with Refreshable[A]]
-	(stack: StackLike[Display] with CustomDrawable, selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]],
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]],
 	 equalsCheck: (A, A) => Boolean = { (a: A, b: A) => a == b })(makeDisplay: A => Display) =
-		new StackSelectionManager[A, Display](stack, selectionAreaDrawer, contentPointer, equalsCheck)(makeDisplay)
+		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, equalsCheck)(makeDisplay)
 	
 	/**
 	  * Creates a content manager for immutable items that don't represent state of any other object. No two different
 	  * items will be linked in any way.
-	  * @param stack Stack that will hold the displays
+	  * @param container Container that will hold the displays
 	  * @param selectionAreaDrawer A drawer that will highlight the selected area
 	  * @param initialItems Initially displayed content (default = empty vector)
 	  * @param equalsCheck Function for checking item equality (default = standard equals (== -operator))
@@ -50,15 +52,15 @@ object StackSelectionManager
 	  * @return New content manager
 	  */
 	def forStatelessItems[A, Display <: Stackable with Refreshable[A]]
-	(stack: StackLike[Display] with CustomDrawable, selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector(),
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector(),
 	 equalsCheck: (A, A) => Boolean = { (a: A, b: A) => a == b })(makeDisplay: A => Display) =
-		forStatelessItemsPointer[A, Display](stack, selectionAreaDrawer, new PointerWithEvents(initialItems), equalsCheck)(makeDisplay)
+		forStatelessItemsPointer[A, Display](container, selectionAreaDrawer, new PointerWithEvents(initialItems), equalsCheck)(makeDisplay)
 	
 	/**
 	  * Creates a content manager for immutable items that represent a state of some other object
 	  * (Eg. different immutable states of a single entity). The states may be linked together via a function
 	  * (Eg. by checking related database item row id)
-	  * @param stack Stack that will hold the displays
+	  * @param container Container that will hold the displays
 	  * @param selectionAreaDrawer A drawer that will highlight the selected area
 	  * @param contentPointer Pointer to the displayed content
 	  * @param sameItemCheck Function for checking whether the two items represent the same instance. If you would use
@@ -70,16 +72,16 @@ object StackSelectionManager
 	  * @return New content manager
 	  */
 	def forImmutableStatesPointer[A, Display <: Stackable with Refreshable[A]]
-	(stack: StackLike[Display] with CustomDrawable, selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]])(
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]])(
 		sameItemCheck: (A, A) => Boolean)(makeDisplay: A => Display) =
-		new StackSelectionManager[A, Display](stack, selectionAreaDrawer, contentPointer, sameItemCheck,
+		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, sameItemCheck,
 			Some((a: A, b: A) => a == b))(makeDisplay)
 	
 	/**
 	  * Creates a content manager for immutable items that represent a state of some other object
 	  * (Eg. different immutable states of a single entity). The states may be linked together via a function
 	  * (Eg. by checking related database item row id)
-	  * @param stack Stack that will hold the displays
+	  * @param container Container that will hold the displays
 	  * @param selectionAreaDrawer A drawer that will highlight the selected area
 	  * @param initialItems Initially displayed content (default = empty vector)
 	  * @param sameItemCheck Function for checking whether the two items represent the same instance. If you would use
@@ -91,15 +93,15 @@ object StackSelectionManager
 	  * @return New content manager
 	  */
 	def forImmutableStates[A, Display <: Stackable with Refreshable[A]]
-	(stack: StackLike[Display] with CustomDrawable, selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector())(
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector())(
 		sameItemCheck: (A, A) => Boolean)(makeDisplay: A => Display) =
-		forImmutableStatesPointer[A, Display](stack, selectionAreaDrawer, new PointerWithEvents(initialItems))(sameItemCheck)(makeDisplay)
+		forImmutableStatesPointer[A, Display](container, selectionAreaDrawer, new PointerWithEvents(initialItems))(sameItemCheck)(makeDisplay)
 	
 	/**
 	  * Creates a content manager for mutable / mutating items. Please note that the items may not always update
 	  * correctly since mutations inside the content do not trigger content change events. Therefore you may manually
 	  * need to trigger updates for the container's displays.
-	  * @param stack Stack that will hold the displays
+	  * @param container Container that will hold the displays
 	  * @param selectionAreaDrawer A drawer that will highlight the selected area
 	  * @param contentPointer Pointer to the displayed content
 	  * @param sameItemCheck Function for checking whether the two items represent the same instance.
@@ -111,16 +113,16 @@ object StackSelectionManager
 	  * @return New content manager
 	  */
 	def forMutableItemsPointer[A, Display <: Stackable with Refreshable[A]]
-	(stack: StackLike[Display] with CustomDrawable, selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]])(
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: PointerWithEvents[Vector[A]])(
 		sameItemCheck: (A, A) => Boolean)(equalsCheck: (A, A) => Boolean)(makeDisplay: A => Display) =
-		new StackSelectionManager[A, Display](stack, selectionAreaDrawer, contentPointer, sameItemCheck,
+		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, sameItemCheck,
 			Some(equalsCheck))(makeDisplay)
 	
 	/**
 	  * Creates a content manager for mutable / mutating items. Please note that the items may not always update
 	  * correctly since mutations inside the content do not trigger content change events. Therefore you may manually
 	  * need to trigger updates for the container's displays.
-	  * @param stack Stack that will hold the displays
+	  * @param container Container that will hold the displays
 	  * @param selectionAreaDrawer A drawer that will highlight the selected area
 	  * @param initialItems Initially displayed content (default = empty vector)
 	  * @param sameItemCheck Function for checking whether the two items represent the same instance.
@@ -132,9 +134,9 @@ object StackSelectionManager
 	  * @return New content manager
 	  */
 	def forMutableItems[A, Display <: Stackable with Refreshable[A]]
-	(stack: StackLike[Display] with CustomDrawable, selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector())(
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector())(
 		sameItemCheck: (A, A) => Boolean)(equalsCheck: (A, A) => Boolean)(makeDisplay: A => Display) =
-		forMutableItemsPointer[A, Display](stack, selectionAreaDrawer, new PointerWithEvents(initialItems))(
+		forMutableItemsPointer[A, Display](container, selectionAreaDrawer, new PointerWithEvents(initialItems))(
 			sameItemCheck)(equalsCheck)(makeDisplay)
 }
 
@@ -143,26 +145,26 @@ object StackSelectionManager
   * @author Mikko Hilpinen
   * @since 5.6.2019, v1+
   */
-@deprecated("Replaced with ContainerSelectionManager, which supports also non-stack containers", "v1.2")
-class StackSelectionManager[A, C <: Stackable with Refreshable[A]]
-(stack: StackLike[C] with CustomDrawable, selectionAreaDrawer: CustomDrawer,
+class ContainerSelectionManager[A, C <: Stackable with Refreshable[A]]
+(container: MultiContainer[C] with Stackable with CustomDrawable with AreaOfItems[C], selectionAreaDrawer: CustomDrawer,
  contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
  sameItemCheck: (A, A) => Boolean = { (a: A, b: A) =>  a == b }, equalsCheck: Option[(A, A) => Boolean] = None)(makeItem: A => C)
-	extends ContainerContentManager[A, StackLike[C], C](stack, contentPointer, sameItemCheck, equalsCheck)(makeItem) with SelectionManager[A, C]
+	extends ContainerContentManager[A, MultiContainer[C] with Stackable, C](container, contentPointer,
+		sameItemCheck, equalsCheck)(makeItem) with SelectionManager[A, C]
 {
 	// INITIAL CODE	--------------------
 	
-	stack.addCustomDrawer(SelectionDrawer)
+	container.addCustomDrawer(SelectionDrawer)
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def updateSelectionDisplay(oldSelected: Option[C], newSelected: Option[C]) = stack.repaint()
+	override protected def updateSelectionDisplay(oldSelected: Option[C], newSelected: Option[C]) = container.repaint()
 	
 	override protected def finalizeRefresh() =
 	{
 		super.finalizeRefresh()
-		stack.repaint()
+		container.repaint()
 	}
 	
 	
@@ -172,7 +174,7 @@ class StackSelectionManager[A, C <: Stackable with Refreshable[A]]
 	  * Enables mouse button state handling for the stack (selects the clicked item)
 	  * @param consumeEvents Whether mouse events should be consumed (default = true)
 	  */
-	def enableMouseHandling(consumeEvents: Boolean = true) = stack.addMouseButtonListener(new MouseHandler(consumeEvents))
+	def enableMouseHandling(consumeEvents: Boolean = true) = container.addMouseButtonListener(new MouseHandler(consumeEvents))
 	/**
 	  * Enables key state handling for the stack (allows selection change with up & down arrows)
 	  */
@@ -183,7 +185,7 @@ class StackSelectionManager[A, C <: Stackable with Refreshable[A]]
 	{
 		val listener = new SelectionKeyListener(nextKeyCode, prevKeyCode, initialScrollDelay, scrollDelayModifier,
 			minScrollDelay, listenEnabledCondition)(amount => moveSelection(amount))
-		stack.addKeyStateListener(listener)
+		container.addKeyStateListener(listener)
 		actorHandler += listener
 	}
 	
@@ -197,7 +199,7 @@ class StackSelectionManager[A, C <: Stackable with Refreshable[A]]
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			// Draws the selected area using another custom drawer
-			selectedDisplay.flatMap(stack.areaOf).foreach { area => selectionAreaDrawer.draw(drawer,
+			selectedDisplay.flatMap(container.areaOf).foreach { area => selectionAreaDrawer.draw(drawer,
 				area.translated(bounds.position)) }
 		}
 	}
@@ -206,11 +208,11 @@ class StackSelectionManager[A, C <: Stackable with Refreshable[A]]
 	{
 		// Only considers left mouse button presses inside stack bounds
 		override def mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter &&
-			MouseEvent.isOverAreaFilter(stack.bounds)
+			MouseEvent.isOverAreaFilter(container.bounds)
 		
 		override def onMouseButtonState(event: MouseButtonStateEvent) =
 		{
-			val nearest = stack.itemNearestTo(event.mousePosition - stack.position)
+			val nearest = container.itemNearestTo(event.mousePosition - container.position)
 			nearest.foreach(handleMouseClick)
 			
 			if (consumeEvents && nearest.isDefined)

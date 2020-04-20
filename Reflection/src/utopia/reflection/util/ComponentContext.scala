@@ -9,6 +9,8 @@ import utopia.reflection.container.stack.ScrollBarDrawer
 import utopia.reflection.shape.{Alignment, Border, StackInsets, StackLength}
 import utopia.reflection.text.Font
 
+import scala.concurrent.duration.FiniteDuration
+
 /**
   * Used for defining specific settings for multiple components at creation time
   * @author Mikko Hilpinen
@@ -21,7 +23,8 @@ case class ComponentContext(actorHandler: ActorHandler, font: Font, highlightCol
 							relatedItemsStackMargin: StackLength, stackCap: StackLength, dropDownWidthLimit: Option[Int],
 							switchWidth: StackLength, textFieldWidth: StackLength, scrollPerWheelClick: Double,
 							scrollBarWidth: Int, scrollBarDrawer: ScrollBarDrawer, scrollBarIsInsideContent: Boolean,
-							scrollFriction: LinearAcceleration, allowImageUpscaling: Boolean)
+							scrollFriction: LinearAcceleration, allowImageUpscaling: Boolean, animationDuration: FiniteDuration,
+							fadingIsEnabledInAnimations: Boolean)
 {
 	// COMPUTED	------------------------
 	

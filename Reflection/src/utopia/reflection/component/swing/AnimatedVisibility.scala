@@ -15,7 +15,7 @@ import scala.concurrent.duration.FiniteDuration
   * @author Mikko Hilpinen
   * @since 19.4.2020, v1.2
   */
-class AnimatedVisibility[C <: AwtStackable](comp: C, actorHandler: ActorHandler, transitionAxis: Axis2D,
+class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorHandler, transitionAxis: Axis2D,
 											duration: FiniteDuration = 0.25.seconds,
 											useFading: Boolean = true, isShownInitially: Boolean = false)
 										   (implicit exc: ExecutionContext)
@@ -33,7 +33,7 @@ class AnimatedVisibility[C <: AwtStackable](comp: C, actorHandler: ActorHandler,
 	
 	// If initially shown, sets panel content accordingly
 	if (isShownInitially)
-		panel.set(comp)
+		panel.set(display)
 	
 	
 	// COMPUTED	-------------------------
@@ -84,7 +84,7 @@ class AnimatedVisibility[C <: AwtStackable](comp: C, actorHandler: ActorHandler,
 		{
 			targetState = newState
 			if (newState)
-				panel.set(comp)
+				panel.set(display)
 			else
 				panel.clear()
 		}
@@ -94,7 +94,7 @@ class AnimatedVisibility[C <: AwtStackable](comp: C, actorHandler: ActorHandler,
 	private def startTransition(target: Boolean): Future[Boolean] =
 	{
 		// Creates the transition
-		val transition = new AnimatedTransition(comp, transitionAxis, Direction1D.matching(target), duration, useFading)
+		val transition = new AnimatedTransition(display, transitionAxis, Direction1D.matching(target), duration, useFading)
 		actorHandler += transition
 		panel.set(transition)
 		
@@ -107,7 +107,7 @@ class AnimatedVisibility[C <: AwtStackable](comp: C, actorHandler: ActorHandler,
 				// Case: Target state reached
 				// Switches to original component or clears this panel
 				if (target)
-					panel.set(comp)
+					panel.set(display)
 				else
 					panel.clear()
 				

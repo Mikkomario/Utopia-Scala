@@ -1,5 +1,6 @@
 package utopia.reflection.util
 
+import utopia.flow.util.TimeExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.{Axis2D, LinearAcceleration}
@@ -8,6 +9,8 @@ import utopia.reflection.color.ComponentColor
 import utopia.reflection.container.stack.{ScrollAreaLike, ScrollBarDrawer}
 import utopia.reflection.shape.{Alignment, Border, ScrollBarBounds, StackInsets, StackLength}
 import utopia.reflection.text.Font
+
+import scala.concurrent.duration.FiniteDuration
 
 /**
   * Used for configuring component style at creation time
@@ -56,7 +59,8 @@ case class ComponentContextBuilder(actorHandler: ActorHandler, font: Font, highl
 								   scrollPerWheelClick: Double = 32, scrollBarWidth: Int = 24,
 								   scrollBarDrawer: Option[ScrollBarDrawer] = None, scrollBarIsInsideContent: Boolean = false,
 								   scrollFriction: LinearAcceleration = ScrollAreaLike.defaultFriction,
-								   allowImageUpscaling: Boolean = false)
+								   allowImageUpscaling: Boolean = false, animationDuration: FiniteDuration = 0.25.seconds,
+								   fadingIsEnabledInAnimations: Boolean = true)
 {
 	// ATTRIBUTES	-------------------------
 	
@@ -71,7 +75,7 @@ case class ComponentContextBuilder(actorHandler: ActorHandler, font: Font, highl
 		stackMargin, relatedItemsStackMargin.getOrElse(stackMargin), stackCap, dropDownWidthLimit,
 		switchWidth.getOrElse(StackLength.any(normalWidth / 4)), textFieldWidth.getOrElse(StackLength.any(normalWidth)),
 		scrollPerWheelClick, scrollBarWidth, scrollBarDrawer.getOrElse(new DefaultScrollBarDrawer),
-		scrollBarIsInsideContent, scrollFriction, allowImageUpscaling)
+		scrollBarIsInsideContent, scrollFriction, allowImageUpscaling, animationDuration, fadingIsEnabledInAnimations)
 	
 	
 	// COMPUTED	-----------------------------

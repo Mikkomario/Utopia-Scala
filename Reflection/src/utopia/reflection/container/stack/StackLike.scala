@@ -4,7 +4,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.reflection.component.stack.{StackSizeCalculating, Stackable, StackableWrapper}
-import utopia.reflection.component.Area
+import utopia.reflection.component.{Area, AreaOfItems}
 import utopia.reflection.shape.StackLength
 
 /**
@@ -12,7 +12,7 @@ import utopia.reflection.shape.StackLength
 * @author Mikko Hilpinen
 * @since 25.2.2019
 **/
-trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCalculating
+trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCalculating with AreaOfItems[C]
 {
 	// ATTRIBUTES    --------------------
     
@@ -88,34 +88,12 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
         _components.view.filter { _.isVisible }.foreach { _.updateBounds() }
     }
     
-    
-    // OTHER    -----------------------
-    
-    /**
-      * @param component A component within this stack
-      * @return Current index of the component. None if there's no such component in this stack
-      */
-    def indexOf(component: Any) = _components.indexWhereOption { _.source == component }
-    
-    /**
-      * Replaces a component with a new version
-      * @param oldComponent Old component
-      * @param newComponent New component
-      */
-    def replace(oldComponent: Any, newComponent: C) = indexOf(oldComponent).foreach { insert(newComponent, _) }
-    
-    /**
-      * Drops the last n items from this stack
-      * @param amount The amount of items to remove from this stack
-      */
-    def dropLast(amount: Int) = _components dropRight amount map { _.source } foreach { -= }
-    
     /**
       * Finds the area of a single element in this stack, including the area around the object
       * @param item An item in this stack
       * @return The bounds around the item. None if the item isn't in this stack
       */
-    def areaOf(item: C) =
+    override def areaOf(item: C) =
     {
         // Caches components so that indexes won't change in between
         val c = components
@@ -142,7 +120,7 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
       * @param relativePoint A point relative to this Stack's position ((0, 0) = stack origin)
       * @return The component that's nearest to the provided point. None if this stack is empty
       */
-    def itemNearestTo(relativePoint: Point) =
+    override def itemNearestTo(relativePoint: Point) =
     {
         val p = relativePoint.along(direction)
         val c = components
@@ -155,9 +133,31 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
                     c(nextIndex)
                 else
                     c(nextIndex - 1)
-                
+            
         }.orElse(c.lastOption)
     }
+    
+    
+    // OTHER    -----------------------
+    
+    /**
+      * @param component A component within this stack
+      * @return Current index of the component. None if there's no such component in this stack
+      */
+    def indexOf(component: Any) = _components.indexWhereOption { _.source == component }
+    
+    /**
+      * Replaces a component with a new version
+      * @param oldComponent Old component
+      * @param newComponent New component
+      */
+    def replace(oldComponent: Any, newComponent: C) = indexOf(oldComponent).foreach { insert(newComponent, _) }
+    
+    /**
+      * Drops the last n items from this stack
+      * @param amount The amount of items to remove from this stack
+      */
+    def dropLast(amount: Int) = _components dropRight amount map { _.source } foreach { -= }
 }
 
 private class StackItem[C <: Stackable](val source: C) extends Area with StackableWrapper

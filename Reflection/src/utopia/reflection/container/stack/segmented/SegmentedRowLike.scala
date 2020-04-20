@@ -5,6 +5,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis2D
 import utopia.reflection.component.stack.{Stackable, StackableWrapper}
 import utopia.reflection.component.ComponentWrapper
+import utopia.reflection.container.MultiContainer
 import utopia.reflection.container.stack.{MultiStackContainer, StackLike}
 import utopia.reflection.shape.StackLength
 
@@ -15,7 +16,7 @@ import utopia.reflection.shape.StackLength
   * @author Mikko Hilpinen
   * @since 28.4.2019, v1+
   */
-trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiStackContainer[C] with Segmented with StackableWrapper
+trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiContainer[C] with Stackable with Segmented with StackableWrapper
 {
 	// ATTRIBUTES	-----------------
 	
@@ -52,7 +53,7 @@ trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiStackContai
 	
 	// IMPLEMENTED	-----------------
 	
-	override def children = super[MultiStackContainer].children
+	// override def children = super[MultiStackContainer].children
 	
 	override protected def wrapped = stack
 	

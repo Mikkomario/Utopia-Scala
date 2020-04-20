@@ -8,6 +8,7 @@ import utopia.reflection.container.ContainerLike
   * @author Mikko Hilpinen
   * @since 21.4.2019, v1+
   */
+// FIXME: This cannot be a "like" trait because it uses "this" and defines attributes (cannot be used in wrappers)
 trait StackContainerLike[C <: Stackable] extends ContainerLike[C] with Stackable
 {
 	// ATTRIBUTES	-----------------------

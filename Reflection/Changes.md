@@ -14,9 +14,18 @@ and will insert rows where new content is inserted in the vector
 - DisplayFunction.interpolating -methods now use new string interpolation style and 
 multiple parameter lists.
 - LocalStringLike.interpolate renamed to .interpolated
-    - Also, removed vararg-version of interpolation because of overlap  
+    - Also, removed vararg-version of interpolation because of overlap 
+    
+### Deprecations
+- StackSelectionManager was deprecated. You should now use ContainerSelectionManager instead.
+    - ContainerSelectionManager supports a wider range of containers.
+    
+### Fixes
+- TextLabel now calls repaint upon layout update 
 
 ### New Features
+- AnimatedStack
+    - Animates new component additions and component removals
 - AnimatedSizeContainer
     - By wrapping components with this container, you will be able to 
     use animated content resizes.
@@ -27,6 +36,8 @@ multiple parameter lists.
     - An appearance / disappearance transition for a component. 
     Used in AnimatedVisibility, which is oftentimes easier to use. 
         - AnimatedTransition is better, however, when you only need a singular transition.
+- MappingContainer & AnimatedChangesContainer for wrapping other containers and adding 
+animations.
 
 ### New Methods
 - AwtComponentWrapper: toImage
@@ -34,3 +45,6 @@ multiple parameter lists.
     ComponentToImage object.
 - LocalStringLike.interpolate(Map)
     - String interpolation is now available for key value pairs and new string syntax. 
+    
+### Other Changes
+- ContainerContentManager now accepts any MultiContainer with Stackable and not just MultiStackContainers
