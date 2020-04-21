@@ -45,6 +45,7 @@ class AnimatedTransition(original: AwtComponentRelated with Stackable, transitio
 	
 	private val curve = ProjectilePath()
 	private val targetSize = finalSize.getOrElse(original.stackSize.optimal)
+	// TODO: Update the base image (and target size?) if the component layout changes measurably
 	private val baseImage = ComponentToImage(original, targetSize)
 	
 	private var state: TransitionState = NotStarted

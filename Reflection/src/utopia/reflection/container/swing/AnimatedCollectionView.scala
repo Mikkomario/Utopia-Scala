@@ -1,5 +1,7 @@
 package utopia.reflection.container.swing
 
+import utopia.flow.util.TimeExtensions._
+import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis2D
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.swing.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
@@ -8,15 +10,20 @@ import utopia.reflection.container.stack.{CollectionViewLike, StackLayout}
 import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.shape.StackLength
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.FiniteDuration
+
 /**
- * This container places items in rows and columns, filling a 2D space
+ * This container places items in rows and columns, filling a 2D space. All item additions are animated.
  * @author Mikko Hilpinen
  * @since 24.4.2020, v1.2
  */
-class CollectionView[C <: AwtStackable](rowAxis: Axis2D, initialRowSplitThreshold: Double,
-										margin: StackLength = StackLength.any, insideRowLayout: StackLayout = Fit,
-										forceEqualRowLength: Boolean = false)
-	extends CollectionViewLike[C, Stack[C], Stack[Stack[C]]] with StackableAwtComponentWrapperWrapper
+class AnimatedCollectionView[C <: AwtStackable](actorHandler: ActorHandler, rowAxis: Axis2D, initialRowSplitThreshold: Double,
+												margin: StackLength = StackLength.any, insideRowLayout: StackLayout = Fit,
+												forceEqualRowLength: Boolean = false,
+												animationDuration: FiniteDuration = 0.25.seconds,
+												useFadingInAnimations: Boolean = true)(implicit exc: ExecutionContext)
+	extends CollectionViewLike[C, AnimatedStack[C], AnimatedStack[AnimatedStack[C]]] with StackableAwtComponentWrapperWrapper
 		with SwingComponentRelated with AwtContainerRelated with CustomDrawableWrapper
 {
 	// ATTRIBUTES	-----------------------
@@ -30,16 +37,11 @@ class CollectionView[C <: AwtStackable](rowAxis: Axis2D, initialRowSplitThreshol
 			else
 				Leading
 		}
-		new Stack[Stack[C]](rowAxis.perpendicular, margin, layout = layout)
+		new AnimatedStack[AnimatedStack[C]](actorHandler, rowAxis.perpendicular, margin, layout = layout,
+			animationDuration = animationDuration, fadingIsEnabled = useFadingInAnimations)
 	}
 	
 	private var _rowSplitThreshold = initialRowSplitThreshold
-	
-	
-	// INITIAL CODE	-----------------------
-	
-	// Each time size changes, also updates content (doesn't reset stack sizes at this time)
-	// addResizeListener(updateLayout())
 	
 	
 	// COMPUTED	---------------------------
@@ -65,7 +67,8 @@ class CollectionView[C <: AwtStackable](rowAxis: Axis2D, initialRowSplitThreshol
 	
 	override protected def betweenComponentsSpace = margin.optimal
 	
-	override protected def newCollection() = new Stack[C](rowAxis, margin, layout = insideRowLayout)
+	override protected def newCollection() = new AnimatedStack[C](actorHandler, rowAxis, margin,
+		layout = insideRowLayout, animationDuration = animationDuration, fadingIsEnabled = useFadingInAnimations)
 	
 	override def drawable = container
 }

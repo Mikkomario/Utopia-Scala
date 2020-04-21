@@ -10,7 +10,7 @@ import utopia.genesis.shape.Axis.X
 import utopia.genesis.shape.shape2D.{Direction2D, Size}
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.container.swing.Stack.AwtStackable
-import utopia.reflection.container.swing.CollectionView
+import utopia.reflection.container.swing.AnimatedCollectionView
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.localization.{Localizer, NoLocalization}
@@ -43,8 +43,9 @@ object CollectionViewTest extends App
 	
 	implicit val baseContext: ComponentContext = baseCB.result
 	
-	val collection = new CollectionView[AwtStackable](X, 480, 16.downscaling, forceEqualRowLength = true)
-	val content = collection.alignedToSide(Direction2D.Left, useLowPriorityLength = true).framed(16.any x 16.any, Color.white).withAnimatedSize(actorHandler)
+	val collection = new AnimatedCollectionView[AwtStackable](actorHandler, X, 480, 16.downscaling)
+	// new CollectionView[AwtStackable](X, 480, 16.downscaling, forceEqualRowLength = true)
+	val content = collection.alignedToSide(Direction2D.Left, useLowPriorityLength = true).framed(16.any x 16.any, Color.white)//.withAnimatedSize(actorHandler)
 	
 	new SingleFrameSetup(actorHandler, Frame.windowed(content, "Collection View Test", Program)).start()
 	

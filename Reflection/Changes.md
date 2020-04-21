@@ -32,6 +32,9 @@ Axis2D as a parameter instead of Direction2D.
 ### New Features
 - AnimatedStack
     - Animates new component additions and component removals
+- AnimatedCollectionView
+    - Animates new component additions and component removals
+    - Row addition animations don't yet work as they should since the animated image is not updated.
 - AnimatedSizeContainer
     - By wrapping components with this container, you will be able to 
     use animated content resizes.
