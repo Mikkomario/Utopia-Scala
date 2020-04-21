@@ -243,7 +243,9 @@ object CollectionExtensions
         
         /**
           * @return A version of this seq with consecutive items paired. Each item will be present twice in the returned
-          *         collection, except the first and the last item
+          *         collection, except the first and the last item. The first item will be presented once as the first
+          *         argument. The last item will be presented once as the second argument. If this sequence
+          *         contains less than two items, an empty seq is returned.
           */
         def paired = (1 until seq.size).map { i => (seq(i - 1), seq(i)) }
     

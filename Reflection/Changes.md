@@ -15,6 +15,8 @@ and will insert rows where new content is inserted in the vector
 multiple parameter lists.
 - LocalStringLike.interpolate renamed to .interpolated
     - Also, removed vararg-version of interpolation because of overlap 
+- Rewrote CollectionView. The new implementation doesn't support negative directions and takes an 
+Axis2D as a parameter instead of Direction2D.
     
 ### Deprecations
 - StackSelectionManager was deprecated. You should now use ContainerSelectionManager instead.
@@ -40,8 +42,9 @@ multiple parameter lists.
     - An appearance / disappearance transition for a component. 
     Used in AnimatedVisibility, which is oftentimes easier to use. 
         - AnimatedTransition is better, however, when you only need a singular transition.
-- MappingContainer & AnimatedChangesContainer for wrapping other containers and adding 
+- MappingContainer, WrappingContainer & AnimatedChangesContainer for wrapping other containers and adding 
 animations.
+- CollectionViewLike trait for adding custom collection views for both Swing and non-swing approaches
 
 ### New Methods
 - AwtComponentWrapper: toImage

@@ -6,6 +6,7 @@ import utopia.flow.async.{Loop, ThreadPool}
 import utopia.genesis.color.{Color, RGB}
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.shape.Axis.X
 import utopia.genesis.shape.shape2D.{Direction2D, Size}
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.container.swing.Stack.AwtStackable
@@ -29,6 +30,7 @@ import scala.util.Random
 object CollectionViewTest extends App
 {
 	GenesisDataType.setup()
+	implicit val exc: ExecutionContext = new ThreadPool("Reflection").executionContext
 	
 	// Sets up localization context
 	implicit val defaultLanguageCode: String = "EN"
@@ -41,17 +43,16 @@ object CollectionViewTest extends App
 	
 	implicit val baseContext: ComponentContext = baseCB.result
 	
-	val collection = new CollectionView[AwtStackable](Direction2D.Left, 320, 16.downscaling)
+	val collection = new CollectionView[AwtStackable](X, 480, 16.downscaling, forceEqualRowLength = true)
 	val content = collection.alignedToSide(Direction2D.Left, useLowPriorityLength = true).framed(16.any x 16.any, Color.white).withAnimatedSize(actorHandler)
 	
-	implicit val exc: ExecutionContext = new ThreadPool("Reflection").executionContext
 	new SingleFrameSetup(actorHandler, Frame.windowed(content, "Collection View Test", Program)).start()
 	
 	val random = new Random()
 	val createLabelLoop = Loop(1.seconds) {
 		val label = new EmptyLabel
 		label.background = RGB(random.nextDouble(), random.nextDouble(), random.nextDouble())
-		collection += label.withStackSize(StackSize.any(Size(64, 64)))
+		collection += label.withStackSize(StackSize.any(Size(16 + random.nextInt(97), 64)))
 	}
 	createLabelLoop.registerToStopOnceJVMCloses()
 	createLabelLoop.startAsync()

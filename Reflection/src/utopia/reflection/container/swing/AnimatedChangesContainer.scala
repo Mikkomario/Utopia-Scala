@@ -7,7 +7,7 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis2D
 import utopia.reflection.component.stack.StackableWrapper
 import utopia.reflection.component.swing.AnimatedVisibility
-import utopia.reflection.container.{MappingContainer, MultiContainer}
+import utopia.reflection.container.{WrappingContainer, MultiContainer}
 import utopia.reflection.container.stack.MultiStackContainer
 import utopia.reflection.container.swing.Stack.AwtStackable
 
@@ -22,7 +22,7 @@ import scala.concurrent.duration.FiniteDuration
 class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer[AnimatedVisibility[C]]]
 (override val container: Wrapped, actorHandler: ActorHandler, transitionAxis: Axis2D,
  animationDuration: FiniteDuration = 0.25.seconds, fadingIsEnabled: Boolean = true)(implicit exc: ExecutionContext)
-	extends MappingContainer[C, AnimatedVisibility[C], Wrapped] with StackableWrapper with MultiContainer[C]
+	extends WrappingContainer[C, AnimatedVisibility[C], Wrapped] with StackableWrapper with MultiContainer[C]
 {
 	// ATTRIBUTES	-----------------------------
 	

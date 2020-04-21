@@ -5,14 +5,11 @@ import utopia.flow.util.FileExtensions._
 import utopia.flow.async.ThreadPool
 import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.handling.MouseButtonStateListener
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.Direction2D
 import utopia.reflection.component.swing.DropDown
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.swing.{AnimatedSizeContainer, CollectionView, Stack}
-import utopia.reflection.container.swing.Stack.AwtStackable
+import utopia.reflection.container.swing.{AnimatedSizeContainer, Stack}
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.localization.{Localizer, NoLocalization}

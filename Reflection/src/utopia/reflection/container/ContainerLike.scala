@@ -29,6 +29,11 @@ trait ContainerLike[C <: ComponentLike] extends ComponentLike
 	  */
 	def isEmpty = components.isEmpty
 	
+	/**
+	  * @return Whether this container holds some components
+	  */
+	def nonEmpty = !isEmpty
+	
 	
 	// IMPLEMENTED	----------------
 	
