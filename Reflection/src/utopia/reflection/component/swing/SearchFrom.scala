@@ -145,7 +145,7 @@ object SearchFrom
 					  (implicit context: ComponentContext) =
 	{
 		val label = TextLabel.contextual(noResultsText.interpolated(searchStringPointer.value.getOrElse("")))
-		searchStringPointer.addListener { e => label.text = noResultsText.interpolated(e.newValue.getOrElse("")) }
+		searchStringPointer.addListener { e => label.text = noResultsText.interpolated(Vector(e.newValue.getOrElse(""))) }
 		label
 	}
 }
