@@ -77,24 +77,16 @@ object AnimatedStack
   * @author Mikko Hilpinen
   * @since 18.4.2020, v1.2
   */
-class AnimatedStack[C <: AwtStackable](override val actorHandler: ActorHandler, direction: Axis2D,
+class AnimatedStack[C <: AwtStackable](actorHandler: ActorHandler, direction: Axis2D,
 									   margin: StackLength = StackLength.any,
 									   cap: StackLength = StackLength.fixedZero, layout: StackLayout = Fit,
-									   override val animationDuration: FiniteDuration = 0.25.seconds,
-									   override val fadingIsEnabled: Boolean = true)(implicit val executionContext: ExecutionContext)
-	extends AnimatedChangesContainer[C, Stack[AnimatedVisibility[C]]] with SwingComponentRelated
-		with CustomDrawableWrapper with AreaOfItems[C]
+									   animationDuration: FiniteDuration = 0.25.seconds,
+									   fadingIsEnabled: Boolean = true)(implicit val executionContext: ExecutionContext)
+	extends AnimatedChangesContainer[C, Stack[AnimatedVisibility[C]]](
+		new Stack[AnimatedVisibility[C]](direction, margin, cap, layout), actorHandler, direction, animationDuration,
+		fadingIsEnabled) with SwingComponentRelated with CustomDrawableWrapper with AreaOfItems[C]
 {
-	// ATTRIBUTES	-------------------------
-	
-	protected val container = new Stack[AnimatedVisibility[C]](direction, margin, cap, layout)
-	
-	protected var waitingRemoval = Vector[AnimatedVisibility[C]]()
-	
-	
 	// IMPLEMENTED	-------------------------
-	
-	override protected def transitionAxis = direction
 	
 	override def component = container.component
 	

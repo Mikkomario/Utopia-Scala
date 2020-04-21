@@ -18,7 +18,7 @@ import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.container.swing.window.{Popup, Window}
-import utopia.reflection.container.swing.{AnimatedStack, Stack, SwitchPanel}
+import utopia.reflection.container.swing.{AnimatedStack, SwitchPanel}
 import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.reflection.shape.{StackLength, StackSize, StackSizeModifier}
 
@@ -74,8 +74,8 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	
 	// ATTRIBUTES	----------------------------
 	
-	private val searchStack = // new AnimatedStack[C](actorHandler, Y, betweenDisplaysMargin, layout = displayStackLayout)
-		Stack.column[C](margin = betweenDisplaysMargin, layout = displayStackLayout)
+	private val searchStack = new AnimatedStack[C](actorHandler, Y, betweenDisplaysMargin, layout = displayStackLayout)
+		//Stack.column[C](margin = betweenDisplaysMargin, layout = displayStackLayout)
 	private val displaysManager = new ContainerSelectionManager[A, C](searchStack, selectionDrawer,
 		currentSelectionOptionsPointer, representSameInstance,
 		if (contentIsStateless) None else Some((a, b) => a == b))(makeDisplay)
@@ -146,7 +146,12 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 			{
 				// If only one item is available, auto-selects that one
 				if (e.newValue.size == 1)
-					value = Some(e.newValue.head)
+				{
+					if (isDisplayingPopUp)
+						displaysManager.value = Some(e.newValue.head)
+					else
+						value = Some(e.newValue.head)
+				}
 				popupContentView.set(searchStack)
 			}
 		}, Some(Vector()))

@@ -20,8 +20,12 @@ multiple parameter lists.
 - StackSelectionManager was deprecated. You should now use ContainerSelectionManager instead.
     - ContainerSelectionManager supports a wider range of containers.
     
+### Major Changes
+- DropDownLike now uses animated stack instead of normal stack in its pop-up view.
+    
 ### Fixes
 - TextLabel now calls repaint upon layout update 
+- Made StackHierarchyManager more thread-safe, although there are still probably non-throwing issues
 
 ### New Features
 - AnimatedStack

@@ -1,6 +1,8 @@
 package utopia.reflection.container.swing
 
+import utopia.flow.collection.VolatileList
 import utopia.flow.util.TimeExtensions._
+import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis2D
 import utopia.reflection.component.stack.StackableWrapper
@@ -12,118 +14,104 @@ import utopia.reflection.container.swing.Stack.AwtStackable
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
-object AnimatedChangesContainer
-{
-	// OTHER	---------------------------
-	
-	/**
-	  * Wraps a container and gives it animations
-	  * @param container Container to wrap (must support AnimatedVisibility)
-	  * @param actorHandler ActorHandler that will deliver action events for animations
-	  * @param transitionAxis Axis along which the appearance & disappearance animations are made
-	  * @param animationDuration Duration of a single appearance / disappearance animation (default = 0.25 seconds)
-	  * @param fadingIsEnabled Whether components should alter their transparency as they appear or disappear (default = true)
-	  * @param exc Implicit execution context
-	  * @tparam C Type of wrapped component
-	  * @return A new container that uses animations for component appearance & disappearance
-	  */
-	def wrap[C <: AwtStackable](container: MultiStackContainer[AnimatedVisibility[C]], actorHandler: ActorHandler,
-								transitionAxis: Axis2D, animationDuration: FiniteDuration = 0.25.seconds,
-								fadingIsEnabled: Boolean = true)
-							   (implicit exc: ExecutionContext): AnimatedChangesContainer[C, MultiStackContainer[AnimatedVisibility[C]]] =
-		new SimpleContainer(container, actorHandler, transitionAxis, animationDuration, fadingIsEnabled)
-	
-	
-	// NESTED	---------------------------
-	
-	private class SimpleContainer[C <: AwtStackable, Wrapped <: MultiStackContainer[AnimatedVisibility[C]]]
-	(override val container: Wrapped, override val actorHandler: ActorHandler, override val transitionAxis: Axis2D,
-	 override val animationDuration: FiniteDuration = 0.25.seconds, override val fadingIsEnabled: Boolean = true)
-	(implicit val executionContext: ExecutionContext) extends AnimatedChangesContainer[C, Wrapped]
-	{
-		// ATTRIBUTES	-------------------
-		
-		override protected var waitingRemoval = Vector[AnimatedVisibility[C]]()
-	}
-}
-
 /**
   * This container is able to animated appearances and disappearances of its contents
   * @author Mikko Hilpinen
   * @since 20.4.2020, v1.2
   */
-trait AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer[AnimatedVisibility[C]]]
+class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer[AnimatedVisibility[C]]]
+(override val container: Wrapped, actorHandler: ActorHandler, transitionAxis: Axis2D,
+ animationDuration: FiniteDuration = 0.25.seconds, fadingIsEnabled: Boolean = true)(implicit exc: ExecutionContext)
 	extends MappingContainer[C, AnimatedVisibility[C], Wrapped] with StackableWrapper with MultiContainer[C]
 {
-	// ABSTRACT	---------------------------------
+	// ATTRIBUTES	-----------------------------
 	
-	/**
-	  * @return Wrappers currently waiting to be removed from the managed container
-	  */
-	protected def waitingRemoval: Vector[AnimatedVisibility[C]]
-	/**
-	  * Updates the waiting wrappers list
-	  * @param newWaiting New set of wrappers waiting for removal
-	  */
-	protected def waitingRemoval_=(newWaiting: Vector[AnimatedVisibility[C]]): Unit
-	
-	/**
-	  * @return Execution context (implicit)
-	  */
-	protected implicit def executionContext: ExecutionContext
-	
-	/**
-	  * @return ActorHandler that delivers action events for the animations
-	  */
-	protected def actorHandler: ActorHandler
-	
-	/**
-	  * @return Axis along which the appearance & disappearance animations are made
-	  */
-	protected def transitionAxis: Axis2D
-	
-	/**
-	  * @return Duration of a single appearance / disappearance animation
-	  */
-	protected def animationDuration: FiniteDuration
-	
-	/**
-	  * @return Whether components should alter their transparency as they appear or disappear
-	  */
-	protected def fadingIsEnabled: Boolean
+	private val wrappersList = VolatileList[(AnimatedVisibility[C], Boolean)]()
 	
 	
 	// IMPLEMENTED	-----------------------------
 	
 	override protected def wrappers =
 	{
+		wrappersList.get.filterNot { _._2 }.map { case(w, _) => w -> w.display }
+		/*
 		val notIncluded = waitingRemoval
 		val wrappersInContainer = container.components
 		if (notIncluded.isEmpty)
 			wrappersInContainer.map { w => w -> w.display }
 		else
-			wrappersInContainer.filterNot(notIncluded.contains).map { w => w -> w.display }
+			wrappersInContainer.filterNot(notIncluded.contains).map { w => w -> w.display }*/
 	}
 	
 	override protected def removeWrapper(wrapper: AnimatedVisibility[C], component: C) =
 	{
-		waitingRemoval :+= wrapper
-		(wrapper.isShown = false).foreach { _ =>
-			// Removes the wrapper from the container once animation has finished. Until that, keeps the
-			// wrapper in a separate vector
-			container -= wrapper
-			waitingRemoval = waitingRemoval.filterNot { _ == wrapper }
+		// Marks the wrapper as ready for removal
+		wrappersList.update { old =>
+			// Also starts the hiding process
+			(wrapper.isShown = false).foreach { newState =>
+				// If someone made the wrapper visible again, will not remove it
+				if (!newState)
+				{
+					// Removes the wrapper from the container once animation has finished
+					wrappersList.update { old =>
+						container -= wrapper
+						old.filterNot { case (w, removing) => removing && w == wrapper } }
+				}
+			}
+			
+			old.mapFirstWhere { _._1 == wrapper } { case (w, _) => w -> true }
 		}
 	}
 	
 	override protected def add(component: C, index: Int) =
 	{
-		// Wraps the component in an animation
-		val wrapper = new AnimatedVisibility[C](component, actorHandler, transitionAxis, animationDuration, fadingIsEnabled)
-		// Adds the wrapper to the container and starts the animation
-		// FIXME: Indexing fails during component removal
-		container.insert(wrapper, index)
-		wrapper.isShown = true
+		wrappersList.update { old =>
+			// If the component was being removed from the container, cancels the removal
+			// (may still need to reposition the wrapper)
+			old.indexWhereOption { _._1.display == component } match
+			{
+				case Some(wrapperIndex) =>
+					val (wrapper, wasRemoving) = old(wrapperIndex)
+					if (wasRemoving)
+						wrapper.isShown = true
+					
+					// Checks the "projected" index of the wrapper (index in system where removing components don't count)
+					val removingCountBeforeWrapper = old.take(wrapperIndex).count { _._2 }
+					val projectedWrapperIndex = wrapperIndex - removingCountBeforeWrapper
+					
+					// Case: Same index is kept -> may update removal status
+					if (index == projectedWrapperIndex)
+					{
+						if (wasRemoving)
+							old.updated(wrapperIndex, wrapper -> false)
+						else
+							old
+					}
+					// Case: Wrapper position was changed -> Needs to remove from and then add to container
+					else
+					{
+						// Calculates the targeted index in the real system (where removing components are being counted)
+						val newWrapperIndex = trueIndex(index, old)
+						
+						container -= wrapper
+						container.insert(wrapper, newWrapperIndex)
+						
+						// Will have to take into account the wrapper's removal's effect on indexing
+						val indexMod = if (wrapperIndex < newWrapperIndex) -1 else 0
+						old.withoutIndex(wrapperIndex).inserted(wrapper -> false, newWrapperIndex + indexMod)
+					}
+				case None =>
+					// Wraps the component in an animation
+					val wrapper = new AnimatedVisibility[C](component, actorHandler, transitionAxis, animationDuration,
+						fadingIsEnabled)
+					// Adds the wrapper to the container (needs to check indexing because there may still be wrappers waiting for removal)
+					// Also, Starts the appearance animation
+					val newWrapperIndex = trueIndex(index, old)
+					container.insert(wrapper, newWrapperIndex)
+					wrapper.isShown = true
+					old.inserted(wrapper -> false, newWrapperIndex)
+			}
+		}
 	}
 	
 	
@@ -151,5 +139,13 @@ trait AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 			else
 				container += new AnimatedVisibility[C](component, actorHandler, transitionAxis, animationDuration,
 					fadingIsEnabled, isShownInitially = true) // FIXME: Remove this once content tracking changes
+	}
+	
+	private def trueIndex(projectedIndex: Int, data: Vector[(_, Boolean)]) =
+	{
+		val removeCountBeforeIndex = data.take(projectedIndex + 1).count { _._2 }
+		// If there are removing items directly after the specified index, will move the index to the right
+		val removeCountAfterIndex = data.drop(projectedIndex + removeCountBeforeIndex).takeWhile { _._2 }.size
+		projectedIndex + removeCountBeforeIndex + removeCountAfterIndex
 	}
 }
