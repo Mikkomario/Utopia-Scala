@@ -5,7 +5,7 @@ package utopia.flow.datastructure.template
  * @author Mikko Hilpinen
  * @since 10.4.2019
  */
-trait GraphEdge[N, E, GNode <: GraphNode[N, E, GNode, _]] extends Node[E]
+trait GraphEdge[+N, E, GNode <: GraphNode[N, E, GNode, _]] extends Node[E]
 {
 	// ABSTRACT	------------------
 	

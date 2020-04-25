@@ -1,5 +1,6 @@
 package utopia.flow.datastructure.template
 
+import utopia.flow.datastructure.immutable.Graph
 import utopia.flow.util.CollectionExtensions._
 
 import scala.math.Ordering.Double.TotalOrdering
@@ -10,7 +11,7 @@ import scala.collection.immutable.VectorBuilder
  * @author Mikko Hilpinen
  * @since 10.4.2019
  */
-trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N, E, GNode]] extends Node[N]
+trait GraphNode[+N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N, E, GNode]] extends Node[N]
 {
     // TYPES    --------------------
     
@@ -26,12 +27,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	  */
     def leavingEdges: Set[Edge]
 	
-	protected def me: GNode
-    
-    
-    // ATTRIBUTES   -----------------
-    
-    private lazy val emptyRoute = Vector[Edge]()
+	protected def repr: GNode
     
     
     // COMPUTED PROPERTIES    -------
@@ -49,6 +45,21 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 		val buffer = new VectorBuilder[GNode]()
 		foreach(buffer.+=)
 		buffer.result().toSet
+	}
+	
+	/**
+	 * Converts this node to a graph
+	 * @tparam N2 Type of node content in the graph
+	 * @return A graph based on this node's connections
+	 */
+	def toGraph[N2 >: N] =
+	{
+		val connectionsBuffer = new VectorBuilder[(N2, E, N2)]
+		foreach { node => node.leavingEdges.foreach { edge =>
+			val newConnection = (node.content, edge.content, edge.end.content)
+			connectionsBuffer += newConnection
+		} }
+		Graph(connectionsBuffer.result().toSet)
 	}
 	
 	
@@ -117,7 +128,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
     def shortestRouteTo(node: AnyNode) = cheapestRouteTo(node, { _ => 1 })
     
     /**
-     * Finds the 'cheapest' route from this node to the provided node, if there is one. A special 
+     * Finds the 'cheapest' route from this node to the provided node, if there is one. A special
      * function is used for calculating the route cost.
      * @param node The node traversed to
      * @param costOf The function used for calculating the cost of a single edge (based on the edge
@@ -134,7 +145,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
     }
     
     /**
-     * Finds all routes (edge combinations) that connect this node to the provided node. Routes 
+     * Finds all routes (edge combinations) that connect this node to the provided node. Routes
      * can't contain the same edge multiple times so no looping routes are included.
      * @param node The node this node may be connected to
      * @return All possible routes to the provided node. In case this node is the searched node,
@@ -147,7 +158,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
     private def routesTo(node: AnyNode, visitedNodes: Set[AnyNode]): Set[Route] =
     {
         if (node == this)
-            Set(emptyRoute)
+            Set(Vector())
         else
         {
     		// Tries to find the destination from each connected edge that leads to a new node
@@ -190,11 +201,11 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	
 	private def traverseUntil[B](operation: GNode => Option[B], traversedNodes: Set[GNode]): Option[B] =
 	{
-		val nodes = traversedNodes + me
+		val nodes = traversedNodes + repr
 		
 		// Performs the operation on self first
 		// If that didn't yield a result, tries children instead
-		operation(me).orElse(endNodes.diff(nodes).findMap { _.traverseUntil(operation, nodes) })
+		operation(repr).orElse(endNodes.diff(nodes).findMap { _.traverseUntil(operation, nodes) })
 	}
 	
 	/**
@@ -206,8 +217,8 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	
 	private def foreach[U](operation: GNode => U, traversedNodes: Set[GNode]): Unit =
 	{
-		val nodes = traversedNodes + me
-		operation(me)
+		val nodes = traversedNodes + repr
+		operation(repr)
 		endNodes.diff(nodes).foreach { _.foreach(operation, nodes) }
 	}
 }

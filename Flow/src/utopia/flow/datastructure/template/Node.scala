@@ -2,7 +2,7 @@ package utopia.flow.datastructure.template
 
 object Node
 {
-    def contentsOf[T](nodes: IterableOnce[Node[T]]) = nodes.iterator.map { node => node.content }
+    def contentsOf[A](nodes: IterableOnce[Node[A]]) = nodes.iterator.map { node => node.content }
 }
 
 /**
@@ -10,10 +10,10 @@ object Node
  * @author Mikko Hilpinen
  * @since 28.10.2016
  */
-trait Node[T]
+trait Node[+A]
 {
     /**
      * The contents of the node
      */
-    def content: T
+    def content: A
 }

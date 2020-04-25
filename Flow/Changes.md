@@ -26,6 +26,8 @@ collection types when used.
 - Loop.runOnce and Loop.nextWaitTarget are now public and not protected. This will cause compile errors in sub-classes.
 
 ### New Features
+- Added **Graph** for creating and using immutable graphs (previously there was only a mutable node 
+implementation)
 - **SynchronizedLoops** - Added for running multiple loops in a single background thread
 - **DailyTask** - A new implementation of **Loop** that is run daily at a specific time
 - Period comparison (inexact) (and some other new methods) is now available by importing **TimeExtensions**

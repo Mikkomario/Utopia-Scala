@@ -205,6 +205,11 @@ case class StackSize(width: StackLength, height: StackLength)
       */
     def expanding = mapSides { _.expanding }
     
+    /**
+     * @return The components that form this stack size
+     */
+    def components = Vector(width, height)
+    
     
     // IMPLEMENTED    ----------------
     

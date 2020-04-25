@@ -9,7 +9,7 @@ import utopia.flow.util.{Counter, Generator}
   */
 object CounterTest extends App
 {
-	val stringGen = Generator[String]("A", _ + "A")
+	val stringGen = Generator[String]("A"){ _ + "A" }
 	
 	assert(stringGen.next() == "A")
 	assert(stringGen.next() == "AA")

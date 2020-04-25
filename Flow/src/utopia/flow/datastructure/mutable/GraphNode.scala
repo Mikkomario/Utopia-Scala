@@ -22,7 +22,7 @@ class GraphNode[N, E](var content: N) extends template.GraphNode[N, E, GraphNode
     
     var leavingEdges: Set[Edge] = HashSet()
     
-    override protected def me = this
+    override protected def repr = this
     
     
     // OTHER METHODS    ------------

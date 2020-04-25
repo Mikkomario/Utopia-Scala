@@ -149,6 +149,14 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Re
 	def *(n: Double, axis: Axis) = mapAxis(axis) { _ * n }
 	
 	/**
+	 * @param x X modifier
+	 * @param y Y modifier
+	 * @param more Z, etc. modifiers (optional)
+	 * @return A modified copy of this vectorlike instance
+	 */
+	def *(x: Double, y: Double, more: Double*) = combineDimensions(Vector(x, y) ++ more, { _ * _ })
+	
+	/**
 	  * @param other Another vectorlike element
 	  * @return This element divided on each axis of the provided element. Dividing by 0 is ignored
 	  */
