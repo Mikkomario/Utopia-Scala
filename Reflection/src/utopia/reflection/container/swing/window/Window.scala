@@ -379,7 +379,7 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
     {
         override def windowClosed(e: WindowEvent) = handleClosing()
         
-        override def windowClosing(e: WindowEvent) = handleClosing()
+        override def windowClosing(e: WindowEvent) = () // handleClosing()
     
         private def handleClosing() =
         {
