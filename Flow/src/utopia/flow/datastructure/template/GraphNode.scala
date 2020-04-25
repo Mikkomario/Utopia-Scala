@@ -1,6 +1,6 @@
 package utopia.flow.datastructure.template
 
-import utopia.flow.datastructure.immutable.Graph
+import utopia.flow.datastructure.immutable.{Graph, Tree}
 import utopia.flow.util.CollectionExtensions._
 
 import scala.math.Ordering.Double.TotalOrdering
@@ -11,7 +11,7 @@ import scala.collection.immutable.VectorBuilder
  * @author Mikko Hilpinen
  * @since 10.4.2019
  */
-trait GraphNode[+N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N, E, GNode]] extends Node[N]
+trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N, E, GNode]] extends Node[N]
 {
     // TYPES    --------------------
     
@@ -49,18 +49,35 @@ trait GraphNode[+N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[
 	
 	/**
 	 * Converts this node to a graph
-	 * @tparam N2 Type of node content in the graph
 	 * @return A graph based on this node's connections
 	 */
-	def toGraph[N2 >: N] =
+	def toGraph =
 	{
-		val connectionsBuffer = new VectorBuilder[(N2, E, N2)]
+		val connectionsBuffer = new VectorBuilder[(N, E, N)]
 		foreach { node => node.leavingEdges.foreach { edge =>
 			val newConnection = (node.content, edge.content, edge.end.content)
 			connectionsBuffer += newConnection
 		} }
 		Graph(connectionsBuffer.result().toSet)
 	}
+	
+	/**
+	 * Converts this graph to a tree
+	 * @return A tree from this node
+	 */
+	def toTreeWithoutEdges = _toTreeWithoutEdges(Set())
+	
+	private def _toTreeWithoutEdges(traversedNodes: Set[GNode]): Tree[N] =
+	{
+		val newTraversedNodes = traversedNodes + repr
+		val children = leavingEdges.map { _.end }.diff(traversedNodes).map { _._toTreeWithoutEdges(newTraversedNodes) }
+		Tree(content, children.toVector)
+	}
+	
+	/**
+	 * @return Finds all circular routes from this node to itself without traversing trough any other node more than once
+	 */
+	def routesToSelf = routesTo(this)
 	
 	
 	// OPERATORS	-----------------
@@ -146,30 +163,44 @@ trait GraphNode[+N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[
     
     /**
      * Finds all routes (edge combinations) that connect this node to the provided node. Routes
-     * can't contain the same edge multiple times so no looping routes are included.
+     * can't contain the same node multiple times so no looping routes are included. An exception to this is the case
+	 * where this node is targeted. In that case, the resulting routes start and end at this node.
      * @param node The node this node may be connected to
      * @return All possible routes to the provided node. In case this node is the searched node,
      * however, a single empty route will be returned. The end node will always be at the end of
      * each route and nowhere else. If there are no connecting routes, an empty array is returned.
      */
-    def routesTo(node: AnyNode): Set[Route] = routesTo(node, Set())
+    def routesTo(node: AnyNode): Set[Route] =
+	{
+		// If trying to find routes to self, will have to handle limitations a bit differently
+		if (node == this)
+		{
+			leavingEdges.find { _.end == this } match
+			{
+				case Some(zeroRoute) => Set(Vector(zeroRoute))
+				case None => leavingEdges.flatMap { e => e.end.routesTo(this, Set()).map { route => e +: route } }
+			}
+		}
+		else
+			routesTo(node, Set())
+	}
     
     // Uses recursion
     private def routesTo(node: AnyNode, visitedNodes: Set[AnyNode]): Set[Route] =
     {
-        if (node == this)
-            Set(Vector())
-        else
-        {
-    		// Tries to find the destination from each connected edge that leads to a new node
-			val newVisitedNodes = visitedNodes + this
+		// Tries to find the destination from each connected edge that leads to a new node
+		val newVisitedNodes = visitedNodes + this
 	
-			// Records each found route. The traversed edge is included in the returned route(s)
-			val availableEdges = leavingEdges.filterNot { e => newVisitedNodes.contains(e.end) }
-			val routes = availableEdges.flatMap { e => e.end.routesTo(node, newVisitedNodes).map { route => e +: route } }
-			
-			routes
-        }
+		// Checks whether there exist edges to the final node
+		val availableEdges = leavingEdges.filterNot { e => newVisitedNodes.contains(e.end) }
+		availableEdges.find { _.end == node } match
+		{
+			case Some(directRoute) => Set(Vector(directRoute))
+			case None =>
+				// If there didn't exist a direct path, tries to find an indirect one
+				// Attaches this element at the beginning of each returned route (if there were any returned)
+				availableEdges.flatMap { e => e.end.routesTo(node, newVisitedNodes).map { route => e +: route } }
+		}
     }
 	
 	/**

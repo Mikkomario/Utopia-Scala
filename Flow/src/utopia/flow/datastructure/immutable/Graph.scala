@@ -10,21 +10,41 @@ object Graph
 	trait GraphViewNode[N, E] extends GraphNode[N, E, GraphViewNode[N, E], GraphViewEdge[N, E]]
 	
 	trait GraphViewEdge[N, E] extends template.GraphEdge[N, E, GraphViewNode[N, E]]
+	
+	/**
+	 * @param isTwoWayBound Whether the resulting graph should be two-way bound
+	 * @tparam N Type of nodes in graph
+	 * @tparam E Type of edges in graph
+	 * @return An empty graph
+	 */
+	def empty[N, E](isTwoWayBound: Boolean = false) = Graph(Set[(N, E, N)](), isTwoWayBound)
 }
 
 /**
- * A graph that consists of set of unique nodes and edges between those nodes
+ * A graph that consists of set of unique nodes and edges between those nodes. Notice that by default the edges are
+ * single direction only.
  * @author Mikko Hilpinen
  * @since 25.4.2020, v1.8
  */
-case class Graph[N, E](connections: Set[(N, E, N)])
+case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = false)
 {
 	// ATTRIBUTES	------------------------
 	
 	private lazy val edgesByStartNode = connections.toMultiMap { case (start, content, end) => start -> (content -> end) }
+	private lazy val edgesByEndNode = connections.toMultiMap { case (start, content, end) => end -> (content -> start) }
 	
 	
 	// COMPUTED	----------------------------
+	
+	/**
+	 * @return Whether this graph is empty
+	 */
+	def isEmpty = connections.isEmpty
+	
+	/**
+	 * @return Whether this graph contains connections
+	 */
+	def nonEmpty = !isEmpty
 	
 	/**
 	 * @return All nodes within this graph
@@ -37,6 +57,17 @@ case class Graph[N, E](connections: Set[(N, E, N)])
 	 */
 	def edges = connections.map { case (_, edge, end) => GEdge(edge, end): GraphViewEdge[N, E] }
 	
+	/**
+	 * @return A copy of this graph where each edge points to the opposite direction
+	 */
+	def reversed = copy(connections = connections.map { case (start, edge, end) => (end, edge, start) })
+	
+	/**
+	 * @return A copy of this graph where each node is connected with at least two edges, each pointing to
+	 *         opposite direction.
+	 */
+	def twoWayBound = if (isTwoWayBound) this else copy(isTwoWayBound = true)
+	
 	
 	// OTHER	----------------------------
 	
@@ -47,10 +78,16 @@ case class Graph[N, E](connections: Set[(N, E, N)])
 	def node(nodeContent: N): GraphViewNode[N, E] = GNode(nodeContent)
 	
 	/**
+	 * @param nodeContent Content of the node
+	 * @return A node in this graph with specified content
+	 */
+	def apply(nodeContent: N) = node(nodeContent)
+	
+	/**
 	 * @param startNode Starting node content
 	 * @return A graph that contains only the specified node and the nodes connected to that node directly or indirectly
 	 */
-	def subGraphFrom(startNode: N) = Graph(node(startNode).allNodes.flatMap { n =>
+	def subGraphFrom(startNode: N) = copy(connections = node(startNode).allNodes.flatMap { n =>
 		n.leavingEdges.map { e => (n.content, e.content, e.end.content) } })
 	
 	/**
@@ -61,7 +98,7 @@ case class Graph[N, E](connections: Set[(N, E, N)])
 	 * @tparam E2 New edge content type
 	 * @return A mapped copy of this graph
 	 */
-	def map[N2, E2](nodeMapper: N => N2)(edgeMapper: E => E2) = Graph(connections.map {
+	def map[N2, E2](nodeMapper: N => N2)(edgeMapper: E => E2) = copy(connections = connections.map {
 		case (start, edge, end) => (nodeMapper(start), edgeMapper(edge), nodeMapper(end)) })
 	
 	/**
@@ -70,7 +107,7 @@ case class Graph[N, E](connections: Set[(N, E, N)])
 	 * @tparam N2 New type of node content
 	 * @return A mapped copy of this graph
 	 */
-	def mapNodes[N2](f: N => N2) = Graph(connections.map { case (start, edge, end) =>
+	def mapNodes[N2](f: N => N2) = copy(connections = connections.map { case (start, edge, end) =>
 		(f(start), edge, f(end)) })
 	
 	/**
@@ -79,14 +116,14 @@ case class Graph[N, E](connections: Set[(N, E, N)])
 	 * @tparam E2 New edge content
 	 * @return A mapped copy of this graph
 	 */
-	def mapEdges[E2](f: E => E2) = Graph(connections.map { case (start, edge, end) => (start, f(edge), end) })
+	def mapEdges[E2](f: E => E2) = copy(connections = connections.map { case (start, edge, end) => (start, f(edge), end) })
 	
 	/**
 	 * Filters the connections in this graph, only considering connection contents
 	 * @param f A filtering function for connections based on connection contents
 	 * @return A filtered copy of this graph
 	 */
-	def filterByContent(f: (N, E, N) => Boolean) = Graph(connections.filter { case (start, edge, end) => f(start, edge, end) })
+	def filterByContent(f: (N, E, N) => Boolean) = copy(connections = connections.filter { case (start, edge, end) => f(start, edge, end) })
 	
 	/**
 	 * Filters the nodes in this graph by testing their content. Function will be applied only once for each unique
@@ -117,7 +154,7 @@ case class Graph[N, E](connections: Set[(N, E, N)])
 			}
 		}
 		
-		Graph(connections.filter { case (start, _, end) => test(start) && test(end) })
+		copy(connections = connections.filter { case (start, _, end) => test(start) && test(end) })
 	}
 	
 	/**
@@ -151,26 +188,32 @@ case class Graph[N, E](connections: Set[(N, E, N)])
 	def withEdge(start: N, edge: E, end: N) =
 	{
 		val newConnection = (start, edge, end)
-		Graph(connections + newConnection)
+		copy(connections = connections + newConnection)
 	}
 	
 	/**
 	 * @param connection A new connection (start -> edge content -> end)
 	 * @return A copy of this graph with specified connection added
 	 */
-	def +(connection: (N, E, N)) = Graph(connections + connection)
+	def +(connection: (N, E, N)) = copy(connections = connections + connection)
 	
 	/**
 	 * @param newConnections New connections (start -> edge content -> end)
 	 * @return A copy of this graph with specified connections added
 	 */
-	def ++(newConnections: IterableOnce[(N, E, N)]) = Graph(connections ++ newConnections)
+	def ++(newConnections: IterableOnce[(N, E, N)]) = copy(connections = connections ++ newConnections)
+	
+	/**
+	 * @param other Another graph
+	 * @return A combination of these two graphs
+	 */
+	def ++(other: Graph[N, E]) = copy(connections = connections ++ other.connections)
 	
 	/**
 	 * @param node Node to exclude from this graph
 	 * @return A copy of this graph with specified node excluded
 	 */
-	def withoutNode(node: N) = Graph(connections.filter { case (start, _, end) => start != node && end != node })
+	def withoutNode(node: N) = copy(connections = connections.filter { case (start, _, end) => start != node && end != node })
 	
 	/**
 	 * @param node Node to exclude from this graph
@@ -182,7 +225,7 @@ case class Graph[N, E](connections: Set[(N, E, N)])
 	 * @param nodes Nodes to exclude from this graph
 	 * @return A copy of this graph with specified nodes excluded
 	 */
-	def withoutNodes(nodes: Iterable[N]) = Graph(connections.filterNot { case (start, _, end) =>
+	def withoutNodes(nodes: Iterable[N]) = copy(connections = connections.filterNot { case (start, _, end) =>
 		nodes.exists { n => start == n || end == n } })
 	
 	/**
@@ -191,12 +234,26 @@ case class Graph[N, E](connections: Set[(N, E, N)])
 	 */
 	def --(nodes: Iterable[N]) = withoutNodes(nodes)
 	
+	/**
+	 * @param other Another graph
+	 * @return A copy of this graph with none of the connections in the other graph
+	 */
+	def --(other: Graph[N, E]) = copy(connections = connections -- other.connections)
+	
 	
 	// NESTED	----------------------------
 	
 	private case class GNode(content: N) extends GraphViewNode[N, E]
 	{
-		override lazy val leavingEdges = edgesByStartNode(content).map { case (content, end) => GEdge(content, end) }
+		// May include edges to other way as well
+		override lazy val leavingEdges = {
+			val singleWay: Set[GraphViewEdge[N, E]] = edgesByStartNode.getOrElse(content, Set()).map {
+				case (content, end) => GEdge(content, end) }
+			if (isTwoWayBound)
+				singleWay ++ edgesByEndNode.getOrElse(content, Set()).map { case (content, start) => GEdge(content, start) }
+			else
+				singleWay
+		}
 		
 		override protected def repr = this
 	}
