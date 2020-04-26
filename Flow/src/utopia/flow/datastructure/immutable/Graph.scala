@@ -18,6 +18,15 @@ object Graph
 	 * @return An empty graph
 	 */
 	def empty[N, E](isTwoWayBound: Boolean = false) = Graph(Set[(N, E, N)](), isTwoWayBound)
+	
+	/**
+	 * Creates a graph where the connections are two-way-bound (can be traversed either ways)
+	 * @param connections Connections that form the graph
+	 * @tparam N Type of node content
+	 * @tparam E Type of edge content
+	 * @return A new graph
+	 */
+	def twoWayBound[N, E](connections: Set[(N, E, N)]) = Graph(connections, isTwoWayBound = true)
 }
 
 /**
@@ -30,8 +39,32 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 {
 	// ATTRIBUTES	------------------------
 	
-	private lazy val edgesByStartNode = connections.toMultiMap { case (start, content, end) => start -> (content -> end) }
-	private lazy val edgesByEndNode = connections.toMultiMap { case (start, content, end) => end -> (content -> start) }
+	private lazy val nodesByContent = connections.flatMap { case (start, _, end) => Set(start, end) }.map { n =>
+		n -> (GNode(n): GraphViewNode[N, E]) }.toMap
+	private lazy val edgesByStartNode = connections.toMultiMap { case (start, content, end) =>
+		start -> (GEdge(content, end): GraphViewEdge[N, E]) }
+	private lazy val edgesByEndNode = connections.toMultiMap { case (start, content, end) =>
+		end -> (GEdge(content, start): GraphViewEdge[N, E]) }
+	
+	/**
+	 * @return All nodes within this graph
+	 */
+	lazy val nodes = nodesByContent.values.toSet
+	
+	/**
+	 * @return All graphs within this graph that are not connected together. If all of the nodes in this graph are
+	 *         connected, returns only a single graph (this).
+	 */
+	lazy val subGraphs =
+	{
+		// Collects graphs from nodes until all nodes have been collected
+		var pulledGraphs = Set[Graph[N, E]]()
+		nodes.foreach { startNode =>
+			if (!pulledGraphs.exists { _.contains(startNode.content) })
+				pulledGraphs += subGraphFrom(startNode.content)
+		}
+		pulledGraphs
+	}
 	
 	
 	// COMPUTED	----------------------------
@@ -45,12 +78,6 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	 * @return Whether this graph contains connections
 	 */
 	def nonEmpty = !isEmpty
-	
-	/**
-	 * @return All nodes within this graph
-	 */
-	def nodes = connections.flatMap { case (start, _, end) =>
-		Vector[GraphViewNode[N, E]](GNode(start), GNode(end)) }
 	
 	/**
 	 * @return All edges within this graph
@@ -75,13 +102,19 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	 * @param nodeContent Content of the node
 	 * @return A node in this graph with specified content
 	 */
-	def node(nodeContent: N): GraphViewNode[N, E] = GNode(nodeContent)
+	def node(nodeContent: N): GraphViewNode[N, E] = nodesByContent.getOrElse(nodeContent, GNode(nodeContent))
 	
 	/**
 	 * @param nodeContent Content of the node
 	 * @return A node in this graph with specified content
 	 */
 	def apply(nodeContent: N) = node(nodeContent)
+	
+	/**
+	 * @param nodeContent Tested node content
+	 * @return Whether this graph contains a link for the specified node
+	 */
+	def contains(nodeContent: N) = nodesByContent.contains(nodeContent)
 	
 	/**
 	 * @param startNode Starting node content
@@ -247,10 +280,9 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	{
 		// May include edges to other way as well
 		override lazy val leavingEdges = {
-			val singleWay: Set[GraphViewEdge[N, E]] = edgesByStartNode.getOrElse(content, Set()).map {
-				case (content, end) => GEdge(content, end) }
+			val singleWay = edgesByStartNode.getOrElse(content, Set())
 			if (isTwoWayBound)
-				singleWay ++ edgesByEndNode.getOrElse(content, Set()).map { case (content, start) => GEdge(content, start) }
+				singleWay ++ edgesByEndNode.getOrElse(content, Set())
 			else
 				singleWay
 		}
@@ -260,6 +292,6 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	
 	private case class GEdge(content: E, endContent: N) extends GraphViewEdge[N, E]
 	{
-		override lazy val end = GNode(endContent)
+		override lazy val end = nodesByContent(endContent)
 	}
 }

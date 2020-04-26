@@ -48,6 +48,16 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	}
 	
 	/**
+	 * @return Content of all nodes linked with this node, including the contents of this node
+	 */
+	def allNodeContent =
+	{
+		val buffer = new VectorBuilder[N]
+		foreach { buffer += _.content }
+		buffer.result().toSet
+	}
+	
+	/**
 	 * Converts this node to a graph
 	 * @return A graph based on this node's connections
 	 */
@@ -67,10 +77,10 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	 */
 	def toTreeWithoutEdges = _toTreeWithoutEdges(Set())
 	
-	private def _toTreeWithoutEdges(traversedNodes: Set[GNode]): Tree[N] =
+	private def _toTreeWithoutEdges(traversedNodes: Set[Any]): Tree[N] =
 	{
-		val newTraversedNodes = traversedNodes + repr
-		val children = leavingEdges.map { _.end }.diff(traversedNodes).map { _._toTreeWithoutEdges(newTraversedNodes) }
+		val newTraversedNodes = traversedNodes + this
+		val children = endNodes.filterNot { traversedNodes.contains(_) }.map { _._toTreeWithoutEdges(newTraversedNodes) }
 		Tree(content, children.toVector)
 	}
 	
@@ -246,10 +256,15 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	  */
 	def foreach[U](operation: GNode => U): Unit = foreach(operation, Set())
 	
-	private def foreach[U](operation: GNode => U, traversedNodes: Set[GNode]): Unit =
+	private def foreach[U](operation: GNode => U, traversedNodes: Set[AnyNode]): Set[AnyNode] =
 	{
-		val nodes = traversedNodes + repr
+		val newTraversedNodes = traversedNodes + this
 		operation(repr)
-		endNodes.diff(nodes).foreach { _.foreach(operation, nodes) }
+		endNodes.foldLeft(newTraversedNodes) { (traversed, node) =>
+			if (traversed.contains(node))
+				traversed
+			else
+				node.foreach(operation, traversed)
+		}
 	}
 }

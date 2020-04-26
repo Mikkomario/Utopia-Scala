@@ -43,6 +43,11 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
     def isEmpty = children.isEmpty
     
     /**
+     * @return Whether this tree has child nodes registered under it
+     */
+    def hasChildren = children.nonEmpty
+    
+    /**
      * The depth of this tree. A tree with no children has depth of 0, a tree with only direct
      * children has depth of 1, a tree with grand children has depth of 2 and so on.
      */
@@ -57,6 +62,25 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
       * @return All content within this node and the nodes under
       */
     def allContent = content +: nodesBelow.map { _.content }
+    
+    /**
+     * @return List of all "branches" <b>under</b> this node. Eg. If this node contains two children each of which
+     *         have two children themselves, returns <b>4</b> vectors that each have a size of 2. The vectors only contain
+     *         node content, not the nodes themselves. <b>This node is not included in any of the returned vectors</b>.
+     *         In other words, the resulting number of vectors is the same as the number of leaves in this tree and
+     *         the depth of each vector matches the length of each branch, including that leaf.
+     */
+    def allBranches: Vector[Vector[A]] =
+    {
+        // Lists branches starting from each of this tree's children (includes children in the branches they found)
+        children.flatMap { child =>
+            // Leaves form the ends of the branches
+            if (child.hasChildren)
+                child.allBranches.map { branch => child.content +: branch }
+            else
+                Vector(Vector(child.content))
+        }
+    }
     
     
     // IMPLEMENTED  ----------------
