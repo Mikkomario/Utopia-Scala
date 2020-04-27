@@ -7,12 +7,17 @@ import utopia.genesis.color.Color
  * @author Mikko Hilpinen
  * @since 15.1.2020, v1
  */
-sealed trait TextColorStandard
+trait TextColorStandard
 {
 	/**
 	 * @return Default / recommended text color for this standard
 	 */
 	def defaultTextColor: Color
+	
+	/**
+	  * @return Color used for hints & disabled text
+	  */
+	def hintTextColor: Color = defaultTextColor.timesAlpha(0.625)
 }
 
 object TextColorStandard
