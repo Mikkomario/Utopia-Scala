@@ -1,5 +1,6 @@
 package utopia.reflection.component.swing.label
 
+import utopia.genesis.color.Color
 import utopia.reflection.util.ComponentContext
 
 object EmptyLabel
@@ -9,10 +10,22 @@ object EmptyLabel
 	  * @param context Component creation context
 	  * @return A new empty label
 	  */
+	@deprecated("Please use withBackground instead", "v1.2")
 	def contextual(implicit context: ComponentContext) =
 	{
 		val label = new EmptyLabel
 		context.setBorderAndBackground(label)
+		label
+	}
+	
+	/**
+	  * @param backgroundColor Label background color
+	  * @return A new label with specified background color
+	  */
+	def withBackground(backgroundColor: Color) =
+	{
+		val label = new EmptyLabel
+		label.background = backgroundColor
 		label
 	}
 }

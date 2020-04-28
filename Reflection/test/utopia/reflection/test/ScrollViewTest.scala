@@ -12,9 +12,10 @@ import utopia.genesis.handling.{ActorLoop, KeyStateListener}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis._
 import utopia.reflection.component.Refreshable
+import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
 import utopia.reflection.component.swing.label.ItemLabel
-import utopia.reflection.container.stack.{BoxScrollBarDrawer, StackHierarchyManager}
+import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.container.swing.{AnimatedStack, ScrollView, Stack}

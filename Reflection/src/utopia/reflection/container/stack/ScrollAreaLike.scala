@@ -15,7 +15,7 @@ import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.drawing.template.DrawLevel.Foreground
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawer}
 import utopia.reflection.component.stack.{CachingStackable, Stackable}
 import utopia.reflection.shape.{ScrollBarBounds, StackLengthLimit, StackSize}
 

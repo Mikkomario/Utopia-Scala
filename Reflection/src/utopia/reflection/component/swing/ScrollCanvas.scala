@@ -13,9 +13,8 @@ import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.ComponentLike
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawer}
 import utopia.reflection.component.stack.{CachingStackable, StackLeaf, Stackable}
-import utopia.reflection.container.stack.ScrollBarDrawer
 import utopia.reflection.container.swing.{Panel, ScrollArea}
 import utopia.reflection.shape.{StackLengthLimit, StackSize}
 import utopia.reflection.util.ComponentContext

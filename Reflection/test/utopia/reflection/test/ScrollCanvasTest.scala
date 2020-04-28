@@ -12,8 +12,9 @@ import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Size}
 import utopia.genesis.util.{Drawer, FPS}
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
+import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.swing.ScrollCanvas
-import utopia.reflection.container.stack.{BoxScrollBarDrawer, ScrollAreaLike, StackHierarchyManager}
+import utopia.reflection.container.stack.{ScrollAreaLike, StackHierarchyManager}
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.localization.{Localizer, NoLocalization}
