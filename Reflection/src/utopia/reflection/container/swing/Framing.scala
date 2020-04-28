@@ -1,11 +1,14 @@
 package utopia.reflection.container.swing
 
+import utopia.reflection.color.ComponentColor
+import utopia.reflection.component.context.{BackgroundSensitive, BaseContextLike}
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.stack.Stackable
 import utopia.reflection.component.swing.{AwtComponentRelated, SwingComponentRelated}
 import utopia.reflection.container.stack.FramingLike
 import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.shape.{StackInsets, StackSize}
+import utopia.reflection.shape.LengthExtensions._
 
 object Framing
 {
@@ -19,6 +22,27 @@ object Framing
 	  */
 	def symmetric[C <: AwtStackable](component: C, margins: StackSize) =
 		new Framing(component, StackInsets.symmetric(margins * 2))
+	
+	/**
+	  * Creates a framing that is filled with both content and color
+	  * @param insets Insets around the framing contents
+	  * @param color Framing background color
+	  * @param f A function for creating frame contents, takes modified frame context as a parameter
+	  * @param context Component creation context before modification (implicit)
+	  * @tparam C Type of content placed in this frame
+	  * @tparam Context2 Type of context in this frame
+	  * @tparam Context1 Type of context outside this frame
+	  * @return A frame with background color and contents
+	  */
+	def fill[C <: AwtStackable, Context2, Context1 <: BackgroundSensitive[Context2]]
+	(insets: StackInsets, color: ComponentColor)(f: Context2 => C)(implicit context: Context1) =
+	{
+		val newContext = context.inContextWithBackground(color)
+		val newComponent = f(newContext)
+		val framing = new Framing[C](newComponent, insets)
+		framing.background = color
+		framing
+	}
 }
 
 /**

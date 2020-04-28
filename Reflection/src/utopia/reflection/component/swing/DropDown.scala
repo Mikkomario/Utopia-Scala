@@ -5,6 +5,7 @@ import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.Direction2D.Up
+import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, BorderDrawer, TextDrawContext}
 import utopia.reflection.component.{Focusable, Refreshable}
 import utopia.reflection.component.drawing.template.CustomDrawer
@@ -17,7 +18,6 @@ import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.{Alignment, Border, Insets, StackInsets, StackLength, StackSize, StackSizeModifier}
 import utopia.reflection.text.{Font, Prompt}
-import utopia.reflection.util.ComponentContext
 
 import scala.concurrent.ExecutionContext
 
@@ -29,7 +29,6 @@ object DropDown
 	  * @param icon Icon displayed at the right side of this view
 	  * @param selectionPromptText Text displayed while no item is selected
 	  * @param displayFunction Function for converting items to displayable strings (default = toString)
-	  * @param borderColor Color used in component border (default = black)
 	  * @param displayStackLayout Stack layout used for selection displays (default = Fit)
 	  * @param contentPointer Pointer that holds current selection options (default = new pointer)
 	  * @param valuePointer Pointer that holds currently selected value (default = new pointer)
@@ -48,23 +47,26 @@ object DropDown
 	  */
 	def contextual[A, C <: AwtStackable with Refreshable[A]]
 	(noResultsView: AwtStackable, icon: Image, selectionPromptText: LocalizedString,
-	 displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderColor: Color = Color.textBlack,
-	 displayStackLayout: StackLayout = Fit,
+	 displayFunction: DisplayFunction[A] = DisplayFunction.raw, displayStackLayout: StackLayout = Fit,
 	 contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
 	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 	(makeDisplayFunction: A => C)
-	(implicit context: ComponentContext, exc: ExecutionContext) =
+	(implicit context: ButtonContextLike, exc: ExecutionContext) =
 	{
+		// Determines background and focus colors
+		val backgroundColor = context.buttonColor
+		val highlightColor = context.buttonColorHighlighted
+		
 		val dd = new DropDown[A, C](context.actorHandler, noResultsView, icon,
-			new BackgroundDrawer(context.highlightColor, Normal), context.highlightColor, selectionPromptText,
-			context.font, context.textColor, displayFunction, context.textAlignment, context.insets,
-			context.insets.mapVertical { _.withLowPriority }, borderColor,
-			context.borderWidth, context.stackMargin, displayStackLayout, contentPointer, valuePointer,
+			new BackgroundDrawer(highlightColor, Normal), highlightColor, selectionPromptText,
+			context.font, context.textColor, displayFunction, context.textAlignment, context.textInsets,
+			context.textInsets.mapVertical { _.withLowPriority }, context.textColor,
+			context.borderWidth, context.relatedItemsStackMargin, displayStackLayout, contentPointer, valuePointer,
 			context.textHasMinWidth, context.allowImageUpscaling, shouldDisplayPopUpOnFocusGain, sameInstanceCheck,
 			contentIsStateless)(makeDisplayFunction)
-		context.background.foreach { dd.background = _ }
+		dd.background = backgroundColor
 		dd
 	}
 	
@@ -74,7 +76,6 @@ object DropDown
 	  * @param icon Icon displayed at the right side of this view
 	  * @param selectionPromptText Text displayed while no item is selected
 	  * @param displayFunction Function for converting items to displayable strings (default = toString)
-	  * @param borderColor Color used in component border (default = black)
 	  * @param contentPointer Pointer that holds current selection options (default = new pointer)
 	  * @param valuePointer Pointer that holds currently selected value (default = new pointer)
 	  * @param shouldDisplayPopUpOnFocusGain Whether this component should always open selection pop-up on focus gain (default = true)
@@ -90,15 +91,15 @@ object DropDown
 	  */
 	def contextualWithTextOnly[A]
 	(noResultsView: AwtStackable, icon: Image, selectionPromptText: LocalizedString,
-	 displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderColor: Color = Color.textBlack,
+	 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 	 contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
 	 valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
-	(implicit context: ComponentContext, exc: ExecutionContext) =
+	(implicit context: ButtonContextLike, exc: ExecutionContext) =
 	{
 		def makeDisplay(item: A) = ItemLabel.contextual(item, displayFunction)
-		contextual(noResultsView, icon, selectionPromptText, displayFunction, borderColor, Fit, contentPointer,
+		contextual(noResultsView, icon, selectionPromptText, displayFunction, Fit, contentPointer,
 			valuePointer, shouldDisplayPopUpOnFocusGain, sameInstanceCheck, contentIsStateless)(makeDisplay)
 	}
 }

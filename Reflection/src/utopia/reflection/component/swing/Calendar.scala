@@ -49,6 +49,7 @@ object Calendar
 	  * @param firstDayOfWeek First day of a week (default = Monday)
 	  * @return A new calendar
 	  */
+		// TODO: Update to a new version that uses new drop down implementations
 	def apply(monthDropDown: JDropDownWrapper[Month], yearDropDown: JDropDownWrapper[Year], forwardIcon: ButtonImageSet,
 			  backwardIcon: ButtonImageSet, headerHMargin: StackLength, afterHeaderMargin: StackLength,
 			  dayNameDisplayFunction: DisplayFunction[DayOfWeek], dayNameFont: Font, dayNameTextColor: Color,

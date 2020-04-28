@@ -3,13 +3,13 @@ package utopia.reflection.container.swing
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.{Axis2D, LinearAcceleration}
 import utopia.genesis.shape.shape2D.Bounds
+import utopia.reflection.component.context.ScrollingContextLike
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.ScrollBarDrawer
 import utopia.reflection.component.stack.Stackable
 import utopia.reflection.component.swing.{AwtComponentRelated, AwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.container.stack.ScrollAreaLike
 import utopia.reflection.shape.StackLengthLimit
-import utopia.reflection.util.ComponentContext
 
 import scala.collection.immutable.HashMap
 
@@ -25,7 +25,7 @@ object ScrollArea
 	  * @return A new scroll area
 	  */
 	def contextual[C <: Stackable with AwtComponentRelated](content: C, lengthLimits: Map[Axis2D, StackLengthLimit] = HashMap(),
-															limitsToContentSize: Boolean = false)(implicit context: ComponentContext) =
+															limitsToContentSize: Boolean = false)(implicit context: ScrollingContextLike) =
 	{
 		new ScrollArea[C](content, context.actorHandler, context.scrollPerWheelClick, context.scrollBarDrawer,
 			context.scrollBarWidth, context.scrollBarIsInsideContent, context.scrollFriction, lengthLimits, limitsToContentSize)

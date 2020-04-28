@@ -11,13 +11,13 @@ import utopia.genesis.util.{Drawer, FPS}
 import utopia.genesis.view.RepaintLoop
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.ComponentLike
+import utopia.reflection.component.context.ScrollingContextLike
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawer}
 import utopia.reflection.component.stack.{CachingStackable, StackLeaf, Stackable}
 import utopia.reflection.container.swing.{Panel, ScrollArea}
 import utopia.reflection.shape.{StackLengthLimit, StackSize}
-import utopia.reflection.util.ComponentContext
 
 import scala.concurrent.ExecutionContext
 
@@ -36,7 +36,7 @@ object ScrollCanvas
 	  */
 	def contextual(originalWorldSize: Size, drawHandler: DrawableHandler, contentMouseButtonHandler: MouseButtonStateHandler,
 				   contentMouseMoveHandler: MouseMoveHandler, contentMouseWheelHandler: MouseWheelHandler,
-				   maxOptimalSize: Option[Size] = None)(implicit context: ComponentContext) =
+				   maxOptimalSize: Option[Size] = None)(implicit context: ScrollingContextLike) =
 	{
 		new ScrollCanvas(originalWorldSize, drawHandler, context.actorHandler, contentMouseButtonHandler,
 			contentMouseMoveHandler, contentMouseWheelHandler, context.scrollPerWheelClick, context.scrollBarDrawer,

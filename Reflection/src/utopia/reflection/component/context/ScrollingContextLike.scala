@@ -1,5 +1,6 @@
 package utopia.reflection.component.context
 
+import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.LinearAcceleration
 import utopia.reflection.component.drawing.template.ScrollBarDrawer
 
@@ -10,6 +11,11 @@ import utopia.reflection.component.drawing.template.ScrollBarDrawer
   */
 trait ScrollingContextLike
 {
+	/**
+	  * @return Actor handler used for delivering scrolling-related action events
+	  */
+	def actorHandler: ActorHandler
+	
 	/**
 	  * @return The amount of pixels scrolled for each "click" of the mouse wheel
 	  */

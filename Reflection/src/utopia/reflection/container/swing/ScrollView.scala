@@ -4,6 +4,7 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis.Y
 import utopia.genesis.shape.{Axis2D, LinearAcceleration}
 import utopia.genesis.shape.shape2D.Bounds
+import utopia.reflection.component.context.ScrollingContextLike
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.ScrollBarDrawer
 import utopia.reflection.component.stack.Stackable
@@ -27,7 +28,7 @@ object ScrollView
 	def contextual[C <: Stackable with AwtComponentRelated](content: C, axis: Axis2D = Y,
 															lengthLimits: StackLengthLimit = StackLengthLimit.noLimit,
 															limitsToContentSize: Boolean = false)
-														   (implicit context: ComponentContext) =
+														   (implicit context: ScrollingContextLike) =
 	{
 		new ScrollView[C](content, axis, context.actorHandler, context.scrollPerWheelClick, context.scrollBarDrawer,
 			context.scrollBarWidth, context.scrollBarIsInsideContent, context.scrollFriction, lengthLimits, limitsToContentSize)

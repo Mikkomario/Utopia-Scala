@@ -5,6 +5,7 @@ import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.path.ProjectilePath
 import utopia.inception.handling.HandlerType
+import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.AwtComponentWrapperWrapper
 import utopia.reflection.container.stack.SingleStackContainer
 import utopia.reflection.container.swing.Stack.AwtStackable
@@ -29,6 +30,16 @@ object AnimatedSizeContainer
 		actorHandler += container
 		container
 	}
+	
+	/**
+	  * Creates a new animated size container with contextual information
+	  * @param component A component being wrapped in this container
+	  * @param context Component creation context
+	  * @tparam C Type of component being wrapped
+	  * @return A new animated changes container
+	  */
+	def contextual[C <: AwtStackable](component: C)(implicit context: AnimationContextLike) =
+		apply(component, context.actorHandler, context.animationDuration)
 }
 
 /**

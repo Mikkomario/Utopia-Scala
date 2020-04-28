@@ -6,13 +6,13 @@ import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.Point
 import utopia.reflection.component.AreaOfItems
+import utopia.reflection.component.context.{AnimationContextLike, BaseContextLike}
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.swing.{AnimatedVisibility, SwingComponentRelated}
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.shape.StackLength
-import utopia.reflection.util.ComponentContext
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -24,20 +24,23 @@ object AnimatedStack
 	  * @param direction Direction of this stack
 	  * @param items Items placed inside this stack initially (default = empty)
 	  * @param layout Layout used for items breadth-wise (default = Fit)
+	  * @param cap Cap placed at each end of stack (default = no cap)
 	  * @param itemsAreRelated Whether items should be considered related (affects margin) (default = false)
-	  * @param context Component creation context
+	  * @param ac Component animation context (implicit)
+	  * @param bc Base component creation context (implicit)
 	  * @param exc Execution context
 	  * @tparam C Type of stacked component
 	  * @return A new stack that uses animations
 	  */
 	def contextual[C <: AwtStackable](direction: Axis2D, items: Vector[C] = Vector(), layout: StackLayout = Fit,
-									  itemsAreRelated: Boolean = false)(implicit context: ComponentContext, exc: ExecutionContext) =
+									  cap: StackLength = StackLength.fixedZero,
+									  itemsAreRelated: Boolean = false)(implicit ac: AnimationContextLike,
+																		bc: BaseContextLike, exc: ExecutionContext) =
 	{
-		val stack = new AnimatedStack[C](context.actorHandler, direction,
-			if (itemsAreRelated) context.relatedItemsStackMargin else context.stackMargin, context.stackCap, layout,
-			context.animationDuration, context.fadingIsEnabledInAnimations)
+		val stack = new AnimatedStack[C](ac.actorHandler, direction,
+			if (itemsAreRelated) bc.relatedItemsStackMargin else bc.defaultStackMargin, cap, layout,
+			ac.animationDuration, ac.useFadingInAnimations)
 		stack ++= items
-		context.setBorderAndBackground(stack)
 		stack
 	}
 	
@@ -45,31 +48,35 @@ object AnimatedStack
 	  * Creates an animated stack column using a component creation context
 	  * @param items Items placed inside this stack initially (default = empty)
 	  * @param layout Layout used for items breadth-wise (default = Fit)
+	  * @param cap Cap placed at each end of stack (default = no cap)
 	  * @param itemsAreRelated Whether items should be considered related (affects margin) (default = false)
-	  * @param context Component creation context
+	  * @param ac Component animation context (implicit)
+	  * @param bc Base component creation context (implicit)
 	  * @param exc Execution context
 	  * @tparam C Type of stacked component
 	  * @return A new stack that uses animations
 	  */
 	def contextualColumn[C <: AwtStackable](items: Vector[C] = Vector(), layout: StackLayout = Fit,
-											itemsAreRelated: Boolean = false)
-										   (implicit context: ComponentContext, exc: ExecutionContext) =
-		contextual(Y, items, layout, itemsAreRelated)
+											cap: StackLength = StackLength.fixedZero, itemsAreRelated: Boolean = false)
+										   (implicit ac: AnimationContextLike, bc: BaseContextLike, exc: ExecutionContext) =
+		contextual(Y, items, layout, cap, itemsAreRelated)
 	
 	/**
 	  * Creates an animated stack row using a component creation context
 	  * @param items Items placed inside this stack initially (default = empty)
 	  * @param layout Layout used for items breadth-wise (default = Fit)
+	  * @param cap Cap placed at each end of stack (default = no cap)
 	  * @param itemsAreRelated Whether items should be considered related (affects margin) (default = false)
-	  * @param context Component creation context
+	  * @param ac Component animation context (implicit)
+	  * @param bc Base component creation context (implicit)
 	  * @param exc Execution context
 	  * @tparam C Type of stacked component
 	  * @return A new stack that uses animations
 	  */
 	def contextualRow[C <: AwtStackable](items: Vector[C] = Vector(), layout: StackLayout = Fit,
-										 itemsAreRelated: Boolean = false)
-										(implicit context: ComponentContext, exc: ExecutionContext) =
-		contextual(X, items, layout, itemsAreRelated)
+										 cap: StackLength = StackLength.fixedZero, itemsAreRelated: Boolean = false)
+										(implicit ac: AnimationContextLike, bc: BaseContextLike, exc: ExecutionContext) =
+		contextual(X, items, layout, cap, itemsAreRelated)
 }
 
 /**

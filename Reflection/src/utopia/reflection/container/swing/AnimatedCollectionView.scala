@@ -3,6 +3,7 @@ package utopia.reflection.container.swing
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis2D
+import utopia.reflection.component.context.{AnimationContextLike, BaseContextLike}
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.swing.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
@@ -12,6 +13,27 @@ import utopia.reflection.shape.StackLength
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
+
+object AnimatedCollectionView
+{
+	/**
+	  * Creates a new animated collection view using component creation context
+	  * @param rowAxis Axis of rows in this collection (the first axis on which items are added)
+	  * @param initialRowSplitThreshold A pixel threshold after which a row is split into two
+	  * @param insideRowLayout Stack layout used inside a row (default = Fit)
+	  * @param forceEqualRowLength Whether all rows should have equal length (default = false)
+	  * @param ac Animation context (implicit)
+	  * @param bc Base context (implicit)
+	  * @param exc Execution context (implicit)
+	  * @tparam C Type of component in this container
+	  * @return A new collection view
+	  */
+	def contextual[C <: AwtStackable](rowAxis: Axis2D, initialRowSplitThreshold: Double,
+									  insideRowLayout: StackLayout = Fit, forceEqualRowLength: Boolean = false)
+									 (implicit ac: AnimationContextLike, bc: BaseContextLike, exc: ExecutionContext) =
+		new AnimatedCollectionView[C](ac.actorHandler, rowAxis, initialRowSplitThreshold, bc.defaultStackMargin,
+			insideRowLayout, forceEqualRowLength, ac.animationDuration, ac.useFadingInAnimations)
+}
 
 /**
  * This container places items in rows and columns, filling a 2D space. All item additions are animated.

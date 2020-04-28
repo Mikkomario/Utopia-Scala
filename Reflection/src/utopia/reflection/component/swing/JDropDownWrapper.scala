@@ -11,13 +11,13 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.genesis.color.Color
 import utopia.reflection.component.Focusable
+import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.input.SelectableWithPointers
 import utopia.reflection.component.stack.{CachingStackable, StackLeaf}
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.{StackInsets, StackLength, StackSize}
+import utopia.reflection.shape.{Border, StackInsets, StackLength, StackSize}
 import utopia.reflection.text.Font
-import utopia.reflection.util.ComponentContext
 
 object JDropDownWrapper
 {
@@ -32,12 +32,16 @@ object JDropDownWrapper
 	  * @return A new drop down
 	  */
 	def contextual[A](selectText: LocalizedString, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-					  initialChoices: Vector[A] = Vector())(implicit context: ComponentContext) =
+					  initialChoices: Vector[A] = Vector(), maximumOptimalWidth: Option[Int] = None)
+					 (implicit context: ButtonContextLike) =
 	{
-		val dropDown = new JDropDownWrapper[A](context.insets, selectText, context.font,
-			context.background.getOrElse(Color.white), context.focusColor, context.textColor, displayFunction,
-			initialChoices, context.dropDownWidthLimit)
-		context.border.foreach(dropDown.setBorder)
+		val background = context.buttonColor
+		val highlighted = context.buttonColorHighlighted
+		
+		val dropDown = new JDropDownWrapper[A](context.textInsets, selectText, context.font, background,
+			highlighted, context.textColor, displayFunction, initialChoices, maximumOptimalWidth)
+		if (context.borderWidth > 0)
+			dropDown.setBorder(Border.symmetric(context.borderWidth, context.textColor))
 		dropDown
 	}
 }

@@ -13,12 +13,38 @@ import utopia.flow.util.TimeExtensions._
 import utopia.genesis.image.Image
 import utopia.genesis.shape.path.ProjectilePath
 import utopia.genesis.util.Drawer
+import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.shape.StackSize
 import utopia.reflection.util.ComponentToImage
 
 import scala.concurrent.Promise
 import scala.concurrent.duration.{Duration, FiniteDuration}
+
+object AnimatedTransition
+{
+	/**
+	  * Creates a new animated transition by utilizing component creation context
+	  * @param original The original component being drawn (uses the initial state (except size) of the original component and doesn't
+	  *                 update visuals during transition)
+	  * @param transitionAxis      The axis along which the appearance or disappearance happens
+	  * @param transitionDirection Whether transition should be appearance (positive) or disappearance (negative)
+	  *                            (default = positive)
+	  * @param finalSize Estimated size of the component when it is finally presented (optional). If None, optimal stack
+	  *                  size of the component is used instead. Defaults to None.
+	  * @param context Component creation context (implicit)
+	  * @return A new animated transition
+	  */
+	def contextual(original: AwtComponentRelated with Stackable, transitionAxis: Axis2D,
+				   transitionDirection: Direction1D = Positive, finalSize: Option[Size] = None)
+				  (implicit context: AnimationContextLike) =
+	{
+		val c = new AnimatedTransition(original, transitionAxis, transitionDirection, context.animationDuration,
+			context.useFadingInAnimations)
+		context.actorHandler += c
+		c
+	}
+}
 
 /**
   * Used for animating component appearances and disappearances in a stack layout environment. Remember to add this

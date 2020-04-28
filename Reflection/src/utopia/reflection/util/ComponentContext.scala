@@ -16,6 +16,7 @@ import scala.concurrent.duration.FiniteDuration
   * @author Mikko Hilpinen
   * @since 5.8.2019, v1+
   */
+@deprecated("Replaced with new set of context classes", "v1.2")
 case class ComponentContext(actorHandler: ActorHandler, font: Font, highlightColor: Color, focusColor: Color, normalWidth: Int,
 							textColor: Color, promptFont: Font, promptTextColor: Color, textHasMinWidth: Boolean,
 							textAlignment: Alignment, background: Option[Color], barBackground: Color, insets: StackInsets,

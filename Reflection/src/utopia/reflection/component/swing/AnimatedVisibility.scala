@@ -4,11 +4,30 @@ import utopia.flow.async.Volatile
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.{Axis2D, Direction1D}
+import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.container.swing.{AwtContainerRelated, SwitchPanel}
 import utopia.reflection.container.swing.Stack.AwtStackable
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
+
+object AnimatedVisibility
+{
+	/**
+	  * Creates a new animated visibility container with component creation context
+	  * @param display Component displayed
+	  * @param transitionAxis Axis along which the component is shrinked
+	  * @param isShownInitially Whether the component should be visible initially (default = false)
+	  * @param context Component creation context (implicit)
+	  * @param exc Execution context (implicit)
+	  * @tparam C Type of displayed component
+	  * @return A new animated visibility container
+	  */
+	def contextual[C <: AwtStackable](display: C, transitionAxis: Axis2D, isShownInitially: Boolean = false)
+									 (implicit context: AnimationContextLike, exc: ExecutionContext) =
+		new AnimatedVisibility[C](display, context.actorHandler, transitionAxis, context.animationDuration,
+			context.useFadingInAnimations, isShownInitially)
+}
 
 /**
   * This component wrapper animates component visibility changes (appearance & disappearance)

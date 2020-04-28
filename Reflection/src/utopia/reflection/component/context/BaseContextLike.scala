@@ -2,7 +2,7 @@ package utopia.reflection.component.context
 
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.reflection.color.ColorScheme
-import utopia.reflection.shape.Margins
+import utopia.reflection.shape.{Margins, StackLength}
 import utopia.reflection.text.Font
 
 /**
@@ -33,4 +33,20 @@ trait BaseContextLike
 	  * @return Used margins
 	  */
 	def margins: Margins
+	
+	/**
+	  * @return The default margin placed between items in a stack
+	  */
+	def defaultStackMargin: StackLength
+	
+	/**
+	  * @return The margin placed between items in a stack when they are more closely related
+	  */
+	def relatedItemsStackMargin: StackLength
+	
+	/**
+	  * @return Whether images and icons should be allowed to scale above their original resolution. When this is
+	  *         enabled, images will fill the desired screen space but they will be blurry.
+	  */
+	def allowImageUpscaling: Boolean
 }

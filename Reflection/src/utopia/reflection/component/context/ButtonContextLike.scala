@@ -22,6 +22,14 @@ trait ButtonContextLike extends TextContextLike
 	def borderWidth: Double
 	
 	
+	// COMPUTED	----------------------------
+	
+	/**
+	  * @return A highlighted version of the button color, suitable for focus highlight etc.
+	  */
+	def buttonColorHighlighted = buttonColor.highlighted
+	
+	
 	// IMPLEMENTED	------------------------
 	
 	override def textColor = buttonColor.defaultTextColor

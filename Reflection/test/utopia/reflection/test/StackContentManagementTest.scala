@@ -2,23 +2,15 @@ package utopia.reflection.test
 
 import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.async.{Loop, ThreadPool}
-import utopia.genesis.color.Color
+import utopia.flow.async.Loop
 import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.handling.mutable.ActorHandler
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.container.swing.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.controller.data.ContainerContentManager
-import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape.StackInsets
-import utopia.reflection.text.Font
-import utopia.reflection.text.FontStyle.Plain
-import utopia.reflection.util.{ComponentContext, ComponentContextBuilder, SingleFrameSetup}
-
-import scala.concurrent.ExecutionContext
+import utopia.reflection.util.SingleFrameSetup
 
 /**
   * Tests stack content management
@@ -29,28 +21,20 @@ object StackContentManagementTest extends App
 {
 	GenesisDataType.setup()
 	
-	// Sets up localization context
-	implicit val defaultLanguageCode: String = "EN"
-	implicit val localizer: Localizer = NoLocalization
-	
-	// Creates component context
-	implicit val exc: ExecutionContext = new ThreadPool("Reflection").executionContext
-	val actorHandler = ActorHandler()
-	val baseCB = ComponentContextBuilder(actorHandler, Font("Arial", 12, Plain, 2), Color.green, Color.yellow, 320,
-		insets = StackInsets.symmetric(8.any), stackMargin = 8.downscaling, relatedItemsStackMargin = Some(4.downscaling),
-		borderWidth = Some(1))
-	
-	implicit val baseContext: ComponentContext = baseCB.result
+	import TestContext._
 	
 	// Creates the main content
 	val stack = Stack.column[ItemLabel[Int]]()
-	val manager = ContainerContentManager.forStatelessItems[Int, ItemLabel[Int]](stack, Vector(1, 4, 6)) { i =>
-		val label = ItemLabel.contextual(i)
-		label.addContentListener { e => println(s"Label content changed: $e") }
-		label
-	}
 	
-	val content = stack.framed(64.any x 16.any, Color.white)
+	val background = colorScheme.gray
+	val manager = baseContext.inContextWithBackground(background).forTextComponents().use { implicit txc =>
+		ContainerContentManager.forStatelessItems[Int, ItemLabel[Int]](stack, Vector(1, 4, 6)) { i =>
+			val label = ItemLabel.contextual(i)
+			label.addContentListener { e => println(s"Label content changed: $e") }
+			label
+		}
+	}
+	val content = stack.framed(64.any x 16.any, background)
 	
 	// Starts test
 	val frame = Frame.windowed(content, "Component to Image Test", User)

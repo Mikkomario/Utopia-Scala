@@ -24,4 +24,10 @@ trait BaseContextWrapper extends BaseContextLike
 	override def defaultColorScheme = base.defaultColorScheme
 	
 	override def margins = base.margins
+	
+	override def allowImageUpscaling = base.allowImageUpscaling
+	
+	override def defaultStackMargin = base.defaultStackMargin
+	
+	override def relatedItemsStackMargin = base.relatedItemsStackMargin
 }

@@ -4,6 +4,7 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.genesis.image.Image
 import utopia.genesis.shape.Axis.{X, Y}
+import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.{RefreshableWithPointer, TextComponent}
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.swing.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
@@ -14,7 +15,6 @@ import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.Alignment.{Bottom, Top}
 import utopia.reflection.shape.{Alignment, StackInsets, StackLength}
 import utopia.reflection.text.Font
-import utopia.reflection.util.ComponentContext
 
 object ImageAndTextLabel
 {
@@ -22,33 +22,35 @@ object ImageAndTextLabel
 	  * Creates a new image and text label using a component creation context
 	  * @param pointer Content pointer
 	  * @param displayFunction Function for creating text display
+	  * @param imageInsets Insets placed around image. If None, contextual text insets will be used (default)
 	  * @param itemToImage Function for creating image display
 	  * @param context Component creation context (implicit)
 	  * @tparam A Type of displayed item
 	  * @return A new label
 	  */
-	def contextualWithPointer[A](pointer: PointerWithEvents[A],
-								 displayFunction: DisplayFunction[A] = DisplayFunction.raw)(itemToImage: A => Image)
-								(implicit context: ComponentContext) =
+	def contextualWithPointer[A](pointer: PointerWithEvents[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+								 imageInsets: Option[StackInsets] = None)
+								(itemToImage: A => Image)(implicit context: TextContextLike) =
 	{
-		val label = new ImageAndTextLabel[A](pointer, context.font, displayFunction, context.insets, context.insets,
-			context.textAlignment, context.textColor, context.textHasMinWidth, context.allowImageUpscaling)(itemToImage)
-		context.setBorderAndBackground(label)
-		label
+		new ImageAndTextLabel[A](pointer, context.font, displayFunction, context.textInsets,
+			imageInsets.getOrElse(context.textInsets), context.textAlignment, context.textColor, context.textHasMinWidth,
+			context.allowImageUpscaling)(itemToImage)
 	}
 	
 	/**
 	  * Creates a new image and text label using a component creation context
 	  * @param item Initially displayed item
 	  * @param displayFunction Function for creating text display
+	  * @param imageInsets Insets placed around image. If None, contextual text insets will be used (default)
 	  * @param itemToImage Function for creating image display
 	  * @param context Component creation context (implicit)
 	  * @tparam A Type of displayed item
 	  * @return A new label
 	  */
-	def contextual[A](item: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw)(itemToImage: A => Image)
-					 (implicit context: ComponentContext) =
-		contextualWithPointer(new PointerWithEvents(item), displayFunction)(itemToImage)
+	def contextual[A](item: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+					  imageInsets: Option[StackInsets] = None)(itemToImage: A => Image)
+					 (implicit context: TextContextLike) =
+		contextualWithPointer(new PointerWithEvents(item), displayFunction, imageInsets)(itemToImage)
 }
 
 /**

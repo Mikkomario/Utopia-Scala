@@ -12,10 +12,32 @@ import utopia.genesis.color.Color
  */
 case class ComponentColor(background: Color, textColorStandard: TextColorStandard)
 {
+	// COMPUTED	------------------------------
+	
 	/**
 	 * @return A default text color used with this component coloring
 	 */
 	def defaultTextColor: Color = textColorStandard.defaultTextColor
+	
+	/**
+	  * @return A highlighted copy of this component color
+	  */
+	def highlighted =
+	{
+		// Either darkens or lightens the color, depending on original color lightness
+		val newBG =
+		{
+			if (background.luminosity <= 0.65)
+				background.lightened(1.6)
+			else
+				background.darkened(1.6)
+		}
+		copy(background = newBG)
+	}
+	
+	// IMPLEMENTED	--------------------------
+	
+	override def toString = background.toString
 }
 
 object ComponentColor

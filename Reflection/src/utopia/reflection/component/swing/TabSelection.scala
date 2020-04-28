@@ -8,6 +8,8 @@ import utopia.genesis.handling.MouseButtonStateListener
 import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.immutable.Handleable
+import utopia.reflection.color.ColorSet
+import utopia.reflection.component.context.{ButtonContextLike, TextContext, TextContextLike}
 import utopia.reflection.component.drawing.template.DrawLevel.Background
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
@@ -19,30 +21,40 @@ import utopia.reflection.shape.Alignment.Center
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.{StackInsets, StackLength}
 import utopia.reflection.text.Font
-import utopia.reflection.util.ComponentContext
 
 import scala.collection.immutable.HashMap
 
 object TabSelection
 {
+	def contextual[A](displayFunction: DisplayFunction[A] = DisplayFunction.raw, initialChoices: Seq[A] = Vector())
+								(implicit context: TextContextLike) =
+	{
+		val (background, isOpaque) = context match
+		{
+			case bc: ButtonContextLike => bc.buttonColor -> true
+			case _ => context.containerBackground -> false
+		}
+		
+		val yMargin = context.textInsets.vertical
+		val field = new TabSelection[A](context.font, context.colorScheme.secondary.forBackground(background),
+			context.textInsets.horizontal.optimal, yMargin, context.margins.small, displayFunction, initialChoices,
+			context.textColor)
+		if (isOpaque)
+			field.background = background
+		field
+	}
+	
 	/**
 	  * Creates a new tab selection using contextual information
 	  * @param displayFunction Display function used for selectable values (default = displayed as is)
 	  * @param initialChoices Initially selectable choices (default = empty)
-	  * @param selectionLineHeight Height of the line drawn under the currently selected component
 	  * @param context Component creation context
 	  * @tparam A Type of selected item
 	  * @return A new tab selection
 	  */
-	def contextual[A](displayFunction: DisplayFunction[A] = DisplayFunction.raw, initialChoices: Seq[A] = Vector(),
-					  selectionLineHeight: Double = 8.0)(implicit context: ComponentContext) =
-	{
-		val yMargin = context.insets.vertical
-		val component = new TabSelection[A](context.font, context.highlightColor, context.insets.horizontal.optimal,
-			yMargin, selectionLineHeight, displayFunction, initialChoices, context.textColor)
-		context.setBorderAndBackground(component)
-		component
-	}
+	def contextualWithBackground[A](background: ColorSet, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+									initialChoices: Seq[A] = Vector())(implicit context: TextContext) =
+		contextual(displayFunction, initialChoices)(context.forCustomColorButtons(background))
 }
 
 /**

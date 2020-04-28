@@ -23,6 +23,7 @@ object ProgressBar
 	  * @tparam A Tracked item type
 	  * @return A new progress bar
 	  */
+	@deprecated("ComponentContext is deprecated, please use the normal constructor", "v1.2")
 	def contextual[A](stackSize: StackSize, data: PointerWithEvents[A])(calculateProgress: A => Double)
 					 (implicit context: ComponentContext) = new ProgressBar[A](stackSize, context.barBackground,
 		context.highlightColor, data)(calculateProgress)

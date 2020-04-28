@@ -23,4 +23,8 @@ trait TextContextWrapper extends TextContextLike with ColorContextWrapper
 	override def textInsets = base.textInsets
 	
 	override def textColor = base.textColor
+	
+	override def textHasMinWidth = base.textHasMinWidth
+	
+	override def localizer = base.localizer
 }

@@ -1,6 +1,8 @@
 # Utopia Reflection - List of Changes
 ## v1.2 (beta)
 ### Breaking Changes
+- ComponentContext and ComponentContextBuilder were replaced with new implementations. 
+Existing components don't support old context types anymore.
 - Container add methods now target specific indices
     - All custom containers need to be adjusted accordingly
 - ContainerManager now only updates non-equal rows on content update 

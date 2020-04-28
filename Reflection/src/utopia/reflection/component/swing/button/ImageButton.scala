@@ -1,8 +1,8 @@
 package utopia.reflection.component.swing.button
 
+import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.swing.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.swing.label.ImageLabel
-import utopia.reflection.util.ComponentContext
 
 object ImageButton
 {
@@ -26,12 +26,8 @@ object ImageButton
 	 * @param context Component creation context
 	 * @return A new button
 	 */
-	def contextualWithoutAction(images: ButtonImageSet)(implicit context: ComponentContext) =
-	{
-		val button = new ImageButton(images, context.allowImageUpscaling)
-		context.setBorderAndBackground(button)
-		button
-	}
+	def contextualWithoutAction(images: ButtonImageSet)(implicit context: BaseContextLike) =
+		new ImageButton(images, context.allowImageUpscaling)
 	
 	/**
 	  * Creates a new button using contextual information
@@ -40,10 +36,10 @@ object ImageButton
 	  * @param context Component creation context
 	  * @return A new button
 	  */
-	def contextual(images: ButtonImageSet)(action: () => Unit)(implicit context: ComponentContext) =
+	def contextual(images: ButtonImageSet)(action: => Unit)(implicit context: BaseContextLike) =
 	{
 		val button = contextualWithoutAction(images)
-		button.registerAction(action)
+		button.registerAction(() => action)
 		button
 	}
 }

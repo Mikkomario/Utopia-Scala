@@ -6,6 +6,7 @@ import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.genesis.util.Drawer
+import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.template.CustomDrawer
@@ -14,7 +15,6 @@ import utopia.reflection.component.swing.{AwtComponentRelated, AwtComponentWrapp
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.stack.{StackLayout, StackLike}
 import utopia.reflection.shape.StackLength
-import utopia.reflection.util.ComponentContext
 
 import scala.collection.immutable.VectorBuilder
 
@@ -143,39 +143,42 @@ object Stack
     /**
       * Creates a stack by adding contents through a builder. Uses component creation context.
       * @param direction Stack direction
+      * @param cap Cap at each end of this stack (default = no cap)
       * @param layout Stack layout used (default = Fit)
       * @param isRelated Whether the items in this stack should be considered closely related (default = false)
       * @param b A function for building stack contents
       * @param context Component creation context (implicit)
       * @return A new stack
       */
-    def buildWithContext(direction: Axis2D, layout: StackLayout = Fit, isRelated: Boolean = false)
-                        (b: VectorBuilder[AwtStackable] => Unit)(implicit context: ComponentContext) =
-        build(direction, if (isRelated) context.relatedItemsStackMargin else context.stackMargin, context.stackCap, layout)(b)
+    def buildWithContext(direction: Axis2D, cap: StackLength = defaultCap, layout: StackLayout = Fit,
+                         isRelated: Boolean = false)(b: VectorBuilder[AwtStackable] => Unit)(implicit context: BaseContextLike) =
+        build(direction, if (isRelated) context.relatedItemsStackMargin else context.defaultStackMargin, cap, layout)(b)
     
     /**
       * Creates a horizontal stack by adding contents through a builder. Uses component creation context.
+      * @param cap Cap at each end of this stack (default = no cap)
       * @param layout Stack layout used (default = Fit)
       * @param isRelated Whether the items in this stack should be considered closely related (default = false)
       * @param b A function for building stack contents
       * @param context Component creation context (implicit)
       * @return A new stack
       */
-    def buildRowWithContext(layout: StackLayout = Fit, isRelated: Boolean = false)
-                           (b: VectorBuilder[AwtStackable] => Unit)(implicit context: ComponentContext) =
-        buildWithContext(X, layout, isRelated)(b)
+    def buildRowWithContext(cap: StackLength = defaultCap, layout: StackLayout = Fit, isRelated: Boolean = false)
+                           (b: VectorBuilder[AwtStackable] => Unit)(implicit context: BaseContextLike) =
+        buildWithContext(X, cap, layout, isRelated)(b)
     
     /**
       * Creates a vertical stack by adding contents through a builder. Uses component creation context.
+      * @param cap Cap at each end of this stack (default = no cap)
       * @param layout Stack layout used (default = Fit)
       * @param isRelated Whether the items in this stack should be considered closely related (default = false)
       * @param b A function for building stack contents
       * @param context Component creation context (implicit)
       * @return A new stack
       */
-    def buildColumnWithContext(layout: StackLayout = Fit, isRelated: Boolean = false)
-                              (b: VectorBuilder[AwtStackable] => Unit)(implicit context: ComponentContext) =
-        buildWithContext(Y, layout, isRelated)(b)
+    def buildColumnWithContext(cap: StackLength = defaultCap, layout: StackLayout = Fit, isRelated: Boolean = false)
+                              (b: VectorBuilder[AwtStackable] => Unit)(implicit context: BaseContextLike) =
+        buildWithContext(Y, cap, layout, isRelated)(b)
 }
 
 /**

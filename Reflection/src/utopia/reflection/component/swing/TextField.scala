@@ -14,6 +14,7 @@ import utopia.genesis.color.Color
 import utopia.genesis.shape.Axis.X
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.genesis.util.Drawer
+import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
@@ -23,7 +24,6 @@ import utopia.reflection.component.stack.{CachingStackable, StackLeaf}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.{Alignment, Border, Insets, StackLength, StackSize}
 import utopia.reflection.text.{Font, Prompt, Regex}
-import utopia.reflection.util.ComponentContext
 
 object TextField
 {
@@ -107,6 +107,7 @@ object TextField
 	
 	/**
 	  * Creates a new text field using contextual information
+	  * @param targetWidth The stack width for this field
 	  * @param document Document used for this field (default = plain document)
 	  * @param initialText Initially displayed text (default = no text)
 	  * @param prompt Prompt text displayed (optional)
@@ -114,69 +115,73 @@ object TextField
 	  * @param context Component creation context
 	  * @return A new text field
 	  */
-	def contextual(document: Document = new PlainDocument(), initialText: String = "",
+	def contextual(targetWidth: StackLength, document: Document = new PlainDocument(), initialText: String = "",
 				   prompt: Option[LocalizedString] = None, resultFilter: Option[Regex] = None,
 				   valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None))
-				  (implicit context: ComponentContext) =
+				  (implicit context: ButtonContextLike) =
 	{
-		val field = new TextField(context.textFieldWidth, context.insets.total / 2, context.font, document,
-			initialText, prompt.map { Prompt(_, context.promptFont, context.promptTextColor) }, context.textColor,
+		val field = new TextField(targetWidth, context.textInsets.total / 2, context.font, document,
+			initialText, prompt.map { Prompt(_, context.promptFont, context.hintTextColor) }, context.textColor,
 			resultFilter, context.textAlignment, valuePointer)
-		context.setBorderAndBackground(field)
-		field.addFocusHighlight(context.focusColor)
-		
+		field.background = context.buttonColor
+		field.addFocusHighlight(context.buttonColorHighlighted)
 		field
 	}
 	
 	/**
 	  * Creates a field that is used for writing positive integers. Uses component creation context.
+	  * @param targetWidth The stack width for this field
 	  * @param initialValue Initially displayed value (Default = None)
 	  * @param prompt Prompt text displayed, if any (Default = None)
 	  * @param context Component creation context (implicit)
 	  * @return A new text field
 	  */
-	def contextualForPositiveInts(initialValue: Option[Int] = None, prompt: Option[LocalizedString] = None,
+	def contextualForPositiveInts(targetWidth: StackLength, initialValue: Option[Int] = None, prompt: Option[LocalizedString] = None,
 								  valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None))
-								 (implicit context: ComponentContext) = contextual(
+								 (implicit context: ButtonContextLike) = contextual(targetWidth,
 		FilterDocument(Regex.digit, 10), initialValue.map { _.toString } getOrElse "", prompt, Some(Regex.numericPositive),
 		valuePointer)
 	
 	/**
 	  * Creates a field that is used for writing positive or negative integers. Uses component creation context.
+	  * @param targetWidth The stack width for this field
 	  * @param initialValue Initially displayed value (Default = None)
 	  * @param prompt Prompt text displayed, if any (Default = None)
 	  * @param context Component creation context (implicit)
 	  * @return A new text field
 	  */
-	def contextualForInts(initialValue: Option[Int] = None, prompt: Option[LocalizedString] = None,
+	def contextualForInts(targetWidth: StackLength, initialValue: Option[Int] = None, prompt: Option[LocalizedString] = None,
 						  valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None))
-						 (implicit context: ComponentContext) = contextual(
+						 (implicit context: ButtonContextLike) = contextual(targetWidth,
 		FilterDocument(Regex.numericParts, 11), initialValue.map { _.toString } getOrElse "", prompt, Some(Regex.numeric),
 		valuePointer)
 	
 	/**
 	  * Creates a field that is used for writing positive doubles. Uses component creation context.
+	  * @param targetWidth The stack width for this field
 	  * @param initialValue Initially displayed value (Default = None)
 	  * @param prompt Prompt text displayed, if any (Default = None)
 	  * @param context Component creation context (implicit)
 	  * @return A new text field
 	  */
-	def contextualForPositiveDoubles(initialValue: Option[Double] = None, prompt: Option[LocalizedString] = None,
+	def contextualForPositiveDoubles(targetWidth: StackLength, initialValue: Option[Double] = None,
+									 prompt: Option[LocalizedString] = None,
 									 valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None))
-									(implicit context: ComponentContext) = contextual(
+									(implicit context: ButtonContextLike) = contextual(targetWidth,
 		FilterDocument(Regex.decimalPositiveParts, 24), initialValue.map { _.toString } getOrElse "", prompt,
 		Some(Regex.decimalPositive), valuePointer)
 	
 	/**
 	  * Creates a field that is used for writing positive or negative doubles. Uses component creation context.
+	  * @param targetWidth The stack width for this field
 	  * @param initialValue Initially displayed value (Default = None)
 	  * @param prompt Prompt text displayed, if any (Default = None)
 	  * @param context Component creation context (implicit)
 	  * @return A new text field
 	  */
-	def contextualForDoubles(initialValue: Option[Double] = None, prompt: Option[LocalizedString] = None,
+	def contextualForDoubles(targetWidth: StackLength, initialValue: Option[Double] = None, prompt: Option[LocalizedString] = None,
 							 valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None))
-							(implicit context: ComponentContext) = contextual(
+							(implicit context: ButtonContextLike) = contextual(targetWidth,
 		FilterDocument(Regex.decimalParts, 24), initialValue.map { _.toString } getOrElse "", prompt,
 		Some(Regex.decimal), valuePointer)
 }

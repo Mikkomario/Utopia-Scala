@@ -48,6 +48,7 @@ import scala.concurrent.duration.FiniteDuration
  * @param scrollFriction Friction used when drag-scrolling (default = default scroll area friction (2000 px/s&#94;2))
  * @param allowImageUpscaling Whether images should be allowed to scale above their original source resolution (default = false)
   */
+@deprecated("Replaced with new set of context classes", "v1.2")
 case class ComponentContextBuilder(actorHandler: ActorHandler, font: Font, highlightColor: Color, focusColor: Color,
 								   normalWidth: Int, textColor: Color = Color.textBlack, promptFont: Option[Font] = None,
 								   promptTextColor: Option[Color] = None, textHasMinWidth: Boolean = true,

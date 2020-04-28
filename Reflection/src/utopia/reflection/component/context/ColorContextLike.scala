@@ -20,4 +20,17 @@ trait ColorContextLike extends BaseContextLike
 	  * @return Background color of the current container component
 	  */
 	def containerBackground: ComponentColor
+	
+	
+	// COMPUTED	-------------------------
+	
+	/**
+	  * @return The default primary color used in this context
+	  */
+	def primaryColor = colorScheme.primary.forBackground(containerBackground)
+	
+	/**
+	  * @return The default secondary color used in this context
+	  */
+	def secondaryColor = colorScheme.secondary.forBackground(containerBackground)
 }

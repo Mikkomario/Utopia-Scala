@@ -2,6 +2,7 @@ package utopia.reflection.color
 
 import utopia.genesis.color.Color
 
+import scala.math.Ordering.Double.TotalOrdering
 import scala.language.implicitConversions
 
 object ColorSet
@@ -32,6 +33,7 @@ object ColorSet
   * @param light A lighter version of color
   * @param dark a darker version of color
   */
+// TODO: Create an enumeration-based version of this class (where light and dark, etc. are enumerations)
 case class ColorSet(default: ComponentColor, light: ComponentColor, dark: ComponentColor)
 {
 	/**
@@ -50,4 +52,21 @@ case class ColorSet(default: ComponentColor, light: ComponentColor, dark: Compon
 		else
 			dark
 	}
+	
+	/**
+	  * Picks the color that most resembles the specified color
+	  * @param anotherColor Another color
+	  * @return A color in this set that most resembles the specified color
+	  */
+	def mostLike(anotherColor: Color) =
+	{
+		val contrastLuminosity = anotherColor.luminosity
+		Vector(default, light, dark).minBy { c => (c.luminosity - contrastLuminosity).abs }
+	}
+	
+	/**
+	  * @param color A color
+	  * @return Whether this color set specifies that color
+	  */
+	def contains(color: ComponentColor) = color == default || color == light || color == dark
 }

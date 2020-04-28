@@ -5,14 +5,33 @@ import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis2D
+import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.stack.StackableWrapper
 import utopia.reflection.component.swing.AnimatedVisibility
-import utopia.reflection.container.{WrappingContainer, MultiContainer}
+import utopia.reflection.container.{MultiContainer, WrappingContainer}
 import utopia.reflection.container.stack.MultiStackContainer
 import utopia.reflection.container.swing.Stack.AwtStackable
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
+
+object AnimatedChangesContainer
+{
+	/**
+	  * Creates a new animated changes container using contextual information
+	  * @param container A container being wrapped
+	  * @param transitionAxis Axis along which the items appear / disappear
+	  * @param context Component creation context (implicit)
+	  * @param exc Execution context (implicit)
+	  * @tparam C Type of component in container
+	  * @tparam Wrapped Type of wrapped container
+	  * @return A new container
+	  */
+	def contextual[C <: AwtStackable, Wrapped <: MultiStackContainer[AnimatedVisibility[C]]]
+	(container: Wrapped, transitionAxis: Axis2D)(implicit context: AnimationContextLike, exc: ExecutionContext) =
+		new AnimatedChangesContainer[C, Wrapped](container, context.actorHandler, transitionAxis,
+			context.animationDuration, context.useFadingInAnimations)
+}
 
 /**
   * This container is able to animated appearances and disappearances of its contents

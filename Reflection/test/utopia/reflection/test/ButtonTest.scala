@@ -43,12 +43,12 @@ object ButtonTest extends App
 		val action = () => progressPointer.value += 0.1
 		val color = Color.magenta
 		val textInsets = StackInsets.symmetric(8.any, 4.any)
-		val borderWitdh = 2
+		val borderWidth = 2
 		
 		// Creates the buttons
 		val imageButton = ImageButton(images)(action)
-		val textButton = TextButton("Text Button", basicFont, color, insets = textInsets, borderWidth = borderWitdh)(action)
-		val comboButton = ImageAndTextButton(images, "Button", basicFont, color, textInsets, borderWitdh,
+		val textButton = TextButton("Text Button", basicFont, color, insets = textInsets, borderWidth = borderWidth)(action)
+		val comboButton = ImageAndTextButton(images, "Button", basicFont, color, textInsets, borderWidth,
 			Alignment.Left)(action)
 		
 		val row = imageButton.rowWith(Vector(textButton, comboButton), margin = 16.any, layout = Fit)

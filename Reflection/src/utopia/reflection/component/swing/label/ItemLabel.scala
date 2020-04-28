@@ -3,6 +3,8 @@ package utopia.reflection.component.swing.label
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.genesis.color.Color
+import utopia.reflection.color.ComponentColor
+import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.swing.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
@@ -10,28 +12,51 @@ import utopia.reflection.component.{RefreshableWithPointer, TextComponent}
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.{Alignment, StackInsets}
 import utopia.reflection.text.Font
-import utopia.reflection.util.ComponentContext
 
 object ItemLabel
 {
 	/**
 	  * Creates a new label using contextual information
 	  * @param content Initial label content
-	  * @param displayFunction A function for displaying label data
+	  * @param displayFunction A function for displaying label data (default = toString)
 	  * @param context Component creation context
 	  * @tparam A Type of presented item
 	  * @return A new label
 	  */
 	def contextual[A](content: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw)
-					 (implicit context: ComponentContext) = contextualWithPointer(
+					 (implicit context: TextContextLike) = contextualWithPointer(
 		new PointerWithEvents(content), displayFunction)
 	
+	/**
+	  * Creates a new label using specified content pointer and contextual information
+	  * @param pointer Label content pointer
+	  * @param displayFunction Display function for label data (default = toString)
+	  * @param context Component creation context (implicit)
+	  * @tparam A Type of displayed item
+	  * @return A new label
+	  */
 	def contextualWithPointer[A](pointer: PointerWithEvents[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw)
-								(implicit context: ComponentContext) =
+								(implicit context: TextContextLike) =
 	{
-		val label = new ItemLabel[A](pointer, displayFunction, context.font, context.textColor, context.insets,
+		new ItemLabel[A](pointer, displayFunction, context.font, context.textColor, context.textInsets,
 			context.textAlignment, context.textHasMinWidth)
-		context.setBorderAndBackground(label)
+	}
+	
+	/**
+	  * Creates a new opaque (non-transparent) item label
+	  * @param color Label background
+	  * @param content Label content (initially)
+	  * @param displayFunction Display function for content (default = toString)
+	  * @param context Component creation context (implicit)
+	  * @tparam A Type of displayed item
+	  * @return A new label
+	  */
+	def contextualWithBackground[A](color: ComponentColor, content: A,
+									displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+								   (implicit context: BackgroundSensitive[TextContextLike]) =
+	{
+		val label = contextual(content, displayFunction)(context.inContextWithBackground(color))
+		label.background = color
 		label
 	}
 }

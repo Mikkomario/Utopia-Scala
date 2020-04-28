@@ -108,6 +108,14 @@ object Stackable
 		}
 		
 		/**
+		  * Frames this item
+		  * @param sideLength Frame side length on each side
+		  * @param color Frame background color
+		  * @return A new framing with this item inside it
+		  */
+		def framed(sideLength: StackLength, color: Color): Framing[S] = framed(StackInsets.symmetric(sideLength), color)
+		
+		/**
 		  * @param alignment Target alignment
 		  * @param useLowPriorityLength Whether to use low priority for affected direction's length
 		  * @return A frame whether this component is aligned according to specified alignment

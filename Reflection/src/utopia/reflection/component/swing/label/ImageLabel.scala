@@ -5,11 +5,11 @@ import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.{Bounds, Point}
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.RefreshableWithPointer
+import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.stack.{CachingStackable, StackLeaf}
 import utopia.reflection.shape.StackSize
-import utopia.reflection.util.ComponentContext
 
 object ImageLabel
 {
@@ -20,12 +20,8 @@ object ImageLabel
 	  * @param context Component creation context
 	  * @return A new label
 	  */
-	def contextual(image: Image, alwaysFillsArea: Boolean = true)(implicit context: ComponentContext) =
-	{
-		val label = new ImageLabel(image, alwaysFillsArea, context.allowImageUpscaling)
-		context.setBorderAndBackground(label)
-		label
-	}
+	def contextual(image: Image, alwaysFillsArea: Boolean = true)(implicit context: BaseContextLike) =
+		new ImageLabel(image, alwaysFillsArea, context.allowImageUpscaling)
 }
 
 /**

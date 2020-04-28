@@ -1,6 +1,7 @@
 package utopia.reflection.component.context
 
 import utopia.genesis.color.Color
+import utopia.reflection.localization.Localizer
 import utopia.reflection.shape.{Alignment, StackInsets}
 import utopia.reflection.text.Font
 
@@ -12,6 +13,11 @@ import utopia.reflection.text.Font
 trait TextContextLike extends ColorContextLike
 {
 	// ABSTRACT	--------------------------
+	
+	/**
+	  * @return The localizer used in this context
+	  */
+	def localizer: Localizer
 	
 	/**
 	  * @return The font used in texts
@@ -37,6 +43,11 @@ trait TextContextLike extends ColorContextLike
 	  * @return Color used in the text
 	  */
 	def textColor: Color
+	
+	/**
+	  * @return Whether displayed text components should always have a minimum width so that the text is not cut off
+	  */
+	def textHasMinWidth: Boolean
 	
 	
 	// OTHER	--------------------------

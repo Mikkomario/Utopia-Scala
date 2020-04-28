@@ -5,6 +5,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.color.Color
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.TextComponent
+import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.container.stack.StackLayout.{Center, Leading, Trailing}
@@ -12,7 +13,6 @@ import utopia.reflection.container.swing.{AlignFrame, Stack, SwitchPanel}
 import utopia.reflection.localization.{LocalString, LocalizedString}
 import utopia.reflection.shape.{Alignment, StackInsets, StackLength}
 import utopia.reflection.text.Font
-import utopia.reflection.util.ComponentContext
 
 object MultiLineTextView
 {
@@ -24,9 +24,9 @@ object MultiLineTextView
 	  * @return A new multi line text view
 	  */
 	def contextual(text: LocalizedString, lineSplitThreshold: Double, useLowPriorityForScalingSides: Boolean = false)
-				  (implicit context: ComponentContext) = new MultiLineTextView(text, context.font, lineSplitThreshold,
-		context.insets, context.relatedItemsStackMargin, useLowPriorityForScalingSides, context.textAlignment,
-		context.textColor)
+				  (implicit context: TextContextLike) = new MultiLineTextView(text, context.font, lineSplitThreshold,
+		context.textInsets, StackLength(0, context.margins.verySmall, context.margins.small), useLowPriorityForScalingSides,
+		context.textAlignment, context.textColor)
 }
 
 /**

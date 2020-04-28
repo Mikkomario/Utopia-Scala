@@ -9,6 +9,7 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.shape2D.{Bounds, Circle, Point}
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.{HandlerType, Mortal}
+import utopia.reflection.component.context.ColorContextLike
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
@@ -16,7 +17,6 @@ import utopia.reflection.component.input.InteractionWithPointer
 import utopia.reflection.component.stack.StackLeaf
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.shape.{StackLength, StackSize}
-import utopia.reflection.util.ComponentContext
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -30,7 +30,7 @@ object Switch
 	  * @param context Component creation context
 	  * @return A new switch
 	  */
-	def contextual(implicit context: ComponentContext) = new Switch(context.switchWidth, context.highlightColor,
+	def contextual(width: StackLength)(implicit context: ColorContextLike) = new Switch(width, context.secondaryColor,
 		context.actorHandler)
 }
 
