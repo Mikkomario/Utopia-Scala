@@ -35,6 +35,12 @@ case class ComponentColor(background: Color, textColorStandard: TextColorStandar
 		copy(background = newBG)
 	}
 	
+	/**
+	  * @return A color set that consists only of this one color
+	  */
+	def invariable = ColorSet(this, this, this)
+	
+	
 	// IMPLEMENTED	--------------------------
 	
 	override def toString = background.toString

@@ -40,16 +40,16 @@ object ButtonTest extends App
 		val images = ButtonImageSet.brightening(image)
 		
 		val progressPointer = new PointerWithEvents(0.0)
-		val action = () => progressPointer.value += 0.1
+		def action() = progressPointer.value += 0.1
 		val color = Color.magenta
 		val textInsets = StackInsets.symmetric(8.any, 4.any)
 		val borderWidth = 2
 		
 		// Creates the buttons
-		val imageButton = ImageButton(images)(action)
-		val textButton = TextButton("Text Button", basicFont, color, insets = textInsets, borderWidth = borderWidth)(action)
+		val imageButton = ImageButton(images)(() => action())
+		val textButton = TextButton("Text Button", basicFont, color, insets = textInsets, borderWidth = borderWidth) { action() }
 		val comboButton = ImageAndTextButton(images, "Button", basicFont, color, textInsets, borderWidth,
-			Alignment.Left)(action)
+			Alignment.Left)(() => action())
 		
 		val row = imageButton.rowWith(Vector(textButton, comboButton), margin = 16.any, layout = Fit)
 		

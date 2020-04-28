@@ -45,9 +45,9 @@ object SegmentedRowTest extends App
 	val largeFont = basicFont * 1.2
 	
 	val button1 = TextButton("Yeah!", largeFont, Color.magenta, insets = StackInsets.symmetric(32.any, 8.any),
-		borderWidth = 4) { () => labels(1).text += "!" }
+		borderWidth = 4) { labels(1).text += "!" }
 	val button2 = TextButton("For Sure!", largeFont, Color.magenta, insets = StackInsets.symmetric(32.any, 8.any),
-		borderWidth = 4) { () => labels(3).text += "!" }
+		borderWidth = 4) { labels(3).text += "!" }
 	
 	// Creates the rows
 	val hGroup = new SegmentedGroup(X)

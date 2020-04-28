@@ -43,7 +43,7 @@ object TextLabelStackTest extends App
 	
 	// Creates a button too
 	val button = TextButton("A Button!", basicFont, Color.magenta, insets = StackInsets.symmetric(32.any, 8.any),
-		borderWidth = 4) { () => println("The Button was pressed") }
+		borderWidth = 4) { println("The Button was pressed") }
 	
 	// Creates the stack
 	val stack = Stack.columnWithItems(labels :+ button, 8.any, 16.any, Leading)
