@@ -8,7 +8,7 @@ import utopia.genesis.handling.MouseButtonStateListener
 import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.immutable.Handleable
-import utopia.reflection.color.ColorSet
+import utopia.reflection.color.{ColorSet, ComponentColor}
 import utopia.reflection.component.context.{ButtonContextLike, TextContext, TextContextLike}
 import utopia.reflection.component.drawing.template.DrawLevel.Background
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
@@ -52,7 +52,7 @@ object TabSelection
 	  * @tparam A Type of selected item
 	  * @return A new tab selection
 	  */
-	def contextualWithBackground[A](background: ColorSet, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	def contextualWithBackground[A](background: ComponentColor, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 									initialChoices: Seq[A] = Vector())(implicit context: TextContext) =
 		contextual(displayFunction, initialChoices)(context.forCustomColorButtons(background))
 }

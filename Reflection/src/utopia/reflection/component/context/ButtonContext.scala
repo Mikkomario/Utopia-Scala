@@ -1,6 +1,6 @@
 package utopia.reflection.component.context
 
-import utopia.reflection.color.{ColorSet, ComponentColor}
+import utopia.reflection.color.ComponentColor
 
 object ButtonContext
 {
@@ -22,7 +22,7 @@ object ButtonContext
 	  * @param color Color that should be used in the buttons created in this context
 	  * @return A new button context that uses the specified color
 	  */
-	def forCustomColorButtons(textContext: TextContext, color: ColorSet) = apply(textContext, Some(color))
+	def forCustomColorButtons(textContext: TextContext, color: ComponentColor) = apply(textContext, Some(color))
 }
 
 /**
@@ -30,7 +30,7 @@ object ButtonContext
   * @author Mikko Hilpinen
   * @since 27.4.2020, v1.2
   */
-case class ButtonContext(base: TextContext, buttonColorOverride: Option[ColorSet] = None,
+case class ButtonContext(base: TextContext, buttonColorOverride: Option[ComponentColor] = None,
 						 borderWidthOverride: Option[Double] = None)
 	extends ButtonContextLike with TextContextWrapper with BackgroundSensitive[ButtonContext] with ScopeUsable[ButtonContext]
 {
@@ -38,7 +38,7 @@ case class ButtonContext(base: TextContext, buttonColorOverride: Option[ColorSet
 	
 	override def repr = this
 	
-	override def buttonColor = buttonColorOverride.getOrElse(colorScheme.primary).forBackground(containerBackground)
+	override def buttonColor = buttonColorOverride.getOrElse(colorScheme.primary.forBackground(containerBackground))
 	
 	override def borderWidth = borderWidthOverride.getOrElse(margins.verySmall)
 	

@@ -1,7 +1,7 @@
 package utopia.reflection.component.context
 
 import utopia.genesis.color.Color
-import utopia.reflection.color.{ColorSet, ComponentColor}
+import utopia.reflection.color.ComponentColor
 import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.{Alignment, StackInsets}
 import utopia.reflection.text.Font
@@ -32,7 +32,7 @@ case class TextContext(base: ColorContext, textAlignment: Alignment, textInsets:
 	/**
 	  * @return A copy of this context that can be used in gray fields (based on color scheme)
 	  */
-	def forGrayFields = forCustomColorButtons(colorScheme.gray)
+	def forGrayFields = forCustomColorButtons(colorScheme.gray.forBackground(containerBackground))
 	
 	/**
 	  * @return A copy of this context, except with zero insets
@@ -95,5 +95,5 @@ case class TextContext(base: ColorContext, textAlignment: Alignment, textInsets:
 	  * @param color Button color
 	  * @return A copy of this context that can be used in buttons
 	  */
-	def forCustomColorButtons(color: ColorSet) = ButtonContext.forCustomColorButtons(this, color)
+	def forCustomColorButtons(color: ComponentColor) = ButtonContext.forCustomColorButtons(this, color)
 }
