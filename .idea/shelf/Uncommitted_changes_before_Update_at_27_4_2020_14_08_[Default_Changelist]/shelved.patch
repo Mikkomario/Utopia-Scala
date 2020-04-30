@@ -1,0 +1,18 @@
+Index: Flow/test/utopia/flow/test/CounterTest.scala
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package utopia.flow.test\r\n\r\nimport utopia.flow.util.{Counter, Generator}\r\n\r\n/**\r\n  * Tests Counter class\r\n  * @author Mikko Hilpinen\r\n  * @since 17.4.2019\r\n  */\r\nobject CounterTest extends App\r\n{\r\n\tval stringGen = Generator[String](\"A\", _ + \"A\")\r\n\t\r\n\tassert(stringGen.next() == \"A\")\r\n\tassert(stringGen.next() == \"AA\")\r\n\tassert(stringGen.next() == \"AAA\")\r\n\t\r\n\tval counter = new Counter(1, 1)\r\n\t\r\n\tassert(counter.next() == 1)\r\n\tassert(counter.next() == 2)\r\n\tassert(counter.next() == 3)\r\n\t\r\n\tprintln(\"Success\")\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- Flow/test/utopia/flow/test/CounterTest.scala	(revision dba4bc92297cd02d70c64413ad54a688caf4d8fc)
++++ Flow/test/utopia/flow/test/CounterTest.scala	(date 1587636505416)
+@@ -9,7 +9,7 @@
+   */
+ object CounterTest extends App
+ {
+-	val stringGen = Generator[String]("A", _ + "A")
++	val stringGen = Generator[String]("A") { _ + "A" }
+ 	
+ 	assert(stringGen.next() == "A")
+ 	assert(stringGen.next() == "AA")
