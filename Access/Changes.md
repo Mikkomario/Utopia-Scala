@@ -4,3 +4,4 @@
 ### New Methods
 - Headers
     - ifModifiedSince and withIfModifiedSince(Instant)
+    - bearerAuthorization and withBearerAuthorization(String) for token-based authentication
