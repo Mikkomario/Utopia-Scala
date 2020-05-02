@@ -211,6 +211,18 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
             None
     }
     
+    /**
+      * @return Non-decrypted (expected to have no encoding) token registered with the "bearer" authorization header.
+      *         None if there was no authorization header or if it was not of type "bearer".
+      */
+    def bearerAuthorization = authorization.flatMap { auth =>
+        val (authType, token) = auth.splitAtFirst(" ")
+        if (authType ~== "Bearer")
+            Some(token)
+        else
+            None
+    }
+    
     
     // OPERATORS    ---------------
     
@@ -474,6 +486,12 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
         val encoded = Base64.getEncoder.encodeToString((userName + ":" + password).getBytes(Codec.UTF8.charSet))
         withAuthorization("Basic " + encoded)
     }
+    
+    /**
+      * @param token Authorization/access token
+      * @return A copy of these headers with an authorization header containing specified token
+      */
+    def withBearerAuthorization(token: String) = withAuthorization(s"Bearer $token")
     
     // TODO: Implement support for following predefined headers:
     // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
