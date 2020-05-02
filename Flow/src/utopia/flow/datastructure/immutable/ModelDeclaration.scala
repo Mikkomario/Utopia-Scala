@@ -3,7 +3,8 @@ package utopia.flow.datastructure.immutable
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.datastructure.template.{NoSuchAttributeException, Property}
 import utopia.flow.datastructure.template
-import utopia.flow.generic.DataType
+import utopia.flow.generic.{DataType, ModelType, StringType, VectorType}
+import utopia.flow.util.StringExtensions._
 
 import scala.collection.immutable.VectorBuilder
 
@@ -135,30 +136,53 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
             val castFailedBuilder = new VectorBuilder[(Constant, DataType)]()
     
             model.attributesWithValue.foreach { att =>
-        
-                val declaration = find(att.name)
-                if (declaration.isDefined)
+                find(att.name) match
                 {
-                    val castValue = att.value.castTo(declaration.get.dataType)
-                    if (castValue.isDefined)
-                        castBuilder += Constant(att.name, castValue.get)
-                    else
-                        castFailedBuilder += (Constant(att.name, att.value) -> declaration.get.dataType)
+                    case Some(declaration) =>
+                        val castValue = att.value.castTo(declaration.dataType)
+                        if (castValue.isDefined)
+                            castBuilder += Constant(att.name, castValue.get)
+                        else
+                            castFailedBuilder += (Constant(att.name, att.value) -> declaration.dataType)
+                    case None => keepBuilder += Constant(att.name, att.value)
                 }
-                else
-                    keepBuilder += Constant(att.name, att.value)
             }
             
             // If all values could be cast, proceeds to create the model, otherwise fails
             val castFailed = castFailedBuilder.result()
             if (castFailed.isEmpty)
             {
-                val resultConstants = keepBuilder.result() ++ castBuilder.result() ++ missingDefaults.map {
-                    d => Constant(d.name, d.defaultValue.get) }
-                ModelValidationResult.success(Model.withConstants(resultConstants))
+                // Makes sure all required values have a non-empty value associated with them
+                // (works for strings, models and vectors)
+                val castValues = castBuilder.result()
+                val emptyValues = castValues.filter { c => valueIsEmpty(c.value) }
+                if (emptyValues.nonEmpty)
+                    ModelValidationResult.missing(declarations.filter { d => emptyValues.exists { _.name ~== d.name } })
+                else
+                {
+                    val resultConstants = keepBuilder.result() ++ castValues ++ missingDefaults.map {
+                        d => Constant(d.name, d.defaultValue.get) }
+                    ModelValidationResult.success(Model.withConstants(resultConstants))
+                }
             }
             else
                 ModelValidationResult.castFailed(castFailed.toSet)
+        }
+    }
+    
+    private def valueIsEmpty(value: Value): Boolean =
+    {
+        if (value.isEmpty)
+            true
+        else
+        {
+            value.dataType match
+            {
+                case StringType => value.getString.isEmpty
+                case VectorType => value.getVector.forall(valueIsEmpty)
+                case ModelType => value.getModel.attributes.map { _.value }.forall(valueIsEmpty)
+                case _ => false
+            }
         }
     }
 }
