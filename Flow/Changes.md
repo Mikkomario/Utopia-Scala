@@ -16,6 +16,7 @@ collection types when used.
 ### New Methods
 - CollectionExtensions
     - Added .slice(Range) to SeqOps
+    - Added .getOrMap(...) to Try
     
 ### Other Changes
 - ModelDeclaration.validate now makes sure the required values are non-empty. This applies for 
