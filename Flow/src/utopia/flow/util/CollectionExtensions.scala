@@ -342,7 +342,7 @@ object CollectionExtensions
         }
     }
     
-    implicit class RichTry[T](val t: Try[T]) extends AnyVal
+    implicit class RichTry[A](val t: Try[A]) extends AnyVal
     {
         /**
          * The success value of this try. None if this try was a failure
@@ -352,6 +352,17 @@ object CollectionExtensions
          * The failure (throwable) value of this try. None if this try was a success.
          */
         def failure = t.failed.toOption
+    
+        /**
+          * @param f A mapping function for possible failure
+          * @tparam B Result type
+          * @return Contents of this try on success, mapped error on failure
+          */
+        def getOrMap[B >: A](f: Throwable => B): B = t match
+        {
+            case Success(item) => item
+            case Failure(error) => f(error)
+        }
     }
     
     implicit class RichEither[L, R](val e: Either[L, R]) extends AnyVal

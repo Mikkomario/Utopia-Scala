@@ -31,7 +31,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250, va
     /**
      * An execution context based on this thread pool
      */
-    lazy val executionContext = ExecutionContext.fromExecutor(this)
+    lazy implicit val executionContext: ExecutionContext = ExecutionContext.fromExecutor(this)
     
     
     // IMPLEMENTED    --------------------
