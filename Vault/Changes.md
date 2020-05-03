@@ -1,4 +1,9 @@
 # Utopia Vault - List of Changes
+
+## v1.5.1 (Beta)
+### Changes
+- Changed mergeCondition(...) methods in Accessor from protected to public
+
 ## v1.5
 ### Major Changes
 - Module is now based on Scala **v2.13.1** and no longer Scala 2.12.18

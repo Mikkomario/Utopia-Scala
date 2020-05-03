@@ -38,14 +38,14 @@ trait Access[+A]
 	 * @param additional An additional condition
 	 * @return A combination of the additional and global conditions
 	 */
-	protected def mergeCondition(additional: Condition) = globalCondition.map { _ && additional }.getOrElse(additional)
+	def mergeCondition(additional: Condition) = globalCondition.map { _ && additional }.getOrElse(additional)
 	
 	/**
 	 * Merges an additional condition with the existing global condition
 	 * @param additional An additional condition (optional)
 	 * @return A combination of the additional and global conditions. None if there was neither.
 	 */
-	protected def mergeCondition(additional: Option[Condition]): Option[Condition] = additional match
+	def mergeCondition(additional: Option[Condition]): Option[Condition] = additional match
 	{
 		case Some(cond) => Some(mergeCondition(cond))
 		case None => globalCondition
