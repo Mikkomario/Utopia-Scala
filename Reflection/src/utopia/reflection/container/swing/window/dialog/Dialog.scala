@@ -1,9 +1,10 @@
-package utopia.reflection.container.swing.window
+package utopia.reflection.container.swing.window.dialog
 
 import javax.swing.JDialog
 import utopia.reflection.component.stack.Stackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
+import utopia.reflection.container.swing.window.{Window, WindowResizePolicy}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.Alignment.Center

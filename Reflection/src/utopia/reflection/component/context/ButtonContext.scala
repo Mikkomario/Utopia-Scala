@@ -15,7 +15,7 @@ object ButtonContext
 	  * @return A new button context that uses secondary color scheme color
 	  */
 	def forSecondaryColorButtons(textContext: TextContext) = apply(textContext,
-		Some(textContext.colorScheme.secondary))
+		Some(textContext.colorScheme.secondary.forBackground(textContext.containerBackground)))
 	
 	/**
 	  * @param textContext Context used for handling text

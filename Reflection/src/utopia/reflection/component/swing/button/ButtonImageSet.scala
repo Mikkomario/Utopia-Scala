@@ -27,6 +27,21 @@ object ButtonImageSet
 	}
 	
 	/**
+	  * Creates a new button mage set that presents a modified version of the specified image
+	  * @param image The original image
+	  * @param intensity Darkening intensity modifier (default = 1)
+	  * @return A set that will a) Use 55% alpha while disabled and b) darken the image on focus and pressed -states
+	  */
+	def darkening(image: Image, intensity: Double = 1) =
+	{
+		val disabled = image.timesAlpha(0.55)
+		val focused = image.mapPixels { _.darkened(1 + (0.6 * intensity)) }
+		val pressed = focused.mapPixels { _.darkened(1 + (0.6 * intensity)) }
+		
+		ButtonImageSet(image, focused, pressed, disabled)
+	}
+	
+	/**
 	  * Creates a new button image set that changes alpha value based on button state
 	  * @param image The source image
 	  * @param defaultAlpha Alpha used in button defeult state

@@ -10,6 +10,7 @@ import utopia.reflection.component.stack.Stackable
 import utopia.reflection.component.swing.AwtComponentRelated
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.reflection.container.swing.window.dialog.Dialog
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.Alignment.TopLeft
 import utopia.reflection.util.Screen
