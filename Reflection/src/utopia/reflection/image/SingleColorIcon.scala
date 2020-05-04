@@ -62,8 +62,8 @@ class SingleColorIcon(original: Image)
 	  */
 	def singleColorImage(implicit context: ColorContextLike) = context.containerBackground.textColorStandard match
 	{
-		case Dark => blackForButtons
-		case Light => whiteForButtons
+		case Dark => black
+		case Light => white
 	}
 	
 	/**
