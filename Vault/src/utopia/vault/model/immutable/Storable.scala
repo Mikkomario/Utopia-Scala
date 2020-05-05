@@ -7,6 +7,7 @@ import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{DeclarationConstantGenerator, ModelConvertible}
 import utopia.vault.database.{Connection, DBException}
 import utopia.vault.model.enumeration.BasicCombineOperator.And
+import utopia.vault.model.enumeration.ComparisonOperator.Equal
 import utopia.vault.model.enumeration.{BasicCombineOperator, ComparisonOperator}
 import utopia.vault.nosql.factory.{FromRowFactory, StorableFactory}
 import utopia.vault.sql.{Condition, Delete, Insert, SqlSegment, Update, Where}
@@ -85,11 +86,11 @@ trait Storable extends ModelConvertible
     /**
       * Creates a condition based on this storable instance. All DEFINED (= non-empty) properties are included in the
       * resulting condition.
-      * @param comparisonOperator Operator used when comparing the items
+      * @param comparisonOperator Operator used when comparing the items (default = equal (<=>))
       * @param combineOperator Operator used when combining individual conditions (Default = And = &&)
       * @return A condition based on this storable instance and specified operators
       */
-    def toConditionWithOperator(comparisonOperator: ComparisonOperator, combineOperator: BasicCombineOperator = And) =
+    def toConditionWithOperator(comparisonOperator: ComparisonOperator = Equal, combineOperator: BasicCombineOperator = And) =
         makeCondition({ _.makeCondition(comparisonOperator, _) }, combineOperator)
     
     /**
