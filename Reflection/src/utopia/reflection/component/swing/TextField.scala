@@ -233,9 +233,10 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 	setBorder(defaultBorder)
 	text = initialText
 	
-	document.addDocumentListener(new InputListener)
-	field.addActionListener(new EnterListener())
-	valuePointer.addListener(new ValueChangeListener)
+	document.addDocumentListener(InputListener)
+	field.addActionListener(EnterListener)
+	field.addFocusListener(FocusResultHandler)
+	valuePointer.addListener(ValueChangeListener)
 	
 	{
 		// TODO: Handle alignment better (take into account bottom & top alignments)
@@ -380,7 +381,7 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 	
 	// NESTED CLASSES	----------------------
 	
-	private class EnterListener extends ActionListener
+	private object EnterListener extends ActionListener
 	{
 		// When enter is pressed, filters field value and informs listeners
 		override def actionPerformed(e: ActionEvent) =
@@ -395,7 +396,7 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 		}
 	}
 	
-	private class ValueChangeListener extends ChangeListener[Option[String]]
+	private object ValueChangeListener extends ChangeListener[Option[String]]
 	{
 		override def onChangeEvent(event: ChangeEvent[Option[String]]) =
 		{
@@ -404,7 +405,7 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 		}
 	}
 	
-	private class InputListener extends DocumentListener
+	private object InputListener extends DocumentListener
 	{
 		override def insertUpdate(e: DocumentEvent) = handleInputChange()
 		
@@ -466,6 +467,21 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 				}
 			}
 		}*/
+	}
+	
+	object FocusResultHandler extends FocusListener
+	{
+		override def focusGained(e: FocusEvent) = ()
+		
+		override def focusLost(e: FocusEvent) =
+		{
+			filter()
+			if (resultListeners.nonEmpty)
+			{
+				val result = value
+				resultListeners.foreach { _(result) }
+			}
+		}
 	}
 	
 	private class FocusHighlighter(val defaultBackground: Color, val highlightBackground: Color) extends FocusListener
