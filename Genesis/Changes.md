@@ -1,5 +1,8 @@
 # Utopia Reflection - List of Changes
-## v2.2.1 (beta)
+## v2.3 (beta)
+### Breaking Changes
+- **Drawer.drawTextPositioned** now accepts a Bounds instead of Position from the function return 
+value. Added appropriate text scaling to the method.
 ### New Features
 - ProjectilePath
     - A simple class which allows you to easily create a parable-like projectile motion for your double value
@@ -9,3 +12,5 @@
 - Direction2D.isPositiveDirection
     - Replaced with .sign and Direction1D
     - Some related methods have also been deprecated
+### Other Changes
+- Drawer.drawTextCentered now properly downscales the text if it was to go out of bounds.

@@ -60,3 +60,5 @@ animations.
     
 ### Other Changes
 - ContainerContentManager now accepts any MultiContainer with Stackable and not just MultiStackContainers
+- TextFields now downscale their prompts if they would not fit into bounds.
+- Tweaks to component coloring (Eg. Button hover color)
