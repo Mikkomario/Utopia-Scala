@@ -33,7 +33,7 @@ case class TextContext(base: ColorContext, textAlignment: Alignment, textInsets:
 	/**
 	  * @return A copy of this context that can be used in gray fields (based on color scheme)
 	  */
-	def forGrayFields = forCustomColorButtons(colorScheme.gray.forBackground(containerBackground))
+	def forGrayFields = forCustomColorButtons(colorScheme.gray.forBackgroundPreferringLight(containerBackground))
 	
 	/**
 	  * @return A copy of this context, except with zero insets

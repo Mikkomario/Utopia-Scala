@@ -42,16 +42,25 @@ case class ColorSet(default: ComponentColor, light: ComponentColor, dark: Compon
 	  * @param backgroundColor A background / contrasting color
 	  * @return The best color in this color set in a context with specified color
 	  */
-	def forBackground(backgroundColor: Color) =
-	{
-		val contrastLuminosity = backgroundColor.luminosity
-		if ((default.luminosity - contrastLuminosity).abs > 0.25)
-			default
-		else if ((light.luminosity - contrastLuminosity).abs > (dark.luminosity - contrastLuminosity).abs)
-			light
-		else
-			dark
-	}
+	def forBackground(backgroundColor: Color): ComponentColor = forBackground(backgroundColor, Vector(default, light, dark))
+	
+	/**
+	  * Picks the best color set for the specific background (best being one that has enough contrast difference,
+	  * preferring light color)
+	  * @param backgroundColor A background / contrasting color
+	  * @return The best color in this color set in a context with specified color
+	  */
+	def forBackgroundPreferringLight(backgroundColor: Color): ComponentColor = forBackground(backgroundColor,
+		Vector(light, default, dark))
+	
+	/**
+	  * Picks the best color set for the specific background (best being one that has enough contrast difference,
+	  * preferring dark color)
+	  * @param backgroundColor A background / contrasting color
+	  * @return The best color in this color set in a context with specified color
+	  */
+	def forBackgroundPreferringDark(backgroundColor: Color): ComponentColor = forBackground(backgroundColor,
+		Vector(dark, default, light))
 	
 	/**
 	  * Picks the color that most resembles the specified color
@@ -69,4 +78,14 @@ case class ColorSet(default: ComponentColor, light: ComponentColor, dark: Compon
 	  * @return Whether this color set specifies that color
 	  */
 	def contains(color: ComponentColor) = color == default || color == light || color == dark
+	
+	private def forBackground(backgroundColor: Color, order: Vector[ComponentColor]) =
+	{
+		val primary = order.head
+		val contrastLuminosity = backgroundColor.luminosity
+		if ((primary.luminosity - contrastLuminosity).abs > 0.2)
+			primary
+		else
+			order.maxBy { c => (c.luminosity - contrastLuminosity).abs }
+	}
 }
