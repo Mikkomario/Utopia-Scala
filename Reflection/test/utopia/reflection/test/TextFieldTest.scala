@@ -65,7 +65,7 @@ object TextFieldTest extends App
 				val (productField, amountField, priceField) = context.forTextComponents(Alignment.Left).withPromptFont(context.defaultFont * 0.8).forGrayFields.use { implicit fieldC =>
 					println(s"Field context bg = ${fieldC.containerBackground}, field BG = ${fieldC.buttonColor}, text color = ${fieldC.textColor}")
 					val productField = TextField.contextual(standardWidth, prompt = Some("Describe product"))
-					val amountField = TextField.contextualForPositiveInts(standardWidth / 2, prompt = Some("1-999"))
+					val amountField = TextField.contextualForPositiveInts(standardWidth / 2, prompt = Some("1-999 Too long a prompt"))
 					val priceField = TextField.contextualForPositiveDoubles(standardWidth / 2, prompt = Some("€"))
 					(productField, amountField, priceField)
 				}

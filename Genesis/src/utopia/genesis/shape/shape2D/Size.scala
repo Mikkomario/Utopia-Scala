@@ -111,6 +111,15 @@ case class Size(width: Double, height: Double) extends VectorLike[Size] with App
      */
 	def toDimension = new Dimension(width.toInt, height.toInt)
     
+    /**
+      * @return This size as a square shape where width is equal to height. Lowers one of the sides if necessary.
+      */
+    def fitToSquare =
+    {
+        val side = width min height
+        Size(side, side)
+    }
+    
     
     // IMPLEMENTED    -----------------------
     

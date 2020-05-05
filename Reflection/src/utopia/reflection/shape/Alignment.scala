@@ -373,18 +373,40 @@ sealed trait Alignment
 	  *                        Only used when the 'areaToPosition' doesn't naturally fit into the specified bounds.
 	  * @return A set of bounds for the area to position that follows this alignment
 	  */
-	def position(areaToPosition: Size, within: Bounds, margins: StackInsets = StackInsets.any, fitWithinBounds: Boolean = true) =
+	def position(areaToPosition: Size, within: Bounds, margins: StackInsets = StackInsets.any,
+				 fitWithinBounds: Boolean = true, preserveShape: Boolean = true) =
 	{
+		// Calculates the final size of the positioned area
+		val fittedArea =
+		{
+			if (fitWithinBounds)
+			{
+				if (preserveShape)
+				{
+					val scale = (within.size / areaToPosition).minDimension
+					if (scale < 1)
+						areaToPosition * scale
+					else
+						areaToPosition
+				}
+				else
+				{
+					val scale = (within.size / areaToPosition).map { _ min 1 }
+					areaToPosition * scale
+				}
+			}
+			else
+				areaToPosition
+		}
+		
+		// Calculates the new position for the area
 		val topLeft = Point.calculateWith { axis =>
 			val (startMargin, endMargin) = margins.sidesAlong(axis)
-			positionWithDirection(areaToPosition.along(axis), within.size.along(axis), startMargin, endMargin,
+			positionWithDirection(fittedArea.along(axis), within.size.along(axis), startMargin, endMargin,
 				directionAlong(axis), !fitWithinBounds)
 		}
-		// May need to shrink the resulting bounds
-		if (fitWithinBounds)
-			Bounds(topLeft, areaToPosition min within.size)
-		else
-			Bounds(topLeft, areaToPosition)
+		
+		Bounds(topLeft, fittedArea)
 	}
 	
 	private def positionWithDirection(length: Double, withinLength: Double, targetStartMargin: StackLength,

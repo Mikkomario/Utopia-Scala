@@ -1,5 +1,6 @@
 package utopia.genesis.shape
 
+import scala.math.Ordering.Double.TotalOrdering
 import scala.collection.immutable.{HashMap, VectorBuilder}
 import utopia.genesis.shape.Axis._
 import utopia.flow.util.CollectionExtensions._
@@ -103,6 +104,16 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Re
 	  * A version of this vector where all values are at least 0
 	  */
 	def positive = map { _ max 0 }
+	
+	/**
+	  * @return Smallest of this vector's dimensions
+	  */
+	def minDimension = dimensions.min
+	
+	/**
+	  * @return Largest of this vector's dimensions
+	  */
+	def maxDimension = dimensions.max
 	
 	
 	// OPERATORS	----------------------
