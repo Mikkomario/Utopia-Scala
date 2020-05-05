@@ -27,10 +27,11 @@ case class ComponentColor(background: Color, textColorStandard: TextColorStandar
 		// Either darkens or lightens the color, depending on original color lightness
 		val newBG =
 		{
-			if (background.luminosity <= 0.65)
-				background.lightened(1.6)
+			val originalLuminosity = background.luminosity
+			if (originalLuminosity < 0.6)
+				background.lightened(1 + originalLuminosity + 0.1)
 			else
-				background.darkened(1.6)
+				background.darkened(1 + (1 - originalLuminosity + 0.1))
 		}
 		copy(background = newBG)
 	}

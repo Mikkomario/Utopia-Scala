@@ -1,6 +1,6 @@
 package utopia.genesis.util
 
-import java.awt.{AlphaComposite, BasicStroke, Font, Graphics, Graphics2D, Image, Paint, Shape, Stroke, Toolkit}
+import java.awt.{AlphaComposite, BasicStroke, Font, Graphics, Graphics2D, Image, Paint, RenderingHints, Shape, Stroke, Toolkit}
 import java.awt.geom.AffineTransform
 
 import utopia.genesis.color.Color
@@ -192,7 +192,13 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
       * @return Whether the image was fully loaded and drawn
       */
     def drawImage(image: Image, position: Point = Point.origin): Boolean =
+    {
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
+        graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
+        
         graphics.drawImage(image, position.x.toInt, position.y.toInt, null)
+    }
     
     /**
      * Creates a transformed copy of this

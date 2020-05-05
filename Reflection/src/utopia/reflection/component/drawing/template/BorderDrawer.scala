@@ -38,11 +38,10 @@ trait BorderDrawer extends CustomDrawer
 		if (bounds.width > 0 && bounds.height > 0)
 		{
 			// Sets the color & draws the borders
-			if (border.color.isDefined)
-			{
+			border.color.foreach { color =>
 				val boundsToDraw = boundsFromInsets(bounds, border.insets)
 				if (boundsToDraw.nonEmpty)
-					drawer.withColor(border.color.get, border.color.get).disposeAfter { d => boundsToDraw.foreach(d.draw) }
+					drawer.withColor(color, color).disposeAfter { d => boundsToDraw.foreach(d.draw) }
 			}
 			
 			// Moves to the inner border

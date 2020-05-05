@@ -36,7 +36,7 @@ object ButtonTest extends App
 		implicit val localizer: Localizer = NoLocalization
 		val basicFont = Font("Arial", 12, Plain, 2)
 		
-		val image = Image.readFrom(Paths.get("test-images/mushrooms.png")).get.withSize(Size(64, 64)).downscaled
+		val image = Image.readFrom(Paths.get("Reflection/test-images/mushrooms.png")).get.withSize(Size(64, 64)).downscaled
 		val images = ButtonImageSet.brightening(image)
 		
 		val progressPointer = new PointerWithEvents(0.0)
@@ -48,7 +48,7 @@ object ButtonTest extends App
 		// Creates the buttons
 		val imageButton = ImageButton(images)(() => action())
 		val textButton = TextButton("Text Button", basicFont, color, insets = textInsets, borderWidth = borderWidth) { action() }
-		val comboButton = ImageAndTextButton(images, "Button", basicFont, color, textInsets, borderWidth,
+		val comboButton = ImageAndTextButton(images, "Button", basicFont, Color.blue, textInsets, borderWidth,
 			Alignment.Left)(() => action())
 		
 		val row = imageButton.rowWith(Vector(textButton, comboButton), margin = 16.any, layout = Fit)

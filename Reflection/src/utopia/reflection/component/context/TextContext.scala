@@ -63,6 +63,12 @@ case class TextContext(base: ColorContext, textAlignment: Alignment, textInsets:
 	def withFont(font: Font) = copy(fontOverride = Some(font))
 	
 	/**
+	  * @param font A font to be used in prompts
+	  * @return Copy of this context with specified font used for prompts
+	  */
+	def withPromptFont(font: Font) = copy(promptFontOverride = Some(font))
+	
+	/**
 	  * @param alignment New text alignment
 	  * @return A copy of this context with specified text alignment
 	  */

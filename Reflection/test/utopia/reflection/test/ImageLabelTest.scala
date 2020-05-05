@@ -24,7 +24,7 @@ object ImageLabelTest extends App
 {
 	private def run() =
 	{
-		val originalImage = Image.readFrom(Paths.get("test-images/mushrooms.png")).get.withSize(Size(128, 128))
+		val originalImage = Image.readFrom(Paths.get("Reflection/test-images/mushrooms.png")).get.withSize(Size(128, 128))
 			.downscaled
 		val smaller = originalImage.withSize(Size(64, 64))
 		

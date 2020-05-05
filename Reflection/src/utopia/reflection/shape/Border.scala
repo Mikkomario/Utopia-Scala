@@ -128,8 +128,11 @@ object Border
 	  */
 	def raised(w: Double, baseColor: Color, varianceMod: Double) =
 	{
-		val dark = Border(Insets(0, w, 0, w), baseColor.darkened(1 + varianceMod / 2))
-		val light = Border(dark.insets.opposite, baseColor.lightened(1 + varianceMod / 2), dark)
+		// Amount of variance depends from the base color luminosity
+		val luminosityMod = baseColor.luminosity
+		
+		val dark = Border(Insets(0, w, 0, w), baseColor.darkened(1 + varianceMod * (1 - luminosityMod)))
+		val light = Border(dark.insets.opposite, baseColor.lightened(1 + varianceMod * luminosityMod), dark)
 		
 		light
 	}

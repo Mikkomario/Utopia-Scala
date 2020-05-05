@@ -89,7 +89,7 @@ class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedSt
 		insets.withLeft(StackLength.fixedZero).mapRight { _.expanding }, initialAlignment = textAlignment)
 	private val content =
 	{
-		val inside = imageLabel.framed(insets).rowWith(Vector(textLabel), margin = StackLength.fixedZero)
+		val inside = imageLabel.framed(insets.mapRight { _ / 2 }).rowWith(Vector(textLabel), margin = StackLength.fixedZero)
 		if (borderWidth > 0)
 			inside.framed(StackInsets.symmetric(borderWidth.fixed))
 		else
