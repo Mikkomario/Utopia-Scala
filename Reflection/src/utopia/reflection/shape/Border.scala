@@ -131,8 +131,8 @@ object Border
 		// Amount of variance depends from the base color luminosity
 		val luminosityMod = baseColor.luminosity
 		
-		val dark = Border(Insets(0, w, 0, w), baseColor.darkened(1 + varianceMod * (1 - luminosityMod)))
-		val light = Border(dark.insets.opposite, baseColor.lightened(1 + varianceMod * luminosityMod), dark)
+		val dark = Border(Insets(0, w, 0, w), baseColor.darkened(1 + varianceMod * 0.5 * (1 - luminosityMod) + 0.1))
+		val light = Border(dark.insets.opposite, baseColor.lightened(1 + varianceMod * luminosityMod + 0.1), dark)
 		
 		light
 	}

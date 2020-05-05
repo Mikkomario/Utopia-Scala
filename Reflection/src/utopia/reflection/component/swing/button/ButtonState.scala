@@ -45,9 +45,9 @@ case class ButtonState(isEnabled: Boolean, isInFocus: Boolean, isMouseOver: Bool
 		{
 			val luminosityMod = color.luminosity
 			if (originalColor.luminosity >= 0.6)
-				color.darkened((1 - luminosityMod) * intensity)
+				color.darkened(1 + (1 - luminosityMod) * intensity * 0.3 + 0.1)
 			else
-				color.lightened(1 + luminosityMod * intensity)
+				color.lightened(1 + luminosityMod * intensity * 0.7 + 0.1)
 		}
 		
 		var c = originalColor
