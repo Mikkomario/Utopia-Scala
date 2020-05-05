@@ -13,16 +13,16 @@ import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.genesis.color.Color
 import utopia.genesis.shape.Axis.X
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
-import utopia.genesis.util.Drawer
 import utopia.reflection.component.context.ButtonContextLike
+import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
-import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.reflection.component.drawing.template.TextDrawer
 import utopia.reflection.component.{Alignable, Focusable}
 import utopia.reflection.component.input.InteractionWithPointer
 import utopia.reflection.component.stack.{CachingStackable, StackLeaf}
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, Border, Insets, StackLength, StackSize}
+import utopia.reflection.shape.{Alignment, Border, Insets, StackInsets, StackLength, StackSize}
 import utopia.reflection.text.{Font, Prompt, Regex}
 
 object TextField
@@ -432,10 +432,30 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 		}
 	}
 	
-	private class PromptDrawer extends CustomDrawer
+	private class PromptDrawer extends TextDrawer
 	{
+		private val _insets = StackInsets.symmetric(insideMargins * 2)
+		
+		override def drawContext =
+		{
+			prompt match
+			{
+				case Some(p) => TextDrawContext(p.font, textColor.timesAlpha(0.66), insets = _insets)
+				case None => TextDrawContext(font, textColor)
+			}
+		}
+		
+		override def text =
+		{
+			if (isDisplayingPrompt)
+				prompt.map { _.text }.getOrElse(LocalizedString.empty)
+			else
+				LocalizedString.empty
+		}
+		
 		override val drawLevel = Normal
 		
+		/*
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			if (isDisplayingPrompt)
@@ -445,7 +465,7 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 						p.font.toAwt, bounds.topLeft + insideMargins.optimal)
 				}
 			}
-		}
+		}*/
 	}
 	
 	private class FocusHighlighter(val defaultBackground: Color, val highlightBackground: Color) extends FocusListener

@@ -62,7 +62,7 @@ object TextFieldTest extends App
 			// Adds the main interaction area
 			mainStack += Stack.buildRowWithContext() { row =>
 				// Creates the fields
-				val (productField, amountField, priceField) = context.forTextComponents(Alignment.Left).forGrayFields.use { implicit fieldC =>
+				val (productField, amountField, priceField) = context.forTextComponents(Alignment.Left).withPromptFont(context.defaultFont * 0.8).forGrayFields.use { implicit fieldC =>
 					println(s"Field context bg = ${fieldC.containerBackground}, field BG = ${fieldC.buttonColor}, text color = ${fieldC.textColor}")
 					val productField = TextField.contextual(standardWidth, prompt = Some("Describe product"))
 					val amountField = TextField.contextualForPositiveInts(standardWidth / 2, prompt = Some("1-999"))
