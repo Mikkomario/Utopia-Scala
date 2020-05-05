@@ -18,6 +18,12 @@ object Where
       * @return A where clause based on the model
       */
     def apply(conditionModel: Storable) = conditionModel.toCondition.toWhereClause
+    
+    /**
+      * @param condition A condition
+      * @return A where clause that only accepts rows that DON'T fulfill the condition
+      */
+    def not(condition: Condition) = (!condition).toWhereClause
 }
 
 /**
