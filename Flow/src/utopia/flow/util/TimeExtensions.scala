@@ -109,6 +109,18 @@ object TimeExtensions
 	     * Checks whether this instant comes after the specified instant
 	     */
 	    def >(other: Instant) = i.isAfter(other)
+		
+		/**
+		  * @param other Another instant
+		  * @return Whether this instant is before or equal to the other instant
+		  */
+		def <=(other: Instant) = !(this > other)
+		
+		/**
+		  * @param other Another instant
+		  * @return Whether this instant is equal or larger to the other instant
+		  */
+		def >=(other: Instant) = !(this < other)
 	}
 	
 	implicit class ExtendedLocalDateTime(val d: LocalDateTime) extends RichComparable[LocalDateTime]
