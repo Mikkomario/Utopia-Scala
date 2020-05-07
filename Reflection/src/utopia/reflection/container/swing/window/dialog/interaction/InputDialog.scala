@@ -12,6 +12,7 @@ import utopia.reflection.component.swing.button.ImageButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.stack.segmented.SegmentedGroup
+import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.container.swing.{SegmentedRow, Stack}
 import utopia.reflection.container.swing.window.Popup
 import utopia.reflection.container.swing.window.dialog.interaction.ButtonColor.Secondary
@@ -73,6 +74,14 @@ trait InputDialog[+A] extends InteractionDialog[A]
 	protected def fields: Vector[InputRowBlueprint]
 	
 	/**
+	  * Combines the specified rows into a single component (Eg. stack). The rows are segmented to all share same
+	  * width for label and input component.
+	  * @param inputRows Rows to lay in the container
+	  * @return A container that will be displayed in the dialog
+	  */
+	protected def buildLayout(inputRows: Vector[SegmentedRow[AwtStackable]]): AwtStackable
+	
+	/**
 	  * Produces a result based on dialog input when the user selects "OK"
 	  * @return Either the produced input (right) or a field to return the focus to, along with a message
 	  *         to display to the user (left)
@@ -127,24 +136,23 @@ trait InputDialog[+A] extends InteractionDialog[A]
 		
 		// Places rows in an aligned stack
 		val group = new SegmentedGroup(X)
-		Stack.buildColumnWithContext() { stack =>
-			fields.foreach { row =>
-				val fieldInRow =
-				{
-					if (row.spansWholeRow)
-						row.field
-					else
-						row.field.alignedToSide(Direction2D.Left)
-				}
-				val rowComponent = SegmentedRow.partOfGroupWithItems(group, Vector(TextLabel.contextual(row.fieldName),
-					fieldInRow), margin = context.margins.medium.downscaling)
-				// Some rows have dependent visibility state
-				row.rowVisibilityPointer.foreach { pointer =>
-					rowComponent.isVisible = pointer.value
-					pointer.addListener { e => rowComponent.isVisible = e.newValue }
-				}
-				stack += rowComponent
+		val rows = fields.map { row =>
+			val fieldInRow =
+			{
+				if (row.spansWholeRow)
+					row.field
+				else
+					row.field.alignedToSide(Direction2D.Left)
 			}
+			val rowComponent = SegmentedRow.partOfGroupWithItems(group, Vector(TextLabel.contextual(row.fieldName),
+				fieldInRow), margin = context.margins.medium.downscaling)
+			// Some rows have dependent visibility state
+			row.rowVisibilityPointer.foreach { pointer =>
+				rowComponent.isVisible = pointer.value
+				pointer.addListener { e => rowComponent.isVisible = e.newValue }
+			}
+			rowComponent
 		}
+		buildLayout(rows)
 	}
 }
