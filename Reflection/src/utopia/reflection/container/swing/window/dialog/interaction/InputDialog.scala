@@ -69,17 +69,18 @@ trait InputDialog[+A] extends InteractionDialog[A]
 	protected def executionContext: ExecutionContext
 	
 	/**
-	  * @return Blueprints for the fields that are used in producing input in this dialog
+	  * @return Blueprints for the fields that are used in producing input in this dialog. The blueprints should be
+	  *         grouped in separate vectors.
 	  */
-	protected def fields: Vector[InputRowBlueprint]
+	protected def fields: Vector[RowGroups[InputRowBlueprint]]
 	
 	/**
 	  * Combines the specified rows into a single component (Eg. stack). The rows are segmented to all share same
 	  * width for label and input component.
-	  * @param inputRows Rows to lay in the container
+	  * @param inputRows Rows to lay in the container (grouped)
 	  * @return A container that will be displayed in the dialog
 	  */
-	protected def buildLayout(inputRows: Vector[SegmentedRow[AwtStackable]]): AwtStackable
+	protected def buildLayout(inputRows: Vector[RowGroups[AwtStackable]]): AwtStackable
 	
 	/**
 	  * Produces a result based on dialog input when the user selects "OK"
@@ -132,24 +133,26 @@ trait InputDialog[+A] extends InteractionDialog[A]
 	{
 		implicit val context: TextContextLike = fieldLabelContext
 		
-		// Places rows in an aligned stack
-		val group = new SegmentedGroup(X)
-		val rows = fields.map { row =>
-			val fieldInRow =
-			{
-				if (row.spansWholeRow)
-					row.field
-				else
-					row.field.alignedToSide(Direction2D.Left)
+		// Uses one segmented group for each row group group
+		val rows = fields.map { groups =>
+			val segmentGroup = new SegmentedGroup(X)
+			groups.mapRows { row =>
+				val fieldInRow =
+				{
+					if (row.spansWholeRow)
+						row.field
+					else
+						row.field.alignedToSide(Direction2D.Left)
+				}
+				val rowComponent = SegmentedRow.partOfGroupWithItems(segmentGroup, Vector(TextLabel.contextual(row.fieldName),
+					fieldInRow), margin = context.margins.medium.downscaling)
+				// Some rows have dependent visibility state
+				row.rowVisibilityPointer.foreach { pointer =>
+					rowComponent.isVisible = pointer.value
+					pointer.addListener { e => rowComponent.isVisible = e.newValue }
+				}
+				rowComponent
 			}
-			val rowComponent = SegmentedRow.partOfGroupWithItems(group, Vector(TextLabel.contextual(row.fieldName),
-				fieldInRow), margin = context.margins.medium.downscaling)
-			// Some rows have dependent visibility state
-			row.rowVisibilityPointer.foreach { pointer =>
-				rowComponent.isVisible = pointer.value
-				pointer.addListener { e => rowComponent.isVisible = e.newValue }
-			}
-			rowComponent
 		}
 		buildLayout(rows)
 	}
