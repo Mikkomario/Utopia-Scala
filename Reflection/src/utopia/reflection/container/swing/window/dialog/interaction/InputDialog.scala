@@ -91,8 +91,6 @@ trait InputDialog[+A] extends InteractionDialog[A]
 	
 	// IMPLEMENTED	----------------------------------
 	
-	override protected def standardContext = fieldLabelContext
-	
 	override protected def buttonBlueprints =
 	{
 		val okButton = new DialogButtonBlueprint[A](okButtonText, okButtonIcon, Secondary)(() =>
