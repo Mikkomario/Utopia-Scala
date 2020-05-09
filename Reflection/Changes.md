@@ -50,6 +50,7 @@ Axis2D as a parameter instead of Direction2D.
 - MappingContainer, WrappingContainer & AnimatedChangesContainer for wrapping other containers and adding 
 animations.
 - CollectionViewLike trait for adding custom collection views for both Swing and non-swing approaches
+- ContentDisplayer and ContainerContentDisplayer for features similar to ContentManager, except read-only.
 
 ### New Methods
 - AwtComponentWrapper: toImage
