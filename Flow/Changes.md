@@ -8,6 +8,10 @@
 - Generator
     - .apply method in Generator object now takes two parameter lists instead of one
         
+### New Features
+- ValueUnwraps -extensions added to utopia.flow.generic -package. By importing these extensions, you 
+can automatically unwrap values to most basic types (saves you from writing value.string or value.getInt etc.)
+        
 ### Fixes
 - tryMap(...) in CollectionExtensions now uses buildFrom and not Factory. This should result in better result 
 collection types when used.
