@@ -140,29 +140,7 @@ object ContainerContentManager
   * @param makeItem A function for producing new displays
   */
 class ContainerContentManager[A, Container <: MultiContainer[Display] with Stackable, Display <: Stackable with Refreshable[A]]
-(protected val container: Container,
- override val contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
+(container: Container, contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
  sameItemCheck: (A, A) => Boolean = { (a: A, b: A) =>  a == b }, equalsCheck: Option[(A, A) => Boolean] = None)
-(makeItem: A => Display) extends ContentManager[A, Display]
-{
-	// INITIAL CODE	-----------------------
-	
-	setup()
-	
-	
-	// IMPLEMENTED	-----------------------
-	
-	override protected def representSameItem(a: A, b: A) = sameItemCheck(a, b)
-	
-	override protected def contentIsStateless = equalsCheck.isEmpty
-	
-	override protected def itemsAreEqual(a: A, b: A) = equalsCheck.map { _(a, b) }.getOrElse(sameItemCheck(a, b))
-	
-	override def displays = container.components
-	
-	override protected def addDisplaysFor(values: Vector[A], index: Int) = container.insertMany(values.map(makeItem), index)
-	
-	override protected def dropDisplaysAt(range: Range) = container.removeComponentsIn(range)
-	
-	override protected def finalizeRefresh() = container.revalidate()
-}
+(makeItem: A => Display) extends ContainerContentDisplayer[A, Container, Display, PointerWithEvents[Vector[A]]](
+	container, contentPointer, sameItemCheck, equalsCheck)(makeItem) with ContentManager[A, Display]
