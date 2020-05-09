@@ -1,6 +1,6 @@
 package utopia.reflection.component.context
 
-import utopia.reflection.color.{ColorScheme, ComponentColor}
+import utopia.reflection.color.{ColorScheme, ColorSet, ComponentColor}
 import utopia.reflection.localization.Localizer
 import utopia.reflection.shape.{Alignment, StackInsets}
 import utopia.reflection.shape.LengthExtensions._
@@ -15,6 +15,28 @@ case class ColorContext(base: BaseContextLike, containerBackground: ComponentCol
 						colorSchemeOverride: Option[ColorScheme] = None)
 	extends ColorContextLike with BaseContextWrapper with BackgroundSensitive[ColorContext] with ScopeUsable[ColorContext]
 {
+	// COMPUTED ------------------------------
+	
+	/**
+	 * @return A copy of this context where the background is set to primary color scheme color. A shade is picked
+	 *         based on existing container background.
+	 */
+	def withPrimaryBackground = forComponentWithBackground(colorScheme.primary)
+	
+	/**
+	 * @return A copy of this context where the background is set to secondary color scheme color. A shade is picked
+	 *         based on existing container background.
+	 */
+	def withSecondaryBackground = forComponentWithBackground(colorScheme.secondary)
+	
+	/**
+	 * @return A copy of this context where background is set to gray color scheme color. A shade is picked based
+	 *         on existing container background. Light gray is preferred.
+	 */
+	def withLightGrayBackground = copy(containerBackground =
+		colorScheme.gray.forBackgroundPreferringLight(containerBackground))
+	
+	
 	// IMPLEMENTED	--------------------------
 	
 	override def repr = this
@@ -25,6 +47,13 @@ case class ColorContext(base: BaseContextLike, containerBackground: ComponentCol
 	
 	
 	// OTHER	------------------------------
+	
+	/**
+	 * @param background Component background color options
+	 * @return Context within that component
+	 */
+	def forComponentWithBackground(background: ColorSet) = copy(containerBackground =
+		background.forBackground(containerBackground))
 	
 	/**
 	  * @param colorScheme New color scheme

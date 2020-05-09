@@ -1,6 +1,7 @@
 package utopia.reflection.component.context
 
 import utopia.genesis.color.Color
+import utopia.genesis.shape.shape2D.Direction2D
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.container.swing.window.dialog.interaction.ButtonColor
 import utopia.reflection.localization.{Localizer, NoLocalization}
@@ -39,6 +40,16 @@ case class TextContext(base: ColorContext, textAlignment: Alignment, textInsets:
 	  * @return A copy of this context, except with zero insets
 	  */
 	def withoutInsets = withInsets(StackInsets.zero)
+	
+	/**
+	 * @return A copy of this context with insets that easily expand horizontally
+	 */
+	def expandingHorizontally = mapInsets { _.mapHorizontal { _.expanding } }
+	
+	/**
+	 * @return A copy of this context where insets expand more easily to right
+	 */
+	def expandingToRight = expandingTo(Direction2D.Right)
 	
 	
 	// IMPLEMENTED	--------------------------
@@ -85,6 +96,12 @@ case class TextContext(base: ColorContext, textAlignment: Alignment, textInsets:
 	  * @return A copy of this context with mapped insets
 	  */
 	def mapInsets(f: StackInsets => StackInsets) = withInsets(f(textInsets))
+	
+	/**
+	 * @param direction Direction towards which insets should expand more easily
+	 * @return A copy of this context with insets expanding to that direction
+	 */
+	def expandingTo(direction: Direction2D) = withInsets(textInsets.mapSide(direction) { _.expanding })
 	
 	/**
 	  * @param textColor New text color

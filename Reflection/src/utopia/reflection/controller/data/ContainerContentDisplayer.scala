@@ -41,7 +41,7 @@ object ContainerContentDisplayer
 	 * @param container Container that will hold the displays
 	 * @param contentPointer Pointer to the displayed content
 	 * @param sameItemCheck Function for checking whether the two items represent the same instance. If you would use
-	 *                      a standard equals function (==), please call 'forStatelessItemsPointer' instead since
+	 *                      a standard equals function (==), please call 'forStatelessItems' instead since
 	 *                      equals function is used for checking display equality.
 	 * @param makeDisplay Function for creating new displays
 	 * @tparam A Type of displayed item
