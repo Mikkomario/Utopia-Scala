@@ -36,6 +36,21 @@ object BezierPath
 		}
 	}
 	
+	/**
+	 * Calculates a bezier path between the specified points
+	 * @param points The points that form the path. Must be at least 3 items.
+	 * @tparam P The type of path point
+	 * @return Sequence of paths between speified points
+	 * @throws IllegalArgumentException If there are less than 3 points
+	 */
+	def parts[P <: Arithmetic[P, P] with Distance](points: Seq[P]) =
+	{
+		if (points.size < 3)
+			throw new IllegalArgumentException("Cubic Bezier path must be initialized with at least 3 points")
+		else
+			calculatePath(points)
+	}
+	
 	private def calculatePath[P <: Arithmetic[P, P] with Distance](points: Seq[P]) =
 	{
 		// Number of curves

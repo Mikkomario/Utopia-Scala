@@ -1,7 +1,6 @@
 package utopia.genesis.shape.path
 
 import utopia.genesis.shape.shape2D.Point
-import utopia.genesis.util.{Arithmetic, Distance}
 
 /**
  * Used for creating curved x-y mapping functions
@@ -21,35 +20,33 @@ object BezierFunction
 	 */
 	def apply(points: Seq[Point]): Double => Double =
 	{
-		val functionPoints = points.sortBy { _.x }.map { p => FunctionPoint(p.x, p.y) }
-		val path = BezierPath(functionPoints, sequencesPerPart = 0)
-		FunctionPath(path, functionPoints.head.x, functionPoints.last.x).apply
+		val functionPoints = points.sortBy { _.x }
+		val path = BezierPath.parts(functionPoints)
+		
+		FunctionPath(path.toVector, functionPoints.head.x, functionPoints.last.x).apply
 	}
 	
 	
 	// NESTED   ------------------------------
 	
-	private case class FunctionPath(path: Path[FunctionPoint], startX: Double, endX: Double)
+	private case class FunctionPath(paths: Vector[Path[Point]], startX: Double, endX: Double)
 	{
-		private val length = endX - startX
-		
 		def apply(x: Double) =
 		{
-			val pathPosition = (x - startX) / length
-			path(pathPosition).y
+			// Finds the correct path sequence
+			val p =
+			{
+				if (x < startX)
+					paths.head
+				else if (x > endX)
+					paths.last
+				else
+					paths.find { p => p.start.x <= x && p.end.x >= x }.get
+			}
+			// Determines the progress on that path sequence
+			val progress = (x - p.start.x) / (p.end.x - p.start.x)
+			
+			p(progress).y
 		}
-	}
-	
-	private case class FunctionPoint(x: Double, y: Double) extends Arithmetic[FunctionPoint, FunctionPoint] with Distance
-	{
-		override def -(another: FunctionPoint) = FunctionPoint(x - another.x, y - another.y)
-		
-		override def repr = this
-		
-		override def *(mod: Double) = FunctionPoint(x * mod, y * mod)
-		
-		override def +(another: FunctionPoint) = FunctionPoint(x + another.x, y + another.y)
-		
-		override def length = x
 	}
 }
