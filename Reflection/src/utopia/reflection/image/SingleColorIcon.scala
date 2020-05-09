@@ -60,10 +60,18 @@ class SingleColorIcon(original: Image)
 	  * @param context Component creation context
 	  * @return A copy of this icon as an image with a single color. The color matches contextual text color.
 	  */
-	def singleColorImage(implicit context: ColorContextLike) = context.containerBackground.textColorStandard match
+	def singleColorImage(implicit context: ColorContextLike) =
 	{
-		case Dark => black
-		case Light => white
+		val background = context match
+		{
+			case btnC: ButtonContextLike => btnC.buttonColor
+			case c: ColorContextLike => c.containerBackground
+		}
+		background.textColorStandard match
+		{
+			case Dark => black
+			case Light => white
+		}
 	}
 	
 	/**

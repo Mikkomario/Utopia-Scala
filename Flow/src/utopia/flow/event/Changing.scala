@@ -67,6 +67,13 @@ trait Changing[A]
 	}
 	
 	/**
+	 * @param f A mapping function
+	 * @tparam B Mapping result type
+	 * @return A mirrored version of this item, using specified mapping function
+	 */
+	def map[B](f: A => B) = Mirror.of(this)(f)
+	
+	/**
 	  * Fires a change event for all the listeners
 	  * @param oldValue The old value of this changing element (call-by-name)
 	  */
