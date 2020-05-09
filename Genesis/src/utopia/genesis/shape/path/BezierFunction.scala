@@ -1,5 +1,7 @@
 package utopia.genesis.shape.path
 
+import scala.math.Ordering.Double.TotalOrdering
+
 import utopia.genesis.shape.shape2D.Point
 
 /**
