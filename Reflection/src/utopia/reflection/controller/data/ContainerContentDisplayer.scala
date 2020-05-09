@@ -98,6 +98,11 @@ class ContainerContentDisplayer[A, Container <: MultiContainer[Display] with Sta
  sameItemCheck: (A, A) => Boolean = { (a: A, b: A) =>  a == b }, equalsCheck: Option[(A, A) => Boolean] = None)
 (makeItem: A => Display) extends ContentDisplayer[A, Display, P]
 {
+	// ATTRIBUTES   -----------------------
+	
+	private var displayRemovalListeners = Vector[Display => Unit]()
+	
+	
 	// INITIAL CODE	-----------------------
 	
 	setup()
@@ -115,7 +120,17 @@ class ContainerContentDisplayer[A, Container <: MultiContainer[Display] with Sta
 	
 	override protected def addDisplaysFor(values: Vector[A], index: Int) = container.insertMany(values.map(makeItem), index)
 	
-	override protected def dropDisplaysAt(range: Range) = container.removeComponentsIn(range)
+	override protected def dropDisplaysAt(range: Range) = container.removeComponentsIn(range).foreach { c =>
+		displayRemovalListeners.foreach { _(c) } }
 	
 	override protected def finalizeRefresh() = container.revalidate()
+	
+	
+	// OTHER    ---------------------------
+	
+	/**
+	 * Registers a function that will be called for each display that is removed from the managed container
+	 * @param listener Listener function that takes a display
+	 */
+	def addDisplayRemovalListener(listener: Display => Unit) = displayRemovalListeners :+= listener
 }
