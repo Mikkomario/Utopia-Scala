@@ -10,7 +10,7 @@ import utopia.vault.model.enumeration.BasicCombineOperator.And
 import utopia.vault.model.enumeration.ComparisonOperator.Equal
 import utopia.vault.model.enumeration.{BasicCombineOperator, ComparisonOperator}
 import utopia.vault.nosql.factory.{FromRowFactory, StorableFactory}
-import utopia.vault.sql.{Condition, Delete, Insert, SqlSegment, Update, Where}
+import utopia.vault.sql.{Condition, Delete, Insert, SqlSegment, SqlTarget, Update, Where}
 
 object Storable
 {
@@ -145,7 +145,7 @@ trait Storable extends ModelConvertible
      */
     def update(writeNulls: Boolean = false)(implicit connection: Connection) = 
     {
-        val update = indexCondition.map { cond => toUpdateStatement(writeNulls) + Where(cond) }
+        val update = indexCondition.map { cond => toUpdateStatement(writeNulls = writeNulls) + Where(cond) }
         
         update.exists
         {
@@ -164,30 +164,36 @@ trait Storable extends ModelConvertible
     /**
       * Performs an update based on this model, but applies a specific condition
       * @param condition Condition applied to this update
+      * @param customTarget Sql target that's being updated. None if only this storable's table should be updated (default)
       * @param writeNulls Whether empty (null) values should be pushed to the DB (default = false)
       * @param writeIndex Whether index value (if present) should be pushed to the DB (default = false)
       * @param connection Database connection (implicit)
       * @return Number of updated rows
       */
-    def updateWhere(condition: Condition, writeNulls: Boolean = false, writeIndex: Boolean = false)
-                   (implicit connection: Connection) =
-        connection(toUpdateStatement(writeNulls, writeIndex) + Where(condition)).updatedRowCount
+    def updateWhere(condition: Condition, customTarget: Option[SqlTarget] = None, writeNulls: Boolean = false,
+                    writeIndex: Boolean = false)(implicit connection: Connection) =
+        connection(toUpdateStatement(customTarget, writeNulls, writeIndex) + Where(condition)).updatedRowCount
     
     /**
      * Creates an update sql segment based on this storable instance. This update segment can then 
      * be combined with a condition in order to update row data to match that of this storable instance.
+      * @param customTarget Sql target that's being updated. None if only this storable's table should be updated (default).
      * @param writeNulls whether null / empty value assignments should be included in the update segment. 
-     * Defaults to false.
+     * Defaults to false. In general, this should only be used when row id is defined and you want to overwrite a row.
      * @param writeIndex whether index should specifically be included among the set column values 
      * (where applicable). Defaults to false.
      */
-    def toUpdateStatement(writeNulls: Boolean = false, writeIndex: Boolean = false) = 
+    def toUpdateStatement(customTarget: Option[SqlTarget] = None, writeNulls: Boolean = false, writeIndex: Boolean = false) =
     {
         val primaryColumn = table.primaryColumn
         val originalModel = if (writeNulls) toModel else toModel.withoutEmptyValues
         val updateModel = if (writeIndex || primaryColumn.isEmpty) 
                 originalModel else originalModel - primaryColumn.get.name
-        Update(table, updateModel)
+        customTarget match
+        {
+            case Some(target) => Update(target, table, updateModel)
+            case None => Update(table, updateModel)
+        }
     }
     
     /**
