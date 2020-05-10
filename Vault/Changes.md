@@ -1,6 +1,9 @@
 # Utopia Vault - List of Changes
 
-## v1.5.1 (Beta)
+## v1.6 (Beta)
+### Breaking Changes
+- Storable.toUpdateStatement and .updateWhere now take an optional SqlTarget as the first parameter. 
+This allows you to use these update methods in updates that require joins.
 ### Changes
 - Changed mergeCondition(...) methods in Accessor from protected to public
 
