@@ -68,14 +68,9 @@ higher abstraction layers when you need to edit them.
 ### Use of External Libraries
 This abstraction level concept is also why **I've opted to use as few external libraries as possible**.  
 I want to give **you** the freedom to **choose** which libraries suit you best while still 
-providing you with a easy-to-use foundation.
+providing you with an easy-to-use foundation.
 
-For example, the JSON interface I've written is not very efficient. 
-If you wish to use a standardized JSON interface instead, that's completely possible. And If you wish to utilize that 
-with typeless values and other features offered by *Utopia*, you can do what I've done and write a similar interface 
-yourself.
-
-The times I have opted to use external libraries (Utopia Disciple and Utopia Nexus for Tomcat), you can find out that 
+The times I have opted to use external libraries (Utopia Disciple, Utopia Nexus for Tomcat), you can find out that 
 most of the implementation code is in-fact independent from the libraries used. If you want to use different libraries, 
 you don't need to write that much code by yourself.
 
@@ -252,6 +247,9 @@ Below I've listed some individual features you may be interested in using, in ca
         - Please note that the current implementation of JSON parser prioritizes accessibility over performance and is not
         most efficient at this time. You may wish to use another parser for very large json files where performance
         becomes an issue.
+            - There is a much more efficient implementation of json reading in BunnyMunch module (JsonBunny). 
+            It offers the same benefits as JSONReader, just more efficiently. The difference is that 
+            JsonBunny leverages Jawn json parser while JSONReader is completely independent.
     
     Various data structures
         - Tree and Graph supports
@@ -512,7 +510,6 @@ When you wish to instantiate typeless values, please enable implicit value conve
 - **Value** - When you need to use attributes but you can't define their exact typing below Any
 - immutable.**Model**[Constant] - When you need to group a number of values together to form an object
 - **ThreadPool** - When you need an implicit ExecutionContext (you will find out when)
-- **JSONReader** - When you need to parse a string or a file into a JSON value / object
 - **XmlElement**, **XmlReader** & **XmlWriter** - When you need to deal with XML
 - **Loop** - When you need to loop a function or a process in background
 - **WaitUtils** - When you need to block / wait for a period of time
