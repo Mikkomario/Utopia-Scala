@@ -39,7 +39,7 @@ import java.nio.charset.Charset
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.impl.client.CloseableHttpClient
 import utopia.flow.generic.ModelType
-import utopia.flow.parse.{JSONReader, XmlReader}
+import utopia.flow.parse.{JSONReader, JsonParser, XmlReader}
 
 import scala.io.{Codec, Source}
 
@@ -69,6 +69,12 @@ object Gateway
 	 * response headers)
 	 */
 	var defaultResponseEncoding = Codec.UTF8
+	
+	/**
+	  * Set of custom json parsers to use when content encoding matches parser default. Specify your own parser/parsers
+	  * to override default functionality (JSONReader)
+	  */
+	var jsonParsers = Vector[JsonParser]()
 	
     
     // COMPUTED PROPERTIES    ----------------
@@ -219,8 +225,16 @@ object Gateway
 	 * @param headers Response body headers
 	 * @return Parsed json value
 	 */
-	def jsonFromResponse(stream: InputStream, headers: Headers) = JSONReader(stream,
-		headers.codec.getOrElse(defaultResponseEncoding))
+	def jsonFromResponse(stream: InputStream, headers: Headers) =
+	{
+		// Checks whether a custom parser can be used
+		val encoding = headers.codec.getOrElse(defaultResponseEncoding)
+		jsonParsers.find { _.defaultEncoding == encoding } match
+		{
+			case Some(parser) => parser(stream)
+			case None => JSONReader(stream, encoding)
+		}
+	}
 	
 	/**
 	 * Performs an asynchronous request and parses the response from JSON to a model. Expects response contents to

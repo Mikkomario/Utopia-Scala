@@ -9,9 +9,8 @@ import utopia.nexus.http.Response
 import javax.servlet.http.HttpServletRequest
 import utopia.nexus.http.Path
 import utopia.flow.datastructure.immutable.Model
-import utopia.flow.parse.JSONReader
+import utopia.flow.parse.{JSONReader, JsonParser}
 import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.StringType
 
 import scala.util.{Success, Try}
 import utopia.nexus.http.Request
@@ -77,7 +76,7 @@ object HttpExtensions
         /**
          * Converts a httpServletRequest into a http Request
          */
-        def toRequest(implicit settings: ServerSettings) = 
+        def toRequest(implicit settings: ServerSettings, jsonParser: JsonParser) =
         {
             val method = r.getMethod.toOption.flatMap(Method.parse)
             
@@ -94,8 +93,7 @@ object HttpExtensions
 
                 val javaCookies = Option(r.getCookies).map { _.toVector }.getOrElse(Vector())
                 val cookies = javaCookies.map { javaCookie => Cookie(javaCookie.getName, 
-                        javaCookie.getValue.toOption.flatMap { 
-                        JSONReader(_).toOption }.getOrElse(Value.emptyWithType(StringType)),
+                        javaCookie.getValue.toOption.map { jsonParser.valueOf }.getOrElse(Value.empty),
                         if (javaCookie.getMaxAge < 0) None else Some(javaCookie.getMaxAge), 
                         javaCookie.getSecure) }
                 
@@ -112,14 +110,14 @@ object HttpExtensions
                 None
         }
         
-        private def parseQueryParam(paramValue: String)(implicit settings: ServerSettings) =
+        private def parseQueryParam(paramValue: String)(implicit settings: ServerSettings, jsonParser: JsonParser) =
         {
             val decoded = settings.expectedParameterEncoding match
             {
                 case Some(encoding) => Try { URLDecoder.decode(paramValue, encoding.charSet.name()) }
                 case None => Success(paramValue)
             }
-            decoded.flatMap { JSONReader(_) }
+            decoded.map(jsonParser.valueOf)
         }
         
         private def bodyFromRequest(request: HttpServletRequest, headers: Headers) = 

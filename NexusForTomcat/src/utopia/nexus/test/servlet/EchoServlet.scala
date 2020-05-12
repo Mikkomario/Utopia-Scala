@@ -11,6 +11,7 @@ import utopia.nexus.servlet.HttpExtensions._
 import utopia.nexus.http.ServerSettings
 import utopia.flow.datastructure.mutable
 import utopia.flow.datastructure.immutable.Model
+import utopia.flow.parse.{JSONReader, JsonParser}
 import utopia.nexus.http.Body
 
 /**
@@ -30,6 +31,7 @@ class EchoServlet extends HttpServlet
     
     DataType.setup()
     private implicit val settings: ServerSettings = ServerSettings("http://localhost:9999")
+    private implicit val jsonParser: JsonParser = JSONReader
     
     
     // IMPLEMENTED METHODS    ----------------

@@ -8,6 +8,10 @@
 - Generator
     - .apply method in Generator object now takes two parameter lists instead of one
         
+### Deprecations
+- FromModelFactory.fromJSON was deprecated in favor of new .fromJson method that takes an implicit 
+JsonParser as a parameter.
+        
 ### New Features
 - ValueUnwraps -extensions added to utopia.flow.generic -package. By importing these extensions, you 
 can automatically unwrap values to most basic types (saves you from writing value.string or value.getInt etc.)
@@ -24,6 +28,9 @@ collection types when used.
     - Added .getOrMap(...) to Try
     
 ### Other Changes
+- JsonParser trait added, which JSONReader now implements. The purpose of this change is to 
+offer a way to use alternative parsers when necessary (see BunnyMunch module for one 
+alternative implementation)
 - ModelDeclaration.validate now makes sure the required values are non-empty. This applies for 
 String, Vector and Model type value requirements.
 - Instant now has <= and >= methods through TimeExtensions

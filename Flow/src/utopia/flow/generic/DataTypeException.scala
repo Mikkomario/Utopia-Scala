@@ -8,7 +8,7 @@ package utopia.flow.generic
  * @param message The message sent along with the exception
  * @param cause The cause of the exception (optional)
  */
-case class DataTypeException(val message: String, val cause: Throwable = null) extends 
+case class DataTypeException(message: String, cause: Throwable = null) extends
         RuntimeException(message, cause)
 {
     /**

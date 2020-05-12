@@ -17,9 +17,9 @@ import scala.util.Try
   * @author Mikko Hilpinen
   * @since 22.7.2019, v1.6+
   */
-object JSONReader
+object JSONReader extends JsonParser
 {
-	private val defaultEncoding = Codec.UTF8
+	val defaultEncoding = Codec.UTF8
 	
 	/**
 	  * Parses the contents of a stream

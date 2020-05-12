@@ -4,13 +4,16 @@ import scala.language.postfixOps
 import utopia.access.http.ContentCategory._
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.FileExtensions._
+import utopia.flow.util.CollectionExtensions._
 import java.io.{BufferedReader, File, FileOutputStream, OutputStream}
 
 import utopia.access.http.ContentType
 import utopia.access.http.Headers
+import utopia.flow.datastructure.immutable.Model
+import utopia.flow.generic.DataTypeException
 
-import scala.util.Try
-import utopia.flow.parse.{JSONReader, XmlReader}
+import scala.util.{Success, Try}
+import utopia.flow.parse.{JSONReader, JsonParser, XmlReader}
 
 /**
 * This class represents a body send along with a request. These bodies can only be read once.
@@ -39,16 +42,45 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
     /**
       * @return A buffered version of this body where contents are parsed from a JSON into a value
       */
+    def bufferedJson(implicit parser: JsonParser) = bufferedToString.map { _.flatMap { parser(_) } }
+    
+    /**
+      * @return A buffered version of this body where contents are parsed from a JSON into a value
+      */
+    def bufferedJsonObject(implicit parser: JsonParser) = bufferedToString.map {
+        _.flatMap { parser(_).flatMap { v =>
+            if (v.isEmpty)
+                Success(Model.empty)
+            else
+                v.model.toTry { DataTypeException(s"${v.description} can't be converted to model") }
+        } } }
+    
+    /**
+      * @return A buffered version of this body where contents are parsed from a JSON array into a vector of values
+      */
+    def bufferedJsonArray = bufferedToString.map { _.flatMap { JSONReader(_) }.flatMap { v =>
+        if (v.isEmpty)
+            Success(Vector())
+        else
+            v.vector.toTry { DataTypeException(s"${v.description} can't be converted to a vector") }
+    } }
+    
+    /**
+      * @return A buffered version of this body where contents are parsed from a JSON into a value
+      */
+    @deprecated("Please use bufferedJson instead", "v1.5")
     def bufferedJSON = bufferedToString.map { _.flatMap { JSONReader(_) } }
     
     /**
      * @return A buffered version of this body where contents are parsed from a JSON into a value
      */
+    @deprecated("Please use BufferedJsonObject instead", "v1.5")
     def bufferedJSONModel = bufferedToString.map { _.flatMap { JSONReader(_).map { _.getModel } } }
     
     /**
       * @return A buffered version of this body where contents are parsed from a JSON array into a vector of values
       */
+    @deprecated("Please use BufferedJsonArray instead", "v1.5")
     def bufferedJSONArray = bufferedToString.map { _.flatMap { JSONReader(_) }.map { _.getVector } }
     
     /**
