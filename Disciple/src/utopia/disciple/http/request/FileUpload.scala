@@ -1,8 +1,9 @@
-package utopia.disciple.http
+package utopia.disciple.http.request
 
 import java.io.File
-import utopia.access.http.ContentType
 import java.nio.charset.Charset
+
+import utopia.access.http.ContentType
 
 object FileUpload
 {
@@ -26,4 +27,4 @@ object FileUpload
 * @author Mikko Hilpinen
 * @since 19.2.2018
 **/
-case class FileUpload(val file: File, val contentType: ContentType, val charset: Option[Charset] = None)
+case class FileUpload(file: File, contentType: ContentType, charset: Option[Charset] = None)

@@ -1,9 +1,10 @@
-package utopia.disciple.http
+package utopia.disciple.http.request
 
-import java.io.File
-import utopia.access.http.ContentType
+import java.io.{File, FileInputStream}
 import java.nio.charset.Charset
-import java.io.FileInputStream
+
+import utopia.access.http.ContentType
+
 import scala.util.Try
 
 /**

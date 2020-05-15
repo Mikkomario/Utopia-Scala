@@ -8,10 +8,7 @@ import scala.language.postfixOps
 import utopia.access.http.Method
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpDelete, HttpGet, HttpPatch, HttpPost, HttpPut}
 import org.apache.http.impl.client.HttpClients
-import utopia.disciple.http.Request
-import utopia.disciple.http.StreamedResponse
 import utopia.access.http.Status
-import utopia.access.http.Status._
 import utopia.access.http.Headers
 
 import scala.util.Try
@@ -21,23 +18,26 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import java.io.InputStream
 
-import scala.concurrent.Promise
 import utopia.flow.util.AutoClose._
-import utopia.disciple.http.BufferedResponse
+import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.TimeExtensions._
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.Consts
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.HttpEntity
 import org.apache.http.client.utils.URIBuilder
-import utopia.disciple.http.Body
 import org.apache.http.message.BasicHeader
 import java.io.OutputStream
 import java.net.URLEncoder
 import java.nio.charset.Charset
 
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.impl.client.CloseableHttpClient
+import utopia.disciple.http.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
+import utopia.disciple.http.request.{Body, Request, Timeout}
+import utopia.disciple.http.response.{ResponseParser, StreamedResponse}
 import utopia.flow.generic.ModelType
 import utopia.flow.parse.{JSONReader, JsonParser, XmlReader}
 
@@ -53,9 +53,7 @@ object Gateway
 {
     // ATTRIBUTES    -------------------------
     
-    private val _introducedStatuses = Vector[Status](OK, Created, Accepted, NoContent, NotModified, 
-            BadRequest, Unauthorized, Forbidden, NotFound, MethodNotAllowed, 
-            InternalServerError, NotImplemented, ServiceUnavailable)
+    private var _introducedStatuses = Status.values
     
     private val connectionManager = new PoolingHttpClientConnectionManager()
     
@@ -68,13 +66,18 @@ object Gateway
 	 * Default character encoding used when parsing response data (used when no character encoding is specified in
 	 * response headers)
 	 */
-	var defaultResponseEncoding = Codec.UTF8
+	implicit var defaultResponseEncoding: Codec = Codec.UTF8
 	
 	/**
 	  * Set of custom json parsers to use when content encoding matches parser default. Specify your own parser/parsers
 	  * to override default functionality (JSONReader)
 	  */
 	var jsonParsers = Vector[JsonParser]()
+	
+	/**
+	  * Maximum timeouts for a single request. Changing this value will affect all future requests.
+	  */
+	var maximumTimeout = Timeout(connection = 5.minutes, read = 5.minutes)
 	
     
     // COMPUTED PROPERTIES    ----------------
@@ -103,16 +106,38 @@ object Gateway
     
     // TODO: Add support for multipart body:
     // https://stackoverflow.com/questions/2304663/apache-httpclient-making-multipart-form-post
-    
+	
+	/**
+	  * Introduces the specified status as one of the recognized statuses in this interface. The new status
+	  * will replace a possible existing status with the same code.
+	  * @param status Status to recognize in future responses
+	  */
+	def introduceStatus(status: Status) =
+		_introducedStatuses = _introducedStatuses.filterNot { _.code == status.code } :+ status
+	
+	/**
+	  * Introduces a number of new statuses so that they are recognized by this interface. New status versions will
+	  * replace possible already existing statuses with same codes.
+	  * @param statuses Statues to recognize in future responses.
+	  */
+	def introduceStatuses(statuses: Iterable[Status]) =
+	{
+		val newStatuses = statuses.distinctBy { _.code }
+		_introducedStatuses = _introducedStatuses.filterNot { s =>
+			newStatuses.exists { _.code == s.code } } ++ newStatuses
+	}
+	
     /**
      * Performs a synchronous request over a HTTP connection, calling the provided function 
-     * when a response is received
+     * when a response is received. <b>Please note that this function blocks during the request</b>
      * @param request the request that is sent to the server
      * @param consumeResponse the function that handles the server response (or the lack of it)
+	  * @tparam R Type of consume function result
+	  * @return Consume function result
      */
-    def makeRequest(request: Request)(consumeResponse: Try[StreamedResponse] => Unit) =
+    def makeBlockingRequest[R](request: Request)(consumeResponse: Try[StreamedResponse] => R) =
     {
-        try
+        Try
         {
             // Makes the base request (uri + params + body)
             val base = makeRequestBase(request.method, request.requestUri, request.params, request.body,
@@ -121,12 +146,27 @@ object Gateway
             // Adds the headers
             request.headers.fields.foreach { case (key, value) => base.addHeader(key, value) }
             
+			// Sets the timeout
+			val config =
+			{
+				val builder = RequestConfig.custom()
+				(request.timeout min maximumTimeout).thresholds.view.mapValues { _.toMillis.toInt }.foreach { case (timeoutType, millis) =>
+					timeoutType match
+					{
+						case ConnectionTimeout => builder.setConnectTimeout(millis)
+						case ReadTimeout => builder.setSocketTimeout(millis)
+						case ManagerTimeout => builder.setConnectionRequestTimeout(millis)
+					}
+				}
+				builder.build()
+			}
+			base.setConfig(config)
+			
             // Performs the request and consumes any response
 			client.execute(base).consume { response => consumeResponse(Success(wrapResponse(response))) }
-        }
-        catch
-        {
-            case e: Exception => consumeResponse(Failure(e))
+        } match {
+			case Success(result) => result
+            case Failure(error) => consumeResponse(Failure(error))
         }
     }
     
@@ -135,47 +175,31 @@ object Gateway
      * when a response is received
      * @param request the request that is sent to the server
      * @param consumeResponse the function that handles the server response (or the lack of it)
+	  * @tparam R Consume function result type
+	  * @return Future with eventual consume function results
      */
-    def makeAsyncRequest(request: Request)(consumeResponse: Try[StreamedResponse] => Unit)
-            (implicit context: ExecutionContext): Unit = Future(makeRequest(request)(consumeResponse))
-    
+    def makeRequest[R](request: Request)(consumeResponse: Try[StreamedResponse] => R)
+					  (implicit context: ExecutionContext) = Future { makeBlockingRequest(request)(consumeResponse) }
+	
+	/**
+	  * Performs a request and buffers / parses it to the program memory
+	  * @param request the request that is sent to the server
+	  * @param parser the function that parses the response stream contents
+	  * @return A future that holds the request results. Contains a failure if no data was received.
+	  */
+	def responseFor[A](request: Request)(parser: ResponseParser[A])
+					  (implicit context: ExecutionContext) =
+		makeRequest(request) { result => result.map { _.buffered(parser) } }
+	
     /**
      * Performs a request and buffers / parses it to the program memory
      * @param request the request that is sent to the server
      * @param parseResponse the function that parses the response stream contents
      * @return A future that holds the request results. Please note that the Future is a failure if no data was received.
      */
+	@deprecated("replaced with responseFor(...)", "v1.3")
     def getResponse[A](request: Request)(parseResponse: (InputStream, Headers) => Try[A])(implicit context: ExecutionContext) =
-    {
-        val response = Promise[BufferedResponse[Try[A]]]()
-        makeAsyncRequest(request) { result => response.complete(result.map { _.buffered(parseResponse) }) }
-        response.future
-    }
-	
-	/**
-	 * Performs a request and buffers / parses it to the program memory
-	 * @param request the request that is sent to the server
-	 * @param parseSuccess A function for parsing response contents on a success (2XX) response
-	 * @param parseFailure A function for parsing response contents on a failure / error response
-	 * @return A future that holds the request results. Please note that the Future is a failure if no data was received.
-	 */
-	def getSuccessOrFailureResponse[S, F](request: Request)(parseSuccess: (InputStream, Headers) => Try[S])
-										 (parseFailure: (InputStream, Headers) => Try[F])(implicit context: ExecutionContext) =
-	{
-		val response = Promise[Either[BufferedResponse[Try[F]], BufferedResponse[Try[S]]]]()
-		makeAsyncRequest(request) { result =>
-			
-			val buffered = result.map { response =>
-				if (response.isSuccess)
-					Right(response.buffered(parseSuccess))
-				else
-					Left(response.buffered(parseFailure))
-			}
-			
-			response.complete(buffered)
-		}
-		response.future
-	}
+		responseFor(request)(ResponseParser.failOnEmpty { (stream, headers, _) => parseResponse(stream, headers) })
 	
 	/**
 	  * Performs a request and buffers / parses it to the program memory
@@ -184,13 +208,22 @@ object Gateway
 	  * @param parseResponse the function that parses the response stream contents
 	  * @return A future that holds the request results. Please note that the Future is a failure if no data was received.
 	  */
+	@deprecated("Replaced with responseFor(...)", "v1.3")
 	def getResponse[A](request: Request, contentOnEmptyResponse: => A)(parseResponse: (InputStream, Headers) => Try[A])
 					  (implicit context: ExecutionContext) =
 	{
-		val response = Promise[BufferedResponse[Try[A]]]()
-		makeAsyncRequest(request)(result => response.complete(result.map { _.bufferedOr(contentOnEmptyResponse)(parseResponse) }))
-		response.future
+		responseFor(request)(ResponseParser.defaultOnEmpty(contentOnEmptyResponse) { (stream, headers, _) =>
+			parseResponse(stream, headers) })
 	}
+	
+	/**
+	  * Performs an asynchronous request and parses the response body into a string (empty string on empty
+	  * responses and read failures)
+	  * @param request Request to send
+	  * @param exc Implicit execution context
+	  * @return Future with the buffered response
+	  */
+	def stringResponseFor(request: Request)(implicit exc: ExecutionContext) = responseFor(request)(ResponseParser.string)
 	
 	/**
 	  * Performs an asynchronous request and parses the response to program memory as string
@@ -198,8 +231,9 @@ object Gateway
 	  * @param context An implicit execution context
 	  * @return A future for the parsed response
 	  */
+	@deprecated("Please use stringResponseFor(...) instead", "v1.3")
 	def getStringResponse(request: Request)(implicit context: ExecutionContext) =
-		getResponse(request, "")(stringFromResponse)
+		responseFor(request)(ResponseParser.tryString)
 	
 	/**
 	 * A parsing function that reads response contents as a string
@@ -207,8 +241,19 @@ object Gateway
 	 * @param headers Response body headers
 	 * @return Parsed string. May contain failure.
 	 */
+	@deprecated("Replaced with ResponseParser.tryString", "v1.3")
 	def stringFromResponse(stream: InputStream, headers: Headers) = Try {
 		Source.fromInputStream(stream)(headers.codec.getOrElse(defaultResponseEncoding)).consume { _.getLines.mkString } }
+	
+	/**
+	  * Performs an asynchronous request and parses response body into a value (empty value on empty responses and
+	  * read failures). Supports json and xml content types. Other content types are read as raw strings.
+	  * @param request Request to send
+	  * @param exc Implicit execution context
+	  * @return Future with the buffered response
+	  */
+	def valueResponseFor(request: Request)(implicit exc: ExecutionContext) = responseFor(request)(
+		ResponseParser.valueWith(jsonParsers))
 	
 	/**
 	  * Performs an asynchronous request and parses the response from JSON
@@ -216,6 +261,7 @@ object Gateway
 	  * @param context Implicit execution context
 	  * @return A future for the parsed response
 	  */
+	@deprecated("Please use valueResponseFor(...) instead", "v1.3")
 	def getJSONResponse(request: Request)(implicit context: ExecutionContext) =
 		getResponse(request, Value.empty)(jsonFromResponse)
 	
@@ -225,6 +271,7 @@ object Gateway
 	 * @param headers Response body headers
 	 * @return Parsed json value
 	 */
+	@deprecated("Replaced with ResponseParser.value(...)", "v1.3")
 	def jsonFromResponse(stream: InputStream, headers: Headers) =
 	{
 		// Checks whether a custom parser can be used
@@ -237,12 +284,23 @@ object Gateway
 	}
 	
 	/**
+	  * Performs an asynchronous request and parses response body into a model (empty model on empty responses and
+	  * read/parse failures). Supports json and xml content types.
+	  * @param request Request to send
+	  * @param exc Implicit execution context
+	  * @return Future with the buffered response
+	  */
+	def modelResponseFor(request: Request)(implicit exc: ExecutionContext) = responseFor(request)(
+		ResponseParser.modelWith(jsonParsers))
+	
+	/**
 	 * Performs an asynchronous request and parses the response from JSON to a model. Expects response contents to
 	 * be a json object.
 	 * @param request Request set to server
 	 * @param context Implicit execution context
 	 * @return A future for the parsed response
 	 */
+	@deprecated("Replaced with modelResponseFor(...)", "v1.3")
 	def getJSONModelResponse(request: Request)(implicit context: ExecutionContext) =
 		getResponse(request, Model.empty)(jsonModelFromResponse)
 	
@@ -252,7 +310,19 @@ object Gateway
 	 * @param headers Response body headers
 	 * @return Parsed json model
 	 */
+	@deprecated("Replaced with modelResponseFor(...)", "v1.3")
 	def jsonModelFromResponse(stream: InputStream, headers: Headers) = jsonFromResponse(stream, headers).map { _.getModel }
+	
+	/**
+	  * Performs an asynchronous request and parses response body into a value vector (empty vector on empty responses and
+	  * read failures). Supports json and xml content types. Other content types are interpreted as strings and
+	  * converted to values, then wrapped in a vector.
+	  * @param request Request to send
+	  * @param exc Implicit execution context
+	  * @return Future with the buffered response
+	  */
+	def valueVectorResponseFor(request: Request)(implicit exc: ExecutionContext) =
+		responseFor(request)(ResponseParser.valuesWith(jsonParsers))
 	
 	/**
 	 * Performs an asynchronous request and parses the response from JSON to a vector. Expects response contents
@@ -261,6 +331,7 @@ object Gateway
 	 * @param context Implicit execution context
 	 * @return A future for the parsed response
 	 */
+	@deprecated("Replaced with valueVectorResponseFor(...)", "v1.3")
 	def getJSONVectorResponse(request: Request)(implicit context: ExecutionContext) =
 		getResponse(request, Vector[Value]())(jsonVectorFromResponse)
 	
@@ -270,7 +341,19 @@ object Gateway
 	 * @param headers Response body headers
 	 * @return Parsed values
 	 */
+	@deprecated("Replaced with valueVectorResponseFor(...)", "v1.3")
 	def jsonVectorFromResponse(stream: InputStream, headers: Headers) = jsonFromResponse(stream, headers).map { _.getVector }
+	
+	/**
+	  * Performs an asynchronous request and parses response body into a model vector (empty vector on empty responses and
+	  * read/parse failures). Supports json and xml content types. Responses with only a single model have their
+	  * contents wrapped in a vector.
+	  * @param request Request to send
+	  * @param exc Implicit execution context
+	  * @return Future with the buffered response
+	  */
+	def modelVectorResponseFor(request: Request)(implicit exc: ExecutionContext) =
+		responseFor(request)(ResponseParser.modelsWith(jsonParsers))
 	
 	/**
 	 * Performs an asynchronous request and parses the response from JSON to a number of models. Expects response contents
@@ -279,6 +362,7 @@ object Gateway
 	 * @param context Implicit execution context
 	 * @return A future for the parsed response
 	 */
+	@deprecated("Replaced with modelVectorResponseFor(...)", "v1.3")
 	def getJSONMultiModelResponse(request: Request)(implicit context: ExecutionContext) =
 		getResponse(request, Vector[Model[Constant]]())(multipleJsonModelsFromResponse)
 	
@@ -288,6 +372,7 @@ object Gateway
 	 * @param headers Response body headers
 	 * @return Parsed model(s)
 	 */
+	@deprecated("Replaced with modelVectorResponseFor(...)", "v1.3")
 	def multipleJsonModelsFromResponse(stream: InputStream, headers: Headers) = jsonFromResponse(stream, headers).map { v =>
 		if (v.isOfType(ModelType))
 			Vector(v.getModel)
@@ -296,11 +381,21 @@ object Gateway
 	}
 	
 	/**
+	  * Performs an asynchronous request and parses response body into an xml element (failure on empty responses and
+	  * read/parse failures).
+	  * @param request Request to send
+	  * @param exc Implicit execution context
+	  * @return Future with the buffered response
+	  */
+	def xmlResponseFor(request: Request)(implicit exc: ExecutionContext) = responseFor(request)(ResponseParser.xml)
+	
+	/**
 	  * Performs an asynchronous request and parses the response to Xml
 	  * @param request Request sent to the server
 	  * @param context Implicit execution context
 	  * @return A future for the parsed response
 	  */
+	@deprecated("Replaced with xmlResponseFor(...)", "v1.3")
 	def getXmlResponse(request: Request)(implicit context: ExecutionContext) =
 		getResponse(request)(xmlFromResponse)
 	
@@ -310,6 +405,7 @@ object Gateway
 	 * @param headers Response body headers
 	 * @return Parsed xml element
 	 */
+	@deprecated("Replaced with xmlResponseFor(...)", "v1.3")
 	def xmlFromResponse(stream: InputStream, headers: Headers) = XmlReader.parseStream(stream,
 		headers.charset.getOrElse(Charset.forName("UTF-8")))
 	
@@ -386,7 +482,7 @@ object Gateway
 	    val status = statusForCode(response.getStatusLine.getStatusCode)
 	    val headers = new Headers(response.getAllHeaders.map(h => (h.getName, h.getValue)).toMap)
 	    
-	    new StreamedResponse(status, headers, () => response.getEntity.getContent)
+	    new StreamedResponse(status, headers)({ response.getEntity.getContent })
 	}
 	
 	private def statusForCode(code: Int) = _introducedStatuses.find(

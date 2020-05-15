@@ -60,13 +60,13 @@ object Status
       * MUST NOT contain a message-body, and thus is always terminated by the first empty line after the
       * header fields.
       */
-    case object NotModified extends Status("Not Modified", 304)
+    case object NotModified extends Status("Not Modified", 304, isTemporary = true)
     
     /**
       * The request could not be understood by the server due to malformed syntax. The client SHOULD NOT
       * repeat the request without modifications.
       */
-    case object BadRequest extends Status("Bad Request", 400)
+    case object BadRequest extends Status("Bad Request", 400, doNotRepeat = true)
     
     /**
       * The request requires user authentication. The response MUST include a WWW-Authenticate header field
@@ -78,7 +78,7 @@ object Status
       * was given in the response, since that entity might include relevant diagnostic information.
       * HTTP access authentication is explained in "HTTP Authentication: Basic and Digest Access Authentication"
       */
-    case object Unauthorized extends Status("Unauthorized", 401)
+    case object Unauthorized extends Status("Unauthorized", 401, doNotRepeat = true)
     
     /**
       * The server understood the request, but is refusing to fulfill it. Authorization will not help
@@ -87,7 +87,7 @@ object Status
       * refusal in the entity. If the server does not wish to make this information available to the
       * client, the status code 404 (Not Found) can be used instead.
       */
-    case object Forbidden extends Status("Forbidden", 403)
+    case object Forbidden extends Status("Forbidden", 403, doNotRepeat = true)
     
     /**
       * The server has not found anything matching the Request-URI. No indication is given of whether
@@ -104,7 +104,7 @@ object Status
       * Request-URI. The response MUST include an Allow header containing a list of valid methods for
       * the requested resource.
       */
-    case object MethodNotAllowed extends Status("Method Not Allowed", 405)
+    case object MethodNotAllowed extends Status("Method Not Allowed", 405, doNotRepeat = true)
     
     /**
       * The server encountered an unexpected condition which prevented it from fulfilling the request.
@@ -116,7 +116,7 @@ object Status
       * appropriate response when the server does not recognize the request method and is not
       * capable of supporting it for any resource.
       */
-    case object NotImplemented extends Status("Not Implemented", 501)
+    case object NotImplemented extends Status("Not Implemented", 501, doNotRepeat = true)
     
     /**
       * The server is currently unable to handle the request due to a temporary overloading or
@@ -125,7 +125,16 @@ object Status
       * Retry-After header. If no Retry-After is given, the client SHOULD handle the response as it
       * would for a 500 response.
       */
-    case object ServiceUnavailable extends Status("Service Unavailable", 503)
+    case object ServiceUnavailable extends Status("Service Unavailable", 503, isTemporary = true)
+    
+    
+    // OTHER    ----------------------------
+    
+    /**
+      * All Values listed in this project
+      */
+    val values = Vector[Status](OK, Created, Accepted, NoContent, NotModified, BadRequest, Unauthorized, Forbidden,
+        NotFound, MethodNotAllowed, InternalServerError, NotImplemented, ServiceUnavailable)
 }
 
 /**
@@ -133,8 +142,18 @@ object Status
  * See also: https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html [referenced: 25.11.2017]
  * @author Mikko Hilpinen
  * @since 20.8.2017
+  * @param name Status name (for human readers)
+  * @param code Status code
+  * @param isTemporary Whether it is known that this status may change in future requests after a delay. False if
+  *                    status is permanent or it's not known whether it could be temporary (see 'doNotRepeat' for
+  *                    possible details)
+  * @param doNotRepeat Whether it is known that the current version of the server is very likely to never accept
+  *                    the request as it is currently presented and therefore the client shouldn't try to re-send the
+  *                    request. False if it is unknown whether the server status may change in time or if this current
+  *                    status is only temporary (see 'isTemporary' for more details)
  */
-class Status(val name: String, val code: Int) extends Equatable
+class Status(val name: String, val code: Int, val isTemporary: Boolean = false, val doNotRepeat: Boolean = false)
+    extends Equatable
 {
     // ATTRIBUTES    -----------------------
     

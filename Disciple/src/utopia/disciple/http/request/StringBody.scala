@@ -1,12 +1,12 @@
-package utopia.disciple.http
+package utopia.disciple.http.request
+
+import java.io.ByteArrayInputStream
+import java.nio.charset.{Charset, StandardCharsets}
 
 import utopia.access.http.ContentCategory._
-
 import utopia.access.http.ContentType
-import java.nio.charset.Charset
-import java.io.ByteArrayInputStream
+
 import scala.util.Success
-import java.nio.charset.StandardCharsets
 
 object StringBody
 {

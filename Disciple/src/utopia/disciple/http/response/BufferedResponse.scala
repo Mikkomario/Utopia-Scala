@@ -1,7 +1,6 @@
-package utopia.disciple.http
+package utopia.disciple.http.response
 
-import utopia.access.http.Status
-import utopia.access.http.Headers
+import utopia.access.http.{Headers, Status}
 
 import scala.util.{Failure, Success}
 

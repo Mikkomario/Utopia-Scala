@@ -1,14 +1,12 @@
-package utopia.disciple.http
+package utopia.disciple.http.request
 
-import scala.language.postfixOps
-import utopia.flow.util.AutoClose._
+import java.io.{InputStream, OutputStream}
+import java.nio.charset.Charset
 
 import utopia.access.http.ContentType
-import java.nio.charset.Charset
+import utopia.flow.util.AutoClose._
+
 import scala.util.Try
-import java.io.InputStream
-import java.io.OutputStream
-import java.io.IOException
 
 /**
 * A body can be placed in an http request
@@ -54,19 +52,18 @@ trait Body
 	// OTHER METHODS    ---------------------
 	
 	/**
-	 * Writes the contents of this body's stream into an output stream. Best performance is 
+	 * Writes the contents of this body's stream into an output stream. Best performance is
 	 * achieved if both streams are buffered.
 	 */
-	def writeTo(output: OutputStream) = 
+	def writeTo(output: OutputStream) =
 	{
 	    // See: https://stackoverflow.com/questions/6927873/
 	    // how-can-i-read-a-file-to-an-inputstream-then-write-it-into-an-outputstream-in-sc
-	    stream.flatMap(_.tryConsume(input => 
-	    {
-	        Iterator 
+	    stream.flatMap { _.tryConsume { input =>
+	        Iterator
             .continually (input.read)
-            .takeWhile (-1 !=)
+            .takeWhile { _ != -1 }
             .foreach (output.write)
-	    }))
+		} }
 	}
 }

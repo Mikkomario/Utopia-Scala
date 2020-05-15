@@ -16,63 +16,6 @@ object CollectionExtensions
     class SeqOperations[Repr, S <: IsSeq[Repr]](coll: Repr, seq: S)
     {
         /**
-         * Filters a seq so that only distinct values remain. Uses a special function to determine equality
-         * @param equals A function that determines whether two values are equal
-         * @param buildFrom Builder for the new collection
-         * @return A collection with only distinct values (when considering the provided 'equals' function)
-         */
-        def distinctWith(equals: (seq.A, seq.A) => Boolean)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
-        {
-            val seqOps = seq(coll)
-            val builder = buildFrom.newBuilder(coll)
-            val collected = mutable.HashSet[seq.A]()
-            
-            seqOps.foreach { item =>
-                if (!collected.exists { e => equals(e, item) })
-                {
-                    builder += item
-                    collected += item
-                }
-            }
-            
-            builder.result()
-        }
-    
-        /**
-         * Filters a seq so that only distinct values remain. Compares the values by mapping them.
-         * @param f A mapping function to produce comparable values
-         * @param buildFrom A builder (implicit) to build the final collection
-         * @tparam B Map target type
-         * @return A collection with only distinct values (based on mapping)
-         */
-        def distinctBy[B](f: seq.A => B)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
-            distinctWith { (a, b) => f(a) == f(b) }
-    
-        /**
-         * This function works like foldLeft, except that it stores each step (including the start) into a seq
-         * @param start The starting step
-         * @param map A function for calculating the next step, takes the previous result + the next item in this seq
-         * @param buildFrom A buildfrom for final collection (implicit)
-         * @tparam B The type of steps
-         * @tparam That The type of final collection
-         * @return All of the steps mapped into a collection
-         */
-        def foldMapLeft[B, That](start: B)(map: (B, seq.A) => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
-        {
-            val builder = buildFrom.newBuilder(coll)
-            var last = start
-            builder += last
-    
-            val seqOps = seq(coll)
-            seqOps.foreach { item =>
-                last = map(last, item)
-                builder += last
-            }
-    
-            builder.result()
-        }
-    
-        /**
          * Maps a single item in this sequence
          * @param index The index that should be mapped
          * @param f A mapping function
@@ -660,6 +603,63 @@ object CollectionExtensions
     
     class IterableOnceOperations[Repr, I <: IsIterableOnce[Repr]](coll: Repr, iter: I)
     {
+        /**
+          * Filters this collection so that only distinct values remain. Uses a special function to determine equality
+          * @param equals A function that determines whether two values are equal
+          * @param buildFrom Builder for the new collection
+          * @return A collection with only distinct values (when considering the provided 'equals' function)
+          */
+        def distinctWith(equals: (iter.A, iter.A) => Boolean)(implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
+        {
+            val iterOps = iter(coll)
+            val builder = buildFrom.newBuilder(coll)
+            val collected = mutable.HashSet[iter.A]()
+        
+            iterOps.iterator.foreach { item =>
+                if (!collected.exists { e => equals(e, item) })
+                {
+                    builder += item
+                    collected += item
+                }
+            }
+        
+            builder.result()
+        }
+    
+        /**
+          * Filters this collection so that only distinct values remain. Compares the values by mapping them.
+          * @param f A mapping function to produce comparable values
+          * @param buildFrom A builder (implicit) to build the final collection
+          * @tparam B Map target type
+          * @return A collection with only distinct values (based on mapping)
+          */
+        def distinctBy[B](f: iter.A => B)(implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
+            distinctWith { (a, b) => f(a) == f(b) }
+    
+        /**
+          * This function works like foldLeft, except that it stores each step (including the start) into a seq
+          * @param start The starting step
+          * @param map A function for calculating the next step, takes the previous result + the next item in this seq
+          * @param buildFrom A buildfrom for final collection (implicit)
+          * @tparam B The type of steps
+          * @tparam That The type of final collection
+          * @return All of the steps mapped into a collection
+          */
+        def foldMapLeft[B, That](start: B)(map: (B, iter.A) => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
+        {
+            val builder = buildFrom.newBuilder(coll)
+            var last = start
+            builder += last
+        
+            val iterOps = iter(coll)
+            iterOps.iterator.foreach { item =>
+                last = map(last, item)
+                builder += last
+            }
+        
+            builder.result()
+        }
+        
         // Referenced from: https://stackoverflow.com/questions/22090371/scala-grouping-list-of-tuples [10.10.2018]
         /**
           * Converts this iterable item to a map with possibly multiple values per key
