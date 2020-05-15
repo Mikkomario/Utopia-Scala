@@ -162,6 +162,29 @@ object ResponseParser
 		successOrFailure[Either[F, S]] { (stream, headers) => Right(parseSuccess(stream, headers)) } {
 			(stream, headers) => Left(parseFailure(stream, headers)) }
 	
+	/**
+	  * Combines two response parsers, using one in success statuses and other for failure statuses
+	  * @param successParser Success response parser
+	  * @param failureParser Failure response parser
+	  * @tparam F Failure response type
+	  * @tparam S Success response type
+	  * @return A response parser that contains either success or failure result, based on response status
+	  */
+	def eitherSuccessOrFailure[F, S](successParser: ResponseParser[S], failureParser: ResponseParser[F]) =
+	{
+		apply { (stream, headers, status) =>
+			if (StatusGroup.failure.contains(status.group))
+				Left(failureParser(stream, headers, status))
+			else
+				Right(successParser(stream, headers, status))
+		} { (headers, status) =>
+			if (StatusGroup.failure.contains(status.group))
+				Left(failureParser(headers, status))
+			else
+				Right(successParser(headers, status))
+		}
+	}
+	
 	private def parseValue(stream: InputStream, headers: Headers, parsers: Iterable[JsonParser])
 						  (implicit defaultEncoding: Codec): Try[Value] =
 	{
