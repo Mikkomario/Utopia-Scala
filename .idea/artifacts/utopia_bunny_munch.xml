@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="utopia-bunny-munch">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_bunny_munch</output-path>
+    <root id="archive" name="utopia-bunny-munch.jar">
+      <element id="module-output" name="BunnyMunch" />
+      <element id="module-source" name="BunnyMunch" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/BunnyMunch/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>
