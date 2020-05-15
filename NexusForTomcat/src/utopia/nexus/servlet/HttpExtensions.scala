@@ -9,7 +9,7 @@ import utopia.nexus.http.Response
 import javax.servlet.http.HttpServletRequest
 import utopia.nexus.http.Path
 import utopia.flow.datastructure.immutable.Model
-import utopia.flow.parse.{JSONReader, JsonParser}
+import utopia.flow.parse.JsonParser
 import utopia.flow.datastructure.immutable.Value
 
 import scala.util.{Success, Try}
