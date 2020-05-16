@@ -13,7 +13,7 @@ import scala.util.{Failure, Success, Try}
  * @author Mikko Hilpinen
  * @since 21.8.2019, v1.3.1+
  */
-trait MultiLinkedStorableFactory[+Parent, Child] extends FromResultFactory[Parent]
+trait MultiLinkedFactory[+Parent, Child] extends FromResultFactory[Parent]
 {
 	// ABSTRACT	--------------------
 	

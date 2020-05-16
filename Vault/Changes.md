@@ -2,9 +2,24 @@
 
 ## v1.6 (Beta)
 ### Breaking Changes
+- Renamed multiple factory traits:
+    - StorableFactory -> FromRowModelFactory
+    - StorableFactoryWithValidation -> FromValidatedRowModelFactory
+    - LinkedStorableFactory -> LinkedFactory
+    - MultiLinkedStorableFactory -> MultiLinkedFactory
+    - RowFactoryWithTimestamps -> FromRowFactoryWithTimestamps
+- Added a new abstract property joinType to FromResultFactory. This will have to be defined in sub-classes.
+    - FromRowModelFactory, LinkedFactory, PossiblyLinkedFactory and PossiblyMultiLinkedFactory 
+    already specify this property. 
 - Storable.toUpdateStatement and .updateWhere now take an optional SqlTarget as the first parameter. 
 This allows you to use these update methods in updates that require joins.
-### Changes
+- RowFactory.foreach renamed to foreachWhere
+### New Features
+- Added PossiblyLinkedFactory and PossiblyMultiLinkedFactory to support situations where there is a 
+possibility of 0 linked items.
+- Added RowModelAccess, SingleRowModel access and ManyRowModelAccess for FromRowFactory -utilizing 
+access classes
+### Other Changes
 - Changed mergeCondition(...) methods in Accessor from protected to public
 
 ## v1.5

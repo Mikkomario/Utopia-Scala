@@ -49,7 +49,7 @@ object HttpExtensions
             
             r.setCookies.foreach( cookie => 
             {
-                val javaCookie = new javax.servlet.http.Cookie(cookie.name, cookie.value.toJSON)
+                val javaCookie = new javax.servlet.http.Cookie(cookie.name, cookie.value.toJson)
                 cookie.lifeLimitSeconds.foreach(javaCookie.setMaxAge)
                 javaCookie.setSecure(cookie.isSecure)
                 

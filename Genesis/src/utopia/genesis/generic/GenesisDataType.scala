@@ -6,7 +6,7 @@ import utopia.genesis.shape.shape2D.{Bounds, Circle, Line, Point, Rectangle, Siz
 import utopia.flow.generic.AnyType
 import utopia.flow.generic.EnvironmentNotSetupException
 import utopia.flow.generic.ConversionHandler
-import utopia.flow.parse.JSONValueConverter
+import utopia.flow.parse.JsonValueConverter
 
 /**
  * Vectors are used for representing motion, force and coordinates
@@ -57,7 +57,7 @@ object GenesisDataType
         DataType.setup()
         DataType.introduceTypes(Vector3DType, PointType, SizeType, LineType, CircleType, TransformationType)
         ConversionHandler.addCaster(GenesisValueCaster)
-        JSONValueConverter.introduce(GenesisJSONValueConverter)
+        JsonValueConverter.introduce(GenesisJsonValueConverter)
     }
 }
 

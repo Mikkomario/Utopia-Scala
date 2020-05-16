@@ -33,12 +33,12 @@ object XmlTest extends App
     
     // Test prints
     println(root.toXml)
-    println(root.toJSON)
+    println(root.toJson)
     
     val parsed = XmlElement(root.toModel)
     
     println(parsed.get.toXml)
-    println(parsed.get.toJSON)
+    println(parsed.get.toJson)
     
     // Makes sure model parsing works for xml elements
     assert(parsed.get == root)
@@ -52,7 +52,7 @@ object XmlTest extends App
     val parsed2 = XmlReader.parseFile(testFile)
     
     println(parsed2.get.toXml)
-    println(parsed2.get.toJSON)
+    println(parsed2.get.toJson)
     
     assert(parsed2.get == root)
     
@@ -64,7 +64,7 @@ object XmlTest extends App
         })
     
     println(parsed3.get.toXml)
-    println(parsed3.get.toJSON)
+    println(parsed3.get.toJson)
     
     assert(parsed3.get == grandChild1)
     

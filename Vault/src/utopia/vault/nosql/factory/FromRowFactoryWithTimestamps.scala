@@ -14,7 +14,7 @@ import utopia.vault.sql.{Condition, OrderBy}
   * @author Mikko Hilpinen
   * @since 1.2.2020, v1.4
   */
-trait RowFactoryWithTimestamps[+A] extends FromRowFactory[A]
+trait FromRowFactoryWithTimestamps[+A] extends FromRowFactory[A]
 {
 	// ABSTRACT	------------------------
 	

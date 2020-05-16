@@ -21,7 +21,7 @@ object ParseTest extends App
 	val subModel = Model(Vector("name" -> "Öykkäri", "age" -> 44, "length" -> 187.2))
 	val model = Model(Vector("tester" -> subModel, "test_description" -> "Testing BunnyMunch", "empty" -> Value.empty,
 		"json" -> "{[1, 2, 3]}"))
-	val json = model.toJSON
+	val json = model.toJson
 	
 	Parser.parseFromString(json) match
 	{

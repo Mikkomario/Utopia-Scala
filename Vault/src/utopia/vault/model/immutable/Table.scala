@@ -2,9 +2,8 @@ package utopia.vault.model.immutable
 
 import utopia.flow.datastructure.immutable.{ModelDeclaration, Value}
 import utopia.vault.database.Connection
-import utopia.vault.nosql.factory.StorableFactory
-import utopia.vault.sql.JoinType.JoinType
-import utopia.vault.sql.{Condition, Exists, Limit, Select, SqlSegment, SqlTarget, Where}
+import utopia.vault.nosql.factory.FromRowModelFactory
+import utopia.vault.sql.{Condition, Exists, JoinType, Limit, Select, SqlSegment, SqlTarget, Where}
 
 import scala.collection.immutable.HashSet
 
@@ -62,7 +61,7 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
     /**
       * @return A factory for storable instances from this table
       */
-    def toFactory = StorableFactory(this)
+    def toFactory = FromRowModelFactory(this)
     
     /**
       * @param connection Database connection

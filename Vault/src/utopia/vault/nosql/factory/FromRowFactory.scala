@@ -182,13 +182,40 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 		.rows.headOption.flatMap(parseIfPresent)
 	
 	/**
+	  * Performs an operation on each of the targeted entities
+	  * @param condition A condition for finding target entities (optional)
+	  * @param operation An operation performed for each entity
+	  * @param connection DB Connection
+	  * @tparam U Arbitrary result type
+	  */
+	def foreachWhere[U](condition: Option[Condition])(operation: A => U)(implicit connection: Connection) =
+	{
+		val select = SelectAll(target)
+		val statement = condition match
+		{
+			case Some(condition) => select + Where(condition)
+			case None => select
+		}
+		connection.foreach(statement) { parseIfPresent(_).foreach(operation) }
+	}
+	
+	/**
 	 * Performs an operation on each of the targeted entities
 	 * @param where A condition for finding target entities
 	 * @param operation An operation performed for each entity
 	 * @param connection DB Connection
+	  * @tparam U Arbitrary result type
 	 */
-	def foreach(where: Condition)(operation: A => Unit)(implicit connection: Connection) =
-		connection.foreach(SelectAll(target) + Where(where)) { parseIfPresent(_).foreach(operation) }
+	def foreachWhere[U](where: Condition)(operation: A => U)(implicit connection: Connection): Unit =
+		foreachWhere(Some(where))(operation)
+	
+	/**
+	  * Performs an operation on all entities accessible from this factory
+	  * @param operation An operation performed for each entity
+	  * @param connection DB Connection
+	  * @tparam U Arbitrary result type
+	  */
+	def foreach[U](operation: A => U)(implicit connection: Connection) = foreachWhere(None)(operation)
 	
 	/**
 	 * Folds entities into a single value

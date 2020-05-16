@@ -26,6 +26,11 @@ trait FromResultFactory[+A]
 	def joinedTables: Seq[Table]
 	
 	/**
+	  * @return Joining style used
+	  */
+	def joinType: JoinType
+	
+	/**
 	  * Parses a result into one or multiple (or zero) objects
 	  * @param result A database query result to be parsed
 	  * @return Parsed objects
@@ -38,7 +43,7 @@ trait FromResultFactory[+A]
 	/**
 	  * @return This factory's target that includes the primary table and possible joined tables
 	  */
-	def target = joinedTables.foldLeft(table: SqlTarget) { (r, t) => r.join(t, JoinType.Left) }
+	def target = joinedTables.foldLeft(table: SqlTarget) { (r, t) => r.join(t, joinType) }
 	
 	/**
 	  * @return The table(s) used by this factory (never empty)

@@ -2,16 +2,16 @@ package utopia.vault.nosql.factory
 
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.vault.model.immutable.Row
-import utopia.vault.util.ErrorHandling
+import utopia.vault.sql.JoinType
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Try}
 
 /**
  * Used for converting DB data to models for tables that contain a single link to another table / model
  * @author Mikko
  * @since 21.8.2019, v1.3.1+
  */
-trait LinkedStorableFactory[+Parent, Child] extends FromRowFactory[Parent]
+trait LinkedFactory[+Parent, Child] extends FromRowFactory[Parent]
 {
 	// ABSTRACT	---------------------
 	
@@ -31,6 +31,8 @@ trait LinkedStorableFactory[+Parent, Child] extends FromRowFactory[Parent]
 	
 	
 	// IMPLEMENTED	-----------------
+	
+	override def joinType = JoinType.Inner
 	
 	override def apply(row: Row) =
 	{

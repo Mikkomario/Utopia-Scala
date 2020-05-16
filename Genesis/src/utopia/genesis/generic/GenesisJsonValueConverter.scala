@@ -11,7 +11,7 @@ import utopia.genesis.generic.GenesisValue._
  * @author Mikko Hilpinen
  * @since 24.6.2017
  */
-object GenesisJSONValueConverter extends ValueConverter[String]
+object GenesisJsonValueConverter extends ValueConverter[String]
 {
     override def supportedTypes = HashSet(Vector3DType, PointType, SizeType, LineType, CircleType, BoundsType, TransformationType)
     
@@ -19,13 +19,13 @@ object GenesisJSONValueConverter extends ValueConverter[String]
     {
         dataType match 
         {
-            case Vector3DType => value.vector3DOr().toJSON
-            case PointType => value.pointOr().toJSON
-            case SizeType => value.sizeOr().toJSON
-            case LineType => value.lineOr().toJSON
-            case CircleType => value.circleOr().toJSON
-            case BoundsType => value.boundsOr().toJSON
-            case TransformationType => value.transformationOr().toJSON
+            case Vector3DType => value.vector3DOr().toJson
+            case PointType => value.pointOr().toJson
+            case SizeType => value.sizeOr().toJson
+            case LineType => value.lineOr().toJson
+            case CircleType => value.circleOr().toJson
+            case BoundsType => value.boundsOr().toJson
+            case TransformationType => value.transformationOr().toJson
             case _ => value.stringOr()
         }
     }

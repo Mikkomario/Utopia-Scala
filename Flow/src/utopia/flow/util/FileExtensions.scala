@@ -4,7 +4,7 @@ import java.awt.Desktop
 import java.io.{BufferedOutputStream, FileInputStream, FileNotFoundException, FileOutputStream, IOException}
 import java.nio.file.{DirectoryNotEmptyException, Files, Path, Paths, StandardOpenOption}
 
-import utopia.flow.parse.JSONConvertible
+import utopia.flow.parse.JsonConvertible
 
 import scala.language.implicitConversions
 import utopia.flow.util.StringExtensions._
@@ -498,7 +498,7 @@ object FileExtensions
 		 * @param json A json-convertible instance that will produce contents of this file
 		 * @return This path. Failure if writing failed.
 		 */
-		def writeJSON(json: JSONConvertible) = write(json.toJSON)(Codec.UTF8)
+		def writeJSON(json: JsonConvertible) = write(json.toJson)(Codec.UTF8)
 		
 		/**
 		 * Writes into this file with a function. An output stream is opened for the duration of the function.

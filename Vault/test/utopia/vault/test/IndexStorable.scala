@@ -4,9 +4,9 @@ import utopia.flow.datastructure.immutable
 import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.model.immutable.StorableWithFactory
-import utopia.vault.nosql.factory.StorableFactoryWithValidation
+import utopia.vault.nosql.factory.FromValidatedRowModelFactory
 
-object IndexStorable extends StorableFactoryWithValidation[IndexStorable]
+object IndexStorable extends FromValidatedRowModelFactory[IndexStorable]
 {
 	override def table = TestTables.indexTest
 	

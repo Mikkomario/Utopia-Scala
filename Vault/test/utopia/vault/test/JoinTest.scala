@@ -2,14 +2,9 @@ package utopia.vault.test
 
 import utopia.flow.generic.DataType
 import utopia.vault.database.Connection
-import utopia.vault.sql.Delete
+import utopia.vault.sql.{Delete, Insert, JoinType, Select, SelectAll, Where}
 import utopia.flow.datastructure.immutable.Model
-import utopia.vault.sql.Insert
-
 import utopia.vault.sql.JoinType._
-import utopia.vault.sql.Select
-import utopia.vault.sql.SelectAll
-import utopia.vault.sql.Where
 import utopia.flow.generic.ValueConversions._
 
 /**

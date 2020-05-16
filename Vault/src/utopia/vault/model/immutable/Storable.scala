@@ -9,7 +9,7 @@ import utopia.vault.database.{Connection, DBException}
 import utopia.vault.model.enumeration.BasicCombineOperator.And
 import utopia.vault.model.enumeration.ComparisonOperator.Equal
 import utopia.vault.model.enumeration.{BasicCombineOperator, ComparisonOperator}
-import utopia.vault.nosql.factory.{FromRowFactory, StorableFactory}
+import utopia.vault.nosql.factory.{FromRowFactory, FromRowModelFactory}
 import utopia.vault.sql.{Condition, Delete, Insert, SqlSegment, SqlTarget, Update, Where}
 
 object Storable
@@ -156,7 +156,7 @@ trait Storable extends ModelConvertible
                 }
                 catch
                 {
-                    case e: DBException => e.rethrow(s"Failed to update storable: $toJSON")
+                    case e: DBException => e.rethrow(s"Failed to update storable: $toJson")
                 }
         }
     }
@@ -213,7 +213,7 @@ trait Storable extends ModelConvertible
                 }
                 catch
                 {
-                    case e: DBException => e.rethrow(s"Failed to update storable: $toJSON")
+                    case e: DBException => e.rethrow(s"Failed to update storable: $toJson")
                 }
         }
         update.isDefined
@@ -276,7 +276,7 @@ trait Storable extends ModelConvertible
         }
         catch
         {
-            case e: DBException => e.rethrow(s"Failed to insert storable: $toJSON")
+            case e: DBException => e.rethrow(s"Failed to insert storable: $toJson")
         }
     }
     
@@ -318,7 +318,7 @@ trait Storable extends ModelConvertible
 
 private class StorableWrapper(override val table: Table, val model: template.Model[Property]) extends StorableWithFactory[Storable]
 {
-    override lazy val factory = StorableFactory(table)
+    override lazy val factory = FromRowModelFactory(table)
     
     override def valueProperties = model.attributes.map { c => c.name -> c.value }
 }

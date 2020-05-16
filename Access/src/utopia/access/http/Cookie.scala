@@ -41,5 +41,5 @@ case class Cookie(name: String, value: Value, lifeLimitSeconds: Option[Int] = No
     override def toModel = Model(Vector("name" -> name, "value" -> value, "life_limit_seconds" -> lifeLimitSeconds,
         "secure" -> isSecure))
     
-    override def toString = toJSON
+    override def toString = toJson
 }
