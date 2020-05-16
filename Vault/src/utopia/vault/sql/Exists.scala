@@ -35,4 +35,13 @@ object Exists
 		else
 			false
 	}
+	
+	/**
+	  * Checks whether there exist any rows in the specified target
+	  * @param target Targeted table(s)
+	  * @param connection DB Connection (implicit)
+	  * @return Whether the target contains any rows
+	  */
+	def any(target: SqlTarget)(implicit connection: Connection) = connection(Select.nothing(target) +
+		Limit(1)).nonEmpty
 }
