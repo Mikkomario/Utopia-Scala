@@ -19,6 +19,8 @@ This allows you to use these update methods in updates that require joins.
 possibility of 0 linked items.
 - Added RowModelAccess, SingleRowModel access and ManyRowModelAccess for FromRowFactory -utilizing 
 access classes
+### New Methods
+- Condition object now contains .alwaysTrue and .alwaysFalse properties
 ### Other Changes
 - Changed mergeCondition(...) methods in Accessor from protected to public
 
