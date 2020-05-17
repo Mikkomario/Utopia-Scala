@@ -26,6 +26,19 @@ object Where
     def not(condition: Condition) = (!condition).toWhereClause
 }
 
+object Condition
+{
+    /**
+      * A condition that always returns true
+      */
+    val alwaysTrue = Condition(SqlSegment("TRUE"))
+    
+    /**
+      * A condition that always returns false
+      */
+    val alwaysFalse = Condition(SqlSegment("FALSE"))
+}
+
 /**
  * Conditions can be combined with each other logically and converted to sql where clauses. 
  * A where clause is often used after a join or a basic operation.
