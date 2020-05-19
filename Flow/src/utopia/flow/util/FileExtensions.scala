@@ -1,7 +1,7 @@
 package utopia.flow.util
 
 import java.awt.Desktop
-import java.io.{BufferedOutputStream, FileInputStream, FileNotFoundException, FileOutputStream, IOException}
+import java.io.{BufferedOutputStream, BufferedReader, FileInputStream, FileNotFoundException, FileOutputStream, IOException, InputStream, InputStreamReader, Reader}
 import java.nio.file.{DirectoryNotEmptyException, Files, Path, Paths, StandardOpenOption}
 
 import utopia.flow.parse.JsonConvertible
@@ -505,8 +505,33 @@ object FileExtensions
 		 * @param writer A writer function that uses an output stream (may throw)
 		 * @return This path. Failure if writing function threw or stream couldn't be opened (Eg. trying to write to a file).
 		 */
-		def writeWith(writer: BufferedOutputStream => Unit) =
+		def writeWith[U](writer: BufferedOutputStream => U) =
 			Try { new FileOutputStream(p.toFile).consume { new BufferedOutputStream(_).consume(writer) } }.map { _ => p }
+		
+		/**
+		  * Writes into this file by reading data from a reader.
+		  * @param reader Reader that supplies the data
+		  * @return This path. Failure if reading or writing failed or the file stream couldn't be opened
+		  */
+		def writeFromReader(reader: Reader) = writeWith { output =>
+			// See: https://stackoverflow.com/questions/6927873/
+			// how-can-i-read-a-file-to-an-inputstream-then-write-it-into-an-outputstream-in-sc
+			Iterator.continually(reader.read)
+				.takeWhile { _ != -1 }
+				.foreach(output.write)
+		}
+		
+		/**
+		  * Writes the specified input stream into this file
+		  * @param inputStream Reader that supplies the data
+		  * @param codec Input stream encoding (implicit)
+		  * @return This path. Failure if reading or writing failed or the file stream couldn't be opened
+		  */
+		def writeStream(inputStream: InputStream)(implicit codec: Codec) =
+		{
+			new InputStreamReader(inputStream, codec.charSet).consume { streamReader =>
+				new BufferedReader(streamReader).consume(writeFromReader) }
+		}
 		
 		/**
 		 * Reads data from this file

@@ -458,7 +458,7 @@ object Gateway
 	
 	private def paramValue(originalValue: Value, encoding: Option[Codec]) =
 	{
-		val valueString = originalValue.toJSON
+		val valueString = originalValue.toJson
 		encoding match
 		{
 			case Some(codec) => URLEncoder.encode(valueString, codec.charSet.name())
