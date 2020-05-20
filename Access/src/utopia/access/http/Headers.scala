@@ -194,6 +194,11 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     def isChunked = apply("Transfer-Encoding").contains("chunked")
     
     /**
+      * @return Whether an authorization header has been specified
+      */
+    def containsAuthorization = isDefined("Authorization")
+    
+    /**
       * @return The provided authorization. Eg. "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==". None if no auth header is provided.
       */
     def authorization = apply("Authorization")
