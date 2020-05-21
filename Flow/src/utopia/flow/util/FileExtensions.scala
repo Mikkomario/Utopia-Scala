@@ -29,6 +29,13 @@ object FileExtensions
 	
 	implicit class RichPath(val p: Path) extends AnyVal
 	{
+		// COMPUTED ----------------------------
+		
+		/**
+		 * @return A json representation of this path (uses / as the directory separator)
+		 */
+		def toJson = toString.replace("\\", "/")
+		
 		/**
 		 * @return Whether this file exists in the file system (false if undetermined)
 		 */
@@ -139,6 +146,28 @@ object FileExtensions
 				Try { Files.size(p) }
 			else
 				children.flatMap { _.tryMap { _.size }.map { _.sum } }
+		}
+		
+		
+		// OTHER    -------------------------------
+		
+		/**
+		 * @param childFileName Name of a child file
+		 * @return Whether this directory contains the specified file (false if this is not a directory)
+		 */
+		def containsDirect(childFileName: String) = (this/childFileName).exists
+		
+		/**
+		 * Checks whether this directory or any sub-directory within this directory contains a file with the
+		 * specified name (case-insensitive).
+		 * @param childFileName Name of the searched file (including file extension)
+		 * @return Whether this directory system contains a file with the specified name
+		 */
+		def containsRecursive(childFileName: String): Boolean =
+		{
+			children.getOrElse(Vector()).exists { c =>
+				(c.fileName ~== childFileName) || (c.isDirectory && c.containsRecursive(childFileName))
+			}
 		}
 		
 		/**

@@ -26,6 +26,8 @@ collection types when used.
 - CollectionExtensions
     - Added .slice(Range) to SeqOps
     - Added .getOrMap(...) to Try
+- FileExtensions: Added .toJson, .contains(String), .containsRecursive(String), writeFromReader(...) and 
+writeStream(...)
     
 ### Other Changes
 - JsonParser trait added, which JSONReader now implements. The purpose of this change is to 
