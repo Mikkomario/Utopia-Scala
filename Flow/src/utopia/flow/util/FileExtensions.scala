@@ -7,10 +7,10 @@ import java.nio.file.{DirectoryNotEmptyException, Files, Path, Paths, StandardOp
 import utopia.flow.parse.JsonConvertible
 
 import scala.language.implicitConversions
-import utopia.flow.util.StringExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.NullSafe._
+import StringExtensions._
 
 import scala.io.Codec
 import scala.util.{Failure, Success, Try}
@@ -136,6 +136,11 @@ object FileExtensions
 		}
 		
 		/**
+		 * @return All non-directory files in this directory and its sub-directories
+		 */
+		def allRegularFileChildren = findDescendants { _.isRegularFile }
+		
+		/**
 		 * @return The size of this file in bytes. If called for a directory, returns the combined size of all files and
 		 *         directories under this directory. Please note that this method may take a while to complete.
 		 */
@@ -217,6 +222,26 @@ object FileExtensions
 			else
 				Success(start)
 		}
+		
+		/**
+		 * @param filter A filter that determines which paths will be included. Will be called once for each file
+		 *               within this directory and its sub-directories (including the directories themselves).
+		 * @return Paths accepted by the filter
+		 */
+		def findDescendants(filter: Path => Boolean): Try[Vector[Path]] =
+		{
+			// Finds direct children, and the children under those via recursion
+			children.map { children =>
+				children.filter(filter) ++ children.flatMap { _.findDescendants(filter).getOrElse(Vector()) }
+			}
+		}
+		
+		/**
+		 * @param extension A file extension (Eg. "png"), not including the '.'
+		 * @return All files directly or indirectly under this directory that have the specified file extension / type
+		 */
+		def allRegularFileChildrenOfType(extension: String) = findDescendants { f =>
+			f.isRegularFile && (f.fileType ~== extension) }
 		
 		/**
 		 * Moves this file / directory to another directory
