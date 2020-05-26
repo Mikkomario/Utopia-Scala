@@ -2,7 +2,7 @@ package utopia.reflection.image
 
 import utopia.genesis.color.Color
 import utopia.genesis.image.Image
-import utopia.reflection.color.ComponentColor
+import utopia.reflection.color.{ColorSet, ComponentColor}
 import utopia.reflection.color.TextColorStandard.{Dark, Light}
 import utopia.reflection.component.context.{ButtonContextLike, ColorContextLike}
 import utopia.reflection.component.swing.button.ButtonImageSet
@@ -109,6 +109,14 @@ class SingleColorIcon(original: Image)
 		else
 			ButtonImageSet.darkening(colored)
 	}
+	
+	/**
+	 * @param colors Available colors
+	 * @param context Button creation context
+	 * @return A button image set to be used in buttons without text
+	 */
+	def asIndividualButtonWithColor(colors: ColorSet)(implicit context: ColorContextLike) =
+		colors.forBackground(context.containerBackground)
 	
 	/**
 	  * @param f A mapping function

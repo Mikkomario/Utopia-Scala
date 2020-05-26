@@ -74,6 +74,15 @@ trait Changing[A]
 	def map[B](f: A => B) = Mirror.of(this)(f)
 	
 	/**
+	 * @param other Another changing item
+	 * @param f A merge function
+	 * @tparam B Type of the other changing item
+	 * @tparam R Type of merge result
+	 * @return A mirror that merges the values from both of these items
+	 */
+	def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) = MergeMirror.of(this, other)(f)
+	
+	/**
 	  * Fires a change event for all the listeners
 	  * @param oldValue The old value of this changing element (call-by-name)
 	  */
