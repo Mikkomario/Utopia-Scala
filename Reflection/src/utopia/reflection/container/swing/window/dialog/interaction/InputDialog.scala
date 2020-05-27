@@ -75,6 +75,11 @@ trait InputDialog[+A] extends InteractionDialog[A]
 	protected def fields: Vector[RowGroups[InputRowBlueprint]]
 	
 	/**
+	 * @return Buttons used in addition to ok and cancel buttons
+	 */
+	protected def additionalButtons: Vector[DialogButtonBlueprint[A]]
+	
+	/**
 	  * Combines the specified rows into a single component (Eg. stack). The rows are segmented to all share same
 	  * width for label and input component.
 	  * @param inputRows Rows to lay in the container (grouped)
@@ -126,7 +131,7 @@ trait InputDialog[+A] extends InteractionDialog[A]
 			}
 		})
 		val cancelButton = DialogButtonBlueprint.closeButton(cancelButtonText, closeIcon)
-		Vector(okButton, cancelButton)
+		(okButton +: additionalButtons) :+ cancelButton
 	}
 	
 	override protected def dialogContent =

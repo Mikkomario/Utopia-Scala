@@ -2,14 +2,17 @@ package utopia.reflection.container.swing.window.dialog.interaction
 
 import java.awt.Window
 
-import utopia.genesis.shape.shape2D.Direction2D
+import utopia.flow.util.CollectionExtensions._
 import utopia.reflection.component.context.{ButtonContextLike, ColorContextLike}
+import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.button.{ImageAndTextButton, TextButton}
 import utopia.reflection.container.swing.Stack
 import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.container.swing.window.dialog.Dialog
 import utopia.reflection.localization.LocalizedString
+import utopia.reflection.shape.{Alignment, StackLength}
+import utopia.reflection.shape.Alignment.Top
 import utopia.reflection.shape.LengthExtensions._
 
 import scala.concurrent.ExecutionContext
@@ -81,10 +84,13 @@ trait InteractionDialog[+A]
 		val content = {
 			implicit val baseC: ColorContextLike = context
 			Stack.buildColumnWithContext() { mainStack =>
+				// Some of the buttons may be placed before the dialog content, some after
+				val (bottomButtons, topButtons) = actualizedButtons.divideBy { _._1.location.vertical == Top }
+				if (topButtons.nonEmpty)
+					mainStack += buttonRow(topButtons, context.defaultStackMargin.optimal)
 				mainStack += dialogContent
-				mainStack += Stack.buildRowWithContext() { buttonRow =>
-					actualizedButtons.foreach { buttonRow += _._2 }
-				}.alignedToSide(Direction2D.Right)
+				if (bottomButtons.nonEmpty)
+					mainStack += buttonRow(bottomButtons, context.defaultStackMargin.optimal)
 			}
 		}.framed(context.margins.medium.downscaling, context.containerBackground)
 		
@@ -108,5 +114,35 @@ trait InteractionDialog[+A]
 		dialog.startEventGenerators(context.actorHandler)
 		dialog.display()
 		dialog.closeFuture.map { _ => result.getOrElse(defaultResult) }
+	}
+	
+	private def buttonRow(buttons: Seq[(DialogButtonBlueprint[_], AwtStackable)], baseMargin: Double) =
+	{
+		val nonScalingMargin = baseMargin.downscaling
+		
+		val buttonsByLocation = buttons.groupMap { _._1.location.horizontal } { _._2 }
+		// Case: Items only on one side
+		if (buttonsByLocation.size == 1)
+		{
+			val (alignment, buttons) = buttonsByLocation.head
+			Stack.rowWithItems(buttons, nonScalingMargin).aligned(alignment)
+		}
+		else
+		{
+			val scalingMargin = baseMargin.upscaling.expanding
+			val buttonGroups = Vector(Alignment.Left, Alignment.Center, Alignment.Right).flatMap(buttonsByLocation.get)
+			val buttonGroupComponents = buttonGroups.map { buttons =>
+				if (buttons.size == 1)
+					buttons.head
+				else
+					Stack.rowWithItems(buttons, nonScalingMargin)
+			}
+			// Case: Items on left side + right and/or center
+			if (buttonsByLocation.contains(Alignment.Left))
+				Stack.rowWithItems(buttonGroupComponents, scalingMargin)
+			// Case: Items only on center and right
+			else
+				Stack.rowWithItems(StackSpace.horizontal(StackLength.fixedZero) +: buttonGroupComponents)
+		}
 	}
 }
