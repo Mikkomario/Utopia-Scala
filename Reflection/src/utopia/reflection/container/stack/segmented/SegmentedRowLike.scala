@@ -6,7 +6,7 @@ import utopia.genesis.shape.Axis2D
 import utopia.reflection.component.stack.{Stackable, StackableWrapper}
 import utopia.reflection.component.ComponentWrapper
 import utopia.reflection.container.MultiContainer
-import utopia.reflection.container.stack.{MultiStackContainer, StackLike}
+import utopia.reflection.container.stack.StackLike
 import utopia.reflection.shape.StackLength
 
 /**
@@ -55,6 +55,20 @@ trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiContainer[C
 	
 	// override def children = super[MultiStackContainer].children
 	
+	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
+	{
+		super.isAttachedToMainHierarchy_=(newAttachmentStatus)
+		// When attached to the main hierarchy, starts listening to updates in master
+		if (newAttachmentStatus)
+			listeningMaster.runAndSet { master.addSegmentChangedListener(MasterChangeListener) }
+		// When removed, stops listening
+		else
+			listeningMaster.updateIf { s => s } { _ =>
+				master.removeSegmentChangedListener(MasterChangeListener)
+				false
+			}
+	}
+	
 	override protected def wrapped = stack
 	
 	override def segmentCount = stack.count
@@ -97,15 +111,9 @@ trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiContainer[C
 	}
 	
 	
-	// OTHER	---------------------
-	
-	protected def startListeningToMasterUpdates() = listeningMaster.runAndSet {
-		master.addSegmentChangedListener(new MasterChangeListener()) }
-	
-	
 	// NESTED CLASSES	-------------
 	
-	private class MasterChangeListener extends SegmentChangedListener
+	private object MasterChangeListener extends SegmentChangedListener
 	{
 		override def onSegmentUpdated(source: Segmented) =
 		{

@@ -14,34 +14,30 @@ object AlignFrame
 	/**
 	  * Creates a frame that places content at center
 	  * @param content Content for the frame
-	  * @param useLowPriorityLengths Whether to use low priority stack lengths in the resulting frame (default = false)
 	  * @tparam C Type of frame content
 	  * @return A new frame
 	  */
-	def centered[C <: AwtStackable](content: C, useLowPriorityLengths: Boolean = false) = new AlignFrame(content,
-		Center, useLowPriorityLengths)
+	def centered[C <: AwtStackable](content: C, useLowPriorityLengths: Boolean = false) = new AlignFrame(content, Center)
 	
 	/**
 	  * Creates a frame that places content to a specified side
 	  * @param content Content for the frame
 	  * @param side Targeted side
-	  * @param useLowPriorityLength Whether to use low priority stack length for the affected direction (default = false)
 	  * @tparam C Type of frame content
 	  * @return A new frame
 	  */
-	def toSide[C <: AwtStackable](content: C, side: Direction2D, useLowPriorityLength: Boolean = false) = new AlignFrame(
-		content, Alignment forDirection side, useLowPriorityLength)
+	def toSide[C <: AwtStackable](content: C, side: Direction2D) = new AlignFrame(
+		content, Alignment forDirection side)
 	
 	/**
 	  * Creates an aligned frame
 	  * @param content Content for the frame
 	  * @param alignment Alignment used
-	  * @param useLowPriorityLength Whether to use low priority stack length for the affected direction(s) (default = false)
 	  * @tparam C Type of frame content
 	  * @return A new frame
 	  */
-	def apply[C <: AwtStackable](content: C, alignment: Alignment, useLowPriorityLength: Boolean = false) = new AlignFrame(
-		content, alignment, useLowPriorityLength)
+	def apply[C <: AwtStackable](content: C, alignment: Alignment) = new AlignFrame(
+		content, alignment)
 }
 
 /**
@@ -49,8 +45,7 @@ object AlignFrame
  * @author Mikko Hilpinen
  * @since 3.11.2019, v1+
  */
-class AlignFrame[C <: AwtStackable](initialComponent: C, initialAlignment: Alignment,
-														  override val useLowPriorityLength: Boolean = false)
+class AlignFrame[C <: AwtStackable](initialComponent: C, initialAlignment: Alignment)
 	extends AlignFrameLike[C] with SwingComponentRelated with AwtContainerRelated with CustomDrawableWrapper with Alignable
 {
 	// ATTRIBUTES	---------------------

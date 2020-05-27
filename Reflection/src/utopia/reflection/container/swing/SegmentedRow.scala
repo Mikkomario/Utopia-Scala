@@ -95,7 +95,6 @@ class SegmentedRow[C <: AwtStackable](val master: Segmented, override val direct
 	// INITIAL CODE	----------------
 	
 	addResizeListener(updateLayout())
-	startListeningToMasterUpdates()
 	
 	
 	// IMPLEMENTED	-----------------

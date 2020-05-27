@@ -18,10 +18,14 @@ trait AlignFrameLike[C <: Stackable] extends SingleStackContainer[C] with Compon
 {
 	// ABSTRACT	----------------------
 	
+	/**
+	 * @return Alignment used in content alignment
+	 */
 	def alignment: Alignment
 	
-	def useLowPriorityLength: Boolean
-	
+	/**
+	 * @return Container where the content is placed
+	 */
 	protected def container: Container[C]
 	
 	
@@ -73,18 +77,12 @@ trait AlignFrameLike[C <: Stackable] extends SingleStackContainer[C] with Compon
 			// May also use low priority for said axis
 			val align = alignment
 			if (align == Center)
-			{
-				val noMax = c.stackSize.withNoMax
-				if (useLowPriorityLength) noMax.withLowPriority else noMax
-			}
+				c.stackSize.withNoMax.expanding
 			else
 			{
 				c.stackSize.map { (axis, length) =>
 					if (align.directionAlong(axis).isDefined)
-					{
-						val noMax = length.noMax
-						if (useLowPriorityLength) noMax.withLowPriority else noMax
-					}
+						length.noMax.expanding
 					else
 						length
 				}

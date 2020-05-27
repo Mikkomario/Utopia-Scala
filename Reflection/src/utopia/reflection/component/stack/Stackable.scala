@@ -117,18 +117,15 @@ object Stackable
 		
 		/**
 		  * @param alignment Target alignment
-		  * @param useLowPriorityLength Whether to use low priority for affected direction's length
 		  * @return A frame whether this component is aligned according to specified alignment
 		  */
-		def aligned(alignment: Alignment, useLowPriorityLength: Boolean = false) = AlignFrame(s, alignment, useLowPriorityLength)
+		def aligned(alignment: Alignment) = AlignFrame(s, alignment)
 		
 		/**
 		 * @param side Target side
-		  * @param useLowPriorityLength Whether to use low priority for affected direction's length
 		 * @return This item framed so that it will be placed to specified side of container
 		 */
-		def alignedToSide(side: Direction2D, useLowPriorityLength: Boolean = false) = aligned(
-			Alignment forDirection side, useLowPriorityLength)
+		def alignedToSide(side: Direction2D) = aligned(Alignment forDirection side)
 		
 		/**
 		 * @return This item wrapped in a frame that places it at the center

@@ -19,6 +19,7 @@ multiple parameter lists.
     - Also, removed vararg-version of interpolation because of overlap 
 - Rewrote CollectionView. The new implementation doesn't support negative directions and takes an 
 Axis2D as a parameter instead of Direction2D.
+- Removed useLowPriority parameter from AlignFrame. Now all frames expand the content when necessary.
     
 ### Deprecations
 - StackSelectionManager was deprecated. You should now use ContainerSelectionManager instead.

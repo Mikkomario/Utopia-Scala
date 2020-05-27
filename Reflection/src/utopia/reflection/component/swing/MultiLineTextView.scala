@@ -3,6 +3,7 @@ package utopia.reflection.component.swing
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.color.Color
+import utopia.genesis.shape.Axis.{X, Y}
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.TextComponent
 import utopia.reflection.component.context.TextContextLike
@@ -11,7 +12,7 @@ import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.container.stack.StackLayout.{Center, Leading, Trailing}
 import utopia.reflection.container.swing.{AlignFrame, Stack, SwitchPanel}
 import utopia.reflection.localization.{LocalString, LocalizedString}
-import utopia.reflection.shape.{Alignment, StackInsets, StackLength}
+import utopia.reflection.shape.{Alignment, StackInsets, StackLength, StackSize, StackSizeModifier}
 import utopia.reflection.text.Font
 
 object MultiLineTextView
@@ -20,13 +21,15 @@ object MultiLineTextView
 	  * Creates a new contextual multi line text view (uses context.normalWidth as line split threshold)
 	  * @param text Text displayed on the new view
 	  * @param useLowPriorityForScalingSides Whether aligned sides should have low stack length priority (default = false)
+	 *  @param isHint Whether prompt/hint styling should be used (default = false)
 	  * @param context Component creation context
 	  * @return A new multi line text view
 	  */
-	def contextual(text: LocalizedString, lineSplitThreshold: Double, useLowPriorityForScalingSides: Boolean = false)
-				  (implicit context: TextContextLike) = new MultiLineTextView(text, context.font, lineSplitThreshold,
+	def contextual(text: LocalizedString, lineSplitThreshold: Double, useLowPriorityForScalingSides: Boolean = false,
+	               isHint: Boolean = false)(implicit context: TextContextLike) =
+		new MultiLineTextView(text, if (isHint) context.promptFont else context.font, lineSplitThreshold,
 		context.textInsets, StackLength(0, context.margins.verySmall, context.margins.small), useLowPriorityForScalingSides,
-		context.textAlignment, context.textColor)
+		context.textAlignment, if (isHint) context.hintTextColor else context.textColor)
 }
 
 /**
@@ -47,7 +50,7 @@ object MultiLineTextView
 class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initialLineSplitThreshold: Double,
 						initialInsets: StackInsets = StackInsets.any,
 						val betweenLinesMargin: StackLength = StackLength.fixed(0),
-						val useLowPriorityForScalingSides: Boolean = false, initialAlignment: Alignment = Alignment.Left,
+						useLowPriorityForScalingSides: Boolean = false, initialAlignment: Alignment = Alignment.Left,
 						initialTextColor: Color = Color.textBlack)
 	extends StackableAwtComponentWrapperWrapper with TextComponent with CustomDrawableWrapper
 {
@@ -66,6 +69,9 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 	
 	// Sets initial content
 	panel.set(makeNewContent())
+	
+	if (useLowPriorityForScalingSides)
+		panel.addConstraint(new LowPriorityLengthConstraint)
 	
 	
 	// COMPUTED	----------------------------
@@ -153,7 +159,7 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 				Stack.columnWithItems(lineComponents, betweenLinesMargin, insets.vertical / 2, stackLayout)
 			}
 		}
-		stack.aligned(alignment, useLowPriorityForScalingSides)
+		stack.aligned(alignment)
 	}
 	
 	private def split(text: String) =
@@ -187,5 +193,18 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 		}
 		else
 			(-1 +: lineSplitIndices :+ text.length).paired.map { case (start, end) => text.substring(start + 1, end) }
+	}
+	
+	
+	// NESTED   -----------------------------
+	
+	private class LowPriorityLengthConstraint extends StackSizeModifier
+	{
+		override def apply(size: StackSize) =
+		{
+			// Sets low priority length to one side of the size, based on alignment
+			val targetSide = if (alignment.isHorizontal) X else Y
+			size.mapSide(targetSide) { _.withLowPriority }
+		}
 	}
 }

@@ -126,7 +126,7 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
 {
 	// ATTRIBUTES	------------------------------
 	
-	private val finalTextInsets = textInsets.mapRight { _.noMax.withLowPriority } + borderWidth
+	private val finalTextInsets = textInsets.mapRight { _.noMax.expanding } + borderWidth
 	private val noValueContext = TextDrawContext(selectionPrompt.font, selectionPrompt.color, textAlignment, finalTextInsets)
 	private val valueSelectedContext = TextDrawContext(defaultFont, defaultTextColor, textAlignment, finalTextInsets)
 	
