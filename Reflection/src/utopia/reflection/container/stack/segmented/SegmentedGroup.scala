@@ -1,8 +1,23 @@
 package utopia.reflection.container.stack.segmented
 
+import utopia.genesis.shape.Axis.{X, Y}
+
 import scala.math.Ordering.Double.TotalOrdering
 import utopia.genesis.shape.Axis2D
 import utopia.reflection.shape.StackLength
+
+object SegmentedGroup
+{
+	/**
+	 * @return A new horizontal segmented group (items have equal widths)
+	 */
+	def horizontal = new SegmentedGroup(X)
+	
+	/**
+	 * @return A new vertical segmented group (items have equal heights)
+	 */
+	def vertical = new SegmentedGroup(Y)
+}
 
 /**
   * These groups keep track of multiple segmented items in order to match their segment lengths

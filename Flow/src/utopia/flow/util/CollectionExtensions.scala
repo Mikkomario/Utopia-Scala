@@ -719,6 +719,54 @@ object CollectionExtensions
     implicit def iterableOnceOperations[Repr](coll: Repr)(implicit iter: IsIterableOnce[Repr]): IterableOnceOperations[Repr, iter.type] =
         new IterableOnceOperations(coll, iter)
     
+    implicit class RichIterableOnce[A](val i: IterableOnce[A]) extends AnyVal
+    {
+        /**
+         * Divides / maps the items in this collection to two groups
+         * @param f A function for separating / mapping the items
+         * @tparam L Type of left group items
+         * @tparam R Type of right group items
+         * @return Left group and right group
+         */
+        def dividedWith[L, R](f: A => Either[L, R]) =
+        {
+            val lBuilder = new VectorBuilder[L]
+            val rBuilder = new VectorBuilder[R]
+            i.iterator.map(f).foreach {
+                case Left(l) => lBuilder += l
+                case Right(r) => rBuilder += r
+            }
+            lBuilder.result() -> rBuilder.result()
+        }
+    }
+    
+    implicit class RichIterableOnceEithers[L, R](val i: IterableOnce[Either[L, R]]) extends AnyVal
+    {
+        /**
+         * Divides this collection to two separate collections, one for left items and one for right items
+         * @return Left items + right items
+         */
+        def divided =
+        {
+            val lBuilder = new VectorBuilder[L]
+            val rBuilder = new VectorBuilder[R]
+            i.iterator.foreach {
+                case Left(l) => lBuilder += l
+                case Right(r) => rBuilder += r
+            }
+            lBuilder.result() -> rBuilder.result()
+        }
+    }
+    
+    implicit class RichIterableOnceTries[A](val i: IterableOnce[Try[A]]) extends AnyVal
+    {
+        /**
+         * Divides this collection to two separate collections, one for failures and one for successes
+         * @return Failures + successes
+         */
+        def divided = i.dividedWith { _.toEither }
+    }
+    
     /**
      * This extension allows tuple lists to be transformed into multi maps directly
      */

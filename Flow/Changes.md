@@ -15,7 +15,8 @@ JsonParser as a parameter.
 ### New Features
 - ValueUnwraps -extensions added to utopia.flow.generic -package. By importing these extensions, you 
 can automatically unwrap values to most basic types (saves you from writing value.string or value.getInt etc.)
-- Mirror class added for supporting mapping change listening
+- Mirror and MergeMirror classes added for supporting mapping change listening
+    - Added map and merge methods to Changing respectively
         
 ### Fixes
 - tryMap(...) in CollectionExtensions now uses buildFrom and not Factory. This should result in better result 
@@ -26,6 +27,7 @@ collection types when used.
 - CollectionExtensions
     - Added .slice(Range) to SeqOps
     - Added .getOrMap(...) to Try
+    - Couple of new .divided methods
 - FileExtensions: Added .toJson, .contains(String), .containsRecursive(String), writeFromReader(...) and 
 writeStream(...)
     
