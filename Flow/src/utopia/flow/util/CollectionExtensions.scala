@@ -738,6 +738,24 @@ object CollectionExtensions
             }
             lBuilder.result() -> rBuilder.result()
         }
+    
+        /**
+         * Maps the items in this collection into two different collections
+         * @param f A mapping function that produces two results (left -> right) for each item
+         * @tparam L Type of left result item
+         * @tparam R Type of right result item
+         * @return Left results -> right results
+         */
+        def splitMap[L, R](f: A => (L, R)) =
+        {
+            val lBuilder = new VectorBuilder[L]
+            val rBuilder = new VectorBuilder[R]
+            i.iterator.map(f).foreach { case (l, r) =>
+                lBuilder += l
+                rBuilder += r
+            }
+            lBuilder.result() -> rBuilder.result()
+        }
     }
     
     implicit class RichIterableOnceEithers[L, R](val i: IterableOnce[Either[L, R]]) extends AnyVal

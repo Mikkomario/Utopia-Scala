@@ -74,6 +74,12 @@ case class TextContext(base: ColorContext, textAlignment: Alignment, textInsets:
 	def withFont(font: Font) = copy(fontOverride = Some(font))
 	
 	/**
+	 * @param f A function for transforming the previous font
+	 * @return A copy of this context with the specified font
+	 */
+	def mapFont(f: Font => Font) = copy(fontOverride = Some(f(font)))
+	
+	/**
 	  * @param font A font to be used in prompts
 	  * @return Copy of this context with specified font used for prompts
 	  */
