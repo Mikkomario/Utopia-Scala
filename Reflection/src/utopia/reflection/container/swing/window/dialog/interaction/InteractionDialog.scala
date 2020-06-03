@@ -2,6 +2,7 @@ package utopia.reflection.container.swing.window.dialog.interaction
 
 import java.awt.Window
 
+import utopia.flow.collection.VolatileList
 import utopia.flow.util.CollectionExtensions._
 import utopia.reflection.component.context.{ButtonContextLike, ColorContextLike}
 import utopia.reflection.component.swing.StackSpace
@@ -24,6 +25,12 @@ import scala.concurrent.ExecutionContext
   */
 trait InteractionDialog[+A]
 {
+	// ATTRIBUTES   -------------------
+	
+	// Keeps track of the currently displayed dialog.
+	private val _visibleDialogs = VolatileList[Dialog[_]]()
+	
+	
 	// ABSTRACT	-----------------------
 	
 	/**
@@ -57,6 +64,24 @@ trait InteractionDialog[+A]
 	  * @return Title displayed on this dialog
 	  */
 	protected def title: LocalizedString
+	
+	
+	// COMPUTED -----------------------
+	
+	/**
+	 * @return Currently displayed dialogs from this instance. Empty if no dialogs are being displayed at this time.
+	 */
+	def visibleDialogs = _visibleDialogs.get
+	
+	/**
+	 * @return Whether a dialog from this instance is currently being displayed (may be hidden, see .isVisible)
+	 */
+	def isDisplaying = _visibleDialogs.nonEmpty
+	
+	/**
+	 * @return Whether a dialog from this instance is currently visible
+	 */
+	def isVisible = _visibleDialogs.exists { _.isVisible }
 	
 	
 	// OTHER	-----------------------
@@ -110,10 +135,16 @@ trait InteractionDialog[+A]
 				dialog.close()
 		}) }
 		
+		// Remembers the dialog
+		_visibleDialogs :+= dialog
+		
 		// Displays the dialog and returns a promise of final result
 		dialog.startEventGenerators(context.actorHandler)
 		dialog.display()
-		dialog.closeFuture.map { _ => result.getOrElse(defaultResult) }
+		dialog.closeFuture.map { _ =>
+			_visibleDialogs -= dialog
+			result.getOrElse(defaultResult)
+		}
 	}
 	
 	private def buttonRow(buttons: Seq[(DialogButtonBlueprint[_], AwtStackable)], baseMargin: Double) =

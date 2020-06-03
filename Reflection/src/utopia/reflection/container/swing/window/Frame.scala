@@ -1,15 +1,18 @@
 package utopia.reflection.container.swing.window
 
 import javax.swing.{JFrame, WindowConstants}
-import utopia.reflection.component.stack.Stackable
-import utopia.reflection.container.swing.AwtContainerRelated
-import utopia.reflection.container.swing.window.WindowResizePolicy.User
+import utopia.reflection.component.stack.{StackLeaf, Stackable}
+import utopia.reflection.component.swing.{AwtComponentWrapper, AwtComponentWrapperWrapper}
+import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
+import utopia.reflection.container.swing.window.WindowResizePolicy.{Program, User}
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.{Alignment, StackSize}
 import utopia.reflection.shape.Alignment.Center
 
 object Frame
 {
+    // OTHER    ----------------------------------
+    
     /**
       * Creates a new windowed frame
       * @param content The frame contents
@@ -40,6 +43,39 @@ object Frame
                                                             resizeAlignment: Alignment = Center) =
         new Frame(content, title, WindowResizePolicy.Program, resizeAlignment, true, true,
             showToolBar)
+    
+    /**
+     * Creates an invisible, zero sized frame
+     * @param title Title for the frame (default = empty)
+     * @return A new frame
+     */
+    def invisible(title: LocalizedString = LocalizedString.empty): Frame[Stackable with AwtContainerRelated] =
+        new Frame(new ZeroSizePanel, title, Program, borderless = true)
+    
+    
+    // NESTED   --------------------------------
+    
+    private class ZeroSizePanel extends AwtComponentWrapperWrapper with Stackable with StackLeaf with AwtContainerRelated
+    {
+        // ATTRIBUTES   ------------------------
+        
+        private val panel = new Panel[AwtComponentWrapper]
+        
+        
+        // IMPLEMENTED  ------------------------
+    
+        override def component = panel.component
+    
+        override protected def wrapped = panel
+    
+        override def updateLayout() = ()
+    
+        override def stackSize = StackSize.fixedZero
+    
+        override def resetCachedSize() = ()
+    
+        override lazy val stackId = hashCode()
+    }
 }
 
 /**

@@ -14,6 +14,11 @@ object StackSize
      */
     val any: StackSize = any(Size.zero)
     
+    /**
+     * A stack size that is always 0x0
+     */
+    val fixedZero = fixed(Size.zero)
+    
     
     // CONSTRUCTOR    -------------------
     
