@@ -482,7 +482,7 @@ object Gateway
 	    val status = statusForCode(response.getStatusLine.getStatusCode)
 	    val headers = new Headers(response.getAllHeaders.map(h => (h.getName, h.getValue)).toMap)
 	    
-	    new StreamedResponse(status, headers)({ response.getEntity.getContent })
+	    new StreamedResponse(status, headers)({ Option(response.getEntity).map { _.getContent } })
 	}
 	
 	private def statusForCode(code: Int) = _introducedStatuses.find(

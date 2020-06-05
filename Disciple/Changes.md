@@ -7,6 +7,8 @@
     - Deprecated other old methods.
     - New interface methods don't wrap all results in Try. Especially the value-based 
     buffered result methods are now more error-resilient.
+- StreamedResponse implementations now need to accept an openStream function that returns 
+returns an option in case of some empty responses.
 ### New Features
 - You can now specify custom JsonParsers via Gateway.jsonParsers -attribute 
 (check out the BunnyMunch module and JsonBunny for an alternative to JSONReader)
