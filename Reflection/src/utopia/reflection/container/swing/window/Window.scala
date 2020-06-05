@@ -2,6 +2,7 @@ package utopia.reflection.container.swing.window
 
 import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter, WindowEvent}
 
+import javax.swing.SwingUtilities
 import utopia.flow.async.{VolatileFlag, VolatileOption}
 import utopia.flow.datastructure.mutable.Lazy
 import utopia.genesis.color.Color
@@ -370,6 +371,19 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
         }
         else
             this.component.setLocationRelativeTo(component)
+    }
+    
+    /**
+     * Requests this window to gain focus if it doesn't have it already. Moves this window to the front in the process.
+     */
+    def requestFocus() =
+    {
+        if (!isFocusedWindow)
+            SwingUtilities.invokeLater(() =>
+            {
+                component.toFront()
+                component.repaint()
+            })
     }
     
     
