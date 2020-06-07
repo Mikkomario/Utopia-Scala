@@ -11,9 +11,13 @@ import scala.util.Try
  * Streamed Responses are Responses that have a limited lifespan and can be consumed once only
  * @author Mikko Hilpinen
  * @since 30.11.2017
+  * @param status Response status
+  * @param headers Response headers
+  * @param openStream Function for opening response stream. Returns None if no stream was available
+  *                   (which is treated as an empty response)
  */
 class StreamedResponse(override val status: Status, override val headers: Headers, 
-        /*override val cookies: Set[Cookie], */)(openStream: => InputStream) extends Response
+        /*override val cookies: Set[Cookie], */)(openStream: => Option[InputStream]) extends Response
 {
     // ATTRIBUTES    ------------------------
     
@@ -42,8 +46,13 @@ class StreamedResponse(override val status: Status, override val headers: Header
             reader(headers, status)
         else
         {
-            closed = true
-            openStream.consume { reader(_, headers, status) }
+            openStream match
+            {
+                case Some(stream) =>
+                    closed = true
+                    stream.consume { reader(_, headers, status) }
+                case None => reader(headers, status)
+            }
         }
     }
     
