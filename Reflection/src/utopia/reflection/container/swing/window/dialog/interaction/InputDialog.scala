@@ -82,10 +82,11 @@ trait InputDialog[+A] extends InteractionDialog[A]
 	/**
 	  * Combines the specified rows into a single component (Eg. stack). The rows are segmented to all share same
 	  * width for label and input component.
-	  * @param inputRows Rows to lay in the container (grouped)
+	  * @param rowGroups Row groups that form the dialog content. Each group is matched with a segmented group
+	 *                  affecting all rows in that group.
 	  * @return A container that will be displayed in the dialog
 	  */
-	protected def buildLayout(inputRows: Vector[RowGroups[AwtStackable]]): AwtStackable
+	protected def buildLayout(rowGroups: Vector[(RowGroups[AwtStackable], SegmentedGroup)]): AwtStackable
 	
 	/**
 	  * Produces a result based on dialog input when the user selects "OK"
@@ -141,7 +142,7 @@ trait InputDialog[+A] extends InteractionDialog[A]
 		// Uses one segmented group for each row group group
 		val rows = fields.map { groups =>
 			val segmentGroup = new SegmentedGroup(X)
-			groups.mapRows { row =>
+			val group = groups.mapRows { row =>
 				val fieldInRow =
 				{
 					if (row.spansWholeRow)
@@ -158,6 +159,7 @@ trait InputDialog[+A] extends InteractionDialog[A]
 				}
 				rowComponent
 			}
+			group -> segmentGroup
 		}
 		buildLayout(rows)
 	}

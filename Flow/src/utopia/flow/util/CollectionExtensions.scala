@@ -323,7 +323,7 @@ object CollectionExtensions
           * @return This either's right value or None if this either is left (same as toOption)
           */
         def rightOption = e.toOption
-    
+        
         /**
           * If this either is left, maps it
           * @param f A mapping function for left side

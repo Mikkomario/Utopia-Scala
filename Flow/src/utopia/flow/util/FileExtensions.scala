@@ -34,7 +34,7 @@ object FileExtensions
 		/**
 		 * @return A json representation of this path (uses / as the directory separator)
 		 */
-		def toJson = toString.replace("\\", "/")
+		def toJson = p.toString.replace("\\", "/")
 		
 		/**
 		 * @return Whether this file exists in the file system (false if undetermined)
