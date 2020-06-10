@@ -16,6 +16,7 @@ import utopia.reflection.shape.StackLength
   * @author Mikko Hilpinen
   * @since 28.4.2019, v1+
   */
+@deprecated("Segment system updated to Segment and SegmentGroup", "v1.2")
 trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiContainer[C] with Stackable with Segmented with StackableWrapper
 {
 	// ATTRIBUTES	-----------------

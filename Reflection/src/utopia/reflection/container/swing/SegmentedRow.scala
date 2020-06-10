@@ -13,6 +13,7 @@ import utopia.reflection.container.swing.SegmentedRow.RowSegment
 import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.shape.StackLength
 
+@deprecated("Segment system updated to Segment and SegmentGroup", "v1.2")
 object SegmentedRow
 {
 	type RowSegment = StackableWrapper with AwtComponentRelated
@@ -82,6 +83,7 @@ object SegmentedRow
   * @param cap The cap at each end of this row (default = no cap)
   * @param layout The layout used perpendicular to 'direction' (default = Fit)
   */
+@deprecated("Segment system updated to Segment and SegmentGroup", "v1.2")
 class SegmentedRow[C <: AwtStackable](val master: Segmented, override val direction: Axis2D = X,
 									  margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixed(0),
 									  layout: StackLayout = Fit)

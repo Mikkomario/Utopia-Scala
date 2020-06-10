@@ -3,7 +3,6 @@ package utopia.reflection.container.swing.window.dialog.interaction
 import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.WaitUtils
 import utopia.genesis.handling.KeyStateListener
-import utopia.genesis.shape.Axis.X
 import utopia.genesis.shape.shape2D.{Direction2D, Point}
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.{ComponentLike, Focusable}
@@ -11,9 +10,8 @@ import utopia.reflection.component.swing.AwtComponentRelated
 import utopia.reflection.component.swing.button.ImageButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackLayout.Center
-import utopia.reflection.container.stack.segmented.SegmentedGroup
 import utopia.reflection.container.swing.Stack.AwtStackable
-import utopia.reflection.container.swing.{SegmentedRow, Stack}
+import utopia.reflection.container.swing.{SegmentGroup, Stack}
 import utopia.reflection.container.swing.window.Popup
 import utopia.reflection.container.swing.window.dialog.interaction.ButtonColor.Secondary
 import utopia.reflection.image.SingleColorIcon
@@ -140,7 +138,7 @@ trait InputDialog[+A] extends InteractionDialog[A]
 		
 		// Uses one segmented group for each row group group
 		val rows = fields.map { groups =>
-			val segmentGroup = new SegmentedGroup(X)
+			val segmentGroup = new SegmentGroup()
 			groups.mapRows { row =>
 				val fieldInRow =
 				{
@@ -149,8 +147,9 @@ trait InputDialog[+A] extends InteractionDialog[A]
 					else
 						row.field.alignedToSide(Direction2D.Left)
 				}
-				val rowComponent = SegmentedRow.partOfGroupWithItems(segmentGroup, Vector(TextLabel.contextual(row.fieldName),
-					fieldInRow), margin = context.margins.medium.downscaling)
+				val rowComponent = Stack.buildRowWithContext() { s =>
+					segmentGroup.wrap(Vector(TextLabel.contextual(row.fieldName), fieldInRow)).foreach { s += _ }
+				}
 				// Some rows have dependent visibility state
 				row.rowVisibilityPointer.foreach { pointer =>
 					rowComponent.isVisible = pointer.value

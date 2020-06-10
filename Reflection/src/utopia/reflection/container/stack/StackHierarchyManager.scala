@@ -88,6 +88,20 @@ object StackHierarchyManager
 	}
 	
 	/**
+	  * Requests validation for the specified item
+	  * @param items Items to revalidate
+	  */
+	def requestValidationFor(items: Iterable[Stackable]) =
+	{
+		// Queues the item
+		validationQueue ++= items
+		
+		// Informs validation loop
+		if (items.nonEmpty)
+			validationLoop.foreach { l => WaitUtils.notify(l.waitLock) }
+	}
+	
+	/**
 	  * Starts automatic revalidation in a background thread
 	  * @param vps The maximum validations per second value (default = 30)
 	  * @param context The asynchronous execution context
@@ -153,8 +167,8 @@ object StackHierarchyManager
 		if (remainingIds.nonEmpty)
 		{
 			// Handles the items from bottom to the top (longest ids are treated first and shortened)
-			val maxIdLenght = remainingIds.map { _.length }.max
-			val groups = remainingIds.groupBy { _.length == maxIdLenght }
+			val maxIdLength = remainingIds.map { _.length }.max
+			val groups = remainingIds.groupBy { _.length == maxIdLength }
 			
 			val longest = groups.getOrElse(true, Set())
 			longest.foreach { nodeOptionForId(_).foreach { _.content.resetCachedSize() } }

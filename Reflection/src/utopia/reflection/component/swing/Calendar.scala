@@ -7,7 +7,7 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.color.Color
-import utopia.genesis.shape.Axis.{X, Y}
+import utopia.genesis.shape.Axis.Y
 import utopia.genesis.shape.shape2D.Size
 import utopia.reflection.component.drawing.immutable.SelectionCircleDrawer
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
@@ -15,10 +15,8 @@ import utopia.reflection.component.input.{InteractionWithPointer, SelectionGroup
 import utopia.reflection.component.stack.Stackable
 import utopia.reflection.component.swing.button.{ButtonImageSet, CustomDrawableButtonLike, ImageButton}
 import utopia.reflection.component.swing.label.ItemLabel
-import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.stack.StackLayout.Center
-import utopia.reflection.container.stack.segmented.SegmentedGroup
-import utopia.reflection.container.swing.{SegmentedRow, Stack, SwitchPanel}
+import utopia.reflection.container.swing.{SegmentGroup, Stack, SwitchPanel}
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.{Alignment, StackInsets, StackLength, StackSize}
 import utopia.reflection.text.Font
@@ -144,7 +142,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 	private val weekDays = (DayOfWeek.values().dropWhile { _.getValue < firstDayOfWeek.getValue } ++
 		DayOfWeek.values().takeWhile { _.getValue < firstDayOfWeek.getValue }).toVector
 	
-	private val segmentGroup = new SegmentedGroup(X)
+	private val segmentGroup = new SegmentGroup()
 	
 	private var cachedDaySelections: Map[YearMonth, DaySelection] = HashMap()
 	
@@ -165,9 +163,8 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 		
 		// Calendar consists of names & numbers parts
 		val dayNameLabels = weekDays.map(makeDayNameLabel)
-		val dayNameRow = SegmentedRow.partOfGroupWithItems(segmentGroup, dayNameLabels, insideCalendarMargin.along(X))
+		val dayNameRow = Stack.rowWithItems(segmentGroup.wrap(dayNameLabels), insideCalendarMargin.width)
 		
-		currentSelection.attach()
 		currentSelection.addValueListener(SelectionChangeListener)
 		
 		val calendarPart = dayNameRow.columnWith(Vector(selectionSwitch), margin = insideCalendarMargin.along(Y))
@@ -274,10 +271,8 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 	private def updateSelectionArea() =
 	{
 		currentSelection.removeValueListener(SelectionChangeListener)
-		currentSelection.detach()
 		
 		currentSelection = selectionFor(selectedMonth)
-		currentSelection.attach()
 		currentSelection.addValueListener(SelectionChangeListener)
 		selectionSwitch.set(currentSelection)
 	}
@@ -344,7 +339,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 				if (e.newValue) valuePointer.set(Some(date)) else if (value.contains(date)) valuePointer.set(None) } }
 			
 			// Creates date rows
-			rowElements.map { items => SegmentedRow.withItems(segmentGroup, items, margin = insideCalendarMargin.along(X)) }
+			rowElements.map { items => Stack.rowWithItems(segmentGroup.wrap(items), insideCalendarMargin.width) }
 		}
 		
 		val content = Stack.columnWithItems(rows, margin = insideCalendarMargin.height)
@@ -360,11 +355,5 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 		// IMPLEMENTED	------------------
 		
 		override protected def wrapped = content
-		
-		
-		// OTHER	----------------------
-		
-		def attach() = segmentGroup.register(rows)
-		def detach() = rows.foreach(segmentGroup.remove)
 	}
 }

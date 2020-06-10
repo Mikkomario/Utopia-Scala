@@ -24,6 +24,7 @@ Axis2D as a parameter instead of Direction2D.
 ### Deprecations
 - StackSelectionManager was deprecated. You should now use ContainerSelectionManager instead.
     - ContainerSelectionManager supports a wider range of containers.
+- SegmentedRow and SegmentedGroup were deprecated since new implementations (SegmentGroup) were added
     
 ### Major Changes
 - DropDownLike now uses animated stack instead of normal stack in its pop-up view.
@@ -33,6 +34,12 @@ Axis2D as a parameter instead of Direction2D.
 - Made StackHierarchyManager more thread-safe, although there are still probably non-throwing issues
 
 ### New Features
+- SegmentGroup
+    - Replaces old SegmentedRow and SegmentedGroup implementations by wrapping components instead of 
+    imitating a stack. Wrapped components may then be placed within stacks or other containers.
+    - Used by creating a new SegmentGroup and by calling .wrap(...) for each generated row of components
+    - Segment dependency management is now automatic and you don't need to manually register or unregister 
+    components from the segments.
 - AnimatedStack
     - Animates new component additions and component removals
 - AnimatedCollectionView

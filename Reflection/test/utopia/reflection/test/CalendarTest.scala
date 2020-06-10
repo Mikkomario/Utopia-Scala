@@ -46,7 +46,7 @@ object CalendarTest extends App
 	val monthSelect = new JDropDownWrapper[Month](StackInsets.symmetric(16.any, 4.upscaling), "Month", basicFont,
 		Color.white, Color.magenta, initialContent = Month.values().toVector)
 	
-	val buttonImage = Image.readFrom(Paths.get("test-images/arrow-back-48dp.png")).get
+	val buttonImage = Image.readFrom(Paths.get("Reflection/test-images/arrow-back-48dp.png")).get
 	val backImages = ButtonImageSet.varyingAlpha(buttonImage, 0.66, 1)
 	val forwardImages = ButtonImageSet.varyingAlpha(buttonImage.flippedHorizontally, 0.66, 1)
 	

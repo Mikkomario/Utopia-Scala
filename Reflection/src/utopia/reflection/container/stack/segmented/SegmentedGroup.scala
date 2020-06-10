@@ -25,6 +25,7 @@ object SegmentedGroup
   * @since 28.4.2019, v1+
  *  @param direction The direction of the segmented rows in this group
   */
+@deprecated("Segment system updated to Segment and SegmentGroup", "v1.2")
 class SegmentedGroup(override val direction: Axis2D) extends Segmented
 {
 	// ATTRIBUTES	-------------------
