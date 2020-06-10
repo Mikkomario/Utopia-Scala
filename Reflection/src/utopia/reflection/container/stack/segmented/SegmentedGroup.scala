@@ -6,6 +6,7 @@ import scala.math.Ordering.Double.TotalOrdering
 import utopia.genesis.shape.Axis2D
 import utopia.reflection.shape.StackLength
 
+@deprecated("Segment system updated to Segment and SegmentGroup", "v1.2")
 object SegmentedGroup
 {
 	/**
