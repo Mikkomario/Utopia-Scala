@@ -470,7 +470,13 @@ object FileExtensions
 						s"Targeted directory $p is not empty and recursive deletion is disabled"))
 			}
 			else
-				Try { Files.deleteIfExists(p) }
+				Try { Files.deleteIfExists(p) }.recoverWith { _ =>
+					Try
+					{
+						Files.setAttribute(p, "dos:readonly", false)
+						Files.deleteIfExists(p)
+					}
+				}
 		}
 		
 		/**
