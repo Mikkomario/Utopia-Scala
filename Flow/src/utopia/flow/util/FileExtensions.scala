@@ -342,6 +342,25 @@ object FileExtensions
 			newPath.delete().flatMap { _ => Try { Files.copy(p, newPath) } }.flatMap { newParent =>
 				children.flatMap { _.tryForEach { c => new RichPath(c).recursiveCopyTo(newParent) } }.map { _ => newParent }}
 		}
+		
+		/**
+		  * Moves and possibly renames this file
+		  * @param targetPath   New path for this file, including the file name
+		  * @param allowReplace Whether a file already existing at target path should be replaced with this one,
+		  *                     if present (default = true)
+		  * @return This file's new path. Failure if moving or file deletion failed or if tried to overwrite a file
+		  *         while allowReplace = false.
+		  */
+		def moveAs(targetPath: Path, allowReplace: Boolean = true) =
+		{
+			if (targetPath == p)
+				Success(p)
+			else
+				copyAs(targetPath, allowReplace).flatMap { newPath =>
+					delete().map { _ => newPath }
+				}
+		}
+		
 		/**
 		 * Renames this file or directory
 		 * @param newFileName New name for this file or directory (just file name, not the full path)
