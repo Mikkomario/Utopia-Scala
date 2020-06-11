@@ -1,8 +1,8 @@
 package utopia.flow.util
 
 import java.awt.Desktop
-import java.io.{BufferedOutputStream, BufferedReader, FileInputStream, FileNotFoundException, FileOutputStream, IOException, InputStream, InputStreamReader, Reader}
-import java.nio.file.{DirectoryNotEmptyException, Files, Path, Paths, StandardOpenOption}
+import java.io.{BufferedOutputStream, FileInputStream, FileNotFoundException, FileOutputStream, IOException, InputStream, Reader}
+import java.nio.file.{DirectoryNotEmptyException, Files, Path, Paths, StandardCopyOption, StandardOpenOption}
 
 import utopia.flow.parse.JsonConvertible
 
@@ -603,13 +603,14 @@ object FileExtensions
 		/**
 		  * Writes the specified input stream into this file
 		  * @param inputStream Reader that supplies the data
-		  * @param codec Input stream encoding (implicit)
 		  * @return This path. Failure if reading or writing failed or the file stream couldn't be opened
 		  */
-		def writeStream(inputStream: InputStream)(implicit codec: Codec) =
+		def writeStream(inputStream: InputStream)/*(implicit codec: Codec)*/ =
 		{
+			Try { Files.copy(inputStream, p, StandardCopyOption.REPLACE_EXISTING) }.map { _ => p }
+			/*
 			new InputStreamReader(inputStream, codec.charSet).consume { streamReader =>
-				new BufferedReader(streamReader).consume(writeFromReader) }
+				new BufferedReader(streamReader).consume(writeFromReader) }*/
 		}
 		
 		/**
