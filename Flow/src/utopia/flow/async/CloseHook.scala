@@ -7,6 +7,8 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.WeakList
 import utopia.flow.util.WaitUtils
 
+import scala.concurrent.{ExecutionContext, Future}
+
 /**
 * This object stops some operations before jvm closes
 * @author Mikko Hilpinen
@@ -23,6 +25,8 @@ object CloseHook
     
     private val additionalShutdownTime = 200.millis
     private var loops = WeakList[Breakable]()
+    private var hooks = Vector[() => Future[Any]]()
+    
     
     
     // INITIAL CODE -----------------
@@ -44,13 +48,27 @@ object CloseHook
     // OTHER    ---------------------
     
     /**
+      * Registers an action to be performed when the JVM is about to close
+      * @param onCloseAction Action that will be called asynchronously when the JVM is about to close (call by name)
+      */
+    def registerAction(onCloseAction: => Any)(implicit exc: ExecutionContext) =
+        hooks :+= { () => Future { onCloseAction } }
+    
+    /**
+      * Registers an asynchronous action to be perfomed when the JVM is about to close
+      * @param onCloseAction An action that will be called when the JVM is about to close. Shouldn't block. Call by name.
+      */
+    def registerAsyncAction(onCloseAction: => Future[Any]) = hooks :+= { () => onCloseAction }
+    
+    /**
       * Stops all registered breakable items
       */
     def shutdown() =
     {
         // Stops all registered loops
-        val completions = loops.strong.map { _.stop() }
+        val completions = loops.strong.map { _.stop() } ++ hooks.map { _() }
         loops = WeakList()
+        hooks = Vector()
         
         if (completions.nonEmpty)
         {
