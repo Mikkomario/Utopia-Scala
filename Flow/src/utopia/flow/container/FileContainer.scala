@@ -7,21 +7,23 @@ import utopia.flow.container.SaveTiming.{Delayed, Immediate, OnJvmClose, OnlyOnT
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.flow.parse.JsonParser
-import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.WaitUtils
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 /**
   * This container mirrors the stored value in a local file. Remember to call setupAutoSave(...)
   * when extending this class.
   * @author Mikko Hilpinen
   * @since 13.6.2020, v1.8
+  * @param fileLocation Location in the file system where this container's back up file should be located
+  * @param jsonParser A parser used for handling json reading (implicit)
+  * @tparam A Type of item stored in this container
   */
-abstract class FileContainer[A](fileLocation: Path, jsonParser: JsonParser)
+abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonParser)
 {
 	// ABSTRACT	-------------------------------
 	
@@ -41,12 +43,6 @@ abstract class FileContainer[A](fileLocation: Path, jsonParser: JsonParser)
 	  */
 	protected def empty: A
 	
-	/**
-	  * This function is called when data reading or writing fails
-	  * @param error Thrown error
-	  */
-	protected def handleError(error: Throwable): Unit
-	
 	
 	// ATTRIBUTES	---------------------------
 	
@@ -54,7 +50,7 @@ abstract class FileContainer[A](fileLocation: Path, jsonParser: JsonParser)
 	  * Currently stored item (as a volatile pointer)
 	  */
 	protected lazy val _current = new Volatile(fromFile)
-	private val saveCompletion = Volatile(Future.successful(()))
+	private val saveCompletion = Volatile(Future.successful[Try[Unit]](Success(())))
 	
 	
 	// COMPUTED	-------------------------------
@@ -87,14 +83,13 @@ abstract class FileContainer[A](fileLocation: Path, jsonParser: JsonParser)
 	def saveStatus()(implicit exc: ExecutionContext) =
 	{
 		// Will only perform one saving at a time
-		val newSavePromise = Promise[Unit]()
+		val newSavePromise = Promise[Try[Unit]]()
 		saveCompletion.getAndSet(newSavePromise.future).onComplete { _ =>
 			// Saves current status to file as json
 			val dataToSave = toValue(_current.get)
 			fileLocation.createParentDirectories()
-			fileLocation.writeJSON(dataToSave).failure.foreach(handleError)
 			// Completes the promise so that the next save process can start
-			newSavePromise.success(())
+			newSavePromise.success(fileLocation.writeJSON(dataToSave).map { _ => () })
 		}
 		newSavePromise.future
 	}
@@ -122,8 +117,8 @@ abstract class FileContainer[A](fileLocation: Path, jsonParser: JsonParser)
 			jsonParser(fileLocation.toFile) match
 			{
 				case Success(value) => fromValue(value)
-				case Failure(error) =>
-					handleError(error)
+				case Failure(_) =>
+					// Read errors are ignored here
 					empty
 			}
 		}
