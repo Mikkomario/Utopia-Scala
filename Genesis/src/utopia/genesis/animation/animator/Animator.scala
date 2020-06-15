@@ -21,6 +21,10 @@ trait Animator[A] extends Actor with Drawable
 	  * Modifier used for this animator's animation speed. Defaults to 1.0
 	  */
 	var speedModifier = 1.0
+	/**
+	  * Whether drawn animation is allowed to automatically repeat. Defaults to true.
+	  */
+	var allowsRepeat = true
 	private var _progress: Duration = Duration.Zero
 	private lazy val cached = VolatileLazy { apply(_progress / animationDuration) }
 	
@@ -62,6 +66,11 @@ trait Animator[A] extends Actor with Drawable
 		cached.reset()
 	}
 	
+	/**
+	  * @return Currently displayed item
+	  */
+	def current = cached.get
+	
 	
 	// IMPLEMENTED	--------------------
 	
@@ -71,11 +80,23 @@ trait Animator[A] extends Actor with Drawable
 		val mod = speedModifier
 		if (mod != 0)
 		{
-			_progress += duration * mod
 			val ad = animationDuration
-			// Resets progress if past animation duration
-			while (_progress > ad) { _progress -= ad }
-			cached.reset()
+			if (allowsRepeat)
+			{
+				_progress += duration * mod
+				// Resets progress if past animation duration
+				while (_progress > ad) { _progress -= ad }
+				cached.reset()
+			}
+			else if (_progress < ad)
+			{
+				val proposedProgress = _progress + duration * mod
+				if (proposedProgress > ad)
+					_progress = ad
+				else
+					_progress = proposedProgress
+				cached.reset()
+			}
 		}
 	}
 	
@@ -97,4 +118,14 @@ trait Animator[A] extends Actor with Drawable
 	  * Stops this animation by setting the speed modifier to 0
 	  */
 	def stop() = speedModifier = 0
+	
+	/**
+	  * Makes it so that this animator will always stop at the end of each animation
+	  */
+	def disableRepeat() = allowsRepeat = false
+	
+	/**
+	  * Makes it so that this animator will keep repeating the current animation
+	  */
+	def enableRepeat() = allowsRepeat = true
 }

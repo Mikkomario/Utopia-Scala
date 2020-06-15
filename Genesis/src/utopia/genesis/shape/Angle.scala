@@ -47,6 +47,14 @@ object Angle
     val blue = ofRadians(4 * math.Pi / 3)
     
     
+    // COMPUTED ----------------------------------
+    
+    /**
+      * @return A zero degree angle
+      */
+    def zero = right
+    
+    
     // FACTORIES    ------------------------------
     
     /**

@@ -206,6 +206,12 @@ case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector
     def +(other: Transformation) = Transformation(translation + other.translation, 
             scaling * other.scaling, rotation + other.rotation, shear + other.shear, useReverseOrder)
     
+    /**
+      * @param rotation Amount of rotation to add to this transformation
+      * @return A rotated copy of this transformation
+      */
+    def +(rotation: Rotation) = copy(rotation = this.rotation + rotation)
+    
     /*
      * Negates a transformation from this transformation
      */
