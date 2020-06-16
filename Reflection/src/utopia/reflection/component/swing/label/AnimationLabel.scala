@@ -1,14 +1,62 @@
 package utopia.reflection.component.swing.label
 
-import utopia.genesis.animation.animator.Animator
+import java.time.Instant
+
+import scala.math.Ordering.Double.TotalOrdering
+import utopia.flow.util.TimeExtensions._
+import utopia.genesis.animation.TimedAnimation
+import utopia.genesis.animation.animator.{Animator, TransformingImageAnimator}
+import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.image.Image
+import utopia.genesis.shape.Rotation
 import utopia.genesis.shape.shape2D.{Bounds, Point, Transformation}
-import utopia.genesis.util.Drawer
+import utopia.genesis.util.{Drawer, FPS}
+import utopia.inception.handling.HandlerType
+import utopia.inception.handling.immutable.Handleable
+import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.stack.StackLeaf
+import utopia.reflection.component.stack.Stackable
 import utopia.reflection.shape.Alignment.Center
 import utopia.reflection.shape.{Alignment, StackSize}
+import utopia.reflection.shape.LengthExtensions._
+
+import scala.concurrent.duration.{Duration, FiniteDuration}
+
+object AnimationLabel
+{
+	/**
+	  * Creates a new label that rotates a static image
+	  * @param actorHandler Actor handler that will deliver action events
+	  * @param image Image to be drawn
+	  * @param origin Image origin (relative to image top-left corner)
+	  * @param rotation Rotation animation
+	  * @param alignment Alignment to use when positioning the image in the label (default = Center)
+	  * @return A new label
+	  */
+	def withRotatingImage(actorHandler: ActorHandler, image: Image, origin: Point, rotation: TimedAnimation[Rotation],
+						  alignment: Alignment = Center) =
+	{
+		val animator = TransformingImageAnimator(image, origin, rotation.map(Transformation.rotation))
+		val maxRadius = image.size.toBounds().corners.map { p => (p - origin).length }.max
+		val stackSize = (maxRadius * 2).any.square
+		new AnimationLabel(actorHandler, animator, stackSize, Point(maxRadius, maxRadius), alignment)
+	}
+	
+	/**
+	  * Creates a new label that rotates a static image
+	  * @param image Image to be drawn
+	  * @param origin Image origin (relative to image top-left corner)
+	  * @param rotation Rotation animation
+	  * @param alignment Alignment to use when positioning the image in the label (default = Center)
+	  * @param context Implicit component creation context
+	  * @return A new label
+	  */
+	def contextualWithRotatingImage(image: Image, origin: Point, rotation: TimedAnimation[Rotation],
+									alignment: Alignment = Center)(implicit context: BaseContextLike) =
+		withRotatingImage(context.actorHandler, image, origin, rotation, alignment)
+}
 
 /**
   * This label draws an animation on top of itself
@@ -22,12 +70,16 @@ import utopia.reflection.shape.{Alignment, StackSize}
   * @param alignment Alignment used when positioning the drawn content
   */
 class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], override val stackSize: StackSize,
-						drawOrigin: Point = Point.origin, alignment: Alignment = Center)
-	extends Label with StackLeaf
+						drawOrigin: Point = Point.origin, alignment: Alignment = Center, maxFps: FPS = FPS(120))
+	extends Label with Stackable
 {
+	// ATTRIBUTES	-------------------------
+	
+	private var _isAttached = false
+	
+	
 	// INITIAL CODE	-------------------------
 	
-	actorHandler += animator
 	addCustomDrawer(ContentDrawer)
 	
 	
@@ -38,6 +90,27 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 	override def resetCachedSize() = ()
 	
 	override def stackId = hashCode()
+	
+	override def isAttachedToMainHierarchy = _isAttached
+	
+	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
+	{
+		if (_isAttached != newAttachmentStatus)
+		{
+			_isAttached = newAttachmentStatus
+			// Animator is only attached to the actor handler when this component is displayable
+			if (newAttachmentStatus)
+			{
+				actorHandler += animator
+				actorHandler += Repainter
+			}
+			else
+			{
+				actorHandler -= animator
+				actorHandler -= Repainter
+			}
+		}
+	}
 	
 	
 	// NESTED	----------------------------
@@ -56,5 +129,21 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 			drawer.transformed(Transformation.position(drawBounds.position + drawOrigin * scaling).scaled(scaling))
 				.disposeAfter(animator.draw)
 		}
+	}
+	
+	object Repainter extends Actor
+	{
+		private val threshold = maxFps.interval
+		private var lastDraw = Instant.now() - threshold
+		
+		override def act(duration: FiniteDuration) =
+		{
+			val time = Instant.now()
+			if (time >= lastDraw + threshold)
+				repaint()
+			lastDraw = time
+		}
+		
+		override def allowsHandlingFrom(handlerType: HandlerType) = isVisible
 	}
 }

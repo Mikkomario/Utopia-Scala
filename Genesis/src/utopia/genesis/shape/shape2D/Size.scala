@@ -174,6 +174,12 @@ case class Size(width: Double, height: Double) extends VectorLike[Size] with App
     }
     
     /**
+      * @param position New position for this size (default = (0, 0))
+      * @return A set of bounds with this size and specified position
+      */
+    def toBounds(position: Point = Point.origin) = Bounds(position, this)
+    
+    /**
       * Checks whether this size would fit into the other size
       * @param another Another size
       * @return Whether this size would fit into the other size
