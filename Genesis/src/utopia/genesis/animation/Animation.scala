@@ -2,7 +2,7 @@ package utopia.genesis.animation
 
 import utopia.genesis.animation.Animation.{MapAnimation, RepeatingAnimation, ReverseAnimation}
 import utopia.genesis.animation.transform.{AnimatedTransform, AnimationWithTransform, TimedAnimationWithTranform, TimedTransform}
-import utopia.genesis.shape.path.ProjectilePath
+import utopia.genesis.shape.path.{ProjectilePath, SPath}
 import utopia.genesis.shape.shape2D.Point
 
 import scala.concurrent.duration.Duration
@@ -30,6 +30,24 @@ trait Animation[+A]
 	  * @return A version of this animation that first progresses faster and then slows down as it nears progress 1.0
 	  */
 	def projectileCurved = CurvedAnimation(this, ProjectilePath())
+	
+	/**
+	  * @return A vesion of this animation that progresses fastest at 50% progress and slowest around 0% and
+	  *         100% progress
+	  */
+	def sPathCurved = curved(SPath.default)
+	
+	/**
+	  * @return A version of this animation that progresses fastest at 50% progress and slowest around 0% and
+	  *         100% progress
+	  */
+	def smoothSPathCurved = curved(SPath.smooth)
+	
+	/**
+	  * @return A version of this animation that progresses fastest at 50% progress and slowest around 0% and
+	  *         100% progress
+	  */
+	def verySmoothSPathCurved = curved(SPath.verySmooth)
 	
 	/**
 	  * @return A copy of this animation that has uses reversed progress
@@ -83,6 +101,12 @@ trait Animation[+A]
 	  * @return A new animation
 	  */
 	def repeated(times: Int): Animation[A] = new RepeatingAnimation[A](this, times)
+	
+	/**
+	  * @param curvature A curve animation used for transforming progress% values
+	  * @return A curved version of this animation
+	  */
+	def curved(curvature: Animation[Double]) = CurvedAnimation(this, curvature)
 	
 	/**
 	  * @param points Progress mapping points where x represents the original progress and y the mapped progress

@@ -4,8 +4,8 @@
 - **Drawer.drawTextPositioned** now accepts a Bounds instead of Position from the function return 
 value. Added appropriate text scaling to the method.
 ### New Features
-- ProjectilePath
-    - A simple class which allows you to easily create a parable-like projectile motion for your double value
+- ProjectilePath & SPath
+    - Simple classes which allows you to easily create smooth, non-linear paths between (0,0) and (1,1)
 - Direction1D
     - A very simple enumeration for one dimensional direction (forward / backward)
 - BezierFunction

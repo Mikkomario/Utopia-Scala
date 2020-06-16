@@ -59,6 +59,8 @@ Axis2D as a parameter instead of Direction2D.
 animations.
 - CollectionViewLike trait for adding custom collection views for both Swing and non-swing approaches
 - ContentDisplayer and ContainerContentDisplayer for features similar to ContentManager, except read-only.
+- AnimationLabel
+    - Can be used for animated drawing (Sprites, rotating images etc.)
 
 ### New Methods
 - AwtComponentWrapper: toImage
