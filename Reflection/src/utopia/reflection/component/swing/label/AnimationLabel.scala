@@ -13,7 +13,6 @@ import utopia.genesis.shape.Rotation
 import utopia.genesis.shape.shape2D.{Bounds, Point, Transformation}
 import utopia.genesis.util.{Drawer, FPS}
 import utopia.inception.handling.HandlerType
-import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
@@ -22,7 +21,7 @@ import utopia.reflection.shape.Alignment.Center
 import utopia.reflection.shape.{Alignment, StackSize}
 import utopia.reflection.shape.LengthExtensions._
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.duration.FiniteDuration
 
 object AnimationLabel
 {

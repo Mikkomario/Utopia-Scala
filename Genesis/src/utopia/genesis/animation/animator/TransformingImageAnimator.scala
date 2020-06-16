@@ -1,7 +1,7 @@
 package utopia.genesis.animation.animator
 
 import utopia.genesis.animation.{Animation, TimedAnimation}
-import utopia.genesis.image.{Image, Strip}
+import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.{Point, Transformation}
 import utopia.genesis.util.Drawer
 
