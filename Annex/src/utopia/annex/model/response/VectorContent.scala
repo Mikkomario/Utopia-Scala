@@ -1,4 +1,4 @@
-package utopia.annex.model
+package utopia.annex.model.response
 
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.FromModelFactory
@@ -16,4 +16,3 @@ case class VectorContent[+A](models: Vector[Model[Constant]])(implicit parser: F
 	  */
 	lazy val parsed = models.tryMap { parser(_) }
 }
-

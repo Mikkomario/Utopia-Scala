@@ -1,4 +1,4 @@
-package utopia.annex.model
+package utopia.annex.model.response
 
 import utopia.access.http.StatusGroup.ServerError
 import utopia.access.http.{Status, StatusGroup}

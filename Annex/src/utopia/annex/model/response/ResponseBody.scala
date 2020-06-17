@@ -1,4 +1,4 @@
-package utopia.annex.model
+package utopia.annex.model.response
 
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.FromModelFactory

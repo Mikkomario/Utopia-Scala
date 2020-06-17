@@ -1,4 +1,4 @@
-package utopia.annex.model
+package utopia.annex.model.request
 
 import utopia.access.http.Method
 import utopia.flow.datastructure.immutable.{Constant, Model}

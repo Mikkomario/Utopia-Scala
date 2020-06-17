@@ -1,4 +1,4 @@
-package utopia.annex.model
+package utopia.annex.model.schrodinger
 
 import scala.util.{Failure, Success, Try}
 

@@ -1,4 +1,4 @@
-package utopia.annex.model
+package utopia.annex.model.schrodinger
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.async.AsyncExtensions._

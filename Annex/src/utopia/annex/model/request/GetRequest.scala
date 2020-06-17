@@ -1,11 +1,10 @@
-package utopia.annex.model
+package utopia.annex.model.request
 
 import utopia.access.http.Method.Get
 import utopia.flow.datastructure.immutable.Model
 
 object GetRequest
 {
-	
 	// OTHER    -----------------------------
 	
 	/**

@@ -1,4 +1,6 @@
-package utopia.annex.model
+package utopia.annex.model.schrodinger
+
+import utopia.annex.model.response.RequestNotSent
 
 /**
   * This schrödinger item is used in requests where results are searched first from local, then global data

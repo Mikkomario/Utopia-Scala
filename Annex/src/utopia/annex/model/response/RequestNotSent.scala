@@ -1,4 +1,4 @@
-package utopia.annex.model
+package utopia.annex.model.response
 
 /**
   * A status used when a request is not sent for some reason
