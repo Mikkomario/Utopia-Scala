@@ -1,0 +1,15 @@
+package utopia.metropolis.model.combined.language
+
+import utopia.metropolis.model.combined.description.Described
+import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.stored.language.Language
+
+/**
+  * Adds descriptive data to a language
+  * @author Mikko Hilpinen
+  * @since 16.5.2020, v2
+  */
+case class DescribedLanguage(language: Language, descriptions: Set[DescriptionLink]) extends Described[Language]
+{
+	override def wrapped = language
+}
