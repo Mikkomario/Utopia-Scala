@@ -51,15 +51,25 @@ object ExodusContext
 	  * @param executionContext Execution context used
 	  * @param connectionPool Database connection pool used
 	  * @param databaseName Name of the primary database where user data is stored
+	  * @param handleErrors A function for handling thrown errors
 	  */
-	def setup(executionContext: ExecutionContext, connectionPool: ConnectionPool, databaseName: String) =
+	def setup(executionContext: ExecutionContext, connectionPool: ConnectionPool, databaseName: String)
+			 (handleErrors: (Throwable, String) => Unit) =
 	{
 		DataType.setup()
-		data = Some(Data(executionContext, connectionPool, databaseName))
+		data = Some(Data(executionContext, connectionPool, databaseName, handleErrors))
 	}
+	
+	/**
+	  * Receives the specified error
+	  * @param error An error that occurred
+	  * @param message An error message
+	  */
+	def handleError(error: Throwable, message: String) = data.foreach { _.errorHandler(error, message) }
 	
 	
 	// NESTED	--------------------------------------
 	
-	private case class Data(exc: ExecutionContext, connectionPool: ConnectionPool, databaseName: String)
+	private case class Data(exc: ExecutionContext, connectionPool: ConnectionPool, databaseName: String,
+							errorHandler: (Throwable, String) => Unit)
 }
