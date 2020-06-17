@@ -510,6 +510,29 @@ object CollectionExtensions
             
             (onlyInMe, merged, onlyInThem)
         }
+    
+        /**
+          * Performs the specified mapping function until it succeeds or until all items in this collection have been
+          * tested
+          * @param f A mapping function which may fail
+          * @tparam B Type of map function result
+          * @return The first successful map result or failure if none of the items in this collection could be mapped
+          */
+        def tryFindMap[B](f: A => Try[B]) =
+        {
+            val iter = t.iterator.map(f)
+            if (iter.hasNext)
+            {
+                // Returns the first result if its a success or if no successes were found
+                val firstResult = iter.next()
+                if (firstResult.isSuccess)
+                    firstResult
+                else
+                    iter.find { _.isSuccess }.getOrElse(firstResult)
+            }
+            else
+                Failure(new NoSuchElementException("Called tryFindMap on an empty collection"))
+        }
     }
     
     implicit class RichIterableLike[A, CC[X], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
