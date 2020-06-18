@@ -164,7 +164,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 							if (isOfflineMode)
 								sendSynchronous(request, isOfflineMode = true)
 							else
-								offlineQueue.push { sendSynchronous(request) }.waitFor() match
+								offlineQueue.push { sendSynchronous(request, isOfflineMode = true) }.waitFor() match
 								{
 									case Success(result) => result
 									case Failure(error) => Left(RequestFailed(error))

@@ -207,4 +207,16 @@ case class Point(override val x: Double, override val y: Double) extends VectorL
      * Point translated over Y axis
      */
     def plusY(increase: Double) = Point(x, y + increase)
+	
+	/**
+	  * @param decrease Amount of translation to left
+	  * @return Translated point
+	  */
+	def minusX(decrease: Double) = plusX(-decrease)
+	
+	/**
+	  * @param decrease Amount of translation to right
+	  * @return Translated point
+	  */
+	def minusY(decrease: Double) = plusY(-decrease)
 }

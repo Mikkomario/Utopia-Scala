@@ -39,7 +39,7 @@ class Dialog[C <: Stackable with AwtContainerRelated](owner: java.awt.Window, ov
         _component.pack()
     
         setup()
-        center()
+        centerOnParent()
     }
     
 	// IMPLEMENTED    ------------------

@@ -16,9 +16,15 @@ trait Area
 {
     // ABSTRACT    ------------------------
     
+    /**
+      * @return The position of this component's top-left corner
+      */
     def position: Point
     def position_=(p: Point): Unit
     
+    /**
+      * @return The current size of this component
+      */
     def size: Size
     def size_=(s: Size): Unit
     
@@ -59,7 +65,20 @@ trait Area
     }
     
     def rightX = x + width
+    def rightX_=(newX: Double) = x = newX - width
     def bottomY = y + height
+    def bottomY_=(newY: Double) = y = newY - height
+    
+    def topLeft = position
+    def topLeft_=(p: Point) = position = p
+    def topRight = position.plusX(width)
+    def topRight_=(p: Point) = position = p.minusX(width)
+    def bottomRight = position + size
+    def bottomRight_=(p: Point) = position = p - size
+    def bottomLeft = position.plusY(height)
+    def bottomLeft_=(p: Point) = position = p.minusY(height)
+    def center = position + size / 2
+    def center_=(p: Point) = position = p - size / 2
     
     
     // OTHER    ------------------------

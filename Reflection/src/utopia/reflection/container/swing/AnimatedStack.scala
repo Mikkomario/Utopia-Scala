@@ -91,7 +91,7 @@ class AnimatedStack[C <: AwtStackable](actorHandler: ActorHandler, direction: Ax
 									   fadingIsEnabled: Boolean = true)(implicit val executionContext: ExecutionContext)
 	extends AnimatedChangesContainer[C, Stack[AnimatedVisibility[C]]](
 		new Stack[AnimatedVisibility[C]](direction, margin, cap, layout), actorHandler, direction, animationDuration,
-		fadingIsEnabled) with SwingComponentRelated with CustomDrawableWrapper with AreaOfItems[C]
+		fadingIsEnabled) with SwingComponentRelated with CustomDrawableWrapper with AreaOfItems[C] with AwtContainerRelated
 {
 	// IMPLEMENTED	-------------------------
 	
