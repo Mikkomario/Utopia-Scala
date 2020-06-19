@@ -462,7 +462,7 @@ CREATE TABLE client_device_description
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deprecated_after DATETIME,
 
-    INDEX (deprecated_after),
+    INDEX cdd_timeline_idx (deprecated_after, created),
 
     FOREIGN KEY cdd_cd_described_device (device_id)
         REFERENCES client_device(id) ON DELETE CASCADE,
@@ -481,7 +481,7 @@ CREATE TABLE client_device_user
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deprecated_after DATETIME,
 
-    INDEX (deprecated_after),
+    INDEX cdu_timeline_idx (deprecated_after, created),
 
     FOREIGN KEY cdu_cd_used_client_device (device_id)
         REFERENCES client_device(id) ON DELETE CASCADE,

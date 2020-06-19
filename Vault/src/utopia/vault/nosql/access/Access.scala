@@ -33,6 +33,9 @@ trait Access[+A]
 	 */
 	protected def read(condition: Option[Condition], order: Option[OrderBy] = None)(implicit connection: Connection): A
 	
+	
+	// OTHER	----------------------
+	
 	/**
 	 * Merges an additional condition with the existing global condition
 	 * @param additional An additional condition

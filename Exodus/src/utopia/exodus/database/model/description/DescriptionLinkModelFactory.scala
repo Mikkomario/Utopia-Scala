@@ -33,11 +33,12 @@ trait DescriptionLinkModelFactory[+M <: Storable]
 	  * @param id Link id (optional)
 	  * @param targetId Description target id (optional)
 	  * @param descriptionId Description id (optional)
+	  * @param created Creation time of this link (optional)
 	  * @param deprecatedAfter Deprecation / invalidation time of this link (optional)
 	  * @return A new database model with specified attributes
 	  */
 	def apply(id: Option[Int] = None, targetId: Option[Int] = None, descriptionId: Option[Int] = None,
-			  deprecatedAfter: Option[Instant] = None): M
+			  created: Option[Instant] = None, deprecatedAfter: Option[Instant] = None): M
 	
 	
 	// COMPUTED	-----------------------------------
@@ -62,6 +63,12 @@ trait DescriptionLinkModelFactory[+M <: Storable]
 	def withTargetId(targetId: Int) = apply(targetId = Some(targetId))
 	
 	/**
+	  * @param creationTime Row creation time
+	  * @return A model with only creation time set
+	  */
+	def withCreationTime(creationTime: Instant) = apply(created = Some(creationTime))
+	
+	/**
 	  * @param deprecationTime Deprecation time for this description link
 	  * @return A model with only deprecation time set
 	  */
@@ -74,22 +81,24 @@ trait DescriptionLinkModelFactory[+M <: Storable]
 	  * @return Newly inserted description link
 	  */
 	def insert(data: PartialDescriptionLinkData)(implicit connection: Connection): DescriptionLink = insert(
-		data.targetId, data.description)
+		data.targetId, data.description, data.created)
 	
 	/**
 	  * Inserts a new description link to DB
 	  * @param targetId Id of described item
 	  * @param data Description to insert
+	  * @param created Creation time of this description link (default = current time)
 	  * @param connection DB Connection (implicit)
 	  * @return Newly inserted description link
 	  */
-	def insert(targetId: Int, data: DescriptionData)(implicit connection: Connection) =
+	def insert(targetId: Int, data: DescriptionData, created: Instant = Instant.now())
+			  (implicit connection: Connection) =
 	{
 		// Inserts the description
 		val newDescription = DescriptionModel.insert(data)
 		// Inserts the link between description and target
-		val linkId = apply(None, Some(targetId), Some(newDescription.id)).insert().getInt
-		DescriptionLink(linkId, DescriptionLinkData(targetId, newDescription))
+		val linkId = apply(None, Some(targetId), Some(newDescription.id), Some(created)).insert().getInt
+		DescriptionLink(linkId, DescriptionLinkData(targetId, newDescription, created))
 	}
 }
 
@@ -117,14 +126,16 @@ object DescriptionLinkModelFactory
 		private lazy val factory = DescriptionLinkFactory(this)
 		
 		def apply(id: Option[Int] = None, targetId: Option[Int] = None, descriptionId: Option[Int] = None,
+				  created: Option[Instant] = None,
 				  deprecatedAfter: Option[Instant] = None): DescriptionLinkModel[DescriptionLink, DescriptionLinkFactory[DescriptionLink]] =
-			DescriptionLinkModelImplementation(id, targetId, descriptionId, deprecatedAfter)
+			DescriptionLinkModelImplementation(id, targetId, descriptionId, created, deprecatedAfter)
 		
 		
 		// NESTED	--------------------------
 		
 		private case class DescriptionLinkModelImplementation(id: Option[Int] = None, targetId: Option[Int] = None,
 															  descriptionId: Option[Int] = None,
+															  created: Option[Instant] = None,
 															  deprecatedAfter: Option[Instant] = None)
 			extends DescriptionLinkModel[DescriptionLink, DescriptionLinkFactory[DescriptionLink]]
 		{

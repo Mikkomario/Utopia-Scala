@@ -1,5 +1,7 @@
 package utopia.exodus.database.factory.description
 
+import java.time.Instant
+
 import utopia.exodus.database.model.description.{DescriptionLinkModel, DescriptionLinkModelFactory}
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.metropolis.model.partial.description.DescriptionLinkData
@@ -28,9 +30,10 @@ trait DescriptionLinkFactory[+E] extends LinkedFactory[E, Description] with Depr
 	  * @param id Link id
 	  * @param targetId Description target id
 	  * @param description Description from DB
+	  * @param created Creation time of the link
 	  * @return A new existing desription link model
 	  */
-	protected def apply(id: Int, targetId: Int, description: Description): Try[E]
+	protected def apply(id: Int, targetId: Int, description: Description, created: Instant): Try[E]
 	
 	
 	// IMPLEMENTED	------------------------------
@@ -43,7 +46,7 @@ trait DescriptionLinkFactory[+E] extends LinkedFactory[E, Description] with Depr
 	
 	override def apply(model: Model[Constant], child: Description) =
 		table.requirementDeclaration.validate(model).toTry.flatMap { valid =>
-			apply(valid("id").getInt, valid(modelFactory.targetIdAttName).getInt, child)
+			apply(valid("id").getInt, valid(modelFactory.targetIdAttName).getInt, child, valid("created").getInstant)
 		}
 }
 
@@ -106,7 +109,7 @@ object DescriptionLinkFactory
 	private case class DescriptionLinkFactoryImplementation(modelFactory: DescriptionLinkModelFactory[Storable])
 		extends DescriptionLinkFactory[DescriptionLink]
 	{
-		override protected def apply(id: Int, targetId: Int, description: Description) =
-			Success(DescriptionLink(id, DescriptionLinkData(targetId, description)))
+		override protected def apply(id: Int, targetId: Int, description: Description, created: Instant) =
+			Success(DescriptionLink(id, DescriptionLinkData(targetId, description, created)))
 	}
 }

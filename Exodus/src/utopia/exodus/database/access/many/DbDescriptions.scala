@@ -120,17 +120,17 @@ object DbDescriptions
 	// NESTED	----------------------------
 	
 	case class DescriptionsOfAll(factory: DescriptionLinkFactory[DescriptionLink],
-								 modelFactory: DescriptionLinkModelFactory[Storable])
+								 linkModelFactory: DescriptionLinkModelFactory[Storable])
 		extends DescriptionLinksForManyAccess
 	{
 		override def globalCondition = None
 		
 		override protected def subGroup(remainingTargetIds: Set[Int]) =
-			DescriptionsOfMany(remainingTargetIds, factory, modelFactory)
+			DescriptionsOfMany(remainingTargetIds, factory, linkModelFactory)
 	}
 	
 	case class DescriptionsOfMany(targetIds: Set[Int], factory: DescriptionLinkFactory[DescriptionLink],
-								  modelFactory: DescriptionLinkModelFactory[Storable])
+								  linkModelFactory: DescriptionLinkModelFactory[Storable])
 		extends DescriptionLinksForManyAccess
 	{
 		// IMPLEMENTED	---------------------
@@ -145,9 +145,9 @@ object DbDescriptions
 				val baseCondition =
 				{
 					if (targetIds.size == 1)
-						modelFactory.withTargetId(targetIds.head).toCondition
+						linkModelFactory.withTargetId(targetIds.head).toCondition
 					else
-						modelFactory.targetIdColumn.in(targetIds)
+						linkModelFactory.targetIdColumn.in(targetIds)
 				}
 				Some(baseCondition && factory.nonDeprecatedCondition)
 			}
@@ -184,12 +184,13 @@ object DbDescriptions
 	}
 	
 	case class DescriptionsOfSingle(targetId: Int, factory: DescriptionLinkFactory[DescriptionLink],
-									modelFactory: DescriptionLinkModelFactory[Storable])
+									linkModelFactory: DescriptionLinkModelFactory[Storable])
 		extends DescriptionLinksAccess
 	{
 		// IMPLEMENTED	--------------------
 		
-		override val globalCondition = Some(modelFactory.withTargetId(targetId).toCondition && factory.nonDeprecatedCondition)
+		override val globalCondition = Some(linkModelFactory.withTargetId(targetId).toCondition &&
+			factory.nonDeprecatedCondition)
 		
 		
 		// OTHER	-------------------------
@@ -220,7 +221,7 @@ object DbDescriptions
 			// Must first deprecate the old version of this description
 			deprecate(newDescription.languageId, newDescription.role)
 			// Then inserts a new description
-			modelFactory.insert(targetId, newDescription)
+			linkModelFactory.insert(targetId, newDescription)
 		}
 		
 		/**
@@ -248,7 +249,7 @@ object DbDescriptions
 			// Needs to join into description table in order to filter by language id and role id
 			// (factories automatically do this)
 			val descriptionCondition = descriptionModel.withRole(role).withLanguageId(languageId).toCondition
-			modelFactory.nowDeprecated.updateWhere(mergeCondition(descriptionCondition), Some(factory.target)) > 0
+			linkModelFactory.nowDeprecated.updateWhere(mergeCondition(descriptionCondition), Some(factory.target)) > 0
 		}
 		
 		/**

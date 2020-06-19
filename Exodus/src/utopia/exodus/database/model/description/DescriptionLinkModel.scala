@@ -34,6 +34,11 @@ trait DescriptionLinkModel[+E, +F <: DescriptionLinkFactory[E]] extends Storable
 	def descriptionId: Option[Int]
 	
 	/**
+	  * @return Creation time of this link
+	  */
+	def created: Option[Instant]
+	
+	/**
 	  * @return Description deprecation time (optional)
 	  */
 	def deprecatedAfter: Option[Instant]
@@ -42,7 +47,7 @@ trait DescriptionLinkModel[+E, +F <: DescriptionLinkFactory[E]] extends Storable
 	// IMPLEMENTED	--------------------------
 	
 	override def valueProperties = Vector("id" -> id, factory.modelFactory.targetIdAttName -> targetId,
-		"descriptionId" -> descriptionId, "deprecatedAfter" -> deprecatedAfter)
+		"descriptionId" -> descriptionId, "created" -> created, "deprecatedAfter" -> deprecatedAfter)
 }
 
 object DescriptionLinkModel

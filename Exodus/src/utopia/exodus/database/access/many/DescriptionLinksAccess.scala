@@ -1,11 +1,15 @@
 package utopia.exodus.database.access.many
 
+import java.time.Instant
+
 import utopia.exodus.database.factory.description.DescriptionLinkFactory
-import utopia.exodus.database.model.description.DescriptionModel
+import utopia.exodus.database.model.description.{DescriptionLinkModelFactory, DescriptionModel}
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.enumeration.DescriptionRole
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
+import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
+import utopia.vault.model.immutable.Storable
 import utopia.vault.nosql.access.ManyModelAccess
 import utopia.vault.sql.Extensions._
 
@@ -19,6 +23,11 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 	// ABSTRACT	-------------------------
 	
 	override def factory: DescriptionLinkFactory[DescriptionLink]
+	
+	/**
+	  * @return A factory used for creating search models for description links
+	  */
+	def linkModelFactory: DescriptionLinkModelFactory[Storable]
 	
 	
 	// COMPUTED	------------------------
@@ -35,6 +44,18 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 	
 	
 	// OTHER	------------------------
+	
+	/**
+	  * @param threshold A time threshold (inclusive)
+	  * @param connection DB Connection (implicit)
+	  * @return Whether there are any changes to these descriptions since the specified time threshold
+	  */
+	def isModifiedSince(threshold: Instant)(implicit connection: Connection) =
+	{
+		val creationCondition = linkModelFactory.withCreationTime(threshold).toConditionWithOperator(LargerOrEqual)
+		val deletionCondition = linkModelFactory.withDeprecatedAfter(threshold).toConditionWithOperator(LargerOrEqual)
+		exists(creationCondition || deletionCondition)
+	}
 	
 	/**
 	  * @param languageId Id of targeted language

@@ -27,7 +27,15 @@ object UserDeviceModel extends Deprecatable
 	
 	// COMPUTED	--------------------------
 	
+	/**
+	  * @return Table used by this model
+	  */
 	def table = Tables.userDevice
+	
+	/**
+	  * @return A model that has just been marked as deprecated
+	  */
+	def nowDeprecated = withDeprecatedAfter(Instant.now())
 	
 	
 	// IMPLEMENTED	----------------------
@@ -48,6 +56,18 @@ object UserDeviceModel extends Deprecatable
 	  * @return A model with only device id set
 	  */
 	def withDeviceId(deviceId: Int) = apply(deviceId = Some(deviceId))
+	
+	/**
+	  * @param created Row creation time
+	  * @return A model with only creation time set
+	  */
+	def withCreationTime(created: Instant) = apply(created = Some(created))
+	
+	/**
+	  * @param deprecationTime Link deprecation time
+	  * @return A model with only deprecation time set
+	  */
+	def withDeprecatedAfter(deprecationTime: Instant) = apply(deprecatedAfter = Some(deprecationTime))
 	
 	/**
 	  * Inserts a new connection between a user and a client device
@@ -74,13 +94,13 @@ object UserDeviceModel extends Deprecatable
   * @since 2.5.2020, v1
   */
 case class UserDeviceModel(id: Option[Int] = None, userId: Option[Int] = None, deviceId: Option[Int] = None,
-						   deprecatedAfter: Option[Instant] = None) extends Storable
+						   created: Option[Instant] = None, deprecatedAfter: Option[Instant] = None) extends Storable
 {
 	// IMPLEMENTED	---------------------------------
 	
 	override def table = UserDeviceModel.table
 	
-	override def valueProperties = Vector("id" -> id, "userId" -> userId, "deviceId" -> deviceId,
+	override def valueProperties = Vector("id" -> id, "userId" -> userId, "deviceId" -> deviceId, "created" -> created,
 		"deprecatedAfter" -> deprecatedAfter)
 	
 	

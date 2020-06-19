@@ -1,5 +1,7 @@
 package utopia.metropolis.model.partial.description
 
+import java.time.Instant
+
 import utopia.flow.datastructure.immutable.{Constant, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.datastructure.template.{Model, Property}
 import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible}
@@ -45,7 +47,8 @@ object DescriptionLinkData
 		extends FromModelFactory[DescriptionLinkData[D]]
 	{
 		override def apply(model: Model[Property]) = commonSchema.validate(model).toTry.flatMap { valid =>
-			descriptionFactory(valid).map { description => DescriptionLinkData[D](valid("target_id"), description) }
+			descriptionFactory(valid).map { description => DescriptionLinkData[D](valid("target_id"), description,
+				valid("link_created")) }
 		}
 	}
 }
@@ -58,7 +61,9 @@ object DescriptionLinkData
   * @param description Description of the device
   * @tparam D Type of description contained within this data
   */
-case class DescriptionLinkData[+D <: ModelConvertible](targetId: Int, description: D) extends ModelConvertible
+case class DescriptionLinkData[+D <: ModelConvertible](targetId: Int, description: D, created: Instant = Instant.now())
+	extends ModelConvertible
 {
-	override def toModel = description.toModel + Constant("target_id", targetId)
+	override def toModel = description.toModel + Constant("target_id", targetId) +
+		Constant("link_created", created)
 }

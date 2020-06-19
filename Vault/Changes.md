@@ -14,6 +14,7 @@
 - Storable.toUpdateStatement and .updateWhere now take an optional SqlTarget as the first parameter. 
 This allows you to use these update methods in updates that require joins.
 - RowFactory.foreach renamed to foreachWhere
+- Moved exists method from UniqueAccess to ModelAccess
 ### New Features
 - Added PossiblyLinkedFactory and PossiblyMultiLinkedFactory to support situations where there is a 
 possibility of 0 linked items.

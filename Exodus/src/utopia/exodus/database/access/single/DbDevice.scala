@@ -1,5 +1,6 @@
 package utopia.exodus.database.access.single
 
+import java.time.Instant
 import java.util.UUID.randomUUID
 
 import utopia.exodus.database.access.many.DbDescriptions
@@ -11,6 +12,7 @@ import utopia.exodus.model.stored.DeviceKey
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.enumeration.DescriptionRole.Name
 import utopia.vault.database.Connection
+import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
 import utopia.vault.nosql.access.{SingleModelAccess, UniqueAccess}
 import utopia.vault.sql.{Select, Where}
 
@@ -41,6 +43,13 @@ object DbDevice
 	{
 		// COMPUTED	-----------------------------
 		
+		private def userLinkModel = UserDeviceModel
+		
+		private def anyUserLinkConnectionCondition = userLinkModel.withDeviceId(deviceId).toCondition
+		
+		private def activeUserLinkConnectionCondition = anyUserLinkConnectionCondition &&
+			userLinkModel.nonDeprecatedCondition
+		
 		/**
 		  * @param connection DB Connection (implicit)
 		  * @return Whether a device with this id exists in the database
@@ -63,13 +72,40 @@ object DbDevice
 		  */
 		def userIds(implicit connection: Connection) =
 		{
-			val model = UserDeviceModel
-			connection(Select(model.table, model.userIdAttName) +
-				Where(model.withDeviceId(deviceId).toCondition && model.nonDeprecatedCondition)).rowIntValues
+			val model = userLinkModel
+			connection(Select(model.table, model.userIdAttName) + Where(activeUserLinkConnectionCondition)).rowIntValues
 		}
 		
 		
 		// OTHER	-----------------------------
+		
+		/**
+		  * Checks whether this device's data has been modified since the specified time threshold
+		  * @param threshold A time threshold (inclusive)
+		  * @param connection DB Connection (implicit)
+		  * @return Whether this devices information has been modified since that time
+		  */
+		def isModifiedSince(threshold: Instant)(implicit connection: Connection) =
+		{
+			// Checks for modified device-user links first
+			val newLinkCondition = userLinkModel.withCreationTime(threshold).toConditionWithOperator(LargerOrEqual)
+			val removedLinkCondition = userLinkModel.withDeprecatedAfter(threshold).toConditionWithOperator(LargerOrEqual)
+			if (!userLinkModel.exists(anyUserLinkConnectionCondition && (newLinkCondition || removedLinkCondition)))
+			{
+				// If not, checks for new descriptions
+				DbDescriptions.ofDeviceWithId(deviceId).isModifiedSince(threshold)
+			}
+			else
+				true
+		}
+		
+		/**
+		  * @param userId Id of tested user
+		  * @param connection DB Connection (implicit)
+		  * @return Whether there exists an active link between this device and the specified user
+		  */
+		def isUsedByUserWithId(userId: Int)(implicit connection: Connection) =
+			userLinkModel.exists(activeUserLinkConnectionCondition && userLinkModel.withUserId(userId).toCondition)
 		
 		/**
 		  * @param languageId Id of targeted language
