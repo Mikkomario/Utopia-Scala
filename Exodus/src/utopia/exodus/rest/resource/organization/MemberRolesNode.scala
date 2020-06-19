@@ -17,7 +17,7 @@ import utopia.vault.database.Connection
 /**
   * Used for interacting with organization member roles
   * @author Mikko Hilpinen
-  * @since 11.5.2020, v2
+  * @since 11.5.2020, v1
   */
 case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends Resource[AuthorizedContext]
 {

@@ -9,7 +9,7 @@ import utopia.metropolis.model.stored.description.DescriptionLink
 /**
   * Combines task type with some or all of its descriptions
   * @author Mikko Hilpinen
-  * @since 6.5.2020, v2
+  * @since 6.5.2020, v1
   * @param task Wrapped task
   * @param descriptions Various descriptions for this task
   */

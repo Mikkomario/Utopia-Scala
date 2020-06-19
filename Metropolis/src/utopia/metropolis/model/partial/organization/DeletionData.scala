@@ -9,7 +9,7 @@ import utopia.flow.generic.ValueConversions._
 /**
   * Contains basic information about an organization deletion attempt
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v2
+  * @since 16.5.2020, v1
   * @param organizationId Id of the targeted organization
   * @param creatorId Id of the user who attempted deletion
   * @param actualizationTime Time when this deletion actualizes if not cancelled

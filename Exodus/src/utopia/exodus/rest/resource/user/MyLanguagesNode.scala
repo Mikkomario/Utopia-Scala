@@ -17,7 +17,7 @@ import scala.util.{Failure, Success}
 /**
   * Used for interacting with the languages known to the authorized user
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v2
+  * @since 16.5.2020, v1
   */
 object MyLanguagesNode extends Resource[AuthorizedContext]
 {

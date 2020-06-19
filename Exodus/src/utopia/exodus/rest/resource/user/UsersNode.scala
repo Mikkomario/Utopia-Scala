@@ -18,7 +18,7 @@ import scala.util.{Failure, Success}
 /**
   * A rest-resource for all users
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 object UsersNode extends Resource[AuthorizedContext]
 {

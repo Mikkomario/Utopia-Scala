@@ -12,7 +12,7 @@ import utopia.vault.sql.Extensions._
 /**
   * A common trait for description link access points
   * @author Mikko Hilpinen
-  * @since 17.5.2020, v2
+  * @since 17.5.2020, v1
   */
 trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 {

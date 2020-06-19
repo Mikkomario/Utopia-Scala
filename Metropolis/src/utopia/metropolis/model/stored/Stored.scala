@@ -5,7 +5,7 @@ import utopia.metropolis.model.Extender
 /**
   * A common trait for data that has been stored to database
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 trait Stored[+Data] extends Extender[Data]
 {

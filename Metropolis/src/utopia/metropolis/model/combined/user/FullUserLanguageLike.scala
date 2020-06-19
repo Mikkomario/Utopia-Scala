@@ -10,7 +10,7 @@ import utopia.metropolis.model.stored.user.UserLanguage
 /**
   * A common trait for extended user language models
   * @author Mikko Hilpinen
-  * @since 17.5.2020, v2
+  * @since 17.5.2020, v1
   */
 trait FullUserLanguageLike[+L <: ModelConvertible] extends DeepExtender[UserLanguage, UserLanguageData]
 {

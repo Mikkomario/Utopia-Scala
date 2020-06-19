@@ -17,7 +17,7 @@ import utopia.vault.database.Connection
 /**
   * A rest-resource for targeting organization members
   * @author Mikko Hilpinen
-  * @since 11.5.2020, v2
+  * @since 11.5.2020, v1
   * @param organizationId Id of the targeted organization
   * @param userId Id of targeted user. None if self.
   */

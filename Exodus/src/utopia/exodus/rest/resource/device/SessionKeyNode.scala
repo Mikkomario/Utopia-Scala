@@ -14,7 +14,7 @@ import utopia.vault.database.Connection
 /**
   * Used for accessing temporary session-keys, which are used for authorizing requests
   * @author Mikko Hilpinen
-  * @since 3.5.2020, v2
+  * @since 3.5.2020, v1
   */
 case class SessionKeyNode(deviceId: Int) extends Resource[AuthorizedContext]
 {

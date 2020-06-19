@@ -66,7 +66,7 @@ object DescriptionModel
 /**
   * Used for interacting with descriptions in DB
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 case class DescriptionModel(id: Option[Int] = None, role: Option[DescriptionRole] = None, languageId: Option[Int] = None,
 							text: Option[String] = None, authorId: Option[Int] = None)

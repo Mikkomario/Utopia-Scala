@@ -11,7 +11,7 @@ import utopia.nexus.result.Result
 /**
   * A rest resource for accessing individual invitation's data
   * @author Mikko Hilpinen
-  * @since 6.5.2020, v2
+  * @since 6.5.2020, v1
   */
 case class InvitationNode(invitationId: Int) extends Resource[AuthorizedContext]
 {

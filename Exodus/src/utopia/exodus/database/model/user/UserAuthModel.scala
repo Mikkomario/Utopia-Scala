@@ -46,7 +46,7 @@ object UserAuthModel
 /**
   * Used for interacting with user passwords in the DB
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 case class UserAuthModel(id: Option[Int] = None, userId: Option[Int] = None, hash: Option[String] = None) extends Storable
 {

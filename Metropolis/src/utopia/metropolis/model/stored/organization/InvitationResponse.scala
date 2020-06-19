@@ -9,7 +9,7 @@ import utopia.metropolis.model.stored.Stored
 /**
   * Represents an invitation response that has been stored to DB
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v2
+  * @since 4.5.2020, v1
   */
 case class InvitationResponse(id: Int, data: InvitationResponseData) extends Stored[InvitationResponseData]
 	with ModelConvertible

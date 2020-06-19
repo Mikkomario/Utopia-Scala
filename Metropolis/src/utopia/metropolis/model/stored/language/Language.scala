@@ -7,7 +7,7 @@ import utopia.flow.generic.ValueConversions._
 /**
   * Represents a language stored in DB
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 case class Language(id: Int, isoCode: String) extends ModelConvertible
 {

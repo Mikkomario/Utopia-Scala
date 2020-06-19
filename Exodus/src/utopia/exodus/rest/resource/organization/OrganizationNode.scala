@@ -15,7 +15,7 @@ import utopia.vault.database.Connection
 /**
   * A rest resource for accessing individual organization's data
   * @author Mikko Hilpinen
-  * @since 6.5.2020, v2
+  * @since 6.5.2020, v1
   */
 case class OrganizationNode(organizationId: Int) extends ResourceWithChildren[AuthorizedContext]
 {

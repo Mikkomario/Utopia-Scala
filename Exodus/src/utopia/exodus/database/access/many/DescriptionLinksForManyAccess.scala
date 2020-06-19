@@ -7,7 +7,7 @@ import utopia.vault.database.Connection
 /**
   * A common trait for access points which provide description link access for multiple items at once
   * @author Mikko Hilpinen
-  * @since 20.5.2020, v2
+  * @since 20.5.2020, v1
   */
 trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 {

@@ -31,7 +31,7 @@ object UserLanguage
 /**
   * Used for linking users with their proficient languages
   * @author Mikko Hilpinen
-  * @since 17.5.2020, v2
+  * @since 17.5.2020, v1
   */
 case class UserLanguage(id: Int, data: UserLanguageData) extends Stored[UserLanguageData]
 {

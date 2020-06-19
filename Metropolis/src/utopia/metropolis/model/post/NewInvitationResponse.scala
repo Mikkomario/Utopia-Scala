@@ -15,7 +15,7 @@ object NewInvitationResponse extends FromModelFactoryWithSchema[NewInvitationRes
 /**
   * Used for posting invitation responses to the server
   * @author Mikko Hilpinen
-  * @since 6.5.2020, v2
+  * @since 6.5.2020, v1
   * @param wasAccepted Whether the invitation was accepted
   * @param wasBlocked Whether future invitations were blocked (default = false)
   */

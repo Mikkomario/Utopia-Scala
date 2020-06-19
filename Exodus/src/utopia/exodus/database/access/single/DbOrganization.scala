@@ -16,7 +16,7 @@ import utopia.vault.sql.{Select, Where}
 /**
   * Used for accessing individual organizations
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v2
+  * @since 4.5.2020, v1
   */
 object DbOrganization
 {

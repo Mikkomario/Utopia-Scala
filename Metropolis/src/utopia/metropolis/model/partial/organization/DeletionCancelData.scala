@@ -7,7 +7,7 @@ import utopia.flow.generic.ValueConversions._
 /**
   * Contains basic information about an organization deletion cancellation
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v2
+  * @since 16.5.2020, v1
   * @param deletionId Id of the cancelled deletion
   * @param creatorId Id of the user who cancelled the deletion (if known)
   */

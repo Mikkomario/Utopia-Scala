@@ -12,7 +12,7 @@ import utopia.vault.database.Connection
 /**
   * This rest node returns a descriptive list of all the organizations the authorized user belongs to
   * @author Mikko Hilpinen
-  * @since 6.5.2020, v2
+  * @since 6.5.2020, v1
   */
 object MyOrganizationsNode extends ResourceWithChildren[AuthorizedContext]
 {

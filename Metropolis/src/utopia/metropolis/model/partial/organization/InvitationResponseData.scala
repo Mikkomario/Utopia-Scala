@@ -7,7 +7,7 @@ import utopia.flow.generic.ValueConversions._
 /**
   * Contains basic data about an invitation response
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v2
+  * @since 4.5.2020, v1
   * @param invitationId Id of the invitation this response is for
   * @param wasAccepted Whether the invitation was accepted
   * @param wasBlocked Whether future invitations were blocked

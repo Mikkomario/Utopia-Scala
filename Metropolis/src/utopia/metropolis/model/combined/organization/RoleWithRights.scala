@@ -9,7 +9,7 @@ import utopia.metropolis.model.enumeration.{TaskType, UserRole}
 /**
   * Contains a role + all tasks that are linked to that role
   * @author Mikko Hilpinen
-  * @since 10.5.2020, v2
+  * @since 10.5.2020, v1
   * @constructor Links rights with a role
   * @param role Described role
   * @param tasks Tasks available to that role

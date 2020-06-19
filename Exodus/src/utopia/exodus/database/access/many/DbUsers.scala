@@ -16,7 +16,7 @@ import scala.util.{Failure, Success, Try}
 /**
   * Used for accessing multiple user's data at once
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 object DbUsers extends ManyModelAccess[User]
 {

@@ -25,7 +25,7 @@ object NewInvitation extends FromModelFactory[NewInvitation]
 /**
   * Used for creating new invitations on server side
   * @author Mikko Hilpinen
-  * @since 5.5.2020, v2
+  * @since 5.5.2020, v1
   * @param recipientEmail Email address of the invitation recipient
   * @param startingRole Role given to the recipient upon invitation accept
   * @param durationDays Invitation validity period duration in days

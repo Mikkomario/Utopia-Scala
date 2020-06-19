@@ -10,7 +10,7 @@ import utopia.vault.nosql.access.{SingleIdModelAccess, SingleModelAccess}
 /**
   * Used for accessing individual device keys in DB
   * @author Mikko Hilpinen
-  * @since 3.5.2020, v2
+  * @since 3.5.2020, v1
   */
 object DbDeviceKey extends SingleModelAccess[DeviceKey]
 {

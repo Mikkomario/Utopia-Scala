@@ -12,7 +12,7 @@ object Extender
 /**
   * A common traits for models that wrap other models, providing additional functionality
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 trait Extender[+A]
 {

@@ -9,7 +9,7 @@ import utopia.nexus.result.Result
 /**
   * Used for accessing deletions concerning the organizations the current user is a member of
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v2
+  * @since 16.5.2020, v1
   */
 object DeletionsForMyOrganizationsNode extends ResourceWithChildren[AuthorizedContext]
 {

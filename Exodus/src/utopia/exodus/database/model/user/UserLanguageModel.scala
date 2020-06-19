@@ -55,7 +55,7 @@ object UserLanguageModel
 /**
   * Used for interacting with user-language-links in DB
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 case class UserLanguageModel(id: Option[Int] = None, userId: Option[Int] = None, languageId: Option[Int] = None,
 							 familiarity: Option[LanguageFamiliarity] = None)

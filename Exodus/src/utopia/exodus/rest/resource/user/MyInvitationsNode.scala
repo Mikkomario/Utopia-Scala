@@ -13,7 +13,7 @@ import utopia.vault.database.Connection
 /**
   * A rest resource for accessing invitations that are pending for the logged user
   * @author Mikko Hilpinen
-  * @since 6.5.2020, v2
+  * @since 6.5.2020, v1
   */
 object MyInvitationsNode extends Resource[AuthorizedContext]
 {

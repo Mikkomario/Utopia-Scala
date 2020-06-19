@@ -7,7 +7,7 @@ import utopia.vault.database.Connection
 /**
   * Used for accessing data of multiple devices
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 object DbDevices
 {

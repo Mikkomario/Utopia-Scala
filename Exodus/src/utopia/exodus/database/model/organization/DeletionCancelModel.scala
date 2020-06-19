@@ -36,7 +36,7 @@ object DeletionCancelModel
 /**
   * Used for interacting with organization deletion cancellation data
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v2
+  * @since 16.5.2020, v1
   */
 case class DeletionCancelModel(id: Option[Int] = None, deletionId: Option[Int] = None, creatorId: Option[Int] = None)
 	extends StorableWithFactory[DeletionCancel]

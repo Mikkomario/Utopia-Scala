@@ -7,7 +7,7 @@ import utopia.flow.generic.ValueConversions._
 /**
   * A common trait for stored items that simply wrap model convertible data and add an id
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v2
+  * @since 16.5.2020, v1
   */
 trait StoredModelConvertible[+Data <: ModelConvertible] extends Stored[Data] with ModelConvertible
 {

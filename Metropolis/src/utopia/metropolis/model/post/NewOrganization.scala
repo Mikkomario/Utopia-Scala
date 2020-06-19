@@ -15,7 +15,7 @@ object NewOrganization extends FromModelFactoryWithSchema[NewOrganization]
 /**
   * Used for posting new organizations
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v2
+  * @since 4.5.2020, v1
   */
 case class NewOrganization(name: String, languageId: Int) extends ModelConvertible
 {

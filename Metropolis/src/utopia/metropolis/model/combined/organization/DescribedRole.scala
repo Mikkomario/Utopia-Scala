@@ -6,7 +6,7 @@ import utopia.metropolis.model.stored.description.DescriptionLink
 /**
   * Adds descriptive data to a user role
   * @author Mikko Hilpinen
-  * @since 6.5.2020, v2
+  * @since 6.5.2020, v1
   * @param role Wrapped role with associated rights
   * @param descriptions Various descriptions for this role
   */

@@ -13,7 +13,7 @@ import utopia.vault.database.Connection
 /**
   * This rest-resource represents the logged user
   * @author Mikko Hilpinen
-  * @since 6.5.2020, v2
+  * @since 6.5.2020, v1
   */
 object MeNode extends ResourceWithChildren[AuthorizedContext]
 {

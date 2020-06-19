@@ -64,7 +64,7 @@ object LanguageModel
 /**
   * Used for interacting with language data in DB
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 case class LanguageModel(id: Option[Int] = None, isoCode: Option[String] = None) extends StorableWithFactory[Language]
 {

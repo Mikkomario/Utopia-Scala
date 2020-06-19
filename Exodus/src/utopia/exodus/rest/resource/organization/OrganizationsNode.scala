@@ -16,7 +16,7 @@ import utopia.vault.database.Connection
 /**
   * Used for accessing organization data via REST API interface
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v2
+  * @since 4.5.2020, v1
   */
 object OrganizationsNode extends Resource[AuthorizedContext]
 {

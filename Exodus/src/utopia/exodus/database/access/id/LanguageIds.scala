@@ -7,7 +7,7 @@ import utopia.vault.nosql.access.ManyIdAccess
 /**
   * An access point to multiple language ids at once
   * @author Mikko Hilpinen
-  * @since 10.5.2020, v2
+  * @since 10.5.2020, v1
   */
 object LanguageIds extends ManyIdAccess[Int]
 {

@@ -11,7 +11,7 @@ import utopia.vault.sql.Extensions._
 /**
   * Used for accessing multiple organizations at a time
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v2
+  * @since 4.5.2020, v1
   */
 object DbOrganizations
 {

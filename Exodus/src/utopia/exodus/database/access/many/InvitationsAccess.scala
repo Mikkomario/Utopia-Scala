@@ -13,7 +13,7 @@ import utopia.vault.sql.{JoinType, Select, Where}
 /**
   * Common trait for multiple invitations -access points
   * @author Mikko Hilpinen
-  * @since 6.5.2020, v2
+  * @since 6.5.2020, v1
   */
 trait InvitationsAccess extends ManyModelAccess[Invitation]
 {

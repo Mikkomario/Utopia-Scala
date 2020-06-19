@@ -23,7 +23,7 @@ import scala.util.{Failure, Success}
 /**
   * An access point to an organization's invitations
   * @author Mikko Hilpinen
-  * @since 5.5.2020, v2
+  * @since 5.5.2020, v1
   */
 case class OrganizationInvitationsNode(organizationId: Int) extends Resource[AuthorizedContext]
 {

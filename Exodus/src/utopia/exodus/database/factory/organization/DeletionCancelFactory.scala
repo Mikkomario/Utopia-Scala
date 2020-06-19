@@ -10,7 +10,7 @@ import utopia.vault.nosql.factory.FromValidatedRowModelFactory
 /**
   * Used for reading organization deletion cancellations from DB
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v2
+  * @since 16.5.2020, v1
   */
 object DeletionCancelFactory extends FromValidatedRowModelFactory[DeletionCancel]
 {

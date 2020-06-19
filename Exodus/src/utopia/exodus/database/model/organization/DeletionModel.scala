@@ -64,7 +64,7 @@ object DeletionModel
 /**
   * Used for interacting with organization deletions in DB
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v2
+  * @since 16.5.2020, v1
   */
 case class DeletionModel(id: Option[Int] = None, organizationId: Option[Int] = None, creatorId: Option[Int] = None,
 						 actualizationTime: Option[Instant] = None) extends Storable

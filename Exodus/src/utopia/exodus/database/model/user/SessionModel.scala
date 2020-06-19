@@ -61,7 +61,7 @@ object SessionModel
 /**
   * Used for interacting with user session data in DB
   * @author Mikko Hilpinen
-  * @since 3.5.2020, v2
+  * @since 3.5.2020, v1
   */
 case class SessionModel(id: Option[Int] = None, userId: Option[Int] = None, deviceId: Option[Int] = None,
 						key: Option[String] = None, expires: Option[Instant] = None, logoutTime: Option[Instant] = None)

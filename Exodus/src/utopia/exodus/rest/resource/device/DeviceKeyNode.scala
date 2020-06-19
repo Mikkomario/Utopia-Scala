@@ -15,7 +15,7 @@ import utopia.vault.database.Connection
 /**
   * This resource is used for acquiring long-term device authorization keys
   * @author Mikko Hilpinen
-  * @since 3.5.2020, v2
+  * @since 3.5.2020, v1
   */
 case class DeviceKeyNode(deviceId: Int) extends Resource[AuthorizedContext]
 {

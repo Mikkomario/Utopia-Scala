@@ -12,7 +12,7 @@ import utopia.metropolis.model.enumeration.UserRole
 /**
   * Contains basic information about an invitation to join an organization
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v2
+  * @since 4.5.2020, v1
   * @param organizationId Id of the organization the user is invited to
   * @param recipient Either Right: Recipient user id or Left: Recipient user email address
   * @param startingRole Role assigned to the user in the organization, initially

@@ -40,7 +40,7 @@ object NewLanguageProficiency extends FromModelFactory[NewLanguageProficiency]
 /**
   * Used for posting language proficiency levels for users
   * @author Mikko Hilpinen
-  * @since 17.5.2020, v2
+  * @since 17.5.2020, v1
   */
 case class NewLanguageProficiency(language: Either[String, Int], familiarity: LanguageFamiliarity) extends ModelConvertible
 {

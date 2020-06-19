@@ -8,7 +8,7 @@ import utopia.vault.sql.{Select, Where}
 /**
   * Used for accessing individual user ids
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 object UserId
 {

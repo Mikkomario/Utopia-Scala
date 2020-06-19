@@ -9,7 +9,7 @@ import utopia.vault.nosql.access.ManyModelAccess
 /**
   * Used for accessing multiple user sessions at once
   * @author Mikko Hilpinen
-  * @since 3.5.2020, v2
+  * @since 3.5.2020, v1
   */
 object DbUserSessions extends ManyModelAccess[UserSession]
 {

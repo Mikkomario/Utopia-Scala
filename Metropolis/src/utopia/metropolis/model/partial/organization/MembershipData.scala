@@ -5,7 +5,7 @@ import java.time.Instant
 /**
   * Contains basic data about an organization membership
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v2
+  * @since 4.5.2020, v1
   * @param organizationId Id of the organization the user belongs to
   * @param userId Id of the user who belongs to the organization
   * @param creatorId Id of the user who created this membership

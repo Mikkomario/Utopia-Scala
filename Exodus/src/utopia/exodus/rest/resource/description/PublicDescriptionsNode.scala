@@ -19,7 +19,7 @@ import scala.util.{Failure, Success}
 /**
   * Used for accessing item descriptions without requiring authorization
   * @author Mikko Hilpinen
-  * @since 20.5.2020, v2
+  * @since 20.5.2020, v1
   */
 trait PublicDescriptionsNode[Item, Combined <: ModelConvertible] extends Resource[AuthorizedContext]
 {

@@ -14,7 +14,7 @@ import utopia.vault.database.Connection
 /**
   * Used for accessing & altering organization deletions
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v2
+  * @since 16.5.2020, v1
   */
 case class OrganizationDeletionsNode(organizationId: Int) extends Resource[AuthorizedContext]
 {

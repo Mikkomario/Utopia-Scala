@@ -12,7 +12,7 @@ import utopia.vault.model.immutable.{Storable, Table}
 /**
   * A common trait for description link model companion objects
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v2
+  * @since 4.5.2020, v1
   */
 trait DescriptionLinkModelFactory[+M <: Storable]
 {

@@ -55,7 +55,7 @@ object DeviceKeyModel
 /**
   * Used for interacting with device authentication keys in DB
   * @author Mikko Hilpinen
-  * @since 3.5.2020, v2
+  * @since 3.5.2020, v1
   */
 case class DeviceKeyModel(id: Option[Int] = None, userId: Option[Int] = None, deviceId: Option[Int] = None,
 						  key: Option[String] = None, deprecatedAfter: Option[Instant] = None)

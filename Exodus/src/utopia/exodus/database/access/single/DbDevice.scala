@@ -5,17 +5,19 @@ import java.util.UUID.randomUUID
 import utopia.exodus.database.access.many.DbDescriptions
 import utopia.exodus.database.factory.device.DeviceKeyFactory
 import utopia.exodus.database.model.device.{ClientDeviceModel, DeviceKeyModel}
+import utopia.exodus.database.model.user.UserDeviceModel
 import utopia.exodus.model.partial.DeviceKeyData
 import utopia.exodus.model.stored.DeviceKey
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.enumeration.DescriptionRole.Name
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.{SingleModelAccess, UniqueAccess}
+import utopia.vault.sql.{Select, Where}
 
 /**
   * Used for accessing and modifying individual devices
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 object DbDevice
 {
@@ -54,6 +56,17 @@ object DbDevice
 		  * @return An access point to descriptions of this device
 		  */
 		def descriptions = DbDescriptions.ofDeviceWithId(deviceId)
+		
+		/**
+		  * @param connection Database connection (implicit)
+		  * @return Ids of the users who are currently linked to this device
+		  */
+		def userIds(implicit connection: Connection) =
+		{
+			val model = UserDeviceModel
+			connection(Select(model.table, model.userIdAttName) +
+				Where(model.withDeviceId(deviceId).toCondition && model.nonDeprecatedCondition)).rowIntValues
+		}
 		
 		
 		// OTHER	-----------------------------

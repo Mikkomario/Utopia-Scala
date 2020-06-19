@@ -9,7 +9,7 @@ import javax.crypto.spec.PBEKeySpec
   * Used for hashing and validating passwords
   * From: https://github.com/dholbrook/scala-password-hash
   * @author dholbrook
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 object PasswordHash
 {

@@ -30,7 +30,7 @@ object UserLanguageData
 /**
   * Basic data for linking a user with a language
   * @author Mikko Hilpinen
-  * @since 17.5.2020, v2
+  * @since 17.5.2020, v1
   * @param userId Id of the described user
   * @param languageId Linked language's id
   * @param familiarity Level of familiarity the user has using the specified language

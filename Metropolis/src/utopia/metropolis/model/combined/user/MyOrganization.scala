@@ -9,7 +9,7 @@ import utopia.metropolis.model.stored.description.DescriptionLink
 /**
   * Contains more information about an organization from a single member's perspective
   * @author Mikko Hilpinen
-  * @since 6.5.2020, v2
+  * @since 6.5.2020, v1
   * @param id Organization id
   * @param userId Id of the described user
   * @param descriptions Various descriptions of this organization

@@ -9,7 +9,7 @@ import utopia.metropolis.model.stored.description.DescriptionLink
 /**
   * Combines a description role with some descriptions
   * @author Mikko Hilpinen
-  * @since 20.5.2020, v2
+  * @since 20.5.2020, v1
   */
 case class DescribedDescriptionRole(role: DescriptionRole, descriptions: Set[DescriptionLink]) extends ModelConvertible
 {

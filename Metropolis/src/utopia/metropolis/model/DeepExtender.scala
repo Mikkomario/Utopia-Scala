@@ -10,7 +10,7 @@ object DeepExtender
 /**
   * An extender that has two or more layers
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v2
+  * @since 16.5.2020, v1
   * @tparam Surface Surface level object type
   * @tparam Deep deeper wrapped object type
   */

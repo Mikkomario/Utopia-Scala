@@ -19,6 +19,11 @@ object UserDeviceModel extends Deprecatable
 	  */
 	val deviceIdAttName = "deviceId"
 	
+	/**
+	  * Name of the attribute that contians the user id
+	  */
+	val userIdAttName = "userId"
+	
 	
 	// COMPUTED	--------------------------
 	
@@ -37,6 +42,12 @@ object UserDeviceModel extends Deprecatable
 	  * @return A model with only user id set
 	  */
 	def withUserId(userId: Int) = apply(userId = Some(userId))
+	
+	/**
+	  * @param deviceId Id of the linked device
+	  * @return A model with only device id set
+	  */
+	def withDeviceId(deviceId: Int) = apply(deviceId = Some(deviceId))
 	
 	/**
 	  * Inserts a new connection between a user and a client device
@@ -60,7 +71,7 @@ object UserDeviceModel extends Deprecatable
 /**
   * Registers links between users and devices
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 case class UserDeviceModel(id: Option[Int] = None, userId: Option[Int] = None, deviceId: Option[Int] = None,
 						   deprecatedAfter: Option[Instant] = None) extends Storable

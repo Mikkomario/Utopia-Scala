@@ -25,7 +25,7 @@ object UserWithLinks extends FromModelFactory[UserWithLinks]
 /**
   * This user model contains links to known languages and used devices
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   * @param base Standard user data
   * @param languages Languages known to the user, with proficiency levels
   * @param deviceIds Ids of the devices known to the user

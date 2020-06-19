@@ -17,7 +17,7 @@ import scala.util.{Failure, Success}
 /**
   * Used for interacting with the authorized user's settings
   * @author Mikko Hilpinen
-  * @since 20.5.2020, v2
+  * @since 20.5.2020, v1
   */
 object MySettingsNode extends Resource[AuthorizedContext]
 {

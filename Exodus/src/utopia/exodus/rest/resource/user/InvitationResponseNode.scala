@@ -16,7 +16,7 @@ import utopia.vault.database.Connection
 /**
   * A rest resource that allows access to an invitation response
   * @author Mikko Hilpinen
-  * @since 6.5.2020, v2
+  * @since 6.5.2020, v1
   */
 case class InvitationResponseNode(invitationId: Int) extends Resource[AuthorizedContext]
 {

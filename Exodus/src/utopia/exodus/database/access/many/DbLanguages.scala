@@ -11,7 +11,7 @@ import utopia.vault.sql.Extensions._
 /**
   * Used for accessing multiple languages at a time
   * @author Mikko Hilpinen
-  * @since 10.5.2020, v2
+  * @since 10.5.2020, v1
   */
 object DbLanguages extends ManyModelAccess[Language]
 {

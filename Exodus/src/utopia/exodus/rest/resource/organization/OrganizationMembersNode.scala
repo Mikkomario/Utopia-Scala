@@ -12,7 +12,7 @@ import utopia.nexus.result.Result
 /**
   * An access points to various users in the described organization
   * @author Mikko Hilpinen
-  * @since 11.5.2020, v2
+  * @since 11.5.2020, v1
   */
 case class OrganizationMembersNode(organizationId: Int) extends Resource[AuthorizedContext]
 {

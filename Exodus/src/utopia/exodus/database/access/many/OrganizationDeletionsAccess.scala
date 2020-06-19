@@ -10,7 +10,7 @@ import utopia.vault.nosql.access.ManyModelAccess
 /**
   * Common trait for access points into organization deletions
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v2
+  * @since 16.5.2020, v1
   */
 trait OrganizationDeletionsAccess extends ManyModelAccess[DeletionWithCancellations]
 {

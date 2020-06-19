@@ -7,7 +7,7 @@ import utopia.metropolis.model.error.NoSuchTypeException
 /**
   * An enumeration for different levels of language familiarity
   * @author Mikko Hilpinen
-  * @since 17.5.2020, v2
+  * @since 17.5.2020, v1
   */
 sealed trait LanguageFamiliarity extends RichComparable[LanguageFamiliarity]
 {

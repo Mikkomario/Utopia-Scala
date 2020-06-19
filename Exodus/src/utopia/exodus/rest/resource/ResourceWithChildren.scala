@@ -8,7 +8,7 @@ import utopia.nexus.rest.{Context, Resource}
 /**
   * A common trait for simple resources which have a static list of children under them (no id parsing etc.)
   * @author Mikko Hilpinen
-  * @since 6.5.2020, v2
+  * @since 6.5.2020, v1
   */
 trait ResourceWithChildren[C <: Context] extends Resource[C]
 {

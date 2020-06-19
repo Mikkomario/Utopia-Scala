@@ -11,7 +11,7 @@ import utopia.nexus.result.Result
 /**
   * Used for accessing an individual device's information
   * @author Mikko Hilpinen
-  * @since 3.5.2020, v2
+  * @since 3.5.2020, v1
   */
 case class DeviceNode(deviceId: Int) extends Resource[AuthorizedContext]
 {

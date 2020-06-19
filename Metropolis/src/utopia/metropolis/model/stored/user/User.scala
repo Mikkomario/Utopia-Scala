@@ -16,7 +16,7 @@ object User extends FromModelFactory[User]
 /**
   * Represents a user registered in the database
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   * @param id This user's id in DB
   * @param settings This user's current settings
   */

@@ -58,7 +58,7 @@ object RoleRightModel
 /**
   * Used for interacting with role-task -links in DB
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v2
+  * @since 4.5.2020, v1
   */
 case class RoleRightModel(id: Option[Int] = None, role: Option[UserRole] = None, task: Option[TaskType] = None)
 	extends StorableWithFactory[RoleRight]

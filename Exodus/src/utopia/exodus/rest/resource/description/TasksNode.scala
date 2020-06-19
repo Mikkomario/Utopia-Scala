@@ -15,7 +15,7 @@ import utopia.vault.database.Connection
 /**
   * Used for describing all available task types
   * @author Mikko Hilpinen
-  * @since 21.5.2020, v2
+  * @since 21.5.2020, v1
   */
 object TasksNode extends Resource[AuthorizedContext]
 {

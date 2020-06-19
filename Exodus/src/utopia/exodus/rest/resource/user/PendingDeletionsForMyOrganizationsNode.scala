@@ -14,7 +14,7 @@ import utopia.vault.database.Connection
 /**
   * Used for accessing pending deletions in the current user's organizations
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v2
+  * @since 16.5.2020, v1
   */
 object PendingDeletionsForMyOrganizationsNode extends Resource[AuthorizedContext]
 {

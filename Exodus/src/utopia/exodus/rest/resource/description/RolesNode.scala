@@ -14,7 +14,7 @@ import utopia.vault.database.Connection
 /**
   * This node is used for listing all possible user roles and their descriptions, including associated task ids
   * @author Mikko Hilpinen
-  * @since 20.5.2020, v2
+  * @since 20.5.2020, v1
   */
 object RolesNode extends Resource[AuthorizedContext]
 {

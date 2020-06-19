@@ -6,7 +6,7 @@ import utopia.metropolis.model.error.NoSuchTypeException
 /**
   * A common trait for description role values
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 sealed trait DescriptionRole
 {

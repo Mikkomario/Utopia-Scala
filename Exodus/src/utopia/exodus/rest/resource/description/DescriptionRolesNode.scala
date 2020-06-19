@@ -9,7 +9,7 @@ import utopia.vault.database.Connection
 /**
   * Used for retrieving descriptions of all description roles
   * @author Mikko Hilpinen
-  * @since 20.5.2020, v2
+  * @since 20.5.2020, v1
   */
 object DescriptionRolesNode extends PublicDescriptionsNode[DescriptionRole, DescribedDescriptionRole]
 {

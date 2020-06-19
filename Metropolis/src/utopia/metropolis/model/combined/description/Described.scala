@@ -9,7 +9,7 @@ import utopia.metropolis.model.stored.description.DescriptionLink
 /**
   * A common trait for extenders which include descriptions to items
   * @author Mikko Hilpinen
-  * @since 20.5.2020, v2
+  * @since 20.5.2020, v1
   */
 trait Described[+A <: ModelConvertible] extends Extender[A] with ModelConvertible
 {

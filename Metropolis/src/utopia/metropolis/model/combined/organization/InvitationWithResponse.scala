@@ -9,7 +9,7 @@ import utopia.metropolis.model.stored.organization.{Invitation, InvitationRespon
 /**
   * An extender to standard invitation model that also contains the response to that invitation (if present)
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v2
+  * @since 4.5.2020, v1
   */
 case class InvitationWithResponse(invitation: Invitation, response: InvitationResponse) extends Extender[Invitation]
 	with ModelConvertible

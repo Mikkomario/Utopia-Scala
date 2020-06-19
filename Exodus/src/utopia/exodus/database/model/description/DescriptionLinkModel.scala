@@ -10,7 +10,7 @@ import utopia.vault.model.immutable.StorableWithFactory
 /**
   * Used for interacting with links between devices and their descriptions
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 trait DescriptionLinkModel[+E, +F <: DescriptionLinkFactory[E]] extends StorableWithFactory[E]
 {

@@ -43,7 +43,7 @@ object NewUser extends FromModelFactory[NewUser]
 /**
   * A model used when creating new users from client side
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   * @param settings Initial user settings
   * @param password Initial user password
   * @param languages List of the languages known by the user (with levels of familiarity)

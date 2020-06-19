@@ -18,7 +18,7 @@ import utopia.vault.database.Connection
 /**
   * A rest-resource used for accessing and updating organization descriptions
   * @author Mikko Hilpinen
-  * @since 10.5.2020, v2
+  * @since 10.5.2020, v1
   */
 case class OrganizationDescriptionsNode(organizationId: Int) extends Resource[AuthorizedContext]
 {

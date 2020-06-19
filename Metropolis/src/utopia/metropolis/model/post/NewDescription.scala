@@ -32,7 +32,7 @@ object NewDescription extends FromModelFactory[NewDescription]
 /**
   * Used for posting new / updated descriptions for organizations, devices, etc.
   * @author Mikko Hilpinen
-  * @since 10.5.2020, v2
+  * @since 10.5.2020, v1
   * @param languageId Id of the language these descriptions are written in
   * @param descriptions Text-descriptions of various types (description role -> description text)
   */

@@ -15,7 +15,7 @@ import utopia.vault.nosql.access.{SingleModelAccess, UniqueAccess}
 /**
   * Used for accessing individual user sessions in DB
   * @author Mikko Hilpinen
-  * @since 3.5.2020, v2
+  * @since 3.5.2020, v1
   */
 object DbUserSession extends SingleModelAccess[UserSession]
 {

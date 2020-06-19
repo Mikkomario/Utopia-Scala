@@ -35,7 +35,7 @@ object OrganizationModel
 /**
   * Used for interacting with organizations in DB
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v2
+  * @since 4.5.2020, v1
   */
 case class OrganizationModel(id: Option[Int] = None, creatorId: Option[Int] = None) extends Storable
 {

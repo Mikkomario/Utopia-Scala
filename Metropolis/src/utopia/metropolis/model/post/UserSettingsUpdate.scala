@@ -23,7 +23,7 @@ object UserSettingsUpdate extends FromModelFactory[UserSettingsUpdate]
 /**
   * Used for posting complete or partial user settings updates
   * @author Mikko Hilpinen
-  * @since 20.5.2020, v2
+  * @since 20.5.2020, v1
   */
 case class UserSettingsUpdate(name: Option[String] = None, email: Option[String] = None) extends ModelConvertible
 {

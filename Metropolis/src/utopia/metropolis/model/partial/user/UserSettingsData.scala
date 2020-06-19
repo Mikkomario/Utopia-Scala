@@ -15,7 +15,7 @@ object UserSettingsData extends FromModelFactoryWithSchema[UserSettingsData]
 /**
   * Contains basic data about a user
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   * @param name user-name
   * @param email User's email address
   */

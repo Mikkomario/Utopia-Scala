@@ -12,7 +12,7 @@ import utopia.vault.sql.Extensions._
 /**
   * Used for accessing multiple user roles at once
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v2
+  * @since 4.5.2020, v1
   */
 object DbUserRoles
 {

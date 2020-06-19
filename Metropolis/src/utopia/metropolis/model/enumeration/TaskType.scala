@@ -6,7 +6,7 @@ import utopia.metropolis.model.error.NoSuchTypeException
 /**
   * An enumeration for various task types that users may or may not have access to
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v2
+  * @since 4.5.2020, v1
   */
 sealed trait TaskType
 {

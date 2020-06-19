@@ -18,7 +18,7 @@ object UserSettings extends FromModelFactoryWithSchema[UserSettings]
 /**
   * Represents stored user settings
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v2
+  * @since 2.5.2020, v1
   */
 case class UserSettings(id: Int, userId: Int, data: UserSettingsData) extends Stored[UserSettingsData] with ModelConvertible
 {
