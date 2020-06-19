@@ -1,7 +1,7 @@
 package utopia.annex.model.request
 
 import utopia.access.http.Method.Get
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.datastructure.immutable.{Model, Value}
 
 object GetRequest
 {
@@ -32,7 +32,7 @@ trait GetRequest extends ApiRequest
 {
 	override def method = Get
 	
-	override def body = Model.empty
+	override def body = Value.empty
 	
 	override def persistingModel = None
 }

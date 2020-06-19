@@ -1,6 +1,6 @@
 package utopia.annex.model
 
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Value
 
 /**
   * A common trait for classes which represent items before they are recorded on server side. Even server side instances
@@ -24,5 +24,5 @@ trait Spirit
 	/**
 	  * @return Body that will be posted to server
 	  */
-	def postBody: Model[Constant]
+	def postBody: Value
 }

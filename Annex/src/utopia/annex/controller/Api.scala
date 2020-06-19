@@ -6,7 +6,7 @@ import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.Response
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Body, Request, Timeout}
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.util.TimeExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -36,7 +36,7 @@ trait Api
 	  * @param bodyContent Request body content (non-empty)
 	  * @return A request body wrapping the specified content
 	  */
-	protected def makeRequestBody(bodyContent: Model[Constant]): Body
+	protected def makeRequestBody(bodyContent: Value): Body
 	
 	
 	// OTHER	-------------------------
@@ -59,13 +59,13 @@ trait Api
 	/**
 	  * Posts data to server side
 	  * @param path Targeted path (after base uri)
-	  * @param body Sent json body
+	  * @param body Sent json body (default = empty)
 	  * @param timeout Connection timeout duration (default = maximum timeout)
 	  * @param method Request method used (default = Post)
 	  * @param context Execution context
 	  * @return Response from server (asynchronous)
 	  */
-	def post[A](path: String, body: Model[Constant], timeout: Duration = Duration.Inf, method: Method = Post)
+	def post[A](path: String, body: Value = Value.empty, timeout: Duration = Duration.Inf, method: Method = Post)
 			   (implicit context: ExecutionContext) = makeRequest(method, path, timeout, body)
 	
 	/**
@@ -85,9 +85,20 @@ trait Api
 	def sendRequest(request: Request)(implicit exc: ExecutionContext) =
 		Gateway.valueResponseFor(request).map { _.map(Response.from) }
 	
-	private def makeRequest(method: Method, path: String, timeout: Duration = Duration.Inf,
-							body: Model[Constant] = Model.empty, params: Model[Constant] = Model.empty,
-							modHeaders: Headers => Headers = h => h)(implicit context: ExecutionContext) =
+	/**
+	  * Sends a request to the server and wraps the response
+	  * @param method Method used
+	  * @param path Server address + uri targeted
+	  * @param timeout Request timeout (default = infinite)
+	  * @param body Request body (default = empty)
+	  * @param params Request parameters (default = empty)
+	  * @param modHeaders A function for modifying the request headers (default = no modification)
+	  * @param context Implicit execution context
+	  * @return Asynchronous server result
+	  */
+	protected def makeRequest(method: Method, path: String, timeout: Duration = Duration.Inf,
+							  body: Value = Value.empty, params: Model[Constant] = Model.empty,
+							  modHeaders: Headers => Headers = h => h)(implicit context: ExecutionContext) =
 	{
 		// Timeout is generated from the specified single duration
 		val fullTimeout = timeout.finite match

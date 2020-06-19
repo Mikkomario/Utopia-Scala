@@ -1,7 +1,7 @@
 package utopia.annex.model.request
 
 import utopia.access.http.Method
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 
 /**
   * Represents a relatively simple request that may be sent multiple times if need be
@@ -23,9 +23,9 @@ trait ApiRequest
 	def path: String
 	
 	/**
-	  * @return Request json object body. Empty model if no body should be sent
+	  * @return Request body value. Empty value if no body should be sent
 	  */
-	def body: Model[Constant]
+	def body: Value
 	
 	/**
 	  * @return Whether this request has been deprecated and shouldn't be sent (anymore)

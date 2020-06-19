@@ -1,7 +1,7 @@
 package utopia.annex.model.request
 
 import utopia.access.http.Method.Delete
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, ModelValidationFailedException, PropertyDeclaration}
+import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, ModelValidationFailedException, PropertyDeclaration, Value}
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, StringType}
@@ -51,7 +51,7 @@ trait DeleteRequest extends ApiRequest
 {
 	override def method = Delete
 	
-	override def body = Model.empty
+	override def body = Value.empty
 	
 	override def isDeprecated = false
 	
