@@ -3,38 +3,36 @@ package utopia.flow.container
 import java.nio.file.Path
 
 import utopia.flow.container.SaveTiming.Immediate
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.{FromModelFactory, ModelConvertible}
+import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.generic.DataTypeException
 import utopia.flow.parse.JsonParser
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.util.CollectionExtensions._
 
 import scala.concurrent.ExecutionContext
 
 /**
-  * Used for storing a number of models of a certain type. Data is backed in a local file.
+  * This container holds a number of immutable models
   * @author Mikko Hilpinen
-  * @since 13.6.2020, v1.8
-  * @param fileLocation Location in the file system where this container's back up file should be located
-  * @param factory    A factory used for parsing models into items
-  * @param saveLogic  The logic this container should use to save its current value locally
-  *                   (default = save whenever value changes)
-  * @param jsonParser A parser used for handling json reading
-  * @param exc Implicit execution context (used in some saving styles)
-  * @tparam A Type of individual items stored in this container
+  * @since 17.6.2020, v1.8
+  * @param fileLocation location where the backup of this container is stored
+  * @param saveLogic Logic used when saving the contents of this container (default = save whenever content changes)
+  * @param jsonParser parser used when reading json (implicit)
+  * @param exc Implicit execution context (used in some auto save logic options)
   */
-class ModelsFileContainer[A <: ModelConvertible](fileLocation: Path,
-												 factory: FromModelFactory[A], saveLogic: SaveTiming = Immediate)
-												(implicit jsonParser: JsonParser, exc: ExecutionContext)
-	extends MultiFileContainer[A](fileLocation)
+class ModelsFileContainer(fileLocation: Path, saveLogic: SaveTiming = Immediate)
+						 (implicit jsonParser: JsonParser, exc: ExecutionContext)
+	extends MultiFileContainer[Model[Constant]](fileLocation)
 {
-	// INITIAL CODE	-------------------------------
+	// INITIAL CODE	-----------------------
 	
 	setupAutoSave(saveLogic)
 	
 	
-	// IMPLEMENTED  -------------------------------
+	// IMPLEMENTED	-----------------------
 	
-	override protected def itemToValue(item: A) = item.toModel
+	override protected def itemToValue(item: Model[Constant]) = item
 	
-	override protected def itemFromValue(value: Value) = factory(value.getModel)
+	override protected def itemFromValue(value: Value) = value.model.toTry {
+		DataTypeException(s"Can't parse ${value.description} to model") }
 }

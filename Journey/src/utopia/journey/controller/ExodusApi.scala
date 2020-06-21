@@ -1,28 +1,26 @@
 package utopia.journey.controller
 
+import utopia.access.http.Headers
 import utopia.annex.controller.Api
 import utopia.disciple.http.request.StringBody
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.Value
 import utopia.journey.model.UserCredentials
-import utopia.journey.model.enumeration.AuthorizationReason
-import utopia.metropolis.model.post.NewUser
 
 /**
   * An interface used for accessing the Exodus API
   * @author Mikko Hilpinen
   * @since 20.6.2020, v1
   */
-class ExodusApi(override val rootPath: String, initialDeviceKey: Option[String] = None)(
-	getUserCredentials: AuthorizationReason => Either[NewUser, UserCredentials]) extends Api
+class ExodusApi(override val rootPath: String, credentials: Either[UserCredentials, String], initialSessionKey: String) extends Api
 {
 	// ATTRIBUTES	---------------------------
 	
-	private var sessionKey: Option[String] = None
+	private var sessionKey = initialSessionKey
 	
 	
 	// IMPLEMENTED	---------------------------
 	
-	override protected def headers = ???
+	override protected def headers = Headers.currentDateHeaders.withBearerAuthorization(sessionKey)
 	
 	override protected def makeRequestBody(bodyContent: Value) = StringBody.json(bodyContent.toJson)
 }
