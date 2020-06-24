@@ -51,7 +51,16 @@ object Color
 	/**
 	  * The default black text color for disabled / hint elements
 	  */
-	val textBlackDisabled = black.withAlpha(0.55)
+	val textBlackDisabled = black.withAlpha(0.6)
+	
+	/**
+	 * The default white text color on dark surfaces
+	 */
+	val textWhite = white.withAlpha(0.88)
+	/**
+	 * The default white text color for hint elements
+	 */
+	val textWhiteDisabled = white.withAlpha(0.6)
 	
 	
 	// IMPLICITS	---------------------

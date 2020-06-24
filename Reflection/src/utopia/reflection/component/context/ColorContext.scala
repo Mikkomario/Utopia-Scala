@@ -68,7 +68,7 @@ case class ColorContext(base: BaseContextLike, containerBackground: ComponentCol
 	  * @return Copy of this context that can be used for text components
 	  */
 	def forTextComponents(textAlignment: Alignment = Alignment.Left,
-						  textInsets: StackInsets = StackInsets.symmetric(margins.small.any))
+						  textInsets: StackInsets = StackInsets.symmetric(margins.small.any, margins.verySmall.any))
 						 (implicit localizer: Localizer): TextContext =
 		TextContext(this, textAlignment, textInsets, localizer)
 }

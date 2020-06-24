@@ -35,6 +35,6 @@ object TextColorStandard
 	 */
 	case object Light extends TextColorStandard
 	{
-		override def defaultTextColor = Color.white
+		override def defaultTextColor = Color.textWhite
 	}
 }
