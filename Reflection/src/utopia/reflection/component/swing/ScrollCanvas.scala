@@ -7,7 +7,7 @@ import utopia.genesis.handling.{DrawableHandler, MouseButtonStateHandler, MouseB
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.LinearAcceleration
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Transformation}
-import utopia.genesis.util.{Drawer, FPS}
+import utopia.genesis.util.{Drawer, Fps}
 import utopia.genesis.view.RepaintLoop
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.ComponentLike
@@ -126,7 +126,7 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 	  * @param maxFPS The largest frames per second rate allowed (default = 60 Hrz)
 	  * @param context The asynchronous execution context (implicit)
 	  */
-	def startDrawing(maxFPS: FPS = FPS.default)(implicit context: ExecutionContext) = started.runAndSet
+	def startDrawing(maxFPS: Fps = Fps.default)(implicit context: ExecutionContext) = started.runAndSet
 	{
 		canvas.addCustomDrawer(new CustomDraw())
 		

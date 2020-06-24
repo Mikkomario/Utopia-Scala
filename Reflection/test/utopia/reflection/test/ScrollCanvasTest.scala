@@ -9,7 +9,7 @@ import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.{ActorLoop, Drawable, KeyStateListener, MouseButtonStateListener, MouseWheelListener}
 import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler, MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
 import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Size}
-import utopia.genesis.util.{Drawer, FPS}
+import utopia.genesis.util.{Drawer, Fps}
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
@@ -72,7 +72,7 @@ object ScrollCanvasTest extends App
 	actionLoop.startAsync()
 	StackHierarchyManager.startRevalidationLoop()
 	frame.startEventGenerators(actorHandler)
-	canvas.startDrawing(FPS(30))
+	canvas.startDrawing(Fps(30))
 	frame.isVisible = true
 	
 	println(StackHierarchyManager.description)

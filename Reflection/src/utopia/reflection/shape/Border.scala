@@ -3,7 +3,7 @@ package utopia.reflection.shape
 import javax.swing.BorderFactory
 import javax.swing.border.{EmptyBorder, MatteBorder}
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.Size
+import utopia.genesis.shape.shape2D.{Insets, Size}
 
 object Border
 {

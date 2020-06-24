@@ -1,9 +1,9 @@
 package utopia.reflection.component.drawing.template
 
 import utopia.genesis.shape.Axis.Y
-import utopia.genesis.shape.shape2D.{Bounds, Size}
+import utopia.genesis.shape.shape2D.{Bounds, Insets, Size}
 import utopia.genesis.util.Drawer
-import utopia.reflection.shape.{Border, Insets}
+import utopia.reflection.shape.Border
 
 import scala.collection.immutable.VectorBuilder
 

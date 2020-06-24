@@ -11,7 +11,7 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.genesis.shape.Rotation
 import utopia.genesis.shape.shape2D.{Bounds, Point, Transformation}
-import utopia.genesis.util.{Drawer, FPS}
+import utopia.genesis.util.{Drawer, Fps}
 import utopia.inception.handling.HandlerType
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
@@ -69,7 +69,7 @@ object AnimationLabel
   * @param alignment Alignment used when positioning the drawn content
   */
 class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], override val stackSize: StackSize,
-						drawOrigin: Point = Point.origin, alignment: Alignment = Center, maxFps: FPS = FPS(120))
+						drawOrigin: Point = Point.origin, alignment: Alignment = Center, maxFps: Fps = Fps(120))
 	extends Label with Stackable
 {
 	// ATTRIBUTES	-------------------------

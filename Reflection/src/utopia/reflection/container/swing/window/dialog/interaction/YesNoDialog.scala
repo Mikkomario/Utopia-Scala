@@ -1,5 +1,6 @@
 package utopia.reflection.container.swing.window.dialog.interaction
 
+import utopia.genesis.util.Screen
 import utopia.reflection.component.context.{ButtonContextLike, TextContext, TextContextLike}
 import utopia.reflection.component.swing.MultiLineTextView
 import utopia.reflection.container.swing.window.dialog.interaction.ButtonColor.{Primary, Secondary}
@@ -7,7 +8,6 @@ import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.{LocalizedString, Localizer}
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.Alignment.Center
-import utopia.reflection.util.Screen
 
 object YesNoDialog
 {

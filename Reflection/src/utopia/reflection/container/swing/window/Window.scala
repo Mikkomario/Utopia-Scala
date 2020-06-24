@@ -10,7 +10,8 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
 import utopia.genesis.shape.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.{Axis, Axis2D, Vector3D}
-import utopia.genesis.shape.shape2D.{Point, Size}
+import utopia.genesis.shape.shape2D.{Insets, Point, Size}
+import utopia.genesis.util.Screen
 import utopia.genesis.view.{ConvertingKeyListener, MouseEventGenerator}
 import utopia.reflection.component.stack.{Constrainable, Stackable}
 import utopia.reflection.component.swing.AwtComponentRelated
@@ -18,8 +19,7 @@ import utopia.reflection.component.swing.button.ButtonLike
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.event.ResizeListener
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, Insets, StackSizeModifier}
-import utopia.reflection.util.Screen
+import utopia.reflection.shape.{Alignment, StackSizeModifier}
 
 import scala.concurrent.Promise
 

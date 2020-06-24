@@ -5,7 +5,7 @@ import utopia.genesis.view.MainFrame
 import java.awt.Font
 
 import utopia.flow.async.ThreadPool
-import utopia.genesis.util.{Drawer, FPS}
+import utopia.genesis.util.{Drawer, Fps}
 import utopia.genesis.shape.shape2D.{Bounds, Size}
 import utopia.genesis.view.CanvasMouseEventGenerator
 import utopia.genesis.handling.{ActorLoop, Drawable}
@@ -65,6 +65,6 @@ object CameraTest extends App
 	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
 	
 	actorLoop.startAsync()
-	canvas.startAutoRefresh(FPS(120))
+	canvas.startAutoRefresh(Fps(120))
     frame.display()
 }

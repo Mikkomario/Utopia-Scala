@@ -20,6 +20,7 @@ multiple parameter lists.
 - Rewrote CollectionView. The new implementation doesn't support negative directions and takes an 
 Axis2D as a parameter instead of Direction2D.
 - Removed useLowPriority parameter from AlignFrame. Now all frames expand the content when necessary.
+- Moved Insets and Screen classes from Reflection to Genesis
     
 ### Deprecations
 - StackSelectionManager was deprecated. You should now use ContainerSelectionManager instead.

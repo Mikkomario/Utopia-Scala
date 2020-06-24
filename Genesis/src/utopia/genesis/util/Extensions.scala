@@ -9,6 +9,7 @@ import scala.collection.mutable.ListBuffer
  * @author Mikko Hilpinen
  * @since 24.12.2016
  */
+// TODO: Rename and clean up
 object Extensions
 {
     implicit class DoubleWithAlmostEquals[C](val d: C)(implicit f: C => Double) extends ApproximatelyEquatable[C]

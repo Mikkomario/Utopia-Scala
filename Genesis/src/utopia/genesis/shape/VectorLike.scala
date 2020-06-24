@@ -4,7 +4,7 @@ import scala.math.Ordering.Double.TotalOrdering
 import scala.collection.immutable.{HashMap, VectorBuilder}
 import utopia.genesis.shape.Axis._
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.util.{Arithmetic, Distance}
+import utopia.genesis.util.{Arithmetic, DistanceLike}
 
 object VectorLike
 {
@@ -26,7 +26,7 @@ object VectorLike
   * matching an axis (X, Y, Z, ...)
   * @tparam Repr the concrete implementing class
   */
-trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Repr] with Distance with Dimensional[Double]
+trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Repr] with DistanceLike with Dimensional[Double]
 	with VectorProjectable[Vector3D]
 {
 	// ABSTRACT	---------------------

@@ -1,7 +1,7 @@
 package utopia.genesis.shape.path
 
 import utopia.genesis.util.Arithmetic.ArithMeticDouble
-import utopia.genesis.util.{Arithmetic, Distance}
+import utopia.genesis.util.{Arithmetic, DistanceLike}
 
 object CubicBezier
 {
@@ -27,7 +27,7 @@ object CubicBezier
   * @param controlEnd The second control point
   * @param end The curve end point
   */
-case class CubicBezier[P <: Arithmetic[P, P] with Distance](override val start: P, controlStart: P, controlEnd: P, override val end: P)
+case class CubicBezier[P <: Arithmetic[P, P] with DistanceLike](override val start: P, controlStart: P, controlEnd: P, override val end: P)
 	extends Path[P]
 {
 	// IMPLEMENTED	----------------------

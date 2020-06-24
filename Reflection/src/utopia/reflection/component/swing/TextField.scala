@@ -12,7 +12,7 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.genesis.color.Color
 import utopia.genesis.shape.Axis.X
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.genesis.shape.shape2D.{Bounds, Insets, Point, Size}
 import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
@@ -22,7 +22,7 @@ import utopia.reflection.component.{Alignable, Focusable}
 import utopia.reflection.component.input.InteractionWithPointer
 import utopia.reflection.component.stack.{CachingStackable, StackLeaf}
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, Border, Insets, StackInsets, StackLength, StackSize}
+import utopia.reflection.shape.{Alignment, Border, StackInsets, StackLength, StackSize}
 import utopia.reflection.text.{Font, Prompt, Regex}
 
 object TextField

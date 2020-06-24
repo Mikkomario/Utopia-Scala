@@ -5,6 +5,7 @@ import java.awt.event.{WindowEvent, WindowFocusListener}
 import utopia.reflection.localization.LocalString._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.shape2D.{Point, Size}
+import utopia.genesis.util.Screen
 import utopia.reflection.component.ComponentLike
 import utopia.reflection.component.stack.Stackable
 import utopia.reflection.component.swing.AwtComponentRelated
@@ -13,7 +14,6 @@ import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.container.swing.window.dialog.Dialog
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.Alignment.TopLeft
-import utopia.reflection.util.Screen
 
 /**
   * Used for converting components to pop-ups

@@ -1,14 +1,14 @@
 package utopia.genesis.shape.path
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.util.{Arithmetic, Distance}
+import utopia.genesis.util.{Arithmetic, DistanceLike}
 
 /**
   * This path works exactly like a the original path, except that the "velocity" within the curve is standardized
   * @author Mikko Hilpinen
   * @since 24.6.2019, v2.1+
   */
-case class StandardVelocityPath[P <: Arithmetic[P, P] with Distance](private val original: Path[P], sequenceAmount: Int)
+case class StandardVelocityPath[P <: Arithmetic[P, P] with DistanceLike](private val original: Path[P], sequenceAmount: Int)
 	extends Path[P]
 {
 	// ATTRIBUTES	-------------------

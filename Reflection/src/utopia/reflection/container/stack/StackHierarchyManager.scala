@@ -7,7 +7,7 @@ import utopia.flow.datastructure.immutable.GraphEdge
 import utopia.flow.datastructure.mutable.GraphNode
 import utopia.flow.util.WaitTarget.WaitDuration
 import utopia.flow.util.{Counter, WaitUtils}
-import utopia.genesis.util.FPS
+import utopia.genesis.util.Fps
 import utopia.reflection.component.stack.Stackable
 
 import scala.collection.mutable
@@ -106,7 +106,7 @@ object StackHierarchyManager
 	  * @param vps The maximum validations per second value (default = 30)
 	  * @param context The asynchronous execution context
 	  */
-	def startRevalidationLoop(vps: FPS = FPS(30))(implicit context: ExecutionContext) =
+	def startRevalidationLoop(vps: Fps = Fps(30))(implicit context: ExecutionContext) =
 	{
 		if (validationLoop.isEmpty)
 		{

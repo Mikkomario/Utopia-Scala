@@ -8,7 +8,7 @@ import java.awt.Graphics
 import java.awt.event.{ComponentAdapter, ComponentEvent}
 
 import utopia.genesis.view.ScalingPolicy.Crop
-import utopia.genesis.util.{Drawer, FPS}
+import utopia.genesis.util.{Drawer, Fps}
 import utopia.genesis.shape.shape2D.Transformation
 import utopia.genesis.shape.shape2D.Size
 import utopia.genesis.handling.DrawableHandler
@@ -107,7 +107,7 @@ class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size, val 
       * @param maxFPS The maximum frames (draws) per second
       * @param context Asynchronous execution context
       */
-    def startAutoRefresh(maxFPS: FPS = FPS.default)(implicit context: ExecutionContext): Unit =
+    def startAutoRefresh(maxFPS: Fps = Fps.default)(implicit context: ExecutionContext): Unit =
     {
         if (refreshLoop.isEmpty)
         {

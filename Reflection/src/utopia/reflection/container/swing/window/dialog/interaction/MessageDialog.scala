@@ -1,5 +1,6 @@
 package utopia.reflection.container.swing.window.dialog.interaction
 
+import utopia.genesis.util.Screen
 import utopia.reflection.component.context.{ButtonContextLike, TextContextLike}
 import utopia.reflection.component.swing.MultiLineTextView
 import utopia.reflection.component.swing.label.ImageLabel
@@ -8,7 +9,6 @@ import utopia.reflection.container.swing.Stack
 import utopia.reflection.container.swing.window.dialog.interaction.ButtonColor.Fixed
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.util.Screen
 
 /**
  * A very simple dialog used for displaying a message to the user

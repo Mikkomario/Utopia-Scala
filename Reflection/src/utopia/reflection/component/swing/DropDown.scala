@@ -5,6 +5,7 @@ import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.Direction2D.Up
+import utopia.genesis.shape.shape2D.Insets
 import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, BorderDrawer, TextDrawContext}
 import utopia.reflection.component.{Focusable, Refreshable}
@@ -16,7 +17,7 @@ import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.Stack
 import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
-import utopia.reflection.shape.{Alignment, Border, Insets, StackInsets, StackLength, StackSize, StackSizeModifier}
+import utopia.reflection.shape.{Alignment, Border, StackInsets, StackLength, StackSize, StackSizeModifier}
 import utopia.reflection.text.{Font, Prompt}
 
 import scala.concurrent.ExecutionContext
