@@ -141,7 +141,7 @@ case class Point(override val x: Double, override val y: Double) extends VectorL
 	/**
 	  * An awt representation of this point
 	  */
-	def toAwtPoint = new java.awt.Point(x.toInt, y.toInt)
+	def toAwtPoint = new java.awt.Point(x.ceil.toInt, y.ceil.toInt)
 	
 	/**
 	  * An awt geom representation of this point

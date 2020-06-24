@@ -2,7 +2,7 @@ package utopia.genesis.shape.shape2D
 
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.{Axis2D, Vector3D}
 import utopia.genesis.shape.shape2D.Direction2D._
 
 import scala.collection.immutable.HashMap
@@ -247,6 +247,13 @@ trait InsetsLike[L, +S, +Repr]
       * @return Multiplied insets
       */
     def *(multi: Double) = makeCopy(amounts.map { case (side, length) => side -> multiply(length, multi) })
+    
+    /**
+     * @param multi A multiplier (may be different for different axes)
+     * @return Multiplied copy of these insets
+     */
+    def *(multi: Vector3D) = makeCopy(amounts.map { case (side, length) =>
+        side -> multiply(length, multi.along(side.axis)) })
     
     /**
       * Divides each side of these insets

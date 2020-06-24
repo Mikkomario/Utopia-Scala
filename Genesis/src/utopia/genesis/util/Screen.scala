@@ -2,6 +2,7 @@ package utopia.genesis.util
 
 import java.awt.{GraphicsConfiguration, Toolkit}
 
+import utopia.genesis.shape.Vector3D
 import utopia.genesis.shape.shape2D.{Insets, Size}
 
 import scala.util.Try
@@ -13,12 +14,34 @@ import scala.util.Try
 **/
 object Screen
 {
+	// ATTRIBUTES   -----------------------
+	
+	private var screenSizeMod: Option[Vector3D] = None
+	
+	private lazy val standardSize = Try { Size of toolkit.getScreenSize }.getOrElse(Size.zero)
+	
+	
 	// COMPUTED ---------------------------
 	
+	/**
+	 * @return The virtual size of this screen. This is solely based on the value provided by the OS and may vary from
+	 *         the real size. However, when applying OS scaling, this size is correct.
+	 */
+	def size = standardSize
+	
     /**
-     * The current size of the screen (zero size if there is no screen)
+     * The actual size of the monitor in pixels. Requires calling 'registerRealScreenSize' in order to return different
+     * values.
      */
-	def size = Try { Size of toolkit.getScreenSize }.getOrElse(Size.zero)
+	def actualSize =
+	{
+		val standard = standardSize
+		screenSizeMod match
+		{
+			case Some(scaling) => standard * scaling
+			case None => standard
+		}
+	}
 	
 	/**
 	 * @return Current width of the screen (0 when there is no screen)
@@ -33,7 +56,15 @@ object Screen
 	/**
 	 * @return Pixels per inch resolution of the screen (zero ppi when there is no screen)
 	 */
-	def ppi = Try { Ppi(toolkit.getScreenResolution) }.getOrElse(Ppi.zero)
+	def ppi =
+	{
+		val base = Try { Ppi(toolkit.getScreenResolution) }.getOrElse(Ppi.zero)
+		screenSizeMod match
+		{
+			case Some(scaling) => base / scaling.maxDimension
+			case None => base
+		}
+	}
 	
 	private def toolkit = Toolkit.getDefaultToolkit
 	
@@ -45,5 +76,20 @@ object Screen
 	 * @param configuration the graphics configuration where the insets are read
 	 */
 	def insetsAt(configuration: GraphicsConfiguration) =
-		Try { Insets of toolkit.getScreenInsets(configuration) }.getOrElse(Insets.zero)
+	{
+		val standard = Try { Insets of toolkit.getScreenInsets(configuration) }.getOrElse(Insets.zero)
+		screenSizeMod match
+		{
+			case Some(scaling) => standard * scaling
+			case None => standard
+		}
+	}
+	
+	/**
+	 * Used for informing this object about the actual screen pixel size. Sometimes Windows uses scaling which
+	 * messes up all inside-application settings that are based on the screen size. This method can be used to partially
+	 * remedy that.
+	 * @param realSize A custom screen size
+	 */
+	def registerRealScreenSize(realSize: Size) = screenSizeMod = Some((realSize / standardSize).toVector)
 }

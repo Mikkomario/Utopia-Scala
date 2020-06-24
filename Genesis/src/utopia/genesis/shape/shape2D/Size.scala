@@ -109,7 +109,7 @@ case class Size(width: Double, height: Double) extends VectorLike[Size] with App
     /**
      * An awt representation of this size
      */
-	def toDimension = new Dimension(width.toInt, height.toInt)
+	def toDimension = new Dimension(width.ceil.toInt, height.ceil.toInt)
     
     /**
       * @return This size as a square shape where width is equal to height. Lowers one of the sides if necessary.

@@ -27,11 +27,13 @@ object Switch
 	
 	/**
 	  * Creates a new switch using contextual information
+	 *  @param width Switch component width
+	 *  @param initialState First state of this switch (default = false = off)
 	  * @param context Component creation context
 	  * @return A new switch
 	  */
-	def contextual(width: StackLength)(implicit context: ColorContextLike) = new Switch(width, context.secondaryColor,
-		context.actorHandler)
+	def contextual(width: StackLength, initialState: Boolean = false)(implicit context: ColorContextLike) =
+		new Switch(width, context.secondaryColor, context.actorHandler, initialState)
 }
 
 /**
@@ -39,7 +41,7 @@ object Switch
   * @author Mikko Hilpinen
   * @since 4.5.2019, v1+
   */
-class Switch(val targetWidth: StackLength, val color: Color, actorHandler: ActorHandler)
+class Switch(val targetWidth: StackLength, val color: Color, actorHandler: ActorHandler, initialState: Boolean = false)
 	extends AwtComponentWrapperWrapper with CustomDrawableWrapper with InteractionWithPointer[Boolean] with StackLeaf
 {
 	// ATTRIBUTES	-----------------
@@ -50,19 +52,18 @@ class Switch(val targetWidth: StackLength, val color: Color, actorHandler: Actor
 	private var _isEnabled = true
 	
 	override val stackSize = StackSize(targetWidth, targetWidth.noMax * Switch.maxHeightRatio)
-	override val valuePointer = new PointerWithEvents(false)
+	override val valuePointer = new PointerWithEvents(initialState)
 	
 	
 	// INITIAL CODE	-----------------
 	
 	{
 		// Sets up custom drawing
-		val drawer = new SwitchDrawer()
-		addCustomDrawer(drawer)
-		actorHandler += drawer
+		addCustomDrawer(SwitchDrawer)
+		actorHandler += SwitchDrawer
 		
 		// Sets up mouse listening
-		addMouseButtonListener(new ClickHandler())
+		addMouseButtonListener(ClickHandler)
 		label.setHandCursor()
 	}
 	
@@ -97,7 +98,7 @@ class Switch(val targetWidth: StackLength, val color: Color, actorHandler: Actor
 	
 	// NESTED CLASSES	-------------
 	
-	private class ClickHandler extends MouseButtonStateListener
+	private object ClickHandler extends MouseButtonStateListener
 	{
 		// Only listens to left mouse button presses inside switch area
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter && MouseEvent.isOverAreaFilter(bounds)
@@ -113,12 +114,12 @@ class Switch(val targetWidth: StackLength, val color: Color, actorHandler: Actor
 		override def allowsHandlingFrom(handlerType: HandlerType) = isEnabled
 	}
 	
-	private class SwitchDrawer extends CustomDrawer with Actor with Mortal
+	private object SwitchDrawer extends CustomDrawer with Actor with Mortal
 	{
 		// ATTRIBUTES	-------------
 		
 		private var wasDisplayed = component.isDisplayable
-		private var x = 0.0
+		private var x = if (initialState) 1.0 else 0.0
 		
 		
 		// IMPLEMENTED	-------------

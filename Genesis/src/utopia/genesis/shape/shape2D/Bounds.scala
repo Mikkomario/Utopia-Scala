@@ -106,7 +106,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     /**
      * An awt counterpart of these bounds
      */
-    def toAwt = new java.awt.Rectangle(position.x.toInt, position.y.toInt, width.toInt, height.toInt)
+    def toAwt = new java.awt.Rectangle(position.x.ceil.toInt, position.y.ceil.toInt, width.ceil.toInt, height.ceil.toInt)
     
     /**
      * The diagonal line for this rectangle. Starts at the position coordinates and goes all the 

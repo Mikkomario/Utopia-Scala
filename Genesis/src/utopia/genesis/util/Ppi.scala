@@ -34,7 +34,7 @@ object Ppi
  * @author Mikko Hilpinen
  * @since 24.6.2020, v2.3
  */
-case class Ppi(value: Double) extends RichComparable[Ppi]
+case class Ppi(value: Double) extends RichComparable[Ppi] with Scalable[Ppi]
 {
 	// COMPUTED ---------------------------------
 	
@@ -56,6 +56,12 @@ case class Ppi(value: Double) extends RichComparable[Ppi]
 		else
 			0
 	}
+	
+	override def toString = s"${value.round} pixels per inch"
+	
+	override def repr = this
+	
+	override def *(mod: Double) = Ppi(value * mod)
 	
 	
 	// OTHER    ---------------------------------

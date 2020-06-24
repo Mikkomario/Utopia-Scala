@@ -53,6 +53,8 @@ trait BorderDrawer extends CustomDrawer
 	{
 		val buffer = new VectorBuilder[Bounds]
 		
+		// FIXME: Probably rounding errors here
+		
 		// Top is limited by left
 		if (insets.top > 0)
 			buffer += Bounds(bounds.topLeft.plusX(insets.left), Size(bounds.width - insets.left, insets.top))
