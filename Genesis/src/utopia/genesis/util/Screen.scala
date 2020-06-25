@@ -54,7 +54,8 @@ object Screen
 	def height = size.height
 	
 	/**
-	 * @return Pixels per inch resolution of the screen (zero ppi when there is no screen)
+	 * @return Pixels per inch resolution of the screen (zero ppi when there is no screen). Takes into account forced
+	  *         scaling from the OS, provided that the real screen size has been manually registered.
 	 */
 	def ppi =
 	{
@@ -72,12 +73,21 @@ object Screen
 	// OTHER    --------------------------
 	
 	/**
-	 * The insets of this screen in the specified graphics configuration
+	 * The insets of this screen in the specified graphics configuration. This value is correct only when applying
+	  * OS forced scaling. The actual pixel length of the insets may vary.
 	 * @param configuration the graphics configuration where the insets are read
 	 */
-	def insetsAt(configuration: GraphicsConfiguration) =
+	def insetsAt(configuration: GraphicsConfiguration) = Try { Insets of toolkit.getScreenInsets(configuration) }
+		.getOrElse(Insets.zero)
+	
+	/**
+	  * The insets of this screen in the specified graphics configuration. This is the actual pixel size of the insets,
+	  * but forced OS scaling may alter its use.
+	  * @param configuration the graphics configuration where the insets are read
+	  */
+	def actualInsetsAt(configuration: GraphicsConfiguration) =
 	{
-		val standard = Try { Insets of toolkit.getScreenInsets(configuration) }.getOrElse(Insets.zero)
+		val standard = insetsAt(configuration)
 		screenSizeMod match
 		{
 			case Some(scaling) => standard * scaling
