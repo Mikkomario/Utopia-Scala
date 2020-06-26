@@ -1,5 +1,7 @@
 package utopia.flow.datastructure.immutable
 
+import utopia.flow.datastructure.template
+import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.DataType
 
 import scala.util.{Failure, Success}
@@ -7,22 +9,28 @@ import scala.util.{Failure, Success}
 object ModelValidationResult
 {
 	/**
+	 *  @param original Original model
 	  * @param missingDeclarations Declarations that were missing or empty
 	  * @return A result for missing properties
 	  */
-	def missing(missingDeclarations: Set[PropertyDeclaration]) = ModelValidationResult(missingProperties = missingDeclarations)
+	def missing(original: template.Model[Property], missingDeclarations: Set[PropertyDeclaration]) =
+		ModelValidationResult(original, missingProperties = missingDeclarations)
 	
 	/**
+	 *  @param original Original model
 	  * @param failedConversions Conversions that failed (original attribute -> desired data type)
 	  * @return A result for cast failure
 	  */
-	def castFailed(failedConversions: Set[(Constant, DataType)]) = ModelValidationResult(invalidConversions = failedConversions)
+	def castFailed(original: template.Model[Property], failedConversions: Set[(Constant, DataType)]) =
+		ModelValidationResult(original, invalidConversions = failedConversions)
 	
 	/**
-	  * @param model Successfully validated model
+	 *  @param original Original model
+	  * @param validated Successfully validated model
 	  * @return A result for successful validation
 	  */
-	def success(model: Model[Constant]) = ModelValidationResult(success = Some(model))
+	def success(original: template.Model[Property], validated: Model[Constant]) =
+		ModelValidationResult(original, success = Some(validated))
 }
 
 /**
@@ -33,9 +41,9 @@ object ModelValidationResult
   * @param missingProperties The properties that were missing from the model
   * @param invalidConversions Properties that failed to convert to desired data type
   */
-case class ModelValidationResult private(success: Option[Model[Constant]] = None,
-										 missingProperties: Set[PropertyDeclaration] = Set(),
-										 invalidConversions: Set[(Constant, DataType)] = Set())
+case class ModelValidationResult private(original: template.Model[Property], success: Option[Model[Constant]] = None,
+                                         missingProperties: Set[PropertyDeclaration] = Set(),
+                                         invalidConversions: Set[(Constant, DataType)] = Set())
 {
 	// COMPUTED	-----------------
 	
@@ -71,7 +79,8 @@ case class ModelValidationResult private(success: Option[Model[Constant]] = None
 		if (isSuccess)
 			success.get.toString
 		else if (missingProperties.nonEmpty)
-			s"Missing properties: ${missingProperties.map { _.name }.mkString(", ")}"
+			s"Missing properties: ${missingProperties.map { _.name }.mkString(", ")}. Available: ${
+				original.attributesWithValue.map { _.name }.mkString(", ")}"
 		else
 			s"Couldn't convert: ${invalidConversions.map { case (prop, target) => s"$prop -> $target" }.mkString(", ")}"
 	}

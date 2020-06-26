@@ -126,7 +126,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
         
         // Declarations with default values are replaced with their defaults
         if (missingNonDefaults.nonEmpty)
-            ModelValidationResult.missing(missingNonDefaults)
+            ModelValidationResult.missing(model, missingNonDefaults)
         else
         {
             // Tries to convert all declared model properties to required types and checks that each declared (non-default)
@@ -157,16 +157,17 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
                 val castValues = castBuilder.result()
                 val emptyValues = castValues.filter { c => valueIsEmpty(c.value) }
                 if (emptyValues.nonEmpty)
-                    ModelValidationResult.missing(declarations.filter { d => emptyValues.exists { _.name ~== d.name } })
+                    ModelValidationResult.missing(model,
+                        declarations.filter { d => emptyValues.exists { _.name ~== d.name } })
                 else
                 {
                     val resultConstants = keepBuilder.result() ++ castValues ++ missingDefaults.map {
                         d => Constant(d.name, d.defaultValue.get) }
-                    ModelValidationResult.success(Model.withConstants(resultConstants))
+                    ModelValidationResult.success(model, Model.withConstants(resultConstants))
                 }
             }
             else
-                ModelValidationResult.castFailed(castFailed.toSet)
+                ModelValidationResult.castFailed(model, castFailed.toSet)
         }
     }
     
