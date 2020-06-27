@@ -79,8 +79,8 @@ case class ModelValidationResult private(original: template.Model[Property], suc
 		if (isSuccess)
 			success.get.toString
 		else if (missingProperties.nonEmpty)
-			s"Missing properties: ${missingProperties.map { _.name }.mkString(", ")}. Available: ${
-				original.attributesWithValue.map { _.name }.mkString(", ")}"
+			s"Missing properties: ${missingProperties.map { a => s"'${a.name}'" }.mkString(", ")}. Searching from: ${
+				original.toJson}"
 		else
 			s"Couldn't convert: ${invalidConversions.map { case (prop, target) => s"$prop -> $target" }.mkString(", ")}"
 	}
