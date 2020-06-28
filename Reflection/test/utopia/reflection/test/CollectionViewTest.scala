@@ -8,8 +8,8 @@ import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.shape.Axis.X
 import utopia.genesis.shape.shape2D.{Direction2D, Size}
 import utopia.reflection.component.swing.label.EmptyLabel
-import utopia.reflection.container.swing.Stack.AwtStackable
-import utopia.reflection.container.swing.AnimatedCollectionView
+import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
+import utopia.reflection.container.swing.layout.multi.AnimatedCollectionView
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.shape.StackSize

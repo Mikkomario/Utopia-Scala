@@ -11,15 +11,16 @@ import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.{ActorLoop, KeyStateListener}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis._
-import utopia.reflection.component.Refreshable
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
 import utopia.reflection.component.swing.label.ItemLabel
+import utopia.reflection.component.template.display.Refreshable
 import utopia.reflection.container.stack.StackHierarchyManager
+import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.container.swing.{AnimatedStack, ScrollView, Stack}
-import utopia.reflection.controller.data.{ContainerSelectionManager, StackSelectionManager}
+import utopia.reflection.container.swing.layout.multi.AnimatedStack
+import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.reflection.localization.{DisplayFunction, Localizer, NoLocalization}
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.{StackInsets, StackLengthLimit}

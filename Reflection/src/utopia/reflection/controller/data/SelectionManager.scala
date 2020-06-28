@@ -3,8 +3,8 @@ package utopia.reflection.controller.data
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.flow.util.CollectionExtensions._
-import utopia.reflection.component.input.SelectableWithPointers
-import utopia.reflection.component.Refreshable
+import utopia.reflection.component.template.input.SelectableWithPointers
+import utopia.reflection.component.template.display.Refreshable
 
 /**
   * This manager handles displayed content AND selection

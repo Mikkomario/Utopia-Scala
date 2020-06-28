@@ -6,11 +6,11 @@ import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis._
-import utopia.reflection.component.swing.Switch
+import utopia.reflection.component.swing.input.Switch
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.stack.segmented.SegmentedGroup
-import utopia.reflection.container.swing.{SegmentedRow, Stack}
+import utopia.reflection.container.swing.layout.multi.{SegmentedRow, Stack}
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.localization.{Localizer, NoLocalization}

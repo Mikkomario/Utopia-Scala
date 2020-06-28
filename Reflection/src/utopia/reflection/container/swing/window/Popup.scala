@@ -6,12 +6,11 @@ import utopia.reflection.localization.LocalString._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.shape2D.{Point, Size}
 import utopia.genesis.util.Screen
-import utopia.reflection.component.ComponentLike
-import utopia.reflection.component.stack.Stackable
-import utopia.reflection.component.swing.AwtComponentRelated
+import utopia.reflection.component.swing.template.AwtComponentRelated
+import utopia.reflection.component.template.ComponentLike
+import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.container.swing.window.dialog.Dialog
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.Alignment.TopLeft
 

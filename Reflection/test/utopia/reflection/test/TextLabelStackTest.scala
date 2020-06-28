@@ -12,7 +12,8 @@ import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackLayout.Leading
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.swing.{Framing, Stack}
+import utopia.reflection.container.swing.layout.multi.Stack
+import utopia.reflection.container.swing.layout.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.localization.{Localizer, NoLocalization}

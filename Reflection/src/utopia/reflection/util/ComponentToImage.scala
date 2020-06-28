@@ -5,8 +5,8 @@ import java.awt.image.BufferedImage
 import javax.swing.CellRendererPane
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
-import utopia.reflection.component.Area
-import utopia.reflection.component.swing.AwtComponentRelated
+import utopia.reflection.component.swing.template.AwtComponentRelated
+import utopia.reflection.component.template.layout.Area
 
 /**
   * Used for drawing components as images

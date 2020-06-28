@@ -3,10 +3,10 @@ package utopia.reflection.container.stack.segmented
 import utopia.flow.async.VolatileFlag
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis2D
-import utopia.reflection.component.stack.{Stackable, StackableWrapper}
-import utopia.reflection.component.ComponentWrapper
-import utopia.reflection.container.MultiContainer
-import utopia.reflection.container.stack.StackLike
+import utopia.reflection.component.template.ComponentWrapper
+import utopia.reflection.component.template.layout.stack.{Stackable, StackableWrapper}
+import utopia.reflection.container.stack.template.layout.StackLike
+import utopia.reflection.container.template.MultiContainer
 import utopia.reflection.shape.StackLength
 
 /**

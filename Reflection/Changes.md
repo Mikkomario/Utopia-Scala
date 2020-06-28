@@ -1,6 +1,7 @@
 # Utopia Reflection - List of Changes
 ## v1.2 (beta)
 ### Breaking Changes
+- Major package restructuring
 - ComponentContext and ComponentContextBuilder were replaced with new implementations. 
 Existing components don't support old context types anymore.
 - Container add methods now target specific indices
@@ -62,6 +63,7 @@ animations.
 - ContentDisplayer and ContainerContentDisplayer for features similar to ContentManager, except read-only.
 - AnimationLabel
     - Can be used for animated drawing (Sprites, rotating images etc.)
+- InteractionWindow traits and classes for window-based user interaction
 
 ### New Methods
 - AwtComponentWrapper: toImage

@@ -9,9 +9,9 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{ActorLoop, KeyStateListener, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
 import utopia.genesis.shape.shape2D.Size
 import utopia.inception.handling.immutable.Handleable
-import utopia.reflection.component.Area
 import utopia.reflection.component.swing.label.Label
-import utopia.reflection.container.swing.Stack
+import utopia.reflection.component.template.layout.Area
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.{StackLength, StackSize}

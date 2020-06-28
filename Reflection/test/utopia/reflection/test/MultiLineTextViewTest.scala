@@ -2,8 +2,9 @@ package utopia.reflection.test
 
 import utopia.reflection.shape.LengthExtensions._
 import utopia.genesis.generic.GenesisDataType
-import utopia.reflection.component.swing.{JDropDownWrapper, MultiLineTextView, TextField}
-import utopia.reflection.container.swing.Stack
+import utopia.reflection.component.swing.display.MultiLineTextView
+import utopia.reflection.component.swing.input.{JDropDownWrapper, TextField}
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.localization.LocalString
 import utopia.reflection.shape.{Alignment, StackLength}

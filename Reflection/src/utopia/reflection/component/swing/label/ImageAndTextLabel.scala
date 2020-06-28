@@ -5,12 +5,13 @@ import utopia.genesis.color.Color
 import utopia.genesis.image.Image
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.reflection.component.context.TextContextLike
-import utopia.reflection.component.{RefreshableWithPointer, TextComponent}
 import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.swing.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
+import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
+import utopia.reflection.component.template.display.RefreshableWithPointer
+import utopia.reflection.component.template.text.TextComponent
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.{Leading, Trailing}
-import utopia.reflection.container.swing.Stack
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.Alignment.{Bottom, Top}
 import utopia.reflection.shape.{Alignment, StackInsets, StackLength}

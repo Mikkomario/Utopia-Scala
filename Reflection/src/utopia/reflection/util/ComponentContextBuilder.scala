@@ -7,7 +7,7 @@ import utopia.genesis.shape.{Axis2D, LinearAcceleration}
 import utopia.genesis.util.Drawer
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.drawing.template.ScrollBarDrawer
-import utopia.reflection.container.stack.ScrollAreaLike
+import utopia.reflection.container.stack.template.scrolling.ScrollAreaLike
 import utopia.reflection.shape.{Alignment, Border, ScrollBarBounds, StackInsets, StackLength}
 import utopia.reflection.text.Font
 

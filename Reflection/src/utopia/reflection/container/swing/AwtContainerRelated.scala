@@ -1,6 +1,6 @@
 package utopia.reflection.container.swing
 
-import utopia.reflection.component.swing.AwtComponentRelated
+import utopia.reflection.component.swing.template.AwtComponentRelated
 
 /**
   * This trait is extended by classes that are somehow related with an awt container

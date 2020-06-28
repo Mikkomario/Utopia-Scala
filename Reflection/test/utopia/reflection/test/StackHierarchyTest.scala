@@ -7,10 +7,10 @@ import utopia.flow.util.TimeExtensions._
 import utopia.flow.async.{Loop, ThreadPool}
 import utopia.flow.generic.DataType
 import utopia.genesis.shape.shape2D.Size
-import utopia.reflection.component.stack.StackLeaf
-import utopia.reflection.component.swing.{JStackableWrapper, JWrapper}
+import utopia.reflection.component.template.layout.stack.StackLeaf
+import utopia.reflection.component.swing.template.{JStackableWrapper, JWrapper}
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.swing.Stack
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.localization.{Localizer, NoLocalization}

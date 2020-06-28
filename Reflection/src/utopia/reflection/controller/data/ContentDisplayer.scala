@@ -2,7 +2,7 @@ package utopia.reflection.controller.data
 
 import utopia.flow.event.{ChangeEvent, ChangeListener, Changing}
 import utopia.flow.util.CollectionExtensions._
-import utopia.reflection.component.{PoolWithPointer, Refreshable}
+import utopia.reflection.component.template.display.{PoolWithPointer, Refreshable}
 
 /**
   * Updates the displayed content on a component. Please note that when using ContentDisplayers, you shouldn't modify

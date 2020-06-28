@@ -4,6 +4,7 @@ import java.awt.Graphics
 
 import javax.swing.JLabel
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.reflection.component.swing.template.CustomDrawComponent
 
 /**
   * This is an attempt for a light-weight swing component that can be used with custom drawing and/or spacing

@@ -12,10 +12,10 @@ import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.reflection.component.swing.{Calendar, JDropDownWrapper}
 import utopia.reflection.component.swing.button.ButtonImageSet
+import utopia.reflection.component.swing.input.{Calendar, JDropDownWrapper}
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.swing.Framing
+import utopia.reflection.container.swing.layout.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.localization.{DisplayFunction, Localizer, NoLocalization}

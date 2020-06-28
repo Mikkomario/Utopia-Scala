@@ -4,8 +4,8 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.drawing.mutable.BorderDrawer
-import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
+import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.{Alignment, Border, StackInsets, StackLength}
 import utopia.reflection.text.Font

@@ -8,7 +8,7 @@ import utopia.flow.datastructure.mutable.GraphNode
 import utopia.flow.util.WaitTarget.WaitDuration
 import utopia.flow.util.{Counter, WaitUtils}
 import utopia.genesis.util.Fps
-import utopia.reflection.component.stack.Stackable
+import utopia.reflection.component.template.layout.stack.Stackable
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext

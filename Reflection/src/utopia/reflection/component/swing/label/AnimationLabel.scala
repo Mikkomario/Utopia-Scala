@@ -16,7 +16,7 @@ import utopia.inception.handling.HandlerType
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.stack.Stackable
+import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.shape.Alignment.Center
 import utopia.reflection.shape.{Alignment, StackSize}
 import utopia.reflection.shape.LengthExtensions._

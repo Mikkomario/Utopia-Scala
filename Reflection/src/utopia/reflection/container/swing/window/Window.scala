@@ -13,9 +13,9 @@ import utopia.genesis.shape.{Axis, Axis2D, Vector3D}
 import utopia.genesis.shape.shape2D.{Insets, Point, Size}
 import utopia.genesis.util.Screen
 import utopia.genesis.view.{ConvertingKeyListener, MouseEventGenerator}
-import utopia.reflection.component.stack.{Constrainable, Stackable}
-import utopia.reflection.component.swing.AwtComponentRelated
+import utopia.reflection.component.template.layout.stack.{Constrainable, Stackable}
 import utopia.reflection.component.swing.button.ButtonLike
+import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.event.ResizeListener
 import utopia.reflection.localization.LocalizedString

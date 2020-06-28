@@ -3,9 +3,10 @@ package utopia.reflection.test
 import utopia.genesis.generic.GenesisDataType
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.label.TextLabel
+import utopia.reflection.container.swing.layout.SegmentGroup
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.container.swing.{SegmentGroup, Stack}
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.Alignment
 import utopia.reflection.util.SingleFrameSetup

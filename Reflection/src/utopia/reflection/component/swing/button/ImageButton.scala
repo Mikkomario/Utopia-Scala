@@ -1,8 +1,8 @@
 package utopia.reflection.component.swing.button
 
 import utopia.reflection.component.context.BaseContextLike
-import utopia.reflection.component.swing.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.swing.label.ImageLabel
+import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 
 object ImageButton
 {

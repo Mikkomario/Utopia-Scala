@@ -4,7 +4,7 @@ import scala.math.Ordering.Double.TotalOrdering
 import utopia.flow.datastructure.mutable.Pointer
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.Bounds
-import utopia.reflection.component.stack.Stackable
+import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.container.stack.StackLayout.{Fit, Leading, Trailing}
 import utopia.reflection.shape.{StackLength, StackSize}
 

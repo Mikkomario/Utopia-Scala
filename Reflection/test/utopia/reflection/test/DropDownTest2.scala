@@ -4,9 +4,10 @@ import utopia.reflection.shape.LengthExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.image.Image
-import utopia.reflection.component.swing.DropDown
+import utopia.reflection.component.swing.input.DropDown
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.swing.{AnimatedSizeContainer, Stack}
+import utopia.reflection.container.swing.layout.multi.Stack
+import utopia.reflection.container.swing.layout.wrapper.AnimatedSizeContainer
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.util.SingleFrameSetup

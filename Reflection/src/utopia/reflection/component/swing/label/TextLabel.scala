@@ -4,9 +4,9 @@ import utopia.genesis.color.Color
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.TextDrawer
-import utopia.reflection.component.stack.{CachingStackable, StackLeaf}
-import utopia.reflection.component.SingleLineTextComponent
+import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
+import utopia.reflection.component.template.text.SingleLineTextComponent
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.{Alignment, StackInsets}
 import utopia.reflection.text.Font

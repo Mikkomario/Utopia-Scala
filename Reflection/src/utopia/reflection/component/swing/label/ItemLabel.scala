@@ -7,8 +7,9 @@ import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
-import utopia.reflection.component.swing.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.reflection.component.{RefreshableWithPointer, TextComponent}
+import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
+import utopia.reflection.component.template.display.RefreshableWithPointer
+import utopia.reflection.component.template.text.TextComponent
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.{Alignment, StackInsets}
 import utopia.reflection.text.Font

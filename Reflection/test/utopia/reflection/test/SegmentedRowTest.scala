@@ -10,7 +10,7 @@ import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.segmented.SegmentedGroup
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.swing.{SegmentedRow, Stack}
+import utopia.reflection.container.swing.layout.multi.{SegmentedRow, Stack}
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.localization.{Localizer, NoLocalization}

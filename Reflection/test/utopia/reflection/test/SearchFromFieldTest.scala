@@ -3,15 +3,15 @@ package utopia.reflection.test
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.image.Image
-import utopia.reflection.component.swing.SearchFrom
 import utopia.reflection.component.swing.button.TextButton
-import utopia.reflection.container.swing.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.util.SingleFrameSetup
 import utopia.reflection.shape.LengthExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.genesis.color.Color
+import utopia.reflection.component.swing.input.SearchFrom
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.shape.Alignment.Center
 import utopia.reflection.shape.Alignment
 

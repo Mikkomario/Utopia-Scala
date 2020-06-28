@@ -2,7 +2,7 @@ package utopia.reflection.controller.data
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.CollectionExtensions._
-import utopia.reflection.component.{Refreshable, RefreshableWithPointer}
+import utopia.reflection.component.template.display.{Refreshable, RefreshableWithPointer}
 
 /**
   * ContentManagers update content on a component. Please note that when using ContentManagers, you shouldn't modify

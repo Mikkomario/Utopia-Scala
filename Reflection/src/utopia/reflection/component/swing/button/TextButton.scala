@@ -4,11 +4,11 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.{BorderDrawer, CustomDrawableWrapper}
-import utopia.reflection.component.TextComponent
 import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.shape.Alignment.Center
-import utopia.reflection.component.swing.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.swing.label.TextLabel
+import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
+import utopia.reflection.component.template.text.TextComponent
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.{Alignment, Border, StackInsets}
 import utopia.reflection.text.Font

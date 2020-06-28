@@ -4,13 +4,13 @@ import utopia.flow.generic.ValueConversions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.shape.shape2D.Point
 import utopia.reflection.component.swing.button.TextButton
-import utopia.reflection.component.swing.{TabSelection, TextField}
+import utopia.reflection.component.swing.input.{TabSelection, TextField}
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackLayout.Leading
 import utopia.reflection.container.swing.window.{Frame, Popup}
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.container.swing.Stack
-import utopia.reflection.container.swing.Stack.AwtStackable
+import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.Alignment.Center

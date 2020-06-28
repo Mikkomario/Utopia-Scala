@@ -7,7 +7,7 @@ import utopia.reflection.shape.StackLength
 import utopia.flow.generic.DataType
 import utopia.genesis.color.Color
 import utopia.reflection.component.swing.label.EmptyLabel
-import utopia.reflection.container.swing.Stack
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.localization.{Localizer, NoLocalization}
 

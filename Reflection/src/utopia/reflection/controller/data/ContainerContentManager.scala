@@ -1,9 +1,10 @@
 package utopia.reflection.controller.data
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.reflection.component.{ComponentLike, Refreshable}
-import utopia.reflection.component.stack.Stackable
-import utopia.reflection.container.MultiContainer
+import utopia.reflection.component.template.ComponentLike
+import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.component.template.display.Refreshable
+import utopia.reflection.container.template.MultiContainer
 
 object ContainerContentManager
 {

@@ -3,7 +3,7 @@ package utopia.reflection.component.context
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.Direction2D
 import utopia.reflection.color.ComponentColor
-import utopia.reflection.container.swing.window.dialog.interaction.ButtonColor
+import utopia.reflection.container.swing.window.interaction.ButtonColor
 import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.{Alignment, StackInsets}
 import utopia.reflection.text.Font

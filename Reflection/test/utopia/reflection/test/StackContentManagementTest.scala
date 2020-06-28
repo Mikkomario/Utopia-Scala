@@ -5,7 +5,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.async.Loop
 import utopia.genesis.generic.GenesisDataType
 import utopia.reflection.component.swing.label.ItemLabel
-import utopia.reflection.container.swing.Stack
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.controller.data.ContainerContentManager

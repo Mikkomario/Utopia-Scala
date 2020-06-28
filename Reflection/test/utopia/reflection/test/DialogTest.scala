@@ -4,12 +4,11 @@ import utopia.reflection.localization.LocalString._
 import utopia.flow.async.ThreadPool
 import utopia.reflection.shape.LengthExtensions._
 import utopia.genesis.color.Color
-import utopia.reflection.component.ComponentLike
-import utopia.reflection.component.stack.StackLeaf
-import utopia.reflection.component.swing.AwtComponentRelated
+import utopia.reflection.component.swing.template.AwtComponentRelated
+import utopia.reflection.component.template.ComponentLike
+import utopia.reflection.component.template.layout.stack.StackLeaf
 import utopia.reflection.container.swing.Panel
-import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.container.swing.window.dialog.Dialog
+import utopia.reflection.container.swing.window.{Dialog, Frame}
 import utopia.reflection.shape.StackSize
 
 import scala.concurrent.ExecutionContext

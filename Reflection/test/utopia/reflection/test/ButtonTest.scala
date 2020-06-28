@@ -10,8 +10,8 @@ import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.Size
-import utopia.reflection.component.swing.ProgressBar
 import utopia.reflection.component.swing.button.{ButtonImageSet, ImageAndTextButton, ImageButton, TextButton}
+import utopia.reflection.component.swing.display.ProgressBar
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.window.Frame

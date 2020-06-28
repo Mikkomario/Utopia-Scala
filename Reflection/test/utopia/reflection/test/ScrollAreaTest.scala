@@ -14,9 +14,10 @@ import utopia.genesis.shape.shape2D.Size
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.container.stack.StackHierarchyManager
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.container.swing.{ScrollArea, Stack}
+import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 import utopia.reflection.localization.{DisplayFunction, Localizer, NoLocalization}
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.{StackInsets, StackLengthLimit}

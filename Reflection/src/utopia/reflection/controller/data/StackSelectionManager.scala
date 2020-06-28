@@ -10,11 +10,11 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.immutable.Handleable
-import utopia.reflection.component.Refreshable
 import utopia.reflection.component.drawing.mutable.CustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.stack.Stackable
-import utopia.reflection.container.stack.StackLike
+import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.component.template.display.Refreshable
+import utopia.reflection.container.stack.template.layout.StackLike
 
 import scala.concurrent.duration.Duration
 

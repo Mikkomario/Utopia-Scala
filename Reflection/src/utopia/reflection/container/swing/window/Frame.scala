@@ -1,8 +1,8 @@
 package utopia.reflection.container.swing.window
 
 import javax.swing.{JFrame, WindowConstants}
-import utopia.reflection.component.stack.{StackLeaf, Stackable}
-import utopia.reflection.component.swing.{AwtComponentWrapper, AwtComponentWrapperWrapper}
+import utopia.reflection.component.template.layout.stack.{StackLeaf, Stackable}
+import utopia.reflection.component.swing.template.{AwtComponentWrapper, AwtComponentWrapperWrapper}
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 import utopia.reflection.container.swing.window.WindowResizePolicy.{Program, User}
 import utopia.reflection.localization.LocalizedString
