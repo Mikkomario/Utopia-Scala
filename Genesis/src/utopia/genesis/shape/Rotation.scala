@@ -1,8 +1,7 @@
 package utopia.genesis.shape
 
 import utopia.genesis.util.Extensions._
-import utopia.genesis.util.ApproximatelyEquatable
-import utopia.flow.util.Equatable
+import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic}
 import utopia.genesis.shape.RotationDirection.{Clockwise, Counterclockwise}
 
 object Rotation
@@ -15,19 +14,26 @@ object Rotation
     /**
      * Converts a radian amount to a rotation
      */
-    def ofRadians(rads: Double, direction: RotationDirection = Clockwise) = Rotation(rads, direction)
+    def ofRadians(rads: Double, direction: RotationDirection = Clockwise) =
+	{
+		if (rads >= 0)
+			Rotation(rads, direction)
+		else
+			Rotation(-rads, direction.opposite)
+	}
     
     /**
      * Converts a degree amount to a rotation
      */
-    def ofDegrees(degrees: Double, direction: RotationDirection = Clockwise) = Rotation(degrees.toRadians, direction)
+    def ofDegrees(degrees: Double, direction: RotationDirection = Clockwise) =
+		ofRadians(degrees.toRadians, direction)
 	
 	/**
 	  * @param circles The number of full circles (360 degrees or 2Pi radians) rotated
 	  * @param direction Rotation direction (default = Clockwise)
 	  * @return A new rotation
 	  */
-	def ofCircles(circles: Double, direction: RotationDirection = Clockwise) = Rotation(circles * 2 * math.Pi)
+	def ofCircles(circles: Double, direction: RotationDirection = Clockwise) = ofRadians(circles * 2 * math.Pi)
 	
 	/**
 	  * Calculates the rotation between two angles
@@ -39,19 +45,19 @@ object Rotation
 	def between(start: Angle, end: Angle, direction: RotationDirection) =
 	{
 		if (start ~== end)
-			Rotation.ofRadians(2 * math.Pi, direction)
+			ofRadians(2 * math.Pi, direction)
 		else
 		{
 			val rotationAmount =
 			{
 				if (direction == Clockwise)
 				{
-					if (end > start) end.toRadians - start.toRadians else end.toRadians + math.Pi * 2 - start.toRadians
+					if (end > start) end.radians - start.radians else end.radians + math.Pi * 2 - start.radians
 				}
 				else
-					if (start > end) start.toRadians - end.toRadians else start.toRadians + math.Pi * 2 - end.toRadians
+					if (start > end) start.radians - end.radians else start.radians + math.Pi * 2 - end.radians
 			}
-			Rotation.ofRadians(rotationAmount, direction)
+			ofRadians(rotationAmount, direction)
 		}
 	}
 }
@@ -60,98 +66,113 @@ object Rotation
 * This class represents a rotation around a certain axis
 * @author Mikko Hilpinen
 * @since 21.11.2018
-  * @param radians The amount of radians to rotate
+  * @param radians The amount of radians to rotate (always positive or zero)
   * @param direction The rotation direction (default = clockwise)
 **/
-case class Rotation(radians: Double, direction: RotationDirection = Clockwise) extends Equatable with 
-        ApproximatelyEquatable[Rotation]
+case class Rotation private(radians: Double, direction: RotationDirection = Clockwise)
+	extends ApproximatelyEquatable[Rotation] with Arithmetic[Rotation, Rotation]
 {
-    // ATTRIBUTES    ---------------------
-    
-    /**
-     * This rotation in degrees
-     */
-	lazy val degrees = radians.toDegrees
-	
-	
 	// PROPS    --------------------------
+	
+	/**
+	  * @return Whether this rotation is exactly zero
+	  */
+	def isZero = radians == 0
+	
+	/**
+	  * This rotation in degrees (>= 0)
+	  */
+	def degrees = radians.toDegrees
 	
 	/**
 	 * A radian double value of this rotation
 	 */
-	def toDouble = radians * direction.modifier
+	@deprecated("Please use clockwiseRadians instead", "v2.3")
+	def toDouble = clockwiseRadians
+	
+	/**
+	  * @return A radian double value of this rotation to clockwise direction. Negative if this rotation is counter
+	  *         clockwise
+	  */
+	def clockwiseRadians = radians * direction.modifier
+	
+	/**
+	  * @return A degree double value of this rotation to clockwise direction. Negative if this rotation is counter
+	  *         clockwise
+	  */
+	def clockwiseDegrees = degrees * direction.modifier
+	
+	/**
+	  * @return A radian double value of this rotation to counter clockwise direction. Negative if this direction is
+	  *         clockwise.
+	  */
+	def counterClockwiseRadians = -clockwiseRadians
+	
+	/**
+	  * @return A degree double value of this rotation to counter clockwise direction. Negative if this direction is
+	  *         counter clockwise.
+	  */
+	def counterClockwiseDegrees = -clockwiseDegrees
 	
 	/**
 	 * This rotation as an angle from origin (right)
 	 */
-	def toAngle = new Angle(toDouble)
+	def toAngle = Angle.ofRadians(clockwiseRadians)
 	
 	/**
-	  * @return A clockwise representation of this rotation. Double value is preserved.
+	  * @return Whether this rotation is towards the clockwise direction
 	  */
-	def clockwise = toDirection(Clockwise)
+	def isClockwise = direction == Clockwise
 	
 	/**
-	  * @return A counterclockwise representation of this rotation. Double value is preserved.
+	  * @return Whether this rotation is towards the counter clockwise direction
 	  */
-	def counterClockwise = toDirection(Counterclockwise)
-	
-	/**
-	  * @return A positive (clockwise) copy of this rotation
-	  */
-	def positive = toDirection(RotationDirection.positive)
+	def isCounterClockwise = direction == Counterclockwise
 	
 	
 	// IMPLEMENTED    --------------------
-	
-	def properties = Vector(radians * direction.modifier)
 	
 	override def toString = f"$degrees%1.2f degrees $direction"
 	
 	def ~==(other: Rotation) = radians * direction.modifier ~== other.radians * direction.modifier
 	
-	
-	// OPERATORS    ----------------------
-	
-	/**
-	 * An opposite rotation
-	 */
-	def unary_- = Rotation(radians, direction.opposite)
+	override def repr = this
 	
 	/**
-	 * Combines two rotations
-	 */
-	def +(other: Rotation) = 
+	  * Returns a multiplied version of this rotation
+	  */
+	def *(modifier: Double) =
 	{
-	    if (direction == other.direction)
-	        Rotation(radians + other.radians, direction)
-	    else if (radians >= other.radians)
-	        Rotation(radians - other.radians, direction)
-	    else
-	        Rotation(other.radians - radians, other.direction)
+		if (modifier >= 0)
+			Rotation(radians * modifier, direction)
+		else
+			Rotation(radians * -1 * modifier, direction.opposite)
 	}
 	
 	/**
-	 * Subtracts a rotation from this one
-	 */
+	  * Combines two rotations
+	  */
+	def +(other: Rotation) =
+	{
+		if (direction == other.direction)
+			Rotation(radians + other.radians, direction)
+		else if (radians >= other.radians)
+			Rotation(radians - other.radians, direction)
+		else
+			Rotation(other.radians - radians, other.direction)
+	}
+	
+	/**
+	  * Subtracts a rotation from this one
+	  */
 	def -(other: Rotation) = this + (-other)
-	
-	/**
-	 * Returns a multiplied version of this rotation
-	 */
-	def *(modifier: Double) = Rotation(radians * modifier, direction)
-	
-	/**
-	 * Returns a divided version of this rotation
-	 */
-	def /(modifier: Double) = Rotation(radians / modifier, direction)
 	
 	
 	// OTHER	--------------------------
 	
 	/**
-	  * @param direction Target direction
-	  * @return A copy of this rotation where the direction is as specified. Double value stays the same.
+	  * @param direction New rotation direction
+	  * @return A copy of this rotation with the specified direction
 	  */
-	def toDirection(direction: RotationDirection) = if (direction == this.direction) this else Rotation(-radians, direction)
+	def towards(direction: RotationDirection) = copy(direction = direction)
 }

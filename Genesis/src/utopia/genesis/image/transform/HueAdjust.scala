@@ -14,12 +14,12 @@ import utopia.genesis.shape.Angle
 case class HueAdjust(sourceHue: Angle, effectRange: Angle, targetHue: Angle) extends PixelTransform
 {
 	private val maxRotation = targetHue - sourceHue
-	private val rangeRadians = effectRange.toRadians
+	private val rangeRadians = effectRange.radians
 	
 	override def apply(original: Color) =
 	{
 		// Checks whether pixel is within effect range
-		val hueDifference = (original.hueAngle - sourceHue).radians.abs
+		val hueDifference = (original.hue - sourceHue).radians.abs
 		
 		if (hueDifference < rangeRadians / 2)
 		{

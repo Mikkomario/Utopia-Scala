@@ -11,6 +11,7 @@ import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.{ActorLoop, KeyStateListener}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis._
+import utopia.genesis.shape.Rotation
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
 import utopia.reflection.component.swing.label.ItemLabel
@@ -61,7 +62,7 @@ object ScrollViewTest extends App
 	
 	// Creates the main stack
 	val stack = new AnimatedStack[ItemLabel[Int]](actorHandler, Y, 8.fixed, 4.fixed) // Stack.column[ItemLabel[Int]](8.fixed, 4.fixed)
-	stack.background = Color.yellow.minusHue(33).darkened(1.2)
+	stack.background = Color.yellow.minusHue(Rotation.ofDegrees(33)).darkened(1.2)
 	
 	// Adds content management
 	val selectionDrawer = CustomDrawer(DrawLevel.Foreground) { (d, b) =>

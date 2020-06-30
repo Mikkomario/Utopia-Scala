@@ -1,5 +1,6 @@
 package utopia.genesis.color
 
+import utopia.genesis.shape.Angle
 import utopia.genesis.util.ApproximatelyEquatable
 
 import scala.language.implicitConversions
@@ -180,7 +181,7 @@ case class Color private(private val data: Either[HSL, RGB], alpha: Double) exte
 	
 	override def luminosity = hsl.luminosity
 	
-	def withHue(hue: Double) = withHSL(hsl.withHue(hue))
+	def withHue(hue: Angle) = withHSL(hsl.withHue(hue))
 	
 	def withSaturation(saturation: Double) = withHSL(hsl.withSaturation(saturation))
 	

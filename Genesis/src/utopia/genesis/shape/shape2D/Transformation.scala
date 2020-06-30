@@ -103,7 +103,7 @@ case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector
     
     // TODO: Handle rotation data type
     override def toModel = Model(Vector("translation" -> translation, "scaling" -> scaling, 
-            "rotation" -> rotation.toDouble, "shear" -> shear))
+            "rotation" -> rotation.clockwiseRadians, "shear" -> shear))
     
     /**
      * The translation component of this transformation as a point
@@ -118,7 +118,7 @@ case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector
     /**
      * How much the target is rotated clockwise in radians
      */
-    def rotationRads = rotation.toDouble
+    def rotationRads = rotation.clockwiseRadians
     
     /**
      * How much the target is rotated in degrees (clockwise)

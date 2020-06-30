@@ -1,8 +1,8 @@
 package utopia.genesis.shape
 
-import utopia.flow.util.{Equatable, RichComparable}
+import utopia.flow.util.RichComparable
 import utopia.genesis.util.Extensions._
-import utopia.genesis.util.ApproximatelyEquatable
+import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic}
 import utopia.genesis.shape.RotationDirection.Counterclockwise
 import utopia.genesis.shape.RotationDirection.Clockwise
 import utopia.genesis.shape.shape2D.Direction2D
@@ -60,13 +60,20 @@ object Angle
     /**
      * Converts a radian angle to an angle instance
      */
-    def ofRadians(radians: Double) = new Angle(radians)
+    def ofRadians(radians: Double) =
+    {
+        val raw = radians % (2 * math.Pi)
+        if (raw < 0)
+            Angle(raw + 2 * math.Pi)
+        else
+            Angle(raw)
+    }
     
     /**
      * Converts a degrees angle to an angle instance (some inaccuracy may occur since the value 
      * is converted to radians internally)
      */
-    def ofDegrees(degrees: Double) = new Angle(degrees.toRadians)
+    def ofDegrees(degrees: Double) = ofRadians(degrees.toRadians)
     
     
     // OTHER    ----------------------------------
@@ -87,41 +94,49 @@ object Angle
 /**
  * This class is used for storing a double value representing an angle (0 to 2*Pi radians). This 
  * class makes sure the angle stays in bounds and can be operated properly. Please note that 
- * Angle does NOT represent rotation.
+ * Angle does NOT represent rotation and doesn't have a sign.
  * @author Mikko Hilpinen
  * @since 30.6.2017
  */
-class Angle(rawRadians: Double) extends Equatable with ApproximatelyEquatable[Angle] with RichComparable[Angle]
+case class Angle private(radians: Double) extends ApproximatelyEquatable[Angle] with RichComparable[Angle]
+    with Arithmetic[Rotation, Angle]
 {
     // ATTRIBUTES    ------------------
     
     /**
-     * This angle in radians. Between 0 and 2*Pi
-     */
-    val toRadians = { val downscaled = rawRadians % (2 * math.Pi)
-        if (downscaled < 0) downscaled + 2 * math.Pi else downscaled }
+      * This angle in degrees. Between 0 and 360.
+      */
+    lazy val degrees = radians.toDegrees
     
     
     // COMPUTED PROPERTIES    --------
     
     /**
+      * This angle in radians. Between 0 and 2*Pi
+      */
+    @deprecated("Please use .radians instead", "v2.3")
+    def toRadians = radians /*{ val downscaled = rawRadians % (2 * math.Pi)
+        if (downscaled < 0) downscaled + 2 * math.Pi else downscaled }*/
+    
+    /**
      * This angle in degrees. between 0 and 360
      */
-    lazy val toDegrees = toRadians.toDegrees
-    
-    override def properties = Vector(toRadians)
-    
-    override def toString = f"$toDegrees%1.2f degrees"
+    @deprecated("Please use .degrees instead", "v2.3")
+    def toDegrees = degrees
     
     /**
       * @return A rotation that will turn an item from 0 radians to this angle
       */
-    def toRotation = Rotation(toRadians)
+    def toRotation = Rotation(radians)
     
     
     // IMPLEMENTED  ------------------
     
-    override def compareTo(o: Angle) = ((toRadians - o.toRadians) * 1000).toInt
+    override def repr = this
+    
+    override def toString = f"$degrees%1.2f degrees"
+    
+    override def compareTo(o: Angle) = ((radians - o.radians) * 10000).toInt
     
     
     // OPERATORS    ------------------
@@ -132,7 +147,7 @@ class Angle(rawRadians: Double) extends Equatable with ApproximatelyEquatable[An
      */
     def -(other: Angle) = 
     {
-        val rawValue = toRadians - other.toRadians
+        val rawValue = radians - other.radians
         if (rawValue > math.Pi)
         {
             // > 180 degrees positive -> < 180 degrees negative
@@ -156,39 +171,34 @@ class Angle(rawRadians: Double) extends Equatable with ApproximatelyEquatable[An
     /**
      * Applies a rotation (radians) to this angle in clockwise direction
      */
-    def +(rotationRads: Double) = Angle.ofRadians(toRadians + rotationRads)
+    @deprecated("Please use +(Rotation) instead", "v2.3")
+    def +(rotationRads: Double) = Angle.ofRadians(radians + rotationRads)
     
     /**
      * Applies a rotation to this angle
      */
-    def +(rotation: Rotation): Angle = this + rotation.toDouble
+    def +(rotation: Rotation): Angle = Angle.ofRadians(radians + rotation.clockwiseRadians)
     
     /**
      * Applies a rotation (radians) to this angle in counter-clockwise direction
      */
-    def -(rotationRads: Double) = this + (-rotationRads)
+    @deprecated("Please use -(Rotation) instead", "v2.3")
+    def -(rotationRads: Double) = Angle.ofRadians(radians - rotationRads)
     
     /**
      * Applies a negative rotation to this angle
      */
-    def -(rotation: Rotation): Angle = this.-(rotation.toDouble)
+    def -(rotation: Rotation): Angle = Angle.ofRadians(radians - rotation.clockwiseRadians)
     
     /**
      * Compares two angles without the requirement of being exactly equal
      */
-    def ~==(other: Angle) = toRadians ~== other.toRadians
+    def ~==(other: Angle) = radians ~== other.radians
     
     /**
       * Multiplies this angle
       * @param mod A multiplier
       * @return A multiplied version of this angle
       */
-    def *(mod: Double) = Angle.ofRadians(toRadians * mod)
-    
-    /**
-      * Divides this angle
-      * @param div A divider
-      * @return A divided version of this angle
-      */
-    def /(div: Double) = this * (1/div)
+    def *(mod: Double) = Angle.ofRadians(radians * mod)
 }

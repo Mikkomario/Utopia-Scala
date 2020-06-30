@@ -50,7 +50,7 @@ object Vector3D extends FromModelFactory[Vector3D]
      * Creates a new vector with specified length and direction
      */
     def lenDir(length: Double, direction: Angle) = Vector3D(
-            math.cos(direction.toRadians) * length, math.sin(direction.toRadians) * length)
+            math.cos(direction.radians) * length, math.sin(direction.radians) * length)
     
     /**
      * Converts a coordinate map into a vector
@@ -398,7 +398,7 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
     def rotated(rotation: Rotation, origin: Vector3D = Vector3D.zero) = 
     {
         val separator = this - origin
-        origin + Vector3D.lenDir(separator.length, separator.direction + rotation.toDouble).copy(z = z)
+        origin + Vector3D.lenDir(separator.length, separator.direction + rotation).copy(z = z)
     }
     
     /**

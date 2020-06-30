@@ -9,7 +9,7 @@ import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.{ActorLoop, KeyStateListener}
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.LinearAcceleration
+import utopia.genesis.shape.{LinearAcceleration, Rotation}
 import utopia.genesis.shape.shape2D.Size
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.swing.label.ItemLabel
@@ -52,7 +52,7 @@ object ScrollAreaTest extends App
 	
 	// Creates the main stack
 	val stack = Stack.rowWithItems(columns, 16.fixed, 4.fixed)
-	stack.background = Color.yellow.minusHue(33).darkened(1.2)
+	stack.background = Color.yellow.minusHue(Rotation.ofDegrees(33)).darkened(1.2)
 	
 	val actorHandler = ActorHandler()
 	
