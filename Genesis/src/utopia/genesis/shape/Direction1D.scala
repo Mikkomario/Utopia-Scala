@@ -18,9 +18,18 @@ sealed trait Direction1D
 	def isPositive: Boolean
 	
 	/**
+	  * @return A modified applied to double numbers that have this direction (-1 | 1)
+	  */
+	def modifier: Short
+	
+	
+	// COMPUTED	----------------------------
+	
+	/**
 	  * @return A modifier applied to double numbers that have this direction
 	  */
-	def signModifier: Short
+	@deprecated("Replaced with .modifier", "v2.3")
+	def signModifier = modifier
 	
 	
 	// OTHER	----------------------------
@@ -81,7 +90,7 @@ object Direction1D
 	{
 		override val isPositive = true
 		
-		override val signModifier = 1
+		override val modifier = 1
 	}
 	
 	/**
@@ -91,7 +100,7 @@ object Direction1D
 	{
 		override val isPositive = false
 		
-		override val signModifier = -1
+		override val modifier = -1
 	}
 	
 	/**

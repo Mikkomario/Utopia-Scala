@@ -24,6 +24,7 @@ both always stays positive
     - Replaced with .sign and Direction1D
     - Some related methods have also been deprecated
 - Various deprecations in Angle and Rotation
+- Direction1D.signModifier is now .modifier. Previous .signModifier is now deprecated.
 ### Other Changes
 - Drawer.drawTextCentered now properly downscales the text if it was to go out of bounds.
 - Moved Insets and Screen classes from Reflection to Genesis
