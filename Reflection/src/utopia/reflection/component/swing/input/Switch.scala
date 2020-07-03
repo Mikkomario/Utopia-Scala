@@ -1,20 +1,22 @@
 package utopia.reflection.component.swing.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.flow.util.TimeExtensions._
+import utopia.genesis.animation.Animation
 import utopia.genesis.color.Color
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.handling.{Actor, MouseButtonStateListener}
+import utopia.genesis.handling.{Actor, ActorHandlerType, MouseButtonStateListener}
 import utopia.genesis.shape.shape2D.{Bounds, Circle, Point}
 import utopia.genesis.util.Drawer
-import utopia.inception.handling.{HandlerType, Mortal}
-import utopia.reflection.component.context.ColorContextLike
+import utopia.inception.handling.HandlerType
+import utopia.reflection.component.context.{AnimationContextLike, ColorContextLike}
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.template.input.InteractionWithPointer
-import utopia.reflection.component.template.layout.stack.StackLeaf
+import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.shape.{StackLength, StackSize}
@@ -23,7 +25,6 @@ import scala.concurrent.duration.FiniteDuration
 
 object Switch
 {
-	private val animationDuration = 100.millis
 	private val maxHeightRatio = 0.5
 	
 	/**
@@ -33,8 +34,10 @@ object Switch
 	  * @param context Component creation context
 	  * @return A new switch
 	  */
-	def contextual(width: StackLength, initialState: Boolean = false)(implicit context: ColorContextLike) =
-		new Switch(width, context.secondaryColor, context.actorHandler, initialState)
+	def contextual(width: StackLength, initialState: Boolean = false)
+				  (implicit context: ColorContextLike, animationContext: AnimationContextLike) =
+		new Switch(animationContext.actorHandler, width, context.secondaryColor,
+			animationContext.animationDuration, initialState)
 }
 
 /**
@@ -42,15 +45,16 @@ object Switch
   * @author Mikko Hilpinen
   * @since 4.5.2019, v1+
   */
-class Switch(val targetWidth: StackLength, val color: Color, actorHandler: ActorHandler, initialState: Boolean = false)
-	extends AwtComponentWrapperWrapper with CustomDrawableWrapper with InteractionWithPointer[Boolean] with StackLeaf
+class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color: Color,
+			 animationDuration: FiniteDuration = 0.25.seconds, initialState: Boolean = false)
+	extends AwtComponentWrapperWrapper with CustomDrawableWrapper with InteractionWithPointer[Boolean] with Stackable
 {
 	// ATTRIBUTES	-----------------
 	
 	private val label = new EmptyLabel()
 	
-	// private var _value = false
 	private var _isEnabled = true
+	private var _isAttached = false
 	
 	override val stackSize = StackSize(targetWidth, targetWidth.noMax * Switch.maxHeightRatio)
 	override val valuePointer = new PointerWithEvents(initialState)
@@ -58,15 +62,8 @@ class Switch(val targetWidth: StackLength, val color: Color, actorHandler: Actor
 	
 	// INITIAL CODE	-----------------
 	
-	{
-		// Sets up custom drawing
-		addCustomDrawer(SwitchDrawer)
-		actorHandler += SwitchDrawer
-		
-		// Sets up mouse listening
-		addMouseButtonListener(ClickHandler)
-		label.setHandCursor()
-	}
+	addCustomDrawer(SwitchDrawer2)
+	label.setHandCursor()
 	
 	
 	// COMPUTED	---------------------
@@ -96,6 +93,28 @@ class Switch(val targetWidth: StackLength, val color: Color, actorHandler: Actor
 	
 	override def resetCachedSize() = ()
 	
+	override def isAttachedToMainHierarchy = _isAttached
+	
+	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
+	{
+		if (newAttachmentStatus != _isAttached)
+		{
+			_isAttached = newAttachmentStatus
+			if (newAttachmentStatus)
+			{
+				actorHandler += SwitchDrawer2
+				valuePointer.addListener(StatusChangeListener)
+				addMouseButtonListener(ClickHandler)
+			}
+			else
+			{
+				actorHandler -= SwitchDrawer2
+				valuePointer.removeListener(StatusChangeListener)
+				removeListener(ClickHandler)
+			}
+		}
+	}
+	
 	
 	// NESTED CLASSES	-------------
 	
@@ -115,20 +134,35 @@ class Switch(val targetWidth: StackLength, val color: Color, actorHandler: Actor
 		override def allowsHandlingFrom(handlerType: HandlerType) = isEnabled
 	}
 	
-	private object SwitchDrawer extends CustomDrawer with Actor with Mortal
+	private object StatusChangeListener extends ChangeListener[Boolean]
+	{
+		override def onChangeEvent(event: ChangeEvent[Boolean]) = SwitchDrawer2.updateTarget(event.newValue)
+	}
+	
+	private object SwitchDrawer2 extends CustomDrawer with Actor
 	{
 		// ATTRIBUTES	-------------
 		
-		private var wasDisplayed = component.isDisplayable
-		private var x = if (initialState) 1.0 else 0.0
+		private var currentAnimation: Animation[Double] = Animation.fixed(if (isOn) 1.0 else 0.0)
+		private var currentProgress: Double = 1.0
+		
+		
+		// COMPUTED	-----------------
+		
+		private def state = currentAnimation(currentProgress)
 		
 		
 		// IMPLEMENTED	-------------
+		
+		override def allowsHandlingFrom(handlerType: HandlerType) =
+			if (handlerType == ActorHandlerType) currentProgress < 1.0 else true
 		
 		override def drawLevel = Normal
 		
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
+			val x = state
+			
 			// Calculates necessary bounds information
 			val height = (bounds.size.width * Switch.maxHeightRatio) min bounds.size.height
 			val r = height / 2 * 0.9
@@ -154,40 +188,24 @@ class Switch(val targetWidth: StackLength, val color: Color, actorHandler: Actor
 		
 		override def act(duration: FiniteDuration) =
 		{
-			val shouldUpdate =
-			{
-				// First checks until the component becomes displayed
-				if (!wasDisplayed)
-				{
-					if (component.isDisplayable)
-					{
-						wasDisplayed = true
-						true
-					}
-					else
-						false
-				}
-				else
-					true
-			}
-			
-			if (shouldUpdate)
-			{
-				// Updates animation, if necessary
-				val transition = duration / Switch.animationDuration
-				if (isOn)
-					x = (x + transition) min 1.0
-				else
-					x = (x - transition) max 0.0
-				
-				repaint()
-			}
+			val increment = duration / animationDuration
+			currentProgress = (currentProgress + increment) min 1.0
+			repaint()
 		}
 		
-		// Dies after component is no longer displayable
-		override def isDead = wasDisplayed && !component.isDisplayable
 		
-		// Only allows handling when update is required
-		override def allowsHandlingFrom(handlerType: HandlerType) = if (isOn) x < 1 else x > 0
+		// OTHER	-----------------
+		
+		def updateTarget(newStatus: Boolean) =
+		{
+			val startValue = state
+			val newTarget = if (newStatus) 1.0 else 0.0
+			if (startValue != newTarget)
+			{
+				val transition = newTarget - startValue
+				currentAnimation = Animation { p => startValue + p * transition }.projectileCurved
+				currentProgress = 0.0
+			}
+		}
 	}
 }

@@ -43,10 +43,10 @@ object SwitchTest extends App
 	// Creates the switches
 	val actorHandler = ActorHandler()
 	
-	val enabledSwitch = new Switch(32.upTo(64), Color.red, actorHandler, initialState = true)
-	val disabledSwitch = new Switch(32.upTo(64), Color.red, actorHandler)
+	val enabledSwitch = new Switch(actorHandler, 32.upTo(64), Color.red, initialState = true)
+	val disabledSwitch = new Switch(actorHandler, 32.upTo(64), Color.red)
 	disabledSwitch.isEnabled = false
-	val disabledSwitch2 = new Switch(32.upTo(64), Color.red, actorHandler, initialState = true)
+	val disabledSwitch2 = new Switch(actorHandler, 32.upTo(64), Color.red, initialState = true)
 	disabledSwitch2.isEnabled = false
 	
 	// Creates the stacks

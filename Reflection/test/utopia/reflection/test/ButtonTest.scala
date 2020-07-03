@@ -54,11 +54,14 @@ object ButtonTest extends App
 		val row = imageButton.rowWith(Vector(textButton, comboButton), margin = 16.any, layout = Fit)
 		
 		// Creates progress bar
-		val bar = new ProgressBar[Double](160.any x 12.downscaling, Color.gray(0.7), Color.magenta, progressPointer)({ d => d })
+		val actorHandler = ActorHandler()
+		
+		val bar = new ProgressBar(actorHandler, 160.any x 12.downscaling, Color.gray(0.7), Color.magenta,
+			progressPointer)
 		val content = row.columnWith(Vector(bar), margin = 16.downscaling)
 		
 		// Creates the frame and displays it
-		val actorHandler = ActorHandler()
+		
 		val actionLoop = new ActorLoop(actorHandler)
 		implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 		

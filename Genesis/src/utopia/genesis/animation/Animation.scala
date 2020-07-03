@@ -106,7 +106,7 @@ trait Animation[+A]
 	  * @param curvature A curve animation used for transforming progress% values
 	  * @return A curved version of this animation
 	  */
-	def curved(curvature: Animation[Double]) = CurvedAnimation(this, curvature)
+	def curved(curvature: Animation[Double]): Animation[A] = CurvedAnimation(this, curvature)
 	
 	/**
 	  * @param points Progress mapping points where x represents the original progress and y the mapped progress
@@ -146,6 +146,13 @@ object Animation
 	  */
 	def apply[A](f: Double => A): Animation[A] = new FunctionAnimation[A](f)
 	
+	/**
+	  * @param state A static state this animation will always have
+	  * @tparam A Type of animation result
+	  * @return An animation that always returns the same result
+	  */
+	def fixed[A](state: A): Animation[A] = new FixedAnimation[A](state)
+	
 	
 	// NESTED	---------------------------
 	
@@ -169,5 +176,18 @@ object Animation
 		override def apply(progress: Double) = original(1 - progress)
 		
 		override def reversed = original
+	}
+	
+	private class FixedAnimation[+A](state: A) extends Animation[A]
+	{
+		override def apply(progress: Double) = state
+		
+		override def reversed = this
+		
+		override def withReverseAppended = this
+		
+		override def repeated(times: Int) = this
+		
+		override def curved(curvature: Animation[Double]) = this
 	}
 }

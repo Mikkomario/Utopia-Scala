@@ -27,7 +27,7 @@ sealed trait RotationDirection
     /**
      * The sign modifier applied to rotation
      */
-    def modifier = sign.signModifier
+    def modifier = sign.modifier
 }
 
 object RotationDirection

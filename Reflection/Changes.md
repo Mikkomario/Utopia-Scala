@@ -22,6 +22,7 @@ multiple parameter lists.
 Axis2D as a parameter instead of Direction2D.
 - Removed useLowPriority parameter from AlignFrame. Now all frames expand the content when necessary.
 - Moved Insets and Screen classes from Reflection to Genesis
+- Changed constructor parameter ordering in Switch
     
 ### Deprecations
 - StackSelectionManager was deprecated. You should now use ContainerSelectionManager instead.
@@ -64,6 +65,7 @@ animations.
 - AnimationLabel
     - Can be used for animated drawing (Sprites, rotating images etc.)
 - InteractionWindow traits and classes for window-based user interaction
+- Added smoother animations to Switch and included same animations to ProgressBar
 
 ### New Methods
 - AwtComponentWrapper: toImage
