@@ -10,6 +10,7 @@ import utopia.inception.handling.{HandlerType, Mortal}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.ref.WeakReference
+import scala.util.Try
 
 /**
  * This class listens to mouse status inside a component and generates new mouse events. This
@@ -48,18 +49,18 @@ class MouseEventGenerator(c: Component, val moveHandler: MouseMoveListener,
     
     override def act(duration: FiniteDuration) =
     {
-        component.get.foreach
-        {
-            c =>
-                // Checks for mouse movement
-                val mousePosition = pointInPanel(Point of MouseInfo.getPointerInfo.getLocation, c) / getScaling()
-                
+        component.get.foreach { c =>
+            // Checks for mouse movement
+            // Sometimes mouse position can't be calculated, in which case assumes mouse to remain static
+            Try { Option(MouseInfo.getPointerInfo) }.toOption.flatten.foreach { pointerInfo =>
+                val mousePosition = pointInPanel(Point of pointerInfo.getLocation, c) / getScaling()
                 if (mousePosition != lastMousePosition)
                 {
                     val event = new MouseMoveEvent(mousePosition, lastMousePosition, buttonStatus, duration)
                     lastMousePosition = mousePosition
                     moveHandler.onMouseMove(event)
                 }
+            }
         }
     }
     

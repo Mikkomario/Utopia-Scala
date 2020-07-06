@@ -6,11 +6,16 @@ import utopia.genesis.shape.RotationDirection.{Clockwise, Counterclockwise}
 
 object Rotation
 {
+	// ATTRIBUTES	-----------------------
+	
     /**
      * A zero rotation
      */
     val zero = Rotation(0)
     
+	
+	// OTHER	--------------------------
+	
     /**
      * Converts a radian amount to a rotation
      */

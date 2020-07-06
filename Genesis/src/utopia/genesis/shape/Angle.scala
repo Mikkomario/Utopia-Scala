@@ -54,6 +54,21 @@ object Angle
       */
     def zero = right
     
+    /**
+      * @return 1/4 of a circle
+      */
+    def quarter = down
+    
+    /**
+      * @return 1/2 of a circle
+      */
+    def half = left
+    
+    /**
+      * @return 3/4 of a circle
+      */
+    def threeQuarters = up
+    
     
     // FACTORIES    ------------------------------
     
@@ -138,6 +153,34 @@ case class Angle private(radians: Double) extends ApproximatelyEquatable[Angle] 
     
     override def compareTo(o: Angle) = ((radians - o.radians) * 10000).toInt
     
+    /**
+      * Applies a rotation to this angle
+      */
+    def +(rotation: Rotation): Angle = Angle.ofRadians(radians + rotation.clockwiseRadians)
+    
+    /**
+      * Applies a rotation (radians) to this angle in counter-clockwise direction
+      */
+    @deprecated("Please use -(Rotation) instead", "v2.3")
+    def -(rotationRads: Double) = Angle.ofRadians(radians - rotationRads)
+    
+    /**
+      * Applies a negative rotation to this angle
+      */
+    def -(rotation: Rotation): Angle = Angle.ofRadians(radians - rotation.clockwiseRadians)
+    
+    /**
+      * Compares two angles without the requirement of being exactly equal
+      */
+    def ~==(other: Angle) = radians ~== other.radians
+    
+    /**
+      * Multiplies this angle
+      * @param mod A multiplier
+      * @return A multiplied version of this angle
+      */
+    def *(mod: Double) = Angle.ofRadians(radians * mod)
+    
     
     // OPERATORS    ------------------
     
@@ -175,30 +218,8 @@ case class Angle private(radians: Double) extends ApproximatelyEquatable[Angle] 
     def +(rotationRads: Double) = Angle.ofRadians(radians + rotationRads)
     
     /**
-     * Applies a rotation to this angle
-     */
-    def +(rotation: Rotation): Angle = Angle.ofRadians(radians + rotation.clockwiseRadians)
-    
-    /**
-     * Applies a rotation (radians) to this angle in counter-clockwise direction
-     */
-    @deprecated("Please use -(Rotation) instead", "v2.3")
-    def -(rotationRads: Double) = Angle.ofRadians(radians - rotationRads)
-    
-    /**
-     * Applies a negative rotation to this angle
-     */
-    def -(rotation: Rotation): Angle = Angle.ofRadians(radians - rotation.clockwiseRadians)
-    
-    /**
-     * Compares two angles without the requirement of being exactly equal
-     */
-    def ~==(other: Angle) = radians ~== other.radians
-    
-    /**
-      * Multiplies this angle
-      * @param mod A multiplier
-      * @return A multiplied version of this angle
+      * @param other Another angle (> 0 degrees)
+      * @return How many times this angle is greater than the other angle
       */
-    def *(mod: Double) = Angle.ofRadians(radians * mod)
+    def /(other: Angle) = radians / other.radians
 }
