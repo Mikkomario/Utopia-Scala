@@ -28,6 +28,8 @@ class Mirror[Origin, Reflection](val source: Changing[Origin])(f: Origin => Refl
 	
 	private var _value = f(source.value)
 	
+	var listeners = Vector[ChangeListener[Reflection]]()
+	
 	
 	// INITIAL CODE ------------------------------
 	

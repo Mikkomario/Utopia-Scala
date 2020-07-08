@@ -1,5 +1,6 @@
 package utopia.reflection.component.swing.display
 
+import utopia.flow.async.VolatileFlag
 import utopia.flow.event.{ChangeEvent, ChangeListener, Changing}
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.animation.Animation
@@ -19,6 +20,7 @@ import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.layout.stack.StackableWrapper
 import utopia.reflection.shape.StackSize
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
 object ProgressBar
@@ -52,6 +54,14 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 	
 	private val label = StackSpace.drawingWith(ProgressDrawer, _stackSize)
 	
+	// Used for holding visible completion status, can be listened
+	private val isCompletedFlag = new VolatileFlag(progress >= 1)
+	
+	
+	// INITIAL CODE ----------------------
+	
+	progressPointer.addListener(InvisibleProgressListener, Some(0.0))
+	
 	
 	// COMPUTED	--------------------------
 	
@@ -59,6 +69,13 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 	  * @return Current progress of the tracked data
 	  */
 	def progress = progressPointer.value
+	
+	/**
+	 * @param exc Implicit execution context
+	 * @return A future of the event when this bar has been filled (also completes if the listened progress
+	 *         completes while this component is not shown)
+	 */
+	def completionFuture(implicit exc: ExecutionContext) = isCompletedFlag.futureWhere { c => c }
 	
 	
 	// IMPLEMENTED	----------------------
@@ -69,6 +86,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 		// May enable or disable animations
 		if (newAttachmentStatus)
 		{
+			progressPointer.removeListener(InvisibleProgressListener)
 			actorHandler += ProgressDrawer
 			progressPointer.addListener(TargetUpdateListener)
 		}
@@ -76,6 +94,11 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 		{
 			actorHandler -= ProgressDrawer
 			progressPointer.removeListener(TargetUpdateListener)
+			
+			if (progressPointer.value >= 1)
+				isCompletedFlag.set()
+			else
+				progressPointer.addListener(InvisibleProgressListener, Some(0.0))
 		}
 	}
 	
@@ -91,6 +114,18 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 	private object TargetUpdateListener extends ChangeListener[Double]
 	{
 		override def onChangeEvent(event: ChangeEvent[Double]) = ProgressDrawer.updateTargetProgress(event.newValue)
+	}
+	
+	private object InvisibleProgressListener extends ChangeListener[Double]
+	{
+		override def onChangeEvent(event: ChangeEvent[Double]) =
+		{
+			if (event.newValue >= 1)
+			{
+				isCompletedFlag.set()
+				progressPointer.removeListener(this)
+			}
+		}
 	}
 	
 	private object ProgressDrawer extends CustomDrawer with Actor with Handleable
@@ -116,6 +151,9 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 				val increase = duration / animationDuration
 				currentAnimationProgress = (currentAnimationProgress + increase) min 1.0
 				repaint()
+				
+				if (currentAnimationProgress >= 1)
+					isCompletedFlag.set()
 			}
 		}
 		

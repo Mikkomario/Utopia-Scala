@@ -7,6 +7,7 @@
         - New toMultiMap methods support all IterableOnce instances
 - Generator
     - .apply method in Generator object now takes two parameter lists instead of one
+- Sub-classes of trait Changing now need to specify their listener lists separately
         
 ### Deprecations
 - FromModelFactory.fromJSON was deprecated in favor of new .fromJson method that takes an implicit 
@@ -17,6 +18,7 @@ JsonParser as a parameter.
 can automatically unwrap values to most basic types (saves you from writing value.string or value.getInt etc.)
 - Mirror and MergeMirror classes added for supporting mapping change listening
     - Added map and merge methods to Changing respectively
+- Added .view -property to PointerWithEvents, which allows one to provide a read-only interface to such pointers
         
 ### Fixes
 - tryMap(...) in CollectionExtensions now uses buildFrom and not Factory. This should result in better result 

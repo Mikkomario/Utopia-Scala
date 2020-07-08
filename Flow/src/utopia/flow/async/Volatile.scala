@@ -1,6 +1,6 @@
 package utopia.flow.async
 
-import utopia.flow.event.Changing
+import utopia.flow.event.{ChangeListener, Changing}
 
 object Volatile
 {
@@ -18,6 +18,11 @@ object Volatile
 **/
 class Volatile[T](@volatile private var _value: T) extends Changing[T]
 {
+    // ATTRIBUTES   ----------------
+    
+    var listeners = Vector[ChangeListener[T]]()
+    
+    
     // COMPUTED    -----------------
     
     /**

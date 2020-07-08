@@ -34,6 +34,8 @@ class MergeMirror[O1, O2, Reflection](val firstSource: Changing[O1], val secondS
 	
 	private var _value = f(firstSource.value, secondSource.value)
 	
+	var listeners = Vector[ChangeListener[Reflection]]()
+	
 	
 	// INITIAL CODE ------------------------------
 	

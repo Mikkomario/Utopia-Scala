@@ -115,6 +115,7 @@ class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColo
 	/**
 	  * @param newText The new text to be displayed on this label
 	  */
+	// TODO: Possibly revalidate this label?
 	def text_=(newText: LocalizedString) = drawer.text = newText
 	
 	override def toString = s"Label($text)"

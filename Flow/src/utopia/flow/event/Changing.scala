@@ -9,20 +9,23 @@ import scala.concurrent.{ExecutionContext, Promise}
   */
 trait Changing[A]
 {
-	// ATTRIBUTES	-----------------
-	
-	/**
-	  * The listeners interested in this mutable item's changes
-	  */
-	var listeners = Vector[ChangeListener[A]]()
-	
-	
 	// ABSTRACT	---------------------
 	
 	/**
 	  * @return The current value of this changing element
 	  */
 	def value: A
+	
+	/**
+	 * @return Listeners linked to this changing instance
+	 */
+	def listeners: Vector[ChangeListener[A]]
+	
+	/**
+	 * Updates this instances listeners
+	 * @param newListeners New listeners to associate with this changing instance
+	 */
+	def listeners_=(newListeners: Vector[ChangeListener[A]]): Unit
 	
 	
 	// OTHER	--------------------
