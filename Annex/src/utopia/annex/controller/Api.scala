@@ -52,7 +52,7 @@ trait Api
 	  * @param context Execution context
 	  * @return Response from server (asynchronous)
 	  */
-	def get[A](path: String, timeout: Duration = Duration.Inf, params: Model[Constant] = Model.empty,
+	def get(path: String, timeout: Duration = Duration.Inf, params: Model[Constant] = Model.empty,
 			   headersMod: Headers => Headers = h => h)(implicit context: ExecutionContext) =
 		makeRequest(Get, path, timeout, params = params, modHeaders = headersMod)
 	
@@ -62,11 +62,13 @@ trait Api
 	  * @param body Sent json body (default = empty)
 	  * @param timeout Connection timeout duration (default = maximum timeout)
 	  * @param method Request method used (default = Post)
+	  * @param headersMod A modifier function for passed headers (optional)
 	  * @param context Execution context
 	  * @return Response from server (asynchronous)
 	  */
-	def post[A](path: String, body: Value = Value.empty, timeout: Duration = Duration.Inf, method: Method = Post)
-			   (implicit context: ExecutionContext) = makeRequest(method, path, timeout, body)
+	def post(path: String, body: Value = Value.empty, timeout: Duration = Duration.Inf, method: Method = Post,
+			 headersMod: Headers => Headers = h => h)(implicit context: ExecutionContext) =
+		makeRequest(method, path, timeout, body, modHeaders = headersMod)
 	
 	/**
 	  * @param request Request to send

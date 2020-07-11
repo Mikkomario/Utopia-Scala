@@ -83,7 +83,7 @@ object DbUsers extends ManyModelAccess[User]
 			val idsAreValid = newUser.device match
 			{
 				case Right(deviceId) => DbDevice(deviceId).isDefined
-				case Left(nameAndLanguage) => DbLanguage(nameAndLanguage._2).isDefined
+				case Left(newDevice) => DbLanguage(newDevice.languageId).isDefined
 			}
 			
 			if (idsAreValid)
@@ -98,8 +98,8 @@ object DbUsers extends ManyModelAccess[User]
 					val deviceId = newUser.device match
 					{
 						case Right(deviceId) => deviceId
-						case Left(deviceData) => DbDevices.insert(deviceData._1, deviceData._2, user.id).targetId
-						
+						case Left(newDevice) =>
+							DbDevices.insert(newDevice.name, newDevice.languageId, user.id).targetId
 					}
 					UserDeviceModel.insert(user.id, deviceId)
 					// Returns inserted user

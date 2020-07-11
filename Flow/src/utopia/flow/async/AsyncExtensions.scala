@@ -5,7 +5,7 @@ import utopia.flow.util.{SingleWait, WaitTarget}
 import scala.collection.Factory
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.{Duration, FiniteDuration}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /**
 * This object contains extensions for asynchronous / concurrent classes
@@ -14,6 +14,13 @@ import scala.util.Try
 **/
 object AsyncExtensions
 {
+	/**
+	  * @param reason Reason for this failure
+	  * @tparam A Type of success option
+	  * @return A failure in asynchronous context
+	  */
+	def asyncFailure[A](reason: Throwable) = Future.successful(Failure[A](reason))
+	
     /**
      * This implicit class provides extra features to Future
      */
@@ -122,6 +129,49 @@ object AsyncExtensions
 		  * @return Whether this future already contains a failure result
 		  */
 		def containsFailure = f.isCompleted && waitForResult().isFailure
+		
+		/**
+		  * Performs a mapping operation on a successful asynchronous result
+		  * @param map A mapping function
+		  * @param exc Implicit execution context
+		  * @tparam B Type of map result
+		  * @return A mapped version of this future
+		  */
+		def mapIfSuccess[B](map: A => B)(implicit exc: ExecutionContext) = f.map { r => r.map(map) }
+		
+		/**
+		  * If this future yields a successful result, maps that with a mapping function that may fail
+		  * @param map A mapping function for successful result. May fail.
+		  * @param exc Implicit execution context.
+		  * @tparam B Type of mapping result.
+		  * @return A mapped version of this future.
+		  */
+		def tryMapIfSuccess[B](map: A => Try[B])(implicit exc: ExecutionContext) =
+			f.map { r => r.flatMap(map) }
+		
+		/**
+		  * If this future yields a successful result, maps it with an asynchronous mapping function.
+		  * @param map An asynchronous mapping function for successful result.
+		  * @param exc Implicit execution context
+		  * @tparam B Type of eventual mapping result
+		  * @return A mapped version of this future
+		  */
+		def flatMapIfSuccess[B](map: A => Future[B])(implicit exc: ExecutionContext) = f.flatMap {
+			case Success(v) => map(v).map { Success(_) }
+			case Failure(e) => Future.successful(Failure(e))
+		}
+		
+		/**
+		  * If this future yields a successful result, maps it with an asynchronous mapping function that may fail
+		  * @param map An asynchronous mapping function for successful result. May yield a failure.
+		  * @param exc Implicit execution context
+		  * @tparam B Type of eventual mapping result when successful
+		  * @return A mapped version of this future
+		  */
+		def tryFlatMapIfSuccess[B](map: A => Future[Try[B]])(implicit exc: ExecutionContext) = f.flatMap {
+			case Success(v) => map(v)
+			case Failure(e) => Future.successful(Failure(e))
+		}
 	}
 	
 	implicit class ManyFutures[A](val futures: IterableOnce[Future[A]]) extends AnyVal

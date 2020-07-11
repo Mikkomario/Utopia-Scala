@@ -1,11 +1,12 @@
 package utopia.metropolis.model.post
 
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, ModelValidationFailedException, Value}
+import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, Value}
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, ModelConvertible, ModelType, StringType, VectorType}
 import utopia.flow.util.CollectionExtensions._
+import utopia.metropolis.model.error.IllegalPostModelException
 import utopia.metropolis.model.partial.user.UserSettingsData
 
 import scala.util.{Failure, Success}
@@ -19,22 +20,19 @@ object NewUser extends FromModelFactory[NewUser]
 		UserSettingsData(valid("settings").getModel).flatMap { settings =>
 			// Languages must be parseable
 			valid("languages").getVector.tryMap { v => NewLanguageProficiency(v.getModel) }.flatMap { languages =>
-				// Either device id or device name must be provided
-				val deviceId = valid("device_id").int
-				val deviceData = valid("device").getModel
-				val deviceName = deviceData("name").string.filterNot { _.isEmpty }
-				val languageId = deviceData("language_id").int
-				if (deviceId.isEmpty && (deviceName.isEmpty || languageId.isEmpty))
-					Failure(new ModelValidationFailedException("Either device_id or device with name and language_id must be provided"))
-				else
+				// Either device id or new device data must be provided
+				val deviceData = valid("device_id").int match
 				{
-					val deviceIdOrName = deviceId match
-					{
-						case Some(id) => Right(id)
-						case None => Left(deviceName.get -> languageId.get)
-					}
-					Success(NewUser(settings, valid("password").getString, languages, deviceIdOrName))
+					case Some(deviceId) => Success(Right(deviceId))
+					case None =>
+						valid("device").model match
+						{
+							case Some(deviceModel) => NewDevice(deviceModel).map { Left(_) }
+							case None => Failure(
+								new IllegalPostModelException("Either device_id or device must be provided"))
+						}
 				}
+				deviceData.map { deviceData => NewUser(settings, valid("password").getString, languages, deviceData) }
 			}
 		}
 	}
@@ -50,16 +48,14 @@ object NewUser extends FromModelFactory[NewUser]
   * @param device Either Right: Existing device id or Left: Device name + language id
   */
 case class NewUser(settings: UserSettingsData, password: String, languages: Vector[NewLanguageProficiency],
-				   device: Either[(String, Int), Int]) extends ModelConvertible
+				   device: Either[NewDevice, Int]) extends ModelConvertible
 {
 	override def toModel =
 	{
 		val deviceData: (String, Value) = device match
 		{
 			case Right(deviceId) => "device_id" -> deviceId
-			case Left(deviceNameData) =>
-				val deviceModel = Model(Vector("name" -> deviceNameData._1, "language_id" -> deviceNameData._2))
-				"device" -> deviceModel
+			case Left(newDevice) => "device" -> newDevice.toModel
 		}
 		Model(Vector("settings" -> settings.toModel, "password" -> password, "languages" -> languages.map { _.toModel },
 			deviceData))
