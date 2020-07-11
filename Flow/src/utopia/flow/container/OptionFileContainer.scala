@@ -12,7 +12,8 @@ import utopia.flow.parse.JsonParser
   * @param fileLocation Path to where the data is stored
   * @param jsonParser A parser that will be used for parsing read json data
   */
-abstract class OptionFileContainer[A](fileLocation: Path)(implicit jsonParser: JsonParser) extends FileContainer[Option[A]](fileLocation)
+abstract class OptionFileContainer[A](fileLocation: Path)(implicit jsonParser: JsonParser)
+	extends FileContainer[Option[A]](fileLocation)
 {
 	// ABSTRACT	---------------------------------
 	
@@ -21,6 +22,19 @@ abstract class OptionFileContainer[A](fileLocation: Path)(implicit jsonParser: J
 	  * @return A value representation of the item
 	  */
 	protected def itemToValue(item: A): Value
+	
+	
+	// COMPUTED	--------------------------------
+	
+	/**
+	  * @return Whether this container is currently empty
+	  */
+	def isEmpty = current.isEmpty
+	
+	/**
+	  * @return Whether this container currently holds data
+	  */
+	def nonEmpty = current.nonEmpty
 	
 	
 	// IMPLEMENTED	----------------------------
