@@ -11,6 +11,8 @@ import scala.concurrent.duration.Duration
   * whether the result is a success (alive) or failure (dead) - so in the meanwhile it is a temporary hybrid.
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
+  * @tparam R Type of received response
+  * @tparam I Type of instance within response
   */
 trait Schrodinger[R, I]
 {

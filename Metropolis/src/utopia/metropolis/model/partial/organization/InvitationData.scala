@@ -2,12 +2,38 @@ package utopia.metropolis.model.partial.organization
 
 import java.time.Instant
 
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
+import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, ModelValidationFailedException}
+import utopia.flow.datastructure.template
+import utopia.flow.datastructure.template.Property
+import utopia.flow.generic.{FromModelFactory, InstantType, IntType, ModelConvertible, ModelType}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.TimeExtensions._
 import utopia.metropolis.model.enumeration.UserRole
+
+import scala.util.{Failure, Success}
+
+object InvitationData extends FromModelFactory[InvitationData]
+{
+	private val schema = ModelDeclaration("organization_id" -> IntType, "recipient" -> ModelType, "role_id" -> IntType,
+		"expires" -> InstantType)
+	
+	override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
+		// Starting role must be parseable
+		UserRole.forId(valid("role_id")).flatMap { role =>
+			// Either recipient email or id is required
+			val recipientModel = valid("recipient").getModel
+			recipientModel("id").int.map { Right(_) }.orElse { recipientModel("email").string.map { Left(_) } } match
+			{
+				case Some(recipient) => Success(InvitationData(valid("organization_id"), recipient, role,
+					valid("expires"), valid("sender_id")))
+				case None => Failure(new ModelValidationFailedException(
+					s"Either 'id' or 'email' required in recipient. Found $recipientModel"))
+			}
+		}
+	}
+}
 
 /**
   * Contains basic information about an invitation to join an organization

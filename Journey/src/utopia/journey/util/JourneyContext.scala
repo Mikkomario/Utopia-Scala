@@ -15,7 +15,7 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 11.7.2020, v1
   */
-object JourneySettings
+object JourneyContext
 {
 	// ATTRIBUTES	---------------------------
 	
@@ -58,14 +58,50 @@ object JourneySettings
 	  *                         (default = new thread pool with default settings)
 	  */
 	def setup(containersDirectory: Path = "data", jsonParser: JsonParser = JSONReader,
-			  executionContext: ExecutionContext = new ThreadPool("Journey").executionContext) =
+			  executionContext: ExecutionContext = new ThreadPool("Journey").executionContext,
+			  errorHandler: (Option[Throwable], String) => Unit = defaultErrorHandler) =
 	{
 		DataType.setup()
-		settings = Success(Settings(executionContext, jsonParser, containersDirectory))
+		settings = Success(Settings(executionContext, jsonParser, containersDirectory, errorHandler))
+	}
+	
+	/**
+	  * Records an error
+	  * @param error Error that occurred
+	  * @param message Additional error message (optional)
+	  */
+	def log(error: Throwable, message: String = "") = settings match
+	{
+		case Success(s) => s.errorHandler(Some(error), message)
+		case Failure(_) => defaultErrorHandler(Some(error), message)
+	}
+	
+	/**
+	  * Records an error message
+	  * @param message An error message
+	  */
+	def log(message: String) =
+	{
+		if (message.nonEmpty)
+		{
+			settings match
+			{
+				case Success(s) => s.errorHandler(None, message)
+				case Failure(_) => defaultErrorHandler(None, message)
+			}
+		}
+	}
+	
+	private def defaultErrorHandler(error: Option[Throwable], message: String) =
+	{
+		if (message.nonEmpty)
+			println(message)
+		error.foreach { _.printStackTrace() }
 	}
 	
 	
 	// NESTED	-------------------------------
 	
-	private case class Settings(exc: ExecutionContext, jsonParser: JsonParser, containersDirectory: Path)
+	private case class Settings(exc: ExecutionContext, jsonParser: JsonParser, containersDirectory: Path,
+								errorHandler: (Option[Throwable], String) => Unit)
 }

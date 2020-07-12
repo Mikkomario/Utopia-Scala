@@ -1,9 +1,11 @@
 package utopia.exodus.rest.resource.user
 
 import utopia.access.http.Method.Get
+import utopia.exodus.database.access.many.DbDescriptions
 import utopia.exodus.database.access.single.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.combined.organization.DescribedInvitation
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
 import utopia.nexus.rest.ResourceSearchResult.{Error, Follow}
@@ -27,7 +29,26 @@ object MyInvitationsNode extends Resource[AuthorizedContext]
 			implicit val c: Connection = connection
 			// Reads invitations from DB
 			val pendingInvitations = DbUser(session.userId).receivedInvitations.pending
-			Result.Success(pendingInvitations.map { _.toModel })
+			// Attaches metadata to the invitations
+			if (pendingInvitations.nonEmpty)
+			{
+				// Reads organization descriptions
+				val languageIds = context.languageIdListFor(session.userId)
+				val organizationIds = pendingInvitations.map { _.organizationId }.toSet
+				val organizationDescriptions = DbDescriptions.ofOrganizationsWithIds(organizationIds)
+					.inLanguages(languageIds)
+				
+				// Attaches sender data to each invitation where applicable
+				val enrichedInvitations = pendingInvitations.map { invitation =>
+					val sender = invitation.creatorId.flatMap { DbUser(_).settings.pull }
+					DescribedInvitation(invitation,
+						organizationDescriptions.getOrElse(invitation.organizationId, Set()).toSet, sender)
+				}
+				
+				Result.Success(enrichedInvitations.map { _.toModel })
+			}
+			else
+				Result.Empty
 		}
 	}
 	

@@ -10,7 +10,7 @@ import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.metropolis.model.combined.device.FullDevice
-import utopia.journey.util.JourneySettings._
+import utopia.journey.util.JourneyContext._
 
 /**
   * Used for accessing information about the local client device
