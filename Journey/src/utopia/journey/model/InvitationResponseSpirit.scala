@@ -24,6 +24,15 @@ object InvitationResponseSpirit extends FromModelFactory[InvitationResponseSpiri
 	// OTHER	-----------------------------
 	
 	/**
+	  * @param invitationId Id of the targeted invitation
+	  * @param accept Whether the invitation should be accepted
+	  * @param block Whether future invitations should be blocked (default = false)
+	  * @return A new response spirit
+	  */
+	def apply(invitationId: Int, accept: Boolean, block: Boolean = false): InvitationResponseSpirit =
+		InvitationResponseSpirit(invitationId, NewInvitationResponse(accept, block))
+	
+	/**
 	  * Creates a new positive response
 	  * @param invitationId Id of the accepted invitation
 	  * @return A new response spirit

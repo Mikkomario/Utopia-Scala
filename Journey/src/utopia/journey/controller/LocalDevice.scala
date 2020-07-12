@@ -79,14 +79,19 @@ object LocalDevice
 	
 	private object DeviceStatus extends FromModelFactory[DeviceStatus]
 	{
-		override def apply(model: template.Model[Property]) = model("full").model match
+		override def apply(model: template.Model[Property]) =
 		{
-			case Some(fullModel) => FullDevice(fullModel).map { d => DeviceStatus(Right(d), model("key")) }
-			case None =>
-				model("partial").model
-					.toTry { new ModelValidationFailedException(s"Either 'full' or 'partial' required. Provided: $model") }
-					.flatMap { PartialDeviceData(_) }
-					.map { d => DeviceStatus(Left(d), model("key")) }
+			val key = model("key").string
+			
+			model("full").model match
+			{
+				case Some(fullModel) => FullDevice(fullModel).map { d => DeviceStatus(Right(d), key) }
+				case None =>
+					model("partial").model
+						.toTry { new ModelValidationFailedException(s"Either 'full' or 'partial' required. Provided: $model") }
+						.flatMap { PartialDeviceData(_) }
+						.map { d => DeviceStatus(Left(d), key) }
+			}
 		}
 	}
 	

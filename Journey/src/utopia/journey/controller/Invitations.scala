@@ -2,7 +2,7 @@ package utopia.journey.controller
 
 import java.time.Instant
 
-import utopia.access.http.Status.Unauthorized
+import utopia.access.http.Status.{Forbidden, Unauthorized}
 import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue, QueueSystem}
 import utopia.annex.model.request.{GetRequest, PostRequest}
 import utopia.annex.model.response.RequestNotSent.{RequestFailed, RequestWasDeprecated}
@@ -15,7 +15,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.TimeExtensions._
 import utopia.journey.model.InvitationResponseSpirit
-import utopia.journey.model.error.RequestFailedException
+import utopia.journey.model.error.{RequestDeniedException, RequestFailedException, UnauthorizedRequestException}
 import utopia.journey.util.JourneyContext._
 import utopia.metropolis.model.combined.organization.{DescribedInvitation, InvitationWithResponse}
 
@@ -30,6 +30,8 @@ import scala.util.{Failure, Success}
 class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 5.seconds)
 {
 	// ATTRIBUTES	---------------------------
+	
+	// TODO: Should track the current user (only consider invitations of this user)
 	
 	private val cached = VolatileList[DescribedInvitation]()
 	private val hiddenIds = VolatileList[Int]()
@@ -105,12 +107,48 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 5.
 	
 	// OTHER	--------------------------------
 	
+	/**
+	  * Answers an invitation by sending data to the server
+	  * @param invitationId Id of the invitation to answer
+	  * @param isAccepted Whether the invitation should be accepted
+	  * @param isBlocked Whether future invitations should be blocked (default = false)
+	  * @return Eventual server response. Contains a failure if answering failed at some point. Successful case contains
+	  *         a list of newly updated (locally) invitations
+	  */
 	def answer(invitationId: Int, isAccepted: Boolean, isBlocked: Boolean = false) =
 	{
 		// Temporarily or permanently removes the targeted invitation from the cached data
 		hiddenIds :+= invitationId
 		
-		// TODO: Continue (send request, return a future of either success or failure)
+		// Sends the request, returns a modified version of the response
+		queue.push(PostRequest(InvitationResponseSpirit(invitationId, isAccepted, isBlocked))).map {
+			case Right(response) =>
+				response match
+				{
+					case _: Response.Success  =>
+						// Removes the invitation from locally cached data
+						cached.update { _.filterNot { _.id == invitationId } }
+						hiddenIds -= invitationId
+						Success(activeCached)
+					case Response.Failure(status, message) =>
+						status match
+						{
+							case Unauthorized => Failure(new UnauthorizedRequestException(
+								message.getOrElse("Unauthorized to answer the invitation")))
+							case Forbidden => Failure(new RequestDeniedException(message.getOrElse(
+								"Invitation response was denied")))
+							case _ => Failure(new RequestFailedException(message.getOrElse(
+								s"Server responded with status $status")))
+						}
+				}
+			case Left(notSent) =>
+				notSent match
+				{
+					case RequestFailed(error) => Failure(error)
+					case RequestWasDeprecated => Failure(
+						new RequestFailedException("Invitation response was deprecated before it could be sent"))
+				}
+		}
 	}
 	
 	

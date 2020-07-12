@@ -3,6 +3,31 @@ package utopia.annex.controller
 import utopia.annex.model.request.ApiRequest
 import utopia.flow.async.ActionQueue
 
+import scala.concurrent.ExecutionContext
+
+object RequestQueue
+{
+	// OTHER	--------------------------
+	
+	/**
+	  * @param master Queue system this queue should use
+	  * @param width How many requests can be handled at once (default = 1)
+	  * @param exc Implicit execution context
+	  * @return A new request queue
+	  */
+	def apply(master: QueueSystem, width: Int = 1)(implicit exc: ExecutionContext): RequestQueue =
+		new SimpleRequestQueue(master, width)
+	
+	
+	// NESTED	--------------------------
+	
+	private class SimpleRequestQueue(override val master: QueueSystem, width: Int = 1)(implicit exc: ExecutionContext)
+		extends RequestQueue
+	{
+		override protected val queue = new ActionQueue(width)
+	}
+}
+
 /**
   * A queue used for sending requests back to back
   * @author Mikko Hilpinen

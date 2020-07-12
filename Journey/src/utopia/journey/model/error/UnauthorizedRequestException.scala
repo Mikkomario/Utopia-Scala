@@ -5,4 +5,4 @@ package utopia.journey.model.error
   * @author Mikko Hilpinen
   * @since 11.7.2020, v1
   */
-class UnauthorizedRequestException(message: String) extends RequestFailedException(message)
+class UnauthorizedRequestException(message: String) extends RequestDeniedException(message)
