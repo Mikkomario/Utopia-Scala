@@ -46,6 +46,13 @@ object JourneyContext
 	@throws[EnvironmentNotSetupException]("These settings haven't been initialized yet. Please call .setup(...) first")
 	def containersDirectory = settings.get.containersDirectory
 	
+	/**
+	  * @return Directory where locally generated .json files for persisted requests should be stored
+	  * @throws EnvironmentNotSetupException if setup(...) hasn't been called yet
+	  */
+	@throws[EnvironmentNotSetupException]("These settings haven't been initialized yet. Please call .setup(...) first")
+	def requestsDirectory = containersDirectory/"requests"
+	
 	
 	// OTHER	-------------------------------
 	

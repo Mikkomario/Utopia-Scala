@@ -1,12 +1,58 @@
 package utopia.annex.controller
 
+import java.nio.file.Path
+
 import utopia.annex.model.request.ApiRequest
-import utopia.flow.container.FileContainer
+import utopia.flow.async.ActionQueue
+import utopia.flow.container.SaveTiming.OnJvmClose
+import utopia.flow.container.{FileContainer, ModelsFileContainer, ObjectsFileContainer, SaveTiming}
 import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.parse.JsonParser
 import utopia.flow.util.CollectionExtensions._
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
+
+object PersistingRequestQueue
+{
+	// OTHER	-------------------------
+	
+	/**
+	  * Creates a new request queue that persists some requests
+	  * @param master Parent queue system used
+	  * @param fileLocation Path to the file where persisted requests should be stored
+	  * @param handlers Handlers used when parsing persisted requests
+	  * @param width How many requests can be sent at once (default = 1)
+	  * @param saveLogic Timing logic used when backing persisted requests to local file system
+	  *                  (default = save on jvm close)
+	  * @param exc Implicit execution context
+	  * @param jsonParser Parser used when reading responses and persisted data
+	  * @return A new request queue + possible errors that occurred while parsing previously persisted requests
+	  */
+	def apply(master: QueueSystem, fileLocation: Path, handlers: Iterable[PersistedRequestHandler],
+			  width: Int = 1, saveLogic: SaveTiming = OnJvmClose)
+			 (implicit exc: ExecutionContext, jsonParser: JsonParser): (PersistingRequestQueue, Vector[Throwable]) =
+	{
+		val queue = new SimpleQueue(fileLocation, master, width, saveLogic)
+		val errors = queue.start(handlers)
+		queue -> errors
+	}
+	
+	
+	// NESTED	-------------------------
+	
+	private class SimpleQueue(fileLocation: Path, override val master: QueueSystem, width: Int = 1,
+							  saveLogic: SaveTiming = OnJvmClose)
+							 (implicit val exc: ExecutionContext, jsonParser: JsonParser)
+		extends PersistingRequestQueue
+	{
+		// ATTRIBUTES	----------------
+		
+		override protected val queue = new ActionQueue(width)
+		
+		override protected val requestContainer = new ModelsFileContainer(fileLocation, saveLogic)
+	}
+}
 
 /**
   * This version of the request queue is able to persist the requests when necessary

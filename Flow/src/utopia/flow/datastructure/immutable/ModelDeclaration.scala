@@ -112,6 +112,18 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
     def contains(propertyName: String) = declarations.exists { _.name.equalsIgnoreCase(propertyName) }
     
     /**
+      * Tests whether specified model probably matches this declaration. Will not test for data type integrity, only
+      * the existence of required properties.
+      * @param model Model being tested
+      * @return Whether the model is likely to be valid
+      */
+    def isProbablyValid(model: template.Model[Property]) =
+    {
+        // Checks whether there are any missing or empty required properties
+        declarations.filterNot { _.hasDefault }.forall { declaration => model(declaration.name).isDefined }
+    }
+    
+    /**
       * Checks the provided model whether all declared (non-default) properties have non-empty values and can be casted
       * to declared type
       * @param model Model to be validated

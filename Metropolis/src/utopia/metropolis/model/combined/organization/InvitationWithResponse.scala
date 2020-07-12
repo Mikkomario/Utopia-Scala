@@ -1,10 +1,29 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.datastructure.immutable.Constant
-import utopia.flow.generic.ModelConvertible
+import utopia.flow.datastructure.immutable.{Constant, ModelDeclaration, PropertyDeclaration}
+import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.generic.{FromModelFactory, ModelConvertible, ModelType}
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.Extender
 import utopia.metropolis.model.stored.organization.{Invitation, InvitationResponse}
+
+object InvitationWithResponse extends FromModelFactory[InvitationWithResponse]
+{
+	// ATTRIBUTES	------------------------------
+	
+	private val schema = ModelDeclaration(PropertyDeclaration("response", ModelType))
+	
+	
+	// IMPLEMENTED	------------------------------
+	
+	override def apply(model: Model[Property]) = Invitation(model).flatMap { invitation =>
+		schema.validate(model).toTry.flatMap { valid =>
+			InvitationResponse(valid("response").getModel).map { response =>
+				InvitationWithResponse(invitation, response)
+			}
+		}
+	}
+}
 
 /**
   * An extender to standard invitation model that also contains the response to that invitation (if present)

@@ -1,8 +1,23 @@
 package utopia.metropolis.model.partial.organization
 
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
+import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
+import utopia.flow.generic.{BooleanType, FromModelFactoryWithSchema, IntType, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueUnwraps._
+
+object InvitationResponseData extends FromModelFactoryWithSchema[InvitationResponseData]
+{
+	// ATTRIBUTES	--------------------------
+	
+	override val schema = ModelDeclaration("invitation_id" -> IntType, "was_accepted" -> BooleanType,
+		"creator_id" -> IntType)
+	
+	
+	// IMPLEMENTED	--------------------------
+	
+	override protected def fromValidatedModel(model: Model[Constant]) = InvitationResponseData(model("invitation_id"),
+		model("was_accepted"), model("was_blocked"), model("creator_id"))
+}
 
 /**
   * Contains basic data about an invitation response
