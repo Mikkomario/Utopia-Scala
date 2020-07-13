@@ -1,5 +1,6 @@
 package utopia.genesis.shape
 
+import utopia.flow.util.RichComparable
 import utopia.genesis.util.Extensions._
 import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic}
 import utopia.genesis.shape.RotationDirection.{Clockwise, Counterclockwise}
@@ -75,7 +76,7 @@ object Rotation
   * @param direction The rotation direction (default = clockwise)
 **/
 case class Rotation private(radians: Double, direction: RotationDirection = Clockwise)
-	extends ApproximatelyEquatable[Rotation] with Arithmetic[Rotation, Rotation]
+	extends ApproximatelyEquatable[Rotation] with Arithmetic[Rotation, Rotation] with RichComparable[Rotation]
 {
 	// PROPS    --------------------------
 	
@@ -136,6 +137,8 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	
 	
 	// IMPLEMENTED    --------------------
+	
+	override def compareTo(o: Rotation) = clockwiseRadians.compareTo(o.clockwiseRadians)
 	
 	override def toString = f"$degrees%1.2f degrees $direction"
 	

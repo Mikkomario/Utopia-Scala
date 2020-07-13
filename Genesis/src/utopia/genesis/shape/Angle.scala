@@ -144,6 +144,36 @@ case class Angle private(radians: Double) extends ApproximatelyEquatable[Angle] 
       */
     def toRotation = Rotation(radians)
     
+    /**
+      * @return Sine of this angle
+      */
+    def sine = math.sin(radians)
+    
+    /**
+      * @return Arc sine of this angle
+      */
+    def arcSine = math.asin(radians)
+    
+    /**
+      * @return Cosine of this angle
+      */
+    def cosine = math.cos(radians)
+    
+    /**
+      * @return Arc cosine of this angle
+      */
+    def arcCosine = math.acos(radians)
+    
+    /**
+      * @return Tangent (tan) of this angle
+      */
+    def tangent = math.tan(radians)
+    
+    /**
+      * @return Arc tangent (atan) of this sine
+      */
+    def arcTangent = math.atan(radians)
+    
     
     // IMPLEMENTED  ------------------
     

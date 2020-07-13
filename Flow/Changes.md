@@ -40,6 +40,7 @@ alternative implementation)
 - ModelDeclaration.validate now makes sure the required values are non-empty. This applies for 
 String, Vector and Model type value requirements.
 - Instant now has <= and >= methods through TimeExtensions
+- Moved .findMap(...) from Iterable to IterableOnce in CollectionExtensions
 
 ## v1.7
 

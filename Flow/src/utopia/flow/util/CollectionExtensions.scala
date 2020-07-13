@@ -388,14 +388,6 @@ object CollectionExtensions
             t.foreach { item => if (checked.contains(item)) foundResults += item else checked += item }
             foundResults
         }
-        
-        /**
-          * Maps items until a concrete result is found, then returns that result
-          * @param map A mapping function that maps to either Some or None
-          * @tparam B The map target type
-          * @return The first item that was mapped to Some. None if all items were mapped to None.
-          */
-        def findMap[B](map: A => Option[B]) = t.view.map(map).find { _.isDefined }.flatten
     
         /**
           * Finds the maximum value in this Iterable
@@ -744,6 +736,14 @@ object CollectionExtensions
     
     implicit class RichIterableOnce[A](val i: IterableOnce[A]) extends AnyVal
     {
+        /**
+          * Maps items until a concrete result is found, then returns that result
+          * @param map A mapping function that maps to either Some or None
+          * @tparam B The map target type
+          * @return The first item that was mapped to Some. None if all items were mapped to None.
+          */
+        def findMap[B](map: A => Option[B]) = i.iterator.map(map).find { _.isDefined }.flatten
+        
         /**
          * Divides / maps the items in this collection to two groups
          * @param f A function for separating / mapping the items

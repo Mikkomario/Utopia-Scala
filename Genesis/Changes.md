@@ -28,3 +28,4 @@ both always stays positive
 ### Other Changes
 - Drawer.drawTextCentered now properly downscales the text if it was to go out of bounds.
 - Moved Insets and Screen classes from Reflection to Genesis
+- Added some new utility functions to Angle and Rotation
