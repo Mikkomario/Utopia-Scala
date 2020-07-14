@@ -5,7 +5,7 @@ import utopia.genesis.color.Color
 import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
-import utopia.genesis.shape.LinearAcceleration
+import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Transformation}
 import utopia.genesis.util.{Drawer, Fps}
 import utopia.genesis.view.RepaintLoop

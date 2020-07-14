@@ -2,7 +2,7 @@ package utopia.reflection.component.context
 
 import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.LinearAcceleration
+import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.drawing.template.ScrollBarDrawer
 import utopia.reflection.container.stack.template.scrolling.ScrollAreaLike

@@ -5,7 +5,7 @@ import java.nio.file.Paths
 import utopia.flow.async.ThreadPool
 import utopia.genesis.handling.Drawable
 import utopia.genesis.image.Image
-import utopia.genesis.shape.{Angle, Rotation}
+import utopia.genesis.shape.shape1D.{Angle, Rotation}
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.genesis.util.{DefaultSetup, Drawer}
 import utopia.inception.handling.immutable.Handleable
@@ -20,7 +20,7 @@ import scala.concurrent.ExecutionContext
 object ImageTest extends App
 {
 	// Generates the images
-	val original = Image.readFrom(Paths.get("test-images/mushrooms.png")).get
+	val original = Image.readFrom(Paths.get("Genesis/test-images/mushrooms.png")).get
 		.withMaxSourceResolution(Size(128, 128)).withSize(Size(96, 96))
 	val leftPartBounds = Bounds(Point.origin, Size(57, 96))
 	val leftHalf = original.subImage(leftPartBounds)

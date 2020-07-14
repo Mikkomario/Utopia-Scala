@@ -10,12 +10,13 @@ import utopia.genesis.util.Extensions._
 import utopia.genesis.generic.GenesisValue._
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.datastructure.immutable.Constant
-import utopia.genesis.shape.{Vector3D, VectorLike}
 import utopia.flow.generic.VectorType
 import utopia.flow.generic.ModelType
 import utopia.genesis.shape.shape2D.{Bounds, Circle, Line, Point, Size, Transformation}
 import utopia.flow.generic.ConversionReliability._
 import utopia.flow.generic.ValueConversions._
+import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.template.VectorLike
 
 /**
  * This object handles casting of Genesis-specific data types
@@ -121,10 +122,10 @@ object GenesisValueCaster extends ValueCaster
         value.dataType match 
         {
             case VectorType => Some(Vector3D(value(0).doubleOr(), value(1).doubleOr(), value(2).doubleOr()))
-            case PointType => Some(value.pointOr().toVector)
+            case PointType => Some(value.pointOr().in3D)
             case SizeType => Some(value.sizeOr().toVector)
             case ModelType => Vector3D(value.modelOr()).toOption
-            case LineType => Some(value.lineOr().vector)
+            case LineType => Some(value.lineOr().vector.in3D)
             case _ => None
         }
     }

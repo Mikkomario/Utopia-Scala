@@ -1,5 +1,6 @@
-package utopia.genesis.shape
+package utopia.genesis.shape.shape1D
 
+import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.Direction2D
 import utopia.genesis.util.{Scalable, Signed}
 

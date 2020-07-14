@@ -1,8 +1,9 @@
-package utopia.genesis.shape
+package utopia.genesis.shape.template
 
-import scala.concurrent.duration.Duration
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.util.Scalable
+
+import scala.concurrent.duration.Duration
 
 /**
   * Used for describing a change over time

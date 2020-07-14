@@ -2,8 +2,9 @@ package utopia.reflection.shape
 
 import javax.swing.SwingConstants
 import utopia.genesis.shape.Axis._
-import utopia.genesis.shape.Direction1D.{Negative, Positive}
-import utopia.genesis.shape.{Axis2D, Direction1D}
+import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape1D.Direction1D
+import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Direction2D, Point, Size}
 import utopia.reflection.container.stack.Stacker
 

@@ -10,8 +10,11 @@ import utopia.genesis.event._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
 import utopia.genesis.shape.Axis._
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Velocity2D}
 import utopia.genesis.shape._
+import utopia.genesis.shape.shape1D.LinearAcceleration
+import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.template.VectorLike
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.drawing.template.DrawLevel.Foreground
@@ -223,7 +226,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 	  */
 	def scrollTo(abovePercent: Double, axis: Axis2D, animated: Boolean) =
 	{
-		val target = contentOrigin.withCoordinate(-contentSize.along(axis) * abovePercent, axis)
+		val target = contentOrigin.withDimension(-contentSize.along(axis) * abovePercent, axis)
 		if (animated)
 			animateScrollTo(target)
 		else
@@ -455,14 +458,14 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 	{
 		// ATTRIBUTES	-----------------------
 		
-		var velocity = Velocity.zero
+		var velocity = Velocity2D.zero
 		
 		
 		// IMPLEMENTED	-----------------------
 		
 		override def act(duration: FiniteDuration) =
 		{
-			if (velocity.amount != Vector3D.zero)
+			if (!velocity.amount.isZero)
 			{
 				// Calculates the amount of scrolling and velocity after applying friction
 				val (transition, newVelocity) = velocity(duration, -friction.abs, preserveDirection = true)
@@ -483,9 +486,9 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 		
 		// OTHER	---------------------------
 		
-		def stop() = velocity = Velocity.zero
+		def stop() = velocity = Velocity2D.zero
 		
-		def accelerate(acceleration: Velocity) = velocity += acceleration
+		def accelerate(acceleration: Velocity2D) = velocity += acceleration
 	}
 	
 	private class MouseListener(val scrollPerWheelClick: Double, val dragDuration: Duration, val velocityMod: Double,
@@ -501,7 +504,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 		private var isDraggingContent = false
 		private var contentDragPosition = Point.origin
 		
-		private var velocities = Vector[(Instant, Velocity, Duration)]()
+		private var velocities = Vector[(Instant, Velocity2D, Duration)]()
 		
 		private var keyState = KeyStatus.empty
 		
@@ -565,7 +568,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 							case (_, v, d) => v.perMilliSecond * d.toPreciseMillis }
 							.reduce { _ + _ } / actualDragDuration.toPreciseMillis
 						
-						scroller.accelerate(Velocity(averageTranslationPerMilli)(TimeUnit.MILLISECONDS) * velocityMod)
+						scroller.accelerate(Velocity2D(averageTranslationPerMilli)(TimeUnit.MILLISECONDS) * velocityMod)
 					}
 				}
 			}

@@ -11,8 +11,10 @@ import javax.imageio.ImageIO
 import utopia.flow.datastructure.mutable.Lazy
 import utopia.genesis.color.Color
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
-import utopia.genesis.shape.{Angle, Rotation, Vector3D, VectorLike}
+import utopia.genesis.shape.shape1D.{Angle, Rotation}
 import utopia.genesis.shape.shape2D.{Area2D, Bounds, Point, Size, Transformation}
+import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.template.VectorLike
 import utopia.genesis.util.{Drawer, Scalable}
 
 import scala.util.{Failure, Success, Try}

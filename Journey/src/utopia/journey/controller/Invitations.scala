@@ -75,31 +75,40 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 5.
 		val schrodinger = new CachedFindSchrodinger(activeCached)
 		
 		// Completes the schrödinger asynchronously
-		queue.push(request).foreach { result =>
-			schrodinger.complete(result.mapRight {
-				case Response.Success(_, body) =>
-					body.vector(DescribedInvitation).parsed match
-					{
-						case Success(invitations) =>
-							cached.set(invitations)
-							invitations
-						case Failure(error) =>
-							log(error, "Couldn't parse invitations from a server response")
-							activeCached
-					}
-				case Response.Failure(status, message) =>
-					if (status != Unauthorized)
-					{
-						val errorMessage = message match
+		queue.push(request).foreach {
+			case Right(response) =>
+				response match
+				{
+					case Response.Success(_, body) =>
+						val parsedInvitations = body.vector(DescribedInvitation).parsed
+						parsedInvitations.failure.foreach { log(_,
+							"Failed to parse invitations from server response") }
+						schrodinger.complete(parsedInvitations)
+					case Response.Failure(status, message) =>
+						if (status != Unauthorized)
 						{
-							case Some(m) => s"Invitation retrieval failed ($status). Response message: $m"
-							case None => s"Invitation retrieval failed with status $status"
+							val errorMessage = message match
+							{
+								case Some(m) => s"Invitation retrieval failed ($status). Response message: $m"
+								case None => s"Invitation retrieval failed with status $status"
+							}
+							val error = new RequestFailedException(errorMessage)
+							log(error)
+							schrodinger.complete(Failure(error))
 						}
-						log(new RequestFailedException(errorMessage))
-					}
-					activeCached
-			})
-		}
+						else
+							schrodinger.complete(Failure(new RequestFailedException(message.getOrElse(
+								"Invitation retrieval couldn't be authorized"))))
+				}
+			case Left(notSent) =>
+				notSent match
+				{
+					case RequestFailed(error) =>
+						log(error)
+						schrodinger.complete(Failure(error))
+					case _ => schrodinger.complete(Success(cached.get)) // TODO: Log as an error?
+				}
+			}
 		
 		schrodinger
 	}

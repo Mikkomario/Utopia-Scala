@@ -1,10 +1,12 @@
-package utopia.genesis.shape
+package utopia.genesis.shape.template
 
+import utopia.genesis.shape.Axis
+import utopia.genesis.shape.shape1D.Angle
+import utopia.genesis.util.Extensions._
+import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic, DistanceLike}
+
+import scala.collection.immutable.VectorBuilder
 import scala.math.Ordering.Double.TotalOrdering
-import scala.collection.immutable.{HashMap, VectorBuilder}
-import utopia.genesis.shape.Axis._
-import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.util.{Arithmetic, DistanceLike}
 
 object VectorLike
 {
@@ -26,8 +28,8 @@ object VectorLike
   * matching an axis (X, Y, Z, ...)
   * @tparam Repr the concrete implementing class
   */
-trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Repr] with DistanceLike with Dimensional[Double]
-	with VectorProjectable[Vector3D]
+trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Double], Repr] with DistanceLike
+	with Dimensional[Double] with VectorProjectable[Repr] with ApproximatelyEquatable[Dimensional[Double]]
 {
 	// ABSTRACT	---------------------
 	
@@ -46,23 +48,38 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Re
 	
 	// IMPLEMENTED	-----------------
 	
-	def along(axis: Axis) = dimensions.getOrElse(indexForAxis(axis), 0)
+	override protected def zeroDimension = 0.0
 	
 	override def length = math.sqrt(this dot this)
 	
-	override def +(other: VectorLike[_]) = combineWith(other) { _ + _ }
+	override def +(other: Dimensional[Double]) = combineWith(other) { _ + _ }
 	
-	override def -(other: VectorLike[_]) = combineWith(other) { _ - _ }
+	override def -(other: Dimensional[Double]) = combineWith(other) { _ - _ }
 	
 	override def *(n: Double) = map { _ * n }
 	
-	def projectedOver(other: Vector3D) = other * (dot(other) / other.dot(other))
+	// ab = (a . b) / (b . b) * b
+	override def projectedOver[V <: VectorLike[V]](other: VectorLike[V]) =
+		buildCopy((other * (dot(other) / (other dot other))).dimensions)
 	
-	override def xProjection = X(x)
+	/**
+	  * Calculates the scalar projection of this vector over the other vector. This is the same as
+	  * the length of this vector's projection over the other vector
+	  */
+	def scalarProjection(other: VectorLike[_]) = dot(other) / other.length
 	
-	override def yProjection = Y(y)
-	
-	override def zProjection = Z(z)
+	override def ~==(other: Dimensional[Double]) =
+	{
+		val myDim = dimensions
+		val theirDim = other.dimensions
+		
+		if (myDim.size > theirDim.size && myDim.drop(theirDim.size).exists { _ !~== 0.0 })
+			false
+		else if (theirDim.size > myDim.size && theirDim.drop(myDim.size).exists { _ !~== 0.0 })
+			false
+		else
+			myDim.zip(theirDim).forall { case (a, b) => a ~== b }
+	}
 	
 	
 	// COMPUTED	---------------------
@@ -73,14 +90,9 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Re
 	def isZero = dimensions.forall { _ == 0 }
 	
 	/**
-	  * @return The x and y -dimensions of this vectorlike element
+	  * This vector with length of 1
 	  */
-	def dimensions2D = dimensions.take(2)
-	
-	/**
-	  * A coordinate map representation of this vectorlike element
-	  */
-	def toMap = HashMap(X -> x, Y -> y, Z -> z)
+	def toUnit = this / length
 	
 	/**
 	  * a copy of this element where the coordinate values have been cut to integer numbers.
@@ -150,7 +162,7 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Re
 	  * @param other Another vectorlike element
 	  * @return This element multiplied on each axis of the provided element
 	  */
-	def *(other: VectorLike[_]) = combineWith(other) { _ * _ }
+	def *(other: Dimensional[Double]) = combineWith(other) { _ * _ }
 	
 	/**
 	  * @param n A multiplier for specified axis
@@ -171,7 +183,7 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Re
 	  * @param other Another vectorlike element
 	  * @return This element divided on each axis of the provided element. Dividing by 0 is ignored
 	  */
-	def /(other: VectorLike[_]) = combineWith(other) { case (a, b) => if (b == 0) a else a / b }
+	def /(other: Dimensional[Double]) = combineWith(other) { case (a, b) => if (b == 0) a else a / b }
 	
 	/**
 	  * @param n A divider for target axis
@@ -186,7 +198,7 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Re
 	/**
 	  * The dot product between this and another vector
 	  */
-	def dot(other: VectorLike[_]) = (this * other).dimensions.sum
+	def dot(other: Dimensional[Double]) = (this * other).dimensions.sum
 	
 	/**
 	  * Maps all dimensions of this vectorlike element
@@ -243,7 +255,8 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Re
 	  * @param merge A merge function
 	  * @return A new element with merged or copied dimensions
 	  */
-	def combineWith(other: VectorLike[_])(merge: (Double, Double) => Double) = combineDimensions(other.dimensions, merge)
+	def combineWith(other: Dimensional[Double])(merge: (Double, Double) => Double) =
+		combineDimensions(other.dimensions, merge)
 	
 	private def combineDimensions(dimensions: Seq[Double], merge: (Double, Double) => Double) =
 	{
@@ -251,12 +264,14 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Re
 		val otherDimensions = dimensions
 		
 		val builder = new VectorBuilder[Double]()
-		for (i <- 0 until (myDimensions.size min otherDimensions.size) )
-		{
-			builder += merge(myDimensions(i), otherDimensions(i))
-		}
-		for (i <- otherDimensions.size until myDimensions.size) { builder += merge(myDimensions(i), 0) }
-		for (i <- myDimensions.size until otherDimensions.size) { builder += merge(0, otherDimensions(i)) }
+		
+		// Merges common indices
+		myDimensions.zip(otherDimensions).foreach { case (a, b) => builder += merge(a, b) }
+		// Adds pairless items
+		if (myDimensions.size > otherDimensions.size)
+			myDimensions.drop(otherDimensions.size).foreach { builder += merge(_, 0.0) }
+		else if (otherDimensions.size > myDimensions.size)
+			otherDimensions.drop(myDimensions.size).foreach { builder += merge(0.0, _) }
 		
 		buildCopy(builder.result())
 	}
@@ -265,7 +280,7 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Re
 	  * @param other Another vectorlike element
 	  * @return The minimum combination of these two elements where each dimension is taken from the smaller alternative
 	  */
-	def min(other: VectorLike[_]) = combineWith(other) { _ min _ }
+	def min(other: Dimensional[Double]) = combineWith(other) { _ min _ }
 	
 	/**
 	  * The top left corner of a bounds between these two elements. In other words,
@@ -273,13 +288,13 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Re
 	  * @param other Another element
 	  * @return a minimum of these two elements on each axis
 	  */
-	def topLeft(other: VectorLike[_]) = this min other
+	def topLeft(other: Dimensional[Double]) = this min other
 	
 	/**
 	  * @param other Another vectorlike element
 	  * @return A maximum combination of these two elements where each dimension is taken from the larger alternative
 	  */
-	def max(other: VectorLike[_]) = combineWith(other) { _ max _ }
+	def max(other: Dimensional[Double]) = combineWith(other) { _ max _ }
 	
 	/**
 	  * The bottom right corner of a bounds between the two vertices. In other words,
@@ -287,7 +302,7 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Re
 	  * @param other Another element
 	  * @return A maximum of these two elements on each axis
 	  */
-	def bottomRight(other: VectorLike[_]) = combineWith(other) { _ max _ }
+	def bottomRight(other: Dimensional[Double]) = combineWith(other) { _ max _ }
 	
 	/**
 	  * Creates a copy of this vectorlike instance with a single dimension replaced
@@ -327,10 +342,67 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[VectorLike[_], Re
 			withDimension(0.0, axis)
 	}
 	
-	private def indexForAxis(axis: Axis) = axis match
+	/**
+	  * Creates a new vector with the same direction with this vector
+	  * @param length The length of the new vector
+	  */
+	def withLength(length: Double) = toUnit * length
+	
+	/**
+	  * This vector with increased length
+	  */
+	def +(n: Double) = withLength(length + n)
+	
+	/**
+	  * This vector with decreased length (the direction may change to opposite)
+	  */
+	def -(n: Double) = this + (-n)
+	
+	/**
+	  * @param other Another vector
+	  * @return The distance between the points represented by these two vectors
+	  */
+	def distanceFrom(other: Dimensional[Double]) = (this - other).length
+	
+	/**
+	  * Calculates the directional difference between these two vectors. The difference is
+	  * absolute (always positive) and doesn't specify the direction of the difference.
+	  */
+	def angleDifference(other: VectorLike[_ <: VectorLike[_]]) =
 	{
-		case X => 0
-		case Y => 1
-		case Z => 2
+		// This vector is used as the 'x'-axis, while a perpendicular vector is used as the 'y'-axis
+		// The other vector is then measured against these axes
+		val x: VectorLike[_] = other.projectedOver[VectorLike[Repr]](this)
+		val y = other - x
+		
+		Angle.ofRadians(math.atan2(y.length, x.length).abs)
 	}
+	
+	/**
+	  * The length of the cross product of these two vectors. |a||b|sin(a, b)
+	  */
+	// = |a||b|sin(a, b)e, |e| = 1 (in this we skip the e)
+	def crossProductLength(other: VectorLike[_ <: VectorLike[_]]) = length * other.length * angleDifference(other).sine
+	
+	/**
+	  * Checks whether this vector is parallel with another vector (has same or opposite direction)
+	  */
+	def isParallelWith(other: VectorLike[_ <: VectorLike[_]]) = crossProductLength(other) ~== 0.0
+	
+	/**
+	  * @param axis Target axis
+	  * @return Whether this vector is parallel to the specified axis
+	  */
+	def isParallelWith(axis: Axis): Boolean = isParallelWith(axis.toUnitVector)
+	
+	/**
+	  * Checks whether this vector is perpendicular to another vector (ie. (1, 0) vs. (0, 1))
+	  */
+	def isPerpendicularTo(other: Dimensional[Double]) = dot(other) ~== 0.0
+	
+	/**
+	  * @param axis Target axis
+	  * @return Whether this vector is perpendicular to the specified axis
+	  */
+	def isPerpendicularTo(axis: Axis): Boolean = isPerpendicularTo(axis.toUnitVector)
 }

@@ -1,8 +1,9 @@
 package utopia.reflection.component.template.layout
 
 import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.{Axis2D, Vector3D}
+import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.genesis.shape.shape3D.Vector3D
 
 /**
 * This trait is extended by classes that occupy a certain 2D space (position + size)

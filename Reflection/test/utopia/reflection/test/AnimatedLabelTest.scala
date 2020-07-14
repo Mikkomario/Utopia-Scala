@@ -5,7 +5,7 @@ import utopia.flow.util.TimeExtensions._
 import utopia.genesis.animation.Animation
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.image.Image
-import utopia.genesis.shape.Rotation
+import utopia.genesis.shape.shape1D.Rotation
 import utopia.reflection.component.context.BaseContext
 import utopia.reflection.component.swing.label.AnimationLabel
 import utopia.reflection.container.swing.window.Frame

@@ -12,8 +12,9 @@ import utopia.flow.datastructure.template
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
 import utopia.genesis.generic.GenesisValue._
-import utopia.genesis.shape.{Vector3D, VectorLike}
 import utopia.genesis.shape.Axis._
+import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.template.VectorLike
 
 import scala.util.Success
 

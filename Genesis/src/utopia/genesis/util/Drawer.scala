@@ -6,7 +6,7 @@ import java.awt.geom.AffineTransform
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.{Bounds, Point, ShapeConvertible, Size, Transformation}
 import utopia.flow.util.NullSafe._
-import utopia.genesis.shape.Vector3D
+import utopia.genesis.shape.shape3D.Vector3D
 
 import scala.util.Try
 

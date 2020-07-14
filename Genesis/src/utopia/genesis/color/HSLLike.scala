@@ -1,6 +1,6 @@
 package utopia.genesis.color
 
-import utopia.genesis.shape.{Angle, Rotation}
+import utopia.genesis.shape.shape1D.{Angle, Rotation}
 
 
 /**

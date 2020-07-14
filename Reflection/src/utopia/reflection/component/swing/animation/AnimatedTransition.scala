@@ -3,10 +3,11 @@ package utopia.reflection.component.swing.animation
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.handling.Actor
 import utopia.genesis.image.Image
-import utopia.genesis.shape.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.path.ProjectilePath
 import utopia.genesis.shape.shape2D.{Bounds, Size}
-import utopia.genesis.shape.{Axis2D, Direction1D}
+import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape1D.Direction1D
+import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.{HandlerType, Mortal}
 import utopia.reflection.component.context.AnimationContextLike

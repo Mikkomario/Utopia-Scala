@@ -2,7 +2,7 @@ package utopia.genesis.test
 
 import utopia.genesis.color.RGBChannel._
 import utopia.genesis.color.{HSL, RGB}
-import utopia.genesis.shape.{Angle, Rotation}
+import utopia.genesis.shape.shape1D.{Angle, Rotation}
 
 /**
   * This app programmatically tests color conversion

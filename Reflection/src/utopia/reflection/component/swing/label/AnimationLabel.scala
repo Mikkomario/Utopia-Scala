@@ -9,7 +9,7 @@ import utopia.genesis.animation.animator.{Animator, TransformingImageAnimator}
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.genesis.shape.Rotation
+import utopia.genesis.shape.shape1D.Rotation
 import utopia.genesis.shape.shape2D.{Bounds, Point, Transformation}
 import utopia.genesis.util.{Drawer, Fps}
 import utopia.inception.handling.HandlerType

@@ -1,34 +1,35 @@
-package utopia.genesis.shape
+package utopia.genesis.shape.template
 
-import scala.concurrent.duration.{Duration, TimeUnit}
+import utopia.genesis.shape.shape1D.{LinearAcceleration, LinearVelocity}
+import utopia.genesis.shape.shape2D.Vector2DLike
 import utopia.genesis.util.Arithmetic
-import utopia.flow.util.TimeExtensions._
 
-object Velocity
-{
-	/**
-	  * A zero velocity
-	  */
-	val zero = Velocity(Vector3D.zero, 1.seconds)
-	
-	/**
-	  * @param amount Distance vector traversed in 1 time unit
-	  * @param timeUnit Time unit used (implicit)
-	  * @return A new velocity
-	  */
-	def apply(amount: Vector3D)(implicit timeUnit: TimeUnit): Velocity = new Velocity(amount, Duration(1, timeUnit))
-}
+import scala.concurrent.duration.Duration
 
 /**
   * Used for tracking speed
   * @author Mikko Hilpinen
-  * @since 11.9.2019, v2.1+
-  * @param transition The amount of transition over 'duration'
-  * @param duration The duration of change
+  * @since 14.7.2020, v2.3
   */
-case class Velocity(transition: Vector3D, override val duration: Duration) extends Change[Vector3D, Velocity]
-	with Arithmetic[Velocity, Velocity] with Dimensional[LinearVelocity] with VectorProjectable[Velocity]
+trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: VelocityLike[Transition, Repr]]
+	extends Change[Transition, Repr] with Arithmetic[Change[Dimensional[Double], _], Repr] with Dimensional[LinearVelocity]
+		with VectorProjectable[Repr]
 {
+	// ABSTRACT	-----------------
+	
+	def transition: Transition
+	
+	protected def zeroTransition: Transition
+	
+	/**
+	  * Creates a new copy of this instance
+	  * @param transition New transition (default = current)
+	  * @param duration New Duration (default = current)
+	  * @return A new copy of this velocity
+	  */
+	protected def buildCopy(transition: Transition = transition, duration: Duration = duration): Repr
+	
+	
 	// ATTRIBUTES	-------------
 	
 	/**
@@ -36,18 +37,17 @@ case class Velocity(transition: Vector3D, override val duration: Duration) exten
 	  */
 	lazy val linear = LinearVelocity(transition.length, duration)
 	
+	override lazy val dimensions = transition.dimensions.map { LinearVelocity(_, duration) }
+	
 	
 	// COMPUTED	-----------------
+	
+	override protected def zeroDimension = LinearVelocity.zero
 	
 	/**
 	  * @return Direction of this velocity vector
 	  */
 	def direction = transition.direction
-	
-	/**
-	  * @return A copy of this velocity without z-axis movement
-	  */
-	def in2D = if (transition.z == 0) this else copy(transition = transition.in2D)
 	
 	/**
 	  * @return Whether this velocity is actually stationary (zero)
@@ -57,37 +57,32 @@ case class Velocity(transition: Vector3D, override val duration: Duration) exten
 	
 	// IMPLEMENTED	-------------
 	
-	override def repr = this
-	
 	override def amount = transition
 	
-	override def *(mod: Double) = Velocity(transition * mod, duration)
+	override def *(mod: Double) = buildCopy(transition * mod)
 	
-	override def +(other: Velocity) = Velocity(transition + other(duration), duration)
+	override def +(other: Change[Dimensional[Double], _]) = buildCopy(transition + other(duration))
 	
-	override def -(other: Velocity) = this + (-other)
+	override def -(other: Change[Dimensional[Double], _]) = buildCopy(transition - other(duration))
 	
 	override def toString = s"$perMilliSecond/ms"
-	
-	def along(axis: Axis) = LinearVelocity(transition.along(axis), duration)
-	
-	override def projectedOver(vector: Vector3D) = Velocity(transition.projectedOver(vector), duration)
 	
 	
 	// OPERATORS	-------------
 	
-	def +(other: LinearVelocity) = Velocity(transition + other(duration), duration)
+	def +(other: LinearVelocity) = buildCopy(transition + other(duration))
 	
 	def -(other: LinearVelocity) = this + (-other)
 	
 	
 	// OTHER	-----------------
 	
-	/**
+	/*
 	  * @param time Target duration
 	  * @return An acceleration to increase this amount of velocity in specified time
 	  */
-	def acceleratedIn(time: Duration) = Acceleration(this, time)
+	// TODO: Add? (maybe separate trait)
+	// def acceleratedIn(time: Duration) = Acceleration(this, time)
 	
 	/**
 	  * @param amount Amount to increase this velocity
@@ -96,7 +91,7 @@ case class Velocity(transition: Vector3D, override val duration: Duration) exten
 	  *         instead
 	  */
 	def increasePreservingDirection(amount: LinearVelocity) = if (amount.isPositive || linear > -amount)
-		Velocity(transition + amount(duration), duration) else Velocity(Vector3D.zero, duration)
+		buildCopy(transition + amount(duration)) else buildCopy(zeroTransition, duration)
 	
 	/**
 	  * @param amount Amount to decrease this velocity
@@ -119,7 +114,7 @@ case class Velocity(transition: Vector3D, override val duration: Duration) exten
 	  * @param acceleration Amount of acceleration (considered to be consistent)
 	  * @return The amount of transition in provided time, and also the velocity at the end of that time
 	  */
-	def apply(time: Duration, acceleration: Acceleration): (Vector3D, Velocity) =
+	def apply(time: Duration, acceleration: Change[Change[Dimensional[Double], _], _]): (Transition, Repr) =
 	{
 		val endVelocity = this + acceleration(time)
 		val averageVelocity = average(endVelocity)
@@ -134,7 +129,7 @@ case class Velocity(transition: Vector3D, override val duration: Duration) exten
 	  *                          change directions (by being decreased below 0), a zero velocity will be returned instead
 	  * @return The amount of transition in provided time, and also the velocity at the end of that time
 	  */
-	def apply(time: Duration, acceleration: LinearAcceleration, preserveDirection: Boolean = false): (Vector3D, Velocity) =
+	def apply(time: Duration, acceleration: LinearAcceleration, preserveDirection: Boolean = false): (Transition, Repr) =
 	{
 		// Sometimes translation & acceleration needs to be stopped when velocity would change direction
 		val durationLimit =

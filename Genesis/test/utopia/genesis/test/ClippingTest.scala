@@ -1,13 +1,13 @@
 package utopia.genesis.test
 
 import utopia.genesis.util.{DefaultSetup, DepthRange, Drawer}
-import utopia.genesis.shape.Vector3D
 import java.awt.Color
 
 import utopia.flow.async.ThreadPool
 import utopia.genesis.event.MouseMoveEvent
 import utopia.genesis.handling.{Drawable, MouseMoveListener}
 import utopia.genesis.shape.shape2D.{Circle, Point, ShapeConvertible, Size}
+import utopia.genesis.shape.shape3D.Vector3D
 import utopia.inception.handling.immutable.Handleable
 
 import scala.concurrent.ExecutionContext

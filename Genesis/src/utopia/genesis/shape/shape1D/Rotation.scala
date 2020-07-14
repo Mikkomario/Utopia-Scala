@@ -1,9 +1,9 @@
-package utopia.genesis.shape
+package utopia.genesis.shape.shape1D
 
 import utopia.flow.util.RichComparable
+import utopia.genesis.shape.shape1D.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.genesis.util.Extensions._
 import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic}
-import utopia.genesis.shape.RotationDirection.{Clockwise, Counterclockwise}
 
 object Rotation
 {

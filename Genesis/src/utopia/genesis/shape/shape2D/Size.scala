@@ -14,9 +14,11 @@ import scala.collection.immutable.HashMap
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
 import utopia.genesis.util.ApproximatelyEquatable
-import utopia.genesis.shape.{Axis2D, Vector3D, VectorLike}
+import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.Axis._
 import java.awt.Insets
+
+import utopia.genesis.shape.shape3D.Vector3D
 
 import scala.util.Success
 
@@ -66,7 +68,7 @@ object Size extends FromModelFactory[Size]
 * @author Mikko Hilpinen
 * @since 20.11.2018
 **/
-case class Size(width: Double, height: Double) extends VectorLike[Size] with ApproximatelyEquatable[Size]
+case class Size(width: Double, height: Double) extends Vector2DLike[Size] with ApproximatelyEquatable[Size]
         with ValueConvertible with ModelConvertible
 {
     // COMPUTED    --------------------------

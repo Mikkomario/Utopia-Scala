@@ -1,6 +1,6 @@
 package utopia.genesis.shape.template
 
-import utopia.genesis.shape.Vector3D
+import utopia.genesis.shape.shape3D.Vector3D
 
 /**
  * Areas are able to specify whether they contain a specific coordinate point

@@ -2,7 +2,7 @@ package utopia.genesis.color
 
 import scala.language.implicitConversions
 import utopia.genesis.color.RGBChannel._
-import utopia.genesis.shape.Angle
+import utopia.genesis.shape.shape1D.Angle
 import utopia.genesis.util.ApproximatelyEquatable
 import utopia.genesis.util.Extensions._
 

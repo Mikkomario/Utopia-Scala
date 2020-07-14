@@ -1,11 +1,10 @@
-package utopia.genesis.shape
+package utopia.genesis.shape.shape1D
 
 import utopia.flow.util.RichComparable
+import utopia.genesis.shape.shape1D.RotationDirection.{Clockwise, Counterclockwise}
+import utopia.genesis.shape.shape2D.Direction2D
 import utopia.genesis.util.Extensions._
 import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic}
-import utopia.genesis.shape.RotationDirection.Counterclockwise
-import utopia.genesis.shape.RotationDirection.Clockwise
-import utopia.genesis.shape.shape2D.Direction2D
 
 object Angle
 {

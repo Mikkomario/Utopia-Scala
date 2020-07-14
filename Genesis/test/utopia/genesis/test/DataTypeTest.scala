@@ -1,13 +1,14 @@
 package utopia.genesis.test
 
 import utopia.genesis.generic.GenesisValue._
-import utopia.genesis.shape.{Rotation, Vector3D}
 import utopia.genesis.shape.shape2D.{Bounds, Circle, Line, Point, Size, Transformation}
 import utopia.genesis.generic.{BoundsType, CircleType, GenesisDataType, LineType, PointType, SizeType, TransformationType, Vector3DType}
 import utopia.flow.generic.VectorType
 import utopia.flow.generic.ModelType
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.parse.{JSONReader, JsonParser}
+import utopia.genesis.shape.shape1D.Rotation
+import utopia.genesis.shape.shape3D.Vector3D
 
 /**
  * This is a unit test for the new data type implementations
@@ -55,7 +56,7 @@ object DataTypeTest extends App
 	assert(p1(1).doubleOr() == 1)
 	assert(p1("x").doubleOr() == 1)
 	assert(p1("y").doubleOr() == 1)
-	assert(p1.vector3DOr() == point1.toVector)
+	assert(p1.vector3DOr() == point1.in3D)
  
 	assert(s1.vectorOr().size == 2)
 	assert(s1(0).doubleOr() == 1)

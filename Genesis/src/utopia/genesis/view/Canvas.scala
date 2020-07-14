@@ -1,7 +1,6 @@
 package utopia.genesis.view
 
 import javax.swing.JPanel
-import utopia.genesis.shape.Vector3D
 import utopia.genesis.view.ScalingPolicy.Project
 import java.awt.Color
 import java.awt.Graphics
@@ -12,6 +11,7 @@ import utopia.genesis.util.{Drawer, Fps}
 import utopia.genesis.shape.shape2D.Transformation
 import utopia.genesis.shape.shape2D.Size
 import utopia.genesis.handling.DrawableHandler
+import utopia.genesis.shape.shape3D.Vector3D
 
 import scala.concurrent.{ExecutionContext, Future}
 

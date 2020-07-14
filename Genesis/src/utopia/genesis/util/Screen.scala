@@ -2,8 +2,8 @@ package utopia.genesis.util
 
 import java.awt.{GraphicsConfiguration, Toolkit}
 
-import utopia.genesis.shape.Vector3D
 import utopia.genesis.shape.shape2D.{Insets, Size}
+import utopia.genesis.shape.shape3D.Vector3D
 
 import scala.util.Try
 

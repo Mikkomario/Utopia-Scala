@@ -1,7 +1,8 @@
 package utopia.genesis.color
 
+import utopia.genesis.shape.shape1D.Angle
+
 import scala.language.implicitConversions
-import utopia.genesis.shape.Angle
 import utopia.genesis.util.ApproximatelyEquatable
 import utopia.genesis.util.Extensions._
 

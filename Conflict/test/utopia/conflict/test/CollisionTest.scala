@@ -5,7 +5,7 @@ import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Polygon, Size, Trans
 import utopia.conflict.collision.Extensions._
 import utopia.conflict.util.DefaultSetup
 import utopia.flow.async.ThreadPool
-import utopia.genesis.shape.Vector3D
+import utopia.genesis.shape.shape3D.Vector3D
 
 import scala.collection.immutable.HashSet
 import scala.concurrent.ExecutionContext

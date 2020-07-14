@@ -1,6 +1,11 @@
 # Utopia Reflection - List of Changes
 ## v2.3 (beta)
 ### Breaking Changes
+- Major package restructuring in shape -package
+- Added Vector2D, which now replaces Vector3D in many places
+- Divided Velocity into Velocity2D and Velocity3D
+- Divided Acceleration into Acceleration2D and Acceleration3D
+- Multiple changes in Vector-related traits
 - **Drawer.drawTextPositioned** now accepts a Bounds instead of Position from the function return 
 value. Added appropriate text scaling to the method.
 - Renamed FPS to Fps

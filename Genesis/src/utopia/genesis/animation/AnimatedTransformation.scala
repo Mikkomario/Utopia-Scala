@@ -1,8 +1,9 @@
 package utopia.genesis.animation
 
-import utopia.genesis.shape.RotationDirection.Counterclockwise
+import utopia.genesis.shape.shape1D.Rotation
+import utopia.genesis.shape.shape1D.RotationDirection.Counterclockwise
 import utopia.genesis.shape.shape2D.{Point, Transformation}
-import utopia.genesis.shape.{Rotation, Vector3D}
+import utopia.genesis.shape.shape3D.Vector3D
 
 /**
   * Used for constructing transformation animations

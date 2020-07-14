@@ -1,7 +1,8 @@
 package utopia.genesis.test
 
+import utopia.genesis.shape.shape1D.Rotation
 import utopia.genesis.shape.shape2D.{Line, Point, Transformation}
-import utopia.genesis.shape.{Rotation, Vector3D}
+import utopia.genesis.shape.shape3D.Vector3D
 import utopia.genesis.util.Extensions._
 
 /**

@@ -8,9 +8,9 @@ import utopia.flow.datastructure.mutable.Lazy
 import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
-import utopia.genesis.shape.Direction1D.{Negative, Positive}
-import utopia.genesis.shape.{Axis, Axis2D, Vector3D}
-import utopia.genesis.shape.shape2D.{Insets, Point, Size}
+import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
+import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape2D.{Insets, Point, Size, Vector2D}
 import utopia.genesis.util.Screen
 import utopia.genesis.view.{ConvertingKeyListener, MouseEventGenerator}
 import utopia.reflection.component.template.layout.stack.{Constrainable, Stackable}
@@ -322,9 +322,9 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
                             }
                         case None => increase.along(axis) / 2.0
                     }
-                    (axis: Axis) -> move
+                    axis -> move
                 }.toMap
-                position = (position - Vector3D.of(movement)).positive
+                position = (position - Vector2D.of(movement)).positive
             }
             else
                 checkWindowBounds()

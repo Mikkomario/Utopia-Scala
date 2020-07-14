@@ -2,8 +2,9 @@ package utopia.genesis.shape.shape2D
 
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.{Axis2D, Vector3D}
+import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.Direction2D._
+import utopia.genesis.shape.shape3D.Vector3D
 
 import scala.collection.immutable.HashMap
 

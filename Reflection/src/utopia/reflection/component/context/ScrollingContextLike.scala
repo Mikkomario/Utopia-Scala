@@ -1,7 +1,7 @@
 package utopia.reflection.component.context
 
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.LinearAcceleration
+import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.reflection.component.drawing.template.ScrollBarDrawer
 
 /**

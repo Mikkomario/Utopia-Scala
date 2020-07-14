@@ -8,7 +8,8 @@ import utopia.genesis.util.DefaultSetup
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.animation.Animation
-import utopia.genesis.shape.{Rotation, Vector3D}
+import utopia.genesis.shape.shape1D.Rotation
+import utopia.genesis.shape.shape3D.Vector3D
 
 import scala.concurrent.ExecutionContext
 

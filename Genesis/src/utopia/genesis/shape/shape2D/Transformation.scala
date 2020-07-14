@@ -12,7 +12,9 @@ import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.genesis.generic.GenesisValue._
-import utopia.genesis.shape.{Rotation, Vector3D, VectorLike}
+import utopia.genesis.shape.shape1D.Rotation
+import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.template.{Dimensional, VectorLike}
 
 import scala.util.Success
 
@@ -41,6 +43,12 @@ object Transformation extends FromModelFactory[Transformation]
     def translation(amount: Vector3D) = Transformation(translation = amount)
     
     /**
+      * @param amount Translation vector
+      * @return A new transformation with only translation included
+      */
+    def translation(amount: Dimensional[Double]): Transformation = translation(Vector3D.withDimensions(amount.dimensions))
+    
+    /**
       * @param x Translation x-wise
       * @param y Translation y-wise
       * @return A new translation transformation
@@ -51,7 +59,7 @@ object Transformation extends FromModelFactory[Transformation]
       * @param amount Translation amount (position)
       * @return A transformation that sets an object to specified position
       */
-    def position(amount: Point) = translation(amount.toVector)
+    def position(amount: Point) = translation(amount.in3D)
     
     /**
      * This transformation scales the target by the provided amount
@@ -234,7 +242,8 @@ case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector
      * Transforms a <b>relative</b> point <b>into an absolute</b> point
      * @param relative a relative point that will be transformed
      */
-    def apply(relative: Vector3D): Vector3D = apply(relative.toPoint).toVector
+    def apply[V <: Vector2DLike[_]](relative: Vector2DLike[_ <: V]): V =
+        relative.buildCopy(apply(Point(relative.x, relative.y)).dimensions)
     
     /**
      * Transforms a shape <b>from relative space to absolute space</b>
@@ -266,7 +275,8 @@ case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector
      * @param absolute a vector in absolute world space
      * @return The absolute point in relative world space
      */
-    def invert(absolute: Vector3D): Vector3D = invert(absolute.toPoint).toVector
+    def invert[V  <: Vector2DLike[_]](absolute: Vector2DLike[_ <: V]): V =
+        absolute.buildCopy(invert(Point(absolute.x, absolute.y)).dimensions)
     
     /**
      * Transforms a shape <b>from absolute space to relative space</b>
@@ -361,6 +371,13 @@ case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector
      * Copies this transformation, giving it a new translation vector
      */
     def withTranslation(translation: Vector3D) = copy(translation = translation)
+    
+    /**
+      * @param translation A new translation value
+      * @return A copy of this transformation with new translation
+      */
+    def withTranslation(translation: Dimensional[Double]) =
+        copy(translation = Vector3D.withDimensions(translation.dimensions))
     
     /**
      * Copies this transformation, giving it a new position

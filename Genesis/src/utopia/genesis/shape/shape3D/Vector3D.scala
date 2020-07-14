@@ -1,22 +1,19 @@
-package utopia.genesis.shape
+package utopia.genesis.shape.shape3D
 
 import utopia.flow.datastructure
-import utopia.genesis.util.Extensions._
-import utopia.flow.generic.ValueConvertible
-import utopia.genesis.generic.Vector3DType
-import utopia.flow.datastructure.immutable.Value
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.FromModelFactory
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.datastructure.template.Property
+import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible}
+import utopia.genesis.generic.Vector3DType
 import utopia.genesis.shape.Axis._
+import utopia.genesis.shape.shape2D.{Point, Size, Vector2DLike}
+import utopia.genesis.shape.Axis
+import utopia.genesis.shape.shape1D.{Angle, Rotation}
+import utopia.genesis.util.ApproximatelyEquatable
+import utopia.genesis.util.Extensions._
 
 import scala.collection.immutable.HashMap
-import utopia.genesis.util.ApproximatelyEquatable
-import utopia.genesis.shape.shape2D.Point
-import utopia.genesis.shape.shape2D.Size
-
 import scala.concurrent.duration.Duration
 import scala.util.Success
 
@@ -56,7 +53,23 @@ object Vector3D extends FromModelFactory[Vector3D]
      * Converts a coordinate map into a vector
      */
     def of(map: Map[Axis, Double]) = Vector3D(map.getOrElse(X, 0), map.getOrElse(Y, 0), map.getOrElse(Z, 0))
-    
+	
+	/**
+	  * @param dimensions An array of dimensions (x, y, z, ...)
+	  * @return A 3D vector based on the specified dimensions
+	  */
+	def withDimensions(dimensions: Seq[Double]) =
+	{
+		if (dimensions.size >= 3)
+			Vector3D(dimensions.head, dimensions(1), dimensions(2))
+		else if (dimensions.size == 2)
+			Vector3D(dimensions.head, dimensions(1))
+		else if (dimensions.isEmpty)
+			Vector3D.zero
+		else
+			Vector3D(dimensions.head)
+	}
+	
     /**
      * Calculates a surface normal for two vectors. If this normal was called n, both n and -n are 
      * normals for this surface
@@ -178,7 +191,8 @@ object Vector3D extends FromModelFactory[Vector3D]
  * @since 24.12.2016
  */
 case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, override val z: Double = 0.0)
-	extends VectorLike[Vector3D] with ValueConvertible with ModelConvertible with ApproximatelyEquatable[Vector3D]
+	extends Vector2DLike[Vector3D] with ValueConvertible with ModelConvertible with ApproximatelyEquatable[Vector3D]
+		with ThreeDimensional[Double]
 {
 	// ATTRIBUTES	--------------------
 	
@@ -191,16 +205,6 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
     // COMPUTED PROPERTIES    ----------
     
     /**
-     * This vector without the z component
-     */
-    def in2D = if (z == 0) this else Vector3D(x, y)
-    
-    /**
-     * This vector with length of 1
-     */
-    def toUnit = this / length
-    
-    /**
      * Converts this vector to a point
      */
     def toPoint = Point(x, y)
@@ -209,11 +213,6 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
      * Converts this vector to a size
      */
     def toSize = Size(x, y)
-    
-    /**
-     * This vector's direction on the x-y plane
-     */
-    def direction = Angle ofRadians calculateDirection(x, y)
     
     /**
      * This vector's direction on the z-y plane
@@ -238,12 +237,7 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
     /**
      * A normal for this vector
      */
-    def normal = if (x == 0 && y == 0 && z != 0) Vector3D(1) else normal2D
-    
-    /**
-     * A 2D normal for this vector
-     */
-    def normal2D = Vector3D(-y, x).toUnit
+    def normal = if (x == 0 && y == 0 && z != 0) Vector3D(1) else normal2D.in3D
     
 	
 	// IMPLEMENTED	--------------------
@@ -266,35 +260,7 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
 	  * @param dimensions A set of dimensions
 	  * @return A parsed version of the dimensions
 	  */
-	override def buildCopy(dimensions: Vector[Double]) =
-	{
-		if (dimensions.size >= 3)
-			Vector3D(dimensions(0), dimensions(1), dimensions(2))
-		else if (dimensions.size == 2)
-			Vector3D(dimensions(0), dimensions(1))
-		else if (dimensions.isEmpty)
-			Vector3D.zero
-		else
-			Vector3D(dimensions.head)
-	}
-	
-	/**
-	  * Checks whether two vectors are approximately equal
-	  */
-	override def ~==(other: Vector3D) = Vector3D.forall(this, other, { _ ~== _ })
-    
-    
-    // OPERATORS    --------------------
-	
-    /**
-     * This vector with increased length
-     */
-    def +(n: Double) = withLength(length + n)
-    
-    /**
-     * This vector with decreased length (the direction may change to opposite)
-     */
-    def -(n: Double) = this + (-n)
+	override def buildCopy(dimensions: Vector[Double]) = Vector3D.withDimensions(dimensions)
     
     
     // OTHER METHODS    ----------------
@@ -304,12 +270,6 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
      * normal for a surface created by these two vectors
      */
     def cross(other: Vector3D) = Vector3D.surfaceNormal(this, other).withLength(crossProductLength(other))
-    
-    /**
-     * The length of the cross product of these two vectors. |a||b|sin(a, b)
-     */
-    // = |a||b|sin(a, b)e, |e| = 1 (in this we skip the e)
-    def crossProductLength(other: Vector3D) = length * other.length * math.sin(angleDifferenceRads(other))
 	
 	/**
 	  * A projection of this vector for the specified axis
@@ -326,37 +286,10 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
 	}
     
     /**
-     * Calculates the scalar projection of this vector over the other vector. This is the same as 
-     * the length of this vector's projection over the other vector
-     */
-    def scalarProjection(other: Vector3D) = dot(other) / other.length
-    
-    /**
-     * Checks whether this vector is parallel with another vector (has same or opposite direction)
-     */
-    def isParallelWith(other: Vector3D) = crossProductLength(other) ~== 0.0
-	
-	/**
-	  * @param axis Target axis
-	  * @return Whether this vector is parallel to the specified axis
-	  */
-	def isParallelWith(axis: Axis): Boolean = isParallelWith(axis.toUnitVector)
-    
-    /**
-     * Checks whether this vector is perpendicular to another vector (ie. (1, 0) vs. (0, 1))
-     */
-    def isPerpendicularTo(other: Vector3D) = dot(other) ~== 0.0
-	
-	/**
-	  * @param axis Target axis
-	  * @return Whether this vector is perpendicular to the specified axis
-	  */
-	def isPerpendicularTo(axis: Axis): Boolean = isPerpendicularTo(axis.toUnitVector)
-    
-    /**
      * Calculates the directional difference between the two vectors in radians. The difference is 
      * absolute (always positive) and doesn't specify the direction of the difference.
      */
+	@deprecated("Please use angleDifference(...) instead", "v2.3")
     def angleDifferenceRads(other: Vector3D) = 
     {
         // This vector is used as the 'x'-axis, while a perpendicular vector is used as the 'y'-axis
@@ -368,18 +301,6 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
     }
     
     /**
-     * Creates a new vector with the same direction with this vector
-     * @param length The length of the new vector
-     */
-    def withLength(length: Double) = toUnit * length
-    
-    /**
-     * Creates a new vector with the same length as this vector
-     * @param direction The direction of the new vector
-     */
-    def withDirection(direction: Angle) = Vector3D.lenDir(length, direction)
-    
-    /**
      * Creates a new vector with the same length as this vector
      * @param direction the new direction of the vector on the x-z plane
      */
@@ -387,18 +308,6 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
     {
         val zRotated = in2D.withDirection(direction)
         Vector3D(zRotated.x, y, zRotated.y)
-    }
-    
-    /**
-     * Rotates the vector around a certain origin point
-     * @param rotation The amount of rotation
-     * @param origin The point this vector is rotated around (defaults to zero)
-     * @return The rotated vector
-     */
-    def rotated(rotation: Rotation, origin: Vector3D = Vector3D.zero) = 
-    {
-        val separator = this - origin
-        origin + Vector3D.lenDir(separator.length, separator.direction + rotation).copy(z = z)
     }
     
     /**
@@ -422,7 +331,7 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
 	  * @param time Duration of this transition
 	  * @return A velocity vector
 	  */
-	def traversedIn(time: Duration) = Velocity(this, time)
+	def traversedIn(time: Duration) = Velocity3D(this, time)
 	
     private def calculateDirection(x: Double, y: Double) = math.atan2(y, x)
 }

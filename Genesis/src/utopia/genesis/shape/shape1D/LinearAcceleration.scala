@@ -1,8 +1,10 @@
-package utopia.genesis.shape
+package utopia.genesis.shape.shape1D
 
 import utopia.flow.util.RichComparable
-import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic, Signed}
 import utopia.flow.util.TimeExtensions._
+import utopia.genesis.shape.shape2D.Acceleration2D
+import utopia.genesis.shape.template.Change
+import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic, Signed}
 
 import scala.concurrent.duration.{Duration, TimeUnit}
 
@@ -66,5 +68,5 @@ case class LinearAcceleration(override val amount: LinearVelocity, override val 
 	  * @param direction Target direction
 	  * @return A directed version of this acceleration
 	  */
-	def withDirection(direction: Angle) = Acceleration(amount.withDirection(direction), duration)
+	def withDirection(direction: Angle) = Acceleration2D(amount.withDirection(direction), duration)
 }

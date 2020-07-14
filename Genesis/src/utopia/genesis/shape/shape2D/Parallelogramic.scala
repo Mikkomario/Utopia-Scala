@@ -1,7 +1,5 @@
 package utopia.genesis.shape.shape2D
 
-import utopia.genesis.shape.Vector3D
-
 /**
   * This trait is extended by 2D shapes that have 4 corners and where the opposite sides (left + right, top + bottom)
   * are always identical
@@ -20,12 +18,12 @@ trait Parallelogramic extends Polygonic with TransformProjectable[Parallelogram]
 	/**
 	  * @return The top / bottom edge of this shape
 	  */
-	def top: Vector3D
+	def top: Vector2D
 	
 	/**
 	  * @return The left / right edge of this shape
 	  */
-	def left: Vector3D
+	def left: Vector2D
 	
 	
 	// COMPUTED	------------------

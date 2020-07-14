@@ -67,11 +67,11 @@ object KeyTest extends App
             // Draws the grid first
             for (x <- 0 to gridSquares.width.toInt)
             {
-                drawer.draw(Line.ofVector(gridPosition + X(squareSide * x), gridSize.yProjection))
+                drawer.draw(Line.ofVector(gridPosition + X(squareSide * x), gridSize.yProjection.toVector))
             }
             for (y <- 0 to gridSquares.height.toInt)
             {
-                drawer.draw(Line.ofVector(gridPosition + Y(squareSide * y), gridSize.xProjection))
+                drawer.draw(Line.ofVector(gridPosition + Y(squareSide * y), gridSize.xProjection.toVector))
             }
             
             // Then draws the object

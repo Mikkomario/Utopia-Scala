@@ -3,7 +3,8 @@ package utopia.reflection.util
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.{Axis2D, LinearAcceleration}
+import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.genesis.util.Drawer
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.drawing.template.ScrollBarDrawer

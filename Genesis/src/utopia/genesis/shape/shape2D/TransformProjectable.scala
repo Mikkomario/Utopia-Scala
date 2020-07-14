@@ -1,6 +1,8 @@
 package utopia.genesis.shape.shape2D
 
-import utopia.genesis.shape.{Rotation, Vector3D, VectorLike}
+import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.shape1D.Rotation
+import utopia.genesis.shape.template.VectorLike
 
 /**
  * Transformations can be applied to (immutable) transformable shapes / elements

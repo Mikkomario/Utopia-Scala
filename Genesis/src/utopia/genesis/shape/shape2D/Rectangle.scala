@@ -7,7 +7,6 @@ import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{DoubleType, FromModelFactory, ModelConvertible}
 import utopia.genesis.generic.{PointType, Vector3DType}
-import utopia.genesis.shape.Vector3D
 
 import scala.util.Try
 
@@ -16,7 +15,7 @@ object Rectangle extends FromModelFactory[Rectangle]
 	/**
 	  * A rectangle at origin position with zero size
 	  */
-	val zero = Rectangle(Point.origin, Vector3D.zero, 0)
+	val zero = Rectangle(Point.origin, Vector2D.zero, 0)
 	
 	/**
 	  * A schema used when converting models to rectangles
@@ -25,7 +24,7 @@ object Rectangle extends FromModelFactory[Rectangle]
 	
 	override def apply(model: template.Model[Property]): Try[Rectangle] =
 	{
-		schema.validate(model).toTry.map { valid => Rectangle(valid("topLeft").getPoint, valid("top").getVector3D,
+		schema.validate(model).toTry.map { valid => Rectangle(valid("topLeft").getPoint, valid("top").getVector3D.in2D,
 			valid("leftEdgeLength").getDouble) }
 	}
 }
@@ -36,7 +35,7 @@ object Rectangle extends FromModelFactory[Rectangle]
   * @param top The top vector of this rectangle
   * @param leftLength The length of the left edge of this rectangle
   */
-case class Rectangle(topLeft: Point, top: Vector3D, leftLength: Double) extends Rectangular with ModelConvertible
+case class Rectangle(topLeft: Point, top: Vector2D, leftLength: Double) extends Rectangular with ModelConvertible
 {
 	// ATTRIBUTES	-----------------
 	
@@ -58,5 +57,6 @@ case class Rectangle(topLeft: Point, top: Vector3D, leftLength: Double) extends 
 	
 	// IMPLEMENTED	--------------------
 	
-	override def toModel = Model(Vector(("topLeft", topLeft), ("top", top), ("leftEdgeLength", leftLength)))
+	override def toModel =
+		Model(Vector(("topLeft", topLeft), ("top", top.in3D), ("leftEdgeLength", leftLength)))
 }

@@ -1,8 +1,9 @@
 package utopia.genesis.shape.shape2D
 
 import utopia.genesis.shape.Axis._
-import utopia.genesis.shape.Direction1D.{Negative, Positive}
-import utopia.genesis.shape.{Axis2D, Direction1D}
+import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape1D.Direction1D
+import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 
 /**
  * Represents a single side of a 2D rectangle, Eg. top

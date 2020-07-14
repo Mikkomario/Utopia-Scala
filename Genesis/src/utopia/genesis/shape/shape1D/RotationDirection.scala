@@ -1,6 +1,6 @@
-package utopia.genesis.shape
+package utopia.genesis.shape.shape1D
 
-import utopia.genesis.shape.Direction1D.{Negative, Positive}
+import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 
 /**
 * objects of rotation direction are used as enumerations to describe different circular directions

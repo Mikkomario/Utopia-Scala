@@ -1,6 +1,7 @@
-package utopia.genesis.shape
+package utopia.genesis.shape.template
 
-import utopia.genesis.shape.Axis._
+import utopia.genesis.shape.Axis
+import utopia.genesis.shape.Axis.{X, Y, Z}
 
 /**
   * These items can be projected over vectors
@@ -16,7 +17,7 @@ trait VectorProjectable[+Projection]
 	  * @param vector Target vector
 	  * @return This instance's projection over target vector
 	  */
-	def projectedOver(vector: Vector3D): Projection
+	def projectedOver[V <: VectorLike[V]](vector: VectorLike[V]): Projection
 	
 	
 	// COMPUTED	-------------------
@@ -24,15 +25,15 @@ trait VectorProjectable[+Projection]
 	/**
 	  * @return The x-wise projection of this item (only has x-component)
 	  */
-	def xProjection = projectedOver(X)
+	def xProjection = projectedOver(X.toUnitVector)
 	/**
 	  * @return The y-wise projection of this item (only has y-component)
 	  */
-	def yProjection = projectedOver(Y)
+	def yProjection = projectedOver(Y.toUnitVector)
 	/**
 	  * @return The z-wise projection of this item (only has z-component)
 	  */
-	def zProjection = projectedOver(Z)
+	def zProjection = projectedOver(Z.toUnitVector)
 	
 	
 	// OTHER	-------------------
@@ -41,5 +42,10 @@ trait VectorProjectable[+Projection]
 	  * @param axis Target axis
 	  * @return A projection of this item over specified axis
 	  */
-	def projectedOver(axis: Axis): Projection = projectedOver(axis.toUnitVector)
+	def projectedOver(axis: Axis): Projection = axis match
+	{
+		case X => xProjection
+		case Y => yProjection
+		case Z => zProjection
+	}
 }

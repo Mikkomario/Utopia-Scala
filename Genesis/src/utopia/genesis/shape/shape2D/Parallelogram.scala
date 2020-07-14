@@ -1,5 +1,9 @@
 package utopia.genesis.shape.shape2D
 
-import utopia.genesis.shape.Vector3D
-
-case class Parallelogram(topLeft: Point, top: Vector3D, left: Vector3D) extends Parallelogramic
+/**
+  * A 2D shape that consists of 4 points
+  * @param topLeft The top left point
+  * @param top Vector from the top left point to the top right point
+  * @param left Vector from the top left point to tbe bottom left point
+  */
+case class Parallelogram(topLeft: Point, top: Vector2D, left: Vector2D) extends Parallelogramic

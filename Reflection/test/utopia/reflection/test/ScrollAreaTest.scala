@@ -9,7 +9,7 @@ import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.{ActorLoop, KeyStateListener}
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.{LinearAcceleration, Rotation}
+import utopia.genesis.shape.shape1D.{LinearAcceleration, Rotation}
 import utopia.genesis.shape.shape2D.Size
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.swing.label.ItemLabel

@@ -1,6 +1,6 @@
 package utopia.annex.model.schrodinger
 
-import utopia.annex.model.response.RequestNotSent
+import scala.util.{Failure, Success, Try}
 
 /**
   * This Shcrödinger item is used when previous results may be cached already. In which case presents them as
@@ -8,17 +8,17 @@ import utopia.annex.model.response.RequestNotSent
   * @author Mikko Hilpinen
   * @since 12.7.2020, v1
   */
-class CachedFindSchrodinger[I](cached: I) extends Schrodinger[Either[RequestNotSent, I], I]
+class CachedFindSchrodinger[I](cached: I) extends Schrodinger[Try[I], I]
 {
 	// IMPLEMENTED	-------------------------------
 	
-	override protected def instanceFrom(result: Option[Either[RequestNotSent, I]]) = result match
+	override protected def instanceFrom(result: Option[Try[I]]) = result match
 	{
 		case Some(result) =>
 			result match
 			{
-				case Right(instance) => instance
-				case Left(_) => cached
+				case Success(instance) => instance
+				case Failure(_) => cached
 			}
 		case None => cached
 	}

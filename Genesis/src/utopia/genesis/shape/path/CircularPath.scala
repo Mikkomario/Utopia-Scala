@@ -1,7 +1,7 @@
 package utopia.genesis.shape.path
 
-import utopia.genesis.shape.RotationDirection.Clockwise
-import utopia.genesis.shape.{Angle, Rotation, RotationDirection}
+import utopia.genesis.shape.shape1D.RotationDirection.Clockwise
+import utopia.genesis.shape.shape1D.{Angle, Rotation, RotationDirection}
 import utopia.genesis.shape.shape2D.{Circle, Point}
 
 /**

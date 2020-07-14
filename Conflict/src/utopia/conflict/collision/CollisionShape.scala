@@ -1,9 +1,9 @@
 package utopia.conflict.collision
 
-import utopia.genesis.shape.Vector3D
 import utopia.genesis.shape.shape2D._
 import utopia.genesis.util.Extensions._
 import utopia.conflict.collision.Extensions._
+import utopia.genesis.shape.shape3D.Vector3D
 
 object CollisionShape
 {
