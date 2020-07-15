@@ -238,6 +238,16 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
      * A normal for this vector
      */
     def normal = if (x == 0 && y == 0 && z != 0) Vector3D(1) else normal2D.in3D
+	
+	/**
+	  * @return A 3x3 matrix based on this 3d vector. The natural 1x3 matrix representation [x,y,z] of this vector
+	  *         is expanded to 3x3 by adding missing numbers from the identity matrix.
+	  */
+	def to3DMatrix = Matrix3D(
+		x, y, z,
+		0, 1, 0,
+		0, 0, 1
+	)
     
 	
 	// IMPLEMENTED	--------------------

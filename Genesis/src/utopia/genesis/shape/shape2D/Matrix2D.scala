@@ -1,5 +1,6 @@
 package utopia.genesis.shape.shape2D
 
+import utopia.genesis.shape.shape3D.Matrix3D
 import utopia.genesis.shape.template.MatrixLike
 
 object Matrix2D
@@ -64,6 +65,15 @@ case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D =
 			) / determinant)
 		}
 	}
+	
+	/**
+	  * @return A 3x3 matrix based on this matrix. The z-transformation matches that of the identity matrix (0, 0, 1)
+	  */
+	def to3D = Matrix3D(
+		apply(0,0), apply(1,0), 0,
+		apply(0,1), apply(1,1), 0,
+		0, 0, 1
+	)
 	
 	
 	// IMPLEMENTED	----------------------------

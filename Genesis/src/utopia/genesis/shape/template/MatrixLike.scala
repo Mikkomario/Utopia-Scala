@@ -66,7 +66,9 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with Scalable
 	
 	// Vector multiplication: x*x-transformation + y*y-transformation
 	// TODO: Handle the case of 0-dimension vectors
-	def *(vector: V): V = vector.dimensions.zip(columns).map { case (c, transformation) => transformation * c }.reduce { _ + _ }
+	def *(vector: V): V = vector.dimensions.zip(columns)
+		.map { case (c, transformation) => transformation * c }
+		.reduce { _ + _ }
 	
 	def *(matrix: MatrixLike[V, _]): Repr = buildCopy(matrix.columns.map { this * _ })
 	

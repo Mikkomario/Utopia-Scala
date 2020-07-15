@@ -28,6 +28,15 @@ trait Vector2DLike[+Repr <: Vector2DLike[Repr]] extends VectorLike[Repr] with Tw
 	  */
 	def in2D = Vector2D(x, y)
 	
+	/**
+	  * @return A 2x2 matrix representation of this vector (1x2 matrix [x,y] extended to 2x2).
+	  *         The resulting matrix will match the identity matrix outside the 1x2 defined range.
+	  */
+	def to2DMatrix = Matrix2D(
+		x, y,
+		0, 1
+	)
+	
 	
 	// OTHER	--------------------------
 	
