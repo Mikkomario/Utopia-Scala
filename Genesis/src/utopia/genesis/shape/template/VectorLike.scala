@@ -1,6 +1,7 @@
 package utopia.genesis.shape.template
 
 import utopia.genesis.shape.Axis
+import utopia.genesis.shape.Axis.{X, Y, Z}
 import utopia.genesis.shape.shape1D.Angle
 import utopia.genesis.util.Extensions._
 import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic, DistanceLike}
@@ -206,6 +207,20 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * @return A mapped version of this element
 	  */
 	def map(f: Double => Double) = buildCopy(dimensions.map(f))
+	
+	/**
+	  * @param f A mapping function that also takes dimension index (0 for the first dimension)
+	  * @return A mapped copy of this vector
+	  */
+	def mapWithIndex(f: (Double, Int) => Double) = buildCopy(
+		dimensions.zipWithIndex.map { case (d, i) => f(d, i) })
+	
+	/**
+	  * @param f A mapping function that also takes targeted axis
+	  * @return A mapped copy of this vector
+	  */
+	def mapWithAxis(f: (Double, Axis) => Double) = buildCopy(
+		dimensions.zip(Vector(X, Y, Z)).map { case (d, a) => f(d, a) })
 	
 	/**
 	  * Transforms a coordinate of this vectorlike element and returns the transformed element

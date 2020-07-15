@@ -7,7 +7,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible}
 import utopia.genesis.generic.Vector3DType
 import utopia.genesis.shape.Axis._
-import utopia.genesis.shape.shape2D.{Point, Size, Vector2DLike}
+import utopia.genesis.shape.shape2D.{Point, Size, Vector2D, Vector2DLike}
 import utopia.genesis.shape.Axis
 import utopia.genesis.shape.shape1D.{Angle, Rotation}
 import utopia.genesis.util.ApproximatelyEquatable
@@ -270,6 +270,33 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
      * normal for a surface created by these two vectors
      */
     def cross(other: Vector3D) = Vector3D.surfaceNormal(this, other).withLength(crossProductLength(other))
+	
+	/**
+	  * @param axis Target axis / dimension
+	  * @return A 2D copy of this vector with the specified dimension dropped (Eg. (x, z) or (y, z))
+	  */
+	def withoutDimension(axis: Axis) = axis match
+	{
+		case X => Vector2D(y, z)
+		case Y => Vector2D(x, z)
+		case Z => Vector2D(x, y)
+	}
+	
+	/**
+	  * @param index Index of the targeted dimension [0, 2]
+	  * @return A 2D copy of this vector with the specified dimension dropped
+	  */
+	def withoutDimensionAtIndex(index: Int) =
+	{
+		val dimension = index match
+		{
+			case 0 => X
+			case 1 => Y
+			case 2 => Z
+			case _ => throw new IndexOutOfBoundsException(s"3D Vector doesn't have dimension with index $index")
+		}
+		withoutDimension(dimension)
+	}
 	
 	/**
 	  * A projection of this vector for the specified axis

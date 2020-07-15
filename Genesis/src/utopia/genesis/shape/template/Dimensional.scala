@@ -48,4 +48,18 @@ trait Dimensional[+A]
 		case Y => 1
 		case Z => 2
 	}
+	
+	/**
+	  * @param index An index
+	  * @return An axis that matches that index
+	  * @throws IndexOutOfBoundsException If passing an index larger than 2 or smaller than 0
+	  */
+	@throws[IndexOutOfBoundsException]("Only indices 0, 1, and 2 are allowed")
+	protected def axisForIndex(index: Int) = index match
+	{
+		case 0 => X
+		case 1 => Y
+		case 2 => Z
+		case _ => throw new IndexOutOfBoundsException(s"No axis for index $index")
+	}
 }
