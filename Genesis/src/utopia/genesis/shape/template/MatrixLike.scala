@@ -1,9 +1,6 @@
 package utopia.genesis.shape.template
 
-import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.util.Scalable
-
-import scala.collection.immutable.VectorBuilder
+import utopia.genesis.util.{ApproximatelyEquatable, Scalable}
 
 /**
   * A common trait for matrix implementations
@@ -11,6 +8,7 @@ import scala.collection.immutable.VectorBuilder
   * @since 15.7.2020, v2.3
   */
 trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with Scalable[Repr]
+	with ApproximatelyEquatable[Dimensional[V]]
 {
 	// ABSTRACT	---------------------
 	
@@ -47,6 +45,21 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with Scalable
 	override def dimensions = columns
 	
 	override def *(mod: Double) = map { _ * mod }
+	
+	override def ~==(other: Dimensional[V]) =
+	{
+		if (dimensions.size == other.dimensions.size)
+			dimensions.zip(other.dimensions).forall { case (a, b) => a ~== b }
+		else
+			false
+	}
+	
+	override def toString =
+	{
+		val content = toMap.map { case (axis, vector) =>
+			s"$axis: [${vector.dimensions.mkString(",")}]" }.mkString(", ")
+		s"{$content}"
+	}
 	
 	
 	// OTHER	--------------------

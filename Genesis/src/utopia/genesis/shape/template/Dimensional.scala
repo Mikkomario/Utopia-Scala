@@ -24,6 +24,16 @@ trait Dimensional[+A]
 	protected def zeroDimension: A
 	
 	
+	// COMPUTED	--------------------
+	
+	/**
+	  * @return A map with axes as keys and dimensions as values. Only supports up to 3 axes, all of which
+	  *         might not be present in the resulting map.
+	  */
+	def toMap = dimensions.take(3).zipWithIndex.map { case (v, i) =>
+		axisForIndex(i) -> v }
+	
+	
 	// OTHER	--------------------
 	
 	/**

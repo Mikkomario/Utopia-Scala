@@ -122,23 +122,23 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	/**
 	  * @return A transposed copy of this matrix (A matrix with rows of this matrix as columns)
 	  */
-	def transposed = Matrix3D(
-		xTransform.x, yTransform.x, zTransform.x,
-		xTransform.y, yTransform.y, zTransform.y,
-		xTransform.z, yTransform.z, zTransform.z
-	)
+	def transposed = Matrix3D.withRows(columns)
 	
 	/**
 	  * @return A copy of this matrix that has first been transposed, with then each value replaced by the determinant
 	  *         of their corresponding minor 2x2 matrix, with cofactors.
 	  */
-	def adjugate = transposed.mapWithIndices { (_, colId, rowId) =>
-		val minorDeterminant = dropTo2D(colId, rowId).determinant
-		// Also adds a sign based on matrix
-		// + - +
-		// - + -
-		// + - + (Every second item is negated)
-		minorDeterminant * (if ((rowId * 3 + colId) % 2 == 0) 1 else -1)
+	def adjugate =
+	{
+		val t = transposed
+		t.mapWithIndices { (v, colId, rowId) =>
+			val minorDeterminant = t.dropTo2D(colId, rowId).determinant
+			// Also adds a sign based on matrix
+			// + - +
+			// - + -
+			// + - + (Every second item is negated)
+			minorDeterminant * (if ((rowId * 3 + colId) % 2 == 0) 1 else -1)
+		}
 	}
 	
 	
