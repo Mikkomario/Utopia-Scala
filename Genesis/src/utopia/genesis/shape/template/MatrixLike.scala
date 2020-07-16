@@ -85,6 +85,20 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with Scalable
 	
 	def *(matrix: MatrixLike[V, _]): Repr = buildCopy(matrix.columns.map { this * _ })
 	
+	/**
+	  * Transforms the specified vector. Same as using vector multiplication (*)
+	  * @param vector Vector to transform
+	  * @return A transformed vector
+	  */
+	def apply(vector: V) = this * vector
+	
+	/**
+	  * Transforms the specified matrix. Same as using matrix multiplication (*)
+	  * @param matrix Matrix to transform
+	  * @return A transformed matrix
+	  */
+	def apply(matrix: MatrixLike[V, _]) = this * matrix
+	
 	// Determinant = how much the area is scaled, proportionally (Eg. 2x scaling both x and y yields determinant 4 =(2^2))
 	// NB: When determinant is 0, there is only a single line or a single point, no 2d space
 	// NBB: When determinant is negative, space is flipped (like with scaling in general)

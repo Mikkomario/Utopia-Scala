@@ -2,7 +2,8 @@ package utopia.genesis.shape.shape1D
 
 import utopia.flow.util.RichComparable
 import utopia.flow.util.TimeExtensions._
-import utopia.genesis.shape.shape2D.Acceleration2D
+import utopia.genesis.shape.shape2D.{Acceleration2D, Vector2D}
+import utopia.genesis.shape.shape3D.{Acceleration3D, Vector3D}
 import utopia.genesis.shape.template.Change
 import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic, Signed}
 
@@ -63,6 +64,20 @@ case class LinearAcceleration(override val amount: LinearVelocity, override val 
 	
 	
 	// OTHER	-----------------------
+	
+	/**
+	  * @param vector A vector
+	  * @return Acceleration with the same direction as the specified vector. If a unit vector was provided, the linear
+	  *         acceleration of the resulting acceleration will match this acceleration.
+	  */
+	def *(vector: Vector2D) = Acceleration2D(amount * vector, duration)
+	
+	/**
+	  * @param vector A vector
+	  * @return Acceleration with the same direction as the specified vector. If a unit vector was provided, the linear
+	  *         acceleration of the resulting acceleration will match this acceleration.
+	  */
+	def *(vector: Vector3D) = Acceleration3D(amount * vector, duration)
 	
 	/**
 	  * @param direction Target direction

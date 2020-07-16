@@ -3,6 +3,7 @@ package utopia.genesis.shape.shape1D
 import utopia.flow.util.RichComparable
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.shape.shape2D.{Vector2D, Velocity2D}
+import utopia.genesis.shape.shape3D.{Vector3D, Velocity3D}
 import utopia.genesis.shape.template.Change
 import utopia.genesis.util.Extensions._
 import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic, Signed}
@@ -63,6 +64,20 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	
 	
 	// OTHER	------------------------
+	
+	/**
+	  * @param vector A vector this velocity is multiplied with
+	  * @return A velocity vector with the same direction as the specified vector's. If a unit vector was provided, the
+	  *         linear velocity of the resulting velocity will match this velocity.
+	  */
+	def *(vector: Vector2D) = Velocity2D(vector * amount, duration)
+	
+	/**
+	  * @param vector A vector this velocity is multiplied with
+	  * @return A velocity vector with the same direction as the specified vector's. If a unit vector was provided, the
+	  *         linear velocity of the resulting velocity will match this velocity.
+	  */
+	def *(vector: Vector3D) = Velocity3D(vector * amount, duration)
 	
 	/**
 	  * Adds provided amount of velocity to this one. Will never change the sign of this velocity but will stop at 0

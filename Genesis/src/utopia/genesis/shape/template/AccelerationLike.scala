@@ -62,4 +62,19 @@ trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
 	override def toString = s"${perMilliSecond.transition}/ms^2"
 	
 	override def along(axis: Axis) = shape1D.LinearAcceleration(amount.along(axis), duration)
+	
+	
+	// OTHER	----------------------
+	
+	/**
+	  * @param other Another acceleration without direction
+	  * @return A sum of these accelerations. Has the same or opposite direction as this acceleration.
+	  */
+	def +(other: LinearAcceleration) = buildCopy(amount + other(duration))
+	
+	/**
+	  * @param other Another acceleration without direction
+	  * @return A subtraction of these accelerations. Has the same or opposite direction as this acceleration.
+	  */
+	def -(other: LinearAcceleration) = this + (-other)
 }
