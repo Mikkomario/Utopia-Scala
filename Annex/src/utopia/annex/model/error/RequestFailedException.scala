@@ -1,4 +1,4 @@
-package utopia.journey.model.error
+package utopia.annex.model.error
 
 /**
   * A more generic exception used when a request failed or an unexpected response status was received

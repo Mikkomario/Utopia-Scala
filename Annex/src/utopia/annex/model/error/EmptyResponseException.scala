@@ -1,4 +1,4 @@
-package utopia.journey.model.error
+package utopia.annex.model.error
 
 /**
   * Thrown when response content is expected but an empty response is received instead

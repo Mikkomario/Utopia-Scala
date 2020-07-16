@@ -1,4 +1,4 @@
-package utopia.journey.model.error
+package utopia.annex.model.error
 
 /**
   * Thrown when a request was denied by the server for some reason

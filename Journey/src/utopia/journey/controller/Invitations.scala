@@ -11,11 +11,10 @@ import utopia.annex.model.response.{RequestNotSent, Response}
 import utopia.annex.model.schrodinger.CachedFindSchrodinger
 import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.TimeExtensions._
 import utopia.journey.model.InvitationResponseSpirit
-import utopia.journey.model.error.{RequestDeniedException, RequestFailedException, UnauthorizedRequestException}
+import utopia.annex.model.error.{RequestDeniedException, RequestFailedException, UnauthorizedRequestException}
 import utopia.journey.util.JourneyContext._
 import utopia.metropolis.model.combined.organization.{DescribedInvitation, InvitationWithResponse}
 
@@ -32,6 +31,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 5.
 	// ATTRIBUTES	---------------------------
 	
 	// TODO: Should track the current user (only consider invitations of this user)
+	// Possibly move this as a sub-object of "Me"
 	
 	private val cached = VolatileList[DescribedInvitation]()
 	private val hiddenIds = VolatileList[Int]()
@@ -75,40 +75,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 5.
 		val schrodinger = new CachedFindSchrodinger(activeCached)
 		
 		// Completes the schrödinger asynchronously
-		queue.push(request).foreach {
-			case Right(response) =>
-				response match
-				{
-					case Response.Success(_, body) =>
-						val parsedInvitations = body.vector(DescribedInvitation).parsed
-						parsedInvitations.failure.foreach { log(_,
-							"Failed to parse invitations from server response") }
-						schrodinger.complete(parsedInvitations)
-					case Response.Failure(status, message) =>
-						if (status != Unauthorized)
-						{
-							val errorMessage = message match
-							{
-								case Some(m) => s"Invitation retrieval failed ($status). Response message: $m"
-								case None => s"Invitation retrieval failed with status $status"
-							}
-							val error = new RequestFailedException(errorMessage)
-							log(error)
-							schrodinger.complete(Failure(error))
-						}
-						else
-							schrodinger.complete(Failure(new RequestFailedException(message.getOrElse(
-								"Invitation retrieval couldn't be authorized"))))
-				}
-			case Left(notSent) =>
-				notSent match
-				{
-					case RequestFailed(error) =>
-						log(error)
-						schrodinger.complete(Failure(error))
-					case _ => schrodinger.complete(Success(cached.get)) // TODO: Log as an error?
-				}
-			}
+		schrodinger.completeWith(queue.push(request)) { _.vector(DescribedInvitation).parsed } { log(_) }
 		
 		schrodinger
 	}

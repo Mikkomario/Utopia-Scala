@@ -12,7 +12,7 @@ import utopia.flow.async.VolatileOption
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.util.TimeExtensions._
 import utopia.journey.model.UserCredentials
-import utopia.journey.model.error.{RequestFailedException, UnauthorizedRequestException}
+import utopia.annex.model.error.{RequestFailedException, UnauthorizedRequestException}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration
