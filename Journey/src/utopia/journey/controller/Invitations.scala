@@ -77,7 +77,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 5.
 		// Completes the schrödinger asynchronously
 		schrodinger.completeWith(queue.push(request)) { _.vector(DescribedInvitation).parsed } { log(_) }
 		
-		schrodinger
+		schrodinger.view
 	}
 	
 	

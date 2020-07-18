@@ -1,10 +1,9 @@
 package utopia.annex.model.schrodinger
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.async.AsyncExtensions._
+import utopia.flow.async.LazyFuture
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
 
 /**
   * Common parent class for Schrödinger items. Schrödinger items may have a flux state where it is still unknown
@@ -14,7 +13,7 @@ import scala.concurrent.duration.Duration
   * @tparam R Type of received response
   * @tparam I Type of instance within response
   */
-trait Schrodinger[R, I]
+trait Schrodinger[R, I] extends ShcrodingerLike[R, I]
 {
 	// ABSTRACT ---------------------------
 	
@@ -28,34 +27,35 @@ trait Schrodinger[R, I]
 	
 	// ATTRIBUTES   -----------------------
 	
-	private val serverResultPointer: PointerWithEvents[Option[R]] = new PointerWithEvents(None)
+	protected val _serverResultPointer: PointerWithEvents[Option[R]] = new PointerWithEvents(None)
 	
 	/**
 	  * A pointer to the currently mimicked instance
 	  */
 	lazy val instancePointer = serverResultPointer.map(instanceFrom)
 	
+	private val _serverResultFuture = new LazyFuture({ implicit exc =>
+		serverResultPointer.futureWhere { _.isDefined }.map { _.get } })
+	
 	
 	// COMPUTED ---------------------------
 	
-	/**
-	  * @return Current instance state of this schrödinger item. Is based on server result if one has been received,
-	  *         otherwise returns a temporary placeholder.
-	  */
-	def instance = instancePointer.value
+	override def serverResultPointer = _serverResultPointer
+	
+	private def serverResult_=(newResult: R) = _serverResultPointer.value = Some(newResult)
 	
 	/**
-	  * @return Current result received from the server, if any result has been received yet
+	  * @return A read-only view into this schrödinger
 	  */
-	def serverResult = serverResultPointer.value
-	private def serverResult_=(newResult: R) = serverResultPointer.value = Some(newResult)
+	def view = new SchrodingerView(this)
 	
-	/**
-	  * @param exc Implicit execution context
-	  * @return A future of the eventual server result (success or failure)
-	  */
-	def serverResultFuture(implicit exc: ExecutionContext) =
-		serverResultPointer.futureWhere { _.isDefined }.map { _.get }
+	
+	// IMPLEMENTED	-----------------------
+	
+	override def serverResultFuture(implicit exc: ExecutionContext) = _serverResultFuture.get
+	
+	override def finalInstanceFuture(implicit exc: ExecutionContext) = serverResultFuture.map { r =>
+		instanceFrom(Some(r)) }
 	
 	
 	// OTHER    ---------------------------
@@ -65,17 +65,4 @@ trait Schrodinger[R, I]
 	  * @param result Received result
 	  */
 	def complete(result: R) = serverResult = result
-	
-	/**
-	  * Waits for the instance version that is based on the server result. Wait time can be limited with timeout. If
-	  * timeout is reached before server response is received, a temporary instance version is generated instead.
-	  * If the server response has already been received, no waiting occurs. Notice that this method may block for
-	  * extended time periods, especially when no timeout has been defined.
-	  * @param timeout Maximum server result wait duration. Default = infinite, which causes this method to block until
-	  *                server result is received.
-	  * @param exc Implicit execution context.
-	  * @return Instance either based on server result or temporary placeholder, in case timeout was reached.
-	  */
-	def waitForInstance(timeout: Duration = Duration.Inf)(implicit exc: ExecutionContext) =
-		instanceFrom(serverResultPointer.futureWhere { _.isDefined }.waitFor(timeout).getOrElse(None))
 }

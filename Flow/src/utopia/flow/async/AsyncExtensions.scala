@@ -1,5 +1,6 @@
 package utopia.flow.async
 
+import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.{SingleWait, WaitTarget}
 
 import scala.collection.Factory
@@ -172,6 +173,23 @@ object AsyncExtensions
 			case Success(v) => map(v)
 			case Failure(e) => Future.successful(Failure(e))
 		}
+		
+		/**
+		  * Calls the specified function if this future completes with a success
+		  * @param f A function called for a successful result
+		  * @param exc Implicit execution context
+		  * @tparam U Arbitrary result type
+		  */
+		def foreachSuccess[U](f: A => U)(implicit exc: ExecutionContext) = this.f.foreach { _.foreach(f) }
+		
+		/**
+		  * Calls the specified function if this future completes with a failure
+		  * @param f A function called for a failure result (throwable)
+		  * @param exc Implicit execution context
+		  * @tparam U Arbitrary result type
+		  */
+		def foreachFailure[U](f: Throwable => U)(implicit exc: ExecutionContext) =
+			this.f.onComplete { _.flatten.failure.foreach(f) }
 	}
 	
 	implicit class ManyFutures[A](val futures: IterableOnce[Future[A]]) extends AnyVal
