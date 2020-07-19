@@ -79,4 +79,9 @@ abstract class MultiFileContainer[A](fileLocation: Path)(implicit jsonParser: Js
 	  * @return Content in this container before removal
 	  */
 	def popAll() = getAndSet(empty)
+	
+	/**
+	  * Removes all content from this container
+	  */
+	def clear() = _current.set(empty)
 }

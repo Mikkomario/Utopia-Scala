@@ -1,12 +1,10 @@
 package utopia.journey.controller
 
-import utopia.annex.controller.{QueueSystem, RequestQueue}
+import utopia.annex.controller.QueueSystem
 import utopia.annex.model.error.EmptyResponseException
 import utopia.annex.model.request.GetRequest
-import utopia.annex.model.response.RequestNotSent.RequestFailed
-import utopia.annex.model.response.Response
 import utopia.annex.model.response.ResponseBody.{Content, Empty}
-import utopia.annex.model.schrodinger.{CachedFindSchrodinger, TryFindSchrodinger}
+import utopia.annex.model.schrodinger.TryFindSchrodinger
 import utopia.flow.container.OptionObjectFileContainer
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
@@ -30,8 +28,28 @@ class Me(queueSystem: QueueSystem, loginEmail: Option[String])
 	
 	private val container = new OptionObjectFileContainer(containersDirectory/"user.json", UserWithLinks)
 	
+	private val previousUserId = container.current.map { _.id }
+	// This value is updated when more information becomes available
+	private var userWasChanged = container.current.forall { user => loginEmail.exists { _ != user.settings.email } }
+	
 	private val schrodinger = new TryFindSchrodinger(container.current.filter { local =>
 		loginEmail.forall { local.settings.email == _ } }.toTry { new NoUserDataError("No local user data stored") })
+	
+	// When initializing the invitations access point (lazy), uses the latest known status about active user changing
+	// If this information is incorrect, cached invitation answers may not get posted or they may be rejected by
+	// the server (which is not a huge problem)
+	/**
+	  * An access point to the invitations concerning this user
+	  */
+	lazy val invitations = new Invitations(queueSystem, isSameUser = !userWasChanged)
+	// Same thing with organizations
+	/**
+	  * An access point to this user's organizations
+	  */
+	lazy val organizations = new MyOrganizations(queueSystem, isSameUser = !userWasChanged)
+	
+	
+	// INITIAL CODE	---------------------------
 	
 	// Immediately retrieves current user data from the server
 	schrodinger.completeWith(queueSystem.push(GetRequest("users/me"))) {
@@ -39,12 +57,11 @@ class Me(queueSystem: QueueSystem, loginEmail: Option[String])
 		case Empty => Failure(new EmptyResponseException("Expected user content but empty response received instead"))
 	}
 	
-	
-	// INITIAL CODE	---------------------------
-	
-	// Stores the user data when it arrives (if it arrives)
+	// Stores the user data when it arrives (if it arrives). Also checks whether the active user changed.
 	schrodinger.serverResultFuture.foreach {
-		case Success(user) => container.current = Some(user)
+		case Success(user) =>
+			userWasChanged = !previousUserId.contains(user.id)
+			container.current = Some(user)
 		case Failure(error) => log(error, "User data retrieval failed")
 	}
 }

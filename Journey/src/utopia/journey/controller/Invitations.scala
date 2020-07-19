@@ -25,26 +25,30 @@ import scala.util.{Failure, Success}
   * Used for accessing currently pending invitations
   * @author Mikko Hilpinen
   * @since 12.7.2020, v1
+  * @param queueSystem An authorized queue system used when making queries to server
+  * @param maxResponseWait Maximum time to wait for pending requests before discarding the request (default = 10 seconds)
+  * @param isSameUser Whether the current user is the same as the previously logged user (default = true)
   */
-class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 5.seconds)
+class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10.seconds, isSameUser: Boolean = true)
 {
 	// ATTRIBUTES	---------------------------
-	
-	// TODO: Should track the current user (only consider invitations of this user)
-	// Possibly move this as a sub-object of "Me"
 	
 	private val cached = VolatileList[DescribedInvitation]()
 	private val hiddenIds = VolatileList[Int]()
 	
+	// Handles persisted requests only when the same user is still logged in
 	private val (queue, loadErrors) = PersistingRequestQueue(queueSystem, requestsDirectory/"invitations.json",
-		Vector(PostAnswerRequestHandler), 2)
+		if (isSameUser) Vector(PostAnswerRequestHandler) else Vector(), 2)
 	
 	
 	// INITIAL CODE	--------------------------
 	
-	// Logs possible load errors
-	loadErrors.headOption.foreach { error =>
-		log(error, s"Failed to handle persisted requests (${loadErrors.size} errors)")
+	if (isSameUser)
+	{
+		// Logs possible load errors
+		loadErrors.headOption.foreach { error =>
+			log(error, s"Failed to handle persisted requests (${loadErrors.size} errors)")
+		}
 	}
 	
 	
