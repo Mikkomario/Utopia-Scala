@@ -1,4 +1,4 @@
-package utopia.journey.controller
+package utopia.journey.controller.user
 
 import utopia.annex.controller.QueueSystem
 import utopia.annex.model.request.GetRequest

@@ -1,9 +1,10 @@
-package utopia.journey.controller
+package utopia.journey.controller.user
 
 import java.time.Instant
 
 import utopia.access.http.Status.{Forbidden, Unauthorized}
 import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue, QueueSystem}
+import utopia.annex.model.error.{RequestDeniedException, RequestFailedException, UnauthorizedRequestException}
 import utopia.annex.model.request.{GetRequest, PostRequest}
 import utopia.annex.model.response.RequestNotSent.{RequestFailed, RequestWasDeprecated}
 import utopia.annex.model.response.ResponseBody.{Content, Empty}
@@ -14,7 +15,6 @@ import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.TimeExtensions._
 import utopia.journey.model.InvitationResponseSpirit
-import utopia.annex.model.error.{RequestDeniedException, RequestFailedException, UnauthorizedRequestException}
 import utopia.journey.util.JourneyContext._
 import utopia.metropolis.model.combined.organization.{DescribedInvitation, InvitationWithResponse}
 
