@@ -2,6 +2,27 @@ package utopia.flow.event
 
 import scala.concurrent.{ExecutionContext, Promise}
 
+object Changing
+{
+	// OTHER	---------------------
+	
+	/**
+	  * Wraps an immutable value as a "changing" instance that won't actually change
+	  * @param value A value being wrapped
+	  * @tparam A Type of wrapped value
+	  * @return A "changing" instance that will always have the specified value
+	  */
+	def wrap[A](value: A): Changing[A] = new Unchanging(value)
+	
+	
+	// NESTED	---------------------
+	
+	private class Unchanging[A](override val value: A) extends Changing[A]
+	{
+		var listeners = Vector[ChangeListener[A]]()
+	}
+}
+
 /**
   * Changing instances generate change events
   * @author Mikko Hilpinen
