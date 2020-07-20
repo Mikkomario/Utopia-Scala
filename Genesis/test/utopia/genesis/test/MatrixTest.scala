@@ -105,5 +105,8 @@ object MatrixTest extends App
 		-5, 4, 1
 	))
 	
+	// Tests inverse matrix vector multiplication
+	assert(m7.inverse.get(m7 * v1) ~== v1)
+	
 	println("Success!")
 }
