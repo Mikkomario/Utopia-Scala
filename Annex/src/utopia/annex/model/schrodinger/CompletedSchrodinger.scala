@@ -2,6 +2,7 @@ package utopia.annex.model.schrodinger
 import utopia.flow.event.Changing
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Success, Try}
 
 object CompletedSchrodinger
 {
@@ -11,6 +12,13 @@ object CompletedSchrodinger
 	  * @return A schrödinger completed with said result. The processed instance will match this result.
 	  */
 	def apply[R](result: R) = new CompletedSchrodinger(result, result)
+	
+	/**
+	  * @param result Successful result contents
+	  * @tparam R Type of result contents
+	  * @return A schrödinger completed with said result. Server response is specified result wrapped in Success(...)
+	  */
+	def success[R](result: R) = new CompletedSchrodinger[Try[R], R](Success(result), result)
 }
 
 /**

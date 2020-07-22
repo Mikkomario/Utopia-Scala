@@ -1,7 +1,9 @@
 package utopia.metropolis.model.combined.description
 
 import utopia.flow.datastructure.immutable.{Model, Value}
-import utopia.flow.generic.ModelConvertible
+import utopia.flow.datastructure.template
+import utopia.flow.datastructure.template.Property
+import utopia.flow.generic.{FromModelFactory, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.enumeration.DescriptionRole
 import utopia.metropolis.model.stored.description.DescriptionLink
