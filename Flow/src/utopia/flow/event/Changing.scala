@@ -98,6 +98,13 @@ trait Changing[A]
 	def map[B](f: A => B) = Mirror.of(this)(f)
 	
 	/**
+	  * @param f A mapping function
+	  * @tparam B Mapping result type
+	  * @return A lazily mirrored version of this item that uses the specified mapping function
+	  */
+	def lazyMap[B](f: A => B) = LazyMirror.of(this)(f)
+	
+	/**
 	 * @param other Another changing item
 	 * @param f A merge function
 	 * @tparam B Type of the other changing item
