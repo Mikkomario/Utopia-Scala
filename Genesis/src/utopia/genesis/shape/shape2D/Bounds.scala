@@ -153,7 +153,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     
     override def bottomRight = position + size
     
-    override def contains(point: Point) = point.x >= topLeft.x && point.y >= topLeft.y &&
+    override def contains[V <: Vector2DLike[V]](point: V) = point.x >= topLeft.x && point.y >= topLeft.y &&
             point.x <= bottomRight.x && point.y <= bottomRight.y
     
     

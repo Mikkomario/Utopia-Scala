@@ -16,6 +16,7 @@ import utopia.genesis.generic.GenesisValue._
 import utopia.genesis.generic.LineType
 import utopia.genesis.shape.path.LinearPathLike
 import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.template.VectorLike
 
 import scala.util.Success
 
@@ -42,7 +43,7 @@ object Line extends FromModelFactory[Line]
      * @param vector The vector portion of the line
      * @return A line with the provided position and vector part
      */
-    def ofVector(position: Point, vector: Vector3D) = Line(position, position + vector)
+    def ofVector(position: Point, vector: VectorLike[_]) = Line(position, position + vector)
     
     /**
      * Creates a set of edges for the provided vertices. The vertices are iterated in order and an 
@@ -54,12 +55,10 @@ object Line extends FromModelFactory[Line]
      * vertices
      */
     // TODO: Add a 3D version separately
-    def edgesForVertices(vertices: Seq[Point], close: Boolean = true) = 
+    def edgesForVertices(vertices: Seq[Point], close: Boolean = true) =
     {
         if (vertices.size < 2)
-        {
             Vector()
-        }
         else
         {
             var lastVertex = vertices.head

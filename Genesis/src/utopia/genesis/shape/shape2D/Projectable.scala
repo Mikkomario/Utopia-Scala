@@ -105,7 +105,7 @@ trait Projectable
       * @return Whether the projected point is contained within this object's projection when considering only the
       *         specified axis
       */
-    def containsProjection(point: Point, axis: Vector2D) =
+    def containsProjection[V <: Vector2DLike[V]](point: V, axis: Vector2D) =
     {
         val pointProjection = point.projectedOver(axis)
         val myProjection = projectedOver(axis)
@@ -120,7 +120,7 @@ trait Projectable
         if (comparePoints(projection.start, projection.end) <= 0) projection else projection.reverse
     }
     
-    protected def comparePoints(v1: Point, v2: Point) =
+    protected def comparePoints(v1: TwoDimensional[Double], v2: TwoDimensional[Double]) =
     {
         if (v1.x < v2.x) { -1 }
         else if (v1.x > v2.x) { 1 }
