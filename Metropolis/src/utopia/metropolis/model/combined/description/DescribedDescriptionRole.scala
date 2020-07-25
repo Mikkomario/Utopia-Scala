@@ -13,6 +13,8 @@ import utopia.metropolis.model.stored.description.DescriptionLink
   * @author Mikko Hilpinen
   * @since 20.5.2020, v1
   */
+// TODO: Possibly move this class to server side since it can't be parsed with provided model data.
+//  Alternatively change model structure (likely the latter).
 case class DescribedDescriptionRole(role: DescriptionRole, descriptions: Set[DescriptionLink]) extends ModelConvertible
 {
 	// Uses role json keys to describe the roles (so that the user won't need to use recursion

@@ -102,12 +102,14 @@ CREATE TABLE user_language
 CREATE TABLE description_role
 (
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    json_key_singular VARCHAR(32) NOT NULL,
+    json_key_plural VARCHAR(32) NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 
 )Engine=InnoDB DEFAULT CHARSET=latin1;
 
 -- 1 = Name
-INSERT INTO description_role (id) VALUES (1);
+INSERT INTO description_role (id, json_key_singular, json_key_plural) VALUES (1, 'name', 'names');
 
 -- Descriptions describe various things.
 -- Descriptions can be overwritten and are written in a specific language.
