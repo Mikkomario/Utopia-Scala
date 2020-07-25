@@ -10,5 +10,5 @@ trait Area2D
     /**
      * Whether this area contains the specified 2D point
      */
-	def contains(point: Point): Boolean
+	def contains[V <: Vector2DLike[V]](point: V): Boolean
 }

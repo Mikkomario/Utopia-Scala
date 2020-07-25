@@ -247,7 +247,7 @@ trait ComponentLike extends Area
         // If has chilren, informs them. Event position is modified and only events within this component's area
         // are relayed forward
         val myBounds = bounds
-        if (positionsFromEvent(event).exists(myBounds.contains))
+        if (positionsFromEvent(event).exists { myBounds.contains(_) })
         {
             val translated = translateEvent(event, myBounds.position)
             // Only visible children are informed of events

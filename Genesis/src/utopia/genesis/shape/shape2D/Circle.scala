@@ -75,7 +75,7 @@ case class Circle(origin: Point, radius: Double) extends ShapeConvertible with A
     
     // IMPLEMENTED METHODS    ---------
     
-    override def contains(point: Point) = point.distanceFrom(origin) <= radius
+    override def contains[V <: Vector2DLike[V]](point: V) = point.distanceFrom(origin) <= radius
     
     override def projectedOver(axis: Vector2D) =
     {
@@ -94,7 +94,7 @@ case class Circle(origin: Point, radius: Double) extends ShapeConvertible with A
     /**
      * Checks whether the circle contains the provided rectangle
      */
-    def contains(poly: Polygonic): Boolean = poly.corners.forall(contains)
+    def contains(poly: Polygonic): Boolean = poly.corners.forall { contains(_) }
     
     /**
      * Checks whether the other circle is contained within this circle's area
