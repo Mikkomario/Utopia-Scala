@@ -1,9 +1,9 @@
 package utopia.exodus.rest.resource.description
 
 import utopia.exodus.database.access.many.DbDescriptions
+import utopia.exodus.database.factory.description.DescriptionRoleFactory
 import utopia.metropolis.model.combined.description.DescribedDescriptionRole
-import utopia.metropolis.model.enumeration.DescriptionRole
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
 import utopia.vault.database.Connection
 
 /**
@@ -17,7 +17,7 @@ object DescriptionRolesNode extends PublicDescriptionsNode[DescriptionRole, Desc
 	
 	override val name = "description-roles"
 	
-	override protected def items(implicit connection: Connection) = DescriptionRole.values
+	override protected def items(implicit connection: Connection) = DescriptionRoleFactory.getAll()
 	
 	override protected def descriptionsAccess = DbDescriptions.ofAllDescriptionRoles
 	

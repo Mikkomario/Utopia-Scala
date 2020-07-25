@@ -51,18 +51,25 @@ object MemberRoleModel extends Deprecatable
 	  * @param role a user role
 	  * @return A model with only role set
 	  */
-	def withRole(role: UserRole) = apply(role = Some(role))
+	@deprecated("Please use .withRoleId(Int) instead")
+	def withRole(role: UserRole) = withRoleId(role.id)
+	
+	/**
+	  * @param roleId Id of targeted user role
+	  * @return A model with only role id set
+	  */
+	def withRoleId(roleId: Int) = apply(roleId = Some(roleId))
 	
 	/**
 	  * Inserts a new membership-role -connection to the DB
 	  * @param membershipId Id of associated organization membership
-	  * @param role Role assigned to the user in the organization
+	  * @param roleId Id of the role assigned to the user in the organization
 	  * @param creatorId Id of the user who created this link
 	  * @param connection DB Connection (implicit)
 	  * @return Id of the newly inserted link
 	  */
-	def insert(membershipId: Int, role: UserRole, creatorId: Int)(implicit connection: Connection) =
-		apply(None, Some(membershipId), Some(role), Some(creatorId)).insert().getInt
+	def insert(membershipId: Int, roleId: Int, creatorId: Int)(implicit connection: Connection) =
+		apply(None, Some(membershipId), Some(roleId), Some(creatorId)).insert().getInt
 }
 
 /**
@@ -71,13 +78,13 @@ object MemberRoleModel extends Deprecatable
   * @since 4.5.2020, v1
   */
 case class MemberRoleModel(id: Option[Int] = None, membershipId: Option[Int] = None,
-						   role: Option[UserRole] = None, creatorId: Option[Int] = None,
+						   roleId: Option[Int] = None, creatorId: Option[Int] = None,
 						   deprecatedAfter: Option[Instant] = None) extends Storable
 {
 	import MemberRoleModel._
 	
 	override def table = MemberRoleModel.table
 	
-	override def valueProperties = Vector("id" -> id, "membershipId" -> membershipId, roleIdAttName -> role.map { _.id },
+	override def valueProperties = Vector("id" -> id, "membershipId" -> membershipId, roleIdAttName -> roleId,
 		"creatorId" -> creatorId, "deprecatedAfter" -> deprecatedAfter)
 }

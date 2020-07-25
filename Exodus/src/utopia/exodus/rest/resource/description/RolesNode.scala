@@ -32,7 +32,7 @@ object RolesNode extends Resource[AuthorizedContext]
 			// Reads role descriptions and combines them with roles
 			val descriptions = DbDescriptions.ofAllRoles.inLanguages(languageIds)
 			val rolesWithDescriptions = roles.map { role =>
-				DescribedRole(role, descriptions.getOrElse(role.id, Set()).toSet) }
+				DescribedRole(role, descriptions.getOrElse(role.roleId, Set()).toSet) }
 			Result.Success(rolesWithDescriptions.map { _.toModel })
 		}
 	}

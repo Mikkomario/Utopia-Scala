@@ -3,9 +3,7 @@ package utopia.metropolis.model.post
 import utopia.flow.datastructure.immutable.ModelDeclaration
 import utopia.flow.datastructure.template.{Model, Property}
 import utopia.flow.generic.{FromModelFactory, IntType, StringType, VectorType}
-import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.util.CollectionExtensions._
-import utopia.metropolis.model.enumeration.DescriptionRole
 
 object NewDescription extends FromModelFactory[NewDescription]
 {
@@ -18,13 +16,11 @@ object NewDescription extends FromModelFactory[NewDescription]
 	// IMPLEMENTED	----------------------------
 	
 	override def apply(model: Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
-		// All specified descriptions must adhere to description schema and each referenced role id must be valid
-		val descriptions = valid("descriptions").getVector.tryMap { dv => descriptionSchema.validate(dv.getModel).toTry.flatMap { dm =>
-			DescriptionRole.forId(dm("role_id")).map { role => role -> dm("text").getString }
-		} }
-		descriptions.map { validDescriptions =>
+		val languageId = valid("language_id").getInt
+		// All specified descriptions must adhere to description schema
+		valid("descriptions").getVector.tryMap { dv => descriptionSchema.validate(dv.getModel).toTry }.map { descriptionModels =>
 			// NB: If there are multiple descriptions for a single role, only one of those is preserved
-			NewDescription(valid("language_id"), validDescriptions.toMap)
+			NewDescription(languageId, descriptionModels.map { dm => dm("role_id").getInt -> dm("text").getString }.toMap)
 		}
 	}
 }
@@ -34,6 +30,6 @@ object NewDescription extends FromModelFactory[NewDescription]
   * @author Mikko Hilpinen
   * @since 10.5.2020, v1
   * @param languageId Id of the language these descriptions are written in
-  * @param descriptions Text-descriptions of various types (description role -> description text)
+  * @param descriptions Text-descriptions of various types (description role id -> description text)
   */
-case class NewDescription(languageId: Int, descriptions: Map[DescriptionRole, String])
+case class NewDescription(languageId: Int, descriptions: Map[Int, String])

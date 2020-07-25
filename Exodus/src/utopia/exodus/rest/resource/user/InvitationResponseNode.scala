@@ -65,7 +65,7 @@ case class InvitationResponseNode(invitationId: Int) extends Resource[Authorized
 										// Adds this user to the organization (if the invitation was accepted)
 										if (savedResponse.wasAccepted)
 											DbOrganization(invitation.organizationId).memberships.insert(
-												session.userId, invitation.startingRole,
+												session.userId, invitation.startingRoleId,
 												invitation.creatorId.getOrElse(session.userId))
 										// Returns the original invitation, along with the posted response
 										Result.Success(InvitationWithResponse(invitation, savedResponse).toModel)

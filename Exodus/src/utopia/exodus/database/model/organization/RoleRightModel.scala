@@ -46,13 +46,27 @@ object RoleRightModel
 	  * @param role A user role
 	  * @return A model with only that role set
 	  */
-	def withRole(role: UserRole) = apply(role = Some(role))
+	@deprecated("Please use .withRoleId(Int) instead", "v1")
+	def withRole(role: UserRole) = withRoleId(role.id)
+	
+	/**
+	  * @param roleId Id of a user role
+	  * @return A model with only role id set
+	  */
+	def withRoleId(roleId: Int) = apply(roleId = Some(roleId))
 	
 	/**
 	  * @param task A task type
 	  * @return A model with only task type set
 	  */
-	def withTask(task: TaskType) = apply(task = Some(task))
+	@deprecated("Please use .withTaskId(Int) instead", "v1")
+	def withTask(task: TaskType) = withTaskId(task.id)
+	
+	/**
+	  * @param taskId Id of a task
+	  * @return A model with only task id set
+	  */
+	def withTaskId(taskId: Int) = apply(taskId = Some(taskId))
 }
 
 /**
@@ -60,7 +74,7 @@ object RoleRightModel
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
-case class RoleRightModel(id: Option[Int] = None, role: Option[UserRole] = None, task: Option[TaskType] = None)
+case class RoleRightModel(id: Option[Int] = None, roleId: Option[Int] = None, taskId: Option[Int] = None)
 	extends StorableWithFactory[RoleRight]
 {
 	import RoleRightModel._
@@ -69,5 +83,5 @@ case class RoleRightModel(id: Option[Int] = None, role: Option[UserRole] = None,
 	
 	override def factory = RoleRightFactory
 	
-	override def valueProperties = Vector("id" -> id, roleIdAttName -> role.map { _.id }, taskIdAttName -> task.map { _.id })
+	override def valueProperties = Vector("id" -> id, roleIdAttName -> roleId, taskIdAttName -> taskId)
 }

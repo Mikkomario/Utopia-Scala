@@ -6,7 +6,6 @@ import utopia.exodus.database.Tables
 import utopia.exodus.database.factory.organization.InvitationFactory
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
-import utopia.metropolis.model.enumeration.UserRole
 import utopia.metropolis.model.partial.organization.InvitationData
 import utopia.metropolis.model.stored.organization.Invitation
 import utopia.vault.database.Connection
@@ -51,7 +50,7 @@ object InvitationModel
 	def insert(data: InvitationData)(implicit connection: Connection) =
 	{
 		val newId = apply(None, Some(data.organizationId), data.recipient.rightOption, data.recipient.leftOption,
-			Some(data.startingRole), Some(data.expireTime), data.creatorId).insert().getInt
+			Some(data.startingRoleId), Some(data.expireTime), data.creatorId).insert().getInt
 		Invitation(newId, data)
 	}
 }
@@ -62,7 +61,7 @@ object InvitationModel
   * @since 4.5.2020, v1
   */
 case class InvitationModel(id: Option[Int] = None, organizationId: Option[Int] = None, recipientId: Option[Int] = None,
-						   recipientEmail: Option[String] = None, startingRole: Option[UserRole] = None,
+						   recipientEmail: Option[String] = None, startingRoleId: Option[Int] = None,
 						   expireTime: Option[Instant] = None, creatorId: Option[Int] = None)
 	extends StorableWithFactory[Invitation]
 {
@@ -71,7 +70,7 @@ case class InvitationModel(id: Option[Int] = None, organizationId: Option[Int] =
 	override def factory = InvitationFactory
 	
 	override def valueProperties = Vector("id" -> id, "organizationId" -> organizationId, "recipientId" -> recipientId,
-		"recipientEmail" -> recipientEmail, "startingRoleId" -> startingRole.map { _.id }, "expiresIn" -> expireTime,
+		"recipientEmail" -> recipientEmail, "startingRoleId" -> startingRoleId, "expiresIn" -> expireTime,
 		"creatorId" -> creatorId)
 	
 	

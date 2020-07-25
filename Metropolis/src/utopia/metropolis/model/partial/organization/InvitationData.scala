@@ -10,7 +10,6 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.TimeExtensions._
-import utopia.metropolis.model.enumeration.UserRole
 
 import scala.util.{Failure, Success}
 
@@ -20,17 +19,14 @@ object InvitationData extends FromModelFactory[InvitationData]
 		"expires" -> InstantType)
 	
 	override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
-		// Starting role must be parseable
-		UserRole.forId(valid("role_id")).flatMap { role =>
-			// Either recipient email or id is required
-			val recipientModel = valid("recipient").getModel
-			recipientModel("id").int.map { Right(_) }.orElse { recipientModel("email").string.map { Left(_) } } match
-			{
-				case Some(recipient) => Success(InvitationData(valid("organization_id"), recipient, role,
-					valid("expires"), valid("sender_id")))
-				case None => Failure(new ModelValidationFailedException(
-					s"Either 'id' or 'email' required in recipient. Found $recipientModel"))
-			}
+		// Either recipient email or id is required
+		val recipientModel = valid("recipient").getModel
+		recipientModel("id").int.map { Right(_) }.orElse { recipientModel("email").string.map { Left(_) } } match
+		{
+			case Some(recipient) => Success(InvitationData(valid("organization_id"), recipient, valid("role_id"),
+				valid("expires"), valid("sender_id")))
+			case None => Failure(new ModelValidationFailedException(
+				s"Either 'id' or 'email' required in recipient. Found $recipientModel"))
 		}
 	}
 }
@@ -41,11 +37,11 @@ object InvitationData extends FromModelFactory[InvitationData]
   * @since 4.5.2020, v1
   * @param organizationId Id of the organization the user is invited to
   * @param recipient Either Right: Recipient user id or Left: Recipient user email address
-  * @param startingRole Role assigned to the user in the organization, initially
+  * @param startingRoleId Id of the role assigned to the user in the organization, initially
   * @param expireTime Timestamp when the invitation will expire
   * @param creatorId Id of the user who created this invitation (optional)
   */
-case class InvitationData(organizationId: Int, recipient: Either[String, Int], startingRole: UserRole,
+case class InvitationData(organizationId: Int, recipient: Either[String, Int], startingRoleId: Int,
 						  expireTime: Instant, creatorId: Option[Int] = None) extends ModelConvertible
 {
 	// COMPUTED	----------------------------
@@ -71,7 +67,7 @@ case class InvitationData(organizationId: Int, recipient: Either[String, Int], s
 	override def toModel =
 	{
 		val recipientModel = Model(Vector("id" -> recipientId, "email" -> recipientEmail))
-		Model(Vector("organization_id" -> organizationId, "recipient" -> recipientModel, "role_id" -> startingRole.id,
+		Model(Vector("organization_id" -> organizationId, "recipient" -> recipientModel, "role_id" -> startingRoleId,
 			"expires" -> expireTime, "sender_id" -> creatorId))
 	}
 }

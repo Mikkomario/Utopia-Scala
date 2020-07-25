@@ -4,12 +4,12 @@ import utopia.access.http.Method.Post
 import utopia.access.http.Status.{BadRequest, Forbidden, NotImplemented}
 import utopia.exodus.database.access.id.UserId
 import utopia.exodus.database.access.single.{DbMembership, DbOrganization, DbUser}
+import utopia.exodus.model.enumeration.StandardTask.InviteMembers
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.TimeExtensions._
-import utopia.metropolis.model.enumeration.TaskType.InviteMembers
 import utopia.metropolis.model.post.NewInvitation
 import utopia.metropolis.model.stored.organization.Invitation
 import utopia.nexus.http.Path
@@ -34,7 +34,7 @@ case class OrganizationInvitationsNode(organizationId: Int) extends Resource[Aut
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		// Checks authorization first
-		context.authorizedForTask(organizationId, InviteMembers) { (session, membershipId, connection) =>
+		context.authorizedForTask(organizationId, InviteMembers.id) { (session, membershipId, connection) =>
 			// Parses the posted invitation
 			context.handlePost(NewInvitation) { newInvitation =>
 				newInvitation.validated match
@@ -42,7 +42,7 @@ case class OrganizationInvitationsNode(organizationId: Int) extends Resource[Aut
 					case Success(validInvitation) =>
 						implicit val c: Connection = connection
 						// Makes sure the user has a right to give the specified role to another user
-						if (DbMembership(membershipId).canPromoteTo(validInvitation.startingRole))
+						if (DbMembership(membershipId).canPromoteToRoleWithId(validInvitation.startingRoleId))
 						{
 							// Finds the user that is being invited (if registered)
 							val recipientEmail = validInvitation.recipientEmail
@@ -89,7 +89,7 @@ case class OrganizationInvitationsNode(organizationId: Int) extends Resource[Aut
 											// Creates a new invitation and saves it
 											val invitation = accessInvitations.send(
 												recipientUserId.map { Right(_) }.getOrElse(Left(recipientEmail)),
-												validInvitation.startingRole, session.userId,
+												validInvitation.startingRoleId, session.userId,
 												validInvitation.durationDays.days)
 											Result.Success(invitationSendResultModel(wasInvitationSend = true,
 												Some(invitation)))
@@ -98,8 +98,8 @@ case class OrganizationInvitationsNode(organizationId: Int) extends Resource[Aut
 							}
 						}
 						else
-							Result.Failure(Forbidden, s"You're not allowed to promote a user to ${
-								validInvitation.startingRole}")
+							Result.Failure(Forbidden, s"You're not allowed to promote a user to role ${
+								validInvitation.startingRoleId}")
 					case Failure(error) => Result.Failure(BadRequest, error.getMessage)
 				}
 			}

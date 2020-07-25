@@ -79,10 +79,49 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 		// OTHER	---------------------
 		
 		/**
+		  * @param roleIds Targeted description role ids
+		  * @param connection DB Connection (implicit)
+		  * @return Recorded descriptions for those roles (in this language & target)
+		  */
+		def forRolesWithIds(roleIds: Set[Int])(implicit connection: Connection) =
+		{
+			if (roleIds.nonEmpty)
+				read(Some(descriptionModel.descriptionRoleIdColumn.in(roleIds)))
+			else
+				Vector()
+		}
+		
+		/**
+		  * Reads descriptions of this item, except those in excluded description roles
+		  * @param excludedRoleIds Ids of the excluded description roles
+		  * @param connection DB Connection (implicit)
+		  * @return Read description links
+		  */
+		def forRolesOutsideIds(excludedRoleIds: Set[Int])(implicit connection: Connection) =
+		{
+			// apply(DescriptionRole.values.toSet -- excludedRoles)
+			if (excludedRoleIds.nonEmpty)
+				read(Some(!descriptionModel.descriptionRoleIdColumn.in(excludedRoleIds)))
+			else
+				all
+		}
+		
+		
+		/**
+		  * @param roleId Targeted description role's id
+		  * @param connection Db Connection
+		  * @return Description for that role for this item in targeted language
+		  */
+		@deprecated("A singular access point should be used for retrieving singular descriptions", "v1")
+		def forRoleWithId(roleId: Int)(implicit connection: Connection): Option[DescriptionLink] =
+			read(Some(descriptionModel.withRoleId(roleId).toCondition)).headOption
+		
+		/**
 		  * @param role Targeted description role
 		  * @param connection Db Connection
 		  * @return Description for that role for this item in targeted language
 		  */
+		@deprecated("Replaced with .forRoleWithId(Int)", "v1")
 		def apply(role: DescriptionRole)(implicit connection: Connection): Option[DescriptionLink] =
 			apply(Set(role)).headOption
 		
@@ -91,6 +130,7 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 		  * @param connection DB Connection (implicit)
 		  * @return Recorded descriptions for those roles (in this language & target)
 		  */
+		@deprecated("Replaced with .forRolesWithIds(...)", "v1")
 		def apply(roles: Set[DescriptionRole])(implicit connection: Connection) =
 		{
 			if (roles.nonEmpty)
@@ -105,6 +145,7 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 		  * @param connection DB Connection (implicit)
 		  * @return Read description links
 		  */
+		@deprecated("Replaced with .forRolesOutsideIds(...)", "v1")
 		def forRolesOutside(excludedRoles: Set[DescriptionRole])(implicit connection: Connection) =
 			apply(DescriptionRole.values.toSet -- excludedRoles)
 	}

@@ -1,12 +1,9 @@
 package utopia.metropolis.model.combined.description
 
 import utopia.flow.datastructure.immutable.{Model, Value}
-import utopia.flow.datastructure.template
-import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{FromModelFactory, ModelConvertible}
+import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.enumeration.DescriptionRole
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
 
 /**
   * Combines a description role with some descriptions
@@ -21,6 +18,7 @@ case class DescribedDescriptionRole(role: DescriptionRole, descriptions: Set[Des
 	// or something to interpret the ids)
 	override def toModel =
 	{
+		/*
 		val descriptionProperties = descriptions.groupBy { _.description.role }.map { case (role, links) =>
 			val valueModels = links.map { link => Model(Vector(
 				"text" -> link.description.text, "language_id" -> link.description.languageId, "role_id" -> role.id)) }
@@ -30,6 +28,8 @@ case class DescribedDescriptionRole(role: DescriptionRole, descriptions: Set[Des
 			else
 				role.jsonKeyPlural -> (valueModels.toVector: Value)
 		}.toVector
-		Model(("id" -> (role.id: Value)) +: descriptionProperties)
+		Model(("id" -> (role.id: Value)) +: descriptionProperties)*/
+		// FIXME: Reimplement this model conversion
+		???
 	}
 }

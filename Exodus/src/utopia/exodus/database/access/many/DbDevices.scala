@@ -1,7 +1,7 @@
 package utopia.exodus.database.access.many
 
 import utopia.exodus.database.model.device.ClientDeviceModel
-import utopia.metropolis.model.enumeration.DescriptionRole.Name
+import utopia.exodus.model.enumeration.StandardDescriptionRoleId
 import utopia.vault.database.Connection
 
 /**
@@ -26,6 +26,6 @@ object DbDevices
 		// Inserts a new device first
 		val newDeviceId = factory.insert(authorId)
 		// Then inserts a description for the device
-		DbDescriptions.ofDeviceWithId(newDeviceId).update(Name, languageId, authorId, deviceName)
+		DbDescriptions.ofDeviceWithId(newDeviceId).update(StandardDescriptionRoleId.name, languageId, authorId, deviceName)
 	}
 }

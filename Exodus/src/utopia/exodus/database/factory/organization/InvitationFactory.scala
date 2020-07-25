@@ -2,7 +2,6 @@ package utopia.exodus.database.factory.organization
 
 import utopia.exodus.database.Tables
 import utopia.flow.datastructure.template.{Model, Property}
-import utopia.metropolis.model.enumeration.UserRole
 import utopia.metropolis.model.error.NoDataFoundException
 import utopia.metropolis.model.partial.organization.InvitationData
 import utopia.metropolis.model.stored.organization.Invitation
@@ -22,19 +21,16 @@ object InvitationFactory extends FromRowModelFactory[Invitation]
 	override def table = Tables.organizationInvitation
 	
 	override def apply(model: Model[Property]) = table.requirementDeclaration.validate(model).toTry.flatMap { valid =>
-		// Role must be parseable
-		UserRole.forId(valid("startingRoleId").getInt).flatMap { role =>
-			// Either recipient id or recipient email must be provided
-			val recipient =
-			{
-				valid("recipientId").int.map { id => Success(Right(id)) }.orElse { valid("recipientEmail").string.map {
-					email => Success(Left(email)) } }.getOrElse(Failure(new NoDataFoundException(
-					s"Didn't find recipientId or recipientEmail from $valid")))
-			}
-			recipient.map { recipient =>
-				Invitation(valid("id").getInt, InvitationData(valid("organizationId").getInt, recipient,
-					role, valid("expiresIn").getInstant, valid("creatorId").int))
-			}
+		// Either recipient id or recipient email must be provided
+		val recipient =
+		{
+			valid("recipientId").int.map { id => Success(Right(id)) }.orElse { valid("recipientEmail").string.map {
+				email => Success(Left(email)) } }.getOrElse(Failure(new NoDataFoundException(
+				s"Didn't find recipientId or recipientEmail from $valid")))
+		}
+		recipient.map { recipient =>
+			Invitation(valid("id").getInt, InvitationData(valid("organizationId").getInt, recipient,
+				valid("startingRoleId").getInt, valid("expiresIn").getInstant, valid("creatorId").int))
 		}
 	}
 }

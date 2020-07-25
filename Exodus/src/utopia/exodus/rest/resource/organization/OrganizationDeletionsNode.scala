@@ -2,9 +2,9 @@ package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.Delete
 import utopia.exodus.database.access.single.DbOrganization
+import utopia.exodus.model.enumeration.StandardTask.CancelOrganizationDeletion
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.enumeration.TaskType.CancelOrganizationDeletion
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
 import utopia.nexus.rest.ResourceSearchResult.Error
@@ -24,7 +24,7 @@ case class OrganizationDeletionsNode(organizationId: Int) extends Resource[Autho
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.authorizedForTask(organizationId, CancelOrganizationDeletion) { (session, _, connection) =>
+		context.authorizedForTask(organizationId, CancelOrganizationDeletion.id) { (session, _, connection) =>
 			implicit val c: Connection = connection
 			// Cancels all deletions targeted towards this organization
 			val updatedDeletions = DbOrganization(organizationId).deletions.pending.cancel(session.userId)

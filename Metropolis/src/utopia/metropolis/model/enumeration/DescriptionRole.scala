@@ -8,6 +8,7 @@ import utopia.metropolis.model.error.NoSuchTypeException
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
+@deprecated("Replaced with a model class with the same name and StandardDescriptionRoleId in Exodus", "v1")
 sealed trait DescriptionRole
 {
 	/**
@@ -26,11 +27,13 @@ sealed trait DescriptionRole
 	def jsonKeyPlural: String
 }
 
+@deprecated("Replaced with a model class with the same name and StandardDescriptionRoleId in Exodus", "v1")
 object DescriptionRole
 {
 	/**
 	  * Name descriptions simply name various resources
 	  */
+	@deprecated("Replaced with a model class with the same name and StandardDescriptionRoleId in Exodus", "v1")
 	case object Name extends DescriptionRole
 	{
 		override def id = 1

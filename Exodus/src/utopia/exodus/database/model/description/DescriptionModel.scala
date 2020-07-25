@@ -2,7 +2,6 @@ package utopia.exodus.database.model.description
 
 import utopia.exodus.database.factory.description.DescriptionFactory
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.enumeration.DescriptionRole
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.stored.description.Description
 import utopia.vault.database.Connection
@@ -39,10 +38,10 @@ object DescriptionModel
 	// OTHER	-------------------------------------
 	
 	/**
-	  * @param role Description role
+	  * @param roleId Id if the Description's role
 	  * @return A model with only description role set
 	  */
-	def withRole(role: DescriptionRole) = apply(role = Some(role))
+	def withRoleId(roleId: Int) = apply(roleId = Some(roleId))
 	
 	/**
 	  * @param languageId Description language id
@@ -58,7 +57,7 @@ object DescriptionModel
 	  */
 	def insert(data: DescriptionData)(implicit connection: Connection) =
 	{
-		val newId = apply(None, Some(data.role), Some(data.languageId), Some(data.text), data.authorId).insert().getInt
+		val newId = apply(None, Some(data.roleId), Some(data.languageId), Some(data.text), data.authorId).insert().getInt
 		Description(newId, data)
 	}
 }
@@ -68,7 +67,7 @@ object DescriptionModel
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
-case class DescriptionModel(id: Option[Int] = None, role: Option[DescriptionRole] = None, languageId: Option[Int] = None,
+case class DescriptionModel(id: Option[Int] = None, roleId: Option[Int] = None, languageId: Option[Int] = None,
 							text: Option[String] = None, authorId: Option[Int] = None)
 	extends StorableWithFactory[Description]
 {
@@ -78,7 +77,7 @@ case class DescriptionModel(id: Option[Int] = None, role: Option[DescriptionRole
 	
 	override def factory = DescriptionFactory
 	
-	override def valueProperties = Vector("id" -> id, descriptionRoleIdAttName -> role.map { _.id },
+	override def valueProperties = Vector("id" -> id, descriptionRoleIdAttName -> roleId,
 		"languageId" -> languageId, "text" -> text, "authorId" -> authorId)
 	
 	

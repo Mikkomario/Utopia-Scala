@@ -9,7 +9,6 @@ import utopia.flow.generic.FromModelFactory
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.metropolis.model.enumeration.TaskType
 import utopia.nexus.http.{Request, ServerSettings}
 import utopia.nexus.rest.BaseContext
 import utopia.nexus.result.{Result, ResultParser, UseRawJSON}
@@ -194,18 +193,18 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  * 2) The authorized user is a member of the specified organization and<br>
 	  * 3) The user has the right/authorization to perform the specified task within that organization
 	  * @param organizationId Id of the targeted organization
-	  * @param task The task the user is trying to perform
+	  * @param taskId Id of the task the user is trying to perform
 	  * @param f Function called when the user is fully authorized. Takes user session, membership id and database
 	  *          connection as parameters. Returns operation result.
 	  * @return An http response based either on the function result or authorization failure.
 	  */
-	def authorizedForTask(organizationId: Int, task: TaskType)(f: (UserSession, Int, Connection) => Result) =
+	def authorizedForTask(organizationId: Int, taskId: Int)(f: (UserSession, Int, Connection) => Result) =
 	{
 		// Makes sure the user belongs to the organization and that they have a valid session key authorization
 		authorizedInOrganization(organizationId) { (session, membershipId, connection) =>
 			implicit val c: Connection = connection
 			// Makes sure the user has a right to perform the required task
-			if (DbMembership(membershipId).allows(task))
+			if (DbMembership(membershipId).allowsTaskWithId(taskId))
 				f(session, membershipId, connection)
 			else
 				Result.Failure(Forbidden,

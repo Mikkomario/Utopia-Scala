@@ -5,7 +5,7 @@ import utopia.exodus.database.access.many.{DbDescriptions, InvitationsAccess}
 import utopia.exodus.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory, RoleRightFactory}
 import utopia.exodus.database.factory.user.{FullUserLanguageFactory, UserFactory, UserLanguageFactory, UserSettingsFactory}
 import utopia.exodus.database.model.organization.{MembershipModel, RoleRightModel}
-import utopia.exodus.database.model.user.{UserAuthModel, UserDeviceModel, UserLanguageModel, UserModel, UserSettingsModel}
+import utopia.exodus.database.model.user.{UserAuthModel, UserDeviceModel, UserLanguageModel, UserSettingsModel}
 import utopia.exodus.util.PasswordHash
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
@@ -37,11 +37,6 @@ object DbUser extends SingleModelAccess[User]
 	override def factory = UserFactory
 	
 	override def globalCondition = Some(factory.nonDeprecatedCondition)
-	
-	
-	// COMPUTED	-------------------------
-	
-	private def model = UserModel
 	
 	
 	// OTHER	-------------------------
@@ -355,17 +350,17 @@ object DbUser extends SingleModelAccess[User]
 					// TODO: Add proper language filtering
 					val organizationDescriptions = DbDescriptions.ofOrganizationsWithIds(organizationIds).all
 					// Reads all task links
-					val roleIds = memberships.flatMap { _.roles }.map { _.id }.toSet
+					val roleIds = memberships.flatMap { _.roleIds }.toSet
 					val roleRights = RoleRightFactory.getMany(RoleRightModel.roleIdColumn.in(roleIds))
 					// Groups the information
-					val rolesWithRights = roleRights.groupBy { _.role }.map { case (role, links) =>
-						RoleWithRights(role, links.map { _.task }.toSet) }
+					val rolesWithRights = roleRights.groupBy { _.roleId }.map { case (roleId, links) =>
+						RoleWithRights(roleId, links.map { _.taskId }.toSet) }
 					
 					memberships.map { membership =>
 						val organizationId = membership.wrapped.organizationId
 						MyOrganization(organizationId, userId,
 							organizationDescriptions.filter { _.targetId == organizationId }.toSet,
-							membership.roles.flatMap { role => rolesWithRights.find { _.role == role } })
+							membership.roleIds.flatMap { roleId => rolesWithRights.find { _.roleId == roleId } })
 					}
 				}
 				else

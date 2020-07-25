@@ -1,9 +1,9 @@
 package utopia.exodus.database.access.many
 
 import utopia.exodus.database.model.organization.{DeletionModel, MemberRoleModel, MembershipModel, OrganizationModel}
+import utopia.exodus.model.enumeration.StandardDescriptionRoleId
+import utopia.exodus.model.enumeration.StandardUserRole.Owner
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.enumeration.DescriptionRole.Name
-import utopia.metropolis.model.enumeration.UserRole.Owner
 import utopia.metropolis.model.partial.organization.MembershipData
 import utopia.vault.database.Connection
 import utopia.vault.sql.Extensions._
@@ -40,9 +40,10 @@ object DbOrganizations
 		val organizationId = factory.insert(founderId)
 		// Adds the user to the organization (as owner)
 		val membership = MembershipModel.insert(MembershipData(organizationId, founderId, Some(founderId)))
-		MemberRoleModel.insert(membership.id, Owner, founderId)
+		MemberRoleModel.insert(membership.id, Owner.id, founderId)
 		// Inserts a name for that organization
-		DbDescriptions.ofOrganizationWithId(organizationId).update(Name, languageId, founderId, organizationName)
+		DbDescriptions.ofOrganizationWithId(organizationId).update(StandardDescriptionRoleId.name, languageId,
+			founderId, organizationName)
 		// Returns organization id
 		organizationId
 	}

@@ -2,12 +2,12 @@ package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.Delete
 import utopia.exodus.database.access.single.DbOrganization
+import utopia.exodus.model.enumeration.StandardTask.DeleteOrganization
+import utopia.exodus.model.enumeration.StandardUserRole.Owner
 import utopia.exodus.rest.resource.ResourceWithChildren
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.TimeExtensions._
-import utopia.metropolis.model.enumeration.TaskType.DeleteOrganization
-import utopia.metropolis.model.enumeration.UserRole.Owner
 import utopia.nexus.http.Path
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
@@ -34,7 +34,7 @@ case class OrganizationNode(organizationId: Int) extends ResourceWithChildren[Au
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		// Makes sure the user is authorized to delete this organization
-		context.authorizedForTask(organizationId, DeleteOrganization) { (session, membershipId, connection) =>
+		context.authorizedForTask(organizationId, DeleteOrganization.id) { (session, _, connection) =>
 			implicit val c: Connection = connection
 			// Checks whether there already exists a pending deletion
 			val organization = DbOrganization(organizationId)
@@ -47,7 +47,7 @@ case class OrganizationNode(organizationId: Int) extends ResourceWithChildren[Au
 				{
 					// Calculates the deletion period (how long this action can be cancelled) based on the number of
 					// organization owners and users
-					val numberOfOwners = organization.memberships.withRole(Owner).size
+					val numberOfOwners = organization.memberships.withRole(Owner.id).size
 					val organizationSize = organization.memberships.size
 					// Owners (other than requester) delay deletion by a week, normal users by a day
 					// Maximum wait duration is 30 days, however

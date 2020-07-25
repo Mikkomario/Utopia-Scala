@@ -2,12 +2,12 @@ package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.{Get, Put}
 import utopia.access.http.Status.NotFound
+import utopia.exodus.database.access.id.DescriptionRoleIds
 import utopia.exodus.database.access.many.DbDescriptions
 import utopia.exodus.database.access.single.DbLanguage
+import utopia.exodus.model.enumeration.StandardTask.DocumentOrganization
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.enumeration.DescriptionRole
-import utopia.metropolis.model.enumeration.TaskType.DocumentOrganization
 import utopia.metropolis.model.post.NewDescription
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
@@ -45,7 +45,7 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends Resource[Au
 		else
 		{
 			// Authorizes the request and parses posted description(s)
-			context.authorizedForTask(organizationId, DocumentOrganization) { (session, _, connection) =>
+			context.authorizedForTask(organizationId, DocumentOrganization.id) { (session, _, connection) =>
 				context.handlePost(NewDescription) { newDescription =>
 					implicit val c: Connection = connection
 					// Makes sure language id is valid
@@ -57,9 +57,10 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends Resource[Au
 						// Returns new version of organization's descriptions (in specified language)
 						val otherDescriptions =
 						{
-							val missingRoles = DescriptionRole.values.toSet -- insertedDescriptions.map { _.description.role }.toSet
-							if (missingRoles.nonEmpty)
-								dbDescriptions.inLanguages(Vector(newDescription.languageId), missingRoles)
+							val missingRoleIds = DescriptionRoleIds.all.toSet --
+								insertedDescriptions.map { _.description.roleId }.toSet
+							if (missingRoleIds.nonEmpty)
+								dbDescriptions.inLanguages(Vector(newDescription.languageId), missingRoleIds)
 							else
 								Vector()
 						}

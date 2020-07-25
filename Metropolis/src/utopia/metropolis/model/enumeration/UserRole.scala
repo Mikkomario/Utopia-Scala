@@ -8,6 +8,7 @@ import utopia.metropolis.model.error.NoSuchTypeException
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("On Exodus side, replaced with StandardUserRole, otherwise use the id list returned by Exodus server", "v1")
 sealed trait UserRole
 {
 	/**
@@ -16,11 +17,13 @@ sealed trait UserRole
 	def id: Int
 }
 
+@deprecated("On Exodus side, replaced with StandardUserRole, otherwise use the id list returned by Exodus server", "v1")
 object UserRole
 {
 	/**
 	  * Owners have read/write access to all data in an organization
 	  */
+	@deprecated("On Exodus side, replaced with StandardUserRole, otherwise use the id list returned by Exodus server", "v1")
 	case object Owner extends UserRole
 	{
 		override val id = 1
@@ -30,6 +33,7 @@ object UserRole
 	  * Admins have most of the same rights as the owners, except that they can't change ownership or delete
 	  * an organization
 	  */
+	@deprecated("On Exodus side, replaced with StandardUserRole, otherwise use the id list returned by Exodus server", "v1")
 	case object Admin extends UserRole
 	{
 		override val id = 2

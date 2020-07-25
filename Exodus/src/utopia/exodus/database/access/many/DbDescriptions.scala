@@ -1,9 +1,10 @@
 package utopia.exodus.database.access.many
 
+import utopia.exodus.database.access.id.DescriptionRoleIds
 import utopia.exodus.database.factory.description.DescriptionLinkFactory
 import utopia.exodus.database.model.description.{DescriptionLinkModel, DescriptionLinkModelFactory}
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.enumeration.{DescriptionRole, TaskType, UserRole}
+import utopia.metropolis.model.enumeration.{TaskType, UserRole}
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.post.NewDescription
 import utopia.metropolis.model.stored.description.DescriptionLink
@@ -78,6 +79,7 @@ object DbDescriptions
 	  * @param task Task type
 	  * @return An access point to descriptions of that task type
 	  */
+	@deprecated("Use .ofTaskWithId(Int) instead", "v1")
 	def ofTask(task: TaskType) =
 		DescriptionsOfSingle(task.id, DescriptionLinkFactory.task, DescriptionLinkModel.task)
 	
@@ -85,6 +87,7 @@ object DbDescriptions
 	  * @param tasks Task types
 	  * @return An access point to descriptions of those task types
 	  */
+	@deprecated("Use .ofTasksWithIds(...) instead", "v1")
 	def ofTasks(tasks: Set[TaskType]) = DescriptionsOfMany(tasks.map { _.id },
 		DescriptionLinkFactory.task, DescriptionLinkModel.task)
 	
@@ -92,6 +95,7 @@ object DbDescriptions
 	  * @param role User role
 	  * @return An access point to descriptions of that user role
 	  */
+	@deprecated("Use .ofRoleWithId(Int) instead", "v1")
 	def ofRole(role: UserRole) =
 		DescriptionsOfSingle(role.id, DescriptionLinkFactory.role, DescriptionLinkModel.role)
 	
@@ -99,7 +103,36 @@ object DbDescriptions
 	  * @param roles Roles
 	  * @return An access point to descriptions of those roles
 	  */
+	@deprecated("Use .ofRolesWithIds(...) instead", "v1")
 	def ofRoles(roles: Set[UserRole]) = DescriptionsOfMany(roles.map { _.id },
+		DescriptionLinkFactory.role, DescriptionLinkModel.role)
+	
+	/**
+	  * @param taskId Task id
+	  * @return An access point to descriptions of that task type
+	  */
+	def ofTaskWithId(taskId: Int) = DescriptionsOfSingle(taskId, DescriptionLinkFactory.task,
+		DescriptionLinkModel.task)
+	
+	/**
+	  * @param taskIds Ids of targeted tasks
+	  * @return An access point to descriptions of those task types
+	  */
+	def ofTasksWithIds(taskIds: Set[Int]) = DescriptionsOfMany(taskIds,
+		DescriptionLinkFactory.task, DescriptionLinkModel.task)
+	
+	/**
+	  * @param roleId User role id
+	  * @return An access point to descriptions of that user role
+	  */
+	def ofRoleWithId(roleId: Int) =
+		DescriptionsOfSingle(roleId, DescriptionLinkFactory.role, DescriptionLinkModel.role)
+	
+	/**
+	  * @param roleIds Ids of targeted user roles
+	  * @return An access point to descriptions of those roles
+	  */
+	def ofRolesWithIds(roleIds: Set[Int]) = DescriptionsOfMany(roleIds,
 		DescriptionLinkFactory.role, DescriptionLinkModel.role)
 	
 	/**
@@ -169,17 +202,17 @@ object DbDescriptions
 		  * role per target is read.
 		  * @param languageIds Ids of the targeted languages, from most preferred to least preferred (less preferred
 		  *                    language ids are used when no results can be found with the more preferred options)
-		  * @param roles Description roles that are read (will not target roles outside this set)
+		  * @param roleIds Ids of the description roles that are read (will not target roles outside this set)
 		  * @param connection DB Connection (implicit)
 		  * @return Read descriptions, grouped by target id
 		  */
-		def inLanguages(languageIds: Seq[Int], roles: Set[DescriptionRole])
+		def inLanguages(languageIds: Seq[Int], roleIds: Set[Int])
 					   (implicit connection: Connection): Map[Int, Vector[DescriptionLink]] =
 		{
-			if (languageIds.isEmpty || targetIds.isEmpty || roles.isEmpty)
+			if (languageIds.isEmpty || targetIds.isEmpty || roleIds.isEmpty)
 				Map()
 			else
-				inLanguages(targetIds, languageIds, roles)
+				inLanguages(targetIds, languageIds, roleIds)
 		}
 	}
 	
@@ -219,36 +252,36 @@ object DbDescriptions
 		def update(newDescription: DescriptionData)(implicit connection: Connection) =
 		{
 			// Must first deprecate the old version of this description
-			deprecate(newDescription.languageId, newDescription.role)
+			deprecate(newDescription.languageId, newDescription.roleId)
 			// Then inserts a new description
 			linkModelFactory.insert(targetId, newDescription)
 		}
 		
 		/**
 		  * Updates a single description for this item
-		  * @param newDescriptionRole Role of the new description
+		  * @param newDescriptionRoleId Id of the new description's role
 		  * @param languageId Id of the language the new description is written in
 		  * @param authorId Id of the user who wrote this description
 		  * @param text Description text
 		  * @param connection DB Connection (implicit)
 		  * @return Newly inserted description
 		  */
-		def update(newDescriptionRole: DescriptionRole, languageId: Int, authorId: Int, text: String)
-				  (implicit connection: Connection): DescriptionLink = update(DescriptionData(newDescriptionRole,
+		def update(newDescriptionRoleId: Int, languageId: Int, authorId: Int, text: String)
+				  (implicit connection: Connection): DescriptionLink = update(DescriptionData(newDescriptionRoleId,
 			languageId, text, Some(authorId)))
 		
 		/**
 		  * Deprecates a description for this item
 		  * @param languageId Id of the language the description is written in
-		  * @param role Targeted description role
+		  * @param roleId Id of the targeted description role
 		  * @param connection DB Connection (implicit)
 		  * @return Whether a description was deprecated
 		  */
-		def deprecate(languageId: Int, role: DescriptionRole)(implicit connection: Connection) =
+		def deprecate(languageId: Int, roleId: Int)(implicit connection: Connection) =
 		{
 			// Needs to join into description table in order to filter by language id and role id
 			// (factories automatically do this)
-			val descriptionCondition = descriptionModel.withRole(role).withLanguageId(languageId).toCondition
+			val descriptionCondition = descriptionModel.withRoleId(roleId).withLanguageId(languageId).toCondition
 			linkModelFactory.nowDeprecated.updateWhere(mergeCondition(descriptionCondition), Some(factory.target)) > 0
 		}
 		
@@ -263,10 +296,11 @@ object DbDescriptions
 			languageIds.headOption match
 			{
 				case Some(languageId) =>
+					val allRoleIds = DescriptionRoleIds.all.toSet
 					val readDescriptions = inLanguageWithId(languageId).all
-					val missingRoles = DescriptionRole.values.toSet -- readDescriptions.map { _.description.role }.toSet
-					if (missingRoles.nonEmpty)
-						readDescriptions ++ inLanguages(languageIds.tail, missingRoles)
+					val missingRoleIds = allRoleIds -- readDescriptions.map { _.description.roleId }.toSet
+					if (missingRoleIds.nonEmpty)
+						readDescriptions ++ inLanguages(languageIds.tail, missingRoleIds)
 					else
 						readDescriptions
 				case None => Vector()
@@ -275,12 +309,12 @@ object DbDescriptions
 		
 		/**
 		  * @param languageIds Ids of the targeted languages (in order from most to least preferred)
-		  * @param remainingRoles Roles that need descriptions
+		  * @param remainingRoleIds Ids of the roles that need descriptions
 		  * @param connection DB Connection (implicit)
 		  * @return This item's descriptions in specified languages (secondary languages are used when no primary
 		  *         language description is found)
 		  */
-		def inLanguages(languageIds: Seq[Int], remainingRoles: Set[DescriptionRole])(
+		def inLanguages(languageIds: Seq[Int], remainingRoleIds: Set[Int])(
 			implicit connection: Connection): Vector[DescriptionLink] =
 		{
 			// Reads descriptions in target languages until either all description types have been read or all language
@@ -288,10 +322,10 @@ object DbDescriptions
 			languageIds.headOption match
 			{
 				case Some(languageId) =>
-					val readDescriptions = inLanguageWithId(languageId)(remainingRoles)
-					val newRemainingRoles = remainingRoles -- readDescriptions.map { _.description.role }
-					if (remainingRoles.nonEmpty)
-						readDescriptions ++ inLanguages(languageIds.tail, newRemainingRoles)
+					val readDescriptions = inLanguageWithId(languageId).forRolesWithIds(remainingRoleIds)
+					val newRemainingRoleIds = remainingRoleIds -- readDescriptions.map { _.description.roleId }
+					if (remainingRoleIds.nonEmpty)
+						readDescriptions ++ inLanguages(languageIds.tail, newRemainingRoleIds)
 					else
 						readDescriptions
 				case None => Vector()

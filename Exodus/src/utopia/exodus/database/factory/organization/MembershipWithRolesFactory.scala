@@ -2,7 +2,6 @@ package utopia.exodus.database.factory.organization
 
 import utopia.exodus.database.model.organization.MemberRoleModel
 import utopia.metropolis.model.combined.organization.MembershipWithRoles
-import utopia.metropolis.model.enumeration.UserRole
 import utopia.vault.model.immutable.Result
 import utopia.vault.nosql.factory.{Deprecatable, FromResultFactory}
 import utopia.vault.sql.JoinType
@@ -38,9 +37,8 @@ object MembershipWithRolesFactory extends FromResultFactory[MembershipWithRoles]
 			{
 				case Success(membership) =>
 					// Adds role ids (parsed)
-					val roles = roleLinkRows.flatMap { _(roleLinkTable)(MemberRoleModel.roleIdAttName).int }
-						.flatMap { UserRole.forId(_).toOption }
-					Some(MembershipWithRoles(membership, roles.toSet))
+					val roleIds = roleLinkRows.flatMap { _(roleLinkTable)(MemberRoleModel.roleIdAttName).int }
+					Some(MembershipWithRoles(membership, roleIds.toSet))
 				case Failure(error) =>
 					ErrorHandling.modelParsePrinciple.handle(error)
 					None

@@ -1,6 +1,6 @@
 package utopia.exodus.database.access.many
 
-import utopia.metropolis.model.enumeration.DescriptionRole
+import utopia.exodus.database.access.id.DescriptionRoleIds
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 
@@ -38,7 +38,7 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 				// In the first iteration, reads all descriptions. After that divides into sub-groups
 				val readDescriptions = inLanguageWithId(languageId).all.groupBy { _.targetId }
 				// Reads the rest of the data using recursion
-				readRemaining(languageIds, DescriptionRole.values.toSet, this, readDescriptions)
+				readRemaining(languageIds, DescriptionRoleIds.all.toSet, this, readDescriptions)
 			case None => Map()
 		}
 	}
@@ -47,11 +47,11 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 	  * Reads description data from specified targets
 	  * @param remainingTargetIds Targeted target ids (shouldn't be empty)
 	  * @param languageIds Ids of the languages to use, from most to least preferred (mustn't be empty)
-	  * @param remainingRoles Remaining description roles to read (shouldn't be empty)
+	  * @param remainingRoleIds Ids of the remaining description roles to read (shouldn't be empty)
 	  * @param connection DB Connection (implicit)
 	  * @return Read descriptions, grouped by target id
 	  */
-	protected def inLanguages(remainingTargetIds: Set[Int], languageIds: Seq[Int], remainingRoles: Set[DescriptionRole])(
+	protected def inLanguages(remainingTargetIds: Set[Int], languageIds: Seq[Int], remainingRoleIds: Set[Int])(
 		implicit connection: Connection): Map[Int, Vector[DescriptionLink]] =
 	{
 		// Reads descriptions in target languages until either all description types have been read or all language
@@ -59,16 +59,17 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 		val languageId = languageIds.head
 		val newAccessPoint = subGroup(remainingTargetIds)
 		// Target id -> Descriptions
-		val readDescriptions = newAccessPoint.inLanguageWithId(languageId)(remainingRoles).groupBy { _.targetId }
+		val readDescriptions = newAccessPoint.inLanguageWithId(languageId).forRolesWithIds(remainingRoleIds)
+			.groupBy { _.targetId }
 		
 		// Reads the rest of the descriptions recursively
-		readRemaining(languageIds, remainingRoles, newAccessPoint, readDescriptions)
+		readRemaining(languageIds, remainingRoleIds, newAccessPoint, readDescriptions)
 	}
 	
 	// Continues read through recursion, if possible. Utilizes (and includes) existing read results.
 	// LanguageIds and roles should be passed as they were at the start of the last read
 	private def readRemaining(languageIds: Seq[Int],
-							  remainingRoles: Set[DescriptionRole], lastAccessPoint: DescriptionLinksForManyAccess,
+							  remainingRoleIds: Set[Int], lastAccessPoint: DescriptionLinksForManyAccess,
 							  lastReadResults: Map[Int, Vector[DescriptionLink]])
 							 (implicit connection: Connection): Map[Int, Vector[DescriptionLink]] =
 	{
@@ -78,7 +79,7 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 			// Groups the remaining items based on the remaining roles without a description
 			// Remaining roles -> target ids
 			val remainingRolesWithTargets = lastReadResults.groupMap { case (_, descriptions) =>
-				remainingRoles -- descriptions.map { _.description.role } } { case (targetId, _) => targetId }
+				remainingRoleIds -- descriptions.map { _.description.roleId } } { case (targetId, _) => targetId }
 				.filter { _._1.nonEmpty }
 			
 			// Performs additional queries for each remaining role group (provided there are languages left)
@@ -86,8 +87,8 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 				lastReadResults
 			else
 			{
-				val recursiveReadResults = remainingRolesWithTargets.map { case (roles, targetIds) =>
-					lastAccessPoint.inLanguages(targetIds.toSet, remainingLanguageIds, roles) }
+				val recursiveReadResults = remainingRolesWithTargets.map { case (roleIds, targetIds) =>
+					lastAccessPoint.inLanguages(targetIds.toSet, remainingLanguageIds, roleIds) }
 					.reduce { _ ++ _ }
 				lastReadResults ++ recursiveReadResults
 			}

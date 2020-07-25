@@ -9,6 +9,8 @@ import utopia.metropolis.model.error.NoSuchTypeException
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1
   */
+// TODO: Replace this class with a model read from the database (no more hard-coded options)
+// TODO: Add an Exodus rest node for these as well
 sealed trait LanguageFamiliarity extends RichComparable[LanguageFamiliarity]
 {
 	// ABSTRACT	---------------------------------

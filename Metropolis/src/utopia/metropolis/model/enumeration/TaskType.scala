@@ -8,6 +8,7 @@ import utopia.metropolis.model.error.NoSuchTypeException
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("On Exodus side, replaced with StandardTask. Elsewhere use Exodus server result list.", "v1")
 sealed trait TaskType
 {
 	/**
@@ -16,11 +17,13 @@ sealed trait TaskType
 	def id: Int
 }
 
+@deprecated("On Exodus side, replaced with StandardTask. Elsewhere use Exodus server result list.", "v1")
 object TaskType
 {
 	/**
 	  * This task/right allows one to delete the whole organization
 	  */
+	@deprecated("On Exodus side, replaced with StandardTask. Elsewhere use Exodus server result list.", "v1")
 	case object DeleteOrganization extends TaskType
 	{
 		override val id = 1
@@ -29,6 +32,7 @@ object TaskType
 	/**
 	  * This task allows one to adjust roles for other users (but not promote past own status)
 	  */
+	@deprecated("On Exodus side, replaced with StandardTask. Elsewhere use Exodus server result list.", "v1")
 	case object ChangeRoles extends TaskType
 	{
 		override val id = 2
@@ -37,6 +41,7 @@ object TaskType
 	/**
 	  * This task allows one to invite new members to the organization
 	  */
+	@deprecated("On Exodus side, replaced with StandardTask. Elsewhere use Exodus server result list.", "v1")
 	case object InviteMembers extends TaskType
 	{
 		override val id = 3
@@ -45,6 +50,7 @@ object TaskType
 	/**
 	  * This task allows one to update organization description
 	  */
+	@deprecated("On Exodus side, replaced with StandardTask. Elsewhere use Exodus server result list.", "v1")
 	case object DocumentOrganization extends TaskType
 	{
 		override val id = 4
@@ -53,6 +59,7 @@ object TaskType
 	/**
 	  * This task allows one to remove members from an organization
 	  */
+	@deprecated("On Exodus side, replaced with StandardTask. Elsewhere use Exodus server result list.", "v1")
 	case object RemoveMember extends TaskType
 	{
 		override val id = 5
@@ -61,6 +68,7 @@ object TaskType
 	/**
 	  * This task allows one to cancel a pending organization deletion
 	  */
+	@deprecated("On Exodus side, replaced with StandardTask. Elsewhere use Exodus server result list.", "v1")
 	case object CancelOrganizationDeletion extends TaskType
 	{
 		override def id = 6

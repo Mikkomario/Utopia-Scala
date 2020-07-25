@@ -7,10 +7,10 @@ import utopia.exodus.database.access.many.DbDescriptions
 import utopia.exodus.database.factory.device.DeviceKeyFactory
 import utopia.exodus.database.model.device.{ClientDeviceModel, DeviceKeyModel}
 import utopia.exodus.database.model.user.UserDeviceModel
+import utopia.exodus.model.enumeration.StandardDescriptionRoleId
 import utopia.exodus.model.partial.DeviceKeyData
 import utopia.exodus.model.stored.DeviceKey
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.enumeration.DescriptionRole.Name
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
 import utopia.vault.nosql.access.{SingleModelAccess, UniqueAccess}
@@ -113,7 +113,8 @@ object DbDevice
 		  * @return This device's name in specified language
 		  */
 		def nameInLanguageWithId(languageId: Int)(implicit connection: Connection) =
-			DbDescriptions.ofDeviceWithId(deviceId).inLanguageWithId(languageId)(Name)
+			DbDescription.ofDeviceWithId(deviceId).inLanguageWithId(languageId)
+				.forRoleWithId(StandardDescriptionRoleId.name).map { _.description.text }
 		
 		
 		// NESTED	-----------------------------

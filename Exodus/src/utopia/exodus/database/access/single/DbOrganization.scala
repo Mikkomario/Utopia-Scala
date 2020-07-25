@@ -6,7 +6,6 @@ import utopia.exodus.database.access.many.{DbDescriptions, InvitationsAccess, Or
 import utopia.exodus.database.factory.organization.MembershipFactory
 import utopia.exodus.database.model.organization.{DeletionModel, MemberRoleModel, MembershipModel}
 import utopia.flow.util.TimeExtensions._
-import utopia.metropolis.model.enumeration.UserRole
 import utopia.metropolis.model.partial.organization.{DeletionData, InvitationData, MembershipData}
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
@@ -78,31 +77,31 @@ object DbOrganization
 			// OTHER	---------------------------
 			
 			/**
-			  * @param role Searched user role
+			  * @param roleId Searched user role's id
 			  * @param connection DB Connection (implicit)
 			  * @return Members within this organization that have the specified role
 			  */
-			def withRole(role: UserRole)(implicit connection: Connection) =
+			def withRole(roleId: Int)(implicit connection: Connection) =
 			{
 				// Needs to join into role rights
 				connection(Select(factory.target join memberRolesFactory.table, factory.table) +
-					Where(mergeCondition(memberRolesFactory.withRole(role).toCondition))).parse(factory)
+					Where(mergeCondition(memberRolesFactory.withRoleId(roleId).toCondition))).parse(factory)
 			}
 			
 			/**
 			  * Inserts a new membership, along with a single role
 			  * @param userId Id of the new organization member (user)
-			  * @param startingRole Role given to the user in this organization
+			  * @param startingRoleId Id of the role given to the user in this organization
 			  * @param creatorId Id of the user who authorized / added this membership
 			  * @param connection DB Connection (implicit)
 			  * @return Inserted membership
 			  */
-			def insert(userId: Int, startingRole: UserRole, creatorId: Int)(implicit connection: Connection) =
+			def insert(userId: Int, startingRoleId: Int, creatorId: Int)(implicit connection: Connection) =
 			{
 				// Adds membership
 				val newMembership = model.insert(MembershipData(organizationId, userId, Some(creatorId)))
 				// Adds user role
-				memberRolesFactory.insert(newMembership.id, startingRole, creatorId)
+				memberRolesFactory.insert(newMembership.id, startingRoleId, creatorId)
 				newMembership
 			}
 		}
@@ -120,16 +119,16 @@ object DbOrganization
 			  * Sends a new invitation. Please make sure the user is allowed to send this invitation before calling this
 			  * method.
 			  * @param recipient Either recipient user id (right) or recipient user email (left)
-			  * @param role The role the user will receive upon accepting this invitation
+			  * @param roleId Id of the role the user will receive upon accepting this invitation
 			  * @param senderId Id of the user sending this invitation
 			  * @param validDuration Duration how long the invitation can still be answered (default = 1 week)
 			  * @param connection DB Connection (implicit)
 			  * @return Newly saved invitation
 			  */
-			def send(recipient: Either[String, Int], role: UserRole, senderId: Int, validDuration: Period = 7.days)
+			def send(recipient: Either[String, Int], roleId: Int, senderId: Int, validDuration: Period = 7.days)
 					(implicit connection: Connection) =
 			{
-				model.insert(InvitationData(organizationId, recipient, role, Instant.now() + validDuration, Some(senderId)))
+				model.insert(InvitationData(organizationId, recipient, roleId, Instant.now() + validDuration, Some(senderId)))
 			}
 		}
 		
