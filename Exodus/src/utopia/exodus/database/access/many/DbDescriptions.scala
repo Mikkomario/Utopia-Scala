@@ -35,6 +35,12 @@ object DbDescriptions
 		DescriptionLinkModel.language)
 	
 	/**
+	  * An access point to all language familiarity description
+	  */
+	val ofAllLanguageFamiliarities = DescriptionsOfAll(DescriptionLinkFactory.languageFamiliarity,
+		DescriptionLinkModel.languageFamiliarity)
+	
+	/**
 	  * An access point to all role descriptions
 	  */
 	val ofAllRoles = DescriptionsOfAll(DescriptionLinkFactory.role, DescriptionLinkModel.role)
@@ -146,8 +152,24 @@ object DbDescriptions
 	  * @param languageIds Language ids
 	  * @return An access point to descriptions of languages with those ids
 	  */
-	def ofLanguagesWithIds(languageIds: Set[Int]) = DescriptionsOfMany(languageIds, DescriptionLinkFactory.language,
-		DescriptionLinkModel.language)
+	def ofLanguagesWithIds(languageIds: Set[Int]) = DescriptionsOfMany(languageIds,
+		DescriptionLinkFactory.language, DescriptionLinkModel.language)
+	
+	// TODO: WET WET (factory and model references are being repeated 3 times each)
+	
+	/**
+	  * @param familiarityId Language familiarity id
+	  * @return An access point to that familiarity's descriptions
+	  */
+	def ofLanguageFamiliarityWithId(familiarityId: Int) = DescriptionsOfSingle(familiarityId,
+		DescriptionLinkFactory.languageFamiliarity, DescriptionLinkModel.languageFamiliarity)
+	
+	/**
+	  * @param familiarityIds A set of language familiarity ids
+	  * @return An access point to those familiarities descriptions
+	  */
+	def ofLanguageFamiliaritiesWithIds(familiarityIds: Set[Int]) = DescriptionsOfMany(familiarityIds,
+		DescriptionLinkFactory.languageFamiliarity, DescriptionLinkModel.languageFamiliarity)
 	
 	
 	// NESTED	----------------------------

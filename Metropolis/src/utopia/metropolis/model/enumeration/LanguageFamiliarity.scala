@@ -9,8 +9,7 @@ import utopia.metropolis.model.error.NoSuchTypeException
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1
   */
-// TODO: Replace this class with a model read from the database (no more hard-coded options)
-// TODO: Add an Exodus rest node for these as well
+@deprecated("Replaced with LanguageFamiliarity model", "v1")
 sealed trait LanguageFamiliarity extends RichComparable[LanguageFamiliarity]
 {
 	// ABSTRACT	---------------------------------
@@ -34,6 +33,7 @@ sealed trait LanguageFamiliarity extends RichComparable[LanguageFamiliarity]
 	override def compareTo(o: LanguageFamiliarity) = o.orderIndex - orderIndex
 }
 
+@deprecated("Replaced with LanguageFamiliarity model", "v1")
 object LanguageFamiliarity
 {
 	/**
@@ -51,6 +51,7 @@ object LanguageFamiliarity
 	/**
 	  * Used with the most preferred / native languages
 	  */
+	@deprecated("Replaced with LanguageFamiliarity model", "v1")
 	case object PrimaryLanguage extends LanguageFamiliarity
 	{
 		override val id = 1
@@ -59,6 +60,7 @@ object LanguageFamiliarity
 	/**
 	  * Used with preferred fluent languages
 	  */
+	@deprecated("Replaced with LanguageFamiliarity model", "v1")
 	case object FluentPreferred extends LanguageFamiliarity
 	{
 		override val id = 2
@@ -67,6 +69,7 @@ object LanguageFamiliarity
 	/**
 	  * Used with fluent languages
 	  */
+	@deprecated("Replaced with LanguageFamiliarity model", "v1")
 	case object Fluent extends LanguageFamiliarity
 	{
 		override val id = 3
@@ -75,6 +78,7 @@ object LanguageFamiliarity
 	/**
 	  * Used when the user has some skill in specified language
 	  */
+	@deprecated("Replaced with LanguageFamiliarity model", "v1")
 	case object OK extends LanguageFamiliarity
 	{
 		override val id = 4
@@ -83,6 +87,7 @@ object LanguageFamiliarity
 	/**
 	  * Used when the user is somewhat skilled in the specified language, but doesn't prefer to use it
 	  */
+	@deprecated("Replaced with LanguageFamiliarity model", "v1")
 	case object OKNotPreferred extends LanguageFamiliarity
 	{
 		override val id = 5
@@ -91,6 +96,7 @@ object LanguageFamiliarity
 	/**
 	  * Used when the user is not skilled in a language, but is able to use it in some situations
 	  */
+	@deprecated("Replaced with LanguageFamiliarity model", "v1")
 	case object Bad extends LanguageFamiliarity
 	{
 		override val id = 6

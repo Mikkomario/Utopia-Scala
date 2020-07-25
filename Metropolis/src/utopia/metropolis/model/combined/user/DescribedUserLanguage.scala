@@ -1,6 +1,6 @@
 package utopia.metropolis.model.combined.user
 
-import utopia.metropolis.model.combined.language.DescribedLanguage
+import utopia.metropolis.model.combined.language.{DescribedLanguage, DescribedLanguageFamiliarity}
 import utopia.metropolis.model.stored.user.UserLanguage
 
 /**
@@ -8,5 +8,6 @@ import utopia.metropolis.model.stored.user.UserLanguage
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1
   */
-case class DescribedUserLanguage(wrapped: UserLanguage, language: DescribedLanguage)
-	extends FullUserLanguageLike[DescribedLanguage]
+case class DescribedUserLanguage(wrapped: UserLanguage, language: DescribedLanguage,
+								 familiarity: DescribedLanguageFamiliarity)
+	extends FullUserLanguageLike[DescribedLanguage, DescribedLanguageFamiliarity]

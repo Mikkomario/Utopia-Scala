@@ -73,7 +73,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 		if (languagesFromHeaders.nonEmpty)
 			languagesFromHeaders.map { _.id }
 		else
-			DbUser(userId).languages.all.sortBy { _.familiarity.orderIndex }.map { _.languageId }
+			DbUser(userId).languages.withFamiliarityLevels.sortBy { _._2.orderIndex }.map { _._1 }
 	}
 	
 	/**

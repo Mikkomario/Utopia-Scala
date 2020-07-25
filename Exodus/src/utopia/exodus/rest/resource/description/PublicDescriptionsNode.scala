@@ -68,8 +68,8 @@ trait PublicDescriptionsNode[Item, Combined <: ModelConvertible] extends Resourc
 			else if (context.request.headers.containsAuthorization)
 			{
 				context.sessionKeyAuthorized { (session, _) =>
-					val userLanguages = DbUser(session.userId).languages.all.sortBy { _.familiarity.orderIndex }
-						.map { _.languageId }
+					val userLanguages = DbUser(session.userId).languages.withFamiliarityLevels.sortBy { _._2.orderIndex }
+						.map { _._1 }
 					get(userLanguages)
 				}
 			}

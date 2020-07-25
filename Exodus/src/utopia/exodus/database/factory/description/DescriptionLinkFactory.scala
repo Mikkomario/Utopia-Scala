@@ -84,6 +84,11 @@ object DescriptionLinkFactory
 	  */
 	lazy val language = apply(DescriptionLinkModel.language)
 	
+	/**
+	  * Language familiarity description factory
+	  */
+	lazy val languageFamiliarity = apply(DescriptionLinkModel.languageFamiliarity)
+	
 	
 	// OTHER	----------------------------------
 	

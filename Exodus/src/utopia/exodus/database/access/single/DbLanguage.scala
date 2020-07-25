@@ -32,11 +32,12 @@ object DbLanguage extends SingleModelAccessById[Language, Int]
 	  * Validates the proposed language proficiencies, making sure all language ids and codes are valid
 	  * @param proficiencies Proposed proficiencies
 	  * @param connection DB Connection (implicit)
-	  * @return List of language id -> familiarity pairs. Failure if some of the ids or codes were invalid
+	  * @return List of language id -> familiarity id pairs. Failure if some of the ids or codes were invalid
 	  */
 	def validateProposedProficiencies(proficiencies: Vector[NewLanguageProficiency])(implicit connection: Connection) =
 	{
 		proficiencies.tryMap { proficiency =>
+			// Validates / retrieves language id
 			val languageId = proficiency.language match
 			{
 				case Right(languageId) =>
@@ -48,7 +49,13 @@ object DbLanguage extends SingleModelAccessById[Language, Int]
 					LanguageId.forIsoCode(languageCode).pull.toTry {
 						new NoDataFoundException(s"$languageCode is not a valid language code") }
 			}
-			languageId.map { _ -> proficiency.familiarity }
+			languageId.flatMap { languageId =>
+				// Validates language familiarity id
+				if (DbLanguageFamiliarity(proficiency.familiarityId).isDefined)
+					Success(languageId -> proficiency.familiarityId)
+				else
+					Failure(new NoDataFoundException(s"${proficiency.familiarityId} is not a valid language familiarity id"))
+			}
 		}
 	}
 }

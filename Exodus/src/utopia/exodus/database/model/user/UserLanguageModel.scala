@@ -3,7 +3,6 @@ package utopia.exodus.database.model.user
 import utopia.exodus.database.Tables
 import utopia.exodus.database.factory.user.UserLanguageFactory
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.enumeration.LanguageFamiliarity
 import utopia.metropolis.model.partial.user.UserLanguageData
 import utopia.metropolis.model.stored.user.UserLanguage
 import utopia.vault.database.Connection
@@ -47,7 +46,7 @@ object UserLanguageModel
 	  */
 	def insert(data: UserLanguageData)(implicit connection: Connection) =
 	{
-		val newId = apply(None, Some(data.userId), Some(data.languageId), Some(data.familiarity)).insert().getInt
+		val newId = apply(None, Some(data.userId), Some(data.languageId), Some(data.familiarityId)).insert().getInt
 		UserLanguage(newId, data)
 	}
 }
@@ -58,7 +57,7 @@ object UserLanguageModel
   * @since 2.5.2020, v1
   */
 case class UserLanguageModel(id: Option[Int] = None, userId: Option[Int] = None, languageId: Option[Int] = None,
-							 familiarity: Option[LanguageFamiliarity] = None)
+							 familiarityId: Option[Int] = None)
 	extends StorableWithFactory[UserLanguage]
 {
 	import UserLanguageModel._
@@ -66,5 +65,5 @@ case class UserLanguageModel(id: Option[Int] = None, userId: Option[Int] = None,
 	override def factory = UserLanguageFactory
 	
 	override def valueProperties = Vector("id" -> id, "userId" -> userId, languageIdAttName -> languageId,
-		"familiarityId" -> familiarity.map { _.id })
+		"familiarityId" -> familiarityId)
 }

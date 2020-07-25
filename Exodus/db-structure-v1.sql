@@ -553,3 +553,5 @@ CREATE TABLE user_session
         REFERENCES client_device(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARSET=latin1;
+
+-- TODO: Insert initial descriptions

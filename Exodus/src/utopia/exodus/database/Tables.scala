@@ -44,6 +44,16 @@ object Tables
 	def languageDescription = apply("language_description")
 	
 	/**
+	  * @return A table that contains language familiarity levels
+	  */
+	def languageFamiliarity = apply("language_familiarity")
+	
+	/**
+	  * @return A table that contains links between language familliarity levels and language familiarities
+	  */
+	def languageFamiliarityDescription = apply("language_familiarity_description")
+	
+	/**
 	  * @return Table that contains users
 	  */
 	def user = apply("user")

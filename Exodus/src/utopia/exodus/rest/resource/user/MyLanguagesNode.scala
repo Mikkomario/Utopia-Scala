@@ -4,6 +4,7 @@ import utopia.access.http.Method.{Delete, Get, Post, Put}
 import utopia.access.http.Status.{BadRequest, Forbidden}
 import utopia.exodus.database.access.single.{DbLanguage, DbUser}
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.post.NewLanguageProficiency
 import utopia.nexus.http.Path
@@ -72,27 +73,27 @@ object MyLanguagesNode extends Resource[AuthorizedContext]
 								Result.Failure(Forbidden, "You must keep at least one language")
 							else
 							{
-								val existingLanguages = user.languages.all
+								val existingLanguages = user.languages.withFamiliarityLevels.toMap
 								
 								// Groups the changes
-								val existingLanguagesMap = existingLanguages.map { l => l.languageId -> l.familiarity }.toMap
 								val changesMap = proficiencies.toMap
 								
-								val changesInExisting = existingLanguagesMap.flatMap { case (languageId, familiarity) =>
+								val changesInExisting = existingLanguages.flatMap { case (languageId, familiarity) =>
 									changesMap.get(languageId).map { newFamiliarity =>
 										languageId -> (familiarity -> newFamiliarity) } }
-								val modifications = changesInExisting.filterNot { case (_, change) => change._1 == change._2 }
+								val modifications = changesInExisting
+									.filterNot { case (_, change) => change._1.id == change._2 }
 								val duplicateLanguageIds = changesInExisting.filter { case (_, change) =>
-									change._1 == change._2 }.keySet
+									change._1.id == change._2 }.keySet
 								val newLanguages = changesMap.filterNot { case (languageId, _) =>
-									existingLanguagesMap.contains(languageId) }
+									existingLanguages.contains(languageId) }
 								
 								// Removes some languages (those not listed in PUT and those being modified)
 								val languageIdsToRemove =
 								{
 									val base = modifications.keySet
 									if (method == Put)
-										base ++ existingLanguagesMap.filterNot { case (languageId, _) =>
+										base ++ existingLanguages.filterNot { case (languageId, _) =>
 											changesMap.contains(languageId) }.keySet
 									else
 										base
@@ -105,12 +106,22 @@ object MyLanguagesNode extends Resource[AuthorizedContext]
 									user.languages.insert(languageId, familiarity) }
 								
 								// Returns the new languages list
-								val duplicates = existingLanguages.filter { l => duplicateLanguageIds.contains(l.languageId) }
+								val duplicates = existingLanguages.filter { case (languageId, _) =>
+									duplicateLanguageIds.contains(languageId) }
+								val duplicateModels = duplicates.map { case (languageId, familiarity) =>
+									Model(Vector("language_id" -> languageId, "familiarity_id" -> familiarity.id)) }.toVector
+								val insertedModels = inserted.map { l => Model(Vector("language_id" -> l.languageId,
+									"familiarity_id" -> l.familiarityId)) }.toVector
+								
 								if (method == Put)
-									Result.Success((duplicates ++ inserted).map { _.toModelWithoutUser })
+									Result.Success(duplicateModels ++ insertedModels)
 								else
-									Result.Success((existingLanguages.filterNot { l => changesMap.contains(l.languageId) } ++
-										duplicates ++ inserted).map { _.toModelWithoutUser })
+								{
+									val previousModels = existingLanguages.filterNot { case (languageId, _) =>
+										changesMap.contains(languageId) }.map { case (languageId, familiarity) =>
+										Model(Vector("language_id" -> languageId, "familiarity_id" -> familiarity.id)) }.toVector
+									Result.Success(previousModels ++ duplicateModels ++ insertedModels)
+								}
 							}
 						case Failure(error) => Result.Failure(BadRequest, error.getMessage)
 					}

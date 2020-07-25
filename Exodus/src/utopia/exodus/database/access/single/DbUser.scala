@@ -1,7 +1,7 @@
 package utopia.exodus.database.access.single
 
 import utopia.exodus.database.access.id.UserId
-import utopia.exodus.database.access.many.{DbDescriptions, InvitationsAccess}
+import utopia.exodus.database.access.many.{DbDescriptions, DbLanguageFamiliarities, InvitationsAccess}
 import utopia.exodus.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory, RoleRightFactory}
 import utopia.exodus.database.factory.user.{FullUserLanguageFactory, UserFactory, UserLanguageFactory, UserSettingsFactory}
 import utopia.exodus.database.model.organization.{MembershipModel, RoleRightModel}
@@ -9,10 +9,9 @@ import utopia.exodus.database.model.user.{UserAuthModel, UserDeviceModel, UserLa
 import utopia.exodus.util.PasswordHash
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.combined.language.DescribedLanguage
+import utopia.metropolis.model.combined.language.{DescribedLanguage, DescribedLanguageFamiliarity}
 import utopia.metropolis.model.combined.organization.RoleWithRights
 import utopia.metropolis.model.combined.user.{DescribedUserLanguage, MyOrganization}
-import utopia.metropolis.model.enumeration.LanguageFamiliarity
 import utopia.metropolis.model.error.AlreadyUsedException
 import utopia.metropolis.model.partial.user.{UserLanguageData, UserSettingsData}
 import utopia.metropolis.model.stored.organization.Membership
@@ -224,6 +223,14 @@ object DbUser extends SingleModelAccess[User]
 			  */
 			def full(implicit connection: Connection) = FullUserLanguageFactory.getMany(condition)
 			
+			/**
+			  * @param connection DB Connection (implicit)
+			  * @return Ids of the languages known to this user, each paired with this user's familiarity level
+			  *         in that language
+			  */
+			def withFamiliarityLevels(implicit connection: Connection) =
+				DbLanguageFamiliarities.familiarityLevelsForUserWithId(userId)
+			
 			
 			// OTHER	-------------------
 			
@@ -235,26 +242,32 @@ object DbUser extends SingleModelAccess[User]
 			  */
 			def withDescriptionsInLanguages(descriptionLanguageIds: Seq[Int])(implicit connection: Connection) =
 			{
-				// Reads languages, then attaches descriptions
+				// Reads languages and familiarities, then attaches descriptions
 				val languages = full
 				val languageIds = languages.map { _.languageId }.toSet
 				val languageDescriptions = DbDescriptions.ofLanguagesWithIds(languageIds).inLanguages(descriptionLanguageIds)
+				val familiarityIds = languages.map { _.familiarityId }.toSet
+				val familiarityDescriptions = DbDescriptions.ofLanguageFamiliaritiesWithIds(familiarityIds)
+					.inLanguages(descriptionLanguageIds)
 				languages.map { base =>
 					val language = base.language
-					val describedLanguage = DescribedLanguage(language, languageDescriptions.getOrElse(language.id, Set()).toSet)
-					DescribedUserLanguage(base, describedLanguage)
+					val describedLanguage = DescribedLanguage(language,
+						languageDescriptions.getOrElse(language.id, Set()).toSet)
+					val describedFamiliarity = DescribedLanguageFamiliarity(base.familiarity,
+						familiarityDescriptions.getOrElse(base.familiarityId, Set()).toSet)
+					DescribedUserLanguage(base, describedLanguage, describedFamiliarity)
 				}
 			}
 			
 			/**
 			  * Inserts a new user language combination (please make sure to only insert new languages)
 			  * @param languageId Id of the known language
-			  * @param familiarity User's level of familiarity wiht this language
+			  * @param familiarityId Id of the user's level of familiarity with this language
 			  * @param connection DB Connection (implicit)
 			  * @return Newly inserted user langauge link
 			  */
-			def insert(languageId: Int, familiarity: LanguageFamiliarity)(implicit connection: Connection) =
-				model.insert(UserLanguageData(userId, languageId, familiarity))
+			def insert(languageId: Int, familiarityId: Int)(implicit connection: Connection) =
+				model.insert(UserLanguageData(userId, languageId, familiarityId))
 			
 			/**
 			  * Removes specified languages from the list of known languages

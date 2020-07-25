@@ -81,4 +81,9 @@ object DescriptionLinkModel
 	  * Language description links model factory
 	  */
 	lazy val language = DescriptionLinkModelFactory(Tables.languageDescription, "languageId")
+	
+	/**
+	  * Language familiarity description link models factory
+	  */
+	lazy val languageFamiliarity = DescriptionLinkModelFactory(Tables.languageFamiliarityDescription, "familiarityId")
 }
