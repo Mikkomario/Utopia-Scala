@@ -3,9 +3,10 @@ package utopia.flow.async
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.{SingleWait, WaitTarget}
 
-import scala.collection.Factory
+import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -196,50 +197,63 @@ object AsyncExtensions
 	{
 		/**
 		  * Waits until all of the futures inside this Iterable item have completed
-		  * @param factory A factory
-		  * @tparam C Resulting collection type
 		  * @return The results of the waiting (each item as a try)
 		  */
-		def waitFor[C]()(implicit factory: Factory[Try[A], C]) =
+		def waitFor() =
 		{
-			val buffer = factory.newBuilder
+			val buffer = new VectorBuilder[Try[A]]
 			buffer ++= futures.iterator.map { _.waitFor() }
 			buffer.result()
 		}
 		
 		/**
 		  * Waits until all of the futures inside this Iterable item have completed
-		  * @param factory A factory
-		  * @tparam C Resulting collection type
 		  * @return The successful results of the waiting (no failures will be included)
 		  */
-		def waitForSuccesses[C]()(implicit factory: Factory[A, C]) =
+		def waitForSuccesses() =
 		{
-			val buffer = factory.newBuilder
+			val buffer = new VectorBuilder[A]
 			buffer ++= futures.iterator.flatMap { _.waitFor().toOption }
 			buffer.result()
 		}
 		
 		/**
 		  * @param context Execution context
-		  * @param factory A factory
-		  * @tparam C result collection type
 		  * @return A future of the completion of all of these items. Resulting collection contains all results wrapped in try
 		  */
-		def future[C](implicit context: ExecutionContext, factory: Factory[Try[A], C]): Future[C] = Future { waitFor() }
+		def future(implicit context: ExecutionContext): Future[Vector[Try[A]]] = Future { waitFor() }
 		
 		/**
 		  * @param context Execution context
-		  * @param factory A factory
 		  * @tparam C result collection type
 		  * @return A future of the completion of all of these items. Resulting collection contains only successful completions
 		  */
-		def futureSuccesses[C](implicit context: ExecutionContext, factory: Factory[A, C]): Future[C] = Future { waitForSuccesses() }
+		def futureSuccesses[C](implicit context: ExecutionContext): Future[Vector[A]] = Future { waitForSuccesses() }
 		
 		/**
 		 * @param context Execution context
 		 * @return A future of the completion of all of these items. Will not check or return the results of those operations.
 		 */
 		def futureCompletion(implicit context: ExecutionContext) = Future { futures.iterator.foreach { _.waitFor() } }
+	}
+	
+	implicit class ManyTryFutures[A](val futures: IterableOnce[Future[Try[A]]]) extends AnyVal
+	{
+		/**
+		  * Blocks until all the futures in this collection have completed. Collects results.
+		  * @return Results of each future in this collection
+		  */
+		def waitForResult() =
+		{
+			val builder = new VectorBuilder[Try[A]]
+			futures.iterator.foreach { builder += _.waitForResult() }
+			builder.result()
+		}
+		
+		/**
+		  * @param exc Implicit execution context
+		  * @return Results of all futures in this collection once they arrive
+		  */
+		def futureResult(implicit exc: ExecutionContext) = Future { waitForResult() }
 	}
 }
