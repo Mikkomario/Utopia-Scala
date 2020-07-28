@@ -56,7 +56,7 @@ case class Circle(origin: Point, radius: Double) extends ShapeConvertible with A
     /**
       * @return The bounds around this circle
       */
-    def bounds = Bounds.between(origin - (radius, radius), origin + (radius, radius))
+    def bounds = Bounds.between(origin - Vector(radius, radius), origin + Vector(radius, radius))
     
     
     // OPERATORS    -------------------

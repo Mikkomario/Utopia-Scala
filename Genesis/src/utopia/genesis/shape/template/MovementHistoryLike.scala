@@ -154,10 +154,10 @@ trait MovementHistoryLike[X <: Vector2DLike[X], V <: VelocityLike[X, V], A <: Ac
 			val amountsWithDurations = (items.head._1 -> (Instant.now() - items.head._2)) +:
 				items.paired.map { case (latter, previous) => previous._1 -> (latter._2 - previous._2) }
 			val totalWeightedAmount = amountsWithDurations.map { case (amount, duration) =>
-				amount * duration.toNanos }.reduce { _ + _ }
+				amount * duration.toNanos.toDouble }.reduce { _ + _ }
 			val totalNanos = amountsWithDurations.map { _._2.toNanos }.sum
 			
-			totalWeightedAmount / totalNanos
+			totalWeightedAmount / totalNanos.toDouble
 		}
 	}
 }

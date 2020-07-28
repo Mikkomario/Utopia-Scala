@@ -240,28 +240,18 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     /**
      * Adds new values to a header. Will not overwrite any existing values.
      */
-    def +(headerName: String, values: Seq[String], regex: String): Headers = 
-    {
-        if (values.nonEmpty)
-            this + (headerName, values.reduce { _ + regex + _ })
-        else
-            this
-    }
+    def +(headerName: String, values: Seq[String], regex: String): Headers = withHeaderAdded(headerName, values, regex)
     
     /**
      * Adds a new value to a header. Will not overwrite any existing values.
      */
-    def +(headerName: String, value: String, regex: String = ",") = 
-    {
-        if (fields.contains(headerName.toLowerCase()))
-        {
-            // Appends to existing value
-            val newValue = apply(headerName).get + regex + value
-            Headers(fields + (headerName -> newValue))
-        }
-        else
-            withHeader(headerName, value)
-    }
+    def +(headerName: String, value: String, regex: String = ",") = withHeaderAdded(headerName, value, regex)
+    
+    /**
+      * @param header A header key value pair
+      * @return A copy of these headers with specified header appended (';' is used to separate multiple header values)
+      */
+    def +(header: (String, String)) = withHeaderAdded(header._1, header._2)
     
     /**
      * Combines two headers with each other. If the headers have same keys, uses the keys from the 
@@ -327,6 +317,32 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     def withHeader(headerName: String, value: String) = new Headers(fields + (headerName -> value))
     
     /**
+      * Adds new values to a header. Will not overwrite any existing values.
+      */
+    def withHeaderAdded(headerName: String, values: Seq[String], regex: String): Headers =
+    {
+        if (values.nonEmpty)
+            withHeaderAdded(headerName, values.reduce { _ + regex + _ }, regex)
+        else
+            this
+    }
+    
+    /**
+      * Adds a new value to a header. Will not overwrite any existing values.
+      */
+    def withHeaderAdded(headerName: String, value: String, regex: String = ",") =
+    {
+        if (fields.contains(headerName.toLowerCase()))
+        {
+            // Appends to existing value
+            val newValue = apply(headerName).get + regex + value
+            Headers(fields + (headerName -> newValue))
+        }
+        else
+            withHeader(headerName, value)
+    }
+    
+    /**
      * Parses a header field into a time instant
      */
     def timeHeader(headerName: String) = apply(headerName).flatMap { dateStr => 
@@ -360,7 +376,7 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     /**
      * Adds a new method to the methods allowed for the targeted resource
      */
-    def withMethodAllowed(method: Method) = this + ("Allow", method.toString)
+    def withMethodAllowed(method: Method) = withHeaderAdded("Allow", method.toString)
     
     /**
      * Checks whether the client accepts the provided content type
@@ -403,7 +419,7 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     /**
      * Adds a new content type to the list of content types accepted by the client
      */
-    def withTypeAccepted(contentType: ContentType) = this + ("Accept", contentType.toString)
+    def withTypeAccepted(contentType: ContentType) = withHeaderAdded("Accept", contentType.toString)
     
     /**
      * Overwrites the set of accepted charsets
@@ -419,7 +435,7 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     /**
      * Adds a new charset to the list of accepted charsets
      */
-    def withCharsetAccepted(charset: Charset, weight: Double = 1) = this + ("Accept-Charset",
+    def withCharsetAccepted(charset: Charset, weight: Double = 1) = withHeaderAdded("Accept-Charset",
             s"${charset.name()};q=$weight")
     
     /**
@@ -439,7 +455,7 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * @param weight Priority of specified language (default = 1.0)
      * @return A copy of these headers with specified accepted language added
      */
-    def withLanguageAccepted(language: String, weight: Double = 1) = this + ("Accept-Language",
+    def withLanguageAccepted(language: String, weight: Double = 1) = withHeaderAdded("Accept-Language",
         s"$language;q=$weight")
     
     /**
@@ -447,8 +463,8 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * @param contentType the type of the content
      * @param charset then encoding that was used used when the content was written to the response
      */
-    def withContentType(contentType: ContentType, charset: Option[Charset] = None) = this + 
-            ("Content-Type", contentType.toString + charset.map { ";" + _.name() }.getOrElse(""))
+    def withContentType(contentType: ContentType, charset: Option[Charset] = None) = withHeader(
+        "Content-Type", contentType.toString + charset.map { ";" + _.name() }.getOrElse(""))
     
     /**
      * Creates a new header with the time when the message associated with this header was originated. 

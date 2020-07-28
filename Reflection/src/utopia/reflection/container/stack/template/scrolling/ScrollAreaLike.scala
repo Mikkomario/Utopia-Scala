@@ -437,13 +437,14 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 					
 					// Calculates scroll bar size
 					val barLengthMod = (length / contentLength) min 1.0
-					val barSize = barAreaSize * (barLengthMod, axis)
+					val barSize = barAreaSize * (axis -> barLengthMod)
 					
 					// Calculates the positions of scroll bar area + bar itself
 					val barAreaPosition = Point(myBreadth - scrollBarWidth, 0, axis.perpendicular)
 					
-					axis -> ScrollBarBounds(Bounds(barAreaPosition + (barAreaSize.along(axis) * scrollPercents.along(axis),
-						axis), barSize), Bounds(barAreaPosition, barAreaSize), axis)
+					axis -> ScrollBarBounds(Bounds(
+						barAreaPosition + axis(barAreaSize.along(axis) * scrollPercents.along(axis)), barSize),
+						Bounds(barAreaPosition, barAreaSize), axis)
 			}.toMap
 			
 			val repaintBounds = Bounds.around(barBounds.values.map { _.area })

@@ -1,7 +1,7 @@
 package utopia.conflict.test
 
 import utopia.conflict.test.TestCollisionGroups.Obstacle
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Polygon, Size, Transformation}
+import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Polygon, Size, Transformation, Vector2D}
 import utopia.conflict.collision.Extensions._
 import utopia.conflict.util.DefaultSetup
 import utopia.flow.async.ThreadPool
@@ -30,10 +30,10 @@ object CollisionTest extends App
     
     val obstacle1 = new TestPolygonObstacle(transformedPolygon)
     val obstacle2 = new TestPolygonObstacle(Circle(Point(96, 228), 64).toPolygon(12))
-    val obstacle3 = new TestPolygonObstacle(Bounds(worldSize.toPoint - (128, 128), Size(64, 64)))
+    val obstacle3 = new TestPolygonObstacle(Bounds(worldSize.toPoint - Vector2D(128, 128), Size(64, 64)))
     val obstacle4 = new TestPolygonObstacle(Transformation.translation(Vector3D(worldSize.x - 128, 32))(nonConvexPolygon))
     
-    val obstacle5 = new TestCircleObstacle(Circle(worldSize.toPoint - (128, 128), 96))
+    val obstacle5 = new TestCircleObstacle(Circle(worldSize.toPoint - Vector2D(128, 128), 96))
     
     // val mouseObstacle = new MousePolygonObstacle(Polygon(Vector(Vector3D(24), Vector3D(0, -24), Vector3D(-24), Vector3D(0, 24))))
     val mouseObstacle = new MousePolygonObstacle(Bounds(Point(-32, -32), Size(64, 64)))

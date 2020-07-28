@@ -24,7 +24,7 @@ object LinesFrom
 	 * @return Lines read from stream
 	 */
 	def stream(stream: InputStream, encoding: String) =
-		Try { Source.fromInputStream(stream, encoding).consume({ _.getLines.toVector }) }
+		Try { Source.fromInputStream(stream, encoding).consume { _.getLines.toVector } }
 	
 	/**
 	 * Reads a stream into a string using default encoding

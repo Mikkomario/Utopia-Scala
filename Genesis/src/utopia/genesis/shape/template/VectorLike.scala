@@ -132,11 +132,18 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	// OPERATORS	----------------------
 	
 	/**
+	  * @param dimensions Dimensions to append
+	  * @return A combination of this vector and specified dimensions
+	  */
+	def +(dimensions: Seq[Double]) = combineDimensions(dimensions) { _ + _ }
+	
+	/**
 	  * @param x X translation
 	  * @param more Y, Z, ... translation
 	  * @return A translated version of this element
 	  */
-	def +(x: Double, more: Double*) = combineDimensions(x +: more, { _ + _ })
+	@deprecated("This method will be removed. Please use another variation of + instead", "v2.3")
+	def +(x: Double, more: Double*) = combineDimensions(x +: more) { _ + _ }
 	
 	/**
 	  * @param adjust Translation on target axis
@@ -146,24 +153,55 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	def +(adjust: Double, axis: Axis) = mapAxis(axis) { _ + adjust }
 	
 	/**
+	  * @param directionalAdjust Axis adjust combo
+	  * @return A copy of this vector with specified dimension appended
+	  */
+	def +(directionalAdjust: (Axis, Double)) = mapAxis(directionalAdjust._1) { _ + directionalAdjust._2 }
+	
+	/**
 	  * @param adjust Translation on target axis
 	  * @param axis Target axis
 	  * @return A copy of this element with one dimension translated
 	  */
-	def -(adjust: Double, axis: Axis) = this + (-adjust, axis)
+	def -(adjust: Double, axis: Axis) = this.+(-adjust, axis)
+	
+	/**
+	  * @param directionalAdjust An axis adjust combo
+	  * @return A copy of this vector with specified dimension subtracted
+	  */
+	def -(directionalAdjust: (Axis, Double)) = mapAxis(directionalAdjust._1) { _ - directionalAdjust._2 }
+	
+	/**
+	  * @param dimensions Dimensions to subtract
+	  * @return A copy of this vector with specified dimensions subtracted
+	  */
+	def -(dimensions: Seq[Double]) = combineDimensions(dimensions) { _ - _ }
 	
 	/**
 	  * @param x X translation (negative)
 	  * @param more Y, Z, ... translation (negative)
 	  * @return A translated version of this element
 	  */
-	def -(x: Double, more: Double*) = combineDimensions(x +: more, { _ - _ })
+	@deprecated("This method will be removed. Please use another variation of - instead", "v2.3")
+	def -(x: Double, more: Double*) = combineDimensions(x +: more) { _ - _ }
+	
+	/**
+	  * @param dimensions Dimensions to use as multipliers (missing dimensions will be treated as 1)
+	  * @return A multiplied copy of this vector
+	  */
+	def *(dimensions: Seq[Double]) = combineDimensions(dimensions) { _ * _ }
 	
 	/**
 	  * @param other Another vectorlike element
 	  * @return This element multiplied on each axis of the provided element
 	  */
 	def *(other: Dimensional[Double]) = combineWith(other) { _ * _ }
+	
+	/**
+	  * @param directedMultiplier Amount axis combo
+	  * @return A copy of this vector multiplied only along the specified axis
+	  */
+	def *(directedMultiplier: (Axis, Double)) = mapAxis(directedMultiplier._1) { _ * directedMultiplier._2 }
 	
 	/**
 	  * @param n A multiplier for specified axis
@@ -178,13 +216,27 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	 * @param more Z, etc. modifiers (optional)
 	 * @return A modified copy of this vectorlike instance
 	 */
-	def *(x: Double, y: Double, more: Double*) = combineDimensions(Vector(x, y) ++ more, { _ * _ })
+	@deprecated("This method will be removed, please use another variation of *", "v2.3")
+	def *(x: Double, y: Double, more: Double*) = combineDimensions(Vector(x, y) ++ more) { _ * _ }
+	
+	/**
+	  * @param dimensions Dimensions to use as dividers. 0s and missing dimensions are ignored (treated as 1)
+	  * @return A divided copy of this vector
+	  */
+	def /(dimensions: Seq[Double]) = combineDimensions(dimensions) { (a, b) => if (b == 0) a else a / b }
 	
 	/**
 	  * @param other Another vectorlike element
 	  * @return This element divided on each axis of the provided element. Dividing by 0 is ignored
 	  */
-	def /(other: Dimensional[Double]) = combineWith(other) { case (a, b) => if (b == 0) a else a / b }
+	def /(other: Dimensional[Double]): Repr = this / other.dimensions
+	
+	/**
+	  * @param directedDivider A divider axis combination
+	  * @return A copy of this vector divided along the specified axis
+	  */
+	def /(directedDivider: (Axis, Double)) = if (directedDivider._2 == 0) repr else
+		mapAxis(directedDivider._1) { _ / directedDivider._2 }
 	
 	/**
 	  * @param n A divider for target axis
@@ -271,9 +323,9 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * @return A new element with merged or copied dimensions
 	  */
 	def combineWith(other: Dimensional[Double])(merge: (Double, Double) => Double) =
-		combineDimensions(other.dimensions, merge)
+		combineDimensions(other.dimensions)(merge)
 	
-	private def combineDimensions(dimensions: Seq[Double], merge: (Double, Double) => Double) =
+	private def combineDimensions(dimensions: Seq[Double])(merge: (Double, Double) => Double) =
 	{
 		val myDimensions = this.dimensions
 		val otherDimensions = dimensions

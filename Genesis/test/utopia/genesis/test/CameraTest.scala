@@ -58,8 +58,8 @@ object CameraTest extends App
     val numbers = new GridNumberDrawer(grid)
 	val camera = new MagnifierCamera(64)
  
-	handlers ++= (grid, numbers, camera, camera.drawHandler)
-    camera.drawHandler ++= (grid, numbers)
+	handlers ++= Vector(grid, numbers, camera, camera.drawHandler)
+    camera.drawHandler ++= Vector(grid, numbers)
     
 	// Starts the program
 	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext

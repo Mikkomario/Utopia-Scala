@@ -498,7 +498,7 @@ private class CustomTextField extends JTextField with CustomDrawComponent
 {
 	// IMPLEMENTED	-----------------
 	
-	override def drawBounds = Bounds(Point.origin, Size.of(getSize()) - (1, 1))
+	override def drawBounds = Bounds(Point.origin, Size.of(getSize()))
 	
 	override def paintComponent(g: Graphics) = customPaintComponent(g, super.paintComponent)
 	

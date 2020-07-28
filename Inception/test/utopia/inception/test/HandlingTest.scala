@@ -24,7 +24,7 @@ object HandlingTest extends App
     assert(o1.defaultHandlingState)
     assert(o1.handlingState(handlerType))
     
-    o1.specifyHandlingState(handlerType, false)
+    o1.specifyHandlingState(handlerType, state = false)
     assert(!o1.handlingState(handlerType))
     assert(o1.defaultHandlingState)
     
@@ -34,7 +34,7 @@ object HandlingTest extends App
     assert(relay.handlers.nonEmpty)
     assert(handler1.isEmpty)
     
-    handler1 ++= (o2, o3, o1)
+    handler1 ++= Vector(o2, o3, o1)
     
     handler1.sortWith({ _.index <= _.index })
     assert(handler1.head == o1)
@@ -44,7 +44,7 @@ object HandlingTest extends App
     assert(handler1.size == 3)
     assert(countHandedObjects(handler1) == 2)
     
-    o1.specifyHandlingState(handlerType, true)
+    o1.specifyHandlingState(handlerType, state = true)
     assert(o1.handlingState(handlerType))
     assert(countHandedObjects(handler1) == 3)
     

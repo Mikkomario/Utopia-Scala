@@ -318,7 +318,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @param y Y-translation applied
       * @return A copy of these bounds with translated position
       */
-    def translated(x: Double, y: Double) = withPosition(position + (x, y))
+    def translated(x: Double, y: Double) = withPosition(position + Vector2D(x, y))
     
     /**
       * @param area Another area

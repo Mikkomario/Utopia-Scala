@@ -46,7 +46,7 @@ object ScrollCanvasTest extends App
 	
 	// Creates the drawable items
 	val worldSize = Size(320, 320)
-	handlers ++= (new TestCircle(Point.origin), new TestCircle(worldSize.toPoint), new TestCircle(worldSize.toPoint / 2))
+	handlers ++= Vector(new TestCircle(Point.origin), new TestCircle(worldSize.toPoint), new TestCircle(worldSize.toPoint / 2))
 	
 	// Creates the canvas
 	val canvas = new ScrollCanvas(worldSize, drawHandler, actorHandler, mouseButtonHandler, mouseMoveHandler,

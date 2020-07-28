@@ -111,8 +111,8 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
                     length - item.maxCoordinateAlong(direction)
                 
                 // Also includes the whole stack breadth
-                Bounds(item.position - (top, direction), item.size.withDimension(breadth, direction.perpendicular) +
-                    (top + bottom, direction))
+                Bounds(item.position - direction(top), item.size.withDimension(breadth, direction.perpendicular) +
+                    direction(top + bottom))
             }
         }
     }

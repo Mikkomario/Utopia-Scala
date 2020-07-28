@@ -1,9 +1,11 @@
 package utopia.exodus.database.access.id
 
+import utopia.exodus.database.Tables
 import utopia.exodus.database.factory.organization.RoleRightFactory
 import utopia.exodus.database.model.organization.RoleRightModel
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
+import utopia.vault.nosql.access.ManyIntIdAccess
 import utopia.vault.sql.Extensions._
 
 /**
@@ -11,8 +13,19 @@ import utopia.vault.sql.Extensions._
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
-object TaskIds
+object TaskIds extends ManyIntIdAccess
 {
+	// IMPLEMENTED	-----------------------
+	
+	override def target = table
+	
+	override def table = Tables.task
+	
+	override def globalCondition = None
+	
+	
+	// OTHER	---------------------------
+	
 	/**
 	  * @param roleId A user role id
 	  * @param connection DB Connection (implicit)

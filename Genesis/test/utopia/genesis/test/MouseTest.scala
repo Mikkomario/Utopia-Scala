@@ -95,7 +95,7 @@ object MouseTest extends App
     val area1 = new TestObject((gameWorldSize / 2).toPoint, 128)
     val area2 = new TestObject((gameWorldSize / 2).toPoint + X(128), 64)
     
-    handlers ++= (area1, area2)
+    handlers ++= Vector(area1, area2)
     
 	// Creates the frame
 	val canvas = new Canvas(drawHandler, gameWorldSize)

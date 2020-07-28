@@ -60,10 +60,10 @@ trait BorderDrawer extends CustomDrawer
 			buffer += Bounds(bounds.topLeft.plusX(insets.left), Size(bounds.width - insets.left, insets.top))
 		// Right is limited by top
 		if (insets.right > 0)
-			buffer += Bounds(bounds.topRight + (-insets.right, insets.top), Size(insets.right, bounds.height - insets.top))
+			buffer += Bounds(bounds.topRight + Vector(-insets.right, insets.top), Size(insets.right, bounds.height - insets.top))
 		// Bottom is limited by right
 		if (insets.bottom > 0)
-			buffer += Bounds(bounds.bottomLeft - (insets.bottom, Y), Size(bounds.width - insets.right, insets.bottom))
+			buffer += Bounds(bounds.bottomLeft - Y(insets.bottom), Size(bounds.width - insets.right, insets.bottom))
 		// Left is limited by bottom
 		if (insets.left > 0)
 			buffer += Bounds(bounds.topLeft, Size(insets.left, bounds.height - insets.bottom))
@@ -72,5 +72,5 @@ trait BorderDrawer extends CustomDrawer
 	}
 	
 	private def boundsInsideInsets(original: Bounds, insets: Insets) =
-		Bounds(original.position + (insets.left, insets.top), original.size - insets.total)
+		Bounds(original.position + Vector(insets.left, insets.top), original.size - insets.total)
 }
