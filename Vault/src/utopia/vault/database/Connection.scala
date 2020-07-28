@@ -331,7 +331,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     @throws(classOf[EnvironmentNotSetupException])
     @throws(classOf[NoConnectionException])
     @throws(classOf[SQLException])
-    def executeQuery(sql: String, values: Seq[Value] = Vector()) = 
+    def executeQuery(sql: String, values: Seq[Value] = Vector()) =
     {
         // Empty statements are not executed
         if (sql.isEmpty)
@@ -363,6 +363,25 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
             }
         }
     }
+    
+    /**
+      * Checks whether a database with specified name exists
+      * @param databaseName Database name
+      * @return Whether such a database exists
+      */
+    def existsDatabaseWithName(databaseName: String) = executeQuery(
+        "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ? LIMIT 1",
+        Vector(databaseName)).nonEmpty
+    
+    /**
+      * Checks whether there exists a database table combination
+      * @param databaseName Database name
+      * @param tableName Table name
+      * @return Whether such a table exists in a database with that name
+      */
+    def existsTable(databaseName: String, tableName: String) = executeQuery(
+        "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? LIMIT 1",
+        Vector(databaseName, tableName)).nonEmpty
     
     private def printIfDebugging(message: => String) = if (Connection.settings.debugPrintsEnabled) println(message)
     

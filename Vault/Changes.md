@@ -20,6 +20,7 @@ This allows you to use these update methods in updates that require joins.
 possibility of 0 linked items.
 - Added RowModelAccess, SingleRowModel access and ManyRowModelAccess for FromRowFactory -utilizing 
 access classes
+- Added .existsDatabaseWithName(String) and .existsTableWithName(String, String) to Connection
 ### New Methods
 - Condition object now contains .alwaysTrue and .alwaysFalse properties
 ### Other Changes
