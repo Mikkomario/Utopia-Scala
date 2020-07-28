@@ -77,7 +77,7 @@ object FileExtensions
 		/**
 		 * @return An absolute path based on this path (if this path is already absolute, returns this)
 		 */
-		def absolute = p.toAbsolutePath
+		def absolute = Try { p.toAbsolutePath }.getOrElse(p)
 		
 		/**
 		 * @return Whether this path represents an existing directory
