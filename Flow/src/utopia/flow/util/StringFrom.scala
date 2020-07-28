@@ -21,7 +21,8 @@ object StringFrom
 	 * @param encoding Character encoding used (Eg. "UTF-8")
 	 * @return A string from specified stream (ignores newlines)
 	 */
-	def stream(stream: InputStream, encoding: String) = Try(Source.fromInputStream(stream, encoding).consume { _.getLines.mkString })
+	def stream(stream: InputStream, encoding: String) =
+		Try(Source.fromInputStream(stream, encoding).consume { _.getLines.mkString })
 	
 	/**
 	 * Reads a stream into a string using default encoding
@@ -29,7 +30,8 @@ object StringFrom
 	 * @param codec Character encoding used (implicit)
 	 * @return A string from specified stream (ignores newlines)
 	 */
-	def stream(stream: InputStream)(implicit codec: Codec) = Try(Source.fromInputStream(stream)(codec).consume { _.getLines.mkString })
+	def stream(stream: InputStream)(implicit codec: Codec) =
+		Try { Source.fromInputStream(stream)(codec).consume { _.getLines.mkString } }
 	
 	/**
 	 * Reads a stream into a string
@@ -45,7 +47,8 @@ object StringFrom
 	 * @param encoding Character encoding used (Eg. "UTF-8")
 	 * @return The file's contents as a single string (ignores newlines)
 	 */
-	def file(file: File, encoding: String) = Try(Source.fromFile(file, encoding).consume { _.getLines.mkString })
+	def file(file: File, encoding: String) =
+		Try(Source.fromFile(file, encoding).consume { _.getLines.mkString })
 	
 	/**
 	 * Reads a file into a string using default encoding
@@ -53,7 +56,8 @@ object StringFrom
 	 * @param codec Character encoding used (implicit)
 	 * @return The file's contents as a single string (ignores newlines)
 	 */
-	def file(file: File)(implicit codec: Codec) = Try(Source.fromFile(file)(codec).consume { _.getLines.mkString })
+	def file(file: File)(implicit codec: Codec) =
+		Try(Source.fromFile(file)(codec).consume { _.getLines.mkString })
 	
 	/**
 	 * Reads a file into a string

@@ -11,6 +11,6 @@
     <orderEntry type="module" module-name="Flow" />
     <orderEntry type="module" module-name="Nexus" />
     <orderEntry type="library" name="servlet-api" level="project" />
-    <orderEntry type="library" name="scala-sdk-2.13.1" level="application" />
+    <orderEntry type="library" name="scala-sdk-2.13.3" level="application" />
   </component>
 </module>

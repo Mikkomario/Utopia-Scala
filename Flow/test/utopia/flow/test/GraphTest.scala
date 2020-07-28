@@ -44,7 +44,7 @@ object GraphTest extends App
     assert(node1.isConnectedTo(node5))
     
     // Tests node traversing
-    assert(node1/(1, 5, 1) == Set(node5))
+    assert(node1/Vector(1, 5, 1) == Set(node5))
     
     // The shortest route should be 1 -> 4 -> 5
     assert(node1.shortestRouteTo(node5).get.size == 2)
