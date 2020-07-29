@@ -383,6 +383,13 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? LIMIT 1",
         Vector(databaseName, tableName)).nonEmpty
     
+    /**
+      * Drops / removes a database
+      * @param databaseName Database name
+      */
+    def dropDatabase(databaseName: String): Unit = executeQuery("DROP DATABASE ?",
+        Vector(databaseName))
+    
     private def printIfDebugging(message: => String) = if (Connection.settings.debugPrintsEnabled) println(message)
     
     private def readInParts(statement: SqlSegment)(operation: Vector[Row] => Unit) =
