@@ -1,5 +1,7 @@
 package utopia.vault.database
 
+import java.nio.file.Path
+
 import utopia.flow.generic.EnvironmentNotSetupException
 import java.sql.DriverManager
 import java.sql.Statement
@@ -21,6 +23,7 @@ import utopia.flow.generic.IntType
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.AutoClose._
+import utopia.flow.util.IterateLines
 import utopia.vault.model.immutable.{Result, Row, Table}
 import utopia.vault.sql.{Limit, Offset, SqlSegment}
 
@@ -387,8 +390,55 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
       * Drops / removes a database
       * @param databaseName Database name
       */
-    def dropDatabase(databaseName: String): Unit = executeQuery("DROP DATABASE ?",
-        Vector(databaseName))
+    def dropDatabase(databaseName: String) = execute(s"DROP DATABASE $databaseName")
+    
+    /**
+      * Executes all statements read from the specified input file
+      * @param inputPath Input file path
+      * @return Success if all of the statements in the file were properly executed. Failure otherwise.
+      */
+    def executeStatementsFrom(inputPath: Path) = {
+        // Reads the file and executes statements whenever one has been completely read
+        IterateLines.fromPath(inputPath) { lines =>
+            Try {
+                var currentStatementBuilder = new StringBuilder()
+                lines.map { _.trim }.filterNot { s => s.isEmpty || s.startsWith("--") }.foreach { line =>
+                    splitToStatements(line) match
+                    {
+                        // Appends current statement until its end is found
+                        case Right(partialStatement) => currentStatementBuilder ++= partialStatement
+                        case Left((statementEnd, completeStatements, statementStart)) =>
+                            // Completes and executes current statement
+                            currentStatementBuilder ++= statementEnd
+                            execute(currentStatementBuilder.result())
+                            // Executes other complete statements on this line
+                            completeStatements.foreach(execute)
+                            // Starts building the next statement
+                            currentStatementBuilder = new StringBuilder()
+                            statementStart.foreach { currentStatementBuilder ++= _ }
+                    }
+                }
+            }
+        }.flatten
+    }
+    
+    private def splitToStatements(statementString: String) = {
+        if (statementString.contains(';'))
+        {
+            val parts = statementString.split(";").toVector.map { _.trim }.filterNot { _.isEmpty }
+            if (parts.size > 1)
+            {
+                if (statementString.trim.endsWith(";"))
+                    Left((parts.head, parts.tail, None))
+                else
+                    Left((parts.head, parts.drop(1).dropRight(1), Some(parts.last)))
+            }
+            else
+                Left((parts.head, Vector(), None))
+        }
+        else
+            Right(statementString)
+    }
     
     private def printIfDebugging(message: => String) = if (Connection.settings.debugPrintsEnabled) println(message)
     
