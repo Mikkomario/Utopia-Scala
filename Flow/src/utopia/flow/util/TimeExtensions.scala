@@ -4,7 +4,7 @@ import java.time.chrono.ChronoLocalDate
 import java.time.format.DateTimeFormatter
 
 import scala.language.implicitConversions
-import java.time.{DayOfWeek, Duration, Instant, LocalDate, LocalDateTime, LocalTime, Month, Period, Year, YearMonth, ZoneId}
+import java.time.{Duration, Instant, LocalDate, LocalDateTime, LocalTime, Month, Period, Year, YearMonth, ZoneId}
 import java.time.temporal.TemporalAmount
 
 import scala.concurrent.duration
@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit
 import scala.collection.immutable.VectorBuilder
 import scala.util.Try
 import utopia.flow.util.RichComparable._
+import utopia.flow.util.WeekDay.Monday
 
 /**
 * This object contains some extensions for java's time classes
@@ -235,7 +236,7 @@ object TimeExtensions
 		/**
 		  * @return Week day of this date
 		  */
-		def weekDay = d.getDayOfWeek
+		def weekDay: WeekDay = d.getDayOfWeek
 		/**
 		  * @return Year + month of this date
 		  */
@@ -336,14 +337,93 @@ object TimeExtensions
 		 * @return Whether this date comes after or is equal to specified date
 		 */
 		def >=(other: ChronoLocalDate) = !d.isBefore(other)
+		
+		/**
+		  * @param weekDay A week day
+		  * @param includeSelf Whether this date should be returned in case it has that week day (default = false,
+		  *                    which would return a day exactly one week from this day in case this day's week day
+		  *                    matches searched week day)
+		  * @return Next 'weekDay' after this day. May be this day if 'includeSelf' is set to true.
+		  */
+		def next(weekDay: WeekDay, includeSelf: Boolean = false) =
+		{
+			val current = this.weekDay
+			if (includeSelf && current == weekDay)
+				d
+			else
+				this + (weekDay - current)
+		}
+		
+		/**
+		  * @param weekDay A week day
+		  * @param includeSelf Whether this date should be returned in case it has that week day (default = false,
+		  *                    which would return a day exactly one week before this day in case this day's week day
+		  *                    matches searched week day)
+		  * @return Last 'weekDay' before this day. May be this day if 'includeSelf' is set to true.
+		  */
+		def previous(weekDay: WeekDay, includeSelf: Boolean = false) =
+		{
+			val current = this.weekDay
+			if (includeSelf && current == weekDay)
+				d
+			else
+				this - (current - weekDay)
+		}
 	}
 	
 	implicit class ExtendedLocalTime(val t: LocalTime) extends AnyVal
 	{
+		// COMPUTED	----------------------
+		
 		/**
 		  * @return A duration based on this time element (from the beginning of day)
 		  */
 		def toDuration = t.toNanoOfDay.nanos
+		
+		
+		// OTHER	----------------------
+		
+		/**
+		  * @param other Another time
+		  * @return Duration from 'other' to this. Negative if 'other' comes after this.
+		  */
+		def -(other: LocalTime) = toDuration - other.toDuration
+		
+		/**
+		  * @param duration a duration
+		  * @return A copy of this time shifted by 'duration' to past
+		  */
+		def -(duration: Duration) = t.minus(duration)
+		
+		/**
+		  * @param duration a duration
+		  * @return A copy of this time shifted by 'duration' to future
+		  */
+		def +(duration: Duration) = t.plus(duration)
+		
+		/**
+		  * @param other Another time
+		  * @return Whether this time comes before the other time
+		  */
+		def <(other: LocalTime) = t.isBefore(other)
+		
+		/**
+		  * @param other Another time
+		  * @return Whether this time comes after the other time
+		  */
+		def >(other: LocalTime) = t.isAfter(other)
+		
+		/**
+		  * @param other Another time
+		  * @return Whether this time comes before or at the same time as the other time
+		  */
+		def <=(other: LocalTime) = !t.isAfter(other)
+		
+		/**
+		  * @param other Another time
+		  * @return Whether this time comes before or at the same time as the other time
+		  */
+		def >=(other: LocalTime) = !t.isBefore(other)
 	}
 	
 	implicit class ExtendedYear(val y: Year) extends AnyVal
@@ -409,11 +489,11 @@ object TimeExtensions
 		  * @return A vector that contains all weeks in this month, first and last week may contain less than 7
 		  *         days.
 		  */
-		def weeks(firstDayOfWeek: DayOfWeek = DayOfWeek.MONDAY) =
+		def weeks(firstDayOfWeek: WeekDay = Monday) =
 		{
 			val d = dates
 			// Month may start at the middle of the week
-			val incompleteStart = d.takeWhile { _.weekDay.getValue > firstDayOfWeek.getValue }.toVector
+			val incompleteStart = d.takeWhile { _.weekDay > firstDayOfWeek }.toVector
 			
 			val weeksBuffer = new VectorBuilder[Vector[LocalDate]]()
 			if (incompleteStart.nonEmpty)
