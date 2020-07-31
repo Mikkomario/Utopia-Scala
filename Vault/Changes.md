@@ -15,6 +15,7 @@
 This allows you to use these update methods in updates that require joins.
 - RowFactory.foreach renamed to foreachWhere
 - Moved exists method from UniqueAccess to ModelAccess
+- ClearOldData now accepts DataDeletionRules as parameters for more readable and easier configuration
 ### New Features
 - Added PossiblyLinkedFactory and PossiblyMultiLinkedFactory to support situations where there is a 
 possibility of 0 linked items.

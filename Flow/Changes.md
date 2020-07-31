@@ -19,6 +19,10 @@ can automatically unwrap values to most basic types (saves you from writing valu
 - Mirror and MergeMirror classes added for supporting mapping change listening
     - Added map and merge methods to Changing respectively
 - Added .view -property to PointerWithEvents, which allows one to provide a read-only interface to such pointers
+- Added a WeekDay enumeration
+    - LocalDate.weekDay now returns an instance of this enumeration when TimeExtensions has been imported
+- Added WeeklyTask trait & wrapper for creating loops that run a task once a week
+    - Best use together with SynchronizedLoops
         
 ### Fixes
 - tryMap(...) in CollectionExtensions now uses buildFrom and not Factory. This should result in better result 
@@ -32,6 +36,9 @@ collection types when used.
     - Couple of new .divided methods
 - FileExtensions: Added .toJson, .contains(String), .containsRecursive(String), writeFromReader(...) and 
 writeStream(...)
+- TimeExtensions
+    - Added .next(WeekDay, Boolean) to LocalDate
+    - Added multiple new methods for LocalTime as well
     
 ### Other Changes
 - JsonParser trait added, which JSONReader now implements. The purpose of this change is to 
