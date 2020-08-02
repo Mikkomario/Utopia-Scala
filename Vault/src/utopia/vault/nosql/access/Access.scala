@@ -1,7 +1,7 @@
 package utopia.vault.nosql.access
 
 import utopia.vault.database.Connection
-import utopia.vault.model.immutable.Table
+import utopia.vault.model.immutable.{Storable, Table}
 import utopia.vault.sql.{Condition, OrderBy}
 
 /**
@@ -53,4 +53,11 @@ trait Access[+A]
 		case Some(cond) => Some(mergeCondition(cond))
 		case None => globalCondition
 	}
+	
+	/**
+	  * Merges an additional condition with the existing global condition
+	  * @param conditionModel A model representing the additional condition to apply
+	  * @return A combination of these conditions
+	  */
+	def mergeCondition(conditionModel: Storable): Condition = mergeCondition(conditionModel.toCondition)
 }
