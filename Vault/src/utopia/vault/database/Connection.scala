@@ -406,7 +406,9 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                     splitToStatements(line) match
                     {
                         // Appends current statement until its end is found
-                        case Right(partialStatement) => currentStatementBuilder ++= partialStatement
+                        case Right(partialStatement) =>
+                            currentStatementBuilder ++= partialStatement
+                            currentStatementBuilder += ' '
                         case Left((statementEnd, completeStatements, statementStart)) =>
                             // Completes and executes current statement
                             currentStatementBuilder ++= statementEnd
@@ -415,7 +417,10 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                             completeStatements.foreach(execute)
                             // Starts building the next statement
                             currentStatementBuilder = new StringBuilder()
-                            statementStart.foreach { currentStatementBuilder ++= _ }
+                            statementStart.foreach { s =>
+                                currentStatementBuilder ++= s
+                                currentStatementBuilder += ' '
+                            }
                     }
                 }
             }
