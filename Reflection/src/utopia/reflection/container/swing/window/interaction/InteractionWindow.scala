@@ -1,5 +1,6 @@
 package utopia.reflection.container.swing.window.interaction
 
+import utopia.flow.async.AsyncExtensions.RichFuture
 import utopia.flow.collection.VolatileList
 import utopia.flow.util.CollectionExtensions._
 import utopia.reflection.component.context.{ButtonContextLike, ColorContextLike}
@@ -83,6 +84,22 @@ trait InteractionWindow[+A]
 	
 	
 	// OTHER	-----------------------
+	
+	/**
+	  * Displays an interactive dialog to the user. Blocks while the dialog is visible
+	  * @param parentWindow Window over which this window is displayed
+	  * @param exc Implicit execution context
+	  */
+	def displayBlockingOver(parentWindow: java.awt.Window)(implicit exc: ExecutionContext) =
+		displayBlocking(Some(parentWindow))
+	
+	/**
+	  * Displays an interactive dialog to the user. Blocks while the dialog is visible
+	  * @param parentWindow Window over which this window is displayed (optional)
+	  * @param exc Implicit execution context
+	  */
+	def displayBlocking(parentWindow: Option[java.awt.Window] = None)(implicit exc: ExecutionContext): Unit =
+		display(parentWindow).waitFor()
 	
 	/**
 	 * Displays an interactive dialog to the user

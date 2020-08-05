@@ -32,4 +32,10 @@ trait PointerLike[A]
 	  * Whether this pointer points to the specified value
 	  */
 	def contains(item: Any) = get == item
+	
+	/**
+	  * Updates the value in this pointer
+	  * @param f A function for changing this pointer's value
+	  */
+	def update(f: A => A) = set(f(get))
 }
