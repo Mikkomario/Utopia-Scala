@@ -16,6 +16,48 @@ import scala.io.Codec
 object CsvReader
 {
 	/**
+	  * Iterates over the lines in a csv document. Doesn't search for or use headers.
+	  * @param path Path to the target document
+	  * @param separator Separator between columns (default = ";")
+	  * @param f Function that consumes the lines iterator.
+	  * @param codec Implicit encoding context
+	  * @tparam A Type of function result
+	  * @return Failure if file handling failed. Function result otherwise.
+	  */
+	def iterateRawRowsIn[A](path: Path, separator: String = ";")(f: Iterator[Vector[String]] => A)(implicit codec: Codec) =
+	{
+		IterateLines.fromPath(path) { linesIter => f(linesIter.filterNot { _.isEmpty }
+			.map { _.split(separator).toVector.map { _.trim } }) }
+	}
+	
+	/**
+	  * Iterates over the lines in a csv document
+	  * @param path Path to the target document
+	  * @param separator Separator between columns (default = ";")
+	  * @param f Function that consumes the parsed lines iterator. Each line is a model that combines headers with line
+	  *          values. The passed iterator must not be used outside this function.
+	  * @param codec Implicit encoding context
+	  * @return Failure if file handling failed. function result otherwise.
+	  */
+	def iterateLinesIn[A](path: Path, separator: String = ";")(f: Iterator[Model[Constant]] => A)(implicit codec: Codec) =
+	{
+		// Iterates all lines from the target path
+		IterateLines.fromPath(path) { linesIter =>
+			// The first line is interpreted as the headers list
+			val iter = linesIter.filterNot { _.isEmpty }.map { _.split(separator).toVector.map { _.trim } }
+			if (iter.hasNext)
+			{
+				val headers = iter.next()
+				// Parses each line to models (on call) and passes this mapped iterator to the specified function
+				f(iter.map { line =>
+					Model.withConstants(headers.zip(line).map { case (header, value) => Constant(header, value) }) })
+			}
+			else
+				f(Iterator.empty)
+		}(codec)
+	}
+	
+	/**
 	  * Calls the specified function for each line in the target document
 	  * @param path Path to the target document
 	  * @param separator Separator between columns (default = ";")
@@ -25,19 +67,5 @@ object CsvReader
 	  * @return Failure if file handling failed. Success otherwise.
 	  */
 	def foreachLine(path: Path, separator: String = ";")(f: Model[Constant] => Unit)(implicit codec: Codec) =
-	{
-		// Iterates all lines from the target path
-		IterateLines.fromPath(path) { linesIter =>
-			// The first line is interpreted as the headers list
-			val iter = linesIter.filterNot { _.isEmpty }.map { _.split(separator).toVector.map { _.trim } }
-			if (iter.hasNext)
-			{
-				val headers = iter.next()
-				// Calls the specified function for each parsed line, wrapped in a model
-				iter.foreach { line =>
-					f(Model.withConstants(headers.zip(line).map { case (header, value) => Constant(header, value) }))
-				}
-			}
-		}(codec)
-	}
+		iterateLinesIn(path, separator) { _.foreach(f) }
 }
