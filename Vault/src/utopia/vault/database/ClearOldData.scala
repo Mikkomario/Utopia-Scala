@@ -106,7 +106,8 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 	{
 		var lastTable = primaryTable
 		childPath.map { nextTable =>
-			val reference = References.fromTo(lastTable, nextTable).head
+			// Reads the next reference (from "right to left")
+			val reference = References.fromTo(nextTable, lastTable).head
 			lastTable = nextTable
 			reference
 		}.toVector
