@@ -525,6 +525,13 @@ object CollectionExtensions
             else
                 Failure(new NoSuchElementException("Called tryFindMap on an empty collection"))
         }
+    
+        /**
+          * @param items Items to test
+          * @tparam O Type of items collection
+          * @return Whether this collection of items contains all of the specified items
+          */
+        def containsAll[O](items: Iterable[O]) = items.forall { item => t.exists { _ == item } }
     }
     
     implicit class RichIterableLike[A, CC[X], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal

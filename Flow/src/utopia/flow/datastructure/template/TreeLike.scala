@@ -139,11 +139,13 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
      * Finds the first child node from this entire tree that matches the specified condition. Returns the whole path
      * to that node
      * @param filter A search condition
-     * @return Path to the first node matching the specified condition, if such a node exists
+     * @return Path to the first node matching the specified condition, if such a node exists. The resulting path
+      *         won't include this node.
      */
     def findWithPath(filter: NodeType => Boolean): Option[Vector[A]] =
     {
-        children.find(filter).map { c => Vector(c.content) }.orElse { children.findMap { c => c.findWithPath(filter).map { c.content +: _ } } }
+        children.find(filter).map { c => Vector(c.content) }
+            .orElse { children.findMap { c => c.findWithPath(filter).map { c.content +: _ } } }
     }
     
     /**
@@ -151,12 +153,15 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
       * specified filter. Includes the "path" to all of the selected nodes as well. If a node is selected, it's children are
       * not tested anymore. All of the returned values are within separate trees.
       * @param filter A filter function
-      * @return Paths to all of the nodes that satisfy the specified filter function
+      * @return Paths to all of the nodes that satisfy the specified filter function. Paths don't include this node.
       */
     def filterWithPaths(filter: NodeType => Boolean): Vector[Vector[A]] =
     {
         val (notAccepted, accepted) = children.divideBy(filter)
         // Adds accepted children as is and finds potential matches under the non-accepted children
-        accepted.map { c => Vector(c.content) } ++ notAccepted.flatMap { _.filterWithPaths(filter) }.filterNot { _.isEmpty }
+        // If paths were found under children that weren't directly accepted, appends those children to the
+        // beginning of the resulting path(s)
+        accepted.map { c => Vector(c.content) } ++
+            notAccepted.flatMap { c => c.filterWithPaths(filter).map { c.content +: _ } }.filterNot { _.isEmpty }
     }
 }

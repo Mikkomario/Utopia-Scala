@@ -6,6 +6,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.sql.Extensions._
 import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
+import utopia.vault.model.error.NoReferenceFoundException
 import utopia.vault.model.immutable.{DataDeletionRule, Reference, Table}
 import utopia.vault.sql.{Condition, Delete, Join, SqlTarget, Where}
 
@@ -28,7 +29,8 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 			val restrictingChildren = nonEmptyRules.flatMap { childRule =>
 				tree.filterWithPaths { _.content == childRule.targetTable }.map { childPath =>
 					// Converts the table path to a reference path
-					referencePathFrom(childRule.targetTable, childPath)
+					// Throws possible errors here (those would result from logic / programming error)
+					referencePathFrom(rule.targetTable, childPath).get
 				}
 			}.toVector
 			// Creates the deletion rule for the primary table
@@ -102,15 +104,18 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 			case (conditionalPeriod: Period, condition: Option[Condition]) => condition.get -> conditionalPeriod }.toMap
 	 */
 	
-	private def referencePathFrom(primaryTable: Table, childPath: Seq[Table]) =
+	private def referencePathFrom(primaryTable: Table, childPath: Vector[Table]) =
 	{
 		var lastTable = primaryTable
-		childPath.map { nextTable =>
-			// Reads the next reference (from "right to left")
-			val reference = References.fromTo(nextTable, lastTable).head
+		
+		childPath.tryMap { nextTable =>
+			val reference = References.fromTo(nextTable, lastTable).headOption.orElse { References.fromTo(lastTable,
+				nextTable).headOption }.toTry { new NoReferenceFoundException(
+				s"Can't find a reference between ${nextTable.name} and ${
+					lastTable.name} even though there was supposed to be a reference there.") }
 			lastTable = nextTable
 			reference
-		}.toVector
+		}
 	}
 	
 	// Expects childPaths to be nonEmpty

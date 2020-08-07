@@ -32,6 +32,7 @@ access classes
 - Module is now based on Scala **v2.13.1** and no longer Scala 2.12.18
 ### Fixes
 - UniqueAccess and ManyAccess implicit auto-access was not marked as implicit previously - fixed
+- Bugfixes in ClearOldData
 ### Deprecations
 - **UniqueAccess.get** was replaced with **UniqueAccess.pull**
 ### New Feature Prototypes
