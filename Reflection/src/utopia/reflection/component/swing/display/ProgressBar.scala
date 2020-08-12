@@ -152,7 +152,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 				currentAnimationProgress = (currentAnimationProgress + increase) min 1.0
 				repaint()
 				
-				if (currentAnimationProgress >= 1)
+				if (currentAnimationProgress >= 1 && displayedProgress >= 1)
 					isCompletedFlag.set()
 			}
 		}
