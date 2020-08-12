@@ -570,7 +570,7 @@ object FileExtensions
 		 * @return This path. Failure if writing failed.
 		 */
 		def append(text: String)(implicit codec: Codec) = Try { Files.write(p, text.getBytes(codec.charSet),
-			StandardOpenOption.APPEND) }
+			StandardOpenOption.APPEND, StandardOpenOption.CREATE) }
 		
 		/**
 		 * Writes a json-convertible instance to this file
