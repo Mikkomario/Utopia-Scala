@@ -81,7 +81,13 @@ trait ConditionElement
       * @return A condition that accepts any of the provided value in this condition element
       */
     def in[V](elements: IterableOnce[V])(implicit transform: V => ConditionElement): Condition =
-        in(elements.iterator.map(transform))
+    {
+        val iterator = elements.iterator
+        if (iterator.hasNext)
+            in(iterator.map(transform))
+        else
+            Condition.alwaysFalse
+    }
     
     /**
       * @param matchString A string match where % is a placeholder for any string.

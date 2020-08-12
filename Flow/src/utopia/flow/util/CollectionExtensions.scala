@@ -621,6 +621,25 @@ object CollectionExtensions
             
             consumed == n
         }
+    
+        /**
+          * Collects the next 'n' items from this iterator, advancing it up to 'n' elements. The number of available
+          * items may be smaller, in case all remaining items are returned.
+          * @param n Number of items to collect
+          * @return Collected items
+          */
+        def takeNext(n: Int) =
+        {
+            var consumed = 0
+            val builder = new VectorBuilder[A]()
+            while (i.hasNext && consumed < n)
+            {
+                builder += i.next()
+                consumed += 1
+            }
+            
+            builder.result()
+        }
     }
     
     class IterableOnceOperations[Repr, I <: IsIterableOnce[Repr]](coll: Repr, iter: I)
