@@ -35,15 +35,22 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 	/**
 	  * @return Whether this button is currently enabled
 	  */
-	def isEnabled = component.isEnabled
-	/**
-	  * @param newEnabled Whether this button should be enabled
-	  */
-	def isEnabled_=(newEnabled: Boolean) =
+	def enabled = component.isEnabled
+	def enabled_=(newEnabled: Boolean) =
 	{
 		state = _state.copy(isEnabled = newEnabled)
 		component.setEnabled(newEnabled)
 	}
+	
+	/**
+	  * @return Whether this button is currently enabled
+	  */
+	def isEnabled = enabled
+	/**
+	  * @param newEnabled Whether this button should be enabled
+	  */
+	@deprecated("Replaced with enabled = ...", "v1.2")
+	def isEnabled_=(newEnabled: Boolean) = enabled = newEnabled
 	
 	/**
 	  * @return This button's current state

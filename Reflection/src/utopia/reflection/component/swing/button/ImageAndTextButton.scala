@@ -6,6 +6,7 @@ import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.drawing.mutable.BorderDrawer
 import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
+import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.{Alignment, Border, StackInsets, StackLength}
 import utopia.reflection.text.Font
@@ -78,7 +79,7 @@ object ImageAndTextButton
 class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedString, font: Font, val color: Color,
 						 insets: StackInsets, borderWidth: Double,
 						 textAlignment: Alignment = Alignment.Left, textColor: Color = Color.textBlack)
-	extends StackableAwtComponentWrapperWrapper with ButtonLike
+	extends StackableAwtComponentWrapperWrapper with ButtonLike with AwtContainerRelated
 {
 	// ATTRIBUTES	------------------------
 	
@@ -134,6 +135,8 @@ class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedSt
 	
 	
 	// IMPLEMENTED	------------------------
+	
+	override def component = content.component
 	
 	override protected def wrapped = content
 	
