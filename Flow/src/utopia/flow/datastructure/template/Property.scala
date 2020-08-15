@@ -28,7 +28,7 @@ trait Property extends JsonConvertible
     
     // COMP. PROPERTIES    -----
     
-    override def toString = s"$name: $value"
+    override def toString = s"$name: ${value.description}"
     
     override def toJson = "\"" + name + "\": " + value.toJson
 }

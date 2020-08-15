@@ -133,7 +133,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
     def validate(model: template.Model[Property]) =
     {
         // First checks for missing attributes
-        val missing = declarations.filterNot { d => model.contains(d.name) }
+        val missing = declarations.filterNot { d => model.containsNonEmpty(d.name) }
         val (missingNonDefaults, missingDefaults) = missing.divideBy { _.defaultValue.isDefined }
         
         // Declarations with default values are replaced with their defaults
@@ -168,6 +168,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
                 // (works for strings, models and vectors)
                 val castValues = castBuilder.result()
                 val emptyValues = castValues.filter { c => valueIsEmpty(c.value) }
+                
                 if (emptyValues.nonEmpty)
                     ModelValidationResult.missing(model,
                         declarations.filter { d => emptyValues.exists { _.name ~== d.name } })

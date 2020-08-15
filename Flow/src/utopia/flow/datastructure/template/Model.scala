@@ -114,7 +114,13 @@ trait Model[+Attribute <: Property] extends JsonConvertible
      * Whether this model contains an existing attribute for the specified attribute name
      * @param attName the name of the attribute
      */
-    def contains(attName: String) = attributeMap.contains(attName.toLowerCase())
+    def contains(attName: String) = attributeMap.contains(attName.toLowerCase)
+    
+    /**
+      * @param attName Name of searched attribute
+      * @return Whether this model contains a non-empty attribute with the specified name
+      */
+    def containsNonEmpty(attName: String) = attributeMap.get(attName.toLowerCase).exists { _.value.isDefined }
     
     /**
      * Converts and unwraps this model's attributes into a map format
