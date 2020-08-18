@@ -5,10 +5,10 @@ import java.time.Instant
 import scala.math.Ordering.Double.TotalOrdering
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.animation.TimedAnimation
-import utopia.genesis.animation.animator.{Animator, TransformingImageAnimator}
+import utopia.genesis.animation.animator.{Animator, SpriteDrawer, TransformingImageAnimator}
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.image.Image
+import utopia.genesis.image.{Image, Strip}
 import utopia.genesis.shape.shape1D.Rotation
 import utopia.genesis.shape.shape2D.{Bounds, Point, Transformation}
 import utopia.genesis.util.{Drawer, Fps}
@@ -32,15 +32,34 @@ object AnimationLabel
 	  * @param origin Image origin (relative to image top-left corner)
 	  * @param rotation Rotation animation
 	  * @param alignment Alignment to use when positioning the image in the label (default = Center)
+	  * @param maxFps Maximum repaint speed for this element (default = 120 frames per second)
 	  * @return A new label
 	  */
 	def withRotatingImage(actorHandler: ActorHandler, image: Image, origin: Point, rotation: TimedAnimation[Rotation],
-						  alignment: Alignment = Center) =
+						  alignment: Alignment = Center, maxFps: Fps = Fps(120)) =
 	{
 		val animator = TransformingImageAnimator(image, origin, rotation.map(Transformation.rotation))
 		val maxRadius = image.size.toBounds().corners.map { p => (p - origin).length }.max
 		val stackSize = (maxRadius * 2).any.square
-		new AnimationLabel(actorHandler, animator, stackSize, Point(maxRadius, maxRadius), alignment)
+		new AnimationLabel(actorHandler, animator, stackSize, Point(maxRadius, maxRadius), alignment, maxFps)
+	}
+	
+	/**
+	  * Creates a new label that draws a looping sprite / strip
+	  * @param actorHandler Actor handler that will deliver action events
+	  * @param strip Image strip
+	  * @param spriteOrigin Image origin to use
+	  * @param animationSpeed Animation speed in frames per second
+	  * @param alignment Alignment to use when positioning image in this label (default = Center)
+	  * @return A new label
+	  */
+	def withSprite(actorHandler: ActorHandler, strip: Strip, spriteOrigin: Point, animationSpeed: Fps,
+				   alignment: Alignment = Center) =
+	{
+		val animator = SpriteDrawer(strip.toTimedAnimation(animationSpeed).map { i => i -> spriteOrigin },
+			Transformation.identity)
+		new AnimationLabel(actorHandler, animator, StackSize.any(strip.imageSize), spriteOrigin, alignment,
+			animationSpeed)
 	}
 	
 	/**
@@ -53,8 +72,22 @@ object AnimationLabel
 	  * @return A new label
 	  */
 	def contextualWithRotatingImage(image: Image, origin: Point, rotation: TimedAnimation[Rotation],
-									alignment: Alignment = Center)(implicit context: BaseContextLike) =
-		withRotatingImage(context.actorHandler, image, origin, rotation, alignment)
+									alignment: Alignment = Center, maxFps: Fps = Fps(120))
+								   (implicit context: BaseContextLike) =
+		withRotatingImage(context.actorHandler, image, origin, rotation, alignment, maxFps)
+	
+	/**
+	  * Creates a new label that draws a looping sprite / strip
+	  * @param strip Image strip
+	  * @param spriteOrigin Image origin to use
+	  * @param animationSpeed Animation speed in frames per second
+	  * @param alignment Alignment to use when positioning image in this label (default = Center)
+	  * @param context Implicit component creation context
+	  * @return A new label
+	  */
+	def contextualWithSprite(strip: Strip, spriteOrigin: Point, animationSpeed: Fps, alignment: Alignment = Center)
+							(implicit context: BaseContextLike) =
+		withSprite(context.actorHandler, strip, spriteOrigin, animationSpeed, alignment)
 }
 
 /**
@@ -65,8 +98,9 @@ object AnimationLabel
   * @param animator Animator used for the actual drawing
   * @param stackSize Size of this label (expected to be the size of the drawn area)
   * @param drawOrigin The point in this label (in optimal size) where the drawer (0, 0) should be located when calling
-  *                   animator.draw(...)
+  *                   animator.draw(...) (default = top left corner of this label)
   * @param alignment Alignment used when positioning the drawn content
+  * @param maxFps Maximum repaint speed for this element (default = 120 frames per second)
   */
 class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], override val stackSize: StackSize,
 						drawOrigin: Point = Point.origin, alignment: Alignment = Center, maxFps: Fps = Fps(120))
