@@ -3,7 +3,6 @@ package utopia.reflection.container.swing.window.interaction
 import utopia.genesis.util.Screen
 import utopia.reflection.component.context.{ButtonContextLike, TextContext, TextContextLike}
 import utopia.reflection.component.swing.display.MultiLineTextView
-import utopia.reflection.container.swing.window.interaction.ButtonColor.{Primary, Secondary}
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.{LocalizedString, Localizer}
 import utopia.reflection.shape.Alignment
@@ -59,9 +58,9 @@ class YesNoWindow(override val standardContext: TextContextLike, override val ti
 	override protected def buttonBlueprints =
 	{
 		val yesButton = new DialogButtonBlueprint[Boolean]("Yes", icons.get(true),
-			colors.getOrElse(true, Secondary))(() => Some(true) -> true)
+			colors.getOrElse(true, ButtonColor.secondary))(() => Some(true) -> true)
 		val noButton = new DialogButtonBlueprint[Boolean]("No", icons.get(false),
-			colors.getOrElse(false, Primary))(() => Some(false) -> true)
+			colors.getOrElse(false, ButtonColor.primary))(() => Some(false) -> true)
 		Vector(yesButton, noButton)
 	}
 	

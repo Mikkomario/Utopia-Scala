@@ -1,6 +1,5 @@
 package utopia.reflection.container.swing.window.interaction
 
-import utopia.reflection.container.swing.window.interaction.ButtonColor.Primary
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
@@ -41,5 +40,5 @@ object DialogButtonBlueprint
   *                              returns whether the dialog should be closed.
   */
 class DialogButtonBlueprint[+A](val text: LocalizedString, val icon: Option[SingleColorIcon] = None,
-								val color: ButtonColor = Primary, val location: Alignment = BottomRight)
+								val color: ButtonColor = ButtonColor.primary, val location: Alignment = BottomRight)
                                (val generateResultOnPress: () => (Option[A], Boolean))

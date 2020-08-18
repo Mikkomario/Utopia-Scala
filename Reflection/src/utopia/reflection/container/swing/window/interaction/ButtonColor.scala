@@ -1,6 +1,7 @@
 package utopia.reflection.container.swing.window.interaction
 
-import utopia.reflection.color.{ColorSet, ComponentColor}
+import utopia.reflection.color.ColorShade.Standard
+import utopia.reflection.color.{ColorRole, ColorSet, ColorShade, ComponentColor}
 import utopia.reflection.component.context.TextContextLike
 
 /**
@@ -19,24 +20,38 @@ trait ButtonColor
 
 object ButtonColor
 {
+	// COMPUTED	-----------------------------
+	
 	/**
 	  * Uses primary color scheme color, adjusting the shade according to context background. This button color is
 	  * best for alternative (non-default) choice buttons.
 	  */
-	case object Primary extends ButtonColor
-	{
-		override def toColor(implicit context: TextContextLike)  = context.colorScheme.primary.forBackground(
-			context.containerBackground)
-	}
+	def primary = Role(ColorRole.Primary)
 	
 	/**
 	  * Uses secondary color scheme color, adjusting the shade according to context background. This button color is
 	  * best for the default/primary buttons.
 	  */
-	case object Secondary extends ButtonColor
+	def secondary = Role(ColorRole.Secondary)
+	
+	/**
+	  * Uses secondary color scheme color, adjusting the shade according to context background. This button color is
+	  * best for additional highlighted buttons or to be used in specific contexts where secondary or primary colors
+	  * are not suitable.
+	  */
+	def tertiary = Role(ColorRole.Tertiary)
+	
+	
+	// NESTED	-----------------------------
+	
+	/**
+	  * Uses color specific for targeted role and shade
+	  * @param role Target color / button role
+	  * @param preferredShade Preferred shade of that color (default = standard/default shade)
+	  */
+	case class Role(role: ColorRole, preferredShade: ColorShade = Standard) extends ButtonColor
 	{
-		override def toColor(implicit context: TextContextLike) = context.colorScheme.secondary.forBackground(
-			context.containerBackground)
+		override def toColor(implicit context: TextContextLike) = context.color(role, preferredShade)
 	}
 	
 	/**

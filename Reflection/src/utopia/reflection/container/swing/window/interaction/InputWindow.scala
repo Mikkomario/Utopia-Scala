@@ -14,7 +14,6 @@ import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Popup
-import utopia.reflection.container.swing.window.interaction.ButtonColor.Secondary
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
@@ -98,7 +97,7 @@ trait InputWindow[+A] extends InteractionWindow[A]
 	
 	override protected def buttonBlueprints =
 	{
-		val okButton = new DialogButtonBlueprint[A](okButtonText, okButtonIcon, Secondary)(() =>
+		val okButton = new DialogButtonBlueprint[A](okButtonText, okButtonIcon, ButtonColor.secondary)(() =>
 		{
 			// Checks the results. If failed, returns focus to an item and displays a message
 			produceResult match
