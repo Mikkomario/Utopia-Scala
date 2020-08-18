@@ -1,7 +1,7 @@
 package utopia.annex.model.request
 
 import utopia.access.http.Method.Get
-import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.datastructure.immutable.Value
 
 object GetRequest
 {
@@ -9,6 +9,8 @@ object GetRequest
 	
 	/**
 	  * @param path Targeted resource path (after root path)
+	  * @param deprecationCondition A condition that must be true in order for this request to deprecate (optional).
+	  *                             Requests don't deprecate by default.
 	  * @return A new request targeting specified path
 	  */
 	def apply(path: String, deprecationCondition: => Boolean = false): GetRequest =

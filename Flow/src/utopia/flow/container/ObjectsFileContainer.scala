@@ -23,7 +23,7 @@ import scala.concurrent.ExecutionContext
   * @tparam A Type of individual items stored in this container
   */
 class ObjectsFileContainer[A <: ModelConvertible](fileLocation: Path,
-												  factory: FromModelFactory[A], saveLogic: SaveTiming = Immediate)
+												  val factory: FromModelFactory[A], saveLogic: SaveTiming = Immediate)
 												 (implicit jsonParser: JsonParser, exc: ExecutionContext)
 	extends MultiFileContainer[A](fileLocation)
 {

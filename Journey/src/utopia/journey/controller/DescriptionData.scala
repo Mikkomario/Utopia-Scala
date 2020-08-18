@@ -9,10 +9,12 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.container.SaveTiming.Delayed
 import utopia.flow.container.{ModelFileContainer, ObjectsFileContainer}
 import utopia.flow.datastructure.immutable.Model
+import utopia.flow.generic.ModelConvertible
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.TimeExtensions._
 import utopia.flow.generic.ValueConversions._
 import utopia.journey.util.JourneyContext._
+import utopia.metropolis.model.combined.description.DescribedDescriptionRole
 import utopia.metropolis.model.combined.language.DescribedLanguage
 
 import scala.concurrent.duration.Duration
@@ -32,48 +34,78 @@ class DescriptionData(currentQueueSystem: => QueueSystem, defaultUpdatePeriod: P
 		Delayed(5.minutes))
 	
 	private val languagesContainer = new ObjectsFileContainer(containersDirectory/"languages.json", DescribedLanguage)
-	// TODO: Implement description role handling and take that into account when parsing other descriptions as well
-	// TODO: It may be that descriptionRole can't be an enumeration anymore...
-	// private val descriptionRolesContainer = new ObjectsFileContainer(containersDirectory/"description-roles.json",
-	//	DescribedDescriptionRole)
+	private val descriptionRolesContainer = new ObjectsFileContainer(containersDirectory/"description-roles.json",
+		DescribedDescriptionRole)
+	// TODO: Implement handling for user roles and tasks when needed
 	
 	
 	// COMPUTED	-----------------------------
 	
-	private def lastLanguageUpdate = updateTimesContainer("language").instantOr(Instant.EPOCH)
+	private def lastLanguageUpdate = lastUpdateFor("language")
 	
-	def languages =
-	{
-		// May request an update in the background
-		if (lastLanguageUpdate < Instant.now() - defaultUpdatePeriod)
-			updateLanguages()
-		else
-		{
-			val localData = languagesContainer.current
-			CompletedSchrodinger.success(localData)
-		}
-	}
+	private def lastDescriptionRolesUpdate = lastUpdateFor("description_role")
+	
+	def languages = getOrUpdate(languagesContainer,
+		"language", "languages")
+	
+	def descriptionRoles = getOrUpdate(descriptionRolesContainer,
+		"description_role", "description-roles")
 	
 	
 	// OTHER	---------------------------
 	
-	def updateLanguages() =
+	/**
+	  * Updates locally cached language data by requesting new data from the server
+	  * @return A schrödinger that will contain the read language data. Populated with local data during the request.
+	  */
+	def updateLanguages() = update(languagesContainer, "language", "languages")
+	
+	/**
+	  * Updates locally cached description role data by requesting new description roles from the server
+	  * @return A shcrödinger that will contain the read description role data. Populated with locally cached
+	  *         data during the request.
+	  */
+	def updateDescriptionRoles() =
+		update(descriptionRolesContainer, "description_role", "description-roles")
+	
+	private def lastUpdateFor(typeName: String) = updateTimesContainer(typeName).instantOr(Instant.EPOCH)
+	
+	// Updates data if too long a time has passed since the last update
+	// Otherwise returns local data
+	private def getOrUpdate[A <: ModelConvertible](container: ObjectsFileContainer[A], typeName: String,
+												   requestPath: String) =
 	{
-		val localData = languagesContainer.current
+		if (lastUpdateFor(typeName) < Instant.now() - defaultUpdatePeriod)
+			update(container, typeName, requestPath)
+		else
+			CompletedSchrodinger.success(container.current)
+	}
+	
+	// Updates a single containers data by performing a server request
+	// Returns a shrödinger
+	private def update[A <: ModelConvertible](container: ObjectsFileContainer[A], typeName: String, requestPath: String) =
+	{
+		// Populates the schrödinger with local data
+		val localData = container.current
 		val requestTime = Instant.now()
 		
 		val schrodinger = new CachedFindSchrodinger(localData)
-		schrodinger.completeWith(currentQueueSystem.push(GetRequest("languages",
-			localData.isEmpty && Instant.now() > requestTime + requestTimeout))) {
-			_.vector(DescribedLanguage).parsed } { log(_) }
-		// Caches server results when they arrive
-		schrodinger.serverResultFuture.foreachSuccess { languages =>
-			languagesContainer.current = languages
-			updateTimesContainer("language") = Instant.now()
+		// Deprecates request after a timeout if there is local data to use
+		schrodinger.completeWith(currentQueueSystem.push(GetRequest(requestPath,
+			localData.nonEmpty && Instant.now() > requestTime + requestTimeout))) {
+			_.vector(container.factory).parsed } { log(_) }
+		
+		// Updates container & update time status once server results arrive
+		schrodinger.serverResultFuture.foreachSuccess { descriptionRoles =>
+			container.current = descriptionRoles
+			updateTimesContainer(typeName) = Instant.now()
 		}
 		
 		schrodinger
 	}
 	
+	/**
+	  * Resets the cache logic so that data will be requested again the next time it is needed
+	  */
 	def resetUpdateStatus() = updateTimesContainer.current = Model.empty
 }
