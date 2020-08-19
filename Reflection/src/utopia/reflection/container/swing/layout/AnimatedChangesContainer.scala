@@ -5,12 +5,14 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis2D
+import utopia.genesis.util.Fps
 import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.animation.AnimatedVisibility
 import utopia.reflection.component.template.layout.stack.StackableWrapper
 import utopia.reflection.container.stack.template.MultiStackContainer
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.template.{MultiContainer, WrappingContainer}
+import utopia.reflection.event.Visibility.{Invisible, Visible}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -20,16 +22,18 @@ object AnimatedChangesContainer
 	/**
 	  * Creates a new animated changes container using contextual information
 	  * @param container A container being wrapped
-	  * @param transitionAxis Axis along which the items appear / disappear
+	  * @param transitionAxis Axis along which the items appear / disappear. None if transition should be applied on
+	  *                       both axes (default)
 	  * @param context Component creation context (implicit)
 	  * @param exc Execution context (implicit)
 	  * @tparam C Type of component in container
 	  * @return A new container
 	  */
-	def contextual[C <: AwtStackable](container: MultiStackContainer[AnimatedVisibility[C]], transitionAxis: Axis2D)
+	def contextual[C <: AwtStackable](container: MultiStackContainer[AnimatedVisibility[C]],
+									  transitionAxis: Option[Axis2D] = None)
 	                                 (implicit context: AnimationContextLike, exc: ExecutionContext) =
 		new AnimatedChangesContainer[C, MultiStackContainer[AnimatedVisibility[C]]](container, context.actorHandler,
-			transitionAxis, context.animationDuration, context.useFadingInAnimations)
+			transitionAxis, context.animationDuration, context.maxAnimationRefreshRate, context.useFadingInAnimations)
 }
 
 /**
@@ -38,8 +42,9 @@ object AnimatedChangesContainer
   * @since 20.4.2020, v1.2
   */
 class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer[AnimatedVisibility[C]]]
-(protected val container: Wrapped, actorHandler: ActorHandler, transitionAxis: Axis2D,
- animationDuration: FiniteDuration = 0.25.seconds, fadingIsEnabled: Boolean = true)(implicit exc: ExecutionContext)
+(protected val container: Wrapped, actorHandler: ActorHandler, transitionAxis: Option[Axis2D] = None,
+ animationDuration: FiniteDuration = 0.25.seconds, maxRefreshRate: Fps = Fps(120), fadingIsEnabled: Boolean = true)
+(implicit exc: ExecutionContext)
 	extends WrappingContainer[C, AnimatedVisibility[C]] with StackableWrapper with MultiContainer[C]
 {
 	// ATTRIBUTES	-----------------------------
@@ -72,7 +77,7 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 			// Also starts the hiding process
 			(wrapper.isShown = false).foreach { newState =>
 				// If someone made the wrapper visible again, will not remove it
-				if (!newState)
+				if (newState.isNotVisible)
 				{
 					// Removes the wrapper from the container once animation has finished
 					wrappersList.update { old =>
@@ -124,8 +129,8 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 					}
 				case None =>
 					// Wraps the component in an animation
-					val wrapper = new AnimatedVisibility[C](component, actorHandler, transitionAxis, animationDuration,
-						fadingIsEnabled)
+					val wrapper = new AnimatedVisibility[C](component, actorHandler, transitionAxis,
+						duration = animationDuration, maxRefreshRate = maxRefreshRate, useFading = fadingIsEnabled)
 					// Adds the wrapper to the container (needs to check indexing because there may still be wrappers waiting for removal)
 					// Also, Starts the appearance animation
 					val newWrapperIndex = trueIndex(index, old)
@@ -145,7 +150,7 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 	  * @param isAnimated Whether the hiding transition should be animated (default = true)
 	  */
 	def hide(component: C, isAnimated: Boolean = true) = container.components.find { _.display == component }
-		.foreach { wrap => if (isAnimated) wrap.isShown = false else wrap.setStateWithoutTransition(false) }
+		.foreach { wrap => if (isAnimated) wrap.isShown = false else wrap.setStateWithoutTransition(Invisible) }
 	
 	/**
 	  * Shows a previously hidden component. If the component is doesn't reside in this container, adds it
@@ -154,13 +159,13 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 	  */
 	def show(component: C, isAnimated: Boolean = true): Unit = container.components.find { _.display == component } match
 	{
-		case Some(wrap) => if (isAnimated) wrap.isShown = true else wrap.setStateWithoutTransition(true)
+		case Some(wrap) => if (isAnimated) wrap.isShown = true else wrap.setStateWithoutTransition(Visible)
 		case None =>
 			if (isAnimated)
 				this += component
 			else
-				container += new AnimatedVisibility[C](component, actorHandler, transitionAxis, animationDuration,
-					fadingIsEnabled, isShownInitially = true) // FIXME: Remove this once content tracking changes
+				container += new AnimatedVisibility[C](component, actorHandler, transitionAxis, Visible, animationDuration,
+					maxRefreshRate, fadingIsEnabled) // FIXME: Remove this once content tracking changes
 	}
 	
 	private def trueIndex(projectedIndex: Int, data: Vector[(_, Boolean)]) =

@@ -49,6 +49,7 @@ object AnimatedSizeContainer
   * @author Mikko Hilpinen
   * @since 18.4.2020, v1.2
   */
+// TODO: Add max refresh rate parameter
 class AnimatedSizeContainer[C <: AwtStackable](transitionDuration: FiniteDuration = 0.25.seconds) extends SingleStackContainer[C]
 	with AwtComponentWrapperWrapper with Actor with AwtContainerRelated
 {

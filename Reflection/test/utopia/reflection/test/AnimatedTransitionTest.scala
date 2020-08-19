@@ -33,7 +33,7 @@ object AnimatedTransitionTest extends App
 		originComponent.addResizeListener { e => println(s"Component size changed: $e") }
 		
 		// Creates the transition components
-		AnimatedVisibility.contextual(originComponent, Y)
+		AnimatedVisibility.contextual(originComponent, Some(Y))
 	}
 	
 	val content = transitionWrapper.framed(margins.medium.any, colorScheme.primary.light)

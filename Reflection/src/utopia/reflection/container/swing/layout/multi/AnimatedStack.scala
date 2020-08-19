@@ -5,6 +5,7 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.Point
+import utopia.genesis.util.Fps
 import utopia.reflection.component.context.{AnimationContextLike, BaseContextLike}
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.swing.animation.AnimatedVisibility
@@ -42,7 +43,7 @@ object AnimatedStack
 	{
 		val stack = new AnimatedStack[C](ac.actorHandler, direction,
 			if (itemsAreRelated) bc.relatedItemsStackMargin else bc.defaultStackMargin, cap, layout,
-			ac.animationDuration, ac.useFadingInAnimations)
+			ac.animationDuration, ac.maxAnimationRefreshRate, ac.useFadingInAnimations)
 		stack ++= items
 		stack
 	}
@@ -90,11 +91,11 @@ object AnimatedStack
 class AnimatedStack[C <: AwtStackable](actorHandler: ActorHandler, direction: Axis2D,
 									   margin: StackLength = StackLength.any,
 									   cap: StackLength = StackLength.fixedZero, layout: StackLayout = Fit,
-									   animationDuration: FiniteDuration = 0.25.seconds,
+									   animationDuration: FiniteDuration = 0.25.seconds, maxRefreshRate: Fps = Fps(120),
 									   fadingIsEnabled: Boolean = true)(implicit val executionContext: ExecutionContext)
 	extends AnimatedChangesContainer[C, Stack[AnimatedVisibility[C]]](
-		new Stack[AnimatedVisibility[C]](direction, margin, cap, layout), actorHandler, direction, animationDuration,
-		fadingIsEnabled)
+		new Stack[AnimatedVisibility[C]](direction, margin, cap, layout), actorHandler, Some(direction), animationDuration,
+		maxRefreshRate, fadingIsEnabled)
 		with SwingComponentRelated with CustomDrawableWrapper with AreaOfItems[C] with AwtContainerRelated
 {
 	// IMPLEMENTED	-------------------------
