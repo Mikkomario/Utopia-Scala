@@ -102,6 +102,24 @@ case class ColorSet(default: ComponentColor, light: ComponentColor, dark: Compon
 	}
 	
 	/**
+	  * Picks a shade from this color set that works best against multiple colors
+	  * @param colors A set of colors selected color should work with
+	  * @return The best color in this set to be used against those colors
+	  */
+	def bestAgainst(colors: Iterable[Color]) =
+	{
+		val contrastLuminosities = colors.map { _.luminosity }.toSet
+		val defaultLuminosity = default.luminosity
+		if (contrastLuminosities.forall { l => (defaultLuminosity - l).abs > 0.2 })
+			default
+		else
+			Vector(default, light, dark).maxBy { c =>
+				val luminosity = c.luminosity
+				contrastLuminosities.map { l => (luminosity - l).abs }.sum
+			}
+	}
+	
+	/**
 	  * @param color A color
 	  * @return Whether this color set specifies that color
 	  */
