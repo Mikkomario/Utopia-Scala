@@ -1,8 +1,8 @@
 package utopia.reflection.container.swing.layout.multi
 
-import utopia.flow.util.TimeExtensions._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis2D
+import utopia.genesis.util.Fps
 import utopia.reflection.component.context.{AnimationContextLike, BaseContextLike}
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
@@ -12,6 +12,7 @@ import utopia.reflection.container.stack.template.layout.CollectionViewLike
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.shape.StackLength
+import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -34,7 +35,8 @@ object AnimatedCollectionView
 									  insideRowLayout: StackLayout = Fit, forceEqualRowLength: Boolean = false)
 									 (implicit ac: AnimationContextLike, bc: BaseContextLike, exc: ExecutionContext) =
 		new AnimatedCollectionView[C](ac.actorHandler, rowAxis, initialRowSplitThreshold, bc.defaultStackMargin,
-			insideRowLayout, forceEqualRowLength, ac.animationDuration, ac.useFadingInAnimations)
+			insideRowLayout, forceEqualRowLength, ac.animationDuration, ac.maxAnimationRefreshRate,
+			ac.useFadingInAnimations)
 }
 
 /**
@@ -45,7 +47,8 @@ object AnimatedCollectionView
 class AnimatedCollectionView[C <: AwtStackable](actorHandler: ActorHandler, rowAxis: Axis2D, initialRowSplitThreshold: Double,
 												margin: StackLength = StackLength.any, insideRowLayout: StackLayout = Fit,
 												forceEqualRowLength: Boolean = false,
-												animationDuration: FiniteDuration = 0.25.seconds,
+												animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+											   maxAnimationRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
 												useFadingInAnimations: Boolean = true)(implicit exc: ExecutionContext)
 	extends CollectionViewLike[C, AnimatedStack[C], AnimatedStack[AnimatedStack[C]]] with StackableAwtComponentWrapperWrapper
 		with SwingComponentRelated with AwtContainerRelated with CustomDrawableWrapper
@@ -62,7 +65,8 @@ class AnimatedCollectionView[C <: AwtStackable](actorHandler: ActorHandler, rowA
 				Leading
 		}
 		new AnimatedStack[AnimatedStack[C]](actorHandler, rowAxis.perpendicular, margin, layout = layout,
-			animationDuration = animationDuration, fadingIsEnabled = useFadingInAnimations)
+			animationDuration = animationDuration, maxRefreshRate = maxAnimationRefreshRate,
+			fadingIsEnabled = useFadingInAnimations)
 	}
 	
 	private var _rowSplitThreshold = initialRowSplitThreshold

@@ -10,9 +10,10 @@ import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.ScrollBarDrawer
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.Stackable
-import utopia.reflection.container.stack.template.scrolling.{ScrollAreaLike, ScrollViewLike}
+import utopia.reflection.container.stack.template.scrolling.ScrollViewLike
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 import utopia.reflection.shape.StackLengthLimit
+import utopia.reflection.util.ComponentCreationDefaults
 
 object ScrollView
 {
@@ -31,8 +32,9 @@ object ScrollView
 															limitsToContentSize: Boolean = false)
 														   (implicit context: ScrollingContextLike) =
 	{
-		new ScrollView[C](content, axis, context.actorHandler, context.scrollPerWheelClick, context.scrollBarDrawer,
-			context.scrollBarWidth, context.scrollBarIsInsideContent, context.scrollFriction, lengthLimits, limitsToContentSize)
+		new ScrollView[C](content, axis, context.actorHandler, context.scrollBarDrawer, context.scrollBarWidth,
+			context.scrollPerWheelClick, context.scrollFriction, lengthLimits, limitsToContentSize,
+			context.scrollBarIsInsideContent)
 	}
 }
 
@@ -42,12 +44,13 @@ object ScrollView
   * @since 30.4.2019, v1+
   */
 class ScrollView[C <: Stackable with AwtComponentRelated](override val content: C, override val axis: Axis2D,
-                                                          actorHandler: ActorHandler, scrollPerWheelClick: Double,
-                                                          scrollBarDrawer: ScrollBarDrawer, override val scrollBarWidth: Int,
-                                                          override val scrollBarIsInsideContent: Boolean = false,
-                                                          override val friction: LinearAcceleration = ScrollAreaLike.defaultFriction,
-                                                          override val lengthLimit: StackLengthLimit = StackLengthLimit.noLimit,
-                                                          override val limitsToContentSize: Boolean = false)
+														  actorHandler: ActorHandler, scrollBarDrawer: ScrollBarDrawer,
+														  override val scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,
+														  scrollPerWheelClick: Double =  ComponentCreationDefaults.scrollAmountPerWheelClick,
+														  override val friction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,
+														  override val lengthLimit: StackLengthLimit = StackLengthLimit.noLimit,
+														  override val limitsToContentSize: Boolean = false,
+														  override val scrollBarIsInsideContent: Boolean = false)
 	extends ScrollViewLike[C] with AwtComponentWrapperWrapper with CustomDrawableWrapper with AwtContainerRelated with SwingComponentRelated
 {
 	// ATTRIBUTES	----------------------

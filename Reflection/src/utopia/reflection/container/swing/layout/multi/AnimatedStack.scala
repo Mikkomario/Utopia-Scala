@@ -1,6 +1,5 @@
 package utopia.reflection.container.swing.layout.multi
 
-import utopia.flow.util.TimeExtensions._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
@@ -17,6 +16,7 @@ import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.AnimatedChangesContainer
 import utopia.reflection.shape.StackLength
+import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -91,7 +91,8 @@ object AnimatedStack
 class AnimatedStack[C <: AwtStackable](actorHandler: ActorHandler, direction: Axis2D,
 									   margin: StackLength = StackLength.any,
 									   cap: StackLength = StackLength.fixedZero, layout: StackLayout = Fit,
-									   animationDuration: FiniteDuration = 0.25.seconds, maxRefreshRate: Fps = Fps(120),
+									   animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+									   maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
 									   fadingIsEnabled: Boolean = true)(implicit val executionContext: ExecutionContext)
 	extends AnimatedChangesContainer[C, Stack[AnimatedVisibility[C]]](
 		new Stack[AnimatedVisibility[C]](direction, margin, cap, layout), actorHandler, Some(direction), animationDuration,

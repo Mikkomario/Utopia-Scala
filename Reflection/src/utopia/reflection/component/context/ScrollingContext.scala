@@ -5,7 +5,7 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.drawing.template.ScrollBarDrawer
-import utopia.reflection.container.stack.template.scrolling.ScrollAreaLike
+import utopia.reflection.util.ComponentCreationDefaults
 
 object ScrollingContext
 {
@@ -20,9 +20,10 @@ object ScrollingContext
 	  * @param scrollFriction Amount of friction applied to scrolling (default = scroll area default (2000px/s2))
 	  * @return A new scrolling context
 	  */
-	def withRoundedBar(actorHandler: ActorHandler, color: Color = Color.black.withAlpha(0.55), barWidth: Int = 24,
-					   scrollPerWheelClick: Double = 32,
-					   scrollFriction: LinearAcceleration = ScrollAreaLike.defaultFriction) =
+	def withRoundedBar(actorHandler: ActorHandler, color: Color = Color.black.withAlpha(0.55),
+					   barWidth: Int = ComponentCreationDefaults.scrollBarWidth,
+					   scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
+					   scrollFriction: LinearAcceleration = ComponentCreationDefaults.scrollFriction) =
 		ScrollingContext(actorHandler, BoxScrollBarDrawer.roundedBarOnly(color), barWidth, scrollPerWheelClick, scrollFriction,
 			scrollBarIsInsideContent = true)
 	
@@ -33,8 +34,9 @@ object ScrollingContext
 	  * @param scrollFriction Amount of friction applied to scrolling (default = scroll area default (2000px/s2))
 	  * @return Scrolling context that draws a dark rounded bar inside content
 	  */
-	def withDarkRoundedBar(actorHandler: ActorHandler, barWidth: Int = 24, scrollPerWheelClick: Double = 32,
-						   scrollFriction: LinearAcceleration = ScrollAreaLike.defaultFriction) =
+	def withDarkRoundedBar(actorHandler: ActorHandler, barWidth: Int = ComponentCreationDefaults.scrollBarWidth,
+						   scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
+						   scrollFriction: LinearAcceleration = ComponentCreationDefaults.scrollFriction) =
 		withRoundedBar(actorHandler, barWidth = barWidth, scrollPerWheelClick = scrollPerWheelClick, scrollFriction = scrollFriction)
 	
 	/**
@@ -44,8 +46,9 @@ object ScrollingContext
 	  * @param scrollFriction Amount of friction applied to scrolling (default = scroll area default (2000px/s2))
 	  * @return Scrolling context that draws a light rounded bar inside content
 	  */
-	def withLightRoundedBar(actorHandler: ActorHandler, barWidth: Int = 24, scrollPerWheelClick: Double = 32,
-							scrollFriction: LinearAcceleration = ScrollAreaLike.defaultFriction) =
+	def withLightRoundedBar(actorHandler: ActorHandler, barWidth: Int = ComponentCreationDefaults.scrollBarWidth,
+							scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
+							scrollFriction: LinearAcceleration = ComponentCreationDefaults.scrollFriction) =
 		withRoundedBar(actorHandler, Color.white.withAlpha(0.625), barWidth, scrollPerWheelClick, scrollFriction)
 }
 
@@ -54,6 +57,8 @@ object ScrollingContext
   * @author Mikko Hilpinen
   * @since 28.4.2020, v1.2
   */
-case class ScrollingContext(actorHandler: ActorHandler, scrollBarDrawer: ScrollBarDrawer, scrollBarWidth: Int = 24,
-							scrollPerWheelClick: Double = 32, scrollFriction: LinearAcceleration = ScrollAreaLike.defaultFriction,
+case class ScrollingContext(actorHandler: ActorHandler, scrollBarDrawer: ScrollBarDrawer,
+							scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,
+							scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
+							scrollFriction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,
 							scrollBarIsInsideContent: Boolean = false) extends ScrollingContextLike

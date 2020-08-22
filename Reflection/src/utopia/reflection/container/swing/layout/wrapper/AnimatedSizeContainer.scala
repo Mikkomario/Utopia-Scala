@@ -1,16 +1,18 @@
 package utopia.reflection.container.swing.layout.wrapper
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.async.VolatileFlag
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.path.ProjectilePath
-import utopia.inception.handling.HandlerType
+import utopia.genesis.util.Fps
+import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.container.stack.template.SingleStackContainer
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 import utopia.reflection.shape.StackSize
+import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
@@ -21,14 +23,16 @@ object AnimatedSizeContainer
 	  * @param component Component placed inside the container
 	  * @param actorHandler Actor handler that will deliver action events for this container
 	  * @param transitionDuration Duration it takes to transition sizes (default = 0.25 seconds)
+	  * @param maxRefreshRate Maximum amount of revalidation calls per second (defaults to global default)
 	  * @tparam C Type of container content
 	  * @return Newly created container
 	  */
-	def apply[C <: AwtStackable](component: C, actorHandler: ActorHandler, transitionDuration: FiniteDuration = 0.25.seconds) =
+	def apply[C <: AwtStackable](component: C, actorHandler: ActorHandler,
+								 transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+								 maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
 	{
-		val container = new AnimatedSizeContainer[C](transitionDuration)
+		val container = new AnimatedSizeContainer[C](actorHandler, transitionDuration, maxRefreshRate)
 		container.set(component)
-		actorHandler += container
 		container
 	}
 	
@@ -40,7 +44,7 @@ object AnimatedSizeContainer
 	  * @return A new animated changes container
 	  */
 	def contextual[C <: AwtStackable](component: C)(implicit context: AnimationContextLike) =
-		apply(component, context.actorHandler, context.animationDuration)
+		apply(component, context.actorHandler, context.animationDuration, context.maxAnimationRefreshRate)
 }
 
 /**
@@ -49,9 +53,10 @@ object AnimatedSizeContainer
   * @author Mikko Hilpinen
   * @since 18.4.2020, v1.2
   */
-// TODO: Add max refresh rate parameter
-class AnimatedSizeContainer[C <: AwtStackable](transitionDuration: FiniteDuration = 0.25.seconds) extends SingleStackContainer[C]
-	with AwtComponentWrapperWrapper with Actor with AwtContainerRelated
+class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler,
+											   transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+											   maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
+	extends SingleStackContainer[C] with AwtComponentWrapperWrapper with AwtContainerRelated
 {
 	// ATTRIBUTES	--------------------
 	
@@ -61,12 +66,31 @@ class AnimatedSizeContainer[C <: AwtStackable](transitionDuration: FiniteDuratio
 	private var startSize = StackSize.any
 	private var targetSize = StackSize.any
 	private var timePassed = Duration.Zero
-	private var isTransitioning = false
+	private var nextRevalidationThreshold = Duration.Zero
+	
+	private val transitioningFlag = new VolatileFlag()
 	
 	
 	// INITIAL CODE	--------------------
 	
 	addResizeListener { _ => updateLayout() }
+	
+	
+	// COMPUTED	------------------------
+	
+	private def transitioning = transitioningFlag.get
+	
+	private def transitioning_=(newState: Boolean) = transitioningFlag.update { oldState =>
+		// May register or unregister the actor component from the actor handler
+		if (oldState != newState)
+		{
+			if (newState)
+				actorHandler += SizeUpdater
+			else
+				actorHandler -= SizeUpdater
+		}
+		newState
+	}
 	
 	
 	// IMPLEMENTED	--------------------
@@ -87,7 +111,7 @@ class AnimatedSizeContainer[C <: AwtStackable](transitionDuration: FiniteDuratio
 	override def stackSize =
 	{
 		// When transitioning, provides a stack size that is getting closer to the target
-		if (isTransitioning)
+		if (transitioning)
 		{
 			val progress = curve(timePassed / transitionDuration)
 			targetSize * progress + startSize * (1 - progress)
@@ -101,7 +125,7 @@ class AnimatedSizeContainer[C <: AwtStackable](transitionDuration: FiniteDuratio
 	override def resetCachedSize() =
 	{
 		// When stack size is reset while a transition is NOT in process, may start one
-		if (!isTransitioning)
+		if (!transitioning)
 		{
 			// Only starts animation if content stack size really changed
 			content.foreach { c => newTarget(c.stackSize) }
@@ -127,22 +151,11 @@ class AnimatedSizeContainer[C <: AwtStackable](transitionDuration: FiniteDuratio
 	override protected def remove(component: C) =
 	{
 		panel -= component
-		isTransitioning = false
+		transitioning = false
 		targetSize = StackSize.any
 	}
 	
 	override def components = panel.components
-	
-	override def act(duration: FiniteDuration) =
-	{
-		// Advances, and may conclude process
-		timePassed += duration
-		if (timePassed >= transitionDuration)
-			isTransitioning = false
-		revalidate()
-	}
-	
-	override def allowsHandlingFrom(handlerType: HandlerType) = isTransitioning
 	
 	
 	// OTHER	-------------------------
@@ -157,8 +170,33 @@ class AnimatedSizeContainer[C <: AwtStackable](transitionDuration: FiniteDuratio
 				length.within(newTargetLength.min, newTargetLength.max)
 			}
 			timePassed = Duration.Zero
-			isTransitioning = true
 			targetSize = newTargetSize
+			transitioning = true
 		}
+	}
+	
+	
+	// NESTED	-------------------------
+	
+	private object SizeUpdater extends Actor with Handleable
+	{
+		override def act(duration: FiniteDuration) =
+		{
+			// Advances, and may conclude process
+			timePassed += duration
+			if (timePassed >= transitionDuration)
+			{
+				transitioning = false
+				revalidate()
+			}
+			// Has a limit on revalidation calls during transition.
+			else if (timePassed >= nextRevalidationThreshold)
+			{
+				nextRevalidationThreshold = timePassed + maxRefreshRate.interval
+				revalidate()
+			}
+		}
+		
+		// override def allowsHandlingFrom(handlerType: HandlerType) = isTransitioning
 	}
 }

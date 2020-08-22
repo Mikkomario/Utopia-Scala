@@ -1,6 +1,5 @@
 package utopia.reflection.component.swing.animation
 
-import utopia.flow.util.TimeExtensions._
 import utopia.genesis.animation.Animation
 import utopia.genesis.shape.path.ProjectilePath
 import utopia.genesis.shape.shape2D.Size
@@ -15,7 +14,7 @@ import utopia.reflection.event.Visibility.{Invisible, Visible}
 import utopia.reflection.event.VisibilityChange
 import utopia.reflection.event.VisibilityChange.{Appearing, Disappearing}
 import utopia.reflection.shape.StackSize
-import utopia.reflection.util.ComponentToImage
+import utopia.reflection.util.{ComponentCreationDefaults, ComponentToImage}
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -62,8 +61,10 @@ object AnimatedVisibilityChange
   * @param useFading Whether fading (alpha change) should be used during the transition (default = true)
   */
 class AnimatedVisibilityChange(original: AwtComponentRelated with Stackable, transitionAxis: Option[Axis2D] = None,
-							   transition: VisibilityChange = Appearing, override val duration: FiniteDuration = 0.25.seconds,
-							   finalSize: Option[Size] = None, override val maxRefreshRate: Fps = Fps(120),
+							   transition: VisibilityChange = Appearing,
+							   override val duration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+							   finalSize: Option[Size] = None,
+							   override val maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
 							   useFading: Boolean = true)
 	extends AnimatedTransitionLike with AwtComponentWrapperWrapper
 {

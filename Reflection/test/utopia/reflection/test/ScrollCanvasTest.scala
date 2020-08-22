@@ -15,7 +15,6 @@ import utopia.inception.handling.mutable.HandlerRelay
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.swing.display.ScrollCanvas
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.stack.template.scrolling.ScrollAreaLike
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.localization.{Localizer, NoLocalization}
@@ -50,8 +49,7 @@ object ScrollCanvasTest extends App
 	
 	// Creates the canvas
 	val canvas = new ScrollCanvas(worldSize, drawHandler, actorHandler, mouseButtonHandler, mouseMoveHandler,
-		mouseWheelHandler, 16, BoxScrollBarDrawer(Color.black, Color.gray(0.5)),
-		16, false, ScrollAreaLike.defaultFriction, None)
+		mouseWheelHandler, None, BoxScrollBarDrawer(Color.black, Color.gray(0.5)))
 	
 	println(canvas.stackSize)
 	

@@ -22,6 +22,7 @@ import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDraw
 import utopia.reflection.component.template.layout.stack.{CachingStackable, Stackable}
 import utopia.reflection.container.stack.template.StackContainerLike
 import utopia.reflection.shape.{ScrollBarBounds, StackLengthLimit, StackSize}
+import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.collection.immutable.HashMap
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -29,9 +30,10 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 object ScrollAreaLike
 {
 	/**
-	  * The scrolling friction that should be used by default (= 2000 pixels/s&#94;2)
+	  * The scrolling friction that should be used by default
 	  */
-	val defaultFriction = LinearAcceleration(2000)(TimeUnit.SECONDS)
+	@deprecated("Please use ComponentCreationDefaults.scrollFriction directly", "v1.2")
+	def defaultFriction = ComponentCreationDefaults.scrollFriction
 }
 
 /**

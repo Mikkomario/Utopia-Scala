@@ -1,6 +1,5 @@
 package utopia.reflection.component.template.layout.stack
 
-import utopia.flow.util.TimeExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis2D
@@ -9,11 +8,14 @@ import utopia.reflection.container.stack.{StackHierarchyManager, StackLayout}
 import utopia.reflection.shape.{Alignment, StackInsets, StackLength, StackSize}
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.shape2D.Direction2D
+import utopia.genesis.util.Fps
+import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, AnimatedSizeContainer, Framing}
 import utopia.reflection.shape.Alignment.Center
+import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -134,12 +136,32 @@ object Stackable
 		def alignedToCenter = aligned(Center)
 		
 		/**
+		  * @return This item wrapped in a frame that places it at the right hand side
+		  */
+		def alignedToRight = aligned(Alignment.Right)
+		
+		/**
+		  * @return This item wrapped in a frame that places it at the left hand side
+		  */
+		def alignedToLeft = aligned(Alignment.Left)
+		
+		/**
+		  * @param context Component creation context (implicit)
+		  * @return A copy of this component wrapped in a container that animates size changes
+		  */
+		def withAnimatedSize(implicit context: AnimationContextLike) =
+			AnimatedSizeContainer.contextual(s)
+		
+		/**
 		  * @param actorHandler An actor handler to deliver action events
-		  * @param transitionDuration Duration of each size transition
+		  * @param transitionDuration Duration of each size transition (defaults to global default)
+		  * @param maxRefreshRate Maximum size refresh rate (defaults to global default)
 		  * @return This component wrapped in a component that animates its size adjustments
 		  */
-		def withAnimatedSize(actorHandler: ActorHandler, transitionDuration: FiniteDuration = 0.25.seconds) =
-			AnimatedSizeContainer(s, actorHandler, transitionDuration)
+		def withAnimatedSizeUsing(actorHandler: ActorHandler,
+							 transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+							 maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
+			AnimatedSizeContainer(s, actorHandler, transitionDuration, maxRefreshRate)
 	}
 }
 

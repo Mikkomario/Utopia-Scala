@@ -20,6 +20,7 @@ import utopia.reflection.component.template.layout.stack.{CachingStackable, Stac
 import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 import utopia.reflection.shape.{StackLengthLimit, StackSize}
+import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext
 
@@ -41,8 +42,8 @@ object ScrollCanvas
 				   maxOptimalSize: Option[Size] = None)(implicit context: ScrollingContextLike) =
 	{
 		new ScrollCanvas(originalWorldSize, drawHandler, context.actorHandler, contentMouseButtonHandler,
-			contentMouseMoveHandler, contentMouseWheelHandler, context.scrollPerWheelClick, context.scrollBarDrawer,
-			context.scrollBarWidth, context.scrollBarIsInsideContent, context.scrollFriction, maxOptimalSize)
+			contentMouseMoveHandler, contentMouseWheelHandler, maxOptimalSize, context.scrollBarDrawer,
+			context.scrollBarWidth, context.scrollPerWheelClick, context.scrollFriction, context.scrollBarIsInsideContent)
 	}
 }
 
@@ -57,24 +58,29 @@ object ScrollCanvas
   * @param contentMouseButtonHandler A mouse button handler that is used by the content drawn in this canvas
   * @param contentMouseMoveHandler A mouse move handler that is used by the content drawn in this canvas
   * @param contentMouseWheelHandler A mouse wheel handler that is used by the content drawn in this canvas
-  * @param scrollPerWheelClick How many pixels (without scaling) each mouse wheel 'click' represents
-  * @param scrollBarDrawer An instance that draws the scroll bars
-  * @param scrollBarWidth The width of the scroll bars
-  * @param scrollBarIsInsideContent Whether the scroll bar should be placed inside (true) or outside (false) of drawn content
-  * @param scrollFriction Friction applied to animated scrolling (pixels/s2)
   * @param maxOptimalSize The maximum optimal size for this canvas (None if no maximum)
+  * @param scrollBarDrawer An instance that draws the scroll bars
+  * @param scrollBarWidth The width of the scroll bars (defaults to global default)
+  * @param scrollPerWheelClick How many pixels (without scaling) each mouse wheel 'click' represents
+  *                            (defaults to global default)
+  * @param scrollFriction Friction applied to animated scrolling (pixels/s2) (defaults to global default)
+  * @param scrollBarIsInsideContent Whether the scroll bar should be placed inside (true) or outside (false) of drawn
+  *                                 content (default = false)
   */
 class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, actorHandler: ActorHandler,
 				   val contentMouseButtonHandler: MouseButtonStateHandler, val contentMouseMoveHandler: MouseMoveHandler,
-				   val contentMouseWheelHandler: MouseWheelHandler, scrollPerWheelClick: Double,
-				   scrollBarDrawer: ScrollBarDrawer, scrollBarWidth: Int, scrollBarIsInsideContent: Boolean,
-				   scrollFriction: LinearAcceleration, maxOptimalSize: Option[Size]) extends StackableAwtComponentWrapperWrapper
+				   val contentMouseWheelHandler: MouseWheelHandler, maxOptimalSize: Option[Size],
+				   scrollBarDrawer: ScrollBarDrawer, scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,
+				   scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
+				   scrollFriction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,
+				   scrollBarIsInsideContent: Boolean = false) extends StackableAwtComponentWrapperWrapper
 {
 	// ATTRIBUTES	------------------------
 	
 	private val canvas = new Canvas()
-	private val scrollArea = new ScrollArea(canvas, actorHandler, scrollPerWheelClick, scrollBarDrawer, scrollBarWidth,
-		scrollBarIsInsideContent, scrollFriction, StackLengthLimit.sizeLimit(maxOptimal = maxOptimalSize), limitsToContentSize = true)
+	private val scrollArea = new ScrollArea(canvas, actorHandler, scrollBarDrawer, scrollBarWidth, scrollPerWheelClick,
+		scrollFriction, StackLengthLimit.sizeLimit(maxOptimal = maxOptimalSize), limitsToContentSize = true,
+		scrollBarIsInsideContent)
 	
 	private val started = new VolatileFlag()
 	

@@ -2,7 +2,6 @@ package utopia.reflection.component.swing.animation
 
 import utopia.flow.async.Volatile
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.util.TimeExtensions._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.util.Fps
@@ -13,6 +12,7 @@ import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.reflection.event.{Visibility, VisibilityChange, VisibilityState}
 import utopia.reflection.event.Visibility.{Invisible, Visible}
+import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,8 +44,8 @@ object AnimatedVisibility
 class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorHandler,
 											transitionAxis: Option[Axis2D] = None,
 											initialState: VisibilityState = Invisible,
-											duration: FiniteDuration = 0.25.seconds,
-											maxRefreshRate: Fps = Fps(120),
+											duration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+											maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
 											useFading: Boolean = true)
 										   (implicit exc: ExecutionContext)
 	extends StackableAwtComponentWrapperWrapper with AwtContainerRelated with SwingComponentRelated

@@ -2,7 +2,6 @@ package utopia.reflection.component.swing.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener}
-import utopia.flow.util.TimeExtensions._
 import utopia.genesis.animation.Animation
 import utopia.genesis.color.Color
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
@@ -20,6 +19,7 @@ import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.shape.{StackLength, StackSize}
+import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -46,7 +46,8 @@ object Switch
   * @since 4.5.2019, v1+
   */
 class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color: Color,
-			 animationDuration: FiniteDuration = 0.25.seconds, initialState: Boolean = false)
+			 animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+			 initialState: Boolean = false)
 	extends AwtComponentWrapperWrapper with CustomDrawableWrapper with InteractionWithPointer[Boolean] with Stackable
 {
 	// ATTRIBUTES	-----------------
