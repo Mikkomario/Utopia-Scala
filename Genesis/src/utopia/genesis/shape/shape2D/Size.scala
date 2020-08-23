@@ -18,8 +18,6 @@ import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.Axis._
 import java.awt.Insets
 
-import utopia.genesis.shape.shape3D.Vector3D
-
 import scala.util.Success
 
 object Size extends FromModelFactory[Size]
@@ -101,7 +99,7 @@ case class Size(width: Double, height: Double) extends Vector2DLike[Size] with A
     /**
      * A vector representation of this size
      */
-    def toVector = Vector3D(width, height)
+    def toVector = Vector2D(width, height)
     
     /**
       * A point representation of this size

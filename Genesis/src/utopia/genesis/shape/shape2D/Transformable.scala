@@ -55,7 +55,7 @@ trait Transformable
 	  */
 	def scaling = transformation.scaling
 	def scaling_=(newScaling: Double) = transformation = transformation.withScaling(newScaling)
-	def scaling_=(newScaling: Vector3D) = transformation = transformation.withScaling(newScaling)
+	def scaling_=(newScaling: Vector2D) = transformation = transformation.withScaling(newScaling)
 	
 	/**
 	  * @return Current horizontal scaling of this instance

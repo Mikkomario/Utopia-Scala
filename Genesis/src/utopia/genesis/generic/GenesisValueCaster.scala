@@ -122,10 +122,10 @@ object GenesisValueCaster extends ValueCaster
         value.dataType match 
         {
             case VectorType => Some(Vector3D(value(0).doubleOr(), value(1).doubleOr(), value(2).doubleOr()))
-            case PointType => Some(value.pointOr().in3D)
-            case SizeType => Some(value.sizeOr().toVector)
-            case ModelType => Vector3D(value.modelOr()).toOption
-            case LineType => Some(value.lineOr().vector.in3D)
+            case PointType => Some(value.getPoint.in3D)
+            case SizeType => Some(value.getSize.toVector.in3D)
+            case ModelType => Vector3D(value.getModel).toOption
+            case LineType => Some(value.getLine.vector.in3D)
             case _ => None
         }
     }

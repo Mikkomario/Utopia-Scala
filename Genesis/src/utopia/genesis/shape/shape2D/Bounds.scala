@@ -166,10 +166,22 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     def +(translation: Point) = translated(translation)
     
     /**
+      * @param insets Insets to add to these bounds
+      * @return A copy of these bounds with specified insets added to the sides
+      */
+    def +(insets: Insets) = Bounds(position - Vector2D(insets.top, insets.left), size + insets.total)
+    
+    /**
       * @param translation Translation applied to these bounds
       * @return A translated set of bounds
       */
     def -(translation: Point) = translated(-translation)
+    
+    /**
+      * @param insets Insets to subtract from these bounds
+      * @return A copy of these bounds with the specified insets subtracted
+      */
+    def -(insets: Insets) = Bounds(position + Vector2D(insets.top, insets.left), size - insets.total)
     
     /**
       * Scales both position and size

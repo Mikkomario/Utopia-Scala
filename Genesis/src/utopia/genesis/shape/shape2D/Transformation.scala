@@ -31,8 +31,8 @@ object Transformation extends FromModelFactory[Transformation]
     // OPERATORS    -----------------
     
     override def apply(model: template.Model[Property]) = Success(Transformation(
-            model("translation").getVector3D, model("scaling").vector3DOr(Vector3D.identity),
-            Rotation(model("rotation").getDouble), model("shear").getVector3D))
+            model("translation").getVector3D.in2D, model("scaling").vector3DOr(Vector3D.identity).in2D,
+            Rotation(model("rotation").getDouble), model("shear").getVector3D.in2D))
     
     
     // OTHER METHODS    --------------
@@ -40,37 +40,37 @@ object Transformation extends FromModelFactory[Transformation]
     /**
      * This transformation moves the coordinates of the target by the provided amount
      */
-    def translation(amount: Vector3D) = Transformation(translation = amount)
+    def translation(amount: Vector2D) = Transformation(translation = amount)
     
     /**
       * @param amount Translation vector
       * @return A new transformation with only translation included
       */
-    def translation(amount: Dimensional[Double]): Transformation = translation(Vector3D.withDimensions(amount.dimensions))
+    def translation(amount: Dimensional[Double]): Transformation = translation(Vector2D.withDimensions(amount.dimensions))
     
     /**
       * @param x Translation x-wise
       * @param y Translation y-wise
       * @return A new translation transformation
       */
-    def translation(x: Double, y: Double): Transformation = translation(Vector3D(x, y))
+    def translation(x: Double, y: Double): Transformation = translation(Vector2D(x, y))
     
     /**
       * @param amount Translation amount (position)
       * @return A transformation that sets an object to specified position
       */
-    def position(amount: Point) = translation(amount.in3D)
+    def position(amount: Point) = translation(amount.toVector)
     
     /**
      * This transformation scales the target by the provided amount
      */
-    def scaling(amount: Vector3D) = Transformation(scaling = amount)
+    def scaling(amount: Vector2D) = Transformation(scaling = amount)
     
     /**
      * This transformation scales the target by the provided amount. Each coordinate is scaled with
      * the same factor 
      */
-    def scaling(amount: Double) = Transformation(scaling = Vector3D(amount, amount, amount))
+    def scaling(amount: Double) = Transformation(scaling = Vector2D(amount, amount))
     
     /**
      * This transformation rotates the target around the zero origin (z-axis) by the provided amount
@@ -92,7 +92,7 @@ object Transformation extends FromModelFactory[Transformation]
     /**
      * This transformation shears the target by the provided amount
      */
-    def shear(amount: Vector3D) = Transformation(shear = amount)
+    def shear(amount: Vector2D) = Transformation(shear = amount)
 }
 
 /**
@@ -101,8 +101,8 @@ object Transformation extends FromModelFactory[Transformation]
  * @author Mikko Hilpinen
  * @since 29.12.2016
  */
-case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector3D = Vector3D.identity,
-                          rotation: Rotation = Rotation.zero, shear: Vector3D = Vector3D.zero,
+case class Transformation(translation: Vector2D = Vector2D.zero, scaling: Vector2D = Vector2D.identity,
+                          rotation: Rotation = Rotation.zero, shear: Vector2D = Vector2D.zero,
                           useReverseOrder: Boolean = false) extends ValueConvertible with ModelConvertible
 {
     // COMPUTED PROPERTIES    -------
@@ -110,8 +110,8 @@ case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector
     override def toValue = new Value(Some(this), TransformationType)
     
     // TODO: Handle rotation data type
-    override def toModel = Model(Vector("translation" -> translation, "scaling" -> scaling, 
-            "rotation" -> rotation.clockwiseRadians, "shear" -> shear))
+    override def toModel = Model(Vector("translation" -> translation.in3D, "scaling" -> scaling.in3D,
+            "rotation" -> rotation.clockwiseRadians, "shear" -> shear.in3D))
     
     /**
      * The translation component of this transformation as a point
@@ -173,9 +173,7 @@ case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector
             t
         }
         else
-        {
             Transformation(-translation).toAffineTransform
-        }
     }
     
     /**
@@ -204,7 +202,7 @@ case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector
     /**
      * Inverts this transformation
      */
-    def unary_- = Transformation(-translation, Vector3D.identity / scaling, -rotation, -shear, !useReverseOrder)
+    def unary_- = Transformation(-translation, Vector2D.identity / scaling, -rotation, -shear, !useReverseOrder)
     
     /**
      * Combines the two transformations together. The applied translation is not depended of the 
@@ -291,7 +289,7 @@ case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector
     /**
      * Converts an absolute coordinate into a relative one. Same as calling invert(Vector3D)
      */
-    def toRelative(absolute: Vector3D) = invert(absolute)
+    def toRelative(absolute: Vector2D) = invert(absolute)
     
     /**
      * Converts an absolute shape to a relative one. Same as calling invert(...)
@@ -306,7 +304,7 @@ case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector
     /**
      * Converts a relative coordinate into an absolute one. Same as calling apply(Point)
      */
-    def toAbsolute(relative: Vector3D) = apply(relative)
+    def toAbsolute(relative: Vector2D) = apply(relative)
     
     /**
      * Converts a relative shape to an absolute one. Same as calling apply(...)
@@ -370,14 +368,14 @@ case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector
     /**
      * Copies this transformation, giving it a new translation vector
      */
-    def withTranslation(translation: Vector3D) = copy(translation = translation)
+    def withTranslation(translation: Vector2D) = copy(translation = translation)
     
     /**
       * @param translation A new translation value
       * @return A copy of this transformation with new translation
       */
     def withTranslation(translation: Dimensional[Double]) =
-        copy(translation = Vector3D.withDimensions(translation.dimensions))
+        copy(translation = Vector2D.withDimensions(translation.dimensions))
     
     /**
      * Copies this transformation, giving it a new position
@@ -387,12 +385,12 @@ case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector
     /**
      * Copies this transformation, giving it a new scaling
      */
-    def withScaling(scaling: Vector3D) = copy(scaling = scaling)
+    def withScaling(scaling: Vector2D) = copy(scaling = scaling)
     
     /**
      * Copies this transformation, giving it a new scaling
      */
-    def withScaling(scaling: Double): Transformation = withScaling(Vector3D(scaling, scaling, scaling))
+    def withScaling(scaling: Double): Transformation = withScaling(Vector2D(scaling, scaling))
     
     /**
      * Copies this transformation, using a different rotation
@@ -414,7 +412,7 @@ case class Transformation(translation: Vector3D = Vector3D.zero, scaling: Vector
     /**
      * Copies this transformation, giving it a new shearing
      */
-    def withShear(shear: Vector3D) = copy(shear = shear)
+    def withShear(shear: Vector2D) = copy(shear = shear)
     
     /**
      * Copies this transformation, changing the translation by the provided amount

@@ -1,28 +1,41 @@
 package utopia.reflection.container.swing.layout.wrapper
 
 import utopia.flow.async.Volatile
-import utopia.flow.util.TimeExtensions._
 import utopia.genesis.animation.transform.AnimatedTransform
-import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.Direction1D
-import utopia.genesis.shape.shape2D.Bounds
-import utopia.genesis.util.Drawer
-import utopia.inception.handling.Mortal
-import utopia.inception.handling.immutable.Handleable
-import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.swing.animation.AnimatedVisibilityChange
-import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
+import utopia.genesis.shape.shape2D.Size
+import utopia.genesis.util.Fps
+import utopia.reflection.component.context.AnimationContextLike
+import utopia.reflection.component.swing.label.EmptyLabel
+import utopia.reflection.component.swing.template.{AwtComponentRelated, StackableAwtComponentWrapperWrapper, SwingComponentRelated}
+import utopia.reflection.component.template.layout.stack.AnimatedTransitionLike
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.shape.StackSize
+import utopia.reflection.util.{ComponentCreationDefaults, ComponentToImage}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
+object AnimatedSwitchPanel
+{
+	/**
+	  * Creates a new animated switch panel with contextual information
+	  * @param initialContent Content displayed initially
+	  * @param imageTransition Transition used with component images
+	  * @param sizeTransition Transition used with component sizes
+	  * @param exc Implicit execution context
+	  * @param context Implicit animation context
+	  * @tparam C Type of switched component
+	  * @return A new animated switch panel
+	  */
+	def contextual[C <: AwtStackable](initialContent: C, imageTransition: AnimatedTransform[(Image, Image), Image],
+									  sizeTransition: AnimatedTransform[(Size, Size), Size])
+									 (implicit exc: ExecutionContext, context: AnimationContextLike) =
+		new AnimatedSwitchPanel(initialContent, context.actorHandler, imageTransition, sizeTransition,
+			context.animationDuration, context.maxAnimationRefreshRate)
+}
 
 /**
   * This component wrapper animates transitions between components
@@ -30,17 +43,20 @@ import scala.concurrent.{ExecutionContext, Future}
   * @since 19.4.2020, v1.2
   */
 class AnimatedSwitchPanel[C <: AwtStackable](initialContent: C, actorHandler: ActorHandler,
-											 transition: AnimatedTransform[(Image, Image), Image],
-											 duration: FiniteDuration = 0.25.seconds)
+											 imageTransition: AnimatedTransform[(Image, Image), Image],
+											 sizeTransition: AnimatedTransform[(Size, Size), Size],
+											 duration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+											 maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
 											(implicit exc: ExecutionContext)
 	extends StackableAwtComponentWrapperWrapper with AwtContainerRelated with SwingComponentRelated
 {
 	// ATTRIBUTES	---------------------
 	
-	private val panel = new SwitchPanel[AwtStackable]
+	private val panel = new SwitchPanel[AwtStackable]()
 	
 	private var currentContent = initialContent
-	private val lastTransition = Volatile(Future.successful(currentContent))
+	private var targetContent = initialContent
+	private val currentTransition = Volatile(Future.successful(currentContent))
 	
 	
 	// INITIAL CODE	---------------------
@@ -50,28 +66,10 @@ class AnimatedSwitchPanel[C <: AwtStackable](initialContent: C, actorHandler: Ac
 	
 	// COMPUTED	-------------------------
 	
-	/*
-	  * Changes whether the component should be shown or not. The actual visibility of the component is altered
-	  * via a transition, so the visual effects may not be immediate
-	  * @param newState Whether component should be shown
-	  * @return A future of the transition completion, with the new shown state of this component
-	  *         (component shown status may have been altered during the transition so that the returned state
-	  *         doesn't always match 'newState')
+	/**
+	  * @return Current content within this panel
 	  */
-		/*
-	def isShown_=(newState: Boolean) =
-	{
-		if (newState != targetState)
-		{
-			// If this component is already transitioning, simply alters the target state.
-			// Otherwise starts a new transition
-			targetState = newState
-			lastTransition.setIf { _.isCompleted } { startTransition(newState) }
-			lastTransition.get
-		}
-		else
-			Future.successful(newState)
-	}*/
+	def content = targetContent
 	
 	
 	// IMPLEMENTED	---------------------
@@ -83,74 +81,71 @@ class AnimatedSwitchPanel[C <: AwtStackable](initialContent: C, actorHandler: Ac
 	
 	// OTHER	-------------------------
 	
-	/*
-	  * Specifies component visibility without triggering transition animations
-	  * @param newState New visibility state
+	/**
+	  * Updates the content in this panel
+	  * @param newContent New content for this panel
 	  */
-	/*
-	def setStateWithoutTransition(newState: Boolean) =
+	def set(newContent: C) =
 	{
-		if (targetState != newState)
-		{
-			targetState = newState
-			if (newState)
-				panel.set(display)
+		// Extends the ongoing transition or starts a new one
+		targetContent = newContent
+		currentTransition.update { lastTransition =>
+			// Case: There is no ongoing transition -> starts a new one
+			if (lastTransition.isCompleted)
+			{
+				if (currentContent == newContent)
+					lastTransition
+				else
+					startTransition(currentContent, newContent)
+			}
+			// Case: There's still an ongoing transition -> queues another transition right after the previous
 			else
-				panel.clear()
+				lastTransition.flatMap { midContent =>
+					if (midContent == newContent)
+						Future.successful(midContent)
+					else
+						startTransition(midContent, newContent)
+				}
 		}
-	}*/
+	}
 	
-	// Returns the reached visibility target
-	/*
-	private def startTransition(target: Boolean): Future[Boolean] =
+	private def startTransition(from: C, to: C) =
 	{
-		// Creates the transition
-		val transition = new AnimatedTransition(display, transitionAxis, Direction1D.matching(target), duration, useFading)
+		val transition = new Transition(ComponentToImage(from, size),
+			ComponentToImage(to, to.stackSize.optimal))
 		actorHandler += transition
 		panel.set(transition)
 		
-		// Starts the transition in background
-		transition.start().flatMap { _ =>
-			// At transition end, may start a new transition if the target state was changed during
-			// the first transition
-			if (targetState == target)
-			{
-				// Case: Target state reached
-				// Switches to original component or clears this panel
-				if (target)
-					panel.set(display)
-				else
-					panel.clear()
-				
-				Future.successful(target)
-			}
-			else
-			{
-				// Case: Target state was switched
-				// Starts a new transition
-				startTransition(targetState)
-			}
+		transition.start().map { _ =>
+			currentContent = to
+			to
 		}
-	}*/
+	}
 	
 	
 	// NESTED	----------------------------------
 	
-	private class Transition(from: C, to: C, direction: Direction1D) extends Actor with Handleable with Mortal
+	private class Transition(from: Image, to: Image) extends AnimatedTransitionLike with AwtComponentRelated
 	{
-		override def act(duration: FiniteDuration) = ???
+		// ATTRIBUTES	----------------------------
 		
-		override def isDead = ???
+		private val label = new EmptyLabel()
 		
-		private class TransitionDrawer(original: Image, target: Image) extends CustomDrawer
-		{
-			override def drawLevel = Normal
-			
-			override def draw(drawer: Drawer, bounds: Bounds) =
-			{
-				
-				???
-			}
-		}
+		
+		// IMPLEMENTED	----------------------------
+		
+		override def component = label.component
+		
+		override protected def duration = AnimatedSwitchPanel.this.duration
+		
+		override protected val imageAnimation = imageTransition.toAnimation(from, to)
+		
+		override protected val sizeAnimation = sizeTransition.toAnimation(from.size, to.size).map { StackSize.any(_) }
+		
+		override protected def maxRefreshRate = AnimatedSwitchPanel.this.maxRefreshRate
+		
+		override protected def wrapped = label
+		
+		override def drawable = label
 	}
 }

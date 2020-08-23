@@ -2,8 +2,7 @@ package utopia.genesis.util
 
 import java.awt.{GraphicsConfiguration, Toolkit}
 
-import utopia.genesis.shape.shape2D.{Insets, Size}
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.shape2D.{Insets, Size, Vector2D}
 
 import scala.util.Try
 
@@ -16,7 +15,7 @@ object Screen
 {
 	// ATTRIBUTES   -----------------------
 	
-	private var screenSizeMod: Option[Vector3D] = None
+	private var screenSizeMod: Option[Vector2D] = None
 	
 	private lazy val standardSize = Try { Size of toolkit.getScreenSize }.getOrElse(Size.zero)
 	

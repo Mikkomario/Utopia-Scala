@@ -29,7 +29,7 @@ object DataTypeTest extends App
     val line = Line(point1, point2)
     val circle = Circle(point2, 12.25)
     val rectangle = Bounds(point2, size1)
-    val transformation = Transformation(vector2, vector2, Rotation.ofRadians(math.Pi), vector1)
+    val transformation = Transformation(vector2.in2D, vector2.in2D, Rotation.ofRadians(math.Pi), vector1.in2D)
     
     val v1 = vector1.toValue
     val v2 = vector2.toValue
@@ -63,7 +63,7 @@ object DataTypeTest extends App
 	assert(s1(1).doubleOr() == 1)
 	assert(s1("width").doubleOr() == 1)
 	assert(s1("height").doubleOr() == 1)
-	assert(s1.vector3DOr() == size1.toVector)
+	assert(s1.vector3DOr() == size1.toVector.in3D)
 	
     assert(l.vector3DOr() ~== (point2 - point1).toVector)
     assert(l(0).pointOr() ~== point1)

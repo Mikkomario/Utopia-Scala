@@ -1,5 +1,6 @@
 package utopia.genesis.shape.shape2D
 
+import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.shape1D.Angle
@@ -38,6 +39,13 @@ object Vector2D
 	  * Converts a coordinate map into a vector
 	  */
 	def of(map: Map[Axis2D, Double]) = Vector2D(map.getOrElse(X, 0), map.getOrElse(Y, 0))
+	
+	/**
+	  * @param dimensions A set of dimensions
+	  * @return A 2D vector from those dimensions (uses the first 2 dimensions)
+	  */
+	def withDimensions(dimensions: Seq[Double]) = Vector2D(dimensions.headOption.getOrElse(0.0),
+		dimensions.getOrElse(1, 0.0))
 }
 
 /**
@@ -58,6 +66,11 @@ case class Vector2D(override val x: Double = 0.0, override val y: Double = 0.0) 
 	  * @return A point that matches this vector
 	  */
 	def toPoint = Point(x, y)
+	
+	/**
+	  * @return A size that matches this vector
+	  */
+	def toSize = Size(x, y)
 	
 	
 	// IMPLEMENTED	-----------------------------

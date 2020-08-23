@@ -128,9 +128,7 @@ class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size, val 
         val size = Size of getSize()
         
         if (scalingPolicy == Project)
-        {
             _gameWorldSize = (prefferedGameWorldSize.toVector projectedOver size.toVector).toSize
-        }
         else
         {
             val prefferedXYRatio = prefferedGameWorldSize.width / prefferedGameWorldSize.height

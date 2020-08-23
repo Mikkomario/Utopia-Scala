@@ -2,7 +2,7 @@ package utopia.genesis.animation
 
 import utopia.genesis.shape.shape1D.Rotation
 import utopia.genesis.shape.shape1D.RotationDirection.Counterclockwise
-import utopia.genesis.shape.shape2D.{Point, Transformation}
+import utopia.genesis.shape.shape2D.{Point, Transformation, Vector2D}
 import utopia.genesis.shape.shape3D.Vector3D
 
 /**
@@ -27,12 +27,12 @@ object AnimatedTransformation
 	/**
 	  * An animation where the target is flipped horizontally
 	  */
-	val flippedHorizontally = scaling(Vector3D.identity, Vector3D(-1, 1))
+	val flippedHorizontally = scaling(Vector2D.identity, Vector2D(-1, 1))
 	
 	/**
 	  * An animation where the target is flipped vertically
 	  */
-	val flippedVertically = scaling(Vector3D.identity, Vector3D(1, -1))
+	val flippedVertically = scaling(Vector2D.identity, Vector2D(1, -1))
 	
 	
 	// OTHER	------------------------
@@ -58,7 +58,7 @@ object AnimatedTransformation
 	  * @param to Scaling at 1.0 progress
 	  * @return A new scaling transformation
 	  */
-	def scaling(from: Vector3D, to: Vector3D) =
+	def scaling(from: Vector2D, to: Vector2D) =
 		apply { p  => Transformation.scaling(from + (to - from) * p) }
 	
 	/**
