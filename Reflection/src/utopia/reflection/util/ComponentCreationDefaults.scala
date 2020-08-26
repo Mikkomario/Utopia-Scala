@@ -19,9 +19,9 @@ object ComponentCreationDefaults
 {
 	/**
 	  * The maximum refresh rate for animations by default. This limits the amount of component hierarchy revalidations
-	  * and repaint calls from animated components inside the action loop. Default value is 60 Hz (times per second).
+	  * and repaint calls from animated components inside the action loop. Default value is 90 Hz (times per second).
 	  */
-	var maxAnimationRefreshRate = Fps(60)
+	var maxAnimationRefreshRate = Fps(90)
 	
 	/**
 	  * The default transition duration for animated transitions. Default value is 0.25 seconds.

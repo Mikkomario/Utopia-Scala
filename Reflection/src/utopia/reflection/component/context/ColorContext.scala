@@ -1,6 +1,7 @@
 package utopia.reflection.component.context
 
-import utopia.reflection.color.{ColorScheme, ColorSet, ComponentColor}
+import utopia.reflection.color.ColorShade.Standard
+import utopia.reflection.color.{ColorRole, ColorScheme, ColorSet, ColorShade, ComponentColor}
 import utopia.reflection.localization.Localizer
 import utopia.reflection.shape.{Alignment, StackInsets}
 import utopia.reflection.shape.LengthExtensions._
@@ -60,6 +61,15 @@ case class ColorContext(base: BaseContextLike, containerBackground: ComponentCol
 	  * @return A copy of this context with specified color scheme being used
 	  */
 	def withColorScheme(colorScheme: ColorScheme) = copy(colorSchemeOverride = Some(colorScheme))
+	
+	/**
+	  * @param colorRole Role for the new background
+	  * @param preferredShade Preferred color shade (default = standard)
+	  * @return A copy of this context with a background color from the specified set
+	  *         (most suitable against current background)
+	  */
+	def forChildComponentWithRole(colorRole: ColorRole, preferredShade: ColorShade = Standard) =
+		copy(containerBackground = color(colorRole, preferredShade))
 	
 	/**
 	  * @param textAlignment Text alignment used (default = Left)

@@ -36,6 +36,16 @@ object ColorSet
   */
 case class ColorSet(default: ComponentColor, light: ComponentColor, dark: ComponentColor)
 {
+	// COMPUTED	----------------------------
+	
+	/**
+	  * @return Color options in this set from light to dark
+	  */
+	def values = Vector(light, default, dark)
+	
+	
+	// OTHER	----------------------------
+	
 	/**
 	  * @param shade Target color shade
 	  * @return A color from this set that matches that shade
