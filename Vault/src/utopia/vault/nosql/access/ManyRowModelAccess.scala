@@ -1,7 +1,7 @@
 package utopia.vault.nosql.access
 
 import utopia.vault.database.Connection
-import utopia.vault.sql.{Exists, Select, Where}
+import utopia.vault.sql.{Count, Exists, Select, Where}
 
 /**
   * Used for accessing multiple models at once, each model occupying exactly one row
@@ -14,8 +14,10 @@ trait ManyRowModelAccess[+A] extends RowModelAccess[A, Vector[A]] with ManyModel
 	  * @param connection DB Connection (implicit)
 	  * @return Number of items accessible from this accessor
 	  */
-	def size(implicit connection: Connection) = connection(Select.nothing(target) +
-		globalCondition.map { Where(_) }).rows.size
+	def size(implicit connection: Connection) = connection(Count(target) + globalCondition.map { Where(_) })
+		.firstValue.getInt
+		// connection(Select.nothing(target) +
+		// globalCondition.map { Where(_) }).rows.size
 	
 	/**
 	  * @param connection DB Connection (implicit)

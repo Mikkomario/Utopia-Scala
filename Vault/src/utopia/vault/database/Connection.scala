@@ -127,7 +127,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         
         // Changes database if necessary
         statement.databaseName.foreach { dbName = _ }
-        val result = apply(statement.sql, statement.values, selectedTables, statement.generatesKeys)
+        val result = apply(statement.sql, statement.values, selectedTables, statement.generatesKeys, statement.isSelect)
         
         printIfDebugging(s"Received result: $result")
         result
@@ -142,7 +142,8 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      * @param selectedTables The tables for which resulting rows are parsed. If empty, the rows 
      * are not parsed at all.
      * @param returnGeneratedKeys Whether the resulting Result object should contain any keys 
-     * generated during the query
+     * generated during the query (default = false)
+      * @param returnRows Whether rows should be returned from this query (default = true)
      * @return The results of the query, containing the read rows and keys. If 'selectedTables' 
      * parameter was empty, no rows are included. If 'returnGeneratedKeys' parameter was false, 
      * no keys are included. On update statements, includes number of updated rows.
@@ -150,7 +151,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      */
     @throws(classOf[DBException])
     def apply(sql: String, values: Seq[Value], selectedTables: Set[Table] = HashSet(), 
-            returnGeneratedKeys: Boolean = false) = 
+            returnGeneratedKeys: Boolean = false, returnRows: Boolean = true) =
     {
         // Empty statements are not executed
         if (sql.isEmpty)
@@ -174,7 +175,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                         statement.getResultSet.consume { results =>
                             // Parses data out of the result
                             // May skip some data in case it is not requested
-                            Result(if (selectedTables.isEmpty) Vector() else rowsFromResult(results, selectedTables),
+                            Result(if (returnRows) rowsFromResult(results, selectedTables) else Vector(),
                                 generatedKeys, statement.getUpdateCount)
                         }
                     }
@@ -487,7 +488,12 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         val columnIndices = indicesForTables.flatMap { case (tableOption, indices) => 
                 tableOption.map { table => (table, indices.flatMap { 
                 index => table.findColumnWithColumnName( meta.getColumnName(index) ).map {
-                (_, meta.getColumnType(index), index) } }) } }
+                (_, meta.getColumnType(index), index) } }) }
+        }
+        // [(name, sqlType, index)]
+        val nonColumnIndices = indicesForTables.getOrElse(None, Vector())
+            .map { index => (meta.getColumnName(index), meta.getColumnType(index), index) }
+        val hasContentOutsideTables = nonColumnIndices.nonEmpty
         
         // Parses the rows from the resultSet
         val rowBuffer = Vector.newBuilder[Row]
@@ -495,10 +501,20 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         {
             // Reads the object data from each row, parses them into constants and creates a model 
             // The models are mapped to each table separately
+            // Also includes data outside the tables if present
+            val otherData =
+            {
+                if (hasContentOutsideTables)
+                    Model.withConstants(nonColumnIndices.map { case (name, sqlType, index) =>
+                        Constant(name, Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) })
+                else
+                    Model.empty
+            }
             // NB: view.force is added in order to create a concrete map
             rowBuffer += Row(columnIndices.view.mapValues { data =>
                 Model.withConstants(data.map { case (column, sqlType, index) => Constant(column.name,
-                Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) }) }.toMap)
+                Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) })
+            }.toMap, otherData)
         }
         
         rowBuffer.result()
