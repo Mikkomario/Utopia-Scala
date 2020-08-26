@@ -14,9 +14,11 @@ import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, AnimatedSizeContainer, Framing}
+import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.Alignment.Center
 import utopia.reflection.util.ComponentCreationDefaults
 
+import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration.FiniteDuration
 
 object Stackable
@@ -210,13 +212,34 @@ trait Stackable extends ComponentLike
 	/**
 	  * Changes whether this stackable instance is currently attached to the main stack hierarchy
 	  * (should affect the children as well). This method is called for informing this stackable, not to cause a change
-	  * in the main stack hierarchy.
+	  * in the main stack hierarchy. The component should fire a stack hierarchy change event from inside this method
+	  * when/if it recognizes that its state has changed.
 	  * @param newAttachmentStatus Whether this stackable instance is now connected to the main stack hierarchy
 	  */
 	def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean): Unit
 	
+	/**
+	  * @return Stack hierarchy listeners currently registered for this component
+	  */
+	def stackHierarchyListeners: Vector[StackHierarchyListener]
+	/**
+	  * Updates the stack hierarchy listeners currently registered for this component
+	  * @param newListeners New stack hierarchy listeners to receive events from this component's state changes
+	  */
+	def stackHierarchyListeners_=(newListeners: Vector[StackHierarchyListener]): Unit
+	
 	
 	// COMPUTED	---------------------
+	
+	/**
+	  * @return Optimal width for this component
+	  */
+	def optimalWidth = stackSize.width.optimal
+	
+	/**
+	  * @return Optimal height for this component
+	  */
+	def optimalHeight = stackSize.height.optimal
 	
 	/**
 	  * @return Whether this component is now larger than its maximum size
@@ -295,5 +318,121 @@ trait Stackable extends ComponentLike
 		// If this component was attached to the main stack hierarchy under a different parent, disconnects from that one
 		else
 			detachFromMainStackHierarchy()
+	}
+	
+	/**
+	  * Informs all of the current stack hierarchy listeners about this component's new connection state. Should be
+	  * called whenever this component's stack hierarchy connection state changes.
+	  * @param newAttachmentStatus This component's new stack hierarchy connection state
+	  *                            (true=connected, false=disconnected)
+	  */
+	protected def fireStackHierarchyChangeEvent(newAttachmentStatus: Boolean) =
+		stackHierarchyListeners.foreach { _.onComponentAttachmentChanged(newAttachmentStatus) }
+	
+	/**
+	  * Registers a stack hierarchy change listener to be informed about stack hierarchy changes concerning this
+	  * component
+	  * @param listener A stack hierarchy change listener
+	  */
+	def addStackHierarchyChangeListener(listener: StackHierarchyListener) =
+	{
+		val currentListeners = stackHierarchyListeners
+		if (!currentListeners.contains(listener))
+			stackHierarchyListeners = currentListeners :+ listener
+	}
+	
+	/**
+	  * Removes a stack hierarchy listener from receiving any more events regarding this component's state changes
+	  * @param listener A listener to remove from this component
+	  */
+	def removeStackHierarchyChangeListener(listener: StackHierarchyListener) =
+		stackHierarchyListeners = stackHierarchyListeners.filterNot { _ == listener }
+	
+	/**
+	  * Registers the specified function to be called whenever this component is attached to the main stack hierarchy
+	  * @param listener A function to be called whenever this component is attached to the main stack hierarchy
+	  * @tparam U Arbitrary result type
+	  */
+	def addStackHierarchyAttachmentListener[U](listener: => U) =
+		addStackHierarchyChangeListener(StackHierarchyListener.attachmentListener(listener))
+	
+	/**
+	  * Registers the specified function to be called whenever this component is detached from the main stack hierarchy
+	  * @param listener A function to be called whenever this component is detached from the main stack hierarchy
+	  * @tparam U Arbitrary result type
+	  */
+	def addStackHierarchyDetachmentListener[U](listener: => U) =
+		addStackHierarchyChangeListener(StackHierarchyListener.detachmentListener(listener))
+	
+	/**
+	  * Calls the specified function once this component is next time attached to the main stack hierarchy
+	  * @param f Function to call when this component gets attached to the main stack hierarchy
+	  * @tparam A Function result type
+	  * @return A future with eventual function results
+	  */
+	def onNextStackHierarchyAttachment[A](f: => A) = onNextStackHierarchyChange(targetState = true)(f)
+	
+	/**
+	  * Calls the specified function once this component is next time detached from the main stack hierarchy
+	  * @param f Function to call when this component gets detached from the main stack hierarchy
+	  * @tparam A Function result type
+	  * @return A future with eventual function results
+	  */
+	def onNextStackHierarchyDetachment[A](f: => A) = onNextStackHierarchyChange(targetState = false)(f)
+	
+	private def onNextStackHierarchyChange[A](targetState: Boolean)(f: => A) =
+	{
+		val promise = Promise[A]()
+		addStackHierarchyChangeListener(new SingleUseStackHierarchyListener({ newStatus =>
+			if (newStatus == targetState)
+			{
+				promise.trySuccess(f)
+				true
+			}
+			else
+				false
+		}))
+		promise.future
+	}
+	
+	/**
+	  * Calls the specified function as soon as this component is attached to the main stack hierarchy. If this
+	  * component is already attached, calls the function immediately.
+	  * @param f Function to call once this component is attached to the main stack hierarchy
+	  * @tparam A Function result type
+	  * @return A future with eventual function results (may already be completed)
+	  */
+	def onceAttachedToStackHierarchy[A](f: => A) = onNextStackHierarchyState(targetState = true)(f)
+	
+	/**
+	  * Calls the specified function as soon as this component is not attached to the main stack hierarchy. If this
+	  * component is already detached, calls the function immediately.
+	  * @param f Function to call once this component is detached from the main stack hierarchy
+	  * @tparam A Function result type
+	  * @return A future with eventual function results (may already be completed)
+	  */
+	def onceDetachedFromStackHierarchy[A](f: => A) = onNextStackHierarchyState(targetState = false)(f)
+	
+	private def onNextStackHierarchyState[A](targetState: Boolean)(f: => A) =
+	{
+		if (isAttachedToMainHierarchy == targetState)
+			Future.successful[A](f)
+		else
+			onNextStackHierarchyChange(targetState)(f)
+	}
+	
+	
+	
+	
+	// NESTED	------------------------------------
+	
+	private class SingleUseStackHierarchyListener(f: Boolean => Boolean) extends StackHierarchyListener
+	{
+		override def onComponentAttachmentChanged(newAttachmentStatus: Boolean) =
+		{
+			// If the function completes successfully, detaches this listener from the owner component
+			if (f(newAttachmentStatus))
+				removeStackHierarchyChangeListener(this)
+		}
 	}
 }

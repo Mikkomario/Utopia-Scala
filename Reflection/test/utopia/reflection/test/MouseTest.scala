@@ -29,6 +29,7 @@ object MouseTest extends App
 	
 	implicit val language: String = "en"
 	implicit val localizer: Localizer = NoLocalization
+	implicit val context: ExecutionContext = new ThreadPool("Mouse Test").executionContext
 	
 	private class MouseEnterExitListener(val area: Area) extends MouseMoveListener with Handleable
 	{
@@ -71,8 +72,6 @@ object MouseTest extends App
 	// Starts the program
 	val actorHandler = ActorHandler()
 	val actorLoop = new ActorLoop(actorHandler)
-	
-	implicit val context: ExecutionContext = new ThreadPool("Mouse Test").executionContext
 	
 	frame.startEventGenerators(actorHandler)
 	actorLoop.startAsync()

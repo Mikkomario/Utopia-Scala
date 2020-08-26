@@ -12,6 +12,8 @@ import utopia.flow.generic.ValueConversions._
 import utopia.genesis.color.Color
 import utopia.genesis.shape.Axis.X
 import utopia.genesis.shape.shape2D.{Bounds, Insets, Point, Size}
+import utopia.reflection.color.ColorSet
+import utopia.reflection.color.ColorShade.{Dark, Light}
 import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
@@ -126,6 +128,8 @@ object TextField
 			initialText, prompt.map { Prompt(_, context.promptFont, context.hintTextColor) }, context.textColor,
 			resultFilter, context.textAlignment, valuePointer)
 		field.background = context.buttonColor
+		field.setSelectionHighlight(if (context.colorScheme.secondary.contains(context.buttonColor))
+			context.colorScheme.primary else context.colorScheme.secondary)
 		field.addFocusHighlight(context.buttonColorHighlighted)
 		field
 	}
@@ -230,6 +234,7 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 	
 	field.setFont(font.toAwt)
 	field.setForeground(textColor.toAwt)
+	field.setCaretColor(textColor.toAwt)
 	field.setDocument(document)
 	
 	setBorder(defaultBorder)
@@ -304,6 +309,12 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 	  */
 	def doubleValue = value.double
 	
+	/**
+	  * @return Color currently used in this field's caret (cursor)
+	  */
+	def caretColor: Color = field.getCaretColor
+	def caretColor_=(newColor: Color) = field.setCaretColor(newColor.toAwt)
+	
 	
 	// IMPLEMENTED	--------------------
 	
@@ -370,6 +381,23 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 	  * @param color The background color used when focused
 	  */
 	def addFocusHighlight(color: Color) = component.addFocusListener(new FocusHighlighter(background, color))
+	
+	/**
+	  * Updates the selection color, selected text color and caret color for this field. Please note that this method
+	  * is dependent on current field background color so it should be set first
+	  * @param color Color set to use in this field's selection colors
+	  */
+	def setSelectionHighlight(color: ColorSet) =
+	{
+		val bg = background
+		val preferredSelectionShade = if (bg.luminosity >= 0.5) Light else Dark
+		val selectionColor = color.forBackgroundPreferring(bg, preferredSelectionShade)
+		val caretColor = color.bestAgainst(Vector(bg, selectionColor))
+		
+		field.setSelectionColor(selectionColor.toAwt)
+		field.setSelectedTextColor(selectionColor.textColorStandard.defaultTextColor.toAwt)
+		field.setCaretColor(caretColor.toAwt)
+	}
 	
 	private def filter() =
 	{

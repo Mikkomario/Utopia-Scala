@@ -11,6 +11,7 @@ import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
 import utopia.reflection.container.stack.{StackHierarchyManager, StackLayout}
 import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
+import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.StackLength
 
 /**
@@ -96,6 +97,8 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		val isUpdatingFlag = new VolatileFlag()
 		private var _isAttached = false
 		
+		override var stackHierarchyListeners = Vector[StackHierarchyListener]()
+		
 		
 		// INITIAL CODE	-------------------------
 		
@@ -139,6 +142,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 			if (_isAttached != newAttachmentStatus)
 			{
 				_isAttached = newAttachmentStatus
+				fireStackHierarchyChangeEvent(newAttachmentStatus)
 				if (newAttachmentStatus)
 				{
 					wrappedComponent.attachToStackHierarchyUnder(this)

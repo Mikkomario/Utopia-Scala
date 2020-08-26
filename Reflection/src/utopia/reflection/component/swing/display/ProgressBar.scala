@@ -63,6 +63,27 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 	
 	progressPointer.addListener(InvisibleProgressListener, Some(0.0))
 	
+	// Enables or disables animations based on whether this component is added to the main stack hierarchy
+	addStackHierarchyChangeListener { isAttached =>
+		// May enable or disable animations
+		if (isAttached)
+		{
+			progressPointer.removeListener(InvisibleProgressListener)
+			actorHandler += ProgressDrawer
+			progressPointer.addListener(TargetUpdateListener)
+		}
+		else
+		{
+			actorHandler -= ProgressDrawer
+			progressPointer.removeListener(TargetUpdateListener)
+			
+			if (progressPointer.value >= 1)
+				isCompletedFlag.set()
+			else
+				progressPointer.addListener(InvisibleProgressListener, Some(0.0))
+		}
+	}
+	
 	
 	// COMPUTED	--------------------------
 	
@@ -80,28 +101,6 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 	
 	
 	// IMPLEMENTED	----------------------
-	
-	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
-	{
-		super.isAttachedToMainHierarchy_=(newAttachmentStatus)
-		// May enable or disable animations
-		if (newAttachmentStatus)
-		{
-			progressPointer.removeListener(InvisibleProgressListener)
-			actorHandler += ProgressDrawer
-			progressPointer.addListener(TargetUpdateListener)
-		}
-		else
-		{
-			actorHandler -= ProgressDrawer
-			progressPointer.removeListener(TargetUpdateListener)
-			
-			if (progressPointer.value >= 1)
-				isCompletedFlag.set()
-			else
-				progressPointer.addListener(InvisibleProgressListener, Some(0.0))
-		}
-	}
 	
 	override def component = label.component
 	

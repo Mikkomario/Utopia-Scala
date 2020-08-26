@@ -8,6 +8,7 @@ import utopia.flow.datastructure.mutable.Lazy
 import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
+import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.{Insets, Point, Size, Vector2D}
@@ -17,11 +18,12 @@ import utopia.reflection.component.template.layout.stack.{Constrainable, Stackab
 import utopia.reflection.component.swing.button.ButtonLike
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.container.swing.AwtContainerRelated
-import utopia.reflection.event.ResizeListener
+import utopia.reflection.event.{ResizeListener, StackHierarchyListener}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.{Alignment, StackSizeModifier}
 
 import scala.concurrent.Promise
+import scala.jdk.CollectionConverters.SeqHasAsJava
 
 /**
 * This is a common wrapper for all window implementations
@@ -40,6 +42,8 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
     private val closePromise = Promise[Unit]()
     
     private val uponCloseAction = VolatileOption[() => Unit]()
+    
+    override var stackHierarchyListeners = Vector[StackHierarchyListener]()
     
     
 	// ABSTRACT    -----------------
@@ -115,6 +119,7 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
         if (_isAttachedToMainHierarchy != newAttachmentStatus)
         {
             _isAttachedToMainHierarchy = newAttachmentStatus
+            fireStackHierarchyChangeEvent(newAttachmentStatus)
             if (newAttachmentStatus)
                 content.attachToStackHierarchyUnder(this)
             else
@@ -260,6 +265,37 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
       */
     def registerButtons(defaultButton: ButtonLike, moreButtons: ButtonLike*) =
         addKeyStateListener(DefaultButtonHandler(defaultButton, moreButtons: _*) { isFocusedWindow })
+    
+    /**
+      * Sets the icon to this window
+      * @param icon New window icon
+      * @param minSize Minimum size allowed for the icon (in pixels). Default = 16x16.
+      */
+    def setIcon(icon: Image, minSize: Size = Size(16, 16)) =
+    {
+        // Minimum size must be positive
+        if (!minSize.isPositive)
+            throw new IllegalArgumentException(s"Icon minimum size must be positive. Now supplied $minSize")
+        else
+        {
+            // Copies the maximum size icon first
+            val original = icon.downscaled
+            original.toAwt.foreach { maxImage =>
+                val maxSize = Size(maxImage.getWidth, maxImage.getHeight)
+                // Case: No smaller icons are allowed
+                if (maxSize.fitsInto(minSize))
+                    component.setIconImage(maxImage)
+                // Case: Multiple icon sizes allowed
+                else
+                {
+                    // Shrinks the original image until minimum size is met
+                    component.setIconImages((maxImage +: Iterator.iterate(original * 0.7) { _ * 0.7 }
+                        .takeWhile { image => image.width >= minSize.width || image.height >= minSize.height }
+                        .flatMap { _.toAwt }.toVector).asJava)
+                }
+            }
+        }
+    }
     
     /**
      * Makes it so that this window will close one escape is pressed

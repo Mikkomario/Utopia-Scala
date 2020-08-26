@@ -11,6 +11,8 @@ import javax.imageio.ImageIO
 import utopia.flow.datastructure.mutable.Lazy
 import utopia.genesis.color.Color
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
+import utopia.genesis.shape.Axis.{X, Y}
+import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.{Angle, Rotation}
 import utopia.genesis.shape.shape2D.{Area2D, Bounds, Direction2D, Insets, Point, Size, Transformation, Vector2D}
 import utopia.genesis.shape.shape3D.Vector3D
@@ -179,6 +181,20 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	  */
 	def withMinimumResolution = if (scaling.dimensions2D.forall { _ >= 1 }) this else
 		withSourceResolution(size min sourceResolution, preserveUseSize = true)
+	
+	/**
+	  * @return A buffered image copied from the source data of this image. None if this image is empty.
+	  */
+	def toAwt =
+	{
+		withMinimumResolution.source.map { img =>
+			val colorModel = img.getColorModel
+			val isAlphaPremultiplied = colorModel.isAlphaPremultiplied
+			val raster = img.copyData(null)
+			new BufferedImage(colorModel, raster, isAlphaPremultiplied, null)
+				.getSubimage(0, 0, img.getWidth, img.getHeight)
+		}
+	}
 	
 	
 	// IMPLEMENTED	----------------
@@ -360,6 +376,27 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	  * @return A copy of this image that is larger or equal to the target area. Shape is preserved.
 	  */
 	def largerThan(area: Size) = if (area.fitsInto(size)) this else filling(area)
+	
+	/**
+	  * Limits the height or width of this image
+	  * @param side Targeted side / axis
+	  * @param maxLength Maximum length for this image on that axis
+	  * @return A copy of this image that has equal or lower than maximum length on the specified axis
+	  */
+	def limitedAlong(side: Axis2D, maxLength: Double) = if (size.along(side) <= maxLength) this else
+		smallerThan(size.withDimension(maxLength, side))
+	
+	/**
+	  * @param maxWidth Maximum allowed width
+	  * @return A copy of this image with equal or lower width than the specified maximum
+	  */
+	def withLimitedWidth(maxWidth: Double) = limitedAlong(X, maxWidth)
+	
+	/**
+	  * @param maxHeight Maximum allowed height
+	  * @return A copy of this image with equal or lower height than the specified maximum
+	  */
+	def withLimitedHeight(maxHeight: Double) = limitedAlong(Y, maxHeight)
 	
 	/**
 	  * @param f A mapping function for pixel tables

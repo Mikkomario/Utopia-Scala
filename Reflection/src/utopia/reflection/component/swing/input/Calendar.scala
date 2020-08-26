@@ -296,8 +296,8 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 	private def updateMonthAdjustButtons() =
 	{
 		val current = selectedMonth
-		previousButton.isEnabled = current > minMonth
-		nextButton.isEnabled = current < maxMonth
+		previousButton.enabled = current > minMonth
+		nextButton.enabled = current < maxMonth
 	}
 	
 	

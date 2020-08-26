@@ -7,6 +7,7 @@ import utopia.reflection.component.template.ComponentWrapper
 import utopia.reflection.component.template.layout.stack.{Stackable, StackableWrapper}
 import utopia.reflection.container.stack.template.layout.StackLike
 import utopia.reflection.container.template.MultiContainer
+import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.StackLength
 
 /**
@@ -162,6 +163,11 @@ trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiContainer[C
 		override def isAttachedToMainHierarchy = item.isAttachedToMainHierarchy
 		
 		override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) = item.isAttachedToMainHierarchy = newAttachmentStatus
+		
+		override def stackHierarchyListeners = item.stackHierarchyListeners
+		
+		override def stackHierarchyListeners_=(newListeners: Vector[StackHierarchyListener]) =
+			item.stackHierarchyListeners = newListeners
 		
 		override def resetCachedSize() =
 		{

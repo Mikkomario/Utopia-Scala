@@ -1,6 +1,7 @@
 package utopia.reflection.component.template.layout.stack
 
 import utopia.reflection.component.template.ComponentWrapper
+import utopia.reflection.event.StackHierarchyListener
 
 /**
   * This wrapper wraps a stackable, providing full stackable interface itself
@@ -28,5 +29,11 @@ trait StackableWrapper extends ComponentWrapper with Stackable
 	
 	override def isAttachedToMainHierarchy = wrapped.isAttachedToMainHierarchy
 	
-	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) = wrapped.isAttachedToMainHierarchy_=(newAttachmentStatus)
+	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
+		wrapped.isAttachedToMainHierarchy_=(newAttachmentStatus)
+	
+	override def stackHierarchyListeners = wrapped.stackHierarchyListeners
+	
+	override def stackHierarchyListeners_=(newListeners: Vector[StackHierarchyListener]) =
+		wrapped.stackHierarchyListeners = newListeners
 }

@@ -24,6 +24,8 @@ object ImageLabelTest extends App
 {
 	private def run() =
 	{
+		implicit val context: ExecutionContext = new ThreadPool("ImageLabelTest").executionContext
+		
 		val originalImage = Image.readFrom(Paths.get("Reflection/test-images/mushrooms.png")).get.withSize(Size(128, 128))
 			.downscaled
 		val smaller = originalImage.withSize(Size(64, 64))
@@ -43,7 +45,6 @@ object ImageLabelTest extends App
 		val frame = Frame.windowed(mainStack, "Switch Test", User)
 		frame.setToExitOnClose()
 		
-		implicit val context: ExecutionContext = new ThreadPool("ImageLabelTest").executionContext
 		StackHierarchyManager.startRevalidationLoop()
 		frame.isVisible = true
 	}

@@ -20,6 +20,8 @@ import scala.concurrent.ExecutionContext
   */
 object DialogTest extends App
 {
+	implicit val exc: ExecutionContext = new ThreadPool("Reflection").executionContext
+	
 	private class ContentPanel(override val stackSize: StackSize) extends Panel[ComponentLike with AwtComponentRelated] with StackLeaf
 	{
 		background = Color.white
@@ -35,7 +37,6 @@ object DialogTest extends App
 	frame.setToExitOnClose()
 	
 	private val dialog = new Dialog(frame.component, new ContentPanel(320.any x 240.any), "Dialog".local.localizationSkipped)
-	implicit val exc: ExecutionContext = new ThreadPool("Reflection").executionContext
 	dialog.closeFuture.foreach { u => frame.background = Color.yellow }
 	
 	frame.isVisible = true

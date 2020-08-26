@@ -9,8 +9,9 @@ import utopia.genesis.shape.Axis._
 import utopia.reflection.component.swing.input.Switch
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.stack.segmented.SegmentedGroup
-import utopia.reflection.container.swing.layout.multi.{SegmentedRow, Stack}
+import utopia.reflection.container.stack.StackLayout.{Leading, Trailing}
+import utopia.reflection.container.swing.layout.SegmentGroup
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.localization.{Localizer, NoLocalization}
@@ -45,14 +46,14 @@ object SwitchTest extends App
 	
 	val enabledSwitch = new Switch(actorHandler, 32.upTo(64), Color.red, initialState = true)
 	val disabledSwitch = new Switch(actorHandler, 32.upTo(64), Color.red)
-	disabledSwitch.isEnabled = false
+	disabledSwitch.enabled = false
 	val disabledSwitch2 = new Switch(actorHandler, 32.upTo(64), Color.red, initialState = true)
-	disabledSwitch2.isEnabled = false
+	disabledSwitch2.enabled = false
 	
 	// Creates the stacks
-	val group = new SegmentedGroup(X)
-	def combine(label: TextLabel, field: Switch) = SegmentedRow.partOfGroupWithItems(group,
-		Vector(label, field), 8.downscaling, 8.downscaling)
+	val group = new SegmentGroup(X, Vector(Trailing, Leading))
+	def combine(label: TextLabel, field: Switch) = Stack.rowWithItems(
+		group.wrap(Vector(label, field)), 8.downscaling, 8.downscaling)
 	val enabledStack = combine(labels(0), enabledSwitch)
 	val disabledStack = combine(labels(1), disabledSwitch)
 	val disabledStack2 = combine(labels(2), disabledSwitch2)

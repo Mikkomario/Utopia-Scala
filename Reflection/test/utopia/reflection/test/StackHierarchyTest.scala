@@ -29,6 +29,7 @@ object StackHierarchyTest extends App
     
     implicit val language: String = "en"
     implicit val localizer: Localizer = NoLocalization
+    implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
     
     private class ChangingWrapper extends JStackableWrapper with StackLeaf
     {
@@ -91,8 +92,6 @@ object StackHierarchyTest extends App
     frame.setToExitOnClose()
     
     // The last item will pulse every second
-    implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
-    
     val pulseLoop = Loop(1.seconds) { item.pulse() }
     pulseLoop.registerToStopOnceJVMCloses()
     

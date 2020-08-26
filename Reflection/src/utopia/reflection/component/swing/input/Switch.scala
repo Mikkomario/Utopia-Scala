@@ -10,6 +10,7 @@ import utopia.genesis.handling.{Actor, ActorHandlerType, MouseButtonStateListene
 import utopia.genesis.shape.shape2D.{Bounds, Circle, Point}
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.HandlerType
+import utopia.reflection.color.TextColorStandard.{Dark, Light}
 import utopia.reflection.component.context.{AnimationContextLike, ColorContextLike}
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
@@ -18,6 +19,7 @@ import utopia.reflection.component.template.input.InteractionWithPointer
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
+import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.{StackLength, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
 
@@ -36,8 +38,15 @@ object Switch
 	  */
 	def contextual(width: StackLength, initialState: Boolean = false)
 				  (implicit context: ColorContextLike, animationContext: AnimationContextLike) =
-		new Switch(animationContext.actorHandler, width, context.secondaryColor,
+	{
+		val knobColor = context.containerBackground.textColorStandard match
+		{
+			case Light => Color.white
+			case Dark => Color.black
+		}
+		new Switch(animationContext.actorHandler, width, context.secondaryColor, knobColor,
 			animationContext.animationDuration, initialState)
+	}
 }
 
 /**
@@ -45,7 +54,7 @@ object Switch
   * @author Mikko Hilpinen
   * @since 4.5.2019, v1+
   */
-class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color: Color,
+class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color: Color, knobColor: Color = Color.white,
 			 animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
 			 initialState: Boolean = false)
 	extends AwtComponentWrapperWrapper with CustomDrawableWrapper with InteractionWithPointer[Boolean] with Stackable
@@ -54,11 +63,13 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	
 	private val label = new EmptyLabel()
 	
-	private var _isEnabled = true
-	private var _isAttached = false
+	private var _enabled = true
+	private var _attached = false
 	
 	override val stackSize = StackSize(targetWidth, targetWidth.noMax * Switch.maxHeightRatio)
 	override val valuePointer = new PointerWithEvents(initialState)
+	
+	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
 	
 	
 	// INITIAL CODE	-----------------
@@ -69,16 +80,33 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	
 	// COMPUTED	---------------------
 	
-	def isEnabled = _isEnabled
-	def isEnabled_=(enabled: Boolean) =
+	/**
+	  * @return Whether this switch is currently enabled (true) or disabled (false)
+	  */
+	def enabled = _enabled
+	def enabled_=(newState: Boolean) =
 	{
-		_isEnabled = enabled
-		if (enabled) label.setHandCursor() else label.setArrowCursor()
+		_enabled = newState
+		if (newState) label.setHandCursor() else label.setArrowCursor()
 	}
 	
+	/**
+	  * @return Whether this switch is currently enabled (true) or disabled (false)
+	  */
+	def isEnabled = enabled
+	@deprecated("Please use enabled = _ instead", "v1.2")
+	def isEnabled_=(newState: Boolean) = enabled = newState
+	
+	/**
+	  * @return Whether this switch is currently on (value == true)
+	  */
 	def isOn = value
+	@deprecated("Please use value = _ instead", "v1.2")
 	def isOn_=(newState: Boolean) = value = newState
 	
+	/**
+	  * @return Whether this switch is currently off (value == false)
+	  */
 	def isOff = !isOn
 	
 	
@@ -94,13 +122,13 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	
 	override def resetCachedSize() = ()
 	
-	override def isAttachedToMainHierarchy = _isAttached
+	override def isAttachedToMainHierarchy = _attached
 	
 	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
 	{
-		if (newAttachmentStatus != _isAttached)
+		if (newAttachmentStatus != _attached)
 		{
-			_isAttached = newAttachmentStatus
+			_attached = newAttachmentStatus
 			if (newAttachmentStatus)
 			{
 				actorHandler += SwitchDrawer2
@@ -113,6 +141,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 				valuePointer.removeListener(StatusChangeListener)
 				removeListener(ClickHandler)
 			}
+			fireStackHierarchyChangeEvent(newAttachmentStatus)
 		}
 	}
 	
@@ -176,14 +205,14 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 			
 			// Determines the draw color
 			val baseColor = if (isEnabled) color.timesSaturation(x) else color.timesSaturation(x).timesAlpha(0.55)
-			val knobColor = if (isEnabled) Color.white else Color.white.timesAlpha(0.55)
+			val drawColor = if (isEnabled) knobColor else knobColor.timesAlpha(0.55)
 			
 			// Performs the actual drawing
 			drawer.noEdges.disposeAfter
 			{
 				d =>
 					d.withFillColor(baseColor).draw(areaBounds.toRoundedRectangle(1))
-					d.withFillColor(knobColor).draw(circle)
+					d.withFillColor(drawColor).draw(circle)
 			}
 		}
 		

@@ -17,6 +17,7 @@ import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.Alignment.Center
 import utopia.reflection.shape.{Alignment, StackSize}
 import utopia.reflection.shape.LengthExtensions._
@@ -110,6 +111,8 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 	
 	private var _isAttached = false
 	
+	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
+	
 	
 	// INITIAL CODE	-------------------------
 	
@@ -142,6 +145,7 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 				actorHandler -= animator
 				actorHandler -= Repainter
 			}
+			fireStackHierarchyChangeEvent(newAttachmentStatus)
 		}
 	}
 	

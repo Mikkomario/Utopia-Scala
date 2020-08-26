@@ -1,8 +1,8 @@
 package utopia.reflection.color
 
 import utopia.genesis.color.RGB
-import utopia.reflection.color.ColorRole.{Error, Gray, Primary, Secondary, Tertiary, Warning}
-import utopia.reflection.color.ColorScheme.defaultError
+import utopia.reflection.color.ColorRole.{Error, Gray, Primary, Secondary, Success, Tertiary, Warning}
+import utopia.reflection.color.ColorScheme.{defaultError, defaultSuccess, defaultWarning}
 
 object ColorScheme
 {
@@ -20,6 +20,14 @@ object ColorScheme
 	  * Default error color to use
 	  */
 	val defaultError = ColorSet(RGB.withValues(176, 0, 32), RGB.withValues(233, 73, 72), RGB.withValues(121, 0, 0))
+	/**
+	  * Default warning color to use
+	  */
+	val defaultWarning = ColorSet(RGB.withValues(239, 159, 0), RGB.withValues(255, 208, 72), RGB.withValues(183, 113, 0))
+	/**
+	  * Default success color to use
+	  */
+	val defaultSuccess = ColorSet(RGB.withValues(44, 181, 17), RGB.withValues(107, 232, 77), RGB.withValues(0, 132, 0))
 	
 	
 	// OTHER	--------------------------------
@@ -28,23 +36,19 @@ object ColorScheme
 	  * Creates a color scheme that mainly uses a single color
 	  * @param color Primary color used
 	  * @param gray Grayscale color used (default = light gray)
-	  * @param error Error color used (optional)
 	  * @return A new color scheme
 	  */
-	def monochrome(color: ColorSet, gray: ColorSet = defaultLightGray, error: ColorSet = defaultError) =
-		apply(color, gray, Map(Error -> error))
+	def monochrome(color: ColorSet, gray: ColorSet = defaultLightGray) = apply(color, gray)
 	
 	/**
 	  * Creates a color scheme that uses two main colors
 	  * @param primary Primary color used
 	  * @param secondary Secondary color used
 	  * @param gray Grayscale color used (default = light gray)
-	  * @param error Error color used (optional)
 	  * @return A new color scheme
 	  */
-	def twoTone(primary: ColorSet, secondary: ColorSet, gray: ColorSet = defaultLightGray,
-				error: ColorSet = defaultError) = apply(primary, gray,
-		Map(Secondary -> secondary, Error -> error))
+	def twoTone(primary: ColorSet, secondary: ColorSet, gray: ColorSet = defaultLightGray) = apply(primary, gray,
+		Map(Secondary -> secondary, Error -> defaultError, Warning -> defaultWarning, Success -> defaultSuccess))
 	
 	/**
 	  * Creates a color scheme that uses three main colors
@@ -52,12 +56,11 @@ object ColorScheme
 	  * @param secondary Secondary color used
 	  * @param tertiary Tertiary color used
 	  * @param gray Grayscale color used (default = light gray)
-	  * @param error Error color used (optional)
 	  * @return A new color scheme
 	  */
-	def threeTone(primary: ColorSet, secondary: ColorSet, tertiary: ColorSet, gray: ColorSet = defaultLightGray,
-				  error: ColorSet = defaultError) = apply(primary, gray,
-		Map(Secondary -> secondary, Tertiary -> tertiary, Error -> error))
+	def threeTone(primary: ColorSet, secondary: ColorSet, tertiary: ColorSet, gray: ColorSet = defaultLightGray) =
+		apply(primary, gray, Map(Secondary -> secondary, Tertiary -> tertiary, Error -> defaultError,
+			Warning -> defaultWarning, Success -> defaultSuccess))
 }
 
 /**
@@ -66,10 +69,12 @@ object ColorScheme
   * @since 17.11.2019, v1
   * @param primary The primary color's used
   * @param gray supplementary grayscale colors used (default = light gray)
-  * @param additional Additional colors used [Color role -> Color set] (default = only error color specified)
+  * @param additional Additional colors used [Color role -> Color set]
+  *                   (default = only error, warning and success colors specified)
   */
 case class ColorScheme(primary: ColorSet, gray: ColorSet = ColorScheme.defaultLightGray,
-					   additional: Map[AdditionalColorRole, ColorSet] = Map(Error -> defaultError))
+					   additional: Map[AdditionalColorRole, ColorSet] =
+					   Map(Error -> defaultError, Success -> defaultSuccess, Warning -> defaultWarning))
 {
 	// ATTRIBUTES	--------------------------
 	

@@ -23,7 +23,6 @@ class SingleFrameSetup(actorHandler: ActorHandler, private val frame: Frame[_])
 	
 	// INITIAL CODE	--------------------
 	
-	frame.setToExitOnClose()
 	actionLoop.registerToStopOnceJVMCloses()
 	
 	
@@ -40,6 +39,7 @@ class SingleFrameSetup(actorHandler: ActorHandler, private val frame: Frame[_])
 			started = true
 			actionLoop.startAsync()
 			StackHierarchyManager.startRevalidationLoop()
+			frame.setToExitOnClose()
 			frame.startEventGenerators(actorHandler)
 			frame.isVisible = true
 		}

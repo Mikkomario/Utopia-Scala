@@ -87,7 +87,7 @@ case class ColorSet(default: ComponentColor, light: ComponentColor, dark: Compon
 	def forBackgroundPreferring(backgroundColor: Color, shade: ColorShade): ComponentColor = shade match
 	{
 		case Standard => forBackground(backgroundColor)
-		case variant: ColorShadeVariant => forBackgroundPreferring(backgroundColor, variant)
+		case variant: ColorShadeVariant => forBackground(backgroundColor, variant)
 	}
 	
 	/**

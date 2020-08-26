@@ -3,6 +3,7 @@ package utopia.reflection.util
 import java.util.concurrent.TimeUnit
 
 import utopia.flow.util.TimeExtensions._
+import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.genesis.util.Fps
 
@@ -18,9 +19,9 @@ object ComponentCreationDefaults
 {
 	/**
 	  * The maximum refresh rate for animations by default. This limits the amount of component hierarchy revalidations
-	  * and repaint calls from animated components inside the action loop. Default value is 120 Hz (times per second).
+	  * and repaint calls from animated components inside the action loop. Default value is 60 Hz (times per second).
 	  */
-	var maxAnimationRefreshRate = Fps(120)
+	var maxAnimationRefreshRate = Fps(60)
 	
 	/**
 	  * The default transition duration for animated transitions. Default value is 0.25 seconds.
@@ -34,12 +35,19 @@ object ComponentCreationDefaults
 	var scrollFriction = LinearAcceleration(2000)(TimeUnit.SECONDS)
 	
 	/**
-	  * The width of scroll bars by default (in pixels). The default value is 24 px.
+	  * The width of scroll bars by default (in pixels). The default value is 24 px. It is recommended to overwrite
+	  * this value with one relative to display resolution.
 	  */
 	var scrollBarWidth = 24
 	
 	/**
 	  * The amount of scrolling applied by default for every mouse wheel "click". Default value is 32 px.
+	  * It is recommended to overwrite this value with one relative to display resolution.
 	  */
 	var scrollAmountPerWheelClick = 32.0
+	
+	/**
+	  * Icon used in frames by default. Default = standard java icon.
+	  */
+	var windowIcon = Image.empty
 }
