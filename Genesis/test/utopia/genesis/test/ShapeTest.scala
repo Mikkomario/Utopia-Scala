@@ -1,8 +1,7 @@
 package utopia.genesis.test
 
-import utopia.genesis.shape.Vector3D
 import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Line, Point, Size}
+import utopia.genesis.shape.shape2D.{Bounds, Circle, Line, Point, Size, Vector2D}
 
 /**
  * This test is for some intersection methods and other shape (line, circle) specific methods
@@ -23,16 +22,16 @@ object ShapeTest extends App
     assert(intersection12.get ~== Point(1, 0))
     
     val line5 = Line(Point(1, 2), Point(1, 1))
-    assert(line1.intersection(line5, false).isDefined)
+    assert(line1.intersection(line5, onlyPointsInSegment = false).isDefined)
     assert(line1.intersection(line5).isEmpty)
     assert(line5.intersection(line1).isEmpty)
     
     val circle1 = Circle(Point(3, 0), 2)
     
-    assert(line1.circleIntersection(circle1, false).size == 2)
+    assert(line1.circleIntersection(circle1, onlyPointsInSegment = false).size == 2)
     assert(line2.circleIntersection(circle1).size == 1)
     assert(line5.circleIntersection(circle1).isEmpty)
-    assert(line5.circleIntersection(circle1, false).size == 1)
+    assert(line5.circleIntersection(circle1, onlyPointsInSegment = false).size == 1)
     
     val circle2 = Circle(Point(4, 0), 1)
     
@@ -41,10 +40,10 @@ object ShapeTest extends App
     assert(!circle1.contains(Circle(Point(5, 0), 1)))
     
     // Tests line clipping
-    assert(line1.clipped(Point(5, 0), Vector3D(1)).get == Line(Point(5, 0), Point(10, 0)))
-    assert(line1.clipped(Point(5, 2), Vector3D(-1)).get == Line(Point.origin, Point(5, 0)))
-    assert(line1.clipped(Point(-2, -2), Vector3D(-1)).isEmpty)
-    assert(line1.clipped(Point(1, 1), Vector3D(1, 1)).get == Line(Point(2, 0), Point(10, 0)))
+    assert(line1.clipped(Point(5, 0), Vector2D(1)).get == Line(Point(5, 0), Point(10, 0)))
+    assert(line1.clipped(Point(5, 2), Vector2D(-1)).get == Line(Point.origin, Point(5, 0)))
+    assert(line1.clipped(Point(-2, -2), Vector2D(-1)).isEmpty)
+    assert(line1.clipped(Point(1, 1), Vector2D(1, 1)).get == Line(Point(2, 0), Point(10, 0)))
     
     // Tests bounds combining
     val bounds1 = Bounds(Point.origin, Size(20, 10))

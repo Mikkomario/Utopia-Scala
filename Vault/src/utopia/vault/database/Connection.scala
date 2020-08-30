@@ -1,5 +1,7 @@
 package utopia.vault.database
 
+import java.nio.file.Path
+
 import utopia.flow.generic.EnvironmentNotSetupException
 import java.sql.DriverManager
 import java.sql.Statement
@@ -21,6 +23,7 @@ import utopia.flow.generic.IntType
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.AutoClose._
+import utopia.flow.util.IterateLines
 import utopia.vault.model.immutable.{Result, Row, Table}
 import utopia.vault.sql.{Limit, Offset, SqlSegment}
 
@@ -124,7 +127,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         
         // Changes database if necessary
         statement.databaseName.foreach { dbName = _ }
-        val result = apply(statement.sql, statement.values, selectedTables, statement.generatesKeys)
+        val result = apply(statement.sql, statement.values, selectedTables, statement.generatesKeys, statement.isSelect)
         
         printIfDebugging(s"Received result: $result")
         result
@@ -139,7 +142,8 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      * @param selectedTables The tables for which resulting rows are parsed. If empty, the rows 
      * are not parsed at all.
      * @param returnGeneratedKeys Whether the resulting Result object should contain any keys 
-     * generated during the query
+     * generated during the query (default = false)
+      * @param returnRows Whether rows should be returned from this query (default = true)
      * @return The results of the query, containing the read rows and keys. If 'selectedTables' 
      * parameter was empty, no rows are included. If 'returnGeneratedKeys' parameter was false, 
      * no keys are included. On update statements, includes number of updated rows.
@@ -147,7 +151,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      */
     @throws(classOf[DBException])
     def apply(sql: String, values: Seq[Value], selectedTables: Set[Table] = HashSet(), 
-            returnGeneratedKeys: Boolean = false) = 
+            returnGeneratedKeys: Boolean = false, returnRows: Boolean = true) =
     {
         // Empty statements are not executed
         if (sql.isEmpty)
@@ -171,7 +175,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                         statement.getResultSet.consume { results =>
                             // Parses data out of the result
                             // May skip some data in case it is not requested
-                            Result(if (selectedTables.isEmpty) Vector() else rowsFromResult(results, selectedTables),
+                            Result(if (returnRows) rowsFromResult(results, selectedTables) else Vector(),
                                 generatedKeys, statement.getUpdateCount)
                         }
                     }
@@ -331,7 +335,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     @throws(classOf[EnvironmentNotSetupException])
     @throws(classOf[NoConnectionException])
     @throws(classOf[SQLException])
-    def executeQuery(sql: String, values: Seq[Value] = Vector()) = 
+    def executeQuery(sql: String, values: Seq[Value] = Vector()) =
     {
         // Empty statements are not executed
         if (sql.isEmpty)
@@ -362,6 +366,84 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                 }
             }
         }
+    }
+    
+    /**
+      * Checks whether a database with specified name exists
+      * @param databaseName Database name
+      * @return Whether such a database exists
+      */
+    def existsDatabaseWithName(databaseName: String) = executeQuery(
+        "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ? LIMIT 1",
+        Vector(databaseName)).nonEmpty
+    
+    /**
+      * Checks whether there exists a database table combination
+      * @param databaseName Database name
+      * @param tableName Table name
+      * @return Whether such a table exists in a database with that name
+      */
+    def existsTable(databaseName: String, tableName: String) = executeQuery(
+        "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? LIMIT 1",
+        Vector(databaseName, tableName)).nonEmpty
+    
+    /**
+      * Drops / removes a database
+      * @param databaseName Database name
+      */
+    def dropDatabase(databaseName: String) = execute(s"DROP DATABASE $databaseName")
+    
+    /**
+      * Executes all statements read from the specified input file
+      * @param inputPath Input file path
+      * @return Success if all of the statements in the file were properly executed. Failure otherwise.
+      */
+    def executeStatementsFrom(inputPath: Path) = {
+        // Reads the file and executes statements whenever one has been completely read
+        IterateLines.fromPath(inputPath) { lines =>
+            Try {
+                var currentStatementBuilder = new StringBuilder()
+                lines.map { _.trim }.filterNot { s => s.isEmpty || s.startsWith("--") }.foreach { line =>
+                    splitToStatements(line) match
+                    {
+                        // Appends current statement until its end is found
+                        case Right(partialStatement) =>
+                            currentStatementBuilder ++= partialStatement
+                            currentStatementBuilder += ' '
+                        case Left((statementEnd, completeStatements, statementStart)) =>
+                            // Completes and executes current statement
+                            currentStatementBuilder ++= statementEnd
+                            execute(currentStatementBuilder.result())
+                            // Executes other complete statements on this line
+                            completeStatements.foreach(execute)
+                            // Starts building the next statement
+                            currentStatementBuilder = new StringBuilder()
+                            statementStart.foreach { s =>
+                                currentStatementBuilder ++= s
+                                currentStatementBuilder += ' '
+                            }
+                    }
+                }
+            }
+        }.flatten
+    }
+    
+    private def splitToStatements(statementString: String) = {
+        if (statementString.contains(';'))
+        {
+            val parts = statementString.split(";").toVector.map { _.trim }.filterNot { _.isEmpty }
+            if (parts.size > 1)
+            {
+                if (statementString.trim.endsWith(";"))
+                    Left((parts.head, parts.tail, None))
+                else
+                    Left((parts.head, parts.drop(1).dropRight(1), Some(parts.last)))
+            }
+            else
+                Left((parts.head, Vector(), None))
+        }
+        else
+            Right(statementString)
     }
     
     private def printIfDebugging(message: => String) = if (Connection.settings.debugPrintsEnabled) println(message)
@@ -406,7 +488,12 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         val columnIndices = indicesForTables.flatMap { case (tableOption, indices) => 
                 tableOption.map { table => (table, indices.flatMap { 
                 index => table.findColumnWithColumnName( meta.getColumnName(index) ).map {
-                (_, meta.getColumnType(index), index) } }) } }
+                (_, meta.getColumnType(index), index) } }) }
+        }
+        // [(name, sqlType, index)]
+        val nonColumnIndices = indicesForTables.getOrElse(None, Vector())
+            .map { index => (meta.getColumnName(index), meta.getColumnType(index), index) }
+        val hasContentOutsideTables = nonColumnIndices.nonEmpty
         
         // Parses the rows from the resultSet
         val rowBuffer = Vector.newBuilder[Row]
@@ -414,10 +501,20 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         {
             // Reads the object data from each row, parses them into constants and creates a model 
             // The models are mapped to each table separately
+            // Also includes data outside the tables if present
+            val otherData =
+            {
+                if (hasContentOutsideTables)
+                    Model.withConstants(nonColumnIndices.map { case (name, sqlType, index) =>
+                        Constant(name, Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) })
+                else
+                    Model.empty
+            }
             // NB: view.force is added in order to create a concrete map
             rowBuffer += Row(columnIndices.view.mapValues { data =>
                 Model.withConstants(data.map { case (column, sqlType, index) => Constant(column.name,
-                Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) }) }.toMap)
+                Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) })
+            }.toMap, otherData)
         }
         
         rowBuffer.result()

@@ -5,7 +5,7 @@ import utopia.genesis.view.MainFrame
 import java.awt.Font
 
 import utopia.flow.async.ThreadPool
-import utopia.genesis.util.{Drawer, FPS}
+import utopia.genesis.util.{Drawer, Fps}
 import utopia.genesis.shape.shape2D.{Bounds, Size}
 import utopia.genesis.view.CanvasMouseEventGenerator
 import utopia.genesis.handling.{ActorLoop, Drawable}
@@ -58,13 +58,13 @@ object CameraTest extends App
     val numbers = new GridNumberDrawer(grid)
 	val camera = new MagnifierCamera(64)
  
-	handlers ++= (grid, numbers, camera, camera.drawHandler)
-    camera.drawHandler ++= (grid, numbers)
+	handlers ++= Vector(grid, numbers, camera, camera.drawHandler)
+    camera.drawHandler ++= Vector(grid, numbers)
     
 	// Starts the program
 	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
 	
 	actorLoop.startAsync()
-	canvas.startAutoRefresh(FPS(120))
+	canvas.startAutoRefresh(Fps(120))
     frame.display()
 }

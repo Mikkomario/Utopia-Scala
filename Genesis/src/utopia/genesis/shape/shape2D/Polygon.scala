@@ -1,6 +1,6 @@
 package utopia.genesis.shape.shape2D
 
-import utopia.genesis.shape.RotationDirection
+import utopia.genesis.shape.shape1D.RotationDirection
 
 object Polygon
 {

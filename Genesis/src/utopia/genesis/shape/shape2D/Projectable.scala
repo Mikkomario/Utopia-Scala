@@ -2,8 +2,7 @@ package utopia.genesis.shape.shape2D
 
 import scala.math.Ordering.Double.TotalOrdering
 import utopia.genesis.util.Extensions._
-import utopia.genesis.shape.Axis
-import utopia.genesis.shape.Vector3D
+import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.Projectable.PointOrdering
 
 object Projectable
@@ -36,7 +35,7 @@ trait Projectable
     /**
      * Projects this shape, creating a line parallel to the provided axis
      */
-    def projectedOver(axis: Vector3D): Line
+    def projectedOver(axis: Vector2D): Line
     
     
     // COMPUTED -------------------------------
@@ -52,7 +51,7 @@ trait Projectable
     /**
       * Projects this shape, creating a line parallel to the provided axis
       */
-    def projectedOver(axis: Axis): Line = projectedOver(axis.toUnitVector)
+    def projectedOver(axis: Axis2D): Line = projectedOver(axis.toUnitVector)
     
     /**
     * Calculates if / how much the projections of the two shapes overlap on the specified axis
@@ -60,7 +59,7 @@ trait Projectable
     * @param axis the axis along which the overlap is checked
     * @return the mtv for the specified axis, if there is overlap
     */
-    def projectionOverlapWith(other: Projectable, axis: Vector3D) = 
+    def projectionOverlapWith(other: Projectable, axis: Vector2D) =
     {
         val projection = orderedProjectionOver(axis)
         val otherProjection = other.orderedProjectionOver(axis)
@@ -85,7 +84,7 @@ trait Projectable
      * @return The minimum translation vector that gets the two shapes out of a collision situation 
      * or none if there is no collision
      */
-    def collisionMtvWith(other: Projectable, axes: Iterable[Vector3D]) = 
+    def collisionMtvWith(other: Projectable, axes: Iterable[Vector2D]) =
     {
         // If there is collision, there must be overlap on each axis
         val mtvs = axes.mapOrFail { projectionOverlapWith(other, _) }
@@ -106,22 +105,22 @@ trait Projectable
       * @return Whether the projected point is contained within this object's projection when considering only the
       *         specified axis
       */
-    def containsProjection(point: Point, axis: Vector3D) =
+    def containsProjection[V <: Vector2DLike[V]](point: V, axis: Vector2D) =
     {
-        val pointProjection = point.toVector.projectedOver(axis).toPoint
+        val pointProjection = point.projectedOver(axis)
         val myProjection = projectedOver(axis)
         
         // Checks whether point lies on the projection. Points at the edge do count
         comparePoints(myProjection.start, pointProjection) <= 0 && comparePoints(myProjection.end, pointProjection) >= 0
     }
     
-    private def orderedProjectionOver(axis: Vector3D) = 
+    private def orderedProjectionOver(axis: Vector2D) =
     {
         val projection = projectedOver(axis)
         if (comparePoints(projection.start, projection.end) <= 0) projection else projection.reverse
     }
     
-    protected def comparePoints(v1: Point, v2: Point) =
+    protected def comparePoints(v1: TwoDimensional[Double], v2: TwoDimensional[Double]) =
     {
         if (v1.x < v2.x) { -1 }
         else if (v1.x > v2.x) { 1 }

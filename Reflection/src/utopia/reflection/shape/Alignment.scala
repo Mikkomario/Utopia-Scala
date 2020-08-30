@@ -3,6 +3,8 @@ package utopia.reflection.shape
 import javax.swing.SwingConstants
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape1D.Direction1D
+import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Direction2D, Point, Size}
 import utopia.reflection.container.stack.Stacker
 
@@ -23,17 +25,23 @@ object Alignment
 		def axis: Axis2D
 		
 		/**
-		  * @return Whether this alignment moves items to the positive (+) direction on the specified axis
+		  * @return The directional sign of this alignment
 		  */
-		def isPositiveDirection: Boolean
+		def sign: Direction1D
 		
 		
 		// COMPUTED	---------------------
 		
 		/**
+		  * @return Whether this alignment moves items to the positive (+) direction on the specified axis
+		  */
+		@deprecated("Please use sign instead", "v1.2.1")
+		def isPositiveDirection = sign.isPositive
+		
+		/**
 		  * @return The direction matching this alignment
 		  */
-		def direction = Direction2D(axis, isPositiveDirection)
+		def direction = Direction2D(axis, sign)
 		
 		
 		// IMPLEMENTED	-----------------
@@ -72,7 +80,7 @@ object Alignment
 	  */
 	case object Left extends HorizontalAlignment
 	{
-		override def isPositiveDirection = false
+		override def sign = Negative
 		
 		override def opposite = Right
 		
@@ -86,7 +94,7 @@ object Alignment
 	  */
 	case object Right extends HorizontalAlignment
 	{
-		override def isPositiveDirection = true
+		override def sign = Positive
 		
 		override def opposite = Left
 		
@@ -100,7 +108,7 @@ object Alignment
 	  */
 	case object Top extends VerticalAlignment
 	{
-		override def isPositiveDirection = false
+		override def sign = Negative
 		
 		override def opposite = Bottom
 		
@@ -114,7 +122,7 @@ object Alignment
 	  */
 	case object Bottom extends VerticalAlignment
 	{
-		override def isPositiveDirection = true
+		override def sign = Positive
 		
 		override def opposite = Top
 		
@@ -366,18 +374,40 @@ sealed trait Alignment
 	  *                        Only used when the 'areaToPosition' doesn't naturally fit into the specified bounds.
 	  * @return A set of bounds for the area to position that follows this alignment
 	  */
-	def position(areaToPosition: Size, within: Bounds, margins: StackInsets = StackInsets.any, fitWithinBounds: Boolean = true) =
+	def position(areaToPosition: Size, within: Bounds, margins: StackInsets = StackInsets.any,
+				 fitWithinBounds: Boolean = true, preserveShape: Boolean = true) =
 	{
+		// Calculates the final size of the positioned area
+		val fittedArea =
+		{
+			if (fitWithinBounds)
+			{
+				if (preserveShape)
+				{
+					val scale = (within.size / areaToPosition).minDimension
+					if (scale < 1)
+						areaToPosition * scale
+					else
+						areaToPosition
+				}
+				else
+				{
+					val scale = (within.size / areaToPosition).map { _ min 1 }
+					areaToPosition * scale
+				}
+			}
+			else
+				areaToPosition
+		}
+		
+		// Calculates the new position for the area
 		val topLeft = Point.calculateWith { axis =>
 			val (startMargin, endMargin) = margins.sidesAlong(axis)
-			positionWithDirection(areaToPosition.along(axis), within.size.along(axis), startMargin, endMargin,
+			positionWithDirection(fittedArea.along(axis), within.size.along(axis), startMargin, endMargin,
 				directionAlong(axis), !fitWithinBounds)
 		}
-		// May need to shrink the resulting bounds
-		if (fitWithinBounds)
-			Bounds(topLeft, areaToPosition min within.size)
-		else
-			Bounds(topLeft, areaToPosition)
+		
+		Bounds(topLeft, fittedArea)
 	}
 	
 	private def positionWithDirection(length: Double, withinLength: Double, targetStartMargin: StackLength,
@@ -393,7 +423,7 @@ sealed trait Alignment
 				case Some(definedDirection) =>
 					// Checks how much margin can be used
 					val totalTargetMargin = targetStartMargin.optimal + targetEndMargin.optimal
-					if (definedDirection.isPositiveDirection)
+					if (definedDirection.sign.isPositive)
 					{
 						// Case: Enough space available
 						if (totalTargetMargin <= emptyLength)

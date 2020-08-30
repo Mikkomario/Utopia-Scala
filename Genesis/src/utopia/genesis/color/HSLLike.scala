@@ -1,6 +1,6 @@
 package utopia.genesis.color
 
-import utopia.genesis.shape.{Angle, Rotation}
+import utopia.genesis.shape.shape1D.{Angle, Rotation}
 
 
 /**
@@ -15,7 +15,7 @@ trait HSLLike[Repr <: HSLLike[Repr]]
 	/**
 	  * @return The hue of this color [0, 360[ where 0 is red, 120 is green and 240 is blue
 	  */
-	def hue: Double
+	def hue: Angle
 	
 	/**
 	  * @return The saturation of this color [0, 1] where 0 is grayscale and 1 is fully saturated
@@ -31,7 +31,7 @@ trait HSLLike[Repr <: HSLLike[Repr]]
 	  * @param hue New hue [0, 360[
 	  * @return A copy of this color with specified hue
 	  */
-	def withHue(hue: Double): Repr
+	def withHue(hue: Angle): Repr
 	
 	/**
 	  * @param saturation New saturation [0, 1]
@@ -60,7 +60,8 @@ trait HSLLike[Repr <: HSLLike[Repr]]
 	/**
 	  * @return An angle representation of hue
 	  */
-	def hueAngle = Angle.ofDegrees(hue)
+	@deprecated("Simply replaced with hue", "v2.3")
+	def hueAngle = hue
 	
 	/**
 	  * @return A grayscale version of this color
@@ -70,7 +71,7 @@ trait HSLLike[Repr <: HSLLike[Repr]]
 	/**
 	  * @return The complementary color of this color
 	  */
-	def complementary = plusHue(180)
+	def complementary = plusHue(Rotation.ofCircles(0.5))
 	
 	
 	// OPERATORS	--------------
@@ -79,7 +80,7 @@ trait HSLLike[Repr <: HSLLike[Repr]]
 	  * @param rotation Hue rotation
 	  * @return A copy of this color with rotated hue
 	  */
-	def +(rotation: Rotation): Repr = plusHue(rotation.clockwise.degrees)
+	def +(rotation: Rotation): Repr = plusHue(rotation)
 	
 	/**
 	  * @param rotation Hue rotation
@@ -91,35 +92,29 @@ trait HSLLike[Repr <: HSLLike[Repr]]
 	// OTHER	------------------
 	
 	/**
-	  * @param hueAngle New hue angle
-	  * @return A copy of this color with new hue angle
-	  */
-	def withHue(hueAngle: Angle): Repr = withHue(hueAngle.toDegrees)
-	
-	/**
 	  * @param amount The adjustment in hue
 	  * @return A copy of this color with ajusted hue
 	  */
-	def plusHue(amount: Double) = withHue(hue + amount)
+	def plusHue(amount: Rotation) = withHue(hue + amount)
 	
 	/**
 	  * Adjusts the hue of this color towards the specified target
-	  * @param amount The maximum hue adjustment
+	  * @param amountDegrees The maximum hue adjustment
 	  * @param target Target hue [0, 360[
 	  * @return A copy of this color with adjusted hue
 	  */
-	def plusHueTowards(amount: Double, target: Double) =
+	def plusHueTowards(amountDegrees: Double, target: Angle) =
 	{
-		val diff = hue - target
-		if (diff == 0)
+		val diff = target - hue
+		if (diff.isZero)
 			this
-		else if (diff.abs <= amount)
+		else if (diff.degrees <= amountDegrees)
 			withHue(target)
-		// Checks whether to go forward or backward on hue scale
-		else if (diff < 0 && diff > -180)
-			plusHue(amount)
 		else
-			minusHue(amount)
+		{
+			// Checks whether to go forward or backward on hue scale
+			plusHue(Rotation.ofDegrees(amountDegrees, diff.direction))
+		}
 	}
 	
 	/**
@@ -138,7 +133,7 @@ trait HSLLike[Repr <: HSLLike[Repr]]
 	  * @param amount Hue adjustment
 	  * @return A copy of this color with adjusted hue
 	  */
-	def minusHue(amount: Double) = withHue(hue - amount)
+	def minusHue(amount: Rotation) = withHue(hue - amount)
 	
 	/**
 	  * @param amount Saturation adjustment
@@ -156,7 +151,7 @@ trait HSLLike[Repr <: HSLLike[Repr]]
 	
 	def timesLuminosity(multiplier: Double) = withLuminosity(luminosity * multiplier)
 	
-	def mapHue(f: Double => Double) = withHue(f(hue))
+	def mapHue(f: Angle => Angle) = withHue(f(hue))
 	
 	def mapSaturation(f: Double => Double) = withSaturation(f(saturation))
 	

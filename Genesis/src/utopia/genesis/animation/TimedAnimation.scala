@@ -1,6 +1,6 @@
 package utopia.genesis.animation
 
-import utopia.genesis.animation.TimedAnimation.{MapAnimation, RepeatingAnimation}
+import utopia.genesis.animation.TimedAnimation.{MapAnimation, RepeatingAnimation, ReverseAnimation}
 import utopia.genesis.animation.transform.{AnimatedTransform, TimedAnimationWithTranform}
 
 import scala.concurrent.duration.Duration
@@ -29,6 +29,10 @@ trait TimedAnimation[+A] extends Animation[A]
 	override def transformedWith[O >: A, R](transform: AnimatedTransform[O, R]) =
 		TimedAnimationWithTranform.wrapTimedAnimation(this, transform)
 	
+	override def reversed: TimedAnimation[A] = new ReverseAnimation[A](this)
+	
+	override def withReverseAppended: TimedAnimation[A] = this + reversed
+	
 	
 	// OTHER	----------------------------
 	
@@ -48,6 +52,13 @@ trait TimedAnimation[+A] extends Animation[A]
 		val d = duration.toNanos
 		apply((passedTime.toNanos % d) / d.toDouble)
 	}
+	
+	/**
+	  * @param another Another animation
+	  * @tparam B Type of the resulting animation result
+	  * @return An animation that first plays this one and then the other
+	  */
+	def +[B >: A](another: TimedAnimation[B]) = TimedCombinedAnimation(this, another)
 }
 
 object TimedAnimation
@@ -84,5 +95,14 @@ object TimedAnimation
 		override def duration = original.duration * repeats
 		
 		override def apply(progress: Double) = original((progress * repeats) % 1)
+	}
+	
+	private class ReverseAnimation[A](original: TimedAnimation[A]) extends TimedAnimation[A]
+	{
+		override def duration = original.duration
+		
+		override def apply(progress: Double) = original(1 - progress)
+		
+		override def reversed = original
 	}
 }

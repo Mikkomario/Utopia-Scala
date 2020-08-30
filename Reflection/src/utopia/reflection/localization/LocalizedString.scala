@@ -97,7 +97,10 @@ case class LocalizedString(original: LocalString, localized: Option[LocalString]
 			originalSplits.map { LocalizedString(_, None) }
 	}
 	
-	override def interpolate(args: Seq[Any]) = LocalizedString(original.interpolate(args), localized.map { _.interpolate(args) })
+	override def interpolated(args: Map[String, Any]) = LocalizedString(original.interpolated(args),
+		localized.map { _.interpolated(args) })
+	
+	override def interpolated(args: Seq[Any]) = LocalizedString(original.interpolated(args), localized.map { _.interpolated(args) })
 	
 	
 	// OPERATORS	--------------------------

@@ -2,10 +2,10 @@ package utopia.genesis.test
 
 import scala.math.Ordering.Double.TotalOrdering
 import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.shape.Vector3D
-import utopia.genesis.shape.shape2D.{Circle, Line, Point}
+import utopia.genesis.shape.shape2D.{Circle, Line, Point, Vector2D}
 import utopia.genesis.util.Extensions._
 import utopia.genesis.shape.Axis._
+import utopia.genesis.shape.shape3D.Vector3D
 
 /**
  * This test makes sure circle and line class projection and collision algorithms are working 
@@ -24,7 +24,7 @@ object CollisionTest extends App
     val mtv1 = circle1.collisionMtvWith(circle2)
     
     assert(mtv1.isDefined)
-    assert(mtv1.get == Vector3D(-1))
+    assert(mtv1.get == Vector2D(-1))
     
     val collisionPoints1 = circle1.circleIntersection(circle2).sortBy { _.y }
     
@@ -51,7 +51,7 @@ object CollisionTest extends App
     val mtv2 = circle1.collisionMtvWith(line1, line1.collisionAxes)
     
     assert(mtv2.isDefined)
-    assert(mtv2.get == Vector3D(-0.5))
+    assert(mtv2.get == Vector2D(-0.5))
     
     val collisionPoints2 = line1.circleIntersection(circle1).sortBy { _.y }
     

@@ -1,10 +1,9 @@
 package utopia.genesis.test
 
-import utopia.genesis.shape.Vector3D
-
 import utopia.genesis.util.Extensions._
 import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.shape.Angle
+import utopia.genesis.shape.shape1D.Angle
+import utopia.genesis.shape.shape3D.Vector3D
 
 object VectorTest extends App
 {
@@ -43,8 +42,8 @@ object VectorTest extends App
     
     assert(v2.rotatedDegs(90) ~== Vector3D(0, 1))
     
-    assert(v1.angleDifferenceRads(Vector3D(1)).toDegrees ~== 45.0)
-    assert((Vector3D(1) angleDifferenceRads Vector3D(0, 1)).toDegrees ~== 90.0)
+    assert(v1.angleDifference(Vector3D(1)).degrees ~== 45.0)
+    assert((Vector3D(1) angleDifference Vector3D(0, 1)).degrees ~== 90.0)
     
     // (-1, 7, 0) x (-5, 8, 0) = (0, 0, 27)
     println(Vector3D(-1, 7) cross Vector3D(-5, 8))

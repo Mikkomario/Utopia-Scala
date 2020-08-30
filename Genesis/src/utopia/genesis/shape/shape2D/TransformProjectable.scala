@@ -1,6 +1,6 @@
 package utopia.genesis.shape.shape2D
 
-import utopia.genesis.shape.{Rotation, Vector3D, VectorLike}
+import utopia.genesis.shape.shape1D.Rotation
 
 /**
  * Transformations can be applied to (immutable) transformable shapes / elements
@@ -24,7 +24,7 @@ trait TransformProjectable[+T]
       * @param translation Amount of translation applied
       * @return A translated copy of this item
       */
-    def translated(translation: Vector3D) = transformedWith(Transformation.translation(translation))
+    def translated(translation: Vector2D) = transformedWith(Transformation.translation(translation))
     
     /**
       * @param rotation Amount of rotation applied
@@ -42,7 +42,7 @@ trait TransformProjectable[+T]
       * @param scaling Amount of scaling applied (on each axis)
       * @return A scaled copy of this item
       */
-    def scaled(scaling: Vector3D) = transformedWith(Transformation.scaling(scaling))
+    def scaled(scaling: Vector2D) = transformedWith(Transformation.scaling(scaling))
     
     /**
       * @param rotation Amount of rotation applied

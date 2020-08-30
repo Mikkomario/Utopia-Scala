@@ -1,6 +1,6 @@
 package utopia.reflection.shape
 
-import utopia.genesis.shape.shape2D.Direction2D
+import utopia.genesis.shape.shape2D.{Direction2D, Insets, InsetsFactory, InsetsLike}
 
 object StackInsets extends InsetsFactory[StackLength, StackSize, StackInsets, StackInsets]
 {

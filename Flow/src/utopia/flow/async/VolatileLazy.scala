@@ -1,6 +1,6 @@
 package utopia.flow.async
 
-import utopia.flow.datastructure.mutable.LazyLike
+import utopia.flow.datastructure.mutable.MutableLazyLike
 
 object VolatileLazy
 {
@@ -17,7 +17,7 @@ object VolatileLazy
  * @author Mikko Hilpinen
  * @since 17.12.2019, v1.6.1+
  */
-class VolatileLazy[A](private val generator: () => A) extends LazyLike[A]
+class VolatileLazy[A](private val generator: () => A) extends MutableLazyLike[A]
 {
 	// ATTRIBUTES	---------------------
 	

@@ -3,7 +3,7 @@ package utopia.reflection.shape
 import javax.swing.BorderFactory
 import javax.swing.border.{EmptyBorder, MatteBorder}
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.Size
+import utopia.genesis.shape.shape2D.{Insets, Size}
 
 object Border
 {
@@ -128,8 +128,11 @@ object Border
 	  */
 	def raised(w: Double, baseColor: Color, varianceMod: Double) =
 	{
-		val dark = Border(Insets(0, w, 0, w), baseColor.darkened(1 + varianceMod / 2))
-		val light = Border(dark.insets.opposite, baseColor.lightened(1 + varianceMod / 2), dark)
+		// Amount of variance depends from the base color luminosity
+		val luminosityMod = baseColor.luminosity
+		
+		val dark = Border(Insets(0, w, 0, w), baseColor.darkened(1 + varianceMod * 0.5 * (1 - luminosityMod) + 0.1))
+		val light = Border(dark.insets.opposite, baseColor.lightened(1 + varianceMod * luminosityMod + 0.1), dark)
 		
 		light
 	}

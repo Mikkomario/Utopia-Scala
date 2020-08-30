@@ -11,6 +11,6 @@ import utopia.reflection.shape.{Alignment, StackInsets}
   * @author Mikko Hilpinen
   * @since 25.3.2020, v1
   */
-class ImageDrawer(override val image: Image, override val insets: StackInsets = StackInsets.any,
+case class ImageDrawer(override val image: Image, override val insets: StackInsets = StackInsets.any,
 				  override val alignment: Alignment = Alignment.Center, override val drawLevel: DrawLevel = Normal,
 				  override val useUpscaling: Boolean = true) extends template.ImageDrawer

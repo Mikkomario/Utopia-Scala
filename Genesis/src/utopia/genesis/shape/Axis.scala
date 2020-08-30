@@ -1,6 +1,10 @@
 package utopia.genesis.shape
 
-import utopia.genesis.shape.shape2D.Direction2D
+import utopia.genesis.shape.shape1D.Direction1D
+import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
+import utopia.genesis.shape.shape2D.{Direction2D, Vector2D}
+import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.template.VectorLike
 
 object Axis2D
 {
@@ -25,7 +29,7 @@ object Axis
       */
     case object X extends Axis2D
     {
-        def toUnitVector = Vector3D(1)
+        def toUnitVector = Vector2D(1)
         def perpendicular = Y
     }
     
@@ -34,7 +38,7 @@ object Axis
       */
     case object Y extends Axis2D
     {
-        def toUnitVector = Vector3D(0, 1)
+        def toUnitVector = Vector2D(0, 1)
         def perpendicular = X
     }
     
@@ -44,6 +48,10 @@ object Axis
     case object Z extends Axis
     {
         def toUnitVector = Vector3D(0, 0, 1)
+    
+        override def toUnitVector3D = toUnitVector
+    
+        override def apply(length: Double) = Vector3D(0, 0, length)
     }
 }
 
@@ -55,9 +63,14 @@ object Axis
 sealed trait Axis
 {
     /**
-     * An unit vector along this axis
+     * A unit vector along this axis
      */
-    def toUnitVector: Vector3D
+    def toUnitVector: VectorLike[_ <: VectorLike[_]]
+    
+    /**
+      * @return A 3D unit vector along this axis
+      */
+    def toUnitVector3D: Vector3D
     
     /**
      * A vector along this axis with the specified length
@@ -70,12 +83,22 @@ sealed trait Axis
  */
 sealed trait Axis2D extends Axis
 {
+    // ABSTRACT ----------------------------
+    
+    override def toUnitVector: Vector2D
+    
+    override def apply(length: Double) = toUnitVector * length
+    
+    
     // COMPUTED ----------------------------
+    
     
     /**
      * The axis perpendicular to this one
      */
     def perpendicular: Axis2D
+    
+    override def toUnitVector3D = toUnitVector.in3D
     
     /**
       * @return Directions associated with this axis
@@ -85,12 +108,12 @@ sealed trait Axis2D extends Axis
     /**
       * @return Forward (positive) direction on this axis
       */
-    def forward = direction(isPositive = true)
+    def forward = toDirection(Positive)
     
     /**
       * @return Backward (negative) direction on this axis
       */
-    def backward = direction(isPositive = false)
+    def backward = toDirection(Negative)
     
     
     // OTHER    ----------------------------
@@ -99,5 +122,12 @@ sealed trait Axis2D extends Axis
       * @param isPositive Whether direction should be positive (true) or negative (false)
       * @return A direction along this axis with specified sign
       */
-    def direction(isPositive: Boolean) = Direction2D(this, isPositive)
+    @deprecated("Please use toDirection(Direction1D) instead")
+    def direction(isPositive: Boolean) = Direction2D(this, if (isPositive) Positive else Negative)
+    
+    /**
+      * @param sign Sign of the resulting direction
+      * @return A direction along this axis with specified sign
+      */
+    def toDirection(sign: Direction1D) = Direction2D(this, sign)
 }

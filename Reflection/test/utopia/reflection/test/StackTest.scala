@@ -7,9 +7,9 @@ import utopia.reflection.shape.StackLength
 import utopia.flow.generic.DataType
 import utopia.genesis.color.Color
 import utopia.reflection.component.swing.label.EmptyLabel
-import utopia.reflection.container.swing.Stack
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.localization.{Localizer, NoLocalization}
+import TestContext._
 
 /**
  * This test creates a simple stack and sees whether the components are positioned properly
@@ -19,9 +19,6 @@ import utopia.reflection.localization.{Localizer, NoLocalization}
 object StackTest extends App
 {
     DataType.setup()
-    
-    implicit val language: String = "en"
-    implicit val localizer: Localizer = NoLocalization
     
     // Creates the basic components & wrap as Stackable
     def makeItem() =

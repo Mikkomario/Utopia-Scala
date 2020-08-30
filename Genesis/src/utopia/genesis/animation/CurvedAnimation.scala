@@ -1,7 +1,7 @@
 package utopia.genesis.animation
 
 import utopia.genesis.util.Arithmetic._
-import utopia.genesis.shape.path.{BezierPath, CubicBezier, Path}
+import utopia.genesis.shape.path.{BezierFunction, CubicBezier}
 import utopia.genesis.shape.shape2D.Point
 
 object CurvedAnimation
@@ -14,8 +14,11 @@ object CurvedAnimation
 	  * @tparam A Type of animation result
 	  * @return A new curved animation
 	  */
-	def apply[A](original: Animation[A], control1: Double, control2: Double) = new CurvedAnimation(original,
-		CubicBezier[ArithMeticDouble](0.0, control1, control2, 1.0))
+	def apply[A](original: Animation[A], control1: Double, control2: Double) =
+	{
+		val bezier = CubicBezier[ArithMeticDouble](0.0, control1, control2, 1.0)
+		new CurvedAnimation(original, Animation { bezier(_) })
+	}
 	
 	/**
 	  * Creates a curved animation that traverses through the specified points
@@ -25,8 +28,7 @@ object CurvedAnimation
 	  * @tparam A Type of animation result
 	  * @return A new curved animation
 	  */
-	def apply[A](original: Animation[A], path: Seq[Point]) = new CurvedAnimation(original,
-		BezierPath[Point](path).map { p: Point => p.y })
+	def apply[A](original: Animation[A], path: Seq[Point]) = new CurvedAnimation(original, BezierFunction(path))
 }
 
 /**
@@ -37,7 +39,7 @@ object CurvedAnimation
   * @param curve The curve that is applied to animation progress. Most of the time you want the curve to start from
   *              0 and to end at 1
   */
-case class CurvedAnimation[+A](original: Animation[A], curve: Path[ArithMeticDouble]) extends Animation[A]
+case class CurvedAnimation[+A](original: Animation[A], curve: Animation[Double]) extends Animation[A]
 {
 	override def apply(progress: Double) = original(curve(progress))
 }

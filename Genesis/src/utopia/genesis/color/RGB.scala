@@ -2,6 +2,7 @@ package utopia.genesis.color
 
 import scala.language.implicitConversions
 import utopia.genesis.color.RGBChannel._
+import utopia.genesis.shape.shape1D.Angle
 import utopia.genesis.util.ApproximatelyEquatable
 import utopia.genesis.util.Extensions._
 
@@ -155,7 +156,7 @@ case class RGB private(override val ratios: Map[RGBChannel, Double]) extends RGB
 				(max - min) / (2 - max - min)
 		}
 		
-		HSL(hue, saturation, luminosity)
+		HSL(Angle.ofDegrees(hue), saturation, luminosity)
 	}
 	
 	

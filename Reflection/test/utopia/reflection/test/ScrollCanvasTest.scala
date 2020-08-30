@@ -9,11 +9,12 @@ import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.{ActorLoop, Drawable, KeyStateListener, MouseButtonStateListener, MouseWheelListener}
 import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler, MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
 import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Size}
-import utopia.genesis.util.{Drawer, FPS}
+import utopia.genesis.util.{Drawer, Fps}
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
-import utopia.reflection.component.swing.ScrollCanvas
-import utopia.reflection.container.stack.{BoxScrollBarDrawer, ScrollAreaLike, StackHierarchyManager}
+import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
+import utopia.reflection.component.swing.display.ScrollCanvas
+import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.localization.{Localizer, NoLocalization}
@@ -44,12 +45,11 @@ object ScrollCanvasTest extends App
 	
 	// Creates the drawable items
 	val worldSize = Size(320, 320)
-	handlers ++= (new TestCircle(Point.origin), new TestCircle(worldSize.toPoint), new TestCircle(worldSize.toPoint / 2))
+	handlers ++= Vector(new TestCircle(Point.origin), new TestCircle(worldSize.toPoint), new TestCircle(worldSize.toPoint / 2))
 	
 	// Creates the canvas
 	val canvas = new ScrollCanvas(worldSize, drawHandler, actorHandler, mouseButtonHandler, mouseMoveHandler,
-		mouseWheelHandler, 16, BoxScrollBarDrawer(Color.black, Color.gray(0.5)),
-		16, false, ScrollAreaLike.defaultFriction, None)
+		mouseWheelHandler, None, BoxScrollBarDrawer(Color.black, Color.gray(0.5)))
 	
 	println(canvas.stackSize)
 	
@@ -71,7 +71,7 @@ object ScrollCanvasTest extends App
 	actionLoop.startAsync()
 	StackHierarchyManager.startRevalidationLoop()
 	frame.startEventGenerators(actorHandler)
-	canvas.startDrawing(FPS(30))
+	canvas.startDrawing(Fps(30))
 	frame.isVisible = true
 	
 	println(StackHierarchyManager.description)

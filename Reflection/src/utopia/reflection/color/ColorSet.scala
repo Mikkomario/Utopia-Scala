@@ -1,7 +1,9 @@
 package utopia.reflection.color
 
 import utopia.genesis.color.Color
+import utopia.reflection.color.ColorShade.{Dark, Light, Standard}
 
+import scala.math.Ordering.Double.TotalOrdering
 import scala.language.implicitConversions
 
 object ColorSet
@@ -34,20 +36,112 @@ object ColorSet
   */
 case class ColorSet(default: ComponentColor, light: ComponentColor, dark: ComponentColor)
 {
+	// COMPUTED	----------------------------
+	
+	/**
+	  * @return Color options in this set from light to dark
+	  */
+	def values = Vector(light, default, dark)
+	
+	
+	// OTHER	----------------------------
+	
+	/**
+	  * @param shade Target color shade
+	  * @return A color from this set that matches that shade
+	  */
+	def apply(shade: ColorShade) = shade match
+	{
+		case Standard => default
+		case Light => light
+		case Dark => dark
+	}
+	
 	/**
 	  * Picks the best color set for the specific background (best being one that has enough contrast difference,
 	  * preferring the default color)
 	  * @param backgroundColor A background / contrasting color
 	  * @return The best color in this color set in a context with specified color
 	  */
-	def forBackground(backgroundColor: Color) =
+	def forBackground(backgroundColor: Color): ComponentColor =
 	{
 		val contrastLuminosity = backgroundColor.luminosity
-		if ((default.luminosity - contrastLuminosity).abs > 0.25)
+		if ((default.luminosity - contrastLuminosity).abs > 0.2)
 			default
-		else if ((light.luminosity - contrastLuminosity).abs > (dark.luminosity - contrastLuminosity).abs)
-			light
 		else
-			dark
+			Vector(light, dark).maxBy { c => (c.luminosity - contrastLuminosity).abs }
+	}
+	
+	/**
+	  * Picks the best color set for the specific background (best being one that has enough contrast difference,
+	  * preferring light color)
+	  * @param backgroundColor A background / contrasting color
+	  * @return The best color in this color set in a context with specified color
+	  */
+	def forBackgroundPreferringLight(backgroundColor: Color): ComponentColor = forBackground(backgroundColor, Light)
+	
+	/**
+	  * Picks the best color set for the specific background (best being one that has enough contrast difference,
+	  * preferring dark color)
+	  * @param backgroundColor A background / contrasting color
+	  * @return The best color in this color set in a context with specified color
+	  */
+	def forBackgroundPreferringDark(backgroundColor: Color): ComponentColor = forBackground(backgroundColor, Dark)
+	
+	/**
+	  * Picks the color in this set that is suitable for the specified background color, preferring specified shade
+	  * @param backgroundColor A background / contrasting color
+	  * @param shade Preferred color shade
+	  * @return A color in this set most suitable against the specified background color
+	  */
+	def forBackgroundPreferring(backgroundColor: Color, shade: ColorShade): ComponentColor = shade match
+	{
+		case Standard => forBackground(backgroundColor)
+		case variant: ColorShadeVariant => forBackground(backgroundColor, variant)
+	}
+	
+	/**
+	  * Picks the color that most resembles the specified color
+	  * @param anotherColor Another color
+	  * @return A color in this set that most resembles the specified color
+	  */
+	def mostLike(anotherColor: Color) =
+	{
+		val contrastLuminosity = anotherColor.luminosity
+		Vector(default, light, dark).minBy { c => (c.luminosity - contrastLuminosity).abs }
+	}
+	
+	/**
+	  * Picks a shade from this color set that works best against multiple colors
+	  * @param colors A set of colors selected color should work with
+	  * @return The best color in this set to be used against those colors
+	  */
+	def bestAgainst(colors: Iterable[Color]) =
+	{
+		val contrastLuminosities = colors.map { _.luminosity }.toSet
+		val defaultLuminosity = default.luminosity
+		if (contrastLuminosities.forall { l => (defaultLuminosity - l).abs > 0.2 })
+			default
+		else
+			Vector(default, light, dark).maxBy { c =>
+				val luminosity = c.luminosity
+				contrastLuminosities.map { l => (luminosity - l).abs }.sum
+			}
+	}
+	
+	/**
+	  * @param color A color
+	  * @return Whether this color set specifies that color
+	  */
+	def contains(color: ComponentColor) = color == default || color == light || color == dark
+	
+	private def forBackground(backgroundColor: Color, preference: ColorShadeVariant) =
+	{
+		val order = Vector(preference, Standard, preference.opposite).map(apply)
+		val contrastLuminosity = backgroundColor.luminosity
+		// Finds the first shade that has enough contrast to the background
+		// If none of the shades are suitable, picks one with the greatest contrast
+		order.find { shade => (shade.luminosity - contrastLuminosity).abs > 0.2 }
+			.getOrElse { order.maxBy { shade => (shade.luminosity - contrastLuminosity).abs } }
 	}
 }

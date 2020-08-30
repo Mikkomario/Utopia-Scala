@@ -12,8 +12,9 @@ import utopia.flow.datastructure.template
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
 import utopia.genesis.generic.GenesisValue._
-import utopia.genesis.shape.{Vector3D, VectorLike}
 import utopia.genesis.shape.Axis._
+import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.template.VectorLike
 
 import scala.util.Success
 
@@ -106,7 +107,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     /**
      * An awt counterpart of these bounds
      */
-    def toAwt = new java.awt.Rectangle(position.x.toInt, position.y.toInt, width.toInt, height.toInt)
+    def toAwt = new java.awt.Rectangle(position.x.ceil.toInt, position.y.ceil.toInt, width.ceil.toInt, height.ceil.toInt)
     
     /**
      * The diagonal line for this rectangle. Starts at the position coordinates and goes all the 
@@ -152,7 +153,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     
     override def bottomRight = position + size
     
-    override def contains(point: Point) = point.x >= topLeft.x && point.y >= topLeft.y &&
+    override def contains[V <: Vector2DLike[V]](point: V) = point.x >= topLeft.x && point.y >= topLeft.y &&
             point.x <= bottomRight.x && point.y <= bottomRight.y
     
     
@@ -165,10 +166,22 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     def +(translation: Point) = translated(translation)
     
     /**
+      * @param insets Insets to add to these bounds
+      * @return A copy of these bounds with specified insets added to the sides
+      */
+    def +(insets: Insets) = Bounds(position - Vector2D(insets.top, insets.left), size + insets.total)
+    
+    /**
       * @param translation Translation applied to these bounds
       * @return A translated set of bounds
       */
     def -(translation: Point) = translated(-translation)
+    
+    /**
+      * @param insets Insets to subtract from these bounds
+      * @return A copy of these bounds with the specified insets subtracted
+      */
+    def -(insets: Insets) = Bounds(position + Vector2D(insets.top, insets.left), size - insets.total)
     
     /**
       * Scales both position and size
@@ -317,7 +330,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @param y Y-translation applied
       * @return A copy of these bounds with translated position
       */
-    def translated(x: Double, y: Double) = withPosition(position + (x, y))
+    def translated(x: Double, y: Double) = withPosition(position + Vector2D(x, y))
     
     /**
       * @param area Another area

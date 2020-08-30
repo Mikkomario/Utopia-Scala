@@ -28,7 +28,8 @@ trait SingleModelAccessById[+A, -ID] extends SingleModelAccess[A] with Unconditi
 	 * @param id An id
 	 * @return An access point to a model with that id
 	 */
-	def apply(id: ID): SingleIdModelAccess[A] = new SingleIdModelAccess(idToValue(id), factory)
+	def apply(id: ID): SingleIdModelAccess[A] = new SingleIdModelAccess[A](
+		idToValue(id), factory)
 }
 
 object SingleModelAccessById

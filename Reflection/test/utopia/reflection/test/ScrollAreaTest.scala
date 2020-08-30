@@ -9,13 +9,15 @@ import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.{ActorLoop, KeyStateListener}
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.LinearAcceleration
+import utopia.genesis.shape.shape1D.{LinearAcceleration, Rotation}
 import utopia.genesis.shape.shape2D.Size
+import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.swing.label.ItemLabel
-import utopia.reflection.container.stack.{BoxScrollBarDrawer, StackHierarchyManager}
+import utopia.reflection.container.stack.StackHierarchyManager
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.container.swing.{ScrollArea, Stack}
+import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 import utopia.reflection.localization.{DisplayFunction, Localizer, NoLocalization}
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.{StackInsets, StackLengthLimit}
@@ -50,15 +52,16 @@ object ScrollAreaTest extends App
 	
 	// Creates the main stack
 	val stack = Stack.rowWithItems(columns, 16.fixed, 4.fixed)
-	stack.background = Color.yellow.minusHue(33).darkened(1.2)
+	stack.background = Color.yellow.minusHue(Rotation.ofDegrees(33)).darkened(1.2)
 	
 	val actorHandler = ActorHandler()
 	
 	// Creates the scroll area
 	val barDrawer = BoxScrollBarDrawer.roundedBarOnly(Color.black.withAlpha(0.55))
-	val scrollArea = new ScrollArea(stack, actorHandler, 64, barDrawer, 16,
-		true, friction = LinearAcceleration(2000)(TimeUnit.SECONDS),
-		lengthLimits = StackLengthLimit.sizeLimit(maxOptimal =  Some(Size.square(480))))
+	val scrollArea = new ScrollArea(stack, actorHandler, barDrawer, 16, 64,
+		friction = LinearAcceleration(2000)(TimeUnit.SECONDS),
+		lengthLimits = StackLengthLimit.sizeLimit(maxOptimal =  Some(Size.square(480))),
+		scrollBarIsInsideContent = true)
 	
 	// Creates the frame and displays it
 	val actionLoop = new ActorLoop(actorHandler)

@@ -18,6 +18,25 @@ object Where
       * @return A where clause based on the model
       */
     def apply(conditionModel: Storable) = conditionModel.toCondition.toWhereClause
+    
+    /**
+      * @param condition A condition
+      * @return A where clause that only accepts rows that DON'T fulfill the condition
+      */
+    def not(condition: Condition) = (!condition).toWhereClause
+}
+
+object Condition
+{
+    /**
+      * A condition that always returns true
+      */
+    val alwaysTrue = Condition(SqlSegment("TRUE"))
+    
+    /**
+      * A condition that always returns false
+      */
+    val alwaysFalse = Condition(SqlSegment("FALSE"))
 }
 
 /**

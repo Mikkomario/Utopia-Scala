@@ -2,10 +2,10 @@ package utopia.genesis.test
 
 import java.awt.Color
 
-import utopia.genesis.shape.Vector3D
 import utopia.genesis.util.Drawer
 import utopia.genesis.handling.Drawable
 import utopia.genesis.shape.shape2D.{Line, Size}
+import utopia.genesis.shape.shape3D.Vector3D
 import utopia.inception.handling.mutable.Handleable
 
 /**

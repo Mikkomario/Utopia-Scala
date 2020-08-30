@@ -17,7 +17,7 @@ object Lazy
 * @author Mikko Hilpinen
 * @since 26.2.2019
 **/
-class Lazy[T](val generator: () => T) extends LazyLike[T]
+class Lazy[T](val generator: () => T) extends MutableLazyLike[T]
 {
 	// ATTRIBUTES    ----------------
     

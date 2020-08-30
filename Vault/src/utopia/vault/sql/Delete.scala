@@ -23,6 +23,15 @@ object Delete
     }
     
     /**
+      * Creates an sql segment that deletes rows from a single table. The deleted
+      * table must be included in the provided target.
+      * @param target The target for the delete operation, may be a single table or join, but must
+      * contain the deleted table.
+      * @param table The table from which rows are deleted
+      */
+    def apply(target: SqlTarget, table: Table): SqlSegment = apply(target, Vector(table))
+    
+    /**
      * Creates an sql segment that deletes rows from a single table. This segment is often followed 
      * by a where clause and possibly a limit as well.
      */

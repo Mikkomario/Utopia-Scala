@@ -11,14 +11,17 @@ import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.{ActorLoop, KeyStateListener}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis._
-import utopia.reflection.component.Refreshable
+import utopia.genesis.shape.shape1D.Rotation
+import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
 import utopia.reflection.component.swing.label.ItemLabel
-import utopia.reflection.container.stack.{BoxScrollBarDrawer, StackHierarchyManager}
+import utopia.reflection.component.template.display.Refreshable
+import utopia.reflection.container.stack.StackHierarchyManager
+import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.container.swing.{ScrollView, Stack}
-import utopia.reflection.controller.data.StackSelectionManager
+import utopia.reflection.container.swing.layout.multi.AnimatedStack
+import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.reflection.localization.{DisplayFunction, Localizer, NoLocalization}
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.{StackInsets, StackLengthLimit}
@@ -36,6 +39,7 @@ import scala.concurrent.duration.Duration
 object ScrollViewTest extends App
 {
 	GenesisDataType.setup()
+	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 	
 	// Sets up localization context
 	implicit val defaultLanguageCode: String = "EN"
@@ -54,18 +58,18 @@ object ScrollViewTest extends App
 		label
 	}
 	
+	val actorHandler = ActorHandler()
+	
 	// Creates the main stack
-	val stack = Stack.column[ItemLabel[Int]](8.fixed, 4.fixed)
-	stack.background = Color.yellow.minusHue(33).darkened(1.2)
+	val stack = new AnimatedStack[ItemLabel[Int]](actorHandler, Y, 8.fixed, 4.fixed) // Stack.column[ItemLabel[Int]](8.fixed, 4.fixed)
+	stack.background = Color.yellow.minusHue(Rotation.ofDegrees(33)).darkened(1.2)
 	
 	// Adds content management
 	val selectionDrawer = CustomDrawer(DrawLevel.Foreground) { (d, b) =>
 		d.withColor(Color.black.withAlpha(0.33), Color.black.withAlpha(0.8)).withStroke(2).draw(b)
 	}
 	
-	val actorHandler = ActorHandler()
-	
-	val contentManager = new StackSelectionManager[Int, ItemLabel[Int]](stack, selectionDrawer)(makeLabel)
+	val contentManager = new ContainerSelectionManager[Int, ItemLabel[Int]](stack, selectionDrawer)(makeLabel)
 	contentManager.addValueListener(i => println("Selected " + i.newValue))
 	contentManager.enableKeyHandling(actorHandler)
 	contentManager.enableMouseHandling(false)
@@ -75,12 +79,11 @@ object ScrollViewTest extends App
 	
 	// Creates the scroll view
 	val barDrawer = BoxScrollBarDrawer(Color.black.withAlpha(0.55), Color.red)
-	val scrollView = new ScrollView(stack, Y, actorHandler, 16, barDrawer, 16,
-		false, lengthLimit = StackLengthLimit(min = 128, maxOptimal =  Some(480)))
+	val scrollView = new ScrollView(stack, Y, actorHandler, barDrawer,
+		lengthLimit = StackLengthLimit(min = 128, maxOptimal =  Some(480)))
 	
 	// Creates the frame and displays it
 	val actionLoop = new ActorLoop(actorHandler)
-	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 	
 	val frame = Frame.windowed(scrollView, "Scroll View Test", User)
 	frame.setToExitOnClose()

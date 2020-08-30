@@ -42,7 +42,7 @@ object Response
      */
     def fromValue(body: Value, status: Status = OK, setCookies: Seq[Cookie] = Vector()) =
         new Response(status, Headers().withCurrentDate.withContentType(Application/"json"), setCookies,
-            Some(_.write(body.toJSON.getBytes(StandardCharsets.UTF_8))))
+            Some(_.write(body.toJson.getBytes(StandardCharsets.UTF_8))))
     
     /**
      * Wraps a file into a response

@@ -18,7 +18,7 @@ object JSONTest extends App
     
     def assertJSON(value: Value, json: String) = 
     {
-        val result = value.toJSON
+        val result = value.toJson
         println(s"${value.description} => $result")
         assert(result == json)
     }
@@ -48,12 +48,12 @@ object JSONTest extends App
     val prop2 = Constant("test2", s)
     val prop3 = Constant("test3", empty)
     
-    assert(prop3.toJSON == "\"test3\": null")
-    assert(prop1.toJSON == "\"test1\": 123")
+    assert(prop3.toJson == "\"test3\": null")
+    assert(prop1.toJson == "\"test1\": 123")
     
     // Tests / prints model writing
     val model = Model.withConstants(Vector(prop1, prop2, prop3))
-    println(model.toJSON)
+    println(model.toJson)
     
     // Tests value reading
     assert(JSONReader("1").get.intOr() == 1)
@@ -61,7 +61,7 @@ object JSONTest extends App
     assert(JSONReader("[1, 2, 3]").get.vectorOr() == Vector[Value](1, 2, 3))
     
     // Tests model reading
-    val readModel1 = JSONReader(model.toJSON).get.getModel
+    val readModel1 = JSONReader(model.toJson).get.getModel
     println(readModel1)
     // assert(readModel1 == model)
     
@@ -72,7 +72,7 @@ object JSONTest extends App
     assert(readModel2("age").dataType == IntType)
     assert(readModel2("length").getDouble == 76.24)
     
-    assert(readModel2 == JSONReader(readModel2.toJSON).get.getModel)
+    assert(readModel2 == JSONReader(readModel2.toJson).get.getModel)
     
     // Tests more difficult data types
     val prop4 = Constant("test4", v)
@@ -82,7 +82,7 @@ object JSONTest extends App
     val model2 = Model.withConstants(Vector(prop4, prop5, prop6))
     println(model2)
     
-    val readModel3 = JSONReader(model2.toJSON).get.getModel
+    val readModel3 = JSONReader(model2.toJson).get.getModel
     println(readModel3)
     
     val readTime = readModel3("test6").instant
@@ -91,7 +91,7 @@ object JSONTest extends App
     assert(readModel3("test5").dataType == ModelType)
     
     // Tests value reading vs. model reading
-    assert(JSONReader(readModel2.toJSON).get.getModel == readModel2)
+    assert(JSONReader(readModel2.toJson).get.getModel == readModel2)
     
     // This kind of setting was causing a problem earlier
     val test = Vector(1)
@@ -104,14 +104,14 @@ object JSONTest extends App
     val model4 = Model(Vector("vec" -> Vector[Value](), "normal" -> "a"))
     
     println(model4)
-    val parsed = JSONReader(model4.toJSON).get.getModel
+    val parsed = JSONReader(model4.toJson).get.getModel
     println(parsed)
     assert(parsed == model4)
     
     val model5 = Model(Vector("mod" -> Model(Vector())))
     
     println(model5)
-    val parsed5 = JSONReader(model5.toJSON).get.getModel
+    val parsed5 = JSONReader(model5.toJson).get.getModel
     println(parsed5)
     assert(parsed5 == model5)
     
@@ -122,7 +122,7 @@ object JSONTest extends App
     
     // Testing JSON reading when quoted portion contains json markers
     val jsonWithQuotes = Model(Vector("Test1" -> "This portion contains, special values",
-        "Test2" -> "This one is also { tough }", "Even worse [when, array, in, property, name]" -> true)).toJSON
+        "Test2" -> "This one is also { tough }", "Even worse [when, array, in, property, name]" -> true)).toJson
     val parsed6 = JSONReader(jsonWithQuotes).get.getModel
     
     assert(parsed6("Test1").getString == "This portion contains, special values")

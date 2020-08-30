@@ -1,7 +1,8 @@
 package utopia.reflection.component.swing.label
 
 import utopia.reflection.component.drawing.mutable.{CustomDrawable, CustomDrawableWrapper}
-import utopia.reflection.component.swing.{EmptyJComponent, JWrapper}
+import utopia.reflection.component.swing.EmptyJComponent
+import utopia.reflection.component.swing.template.JWrapper
 
 object Label
 {

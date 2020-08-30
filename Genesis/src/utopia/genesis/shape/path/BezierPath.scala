@@ -1,7 +1,7 @@
 package utopia.genesis.shape.path
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.util.{Arithmetic, Distance}
+import utopia.genesis.util.{Arithmetic, DistanceLike}
 
 /**
   * This class calculates a smooth path between points that consists of bezier curves
@@ -18,7 +18,7 @@ object BezierPath
 	  * @return A bezier path between paths
 	  * @throws IllegalArgumentException If points is empty
 	  */
-	def apply[P <: Arithmetic[P, P] with Distance](points: Seq[P], sequencesPerPart: Int = 6) =
+	def apply[P <: Arithmetic[P, P] with DistanceLike](points: Seq[P], sequencesPerPart: Int = 6) =
 	{
 		if (points.isEmpty)
 			throw new IllegalArgumentException("Bezier path must be initialized with at least 1 point")
@@ -36,7 +36,22 @@ object BezierPath
 		}
 	}
 	
-	private def calculatePath[P <: Arithmetic[P, P] with Distance](points: Seq[P]) =
+	/**
+	 * Calculates a bezier path between the specified points
+	 * @param points The points that form the path. Must be at least 3 items.
+	 * @tparam P The type of path point
+	 * @return Sequence of paths between speified points
+	 * @throws IllegalArgumentException If there are less than 3 points
+	 */
+	def parts[P <: Arithmetic[P, P] with DistanceLike](points: Seq[P]) =
+	{
+		if (points.size < 3)
+			throw new IllegalArgumentException("Cubic Bezier path must be initialized with at least 3 points")
+		else
+			calculatePath(points)
+	}
+	
+	private def calculatePath[P <: Arithmetic[P, P] with DistanceLike](points: Seq[P]) =
 	{
 		// Number of curves
 		val n = points.size - 1

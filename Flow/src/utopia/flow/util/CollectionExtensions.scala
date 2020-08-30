@@ -2,7 +2,7 @@ package utopia.flow.util
 
 import scala.language.implicitConversions
 import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
-import scala.collection.generic.IsSeq
+import scala.collection.generic.{IsIterableOnce, IsSeq}
 import scala.collection.immutable.{HashSet, VectorBuilder}
 import scala.util.{Failure, Success, Try}
 
@@ -15,63 +15,6 @@ object CollectionExtensions
 {
     class SeqOperations[Repr, S <: IsSeq[Repr]](coll: Repr, seq: S)
     {
-        /**
-         * Filters a seq so that only distinct values remain. Uses a special function to determine equality
-         * @param equals A function that determines whether two values are equal
-         * @param buildFrom Builder for the new collection
-         * @return A collection with only distinct values (when considering the provided 'equals' function)
-         */
-        def distinctWith(equals: (seq.A, seq.A) => Boolean)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
-        {
-            val seqOps = seq(coll)
-            val builder = buildFrom.newBuilder(coll)
-            val collected = mutable.HashSet[seq.A]()
-            
-            seqOps.foreach { item =>
-                if (!collected.exists { e => equals(e, item) })
-                {
-                    builder += item
-                    collected += item
-                }
-            }
-            
-            builder.result()
-        }
-    
-        /**
-         * Filters a seq so that only distinct values remain. Compares the values by mapping them.
-         * @param f A mapping function to produce comparable values
-         * @param buildFrom A builder (implicit) to build the final collection
-         * @tparam B Map target type
-         * @return A collection with only distinct values (based on mapping)
-         */
-        def distinctBy[B](f: seq.A => B)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
-            distinctWith { (a, b) => f(a) == f(b) }
-    
-        /**
-         * This function works like foldLeft, except that it stores each step (including the start) into a seq
-         * @param start The starting step
-         * @param map A function for calculating the next step, takes the previous result + the next item in this seq
-         * @param buildFrom A buildfrom for final collection (implicit)
-         * @tparam B The type of steps
-         * @tparam That The type of final collection
-         * @return All of the steps mapped into a collection
-         */
-        def foldMapLeft[B, That](start: B)(map: (B, seq.A) => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
-        {
-            val builder = buildFrom.newBuilder(coll)
-            var last = start
-            builder += last
-    
-            val seqOps = seq(coll)
-            seqOps.foreach { item =>
-                last = map(last, item)
-                builder += last
-            }
-    
-            builder.result()
-        }
-    
         /**
          * Maps a single item in this sequence
          * @param index The index that should be mapped
@@ -167,6 +110,18 @@ object CollectionExtensions
                 builder.result()
             }
         }
+    
+        /**
+          * Performs specified operation for each item in this sequence. Called function will also receive item index
+          * in this sequence
+          * @param f A function called for each item
+          * @tparam U Arbitrary result type
+          */
+        def foreachWithIndex[U](f: (seq.A, Int) => U) =
+        {
+            val seqOps = seq(coll)
+            seqOps.zipWithIndex.foreach { case(item, index) => f(item, index) }
+        }
     }
     
     implicit def seqOperations[Repr](coll: Repr)(implicit seq: IsSeq[Repr]): SeqOperations[Repr, seq.type] =
@@ -231,7 +186,9 @@ object CollectionExtensions
         
         /**
           * @return A version of this seq with consecutive items paired. Each item will be present twice in the returned
-          *         collection, except the first and the last item
+          *         collection, except the first and the last item. The first item will be presented once as the first
+          *         argument. The last item will be presented once as the second argument. If this sequence
+          *         contains less than two items, an empty seq is returned.
           */
         def paired = (1 until seq.size).map { i => (seq(i - 1), seq(i)) }
     
@@ -245,6 +202,18 @@ object CollectionExtensions
         {
             case Some(index) => seq.take(index + 1)
             case None => seq.take(0)
+        }
+    
+        /**
+          * @param range Range to slice from this sequence
+          * @return Slice of this sequence
+          */
+        def slice(range: Range): Repr =
+        {
+            if (range.nonEmpty)
+                seq.slice(range.head, range.last + 1)
+            else
+                seq.empty
         }
     
         /**
@@ -286,6 +255,22 @@ object CollectionExtensions
         def mapWithIndex[B](f: (A, Int) => B) = seq.indices.map { i => f(seq(i), i) }
     }
     
+    implicit class RichSeqLike2[A, CC[X] <: SeqOps[X, CC, CC[X]], Repr <: SeqOps[A, CC, CC[A]]](val seq: SeqOps[A, CC, Repr]) extends AnyVal
+    {
+        def inserted[B >: A](item: B, index: Int): CC[B] =
+        {
+            if (index <= 0)
+                seq.prepended(item)
+            else if (index >= seq.size)
+                seq.appended(item)
+            else
+            {
+                val (beginning, end) = seq.splitAt(index)
+                (beginning :+ item) ++ end
+            }
+        }
+    }
+    
     implicit class RichOption[A](val o: Option[A]) extends AnyVal
     {
         /**
@@ -300,7 +285,7 @@ object CollectionExtensions
         }
     }
     
-    implicit class RichTry[T](val t: Try[T]) extends AnyVal
+    implicit class RichTry[A](val t: Try[A]) extends AnyVal
     {
         /**
          * The success value of this try. None if this try was a failure
@@ -310,6 +295,17 @@ object CollectionExtensions
          * The failure (throwable) value of this try. None if this try was a success.
          */
         def failure = t.failed.toOption
+    
+        /**
+          * @param f A mapping function for possible failure
+          * @tparam B Result type
+          * @return Contents of this try on success, mapped error on failure
+          */
+        def getOrMap[B >: A](f: Throwable => B): B = t match
+        {
+            case Success(item) => item
+            case Failure(error) => f(error)
+        }
     }
     
     implicit class RichEither[L, R](val e: Either[L, R]) extends AnyVal
@@ -327,7 +323,7 @@ object CollectionExtensions
           * @return This either's right value or None if this either is left (same as toOption)
           */
         def rightOption = e.toOption
-    
+        
         /**
           * If this either is left, maps it
           * @param f A mapping function for left side
@@ -392,14 +388,6 @@ object CollectionExtensions
             t.foreach { item => if (checked.contains(item)) foundResults += item else checked += item }
             foundResults
         }
-        
-        /**
-          * Maps items until a concrete result is found, then returns that result
-          * @param map A mapping function that maps to either Some or None
-          * @tparam B The map target type
-          * @return The first item that was mapped to Some. None if all items were mapped to None.
-          */
-        def findMap[B](map: A => Option[B]) = t.view.map(map).find { _.isDefined }.flatten
     
         /**
           * Finds the maximum value in this Iterable
@@ -485,30 +473,6 @@ object CollectionExtensions
                     bestMatch(matchers.drop(1))
             }
         }
-        
-        /**
-         * Maps the contents of this Iterable. Mapping may fail, interrupting all remaining mappings
-         * @param f A mapping function. May fail.
-         * @param factory Implicit factory for final collection
-         * @tparam B Type of map result
-         * @tparam To Type of final collection
-         * @return Mapped collection if all mappings succeeded. Failure otherwise.
-         */
-        def tryMap[B, To](f: A => Try[B])(implicit factory: Factory[B, To]): Try[To] =
-        {
-            val buffer = factory.newBuilder
-            // Maps items until the mapping function fails
-            t.view.map { a =>
-                val result = f(a)
-                result.toOption.foreach { buffer += _ }
-                result
-            }.find { _.isFailure } match
-            {
-                case Some(failure) => Failure(failure.failure.get)
-                // On success (no failure found), returns all mapped items
-                case None => Success(buffer.result())
-            }
-        }
     
         /**
           * Compares this set of items with another set. Lists items that have been added and removed, plus the changes
@@ -538,6 +502,36 @@ object CollectionExtensions
             
             (onlyInMe, merged, onlyInThem)
         }
+    
+        /**
+          * Performs the specified mapping function until it succeeds or until all items in this collection have been
+          * tested
+          * @param f A mapping function which may fail
+          * @tparam B Type of map function result
+          * @return The first successful map result or failure if none of the items in this collection could be mapped
+          */
+        def tryFindMap[B](f: A => Try[B]) =
+        {
+            val iter = t.iterator.map(f)
+            if (iter.hasNext)
+            {
+                // Returns the first result if its a success or if no successes were found
+                val firstResult = iter.next()
+                if (firstResult.isSuccess)
+                    firstResult
+                else
+                    iter.find { _.isSuccess }.getOrElse(firstResult)
+            }
+            else
+                Failure(new NoSuchElementException("Called tryFindMap on an empty collection"))
+        }
+    
+        /**
+          * @param items Items to test
+          * @tparam O Type of items collection
+          * @return Whether this collection of items contains all of the specified items
+          */
+        def containsAll[O](items: Iterable[O]) = items.forall { item => t.exists { _ == item } }
     }
     
     implicit class RichIterableLike[A, CC[X], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
@@ -627,30 +621,228 @@ object CollectionExtensions
             
             consumed == n
         }
+    
+        /**
+          * Collects the next 'n' items from this iterator, advancing it up to 'n' elements. The number of available
+          * items may be smaller, in case all remaining items are returned.
+          * @param n Number of items to collect
+          * @return Collected items
+          */
+        def takeNext(n: Int) =
+        {
+            var consumed = 0
+            val builder = new VectorBuilder[A]()
+            while (i.hasNext && consumed < n)
+            {
+                builder += i.next()
+                consumed += 1
+            }
+            
+            builder.result()
+        }
     }
     
-    /**
-     * This implicit class is used for extending collection map conversion
-     */
-    implicit class MultiMapConvertible[T](val list: IterableOnce[T]) extends AnyVal
+    class IterableOnceOperations[Repr, I <: IsIterableOnce[Repr]](coll: Repr, iter: I)
     {
-        // Referenced from: https://stackoverflow.com/questions/22090371/scala-grouping-list-of-tuples [10.10.2018]
-        def toMultiMap[Key, Value, Values](key: T => Key, value: T => Value)
-                (implicit factory: Factory[Value, Values]): Map[Key, Values] =
+        /**
+          * Filters this collection so that only distinct values remain. Uses a special function to determine equality
+          * @param equals A function that determines whether two values are equal
+          * @param buildFrom Builder for the new collection
+          * @return A collection with only distinct values (when considering the provided 'equals' function)
+          */
+        def distinctWith(equals: (iter.A, iter.A) => Boolean)(implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
         {
-            val b = mutable.Map.empty[Key, mutable.Builder[Value, Values]]
-	        list.iterator.foreach { elem => b.getOrElseUpdate(key(elem), factory.newBuilder) += value(elem) }
-	        b.map { case (k, vb) => (k, vb.result()) }.to(collection.immutable.Map)
+            val iterOps = iter(coll)
+            val builder = buildFrom.newBuilder(coll)
+            val collected = mutable.HashSet[iter.A]()
+        
+            iterOps.iterator.foreach { item =>
+                if (!collected.exists { e => equals(e, item) })
+                {
+                    builder += item
+                    collected += item
+                }
+            }
+        
+            builder.result()
         }
+    
+        /**
+          * Filters this collection so that only distinct values remain. Compares the values by mapping them.
+          * @param f A mapping function to produce comparable values
+          * @param buildFrom A builder (implicit) to build the final collection
+          * @tparam B Map target type
+          * @return A collection with only distinct values (based on mapping)
+          */
+        def distinctBy[B](f: iter.A => B)(implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
+            distinctWith { (a, b) => f(a) == f(b) }
+    
+        /**
+          * This function works like foldLeft, except that it stores each step (including the start) into a seq
+          * @param start The starting step
+          * @param map A function for calculating the next step, takes the previous result + the next item in this seq
+          * @param buildFrom A buildfrom for final collection (implicit)
+          * @tparam B The type of steps
+          * @tparam That The type of final collection
+          * @return All of the steps mapped into a collection
+          */
+        def foldMapLeft[B, That](start: B)(map: (B, iter.A) => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
+        {
+            val builder = buildFrom.newBuilder(coll)
+            var last = start
+            builder += last
+        
+            val iterOps = iter(coll)
+            iterOps.iterator.foreach { item =>
+                last = map(last, item)
+                builder += last
+            }
+        
+            builder.result()
+        }
+        
+        // Referenced from: https://stackoverflow.com/questions/22090371/scala-grouping-list-of-tuples [10.10.2018]
+        /**
+          * Converts this iterable item to a map with possibly multiple values per key
+          * @param toKey A function for mapping items to keys
+          * @param toValue A function for mapping items to values
+          * @param bf Implicit build from for the final values collections
+          * @tparam Key Type of key in the final map
+          * @tparam Value Type of individual values in the final map
+          * @tparam Values Type of values collections in the final map
+          * @return A multi map based on this iteration mapping
+          */
+        def toMultiMap[Key, Value, Values](toKey: iter.A => Key)(toValue: iter.A => Value)(
+            implicit bf: BuildFrom[Repr, Value, Values]): Map[Key, Values] = toMultiMap { a => toKey(a) -> toValue(a) }
+    
+        /**
+          * Converts this iterable item to a map with possibly multiple values per key
+          * @param f A function for mapping items to key value pairs
+          * @param bf Implicit build from for the final values collections
+          * @tparam Key Type of key in the final map
+          * @tparam Value Type of individual values in the final map
+          * @tparam Values Type of values collections in the final map
+          * @return A multi map based on this iteration mapping
+          */
+        def toMultiMap[Key, Value, Values](f: iter.A => (Key, Value))(implicit bf: BuildFrom[Repr, Value, Values]): Map[Key, Values] =
+        {
+            val buffer = mutable.Map.empty[Key, mutable.Builder[Value, Values]]
+            val iterOps = iter(coll)
+            iterOps.iterator.foreach { item =>
+                val (key, value) = f(item)
+                buffer.getOrElseUpdate(key, bf.newBuilder(coll)) += value
+            }
+            buffer.view.mapValues { _.result() }.toMap
+        }
+    
+        /**
+          * Maps the contents of this Iterable. Mapping may fail, interrupting all remaining mappings
+          * @param f A mapping function. May fail.
+          * @param bf A build from for the final collection (implicit)
+          * @tparam B Type of map result
+          * @tparam To Type of final collection
+          * @return Mapped collection if all mappings succeeded. Failure otherwise.
+          */
+        def tryMap[B, To](f: iter.A => Try[B])(implicit bf: BuildFrom[Repr, B, To]): Try[To] =
+        {
+            val buffer = bf.newBuilder(coll)
+            // Maps items until the mapping function fails
+            val iterOps = iter(coll)
+            val finalResult = iterOps.iterator.map(f).find { result =>
+                result.toOption.foreach { buffer += _ }
+                result.isFailure
+            }.getOrElse(Success(()))
+            
+            finalResult.map { _ => buffer.result() }
+        }
+    }
+    
+    implicit def iterableOnceOperations[Repr](coll: Repr)(implicit iter: IsIterableOnce[Repr]): IterableOnceOperations[Repr, iter.type] =
+        new IterableOnceOperations(coll, iter)
+    
+    implicit class RichIterableOnce[A](val i: IterableOnce[A]) extends AnyVal
+    {
+        /**
+          * Maps items until a concrete result is found, then returns that result
+          * @param map A mapping function that maps to either Some or None
+          * @tparam B The map target type
+          * @return The first item that was mapped to Some. None if all items were mapped to None.
+          */
+        def findMap[B](map: A => Option[B]) = i.iterator.map(map).find { _.isDefined }.flatten
+        
+        /**
+         * Divides / maps the items in this collection to two groups
+         * @param f A function for separating / mapping the items
+         * @tparam L Type of left group items
+         * @tparam R Type of right group items
+         * @return Left group and right group
+         */
+        def dividedWith[L, R](f: A => Either[L, R]) =
+        {
+            val lBuilder = new VectorBuilder[L]
+            val rBuilder = new VectorBuilder[R]
+            i.iterator.map(f).foreach {
+                case Left(l) => lBuilder += l
+                case Right(r) => rBuilder += r
+            }
+            lBuilder.result() -> rBuilder.result()
+        }
+    
+        /**
+         * Maps the items in this collection into two different collections
+         * @param f A mapping function that produces two results (left -> right) for each item
+         * @tparam L Type of left result item
+         * @tparam R Type of right result item
+         * @return Left results -> right results
+         */
+        def splitMap[L, R](f: A => (L, R)) =
+        {
+            val lBuilder = new VectorBuilder[L]
+            val rBuilder = new VectorBuilder[R]
+            i.iterator.map(f).foreach { case (l, r) =>
+                lBuilder += l
+                rBuilder += r
+            }
+            lBuilder.result() -> rBuilder.result()
+        }
+    }
+    
+    implicit class RichIterableOnceEithers[L, R](val i: IterableOnce[Either[L, R]]) extends AnyVal
+    {
+        /**
+         * Divides this collection to two separate collections, one for left items and one for right items
+         * @return Left items + right items
+         */
+        def divided =
+        {
+            val lBuilder = new VectorBuilder[L]
+            val rBuilder = new VectorBuilder[R]
+            i.iterator.foreach {
+                case Left(l) => lBuilder += l
+                case Right(r) => rBuilder += r
+            }
+            lBuilder.result() -> rBuilder.result()
+        }
+    }
+    
+    implicit class RichIterableOnceTries[A](val i: IterableOnce[Try[A]]) extends AnyVal
+    {
+        /**
+         * Divides this collection to two separate collections, one for failures and one for successes
+         * @return Failures + successes
+         */
+        def divided = i.dividedWith { _.toEither }
     }
     
     /**
      * This extension allows tuple lists to be transformed into multi maps directly
      */
-    implicit class RichTupleList[K, V](val list: IterableOnce[(K, V)]) extends AnyVal
+    implicit class RichTupleVector[K, V](val list: Vector[(K, V)]) extends AnyVal
     {
-        def toMultiMap[Values]()(implicit factory: Factory[V, Values]): Map[K, Values] =
-            new MultiMapConvertible(list).toMultiMap(_._1, _._2)
+        /**
+          * @return This collection as a multi map
+          */
+        def asMultiMap: Map[K, Vector[V]] = list.toMultiMap[K, V, Vector[V]] { t => t }
     }
     
     implicit class RichRange(val range: Range) extends AnyVal

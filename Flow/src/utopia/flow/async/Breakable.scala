@@ -13,7 +13,7 @@ trait Breakable
      * Stops this breakable operation
      * @return a furure of the completion of this operation
      */
-	def stop(): Future[Unit]
+	def stop(): Future[Any]
 	
 	/**
 	  * Registers this breakable item to stop once / before the JVM closes

@@ -13,9 +13,10 @@ import utopia.flow.datastructure.template
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
 import utopia.genesis.generic.GenesisValue._
-import utopia.genesis.shape.Vector3D
 import utopia.genesis.generic.LineType
 import utopia.genesis.shape.path.LinearPathLike
+import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.template.VectorLike
 
 import scala.util.Success
 
@@ -42,7 +43,7 @@ object Line extends FromModelFactory[Line]
      * @param vector The vector portion of the line
      * @return A line with the provided position and vector part
      */
-    def ofVector(position: Point, vector: Vector3D) = Line(position, position + vector)
+    def ofVector(position: Point, vector: VectorLike[_]) = Line(position, position + vector)
     
     /**
      * Creates a set of edges for the provided vertices. The vertices are iterated in order and an 
@@ -54,12 +55,10 @@ object Line extends FromModelFactory[Line]
      * vertices
      */
     // TODO: Add a 3D version separately
-    def edgesForVertices(vertices: Seq[Point], close: Boolean = true) = 
+    def edgesForVertices(vertices: Seq[Point], close: Boolean = true) =
     {
         if (vertices.size < 2)
-        {
             Vector()
-        }
         else
         {
             var lastVertex = vertices.head
@@ -138,7 +137,7 @@ case class Line(override val start: Point, override val end: Point) extends Shap
     
     override def length = vector.length
     
-    override def projectedOver(axis: Vector3D) = Line(start.toVector.projectedOver(axis).toPoint,
+    override def projectedOver(axis: Vector2D) = Line(start.toVector.projectedOver(axis).toPoint,
             end.toVector.projectedOver(axis).toPoint)
     
     
@@ -156,17 +155,18 @@ case class Line(override val start: Point, override val end: Point) extends Shap
      */
     def intersection(other: Line, onlyPointsInSegment: Boolean = true) = 
     {
+        val v1 = vector.in3D
+        val v2 = other.vector.in3D
+        
         // a (V1 x V2) = (P2 - P1) x V2
         // Where P is the start point and Vs are the vector parts
-        val leftVector = vector cross other.vector
-        val rightVector = (other.start - start).toVector cross other.vector
+        val leftVector = v1 cross v2
+        val rightVector = (other.start - start).in3D cross v2
         
         // If the left hand side vector is a zero vector, there is no collision
         // The two vectors must also be parallel
         if ((leftVector ~== Vector3D.zero) || !(leftVector isParallelWith rightVector))
-        {
             None
-        }
         else
         {
             // a = |right| / |left|, negative if they have opposite directions
@@ -181,9 +181,7 @@ case class Line(override val start: Point, override val end: Point) extends Shap
                     Some(intersectionPoint) else None
             }
             else
-            {
                 Some(intersectionPoint)
-            }
         }
     }
     
@@ -269,7 +267,7 @@ case class Line(override val start: Point, override val end: Point) extends Shap
      * that will be preserved of the line
      * @return The clipped line. None if this line is completely clipped off
      */
-    def clipped(clippingPlanePoint: Point, clippingPlaneNormal: Vector3D) =
+    def clipped(clippingPlanePoint: Point, clippingPlaneNormal: Vector2D) =
     {
         val origin = clippingPlanePoint.toVector dot clippingPlaneNormal
         val startDistance = start.toVector.dot(clippingPlaneNormal) - origin

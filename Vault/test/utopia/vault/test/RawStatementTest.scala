@@ -33,17 +33,17 @@ object RawStatementTest extends App
         def insert(name: String, age: Int, isAdmin: Boolean = false) = 
         {
             assert(connection(s"INSERT INTO ${table.name} (name, age, is_admin) VALUES (?, ?, ?)",
-                    Vector(name, age, isAdmin), HashSet(), true).generatedKeys.nonEmpty)
+                    Vector(name, age, isAdmin), HashSet(), returnGeneratedKeys = true).generatedKeys.nonEmpty)
         }
         
         // Inserts a couple of elements into the table. Makes sure new indices are generated
-        insert("Arttu", 15, true)
+        insert("Arttu", 15, isAdmin = true)
         insert("Belinda", 22)
         insert("Cecilia", 23)
         
         // Reads person data from the database
         val results = connection(s"SELECT * FROM ${table.name}", Vector(), HashSet(table)).rowModels
-        results.foreach { row => println(row.toJSON) }
+        results.foreach { row => println(row.toJson) }
         
         assert(results.size == 3)
         
@@ -53,13 +53,13 @@ object RawStatementTest extends App
         // Also tries inserting a time value
         val creationTime = Instant.now().toValue
         val latestIndex = connection(s"INSERT INTO ${table.name} (name, created) VALUES (?, ?)", 
-                Vector("Test2", creationTime), HashSet(), true).generatedKeys.head
+                Vector("Test2", creationTime), HashSet(), returnGeneratedKeys = true).generatedKeys.head
         
         // Checks that the time value was preserved
         val lastResult = connection(s"SELECT created FROM ${table.name} WHERE row_id = ?", 
-                Vector(latestIndex), HashSet(table), false).rows.head.toModel
+                Vector(latestIndex), HashSet(table), returnGeneratedKeys = false).rows.head.toModel
         
-        println(lastResult.toJSON)
+        println(lastResult.toJson)
         println(s"Previously ${creationTime.longOr()} (${creationTime.dataType}), now ${lastResult("created").longOr()} (${lastResult("created").dataType})")
         assert(lastResult("created").longOr() == creationTime.longOr())
         

@@ -14,8 +14,8 @@ import utopia.flow.generic.InstantType
 import utopia.flow.generic.VectorType
 import utopia.flow.generic.ModelType
 import utopia.flow.generic.AnyType
-import utopia.flow.parse.JSONValueConverter
-import utopia.flow.parse.JSONConvertible
+import utopia.flow.parse.JsonValueConverter
+import utopia.flow.parse.JsonConvertible
 import utopia.flow.generic.LocalDateType
 import java.time.LocalDate
 import utopia.flow.generic.LocalTimeType
@@ -40,7 +40,7 @@ object Value
  * Values can wrap an object value and associate it with a certain data type. Values can be cast 
  * to different data types. They are immutable.
  */
-case class Value(content: Option[Any], dataType: DataType) extends Node[Option[Any]] with JSONConvertible
+case class Value(content: Option[Any], dataType: DataType) extends Node[Option[Any]] with JsonConvertible
 {
     // INITIAL CODE    ---------
     
@@ -50,7 +50,7 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
     
     // COMP. PROPERTIES    -----
     
-    override def toJSON = JSONValueConverter(this).getOrElse("null")
+    override def toJson = JsonValueConverter(this).getOrElse("null")
     
     /**
      * The description of this value, describing both content and data type

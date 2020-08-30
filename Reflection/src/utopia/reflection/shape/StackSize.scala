@@ -14,6 +14,11 @@ object StackSize
      */
     val any: StackSize = any(Size.zero)
     
+    /**
+     * A stack size that is always 0x0
+     */
+    val fixedZero = fixed(Size.zero)
+    
     
     // CONSTRUCTOR    -------------------
     
@@ -204,6 +209,11 @@ case class StackSize(width: StackLength, height: StackLength)
       * @return A copy of this size that is more easily expanded
       */
     def expanding = mapSides { _.expanding }
+    
+    /**
+     * @return The components that form this stack size
+     */
+    def components = Vector(width, height)
     
     
     // IMPLEMENTED    ----------------

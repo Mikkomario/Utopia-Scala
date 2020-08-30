@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 20.4.2019, v2+
   */
-class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: FPS = FPS.default) extends Setup
+class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = Fps.default) extends Setup
 {
 	// ATTRIBUTES	--------------------
 	

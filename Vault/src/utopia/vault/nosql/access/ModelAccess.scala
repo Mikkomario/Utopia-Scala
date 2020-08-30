@@ -1,6 +1,8 @@
 package utopia.vault.nosql.access
 
+import utopia.vault.database.Connection
 import utopia.vault.nosql.factory.FromResultFactory
+import utopia.vault.sql.Condition
 
 /**
  * Common trait for access points that return parsed model data
@@ -30,4 +32,15 @@ trait ModelAccess[+M, +A] extends Access[A]
 	 * @return The selection target used
 	 */
 	def target = factory.target
+	
+	
+	// OTHER	-------------------------
+	
+	/**
+	  * Checks whether there exist any results for a query with the specified condition
+	  * @param condition A search condition (applied in addition to the global condition)
+	  * @param connection DB Connection (implicit)
+	  * @return Whether there exist any results for that search
+	  */
+	def exists(condition: Condition)(implicit connection: Connection) = factory.exists(mergeCondition(condition))
 }

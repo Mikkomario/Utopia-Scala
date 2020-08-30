@@ -1,7 +1,7 @@
 package utopia.vault.nosql.access
 
 import utopia.vault.database.Connection
-import utopia.vault.model.immutable.Table
+import utopia.vault.model.immutable.{Storable, Table}
 import utopia.vault.sql.{Condition, OrderBy}
 
 /**
@@ -33,21 +33,31 @@ trait Access[+A]
 	 */
 	protected def read(condition: Option[Condition], order: Option[OrderBy] = None)(implicit connection: Connection): A
 	
+	
+	// OTHER	----------------------
+	
 	/**
 	 * Merges an additional condition with the existing global condition
 	 * @param additional An additional condition
 	 * @return A combination of the additional and global conditions
 	 */
-	protected def mergeCondition(additional: Condition) = globalCondition.map { _ && additional }.getOrElse(additional)
+	def mergeCondition(additional: Condition) = globalCondition.map { _ && additional }.getOrElse(additional)
 	
 	/**
 	 * Merges an additional condition with the existing global condition
 	 * @param additional An additional condition (optional)
 	 * @return A combination of the additional and global conditions. None if there was neither.
 	 */
-	protected def mergeCondition(additional: Option[Condition]): Option[Condition] = additional match
+	def mergeCondition(additional: Option[Condition]): Option[Condition] = additional match
 	{
 		case Some(cond) => Some(mergeCondition(cond))
 		case None => globalCondition
 	}
+	
+	/**
+	  * Merges an additional condition with the existing global condition
+	  * @param conditionModel A model representing the additional condition to apply
+	  * @return A combination of these conditions
+	  */
+	def mergeCondition(conditionModel: Storable): Condition = mergeCondition(conditionModel.toCondition)
 }

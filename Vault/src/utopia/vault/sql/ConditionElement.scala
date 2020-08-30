@@ -1,6 +1,8 @@
 package utopia.vault.sql
 
+import utopia.flow.generic.ValueConversions._
 import utopia.vault.model.enumeration.ComparisonOperator
+import Extensions._
 
 /**
  * ConditionElements are elements used in logical conditions. Usually two or more elements are 
@@ -79,7 +81,37 @@ trait ConditionElement
       * @return A condition that accepts any of the provided value in this condition element
       */
     def in[V](elements: IterableOnce[V])(implicit transform: V => ConditionElement): Condition =
-        in(elements.iterator.map(transform))
+    {
+        val iterator = elements.iterator
+        if (iterator.hasNext)
+            in(iterator.map(transform))
+        else
+            Condition.alwaysFalse
+    }
+    
+    /**
+      * @param matchString A string match where % is a placeholder for any string.
+      * @return A condition where this element must match the specified expression
+      */
+    def like(matchString: ConditionElement) = Condition(toSqlSegment + "LIKE" + matchString.toSqlSegment)
+    
+    /**
+      * @param matchString A string
+      * @return A condition where this element must start with the specified string
+      */
+    def startsWith(matchString: String) = like(matchString + "%")
+    
+    /**
+      * @param matchString A string
+      * @return A condition where this element must end with the specified string
+      */
+    def endsWith(matchString: String) = like("%" + matchString)
+    
+    /**
+      * @param matchString A string
+      * @return A condition where this element must contain the specified string
+      */
+    def contains(matchString: String) = like(s"%$matchString%")
     
     /**
       * Creates a simple condition based on two condition elements. This element is used as the first operand.

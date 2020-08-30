@@ -1,5 +1,6 @@
 package utopia.flow.datastructure.template
 
+import utopia.flow.datastructure.immutable.{Graph, Tree}
 import utopia.flow.util.CollectionExtensions._
 
 import scala.math.Ordering.Double.TotalOrdering
@@ -26,12 +27,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	  */
     def leavingEdges: Set[Edge]
 	
-	protected def me: GNode
-    
-    
-    // ATTRIBUTES   -----------------
-    
-    private lazy val emptyRoute = Vector[Edge]()
+	protected def repr: GNode
     
     
     // COMPUTED PROPERTIES    -------
@@ -50,6 +46,48 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 		foreach(buffer.+=)
 		buffer.result().toSet
 	}
+	
+	/**
+	 * @return Content of all nodes linked with this node, including the contents of this node
+	 */
+	def allNodeContent =
+	{
+		val buffer = new VectorBuilder[N]
+		foreach { buffer += _.content }
+		buffer.result().toSet
+	}
+	
+	/**
+	 * Converts this node to a graph
+	 * @return A graph based on this node's connections
+	 */
+	def toGraph =
+	{
+		val connectionsBuffer = new VectorBuilder[(N, E, N)]
+		foreach { node => node.leavingEdges.foreach { edge =>
+			val newConnection = (node.content, edge.content, edge.end.content)
+			connectionsBuffer += newConnection
+		} }
+		Graph(connectionsBuffer.result().toSet)
+	}
+	
+	/**
+	 * Converts this graph to a tree
+	 * @return A tree from this node
+	 */
+	def toTreeWithoutEdges = _toTreeWithoutEdges(Set())
+	
+	private def _toTreeWithoutEdges(traversedNodes: Set[Any]): Tree[N] =
+	{
+		val newTraversedNodes = traversedNodes + this
+		val children = endNodes.filterNot { traversedNodes.contains(_) }.map { _._toTreeWithoutEdges(newTraversedNodes) }
+		Tree(content, children.toVector)
+	}
+	
+	/**
+	 * @return Finds all circular routes from this node to itself without traversing trough any other node more than once
+	 */
+	def routesToSelf = routesTo(this)
 	
 	
 	// OPERATORS	-----------------
@@ -117,7 +155,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
     def shortestRouteTo(node: AnyNode) = cheapestRouteTo(node, { _ => 1 })
     
     /**
-     * Finds the 'cheapest' route from this node to the provided node, if there is one. A special 
+     * Finds the 'cheapest' route from this node to the provided node, if there is one. A special
      * function is used for calculating the route cost.
      * @param node The node traversed to
      * @param costOf The function used for calculating the cost of a single edge (based on the edge
@@ -134,31 +172,45 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
     }
     
     /**
-     * Finds all routes (edge combinations) that connect this node to the provided node. Routes 
-     * can't contain the same edge multiple times so no looping routes are included.
+     * Finds all routes (edge combinations) that connect this node to the provided node. Routes
+     * can't contain the same node multiple times so no looping routes are included. An exception to this is the case
+	 * where this node is targeted. In that case, the resulting routes start and end at this node.
      * @param node The node this node may be connected to
      * @return All possible routes to the provided node. In case this node is the searched node,
      * however, a single empty route will be returned. The end node will always be at the end of
      * each route and nowhere else. If there are no connecting routes, an empty array is returned.
      */
-    def routesTo(node: AnyNode): Set[Route] = routesTo(node, Set())
+    def routesTo(node: AnyNode): Set[Route] =
+	{
+		// If trying to find routes to self, will have to handle limitations a bit differently
+		if (node == this)
+		{
+			leavingEdges.find { _.end == this } match
+			{
+				case Some(zeroRoute) => Set(Vector(zeroRoute))
+				case None => leavingEdges.flatMap { e => e.end.routesTo(this, Set()).map { route => e +: route } }
+			}
+		}
+		else
+			routesTo(node, Set())
+	}
     
     // Uses recursion
     private def routesTo(node: AnyNode, visitedNodes: Set[AnyNode]): Set[Route] =
     {
-        if (node == this)
-            Set(emptyRoute)
-        else
-        {
-    		// Tries to find the destination from each connected edge that leads to a new node
-			val newVisitedNodes = visitedNodes + this
+		// Tries to find the destination from each connected edge that leads to a new node
+		val newVisitedNodes = visitedNodes + this
 	
-			// Records each found route. The traversed edge is included in the returned route(s)
-			val availableEdges = leavingEdges.filterNot { e => newVisitedNodes.contains(e.end) }
-			val routes = availableEdges.flatMap { e => e.end.routesTo(node, newVisitedNodes).map { route => e +: route } }
-			
-			routes
-        }
+		// Checks whether there exist edges to the final node
+		val availableEdges = leavingEdges.filterNot { e => newVisitedNodes.contains(e.end) }
+		availableEdges.find { _.end == node } match
+		{
+			case Some(directRoute) => Set(Vector(directRoute))
+			case None =>
+				// If there didn't exist a direct path, tries to find an indirect one
+				// Attaches this element at the beginning of each returned route (if there were any returned)
+				availableEdges.flatMap { e => e.end.routesTo(node, newVisitedNodes).map { route => e +: route } }
+		}
     }
 	
 	/**
@@ -190,11 +242,11 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	
 	private def traverseUntil[B](operation: GNode => Option[B], traversedNodes: Set[GNode]): Option[B] =
 	{
-		val nodes = traversedNodes + me
+		val nodes = traversedNodes + repr
 		
 		// Performs the operation on self first
 		// If that didn't yield a result, tries children instead
-		operation(me).orElse(endNodes.diff(nodes).findMap { _.traverseUntil(operation, nodes) })
+		operation(repr).orElse(endNodes.diff(nodes).findMap { _.traverseUntil(operation, nodes) })
 	}
 	
 	/**
@@ -204,10 +256,15 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	  */
 	def foreach[U](operation: GNode => U): Unit = foreach(operation, Set())
 	
-	private def foreach[U](operation: GNode => U, traversedNodes: Set[GNode]): Unit =
+	private def foreach[U](operation: GNode => U, traversedNodes: Set[AnyNode]): Set[AnyNode] =
 	{
-		val nodes = traversedNodes + me
-		operation(me)
-		endNodes.diff(nodes).foreach { _.foreach(operation, nodes) }
+		val newTraversedNodes = traversedNodes + this
+		operation(repr)
+		endNodes.foldLeft(newTraversedNodes) { (traversed, node) =>
+			if (traversed.contains(node))
+				traversed
+			else
+				node.foreach(operation, traversed)
+		}
 	}
 }

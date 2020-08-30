@@ -14,7 +14,7 @@ import scala.collection.immutable.HashMap
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
 import utopia.genesis.util.ApproximatelyEquatable
-import utopia.genesis.shape.{Axis2D, Vector3D, VectorLike}
+import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.Axis._
 import java.awt.Insets
 
@@ -66,7 +66,7 @@ object Size extends FromModelFactory[Size]
 * @author Mikko Hilpinen
 * @since 20.11.2018
 **/
-case class Size(width: Double, height: Double) extends VectorLike[Size] with ApproximatelyEquatable[Size]
+case class Size(width: Double, height: Double) extends Vector2DLike[Size] with ApproximatelyEquatable[Size]
         with ValueConvertible with ModelConvertible
 {
     // COMPUTED    --------------------------
@@ -99,7 +99,7 @@ case class Size(width: Double, height: Double) extends VectorLike[Size] with App
     /**
      * A vector representation of this size
      */
-    def toVector = Vector3D(width, height)
+    def toVector = Vector2D(width, height)
     
     /**
       * A point representation of this size
@@ -109,12 +109,21 @@ case class Size(width: Double, height: Double) extends VectorLike[Size] with App
     /**
      * An awt representation of this size
      */
-	def toDimension = new Dimension(width.toInt, height.toInt)
+	def toDimension = new Dimension(width.ceil.toInt, height.ceil.toInt)
+    
+    /**
+      * @return This size as a square shape where width is equal to height. Lowers one of the sides if necessary.
+      */
+    def fitToSquare =
+    {
+        val side = width min height
+        Size(side, side)
+    }
     
     
     // IMPLEMENTED    -----------------------
     
-    override protected def repr = this
+    override def repr = this
     
     lazy val dimensions = Vector(width, height)
     
@@ -163,6 +172,12 @@ case class Size(width: Double, height: Double) extends VectorLike[Size] with App
         case X => withWidth(l)
         case Y => withHeight(l)
     }
+    
+    /**
+      * @param position New position for this size (default = (0, 0))
+      * @return A set of bounds with this size and specified position
+      */
+    def toBounds(position: Point = Point.origin) = Bounds(position, this)
     
     /**
       * Checks whether this size would fit into the other size

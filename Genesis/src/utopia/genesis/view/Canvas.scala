@@ -1,17 +1,17 @@
 package utopia.genesis.view
 
 import javax.swing.JPanel
-import utopia.genesis.shape.Vector3D
 import utopia.genesis.view.ScalingPolicy.Project
 import java.awt.Color
 import java.awt.Graphics
 import java.awt.event.{ComponentAdapter, ComponentEvent}
 
 import utopia.genesis.view.ScalingPolicy.Crop
-import utopia.genesis.util.{Drawer, FPS}
+import utopia.genesis.util.{Drawer, Fps}
 import utopia.genesis.shape.shape2D.Transformation
 import utopia.genesis.shape.shape2D.Size
 import utopia.genesis.handling.DrawableHandler
+import utopia.genesis.shape.shape3D.Vector3D
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -107,7 +107,7 @@ class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size, val 
       * @param maxFPS The maximum frames (draws) per second
       * @param context Asynchronous execution context
       */
-    def startAutoRefresh(maxFPS: FPS = FPS.default)(implicit context: ExecutionContext): Unit =
+    def startAutoRefresh(maxFPS: Fps = Fps.default)(implicit context: ExecutionContext): Unit =
     {
         if (refreshLoop.isEmpty)
         {
@@ -128,9 +128,7 @@ class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size, val 
         val size = Size of getSize()
         
         if (scalingPolicy == Project)
-        {
             _gameWorldSize = (prefferedGameWorldSize.toVector projectedOver size.toVector).toSize
-        }
         else
         {
             val prefferedXYRatio = prefferedGameWorldSize.width / prefferedGameWorldSize.height

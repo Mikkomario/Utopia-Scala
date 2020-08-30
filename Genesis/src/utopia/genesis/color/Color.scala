@@ -1,5 +1,6 @@
 package utopia.genesis.color
 
+import utopia.genesis.shape.shape1D.Angle
 import utopia.genesis.util.ApproximatelyEquatable
 
 import scala.language.implicitConversions
@@ -51,7 +52,16 @@ object Color
 	/**
 	  * The default black text color for disabled / hint elements
 	  */
-	val textBlackDisabled = black.withAlpha(0.55)
+	val textBlackDisabled = black.withAlpha(0.6)
+	
+	/**
+	 * The default white text color on dark surfaces
+	 */
+	val textWhite = white.withAlpha(0.88)
+	/**
+	 * The default white text color for hint elements
+	 */
+	val textWhiteDisabled = white.withAlpha(0.6)
 	
 	
 	// IMPLICITS	---------------------
@@ -171,7 +181,7 @@ case class Color private(private val data: Either[HSL, RGB], alpha: Double) exte
 	
 	override def luminosity = hsl.luminosity
 	
-	def withHue(hue: Double) = withHSL(hsl.withHue(hue))
+	def withHue(hue: Angle) = withHSL(hsl.withHue(hue))
 	
 	def withSaturation(saturation: Double) = withHSL(hsl.withSaturation(saturation))
 	

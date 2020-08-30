@@ -4,17 +4,18 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.genesis.image.Image
 import utopia.genesis.shape.Axis.{X, Y}
-import utopia.reflection.component.{RefreshableWithPointer, TextComponent}
+import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.swing.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
+import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
+import utopia.reflection.component.template.display.RefreshableWithPointer
+import utopia.reflection.component.template.text.TextComponent
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.{Leading, Trailing}
-import utopia.reflection.container.swing.Stack
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.Alignment.{Bottom, Top}
 import utopia.reflection.shape.{Alignment, StackInsets, StackLength}
 import utopia.reflection.text.Font
-import utopia.reflection.util.ComponentContext
 
 object ImageAndTextLabel
 {
@@ -22,33 +23,35 @@ object ImageAndTextLabel
 	  * Creates a new image and text label using a component creation context
 	  * @param pointer Content pointer
 	  * @param displayFunction Function for creating text display
+	  * @param imageInsets Insets placed around image. If None, contextual text insets will be used (default)
 	  * @param itemToImage Function for creating image display
 	  * @param context Component creation context (implicit)
 	  * @tparam A Type of displayed item
 	  * @return A new label
 	  */
-	def contextualWithPointer[A](pointer: PointerWithEvents[A],
-								 displayFunction: DisplayFunction[A] = DisplayFunction.raw)(itemToImage: A => Image)
-								(implicit context: ComponentContext) =
+	def contextualWithPointer[A](pointer: PointerWithEvents[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+								 imageInsets: Option[StackInsets] = None)
+								(itemToImage: A => Image)(implicit context: TextContextLike) =
 	{
-		val label = new ImageAndTextLabel[A](pointer, context.font, displayFunction, context.insets, context.insets,
-			context.textAlignment, context.textColor, context.textHasMinWidth, context.allowImageUpscaling)(itemToImage)
-		context.setBorderAndBackground(label)
-		label
+		new ImageAndTextLabel[A](pointer, context.font, displayFunction, context.textInsets,
+			imageInsets.getOrElse(context.textInsets), context.textAlignment, context.textColor, context.textHasMinWidth,
+			context.allowImageUpscaling)(itemToImage)
 	}
 	
 	/**
 	  * Creates a new image and text label using a component creation context
 	  * @param item Initially displayed item
 	  * @param displayFunction Function for creating text display
+	  * @param imageInsets Insets placed around image. If None, contextual text insets will be used (default)
 	  * @param itemToImage Function for creating image display
 	  * @param context Component creation context (implicit)
 	  * @tparam A Type of displayed item
 	  * @return A new label
 	  */
-	def contextual[A](item: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw)(itemToImage: A => Image)
-					 (implicit context: ComponentContext) =
-		contextualWithPointer(new PointerWithEvents(item), displayFunction)(itemToImage)
+	def contextual[A](item: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+					  imageInsets: Option[StackInsets] = None)(itemToImage: A => Image)
+					 (implicit context: TextContextLike) =
+		contextualWithPointer(new PointerWithEvents(item), displayFunction, imageInsets)(itemToImage)
 }
 
 /**
@@ -95,13 +98,19 @@ class ImageAndTextLabel[A](override val contentPointer: PointerWithEvents[A], in
 					case Alignment.Right => X -> Vector(textLabel, wrappedImageLabel)
 					case _ => Y -> Vector(wrappedImageLabel, textLabel)
 				}
-				
 		}
-		val layout = alignment.horizontal match
-		{
-			case Alignment.Left => Leading
-			case Alignment.Right => Trailing
-			case _ => StackLayout.Center
+		val layout = {
+			if (direction == X)
+				StackLayout.Center
+			else
+			{
+				alignment.horizontal match
+				{
+					case Alignment.Left => Leading
+					case Alignment.Right => Trailing
+					case _ => StackLayout.Center
+				}
+			}
 		}
 		Stack.withItems(items, direction, StackLength.fixedZero, layout = layout)
 	}

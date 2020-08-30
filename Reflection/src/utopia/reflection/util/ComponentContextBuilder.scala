@@ -1,13 +1,18 @@
 package utopia.reflection.util
 
+import utopia.flow.util.TimeExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.{Axis2D, LinearAcceleration}
+import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.genesis.util.Drawer
 import utopia.reflection.color.ComponentColor
-import utopia.reflection.container.stack.{ScrollAreaLike, ScrollBarDrawer}
+import utopia.reflection.component.drawing.template.ScrollBarDrawer
+import utopia.reflection.container.stack.template.scrolling.ScrollAreaLike
 import utopia.reflection.shape.{Alignment, Border, ScrollBarBounds, StackInsets, StackLength}
 import utopia.reflection.text.Font
+
+import scala.concurrent.duration.FiniteDuration
 
 /**
   * Used for configuring component style at creation time
@@ -44,6 +49,7 @@ import utopia.reflection.text.Font
  * @param scrollFriction Friction used when drag-scrolling (default = default scroll area friction (2000 px/s&#94;2))
  * @param allowImageUpscaling Whether images should be allowed to scale above their original source resolution (default = false)
   */
+@deprecated("Replaced with new set of context classes", "v1.2")
 case class ComponentContextBuilder(actorHandler: ActorHandler, font: Font, highlightColor: Color, focusColor: Color,
 								   normalWidth: Int, textColor: Color = Color.textBlack, promptFont: Option[Font] = None,
 								   promptTextColor: Option[Color] = None, textHasMinWidth: Boolean = true,
@@ -56,7 +62,8 @@ case class ComponentContextBuilder(actorHandler: ActorHandler, font: Font, highl
 								   scrollPerWheelClick: Double = 32, scrollBarWidth: Int = 24,
 								   scrollBarDrawer: Option[ScrollBarDrawer] = None, scrollBarIsInsideContent: Boolean = false,
 								   scrollFriction: LinearAcceleration = ScrollAreaLike.defaultFriction,
-								   allowImageUpscaling: Boolean = false)
+								   allowImageUpscaling: Boolean = false, animationDuration: FiniteDuration = 0.25.seconds,
+								   fadingIsEnabledInAnimations: Boolean = true)
 {
 	// ATTRIBUTES	-------------------------
 	
@@ -71,7 +78,7 @@ case class ComponentContextBuilder(actorHandler: ActorHandler, font: Font, highl
 		stackMargin, relatedItemsStackMargin.getOrElse(stackMargin), stackCap, dropDownWidthLimit,
 		switchWidth.getOrElse(StackLength.any(normalWidth / 4)), textFieldWidth.getOrElse(StackLength.any(normalWidth)),
 		scrollPerWheelClick, scrollBarWidth, scrollBarDrawer.getOrElse(new DefaultScrollBarDrawer),
-		scrollBarIsInsideContent, scrollFriction, allowImageUpscaling)
+		scrollBarIsInsideContent, scrollFriction, allowImageUpscaling, animationDuration, fadingIsEnabledInAnimations)
 	
 	
 	// COMPUTED	-----------------------------

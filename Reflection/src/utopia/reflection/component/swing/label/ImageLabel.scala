@@ -4,12 +4,12 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.{Bounds, Point}
 import utopia.genesis.util.Drawer
-import utopia.reflection.component.RefreshableWithPointer
+import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.stack.{CachingStackable, StackLeaf}
+import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
+import utopia.reflection.component.template.display.RefreshableWithPointer
 import utopia.reflection.shape.StackSize
-import utopia.reflection.util.ComponentContext
 
 object ImageLabel
 {
@@ -17,15 +17,13 @@ object ImageLabel
 	  * Creates a new label using contextual settings
 	  * @param image Image presented in this label
 	  * @param alwaysFillsArea Whether image should fill the whole area (default = true)
+	  * @param isLowPriority Whether the image should be shrank easily when adjusting component sizes (default = false)
 	  * @param context Component creation context
 	  * @return A new label
 	  */
-	def contextual(image: Image, alwaysFillsArea: Boolean = true)(implicit context: ComponentContext) =
-	{
-		val label = new ImageLabel(image, alwaysFillsArea, context.allowImageUpscaling)
-		context.setBorderAndBackground(label)
-		label
-	}
+	def contextual(image: Image, alwaysFillsArea: Boolean = true, isLowPriority: Boolean = false)
+				  (implicit context: BaseContextLike) =
+		new ImageLabel(image, alwaysFillsArea, context.allowImageUpscaling, isLowPriority)
 }
 
 /**
@@ -37,7 +35,8 @@ object ImageLabel
   * @param allowUpscaling Whether the image should be allowed to scale above its size (default = false)
   * @constructor Creates a new image label with specified settings (always fill area and upscaling allowing)
   */
-class ImageLabel(initialImage: Image, val alwaysFillArea: Boolean = true, val allowUpscaling: Boolean = false)
+class ImageLabel(initialImage: Image, alwaysFillArea: Boolean = true, allowUpscaling: Boolean = false,
+				 isLowPriority: Boolean = false)
 	extends Label with CachingStackable with RefreshableWithPointer[Image] with StackLeaf
 {
 	// ATTRIBUTES	-----------------
@@ -100,10 +99,8 @@ class ImageLabel(initialImage: Image, val alwaysFillArea: Boolean = true, val al
 		val imageSize = image.size.ceil
 		val isLimited = alwaysFillArea && !allowUpscaling
 		
-		if (isLimited)
-			StackSize.downscaling(imageSize)
-		else
-			StackSize.any(imageSize)
+		val raw = if (isLimited) StackSize.downscaling(imageSize) else StackSize.any(imageSize)
+		if (isLowPriority) raw.shrinking else raw
 	}
 	
 	

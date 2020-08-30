@@ -19,21 +19,16 @@ trait Signed[+Repr] extends Scalable[Repr]
 	  */
 	protected def zero: Repr
 	
-	/**
-	  * @return This item
-	  */
-	protected def self: Repr
-	
 	
 	// OTHER	-------------------
 	
 	/**
 	  * @return This item if positive, otherwise 0
 	  */
-	def positive = if (isPositive) self else zero
+	def positive = if (isPositive) repr else zero
 	
 	/**
 	  * @return The absolute value of this item, always positive
 	  */
-	def abs = if (isPositive) self else -this
+	def abs = if (isPositive) repr else -this
 }

@@ -9,6 +9,7 @@ import utopia.reflection.shape.StackLength
   * @author Mikko Hilpinen
   * @since 28.4.2019, v1+
   */
+@deprecated("Segment system updated to Segment and SegmentGroup", "v1.2")
 trait Segmented
 {
 	// ATTRIBUTES	------------------------

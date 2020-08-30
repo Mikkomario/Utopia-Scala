@@ -1,11 +1,10 @@
 package utopia.conflict.test
 
 import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.shape.RotationDirection.{Clockwise, Counterclockwise}
-import utopia.genesis.shape.Vector3D
 import utopia.genesis.shape.Axis._
-import utopia.genesis.shape.shape2D.{Bounds, Line, Point, Polygon, Size}
+import utopia.genesis.shape.shape2D.{Bounds, Line, Point, Polygon, Size, Vector2D}
 import utopia.conflict.collision.Extensions._
+import utopia.genesis.shape.shape1D.RotationDirection.{Clockwise, Counterclockwise}
 
 /**
  * This test tests the basic polygon features
@@ -89,7 +88,7 @@ object PolygonTest extends App
     val collision1 = overlappingBox.checkCollisionWith(polygon)
     
     assert(collision1.isDefined)
-    assert(collision1.get.mtv == Vector3D(0, -1))
+    assert(collision1.get.mtv == Vector2D(0, -1))
     
     println(collision1.get.collisionPoints)
     
@@ -97,7 +96,7 @@ object PolygonTest extends App
     val collision2 = boxInside.checkCollisionWith(polygon)
     
     assert(collision2.isDefined)
-    assert(collision2.get.mtv == Vector3D(1.5))
+    assert(collision2.get.mtv == Vector2D(1.5))
     
     println(collision2.get.collisionPoints)
     

@@ -3,8 +3,8 @@ package utopia.reflection.controller.data
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.flow.util.CollectionExtensions._
-import utopia.reflection.component.input.SelectableWithPointers
-import utopia.reflection.component.Refreshable
+import utopia.reflection.component.template.input.SelectableWithPointers
+import utopia.reflection.component.template.display.Refreshable
 
 /**
   * This manager handles displayed content AND selection
@@ -15,6 +15,7 @@ trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with
 {
 	// ATTRIBUTES	-------------------
 	
+	// TODO: Value pointer should be settable from outside
 	private var _selectedDisplay: Option[C] = None
 	override val valuePointer = new PointerWithEvents[Option[A]](None)
 	
@@ -96,7 +97,8 @@ trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with
 	private def updateSelection(newValue: Option[A]): Unit =
 	{
 		val oldSelected = _selectedDisplay
-		_selectedDisplay = newValue.flatMap { v => displays.find { d => itemsAreEqual(v, d.content) } }
+		// Finds the new display holding that value
+		_selectedDisplay = newValue.flatMap(displayFor)
 		
 		if (oldSelected != _selectedDisplay)
 			updateSelectionDisplay(oldSelected, _selectedDisplay)
@@ -115,12 +117,25 @@ trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with
 	{
 		override def onChangeEvent(event: ChangeEvent[Vector[A]]) =
 		{
-			// Tries to preserve selection after refresh
+			// Tries to preserve selection after refresh (finds value that matches the previous selection and selects it)
 			value.foreach { currentValue =>
-				if (event.newValue.exists { newV => itemsAreEqual(currentValue, newV) })
-					updateSelection(value)
-				else
-					value = None
+				val newSelectedValue =
+				{
+					val candidates = event.newValue.filter { representSameItem(_, currentValue) }
+					if (candidates.size < 2)
+						candidates.headOption
+					else
+						candidates.find { itemsAreEqual(_, currentValue) }.orElse(candidates.headOption)
+				}
+				newSelectedValue match
+				{
+					case Some(newFoundValue) =>
+						value = newSelectedValue
+						// May need to manually trigger selection display update
+						if (currentValue == newFoundValue)
+							updateSelection(value)
+					case None => value = None
+				}
 			}
 		}
 	}

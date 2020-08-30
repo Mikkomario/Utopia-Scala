@@ -3,12 +3,13 @@ package utopia.genesis.test
 import utopia.flow.async.ThreadPool
 import utopia.genesis.animation.animator.{SpriteDrawer, TransformingImageAnimator}
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.{Size, Transformation}
+import utopia.genesis.shape.shape2D.{Size, Transformation, Vector2D}
 import utopia.genesis.util.DefaultSetup
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.animation.Animation
-import utopia.genesis.shape.{Rotation, Vector3D}
+import utopia.genesis.shape.shape1D.Rotation
+import utopia.genesis.shape.shape3D.Vector3D
 
 import scala.concurrent.ExecutionContext
 
@@ -26,7 +27,7 @@ object SpriteTest extends App
 	// Creates sprite drawers
 	val strip = Image.readFrom("test-images/more-dot-strip-4.png").get.split(4)
 	val drawer1 = SpriteDrawer(strip, strip.imageSize.toPoint / 2, 4.seconds,
-		Transformation(translation = gameWorldSize.toVector / 2, scaling = Vector3D(2, 2)))
+		Transformation(translation = gameWorldSize.toVector / 2, scaling = Vector2D(2, 2)))
 	
 	val image2 = Image.readFrom("test-images/mushrooms.png").get.fitting(Size.square(200))
 	val drawer2 = TransformingImageAnimator(image2, image2.size.toPoint / 2,

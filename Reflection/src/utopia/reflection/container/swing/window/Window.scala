@@ -2,24 +2,28 @@ package utopia.reflection.container.swing.window
 
 import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter, WindowEvent}
 
+import javax.swing.SwingUtilities
 import utopia.flow.async.{VolatileFlag, VolatileOption}
 import utopia.flow.datastructure.mutable.Lazy
 import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
-import utopia.genesis.shape.{Axis, Axis2D, Vector3D}
-import utopia.genesis.shape.shape2D.{Point, Size}
+import utopia.genesis.image.Image
+import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
+import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape2D.{Insets, Point, Size, Vector2D}
+import utopia.genesis.util.Screen
 import utopia.genesis.view.{ConvertingKeyListener, MouseEventGenerator}
-import utopia.reflection.component.stack.{Constrainable, Stackable}
-import utopia.reflection.component.swing.AwtComponentRelated
+import utopia.reflection.component.template.layout.stack.{Constrainable, Stackable}
 import utopia.reflection.component.swing.button.ButtonLike
+import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.container.swing.AwtContainerRelated
-import utopia.reflection.event.ResizeListener
+import utopia.reflection.event.{ResizeListener, StackHierarchyListener}
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, Insets, StackSizeModifier}
-import utopia.reflection.util.Screen
+import utopia.reflection.shape.{Alignment, StackSizeModifier}
 
 import scala.concurrent.Promise
+import scala.jdk.CollectionConverters.SeqHasAsJava
 
 /**
 * This is a common wrapper for all window implementations
@@ -38,6 +42,8 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
     private val closePromise = Promise[Unit]()
     
     private val uponCloseAction = VolatileOption[() => Unit]()
+    
+    override var stackHierarchyListeners = Vector[StackHierarchyListener]()
     
     
 	// ABSTRACT    -----------------
@@ -113,6 +119,7 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
         if (_isAttachedToMainHierarchy != newAttachmentStatus)
         {
             _isAttachedToMainHierarchy = newAttachmentStatus
+            fireStackHierarchyChangeEvent(newAttachmentStatus)
             if (newAttachmentStatus)
                 content.attachToStackHierarchyUnder(this)
             else
@@ -260,6 +267,37 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
         addKeyStateListener(DefaultButtonHandler(defaultButton, moreButtons: _*) { isFocusedWindow })
     
     /**
+      * Sets the icon to this window
+      * @param icon New window icon
+      * @param minSize Minimum size allowed for the icon (in pixels). Default = 16x16.
+      */
+    def setIcon(icon: Image, minSize: Size = Size(16, 16)) =
+    {
+        // Minimum size must be positive
+        if (!minSize.isPositive)
+            throw new IllegalArgumentException(s"Icon minimum size must be positive. Now supplied $minSize")
+        else
+        {
+            // Copies the maximum size icon first
+            val original = icon.downscaled
+            original.toAwt.foreach { maxImage =>
+                val maxSize = Size(maxImage.getWidth, maxImage.getHeight)
+                // Case: No smaller icons are allowed
+                if (maxSize.fitsInto(minSize))
+                    component.setIconImage(maxImage)
+                // Case: Multiple icon sizes allowed
+                else
+                {
+                    // Shrinks the original image until minimum size is met
+                    component.setIconImages((maxImage +: Iterator.iterate(original * 0.7) { _ * 0.7 }
+                        .takeWhile { image => image.width >= minSize.width || image.height >= minSize.height }
+                        .flatMap { _.toAwt }.toVector).asJava)
+                }
+            }
+        }
+    }
+    
+    /**
      * Makes it so that this window will close one escape is pressed
      */
     def setToCloseOnEsc() = addKeyStateListener(KeyStateListener.onKeyPressed(KeyEvent.VK_ESCAPE) { _ =>
@@ -312,12 +350,17 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
                 val movement = Axis2D.values.map { axis =>
                     val move = resizeAlignment.directionAlong(axis) match
                     {
-                        case Some(moveDirection) => if (moveDirection.isPositiveDirection) increase.along(axis) else 0.0
+                        case Some(moveDirection) =>
+                            moveDirection.sign match
+                            {
+                                case Positive => increase.along(axis)
+                                case Negative => 0.0
+                            }
                         case None => increase.along(axis) / 2.0
                     }
-                    (axis: Axis) -> move
+                    axis -> move
                 }.toMap
-                position = (position - Vector3D.of(movement)).positive
+                position = (position - Vector2D.of(movement)).positive
             }
             else
                 checkWindowBounds()
@@ -350,8 +393,7 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
     /**
      * Centers this window on the screen or on the parent component
      */
-    // TODO: This method is redundant in Frame, which has no parent
-    def center() = centerOn(component.getParent)
+    def centerOnParent() = centerOn(component.getParent)
     
     private def centerOn(component: java.awt.Component) =
     {
@@ -364,6 +406,19 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
         }
         else
             this.component.setLocationRelativeTo(component)
+    }
+    
+    /**
+     * Requests this window to gain focus if it doesn't have it already. Moves this window to the front in the process.
+     */
+    def requestFocus() =
+    {
+        if (!isFocusedWindow)
+            SwingUtilities.invokeLater(() =>
+            {
+                component.toFront()
+                component.repaint()
+            })
     }
     
     

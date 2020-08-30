@@ -3,9 +3,11 @@ package utopia.reflection.container.stack.segmented
 import utopia.flow.async.VolatileFlag
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis2D
-import utopia.reflection.component.stack.{Stackable, StackableWrapper}
-import utopia.reflection.component.ComponentWrapper
-import utopia.reflection.container.stack.{MultiStackContainer, StackLike}
+import utopia.reflection.component.template.ComponentWrapper
+import utopia.reflection.component.template.layout.stack.{Stackable, StackableWrapper}
+import utopia.reflection.container.stack.template.layout.StackLike
+import utopia.reflection.container.template.MultiContainer
+import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.StackLength
 
 /**
@@ -15,12 +17,12 @@ import utopia.reflection.shape.StackLength
   * @author Mikko Hilpinen
   * @since 28.4.2019, v1+
   */
-trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiStackContainer[C] with Segmented with StackableWrapper
+@deprecated("Segment system updated to Segment and SegmentGroup", "v1.2")
+trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiContainer[C] with Stackable with Segmented with StackableWrapper
 {
 	// ATTRIBUTES	-----------------
 	
 	private val listeningMaster = new VolatileFlag()
-	private var lastIndex = -1
 	private var segments = Vector[Segment]()
 	
 	
@@ -35,7 +37,7 @@ trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiStackContai
 	  * Adds a segment to the underlying stack
 	  * @param segment A segment
 	  */
-	protected def addSegmentToStack(segment: Segment): Unit
+	protected def addSegmentToStack(segment: Segment, index: Int): Unit
 	
 	/**
 	  * Removes a segment from the underlying stack
@@ -53,7 +55,21 @@ trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiStackContai
 	
 	// IMPLEMENTED	-----------------
 	
-	override def children = super[MultiStackContainer].children
+	// override def children = super[MultiStackContainer].children
+	
+	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
+	{
+		super.isAttachedToMainHierarchy_=(newAttachmentStatus)
+		// When attached to the main hierarchy, starts listening to updates in master
+		if (newAttachmentStatus)
+			listeningMaster.runAndSet { master.addSegmentChangedListener(MasterChangeListener) }
+		// When removed, stops listening
+		else
+			listeningMaster.updateIf { s => s } { _ =>
+				master.removeSegmentChangedListener(MasterChangeListener)
+				false
+			}
+	}
 	
 	override protected def wrapped = stack
 	
@@ -64,42 +80,42 @@ trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiStackContai
 	
 	override def components = segments.map { _.item }
 	
-	override protected def add(component: C) =
+	override protected def add(component: C, index: Int) =
 	{
-		// Wraps the item first
-		val index = lastIndex + 1
-		lastIndex = index
-		
-		val segment = new Segment(index, component)
-		
-		segments :+= segment
-		addSegmentToStack(segment)
+		// Wraps the item into segment
+		val max = segmentCount
+		if (index >= max)
+		{
+			val segment = new Segment(max, component)
+			segments :+= segment
+			addSegmentToStack(segment, index)
+		}
+		else
+		{
+			// May need to adjust indices of other segments
+			segments.drop(index).foreach { _.index += 1 }
+			val segment = new Segment(index, component)
+			segments = segments.inserted(segment, index)
+			addSegmentToStack(segment, index)
+		}
 	}
 	
 	override protected def remove(component: C) =
 	{
 		// Finds the segment first
-		segments.find { _.item == component }.foreach
-		{
-			segment =>
-				segments = segments.filterNot { _ == segment }
-				// May update indexing
-				if (segment.index == lastIndex)
-					lastIndex = segments.lastOption.map { _.index } getOrElse -1
-				removeSegmentFromStack(segment)
+		segments.indexWhereOption { _.item == component }.foreach { index =>
+			val removedSegment = segments(index)
+			segments = segments.withoutIndex(index)
+			// May update indexing
+			segments.drop(index).foreach { _.index -= 1 }
+			removeSegmentFromStack(removedSegment)
 		}
 	}
 	
 	
-	// OTHER	---------------------
-	
-	protected def startListeningToMasterUpdates() = listeningMaster.runAndSet {
-		master.addSegmentChangedListener(new MasterChangeListener()) }
-	
-	
 	// NESTED CLASSES	-------------
 	
-	private class MasterChangeListener extends SegmentChangedListener
+	private object MasterChangeListener extends SegmentChangedListener
 	{
 		override def onSegmentUpdated(source: Segmented) =
 		{
@@ -109,11 +125,11 @@ trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiStackContai
 		}
 	}
 	
-	protected class Segment(val index: Int, val item: C) extends ComponentWrapper with Stackable
+	protected class Segment(var index: Int, val item: C) extends ComponentWrapper with Stackable
 	{
 		// COMPUTED	-----------------
 		
-		def isLast = index == lastIndex
+		def isLast = index == segmentCount - 1
 		
 		def isFirst = index == 0
 		
@@ -147,6 +163,11 @@ trait SegmentedRowLike[C <: Stackable, C2 <: Stackable] extends MultiStackContai
 		override def isAttachedToMainHierarchy = item.isAttachedToMainHierarchy
 		
 		override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) = item.isAttachedToMainHierarchy = newAttachmentStatus
+		
+		override def stackHierarchyListeners = item.stackHierarchyListeners
+		
+		override def stackHierarchyListeners_=(newListeners: Vector[StackHierarchyListener]) =
+			item.stackHierarchyListeners = newListeners
 		
 		override def resetCachedSize() =
 		{

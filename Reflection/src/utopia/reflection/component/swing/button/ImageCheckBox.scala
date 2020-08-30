@@ -2,9 +2,9 @@ package utopia.reflection.component.swing.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
-import utopia.reflection.component.input.InteractionWithPointer
-import utopia.reflection.component.swing.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
+import utopia.reflection.component.template.input.InteractionWithPointer
 import utopia.reflection.component.swing.label.ImageLabel
+import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 
 /**
   * Used for switching a value on or off

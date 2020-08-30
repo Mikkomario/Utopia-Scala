@@ -1,14 +1,15 @@
 package utopia.reflection.component.swing.label
 
 import utopia.genesis.color.Color
+import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.TextDrawer
-import utopia.reflection.component.stack.{CachingStackable, StackLeaf}
-import utopia.reflection.component.SingleLineTextComponent
+import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
+import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
+import utopia.reflection.component.template.text.SingleLineTextComponent
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.{Alignment, StackInsets}
 import utopia.reflection.text.Font
-import utopia.reflection.util.ComponentContext
 
 object TextLabel
 {
@@ -28,14 +29,31 @@ object TextLabel
 	/**
 	  * Creates a new label using contextual information
 	  * @param text Label text (default = empty)
-	  * @param context Component creation context
+	  * @param isHint Whether this label should be considered a hint (default = false)
+	  * @param context Component creation context (implicit)
 	  * @return A new label
 	  */
-	def contextual(text: LocalizedString = LocalizedString.empty, isHint: Boolean = false)(implicit context: ComponentContext) =
+	def contextual(text: LocalizedString = LocalizedString.empty, isHint: Boolean = false)
+				  (implicit context: TextContextLike) =
 	{
 		val label = new TextLabel(text, context.font, if (isHint) context.hintTextColor else context.textColor,
-			context.insets, context.textAlignment, context.textHasMinWidth)
-		context.setBorderAndBackground(label)
+			context.textInsets, context.textAlignment, context.textHasMinWidth)
+		label
+	}
+	
+	/**
+	  * Creates a new label that has an opaque background color
+	  * @param backgroundColor Background color / fill color of this label
+	  * @param text Text displayed in this label (default = empty)
+	  * @param isHint Whether this label is considered a hint (default = false)
+	  * @param context Component creation context (implicit)
+	  * @return A new label
+	  */
+	def contextualWithBackground(backgroundColor: ComponentColor, text: LocalizedString = LocalizedString.empty,
+								 isHint: Boolean = false)(implicit context: BackgroundSensitive[TextContextLike]) =
+	{
+		val label = contextual(text, isHint)(context.inContextWithBackground(backgroundColor))
+		label.background = backgroundColor
 		label
 	}
 }
@@ -97,11 +115,12 @@ class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColo
 	/**
 	  * @param newText The new text to be displayed on this label
 	  */
+	// TODO: Possibly revalidate this label?
 	def text_=(newText: LocalizedString) = drawer.text = newText
 	
 	override def toString = s"Label($text)"
 	
-	override def updateLayout() = ()
+	override def updateLayout() = repaint()
 	
 	
 	// OTHER	----------------------

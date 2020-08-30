@@ -11,8 +11,12 @@ import javax.imageio.ImageIO
 import utopia.flow.datastructure.mutable.Lazy
 import utopia.genesis.color.Color
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
-import utopia.genesis.shape.{Angle, Rotation, Vector3D, VectorLike}
-import utopia.genesis.shape.shape2D.{Area2D, Bounds, Point, Size, Transformation}
+import utopia.genesis.shape.Axis.{X, Y}
+import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape1D.{Angle, Rotation}
+import utopia.genesis.shape.shape2D.{Area2D, Bounds, Direction2D, Insets, Point, Size, Transformation, Vector2D}
+import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.template.VectorLike
 import utopia.genesis.util.{Drawer, Scalable}
 
 import scala.util.{Failure, Success, Try}
@@ -22,7 +26,7 @@ object Image
 	/**
 	 * A zero sized image with no pixel data
 	 */
-	val empty = new Image(None, Vector3D.identity, 1.0, new Lazy(() => PixelTable.empty))
+	val empty = new Image(None, Vector2D.identity, 1.0, new Lazy(() => PixelTable.empty))
 	
 	/**
 	  * Creates a new image
@@ -31,7 +35,7 @@ object Image
 	  * @param alpha The maximum alpha value used when drawing this image [0, 1] (default = 1 = fully visible)
 	  * @return A new image
 	  */
-	def apply(image: BufferedImage, scaling: Vector3D = Vector3D.identity, alpha: Double = 1.0): Image = Image(Some(image),
+	def apply(image: BufferedImage, scaling: Vector2D = Vector2D.identity, alpha: Double = 1.0): Image = Image(Some(image),
 		scaling, alpha, Lazy(PixelTable.fromBufferedImage(image)))
 	
 	/**
@@ -102,7 +106,7 @@ object Image
   * @author Mikko Hilpinen
   * @since 15.6.2019, v2.1+
   */
-case class Image private(private val source: Option[BufferedImage], scaling: Vector3D, alpha: Double,
+case class Image private(private val source: Option[BufferedImage], scaling: Vector2D, alpha: Double,
 						 private val _pixels: Lazy[PixelTable]) extends Scalable[Image]
 {
 	// ATTRIBUTES	----------------
@@ -138,17 +142,17 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	/**
 	  * @return A copy of this image that isn't scaled above 100%
 	  */
-	def downscaled = if (scaling.dimensions2D.exists { _ > 1 }) withScaling(scaling.map { _ min 1 }) else this
+	def downscaled = if (scaling.dimensions.exists { _ > 1 }) withScaling(scaling.map { _ min 1 }) else this
 	
 	/**
 	  * @return A copy of this image that isn't scaled below 100%
 	  */
-	def upscaled = if (scaling.dimensions2D.exists { _ < 1 }) withScaling(scaling.map { _ max 1 }) else this
+	def upscaled = if (scaling.dimensions.exists { _ < 1 }) withScaling(scaling.map { _ max 1 }) else this
 	
 	/**
 	  * @return A copy of this image with original (100%) scaling
 	  */
-	def withOriginalSize = if (scaling == Vector3D.identity) this else withScaling(1)
+	def withOriginalSize = if (scaling == Vector2D.identity) this else withScaling(1)
 	
 	/**
 	  * @return A copy of this image where x-axis is reversed
@@ -178,8 +182,24 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	def withMinimumResolution = if (scaling.dimensions2D.forall { _ >= 1 }) this else
 		withSourceResolution(size min sourceResolution, preserveUseSize = true)
 	
+	/**
+	  * @return A buffered image copied from the source data of this image. None if this image is empty.
+	  */
+	def toAwt =
+	{
+		withMinimumResolution.source.map { img =>
+			val colorModel = img.getColorModel
+			val isAlphaPremultiplied = colorModel.isAlphaPremultiplied
+			val raster = img.copyData(null)
+			new BufferedImage(colorModel, raster, isAlphaPremultiplied, null)
+				.getSubimage(0, 0, img.getWidth, img.getHeight)
+		}
+	}
+	
 	
 	// IMPLEMENTED	----------------
+	
+	override def repr = this
 	
 	override def toString = s"Image ($size ${(alpha * 100).toInt}% Alpha)"
 	
@@ -239,9 +259,39 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	def subImage(area: Bounds) =
 	{
 		source.map { s => area.within(Bounds(Point.origin, size)).map { _ / scaling }.map {
-			a => Image(s.getSubimage(a.x.toInt, a.y.toInt, a.width.toInt, a.height.toInt), scaling) }.getOrElse(
-			Image(new BufferedImage(0, 0, s.getType))) }.getOrElse(this)
+			a => _subImage(s, a) }.getOrElse(Image(new BufferedImage(0, 0, s.getType))) }.getOrElse(this)
 	}
+	
+	// Only works when specified area is inside the original image's bounds
+	private def _subImage(img: BufferedImage, relativeArea: Bounds) = Image(
+		img.getSubimage(relativeArea.x.toInt, relativeArea.y.toInt, relativeArea.width.toInt, relativeArea.height.toInt),
+		scaling)
+	
+	/**
+	  * Crops this image from the sides
+	  * @param insets Insets to crop out of this image
+	  * @return A cropped copy of this image
+	  */
+	def crop(insets: Insets) =
+	{
+		source match
+		{
+			case Some(img) =>
+				val totalInsets = insets.total
+				if (totalInsets.width > width || totalInsets.height > height)
+					Image.empty
+				else
+					_subImage(img, (Bounds(Point.origin, size) - insets) / scaling)
+			case None => this
+		}
+	}
+	
+	/**
+	  * @param side Side from which to crop from this image
+	  * @param amount Amount of pixels to crop from this image
+	  * @return A cropped copy of this image
+	  */
+	def cropFromSide(side: Direction2D, amount: Double) = crop(Insets.towards(side, amount))
 	
 	/**
 	  * Converts this one image into a strip containing multiple parts. The splitting is done horizontally.
@@ -279,13 +329,13 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	  * @param scaling A scaling modifier applied to the original image
 	  * @return A scaled version of this image
 	  */
-	def withScaling(scaling: Vector3D) = copy(scaling = scaling)
+	def withScaling(scaling: Vector2D) = copy(scaling = scaling)
 	
 	/**
 	  * @param scaling A scaling modifier applied to the original image
 	  * @return A scaled version of this image
 	  */
-	def withScaling(scaling: Double): Image = withScaling(Vector3D(scaling, scaling))
+	def withScaling(scaling: Double): Image = withScaling(Vector2D(scaling, scaling))
 	
 	/**
 	  * @param newSize The target size for this image
@@ -326,6 +376,27 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	  * @return A copy of this image that is larger or equal to the target area. Shape is preserved.
 	  */
 	def largerThan(area: Size) = if (area.fitsInto(size)) this else filling(area)
+	
+	/**
+	  * Limits the height or width of this image
+	  * @param side Targeted side / axis
+	  * @param maxLength Maximum length for this image on that axis
+	  * @return A copy of this image that has equal or lower than maximum length on the specified axis
+	  */
+	def limitedAlong(side: Axis2D, maxLength: Double) = if (size.along(side) <= maxLength) this else
+		smallerThan(size.withDimension(maxLength, side))
+	
+	/**
+	  * @param maxWidth Maximum allowed width
+	  * @return A copy of this image with equal or lower width than the specified maximum
+	  */
+	def withLimitedWidth(maxWidth: Double) = limitedAlong(X, maxWidth)
+	
+	/**
+	  * @param maxHeight Maximum allowed height
+	  * @return A copy of this image with equal or lower height than the specified maximum
+	  */
+	def withLimitedHeight(maxHeight: Double) = limitedAlong(Y, maxHeight)
 	
 	/**
 	  * @param f A mapping function for pixel tables

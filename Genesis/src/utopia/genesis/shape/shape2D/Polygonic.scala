@@ -4,8 +4,8 @@ import java.awt.Shape
 
 import scala.math.Ordering.Double.TotalOrdering
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.shape.RotationDirection.Clockwise
-import utopia.genesis.shape.{Rotation, Vector3D}
+import utopia.genesis.shape.shape1D.Rotation
+import utopia.genesis.shape.shape1D.RotationDirection.Clockwise
 
 import scala.collection.immutable.VectorBuilder
 
@@ -224,7 +224,7 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 		new java.awt.Polygon(x, y, c.size)
 	}
 	
-	override def projectedOver(axis: Vector3D) =
+	override def projectedOver(axis: Vector2D) =
 	{
 		val projectedCorners = corners.map { _.toVector.projectedOver(axis).toPoint }
 		val start = projectedCorners.min
@@ -233,7 +233,7 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 		Line(start, end)
 	}
 	
-	override def contains(point: Point) = collisionAxes.forall { containsProjection(point, _) }
+	override def contains[V <: Vector2DLike[V]](point: V) = collisionAxes.forall { containsProjection(point, _) }
 	
 	override def transformedWith(transformation: Transformation): Polygonic = Polygon(corners.map { transformation(_) } )
 	
@@ -307,7 +307,7 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 	  * @return The minimum translation vector that gets these two shapes out of a collision situation
 	  * or none if there is no collision
 	  */
-	def collisionMtvWith(other: Polygonic): Option[Vector3D] = collisionMtvWith(other,
+	def collisionMtvWith(other: Polygonic): Option[Vector2D] = collisionMtvWith(other,
 		(collisionAxes ++ other.collisionAxes).distinctWith { _ isParallelWith _ })
 	
 	/**

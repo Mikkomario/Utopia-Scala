@@ -1,6 +1,7 @@
 package utopia.flow.test
 
 import utopia.flow.datastructure.mutable.Tree
+import utopia.flow.util.CollectionExtensions._
 
 object TreeNodeTest extends App
 {
@@ -15,6 +16,14 @@ object TreeNodeTest extends App
     println("Running TreeNodeTest")
     
     // Creates tree
+    /*
+        1 ->
+            [2 ->
+                [3 ->
+                    4,
+                 5],
+             6]
+     */
     val root = Tree(1)
     val bottomNode = Tree(4)
     root += Tree(2, Tree(3, bottomNode), Tree(5))
@@ -51,6 +60,18 @@ object TreeNodeTest extends App
     
     assert(decreased.size == 1)
     assert(decreased.children.exists { _.content == 6 })
+    
+    assert(copy.findWithPath { _.content == 4 }.contains(Vector(2, 3, 4)))
+    assert(copy.findWithPath { _.content == 5 }.contains(Vector(2, 5)))
+    assert(copy.findWithPath { _.content == 6 }.contains(Vector(6)))
+    assert(copy.findWithPath { _.content == 7 }.isEmpty)
+    assert(copy.findWithPath { _.content == 1 }.isEmpty)
+    
+    assert(copy.filterWithPaths { _.content == 4 } == Vector(Vector(2, 3, 4)))
+    assert(copy.filterWithPaths { _.content == 5 } == Vector(Vector(2, 5)))
+    assert(copy.filterWithPaths { _.content > 3 }.containsAll(Vector(Vector(2, 3, 4), Vector(2, 5), Vector(6))))
+    assert(copy.filterWithPaths { _.content < 3 } == Vector(Vector(2)))
+    assert(copy.filterWithPaths { _.content == 7 }.isEmpty)
     
     // Mutates mutable tree & tests
     root.removeChild(secondChild)

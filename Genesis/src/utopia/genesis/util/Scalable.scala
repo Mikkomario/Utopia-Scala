@@ -10,6 +10,11 @@ trait Scalable[+Repr]
 	// ABSTRACT	--------------------
 	
 	/**
+	  * @return A representation of 'this'
+	  */
+	def repr: Repr
+	
+	/**
 	  * @param mod A scaling modifier
 	  * @return A scaled version of this instance
 	  */

@@ -68,14 +68,9 @@ higher abstraction layers when you need to edit them.
 ### Use of External Libraries
 This abstraction level concept is also why **I've opted to use as few external libraries as possible**.  
 I want to give **you** the freedom to **choose** which libraries suit you best while still 
-providing you with a easy-to-use foundation.
+providing you with an easy-to-use foundation.
 
-For example, the JSON interface I've written is not very efficient. 
-If you wish to use a standardized JSON interface instead, that's completely possible. And If you wish to utilize that 
-with typeless values and other features offered by *Utopia*, you can do what I've done and write a similar interface 
-yourself.
-
-The times I have opted to use external libraries (Utopia Disciple and Utopia Nexus for Tomcat), you can find out that 
+The times I have opted to use external libraries (Utopia Disciple, Utopia Nexus for Tomcat), you can find out that 
 most of the implementation code is in-fact independent from the libraries used. If you want to use different libraries, 
 you don't need to write that much code by yourself.
 
@@ -221,6 +216,13 @@ vector mathematics for you here and wrapped the logic in a familiar **Inception*
 You probably don't need to use **Conflict** in your normal business software, but if you happen to be creating a 2D 
 game or a physics-based software, this will most likely help you a lot in getting started.
 
+### Utopia BunnyMunch
+*Speed and easy-of-use combined when it comes to json parsing*
+
+**Utopia BunnyMunch** is a very simple model, meant to replace the inefficient JSONReader implementation. 
+*BunnyMunch* uses a very fast *Jawn* json parsing library internally, but offers the same Value-based 
+interface as the JSONReader.
+
 ## Module Hierarchy
 *Utopia* modules have following dependency-hierarchy. Modules lower at the list depend from those higher in the list.
 - Utopia Flow
@@ -233,6 +235,7 @@ game or a physics-based software, this will most likely help you a lot in gettin
         - Utopia Genesis
             - Utopia Reflection
             - Utopia Conflict
+    - Utopia BunnyMunch
            
 Basically every other *Utopia* module is dependent from **Flow**. All http-related modules are dependent from 
 **Access** and all 2D visual modules are dependent from **Inception** and **Genesis**.
@@ -252,6 +255,9 @@ Below I've listed some individual features you may be interested in using, in ca
         - Please note that the current implementation of JSON parser prioritizes accessibility over performance and is not
         most efficient at this time. You may wish to use another parser for very large json files where performance
         becomes an issue.
+            - There is a much more efficient implementation of json reading in BunnyMunch module (JsonBunny). 
+            It offers the same benefits as JSONReader, just more efficiently. The difference is that 
+            JsonBunny leverages Jawn json parser while JSONReader is completely independent.
     
     Various data structures
         - Tree and Graph supports
@@ -459,11 +465,11 @@ Below I've listed some individual features you may be interested in using, in ca
 
     Implicit component build context
         - Contextual constructor options in existing components allow you to skip repetitious style definitions by
-        passing an implicit ComponentContext -instance instead
+        passing an implicit context instances instead
         - This makes standardized layout styles easy to implement and use
 
     Automatic container content management
-        - ContentManager and it's subclasses handle displaying of item lists for you
+        - ContentDisplayer and it's subclasses handle displaying of item lists for you
         
 ### Utopia Conflict
     2D collision handling with Collidable, CollisionListener, CollidableHandler and CollisionHandler traits
@@ -472,6 +478,11 @@ Below I've listed some individual features you may be interested in using, in ca
         - Supports advanced polygonic shapes from Genesis, as well as circles
         - Collision events provide access to collision (intersection) points as well as a minimum translation
         vector (MTV) which helps the receiver to resolve the collision situation (with translation, for example)
+        
+### Utopia BunnyMunch
+    Efficient json parsing with support for typeless values
+        - JsonBunny object offers a very simple interface for converting json into values, which can then be 
+        read in various other types.
         
 ## Implementation Hints
 Below are some hints that hopefully help you to use these modules in your own projects.
@@ -512,7 +523,6 @@ When you wish to instantiate typeless values, please enable implicit value conve
 - **Value** - When you need to use attributes but you can't define their exact typing below Any
 - immutable.**Model**[Constant] - When you need to group a number of values together to form an object
 - **ThreadPool** - When you need an implicit ExecutionContext (you will find out when)
-- **JSONReader** - When you need to parse a string or a file into a JSON value / object
 - **XmlElement**, **XmlReader** & **XmlWriter** - When you need to deal with XML
 - **Loop** - When you need to loop a function or a process in background
 - **WaitUtils** - When you need to block / wait for a period of time
@@ -661,8 +671,9 @@ You can get started quickly by utilizing **DefaultSetup** class. You can also cr
 #### You should get familiar with these classes
 - **SingleFrameSetup** - Lets you get started with your test App as smoothly as possible 
 (replaces **DefaultSetup** from Genesis)
-- **ComponentContextBuilder** & **ComponentContext** - You will most likely need these to specify common component 
-creation parameters (eg. Font used). Seek for .contextual -constructors in components to utilize these.
+- **BaseContext**, **ColorContext**, **TextContext** and **ButtonContext** - You will most 
+likely need these to specify common component creation parameters (eg. Font used). Seek for 
+.contextual -constructors in components to utilize these.
 - **Stack** - You go-to container when presenting multiple components together
 - **StackLength**, **StackSize** & **StackInsets** - Basic building blocks for dynamic sizes used in most components
 - **StackLayout** & **Alignment** - These enumerations are used for specifying content placement in **Stacks** and 
@@ -680,9 +691,10 @@ other components.
 - **ComponentLike** - All components extend this trait so you should at least know what it contains.
 - **Stackable** & **CachingStackable** - In case you need to write your own components that support stack layout system.
 - **CustomDrawer** - In case you need to implement your own custom drawer. It's useful to check the sub-classes as well.
-- **ContainerContentManager** - When you need to present a changing list of items in a **Stack** or another container.
+- **ContainerContentDisplayer** - When you need to present a changing list of items in 
+a **Stack** or another container.
 
-#### Example code to get you started
+#### Example code to get you started (deprecated)
 The following code-template is an easy way to get started with your App and tests:
 
     // Set up typeless values
@@ -713,3 +725,9 @@ The following code-template is an easy way to get started with your App and test
 - **CollisionListener** - Extend this if you want to receive collision events
 - **CollisionHandler** - Used for checking collisions between items and for delivering collision events. You should 
 have one in your **Setup**
+
+### Utopia BunnyMunch
+#### You should get familiar with these classes
+- **JsonBunny** - This object lets you parse values from json strings, files or streams
+- **ValueFacade** - In case you wish to use the *Jawn* Parser interface, you can use ValueFacade to add 
+support for typeless values.

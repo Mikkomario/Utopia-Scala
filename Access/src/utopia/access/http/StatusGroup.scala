@@ -22,6 +22,16 @@ object StatusGroup
             ServerError
     }
     
+    /**
+      * Neutral status groups which may or may not be interpreted as success
+      */
+    val neutral = Vector(Information, Redirect)
+    
+    /**
+      * Failure status groups which represent an error in either server or client side
+      */
+    val failure = Vector(ClientError, ServerError)
+    
     
     // VALUES   -----------------------
     

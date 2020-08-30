@@ -29,6 +29,14 @@ class VolatileOption[T](value: Option[T]) extends Volatile[Option[T]](value) wit
     override def foreach[U](f: T => U) = get.foreach(f)
     
     
+    // COMPUTED ---------------------
+    
+    /**
+     * @return Whether this option is not empty
+     */
+    def isDefined = get.isDefined
+    
+    
     // OTHER    ---------------------
     
     /**

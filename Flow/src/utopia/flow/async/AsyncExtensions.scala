@@ -1,11 +1,13 @@
 package utopia.flow.async
 
+import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.{SingleWait, WaitTarget}
 
-import scala.collection.Factory
+import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.{Duration, FiniteDuration}
-import scala.util.Try
+import scala.language.implicitConversions
+import scala.util.{Failure, Success, Try}
 
 /**
 * This object contains extensions for asynchronous / concurrent classes
@@ -14,6 +16,13 @@ import scala.util.Try
 **/
 object AsyncExtensions
 {
+	/**
+	  * @param reason Reason for this failure
+	  * @tparam A Type of success option
+	  * @return A failure in asynchronous context
+	  */
+	def asyncFailure[A](reason: Throwable) = Future.successful(Failure[A](reason))
+	
     /**
      * This implicit class provides extra features to Future
      */
@@ -122,56 +131,129 @@ object AsyncExtensions
 		  * @return Whether this future already contains a failure result
 		  */
 		def containsFailure = f.isCompleted && waitForResult().isFailure
+		
+		/**
+		  * Performs a mapping operation on a successful asynchronous result
+		  * @param map A mapping function
+		  * @param exc Implicit execution context
+		  * @tparam B Type of map result
+		  * @return A mapped version of this future
+		  */
+		def mapIfSuccess[B](map: A => B)(implicit exc: ExecutionContext) = f.map { r => r.map(map) }
+		
+		/**
+		  * If this future yields a successful result, maps that with a mapping function that may fail
+		  * @param map A mapping function for successful result. May fail.
+		  * @param exc Implicit execution context.
+		  * @tparam B Type of mapping result.
+		  * @return A mapped version of this future.
+		  */
+		def tryMapIfSuccess[B](map: A => Try[B])(implicit exc: ExecutionContext) =
+			f.map { r => r.flatMap(map) }
+		
+		/**
+		  * If this future yields a successful result, maps it with an asynchronous mapping function.
+		  * @param map An asynchronous mapping function for successful result.
+		  * @param exc Implicit execution context
+		  * @tparam B Type of eventual mapping result
+		  * @return A mapped version of this future
+		  */
+		def flatMapIfSuccess[B](map: A => Future[B])(implicit exc: ExecutionContext) = f.flatMap {
+			case Success(v) => map(v).map { Success(_) }
+			case Failure(e) => Future.successful(Failure(e))
+		}
+		
+		/**
+		  * If this future yields a successful result, maps it with an asynchronous mapping function that may fail
+		  * @param map An asynchronous mapping function for successful result. May yield a failure.
+		  * @param exc Implicit execution context
+		  * @tparam B Type of eventual mapping result when successful
+		  * @return A mapped version of this future
+		  */
+		def tryFlatMapIfSuccess[B](map: A => Future[Try[B]])(implicit exc: ExecutionContext) = f.flatMap {
+			case Success(v) => map(v)
+			case Failure(e) => Future.successful(Failure(e))
+		}
+		
+		/**
+		  * Calls the specified function if this future completes with a success
+		  * @param f A function called for a successful result
+		  * @param exc Implicit execution context
+		  * @tparam U Arbitrary result type
+		  */
+		def foreachSuccess[U](f: A => U)(implicit exc: ExecutionContext) = this.f.foreach { _.foreach(f) }
+		
+		/**
+		  * Calls the specified function if this future completes with a failure
+		  * @param f A function called for a failure result (throwable)
+		  * @param exc Implicit execution context
+		  * @tparam U Arbitrary result type
+		  */
+		def foreachFailure[U](f: Throwable => U)(implicit exc: ExecutionContext) =
+			this.f.onComplete { _.flatten.failure.foreach(f) }
 	}
 	
 	implicit class ManyFutures[A](val futures: IterableOnce[Future[A]]) extends AnyVal
 	{
 		/**
 		  * Waits until all of the futures inside this Iterable item have completed
-		  * @param factory A factory
-		  * @tparam C Resulting collection type
 		  * @return The results of the waiting (each item as a try)
 		  */
-		def waitFor[C]()(implicit factory: Factory[Try[A], C]) =
+		def waitFor() =
 		{
-			val buffer = factory.newBuilder
+			val buffer = new VectorBuilder[Try[A]]
 			buffer ++= futures.iterator.map { _.waitFor() }
 			buffer.result()
 		}
 		
 		/**
 		  * Waits until all of the futures inside this Iterable item have completed
-		  * @param factory A factory
-		  * @tparam C Resulting collection type
 		  * @return The successful results of the waiting (no failures will be included)
 		  */
-		def waitForSuccesses[C]()(implicit factory: Factory[A, C]) =
+		def waitForSuccesses() =
 		{
-			val buffer = factory.newBuilder
+			val buffer = new VectorBuilder[A]
 			buffer ++= futures.iterator.flatMap { _.waitFor().toOption }
 			buffer.result()
 		}
 		
 		/**
 		  * @param context Execution context
-		  * @param factory A factory
-		  * @tparam C result collection type
 		  * @return A future of the completion of all of these items. Resulting collection contains all results wrapped in try
 		  */
-		def future[C](implicit context: ExecutionContext, factory: Factory[Try[A], C]): Future[C] = Future { waitFor() }
+		def future(implicit context: ExecutionContext): Future[Vector[Try[A]]] = Future { waitFor() }
 		
 		/**
 		  * @param context Execution context
-		  * @param factory A factory
 		  * @tparam C result collection type
 		  * @return A future of the completion of all of these items. Resulting collection contains only successful completions
 		  */
-		def futureSuccesses[C](implicit context: ExecutionContext, factory: Factory[A, C]): Future[C] = Future { waitForSuccesses() }
+		def futureSuccesses[C](implicit context: ExecutionContext): Future[Vector[A]] = Future { waitForSuccesses() }
 		
 		/**
 		 * @param context Execution context
 		 * @return A future of the completion of all of these items. Will not check or return the results of those operations.
 		 */
 		def futureCompletion(implicit context: ExecutionContext) = Future { futures.iterator.foreach { _.waitFor() } }
+	}
+	
+	implicit class ManyTryFutures[A](val futures: IterableOnce[Future[Try[A]]]) extends AnyVal
+	{
+		/**
+		  * Blocks until all the futures in this collection have completed. Collects results.
+		  * @return Results of each future in this collection
+		  */
+		def waitForResult() =
+		{
+			val builder = new VectorBuilder[Try[A]]
+			futures.iterator.foreach { builder += _.waitForResult() }
+			builder.result()
+		}
+		
+		/**
+		  * @param exc Implicit execution context
+		  * @return Results of all futures in this collection once they arrive
+		  */
+		def futureResult(implicit exc: ExecutionContext) = Future { waitForResult() }
 	}
 }

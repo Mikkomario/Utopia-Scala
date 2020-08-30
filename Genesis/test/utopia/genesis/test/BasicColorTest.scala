@@ -1,8 +1,8 @@
 package utopia.genesis.test
 
 import utopia.genesis.color.RGBChannel._
-import utopia.genesis.color.{Color, HSL, RGB}
-import utopia.genesis.shape.Angle
+import utopia.genesis.color.{HSL, RGB}
+import utopia.genesis.shape.shape1D.{Angle, Rotation}
 
 /**
   * This app programmatically tests color conversion
@@ -23,19 +23,17 @@ object BasicColorTest extends App
 	assert( rgb1.withRatio(Blue, 0.7) == RGB(0.6, 0.3, 0.7) )
 	
 	// Tests HSL
-	val hsl1 = HSL(0, 0.5, 0.5)
+	val hsl1 = HSL(Angle.zero, 0.5, 0.5)
 	
-	assert( hsl1.withLuminosity(0.2) == HSL(0, 0.5, 0.2) )
-	assert( hsl1.withSaturation(0.8) == HSL(0, 0.8, 0.5))
-	assert( hsl1.withHue(Angle.ofDegrees(120)) ~== HSL(120, 0.5, 0.5))
-	assert( hsl1 + 200 - 200 == hsl1 )
+	assert( hsl1.withLuminosity(0.2) == HSL(Angle.zero, 0.5, 0.2) )
+	assert( hsl1.withSaturation(0.8) == HSL(Angle.zero, 0.8, 0.5))
+	assert( hsl1.withHue(Angle.ofDegrees(120)) ~== HSL(Angle.ofDegrees(120), 0.5, 0.5))
+	assert( hsl1 + Rotation.ofDegrees(200) - Rotation.ofDegrees(200) == hsl1 )
 	
-	println(s"$hsl1 -> ${ hsl1 + 540 } -> ${ hsl1 + 540 - 540 }")
-	
-	assert( hsl1 + 540 - 540 == hsl1 )
+	assert( hsl1 + Rotation.ofDegrees(540) - Rotation.ofDegrees(540) == hsl1 )
 	assert( hsl1.grayscale.saturation == 0 )
-	assert( hsl1.plusHueTowards(30, 90) == HSL(30, 0.5, 0.5) )
-	assert( hsl1.plusHueTowards(30, 270) == HSL(330, 0.5, 0.5) )
+	assert( hsl1.plusHueTowards(30, Angle.ofDegrees(90)) == HSL(Angle.ofDegrees(30), 0.5, 0.5) )
+	assert( hsl1.plusHueTowards(30, Angle.ofDegrees(270)) == HSL(Angle.ofDegrees(330), 0.5, 0.5) )
 	
 	// Tests conversion
 	val rgb1hsl = rgb1.toHSL

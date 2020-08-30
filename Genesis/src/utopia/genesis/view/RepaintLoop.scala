@@ -8,7 +8,7 @@ import javax.swing.SwingUtilities
 import utopia.flow.async.Loop
 import utopia.flow.util.WaitTarget.Until
 import utopia.flow.util.WaitUtils
-import utopia.genesis.util.FPS
+import utopia.genesis.util.Fps
 
 import scala.ref.WeakReference
 
@@ -17,7 +17,7 @@ import scala.ref.WeakReference
   * @param comp The target component
   * @param maxFPS Maximum frames (paints) per second (default = 60)
   */
-class RepaintLoop(comp: Component, val maxFPS: FPS = FPS.default) extends Loop
+class RepaintLoop(comp: Component, val maxFPS: Fps = Fps.default) extends Loop
 {
 	// ATTRIBUTES	-----------------
 	

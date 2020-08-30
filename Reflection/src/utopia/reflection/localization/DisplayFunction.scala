@@ -122,30 +122,30 @@ object DisplayFunction
 	  * Creates a new display function that uses string interpolation
 	  * @param transform A transform function that converts an item to a local string
 	  * @param localize A function that localizes a string
-	  * @param getArgs A function for retrieving interpolation arguments
+	  * @param getArgs A function for retrieving interpolation arguments (as key value pairs)
 	  * @tparam A source parameter type
 	  * @return A new display function that interpolates the localized string
 	  */
-	def interpolating[A](transform: Transform[A], localize: Localize, getArgs: A => Seq[Any]) =
-		new DisplayFunction[A](item => localize(transform(item)).interpolate(getArgs(item)))
+	def interpolating[A](transform: Transform[A])(localize: Localize)(getArgs: A => Map[String, String]) =
+		new DisplayFunction[A](item => localize(transform(item)).interpolated(getArgs(item)))
 	
 	/**
 	  * Creates a new display function that uses string interpolation
 	  * @param transform A transform function that converts an item to a local string
-	  * @param getArgs A function for retrieving interpolation arguments
+	  * @param getArgs A function for retrieving interpolation arguments (as key value pairs)
 	  * @param localizer A localizer that localizes the local string (implicit)
 	  * @tparam A source parameter type
 	  * @return A new display function that interpolates the localized string
 	  */
-	def interpolatingLocalized[A](transform: Transform[A], getArgs: A => Seq[Any])(implicit localizer: Localizer) =
-		interpolating(transform, localizer.localize, getArgs)
+	def interpolatingLocalized[A](transform: Transform[A])(getArgs: A => Map[String, String])(implicit localizer: Localizer) =
+		interpolating(transform)(localizer.localize)(getArgs)
 	
 	/**
 	  * Creates a new display function that simply interpolates a string
 	  * @param string The string that will be interpolated using parameter item (single argument)
 	  * @return A new display function that uses a static string with interpolation
 	  */
-	def interpolating(string: LocalizedString) = new DisplayFunction[Any](item => string.interpolate(Vector(item)))
+	def interpolating(string: LocalizedString) = new DisplayFunction[Any](item => string.interpolated(Vector(item)))
 	
 	/**
 	  * This display function is used for displaying time in a specific format

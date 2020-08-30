@@ -3,6 +3,8 @@ package utopia.reflection.test
 import utopia.genesis.generic.GenesisDataType
 import utopia.reflection.localization.{LocalString, LocalizedString, Localizer}
 
+import scala.collection.immutable.HashMap
+
 /**
   * This class tests localization features
   * @author Mikko Hilpinen
@@ -20,9 +22,14 @@ object LocalizationTest extends App
 	val autoLocalized: LocalizedString = "Hello"
 	assert(autoLocalized.localized.get == LocalString("HELLO", "EN"))
 	
-	val localInterpolated = LocalString("Hello %s (%i) %S %d").interpolate("Manu", 2, "mies", 1.3456)
+	val localInterpolated = LocalString("Hello %s (%i) %S %d").interpolated(Vector("Manu", 2, "mies", 1.3456))
 	println(localInterpolated)
 	assert(localInterpolated.string == "Hello Manu (2) MIES 1.35")
+	
+	val localTemplate2 = LocalString("Hello ${name} (${age}) %s")
+	val localInterpolated2 = localTemplate2.interpolated(HashMap("name" -> "Mickey", "age" -> 12))
+	println(localInterpolated2)
+	assert(localInterpolated2.string == "Hello Mickey (12) %s")
 	
 	println("Success!")
 }

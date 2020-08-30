@@ -4,7 +4,9 @@ import java.util.concurrent.TimeUnit
 
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.shape.Axis.X
-import utopia.genesis.shape.{Angle, LinearAcceleration, LinearVelocity, Vector3D, Velocity}
+import utopia.genesis.shape.shape3D.{Vector3D, Velocity3D}
+import utopia.genesis.shape.shape1D.{Angle, LinearAcceleration, LinearVelocity}
+import utopia.genesis.shape.shape2D.{Vector2D, Velocity2D}
 
 import scala.concurrent.duration.TimeUnit
 
@@ -53,27 +55,27 @@ object VelocityTest extends App
 	assert(v3(2.millis) == 1)
 	
 	// Next tests velocity
-	val v4 = Velocity(X(1))
-	val v5 = Velocity(Vector3D(1, 1), 2.millis)
-	val v6 = Velocity(Vector3D(2, 1, 0.5))
+	val v4 = Velocity3D(X(1))
+	val v5 = Velocity3D(Vector3D(1, 1), 2.millis)
+	val v6 = Velocity3D(Vector3D(2, 1, 0.5))
 	
 	assert(v4.linear == v1)
-	assert(v4 * 2 == Velocity(X(2)))
-	assert(v4 + v5 == Velocity(Vector3D(3, 1), 2.millis))
+	assert(v4 * 2 == Velocity3D(X(2)))
+	assert(v4 + v5 == Velocity3D(Vector3D(3, 1), 2.millis))
 	
-	assert(v4(2.millis) == X(2))
+	assert(v4(2.millis) == X(2).in3D)
 	assert(v5(1.millis) == Vector3D(0.5, 0.5))
 	assert(v6(2.millis) == Vector3D(4, 2, 1))
 	
-	assert(v1.withDirection(Angle.right) == v4)
+	assert(v1.withDirection(Angle.right) == v4.in2D)
 	assert(v4.direction == Angle.right)
-	assert(v4.in2D == v4)
-	assert(v6.in2D == Velocity(Vector3D(2, 1)))
+	// assert(v4.in2D == v4)
+	assert(v6.in2D == Velocity2D(Vector2D(2, 1)))
 	
-	assert(v4.average(v5) == Velocity(Vector3D(1.5, 0.5), 2.millis))
-	assert(v4 + v1 == Velocity(X(2)))
-	assert(v4 - v1 * 2 == Velocity(X(-1)))
-	assert(v4.decreasePreservingDirection(v1 * 2) == Velocity.zero)
+	assert(v4.average(v5) == Velocity3D(Vector3D(1.5, 0.5), 2.millis))
+	assert(v4 + v1 == Velocity3D(X(2)))
+	assert(v4 - v1 * 2 == Velocity3D(X(-1)))
+	assert(v4.decreasePreservingDirection(v1 * 2) == Velocity3D.zero)
 	
 	// Next tests acceleration
 	val a1 = LinearAcceleration(1)

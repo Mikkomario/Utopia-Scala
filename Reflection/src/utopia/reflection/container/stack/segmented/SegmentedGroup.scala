@@ -1,8 +1,24 @@
 package utopia.reflection.container.stack.segmented
 
+import utopia.genesis.shape.Axis.{X, Y}
+
 import scala.math.Ordering.Double.TotalOrdering
 import utopia.genesis.shape.Axis2D
 import utopia.reflection.shape.StackLength
+
+@deprecated("Segment system updated to Segment and SegmentGroup", "v1.2")
+object SegmentedGroup
+{
+	/**
+	 * @return A new horizontal segmented group (items have equal widths)
+	 */
+	def horizontal = new SegmentedGroup(X)
+	
+	/**
+	 * @return A new vertical segmented group (items have equal heights)
+	 */
+	def vertical = new SegmentedGroup(Y)
+}
 
 /**
   * These groups keep track of multiple segmented items in order to match their segment lengths
@@ -10,12 +26,12 @@ import utopia.reflection.shape.StackLength
   * @since 28.4.2019, v1+
  *  @param direction The direction of the segmented rows in this group
   */
+@deprecated("Segment system updated to Segment and SegmentGroup", "v1.2")
 class SegmentedGroup(override val direction: Axis2D) extends Segmented
 {
 	// ATTRIBUTES	-------------------
 	
 	private var items = Vector[Segmented]()
-	private val changeListener = new ChangeListener()
 	
 	
 	// IMPLEMENTED	-------------------
@@ -58,7 +74,7 @@ class SegmentedGroup(override val direction: Axis2D) extends Segmented
 	def register(item: Segmented) =
 	{
 		items :+= item
-		item.addSegmentChangedListener(changeListener)
+		item.addSegmentChangedListener(ChangeListener)
 	}
 	
 	/**
@@ -68,7 +84,7 @@ class SegmentedGroup(override val direction: Axis2D) extends Segmented
 	def register(many: IterableOnce[Segmented]) =
 	{
 		items ++= many
-		items.foreach { _.addSegmentChangedListener(changeListener) }
+		items.foreach { _.addSegmentChangedListener(ChangeListener) }
 	}
 	
 	/**
@@ -85,7 +101,7 @@ class SegmentedGroup(override val direction: Axis2D) extends Segmented
 	  */
 	def remove(item: Segmented) =
 	{
-		item.removeSegmentChangedListener(changeListener)
+		item.removeSegmentChangedListener(ChangeListener)
 		items = items.filterNot { _ == item }
 	}
 	
@@ -94,14 +110,14 @@ class SegmentedGroup(override val direction: Axis2D) extends Segmented
 	  */
 	def clear() =
 	{
-		items.foreach { _.removeSegmentChangedListener(changeListener) }
+		items.foreach { _.removeSegmentChangedListener(ChangeListener) }
 		items = Vector()
 	}
 	
 	
 	// NESTED CLASSES	---------------
 	
-	private class ChangeListener extends SegmentChangedListener
+	private object ChangeListener extends SegmentChangedListener
 	{
 		// Relays segment changed events
 		override def onSegmentUpdated(source: Segmented) = informSegmentChanged(source)

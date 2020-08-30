@@ -1,7 +1,7 @@
 package utopia.flow.datastructure.template
 
 import utopia.flow.datastructure.immutable.Value
-import utopia.flow.parse.JSONConvertible
+import utopia.flow.parse.JsonConvertible
 
 /**
  * Models are used for storing named values
@@ -9,7 +9,7 @@ import utopia.flow.parse.JSONConvertible
  * @since 26.11.2016
  * @tparam Attribute The type of the properties stored within this model
  */
-trait Model[+Attribute <: Property] extends JSONConvertible
+trait Model[+Attribute <: Property] extends JsonConvertible
 {
     // ABSTRACT    --------------
     
@@ -35,9 +35,9 @@ trait Model[+Attribute <: Property] extends JSONConvertible
     
     // COMP. PROPERTIES    --------
     
-    override def toString = toJSON
+    override def toString = toJson
     
-    override def toJSON = if (isEmpty) "{}" else s"{${attributes.map { _.toJSON }.mkString(", ") }}"
+    override def toJson = if (isEmpty) "{}" else s"{${attributes.map { _.toJson }.mkString(", ") }}"
     
     /**
       * @return The attributes of this model
@@ -114,7 +114,13 @@ trait Model[+Attribute <: Property] extends JSONConvertible
      * Whether this model contains an existing attribute for the specified attribute name
      * @param attName the name of the attribute
      */
-    def contains(attName: String) = attributeMap.contains(attName.toLowerCase())
+    def contains(attName: String) = attributeMap.contains(attName.toLowerCase)
+    
+    /**
+      * @param attName Name of searched attribute
+      * @return Whether this model contains a non-empty attribute with the specified name
+      */
+    def containsNonEmpty(attName: String) = attributeMap.get(attName.toLowerCase).exists { _.value.isDefined }
     
     /**
      * Converts and unwraps this model's attributes into a map format

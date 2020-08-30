@@ -30,8 +30,6 @@ object DefaultButtonHandler
 class DefaultButtonHandler(val defaultButton: ButtonLike, val allButtons: Iterable[ButtonLike])(
 	triggerCondition: => Boolean) extends KeyStateListener
 {
-	override def parent = None
-	
 	// Only listens to events while a) none of the buttons is in focus and b) additional focus condition
 	override def allowsHandlingFrom(handlerType: HandlerType) = allButtons.forall { !_.isInFocus } && triggerCondition
 	

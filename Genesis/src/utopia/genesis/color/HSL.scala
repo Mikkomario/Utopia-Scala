@@ -1,7 +1,8 @@
 package utopia.genesis.color
 
+import utopia.genesis.shape.shape1D.Angle
+
 import scala.language.implicitConversions
-import utopia.genesis.shape.Angle
 import utopia.genesis.util.ApproximatelyEquatable
 import utopia.genesis.util.Extensions._
 
@@ -26,24 +27,13 @@ object HSL
 	  * @param luminosity Luminosity [0, 1] where 0 is black and 1 is white
 	  * @return A new HSL color
 	  */
-	def apply(hue: Double, saturation: Double, luminosity: Double): HSL =
+	def apply(hue: Angle, saturation: Double, luminosity: Double): HSL =
 	{
-		val hue2 = hue % 360
-		val h = if (hue2 < 0) hue2 + 360 else hue2
 		val s = 0.0 max saturation min 1.0
 		val l = 0.0 max luminosity min 1.0
 		
-		new HSL(h, s, l)
+		new HSL(hue, s, l)
 	}
-	
-	/**
-	  * Creates a new HSL color
-	  * @param hueAngle Hue angle [0, 360[ degrees, where 0 is red, 120 is green and 240 is blue
-	  * @param saturation Saturation [0, 1] where 0 is grayscale and 1 is fully saturated
-	  * @param luminosity Luminosity [0, 1] where 0 is black and 1 is white
-	  * @return A new HSL color
-	  */
-	def apply(hueAngle: Angle, saturation: Double, luminosity: Double): HSL = apply(hueAngle.toDegrees, saturation, luminosity)
 }
 
 /**
@@ -54,7 +44,7 @@ object HSL
   * @param saturation Color saturation [0, 1] where 0 is grayscale and 1 is fully saturated
   * @param luminosity Color luminosity [0, 1] where 0 is black and 1 is white
   */
-case class HSL private(override val hue: Double, override val saturation: Double, override val luminosity: Double)
+case class HSL private(override val hue: Angle, override val saturation: Double, override val luminosity: Double)
 	extends HSLLike[HSL] with ApproximatelyEquatable[HSLLike[_]]
 {
 	// COMPUTED	------------------
@@ -65,7 +55,7 @@ case class HSL private(override val hue: Double, override val saturation: Double
 	def toRGB =
 	{
 		//  Formula needs all values between 0 - 1.
-		val h = hue / 360
+		val h = hue.degrees / 360
 		
 		val q =
 		{
@@ -97,7 +87,7 @@ case class HSL private(override val hue: Double, override val saturation: Double
 	  * @param hue New hue [0, 360[
 	  * @return A copy of this color with new hue
 	  */
-	def withHue(hue: Double) = HSL.apply(hue, saturation, luminosity)
+	def withHue(hue: Angle) = HSL.apply(hue, saturation, luminosity)
 	
 	/**
 	  * @param saturation New saturation [0, 1]
@@ -112,21 +102,6 @@ case class HSL private(override val hue: Double, override val saturation: Double
 	def withLuminosity(luminosity: Double) = HSL.apply(hue, saturation, luminosity)
 	
 	override def toString = s"Hue: $hue, Saturation: $saturationPercent%, Luminosity: $luminosityPercent%"
-	
-	
-	// OPERATORS	--------------
-	
-	/**
-	  * @param amount Hue adjust
-	  * @return A copy of this color with adjusted hue
-	  */
-	def +(amount: Double) = plusHue(amount)
-	
-	/**
-	  * @param amount Hue adjust
-	  * @return A copy of this color with adjusted hue
-	  */
-	def -(amount: Double) = minusHue(amount)
 	
 	
 	// OTHER	------------------

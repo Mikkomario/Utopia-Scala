@@ -2,6 +2,8 @@ package utopia.genesis.shape.shape2D
 
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape1D.Direction1D
+import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 
 /**
  * Represents a single side of a 2D rectangle, Eg. top
@@ -17,9 +19,9 @@ sealed trait Direction2D
 	 */
 	def axis: Axis2D
 	/**
-	 * @return Whether this side resides at the positive (true) or the negative (false) side of the axis
-	 */
-	def isPositiveDirection: Boolean
+	  * @return 1D sign of this direction (positive or negative)
+	  */
+	def sign: Direction1D
 	/**
 	 * @return Direction opposite to this one
 	 */
@@ -34,6 +36,15 @@ sealed trait Direction2D
 	 * @return Whether this direction is vertical
 	 */
 	def isVertical = axis == Y
+	
+	
+	// COMPUTED	--------------------------------
+	
+	/**
+	  * @return Whether this side resides at the positive (true) or the negative (false) side of the axis
+	  */
+	@deprecated("Please use sign instead", "v2.3")
+	def isPositiveDirection = sign.isPositive
 }
 
 object Direction2D
@@ -45,7 +56,7 @@ object Direction2D
 	{
 		override def axis = Y
 		
-		override def isPositiveDirection = false
+		override def sign = Negative
 		
 		override def opposite = Down
 	}
@@ -57,7 +68,7 @@ object Direction2D
 	{
 		override def axis = Y
 		
-		override def isPositiveDirection = true
+		override def sign = Positive
 		
 		override def opposite = Up
 	}
@@ -69,7 +80,7 @@ object Direction2D
 	{
 		override def axis = X
 		
-		override def isPositiveDirection = true
+		override def sign = Positive
 		
 		override def opposite = Left
 	}
@@ -81,7 +92,7 @@ object Direction2D
 	{
 		override def axis = X
 		
-		override def isPositiveDirection = false
+		override def sign = Negative
 		
 		override def opposite = Right
 	}
@@ -116,9 +127,21 @@ object Direction2D
 	 * @param isPositive Whether direction should be positive (true) or negative (false)
 	 * @return A direction
 	 */
+	@deprecated("Please use apply(Axis2D, Direction1D) instead", "v2.3")
 	def apply(axis: Axis2D, isPositive: Boolean): Direction2D = axis match
 	{
 		case X => if (isPositive) Right else Left
 		case Y => if (isPositive) Down else Up
+	}
+	
+	/**
+	  * @param axis Target axis
+	  * @param sign Direction along that axis (positive or negative)
+	  * @return A 2D direction
+	  */
+	def apply(axis: Axis2D, sign: Direction1D): Direction2D = axis match
+	{
+		case X => if (sign.isPositive) Right else Left
+		case Y => if (sign.isPositive) Down else Up
 	}
 }

@@ -86,7 +86,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 	override def stop() =
 	{
 		// Closes all current connections (may have to wait for clients to exit)
-		(connections.map { _.stop() } ++ closeFutures).futureCompletion(
+		(connections.map { c: ReusableConnection => c.stop() } ++ closeFutures).futureCompletion(
 			new NewThreadExecutionContext("Closing connection pool"))
 	}
 	

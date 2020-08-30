@@ -9,8 +9,9 @@ import utopia.flow.datastructure.immutable.{Constant, Model, Value}
  * @since 30.4.2017
  * @param columnData Column data contains models generated on retrieved columns. There's a separate
  * model for each table. The table's name is used as a key in this map.
+  * @param otherData Data outside of any included table in model format. Default = empty model.
  */
-case class Row(columnData: Map[Table, Model[Constant]])
+case class Row(columnData: Map[Table, Model[Constant]], otherData: Model[Constant] = Model.empty)
 {
     // ATTRIBUTES   ---------------------------
     
@@ -18,15 +19,20 @@ case class Row(columnData: Map[Table, Model[Constant]])
       * This row represented as a single model. If there are results from multiple tables in this
       * row, this model may not contain all of that data because of duplicate attribute names.
       */
-    lazy val toModel = if (columnData.nonEmpty) columnData.values.reduce { _ ++ _ } else Model.empty
+    lazy val toModel = if (columnData.nonEmpty) otherData ++ columnData.values.reduce { _ ++ _ } else otherData
     
     
     // COMPUTED PROPERTIES    -----------------
     
     /**
+      * @return Whether this row contains data besides table-specific data
+      */
+    def containsOtherData = otherData.hasNonEmptyValues
+    
+    /**
      * Whether this row is empty and contains no column value data at all
      */
-    def isEmpty = columnData.values.forall { _.hasOnlyEmptyValues }
+    def isEmpty = columnData.values.forall { _.hasOnlyEmptyValues } && otherData.hasOnlyEmptyValues
     
     /**
      * The indices for each of the contained table
@@ -44,12 +50,25 @@ case class Row(columnData: Map[Table, Model[Constant]])
       * @return The first value found from this row. Should only be used when just a single value is requested
       */
     def value = columnData.values.find { _.hasNonEmptyValues }.flatMap {
-        _.attributesWithValue.headOption.map { _.value } } getOrElse Value.empty
+        _.attributesWithValue.headOption.map { _.value } } orElse
+        otherData.attributesWithValue.headOption.map { _.value } getOrElse Value.empty
     
     
     // IMPLEMENTED  ---------------------------
     
-    override def toString = s"[${columnData.toVector.map { case (table, data) => s"${table.name}: $data" }.mkString(", ")}]"
+    override def toString =
+    {
+        val tableString = columnData.toVector.map { case (table, data) => s"${table.name}: $data" }.mkString(", ")
+        if (containsOtherData)
+        {
+            if (tableString.nonEmpty)
+                s"[$tableString, other: $otherData]"
+            else
+                otherData.toString
+        }
+        else
+            s"[$tableString]"
+    }
     
     
     // OPERATORS    ---------------------------

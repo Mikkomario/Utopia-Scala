@@ -1,9 +1,9 @@
 package utopia.reflection.component.drawing.template
 
 import utopia.genesis.shape.Axis.Y
-import utopia.genesis.shape.shape2D.{Bounds, Size}
+import utopia.genesis.shape.shape2D.{Bounds, Insets, Size}
 import utopia.genesis.util.Drawer
-import utopia.reflection.shape.{Border, Insets}
+import utopia.reflection.shape.Border
 
 import scala.collection.immutable.VectorBuilder
 
@@ -38,11 +38,10 @@ trait BorderDrawer extends CustomDrawer
 		if (bounds.width > 0 && bounds.height > 0)
 		{
 			// Sets the color & draws the borders
-			if (border.color.isDefined)
-			{
+			border.color.foreach { color =>
 				val boundsToDraw = boundsFromInsets(bounds, border.insets)
 				if (boundsToDraw.nonEmpty)
-					drawer.withColor(border.color.get, border.color.get).disposeAfter { d => boundsToDraw.foreach(d.draw) }
+					drawer.withColor(color, color).disposeAfter { d => boundsToDraw.foreach(d.draw) }
 			}
 			
 			// Moves to the inner border
@@ -54,15 +53,17 @@ trait BorderDrawer extends CustomDrawer
 	{
 		val buffer = new VectorBuilder[Bounds]
 		
+		// FIXME: Probably rounding errors here
+		
 		// Top is limited by left
 		if (insets.top > 0)
 			buffer += Bounds(bounds.topLeft.plusX(insets.left), Size(bounds.width - insets.left, insets.top))
 		// Right is limited by top
 		if (insets.right > 0)
-			buffer += Bounds(bounds.topRight + (-insets.right, insets.top), Size(insets.right, bounds.height - insets.top))
+			buffer += Bounds(bounds.topRight + Vector(-insets.right, insets.top), Size(insets.right, bounds.height - insets.top))
 		// Bottom is limited by right
 		if (insets.bottom > 0)
-			buffer += Bounds(bounds.bottomLeft - (insets.bottom, Y), Size(bounds.width - insets.right, insets.bottom))
+			buffer += Bounds(bounds.bottomLeft - Y(insets.bottom), Size(bounds.width - insets.right, insets.bottom))
 		// Left is limited by bottom
 		if (insets.left > 0)
 			buffer += Bounds(bounds.topLeft, Size(insets.left, bounds.height - insets.bottom))
@@ -71,5 +72,5 @@ trait BorderDrawer extends CustomDrawer
 	}
 	
 	private def boundsInsideInsets(original: Bounds, insets: Insets) =
-		Bounds(original.position + (insets.left, insets.top), original.size - insets.total)
+		Bounds(original.position + Vector(insets.left, insets.top), original.size - insets.total)
 }

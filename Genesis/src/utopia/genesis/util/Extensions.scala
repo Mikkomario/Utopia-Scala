@@ -9,6 +9,7 @@ import scala.collection.mutable.ListBuffer
  * @author Mikko Hilpinen
  * @since 24.12.2016
  */
+// TODO: Rename and clean up
 object Extensions
 {
     implicit class DoubleWithAlmostEquals[C](val d: C)(implicit f: C => Double) extends ApproximatelyEquatable[C]
@@ -16,7 +17,7 @@ object Extensions
         /**
          * Checks if the two double numbers are approximately equal using 0.00001 precision
          */
-        def ~==(d2: C) = (d -d2).abs < 0.00001
+        def ~==(d2: C) = (d -d2).abs < 0.0000001
     }
     
     implicit class seqWithAlmostEquals[B, C](val s: Seq[C])(implicit f: C => ApproximatelyEquatable[B]) extends ApproximatelyEquatable[Seq[B]]

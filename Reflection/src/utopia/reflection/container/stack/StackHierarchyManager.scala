@@ -7,8 +7,8 @@ import utopia.flow.datastructure.immutable.GraphEdge
 import utopia.flow.datastructure.mutable.GraphNode
 import utopia.flow.util.WaitTarget.WaitDuration
 import utopia.flow.util.{Counter, WaitUtils}
-import utopia.genesis.util.FPS
-import utopia.reflection.component.stack.Stackable
+import utopia.genesis.util.Fps
+import utopia.reflection.component.template.layout.stack.Stackable
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
@@ -88,11 +88,25 @@ object StackHierarchyManager
 	}
 	
 	/**
+	  * Requests validation for the specified item
+	  * @param items Items to revalidate
+	  */
+	def requestValidationFor(items: Iterable[Stackable]) =
+	{
+		// Queues the item
+		validationQueue ++= items
+		
+		// Informs validation loop
+		if (items.nonEmpty)
+			validationLoop.foreach { l => WaitUtils.notify(l.waitLock) }
+	}
+	
+	/**
 	  * Starts automatic revalidation in a background thread
 	  * @param vps The maximum validations per second value (default = 30)
 	  * @param context The asynchronous execution context
 	  */
-	def startRevalidationLoop(vps: FPS = FPS(30))(implicit context: ExecutionContext) =
+	def startRevalidationLoop(vps: Fps = Fps(30))(implicit context: ExecutionContext) =
 	{
 		if (validationLoop.isEmpty)
 		{
@@ -153,8 +167,8 @@ object StackHierarchyManager
 		if (remainingIds.nonEmpty)
 		{
 			// Handles the items from bottom to the top (longest ids are treated first and shortened)
-			val maxIdLenght = remainingIds.map { _.length }.max
-			val groups = remainingIds.groupBy { _.length == maxIdLenght }
+			val maxIdLength = remainingIds.map { _.length }.max
+			val groups = remainingIds.groupBy { _.length == maxIdLength }
 			
 			val longest = groups.getOrElse(true, Set())
 			longest.foreach { nodeOptionForId(_).foreach { _.content.resetCachedSize() } }
@@ -173,20 +187,23 @@ object StackHierarchyManager
 	def unregister(item: Stackable) =
 	{
 		// Removes the provided item and each child from both ids and graph
-		if (ids.contains(item.stackId))
-		{
+		ids.get(item.stackId).foreach { itemId =>
 			// Finds correct id and node
-			val itemId = ids(item.stackId)
-			val node = nodeForId(itemId)
-			
-			// Removes the node from graph
-			if (itemId.isMasterId)
-				graph -= itemId.masterId
-			else
-				graphForId(itemId).disconnectAll(node)
-			
-			// Removes any child nodes
-			node.foreach { ids -= _.content.stackId }
+			nodeOptionForId(itemId) match
+			{
+				case Some(node) =>
+					// Removes the node from graph
+					if (itemId.isMasterId)
+						graph -= itemId.masterId
+					else
+						graphForId(itemId).disconnectAll(node)
+					
+					// Removes any child nodes
+					node.foreach { ids -= _.content.stackId }
+				case None =>
+					// If, for some reason, the node was already removed, makes sure the id is removed as well
+					ids -= item.stackId
+			}
 		}
 	}
 	
@@ -213,50 +230,54 @@ object StackHierarchyManager
 	def registerConnection(parent: Stackable, child: Stackable) =
 	{
 		// If the child already had a parent, makes the child a master (top level component) first
-		if (ids.contains(child.stackId))
-		{
-			val childId = ids(child.stackId)
-			childId.parentId.foreach
-			{
-				parentId =>
-					
-					// Disconnects the child from the parent, also updates all id numbers
-					val parentNode = nodeForId(parentId)
+		ids.get(child.stackId).foreach { childId =>
+			childId.parentId.foreach { parentId =>
+				// Disconnects the child from the parent, also updates all id numbers
+				nodeOptionForId(parentId).foreach { parentNode =>
 					val childIndex = childId.last
-					val childNode = (parentNode/childIndex).head
-					
-					parentNode.disconnectDirect(childNode)
-					childNode.foreach { c => ids(c.content.stackId) = ids(c.content.stackId).dropUntil(childIndex) }
-					
-					// Makes the child a master
-					graph(childIndex) = childNode
+					(parentNode/childIndex).headOption.foreach { childNode =>
+						// Disconnects the child node
+						parentNode.disconnectDirect(childNode)
+						// Updates the ids of grandchildren (and their children) to not include the removed old parent's id
+						childNode.foreach { c =>
+							val grandChildStackId = c.content.stackId
+							ids.get(grandChildStackId).foreach { grandChildId =>
+								ids(grandChildStackId) = grandChildId.dropUntil(childIndex)
+							}
+						}
+						
+						// Makes the child a master
+						graph(childIndex) = childNode
+					}
+				}
 			}
 		}
 		
 		// Makes sure that the parent is already registered
 		val newParentId = parentId(parent)
-		val newParentNode = nodeForId(newParentId)
-		
-		// If the child (master) already exists, attaches it to the new parent
-		if (ids.contains(child.stackId))
-		{
-			val oldChildId = ids(child.stackId)
-			val childIndex = oldChildId.last
-			val childNode = graph(childIndex)
-			
-			// Updates all child ids
-			childNode.foreach { n => ids(n.content.stackId) = newParentId + ids(n.content.stackId) }
-			
-			// Removes the child from master nodes and attaches it to the new parent
-			graph -= childIndex
-			newParentNode.connect(childNode, childIndex)
-		}
-		// Otherwise adds the child as a new id + node
-		else
-		{
-			val newChildId = newParentId + indexCounter.next()
-			ids(child.stackId) = newChildId
-			newParentNode.connect(new Node(child), newChildId.last)
+		// If, for some reason, the parent's node was removed before or during this method call, will not finish
+		// the node creation
+		nodeOptionForId(newParentId).foreach { newParentNode =>
+			// If the child (master) already exists, attaches it to the new parent
+			ids.get(child.stackId) match
+			{
+				case Some(oldChildId) =>
+					val childIndex = oldChildId.last
+					// If the child node was removed from this hierarchy before or during this operation,
+					// will not modify or insert it
+					graph.get(childIndex).foreach { childNode =>
+						// Updates all child ids
+						childNode.foreach { n => ids(n.content.stackId) = newParentId + ids(n.content.stackId) }
+						// Removes the child from master nodes and attaches it to the new parent
+						graph -= childIndex
+						newParentNode.connect(childNode, childIndex)
+					}
+				case None =>
+					// Otherwise adds the child as a new id + node
+					val newChildId = newParentId + indexCounter.next()
+					ids(child.stackId) = newChildId
+					newParentNode.connect(new Node(child), newChildId.last)
+			}
 		}
 	}
 	
@@ -264,6 +285,8 @@ object StackHierarchyManager
 	
 	private def graphOptionForId(id: StackId) = graph.get(id.masterId)
 	
+	// FIXME: Throws at times
+	@deprecated("Use nodeOptionForId instead since this may trow", "v1.2")
 	private def nodeForId(id: StackId) = nodeOptionForId(id).get
 	
 	private def nodeOptionForId(id: StackId) =
@@ -274,32 +297,28 @@ object StackHierarchyManager
 			graphOptionForId(id).flatMap { n => (n / id.parts.drop(1)).headOption }
 	}
 	
-	private def parentId(item: Stackable) =
+	private def parentId(item: Stackable) = ids.get(item.stackId) match
 	{
-		val existing = ids.get(item.stackId)
-		if (existing.isDefined)
-			existing.get
-		else
-			addRoot(item)
+		case Some(existing) => existing
+		case None => addRoot(item)
 	}
 	
 	private def _detach(item: Stackable): Unit =
 	{
-		val childId = ids(item.stackId)
-		childId.parentId.foreach
-		{
-			parentId =>
-				
+		ids.get(item.stackId).foreach { childId =>
+			childId.parentId.foreach { parentId =>
 				// Disconnects the child from the parent, also updates all id numbers
-				val parentNode = nodeForId(parentId)
-				val childIndex = childId.last
-				val childNode = (parentNode / childIndex).head
-				
-				parentNode.disconnectDirect(childNode)
-				childNode.foreach { c => ids(c.content.stackId) = ids(c.content.stackId).dropUntil(childIndex) }
-				
-				// Makes the child a master
-				graph(childIndex) = childNode
+				nodeOptionForId(parentId).foreach { parentNode =>
+					val childIndex = childId.last
+					(parentNode / childIndex).headOption.foreach { childNode =>
+						parentNode.disconnectDirect(childNode)
+						childNode.foreach { c => ids(c.content.stackId) = ids(c.content.stackId).dropUntil(childIndex) }
+						
+						// Makes the child a master
+						graph(childIndex) = childNode
+					}
+				}
+			}
 		}
 	}
 	

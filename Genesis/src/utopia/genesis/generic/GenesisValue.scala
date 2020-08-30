@@ -1,8 +1,8 @@
 package utopia.genesis.generic
 
-import utopia.genesis.shape.Vector3D
 import utopia.flow.datastructure.immutable.Value
 import utopia.genesis.shape.shape2D.{Bounds, Circle, Line, Point, Rectangle, Size, Transformation}
+import utopia.genesis.shape.shape3D.Vector3D
 
 object GenesisValue
 {

@@ -26,6 +26,9 @@ object GraphTest extends App
     node1.connect(node4, 4)
     node4.connect(node5, 4)
     
+    assert(node1.allNodeContent == Set(1, 2, 3, 4, 5))
+    assert(node2.allNodeContent == Set(2, 3, 5))
+    
     // Makes sure there are correct number of edges in nodes
     assert(node1.leavingEdges.size == 2)
     assert(node2.leavingEdges.size == 1)
@@ -41,7 +44,7 @@ object GraphTest extends App
     assert(node1.isConnectedTo(node5))
     
     // Tests node traversing
-    assert(node1/(1, 5, 1) == Set(node5))
+    assert(node1/Vector(1, 5, 1) == Set(node5))
     
     // The shortest route should be 1 -> 4 -> 5
     assert(node1.shortestRouteTo(node5).get.size == 2)
@@ -53,6 +56,26 @@ object GraphTest extends App
     node4.disconnectDirect(node5)
     assert(node1.routesTo(node5).size == 1)
     assert(!node1.endNodes.contains(node5))
+    
+    // Tests circular node foreach
+    val cNode1 = new IntNode(1)
+    val cNode2 = new IntNode(2)
+    val cNode3 = new IntNode(3)
+    val cNode4 = new IntNode(4)
+    
+    cNode1.connect(cNode2, 1)
+    cNode2.connect(cNode3, 1)
+    cNode3.connect(cNode4, 1)
+    cNode4.connect(cNode1, 1)
+    cNode1.connect(cNode4, 1)
+    cNode2.connect(cNode1, 1)
+    cNode3.connect(cNode2, 1)
+    cNode4.connect(cNode3, 1)
+    cNode1.connect(cNode1, 1)
+    cNode2.connect(cNode4, 1)
+    
+    assert(cNode1.allNodeContent == Set(1, 2, 3, 4))
+    assert(cNode3.allNodeContent == Set(1, 2, 3, 4))
     
     print("Success")
 }

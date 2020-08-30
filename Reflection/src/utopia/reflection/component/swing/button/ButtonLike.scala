@@ -5,8 +5,8 @@ import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.inception.handling.HandlerType
-import utopia.reflection.component.{ComponentLike, Focusable}
-import utopia.reflection.component.swing.AwtComponentRelated
+import utopia.reflection.component.swing.template.AwtComponentRelated
+import utopia.reflection.component.template.{ComponentLike, Focusable}
 
 /**
   * Used as a common trait for all different button implementations
@@ -35,15 +35,22 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 	/**
 	  * @return Whether this button is currently enabled
 	  */
-	def isEnabled = component.isEnabled
-	/**
-	  * @param newEnabled Whether this button should be enabled
-	  */
-	def isEnabled_=(newEnabled: Boolean) =
+	def enabled = component.isEnabled
+	def enabled_=(newEnabled: Boolean) =
 	{
 		state = _state.copy(isEnabled = newEnabled)
 		component.setEnabled(newEnabled)
 	}
+	
+	/**
+	  * @return Whether this button is currently enabled
+	  */
+	def isEnabled = enabled
+	/**
+	  * @param newEnabled Whether this button should be enabled
+	  */
+	@deprecated("Replaced with enabled = ...", "v1.2")
+	def isEnabled_=(newEnabled: Boolean) = enabled = newEnabled
 	
 	/**
 	  * @return This button's current state
@@ -119,8 +126,6 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 		
 		override def onKeyState(event: KeyStateEvent) = trigger()
 		
-		override def parent = None
-		
 		// Only allows handling while in focus
 		override def allowsHandlingFrom(handlerType: HandlerType) = isInFocus
 	}
@@ -173,8 +178,6 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 			else
 				state = state.copy(isMouseOver = false)
 		}
-		
-		override def parent = None
 		
 		override def allowsHandlingFrom(handlerType: HandlerType) = isEnabled
 	}

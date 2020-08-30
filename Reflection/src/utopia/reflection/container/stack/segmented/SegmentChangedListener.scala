@@ -2,6 +2,7 @@ package utopia.reflection.container.stack.segmented
 
 import scala.language.implicitConversions
 
+@deprecated("Segment system updated to Segment and SegmentGroup", "v1.2")
 object SegmentChangedListener
 {
 	implicit def functionToListener(f: Segmented => Unit): SegmentChangedListener = apply(f)
@@ -28,6 +29,7 @@ object SegmentChangedListener
   * @author Mikko Hilpinen
   * @since 28.4.2019, v1+
   */
+@deprecated("Segment system updated to Segment and SegmentGroup", "v1.2")
 trait SegmentChangedListener
 {
 	/**

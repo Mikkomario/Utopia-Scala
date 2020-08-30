@@ -2,6 +2,27 @@ package utopia.flow.event
 
 import scala.concurrent.{ExecutionContext, Promise}
 
+object Changing
+{
+	// OTHER	---------------------
+	
+	/**
+	  * Wraps an immutable value as a "changing" instance that won't actually change
+	  * @param value A value being wrapped
+	  * @tparam A Type of wrapped value
+	  * @return A "changing" instance that will always have the specified value
+	  */
+	def wrap[A](value: A): Changing[A] = new Unchanging(value)
+	
+	
+	// NESTED	---------------------
+	
+	private class Unchanging[A](override val value: A) extends Changing[A]
+	{
+		var listeners = Vector[ChangeListener[A]]()
+	}
+}
+
 /**
   * Changing instances generate change events
   * @author Mikko Hilpinen
@@ -9,20 +30,23 @@ import scala.concurrent.{ExecutionContext, Promise}
   */
 trait Changing[A]
 {
-	// ATTRIBUTES	-----------------
-	
-	/**
-	  * The listeners interested in this mutable item's changes
-	  */
-	var listeners = Vector[ChangeListener[A]]()
-	
-	
 	// ABSTRACT	---------------------
 	
 	/**
 	  * @return The current value of this changing element
 	  */
 	def value: A
+	
+	/**
+	 * @return Listeners linked to this changing instance
+	 */
+	def listeners: Vector[ChangeListener[A]]
+	
+	/**
+	 * Updates this instances listeners
+	 * @param newListeners New listeners to associate with this changing instance
+	 */
+	def listeners_=(newListeners: Vector[ChangeListener[A]]): Unit
 	
 	
 	// OTHER	--------------------
@@ -65,6 +89,29 @@ trait Changing[A]
 		listener.future.foreach { _ => removeListener(listener) }
 		listener.future
 	}
+	
+	/**
+	 * @param f A mapping function
+	 * @tparam B Mapping result type
+	 * @return A mirrored version of this item, using specified mapping function
+	 */
+	def map[B](f: A => B) = Mirror.of(this)(f)
+	
+	/**
+	  * @param f A mapping function
+	  * @tparam B Mapping result type
+	  * @return A lazily mirrored version of this item that uses the specified mapping function
+	  */
+	def lazyMap[B](f: A => B) = LazyMirror.of(this)(f)
+	
+	/**
+	 * @param other Another changing item
+	 * @param f A merge function
+	 * @tparam B Type of the other changing item
+	 * @tparam R Type of merge result
+	 * @return A mirror that merges the values from both of these items
+	 */
+	def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) = MergeMirror.of(this, other)(f)
 	
 	/**
 	  * Fires a change event for all the listeners

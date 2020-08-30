@@ -10,7 +10,7 @@ import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.segmented.SegmentedGroup
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.swing.{SegmentedRow, Stack}
+import utopia.reflection.container.swing.layout.multi.{SegmentedRow, Stack}
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.localization.{Localizer, NoLocalization}
@@ -45,9 +45,9 @@ object SegmentedRowTest extends App
 	val largeFont = basicFont * 1.2
 	
 	val button1 = TextButton("Yeah!", largeFont, Color.magenta, insets = StackInsets.symmetric(32.any, 8.any),
-		borderWidth = 4) { () => labels(1).text += "!" }
+		borderWidth = 4) { labels(1).text += "!" }
 	val button2 = TextButton("For Sure!", largeFont, Color.magenta, insets = StackInsets.symmetric(32.any, 8.any),
-		borderWidth = 4) { () => labels(3).text += "!" }
+		borderWidth = 4) { labels(3).text += "!" }
 	
 	// Creates the rows
 	val hGroup = new SegmentedGroup(X)

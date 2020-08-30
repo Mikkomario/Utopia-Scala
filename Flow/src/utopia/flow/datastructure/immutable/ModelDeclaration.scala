@@ -3,7 +3,8 @@ package utopia.flow.datastructure.immutable
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.datastructure.template.{NoSuchAttributeException, Property}
 import utopia.flow.datastructure.template
-import utopia.flow.generic.DataType
+import utopia.flow.generic.{DataType, ModelType, StringType, VectorType}
+import utopia.flow.util.StringExtensions._
 
 import scala.collection.immutable.VectorBuilder
 
@@ -111,6 +112,18 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
     def contains(propertyName: String) = declarations.exists { _.name.equalsIgnoreCase(propertyName) }
     
     /**
+      * Tests whether specified model probably matches this declaration. Will not test for data type integrity, only
+      * the existence of required properties.
+      * @param model Model being tested
+      * @return Whether the model is likely to be valid
+      */
+    def isProbablyValid(model: template.Model[Property]) =
+    {
+        // Checks whether there are any missing or empty required properties
+        declarations.filterNot { _.hasDefault }.forall { declaration => model(declaration.name).isDefined }
+    }
+    
+    /**
       * Checks the provided model whether all declared (non-default) properties have non-empty values and can be casted
       * to declared type
       * @param model Model to be validated
@@ -120,12 +133,12 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
     def validate(model: template.Model[Property]) =
     {
         // First checks for missing attributes
-        val missing = declarations.filterNot { d => model.contains(d.name) }
+        val missing = declarations.filterNot { d => model.containsNonEmpty(d.name) }
         val (missingNonDefaults, missingDefaults) = missing.divideBy { _.defaultValue.isDefined }
         
         // Declarations with default values are replaced with their defaults
         if (missingNonDefaults.nonEmpty)
-            ModelValidationResult.missing(missingNonDefaults)
+            ModelValidationResult.missing(model, missingNonDefaults)
         else
         {
             // Tries to convert all declared model properties to required types and checks that each declared (non-default)
@@ -135,30 +148,55 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
             val castFailedBuilder = new VectorBuilder[(Constant, DataType)]()
     
             model.attributesWithValue.foreach { att =>
-        
-                val declaration = find(att.name)
-                if (declaration.isDefined)
+                find(att.name) match
                 {
-                    val castValue = att.value.castTo(declaration.get.dataType)
-                    if (castValue.isDefined)
-                        castBuilder += Constant(att.name, castValue.get)
-                    else
-                        castFailedBuilder += (Constant(att.name, att.value) -> declaration.get.dataType)
+                    case Some(declaration) =>
+                        val castValue = att.value.castTo(declaration.dataType)
+                        if (castValue.isDefined)
+                            castBuilder += Constant(att.name, castValue.get)
+                        else
+                            castFailedBuilder += (Constant(att.name, att.value) -> declaration.dataType)
+                    case None => keepBuilder += Constant(att.name, att.value)
                 }
-                else
-                    keepBuilder += Constant(att.name, att.value)
             }
             
             // If all values could be cast, proceeds to create the model, otherwise fails
             val castFailed = castFailedBuilder.result()
             if (castFailed.isEmpty)
             {
-                val resultConstants = keepBuilder.result() ++ castBuilder.result() ++ missingDefaults.map {
-                    d => Constant(d.name, d.defaultValue.get) }
-                ModelValidationResult.success(Model.withConstants(resultConstants))
+                // Makes sure all required values have a non-empty value associated with them
+                // (works for strings, models and vectors)
+                val castValues = castBuilder.result()
+                val emptyValues = castValues.filter { c => valueIsEmpty(c.value) }
+                
+                if (emptyValues.nonEmpty)
+                    ModelValidationResult.missing(model,
+                        declarations.filter { d => emptyValues.exists { _.name ~== d.name } })
+                else
+                {
+                    val resultConstants = keepBuilder.result() ++ castValues ++ missingDefaults.map {
+                        d => Constant(d.name, d.defaultValue.get) }
+                    ModelValidationResult.success(model, Model.withConstants(resultConstants))
+                }
             }
             else
-                ModelValidationResult.castFailed(castFailed.toSet)
+                ModelValidationResult.castFailed(model, castFailed.toSet)
+        }
+    }
+    
+    private def valueIsEmpty(value: Value): Boolean =
+    {
+        if (value.isEmpty)
+            true
+        else
+        {
+            value.dataType match
+            {
+                case StringType => value.getString.isEmpty
+                case VectorType => value.getVector.forall(valueIsEmpty)
+                case ModelType => value.getModel.attributes.map { _.value }.forall(valueIsEmpty)
+                case _ => false
+            }
         }
     }
 }

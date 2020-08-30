@@ -1,13 +1,12 @@
 package utopia.conflict.test
 
 import utopia.genesis.util.Drawer
-
 import utopia.conflict.collision.Collision
 import utopia.conflict.handling.{Collidable, CollisionGroup, CollisionListener}
 import utopia.genesis.color.Color
 import utopia.genesis.handling.Drawable
-import utopia.genesis.shape.VectorLike
 import utopia.genesis.shape.shape2D.{Circle, Line, Point}
+import utopia.genesis.shape.template.VectorLike
 import utopia.genesis.util.DepthRange
 import utopia.inception.handling.immutable.Handleable
 

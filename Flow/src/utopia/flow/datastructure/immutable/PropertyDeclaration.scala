@@ -62,6 +62,14 @@ trait PropertyDeclaration extends Equals
       * @return A default value for this property
       */
     def defaultValue: Option[Value]
+    
+    
+    // COMPUTED ----------------------
+    
+    /**
+      * @return Whether this declaration specifies a default value
+      */
+    def hasDefault = defaultValue.isDefined
 }
 
 private case class PropertyDeclarationImpl(override val name: String, override val dataType: DataType,

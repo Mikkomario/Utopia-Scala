@@ -1,16 +1,16 @@
 package utopia.flow.util
 
 import java.awt.Desktop
-import java.io.{BufferedOutputStream, FileInputStream, FileNotFoundException, FileOutputStream, IOException}
-import java.nio.file.{DirectoryNotEmptyException, Files, Path, Paths, StandardOpenOption}
+import java.io.{BufferedOutputStream, FileInputStream, FileNotFoundException, FileOutputStream, IOException, InputStream, Reader}
+import java.nio.file.{DirectoryNotEmptyException, Files, Path, Paths, StandardCopyOption, StandardOpenOption}
 
-import utopia.flow.parse.JSONConvertible
+import utopia.flow.parse.JsonConvertible
 
 import scala.language.implicitConversions
-import utopia.flow.util.StringExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.NullSafe._
+import StringExtensions._
 
 import scala.io.Codec
 import scala.util.{Failure, Success, Try}
@@ -29,6 +29,13 @@ object FileExtensions
 	
 	implicit class RichPath(val p: Path) extends AnyVal
 	{
+		// COMPUTED ----------------------------
+		
+		/**
+		 * @return A json representation of this path (uses / as the directory separator)
+		 */
+		def toJson = p.toString.replace("\\", "/")
+		
 		/**
 		 * @return Whether this file exists in the file system (false if undetermined)
 		 */
@@ -70,7 +77,7 @@ object FileExtensions
 		/**
 		 * @return An absolute path based on this path (if this path is already absolute, returns this)
 		 */
-		def absolute = p.toAbsolutePath
+		def absolute = Try { p.toAbsolutePath }.getOrElse(p)
 		
 		/**
 		 * @return Whether this path represents an existing directory
@@ -129,6 +136,11 @@ object FileExtensions
 		}
 		
 		/**
+		 * @return All non-directory files in this directory and its sub-directories
+		 */
+		def allRegularFileChildren = findDescendants { _.isRegularFile }
+		
+		/**
 		 * @return The size of this file in bytes. If called for a directory, returns the combined size of all files and
 		 *         directories under this directory. Please note that this method may take a while to complete.
 		 */
@@ -139,6 +151,28 @@ object FileExtensions
 				Try { Files.size(p) }
 			else
 				children.flatMap { _.tryMap { _.size }.map { _.sum } }
+		}
+		
+		
+		// OTHER    -------------------------------
+		
+		/**
+		 * @param childFileName Name of a child file
+		 * @return Whether this directory contains the specified file (false if this is not a directory)
+		 */
+		def containsDirect(childFileName: String) = (this/childFileName).exists
+		
+		/**
+		 * Checks whether this directory or any sub-directory within this directory contains a file with the
+		 * specified name (case-insensitive).
+		 * @param childFileName Name of the searched file (including file extension)
+		 * @return Whether this directory system contains a file with the specified name
+		 */
+		def containsRecursive(childFileName: String): Boolean =
+		{
+			children.getOrElse(Vector()).exists { c =>
+				(c.fileName ~== childFileName) || (c.isDirectory && c.containsRecursive(childFileName))
+			}
 		}
 		
 		/**
@@ -188,6 +222,26 @@ object FileExtensions
 			else
 				Success(start)
 		}
+		
+		/**
+		 * @param filter A filter that determines which paths will be included. Will be called once for each file
+		 *               within this directory and its sub-directories (including the directories themselves).
+		 * @return Paths accepted by the filter
+		 */
+		def findDescendants(filter: Path => Boolean): Try[Vector[Path]] =
+		{
+			// Finds direct children, and the children under those via recursion
+			children.map { children =>
+				children.filter(filter) ++ children.flatMap { _.findDescendants(filter).getOrElse(Vector()) }
+			}
+		}
+		
+		/**
+		 * @param extension A file extension (Eg. "png"), not including the '.'
+		 * @return All files directly or indirectly under this directory that have the specified file extension / type
+		 */
+		def allRegularFileChildrenOfType(extension: String) = findDescendants { f =>
+			f.isRegularFile && (f.fileType ~== extension) }
 		
 		/**
 		 * Moves this file / directory to another directory
@@ -288,6 +342,25 @@ object FileExtensions
 			newPath.delete().flatMap { _ => Try { Files.copy(p, newPath) } }.flatMap { newParent =>
 				children.flatMap { _.tryForEach { c => new RichPath(c).recursiveCopyTo(newParent) } }.map { _ => newParent }}
 		}
+		
+		/**
+		  * Moves and possibly renames this file
+		  * @param targetPath   New path for this file, including the file name
+		  * @param allowReplace Whether a file already existing at target path should be replaced with this one,
+		  *                     if present (default = true)
+		  * @return This file's new path. Failure if moving or file deletion failed or if tried to overwrite a file
+		  *         while allowReplace = false.
+		  */
+		def moveAs(targetPath: Path, allowReplace: Boolean = true) =
+		{
+			if (targetPath == p)
+				Success(p)
+			else
+				copyAs(targetPath, allowReplace).flatMap { newPath =>
+					delete().map { _ => newPath }
+				}
+		}
+		
 		/**
 		 * Renames this file or directory
 		 * @param newFileName New name for this file or directory (just file name, not the full path)
@@ -416,7 +489,13 @@ object FileExtensions
 						s"Targeted directory $p is not empty and recursive deletion is disabled"))
 			}
 			else
-				Try { Files.deleteIfExists(p) }
+				Try { Files.deleteIfExists(p) }.recoverWith { _ =>
+					Try
+					{
+						Files.setAttribute(p, "dos:readonly", false)
+						Files.deleteIfExists(p)
+					}
+				}
 		}
 		
 		/**
@@ -491,22 +570,48 @@ object FileExtensions
 		 * @return This path. Failure if writing failed.
 		 */
 		def append(text: String)(implicit codec: Codec) = Try { Files.write(p, text.getBytes(codec.charSet),
-			StandardOpenOption.APPEND) }
+			StandardOpenOption.APPEND, StandardOpenOption.CREATE) }
 		
 		/**
 		 * Writes a json-convertible instance to this file
 		 * @param json A json-convertible instance that will produce contents of this file
 		 * @return This path. Failure if writing failed.
 		 */
-		def writeJSON(json: JSONConvertible) = write(json.toJSON)(Codec.UTF8)
+		def writeJSON(json: JsonConvertible) = write(json.toJson)(Codec.UTF8)
 		
 		/**
 		 * Writes into this file with a function. An output stream is opened for the duration of the function.
 		 * @param writer A writer function that uses an output stream (may throw)
 		 * @return This path. Failure if writing function threw or stream couldn't be opened (Eg. trying to write to a file).
 		 */
-		def writeWith(writer: BufferedOutputStream => Unit) =
+		def writeWith[U](writer: BufferedOutputStream => U) =
 			Try { new FileOutputStream(p.toFile).consume { new BufferedOutputStream(_).consume(writer) } }.map { _ => p }
+		
+		/**
+		  * Writes into this file by reading data from a reader.
+		  * @param reader Reader that supplies the data
+		  * @return This path. Failure if reading or writing failed or the file stream couldn't be opened
+		  */
+		def writeFromReader(reader: Reader) = writeWith { output =>
+			// See: https://stackoverflow.com/questions/6927873/
+			// how-can-i-read-a-file-to-an-inputstream-then-write-it-into-an-outputstream-in-sc
+			Iterator.continually(reader.read)
+				.takeWhile { _ != -1 }
+				.foreach(output.write)
+		}
+		
+		/**
+		  * Writes the specified input stream into this file
+		  * @param inputStream Reader that supplies the data
+		  * @return This path. Failure if reading or writing failed or the file stream couldn't be opened
+		  */
+		def writeStream(inputStream: InputStream)/*(implicit codec: Codec)*/ =
+		{
+			Try { Files.copy(inputStream, p, StandardCopyOption.REPLACE_EXISTING) }.map { _ => p }
+			/*
+			new InputStreamReader(inputStream, codec.charSet).consume { streamReader =>
+				new BufferedReader(streamReader).consume(writeFromReader) }*/
+		}
 		
 		/**
 		 * Reads data from this file

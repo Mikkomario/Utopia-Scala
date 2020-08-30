@@ -1,8 +1,9 @@
 package utopia.conflict.collision
 
+import utopia.genesis.shape.shape1D.Angle
+
 import scala.math.Ordering.Double.TotalOrdering
-import utopia.genesis.shape.shape2D.{Circle, Line, Polygon, Polygonic}
-import utopia.genesis.shape.{Angle, Vector3D}
+import utopia.genesis.shape.shape2D.{Circle, Line, Polygon, Polygonic, Vector2D}
 
 /**
  * This object contains extensions that are used in the conflict project
@@ -29,8 +30,8 @@ object Extensions
          * will be.
          */
         def toPolygon(edgeAmount: Int) = Polygon((
-                for { i <- 0 until edgeAmount } yield c.origin + Vector3D.lenDir(c.radius,
-                new Angle(math.Pi * 2 * i / edgeAmount))).toVector)
+                for { i <- 0 until edgeAmount } yield c.origin + Vector2D.lenDir(c.radius,
+                Angle.ofRadians(math.Pi * 2 * i / edgeAmount))).toVector)
     }
     
     implicit class CollisionPolygon(val p: Polygonic) extends AnyVal
@@ -89,7 +90,7 @@ object Extensions
           * @param collisionNormal A normal for the collision plane, usually the minimum translation
           * vector for this polygon
           */
-        def collisionPoints(other: Polygonic, collisionNormal: Vector3D) =
+        def collisionPoints(other: Polygonic, collisionNormal: Vector2D) =
         {
             val c: CollisionPolygon = other
             edgeCollisionClip(c.collisionEdge(-collisionNormal), collisionNormal)
@@ -108,7 +109,7 @@ object Extensions
           * @param collisionNormal a normal to the collision, pointing from the collision area towards
           * this polygon (ie. The collision mtv for this polygon)
           */
-        def collisionPoints(line: Line, collisionNormal: Vector3D) =
+        def collisionPoints(line: Line, collisionNormal: Vector2D) =
         {
             // The collision edge always starts at the point closer to the collision area
             // (= more perpendicular to the collision normal)
@@ -128,7 +129,7 @@ object Extensions
           * @param collisionNormal a normal for the collision plane, from the collision area towards
           * this polygon instance (ie. the mtv for this polygon)
           */
-        private def edgeCollisionClip(otherCollisionEdge: Line, collisionNormal: Vector3D) =
+        private def edgeCollisionClip(otherCollisionEdge: Line, collisionNormal: Vector2D) =
         {
             // Finds the remaining (own) collision edge
             val myCollisionEdge = collisionEdge(collisionNormal)
@@ -142,7 +143,7 @@ object Extensions
     
         // Use minimum translation vector as normal (points towards this polygon from the collision area)
         // Doesn't work for polygons with < 2 vertices (surprise)
-        private def collisionEdge(collisionNormal: Vector3D) =
+        private def collisionEdge(collisionNormal: Vector2D) =
         {
             // Finds the vertex closest to the collision direction
             val c = p.corners
@@ -158,7 +159,7 @@ object Extensions
         }
     }
     
-    private def clipCollisionPoints(reference: Line, incident: Line, referenceNormal: Vector3D) =
+    private def clipCollisionPoints(reference: Line, incident: Line, referenceNormal: Vector2D) =
     {
         // First clips the incident edge from both sides
         val clipped = incident.clipped(reference.start, reference.vector).flatMap { _.clipped(reference.end, -reference.vector) }

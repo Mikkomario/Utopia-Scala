@@ -4,14 +4,14 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.{BorderDrawer, CustomDrawableWrapper}
-import utopia.reflection.component.TextComponent
+import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.shape.Alignment.Center
-import utopia.reflection.component.swing.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.swing.label.TextLabel
+import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
+import utopia.reflection.component.template.text.TextComponent
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.{Alignment, Border, StackInsets}
 import utopia.reflection.text.Font
-import utopia.reflection.util.ComponentContext
 
 object TextButton
 {
@@ -28,26 +28,23 @@ object TextButton
 	  */
 	def apply(text: LocalizedString, font: Font, color: Color, textColor: Color = Color.textBlack,
 			  insets: StackInsets = StackInsets.any, borderWidth: Double = 0.0, alignment: Alignment = Center)
-			 (action: () => Unit) =
+			 (action: => Unit) =
 	{
 		val button = new TextButton(text, font, color, textColor, insets, borderWidth, alignment)
-		button.registerAction(action)
+		button.registerAction(() => action)
 		button
 	}
 	
 	/**
-	  * Creates a new text button using external context
+	  * Creates a new button that doesn't have a registered action yet
 	  * @param text Button text
-	  * @param action The action performed when this button is pressed, if any (Default = None)
-	  * @param context Button context (implicit)
-	  * @return The new button
+	  * @param context Button creation context
+	  * @return A new button
 	  */
-	def contextual(text: LocalizedString, action: Option[() => Unit] = None)(implicit context: ComponentContext): TextButton =
+	def contextualWithoutAction(text: LocalizedString)(implicit context: ButtonContextLike): TextButton =
 	{
-		val button = new TextButton(text, context.font, context.buttonBackground, context.textColor, context.insets,
+		new TextButton(text, context.font, context.buttonColor, context.textColor, context.textInsets,
 			context.borderWidth, context.textAlignment)
-		action.foreach(button.registerAction)
-		button
 	}
 	
 	/**
@@ -57,8 +54,12 @@ object TextButton
 	  * @param context Button context (implicit)
 	  * @return The new button
 	  */
-	def contextual(text: LocalizedString, action: () => Unit)(implicit context: ComponentContext): TextButton =
-		contextual(text, Some(action))
+	def contextual(text: LocalizedString)(action: => Unit)(implicit context: ButtonContextLike): TextButton =
+	{
+		val button = contextualWithoutAction(text)
+		button.registerAction(() => action)
+		button
+	}
 }
 
 /**

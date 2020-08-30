@@ -1,14 +1,14 @@
 package utopia.genesis.shape.path
 
 import utopia.genesis.animation.Animation
-import utopia.genesis.util.Distance
+import utopia.genesis.util.DistanceLike
 
 /**
   * Paths form a sequence of points. They have a specified start and end point
   * @author Mikko Hilpinen
   * @since 19.6.2019, v2.1+
   */
-trait Path[+P] extends Animation[P] with Distance
+trait Path[+P] extends Animation[P] with DistanceLike
 {
 	// ABSTRACT	----------------
 	

@@ -1,6 +1,5 @@
 package utopia.genesis.shape.shape2D
 
-import utopia.genesis.util.Extensions._
 import utopia.flow.generic.ValueConversions._
 import java.awt.geom.Point2D
 
@@ -13,8 +12,9 @@ import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
 import utopia.genesis.util.ApproximatelyEquatable
-import utopia.genesis.shape.{Axis2D, Vector3D, VectorLike}
+import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.Axis._
+import utopia.genesis.shape.shape3D.Vector3D
 
 import scala.util.Success
 
@@ -97,7 +97,7 @@ object Point extends FromModelFactory[Point]
 * @author Mikko Hilpinen
 * @since 20.11.2018
 **/
-case class Point(override val x: Double, override val y: Double) extends VectorLike[Point]
+case class Point(override val x: Double, override val y: Double) extends Vector2DLike[Point]
 	with ApproximatelyEquatable[Point] with ValueConvertible with ModelConvertible
 {
     // IMPLEMENTED    -----------------
@@ -117,21 +117,23 @@ case class Point(override val x: Double, override val y: Double) extends VectorL
 	override def toValue = new Value(Some(this), PointType)
     
     override def toModel = Model.fromMap(HashMap("x" -> x, "y" -> y))
-    
-    override def ~==(other: Point) = (x ~== other.x) && (y ~== other.y)
 	
-	override protected def repr = this
+	override def repr = this
 	
 	override def toString = s"($x, $y)"
 	
 	
 	// COMPUTED	-----------------------
 	
-	
 	/**
 	  * A vector representation of this point
 	  */
-	def toVector = Vector3D(x, y)
+	def toVector = Vector2D(x, y)
+	
+	/**
+	  * @return A 3D vector representation of this point
+	  */
+	def in3D = Vector3D(x, y)
 	
 	/**
 	  * @return A size representation of this point
@@ -141,70 +143,24 @@ case class Point(override val x: Double, override val y: Double) extends VectorL
 	/**
 	  * An awt representation of this point
 	  */
-	def toAwtPoint = new java.awt.Point(x.toInt, y.toInt)
+	def toAwtPoint = new java.awt.Point(x.ceil.toInt, y.ceil.toInt)
 	
 	/**
 	  * An awt geom representation of this point
 	  */
 	def toAwtPoint2D = new Point2D.Double(x, y)
-	
-    
-    // OPERATORS    -------------------
-    
-	/**
-	 * Translated position over certain axis
-	 */
-	def +(increase: Double, axis: Axis2D) = axis match 
-	{
-        case X => plusX(increase)
-        case Y => plusY(increase)
-    }
-	
-	/**
-	 * Translated position over certain axis
-	 */
-	def -(decrease: Double, axis: Axis2D) = this.+(-decrease, axis)
     
     
     // OTHER    -----------------------
 	
 	/**
-	  * @param other Another point
-	  * @return The distance between these two points
-	  */
-	def distanceFrom(other: Point) = (this - other).toVector.length
-	
-	/**
 	 * Connects this point with another, forming a line
 	 */
 	def lineTo(other: Point) = Line(this, other)
-    
-    /**
-     * A copy of this point with specified x
-     */
-    def withX(x: Double) = Point(x, y)
-    
-    /**
-     * A copy of this point with specified y
-     */
-    def withY(y: Double) = Point(x, y)
-    
+	
     /**
      * A copy of this point with specified coordinate
      */
-    def withCoordinate(c: Double, axis: Axis2D) = axis match 
-    {
-        case X => withX(c)
-        case Y => withY(c)
-    }
-    
-    /**
-     * Point translated over X axis
-     */
-    def plusX(increase: Double) = Point(x + increase, y)
-    
-    /**
-     * Point translated over Y axis
-     */
-    def plusY(increase: Double) = Point(x, y + increase)
+	@deprecated("Please use the more generic .withDimension(...) instead", "v2.3")
+    def withCoordinate(c: Double, axis: Axis2D) = withDimension(c, axis)
 }

@@ -240,7 +240,8 @@ object References
      * references. No table is added twice to a single branch, although a table may exist in multiple branches
      * at the same time.
      * @param root Table that will form the reference tree root
-     * @return A reference tree where the specified table is the root and tables referencing that table are below it
+     * @return A reference tree where the specified table is the root and tables referencing that table are below it.
+      *         The references in the result point from tree leaves towards the root of the tree.
      */
     def referenceTree(root: Table): Tree[Table] = referenceTree(root, Set())
     

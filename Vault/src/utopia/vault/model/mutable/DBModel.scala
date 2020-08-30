@@ -5,7 +5,7 @@ import utopia.flow.datastructure.mutable.{Model, Variable}
 import utopia.flow.datastructure.{immutable, template}
 import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.DeclarationVariableGenerator
-import utopia.vault.nosql.factory.StorableFactory
+import utopia.vault.nosql.factory.FromRowModelFactory
 import utopia.vault.model.immutable.{Storable, Table}
 
 import scala.util.Success
@@ -46,7 +46,7 @@ class DBModel(override val table: Table) extends Model[Variable](
 /**
  * These factories are used for constructing storable models from table data
  */
-class DBModelFactory(val table: Table) extends StorableFactory[DBModel]
+class DBModelFactory(val table: Table) extends FromRowModelFactory[DBModel]
 {
     override def apply(model: template.Model[Property]) =
     {

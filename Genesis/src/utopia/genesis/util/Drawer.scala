@@ -1,11 +1,12 @@
 package utopia.genesis.util
 
-import java.awt.{AlphaComposite, BasicStroke, Font, Graphics, Graphics2D, Image, Paint, Shape, Stroke, Toolkit}
+import java.awt.{AlphaComposite, BasicStroke, Font, Graphics, Graphics2D, Image, Paint, RenderingHints, Shape, Stroke, Toolkit}
 import java.awt.geom.AffineTransform
 
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.{Bounds, Point, ShapeConvertible, Size, Transformation}
 import utopia.flow.util.NullSafe._
+import utopia.genesis.shape.shape3D.Vector3D
 
 import scala.util.Try
 
@@ -139,7 +140,13 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
      */
     def drawTextCentered(text: String, font: Font, bounds: Bounds) =
     {
-        drawTextPositioned(text, font) { textSize => bounds.topLeft + (bounds.size - textSize) / 2 }
+        drawTextPositioned(text, font) { textSize =>
+            // May downscale the text to fit the bounds
+            val scaling = (bounds.size / textSize).minDimension min 1
+            val scaledSize = textSize * scaling
+            val topLeft = bounds.topLeft + (bounds.size - scaledSize) / 2
+            Bounds(topLeft, scaledSize)
+        }
     }
     
     /**
@@ -160,20 +167,26 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
       * Draws a piece of text. Text display size affects the positioning
       * @param text Text to draw
       * @param font Font to use
-      * @param getTextTopLeft A function for determining the position of the <b>top-left</b> corner of the drawn
-      *                       text when text size is known.
+      * @param getTextArea A function for determining the bounds of the drawn text when text size is known.
       */
-        // TODO: Handle multiline text
-    def drawTextPositioned(text: String, font: Font)(getTextTopLeft: Size => Point) =
+    // TODO: Handle multiline text
+    def drawTextPositioned(text: String, font: Font)(getTextArea: Size => Bounds) =
     {
         // Sets up the graphics context
         prepareForTextDraw(font)
         val metrics = graphics.getFontMetrics
         
         val textSize = Size(metrics.stringWidth(text), metrics.getHeight)
-        val textTopLeft = getTextTopLeft(textSize)
+        val textArea = getTextArea(textSize)
         
-        graphics.drawString(text, textTopLeft.x.toInt, textTopLeft.y.toInt + metrics.getAscent)
+        // Checks whether the text needs to be scaled
+        val topLeft = textArea.position
+        val scaling = (textArea.size / textSize).toVector
+        
+        if (scaling ~== Vector3D.identity)
+            graphics.drawString(text, topLeft.x.toInt, topLeft.y.toInt + metrics.getAscent)
+        else
+            transformed(Transformation.position(topLeft).scaled(scaling)).graphics.drawString(text, 0, metrics.getAscent)
     }
     
     /**
@@ -192,7 +205,13 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
       * @return Whether the image was fully loaded and drawn
       */
     def drawImage(image: Image, position: Point = Point.origin): Boolean =
+    {
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
+        graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
+        
         graphics.drawImage(image, position.x.toInt, position.y.toInt, null)
+    }
     
     /**
      * Creates a transformed copy of this

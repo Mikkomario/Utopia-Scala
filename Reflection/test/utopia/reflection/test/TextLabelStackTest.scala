@@ -12,7 +12,8 @@ import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackLayout.Leading
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.swing.{Framing, Stack}
+import utopia.reflection.container.swing.layout.multi.Stack
+import utopia.reflection.container.swing.layout.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.localization.{Localizer, NoLocalization}
@@ -43,7 +44,7 @@ object TextLabelStackTest extends App
 	
 	// Creates a button too
 	val button = TextButton("A Button!", basicFont, Color.magenta, insets = StackInsets.symmetric(32.any, 8.any),
-		borderWidth = 4) { () => println("The Button was pressed") }
+		borderWidth = 4) { println("The Button was pressed") }
 	
 	// Creates the stack
 	val stack = Stack.columnWithItems(labels :+ button, 8.any, 16.any, Leading)

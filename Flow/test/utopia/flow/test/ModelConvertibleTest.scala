@@ -1,6 +1,8 @@
 package utopia.flow.test
 
 import utopia.flow.generic.DataType
+import utopia.flow.parse.{JSONReader, JsonParser}
+
 import scala.collection.immutable.HashMap
 
 /**
@@ -12,6 +14,8 @@ import scala.collection.immutable.HashMap
 object ModelConvertibleTest extends App
 {
     DataType.setup()
+    
+    private implicit val jsonParser: JsonParser = JSONReader
     
     // Basic equality tests
     val stats1 = HashMap("def" -> 2, "mag" -> 5, "str" -> 3)
@@ -32,7 +36,7 @@ object ModelConvertibleTest extends App
     assert(fromModel.get == model1)
     
     // JSON parse test
-    val fromJSON = TestModel.fromJSON(model1.toJSON)
+    val fromJSON = TestModel.fromJson(model1.toJson)
     assert(fromJSON.isSuccess)
     assert(fromJSON.get == model1)
     

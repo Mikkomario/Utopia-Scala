@@ -1,7 +1,5 @@
 package utopia.genesis.shape.shape3D
 
-import utopia.genesis.shape.Vector3D
-
 /**
 * Classes conforming to this trait are 3-dimensional continuous areas
 * @author Mikko Hilpinen

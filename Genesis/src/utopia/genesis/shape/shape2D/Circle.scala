@@ -13,7 +13,7 @@ import utopia.flow.generic.FromModelFactory
 import utopia.genesis.generic.GenesisValue._
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
-import utopia.genesis.shape.{Angle, Vector3D}
+import utopia.genesis.shape.shape1D.Angle
 
 import scala.util.Success
 
@@ -56,7 +56,7 @@ case class Circle(origin: Point, radius: Double) extends ShapeConvertible with A
     /**
       * @return The bounds around this circle
       */
-    def bounds = Bounds.between(origin - (radius, radius), origin + (radius, radius))
+    def bounds = Bounds.between(origin - Vector(radius, radius), origin + Vector(radius, radius))
     
     
     // OPERATORS    -------------------
@@ -70,14 +70,14 @@ case class Circle(origin: Point, radius: Double) extends ShapeConvertible with A
       * @param angle Target angle
       * @return A point on this circle's edge at the specified angle
       */
-    def apply(angle: Angle) = origin + Vector3D.lenDir(radius, angle)
+    def apply(angle: Angle) = origin + Vector2D.lenDir(radius, angle)
     
     
     // IMPLEMENTED METHODS    ---------
     
-    override def contains(point: Point) = point.distanceFrom(origin) <= radius
+    override def contains[V <: Vector2DLike[V]](point: V) = point.distanceFrom(origin) <= radius
     
-    override def projectedOver(axis: Vector3D) =
+    override def projectedOver(axis: Vector2D) =
     {
         val projectedOrigin = origin.toVector.projectedOver(axis).toPoint
         Line(projectedOrigin - axis.withLength(radius), projectedOrigin + axis.withLength(radius))
@@ -94,7 +94,7 @@ case class Circle(origin: Point, radius: Double) extends ShapeConvertible with A
     /**
      * Checks whether the circle contains the provided rectangle
      */
-    def contains(poly: Polygonic): Boolean = poly.corners.forall(contains)
+    def contains(poly: Polygonic): Boolean = poly.corners.forall { contains(_) }
     
     /**
      * Checks whether the other circle is contained within this circle's area
@@ -188,14 +188,14 @@ case class Circle(origin: Point, radius: Double) extends ShapeConvertible with A
      * @return if there is collision, the minimum translation vector that gets this circle out 
      * of the collision. None otherwise.
      */
-    def collisionMtvWith(other: Circle): Option[Vector3D] = collisionMtvWith(other, Vector((other.origin - origin).toVector))
+    def collisionMtvWith(other: Circle): Option[Vector2D] = collisionMtvWith(other, Vector((other.origin - origin).toVector))
     
     /**
      * Calculates two collision points using a very simple algorithm. The collision points will be 
      * along the minimum translation vector and one of them is at the edge of this circle.
      * @param mtv The circle's minimum translation vector in the collision
      */
-    def simpleCollisionPoints(mtv: Vector3D) = 
+    def simpleCollisionPoints(mtv: Vector2D) =
     {
         val firstPoint = origin - mtv.withLength(radius)
         Vector(firstPoint, firstPoint + mtv)

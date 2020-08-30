@@ -2,13 +2,14 @@ package utopia.reflection.component.swing.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
+import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.drawing.mutable.BorderDrawer
-import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
+import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
+import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.{Alignment, Border, StackInsets, StackLength}
 import utopia.reflection.text.Font
-import utopia.reflection.util.ComponentContext
 import utopia.reflection.shape.LengthExtensions._
 
 object ImageAndTextButton
@@ -36,6 +37,17 @@ object ImageAndTextButton
 	}
 	
 	/**
+	  * Creates a new button using contextual information. An action for the button needs to be registered separately.
+	  * @param images Images used in this button
+	  * @param text Text displayed in this button
+	  * @param context Component creation context
+	  * @return A new button
+	  */
+	def contextualWithoutAction(images: ButtonImageSet, text: LocalizedString)(implicit context: ButtonContextLike) =
+		new ImageAndTextButton(images, text, context.font, context.buttonColor, context.textInsets,
+			context.borderWidth, context.textAlignment, context.textColor)
+	
+	/**
 	  * Creates a new button using contextual information
 	  * @param images Images used in this button
 	  * @param text Text displayed in this button
@@ -43,20 +55,12 @@ object ImageAndTextButton
 	  * @param context Component creation context
 	  * @return A new button
 	  */
-	def contextual(images: ButtonImageSet, text: LocalizedString)(action: () => Unit)(implicit context: ComponentContext) =
-		apply(images, text, context.font, context.buttonBackground, context.insets, context.borderWidth,
-			context.textAlignment, context.textColor)(action)
-	
-	/**
-	 * Creates a new button using contextual information. An action for the button needs to be registered separately.
-	 * @param images Images used in this button
-	 * @param text Text displayed in this button
-	 * @param context Component creation context
-	 * @return A new button
-	 */
-	def contextualWithoutAction(images: ButtonImageSet, text: LocalizedString)(implicit context: ComponentContext) =
-		new ImageAndTextButton(images, text, context.font, context.buttonBackground, context.insets,
-			context.borderWidth, context.textAlignment, context.textColor)
+	def contextual(images: ButtonImageSet, text: LocalizedString)(action: => Unit)(implicit context: ButtonContextLike) =
+	{
+		val button = contextualWithoutAction(images, text)
+		button.registerAction(() => action)
+		button
+	}
 }
 
 /**
@@ -75,7 +79,7 @@ object ImageAndTextButton
 class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedString, font: Font, val color: Color,
 						 insets: StackInsets, borderWidth: Double,
 						 textAlignment: Alignment = Alignment.Left, textColor: Color = Color.textBlack)
-	extends StackableAwtComponentWrapperWrapper with ButtonLike
+	extends StackableAwtComponentWrapperWrapper with ButtonLike with AwtContainerRelated
 {
 	// ATTRIBUTES	------------------------
 	
@@ -86,7 +90,7 @@ class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedSt
 		insets.withLeft(StackLength.fixedZero).mapRight { _.expanding }, initialAlignment = textAlignment)
 	private val content =
 	{
-		val inside = imageLabel.framed(insets).rowWith(Vector(textLabel), margin = StackLength.fixedZero)
+		val inside = imageLabel.framed(insets.mapRight { _ / 2 }).rowWith(Vector(textLabel), margin = StackLength.fixedZero)
 		if (borderWidth > 0)
 			inside.framed(StackInsets.symmetric(borderWidth.fixed))
 		else
@@ -131,6 +135,8 @@ class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedSt
 	
 	
 	// IMPLEMENTED	------------------------
+	
+	override def component = content.component
 	
 	override protected def wrapped = content
 	

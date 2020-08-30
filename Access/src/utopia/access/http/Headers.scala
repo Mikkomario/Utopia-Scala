@@ -178,6 +178,12 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     def lastModified = timeHeader("Last-Modified")
     
     /**
+      * @return The 'if modified since' -header which is used when the client wants to only update its cached data,
+      *         in case there are changes.
+      */
+    def ifModifiedSince = timeHeader("If-Modified-Since")
+    
+    /**
      * Creates a new set of headers with the updated message date / time
      */
     def withCurrentDate = withDate(Instant.now())
@@ -186,6 +192,11 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * Whether the data is chunked and the content length omitted
      */
     def isChunked = apply("Transfer-Encoding").contains("chunked")
+    
+    /**
+      * @return Whether an authorization header has been specified
+      */
+    def containsAuthorization = isDefined("Authorization")
     
     /**
       * @return The provided authorization. Eg. "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==". None if no auth header is provided.
@@ -205,6 +216,18 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
             None
     }
     
+    /**
+      * @return Non-decrypted (expected to have no encoding) token registered with the "bearer" authorization header.
+      *         None if there was no authorization header or if it was not of type "bearer".
+      */
+    def bearerAuthorization = authorization.flatMap { auth =>
+        val (authType, token) = auth.splitAtFirst(" ")
+        if (authType ~== "Bearer")
+            Some(token)
+        else
+            None
+    }
+    
     
     // OPERATORS    ---------------
     
@@ -217,28 +240,18 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     /**
      * Adds new values to a header. Will not overwrite any existing values.
      */
-    def +(headerName: String, values: Seq[String], regex: String): Headers = 
-    {
-        if (values.nonEmpty)
-            this + (headerName, values.reduce { _ + regex + _ })
-        else
-            this
-    }
+    def +(headerName: String, values: Seq[String], regex: String): Headers = withHeaderAdded(headerName, values, regex)
     
     /**
      * Adds a new value to a header. Will not overwrite any existing values.
      */
-    def +(headerName: String, value: String, regex: String = ",") = 
-    {
-        if (fields.contains(headerName.toLowerCase()))
-        {
-            // Appends to existing value
-            val newValue = apply(headerName).get + regex + value
-            Headers(fields + (headerName -> newValue))
-        }
-        else
-            withHeader(headerName, value)
-    }
+    def +(headerName: String, value: String, regex: String = ",") = withHeaderAdded(headerName, value, regex)
+    
+    /**
+      * @param header A header key value pair
+      * @return A copy of these headers with specified header appended (';' is used to separate multiple header values)
+      */
+    def +(header: (String, String)) = withHeaderAdded(header._1, header._2)
     
     /**
      * Combines two headers with each other. If the headers have same keys, uses the keys from the 
@@ -304,6 +317,32 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     def withHeader(headerName: String, value: String) = new Headers(fields + (headerName -> value))
     
     /**
+      * Adds new values to a header. Will not overwrite any existing values.
+      */
+    def withHeaderAdded(headerName: String, values: Seq[String], regex: String): Headers =
+    {
+        if (values.nonEmpty)
+            withHeaderAdded(headerName, values.reduce { _ + regex + _ }, regex)
+        else
+            this
+    }
+    
+    /**
+      * Adds a new value to a header. Will not overwrite any existing values.
+      */
+    def withHeaderAdded(headerName: String, value: String, regex: String = ",") =
+    {
+        if (fields.contains(headerName.toLowerCase()))
+        {
+            // Appends to existing value
+            val newValue = apply(headerName).get + regex + value
+            Headers(fields + (headerName -> newValue))
+        }
+        else
+            withHeader(headerName, value)
+    }
+    
+    /**
      * Parses a header field into a time instant
      */
     def timeHeader(headerName: String) = apply(headerName).flatMap { dateStr => 
@@ -337,7 +376,7 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     /**
      * Adds a new method to the methods allowed for the targeted resource
      */
-    def withMethodAllowed(method: Method) = this + ("Allow", method.toString)
+    def withMethodAllowed(method: Method) = withHeaderAdded("Allow", method.toString)
     
     /**
      * Checks whether the client accepts the provided content type
@@ -380,7 +419,7 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     /**
      * Adds a new content type to the list of content types accepted by the client
      */
-    def withTypeAccepted(contentType: ContentType) = this + ("Accept", contentType.toString)
+    def withTypeAccepted(contentType: ContentType) = withHeaderAdded("Accept", contentType.toString)
     
     /**
      * Overwrites the set of accepted charsets
@@ -396,7 +435,7 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     /**
      * Adds a new charset to the list of accepted charsets
      */
-    def withCharsetAccepted(charset: Charset, weight: Double = 1) = this + ("Accept-Charset",
+    def withCharsetAccepted(charset: Charset, weight: Double = 1) = withHeaderAdded("Accept-Charset",
             s"${charset.name()};q=$weight")
     
     /**
@@ -416,7 +455,7 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * @param weight Priority of specified language (default = 1.0)
      * @return A copy of these headers with specified accepted language added
      */
-    def withLanguageAccepted(language: String, weight: Double = 1) = this + ("Accept-Language",
+    def withLanguageAccepted(language: String, weight: Double = 1) = withHeaderAdded("Accept-Language",
         s"$language;q=$weight")
     
     /**
@@ -424,8 +463,8 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * @param contentType the type of the content
      * @param charset then encoding that was used used when the content was written to the response
      */
-    def withContentType(contentType: ContentType, charset: Option[Charset] = None) = this + 
-            ("Content-Type", contentType.toString + charset.map { ";" + _.name() }.getOrElse(""))
+    def withContentType(contentType: ContentType, charset: Option[Charset] = None) = withHeader(
+        "Content-Type", contentType.toString + charset.map { ";" + _.name() }.getOrElse(""))
     
     /**
      * Creates a new header with the time when the message associated with this header was originated. 
@@ -437,6 +476,12 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * Creates a new header with the time when the resource was last modified
      */
     def withLastModified(time: Instant) = withTimeHeader("Last-Modified", time)
+    
+    /**
+      * @param timeThreshold A time threshold for the 'if-modified-since' -header
+      * @return A copy of these headers with specified if-modified-since threshold
+      */
+    def withIfModifiedSince(timeThreshold: Instant) = withTimeHeader("If-Modified-Since", timeThreshold)
     
     /**
      * Creates a new header with a specified location information
@@ -462,6 +507,12 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
         val encoded = Base64.getEncoder.encodeToString((userName + ":" + password).getBytes(Codec.UTF8.charSet))
         withAuthorization("Basic " + encoded)
     }
+    
+    /**
+      * @param token Authorization/access token
+      * @return A copy of these headers with an authorization header containing specified token
+      */
+    def withBearerAuthorization(token: String) = withAuthorization(s"Bearer $token")
     
     // TODO: Implement support for following predefined headers:
     // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
