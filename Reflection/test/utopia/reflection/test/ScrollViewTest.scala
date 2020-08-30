@@ -24,7 +24,7 @@ import utopia.reflection.container.swing.layout.multi.AnimatedStack
 import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.reflection.localization.{DisplayFunction, Localizer, NoLocalization}
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape.{StackInsets, StackLengthLimit}
+import utopia.reflection.shape.stack.{StackInsets, StackLengthLimit}
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
 

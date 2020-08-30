@@ -20,7 +20,7 @@ import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.event.StackHierarchyListener
-import utopia.reflection.shape.{StackLength, StackSize}
+import utopia.reflection.shape.stack.{StackLength, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.FiniteDuration

@@ -11,7 +11,7 @@ import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
 import utopia.reflection.container.stack.template.layout.CollectionViewLike
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.reflection.shape.StackLength
+import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext

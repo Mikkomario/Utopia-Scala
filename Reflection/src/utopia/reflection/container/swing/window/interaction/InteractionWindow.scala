@@ -11,9 +11,10 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.{Dialog, Frame, Window}
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, StackLength}
+import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.Alignment.Top
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.stack.StackLength
 
 import scala.concurrent.ExecutionContext
 

@@ -7,7 +7,7 @@ import utopia.reflection.component.template.ComponentWrapper
 import utopia.reflection.component.template.layout.stack.{CachingStackable, Stackable}
 import utopia.reflection.container.stack.template.SingleStackContainer
 import utopia.reflection.container.template.Container
-import utopia.reflection.shape.{StackInsets, StackLength, StackSize}
+import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 
 /**
   * Framings are containers that present a component with scaling 'frames', like a painting

@@ -8,7 +8,7 @@ import utopia.reflection.component.template.layout.stack.{Stackable, StackableWr
 import utopia.reflection.container.stack.template.layout.StackLike
 import utopia.reflection.container.template.MultiContainer
 import utopia.reflection.event.StackHierarchyListener
-import utopia.reflection.shape.StackLength
+import utopia.reflection.shape.stack.StackLength
 
 /**
   * Segmented rows are basically stacks where each item is a segment and the lengths of the segments can be

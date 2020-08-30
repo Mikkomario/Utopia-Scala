@@ -17,7 +17,8 @@ import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.localization.{Localizer, NoLocalization}
-import utopia.reflection.shape.{Alignment, StackInsets}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
 

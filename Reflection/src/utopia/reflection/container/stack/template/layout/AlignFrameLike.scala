@@ -8,7 +8,8 @@ import utopia.reflection.component.template.layout.stack.{CachingStackable, Stac
 import utopia.reflection.container.stack.template.SingleStackContainer
 import utopia.reflection.container.template.Container
 import utopia.reflection.shape.Alignment.Center
-import utopia.reflection.shape.{Alignment, StackSize}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.StackSize
 
 /**
   * Contains a single item, which is aligned to a single side or corner, or the center

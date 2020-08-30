@@ -8,7 +8,7 @@ import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
 import utopia.reflection.container.stack.template.layout.CollectionViewLike
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.reflection.shape.StackLength
+import utopia.reflection.shape.stack.StackLength
 
 /**
  * This container places items in rows and columns, filling a 2D space

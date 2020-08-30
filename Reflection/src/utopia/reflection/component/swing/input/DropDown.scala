@@ -20,6 +20,8 @@ import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape._
+import utopia.reflection.shape.stack.modifier.StackSizeModifier
+import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.{Font, Prompt}
 
 import scala.concurrent.ExecutionContext

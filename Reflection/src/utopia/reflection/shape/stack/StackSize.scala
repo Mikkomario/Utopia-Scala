@@ -1,9 +1,9 @@
-package utopia.reflection.shape
+package utopia.reflection.shape.stack
 
-import utopia.genesis.shape.shape2D.Size
-import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.Axis._
-import utopia.reflection.shape.LengthPriority.Low
+import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape2D.Size
+import utopia.reflection.shape.stack.LengthPriority.Low
 
 object StackSize
 {

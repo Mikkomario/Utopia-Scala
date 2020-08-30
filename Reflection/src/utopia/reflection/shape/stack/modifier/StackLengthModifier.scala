@@ -1,9 +1,10 @@
-package utopia.reflection.shape
-
-import scala.language.implicitConversions
+package utopia.reflection.shape.stack.modifier
 
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
+import utopia.reflection.shape.stack.StackLength
+
+import scala.language.implicitConversions
 
 /**
   * Used for modifying stack lengths
@@ -41,6 +42,19 @@ trait StackLengthModifier
 	
 	
 	// OTHER	----------------------
+	
+	/**
+	  * @param another Another stack length modifier
+	  * @return A combination of these modifiers where this modifier is applied first and the other modifier
+	  *         is applied after that
+	  */
+	def &&(another: StackLengthModifier) = new CombinedLengthModifier(this, another)
+	
+	/**
+	  * @param f A mapping function applied to the results of this modifier
+	  * @return A copy of this modifier with the mapping function applied to all results
+	  */
+	def mapResult(f: StackLength => StackLength) = this && f
 	
 	/**
 	  * @param axis Targeted axis

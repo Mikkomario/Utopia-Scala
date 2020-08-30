@@ -3,7 +3,7 @@ package utopia.reflection.component.swing.template
 import java.awt.Component
 
 import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 
 object StackableAwtComponentWrapper
 {

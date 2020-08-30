@@ -1,7 +1,7 @@
 package utopia.reflection.container.stack.segmented
 
 import utopia.genesis.shape.Axis2D
-import utopia.reflection.shape.StackLength
+import utopia.reflection.shape.stack.StackLength
 
 /**
   * Segmented items can be divided into segments that each have their own length. This trait is used for matching

@@ -1,4 +1,4 @@
-package utopia.reflection.shape
+package utopia.reflection.shape.stack
 
 import utopia.genesis.shape.shape2D.{Direction2D, Insets, InsetsFactory, InsetsLike}
 

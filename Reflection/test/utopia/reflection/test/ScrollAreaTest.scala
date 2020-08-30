@@ -20,7 +20,7 @@ import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 import utopia.reflection.localization.{DisplayFunction, Localizer, NoLocalization}
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape.{StackInsets, StackLengthLimit}
+import utopia.reflection.shape.stack.{StackInsets, StackLengthLimit}
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
 

@@ -9,7 +9,7 @@ import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.component.template.layout.stack.StackLeaf
 import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.window.{Dialog, Frame}
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 
 import scala.concurrent.ExecutionContext
 

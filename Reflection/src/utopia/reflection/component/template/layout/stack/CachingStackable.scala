@@ -1,7 +1,8 @@
 package utopia.reflection.component.template.layout.stack
 
 import utopia.flow.datastructure.mutable.Lazy
-import utopia.reflection.shape.{StackSize, StackSizeModifier}
+import utopia.reflection.shape.stack.StackSize
+import utopia.reflection.shape.stack.modifier.StackSizeModifier
 
 /**
   * This stackable caches the calculated stack size

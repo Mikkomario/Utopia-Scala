@@ -23,7 +23,8 @@ import utopia.reflection.container.swing.layout.multi.AnimatedStack
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.reflection.container.swing.window.{Popup, Window}
 import utopia.reflection.controller.data.ContainerSelectionManager
-import utopia.reflection.shape.{StackLength, StackSize, StackSizeModifier}
+import utopia.reflection.shape.stack.modifier.StackSizeModifier
+import utopia.reflection.shape.stack.{StackLength, StackSize}
 
 import scala.concurrent.ExecutionContext
 

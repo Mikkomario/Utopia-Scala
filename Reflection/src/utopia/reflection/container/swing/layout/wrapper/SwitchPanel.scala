@@ -7,7 +7,7 @@ import utopia.reflection.component.template.layout.stack.{CachingStackable, Stac
 import utopia.reflection.container.stack.template.SingleStackContainer
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 
 object SwitchPanel
 {

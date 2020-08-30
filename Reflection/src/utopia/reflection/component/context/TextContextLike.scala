@@ -2,7 +2,8 @@ package utopia.reflection.component.context
 
 import utopia.genesis.color.Color
 import utopia.reflection.localization.Localizer
-import utopia.reflection.shape.{Alignment, StackInsets}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
 /**

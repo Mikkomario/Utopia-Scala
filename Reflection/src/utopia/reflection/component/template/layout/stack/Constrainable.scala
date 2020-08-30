@@ -2,7 +2,7 @@ package utopia.reflection.component.template.layout.stack
 
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
-import utopia.reflection.shape.{StackLengthModifier, StackSizeModifier}
+import utopia.reflection.shape.stack.modifier.{StackLengthModifier, StackSizeModifier}
 
 /**
   * A common trait for stackable instances that can apply stack size constraints

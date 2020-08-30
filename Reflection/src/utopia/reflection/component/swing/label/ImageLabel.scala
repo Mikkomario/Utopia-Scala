@@ -9,7 +9,7 @@ import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
 import utopia.reflection.component.template.display.RefreshableWithPointer
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 
 object ImageLabel
 {

@@ -15,7 +15,7 @@ import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.AnimatedChangesContainer
-import utopia.reflection.shape.StackLength
+import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext

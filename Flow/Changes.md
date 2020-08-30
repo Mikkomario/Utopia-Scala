@@ -1,4 +1,8 @@
 # Utopia Flow - List of Changes
+## v1.8.1
+### New Methods
+- Added .notCompletingBefore(Future) to Future in AsyncExtensions
+
 ## v1.8
 ### Scala
 - Module is now based on Scala v2.13.3

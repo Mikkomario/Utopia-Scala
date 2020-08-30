@@ -7,7 +7,7 @@ import utopia.reflection.component.template.layout.stack.{StackSizeCalculating, 
 import utopia.reflection.component.template.layout.{Area, AreaOfItems}
 import utopia.reflection.container.stack.template.MultiStackContainer
 import utopia.reflection.container.stack.{StackLayout, Stacker}
-import utopia.reflection.shape.StackLength
+import utopia.reflection.shape.stack.StackLength
 
 /**
 * A stack holds multiple stackable components in a stack-like manner either horizontally or vertically

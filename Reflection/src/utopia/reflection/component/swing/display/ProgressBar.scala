@@ -17,7 +17,7 @@ import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.layout.stack.StackableWrapper
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext
@@ -98,6 +98,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 	 *         completes while this component is not shown)
 	 */
 	def completionFuture(implicit exc: ExecutionContext) = isCompletedFlag.futureWhere { c => c }
+		.map { _ => () }
 	
 	
 	// IMPLEMENTED	----------------------

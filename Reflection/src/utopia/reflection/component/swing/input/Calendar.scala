@@ -22,7 +22,8 @@ import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.reflection.localization.DisplayFunction
-import utopia.reflection.shape.{Alignment, StackInsets, StackLength, StackSize}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.Font
 
 import scala.collection.immutable.HashMap

@@ -11,7 +11,8 @@ import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperW
 import utopia.reflection.component.template.display.RefreshableWithPointer
 import utopia.reflection.component.template.text.TextComponent
 import utopia.reflection.localization.DisplayFunction
-import utopia.reflection.shape.{Alignment, StackInsets}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
 object ItemLabel

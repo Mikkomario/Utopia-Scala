@@ -12,7 +12,7 @@ import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtCompo
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.container.stack.template.scrolling.ScrollViewLike
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.shape.StackLengthLimit
+import utopia.reflection.shape.stack.StackLengthLimit
 import utopia.reflection.util.ComponentCreationDefaults
 
 object ScrollView

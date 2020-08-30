@@ -1,4 +1,16 @@
 # Utopia Reflection - List of Changes
+## v1.3 (beta)
+### Breaking Changes
+- Moved some of the clases in utopia.reflection.shape -package to separate sub-packages
+### New Features
+- Added LoadingView and LoadingWindow
+    - Includes a new ProgressState class for representing background process progress
+- Added ExpandingLengthModifier and NoShrinkingConstraint
+### New Methods
+- Added && and map functions to StackLengthModifier and StackSizeModifier
+### Other Changes
+- Frame.title and Dialog.title now default to empty strings in constructors
+
 ## v1.2
 ### Scala
 - Module is now based on Scala v2.13.3

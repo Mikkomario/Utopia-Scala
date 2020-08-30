@@ -1,7 +1,8 @@
 package utopia.reflection.component.drawing.immutable
 
 import utopia.genesis.color.Color
-import utopia.reflection.shape.{Alignment, StackInsets}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
 /**

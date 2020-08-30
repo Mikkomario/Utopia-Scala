@@ -21,7 +21,8 @@ import utopia.reflection.component.drawing.template.DrawLevel.Foreground
 import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawer}
 import utopia.reflection.component.template.layout.stack.{CachingStackable, Stackable}
 import utopia.reflection.container.stack.template.StackContainerLike
-import utopia.reflection.shape.{ScrollBarBounds, StackLengthLimit, StackSize}
+import utopia.reflection.shape.ScrollBarBounds
+import utopia.reflection.shape.stack.{StackLengthLimit, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.collection.immutable.HashMap

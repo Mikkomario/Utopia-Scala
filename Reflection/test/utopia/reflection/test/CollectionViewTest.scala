@@ -12,7 +12,7 @@ import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.multi.AnimatedCollectionView
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.SingleFrameSetup
 
 import scala.util.Random

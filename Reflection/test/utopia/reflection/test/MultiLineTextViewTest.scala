@@ -7,7 +7,8 @@ import utopia.reflection.component.swing.input.{JDropDownWrapper, TextField}
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.localization.LocalString
-import utopia.reflection.shape.{Alignment, StackLength}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.util.SingleFrameSetup
 
 /**

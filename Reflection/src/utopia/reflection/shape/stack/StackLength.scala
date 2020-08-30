@@ -1,7 +1,7 @@
-package utopia.reflection.shape
+package utopia.reflection.shape.stack
 
 import utopia.flow.util.Equatable
-import utopia.reflection.shape.LengthPriority.{Expanding, Low, Normal, Shrinking}
+import utopia.reflection.shape.stack.LengthPriority.{Expanding, Low, Normal, Shrinking}
 
 object StackLength
 {

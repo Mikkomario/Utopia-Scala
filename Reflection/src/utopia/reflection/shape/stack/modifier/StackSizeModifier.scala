@@ -1,8 +1,8 @@
-package utopia.reflection.shape
+package utopia.reflection.shape.stack.modifier
 
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.Direction2D
+import utopia.reflection.shape.stack.{StackLength, StackSize}
 
 import scala.language.implicitConversions
 
@@ -13,12 +13,50 @@ import scala.language.implicitConversions
   */
 trait StackSizeModifier
 {
+	// ABSTRACT	------------------------------
+	
 	/**
 	  * Modifies the specified stack size
 	  * @param size Size to modify
 	  * @return Size after modification
 	  */
 	def apply(size: StackSize): StackSize
+	
+	
+	// OTHER	------------------------------
+	
+	/**
+	  * @param other Another stack size modifier
+	  * @return A combination of these modifiers where this modifier is applied first and the specified modifier is
+	  *         applied second
+	  */
+	def &&(other: StackSizeModifier) = new CombinedSizeModifier(this, other)
+	
+	/**
+	  * @param f A mapping function
+	  * @return A copy of this modifier where all results are mapped with the specified function
+	  */
+	def map(f: StackSize => StackSize) = this && f
+	
+	/**
+	  * @param side Targeted size side
+	  * @param f A mapping function
+	  * @return A copy of this modifier where all results are mapped with the specified function over the specified side
+	  */
+	def mapSide(side: Axis2D)(f: StackLength => StackLength) =
+		this && (f: StackLengthModifier).over(side)
+	
+	/**
+	  * @param f A mapping function
+	  * @return A copy of this modifier where all result widths are mapped with the specified function
+	  */
+	def mapWidth(f: StackLength => StackLength) = mapSide(X)(f)
+	
+	/**
+	  * @param f A mapping function
+	  * @return A copy of this modifier where all result heights are mapped with the specified function
+	  */
+	def mapHeight(f: StackLength => StackLength) = mapSide(Y)(f)
 }
 
 object StackSizeModifier

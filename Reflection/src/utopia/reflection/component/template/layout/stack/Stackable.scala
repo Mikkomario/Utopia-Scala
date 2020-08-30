@@ -5,7 +5,7 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis2D
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.stack.{StackHierarchyManager, StackLayout}
-import utopia.reflection.shape.{Alignment, StackInsets, StackLength, StackSize}
+import utopia.reflection.shape.Alignment
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.shape2D.Direction2D
 import utopia.genesis.util.Fps
@@ -16,6 +16,7 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, AnimatedSizeContainer, Framing}
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.Alignment.Center
+import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.{Future, Promise}

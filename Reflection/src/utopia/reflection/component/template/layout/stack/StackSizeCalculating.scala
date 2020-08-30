@@ -1,6 +1,6 @@
 package utopia.reflection.component.template.layout.stack
 
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 
 /**
   * These items are able to calculate their stack size

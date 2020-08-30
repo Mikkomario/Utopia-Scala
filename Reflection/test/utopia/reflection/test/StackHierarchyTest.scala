@@ -14,7 +14,7 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.localization.{Localizer, NoLocalization}
-import utopia.reflection.shape.{StackLength, StackSize}
+import utopia.reflection.shape.stack.{StackLength, StackSize}
 
 import scala.concurrent.ExecutionContext
 

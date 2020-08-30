@@ -3,7 +3,8 @@ package utopia.reflection.component.drawing.template
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
-import utopia.reflection.shape.{Alignment, StackInsets}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.StackInsets
 
 /**
   * A common trait for image drawer implementations

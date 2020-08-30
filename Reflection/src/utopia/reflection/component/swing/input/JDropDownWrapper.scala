@@ -17,7 +17,8 @@ import utopia.reflection.component.template.Focusable
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape.{Border, StackInsets, StackLength, StackSize}
+import utopia.reflection.shape.Border
+import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.Font
 
 object JDropDownWrapper

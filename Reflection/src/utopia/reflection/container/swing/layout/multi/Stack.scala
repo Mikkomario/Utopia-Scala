@@ -15,7 +15,7 @@ import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.stack.template.layout.StackLike
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.shape.StackLength
+import utopia.reflection.shape.stack.StackLength
 
 import scala.collection.immutable.VectorBuilder
 

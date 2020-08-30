@@ -8,8 +8,9 @@ import utopia.reflection.component.swing.template.{AwtComponentWrapper, AwtCompo
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 import utopia.reflection.container.swing.window.WindowResizePolicy.{Program, User}
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, StackSize}
+import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.Alignment.Center
+import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext
@@ -22,7 +23,7 @@ object Frame
     /**
       * Creates a new windowed frame
       * @param content The frame contents
-      * @param title The frame title
+      * @param title The frame title (default = empty string)
       * @param resizePolicy The policy used about Frame resizing. By default, only the user may resize the Frame
       * @param resizeAlignment Alignment used when repositioning this window when its size changes
       *                        (used when program dictates window size). Default = Center = window's center point will
@@ -31,7 +32,7 @@ object Frame
       * @param borderless Whether borderless windowed mode should be used (default = false)
       * @return A new windowed frame
       */
-    def windowed[C <: Stackable with AwtContainerRelated](content: C, title: LocalizedString,
+    def windowed[C <: Stackable with AwtContainerRelated](content: C, title: LocalizedString  = LocalizedString.empty,
                                                           resizePolicy: WindowResizePolicy = WindowResizePolicy.User,
                                                           resizeAlignment: Alignment = Center,
                                                           icon: Image = ComponentCreationDefaults.windowIcon,
@@ -41,14 +42,14 @@ object Frame
     /**
       * Creates a new full screen frame
       * @param content The frame contents
-      * @param title The frame title
+      * @param title The frame title (default = empty string)
       * @param icon Icon to display on this window. Default = global default.
       * @param showToolBar Whether tool bar (bottom) should be displayed (default = true)
       * @param resizeAlignment Alignment that determines window position when its size changes
       *                        (used if this window becomes non-fullscreen). Default = Center.
       * @return A new full screen frame
       */
-    def fullScreen[C <: Stackable with AwtContainerRelated](content: C, title: LocalizedString,
+    def fullScreen[C <: Stackable with AwtContainerRelated](content: C, title: LocalizedString  = LocalizedString.empty,
                                                             icon: Image = ComponentCreationDefaults.windowIcon,
                                                             showToolBar: Boolean = true,
                                                             resizeAlignment: Alignment = Center) =
@@ -94,7 +95,8 @@ object Frame
 * @author Mikko Hilpinen
 * @since 26.3.2019
 **/
-class Frame[C <: Stackable with AwtContainerRelated](override val content: C, override val title: LocalizedString,
+class Frame[C <: Stackable with AwtContainerRelated](override val content: C,
+                                                     override val title: LocalizedString = LocalizedString.empty,
                                                      startResizePolicy: WindowResizePolicy = User,
                                                      override val resizeAlignment: Alignment = Center,
                                                      icon: Image = ComponentCreationDefaults.windowIcon,

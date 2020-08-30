@@ -10,7 +10,8 @@ import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.text.TextComponent
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, Border, StackInsets}
+import utopia.reflection.shape.stack.StackInsets
+import utopia.reflection.shape.{Alignment, Border}
 import utopia.reflection.text.Font
 
 object TextButton

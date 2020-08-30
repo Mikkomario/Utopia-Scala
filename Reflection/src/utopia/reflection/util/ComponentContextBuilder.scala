@@ -9,7 +9,8 @@ import utopia.genesis.util.Drawer
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.drawing.template.ScrollBarDrawer
 import utopia.reflection.container.stack.template.scrolling.ScrollAreaLike
-import utopia.reflection.shape.{Alignment, Border, ScrollBarBounds, StackInsets, StackLength}
+import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.reflection.shape.{Alignment, Border, ScrollBarBounds}
 import utopia.reflection.text.Font
 
 import scala.concurrent.duration.FiniteDuration

@@ -21,7 +21,7 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.Alignment.Center
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape.{StackInsets, StackLength}
+import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font
 
 import scala.collection.immutable.HashMap

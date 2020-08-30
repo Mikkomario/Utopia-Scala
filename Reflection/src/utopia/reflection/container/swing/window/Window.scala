@@ -20,7 +20,8 @@ import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.event.{ResizeListener, StackHierarchyListener}
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, StackSizeModifier}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.modifier.StackSizeModifier
 
 import scala.concurrent.Promise
 import scala.jdk.CollectionConverters.SeqHasAsJava

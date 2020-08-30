@@ -6,7 +6,8 @@ import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.reflection.component.drawing.template.ScrollBarDrawer
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.ComponentLike
-import utopia.reflection.shape.{Alignment, Border, StackInsets, StackLength}
+import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.reflection.shape.{Alignment, Border}
 import utopia.reflection.text.Font
 
 import scala.concurrent.duration.FiniteDuration

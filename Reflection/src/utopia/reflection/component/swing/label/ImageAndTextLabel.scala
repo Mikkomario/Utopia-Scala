@@ -14,7 +14,8 @@ import utopia.reflection.container.stack.StackLayout.{Leading, Trailing}
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.Alignment.{Bottom, Top}
-import utopia.reflection.shape.{Alignment, StackInsets, StackLength}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font
 
 object ImageAndTextLabel

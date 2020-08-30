@@ -19,7 +19,7 @@ import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf, Stackable}
 import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
-import utopia.reflection.shape.{StackLengthLimit, StackSize}
+import utopia.reflection.shape.stack.{StackLengthLimit, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext

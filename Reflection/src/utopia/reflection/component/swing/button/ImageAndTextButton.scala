@@ -8,9 +8,10 @@ import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, Border, StackInsets, StackLength}
+import utopia.reflection.shape.{Alignment, Border}
 import utopia.reflection.text.Font
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.stack.{StackInsets, StackLength}
 
 object ImageAndTextButton
 {

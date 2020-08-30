@@ -14,7 +14,7 @@ import utopia.genesis.shape.shape2D.{Point, Size}
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf, Stackable}
 import utopia.reflection.event.{ResizeEvent, ResizeListener}
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.ComponentToImage
 
 object AwtComponentWrapper

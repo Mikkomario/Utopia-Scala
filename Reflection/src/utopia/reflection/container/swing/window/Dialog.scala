@@ -14,7 +14,7 @@ import utopia.reflection.shape.Alignment.Center
 * @since 26.3.2019
 **/
 class Dialog[C <: Stackable with AwtContainerRelated](owner: java.awt.Window, override val content: C,
-                                                      override val title: LocalizedString,
+                                                      override val title: LocalizedString = LocalizedString.empty,
                                                       startResizePolicy: WindowResizePolicy = User,
                                                       override val resizeAlignment: Alignment = Center,
                                                       borderless: Boolean = false) extends Window[C]

@@ -3,8 +3,9 @@ package utopia.reflection.component.context
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorScheme, ColorSet, ColorShade, ComponentColor}
 import utopia.reflection.localization.Localizer
-import utopia.reflection.shape.{Alignment, StackInsets}
+import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.stack.StackInsets
 
 /**
   * This is a more specific instance of base context that also includes information about surrounding container's

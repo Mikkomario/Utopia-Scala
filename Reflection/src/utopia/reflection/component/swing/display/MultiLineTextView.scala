@@ -15,6 +15,8 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, SwitchPanel}
 import utopia.reflection.localization.{LocalString, LocalizedString}
 import utopia.reflection.shape._
+import utopia.reflection.shape.stack.modifier.StackSizeModifier
+import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.Font
 
 object MultiLineTextView

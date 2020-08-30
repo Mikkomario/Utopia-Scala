@@ -6,7 +6,7 @@ import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.swing.template.JWrapper
 import utopia.reflection.component.template.layout.stack.StackLeaf
-import utopia.reflection.shape.{StackLength, StackSize}
+import utopia.reflection.shape.stack.{StackLength, StackSize}
 
 object StackSpace
 {

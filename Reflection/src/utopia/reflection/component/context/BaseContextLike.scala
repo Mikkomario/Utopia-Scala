@@ -2,7 +2,8 @@ package utopia.reflection.component.context
 
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.reflection.color.ColorScheme
-import utopia.reflection.shape.{Margins, StackLength}
+import utopia.reflection.shape.Margins
+import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.text.Font
 
 /**

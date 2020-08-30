@@ -16,7 +16,7 @@ import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.template.ComponentWrapper
 import utopia.reflection.event.TransitionState
 import utopia.reflection.event.TransitionState.{Finished, NotStarted, Ongoing}
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 
 import scala.concurrent.Promise
 import scala.concurrent.duration.{Duration, FiniteDuration}

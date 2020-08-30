@@ -26,7 +26,8 @@ import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.layout.Alignable
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape._
+import utopia.reflection.shape.{stack, _}
+import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.{Font, Prompt, Regex}
 
 object TextField
@@ -336,7 +337,7 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 	override def calculatedStackSize =
 	{
 		val h = textHeight.map { insideMargins.height * 2 + _ } getOrElse 32.any
-		StackSize(targetWidth, h)
+		stack.StackSize(targetWidth, h)
 	}
 	
 	override def align(alignment: Alignment) = alignment.horizontal.swingComponents.get(X).foreach(field.setHorizontalAlignment)

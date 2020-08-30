@@ -7,6 +7,7 @@ import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Direction2D, Point, Size}
 import utopia.reflection.container.stack.Stacker
+import utopia.reflection.shape.stack.{StackInsets, StackLength}
 
 import scala.collection.immutable.HashMap
 

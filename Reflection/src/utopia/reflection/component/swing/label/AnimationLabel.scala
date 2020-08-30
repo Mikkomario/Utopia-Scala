@@ -19,8 +19,10 @@ import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.Alignment.Center
-import utopia.reflection.shape.{Alignment, StackSize}
+import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.stack.StackSize
+import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -37,7 +39,7 @@ object AnimationLabel
 	  * @return A new label
 	  */
 	def withRotatingImage(actorHandler: ActorHandler, image: Image, origin: Point, rotation: TimedAnimation[Rotation],
-						  alignment: Alignment = Center, maxFps: Fps = Fps(120)) =
+						  alignment: Alignment = Center, maxFps: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
 	{
 		val animator = TransformingImageAnimator(image, origin, rotation.map(Transformation.rotation))
 		val maxRadius = image.size.toBounds().corners.map { p => (p - origin).length }.max
@@ -73,7 +75,8 @@ object AnimationLabel
 	  * @return A new label
 	  */
 	def contextualWithRotatingImage(image: Image, origin: Point, rotation: TimedAnimation[Rotation],
-									alignment: Alignment = Center, maxFps: Fps = Fps(120))
+									alignment: Alignment = Center,
+									maxFps: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
 								   (implicit context: BaseContextLike) =
 		withRotatingImage(context.actorHandler, image, origin, rotation, alignment, maxFps)
 	

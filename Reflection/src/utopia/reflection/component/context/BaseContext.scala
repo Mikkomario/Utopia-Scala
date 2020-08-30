@@ -2,9 +2,10 @@ package utopia.reflection.component.context
 
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.reflection.color.{ColorScheme, ComponentColor}
-import utopia.reflection.shape.{Margins, StackLength}
+import utopia.reflection.shape.Margins
 import utopia.reflection.text.Font
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.stack.StackLength
 
 /**
   * This component context specifies information that is shared within the whole program (not component specific)

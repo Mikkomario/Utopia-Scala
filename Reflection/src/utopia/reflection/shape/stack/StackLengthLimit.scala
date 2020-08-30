@@ -1,4 +1,4 @@
-package utopia.reflection.shape
+package utopia.reflection.shape.stack
 
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.Axis2D

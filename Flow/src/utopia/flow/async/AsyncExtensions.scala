@@ -100,6 +100,21 @@ object AsyncExtensions
 				}
 			}
 		}
+		
+		/**
+		  * @param another Another future
+		  * @param exc Implicit execution context
+		  * @tparam U Type of the other future
+		  * @return This future, but delayed until the other future has completed
+		  */
+		def notCompletingBefore[U](another: Future[U])(implicit exc: ExecutionContext) =
+		{
+			// If the other future is already completed, doesn't need to wait for it
+			if (another.isCompleted)
+				f
+			else
+				f.zipWith(another) { (result, _) => result }
+		}
 	}
 	
 	implicit class TryFuture[A](val f: Future[Try[A]]) extends AnyVal
