@@ -89,10 +89,10 @@ class AnimatedVisibilityChange(original: AwtComponentRelated with Stackable, tra
 					case Disappearing => 1.0 - progress
 					case Visible => 1.0
 				}
-				baseImage.withAlpha(alpha)
+				Vector(baseImage.withAlpha(alpha))
 			}
 		else
-			Animation.fixed(baseImage)
+			Animation.fixed(Vector(baseImage))
 	}
 	
 	override protected val sizeAnimation = Animation { progress =>

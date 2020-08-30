@@ -1,5 +1,7 @@
 # Utopia Disciple - List of Changes
-## v1.3 (Beta)
+## v1.3
+### Scala
+- Module is now based on Scala v2.13.3
 ### Breaking Changes
 - Divided http package into two sub-packages: request and response
 - Created a new set of interaction methods to Gateway.

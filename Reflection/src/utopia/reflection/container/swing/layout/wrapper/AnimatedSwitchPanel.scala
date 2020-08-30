@@ -1,10 +1,10 @@
 package utopia.reflection.container.swing.layout.wrapper
 
 import utopia.flow.async.Volatile
-import utopia.genesis.animation.transform.AnimatedTransform
+import utopia.genesis.animation.Animation
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.Size
+import utopia.genesis.shape.path.SPath
 import utopia.genesis.util.Fps
 import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.label.EmptyLabel
@@ -20,20 +20,18 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object AnimatedSwitchPanel
 {
+	// ATTRIBUTES	---------------------------
+	
 	/**
 	  * Creates a new animated switch panel with contextual information
 	  * @param initialContent Content displayed initially
-	  * @param imageTransition Transition used with component images
-	  * @param sizeTransition Transition used with component sizes
 	  * @param exc Implicit execution context
 	  * @param context Implicit animation context
 	  * @tparam C Type of switched component
 	  * @return A new animated switch panel
 	  */
-	def contextual[C <: AwtStackable](initialContent: C, imageTransition: AnimatedTransform[(Image, Image), Image],
-									  sizeTransition: AnimatedTransform[(Size, Size), Size])
-									 (implicit exc: ExecutionContext, context: AnimationContextLike) =
-		new AnimatedSwitchPanel(initialContent, context.actorHandler, imageTransition, sizeTransition,
+	def contextual[C <: AwtStackable](initialContent: C)(implicit exc: ExecutionContext, context: AnimationContextLike) =
+		new AnimatedSwitchPanel[C](initialContent, context.actorHandler,
 			context.animationDuration, context.maxAnimationRefreshRate)
 }
 
@@ -43,8 +41,6 @@ object AnimatedSwitchPanel
   * @since 19.4.2020, v1.2
   */
 class AnimatedSwitchPanel[C <: AwtStackable](initialContent: C, actorHandler: ActorHandler,
-											 imageTransition: AnimatedTransform[(Image, Image), Image],
-											 sizeTransition: AnimatedTransform[(Size, Size), Size],
 											 duration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
 											 maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
 											(implicit exc: ExecutionContext)
@@ -70,6 +66,8 @@ class AnimatedSwitchPanel[C <: AwtStackable](initialContent: C, actorHandler: Ac
 	  * @return Current content within this panel
 	  */
 	def content = targetContent
+	
+	private def curve = SPath.verySmooth
 	
 	
 	// IMPLEMENTED	---------------------
@@ -118,6 +116,7 @@ class AnimatedSwitchPanel[C <: AwtStackable](initialContent: C, actorHandler: Ac
 		
 		transition.start().map { _ =>
 			currentContent = to
+			panel.set(to)
 			to
 		}
 	}
@@ -131,16 +130,24 @@ class AnimatedSwitchPanel[C <: AwtStackable](initialContent: C, actorHandler: Ac
 		
 		private val label = new EmptyLabel()
 		
+		override protected val imageAnimation = Animation { progress =>
+			Vector(from.withAlpha(1 - progress), to.withAlpha(progress)) }.curved(curve)
+		
+		override protected val sizeAnimation = Animation { progress =>
+			StackSize.any(from.size * (1 - progress) + to.size * progress)
+		}
+		
+		
+		// INITIAL CODE	---------------------------
+		
+		enableDrawing()
+		
 		
 		// IMPLEMENTED	----------------------------
 		
 		override def component = label.component
 		
 		override protected def duration = AnimatedSwitchPanel.this.duration
-		
-		override protected val imageAnimation = imageTransition.toAnimation(from, to)
-		
-		override protected val sizeAnimation = sizeTransition.toAnimation(from.size, to.size).map { StackSize.any(_) }
 		
 		override protected def maxRefreshRate = AnimatedSwitchPanel.this.maxRefreshRate
 		

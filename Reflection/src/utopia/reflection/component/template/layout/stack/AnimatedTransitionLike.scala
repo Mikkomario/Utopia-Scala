@@ -39,9 +39,10 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 	protected def duration: FiniteDuration
 	
 	/**
-	  * @return Animation that is used for calculating the drawn image
+	  * @return Animation that is used for calculating the drawn images. The images are drawn in the order they
+	  *         are listed, meaning that the last image will appear on top.
 	  */
-	protected def imageAnimation: Animation[Image]
+	protected def imageAnimation: Animation[Seq[Image]]
 	
 	/**
 	  * @return Animation that is used for calculating component size
@@ -63,7 +64,7 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 	private var nextUpdateThreshold = Duration.Zero
 	private val completionPromise = Promise[Unit]()
 	
-	private val cachedImage = Lazy { imageAnimation(progress) }
+	private val cachedImages = Lazy { imageAnimation(progress) }
 	private val cachedSize = Lazy { sizeAnimation(progress) }
 	
 	
@@ -116,14 +117,14 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 			_state = Finished
 			passedDuration = this.duration
 			completionPromise.success(())
-			cachedImage.reset()
+			cachedImages.reset()
 			revalidate()
 			repaint()
 		}
 		else if (passedDuration > nextUpdateThreshold)
 		{
 			nextUpdateThreshold = passedDuration + maxRefreshRate.interval
-			cachedImage.reset()
+			cachedImages.reset()
 			revalidate()
 			repaint()
 		}
@@ -165,7 +166,7 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 		
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
-			cachedImage.get.withSize(bounds.size, preserveShape = false).drawWith(drawer, bounds.position)
+			cachedImages.get.foreach { _.withSize(bounds.size, preserveShape = false).drawWith(drawer, bounds.position) }
 		}
 	}
 }

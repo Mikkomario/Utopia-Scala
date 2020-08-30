@@ -1,6 +1,8 @@
 # Utopia Access - List of Changes
 
-## v1.2.1 (beta)
+## v1.2.1
+### Scala
+- Module is now based on Scala v2.13.3
 ### New Features
 - **Status** now contains two new fields: **isTemporary**: Boolean and 
 **doNotRepeat**: Boolean. These fields act as hints for the client when set to true, 

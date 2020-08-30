@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContext
 object TestContext
 {
 	val actorHandler = ActorHandler()
-	val colorScheme = ColorScheme(ColorSet.fromHexes("#212121", "#484848", "#000000").get,
+	val colorScheme = ColorScheme.twoTone(ColorSet.fromHexes("#212121", "#484848", "#000000").get,
 		ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get)
 	val font = Font("Arial", 12, Plain, 2)
 	val margins = Margins(12)

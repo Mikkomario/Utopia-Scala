@@ -1,5 +1,7 @@
 # Utopia Reflection - List of Changes
-## v1.2 (beta)
+## v1.2
+### Scala
+- Module is now based on Scala v2.13.3
 ### Breaking Changes
 - Major package restructuring
 - ComponentContext and ComponentContextBuilder were replaced with new implementations. 
@@ -23,19 +25,16 @@ Axis2D as a parameter instead of Direction2D.
 - Removed useLowPriority parameter from AlignFrame. Now all frames expand the content when necessary.
 - Moved Insets and Screen classes from Reflection to Genesis
 - Changed constructor parameter ordering in Switch
-    
+- Refactored color handling in context classes
 ### Deprecations
 - StackSelectionManager was deprecated. You should now use ContainerSelectionManager instead.
     - ContainerSelectionManager supports a wider range of containers.
 - SegmentedRow and SegmentedGroup were deprecated since new implementations (SegmentGroup) were added
-    
 ### Major Changes
 - DropDownLike now uses animated stack instead of normal stack in its pop-up view.
-    
 ### Fixes
 - TextLabel now calls repaint upon layout update 
 - Made StackHierarchyManager more thread-safe, although there are still probably non-throwing issues
-
 ### New Features
 - SegmentGroup
     - Replaces old SegmentedRow and SegmentedGroup implementations by wrapping components instead of 
@@ -66,15 +65,16 @@ animations.
     - Can be used for animated drawing (Sprites, rotating images etc.)
 - InteractionWindow traits and classes for window-based user interaction
 - Added smoother animations to Switch and included same animations to ProgressBar
-
+- Added AnimationLabel
+- Added AnimatedSwitchPanel
 ### New Methods
 - AwtComponentWrapper: toImage
     - Draws a component to an image. This feature is also available via 
     ComponentToImage object.
 - LocalStringLike.interpolate(Map)
     - String interpolation is now available for key value pairs and new string syntax. 
-    
 ### Other Changes
 - ContainerContentManager now accepts any MultiContainer with Stackable and not just MultiStackContainers
 - TextFields now downscale their prompts if they would not fit into bounds.
 - Tweaks to component coloring (Eg. Button hover color)
+- Component creation and context class default values are now defined in ComponentCreationDefaults

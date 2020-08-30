@@ -1,6 +1,8 @@
 # Utopia Vault - List of Changes
 
-## v1.6 (Beta)
+## v1.6
+### Scala
+- Module is now based on Scala v2.13.3
 ### Breaking Changes
 - Renamed multiple factory traits:
     - StorableFactory -> FromRowModelFactory
@@ -22,10 +24,15 @@ possibility of 0 linked items.
 - Added RowModelAccess, SingleRowModel access and ManyRowModelAccess for FromRowFactory -utilizing 
 access classes
 - Added .existsDatabaseWithName(String) and .existsTableWithName(String, String) to Connection
+- Added database dropping feature to Connection
+- Added Count sql statement support
 ### New Methods
 - Condition object now contains .alwaysTrue and .alwaysFalse properties
 ### Other Changes
 - Changed mergeCondition(...) methods in Accessor from protected to public
+- Accessor.mergeCondition(...) now accepts a Storable instance that will automatically be converted to a condition
+- ConditionElement.in(Iterable) now returns a "FALSE" statement when specified set is empty
+- Non-table data may now be read from Rows
 
 ## v1.5
 ### Major Changes

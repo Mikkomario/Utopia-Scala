@@ -1,5 +1,7 @@
 # Utopia Nexus - List of Changes
-## v1.5 (Beta)
+## v1.5
+### Scala
+- Module is now based on Scala v2.13.3
 ### Breaking Changes
 - Renamed NoOperation result to NotModified
 ### Deprecations

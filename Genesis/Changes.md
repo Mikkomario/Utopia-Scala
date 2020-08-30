@@ -1,5 +1,7 @@
 # Utopia Reflection - List of Changes
-## v2.3 (beta)
+## v2.3
+### Scala
+- Module is now based on Scala v2.13.3
 ### Breaking Changes
 - Major package restructuring in shape -package
 - Added Vector2D, which now replaces Vector3D in many places
@@ -34,3 +36,4 @@ both always stays positive
 - Drawer.drawTextCentered now properly downscales the text if it was to go out of bounds.
 - Moved Insets and Screen classes from Reflection to Genesis
 - Added some new utility functions to Angle and Rotation
+- Added a couple of new size methods to Image

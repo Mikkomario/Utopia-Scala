@@ -1,5 +1,7 @@
 # Utopia Flow - List of Changes
-## v1.8 (beta)
+## v1.8
+### Scala
+- Module is now based on Scala v2.13.3
 ### Breaking Changes
 - CollectionExtensions: 
     - toMultiMap(f1, f2) and toMultiMap() were replaced with toMultiMap(f1)(f2), toMultiMap(...) and asMultiMap
@@ -20,12 +22,15 @@ can automatically unwrap values to most basic types (saves you from writing valu
 - Added a WeekDay enumeration
     - LocalDate.weekDay now returns an instance of this enumeration when TimeExtensions has been imported
 - Added WeeklyTask trait & wrapper for creating loops that run a task once a week
-    - Best use together with SynchronizedLoops  
+    - Best use together with SynchronizedLoops
+- Added TimeLogger class for performance testing
 ### Fixes
 - tryMap(...) in CollectionExtensions now uses buildFrom and not Factory. This should result in better result 
 collection types when used.
 - LocalDate is now properly converted to JSON (previously converted to Instant first)
 - Fixed TreeLike.filterWithPaths
+- Fixed a logic error in ModelDeclaration.validate(Model)
+- Fixed .append(...) method in FileExtensions (now properly creates the target file if it doesn't exist)
 ### New Methods
 - CollectionExtensions
     - Added .slice(Range) to SeqOps
@@ -37,6 +42,7 @@ writeStream(...)
 - TimeExtensions
     - Added .next(WeekDay, Boolean) to LocalDate
     - Added multiple new methods for LocalTime as well
+- Added CsvReader class
 ### Other Changes
 - JsonParser trait added, which JSONReader now implements. The purpose of this change is to 
 offer a way to use alternative parsers when necessary (see BunnyMunch module for one 
