@@ -95,15 +95,6 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 		}
 	}
 	
-	/*
-	private def basePeriodFrom(rules: Iterable[(Period, Option[Condition])]) =
-		rules.filter { _._2.isEmpty }.map { _._1 }.maxOption
-	
-	private def conditionalPeriodsFrom(rules: Iterable[(Period, Option[Condition])]) =
-		rules.filter { _._2.isDefined }.map {
-			case (conditionalPeriod: Period, condition: Option[Condition]) => condition.get -> conditionalPeriod }.toMap
-	 */
-	
 	private def referencePathFrom(primaryTable: Table, childPath: Vector[Table]) =
 	{
 		var lastTable = primaryTable

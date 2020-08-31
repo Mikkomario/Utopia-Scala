@@ -82,7 +82,8 @@ object XmlElement extends FromModelFactory[XmlElement]
  * @since 13.1.2017 (v1.3)
  */
 case class XmlElement(name: String, value: Value = Value.emptyWithType(StringType), attributes: Model[Constant] = Model(Vector()),
-                      override val children: Vector[XmlElement] = Vector()) extends TreeLike[String, XmlElement] with ModelConvertible
+                      override val children: Vector[XmlElement] = Vector())
+    extends TreeLike[String, XmlElement] with ModelConvertible
 {
     // COMPUTED PROPERTIES    ------------------
     
@@ -140,17 +141,6 @@ case class XmlElement(name: String, value: Value = Value.emptyWithType(StringTyp
         children = children)
     
     override def content = name
-    
-    
-    // OPERATORS    ----------------------------
-    
-    /*
-     * Finds a child under this element with the provided name. If there is no such child, creates 
-     * a substitute element so that the method can be chained together
-     * @param childName the name of the searched child (case-insensitive)
-     * @return the searched child or a substitute element
-     */
-    // def /(childName: String) = childWithName(childName).getOrElse(new XmlElement(childName))
     
     
     // OTHER METHODS    ------------------------
