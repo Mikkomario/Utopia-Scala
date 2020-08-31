@@ -18,14 +18,16 @@ import scala.concurrent.ExecutionContext
 * @author Mikko Hilpinen
 * @since 28.3.2019
 **/
-class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250, val maxIdleDuration: FiniteDuration = Duration(1, TimeUnit.MINUTES),
+class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
+                 val maxIdleDuration: FiniteDuration = Duration(1, TimeUnit.MINUTES),
                  val errorHandler: Throwable => Unit = e => e.printStackTrace()) extends Executor
 {
     // ATTRIBUTES    ---------------------
     
     private val indexCounter = new Counter(1)
     // Creates the core threads from the very beginning
-    private val threads = VolatileList(Vector.fill(coreSize)(WorkerThread.core(nextCoreName(), errorHandler, () => nextQueueTask())))
+    private val threads = VolatileList(Vector.fill(coreSize)(WorkerThread.core(nextCoreName(),
+        errorHandler, () => nextQueueTask())))
     private val queue = VolatileList[Runnable]()
     
     /**

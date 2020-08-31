@@ -1,8 +1,11 @@
 package utopia.flow.async
 
+import utopia.flow.util.CollectionExtensions.RichTry
 import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.WaitTarget
 import utopia.flow.util.WaitTarget.Until
+
+import scala.util.Try
 
 /**
   * Combines multiple loops and runs them in the same thread. Please note that <b>SynchronizedLoops will discard any
@@ -36,7 +39,8 @@ class SynchronizedLoops(loops: IterableOnce[Loop]) extends Loop
 		else
 		{
 			val nextTask = orderedLoops.head._1
-			nextTask.runOnce()
+			// Catches any thrown exceptions and prints them
+			Try { nextTask.runOnce() }.failure.foreach { _.printStackTrace() }
 			
 			// Determines the next time this task will be run (if it will be run)
 			nextTask.nextWaitTarget.endTime match
