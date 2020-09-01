@@ -103,7 +103,10 @@ trait InputWindow[+A] extends InteractionWindow[A]
 			produceResult match
 			{
 				case Right(result) => Some(result) -> true
-				case Left(redirect) =>
+				case Left((component, message)) =>
+					// Moves the focus
+					component.requestFocusInWindow()
+					
 					// Creates the notification pop-up
 					val popup =
 					{
@@ -111,9 +114,9 @@ trait InputWindow[+A] extends InteractionWindow[A]
 						val dismissButton = ImageButton.contextualWithoutAction(closeIcon.asIndividualButton)
 						val popupContent = Stack.buildRowWithContext(layout = Center) { row =>
 							row += dismissButton
-							row += TextLabel.contextual(redirect._2)
+							row += TextLabel.contextual(message)
 						}.framed(popupContext.margins.medium.any, popupContext.containerBackground)
-						val popup = Popup(redirect._1, popupContent, popupContext.actorHandler,
+						val popup = Popup(component, popupContent, popupContext.actorHandler,
 							hideWhenFocusLost = false, Alignment.Left) { (cSize, pSize) =>
 							Point(cSize.width + popupContext.margins.medium, -(pSize.height - cSize.height) / 2) }
 						dismissButton.registerAction { () => popup.close() }

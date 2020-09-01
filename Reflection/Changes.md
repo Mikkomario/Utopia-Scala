@@ -8,6 +8,8 @@
 - Added ExpandingLengthModifier and NoShrinkingConstraint
 ### New Methods
 - Added && and map functions to StackLengthModifier and StackSizeModifier
+### Fixes
+- Added missing focus gain to InputWindow when a component's value needs to be fixed
 ### Other Changes
 - Frame.title and Dialog.title now default to empty strings in constructors
 
