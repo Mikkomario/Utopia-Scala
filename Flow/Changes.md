@@ -4,6 +4,7 @@
 - Added .notCompletingBefore(Future) to Future in AsyncExtensions
 ### Other Changes
 - Exceptions thrown by Loop.runOnce() implementations are now caught and printed, not propagated further.
+- CsvReader now removes '-characters from the beginnings of columns, if present
 
 ## v1.8
 ### Scala

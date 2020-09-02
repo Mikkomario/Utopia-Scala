@@ -27,7 +27,7 @@ object CsvReader
 	def iterateRawRowsIn[A](path: Path, separator: String = ";")(f: Iterator[Vector[String]] => A)(implicit codec: Codec) =
 	{
 		IterateLines.fromPath(path) { linesIter => f(linesIter.filterNot { _.isEmpty }
-			.map { _.split(separator).toVector.map { _.trim } }) }
+			.map { _.split(separator).toVector.map(processValue) }) }
 	}
 	
 	/**
@@ -44,7 +44,7 @@ object CsvReader
 		// Iterates all lines from the target path
 		IterateLines.fromPath(path) { linesIter =>
 			// The first line is interpreted as the headers list
-			val iter = linesIter.filterNot { _.isEmpty }.map { _.split(separator).toVector.map { _.trim } }
+			val iter = linesIter.filterNot { _.isEmpty }.map { _.split(separator).toVector.map(processValue) }
 			if (iter.hasNext)
 			{
 				val headers = iter.next()
@@ -68,4 +68,13 @@ object CsvReader
 	  */
 	def foreachLine(path: Path, separator: String = ";")(f: Model[Constant] => Unit)(implicit codec: Codec) =
 		iterateLinesIn(path, separator) { _.foreach(f) }
+	
+	private def processValue(original: String) =
+	{
+		val trimmed = original.trim
+		if (trimmed.startsWith("'"))
+			trimmed.drop(1)
+		else
+			trimmed
+	}
 }
