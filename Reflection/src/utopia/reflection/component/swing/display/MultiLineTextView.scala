@@ -11,6 +11,7 @@ import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.text.TextComponent
 import utopia.reflection.container.stack.StackLayout.{Center, Leading, Trailing}
+import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, SwitchPanel}
 import utopia.reflection.localization.{LocalString, LocalizedString}
@@ -56,7 +57,7 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 						val betweenLinesMargin: StackLength = StackLength.fixed(0),
 						useLowPriorityForScalingSides: Boolean = false, initialAlignment: Alignment = Alignment.Left,
 						initialTextColor: Color = Color.textBlack)
-	extends StackableAwtComponentWrapperWrapper with TextComponent with CustomDrawableWrapper
+	extends StackableAwtComponentWrapperWrapper with TextComponent with CustomDrawableWrapper with AwtContainerRelated
 {
 	// ATTRIBUTES	------------------------
 	
@@ -92,6 +93,8 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 	
 	
 	// IMPLEMENTED	------------------------
+	
+	override def component = wrapped.component
 	
 	override def drawContext = _drawContext
 	

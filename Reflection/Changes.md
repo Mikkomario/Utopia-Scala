@@ -12,6 +12,7 @@
 - Added missing focus gain to InputWindow when a component's value needs to be fixed
 ### Other Changes
 - Frame.title and Dialog.title now default to empty strings in constructors
+- MultiLineTextView now extends AwtContainerRelated
 
 ## v1.2
 ### Scala
