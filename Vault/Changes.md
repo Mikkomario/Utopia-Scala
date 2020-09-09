@@ -1,5 +1,9 @@
 # Utopia Vault - List of Changes
 
+v1.6.1
+### New Methods
+- Added .delete() to ModelAccessor - This method deletes all accessible rows in the primary table
+
 ## v1.6
 ### Scala
 - Module is now based on Scala v2.13.3

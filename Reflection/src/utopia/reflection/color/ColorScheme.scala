@@ -1,7 +1,7 @@
 package utopia.reflection.color
 
 import utopia.genesis.color.RGB
-import utopia.reflection.color.ColorRole.{Error, Gray, Primary, Secondary, Success, Tertiary, Warning}
+import utopia.reflection.color.ColorRole.{Error, Gray, Info, Primary, Secondary, Success, Tertiary, Warning}
 import utopia.reflection.color.ColorScheme.{defaultError, defaultSuccess, defaultWarning}
 
 object ColorScheme
@@ -105,6 +105,16 @@ case class ColorScheme(primary: ColorSet, gray: ColorSet = ColorScheme.defaultLi
 	  * @return Color to use when displaying warnings
 	  */
 	def warning = apply(Warning)
+	
+	/**
+	  * @return Color used when displaying success indications
+	  */
+	def success = apply(Success)
+	
+	/**
+	  * @return Color used when displaying additional information
+	  */
+	def info = apply(Info)
 	
 	/**
 	  * @return Number of different standard colors (primary, secondary, tertiary) defined in this color scheme (1-3)

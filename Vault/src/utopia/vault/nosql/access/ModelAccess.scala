@@ -2,7 +2,7 @@ package utopia.vault.nosql.access
 
 import utopia.vault.database.Connection
 import utopia.vault.nosql.factory.FromResultFactory
-import utopia.vault.sql.Condition
+import utopia.vault.sql.{Condition, Delete, Where}
 
 /**
  * Common trait for access points that return parsed model data
@@ -43,4 +43,11 @@ trait ModelAccess[+M, +A] extends Access[A]
 	  * @return Whether there exist any results for that search
 	  */
 	def exists(condition: Condition)(implicit connection: Connection) = factory.exists(mergeCondition(condition))
+	
+	/**
+	  * Deletes all items accessible from this access points (only primary table is targeted)
+	  * @param connection Database connection (implicit)
+	  */
+	def delete()(implicit connection: Connection): Unit =
+		connection(Delete(target, table) + globalCondition.map { Where(_) })
 }

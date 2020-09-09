@@ -21,6 +21,8 @@ case class BaseContext(actorHandler: ActorHandler, defaultFont: Font, defaultCol
 					   allowImageUpscaling: Boolean = false, stackMarginOverride: Option[StackLength] = None)
 	extends BaseContextLike with BackgroundSensitive[ColorContext] with ScopeUsable[BaseContext]
 {
+	// IMPLEMENTED	------------------------------
+	
 	override def repr = this
 	
 	override def inContextWithBackground(color: ComponentColor) = ColorContext(this, color)
