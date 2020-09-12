@@ -8,7 +8,8 @@ new mutable mouse event handlers.
 - Added global mouse and keyboard event handling with GlobalMouseEventHandler and GlobalKeyboardEventHandler objects
 ### Deprecations
 - ConvertingKeyListener was deprecated in favor of GlobalKeyboardEventHandler
-### Other Changes
+### New Methods
+- Added toRoundedRectangleWithRadius(Double) to Bounds
 
 ## v2.3
 ### Scala

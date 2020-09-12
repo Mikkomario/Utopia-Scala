@@ -25,6 +25,16 @@ trait Rectangular extends Parallelogramic
 	  */
 	def height = left.length
 	
+	/**
+	  * @return The width or the height of this rectangle, whichever is larger
+	  */
+	def maxDimension = width max height
+	
+	/**
+	  * @return The width or the height of this rectangle, whichever is smaller
+	  */
+	def minDimension = width min height
+	
 	
 	// IMPLEMENTED	-------------
 	

@@ -9,9 +9,12 @@ wider range of options
 - Added LoadingView and LoadingWindow
     - Includes a new ProgressState class for representing background process progress
 - Added ExpandingLengthModifier and NoShrinkingConstraint
+- Added RoundedBackgroundDrawer (custom background drawer)
 ### New Methods
 - Added && and map functions to StackLengthModifier and StackSizeModifier
 - Added .isClosed to Window
+- Added .inRoundedFraming(...) to AwtStackable
+- Added .addRoundedBackgroundDrawing(Color) to Framing
 ### Fixes
 - Added missing focus gain to InputWindow when a component's value needs to be fixed
 - Scrollable views now listen to global mouse release events, meaning they no longer get stuck in scrolling mode

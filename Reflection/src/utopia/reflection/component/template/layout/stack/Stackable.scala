@@ -122,6 +122,37 @@ object Stackable
 		def framed(sideLength: StackLength, color: Color): Framing[S] = framed(StackInsets.symmetric(sideLength), color)
 		
 		/**
+		  * Frames this item, using a rounded background shape
+		  * @param insets Insets placed round this item
+		  * @param color Background color to use
+		  * @return A framing that contains this item and draws a rounded background shape
+		  */
+		def inRoundedFraming(insets: StackInsets, color: Color) =
+		{
+			val framing = new Framing(s, insets)
+			framing.addRoundedBackgroundDrawing(color)
+			framing
+		}
+		
+		/**
+		  * Frames this item, using a rounded background shape
+		  * @param sideLength The length of each side margin
+		  * @param color Background color to use
+		  * @return A framing that contains this item and draws a rounded background shape
+		  */
+		def inRoundedFraming(sideLength: StackLength, color: Color): Framing[S] =
+			inRoundedFraming(StackInsets.symmetric(sideLength), color)
+		
+		/**
+		  * Frames this item, using a rounded background shape
+		  * @param sides The length of each side margin
+		  * @param color Background color to use
+		  * @return A framing that contains this item and draws a rounded background shape
+		  */
+		def inRoundedFraming(sides: StackSize, color: Color): Framing[S] =
+			inRoundedFraming(StackInsets.symmetric(sides), color)
+		
+		/**
 		  * @param alignment Target alignment
 		  * @return A frame whether this component is aligned according to specified alignment
 		  */

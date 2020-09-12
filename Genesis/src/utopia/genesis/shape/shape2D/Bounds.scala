@@ -227,6 +227,16 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     }
     
     /**
+      * Creates a rounded rectangle based on this rectangle shape
+      * @param radius The radius to use when drawing the corners
+      * @return A new rounded rectangle
+      */
+    def toRoundedRectangleWithRadius(radius: Double) =
+    {
+        new RoundRectangle2D.Double(position.x, position.y, width, height, radius * 2, radius * 2)
+    }
+    
+    /**
      * Checks whether the line completely lies within the rectangle bounds
      */
     def contains(line: Line): Boolean = contains(line.start) && contains(line.end)

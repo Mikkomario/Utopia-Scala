@@ -159,6 +159,11 @@ trait InsetsLike[L, +S, +Repr]
 	// COMPUTED    ---------------
     
     /**
+      * @return Lengths of all the sides in these insets
+      */
+    def sides = amounts.values.toVector
+    
+    /**
      * @return Insets for the left side
      */
     def left = apply(Left)

@@ -64,8 +64,8 @@ object SwitchTest extends App
 	val actionLoop = new ActorLoop(actorHandler)
 	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 	
-	val framing = stack.framed(16.any x 8.any)
-	framing.background = Color.white
+	val framing = stack.inRoundedFraming(16.any, Color.white)
+	framing.background = Color.gray(0.66)
 	val frame = Frame.windowed(framing, "Switch Test", User)
 	frame.setToExitOnClose()
 	
