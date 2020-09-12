@@ -57,20 +57,21 @@ class VolatileOption[T](value: Option[T]) extends Volatile[Option[T]](value) wit
     
     /**
      * Sets a new value this option, but only if there is no current value
+      * @param newValue New value for this option (call by name)
      */
-    def setIfEmpty(getValue: () => Option[T]) = updateIf { _.isEmpty }{ _ => getValue() }
+    def setIfEmpty(newValue: => Option[T]) = updateIf { _.isEmpty } { _ => newValue }
     
     /**
      * Sets a new value to this option (only if empty), then returns the resulting value
-     * @param getValue A function for generating a new value for this option
+     * @param newValue A new value for this option (call by name)
      * @return This option's value after operation
      */
-    def setIfEmptyAndGet(getValue: () => Option[T]) = updateIfAndGet { _.isEmpty } { _ => getValue() }
+    def setIfEmptyAndGet(newValue: => Option[T]) = updateIfAndGet { _.isEmpty } { _ => newValue }
     
     /**
      * Sets a new value this option, but only if there is no current value
      */
-    def setOneIfEmpty(getValue: () => T) = setIfEmpty(() => Some(getValue()))
+    def setOneIfEmpty(newValue: => T) = setIfEmpty(Some(newValue))
     
     /**
      * Sets a new value to this option, then returns that value
@@ -79,10 +80,10 @@ class VolatileOption[T](value: Option[T]) extends Volatile[Option[T]](value) wit
     
     /**
      * Sets a new value to this option (only if empty), then returns the resulting value of this option
-     * @param getValue A function for generating a new value for this option
+     * @param newValue A new value for this option (call by name)
      * @return This option's value after operation
      */
-    def setOneIfEmptyAndGet(getValue: () => T) = updateIfAndGet { _.isEmpty } { _ => Some(getValue()) }.get
+    def setOneIfEmptyAndGet(newValue: => T) = updateIfAndGet { _.isEmpty } { _ => Some(newValue) }.get
     
     
     // NESTED   ---------------------

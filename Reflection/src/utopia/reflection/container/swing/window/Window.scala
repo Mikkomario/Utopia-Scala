@@ -6,6 +6,7 @@ import javax.swing.SwingUtilities
 import utopia.flow.async.{VolatileFlag, VolatileOption}
 import utopia.flow.datastructure.mutable.Lazy
 import utopia.genesis.color.Color
+import utopia.genesis.event.{KeyStateEvent, KeyStatus, KeyTypedEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
 import utopia.genesis.image.Image
@@ -13,7 +14,8 @@ import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.{Insets, Point, Size, Vector2D}
 import utopia.genesis.util.Screen
-import utopia.genesis.view.{ConvertingKeyListener, MouseEventGenerator}
+import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler, MouseEventGenerator}
+import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.template.layout.stack.{Constrainable, Stackable}
 import utopia.reflection.component.swing.button.ButtonLike
 import utopia.reflection.component.swing.template.AwtComponentRelated
@@ -31,7 +33,7 @@ import scala.jdk.CollectionConverters.SeqHasAsJava
 * @author Mikko Hilpinen
 * @since 25.3.2019
 **/
-trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable with AwtContainerRelated with Constrainable
+trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable with AwtContainerRelated with Constrainable
 {
     // ATTRIBUTES   ----------------
     
@@ -43,6 +45,8 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
     private val closePromise = Promise[Unit]()
     
     private val uponCloseAction = VolatileOption[() => Unit]()
+    
+    private var closed = false
     
     override var stackHierarchyListeners = Vector[StackHierarchyListener]()
     
@@ -98,6 +102,11 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
       * @return Whether this is the currently focused window
       */
     def isFocusedWindow = component.isFocused
+    
+    /**
+      * @return Whether this window has already been closed
+      */
+    def isClosed = closed
     
     
     // IMPLEMENTED    --------------
@@ -228,33 +237,33 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
     
 	/**
       * Starts mouse event generation for this window
-      * @param actorHandler An actorhandler that generates the necessary action events
+      * @param actorHandler An ActorHandler that generates the necessary action events
       */
     def startEventGenerators(actorHandler: ActorHandler) =
     {
         generatorActivated.runAndSet
         {
 			// Starts mouse listening
-            val mouseButtonListener = MouseButtonStateListener() { e => content.distributeMouseButtonEvent(e); None }
-            val mouseMovelistener = MouseMoveListener() { content.distributeMouseMoveEvent(_) }
-            val mouseWheelListener = MouseWheelListener() { content.distributeMouseWheelEvent(_) }
-            
-            val mouseEventGenerator = new MouseEventGenerator(content.component, mouseMovelistener, mouseButtonListener,
-                mouseWheelListener, () => 1.0)
+            val mouseEventGenerator = new MouseEventGenerator(content.component)
             actorHandler += mouseEventGenerator
+            mouseEventGenerator.buttonHandler += MouseButtonStateListener() { e =>
+                content.distributeMouseButtonEvent(e); None }
+            mouseEventGenerator.moveHandler += MouseMoveListener() { content.distributeMouseMoveEvent(_) }
+            mouseEventGenerator.wheelHandler += MouseWheelListener() { content.distributeMouseWheelEvent(_) }
 			
+            GlobalMouseEventHandler.registerGenerator(mouseEventGenerator)
+            
 			// Starts key listening
-			val keyStateListener = KeyStateListener() { content.distributeKeyStateEvent(_) }
-			val keyTypedListener = KeyTypedListener { content.distributeKeyTypedEvent(_) }
-    
-            val keyEventGenerator = new ConvertingKeyListener(keyStateListener, keyTypedListener)
-            keyEventGenerator.register()
+            val keyStatusListener = new KeyStatusListener()
+            GlobalKeyboardEventHandler += keyStatusListener
             
             // Quits event listening once this window finally closes
             uponCloseAction.setOne(() =>
             {
                 actorHandler -= mouseEventGenerator
-                keyEventGenerator.unregister()
+                mouseEventGenerator.kill()
+                GlobalKeyboardEventHandler -= keyStatusListener
+                GlobalMouseEventHandler.unregisterGenerator(mouseEventGenerator)
             })
         }
     }
@@ -435,10 +444,50 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
         {
             // Performs a closing action, if one is queued
             uponCloseAction.pop().foreach { _() }
+            closed = true
             closePromise.trySuccess(())
             
             // Removes this window from the stack hierarchy (may preserve a portion of the content by detaching it first)
             detachFromMainStackHierarchy()
+        }
+    }
+    
+    private class KeyStatusListener extends KeyStateListener with KeyTypedListener with Handleable
+    {
+        // ATTRIBUTES   ------------------------
+        
+        private var keyStatus = KeyStatus.empty
+        
+        
+        // IMPLEMENTED  ------------------------
+        
+        // Listens to key state events primarily when this window has focus but will deliver key released events
+        // even when this window is not in focus, provided that these events would alter the simulated key state
+        // inside this window
+        override def onKeyState(event: KeyStateEvent) =
+        {
+            if (isFocusedWindow)
+            {
+                keyStatus = event.keyStatus
+                content.distributeKeyStateEvent(event)
+            }
+            else
+            {
+                val newStatus = event.keyStatus && keyStatus
+                if (newStatus != keyStatus)
+                {
+                    keyStatus = newStatus
+                    if (event.isReleased)
+                        content.distributeKeyStateEvent(event.copy(keyStatus = newStatus))
+                }
+            }
+        }
+        
+        // Only distributes key typed events when this window has focus
+        override def onKeyTyped(event: KeyTypedEvent) =
+        {
+            if (isFocusedWindow)
+                content.distributeKeyTypedEvent(event)
         }
     }
 }

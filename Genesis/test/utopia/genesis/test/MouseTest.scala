@@ -13,7 +13,7 @@ import utopia.genesis.view.CanvasMouseEventGenerator
 import utopia.genesis.event.MouseButtonStateEvent
 import utopia.genesis.event.MouseEvent
 import utopia.genesis.event.MouseWheelEvent
-import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler, MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
+import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler}
 import utopia.genesis.handling.{ActorLoop, Drawable, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
@@ -82,11 +82,12 @@ object MouseTest extends App
     
 	val drawHandler = DrawableHandler()
 	val actorHandler = ActorHandler()
-	val mouseStateHandler = MouseButtonStateHandler()
-	val mouseMoveHandler = MouseMoveHandler()
-	val mouseWheelHandler = MouseWheelHandler()
- 
-	val handlers = HandlerRelay(drawHandler, actorHandler, mouseStateHandler, mouseMoveHandler, mouseWheelHandler)
+	
+	val canvas = new Canvas(drawHandler, gameWorldSize)
+	val mouseEventGen = new CanvasMouseEventGenerator(canvas)
+	
+	val handlers = HandlerRelay(drawHandler, actorHandler, mouseEventGen.buttonHandler, mouseEventGen.moveHandler,
+		mouseEventGen.wheelHandler)
 	
     // Creates event generators
     val actorLoop = new ActorLoop(actorHandler, 10 to 120)
@@ -98,10 +99,8 @@ object MouseTest extends App
     handlers ++= Vector(area1, area2)
     
 	// Creates the frame
-	val canvas = new Canvas(drawHandler, gameWorldSize)
 	val frame = new MainFrame(canvas, gameWorldSize, "Mouse Test")
 	
-	val mouseEventGen = new CanvasMouseEventGenerator(canvas, mouseMoveHandler, mouseStateHandler, mouseWheelHandler)
 	actorHandler += mouseEventGen
 	
     // Displays the frame

@@ -30,5 +30,5 @@ class VolatileLazy[A](private val generator: () => A) extends MutableLazyLike[A]
 	
 	override protected def updateValue(newValue: Option[A]) = value.set(newValue)
 	
-	def get = value.setOneIfEmptyAndGet(generator)
+	def get = value.setOneIfEmptyAndGet(generator())
 }

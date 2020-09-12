@@ -1,5 +1,7 @@
 # Utopia Flow - List of Changes
-## v1.8.1
+## v1.9 (beta)
+### Breaking Changes
+- Changed setIfEmpty method variations in VolatileOption to accept a call by name parameter instead of a function
 ### New Methods
 - Added .notCompletingBefore(Future) to Future in AsyncExtensions
 ### Other Changes

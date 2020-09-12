@@ -3,9 +3,9 @@ package utopia.genesis.util
 import utopia.flow.async.VolatileFlag
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.ActorLoop
-import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler, KeyStateHandler, KeyTypedHandler, MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
+import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler, KeyStateHandler, KeyTypedHandler}
 import utopia.genesis.shape.shape2D.Size
-import utopia.genesis.view.{Canvas, CanvasMouseEventGenerator, ConvertingKeyListener, MainFrame}
+import utopia.genesis.view.{Canvas, CanvasMouseEventGenerator, GlobalKeyboardEventHandler, GlobalMouseEventHandler, MainFrame}
 import utopia.inception.handling.mutable.HandlerRelay
 
 import scala.concurrent.ExecutionContext
@@ -38,24 +38,12 @@ class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = 
 	  * Handler for key typed events
 	  */
 	val keyTypedHandler = KeyTypedHandler()
-	/**
-	  * Handler for mouse button state events
-	  */
-	val mouseButtonHandler = MouseButtonStateHandler()
-	/**
-	  * Handler for mouse move events
-	  */
-	val mouseMoveHandler = MouseMoveHandler()
-	/**
-	  * Handler for mouse wheel events
-	  */
-	val mouseWheelHandler = MouseWheelHandler()
 	
 	/**
 	  * The handler relay for this setup
 	  */
-	override val handlers = HandlerRelay(actorHandler, drawHandler, keyStateHandler, keyTypedHandler, mouseButtonHandler,
-		mouseMoveHandler, mouseWheelHandler)
+	override lazy val handlers = HandlerRelay(actorHandler, drawHandler, keyStateHandler, keyTypedHandler,
+		mouseButtonHandler, mouseMoveHandler, mouseWheelHandler)
 	
 	// View
 	/**
@@ -69,7 +57,7 @@ class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = 
 	
 	// Generators
 	private val actorLoop = new ActorLoop(actorHandler, 15 to maxFPS.fps)
-	private val mouseEventGenerator = new CanvasMouseEventGenerator(canvas, mouseMoveHandler, mouseButtonHandler, mouseWheelHandler)
+	private val mouseEventGenerator = new CanvasMouseEventGenerator(canvas)
 	
 	
 	// INITIAL CODE	-------------------
@@ -79,10 +67,22 @@ class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = 
 	
 	// Registers generators
 	actorHandler += mouseEventGenerator
-	new ConvertingKeyListener(keyStateHandler, keyTypedHandler).register()
 	
 	
 	// COMPUTED	-----------------------
+	
+	/**
+	  * Handler for mouse button state events
+	  */
+	def mouseButtonHandler = mouseEventGenerator.buttonHandler
+	/**
+	  * Handler for mouse move events
+	  */
+	def mouseMoveHandler = mouseEventGenerator.moveHandler
+	/**
+	  * Handler for mouse wheel events
+	  */
+	def mouseWheelHandler = mouseEventGenerator.wheelHandler
 	
 	/**
 	  * @return The current game world size
@@ -101,6 +101,11 @@ class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = 
 	{
 		started.runAndSet
 		{
+			GlobalMouseEventHandler.registerGenerator(mouseEventGenerator)
+			
+			GlobalKeyboardEventHandler += keyStateHandler
+			GlobalKeyboardEventHandler += keyTypedHandler
+			
 			actorLoop.startAsync()
 			actorLoop.registerToStopOnceJVMCloses()
 			

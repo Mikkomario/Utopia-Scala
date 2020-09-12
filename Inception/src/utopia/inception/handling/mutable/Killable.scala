@@ -9,20 +9,10 @@ import utopia.inception.handling.Mortal
   */
 trait Killable extends Mortal
 {
-	// ATTRIBUTES	----------------
-	
-	private var _dead = false
-	
-	
-	// IMPLEMENTED	----------------
-	
-	override def isDead = _dead
-	
-	
-	// OTHER	--------------------
+	// ABSTRACT	-------------------------
 	
 	/**
-	  * Kills this instance, resulting in instant death
+	  * Kills this instance, after which calls to isDead should return true
 	  */
-	def kill() = _dead = true
+	def kill(): Unit
 }

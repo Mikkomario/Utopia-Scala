@@ -258,7 +258,8 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
         {
             currentButtonStatus += (e.getButton, newStatus)
             val eventPosition = positionOfEvent(e)
-            val event = MouseButtonStateEvent(e.getButton, isDown = newStatus, eventPosition, currentButtonStatus)
+            val event = MouseButtonStateEvent(e.getButton, isDown = newStatus, eventPosition,
+                absolutePosition + eventPosition, currentButtonStatus)
             distributeMouseButtonEvent(event)
         }
         

@@ -1,4 +1,15 @@
 # Utopia Reflection - List of Changes
+## v2.4 (beta)
+### Breaking Changes
+- MouseEventGenerator and CanvasMouseEventGenerator no longer accept listeners as parameters. Instead, they now create 
+new mutable mouse event handlers.
+- Added absoluteMousePosition to all MouseEvents
+### New Features
+- Added global mouse and keyboard event handling with GlobalMouseEventHandler and GlobalKeyboardEventHandler objects
+### Deprecations
+- ConvertingKeyListener was deprecated in favor of GlobalKeyboardEventHandler
+### Other Changes
+
 ## v2.3
 ### Scala
 - Module is now based on Scala v2.13.3

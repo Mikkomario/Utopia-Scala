@@ -12,7 +12,9 @@ import utopia.genesis.handling.{KeyStateListener, KeyTypedListener}
   * @author Mikko Hilpinen
   * @since 6.4.2019
   */
-class ConvertingKeyListener(val keyStateHandler: KeyStateListener, val keyTypedHandler: KeyTypedListener) extends KeyListener
+@deprecated("Replaced with GlobalKeyboardEventHandler", "v2.4")
+class ConvertingKeyListener(val keyStateHandler: KeyStateListener, val keyTypedHandler: KeyTypedListener)
+	extends KeyListener
 {
 	// ATTRIBUTES	------------------
 	

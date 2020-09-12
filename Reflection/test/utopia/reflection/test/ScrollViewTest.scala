@@ -8,10 +8,11 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.WaitTarget
 import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.handling.{ActorLoop, KeyStateListener}
+import utopia.genesis.handling.{ActorLoop, KeyStateListener, MouseButtonStateListener}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.shape1D.Rotation
+import utopia.genesis.view.GlobalMouseEventHandler
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
 import utopia.reflection.component.swing.label.ItemLabel
@@ -87,6 +88,7 @@ object ScrollViewTest extends App
 	
 	val frame = Frame.windowed(scrollView, "Scroll View Test", User)
 	frame.setToExitOnClose()
+	frame.addMouseButtonListener(MouseButtonStateListener() { event => println(event); None })
 	
 	actionLoop.registerToStopOnceJVMCloses()
 	actionLoop.startAsync()
@@ -95,6 +97,12 @@ object ScrollViewTest extends App
 	contentUpdateLoop.startAsync()
 	frame.startEventGenerators(actorHandler)
 	frame.isVisible = true
+	
+	println("Global mouse handling:")
+	println(GlobalMouseEventHandler.debugString)
+	
+	println("Frame mouse handling:")
+	println(frame.mouseButtonHandler.debugString)
 }
 
 private class ContentUpdateLoop(val target: Refreshable[Vector[Int]]) extends Loop

@@ -50,7 +50,7 @@ class ExodusApi(override val rootPath: String, credentials: Either[UserCredentia
 			LocalDevice.id match
 			{
 				case Some(deviceId) =>
-					sessionResetFuture.setOneIfEmptyAndGet { () =>
+					sessionResetFuture.setOneIfEmptyAndGet {
 						val result = resetSession(deviceId)
 						result.onComplete { _ => sessionResetFuture.clear() }
 						result

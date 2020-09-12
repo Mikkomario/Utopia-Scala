@@ -55,9 +55,14 @@ trait MouseEvent[+Repr]
     // ABSTRACT ----------------------
     
     /**
-      * @return The current position of the mouse
+      * @return The current (relative) mouse position
       */
     def mousePosition: Point
+    
+    /**
+      * @return Mouse position in the current screen coordinate system (in pixels)
+      */
+    def absoluteMousePosition: Point
     
     /**
       * @return The current mouse button status

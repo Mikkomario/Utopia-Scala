@@ -3,9 +3,12 @@ package utopia.genesis.view
 import java.awt.{Component, MouseInfo}
 import java.awt.event.{MouseEvent, MouseListener, MouseWheelListener}
 
+import utopia.flow.async.VolatileOption
 import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus, MouseMoveEvent, MouseWheelEvent}
-import utopia.genesis.handling.{Actor, MouseButtonStateListener, MouseMoveListener}
+import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
+import utopia.genesis.handling.Actor
 import utopia.genesis.shape.shape2D.Point
+import utopia.inception.handling.mutable.Killable
 import utopia.inception.handling.{HandlerType, Mortal}
 
 import scala.concurrent.duration.FiniteDuration
@@ -19,46 +22,84 @@ import scala.util.Try
  * @author Mikko Hilpinen
  * @since 22.1.2017
  */
-class MouseEventGenerator(c: Component, val moveHandler: MouseMoveListener,
-                          val buttonHandler: MouseButtonStateListener,
-                          val wheelHandler: utopia.genesis.handling.MouseWheelListener,
-                          private val getScaling: () => Double) extends Actor with Mortal
+class MouseEventGenerator(c: Component, scaling: => Double = 1.0) extends Actor with Mortal with Killable
 {
     // ATTRIBUTES    -----------------
     
-    private val component = WeakReference(c)
+    private val componentPointer = WeakReference(c)
+    
+    private val _moveHandler = VolatileOption[MouseMoveHandler]()
+    private val _buttonHandler = VolatileOption[MouseButtonStateHandler]()
+    private val _wheelHandler = VolatileOption[MouseWheelHandler]()
     
     private var lastMousePosition = Point.origin
+    private var lastAbsoluteMousePosition = Point.origin
     private var buttonStatus = MouseButtonStatus.empty
     
     
-    // INITIAL CODE    ---------------
+    // COMPUTED ----------------------
     
-    // Starts listening for mouse events inside the component
-    c.addMouseListener(new MouseEventReceiver())
-    c.addMouseWheelListener(new MouseWheelEventReceiver())
+    /**
+      * @return A handler that distributes generated mouse move events
+      */
+    def moveHandler = _moveHandler.setOneIfEmptyAndGet { MouseMoveHandler() }
+    /**
+      * @return A handler that distributes generated mouse button state events
+      */
+    def buttonHandler = _buttonHandler.setOneIfEmptyAndGet {
+        component.foreach { _.addMouseListener(MouseEventReceiver) }
+        MouseButtonStateHandler()
+    }
+    /**
+      * @return A handler that distributes generated mouse wheel events
+      */
+    def wheelHandler = _wheelHandler.setOneIfEmptyAndGet {
+        component.foreach { _.addMouseWheelListener(MouseWheelEventReceiver) }
+        MouseWheelHandler()
+    }
+    
+    private def component = componentPointer.get
     
     
     // IMPLEMENTED METHODS    --------
     
     // This generator dies once component is no longer reachable
-    override def isDead = component.get.isEmpty
+    override def isDead = component.isEmpty
+    
+    override def kill() =
+    {
+        component.foreach { c =>
+            c.removeMouseListener(MouseEventReceiver)
+            c.removeMouseWheelListener(MouseWheelEventReceiver)
+            componentPointer.clear()
+            _moveHandler.clear()
+            _buttonHandler.clear()
+            _wheelHandler.clear()
+        }
+    }
     
     // Allows handling when component is visible
-    override def allowsHandlingFrom(handlerType: HandlerType) = component.get.exists { _.isShowing }
+    override def allowsHandlingFrom(handlerType: HandlerType) = component.exists { _.isShowing }
     
     override def act(duration: FiniteDuration) =
     {
-        component.get.foreach { c =>
+        component.foreach { c =>
             // Checks for mouse movement
             // Sometimes mouse position can't be calculated, in which case assumes mouse to remain static
             Try { Option(MouseInfo.getPointerInfo) }.toOption.flatten.foreach { pointerInfo =>
-                val mousePosition = pointInPanel(Point of pointerInfo.getLocation, c) / getScaling()
+                val absoluteMousePosition = Point of pointerInfo.getLocation
+                val mousePosition = pointInPanel(absoluteMousePosition, c) / scaling
                 if (mousePosition != lastMousePosition)
                 {
-                    val event = new MouseMoveEvent(mousePosition, lastMousePosition, buttonStatus, duration)
+                    val previousMousePosition = lastMousePosition
                     lastMousePosition = mousePosition
-                    moveHandler.onMouseMove(event)
+                    lastAbsoluteMousePosition = absoluteMousePosition
+                    // Informs the handler only if one has been generated
+                    _moveHandler.foreach { handler =>
+                        val event = new MouseMoveEvent(mousePosition, previousMousePosition, absoluteMousePosition,
+                            buttonStatus, duration)
+                        handler.onMouseMove(event)
+                    }
                 }
             }
         }
@@ -74,7 +115,7 @@ class MouseEventGenerator(c: Component, val moveHandler: MouseMoveListener,
         
         panel match
         {
-            case w: java.awt.Window => relativePoint
+            case _: java.awt.Window => relativePoint
             case _ =>
                 val parent = panel.getParent
                 if (parent == null) relativePoint else pointInPanel(relativePoint, parent)
@@ -84,30 +125,34 @@ class MouseEventGenerator(c: Component, val moveHandler: MouseMoveListener,
     
     // NESTED CLASSES    ------------
     
-    private class MouseEventReceiver extends MouseListener
+    private object MouseEventReceiver extends MouseListener
     {
-        override def mousePressed(e: MouseEvent) = 
-        {
-            buttonStatus += (e.getButton, true)
-            buttonHandler.onMouseButtonState(new MouseButtonStateEvent(e.getButton, true, lastMousePosition,
-                buttonStatus))
-        }
+        // IMPLEMENTED  -------------
         
-        override def mouseReleased(e: MouseEvent) = 
-        {
-            buttonStatus += (e.getButton, false)
-            buttonHandler.onMouseButtonState(new MouseButtonStateEvent(e.getButton, false, lastMousePosition,
-                buttonStatus))
-        }
+        override def mousePressed(e: MouseEvent) =  distributeEvent(e, isDown = true)
+        override def mouseReleased(e: MouseEvent) = distributeEvent(e, isDown = false)
         
         override def mouseClicked(e: MouseEvent) = ()
         override def mouseEntered(e: MouseEvent) = ()
         override def mouseExited(e: MouseEvent) = ()
+        
+        
+        // OTHER    ---------------
+        
+        private def distributeEvent(event: MouseEvent, isDown: Boolean) =
+        {
+            buttonStatus += (event.getButton, isDown)
+            _buttonHandler.foreach {
+                _.onMouseButtonState(MouseButtonStateEvent(event.getButton, isDown, lastMousePosition,
+                    lastAbsoluteMousePosition, buttonStatus))
+            }
+        }
     }
     
-    private class MouseWheelEventReceiver extends MouseWheelListener
+    private object MouseWheelEventReceiver extends MouseWheelListener
     {
-        override def mouseWheelMoved(e: java.awt.event.MouseWheelEvent) = 
-                wheelHandler.onMouseWheelRotated(MouseWheelEvent(e.getWheelRotation, lastMousePosition, buttonStatus))
+        override def mouseWheelMoved(e: java.awt.event.MouseWheelEvent) =
+            _wheelHandler.foreach { _.onMouseWheelRotated(MouseWheelEvent(e.getWheelRotation, lastMousePosition,
+                lastAbsoluteMousePosition, buttonStatus)) }
     }
 }

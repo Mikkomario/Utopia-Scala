@@ -5,10 +5,11 @@ import utopia.inception.handling.HandlerType
 
 object DeepHandler
 {
-	def apply[A <: handling.Handleable](hType: HandlerType, elements: IterableOnce[A] = Vector()) = new DeepHandler(elements)
-	{
-		val handlerType = hType
-	}
+	def apply[A <: handling.Handleable](hType: HandlerType, elements: IterableOnce[A] = Vector()) =
+		new DeepHandler(elements)
+		{
+			val handlerType = hType
+		}
 }
 
 /**
@@ -20,6 +21,11 @@ object DeepHandler
 abstract class DeepHandler[A <: handling.Handleable](initialElements: IterableOnce[A])
 	extends Handler[A](initialElements) with Handleable with Killable
 {
+	// ATTRIBUTES	----------------
+	
+	private var dead = false
+	
+	
 	// INITIAL CODE	----------------
 	
 	// Specifies handler's own handling state
@@ -38,4 +44,11 @@ abstract class DeepHandler[A <: handling.Handleable](initialElements: IterableOn
 	  * @param newState Whether this handler should be handled by handlers of its own type
 	  */
 	def handlingState_=(newState: Boolean) = specifyHandlingState(handlerType, newState)
+	
+	
+	// IMPLEMENTED	----------------
+	
+	override def kill() = dead = true
+	
+	override def isDead = dead
 }

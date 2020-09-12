@@ -43,12 +43,16 @@ object MouseButtonStateEvent
   * @param buttonIndex Target button index
   * @param isDown Whether target button is down
   * @param mousePosition Current mouse position
+  * @param absoluteMousePosition Mouse position in the screen coordinate system (in pixels)
   * @param buttonStatus Current mouse button status
+  * @param consumeEvent An event concerning this event's consuming. None if not consumed (default)
  * @author Mikko Hilpinen
  * @since 17.2.2017
  */
-case class MouseButtonStateEvent(buttonIndex: Int, isDown: Boolean, mousePosition: Point,
-                                 buttonStatus: MouseButtonStatus, override val consumeEvent: Option[ConsumeEvent] = None)
+case class MouseButtonStateEvent(buttonIndex: Int, isDown: Boolean, override val mousePosition: Point,
+                                 override val absoluteMousePosition: Point,
+                                 override val buttonStatus: MouseButtonStatus,
+                                 override val consumeEvent: Option[ConsumeEvent] = None)
     extends MouseEvent[MouseButtonStateEvent] with Consumable[MouseButtonStateEvent]
 {
     // COMPUTED PROPERTIES    ------------

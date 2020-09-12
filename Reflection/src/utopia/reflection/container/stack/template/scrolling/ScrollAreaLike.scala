@@ -16,6 +16,7 @@ import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.genesis.shape.shape3D.Vector3D
 import utopia.genesis.shape.template.VectorLike
 import utopia.genesis.util.Drawer
+import utopia.genesis.view.GlobalMouseEventHandler
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.drawing.template.DrawLevel.Foreground
 import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawer}
@@ -350,7 +351,16 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 		{
 			val newScroller = new AnimatedScroller
 			scroller = Some(newScroller)
-			actorHandler += newScroller
+			
+			// Animated scrolling is enabled only while this area is attached to the main stack hierarchy
+			addStackHierarchyChangeListener(isAttached => {
+				if (isAttached)
+					actorHandler += newScroller
+				else
+					actorHandler -= newScroller
+			})
+			if (isAttachedToMainHierarchy)
+				actorHandler += newScroller
 		}
 	}
 	
@@ -369,10 +379,30 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 		setupAnimatedScrolling(actorHandler)
 		val listener = new MouseListener(scrollPerWheelClick, dragDuration, velocityMod, scroller.get)
 		
-		addMouseButtonListener(listener)
-		addMouseMoveListener(listener)
-		addMouseWheelListener(listener)
-		addKeyStateListener(listener)
+		// Listens to mouse events when attached to the main stack hierarchy
+		addStackHierarchyChangeListener(isAttached => {
+			if (isAttached)
+			{
+				addMouseButtonListener(listener)
+				addMouseMoveListener(listener)
+				addMouseWheelListener(listener)
+				addKeyStateListener(listener)
+				GlobalMouseEventHandler += listener.MouseReleaseListener
+			}
+			else
+			{
+				removeListener(listener)
+				GlobalMouseEventHandler -= listener.MouseReleaseListener
+			}
+		})
+		if (isAttachedToMainHierarchy)
+		{
+			addMouseButtonListener(listener)
+			addMouseMoveListener(listener)
+			addMouseWheelListener(listener)
+			addKeyStateListener(listener)
+			GlobalMouseEventHandler += listener.MouseReleaseListener
+		}
 	}
 	
 	/**
@@ -512,14 +542,14 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 		
 		private var keyState = KeyStatus.empty
 		
-		
-		// IMPLEMENTED	-----------------------
-		
 		// Listens to left mouse presses & releases
-		override def mouseButtonStateEventFilter = MouseButtonStateEvent.buttonFilter(MouseButton.Left)
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter
 		
 		// Only listens to wheel events inside component bounds
-		override def mouseWheelEventFilter = Consumable.notConsumedFilter && MouseEvent.isOverAreaFilter(bounds)
+		override val mouseWheelEventFilter = Consumable.notConsumedFilter && MouseEvent.isOverAreaFilter(bounds)
+		
+		
+		// IMPLEMENTED	-----------------------
 		
 		override def onMouseButtonState(event: MouseButtonStateEvent) =
 		{
@@ -549,31 +579,6 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 					contentDragPosition = event.mousePosition
 					isDraggingContent = true
 					scroller.stop()
-				}
-			}
-			else
-			{
-				// TODO: Handle mouse releases on a global scale (use root mouse event handler)
-				// When mouse is released, stops dragging. May apply scrolling velocity
-				isDraggingBar = false
-				if (isDraggingContent)
-				{
-					isDraggingContent = false
-					
-					// Calculates the scrolling velocity
-					val now = Instant.now
-					val velocityData = velocities.dropWhile { _._1 < now - dragDuration }
-					velocities = Vector()
-					
-					if (velocityData.nonEmpty)
-					{
-						val actualDragDuration = now - velocityData.head._1
-						val averageTranslationPerMilli = velocityData.map {
-							case (_, v, d) => v.perMilliSecond * d.toPreciseMillis }
-							.reduce { _ + _ } / actualDragDuration.toPreciseMillis
-						
-						scroller.accelerate(Velocity2D(averageTranslationPerMilli)(TimeUnit.MILLISECONDS) * velocityMod)
-					}
 				}
 			}
 			None
@@ -623,5 +628,42 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 		}
 		
 		override def onKeyState(event: KeyStateEvent) = keyState = event.keyStatus
+		
+		
+		// NESTED	--------------------------------
+		
+		/**
+		  * Listens to global mouse release events
+		  */
+		object MouseReleaseListener extends MouseButtonStateListener with Handleable
+		{
+			override val mouseButtonStateEventFilter =
+				MouseButtonStateEvent.leftButtonFilter && MouseButtonStateEvent.wasReleasedFilter
+			
+			override def onMouseButtonState(event: MouseButtonStateEvent) =
+			{
+				// When mouse is released, stops dragging. May apply scrolling velocity
+				isDraggingBar = false
+				if (isDraggingContent)
+				{
+					isDraggingContent = false
+					
+					// Calculates the scrolling velocity
+					val now = Instant.now
+					val velocityData = velocities.dropWhile { _._1 < now - dragDuration }
+					velocities = Vector()
+					
+					if (velocityData.nonEmpty)
+					{
+						val actualDragDuration = now - velocityData.head._1
+						val averageTranslationPerMilli = velocityData.map {
+							case (_, v, d) => v.perMilliSecond * d.toPreciseMillis }
+							.reduce { _ + _ } / actualDragDuration.toPreciseMillis
+						scroller.accelerate(Velocity2D(averageTranslationPerMilli)(TimeUnit.MILLISECONDS) * velocityMod)
+					}
+				}
+				None
+			}
+		}
 	}
 }

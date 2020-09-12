@@ -86,11 +86,11 @@ object AsyncExtensions
 					
 					// Both futures try to set the pointer and end the wait
 					f.foreach { r =>
-						resultPointer.setOneIfEmpty(() => r)
+						resultPointer.setOneIfEmpty(r)
 						wait.stop()
 					}
 					other.foreach { r =>
-						resultPointer.setOneIfEmpty(() => r)
+						resultPointer.setOneIfEmpty(r)
 						wait.stop()
 					}
 					

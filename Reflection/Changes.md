@@ -2,14 +2,21 @@
 ## v1.3 (beta)
 ### Breaking Changes
 - Moved some of the clases in utopia.reflection.shape -package to separate sub-packages
+- Removed hideOnFocusLost -parameter from Popup and replaced it with autoCloseLogic parameter that accepts a 
+wider range of options
+- Windows now only propagate keyboard events while they're the focused window
 ### New Features
 - Added LoadingView and LoadingWindow
     - Includes a new ProgressState class for representing background process progress
 - Added ExpandingLengthModifier and NoShrinkingConstraint
 ### New Methods
 - Added && and map functions to StackLengthModifier and StackSizeModifier
+- Added .isClosed to Window
 ### Fixes
 - Added missing focus gain to InputWindow when a component's value needs to be fixed
+- Scrollable views now listen to global mouse release events, meaning they no longer get stuck in scrolling mode
+- Scrollable views now only listen to action and mouse events when attached to the main stack hierarchy, 
+which is more resource-effective
 ### Other Changes
 - Frame.title and Dialog.title now default to empty strings in constructors
 - MultiLineTextView now extends AwtContainerRelated

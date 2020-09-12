@@ -68,6 +68,15 @@ class HandlerRelay(initialHandlers: IterableOnce[AnyHandler])
     def handlers = _handlers.values
     
     
+    // COMPUTED ------------------
+    
+    /**
+      * @return A string representation of the contents of this relay
+      */
+    def debugString = s"Handler Relay with ${_handlers.size} handlers: [${
+        _handlers.map { case (_, h) => s"\n\t- ${h.debugString}" }.mkString("")}\n]"
+    
+    
     // OPERATORS    --------------
     
     /**

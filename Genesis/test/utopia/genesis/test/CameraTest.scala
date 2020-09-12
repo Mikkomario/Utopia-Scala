@@ -9,7 +9,7 @@ import utopia.genesis.util.{Drawer, Fps}
 import utopia.genesis.shape.shape2D.{Bounds, Size}
 import utopia.genesis.view.CanvasMouseEventGenerator
 import utopia.genesis.handling.{ActorLoop, Drawable}
-import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler, MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
+import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler}
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 
@@ -35,12 +35,7 @@ object CameraTest extends App
 	
 	// Creates handlers
 	val actorHandler = ActorHandler()
-	val mouseMoveHandler = MouseMoveHandler()
-	val mouseButtonHandler = MouseButtonStateHandler()
-	val mouseWheelHandler = MouseWheelHandler()
 	val drawHandler = DrawableHandler()
-	
-	val handlers = HandlerRelay(actorHandler, mouseMoveHandler, mouseButtonHandler, mouseWheelHandler, drawHandler)
 	
 	// Creates frame
     val worldSize = Size(800, 600)
@@ -50,14 +45,17 @@ object CameraTest extends App
     
 	// Sets up generators
     val actorLoop = new ActorLoop(actorHandler, 20 to 120)
-    val mouseEventGen = new CanvasMouseEventGenerator(canvas, mouseMoveHandler, mouseButtonHandler, mouseWheelHandler)
+    val mouseEventGen = new CanvasMouseEventGenerator(canvas)
     actorHandler += mouseEventGen
     
 	// Creates test objects
     val grid = new GridDrawer(worldSize, Size(80, 80))
     val numbers = new GridNumberDrawer(grid)
 	val camera = new MagnifierCamera(64)
- 
+	
+	val handlers = HandlerRelay(actorHandler, drawHandler, mouseEventGen.moveHandler, mouseEventGen.buttonHandler,
+		mouseEventGen.wheelHandler)
+	
 	handlers ++= Vector(grid, numbers, camera, camera.drawHandler)
     camera.drawHandler ++= Vector(grid, numbers)
     

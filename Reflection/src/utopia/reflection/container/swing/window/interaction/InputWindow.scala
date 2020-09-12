@@ -2,7 +2,6 @@ package utopia.reflection.container.swing.window.interaction
 
 import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.WaitUtils
-import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.shape.shape2D.{Direction2D, Point}
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.swing.button.ImageButton
@@ -14,6 +13,7 @@ import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Popup
+import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenAnyKeyPressed
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
@@ -117,7 +117,7 @@ trait InputWindow[+A] extends InteractionWindow[A]
 							row += TextLabel.contextual(message)
 						}.framed(popupContext.margins.medium.any, popupContext.containerBackground)
 						val popup = Popup(component, popupContent, popupContext.actorHandler,
-							hideWhenFocusLost = false, Alignment.Left) { (cSize, pSize) =>
+							WhenAnyKeyPressed, Alignment.Left) { (cSize, pSize) =>
 							Point(cSize.width + popupContext.margins.medium, -(pSize.height - cSize.height) / 2) }
 						dismissButton.registerAction { () => popup.close() }
 						
@@ -125,7 +125,6 @@ trait InputWindow[+A] extends InteractionWindow[A]
 					}
 					
 					// Closes the pop-up if any key is pressed or after a delay
-					popup.addKeyStateListener(KeyStateListener.onAnyKeyPressed { _ => popup.close() })
 					WaitUtils.delayed(5.seconds) { popup.close() }(executionContext)
 					popup.display(false)
 					None -> false
