@@ -71,7 +71,8 @@ object LocalString
   * @param string A source string
   * @param languageCode The 2-character ISO code for the language of the string
   */
-case class LocalString(override val string: String, override val languageCode: Option[String] = None) extends LocalStringLike[LocalString]
+case class LocalString(override val string: String, override val languageCode: Option[String] = None)
+	extends LocalStringLike[LocalString]
 {
 	// COMPUTED	--------------------------
 	

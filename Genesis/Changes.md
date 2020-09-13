@@ -11,6 +11,8 @@ new mutable mouse event handlers.
 ### New Methods
 - Added .toRoundedRectangleWithRadius(Double) to Bounds
 - Added .oneTimeListener(Filter)(...) to KeyStateListener
+### Other Methods
+- Bounds and Point .toAwt conversion now rounds the double values to closest integers
 
 ## v2.3
 ### Scala

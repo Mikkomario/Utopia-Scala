@@ -21,6 +21,7 @@ import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.multi.AnimatedStack
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
+import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenFocusLost
 import utopia.reflection.container.swing.window.{Popup, Window}
 import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
@@ -185,7 +186,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 		if (visiblePopup.isEmpty)
 		{
 			// Creates and displays the popup
-			val popup = Popup(mainDisplay, popupContentView, actorHandler) {
+			val popup = Popup(mainDisplay, popupContentView, actorHandler, WhenFocusLost) {
 				(fieldSize, _) => Point(0, fieldSize.height) }
 			visiblePopup = Some(popup)
 			// Relays key events to the search field

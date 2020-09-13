@@ -18,6 +18,8 @@ wider range of options
 - Added .addRoundedBackgroundDrawing(Color) to Framing
 - Added .isInWindow to AwtComponentRelated
 - Added .show() and .hide() to AnimatedVisibility
+- Added a number of new methods to LengthPriority
+- Added .isEmpty and .nonEmpty to LocalStringLike
 ### Fixes
 - Added missing focus gain to InputWindow when a component's value needs to be fixed
 - Scrollable views now listen to global mouse release events, meaning they no longer get stuck in scrolling mode
@@ -27,9 +29,14 @@ which is more resource-effective
 - Window now supports (partially) transparent content by adjusting background color accordingly. This only works 
 in undecorated windows and may get disabled by the OS.
 - SingleColorIcon now properly adjusts luminosity when used as an image set in ImageButton
+- Fixed priority handling when combining stack lengths
+    - Current logic may choose the smaller optimal length if the larger length allows it via priority
+- Fixed StackSize.limitedTo(Size) to primarily affect the maximum size only
 ### Other Changes
 - Frame.title and Dialog.title now default to empty strings in constructors
 - MultiLineTextView now extends AwtContainerRelated
+- ImageButton constructors now contain an optional isLowPriority -parameter
+- Added rounding to Margins.small, .large and .verySmall
 
 ## v1.2
 ### Scala

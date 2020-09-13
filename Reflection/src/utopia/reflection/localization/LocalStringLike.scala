@@ -55,6 +55,16 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	// COMPUTED	--------------
 	
 	/**
+	  * @return Whether this string is empty
+	  */
+	def isEmpty = string.isEmpty
+	
+	/**
+	  * @return Whether this string contains characters
+	  */
+	def nonEmpty = string.nonEmpty
+	
+	/**
 	  * @return This string split on newline characters
 	  */
 	def lines = split("\r?\n|\r")

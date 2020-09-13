@@ -18,6 +18,23 @@ sealed trait LengthPriority
 	  */
 	def expandsFirst: Boolean
 	
+	/**
+	  * @return A copy of this priority that shrinks easily
+	  */
+	def shrinking: LengthPriority
+	/**
+	  * @return A copy of this priority that expands easily
+	  */
+	def expanding: LengthPriority
+	/**
+	  * @return A copy of this priority that doesn't shrink easily
+	  */
+	def notShrinking: LengthPriority
+	/**
+	  * @return A copy of this priority that doesn't expand easily
+	  */
+	def notExpanding: LengthPriority
+	
 	
 	// OTHER	------------------------
 	
@@ -40,6 +57,18 @@ sealed trait LengthPriority
 	  */
 	def max(other: LengthPriority) = LengthPriority(
 		shrinksFirst && other.shrinksFirst, expandsFirst && other.expandsFirst)
+	
+	/**
+	  * @param other Another length priority
+	  * @return Whether this priority allows expansion easier than the other
+	  */
+	def expandsEasierThan(other: LengthPriority) = expandsFirst && !other.expandsFirst
+	
+	/**
+	  * @param other Another length priority
+	  * @return Whether this priority allows shrinking easier than the other
+	  */
+	def shrinksEasierThan(other: LengthPriority) = shrinksFirst && !other.shrinksFirst
 }
 
 object LengthPriority
@@ -52,6 +81,14 @@ object LengthPriority
 		override def shrinksFirst = false
 		
 		override def expandsFirst = false
+		
+		override def shrinking = Shrinking
+		
+		override def expanding = Expanding
+		
+		override def notShrinking = this
+		
+		override def notExpanding = this
 	}
 	
 	/**
@@ -62,6 +99,14 @@ object LengthPriority
 		override def shrinksFirst = true
 		
 		override def expandsFirst = true
+		
+		override def shrinking = this
+		
+		override def expanding = this
+		
+		override def notShrinking = Expanding
+		
+		override def notExpanding = Shrinking
 	}
 	
 	/**
@@ -72,6 +117,14 @@ object LengthPriority
 		override def shrinksFirst = true
 		
 		override def expandsFirst = false
+		
+		override def shrinking = this
+		
+		override def expanding = Low
+		
+		override def notShrinking = Normal
+		
+		override def notExpanding = this
 	}
 	
 	/**
@@ -82,6 +135,14 @@ object LengthPriority
 		override def shrinksFirst = false
 		
 		override def expandsFirst = true
+		
+		override def shrinking = Low
+		
+		override def expanding = this
+		
+		override def notShrinking = this
+		
+		override def notExpanding = Normal
 	}
 	
 	/**

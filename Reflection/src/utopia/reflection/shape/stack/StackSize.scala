@@ -456,7 +456,7 @@ case class StackSize(width: StackLength, height: StackLength)
       * @param size A limiting size
       * @return A copy of this size that always fits to the specified size
       */
-    def limitedTo(size: Size) = min(StackSize.fixed(size))
+    def limitedTo(size: Size) = map { (side, length) => length.within(size.along(side)) }
     
     /**
       * @param other Another size

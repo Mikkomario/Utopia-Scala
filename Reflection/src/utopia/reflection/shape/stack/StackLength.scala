@@ -75,6 +75,36 @@ object StackLength
 	  * @return A stack length with no miminum, preferring the maximum length
 	  */
     def downscaling(max: Double): StackLength = downscaling(max, max)
+	
+	
+	// OTHER	--------------------------
+	
+	// Attempts to intelligently combine the two length priorities. Prefers to minimize priority where reasonable
+	private def combinedPriority(newMin: Double, newOptimal: Double, newMax: Option[Double], firstOptimal: Double,
+								 firstPriority: LengthPriority, secondOptimal: Double, secondPriority: LengthPriority) =
+	{
+		val isSameLength = firstOptimal == secondOptimal
+		val options = Vector(firstOptimal -> firstPriority, secondOptimal -> secondPriority).sortBy { _._1 }
+		/* Shrinking is allowed if:
+			- If Smaller optimal value allows shrinking
+			- If the two optimal values are equal AND one of them allows shrinking
+			- If new optimal value is larger than the smaller AND larger of them allows shrinking
+			- BUT NOT if new minimum is same or larger than new optimal
+		 */
+		val allowsShrinking = newMin < newOptimal && (options.head._2.shrinksFirst ||
+				(isSameLength && options.exists { _._2.shrinksFirst } ||
+					(newOptimal > options.head._1 && options.last._2.shrinksFirst)))
+		/* Expansion is allowed if:
+			- If larger of the two values allows expansion
+			- If the two optimal values are equal AND one of them allows expansion
+			- If the new optimal value is smaller than the larger AND smaller of them allows expansion
+			- BUT NOT if new maximum is same or smaller than new optimal
+		 */
+		val allowsExpansion = newMax.forall { _ > newOptimal } && (options.last._2.expandsFirst ||
+			(isSameLength && options.exists { _._2.expandsFirst }) ||
+			(newOptimal < options.last._1 && options.head._2.expandsFirst))
+		LengthPriority(allowsShrinking, allowsExpansion)
+	}
 }
 
 /**
@@ -298,8 +328,36 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * @param other Another stack length
 	  * @return A minimum between this length and the other (min, optimal and max will be picked from the minimum value)
 	  */
-	def min(other: StackLength): StackLength = StackLength(min min other.min, optimal min other.optimal,
-		Vector(max, other.max).flatten.reduceOption(_ min _), priority min other.priority)
+	def min(other: StackLength): StackLength =
+	{
+		// May prioritize larger optimum length if one of the lengths allows it
+		val newMin = min min other.min
+		val newOptimal =
+		{
+			if (priority.expandsFirst == other.priority.expandsFirst)
+				optimal min other.optimal
+			else
+			{
+				val (limit, proposed) =
+				{
+					if (priority.expandsFirst)
+						max -> other.optimal
+					else
+						other.max -> optimal
+				}
+				limit match
+				{
+					case Some(limit) => limit min proposed
+					case None => proposed
+				}
+			}
+		}
+		val newMax = Vector(max, other.max).flatten.reduceOption { _ min _ }
+		val newPriority = StackLength.combinedPriority(newMin, newOptimal, newMax,
+			optimal, priority, other.optimal, other.priority)
+		
+		StackLength(newMin, newOptimal, newMax, newPriority)
+	}
 	
 	/**
 	  * @param other Another stack length
@@ -307,8 +365,22 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  */
 	def max(other: StackLength): StackLength =
 	{
+		val newMin = min max other.min
 		val newMax = if (max.isEmpty || other.max.isEmpty) None else Some(max.get max other.max.get)
-		StackLength(min max other.min, optimal max other.optimal, newMax, priority min other.priority)
+		// May prioritize smaller optimum length if the other length is low priority
+		val newOptimal =
+		{
+			if (priority.shrinksFirst == other.priority.shrinksFirst)
+				optimal max other.optimal
+			else if (priority.shrinksFirst)
+				other.optimal
+			else
+				optimal
+		}
+		val newPriority = StackLength.combinedPriority(newMin, newOptimal, newMax,
+			optimal, priority, other.optimal, other.priority)
+		
+		StackLength(newMin, newOptimal, newMax, newPriority)
 	}
 	
 	/**
@@ -318,14 +390,46 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	{
 	    val newMin = min max other.min
 	    val newMax = Vector(max, other.max).flatten.reduceOption { _ min _ }
-	    val newOptimal = optimal max other.optimal
-	    val prio = priority min other.priority
 	    
-	    // Optimal is limited by maximum length
+		// May pick the smaller optimal length in case the larger optimal is easily shrank
+	    val newOptimal =
+		{
+			if (priority.shrinksFirst == other.priority.shrinksFirst)
+				optimal max other.optimal
+			else if (priority.shrinksFirst)
+				other.optimal
+			else
+				optimal
+		}
+		val newPriority = StackLength.combinedPriority(newMin, newOptimal, newMax,
+			optimal, priority, other.optimal, other.priority)
+		
+		// Optimal is limited by maximum length
 	    if (newMax exists { _ < newOptimal })
-	        StackLength(newMin, newMax.get, newMax, prio)
+	        StackLength(newMin, newMax.get, newMax, newPriority)
 	    else
-	        StackLength(newMin, newOptimal, newMax, prio)
+	        StackLength(newMin, newOptimal, newMax, newPriority)
+	}
+	
+	/**
+	  * @param maximum New maximum length
+	  * @return A copy of this stack length, now limited to that maximum length
+	  *         (adjusts optimal and minimum, as well as priority if necessary)
+	  */
+	def within(maximum: Double) =
+	{
+		val newMin = min min maximum
+		val newMax = max match
+		{
+			case Some(m) => m min maximum
+			case None => maximum
+		}
+		val newOptimal = newMin max optimal min newMax
+		
+		val minLimitedPriority = if (newMin >= newOptimal) priority.notShrinking else priority
+		val newPriority = if (newMax <= newOptimal) minLimitedPriority.notExpanding else minLimitedPriority
+		
+		StackLength(newMin, newOptimal, Some(newMax), newPriority)
 	}
 	
 	/**
@@ -334,24 +438,37 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * @param maximum Maximum limit. None if not limited.
 	  * @return A stack length that has at least 'minimum' minimum width and at most 'maximum' maximum width
 	  */
-	def within(minimum: Double, maximum: Option[Double]) =
+	def within(minimum: Double, maximum: Option[Double]): StackLength =
 	{
-		if (maximum.isDefined)
+		maximum match
 		{
-			val newMin = minimum max min min maximum.get
-			val newMax = max.map { m => minimum max m min maximum.get } getOrElse maximum.get
-			val newOptimal = newMin max optimal min newMax
-			
-			StackLength(newMin, newOptimal, Some(newMax), priority)
+			case Some(maximum) => within(minimum, maximum)
+			case None =>
+				val newMin = minimum max min
+				val newMax = max.map { minimum max _ }
+				val newOptimal = newMin max optimal
+				val newPriority = if (newMin >= newOptimal) priority.notShrinking else priority
+				
+				StackLength(newMin, newOptimal, newMax, newPriority)
 		}
-		else
-		{
-			val newMin = minimum max min
-			val newMax = max.map { minimum max _ }
-			val newOptimal = newMin max optimal
-			
-			StackLength(newMin, newOptimal, newMax, priority)
-		}
+	}
+	
+	/**
+	  * Creates a new stack length that is within the specified limits
+	  * @param minimum Minimum limit
+	  * @param maximum Maximum limit.
+	  * @return A stack length that has at least 'minimum' minimum width and at most 'maximum' maximum width
+	  */
+	def within(minimum: Double, maximum: Double) =
+	{
+		val newMin = minimum max min min maximum
+		val newMax = max.map { m => minimum max m min maximum } getOrElse maximum
+		val newOptimal = newMin max optimal min newMax
+		
+		val minLimitedPriority = if (newMin >= newOptimal) priority.notShrinking else priority
+		val newPriority = if (newMax <= newOptimal) minLimitedPriority.notExpanding else minLimitedPriority
+		
+		StackLength(newMin, newOptimal, Some(newMax), newPriority)
 	}
 	
 	/**

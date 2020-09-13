@@ -119,12 +119,17 @@ object Popup
 	
 	private class HideOnFocusLostListener(popup: Window[_]) extends WindowFocusListener
 	{
-		override def windowGainedFocus(e: WindowEvent) = ()
+		private var hasGainedFocus = false
+		
+		override def windowGainedFocus(e: WindowEvent) = hasGainedFocus = true
 		
 		override def windowLostFocus(e: WindowEvent) =
 		{
-			popup.component.removeWindowFocusListener(this)
-			popup.close()
+			if (hasGainedFocus)
+			{
+				popup.component.removeWindowFocusListener(this)
+				popup.close()
+			}
 		}
 	}
 	
