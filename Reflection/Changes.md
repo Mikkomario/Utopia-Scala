@@ -17,6 +17,7 @@ wider range of options
 - Added .inRoundedFraming(...) to AwtStackable
 - Added .addRoundedBackgroundDrawing(Color) to Framing
 - Added .isInWindow to AwtComponentRelated
+- Added .show() and .hide() to AnimatedVisibility
 ### Fixes
 - Added missing focus gain to InputWindow when a component's value needs to be fixed
 - Scrollable views now listen to global mouse release events, meaning they no longer get stuck in scrolling mode
@@ -25,6 +26,7 @@ which is more resource-effective
 - ComponentToImage now properly draws the child components as well
 - Window now supports (partially) transparent content by adjusting background color accordingly. This only works 
 in undecorated windows and may get disabled by the OS.
+- SingleColorIcon now properly adjusts luminosity when used as an image set in ImageButton
 ### Other Changes
 - Frame.title and Dialog.title now default to empty strings in constructors
 - MultiLineTextView now extends AwtContainerRelated

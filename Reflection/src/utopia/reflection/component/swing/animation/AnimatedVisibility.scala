@@ -133,6 +133,18 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 	// OTHER	-------------------------
 	
 	/**
+	  * Sets this content visible with animation
+	  * @return A completion of the state change, with final state included
+	  */
+	def show() = visibility = Visible
+	
+	/**
+	  * Sets this content invisible with animation
+	  * @return A completion of the state change, with final state included
+	  */
+	def hide() = visibility = Invisible
+	
+	/**
 	  * Specifies component visibility without triggering transition animations
 	  * @param newState New visibility state
 	  */

@@ -39,7 +39,15 @@ class SingleColorIcon(original: Image)
 	/**
 	  * A version of this icon for dark image + text buttons
 	  */
-	lazy val whiteForButtons = ButtonImageSet.lowAlphaOnDisabled(white, 0.65)
+	lazy val whiteForButtons = ButtonImageSet.lowAlphaOnDisabled(white)
+	/**
+	  * A version of this icon for black individual buttons
+	  */
+	lazy val blackIndividualButton = ButtonImageSet.brightening(black)
+	/**
+	  * A version of this icon for white individual buttons
+	  */
+	lazy val whiteIndividualButton = ButtonImageSet.darkening(white)
 	
 	
 	// COMPUTED	---------------------------
@@ -90,8 +98,8 @@ class SingleColorIcon(original: Image)
 	  */
 	def asIndividualButton(implicit context: ColorContextLike) = context.containerBackground.textColorStandard match
 	{
-		case Dark => blackForButtons
-		case Light => whiteForButtons
+		case Dark => blackIndividualButton
+		case Light => whiteIndividualButton
 	}
 	
 	

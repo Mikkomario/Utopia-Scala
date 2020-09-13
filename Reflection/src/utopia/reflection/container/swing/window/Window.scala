@@ -316,8 +316,7 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
     /**
      * Makes it so that this window will close one escape is pressed
      */
-    def setToCloseOnEsc() = addKeyStateListener(KeyStateListener.onKeyPressed(KeyEvent.VK_ESCAPE) { _ =>
-        if (isFocusedWindow) close() })
+    def setToCloseOnEsc() = addKeyStateListener(KeyStateListener.onKeyPressed(KeyEvent.VK_ESCAPE) { _ => close() })
     
     /**
       * Updates the bounds of this window's contents to match those of this window

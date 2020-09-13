@@ -1,7 +1,9 @@
 package utopia.reflection.container.swing.window
 
 import java.awt.event.{WindowEvent, WindowFocusListener}
+import java.time.Instant
 
+import utopia.flow.util.TimeExtensions._
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
 import utopia.reflection.localization.LocalString._
@@ -141,9 +143,16 @@ object Popup
 	private class HideOnOutsideClickListener(override val popup: Window[_]) extends MouseButtonStateListener
 		with HideActionListener
 	{
+		// ATTRIBUTES	----------------------
+		
+		private val actionThreshold = Instant.now() + 0.1.seconds
+		
+		
+		// IMPLEMENTED	----------------------
+		
 		override def onMouseButtonState(event: MouseButtonStateEvent) =
 		{
-			if (popup.isVisible && !popup.bounds.contains(event.absoluteMousePosition))
+			if (popup.isVisible && Instant.now() > actionThreshold && !popup.bounds.contains(event.absoluteMousePosition))
 				popup.close()
 			None
 		}
