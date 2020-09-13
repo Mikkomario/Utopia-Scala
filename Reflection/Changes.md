@@ -10,16 +10,21 @@ wider range of options
     - Includes a new ProgressState class for representing background process progress
 - Added ExpandingLengthModifier and NoShrinkingConstraint
 - Added RoundedBackgroundDrawer (custom background drawer)
+- Added AwtComponentExtensions for a few utility methods regarding awt Components
 ### New Methods
 - Added && and map functions to StackLengthModifier and StackSizeModifier
 - Added .isClosed to Window
 - Added .inRoundedFraming(...) to AwtStackable
 - Added .addRoundedBackgroundDrawing(Color) to Framing
+- Added .isInWindow to AwtComponentRelated
 ### Fixes
 - Added missing focus gain to InputWindow when a component's value needs to be fixed
 - Scrollable views now listen to global mouse release events, meaning they no longer get stuck in scrolling mode
 - Scrollable views now only listen to action and mouse events when attached to the main stack hierarchy, 
 which is more resource-effective
+- ComponentToImage now properly draws the child components as well
+- Window now supports (partially) transparent content by adjusting background color accordingly. This only works 
+in undecorated windows and may get disabled by the OS.
 ### Other Changes
 - Frame.title and Dialog.title now default to empty strings in constructors
 - MultiLineTextView now extends AwtContainerRelated

@@ -65,6 +65,7 @@ object Popup
 		newWindow.position = newPosition topLeft maxPosition
 		
 		// Determines auto close logic
+		// FIXME: HideOnOutsideClickListener triggers immediately
 		autoCloseLogic match
 		{
 			case WhenFocusLost => newWindow.component.addWindowFocusListener(new HideOnFocusLostListener(newWindow))

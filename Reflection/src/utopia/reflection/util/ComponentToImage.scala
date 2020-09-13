@@ -1,12 +1,15 @@
 package utopia.reflection.util
 
+import java.awt.Frame
 import java.awt.image.BufferedImage
 
 import javax.swing.CellRendererPane
+import utopia.genesis.color.Color
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.layout.Area
+import utopia.reflection.component.template.layout.stack.Stackable
 
 /**
   * Used for drawing components as images
@@ -23,7 +26,19 @@ object ComponentToImage
 	  */
 	def apply(component: AwtComponentRelated with Area): Image =
 	{
-		val imageSize = component.size
+		// Tries to avoid using 0x0 size by backing up with component preferred size, if available
+		val componentSize = component.size
+		val imageSize =
+		{
+			if (componentSize.isPositive)
+				componentSize
+			else
+				component match
+				{
+					case c: Stackable => c.stackSize.optimal
+					case _ => componentSize
+				}
+		}
 		
 		// For visible displayed components, may simply draw them to an image
 		if (component.isInVisibleHierarchy)
@@ -56,14 +71,32 @@ object ComponentToImage
 		{
 			val image = new BufferedImage(imageSize.width.toInt, imageSize.height.toInt, BufferedImage.TYPE_INT_ARGB)
 			
-			// Draws the image using cell renderer panel
+			// Draws the image using cell renderer panel. The panel is added to a temporary invisible frame
+			// because child components can't be properly painted otherwise
+			val testFrame = new Frame()
+			testFrame.setUndecorated(true)
+			testFrame.setBackground(Color.white.withAlpha(0.0).toAwt)
 			val cellRenderedPanel = new CellRendererPane
-			cellRenderedPanel.add(component.component)
 			val boundsBefore = component.bounds
+			// Resizes the component and updates its contents if necessary
+			component match
+			{
+				case c: Stackable =>
+					c.size = imageSize
+					c.updateLayout()
+				case _ => ()
+			}
+			cellRenderedPanel.add(component.component)
+			testFrame.add(cellRenderedPanel)
 			cellRenderedPanel.paintComponent(image.createGraphics(), component.component, cellRenderedPanel,
 				Bounds(Point.origin, imageSize).toAwt)
 			cellRenderedPanel.remove(component.component)
-			component.component.setBounds(boundsBefore.toAwt)
+			component match
+			{
+				case c: Stackable => c.bounds = boundsBefore
+				case _ => component.component.setBounds(boundsBefore.toAwt)
+			}
+			testFrame.dispose()
 			
 			// Returns wrapped image
 			Image.from(image)

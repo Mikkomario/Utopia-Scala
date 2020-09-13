@@ -3,6 +3,8 @@ package utopia.reflection.component.swing.template
 import java.awt.Cursor
 import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 
+import utopia.reflection.util.AwtComponentExtensions._
+
 /**
   * This trait is extended by classes that have a related awt component
   * @author Mikko Hilpinen
@@ -21,56 +23,20 @@ trait AwtComponentRelated
 	// COMPUTED	--------------------
 	
 	/**
+	  * @return Whether this component is in a visible component hierarchy
+	  */
+	def isInWindow = component.isInWindow
+	
+	/**
 	  * @return The lowest window parent of this component. None if this component isn't hosted in any window.
 	  */
-	def parentWindow =
-	{
-		var nextParent = component.getParent
-		var window: Option[java.awt.Window] = None
-		
-		// Checks parents until a window is found
-		while (window.isEmpty && nextParent != null)
-		{
-			nextParent match
-			{
-				case w: java.awt.Window => window = Some(w)
-				case _ => nextParent = nextParent.getParent
-			}
-		}
-		
-		window
-	}
+	def parentWindow = component.parentWindow
 	
 	/**
 	  * @return Whether this component is currently being displayed as a part of a visible component hierarchy
 	  *         (visible hierarchy in visible window)
 	  */
-	def isInVisibleHierarchy: Boolean =
-	{
-		if (component.isVisible)
-		{
-			var foundInvisible = false
-			var foundVisibleWindow = false
-			var nextParent = component.getParent
-			
-			while (nextParent != null && !foundInvisible && !foundVisibleWindow)
-			{
-				if (nextParent.isVisible)
-				{
-					if (nextParent.isInstanceOf[java.awt.Window])
-						foundVisibleWindow = true
-					else
-						nextParent = nextParent.getParent
-				}
-				else
-					foundInvisible = true
-			}
-			
-			foundVisibleWindow
-		}
-		else
-			false
-	}
+	def isInVisibleHierarchy = component.isInVisibleHierarchy
 	
 	
 	// OTHER	--------------------

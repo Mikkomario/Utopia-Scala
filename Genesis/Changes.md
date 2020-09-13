@@ -9,7 +9,8 @@ new mutable mouse event handlers.
 ### Deprecations
 - ConvertingKeyListener was deprecated in favor of GlobalKeyboardEventHandler
 ### New Methods
-- Added toRoundedRectangleWithRadius(Double) to Bounds
+- Added .toRoundedRectangleWithRadius(Double) to Bounds
+- Added .oneTimeListener(Filter)(...) to KeyStateListener
 
 ## v2.3
 ### Scala

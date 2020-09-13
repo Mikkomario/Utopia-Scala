@@ -64,4 +64,12 @@ private class CustomPanel extends JPanel with CustomDrawComponent
 	override def paintChildren(g: Graphics) = customPaintChildren(g, super.paintChildren)
 	
 	override def isPaintingOrigin = shouldPaintOrigin()
+	
+	/*
+	override def repaint() =
+	{
+		// Only repaints this component if part of a window hierarchy
+		if (this.isInWindow)
+			super.repaint()
+	}*/
 }

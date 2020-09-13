@@ -27,6 +27,7 @@ import utopia.reflection.shape.stack.modifier.StackSizeModifier
 
 import scala.concurrent.Promise
 import scala.jdk.CollectionConverters.SeqHasAsJava
+import scala.util.Try
 
 /**
 * This is a common wrapper for all window implementations
@@ -217,9 +218,14 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
       */
     protected def setup() =
     {
+        // Sets transparent background if content doesn't have a background itself
+        // (only works in certain conditions. Doesn't work if this window is decorated)
+        if (content.isTransparent)
+            Try { component.setBackground(Color.black.withAlpha(0.0).toAwt) }
+        
         // Sets position and size
         updateWindowBounds(true)
-    
+        
         if (!fullScreen)
             position = ((Screen.size - size) / 2).toVector.toPoint
     
