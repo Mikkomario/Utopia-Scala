@@ -11,6 +11,21 @@ import utopia.vault.sql.{Condition, Limit, OrderBy, Select, Where}
  */
 trait SingleIdAccess[+ID] extends IdAccess[ID, Option[ID]] with SingleAccess[ID, SingleIdAccess[ID]]
 {
+	// COMPUTED	-------------------------------
+	
+	/**
+	  * @param connection Database connection (implicit)
+	  * @return The smallest available row id
+	  */
+	def min(implicit connection: Connection) = first(OrderBy.ascending(index))
+	
+	/**
+	  * @param connection Database connection (implicit)
+	  * @return The largest available row id
+	  */
+	def max(implicit connection: Connection) = first(OrderBy.descending(index))
+	
+	
 	// IMPLEMENTED	---------------------------
 	
 	override protected def read(condition: Option[Condition], order: Option[OrderBy])(implicit connection: Connection) =
