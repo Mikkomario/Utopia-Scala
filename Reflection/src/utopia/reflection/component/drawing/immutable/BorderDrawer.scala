@@ -9,7 +9,7 @@ import utopia.reflection.shape.Border
   * @author Mikko Hilpinen
   * @since 5.5.2019, v1+
   */
-class BorderDrawer(override val border: Border, isAboveContent: Boolean = true) extends template.BorderDrawer
+case class BorderDrawer(override val border: Border, isAboveContent: Boolean = true) extends template.BorderDrawer
 {
 	// ATTRIBUTES	------------------
 	
