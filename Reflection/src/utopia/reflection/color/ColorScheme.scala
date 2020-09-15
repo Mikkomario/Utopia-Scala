@@ -107,13 +107,13 @@ case class ColorScheme(primary: ColorSet, gray: ColorSet = ColorScheme.defaultLi
 	def warning = apply(Warning)
 	
 	/**
-	  * @return Color used when displaying success indications
-	  */
+	 * @return Color to use when displaying a success state
+	 */
 	def success = apply(Success)
 	
 	/**
-	  * @return Color used when displaying additional information
-	  */
+	 * @return Color to use when displaying an info state
+	 */
 	def info = apply(Info)
 	
 	/**

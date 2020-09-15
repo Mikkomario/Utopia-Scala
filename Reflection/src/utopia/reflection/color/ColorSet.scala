@@ -135,6 +135,12 @@ case class ColorSet(default: ComponentColor, light: ComponentColor, dark: Compon
 	  */
 	def contains(color: ComponentColor) = color == default || color == light || color == dark
 	
+	/**
+	 * @param f A color mapping function
+	 * @return A copy of this color set with mapped colors
+	 */
+	def map(f: ComponentColor => ComponentColor) = ColorSet(f(default), f(light), f(dark))
+	
 	private def forBackground(backgroundColor: Color, preference: ColorShadeVariant) =
 	{
 		val order = Vector(preference, Standard, preference.opposite).map(apply)

@@ -25,6 +25,7 @@ object ImageTest extends App
 	val leftPartBounds = Bounds(Point.origin, Size(57, 96))
 	val leftHalf = original.subImage(leftPartBounds)
 	val partiallyMapped = original.mapArea(leftPartBounds) { _ + Rotation.ofDegrees(90) }
+	val combined = original.withOverlay(original * 0.5, original.size.toPoint / 4)
 	
 	// Sets up the program
 	val gameWorldSize = Size(800, 300)
@@ -42,7 +43,8 @@ object ImageTest extends App
 		new ImageDrawer(original.sharpened(), Point(150, 150)),
 		new ImageDrawer(original.withAdjustedHue(Angle.red, Angle.ofDegrees(90), Angle.blue), Point(250, 150)),
 		new ImageDrawer(original.withThreshold(3), Point(350, 150)),
-		new ImageDrawer(original * 2, Point(450, 150))
+		new ImageDrawer(original * 2, Point(450, 150)),
+		new ImageDrawer(combined, Point(550, 150))
 	)
 	
 	// Starts the program

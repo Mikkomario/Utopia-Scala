@@ -13,6 +13,7 @@ import utopia.reflection.component.template.{ComponentLike, Focusable}
   * @author Mikko Hilpinen
   * @since 25.4.2019, v1+
   */
+// TODO: Add support for hotkeys
 trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 {
 	// ABSTRACT	----------------------
@@ -85,7 +86,7 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 	def trigger() = if (isEnabled) actions.foreach { _() }
 	
 	/**
-	  * Initializes this button's listeners. Shuold be called when constructing this button.
+	  * Initializes this button's listeners. Should be called when constructing this button.
 	  */
 	protected def initializeListeners() =
 	{
@@ -134,8 +135,8 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 	{
 		// ATTRIBUTES	--------------
 		
-		def isDown = state.isPressed
-		def isDown_=(newState: Boolean) = state = state.copy(isPressed = newState)
+		def down = state.isPressed
+		def down_=(newState: Boolean) = state = state.copy(isPressed = newState)
 		
 		
 		// IMPLEMENTED	--------------
@@ -150,12 +151,12 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 		// On left mouse within bounds, brightens color and remembers, on release, returns
 		override def onMouseButtonState(event: MouseButtonStateEvent) =
 		{
-			if (isDown)
+			if (down)
 			{
 				if (event.wasReleased)
 				{
 					trigger()
-					isDown = false
+					down = false
 					Some(ConsumeEvent("Button released"))
 				}
 				else
@@ -163,7 +164,7 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 			}
 			else if (event.isOverArea(bounds))
 			{
-				isDown = true
+				down = true
 				Some(ConsumeEvent("Button pressed"))
 			}
 			else

@@ -11,8 +11,10 @@ new mutable mouse event handlers.
 ### New Methods
 - Added .toRoundedRectangleWithRadius(Double) to Bounds
 - Added .oneTimeListener(Filter)(...) to KeyStateListener
-### Other Methods
-- Bounds and Point .toAwt conversion now rounds the double values to closest integers
+- Added .withOverlay(Image, Point) to Image (can also be called with +)
+### Other Changes
+- Bounds and Point .toAwt conversion now rounds the double values to the closest integers
+- Direction1D now extends RichComparable
 
 ## v2.3
 ### Scala

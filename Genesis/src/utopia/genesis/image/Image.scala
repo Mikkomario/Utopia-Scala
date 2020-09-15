@@ -15,7 +15,6 @@ import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.{Angle, Rotation}
 import utopia.genesis.shape.shape2D.{Area2D, Bounds, Direction2D, Insets, Point, Size, Transformation, Vector2D}
-import utopia.genesis.shape.shape3D.Vector3D
 import utopia.genesis.shape.template.VectorLike
 import utopia.genesis.util.{Drawer, Scalable}
 
@@ -125,6 +124,11 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	// COMPUTED	--------------------
 	
 	/**
+	 * @return Whether this image is actually completely empty
+	 */
+	def isEmpty = source.isEmpty
+	
+	/**
 	  * @return The pixels in this image
 	  */
 	def pixels = _pixels.get
@@ -218,7 +222,7 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	  * @param scaling The scaling factor
 	  * @return A scaled version of this image
 	  */
-	override def *(scaling: Double): Image = this * Vector3D(scaling, scaling)
+	override def *(scaling: Double): Image = this * Vector2D(scaling, scaling)
 	
 	/**
 	  * Downscales this image
@@ -226,6 +230,12 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	  * @return A downscaled version of this image
 	  */
 	def /(divider: VectorLike[_]): Image = withScaling(scaling / divider)
+	
+	/**
+	 * @param other Another image
+	 * @return A copy of this image with the other image drawn on top of this one (at (0,0) coordinates)
+	 */
+	def +(other: Image) = withOverlay(other)
 	
 	
 	// OTHER	--------------------
@@ -552,6 +562,33 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 		}
 		else
 			this
+	}
+	
+	/**
+	 * @param overlayImage An image that will be drawn on top of this image
+	 * @param offset Offset used when positioning the other image (default = (0,0))
+	 * @return A new image where the specified image is drawn on top of this one
+	 */
+	def withOverlay(overlayImage: Image, offset: Point = Point.origin) =
+	{
+		// If one of the images is empty, uses the other image
+		if (overlayImage.isEmpty)
+			this
+		else
+			toAwt match
+			{
+				case Some(buffer) =>
+					// Draws the other image on the buffer
+					// Determines the scaling to apply, if necessary
+					Drawer.use(buffer.createGraphics()) { d =>
+						(overlayImage / scaling).drawWith(d.clippedTo(Bounds(Point.origin, sourceResolution)),
+							offset / scaling)
+					}
+					// Wraps the result
+					Image(buffer, scaling)
+					
+				case None => overlayImage
+			}
 	}
 }
 

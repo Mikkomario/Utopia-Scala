@@ -20,6 +20,8 @@ wider range of options
 - Added .show() and .hide() to AnimatedVisibility
 - Added a number of new methods to LengthPriority
 - Added .isEmpty and .nonEmpty to LocalStringLike
+- Added .success and .info to ColorScheme
+- Added .map(...) to ColorSet
 ### Fixes
 - Added missing focus gain to InputWindow when a component's value needs to be fixed
 - Scrollable views now listen to global mouse release events, meaning they no longer get stuck in scrolling mode
