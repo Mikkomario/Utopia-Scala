@@ -153,8 +153,8 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 	
 	private var currentSelection = selectionFor(selectedMonth)
 	
-	private val previousButton = ImageButton(backwardIcon) { () => lastMonth() }
-	private val nextButton = ImageButton(forwardIcon) { () => nextMonth() }
+	private val previousButton = ImageButton(backwardIcon) { lastMonth() }
+	private val nextButton = ImageButton(forwardIcon) { nextMonth() }
 	
 	// Day selections are swapped each time month changes, hence the switch panel
 	private val selectionSwitch = SwitchPanel(currentSelection)

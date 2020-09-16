@@ -24,40 +24,50 @@ object TextButton
 	  * @param textColor Color used for this button's text
 	  * @param insets Insets placed around this button's text
 	  * @param borderWidth Width of the border inside this button (in pixels)
+	  * @param alignment Text alignment used
+	  * @param hotKeys Hotkey indices that can be used for triggering this button (default = empty)
+	  * @param hotKeyChars Characters on keyboard that can be used for triggering this button (default = empty)
 	  * @param action Action performed when this button is pressed
 	  * @return A new button
 	  */
 	def apply(text: LocalizedString, font: Font, color: Color, textColor: Color = Color.textBlack,
-			  insets: StackInsets = StackInsets.any, borderWidth: Double = 0.0, alignment: Alignment = Center)
+			  insets: StackInsets = StackInsets.any, borderWidth: Double = 0.0, alignment: Alignment = Center,
+			  hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())
 			 (action: => Unit) =
 	{
-		val button = new TextButton(text, font, color, textColor, insets, borderWidth, alignment)
-		button.registerAction(() => action)
+		val button = new TextButton(text, font, color, textColor, insets, borderWidth, alignment, hotKeys, hotKeyChars)
+		button.registerAction { () => action }
 		button
 	}
 	
 	/**
 	  * Creates a new button that doesn't have a registered action yet
 	  * @param text Button text
+	  * @param hotKeys Hotkey indices that can be used for triggering this button (default = empty)
+	  * @param hotKeyChars Characters on keyboard that can be used for triggering this button (default = empty)
 	  * @param context Button creation context
 	  * @return A new button
 	  */
-	def contextualWithoutAction(text: LocalizedString)(implicit context: ButtonContextLike): TextButton =
+	def contextualWithoutAction(text: LocalizedString, hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())
+	                           (implicit context: ButtonContextLike): TextButton =
 	{
 		new TextButton(text, context.font, context.buttonColor, context.textColor, context.textInsets,
-			context.borderWidth, context.textAlignment)
+			context.borderWidth, context.textAlignment, hotKeys, hotKeyChars)
 	}
 	
 	/**
 	  * Creates a new text button using external context
 	  * @param text Button text
+	  * @param hotKeys Hotkey indices that can be used for triggering this button (default = empty)
+	  * @param hotKeyChars Characters on keyboard that can be used for triggering this button (default = empty)
 	  * @param action Button action
 	  * @param context Button context (implicit)
 	  * @return The new button
 	  */
-	def contextual(text: LocalizedString)(action: => Unit)(implicit context: ButtonContextLike): TextButton =
+	def contextual(text: LocalizedString, hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())
+	              (action: => Unit)(implicit context: ButtonContextLike): TextButton =
 	{
-		val button = contextualWithoutAction(text)
+		val button = contextualWithoutAction(text, hotKeys, hotKeyChars)
 		button.registerAction(() => action)
 		button
 	}
@@ -74,11 +84,15 @@ object TextButton
   * @param initialInsets Insets placed around this button's text (default = 0)
   * @param borderWidth Width of the border inside this button (in pixels) (default = 0)
   * @param initialAlignment Alignment used for the text (default = Center)
+  * @param hotKeys Hotkey indices that can be used for triggering this button (default = empty)
+  * @param hotKeyChars Characters on keyboard that can be used for triggering this button (default = empty)
   */
 class TextButton(initialText: LocalizedString, initialFont: Font, val color: Color,
 				 initialTextColor: Color = Color.textBlack, initialInsets: StackInsets = StackInsets.any,
-				 val borderWidth: Double = 0.0, initialAlignment: Alignment = Center)
-	extends StackableAwtComponentWrapperWrapper with TextComponent with ButtonLike with SwingComponentRelated with CustomDrawableWrapper
+				 val borderWidth: Double = 0.0, initialAlignment: Alignment = Center,
+				 hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())
+	extends StackableAwtComponentWrapperWrapper with TextComponent with ButtonLike with SwingComponentRelated
+		with CustomDrawableWrapper
 {
 	// ATTRIBUTES	------------------
 	
@@ -93,7 +107,7 @@ class TextButton(initialText: LocalizedString, initialFont: Font, val color: Col
 	setHandCursor()
 	background = color
 	
-	initializeListeners()
+	initializeListeners(hotKeys, hotKeyChars)
 	
 	// Adds border drawing
 	if (borderWidth > 0)

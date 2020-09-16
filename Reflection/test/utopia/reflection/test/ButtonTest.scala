@@ -47,10 +47,10 @@ object ButtonTest extends App
 		val borderWidth = 2
 		
 		// Creates the buttons
-		val imageButton = ImageButton(images)(() => action())
+		val imageButton = ImageButton(images) { action() }
 		val textButton = TextButton("Text Button", basicFont, color, insets = textInsets, borderWidth = borderWidth) { action() }
 		val comboButton = ImageAndTextButton(ButtonImageSet.darkening(image), "Button", basicFont, Color.blue.withLuminosity(0.8), textInsets, borderWidth,
-			Alignment.Left)(() => action())
+			Alignment.Left) { action() }
 		
 		val row = imageButton.rowWith(Vector(textButton, comboButton), margin = 16.any, layout = Fit)
 		

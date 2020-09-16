@@ -225,7 +225,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 		}
 		
 		override val keyStateEventFilter = KeyStateEvent.wasPressedFilter &&
-			KeyStateEvent.notKeysFilter(Vector(KeyEvent.VK_ESCAPE, KeyEvent.VK_TAB))
+			KeyStateEvent.notKeysFilter(Set(KeyEvent.VK_ESCAPE, KeyEvent.VK_TAB))
 		
 		override def onKeyState(event: KeyStateEvent) = displayPopup()
 		

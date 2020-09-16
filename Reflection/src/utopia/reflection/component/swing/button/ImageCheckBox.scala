@@ -10,8 +10,14 @@ import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperW
   * Used for switching a value on or off
   * @author Mikko Hilpinen
   * @since 1.8.2019, v1+
+  * @param offImages Images to display while this box is not checked
+  * @param onImages Images to display while this box is checked
+  * @param hotKeys Key indices that change the state of this box (default = empty)
+  * @param hotKeyChars Characters in keyboard that change the state of this box (default = empty)
+  * @param initialState Whether this box should be checked initially (default = false)
   */
-class ImageCheckBox(offImages: ButtonImageSet, onImages: ButtonImageSet, initialState: Boolean = false)
+class ImageCheckBox(offImages: ButtonImageSet, onImages: ButtonImageSet, hotKeys: Set[Int] = Set(),
+                    hotKeyChars: Iterable[Char] = Set(), initialState: Boolean = false)
 	extends StackableAwtComponentWrapperWrapper with CustomDrawableWrapper with ButtonLike
 		with InteractionWithPointer[Boolean] with SwingComponentRelated
 {
@@ -23,7 +29,7 @@ class ImageCheckBox(offImages: ButtonImageSet, onImages: ButtonImageSet, initial
 	
 	// INITIAL CODE	---------------------
 	
-	initializeListeners()
+	initializeListeners(hotKeys, hotKeyChars)
 	valuePointer.addListener { _ => updateStyleForState(state) }
 	registerAction { () => value = !value }
 	setHandCursor()

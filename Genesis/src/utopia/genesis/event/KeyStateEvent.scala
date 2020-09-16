@@ -1,6 +1,7 @@
 package utopia.genesis.event
 
 import java.awt.event.KeyEvent
+
 import utopia.inception.util.Filter
 
 object KeyStateEvent
@@ -39,25 +40,25 @@ object KeyStateEvent
       * @param acceptedChars Characters that are accepted by the filter
       * @return Event filter that only accepts events concerning specified characters
       */
-    def charsFilter(acceptedChars: Seq[Char]): Filter[KeyStateEvent] = e => acceptedChars.exists(e.isCharacter)
+    def charsFilter(acceptedChars: Iterable[Char]): Filter[KeyStateEvent] = e => acceptedChars.exists(e.isCharacter)
     
     /**
      * This event filter only accepts events for the specified key indices
      */
     def keysFilter(firstIndex: Int, secondIndex: Int, moreIndices: Int*): Filter[KeyStateEvent] =
-        keysFilter(Vector(firstIndex, secondIndex) ++ moreIndices)
+        keysFilter(Set(firstIndex, secondIndex) ++ moreIndices)
     
     /**
       * @param acceptedKeys Keys that are accepted by the filter
       * @return Event filter that only accepts events concerning specified keys
       */
-    def keysFilter(acceptedKeys: Seq[Int]): Filter[KeyStateEvent] = e => acceptedKeys.contains(e.index)
+    def keysFilter(acceptedKeys: Set[Int]): Filter[KeyStateEvent] = e => acceptedKeys.contains(e.index)
     
     /**
       * @param notAcceptedKeys Keys that are not accepted by the filter
       * @return A filter that accepts events for all keys except those specified
       */
-    def notKeysFilter(notAcceptedKeys: Seq[Int]): Filter[KeyStateEvent] = e => !notAcceptedKeys.contains(e.index)
+    def notKeysFilter(notAcceptedKeys: Set[Int]): Filter[KeyStateEvent] = e => !notAcceptedKeys.contains(e.index)
     
     /**
      * @param char Target combo character
