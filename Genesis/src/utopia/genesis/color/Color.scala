@@ -240,4 +240,26 @@ case class Color private(private val data: Either[HSL, RGB], alpha: Double) exte
 	  * @return A copy of this color with mapped RGB
 	  */
 	def mapRGB(f: RGB => RGB) = withRGB(f(rgb))
+	
+	/**
+	  * @param other Another color
+	  * @return An average between these colors (rgb-wise)
+	  */
+	def average(other: Color) = Color(Right(rgb.average(other.rgb)), (alpha + other.alpha) / 2)
+	
+	/**
+	  * @param other Another color
+	  * @param weight A weight modifier for THIS color
+	  * @return A weighted average between these colors (rgb-wise)
+	  */
+	def average(other: Color, weight: Double) = Color(Right(rgb.average(other.rgb, weight)),
+		(alpha * weight + other.alpha) / (1 + weight))
+	
+	/**
+	  * @param other Another color
+	  * @param myWeight A weight modifier for THIS color
+	  * @param theirWeight A weight modifier for the other color
+	  * @return A weighted average between these colors (rgb-wise)
+	  */
+	def average(other: Color, myWeight: Double, theirWeight: Double): Color = average(other, myWeight / theirWeight)
 }

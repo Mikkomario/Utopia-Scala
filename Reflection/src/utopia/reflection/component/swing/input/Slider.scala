@@ -9,14 +9,14 @@ import utopia.genesis.color.Color
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
 import utopia.genesis.handling.{Actor, KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.path.ProjectilePath
+import utopia.genesis.shape.path.{ProjectilePath, SegmentedPath}
 import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Size}
 import utopia.genesis.util.Drawer
 import utopia.genesis.view.GlobalMouseEventHandler
 import utopia.inception.handling.HandlerType
-import utopia.reflection.component.context.AnimationContextLike
+import utopia.reflection.component.context.{AnimationContextLike, BaseContextLike}
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
@@ -32,7 +32,48 @@ import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
-// TODO: Implement contextual creation options
+object Slider
+{
+	def contextual[A](range: Animation[A], targetWidth: StackLength, leftColor: Color, rightColor: Color,
+	                  knobColor: Animation[Color], colorVariationIntensity: Double = 1.0,
+	                  stickyPoints: Seq[Double] = Vector(), defaultArrowMovement: Double = 0.1,
+	                  leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0, initialValue: Double = 0.0)
+	                 (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+	{
+		val slider = new Slider(range, context.margins.medium, targetWidth, leftColor, rightColor, knobColor,
+			colorVariationIntensity, stickyPoints, defaultArrowMovement, leftHeightModifier, rightHeightModifier,
+			initialValue)
+		slider.enableAnimations()
+		slider
+	}
+	
+	def contextualSingleColor[A](range: Animation[A], targetWidth: StackLength, color: Color,
+	                             colorVariationIntensity: Double = 1.0, stickyPoints: Seq[Double] = Vector(),
+	                             defaultArrowMovement: Double, initialValue: Double = 0.0)
+	                            (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+		contextual(range, targetWidth, color, color.timesAlpha(0.38), Animation.fixed(color),
+			colorVariationIntensity, stickyPoints, defaultArrowMovement, 1.5, initialValue = initialValue)
+	
+	def contextualDualColor[A](range: Animation[A], targetWidth: StackLength, lessColor: Color, moreColor: Color,
+	                           colorVariationIntensity: Double = 1.0, stickyPoints: Seq[Double] = Vector(),
+	                           defaultArrowMovement: Double = 0.1, initialValue: Double = 0.0)
+	                          (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+		contextual(range, targetWidth, moreColor, lessColor, Animation { p =>
+			if (p == 1.0) moreColor else if (p == 0.0) lessColor else moreColor.average(lessColor, p, 1 - p) },
+			colorVariationIntensity, stickyPoints, defaultArrowMovement, 1.25, 1.25,
+			initialValue = initialValue)
+	
+	def contextualSelection[A](options: Seq[A], targetWidth: StackLength, leftColor: Color,
+	                           rightColor: Color, knobColor: Animation[Color], colorVariationIntensity: Double = 1.0,
+	                           leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0)
+	                          (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+	{
+		val range = SegmentedPath(options)
+		contextual(range, targetWidth, leftColor, rightColor, knobColor, colorVariationIntensity,
+			range.centerProgressPoints, leftHeightModifier = leftHeightModifier,
+			rightHeightModifier = rightHeightModifier)
+	}
+}
 
 /**
   * A slider component for selecting from a range of values

@@ -199,18 +199,33 @@ case class RGB private(override val ratios: Map[RGBChannel, Double]) extends RGB
 	  * @param another Another RGB
 	  * @return A minimum between these two colors on each RGB channel
 	  */
-	def min(another: RGB) = mergeWith(another, _ min _)
+	def min(another: RGB) = mergeWith(another) { _ min _ }
 	/**
 	  * @param another Another RGB
 	  * @return A maximum between these two colors on each RGB channel
 	  */
-	def max(another: RGB) = mergeWith(another, _ max _)
+	def max(another: RGB) = mergeWith(another) { _ max _ }
 	/**
 	  * @param another Another RGB
 	  * @return An average between these two colors on each RGB channel
 	  */
-	def average(another: RGB) = mergeWith(another, (a, b) => (a + b) / 2)
+	def average(another: RGB) = mergeWith(another) { (a, b) => (a + b) / 2 }
 	
-	private def mergeWith(another: RGB, f: (Double, Double) => Double) = RGB.withRatios(
+	/**
+	  * @param another Another RGB
+	  * @param weight Weight modifier assigned to THIS color
+	  * @return An average between these two colors on each RGB channel
+	  */
+	def average(another: RGB, weight: Double) = mergeWith(another) { (a, b) => (a * weight + b) / (1 + weight) }
+	
+	/**
+	  * @param another Another RGB
+	  * @param myWeight Weight modifier assigned to THIS color
+	  * @param theirWeight Weight modifier assigned to specified color
+	  * @return An average between these two colors on each RGB channel
+	  */
+	def average(another: RGB, myWeight: Double, theirWeight: Double): RGB = average(another, myWeight / theirWeight)
+	
+	private def mergeWith(another: RGB)(f: (Double, Double) => Double) = RGB.withRatios(
 		RGBChannel.values.map { c => c -> f(apply(c), another(c)) }.toMap)
 }

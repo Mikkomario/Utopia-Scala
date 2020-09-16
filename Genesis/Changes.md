@@ -14,6 +14,7 @@ new mutable mouse event handlers.
 - Added .toRoundedRectangleWithRadius(Double) to Bounds
 - Added .oneTimeListener(Filter)(...) to KeyStateListener
 - Added .withOverlay(Image, Point) to Image (can also be called with +)
+- Added new variations of .average(...) to RGB and added copies of those methods to Color
 ### Other Changes
 - Bounds and Point .toAwt conversion now rounds the double values to the closest integers
 - Direction1D now extends RichComparable
