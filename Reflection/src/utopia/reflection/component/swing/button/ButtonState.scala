@@ -2,6 +2,14 @@ package utopia.reflection.component.swing.button
 
 import utopia.genesis.color.Color
 
+object ButtonState
+{
+	/**
+	  * The default button state
+	  */
+	val default = ButtonState(isEnabled = true, isInFocus = false, isMouseOver = false, isPressed = false)
+}
+
 /**
   * Represents a possible state for a button
   * @author Mikko Hilpinen

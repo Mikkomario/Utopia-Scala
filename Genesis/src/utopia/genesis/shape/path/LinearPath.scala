@@ -8,6 +8,7 @@ import utopia.genesis.util.{Arithmetic, DistanceLike}
   * @since 20.6.2019, v2.1+
   */
 case class LinearPath[P <: Arithmetic[P, P] with DistanceLike](start: P, end: P) extends LinearPathLike[P]
+	with DistanceLike
 {
 	override def length = (end - start).length
 }

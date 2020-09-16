@@ -17,6 +17,7 @@ import utopia.genesis.generic.LineType
 import utopia.genesis.shape.path.LinearPathLike
 import utopia.genesis.shape.shape3D.Vector3D
 import utopia.genesis.shape.template.VectorLike
+import utopia.genesis.util.DistanceLike
 
 import scala.util.Success
 
@@ -81,7 +82,8 @@ object Line extends FromModelFactory[Line]
  * @since 13.12.2016
  */
 case class Line(override val start: Point, override val end: Point) extends ShapeConvertible with
-        ValueConvertible with ModelConvertible with TransformProjectable[Line] with Projectable with LinearPathLike[Point]
+        ValueConvertible with ModelConvertible with TransformProjectable[Line] with Projectable
+    with LinearPathLike[Point] with DistanceLike
 {
     // ATTRIBUTES    -------------------
     

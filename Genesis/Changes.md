@@ -4,8 +4,10 @@
 - MouseEventGenerator and CanvasMouseEventGenerator no longer accept listeners as parameters. Instead, they now create 
 new mutable mouse event handlers.
 - Added absoluteMousePosition to all MouseEvents
+- Path no longer extends DistanceLike
 ### New Features
 - Added global mouse and keyboard event handling with GlobalMouseEventHandler and GlobalKeyboardEventHandler objects
+- Added SegmentedPath for path / animation based on a set of values
 ### Deprecations
 - ConvertingKeyListener was deprecated in favor of GlobalKeyboardEventHandler
 ### New Methods

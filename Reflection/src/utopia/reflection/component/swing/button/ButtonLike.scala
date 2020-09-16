@@ -35,7 +35,7 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 	// ATTRIBUTES	------------------
 	
 	private var actions = Vector[() => Unit]()
-	private var _state: ButtonState = ButtonState(isEnabled = true, isInFocus = false, isMouseOver = false, isPressed = false)
+	private var _state = ButtonState.default
 	
 	
 	// COMPUTED	----------------------

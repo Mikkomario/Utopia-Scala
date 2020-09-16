@@ -5,12 +5,16 @@
 - Removed hideOnFocusLost -parameter from Popup and replaced it with autoCloseLogic parameter that accepts a 
 wider range of options
 - Windows now only propagate keyboard events while they're the focused window
+- ImageButton, TextButton and ImageAndTextButton .apply(...) methods now accept a call by name action instead 
+of a function action
 ### New Features
 - Added LoadingView and LoadingWindow
     - Includes a new ProgressState class for representing background process progress
 - Added ExpandingLengthModifier and NoShrinkingConstraint
 - Added RoundedBackgroundDrawer (custom background drawer)
 - Added AwtComponentExtensions for a few utility methods regarding awt Components
+- Added hotkey support to various buttons
+- Added Slider component
 ### New Methods
 - Added && and map functions to StackLengthModifier and StackSizeModifier
 - Added .isClosed to Window
@@ -39,6 +43,8 @@ in undecorated windows and may get disabled by the OS.
 - MultiLineTextView now extends AwtContainerRelated
 - ImageButton constructors now contain an optional isLowPriority -parameter
 - Added rounding to Margins.small, .large and .verySmall
+- Buttons are now triggered on key releases instead of key presses, and are highlighted before triggering so that 
+the user knows which button they're activating.
 
 ## v1.2
 ### Scala
