@@ -3,7 +3,7 @@ package utopia.reflection.test
 import utopia.flow.util.TimeExtensions._
 import utopia.reflection.shape.LengthExtensions._
 import utopia.flow.async.Loop
-import utopia.genesis.color.{Color, RGB}
+import utopia.genesis.color.{Color, Rgb}
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.shape.Axis.X
 import utopia.genesis.shape.shape2D.{Direction2D, Size}
@@ -38,7 +38,7 @@ object CollectionViewTest extends App
 	val random = new Random()
 	val createLabelLoop = Loop(1.seconds) {
 		val label = new EmptyLabel
-		label.background = RGB(random.nextDouble(), random.nextDouble(), random.nextDouble())
+		label.background = Rgb(random.nextDouble(), random.nextDouble(), random.nextDouble())
 		collection += label.withStackSize(StackSize.any(Size(16 + random.nextInt(97), 64)))
 	}
 	createLabelLoop.registerToStopOnceJVMCloses()

@@ -1,14 +1,14 @@
 package utopia.genesis.color
 
 import scala.language.implicitConversions
-import utopia.genesis.color.RGBChannel._
+import utopia.genesis.color.RgbChannel._
 import utopia.genesis.shape.shape1D.Angle
 import utopia.genesis.util.ApproximatelyEquatable
 import utopia.genesis.util.Extensions._
 
 import scala.collection.immutable.HashMap
 
-object RGB
+object Rgb
 {
 	// ATTRIBUTES	-------------------
 	
@@ -25,7 +25,7 @@ object RGB
 	  * @param rgb An rgb color
 	  * @return A color
 	  */
-	implicit def rgbToColor(rgb: RGB): Color = Color(Right(rgb), 1.0)
+	implicit def rgbToColor(rgb: Rgb): Color = Color(Right(rgb), 1.0)
 	
 	
 	// OPERATORS	-------------------
@@ -45,7 +45,7 @@ object RGB
 	  * @param ratio Color ratio [0, 1]
 	  * @return A new RGB color
 	  */
-	def apply(channel: RGBChannel, ratio: Double) = new RGB(HashMap(channel -> ratio))
+	def apply(channel: RgbChannel, ratio: Double) = new Rgb(HashMap(channel -> ratio))
 	
 	
 	// OTHER	----------------------
@@ -55,28 +55,28 @@ object RGB
 	  * @param ratio Ratio / saturation [0, 1]
 	  * @return A new RGB Color
 	  */
-	def red(ratio: Double) = RGB(Red, ratio)
+	def red(ratio: Double) = Rgb(Red, ratio)
 	
 	/**
 	  * Creates a green color
 	  * @param ratio Ratio / saturation [0, 1]
 	  * @return A new RGB Color
 	  */
-	def green(ratio: Double) = RGB(Green, ratio)
+	def green(ratio: Double) = Rgb(Green, ratio)
 	
 	/**
 	  * Creates a blue color
 	  * @param ratio Ratio / saturation [0, 1]
 	  * @return A new RGB Color
 	  */
-	def blue(ratio: Double) = RGB(Blue, ratio)
+	def blue(ratio: Double) = Rgb(Blue, ratio)
 	
 	/**
 	  * Creates a grayscale color
 	  * @param luminosity luminosity [0, 1], where 0 is black and 1 is white
 	  * @return A new RGB Color
 	  */
-	def gray(luminosity: Double) = withRatios(RGBChannel.values.map { _ -> luminosity }.toMap)
+	def gray(luminosity: Double) = withRatios(RgbChannel.values.map { _ -> luminosity }.toMap)
 	
 	/**
 	 * Creates a grayscale color
@@ -90,14 +90,14 @@ object RGB
 	  * @param ratios Ratios per channel [0, 1]
 	  * @return A new RGB color
 	  */
-	def withRatios(ratios: Map[RGBChannel, Double]) = new RGB(ratios.view.mapValues(inRange).toMap)
+	def withRatios(ratios: Map[RgbChannel, Double]) = new Rgb(ratios.view.mapValues(inRange).toMap)
 	
 	/**
 	  * Creates a new RGB with color values
 	  * @param values Values per channel [0, 255]
 	  * @return A new RGB color
 	  */
-	def withValues(values: Map[RGBChannel, Int]) = withRatios(values.view.mapValues { _.toDouble / maxValue }.toMap)
+	def withValues(values: Map[RgbChannel, Int]) = withRatios(values.view.mapValues { _.toDouble / maxValue }.toMap)
 	
 	/**
 	  * Creates a new RGB with color values
@@ -106,7 +106,7 @@ object RGB
 	  * @param b Blue value [0, 255]
 	  * @return A new RGB color
 	  */
-	def withValues(r: Int, g: Int, b: Int): RGB = withValues(HashMap(Red -> r, Green -> g, Blue -> b))
+	def withValues(r: Int, g: Int, b: Int): Rgb = withValues(HashMap(Red -> r, Green -> g, Blue -> b))
 	
 	private def inRange(ratio: Double) = 0.0 max ratio min 1.0
 }
@@ -116,7 +116,8 @@ object RGB
   * @author Mikko Hilpinen
   * @since 24.4.2019, v1+
   */
-case class RGB private(override val ratios: Map[RGBChannel, Double]) extends RGBLike[RGB] with ApproximatelyEquatable[RGBLike[_]]
+// TODO: Rename to Rgb (same with hsl)
+case class Rgb private(override val ratios: Map[RgbChannel, Double]) extends RgbLike[Rgb] with ApproximatelyEquatable[RgbLike[_]]
 {
 	// COMPUTED	------------------------
 	
@@ -156,15 +157,15 @@ case class RGB private(override val ratios: Map[RGBChannel, Double]) extends RGB
 				(max - min) / (2 - max - min)
 		}
 		
-		HSL(Angle.ofDegrees(hue), saturation, luminosity)
+		Hsl(Angle.ofDegrees(hue), saturation, luminosity)
 	}
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def ~==(other: RGBLike[_]) = RGBChannel.values.forall { c => ratio(c) ~== other.ratio(c) }
+	override def ~==(other: RgbLike[_]) = RgbChannel.values.forall { c => ratio(c) ~== other.ratio(c) }
 	
-	override def withRatios(newRatios: Map[RGBChannel, Double]) = RGB.withRatios(newRatios)
+	override def withRatios(newRatios: Map[RgbChannel, Double]) = Rgb.withRatios(newRatios)
 	
 	override def toString = s"R: ${percent(Red)}%, G: ${percent(Green)}%, B: ${percent(Blue)}%"
 	
@@ -176,14 +177,14 @@ case class RGB private(override val ratios: Map[RGBChannel, Double]) extends RGB
 	  * @param channel A color channel
 	  * @return The color ratio for that channel [0, 1]
 	  */
-	def apply(channel: RGBChannel): Double = ratios.getOrElse(channel, 0)
+	def apply(channel: RgbChannel): Double = ratios.getOrElse(channel, 0)
 	
 	/**
 	  * Multiplies the color values in this color
 	  * @param multiplier A multiplier
 	  * @return A multiplied version of this color
 	  */
-	def *(multiplier: Double) = RGB.withRatios(ratios.view.mapValues { _ * multiplier }.toMap)
+	def *(multiplier: Double) = Rgb.withRatios(ratios.view.mapValues { _ * multiplier }.toMap)
 	
 	/**
 	  * Divides the color values in this color
@@ -199,24 +200,24 @@ case class RGB private(override val ratios: Map[RGBChannel, Double]) extends RGB
 	  * @param another Another RGB
 	  * @return A minimum between these two colors on each RGB channel
 	  */
-	def min(another: RGB) = mergeWith(another) { _ min _ }
+	def min(another: Rgb) = mergeWith(another) { _ min _ }
 	/**
 	  * @param another Another RGB
 	  * @return A maximum between these two colors on each RGB channel
 	  */
-	def max(another: RGB) = mergeWith(another) { _ max _ }
+	def max(another: Rgb) = mergeWith(another) { _ max _ }
 	/**
 	  * @param another Another RGB
 	  * @return An average between these two colors on each RGB channel
 	  */
-	def average(another: RGB) = mergeWith(another) { (a, b) => (a + b) / 2 }
+	def average(another: Rgb) = mergeWith(another) { (a, b) => (a + b) / 2 }
 	
 	/**
 	  * @param another Another RGB
 	  * @param weight Weight modifier assigned to THIS color
 	  * @return An average between these two colors on each RGB channel
 	  */
-	def average(another: RGB, weight: Double) = mergeWith(another) { (a, b) => (a * weight + b) / (1 + weight) }
+	def average(another: Rgb, weight: Double) = mergeWith(another) { (a, b) => (a * weight + b) / (1 + weight) }
 	
 	/**
 	  * @param another Another RGB
@@ -224,8 +225,8 @@ case class RGB private(override val ratios: Map[RGBChannel, Double]) extends RGB
 	  * @param theirWeight Weight modifier assigned to specified color
 	  * @return An average between these two colors on each RGB channel
 	  */
-	def average(another: RGB, myWeight: Double, theirWeight: Double): RGB = average(another, myWeight / theirWeight)
+	def average(another: Rgb, myWeight: Double, theirWeight: Double): Rgb = average(another, myWeight / theirWeight)
 	
-	private def mergeWith(another: RGB)(f: (Double, Double) => Double) = RGB.withRatios(
-		RGBChannel.values.map { c => c -> f(apply(c), another(c)) }.toMap)
+	private def mergeWith(another: Rgb)(f: (Double, Double) => Double) = Rgb.withRatios(
+		RgbChannel.values.map { c => c -> f(apply(c), another(c)) }.toMap)
 }

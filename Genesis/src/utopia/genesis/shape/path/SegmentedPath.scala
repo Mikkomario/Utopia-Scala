@@ -5,7 +5,10 @@ package utopia.genesis.shape.path
   * at the edges of this path, therefore having half the usual "space" / length when compared to other values.
   * @author Mikko Hilpinen
   * @since 16.9.2020, v2.4
+  * @param values Values that are returned by this path
+  * @throws IllegalArgumentException If length of values is smaller than 2
   */
+@throws[IllegalArgumentException]
 case class SegmentedPath[+A](values: Seq[A]) extends Path[A]
 {
 	// ATTRIBUTES   -------------------------

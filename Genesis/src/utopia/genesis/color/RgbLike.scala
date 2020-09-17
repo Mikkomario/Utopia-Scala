@@ -1,7 +1,7 @@
 package utopia.genesis.color
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.color.RGBChannel._
+import utopia.genesis.color.RgbChannel._
 
 import scala.math.Ordering.Double.TotalOrdering
 
@@ -10,20 +10,20 @@ import scala.math.Ordering.Double.TotalOrdering
   * @author Mikko Hilpinen
   * @since 24.4.2019, v1+
   */
-trait RGBLike[Repr <: RGBLike[Repr]]
+trait RgbLike[Repr <: RgbLike[Repr]]
 {
 	// ABSTRACT	------------------------
 	
 	/**
 	  * @return The rgb color channel ratios of this color
 	  */
-	def ratios: Map[RGBChannel, Double]
+	def ratios: Map[RgbChannel, Double]
 	
 	/**
 	  * @param newRatios A new set of color ratios
 	  * @return A copy of this color with specified ratios
 	  */
-	def withRatios(newRatios: Map[RGBChannel, Double]): Repr
+	def withRatios(newRatios: Map[RgbChannel, Double]): Repr
 	
 	
 	// COMPUTED	------------------------
@@ -61,7 +61,7 @@ trait RGBLike[Repr <: RGBLike[Repr]]
 	/**
 	  * @return The color values of this RGB [0, 255] each
 	  */
-	def values = ratios.view.mapValues { r => (r * RGB.maxValue).toInt }.toMap
+	def values = ratios.view.mapValues { r => (r * Rgb.maxValue).toInt }.toMap
 	
 	/**
 	  * @return An inverted version of this RGB (where black is white)
@@ -76,7 +76,7 @@ trait RGBLike[Repr <: RGBLike[Repr]]
 	/**
 	  * @return The minimum ratio of this color's channels [0, 1]
 	  */
-	def minRatio = RGBChannel.values.map(ratio).min
+	def minRatio = RgbChannel.values.map(ratio).min
 	
 	
 	// OPERATORS	--------------------
@@ -86,14 +86,14 @@ trait RGBLike[Repr <: RGBLike[Repr]]
 	  * @param other Another RGB
 	  * @return A combination of these two RGB's
 	  */
-	def +(other: RGB) = withRatios(ratios.mergedWith(other.ratios, _ + _))
+	def +(other: Rgb) = withRatios(ratios.mergedWith(other.ratios, _ + _))
 	
 	/**
 	  * Combines this RGB with another by subtracting the color values
 	  * @param other Another RGB
 	  * @return A subtraction of these RGB's
 	  */
-	def -(other: RGB) = withRatios(ratios.map { case (k, v) => k -> (v - other(k)) })
+	def -(other: Rgb) = withRatios(ratios.map { case (k, v) => k -> (v - other(k)) })
 	
 	
 	// OTHER	------------------------
@@ -103,21 +103,21 @@ trait RGBLike[Repr <: RGBLike[Repr]]
 	  * @param channel Target color channel
 	  * @return Color ratio for that channel [0, 1]
 	  */
-	def ratio(channel: RGBChannel): Double = ratios.getOrElse(channel, 0)
+	def ratio(channel: RgbChannel): Double = ratios.getOrElse(channel, 0)
 	
 	/**
 	  * Finds a color value for a color channel
 	  * @param channel Target color channel
 	  * @return Color value for that channel[0, 255]
 	  */
-	def value(channel: RGBChannel) = (ratio(channel) * RGB.maxValue).toInt
+	def value(channel: RgbChannel) = (ratio(channel) * Rgb.maxValue).toInt
 	
 	/**
 	  * Finds a color saturation % for a channel
 	  * @param channel Target channel
 	  * @return Color saturation % [0, 100]
 	  */
-	def percent(channel: RGBChannel) = (ratio(channel) * 100).toInt
+	def percent(channel: RgbChannel) = (ratio(channel) * 100).toInt
 	
 	/**
 	  * Creates a copy of this RGB with modified color ratio
@@ -125,7 +125,7 @@ trait RGBLike[Repr <: RGBLike[Repr]]
 	  * @param ratio New color ratio [0, 1]
 	  * @return A new RGB
 	  */
-	def withRatio(channel: RGBChannel, ratio: Double) = withRatios(ratios + (channel -> ratio))
+	def withRatio(channel: RgbChannel, ratio: Double) = withRatios(ratios + (channel -> ratio))
 	
 	/**
 	  * Creates a copy of this RGB with modified color value
@@ -133,7 +133,7 @@ trait RGBLike[Repr <: RGBLike[Repr]]
 	  * @param value New color value [0, 255]
 	  * @return A new RGB
 	  */
-	def withValue(channel: RGBChannel, value: Int) = withRatio(channel, value / RGB.maxValue.toDouble)
+	def withValue(channel: RgbChannel, value: Int) = withRatio(channel, value / Rgb.maxValue.toDouble)
 	
 	/**
 	  * Creates a copy of this RGB with modified red color ratio

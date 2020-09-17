@@ -27,42 +27,129 @@ import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.component.template.layout.stack.StackLeaf
 import utopia.reflection.shape.stack.StackLength
-import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object Slider
 {
+	/**
+	  * Creates a new slider using contextual information
+	  * @param range Selectable values as an animation
+	  * @param targetWidth Stack length used as a width for this slider
+	  * @param leftColor Color used for the left side slider bar
+	  * @param rightColor Color used for the right side slider bar
+	  * @param knobColor Color used for the knot, animated based on progress
+	  * @param colorVariationIntensity A modifier applied to color lightness changes (default = 1.0)
+	  * @param stickyPoints Progress points where the slider "sticks" to (all between [0, 1]) (default = empty)
+	  * @param arrowMovement How much slider is progressed with each arrow key press ]0, 1] (default = 0.1)
+	  * @param leftHeightModifier A modifier applied to left bar height (default = 1.0)
+	  * @param rightHeightModifier A modifier applied to right bar height (default = 1.0)
+	  * @param initialValue Value assigned to this slider initially [0, 1] (default = 0.0)
+	  * @param context Component creation context (implicit)
+	  * @param animationContext Component animation context (implicit)
+	  * @tparam A Type of selected value
+	  * @return A new slider
+	  */
 	def contextual[A](range: Animation[A], targetWidth: StackLength, leftColor: Color, rightColor: Color,
 	                  knobColor: Animation[Color], colorVariationIntensity: Double = 1.0,
-	                  stickyPoints: Seq[Double] = Vector(), defaultArrowMovement: Double = 0.1,
+	                  stickyPoints: Seq[Double] = Vector(), arrowMovement: Double = 0.1,
 	                  leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0, initialValue: Double = 0.0)
 	                 (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
 	{
-		val slider = new Slider(range, context.margins.medium, targetWidth, leftColor, rightColor, knobColor,
-			colorVariationIntensity, stickyPoints, defaultArrowMovement, leftHeightModifier, rightHeightModifier,
+		val slider = new Slider(range, context.margins.large, targetWidth, leftColor, rightColor, knobColor,
+			colorVariationIntensity, stickyPoints, arrowMovement, leftHeightModifier, rightHeightModifier,
 			initialValue)
 		slider.enableAnimations()
 		slider
 	}
 	
+	/**
+	  * Creates a new slider using contextual information. This slider only uses a single color.
+	  * The knob and the left side are highlighted.
+	  * @param range Selectable values as an animation
+	  * @param targetWidth Stack length used as a width for this slider
+	  * @param color Color used for the knot and the left side
+	  * @param colorVariationIntensity A modifier applied to color lightness changes (default = 1.0)
+	  * @param stickyPoints Progress points where the slider "sticks" to (all between [0, 1]) (default = empty)
+	  * @param arrowMovement How much slider is progressed with each arrow key press ]0, 1] (default = 0.1)
+	  * @param initialValue Value assigned to this slider initially [0, 1] (default = 0.0)
+	  * @param context Component creation context (implicit)
+	  * @param animationContext Component animation context (implicit)
+	  * @tparam A Type of selected value
+	  * @return A new slider
+	  */
 	def contextualSingleColor[A](range: Animation[A], targetWidth: StackLength, color: Color,
 	                             colorVariationIntensity: Double = 1.0, stickyPoints: Seq[Double] = Vector(),
-	                             defaultArrowMovement: Double, initialValue: Double = 0.0)
+	                             arrowMovement: Double = 0.1, initialValue: Double = 0.0)
 	                            (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
 		contextual(range, targetWidth, color, color.timesAlpha(0.38), Animation.fixed(color),
-			colorVariationIntensity, stickyPoints, defaultArrowMovement, 1.5, initialValue = initialValue)
+			colorVariationIntensity, stickyPoints, arrowMovement, 1.5, initialValue = initialValue)
 	
+	/**
+	  * Creates a new slider using contextual information. This slider mixes between two colors.
+	  * @param range Selectable values as an animation
+	  * @param targetWidth Stack length used as a width for this slider
+	  * @param lessColor Color representing smaller values
+	  * @param moreColor Color representing larger values
+	  * @param colorVariationIntensity A modifier applied to color lightness changes (default = 1.0)
+	  * @param stickyPoints Progress points where the slider "sticks" to (all between [0, 1]) (default = empty)
+	  * @param arrowMovement How much slider is progressed with each arrow key press ]0, 1] (default = 0.1)
+	  * @param initialValue Value assigned to this slider initially [0, 1] (default = 0.0)
+	  * @param context Component creation context (implicit)
+	  * @param animationContext Component animation context (implicit)
+	  * @tparam A Type of selected value
+	  * @return A new slider
+	  */
 	def contextualDualColor[A](range: Animation[A], targetWidth: StackLength, lessColor: Color, moreColor: Color,
 	                           colorVariationIntensity: Double = 1.0, stickyPoints: Seq[Double] = Vector(),
-	                           defaultArrowMovement: Double = 0.1, initialValue: Double = 0.0)
+	                           arrowMovement: Double = 0.1, initialValue: Double = 0.0)
 	                          (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
-		contextual(range, targetWidth, moreColor, lessColor, Animation { p =>
-			if (p == 1.0) moreColor else if (p == 0.0) lessColor else moreColor.average(lessColor, p, 1 - p) },
-			colorVariationIntensity, stickyPoints, defaultArrowMovement, 1.25, 1.25,
+		contextual(range, targetWidth, moreColor, lessColor, dualColorAnimation(lessColor, moreColor),
+			colorVariationIntensity, stickyPoints, arrowMovement, 1.25, 1.25,
 			initialValue = initialValue)
 	
+	/**
+	  * Creates a new slider using contextual information. This slider only highlights the knob, not parts of the bar.
+	  * @param range Selectable values as an animation
+	  * @param targetWidth Stack length used as a width for this slider
+	  * @param color Color used for the knot
+	  * @param colorVariationIntensity A modifier applied to color lightness changes (default = 1.0)
+	  * @param stickyPoints Progress points where the slider "sticks" to (all between [0, 1]) (default = empty)
+	  * @param arrowMovement How much slider is progressed with each arrow key press ]0, 1] (default = 0.1)
+	  * @param initialValue Value assigned to this slider initially [0, 1] (default = 0.0)
+	  * @param context Component creation context (implicit)
+	  * @param animationContext Component animation context (implicit)
+	  * @tparam A Type of selected value
+	  * @return A new slider
+	  */
+	def contextualSingleColorKnot[A](range: Animation[A], targetWidth: StackLength, color: Color,
+	                                 colorVariationIntensity: Double = 1.0, stickyPoints: Seq[Double] = Vector(),
+	                                 arrowMovement: Double = 0.1, initialValue: Double = 0.0)
+	                                (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+	{
+		val backgroundColor = color.timesAlpha(0.38)
+		contextual(range, targetWidth, backgroundColor, backgroundColor, Animation.fixed(color),
+			colorVariationIntensity, stickyPoints, arrowMovement, initialValue = initialValue)
+	}
+	
+	/**
+	  * Creates a new slider using contextual information. This slider contains pre-existing options for values.
+	  * @param options Selectable options for this slider
+	  * @param targetWidth Stack length used as a width for this slider
+	  * @param leftColor Color used for the left side slider bar
+	  * @param rightColor Color used for the right side slider bar
+	  * @param knobColor Color used for the knot, animated based on progress
+	  * @param colorVariationIntensity A modifier applied to color lightness changes (default = 1.0)
+	  * @param leftHeightModifier A modifier applied to left bar height (default = 1.0)
+	  * @param rightHeightModifier A modifier applied to right bar height (default = 1.0)
+	  * @param context Component creation context (implicit)
+	  * @param animationContext Component animation context (implicit)
+	  * @tparam A Type of selected value
+	  * @return A new slider
+	  * @throws IllegalArgumentException if length of options is smaller than 2
+	  */
+	@throws[IllegalArgumentException]
 	def contextualSelection[A](options: Seq[A], targetWidth: StackLength, leftColor: Color,
 	                           rightColor: Color, knobColor: Animation[Color], colorVariationIntensity: Double = 1.0,
 	                           leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0)
@@ -73,16 +160,95 @@ object Slider
 			range.centerProgressPoints, leftHeightModifier = leftHeightModifier,
 			rightHeightModifier = rightHeightModifier)
 	}
+	
+	/**
+	  * Creates a new slider using contextual information. This slider contains pre-existing options for values.
+	  * This slider highlights the knob and the left side bar with the same color.
+	  * @param options Selectable options for this slider
+	  * @param targetWidth Stack length used as a width for this slider
+	  * @param color Color to use on the knot and on the left side bar
+	  * @param colorVariationIntensity A modifier applied to color lightness changes (default = 1.0)
+	  * @param context Component creation context (implicit)
+	  * @param animationContext Component animation context (implicit)
+	  * @tparam A Type of selected value
+	  * @return A new slider
+	  * @throws IllegalArgumentException if length of options is smaller than 2
+	  */
+	@throws[IllegalArgumentException]
+	def contextualSingleColorSelection[A](options: Seq[A], targetWidth: StackLength, color: Color,
+	                                      colorVariationIntensity: Double = 1.0)
+	                                     (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+		contextualSelection(options, targetWidth, color, color.timesAlpha(0.38), Animation.fixed(color),
+			colorVariationIntensity, 1.5)
+	
+	/**
+	  * Creates a new slider using contextual information. This slider contains pre-existing options for values.
+	  * This slider mixes between two colors.
+	  * @param options Selectable options for this slider
+	  * @param targetWidth Stack length used as a width for this slider
+	  * @param lessColor Color representing smaller values
+	  * @param moreColor Color representing larger values
+	  * @param colorVariationIntensity A modifier applied to color lightness changes (default = 1.0)
+	  * @param context Component creation context (implicit)
+	  * @param animationContext Component animation context (implicit)
+	  * @tparam A Type of selected value
+	  * @return A new slider
+	  * @throws IllegalArgumentException if length of options is smaller than 2
+	  */
+	@throws[IllegalArgumentException]
+	def contextualDualColorSelection[A](options: Seq[A], targetWidth: StackLength, lessColor: Color,
+	                           moreColor: Color, colorVariationIntensity: Double = 1.0)
+	                          (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+		contextualSelection(options, targetWidth, moreColor, lessColor, dualColorAnimation(lessColor, moreColor),
+			colorVariationIntensity, 1.25, 1.25)
+	
+	/**
+	  * Creates a new slider using contextual information. This slider contains pre-existing options for values.
+	  * This slider only highlights the knob and not either bar side.
+	  * @param options Selectable options for this slider
+	  * @param targetWidth Stack length used as a width for this slider
+	  * @param color Color to use when drawing the knot
+	  * @param colorVariationIntensity A modifier applied to color lightness changes (default = 1.0)
+	  * @param context Component creation context (implicit)
+	  * @param animationContext Component animation context (implicit)
+	  * @tparam A Type of selected value
+	  * @return A new slider
+	  * @throws IllegalArgumentException if length of options is smaller than 2
+	  */
+	@throws[IllegalArgumentException]
+	def contextualSingleColorKnotSelection[A](options: Seq[A], targetWidth: StackLength, color: Color,
+	                                          colorVariationIntensity: Double = 1.0)
+	                                         (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
+	{
+		val backgroundColor = color.timesAlpha(0.38)
+		contextualSelection(options, targetWidth, backgroundColor, backgroundColor, Animation.fixed(color),
+			colorVariationIntensity)
+	}
+	
+	private def dualColorAnimation(lessColor: Color, moreColor: Color) = Animation { p =>
+		if (p == 1.0) moreColor else if (p == 0.0) lessColor else moreColor.average(lessColor, p, 1 - p) }
 }
 
 /**
   * A slider component for selecting from a range of values
   * @author Mikko Hilpinen
   * @since 16.9.2020, v1.3
+  * @param range Selectable values as an animation
+  * @param targetKnobDiameter The diameter (2 * r) to use when drawing the knob
+  * @param targetWidth Stack length used as a width for this slider
+  * @param leftColor Color used for the left side slider bar
+  * @param rightColor Color used for the right side slider bar
+  * @param knobColor Color used for the knot, animated based on progress
+  * @param colorVariationIntensity A modifier applied to color lightness changes (default = 1.0)
+  * @param stickyPoints Progress points where the slider "sticks" to (all between [0, 1]) (default = empty)
+  * @param arrowMovement How much slider is progressed with each arrow key press ]0, 1] (default = 0.1)
+  * @param leftHeightModifier A modifier applied to left bar height (default = 1.0)
+  * @param rightHeightModifier A modifier applied to right bar height (default = 1.0)
+  * @param initialValue Value assigned to this slider initially [0, 1] (default = 0.0)
   */
 class Slider[A](range: Animation[A], targetKnobDiameter: Double, targetWidth: StackLength,
                 leftColor: Color, rightColor: Color, knobColor: Animation[Color], colorVariationIntensity: Double = 1.0,
-                stickyPoints: Seq[Double] = Vector(), defaultArrowMovement: Double = 0.1,
+                stickyPoints: Seq[Double] = Vector(), arrowMovement: Double = 0.1,
                 leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0, initialValue: Double = 0.0)
 	extends AwtComponentWrapperWrapper with StackLeaf with Focusable with CustomDrawableWrapper
 		with InputWithPointer[A, Changing[A]]
@@ -90,7 +256,8 @@ class Slider[A](range: Animation[A], targetKnobDiameter: Double, targetWidth: St
 	// ATTRIBUTES   -------------------------
 	
 	override lazy val stackId = hashCode()
-	override val stackSize = targetWidth x targetKnobDiameter.any
+	override val stackSize = targetWidth x StackLength(targetKnobDiameter * 0.2, targetKnobDiameter,
+		targetKnobDiameter * 3)
 	
 	private val label = new EmptyLabel()
 	
@@ -121,6 +288,7 @@ class Slider[A](range: Animation[A], targetKnobDiameter: Double, targetWidth: St
 	
 	// Adds mouse listening. Global listening is active only when this component is part of a stack component hierarchy
 	addMouseButtonListener(MousePressListener)
+	addMouseMoveListener(MouseOverListener)
 	addStackHierarchyChangeListener { isAttached =>
 		if (isAttached)
 			GlobalMouseEventHandler += GlobalMouseDragListener
@@ -163,22 +331,10 @@ class Slider[A](range: Animation[A], targetKnobDiameter: Double, targetWidth: St
 	private def pressed_=(newStatus: Boolean) = state = state.copy(isPressed = newStatus)
 	def notPressed = !pressed
 	
-	private def currentKnobBounds =
-	{
-		val b = bounds
-		Circle(Point(b.x + b.width * doubleValue, b.y + b.height / 2.0), (targetKnobDiameter min bounds.height) / 2.0)
-	}
-	
 	private def colorChangeIterations =
 	{
-		if (pressed)
-			3
-		else if (state.isMouseOver)
-			2
-		else if (state.isInFocus)
-			1
-		else
-			0
+		val base = if (pressed) 2 else if (state.isMouseOver) 1 else 0
+		if (state.isInFocus) base + 1 else base
 	}
 	
 	private def currentKnobColor =
@@ -190,11 +346,11 @@ class Slider[A](range: Animation[A], targetKnobDiameter: Double, targetWidth: St
 			if (changes > 0)
 			{
 				if (base.luminosity < 0.6)
-					Iterator.iterate(base) { _.lightened(0.33 * colorVariationIntensity) }
-						.drop(changes - 1).next()
+					Iterator.iterate(base) { _.lightened(1 + 0.4 * colorVariationIntensity) }
+						.drop(changes).next()
 				else
-					Iterator.iterate(base) { _.darkened(0.33 * colorVariationIntensity) }
-						.drop(changes - 1).next()
+					Iterator.iterate(base) { _.darkened(1 + 0.4 * colorVariationIntensity) }
+						.drop(changes).next()
 			}
 			else
 				base
@@ -237,8 +393,17 @@ class Slider[A](range: Animation[A], targetKnobDiameter: Double, targetWidth: St
 			// no longer required
 			progressPointer.removeListener(defaultRepainter)
 			val newAnimator = new Animator(curvature, animationDuration)
+			progressPointer.addListener(newAnimator)
 			animator = Some(newAnimator)
-			actorHandler += newAnimator
+			
+			// Animations are active only while this slider is attached to the main stack hierarchy
+			addStackHierarchyChangeListener(isAttached =>
+			{
+				if (isAttached)
+					actorHandler += newAnimator
+				else
+					actorHandler -= newAnimator
+			}, callIfAttached = true)
 		}
 	}
 	
@@ -298,7 +463,11 @@ class Slider[A](range: Animation[A], targetKnobDiameter: Double, targetWidth: St
 		override def onChangeEvent(event: ChangeEvent[Double]) =
 		{
 			if (pressed)
+			{
 				targetProgress = event.newValue
+				if (!isMoving)
+					repaint()
+			}
 			else
 			{
 				startProgress = calculatedProgress
@@ -328,7 +497,7 @@ class Slider[A](range: Animation[A], targetKnobDiameter: Double, targetWidth: St
 			drawer.onlyFill(if (enabled) leftColor else leftColor.grayscale)
 				.draw(Bounds(Point(bounds.x, lineY - leftLineHeight / 2.0), Size(leftSideWidth, leftLineHeight)))
 			// Finally draws the knob
-			drawer.onlyFill(currentKnobColor).draw(currentKnobBounds)
+			drawer.onlyFill(currentKnobColor).draw(Circle(Point(thresholdX, lineY), (targetKnobDiameter min bounds.height) / 2.0))
 		}
 	}
 	
@@ -341,10 +510,26 @@ class Slider[A](range: Animation[A], targetKnobDiameter: Double, targetWidth: St
 		{
 			progressPointer.value = progressForX(event.mousePosition.x - x)
 			pressed = true
+			if (!isInFocus)
+				requestFocusInWindow()
 			Some(ConsumeEvent("Slider grabbed"))
 		}
 		
-		override def allowsHandlingFrom(handlerType: HandlerType) = notPressed
+		override def allowsHandlingFrom(handlerType: HandlerType) = notPressed && enabled
+	}
+	
+	private object MouseOverListener extends MouseMoveListener
+	{
+		override def onMouseMove(event: MouseMoveEvent) =
+		{
+			val b = bounds
+			if (event.enteredArea(b))
+				state = state.copy(isMouseOver = true)
+			else if (event.exitedArea(b))
+				state = state.copy(isMouseOver = false)
+		}
+		
+		override def allowsHandlingFrom(handlerType: HandlerType) = enabled
 	}
 	
 	private object GlobalMouseDragListener extends MouseButtonStateListener with MouseMoveListener
@@ -375,14 +560,14 @@ class Slider[A](range: Animation[A], targetKnobDiameter: Double, targetWidth: St
 		
 		override def onKeyState(event: KeyStateEvent) =
 		{
+			val direction = if (event.index == KeyEvent.VK_RIGHT) Positive else Negative
 			if (stickyPoints.nonEmpty)
-				progressPointer.value = nextStickyPointInDirection(
-					if (event.index == KeyEvent.VK_RIGHT) Positive else Negative)
+				progressPointer.value = nextStickyPointInDirection(direction)
 			else
-				progressPointer.value = ((progressPointer.value + defaultArrowMovement) max 0.0) min 1.0
+				progressPointer.value = ((progressPointer.value + arrowMovement * direction.modifier) max 0.0) min 1.0
 		}
 		
-		override def allowsHandlingFrom(handlerType: HandlerType) = isInFocus
+		override def allowsHandlingFrom(handlerType: HandlerType) = isInFocus && enabled
 	}
 	
 	private object ComponentFocusListener extends FocusListener

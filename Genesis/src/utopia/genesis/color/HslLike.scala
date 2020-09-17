@@ -8,7 +8,7 @@ import utopia.genesis.shape.shape1D.{Angle, Rotation}
   * @author Mikko Hilpinen
   * @since 24.4.2019, v1+
   */
-trait HSLLike[Repr <: HSLLike[Repr]]
+trait HslLike[Repr <: HslLike[Repr]]
 {
 	// ABSTRACT	------------------
 	

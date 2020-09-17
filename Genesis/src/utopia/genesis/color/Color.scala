@@ -71,7 +71,7 @@ object Color
 	  * @param awtColor An awt color
 	  * @return A color
 	  */
-	implicit def fromAwt(awtColor: java.awt.Color): Color = Color(Right(RGB.withValues(awtColor.getRed,
+	implicit def fromAwt(awtColor: java.awt.Color): Color = Color(Right(Rgb.withValues(awtColor.getRed,
 		awtColor.getGreen, awtColor.getBlue)), awtColor.getAlpha / 255.0)
 	
 	
@@ -85,7 +85,7 @@ object Color
 	  * @param alpha Alpha ratio [0, 1]
 	  * @return A new color
 	  */
-	def apply(r: Double, g: Double, b: Double, alpha: Double = 1.0): Color = Color(Right(RGB(r, g, b)), 0.0 max alpha min 1.0)
+	def apply(r: Double, g: Double, b: Double, alpha: Double = 1.0): Color = Color(Right(Rgb(r, g, b)), 0.0 max alpha min 1.0)
 	
 	
 	// OTHER	-----------------------
@@ -116,7 +116,7 @@ object Color
   * @author Mikko Hilpinen
   * @since 24.4.2019, v1+
   */
-case class Color private(private val data: Either[HSL, RGB], alpha: Double) extends RGBLike[Color] with HSLLike[Color]
+case class Color private(private val data: Either[Hsl, Rgb], alpha: Double) extends RgbLike[Color] with HslLike[Color]
 	with ApproximatelyEquatable[Color]
 {
 	// ATTRIBUTES	----------------------
@@ -124,11 +124,11 @@ case class Color private(private val data: Either[HSL, RGB], alpha: Double) exte
 	/**
 	  * A HSL representation of this color
 	  */
-	lazy val hsl: HSL = data.fold(c => c, _.toHSL)
+	lazy val hsl: Hsl = data.fold(c => c, _.toHSL)
 	/**
 	  * An RGB representation of this color
 	  */
-	lazy val rgb: RGB = data.fold(_.toRGB, c => c)
+	lazy val rgb: Rgb = data.fold(_.toRGB, c => c)
 	
 	
 	// COMPUTED	--------------------------
@@ -173,7 +173,7 @@ case class Color private(private val data: Either[HSL, RGB], alpha: Double) exte
 	
 	override def ratios = rgb.ratios
 	
-	override def withRatios(newRatios: Map[RGBChannel, Double]) = withRGB(RGB.withRatios(newRatios))
+	override def withRatios(newRatios: Map[RgbChannel, Double]) = withRGB(Rgb.withRatios(newRatios))
 	
 	override def hue = hsl.hue
 	
@@ -221,25 +221,25 @@ case class Color private(private val data: Either[HSL, RGB], alpha: Double) exte
 	  * @param hsl A new HSL value
 	  * @return A copy of this color with provided HSL value
 	  */
-	def withHSL(hsl: HSL) = copy(data = Left(hsl))
+	def withHSL(hsl: Hsl) = copy(data = Left(hsl))
 	
 	/**
 	  * @param rgb A new RGB value
 	  * @return A copy of this color with provided RGB value
 	  */
-	def withRGB(rgb: RGB) = copy(data = Right(rgb))
+	def withRGB(rgb: Rgb) = copy(data = Right(rgb))
 	
 	/**
 	  * @param f A mapping function
 	  * @return A copy of this color with mapped HSL
 	  */
-	def mapHSL(f: HSL => HSL) = withHSL(f(hsl))
+	def mapHSL(f: Hsl => Hsl) = withHSL(f(hsl))
 	
 	/**
 	  * @param f a mapping function
 	  * @return A copy of this color with mapped RGB
 	  */
-	def mapRGB(f: RGB => RGB) = withRGB(f(rgb))
+	def mapRGB(f: Rgb => Rgb) = withRGB(f(rgb))
 	
 	/**
 	  * @param other Another color

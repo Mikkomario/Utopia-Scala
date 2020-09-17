@@ -1,6 +1,7 @@
 package utopia.reflection.test
 
 import utopia.flow.async.ThreadPool
+import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.reflection.color.{ColorScheme, ColorSet}
 import utopia.reflection.component.context.{AnimationContext, BaseContext, ScrollingContext}
@@ -18,6 +19,8 @@ import scala.concurrent.ExecutionContext
   */
 object TestContext
 {
+	GenesisDataType.setup()
+	
 	val actorHandler = ActorHandler()
 	val colorScheme = ColorScheme.twoTone(ColorSet.fromHexes("#212121", "#484848", "#000000").get,
 		ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get)
