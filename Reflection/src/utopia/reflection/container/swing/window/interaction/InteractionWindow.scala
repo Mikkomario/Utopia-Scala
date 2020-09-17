@@ -81,7 +81,7 @@ trait InteractionWindow[+A]
 	/**
 	 * @return Whether a dialog from this instance is currently visible
 	 */
-	def isVisible = _visibleDialogs.exists { _.isVisible }
+	def isVisible = _visibleDialogs.exists { _.visible }
 	
 	
 	// OTHER	-----------------------

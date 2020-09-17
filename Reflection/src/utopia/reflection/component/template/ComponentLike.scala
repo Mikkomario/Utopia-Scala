@@ -31,12 +31,12 @@ trait ComponentLike extends Area
     /**
       * @return Whether this component is currently visible
       */
-    def isVisible: Boolean
+    def visible: Boolean
     /**
       * Updates this component's visibility
       * @param isVisible Whether this component is currently visible
       */
-    def isVisible_=(isVisible: Boolean): Unit
+    def visible_=(isVisible: Boolean): Unit
     
     /**
       * @return The background color of this component
@@ -68,6 +68,12 @@ trait ComponentLike extends Area
     
     
     // COMPUTED    ---------------------------
+    
+    /**
+      * @return Whether this component is currently hidden / invisible
+      */
+    def invisible = !visible
+    def invisible_=(notVisible: Boolean) = visible = !notVisible
     
     /**
       * @return An iterator of this components parents
@@ -251,7 +257,7 @@ trait ComponentLike extends Area
         {
             val translated = translateEvent(event, myBounds.position)
             // Only visible children are informed of events
-            children.foreach { c => if (c.isVisible) childAccept(c, translated) }
+            children.foreach { c => if (c.visible) childAccept(c, translated) }
         }
     }
     
@@ -261,7 +267,7 @@ trait ComponentLike extends Area
         if (myBounds.contains(event.mousePosition))
         {
             val translatedEvent = event.relativeTo(myBounds.position)
-            val visibleChildren = children.filter { _.isVisible }
+            val visibleChildren = children.filter { _.visible }
             
             translatedEvent.distributeAmong(visibleChildren)(childAccept)
         }

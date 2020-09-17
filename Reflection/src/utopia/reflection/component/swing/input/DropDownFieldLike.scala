@@ -98,7 +98,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	/**
 	  * @return Whether this field is currently displaying a pop-up view
 	  */
-	def isDisplayingPopUp = visiblePopup.exists { _.isVisible }
+	def isDisplayingPopUp = visiblePopup.exists { _.visible }
 	
 	/**
 	  * @return Current stack size of the search options -view
@@ -175,7 +175,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 		
 		displaysManager.enableMouseHandling()
 		displaysManager.enableKeyHandling(actorHandler, listenEnabledCondition = Some(() => mainDisplay.isInFocus ||
-			visiblePopup.exists { _.isVisible }))
+			visiblePopup.exists { _.visible }))
 		
 		addKeyStateListener(ShowPopupKeyListener)
 		addMouseButtonListener(ShowPopupKeyListener)

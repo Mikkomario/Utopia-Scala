@@ -117,8 +117,8 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     /**
       * @return Whether this component is currently visible
       */
-    override def isVisible = component.isVisible
-    override def isVisible_=(isVisible: Boolean) = component.setVisible(isVisible)
+    override def visible = component.isVisible
+    override def visible_=(isVisible: Boolean) = component.setVisible(isVisible)
     
     /**
       * @return The background color of this component
@@ -276,9 +276,9 @@ private class AwtComponentWrapperWrapperWithStackable(override val wrapped: AwtC
     
     override def calculatedStackSize = getSize()
     
-    override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].isVisible_=(visible)
+    override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].visible_=(visible)
     
-    override def isVisible_=(isVisible: Boolean) = super[CachingStackable].isVisible_=(isVisible)
+    override def visible_=(isVisible: Boolean) = super[CachingStackable].visible_=(isVisible)
     
     override def updateLayout() = update()
 }

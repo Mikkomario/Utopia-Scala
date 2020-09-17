@@ -80,5 +80,5 @@ object SegmentedRowTest extends App
 	actionLoop.startAsync()
 	StackHierarchyManager.startRevalidationLoop()
 	frame.startEventGenerators(actorHandler)
-	frame.isVisible = true
+	frame.visible = true
 }

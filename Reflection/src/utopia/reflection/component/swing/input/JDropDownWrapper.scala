@@ -140,7 +140,7 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 	
 	// IMPLEMENTED	-------------------
 	
-	override protected def updateVisibility(visible: Boolean) = super[JWrapper].isVisible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[JWrapper].visible_=(visible)
 	
 	override def component = field
 	

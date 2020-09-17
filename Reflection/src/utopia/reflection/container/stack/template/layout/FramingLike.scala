@@ -35,9 +35,9 @@ trait FramingLike[C <: Stackable] extends SingleStackContainer[C] with Component
 	
 	override protected def wrapped = container
 	
-	override def isVisible_=(isVisible: Boolean) = super[CachingStackable].isVisible_=(isVisible)
+	override def visible_=(isVisible: Boolean) = super[CachingStackable].visible_=(isVisible)
 	
-	override protected def updateVisibility(visible: Boolean) = super[ComponentWrapper].isVisible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[ComponentWrapper].visible_=(visible)
 	
 	override def components = container.components
 	

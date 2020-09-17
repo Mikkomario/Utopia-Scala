@@ -96,7 +96,7 @@ object ScrollViewTest extends App
 	contentUpdateLoop.registerToStopOnceJVMCloses()
 	contentUpdateLoop.startAsync()
 	frame.startEventGenerators(actorHandler)
-	frame.isVisible = true
+	frame.visible = true
 	
 	println("Global mouse handling:")
 	println(GlobalMouseEventHandler.debugString)

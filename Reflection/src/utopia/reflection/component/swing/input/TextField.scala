@@ -321,7 +321,7 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 	
 	override def drawable: CustomDrawComponent = field
 	
-	override protected def updateVisibility(visible: Boolean) = super[JWrapper].isVisible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[JWrapper].visible_=(visible)
 	
 	override def updateLayout() = ()
 	

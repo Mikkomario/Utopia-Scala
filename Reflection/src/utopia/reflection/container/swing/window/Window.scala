@@ -144,7 +144,7 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
     
     override def resetCachedSize() = cachedStackSize.reset()
     
-    override def isVisible_=(isVisible: Boolean) = component.setVisible(isVisible)
+    override def visible_=(isVisible: Boolean) = component.setVisible(isVisible)
     
     // Size and position are not cached since the user may resize and move this Window at will, breaking the cached size / position logic
     override def size = Size(component.getWidth, component.getHeight)
@@ -180,7 +180,7 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
     // Windows have no parents
     override def parent = None
     
-    override def isVisible = component.isVisible
+    override def visible = component.isVisible
     
     override def background = content.background
     override def background_=(color: Color) = content.background = color
@@ -204,11 +204,11 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
     def display(gainFocus: Boolean = true) =
     {
         if (gainFocus)
-            isVisible = true
+            visible = true
         else
         {
             component.setFocusableWindowState(false)
-            isVisible = true
+            visible = true
             component.setFocusableWindowState(true)
         }
     }

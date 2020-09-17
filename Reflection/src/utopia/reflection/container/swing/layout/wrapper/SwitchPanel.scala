@@ -52,7 +52,7 @@ class SwitchPanel[C <: Stackable with AwtComponentRelated] extends SingleStackCo
 	
 	override protected def wrapped = panel
 	
-	override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].isVisible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].visible_=(visible)
 	
 	override def component = panel.component
 	

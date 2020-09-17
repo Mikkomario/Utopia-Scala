@@ -39,6 +39,6 @@ object DialogTest extends App
 	private val dialog = new Dialog(frame.component, new ContentPanel(320.any x 240.any), "Dialog".local.localizationSkipped)
 	dialog.closeFuture.foreach { u => frame.background = Color.yellow }
 	
-	frame.isVisible = true
-	dialog.isVisible = true
+	frame.visible = true
+	dialog.visible = true
 }

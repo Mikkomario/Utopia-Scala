@@ -64,7 +64,7 @@ object TextLabelStackTest extends App
 	frame.setToExitOnClose()
 	
 	val buttonLoop = Loop(2.seconds) {
-		button.isVisible = !button.isVisible
+		button.visible = !button.visible
 		// println(StackHierarchyManager.description)
 	}
 	buttonLoop.registerToStopOnceJVMCloses()
@@ -74,5 +74,5 @@ object TextLabelStackTest extends App
 	actionLoop.startAsync()
 	StackHierarchyManager.startRevalidationLoop()
 	frame.startEventGenerators(actorHandler)
-	frame.isVisible = true
+	frame.visible = true
 }

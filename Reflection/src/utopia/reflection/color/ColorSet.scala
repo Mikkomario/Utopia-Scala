@@ -2,6 +2,7 @@ package utopia.reflection.color
 
 import utopia.genesis.color.Color
 import utopia.reflection.color.ColorShade.{Dark, Light, Standard}
+import utopia.reflection.component.context.ColorContextLike
 
 import scala.math.Ordering.Double.TotalOrdering
 import scala.language.implicitConversions
@@ -43,6 +44,24 @@ case class ColorSet(default: ComponentColor, light: ComponentColor, dark: Compon
 	  */
 	def values = Vector(light, default, dark)
 	
+	/**
+	  * @param context Color context
+	  * @return A color from this set most suited for that context (preferring default shade)
+	  */
+	def inContext(implicit context: ColorContextLike) = forBackground(context.containerBackground)
+	
+	/**
+	  * @param context Color context
+	  * @return A color from this set most suited for that context (preferring light shade)
+	  */
+	def lightInContext(implicit context: ColorContextLike) = forBackgroundPreferringLight(context.containerBackground)
+	
+	/**
+	  * @param context Color context
+	  * @return A color from this set most suited for that context (preferring dark shade)
+	  */
+	def darkInContext(implicit context: ColorContextLike) = forBackgroundPreferringDark(context.containerBackground)
+	
 	
 	// OTHER	----------------------------
 	
@@ -56,6 +75,14 @@ case class ColorSet(default: ComponentColor, light: ComponentColor, dark: Compon
 		case Light => light
 		case Dark => dark
 	}
+	
+	/**
+	  * @param shade Preferred color shade
+	  * @param context Component color context
+	  * @return A color from this set most suited for that context, preferring the specified shade
+	  */
+	def inContextPreferring(shade: ColorShade)(implicit context: ColorContextLike) =
+		forBackgroundPreferring(context.containerBackground, shade)
 	
 	/**
 	  * Picks the best color set for the specific background (best being one that has enough contrast difference,

@@ -206,7 +206,7 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 		
 		override protected def wrapped: JWrapper = panel
 		
-		override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].isVisible_=(visible)
+		override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].visible_=(visible)
 		
 		override def calculatedStackSize = StackSize.fixed(_worldSize * scaling)
 		

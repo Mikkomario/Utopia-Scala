@@ -110,7 +110,7 @@ class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColo
 	
 	// IMPLEMENTED	------------------
 	
-	override protected def updateVisibility(visible: Boolean) = super[Label].isVisible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[Label].visible_=(visible)
 	
 	override def text = drawer.text
 	/**

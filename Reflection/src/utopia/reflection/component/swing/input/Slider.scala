@@ -414,6 +414,41 @@ class Slider[A](range: Animation[A], targetKnobDiameter: Double, targetWidth: St
 	def enableAnimations()(implicit context: AnimationContextLike): Unit =
 		enableAnimations(context.actorHandler, animationDuration = context.animationDuration)
 	
+	/**
+	  * Moves the slider towards the specified direction
+	  * @param direction Direction to move towards
+	  * @param amount How much this slider is moved [0, 1]. If using sticky points, this value is ignored
+	  *               (default = same as with arrow keys)
+	  */
+	def stepTowards(direction: Direction1D, amount: Double = arrowMovement) =
+	{
+		if (stickyPoints.nonEmpty)
+			progressPointer.value = nextStickyPointInDirection(direction)
+		else
+			progressPointer.value = ((progressPointer.value + arrowMovement * direction.modifier) max 0.0) min 1.0
+	}
+	/**
+	  * Moves this slider's value to the right
+	  * @param amount Amount to move (default = same as with arrow keys) (ignored if sticky keys are used)
+	  */
+	def stepRight(amount: Double = arrowMovement) = stepTowards(Positive, amount)
+	/**
+	  * Moves this slider's value to the right
+	  * @param amount Amount to move (default = same as with arrow keys) (ignored if sticky keys are used)
+	  */
+	def stepLeft(amount: Double = arrowMovement) = stepTowards(Negative, amount)
+	/**
+	  * Jumps this slider's value to the specified point
+	  * @param point A point on this slider [0, 1] to jump to
+	  */
+	def shiftTo(point: Double) =
+	{
+		if (stickyPoints.isEmpty)
+			progressPointer.value = (point max 0.0) min 1.0
+		else
+			progressPointer.value = stickyPointClosestTo(point)
+	}
+	
 	// Progress is based on mouse x-coordinate, but limited between [0, 1]
 	private def progressForX(x: Double) = ((x / width) max 0.0) min 1.0
 	

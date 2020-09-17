@@ -157,7 +157,7 @@ object Popup
 		
 		override def onMouseButtonState(event: MouseButtonStateEvent) =
 		{
-			if (popup.isVisible && Instant.now() > actionThreshold && !popup.bounds.contains(event.absoluteMousePosition))
+			if (popup.visible && Instant.now() > actionThreshold && !popup.bounds.contains(event.absoluteMousePosition))
 				popup.close()
 			None
 		}

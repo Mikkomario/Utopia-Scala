@@ -7,6 +7,7 @@ wider range of options
 - Windows now only propagate keyboard events while they're the focused window
 - ImageButton, TextButton and ImageAndTextButton .apply(...) methods now accept a call by name action instead 
 of a function action
+- Renamed component .isVisible (getter & setter) to .visible
 ### New Features
 - Added LoadingView and LoadingWindow
     - Includes a new ProgressState class for representing background process progress

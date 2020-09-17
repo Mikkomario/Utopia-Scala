@@ -184,6 +184,6 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 			lastDraw = time
 		}
 		
-		override def allowsHandlingFrom(handlerType: HandlerType) = isVisible
+		override def allowsHandlingFrom(handlerType: HandlerType) = visible
 	}
 }

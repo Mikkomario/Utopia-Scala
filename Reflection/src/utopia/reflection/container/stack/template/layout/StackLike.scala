@@ -79,7 +79,7 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
     }
     
     def calculatedStackSize = Stacker.calculateStackSize(
-        _components.filter { _.isVisible }.map { _.stackSize }, direction, margin, cap, layout)
+        _components.filter { _.visible }.map { _.stackSize }, direction, margin, cap, layout)
     
     def updateLayout() =
     {
@@ -87,7 +87,7 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
         Stacker(_components, Bounds(Point.origin, size), stackLength.optimal, direction, margin, cap, layout)
             
         // Finally applies the changes
-        _components.view.filter { _.isVisible }.foreach { _.updateBounds() }
+        _components.view.filter { _.visible }.foreach { _.updateBounds() }
     }
     
     /**

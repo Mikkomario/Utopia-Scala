@@ -76,7 +76,7 @@ class ImageLabel(initialImage: Image, alwaysFillArea: Boolean = true, allowUpsca
 	
 	// IMPLEMENTED	-----------------
 	
-	override protected def updateVisibility(visible: Boolean) = super[Label].isVisible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[Label].visible_=(visible)
 	
 	override def updateLayout() =
 	{

@@ -45,5 +45,5 @@ object StackTest extends App
     frame.setToExitOnClose()
     
     // Start the program
-    frame.isVisible = true
+    frame.visible = true
 }

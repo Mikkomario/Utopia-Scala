@@ -37,7 +37,7 @@ trait AlignFrameLike[C <: Stackable] extends SingleStackContainer[C] with Compon
 	
 	override protected def wrapped = container
 	
-	override protected def updateVisibility(visible: Boolean) = super[CachingStackable].isVisible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[CachingStackable].visible_=(visible)
 	
 	override def components = container.components
 	

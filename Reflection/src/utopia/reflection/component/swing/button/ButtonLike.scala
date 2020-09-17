@@ -18,7 +18,6 @@ object ButtonLike
   * @author Mikko Hilpinen
   * @since 25.4.2019, v1+
   */
-// TODO: Add support for hotkeys
 trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 {
 	import ButtonLike._

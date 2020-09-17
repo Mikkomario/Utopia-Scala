@@ -37,14 +37,14 @@ trait CachingStackable extends Stackable with Constrainable
 		revalidate()
 	}
 	
-	override def isVisible_=(isVisible: Boolean) =
+	override def visible_=(isVisible: Boolean) =
 	{
 		// Revalidates this item each time visibility changes
 		updateVisibility(isVisible)
 		revalidate()
 	}
 	
-	override def stackSize = if (isVisible) cachedStackSize.get else StackSize.any
+	override def stackSize = if (visible) cachedStackSize.get else StackSize.any
 	
 	override def resetCachedSize() = cachedStackSize.reset()
 	

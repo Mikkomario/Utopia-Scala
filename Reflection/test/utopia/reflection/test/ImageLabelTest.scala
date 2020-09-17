@@ -46,7 +46,7 @@ object ImageLabelTest extends App
 		frame.setToExitOnClose()
 		
 		StackHierarchyManager.startRevalidationLoop()
-		frame.isVisible = true
+		frame.visible = true
 	}
 	
 	run()

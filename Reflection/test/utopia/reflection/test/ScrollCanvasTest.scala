@@ -72,7 +72,7 @@ object ScrollCanvasTest extends App
 	StackHierarchyManager.startRevalidationLoop()
 	frame.startEventGenerators(actorHandler)
 	canvas.startDrawing(Fps(30))
-	frame.isVisible = true
+	frame.visible = true
 	
 	println(StackHierarchyManager.description)
 }

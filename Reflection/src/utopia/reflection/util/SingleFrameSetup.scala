@@ -41,7 +41,7 @@ class SingleFrameSetup(actorHandler: ActorHandler, private val frame: Frame[_])
 			StackHierarchyManager.startRevalidationLoop()
 			frame.setToExitOnClose()
 			frame.startEventGenerators(actorHandler)
-			frame.isVisible = true
+			frame.visible = true
 		}
 	}
 }

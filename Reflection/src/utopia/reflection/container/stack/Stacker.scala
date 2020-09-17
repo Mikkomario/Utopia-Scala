@@ -80,7 +80,7 @@ object Stacker
 	def apply(components: Vector[Stackable], area: Bounds, optimalLength: Double, stackAxis: Axis2D,
 			  margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixed(0), layout: StackLayout = Fit) =
 	{
-		val visibleComponents = components.filter { _.isVisible }
+		val visibleComponents = components.filter { _.visible }
 		
 		if (visibleComponents.nonEmpty)
 		{
