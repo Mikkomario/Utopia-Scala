@@ -484,20 +484,23 @@ class Slider[A](range: Animation[A], targetKnobDiameter: Double, targetWidth: St
 		
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
+			val knobRadius = ((targetKnobDiameter min bounds.height) min bounds.width) / 2.0
+			val lineStartX = bounds.x + knobRadius
+			val lineWidth = bounds.width - knobRadius * 2
 			val lineY = bounds.y + bounds.height / 2.0
-			val leftSideWidth = bounds.width * doubleValue
-			val thresholdX = bounds.x + leftSideWidth
+			val leftSideWidth = lineWidth * doubleValue
+			val thresholdX = lineStartX + leftSideWidth
 			// Draws the right side line first
 			val rightLineHeight = (targetKnobDiameter / 5.0 * rightHeightModifier) min (bounds.height * 0.8)
 			drawer.onlyFill(if (enabled) rightColor else rightColor.grayscale)
 				.draw(Bounds(Point(thresholdX, lineY - rightLineHeight / 2.0),
-					Size(bounds.width - leftSideWidth, rightLineHeight)).toRoundedRectangle(1.0))
+					Size(lineWidth - leftSideWidth, rightLineHeight)).toRoundedRectangle(1.0))
 			// Next draws the left line
 			val leftLineHeight = (targetKnobDiameter / 5.0 * leftHeightModifier) min (bounds.height * 0.8)
 			drawer.onlyFill(if (enabled) leftColor else leftColor.grayscale)
-				.draw(Bounds(Point(bounds.x, lineY - leftLineHeight / 2.0), Size(leftSideWidth, leftLineHeight)))
+				.draw(Bounds(Point(lineStartX, lineY - leftLineHeight / 2.0), Size(leftSideWidth, leftLineHeight)))
 			// Finally draws the knob
-			drawer.onlyFill(currentKnobColor).draw(Circle(Point(thresholdX, lineY), (targetKnobDiameter min bounds.height) / 2.0))
+			drawer.onlyFill(currentKnobColor).draw(Circle(Point(thresholdX, lineY), knobRadius))
 		}
 	}
 	
