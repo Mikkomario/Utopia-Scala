@@ -16,6 +16,7 @@
       <module fileurl="file://$PROJECT_DIR$/Nexus/Nexus.iml" filepath="$PROJECT_DIR$/Nexus/Nexus.iml" />
       <module fileurl="file://$PROJECT_DIR$/NexusForTomcat/NexusForTomcat.iml" filepath="$PROJECT_DIR$/NexusForTomcat/NexusForTomcat.iml" />
       <module fileurl="file://$PROJECT_DIR$/Reflection/Reflection.iml" filepath="$PROJECT_DIR$/Reflection/Reflection.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Trove/Trove.iml" filepath="$PROJECT_DIR$/Trove/Trove.iml" />
       <module fileurl="file://$PROJECT_DIR$/Vault/Vault.iml" filepath="$PROJECT_DIR$/Vault/Vault.iml" />
     </modules>
   </component>
