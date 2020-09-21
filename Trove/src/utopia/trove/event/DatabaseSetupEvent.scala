@@ -1,5 +1,6 @@
 package utopia.trove.event
 
+import utopia.trove.model.stored.DatabaseVersion
 import utopia.trove.model.{DatabaseStructureSource, VersionNumber}
 
 import scala.util.{Failure, Success}
@@ -63,7 +64,8 @@ object DatabaseSetupEvent
 	  * @param filesToImport Files that will be imported
 	  * @param currentVersion Current database version (None if no version is installed yet)
 	  */
-	case class UpdatesFound(filesToImport: Vector[DatabaseStructureSource], currentVersion: Option[VersionNumber] = None)
+	case class UpdatesFound(filesToImport: Vector[DatabaseStructureSource],
+							currentVersion: Option[DatabaseVersion] = None) extends DatabaseSetupEvent
 	
 	/**
 	  * An event generated for each update file that was successfully applied
@@ -71,7 +73,7 @@ object DatabaseSetupEvent
 	  * @param remainingUpdates Updates still remaining to be applied (empty if this was the last update)
 	  */
 	case class UpdateApplied(appliedUpdate: DatabaseStructureSource,
-							 remainingUpdates: Vector[DatabaseStructureSource] = Vector())
+							 remainingUpdates: Vector[DatabaseStructureSource] = Vector()) extends DatabaseSetupEvent
 	
 	/**
 	  * An event generated when database configuration or starting fails. Database won't be usable at all in this case.
@@ -98,7 +100,7 @@ object DatabaseSetupEvent
 	  * An event generated when database setup process completes without errors
 	  * @param currentVersion Current database structure version (None if no structure has been initialized yet)
 	  */
-	case class SetupSucceeded(currentVersion: Option[VersionNumber]) extends DatabaseSetupCompletionEvent
+	case class SetupSucceeded(currentVersion: Option[DatabaseVersion]) extends DatabaseSetupCompletionEvent
 	{
 		// COMPUTED	------------------------------
 		

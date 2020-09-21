@@ -123,6 +123,17 @@ class Volatile[T](@volatile private var _value: T) extends Changing[T]
      */
     def getAndSet(newValue: T) = pop { v => v -> newValue }
     
+    /**
+      * @param mutate An updating function for the current value of this volatile container
+      * @return The value previous to the update
+      */
+    def getAndUpdate(mutate: T => T) = this.synchronized
+    {
+        val result = _value
+        setValue(mutate(_value))
+        result
+    }
+    
     // Call this only in a synchronized block
     private def setValue(newValue: T) =
     {

@@ -5,6 +5,7 @@
 ### New Methods
 - Added .notCompletingBefore(Future) to Future in AsyncExtensions
 - Added .subRangeIterator(Int) to Range.Inclusive in CollectionExtensions
+- Added .getAndUpdate(...) to Volatile
 ### Other Changes
 - Exceptions thrown by Loop.runOnce() implementations are now caught and printed, not propagated further.
 - CsvReader now removes '-characters from the beginnings of columns, if present
