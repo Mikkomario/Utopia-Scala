@@ -23,7 +23,7 @@ object Insert
      * match those of the table are used
      * @return Results of the insert operation, which contain generated auto-increment keys where applicable
      */
-    def apply(table: Table, rows: Vector[Model[Property]])(implicit connection: Connection) =
+    def apply(table: Table, rows: Seq[Model[Property]])(implicit connection: Connection) =
     {
         // Finds the inserted properties that are applicable to this table
         // Only properties matching columns (that are not auto-increment) are included

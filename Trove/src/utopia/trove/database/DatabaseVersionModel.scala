@@ -8,6 +8,7 @@ import utopia.trove.model.partial.DatabaseVersionData
 import utopia.trove.model.stored.DatabaseVersion
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
+import utopia.vault.sql.Insert
 
 object DatabaseVersionModel
 {
@@ -40,6 +41,16 @@ case class DatabaseVersionModelFactory(versionFactory: DatabaseVersionFactory)
 		val id = apply(None, Some(data.number), Some(data.created)).insert().getInt
 		DatabaseVersion(id, data)
 	}
+	
+	/**
+	  * Inserts a number of database versions to the database
+	  * @param data Data to insert
+	  * @param connection DB Connection (implicit)
+	  * @return Newly generated row ids
+	  */
+	def insert(data: Seq[DatabaseVersionData])(implicit connection: Connection) =
+		Insert(versionFactory.table, data.map { d => apply(None, Some(d.number), Some(d.created)).toModel })
+			.generatedIntKeys
 }
 
 /**

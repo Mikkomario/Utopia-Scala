@@ -36,4 +36,12 @@ case class DbDatabaseVersions(versionTable: Table) extends ManyRowModelAccess[Da
 	  */
 	def insert(versionNumber: VersionNumber)(implicit connection: Connection) =
 		model.insert(DatabaseVersionData(versionNumber))
+	
+	/**
+	  * Inserts a number of database version recordings to DB
+	  * @param versions Versions to import
+	  * @param connection DB Connection (implicit)
+	  * @return Newly generated row ids
+	  */
+	def insert(versions: Seq[DatabaseVersionData])(implicit connection: Connection) = model.insert(versions)
 }

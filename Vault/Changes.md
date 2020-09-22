@@ -4,6 +4,10 @@
 ### New Methods
 - Added .delete() to ModelAccessor - This method deletes all accessible rows in the primary table
 - Added .min and .max to SingleIdAccessor
+- Added .createDatabase(...) to Connection
+### Other Changes
+- Connection.dropDatabase(...) now accepts a boolean parameter checkIfExists (true by default)
+- .apply(...) in Insert, which accepted multiple models, now accepts Seq instead of just Vector
 
 ## v1.6
 ### Scala

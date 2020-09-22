@@ -388,10 +388,25 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         Vector(databaseName, tableName)).nonEmpty
     
     /**
+      * Creates a new database
+      * @param databaseName Name of the new database
+      * @param checkIfExists Whether database should only be created if one doesn't exist yet (default = true)
+      * @param useNewDb Whether connection should switch to target the new database afterwards (default = true)
+      */
+    def createDatabase(databaseName: String, checkIfExists: Boolean = true, useNewDb: Boolean = true) =
+    {
+        execute(s"CREATE DATABASE${if (checkIfExists) " IF NOT EXISTS " else " "}$databaseName")
+        if (useNewDb)
+            dbName = databaseName
+    }
+    
+    /**
       * Drops / removes a database
       * @param databaseName Database name
+      * @param checkIfExists Whether database should be dropped only if it exists (default = true)
       */
-    def dropDatabase(databaseName: String) = execute(s"DROP DATABASE $databaseName")
+    def dropDatabase(databaseName: String, checkIfExists: Boolean = true) =
+        execute(s"DROP DATABASE${if (checkIfExists) " IF EXISTS " else " "}$databaseName")
     
     /**
       * Executes all statements read from the specified input file
