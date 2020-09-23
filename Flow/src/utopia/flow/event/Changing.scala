@@ -1,6 +1,10 @@
 package utopia.flow.event
 
+import utopia.flow.async.{AsyncMirror, DelayedView}
+
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Promise}
+import scala.util.Try
 
 object Changing
 {
@@ -112,6 +116,66 @@ trait Changing[A]
 	 * @return A mirror that merges the values from both of these items
 	 */
 	def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) = MergeMirror.of(this, other)(f)
+	
+	/**
+	  * @param threshold A required pause between changes in this pointer before the view fires a change event
+	  * @param exc Implicit execution context
+	  * @return A view into this pointer that only fires change events when there is a long enough pause in
+	  *         this pointer's changes
+	  */
+	def delayedBy(threshold: Duration)(implicit exc: ExecutionContext) = new DelayedView(this, threshold)
+	
+	/**
+	  * Creates an asynchronously mapping view of this changing item
+	  * @param placeHolderResult Value placed in the view before the first value has been calculated
+	  * @param f A synchronous mapping function that catches errors, returning a try
+	  * @param errorHandler A function called for all received errors
+	  * @param exc Implicit execution context
+	  * @tparam B Successful mapping result type
+	  * @return An asynchronously mapped view of this changing item
+	  */
+	def tryMapAsync[B](placeHolderResult: B)(f: A => Try[B])(errorHandler: Throwable => Unit)
+	                       (implicit exc: ExecutionContext) =
+		AsyncMirror.trying(this, placeHolderResult)(f)(errorHandler)
+	
+	/**
+	  * Creates an asynchronously mapping view of this changing item
+	  * @param placeHolderResult Value placed in the view before the first value has been calculated
+	  * @param f A synchronous mapping function that may throw errors
+	  * @param errorHandler A function called for all catched errors
+	  * @param exc Implicit execution context
+	  * @tparam B Successful mapping result type
+	  * @return An asynchronously mapped view of this changing item
+	  */
+	def mapAsyncCatching[B](placeHolderResult: B)(f: A => B)(errorHandler: Throwable => Unit)
+	                       (implicit exc: ExecutionContext) =
+		AsyncMirror.catching(this, placeHolderResult)(f)(errorHandler)
+	
+	/**
+	  * Creates an asynchronously mapping view of this changing item
+	  * @param placeHolderResult Value placed in the view before the first value has been calculated
+	  * @param f A synchronous mapping function that is not expected to throw errors (if it throws, those errors
+	  *          are printed yet not propagated)
+	  * @param exc Implicit execution context
+	  * @tparam B Mapping result type
+	  * @return An asynchronously mapped view of this changing item
+	  */
+	def mapAsync[B](placeHolderResult: B)(f: A => B)(implicit exc: ExecutionContext) =
+		AsyncMirror(this, placeHolderResult)(f)
+	
+	/**
+	  * Creates an asynchronously mapping view of this changing item
+	  * @param placeHolderResult Value placed in the view before the first value has been calculated
+	  * @param f A synchronous mapping function that may throw
+	  * @param merge A function for handling possible error cases and merging gained results with those
+	  *              previously acquired
+	  * @param exc Implicit execution context
+	  * @tparam B Type of mapping result
+	  * @tparam R Type of merged / reduced mapping results
+	  * @return An asynchronously mapped view of this changing item
+	  */
+	def mapAsyncMerging[B, R](placeHolderResult: R)(f: A => B)(merge: (R, Try[B]) => R)(implicit exc: ExecutionContext) =
+		new AsyncMirror[A, B, R](this, placeHolderResult)(f)(merge)
 	
 	/**
 	  * Fires a change event for all the listeners

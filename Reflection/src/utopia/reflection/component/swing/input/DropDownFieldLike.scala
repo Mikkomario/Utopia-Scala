@@ -42,7 +42,8 @@ import scala.concurrent.ExecutionContext
   * @param exc Implicit execution context (used in pop-up)
   */
 abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
-(actorHandler: ActorHandler, selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any, displayStackLayout: StackLayout = Fit,
+(actorHandler: ActorHandler, selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any,
+ displayStackLayout: StackLayout = Fit,
  protected val currentSelectionOptionsPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
  override val valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
  contentIsStateless: Boolean = false)

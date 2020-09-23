@@ -32,6 +32,7 @@ object AllTests extends App
 	run(VolatileTest)
 	run(WeakListTest)
 	run(AsyncTest)
+	run(AsyncViewTest)
 	run(FutureRaceTest)
 	run(LoopTest)
 	

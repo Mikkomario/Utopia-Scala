@@ -2,10 +2,15 @@
 ## v1.9 (beta)
 ### Breaking Changes
 - Changed setIfEmpty method variations in VolatileOption to accept a call by name parameter instead of a function
+### New Features
+- Added a delaying / buffering pointer view class (DelayedView)
+- Added asynchronous mapping support for pointers via AsyncMirror class
 ### New Methods
 - Added .notCompletingBefore(Future) to Future in AsyncExtensions
 - Added .subRangeIterator(Int) to Range.Inclusive in CollectionExtensions
 - Added .getAndUpdate(...) to Volatile
+- Added .delayedBy(Duration) to Changing
+- Added .mapAsync(...), .tryMapAsync(...), .mapAsyncCatching(...) and .mapAsyncMerging(...) to Changing
 ### Other Changes
 - Exceptions thrown by Loop.runOnce() implementations are now caught and printed, not propagated further.
 - CsvReader now removes '-characters from the beginnings of columns, if present
