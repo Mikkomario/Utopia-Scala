@@ -76,6 +76,8 @@ case class LocalizedString(original: LocalString, localized: Option[LocalString]
 	
 	// IMPLEMENTED	------------------------
 	
+	override def repr = this
+	
 	override def languageCode = targetLanguageCode orElse sourceLanguageCode
 	
 	override def +(other: LocalizedString) = LocalizedString(original + other.original, displayed + other.displayed)

@@ -8,6 +8,8 @@ wider range of options
 - ImageButton, TextButton and ImageAndTextButton .apply(...) methods now accept a call by name action instead 
 of a function action
 - Renamed component .isVisible (getter & setter) to .visible
+- TextField.contextual constructor parameter prompt is now a LocalizedString instead of an Option and an empty string 
+represents the previous None value.
 ### New Features
 - Added LoadingView and LoadingWindow
     - Includes a new ProgressState class for representing background process progress
@@ -16,6 +18,7 @@ of a function action
 - Added AwtComponentExtensions for a few utility methods regarding awt Components
 - Added hotkey support to various buttons
 - Added Slider component
+- Added FramedImageButton class
 ### New Methods
 - Added && and map functions to StackLengthModifier and StackSizeModifier
 - Added .isClosed to Window
@@ -27,6 +30,7 @@ of a function action
 - Added .isEmpty and .nonEmpty to LocalStringLike
 - Added .success and .info to ColorScheme
 - Added .map(...) to ColorSet
+- Added a new variation of .forButtons(...) to TextContext
 ### Fixes
 - Added missing focus gain to InputWindow when a component's value needs to be fixed
 - Scrollable views now listen to global mouse release events, meaning they no longer get stuck in scrolling mode

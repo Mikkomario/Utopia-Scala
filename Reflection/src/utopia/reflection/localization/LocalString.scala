@@ -90,6 +90,8 @@ case class LocalString(override val string: String, override val languageCode: O
 	
 	// IMPLEMENTED	----------------------
 	
+	override def repr = this
+	
 	override def +(other: LocalString) =
 	{
 		val newCode =

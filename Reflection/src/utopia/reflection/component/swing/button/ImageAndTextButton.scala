@@ -1,14 +1,13 @@
 package utopia.reflection.component.swing.button
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.drawing.mutable.BorderDrawer
+import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, Border}
+import utopia.reflection.shape.Alignment
 import utopia.reflection.text.Font
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
@@ -92,7 +91,8 @@ class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedSt
 						 insets: StackInsets, borderWidth: Double,
 						 textAlignment: Alignment = Alignment.Left, textColor: Color = Color.textBlack,
 						 hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())
-	extends StackableAwtComponentWrapperWrapper with ButtonLike with AwtContainerRelated
+	extends ButtonWithBackground(color, borderWidth) with StackableAwtComponentWrapperWrapper with AwtContainerRelated
+		with CustomDrawableWrapper
 {
 	// ATTRIBUTES	------------------------
 	
@@ -110,22 +110,10 @@ class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedSt
 			inside
 	}
 	
-	private val borderPointer = new PointerWithEvents(makeBorder(color))
-	
 	
 	// INITIAL CODE	------------------------
 	
-	content.background = color
-	setHandCursor()
-	content.component.setFocusable(true)
-	initializeListeners(hotKeys, hotKeyChars)
-	
-	// Adds border drawing
-	if (borderWidth > 0)
-	{
-		content.addCustomDrawer(new BorderDrawer(borderPointer))
-		borderPointer.addListener { _ => content.repaint() }
-	}
+	setup(hotKeys, hotKeyChars)
 	
 	
 	// COMPUTED	----------------------------
@@ -149,20 +137,15 @@ class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedSt
 	
 	// IMPLEMENTED	------------------------
 	
+	override def drawable = content
+	
 	override def component = content.component
 	
 	override protected def wrapped = content
 	
 	override protected def updateStyleForState(newState: ButtonState) =
 	{
-		val newColor = newState.modify(color)
-		background = newColor
+		super.updateStyleForState(newState)
 		imageLabel.image = _images(newState)
-		borderPointer.value = makeBorder(newColor)
 	}
-	
-	
-	// OTHER	----------------------------
-	
-	private def makeBorder(baseColor: Color) = Border.raised(borderWidth, baseColor, 0.5)
 }

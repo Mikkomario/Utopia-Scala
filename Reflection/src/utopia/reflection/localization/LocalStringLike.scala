@@ -10,6 +10,11 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	// ABSTRACT	--------------
 	
 	/**
+	  * @return This item
+	  */
+	def repr: Repr
+	
+	/**
 	  * @return A string representation of this string-like instance
 	  */
 	def string: String
@@ -63,6 +68,11 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	  * @return Whether this string contains characters
 	  */
 	def nonEmpty = string.nonEmpty
+	
+	/**
+	  * @return None if this string is empty. This string otherwise.
+	  */
+	def notEmpty = if (isEmpty) None else Some(repr)
 	
 	/**
 	  * @return This string split on newline characters

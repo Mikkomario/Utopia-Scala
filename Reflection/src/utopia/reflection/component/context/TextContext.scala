@@ -2,7 +2,8 @@ package utopia.reflection.component.context
 
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.Direction2D
-import utopia.reflection.color.ComponentColor
+import utopia.reflection.color.ColorShade.Standard
+import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.container.swing.window.interaction.ButtonColor
 import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.Alignment
@@ -121,6 +122,14 @@ case class TextContext(base: ColorContext, textAlignment: Alignment, textInsets:
 	  * @return A copy of this context using the specified localizer
 	  */
 	def localizedWith(localizer: Localizer) = copy(localizer = localizer)
+	
+	/**
+	  * @param role Button role
+	  * @param preferredShade Preferred button color shade (default = standard)
+	  * @return A copy of this context that can be used for creating buttons
+	  */
+	def forButtons(role: ColorRole, preferredShade: ColorShade = Standard) =
+		ButtonContext.forRole(this, role, preferredShade)
 	
 	/**
 	  * @param color Button color

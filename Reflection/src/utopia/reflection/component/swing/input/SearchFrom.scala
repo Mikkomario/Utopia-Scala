@@ -95,7 +95,7 @@ object SearchFrom
 	(makeDisplay: A => C)(itemToSearchString: A => String)
 	(implicit context: ButtonContextLike, exc: ExecutionContext) =
 	{
-		val searchField = TextField.contextual(standardWidth, prompt = Some(selectionPrompt), valuePointer = searchFieldPointer)
+		val searchField = TextField.contextual(standardWidth, prompt = selectionPrompt, valuePointer = searchFieldPointer)
 		wrapFieldWithContext(searchField, noResultsView, displayStackLayout, searchIcon, contentPointer, selectedValuePointer,
 			shouldDisplayPopUpOnFocusGain, sameInstanceCheck, contentIsStateless)(makeDisplay)(itemToSearchString)
 	}
@@ -262,7 +262,7 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 	}, Some(None))
 	
 	// Possibly adds custom drawing for the search image
-	searchIcon.foreach { img => searchField.addCustomDrawer(new ImageDrawer(img, searchIconInsets, Alignment.Right)) }
+	searchIcon.foreach { img => searchField.addCustomDrawer(ImageDrawer(img, searchIconInsets, Alignment.Right)) }
 	
 	
 	// IMPLEMENTED	----------------------------

@@ -1,9 +1,8 @@
 package utopia.reflection.component.swing.button
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.mutable.{BorderDrawer, CustomDrawableWrapper}
+import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.shape.Alignment.Center
 import utopia.reflection.component.swing.label.TextLabel
@@ -11,7 +10,7 @@ import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperW
 import utopia.reflection.component.template.text.TextComponent
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.shape.{Alignment, Border}
+import utopia.reflection.shape.Alignment
 import utopia.reflection.text.Font
 
 object TextButton
@@ -87,34 +86,22 @@ object TextButton
   * @param hotKeys Hotkey indices that can be used for triggering this button (default = empty)
   * @param hotKeyChars Characters on keyboard that can be used for triggering this button (default = empty)
   */
-class TextButton(initialText: LocalizedString, initialFont: Font, val color: Color,
+class TextButton(initialText: LocalizedString, initialFont: Font, color: Color,
 				 initialTextColor: Color = Color.textBlack, initialInsets: StackInsets = StackInsets.any,
-				 val borderWidth: Double = 0.0, initialAlignment: Alignment = Center,
+				 borderWidth: Double = 0.0, initialAlignment: Alignment = Center,
 				 hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())
-	extends StackableAwtComponentWrapperWrapper with TextComponent with ButtonLike with SwingComponentRelated
-		with CustomDrawableWrapper
+	extends ButtonWithBackground(color, borderWidth) with StackableAwtComponentWrapperWrapper with TextComponent
+		with SwingComponentRelated with CustomDrawableWrapper
 {
 	// ATTRIBUTES	------------------
 	
 	private val label = new TextLabel(initialText, initialFont, initialTextColor, initialInsets + borderWidth,
 		initialAlignment, hasMinWidth = true)
-	private val borderPointer = new PointerWithEvents(makeBorder(color))
 	
 	
 	// INITIAL CODE	------------------
 	
-	component.setFocusable(true)
-	setHandCursor()
-	background = color
-	
-	initializeListeners(hotKeys, hotKeyChars)
-	
-	// Adds border drawing
-	if (borderWidth > 0)
-	{
-		addCustomDrawer(new BorderDrawer(borderPointer))
-		borderPointer.addListener { _ => repaint() }
-	}
+	setup(hotKeys, hotKeyChars)
 	
 	
 	// IMPLEMENTED	------------------
@@ -136,17 +123,5 @@ class TextButton(initialText: LocalizedString, initialFont: Font, val color: Col
 	
 	override def drawable = label
 	
-	override protected def updateStyleForState(newState: ButtonState) =
-	{
-		val newColor = newState.modify(color)
-		background = newColor
-		borderPointer.value = makeBorder(newColor)
-	}
-	
 	override def toString = s"Button($text)"
-	
-	
-	// OTHER	----------------------
-	
-	private def makeBorder(baseColor: Color) = Border.raised(borderWidth, baseColor, 0.5)
 }
