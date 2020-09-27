@@ -2,7 +2,7 @@ package utopia.reflection.shape.stack
 
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.Size
+import utopia.genesis.shape.shape2D.{Size, TwoDimensional}
 import utopia.reflection.shape.stack.LengthPriority.Low
 
 object StackSize
@@ -115,7 +115,7 @@ object StackSize
 * @author Mikko Hilpinen
 * @since 25.2.2019
 **/
-case class StackSize(width: StackLength, height: StackLength)
+case class StackSize(width: StackLength, height: StackLength) extends TwoDimensional[StackLength]
 {
     // COMPUTED PROPERTIES    --------
     
@@ -213,10 +213,15 @@ case class StackSize(width: StackLength, height: StackLength)
     /**
      * @return The components that form this stack size
      */
+    @deprecated("Please use .dimensions instead", "v1.3")
     def components = Vector(width, height)
     
     
     // IMPLEMENTED    ----------------
+    
+    override def dimensions = Vector(width, height)
+    
+    override protected def zeroDimension = StackLength.any
     
     override def toString = s"[$width, $height]"
     
@@ -265,12 +270,6 @@ case class StackSize(width: StackLength, height: StackLength)
         case X => width
         case Y => height
     }
-    
-    /**
-      * @param axis Target axis
-      * @return The length of this size perpendicular to the specified axis
-      */
-    def perpendicularTo(axis: Axis2D) = along(axis.perpendicular)
     
     /**
       * @param axis Targeted axis

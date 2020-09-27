@@ -19,6 +19,9 @@ represents the previous None value.
 - Added hotkey support to various buttons
 - Added Slider component
 - Added FramedImageButton class
+- Added TagFraming class which wraps a component in rounded frames
+- Added TagView component for displaying word tags
+- Added TypeOrSearch component for writing or selecting words
 ### New Methods
 - Added && and map functions to StackLengthModifier and StackSizeModifier
 - Added .isClosed to Window
@@ -31,6 +34,9 @@ represents the previous None value.
 - Added .success and .info to ColorScheme
 - Added .map(...) to ColorSet
 - Added a new variation of .forButtons(...) to TextContext
+- Added a new constructor variation to ItemLabel
+### Deprecations
+- Deprecated StackSize.components in favor of StackSize.dimensions
 ### Fixes
 - Added missing focus gain to InputWindow when a component's value needs to be fixed
 - Scrollable views now listen to global mouse release events, meaning they no longer get stuck in scrolling mode
@@ -50,6 +56,7 @@ in undecorated windows and may get disabled by the OS.
 - Added rounding to Margins.small, .large and .verySmall
 - Buttons are now triggered on key releases instead of key presses, and are highlighted before triggering so that 
 the user knows which button they're activating.
+- StackSize now extends TwoDimensional
 
 ## v1.2
 ### Scala

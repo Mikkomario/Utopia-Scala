@@ -31,7 +31,7 @@ trait Dimensional[+A]
 	  *         might not be present in the resulting map.
 	  */
 	def toMap = dimensions.take(3).zipWithIndex.map { case (v, i) =>
-		axisForIndex(i) -> v }
+		axisForIndex(i) -> v }.toMap
 	
 	
 	// OTHER	--------------------

@@ -47,6 +47,13 @@ trait InsetsFactory[L, S, +Repr, +I <: InsetsLike[L, S, Repr]]
     def symmetric(sideWidth: L) = apply(sideWidth, sideWidth, sideWidth, sideWidth)
     
     /**
+      * @param sideWidth The width of both of the targeted sides
+      * @param axis Targeted axis (X|Y)
+      * @return A set of either horizontal or vertical insets
+      */
+    def symmetric(sideWidth: L, axis: Axis2D) = apply(axis.directions.map { d => d -> sideWidth }.toMap)
+    
+    /**
       * Creates a horizontal set of insets
       * @param left Left side
       * @param right Right side

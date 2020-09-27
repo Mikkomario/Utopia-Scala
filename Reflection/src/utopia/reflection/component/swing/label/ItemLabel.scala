@@ -18,6 +18,25 @@ import utopia.reflection.text.Font
 object ItemLabel
 {
 	/**
+	  * Creates a new item label
+	  * @param font Font used in this label's text
+	  * @param initialContent Initially displayed content
+	  * @param displayFunction Function for converting item to a localized string (default = use toString)
+	  * @param insets Insets to place around the text in this label (default = any insets, preferring 0)
+	  * @param alignment Alignment used when placing the text (default = left)
+	  * @param textColor Color used when drawing the text in this label (default = black)
+	  * @param hasMinWidth Whether this label has a minimum width based on the displayed text (default = true).
+	  *                    If false, text size may be shrank in order to fit it into this label.
+	  * @tparam A Type of displayed item
+	  * @return A new item label
+	  */
+	def apply[A](font: Font, initialContent: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	             insets: StackInsets = StackInsets.any, alignment: Alignment = Alignment.Left,
+	             textColor: Color = Color.textBlack, hasMinWidth: Boolean = true) =
+		new ItemLabel[A](new PointerWithEvents[A](initialContent), displayFunction, font, textColor, insets, alignment,
+			hasMinWidth)
+	
+	/**
 	  * Creates a new label using contextual information
 	  * @param content Initial label content
 	  * @param displayFunction A function for displaying label data (default = toString)

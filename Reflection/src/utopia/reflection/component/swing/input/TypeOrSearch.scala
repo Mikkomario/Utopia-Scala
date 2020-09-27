@@ -24,6 +24,41 @@ import utopia.reflection.localization.LocalString._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 
+object TypeOrSearch
+{
+	/**
+	  * A component with which the user may search and select from existing options or create a completely new option
+	  * @author Mikko Hilpinen
+	  * @since 22.9.2020, v1.3
+	  * @param optimalTextFieldWidth Optimal width for the type text field
+	  * @param addButtonText Text displayed on the primary add button (default = empty = no text)
+	  * @param addButtonIcon Icon displayed on the primary add button (optional)
+	  * @param selectButtonText Text displayed on item select buttons (default = empty = no text)
+	  * @param selectButtonIcon Icon displayed on item select buttons (optional)
+	  * @param optimalSelectionAreaLength Optimal length used for the scrollable selection area (optional)
+	  * @param textFieldPrompt Prompt displayed on the text field (default = empty = no prompt)
+	  * @param preferredTextFieldShade Color shade preferred in the text field (default = standard shade)
+	  * @param searchDelay Delay applied before performing the search (good to increase for slower search functions)
+	  *                    (default = no delay)
+	  * @param optionsForInput Function for converting text field input into a list of proposed values.
+	  *                        Run asynchronously. Should not throw.
+	  * @param context Implicit component creation context (including font information)
+	  * @param scrollingContext Implicit scroll component creation context
+	  * @param animationContext Implicit component animation context
+	  * @param exc Implicit execution context
+	  */
+	def apply(optimalTextFieldWidth: Double, addButtonText: LocalizedString = LocalizedString.empty,
+	          addButtonIcon: Option[SingleColorIcon] = None, selectButtonText: LocalizedString = LocalizedString.empty,
+	          selectButtonIcon: Option[SingleColorIcon] = None, optimalSelectionAreaLength: Option[Double] = None,
+	          textFieldPrompt: LocalizedString = LocalizedString.empty, preferredTextFieldShade: ColorShade = Light,
+	          searchDelay: Duration = Duration.Zero)
+	         (optionsForInput: String => Seq[String])
+	         (implicit context: TextContext, scrollingContext: ScrollingContextLike,
+	          animationContext: AnimationContextLike, exc: ExecutionContext) = new TypeOrSearch(context,
+		optimalTextFieldWidth, addButtonText, addButtonIcon, selectButtonText, selectButtonIcon,
+		optimalSelectionAreaLength, textFieldPrompt, preferredTextFieldShade, searchDelay)(optionsForInput)
+}
+
 /**
   * A component with which the user may search and select from existing options or create a completely new option
   * @author Mikko Hilpinen
@@ -120,6 +155,17 @@ class TypeOrSearch
 	
 	// OTHER    --------------------------------
 	
+	/**
+	  * Removes a word from the list of selected words
+	  * @param word Word to remove
+	  */
+	def -=(word: String) = selectedItemsPointer.update { _.filterNot { _ == word } }
+	/**
+	  * Removes multiple words from the list of selected words
+	  * @param words Words to remove
+	  */
+	def --=(words: Set[String]) = selectedItemsPointer.update { _.filterNot(words.contains) }
+	
 	private def makeSelectionButton(currentItem: => String) = parentContext.forCustomColorButtons(itemButtonColor)
 		.use { implicit c =>
 			selectButtonIcon match
@@ -146,8 +192,11 @@ class TypeOrSearch
 			else
 				old :+ item
 		}
-		// Removes the selected item from displayed items
-		manager.content = manager.content.filterNot { _ == item }
+		// Removes the selected item from displayed items or resets the search
+		if (textField.value.nonEmpty)
+			textField.clear()
+		else
+			manager.content = manager.content.filterNot { _ == item }
 	}
 	
 	private def onAddButtonPressed() =
@@ -164,7 +213,7 @@ class TypeOrSearch
 	{
 		// ATTRIBUTES   ------------------------
 		
-		private val label = ItemLabel.contextual(initialItem)(parentContext)
+		private val label = ItemLabel.contextual(initialItem)(parentContext.expandingToRight)
 		private val view = Stack.buildRowWithContext(layout = Center, isRelated = true) { s =>
 			s += label
 			s += makeSelectionButton(content)

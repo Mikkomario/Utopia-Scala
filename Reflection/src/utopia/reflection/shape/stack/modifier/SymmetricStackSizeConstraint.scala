@@ -10,7 +10,7 @@ import utopia.reflection.shape.stack.{StackLength, StackSize}
 object SymmetricStackSizeConstraint extends StackSizeModifier
 {
 	override def apply(size: StackSize) = {
-		val sides = size.components
+		val sides = size.dimensions2D
 		val min = sides.map {_.min}.max
 		val optimal = sides.map {_.optimal}.max
 		val max = sides.flatMap {_.max}.minOption
