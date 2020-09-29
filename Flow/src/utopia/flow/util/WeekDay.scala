@@ -1,6 +1,6 @@
 package utopia.flow.util
 
-import java.time.{DayOfWeek, Period}
+import java.time.{DayOfWeek, LocalDate, Period}
 
 import scala.language.implicitConversions
 
@@ -92,7 +92,18 @@ object WeekDay
 {
 	// ATTRIBUTES	--------------------
 	
+	/**
+	  * All week days from monday to sunday
+	  */
 	val values = Vector[WeekDay](Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday)
+	
+	
+	// COMPUTED	------------------------
+	
+	/**
+	  * @return Current week day (in local calendar)
+	  */
+	def current(): WeekDay = LocalDate.now().getDayOfWeek
 	
 	
 	// IMPLICIT	------------------------
@@ -103,10 +114,28 @@ object WeekDay
 	
 	// OTHER	------------------------
 	
-	def forIndex(dayIndex: Int) = values((dayIndex - 1) % 7)
+	/**
+	  * @param dayIndex Week day index where monday is 1 and sunday is 7
+	  * @return Weekday matching specified index
+	  */
+	def forIndex(dayIndex: Int) =
+	{
+		if (dayIndex > 0)
+			values((dayIndex - 1) % 7)
+		else
+			values(7 + ((dayIndex - 1) % 7))
+	}
 	
+	/**
+	  * @param startDay First week day to return
+	  * @return An infinite iterator that iterates over weekdays
+	  */
 	def iterate(startDay: WeekDay = Monday) = Iterator.iterate(startDay) { _.next }
 	
+	/**
+	  * @param startDay First week day to return
+	  * @return An infinite iterator that iterates over weekdays in reverse order
+	  */
 	def reverseIterate(startDay: WeekDay = Sunday) = Iterator.iterate(startDay) { _.previous }
 	
 	
@@ -115,63 +144,49 @@ object WeekDay
 	object Monday extends WeekDay
 	{
 		override val index = 1
-		
 		override def toJava = DayOfWeek.MONDAY
-		
 		override def toString = "Monday"
 	}
 	
 	object Tuesday extends WeekDay
 	{
 		override val index = 2
-		
 		override def toJava = DayOfWeek.TUESDAY
-		
 		override def toString = "Tuesday"
 	}
 	
 	object Wednesday extends WeekDay
 	{
 		override val index = 3
-		
 		override def toJava = DayOfWeek.WEDNESDAY
-		
 		override def toString = "Wednesday"
 	}
 	
 	object Thursday extends WeekDay
 	{
 		override val index = 4
-		
 		override def toJava = DayOfWeek.THURSDAY
-		
 		override def toString = "Thursday"
 	}
 	
 	object Friday extends WeekDay
 	{
 		override val index = 5
-		
 		override def toJava = DayOfWeek.FRIDAY
-		
 		override def toString = "Friday"
 	}
 	
 	object Saturday extends WeekDay
 	{
 		override val index = 6
-		
 		override def toJava = DayOfWeek.SATURDAY
-		
 		override def toString = "Saturday"
 	}
 	
 	object Sunday extends WeekDay
 	{
 		override val index = 7
-		
 		override def toJava = DayOfWeek.SUNDAY
-		
 		override def toString = "Sunday"
 	}
 }

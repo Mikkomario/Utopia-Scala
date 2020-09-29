@@ -187,7 +187,27 @@ object TimeExtensions
 		/**
 		  * @return This duration in seconds, but with double precision (converted from nanoseconds)
 		  */
-		def toPreciseSeconds = toPreciseMillis / 1000
+		def toPreciseSeconds = toPreciseMillis / 1000.0
+		
+		/**
+		  * @return This duration in minutes, but with double precision (converted from nanoseconds)
+		  */
+		def toPreciseMinutes = toPreciseSeconds / 60.0
+		
+		/**
+		  * @return This duration in hours, but with double precision (converted from nanoseconds)
+		  */
+		def toPreciseHours = toPreciseMinutes / 60.0
+		
+		/**
+		  * @return This duration in days, but with double precision (converted from nanoseconds)
+		  */
+		def toPreciseDays = toPreciseHours / 24.0
+		
+		/**
+		  * @return This duration in weeks, but with double precision (converted from nanoseconds)
+		  */
+		def toPreciseWeeks = toPreciseDays / 7.0
 		
 		/**
 		  * @return Describes this duration in a suitable unit and precision
@@ -195,7 +215,7 @@ object TimeExtensions
 		def description =
 		{
 			val seconds = toPreciseSeconds
-			if (seconds < 0.1)
+			if (seconds.abs < 0.1)
 			{
 				val millis = toPreciseMillis
 				if (millis < 0.1)
@@ -205,13 +225,32 @@ object TimeExtensions
 				else
 					s"${millis.toInt.toString} millis"
 			}
-			else if (seconds >= 120)
+			else if (seconds.abs >= 120)
 			{
 				val hoursPart = (seconds / 3600).toInt
 				val minutesPart = ((seconds % 3600) / 60).toInt
 				val secondsPart = (seconds % 60).toInt
 				
-				if (hoursPart > 0)
+				if (hoursPart.abs > 72)
+				{
+					if (hoursPart.abs > 504)
+						f"$toPreciseWeeks%1.2f weeks"
+					else
+					{
+						val hours = toPreciseHours
+						val daysPart = (hours / 24.0).toInt
+						val dayHoursPart = hours % 24
+						if (dayHoursPart >= 23.995)
+							s"${daysPart + 1} days"
+						else if (dayHoursPart <= -23.995)
+							s"${daysPart - 1} days"
+						else if (dayHoursPart.abs >= 0.005)
+							f"$daysPart days $dayHoursPart%1.2f hours"
+						else
+							s"$daysPart days"
+					}
+				}
+				else if (hoursPart != 0)
 					s"$hoursPart h $minutesPart min"
 				else
 					s"$minutesPart min $secondsPart s"
@@ -348,8 +387,13 @@ object TimeExtensions
 		def next(weekDay: WeekDay, includeSelf: Boolean = false) =
 		{
 			val current = this.weekDay
-			if (includeSelf && current == weekDay)
-				d
+			if (current == weekDay)
+			{
+				if (includeSelf)
+					d
+				else
+					this + 1.weeks
+			}
 			else
 				this + (weekDay - current)
 		}
@@ -364,8 +408,13 @@ object TimeExtensions
 		def previous(weekDay: WeekDay, includeSelf: Boolean = false) =
 		{
 			val current = this.weekDay
-			if (includeSelf && current == weekDay)
-				d
+			if (current == weekDay)
+			{
+				if (includeSelf)
+					d
+				else
+					this - 1.weeks
+			}
 			else
 				this - (current - weekDay)
 		}
@@ -515,8 +564,8 @@ object TimeExtensions
 		// IMPLEMENTED	-----------------------
 		
 		// Uses some rounding in comparing (not exact with months vs days). 1 month is considered to be 30.44 days
-		override def compareTo(o: Period) = ((p.getYears * 12 + p.getMonths) * 30.44 -
-			((o.getYears * 12 + o.getMonths) * 30.44)).toInt
+		override def compareTo(o: Period) = ((p.getYears * 12 + p.getMonths) * 30.44 + p.getDays -
+			((o.getYears * 12 + o.getMonths) * 30.44 + o.getDays)).toInt
 	}
 	
 	implicit class TimeNumber[T](val i: T) extends AnyVal
@@ -589,4 +638,14 @@ object TimeExtensions
 	 * Converts a finite scala duration to a java duration
 	 */
 	implicit def scalaDurationToJavaDuration(duration: FiniteDuration): Duration = java.time.Duration.ofNanos(duration.toNanos)
+	
+	/**
+	  * Converts a time period (days + months + years)
+	  */
+	implicit def periodToDuration(period: Period): duration.Duration =
+	{
+		// NB: Not exact! Expects one year to be 12 months and one month to be 30.44 days
+		val days = (period.getYears * 12 + period.getMonths) * 30.44 + period.getDays
+		(days * 24).hours
+	}
 }

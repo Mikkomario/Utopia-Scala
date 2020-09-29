@@ -11,9 +11,18 @@
 - Added .getAndUpdate(...) to Volatile
 - Added .delayedBy(Duration) to Changing
 - Added .mapAsync(...), .tryMapAsync(...), .mapAsyncCatching(...) and .mapAsyncMerging(...) to Changing
+- Added .toPreciseMinutes, .toPreciseHours, .toPreciseDays and .toPreciseWeeks to Duration in TimeExtensions
+- Added .current() to WeekDay
+### Fixes
+- Fixed a bug in LocalDate.next(WeekDay) and LocalDate.previous(WeekDay) (returned same day even when 
+includeSelf-parameter was set to false)
+- Fixed a bug in period comparison (didn't compare day value)
+- Fixed a bug in WeekDay.forIndex(Int) (didn't accept 0 or negative values)
 ### Other Changes
 - Exceptions thrown by Loop.runOnce() implementations are now caught and printed, not propagated further.
 - CsvReader now removes '-characters from the beginnings of columns, if present
+- Changed Duration.description behavior when dealing with over 72 hour durations
+- Added implicit conversion from Period to Duration (activated by importing TimeExtensions._)
 
 ## v1.8
 ### Scala
