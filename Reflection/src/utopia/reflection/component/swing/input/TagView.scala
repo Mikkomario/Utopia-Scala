@@ -10,7 +10,7 @@ import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.display.{Refreshable, RefreshableWithPointer}
 import utopia.reflection.container.stack.StackLayout.Center
-import utopia.reflection.container.swing.layout.multi.{AnimatedCollectionView, Stack}
+import utopia.reflection.container.swing.layout.multi.{CollectionView, Stack}
 import utopia.reflection.container.swing.layout.wrapper.TagFraming
 import utopia.reflection.controller.data.ContainerContentDisplayer
 import utopia.reflection.image.SingleColorIcon
@@ -101,14 +101,14 @@ class TagView(parentContext: TextContext, rowSplitThreshold: Double, removeIcon:
 	// ATTRIBUTES   ----------------------------
 	
 	private val view = parentContext.use { implicit c =>
-		AnimatedCollectionView.contextual[TagLabel](X, rowSplitThreshold) }
+		CollectionView.contextual[TagLabel](X, rowSplitThreshold) }
 	ContainerContentDisplayer.forImmutableStates(view, contentPointer) { _._1 == _._1 } { case (text, color) =>
 		new TagLabel(text, color) }
 	
 	
 	// IMPLEMENTED  ----------------------------
 	
-	override protected def wrapped: AnimatedCollectionView[_] = view
+	override protected def wrapped: CollectionView[_] = view
 	
 	
 	// OTHER    --------------------------------

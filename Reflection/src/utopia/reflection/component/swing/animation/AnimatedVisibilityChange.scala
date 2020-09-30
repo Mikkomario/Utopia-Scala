@@ -36,10 +36,8 @@ object AnimatedVisibilityChange
 				   transition: VisibilityChange = Appearing, finalSize: Option[Size] = None)
 				  (implicit context: AnimationContextLike) =
 	{
-		val c = new AnimatedVisibilityChange(original, transitionAxis, transition, context.animationDuration,
+		new AnimatedVisibilityChange(original, transitionAxis, transition, context.animationDuration,
 			finalSize, context.maxAnimationRefreshRate, context.useFadingInAnimations)
-		context.actorHandler += c
-		c
 	}
 }
 

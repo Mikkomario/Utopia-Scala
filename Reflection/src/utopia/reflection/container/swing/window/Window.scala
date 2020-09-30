@@ -2,7 +2,6 @@ package utopia.reflection.container.swing.window
 
 import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter, WindowEvent}
 
-import javax.swing.SwingUtilities
 import utopia.flow.async.{VolatileFlag, VolatileOption}
 import utopia.flow.datastructure.mutable.Lazy
 import utopia.genesis.color.Color
@@ -24,6 +23,7 @@ import utopia.reflection.event.{ResizeListener, StackHierarchyListener}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
+import utopia.reflection.util.AwtEventThread
 
 import scala.concurrent.Promise
 import scala.jdk.CollectionConverters.SeqHasAsJava
@@ -429,11 +429,10 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
     def requestFocus() =
     {
         if (!isFocusedWindow)
-            SwingUtilities.invokeLater(() =>
-            {
+            AwtEventThread.async {
                 component.toFront()
                 component.repaint()
-            })
+            }
     }
     
     

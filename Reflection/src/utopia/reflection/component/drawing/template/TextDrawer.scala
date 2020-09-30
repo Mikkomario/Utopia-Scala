@@ -1,6 +1,5 @@
 package utopia.reflection.component.drawing.template
 
-import utopia.genesis.shape.Axis.X
 import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.immutable.TextDrawContext

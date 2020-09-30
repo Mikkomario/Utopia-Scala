@@ -33,6 +33,7 @@ object TypeOrSearchTest extends App
 		- Disable animations or fix label animation (now too wide)
 		- Make animations in tag view optional
 		- Display add prompt when not content to search
+		- Button size in tags is not correct
 	 */
 	var words = Vector("Aamu", "Apina", "Banana", "David", "Johnson", "Clear", "Cost", "Calculated", "Oregano",
 		"Voisilmä", "Namu", "Kolibri", "Korianteri", "Salmiakki", "Vanukas", "Vapaamatkustaja", "Tuhatjalkainen",
@@ -59,4 +60,9 @@ object TypeOrSearchTest extends App
 	val frame = Frame.windowed(content, "Type or Search Test", Program)
 	
 	new SingleFrameSetup(actorHandler, frame).start()
+	
+	/*
+	val testLoop = Loop(1.seconds) { println(AwtEventThread.debugString) }
+	testLoop.registerToStopOnceJVMCloses()
+	testLoop.startAsync()*/
 }

@@ -166,11 +166,10 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 		// Creates the transition
 		val transition = new AnimatedVisibilityChange(display, transitionAxis, target.transitionIn, duration,
 			None, maxRefreshRate, useFading)
-		actorHandler += transition
 		panel.set(transition)
 		
 		// Starts the transition in background
-		transition.start().flatMap { _ =>
+		transition.start(actorHandler).flatMap { _ =>
 			// At transition end, may start a new transition if the target state was changed during
 			// the first transition
 			if (targetState == target)

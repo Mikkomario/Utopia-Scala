@@ -111,10 +111,9 @@ class AnimatedSwitchPanel[C <: AwtStackable](initialContent: C, actorHandler: Ac
 	{
 		val transition = new Transition(ComponentToImage(from, size),
 			ComponentToImage(to, to.stackSize.optimal))
-		actorHandler += transition
 		panel.set(transition)
 		
-		transition.start().map { _ =>
+		transition.start(actorHandler).map { _ =>
 			currentContent = to
 			panel.set(to)
 			to

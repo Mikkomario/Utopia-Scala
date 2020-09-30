@@ -64,7 +64,7 @@ object TextFieldTest extends App
 				// Creates the fields
 				val (productField, amountField, priceField) = context.forTextComponents(Alignment.Left).withPromptFont(context.defaultFont * 0.8).forGrayFields.use { implicit fieldC =>
 					println(s"Field context bg = ${fieldC.containerBackground}, field BG = ${fieldC.buttonColor}, text color = ${fieldC.textColor}")
-					val productField = TextField.contextual(standardWidth, prompt = "Describe product")
+					val productField = TextField.contextualForStrings(standardWidth, prompt = "Describe product")
 					val amountField = TextField.contextualForPositiveInts(standardWidth / 2, prompt = "1-999 Too long a prompt")
 					val priceField = TextField.contextualForPositiveDoubles(standardWidth / 2, prompt = "€")
 					(productField, amountField, priceField)
@@ -89,8 +89,8 @@ object TextFieldTest extends App
 				productField.valuePointer.addListener { e => println(s"Product: ${e.newValue}") }
 				priceField.addEnterListener { p =>
 					val product = productField.value
-					val amount = amountField.intValue
-					val price = p.double
+					val amount = amountField.value
+					val price = p
 					
 					if (product.isDefined && amount.isDefined && price.isDefined)
 					{
@@ -99,7 +99,7 @@ object TextFieldTest extends App
 						priceField.clear()
 						productField.requestFocusInWindow()
 						
-						showPopup(priceField, s"${amount.get} x ${product.get} = ${amount.get * price.get} €")
+						showPopup(priceField, s"${amount.get} x $product = ${amount.get * price.get} €")
 					}
 					else
 						println("Please select product + amount + price")

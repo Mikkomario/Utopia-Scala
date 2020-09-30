@@ -2,13 +2,14 @@ package utopia.reflection.container.swing
 
 import java.awt.{Container, Graphics}
 
-import javax.swing.{JComponent, JPanel, SwingUtilities}
+import javax.swing.{JComponent, JPanel}
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.reflection.component.drawing.mutable.{CustomDrawable, CustomDrawableWrapper}
 import utopia.reflection.component.swing.template.{AwtComponentRelated, CustomDrawComponent, JWrapper}
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.container.template.MultiContainer
+import utopia.reflection.util.AwtEventThread
 
 /**
 * Panel is the standard container that holds other components in it (based on JPanel)
@@ -20,7 +21,7 @@ class Panel[C <: ComponentLike with AwtComponentRelated] extends MultiContainer[
 {
     // ATTRIBUTES    -------------------
     
-	private val panel = new CustomPanel()
+	private val panel = AwtEventThread.blocking { new CustomPanel() }
 	private var _components = Vector[C]()
 	
 	
@@ -36,14 +37,14 @@ class Panel[C <: ComponentLike with AwtComponentRelated] extends MultiContainer[
 	{
 	    _components = _components.inserted(component, index)
 		// Adds the component to the underlying panel in GUI thread
-		SwingUtilities.invokeLater(() => panel.add(component.component))
+		AwtEventThread.async { panel.add(component.component) }
 	}
 	
 	override protected def remove(component: C) =
 	{
 	    _components = components filterNot { _.equals(component) }
 		// Panel action is done in the GUI thread
-	    SwingUtilities.invokeLater(() => panel.remove(component.component))
+		AwtEventThread.async { panel.remove(component.component) }
 	}
 }
 

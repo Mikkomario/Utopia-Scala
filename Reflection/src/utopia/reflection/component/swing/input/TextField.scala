@@ -7,8 +7,9 @@ import javax.swing.JTextField
 import javax.swing.event.{DocumentEvent, DocumentListener}
 import javax.swing.text.{Document, PlainDocument}
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangeEvent, ChangeListener}
+import utopia.flow.event.Changing
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.shape.Axis.X
 import utopia.genesis.shape.shape2D.{Bounds, Insets, Point, Size}
@@ -19,7 +20,7 @@ import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.TextDrawer
-import utopia.reflection.component.template.input.InteractionWithPointer
+import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
 import utopia.reflection.component.swing.template.{CustomDrawComponent, JWrapper}
 import utopia.reflection.component.template.Focusable
@@ -29,9 +30,26 @@ import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.{stack, _}
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.{Font, Prompt, Regex}
+import utopia.reflection.util.AwtEventThread
 
 object TextField
 {
+	/**
+	  * Creates a new text field that is used for writing unfiltered strings
+	  * @param targetWidth Target width of the field
+	  * @param insideMargins Margins placed on each side of text
+	  * @param font Font used within this field
+	  * @param initialText The initially displayed text (default = empty)
+	  * @param prompt A prompt displayed when this field is empty (default = None)
+	  * @param textColor The text color used (default = 88% opacity black)
+	  * @return A new text field that returns values as is
+	  */
+	def forStrings(targetWidth: StackLength, insideMargins: StackSize, font: Font, initialText: String = "",
+				   prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
+				   alignment: Alignment = Alignment.Left) =
+		new TextField(targetWidth, insideMargins, font, initialText = initialText, prompt = prompt,
+			textColor = textColor, initialAlignment = alignment)({ _.getOrElse("") })
+	
 	/**
 	  * Creates a new text field that is used for writing positive integers
 	  * @param targetWidth Target width of the field
@@ -44,12 +62,11 @@ object TextField
 	  */
 	def forPositiveInts(targetWidth: StackLength, insideMargins: StackSize, font: Font, initialValue: Option[Int] = None,
 						prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
-						alignment: Alignment = Alignment.Left,
-						valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None)) =
+						alignment: Alignment = Alignment.Left) =
 	{
 		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.digit, 10),
-			initialValue.map { _.toString } getOrElse "", prompt, textColor, Some(Regex.numericPositive), alignment,
-			valuePointer)
+			initialValue.map { _.toString } getOrElse "", prompt, textColor,  alignment, Some(Regex.numericPositive))(
+			{ _.flatMap { _.int } })
 	}
 	
 	/**
@@ -63,11 +80,11 @@ object TextField
 	  * @return A new text field that formats values to integers
 	  */
 	def forInts(targetWidth: StackLength, insideMargins: StackSize, font: Font, initialValue: Option[Int] = None,
-				prompt: Option[Prompt] = None, textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-				valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None)) =
+				prompt: Option[Prompt] = None, textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left) =
 	{
 		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.numericParts, 11),
-			initialValue.map { _.toString } getOrElse "", prompt, textColor, Some(Regex.numeric), alignment, valuePointer)
+			initialValue.map { _.toString } getOrElse "", prompt, textColor, alignment, Some(Regex.numeric))(
+			{ _.flatMap { _.int } })
 	}
 	
 	/**
@@ -80,13 +97,14 @@ object TextField
 	  * @param textColor The text color used (default = 88% opacity black)
 	  * @return A new text field that formats values to positive doubles
 	  */
-	def forPositiveDoubles(targetWidth: StackLength, insideMargins: StackSize, font: Font, initialValue: Option[Double] = None,
+	def forPositiveDoubles(targetWidth: StackLength, insideMargins: StackSize, font: Font,
+						   initialValue: Option[Double] = None,
 						   prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
-						   alignment: Alignment = Alignment.Left,
-						   valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None)) =
+						   alignment: Alignment = Alignment.Left) =
 	{
 		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.decimalPositiveParts, 24),
-			initialValue.map { _.toString } getOrElse "", prompt, textColor, Some(Regex.decimalPositive), alignment, valuePointer)
+			initialValue.map { _.toString } getOrElse "", prompt, textColor, alignment, Some(Regex.decimalPositive))(
+			{ _.flatMap { _.double } })
 	}
 	
 	// TODO: A lot of WET WET here
@@ -103,37 +121,55 @@ object TextField
 	  */
 	def forDoubles(targetWidth: StackLength, insideMargins: StackSize, font: Font, initialValue: Option[Double] = None,
 				   prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
-				   alignment: Alignment = Alignment.Left,
-				   valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None)) =
+				   alignment: Alignment = Alignment.Left) =
 	{
 		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.decimalParts, 24),
-			initialValue.map { _.toString } getOrElse "", prompt, textColor, Some(Regex.decimal), alignment, valuePointer)
+			initialValue.map { _.toString } getOrElse "", prompt, textColor, alignment, Some(Regex.decimal))(
+			{ _.flatMap { _.double } })
 	}
 	
 	/**
 	  * Creates a new text field using contextual information
 	  * @param targetWidth The stack width for this field
-	  * @param document Document used for this field (default = plain document)
 	  * @param initialText Initially displayed text (default = no text)
 	  * @param prompt Prompt text displayed (default = empty = no prompt)
+	  * @param document Document used for this field (default = plain document)
 	  * @param resultFilter A regex used for transforming field content (default = None)
+	  * @param mapResult A function for mapping result (non-empty string) to desired type
 	  * @param context Component creation context
 	  * @return A new text field
 	  */
-	def contextual(targetWidth: StackLength, document: Document = new PlainDocument(), initialText: String = "",
-				   prompt: LocalizedString = LocalizedString.empty, resultFilter: Option[Regex] = None,
-				   valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None))
-				  (implicit context: ButtonContextLike) =
+	def contextual[A](targetWidth: StackLength, initialText: String = "",
+					  prompt: LocalizedString = LocalizedString.empty, document: Document = new PlainDocument(),
+					  resultFilter: Option[Regex] = None)
+					 (mapResult: Option[String] => A)
+					 (implicit context: ButtonContextLike) =
 	{
 		val field = new TextField(targetWidth, context.textInsets.total / 2, context.font, document,
 			initialText, prompt.notEmpty.map { Prompt(_, context.promptFont, context.hintTextColor) }, context.textColor,
-			resultFilter, context.textAlignment, valuePointer)
+			context.textAlignment, resultFilter)(mapResult)
 		field.background = context.buttonColor
 		field.setSelectionHighlight(if (context.colorScheme.secondary.contains(context.buttonColor))
 			context.colorScheme.primary else context.colorScheme.secondary)
 		field.addFocusHighlight(context.buttonColorHighlighted)
 		field
 	}
+	
+	/**
+	  * Creates a new text field using contextual information
+	  * @param targetWidth The stack width for this field
+	  * @param initialText Initially displayed text (default = no text)
+	  * @param prompt Prompt text displayed (default = empty = no prompt)
+	  * @param document Document used for this field (default = plain document)
+	  * @param resultFilter A regex used for transforming field content (default = None)
+	  * @param context Component creation context
+	  * @return A new text field
+	  */
+	def contextualForStrings(targetWidth: StackLength, initialText: String = "",
+							 prompt: LocalizedString = LocalizedString.empty, document: Document = new PlainDocument(),
+							 resultFilter: Option[Regex] = None)
+							(implicit context: ButtonContextLike) =
+		contextual(targetWidth, initialText, prompt, document, resultFilter) { _.getOrElse("") }
 	
 	/**
 	  * Creates a field that is used for writing positive integers. Uses component creation context.
@@ -144,11 +180,10 @@ object TextField
 	  * @return A new text field
 	  */
 	def contextualForPositiveInts(targetWidth: StackLength, initialValue: Option[Int] = None,
-	                              prompt: LocalizedString = LocalizedString.empty,
-								  valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None))
-								 (implicit context: ButtonContextLike) = contextual(targetWidth,
-		FilterDocument(Regex.digit, 10), initialValue.map { _.toString } getOrElse "", prompt, Some(Regex.numericPositive),
-		valuePointer)
+	                              prompt: LocalizedString = LocalizedString.empty)
+								 (implicit context: ButtonContextLike) =
+		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
+			FilterDocument(Regex.digit, 10), Some(Regex.numericPositive)) { _.flatMap { _.int } }
 	
 	/**
 	  * Creates a field that is used for writing positive or negative integers. Uses component creation context.
@@ -159,11 +194,10 @@ object TextField
 	  * @return A new text field
 	  */
 	def contextualForInts(targetWidth: StackLength, initialValue: Option[Int] = None,
-	                      prompt: LocalizedString = LocalizedString.empty,
-						  valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None))
-						 (implicit context: ButtonContextLike) = contextual(targetWidth,
-		FilterDocument(Regex.numericParts, 11), initialValue.map { _.toString } getOrElse "", prompt, Some(Regex.numeric),
-		valuePointer)
+	                      prompt: LocalizedString = LocalizedString.empty)
+						 (implicit context: ButtonContextLike) =
+		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
+			FilterDocument(Regex.numericParts, 11), Some(Regex.numeric)) { _.flatMap { _.int } }
 	
 	/**
 	  * Creates a field that is used for writing positive doubles. Uses component creation context.
@@ -174,11 +208,10 @@ object TextField
 	  * @return A new text field
 	  */
 	def contextualForPositiveDoubles(targetWidth: StackLength, initialValue: Option[Double] = None,
-									 prompt: LocalizedString = LocalizedString.empty,
-									 valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None))
-									(implicit context: ButtonContextLike) = contextual(targetWidth,
-		FilterDocument(Regex.decimalPositiveParts, 24), initialValue.map { _.toString } getOrElse "", prompt,
-		Some(Regex.decimalPositive), valuePointer)
+									 prompt: LocalizedString = LocalizedString.empty)
+									(implicit context: ButtonContextLike) =
+		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
+			FilterDocument(Regex.decimalPositiveParts, 24), Some(Regex.decimalPositive)) { _.flatMap { _.double } }
 	
 	/**
 	  * Creates a field that is used for writing positive or negative doubles. Uses component creation context.
@@ -189,11 +222,10 @@ object TextField
 	  * @return A new text field
 	  */
 	def contextualForDoubles(targetWidth: StackLength, initialValue: Option[Double] = None,
-	                         prompt: LocalizedString = LocalizedString.empty,
-							 valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None))
-							(implicit context: ButtonContextLike) = contextual(targetWidth,
-		FilterDocument(Regex.decimalParts, 24), initialValue.map { _.toString } getOrElse "", prompt,
-		Some(Regex.decimal), valuePointer)
+	                         prompt: LocalizedString = LocalizedString.empty)
+							(implicit context: ButtonContextLike) =
+		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
+			FilterDocument(Regex.decimalParts, 24), Some(Regex.decimal)) { _.flatMap { _.double } }
 }
 
 /**
@@ -207,29 +239,40 @@ object TextField
   * @param initialText The initially displayed text (default = "")
   * @param prompt The prompt for this field (default = None)
   * @param textColor The text color in this field (default = 88% opacity black)
+  * @param initialAlignment Alignment used for the text. Default = Left.
   * @param resultFilter Filter applied when querying results from this field (determines formatting on final text
   *                     result). Default = None
-  * @param initialAlignment Alignment used for the text. Default = Left.
-  * @param valuePointer Pointer for holding the current value in this field (default = new pointer)
+  * @param resultsParser A function that converts a non-empty string to a value
   */
 // TODO: Switch from margins to insets (also support proper positioning & border)
-class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, font: Font,
-				val document: Document = new PlainDocument(), initialText: String = "",
-				val prompt: Option[Prompt] = None, val textColor: Color = Color.textBlack,
-				resultFilter: Option[Regex] = None, initialAlignment: Alignment = Alignment.Left,
-				override val valuePointer: PointerWithEvents[Option[String]] = new PointerWithEvents(None))
-	extends JWrapper with CachingStackable with InteractionWithPointer[Option[String]] with Alignable with Focusable
+class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, font: Font,
+				   val document: Document = new PlainDocument(), initialText: String = "",
+				   prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
+				   initialAlignment: Alignment = Alignment.Left,
+				   resultFilter: Option[Regex] = None)(resultsParser: Option[String] => A)
+	extends JWrapper with CachingStackable with InputWithPointer[A, Changing[A]] with Alignable with Focusable
 		with CustomDrawableWrapper with StackLeaf
 {
 	// ATTRIBUTES	----------------------
 	
-	private val field = new CustomTextField()
+	private val _textPointer = new PointerWithEvents(initialText)
+	override val valuePointer = _textPointer.map { text =>
+		// Text is trimmed before mapping. Empty strings are treated as None
+		val base = text.trim.notEmpty
+		// Applies possible regex filtering and then converts the text into a value
+		resultsParser(resultFilter match
+		{
+			case Some(regex) => base.flatMap(regex.findFirstFrom)
+			case None => base
+		})
+	}
+	
+	private val field = AwtEventThread.blocking { new CustomTextField() }
 	private val defaultBorder = Border.square(1, textColor.timesAlpha(0.625))
 	
 	private var isDisplayingPrompt = initialText.isEmpty && prompt.isDefined
-	private var isUpdatingText = false
-	private var enterListeners = Vector[Option[String] => Unit]()
-	private var resultListeners = Vector[Option[String] => Unit]()
+	private var enterListeners = Vector[A => Unit]()
+	private var resultListeners = Vector[A => Unit]()
 	
 	private var _targetWidth = initialTargetWidth
 	
@@ -242,12 +285,11 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 	field.setDocument(document)
 	
 	setBorder(defaultBorder)
-	text = initialText
+	field.setText(initialText)
 	
 	document.addDocumentListener(InputListener)
 	field.addActionListener(EnterListener)
 	field.addFocusListener(FocusResultHandler)
-	valuePointer.addListener(ValueChangeListener)
 	
 	{
 		// TODO: Handle alignment better (take into account bottom & top alignments)
@@ -268,6 +310,11 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 	// COMPUTED	--------------------------
 	
 	/**
+	  * @return An immutable pointer to this field's current text
+	  */
+	def textPointer = _textPointer.view
+	
+	/**
 	  * @return The width (stack length) of this field
 	  */
 	def targetWidth = _targetWidth
@@ -283,35 +330,8 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 	/**
 	  * @return Current text in this field
 	  */
-	def text =
-	{
-		val t = field.getText
-		if (t == null) "" else t
-	}
-	def text_=(newText: String): Unit =
-	{
-		if (!isUpdatingText)
-		{
-			// Updates text field value
-			val raw = newText.trim
-			value = resultFilter.map { _.findFirstFrom(raw) }.getOrElse { if (raw.isEmpty) None else Some(raw) }
-			
-			isUpdatingText = true
-			field.setText(newText)
-			isUpdatingText = false
-		}
-	}
-	def text_=(newText: Option[String]): Unit = text_=(newText getOrElse "")
-	
-	/**
-	  * @return Current integer value in this field. None if the text couldn't be read as an integer
-	  */
-	def intValue = value.int
-	
-	/**
-	  * @return Current double value in this field. None if the text couldn't be read as a double
-	  */
-	def doubleValue = value.double
+	def text = _textPointer.value
+	def text_=(newText: String): Unit = AwtEventThread.async { field.setText(newText) }
 	
 	/**
 	  * @return Color currently used in this field's caret (cursor)
@@ -327,13 +347,6 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 	override protected def updateVisibility(visible: Boolean) = super[JWrapper].visible_=(visible)
 	
 	override def updateLayout() = ()
-	
-	// Empty strings and strings with only whitespaces are treated as None
-	override def value =
-	{
-		val raw = text.trim
-		resultFilter.map { _.findFirstFrom(raw) }.getOrElse { if (raw.isEmpty) None else Some(raw) }
-	}
 	
 	override def component: JTextField = field
 	
@@ -371,13 +384,13 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 	  * of the processed value of this text field
 	  * @param listener A listener
 	  */
-	def addEnterListener(listener: Option[String] => Unit) = enterListeners :+= listener
+	def addEnterListener(listener: A => Unit) = enterListeners :+= listener
 	/**
 	  * Adds a listener that will be informed when this field loses focus or the user presses enter inside this field.
 	  * Informs the listener of the processed value of this field.
 	  * @param listener A listener
 	  */
-	def addResultListener(listener: Option[String] => Unit) = resultListeners :+= listener
+	def addResultListener(listener: A => Unit) = resultListeners :+= listener
 	
 	/**
 	  * Adds focus highlighting to this text field. The highlighting will change text field background color when
@@ -403,13 +416,24 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 		field.setCaretColor(caretColor.toAwt)
 	}
 	
-	private def filter() =
+	// NB: Must be called in the Awt event thread
+	private def filterInAwtThread() =
 	{
 		val original = text
-		val filtered = resultFilter.map { _.findFirstFrom(original.trim) } getOrElse Some(original.trim)
-		val changed = filtered.filter { _ != original }
-		
-		changed.foreach(text_=)
+		val trimmed = original.trim
+		val filtered =
+		{
+			if (trimmed.isEmpty)
+				trimmed
+			else
+				resultFilter match
+				{
+					case Some(regex) => regex.findFirstFrom(trimmed).getOrElse("")
+					case None => trimmed
+				}
+		}
+		if (filtered != original)
+			field.setText(filtered)
 	}
 	
 	
@@ -420,7 +444,7 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 		// When enter is pressed, filters field value and informs listeners
 		override def actionPerformed(e: ActionEvent) =
 		{
-			filter()
+			filterInAwtThread()
 			if (enterListeners.nonEmpty || resultListeners.nonEmpty)
 			{
 				val result = value
@@ -430,12 +454,18 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 		}
 	}
 	
-	private object ValueChangeListener extends ChangeListener[Option[String]]
+	object FocusResultHandler extends FocusListener
 	{
-		override def onChangeEvent(event: ChangeEvent[Option[String]]) =
+		override def focusGained(e: FocusEvent) = ()
+		
+		override def focusLost(e: FocusEvent) =
 		{
-			if (!isUpdatingText)
-				text = event.newValue getOrElse ""
+			filterInAwtThread()
+			if (resultListeners.nonEmpty)
+			{
+				val result = value
+				resultListeners.foreach { _(result) }
+			}
 		}
 	}
 	
@@ -449,13 +479,8 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 		
 		private def handleInputChange() =
 		{
-			if (!isUpdatingText)
-			{
-				isUpdatingText = true
-				val raw = text.trim
-				value = resultFilter.map { _.findFirstFrom(raw) }.getOrElse { if (raw.isEmpty) None else Some(raw) }
-				isUpdatingText = false
-			}
+			// Updates pointer value, replaces null with an empty string
+			_textPointer.value = Option(field.getText).getOrElse("")
 			
 			// Updates prompt display status
 			val newPromptStatus = text.isEmpty && prompt.isDefined
@@ -469,52 +494,31 @@ class TextField(initialTargetWidth: StackLength, val insideMargins: StackSize, f
 	
 	private class PromptDrawer extends TextDrawer
 	{
+		// ATTRIBUTES	------------------------
+		
 		private val _insets = StackInsets.symmetric(insideMargins * 2)
 		
-		override def drawContext =
+		override val drawContext = prompt match
 		{
-			prompt match
-			{
-				case Some(p) => TextDrawContext(p.font, textColor.timesAlpha(0.66), insets = _insets)
-				case None => TextDrawContext(font, textColor)
-			}
-		}
-		
-		override def text =
-		{
-			if (isDisplayingPrompt)
-				prompt.map { _.text }.getOrElse(LocalizedString.empty)
-			else
-				LocalizedString.empty
+			case Some(p) => TextDrawContext(p.font, textColor.timesAlpha(0.66), insets = _insets)
+			case None => TextDrawContext(font, textColor)
 		}
 		
 		override val drawLevel = Normal
 		
-		/*
-		override def draw(drawer: Drawer, bounds: Bounds) =
+		
+		// IMPLEMENTED	-----------------------
+		
+		override def text =
 		{
 			if (isDisplayingPrompt)
-			{
-				prompt.foreach { p =>
-					drawer.clippedTo(bounds).withEdgeColor(textColor.timesAlpha(0.66)).drawText(p.text.string,
-						p.font.toAwt, bounds.topLeft + insideMargins.optimal)
+				prompt match
+				{
+					case Some(prompt) => prompt.text
+					case None => LocalizedString.empty
 				}
-			}
-		}*/
-	}
-	
-	object FocusResultHandler extends FocusListener
-	{
-		override def focusGained(e: FocusEvent) = ()
-		
-		override def focusLost(e: FocusEvent) =
-		{
-			filter()
-			if (resultListeners.nonEmpty)
-			{
-				val result = value
-				resultListeners.foreach { _(result) }
-			}
+			else
+				LocalizedString.empty
 		}
 	}
 	

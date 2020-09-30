@@ -56,7 +56,7 @@ class StackSpace(override val stackSize: StackSize) extends JWrapper with StackL
 {
 	// ATTRIBUTES	---------------------------
 	
-	val component = new EmptyJComponent
+	val component = EmptyJComponent()
 	
 	override val stackId = hashCode()
 	

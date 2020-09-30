@@ -5,13 +5,23 @@ import java.awt.Graphics
 import javax.swing.JLabel
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.reflection.component.swing.template.CustomDrawComponent
+import utopia.reflection.util.AwtEventThread
+
+object EmptyJComponent
+{
+	/**
+	  * Creates a new component (in the awt event thread)
+	  * @return A new EmptyJComponent
+	  */
+	def apply() = AwtEventThread.blocking { new EmptyJComponent() }
+}
 
 /**
   * This is an attempt for a light-weight swing component that can be used with custom drawing and/or spacing
   * @author Mikko Hilpinen
   * @since 14.3.2020, v1
   */
-class EmptyJComponent extends JLabel with CustomDrawComponent
+class EmptyJComponent private() extends JLabel with CustomDrawComponent
 {
 	// ATTRIBUTES   -----------------
 	

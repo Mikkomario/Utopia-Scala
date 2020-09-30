@@ -44,13 +44,13 @@ object ComponentToImage
 		if (component.isInVisibleHierarchy)
 		{
 			if (imageSize.isPositive)
-			{
-				val image = new BufferedImage(imageSize.width.toInt, imageSize.height.toInt, BufferedImage.TYPE_INT_ARGB)
-				val graphics = image.getGraphics
-				component.component.paint(graphics)
-				graphics.dispose()
-				Image.from(image)
-			}
+				AwtEventThread.blocking {
+					val image = new BufferedImage(imageSize.width.toInt, imageSize.height.toInt, BufferedImage.TYPE_INT_ARGB)
+					val graphics = image.getGraphics
+					component.component.paint(graphics)
+					graphics.dispose()
+					Image.from(image)
+				}
 			else
 				Image.empty
 		}
@@ -69,37 +69,39 @@ object ComponentToImage
 		// Prepares the image
 		if (imageSize.isPositive)
 		{
-			val image = new BufferedImage(imageSize.width.toInt, imageSize.height.toInt, BufferedImage.TYPE_INT_ARGB)
-			
-			// Draws the image using cell renderer panel. The panel is added to a temporary invisible frame
-			// because child components can't be properly painted otherwise
-			val testFrame = new Frame()
-			testFrame.setUndecorated(true)
-			testFrame.setBackground(Color.white.withAlpha(0.0).toAwt)
-			val cellRenderedPanel = new CellRendererPane
-			val boundsBefore = component.bounds
-			// Resizes the component and updates its contents if necessary
-			component match
-			{
-				case c: Stackable =>
-					c.size = imageSize
-					c.updateLayout()
-				case _ => ()
+			AwtEventThread.blocking {
+				val image = new BufferedImage(imageSize.width.toInt, imageSize.height.toInt, BufferedImage.TYPE_INT_ARGB)
+				
+				// Draws the image using cell renderer panel. The panel is added to a temporary invisible frame
+				// because child components can't be properly painted otherwise
+				val testFrame = new Frame()
+				testFrame.setUndecorated(true)
+				testFrame.setBackground(Color.white.withAlpha(0.0).toAwt)
+				val cellRenderedPanel = new CellRendererPane
+				val boundsBefore = component.bounds
+				// Resizes the component and updates its contents if necessary
+				component match
+				{
+					case c: Stackable =>
+						c.size = imageSize
+						c.updateLayout()
+					case _ => ()
+				}
+				cellRenderedPanel.add(component.component)
+				testFrame.add(cellRenderedPanel)
+				cellRenderedPanel.paintComponent(image.createGraphics(), component.component, cellRenderedPanel,
+					Bounds(Point.origin, imageSize).toAwt)
+				cellRenderedPanel.remove(component.component)
+				component match
+				{
+					case c: Stackable => c.bounds = boundsBefore
+					case _ => component.component.setBounds(boundsBefore.toAwt)
+				}
+				testFrame.dispose()
+				
+				// Returns wrapped image
+				Image.from(image)
 			}
-			cellRenderedPanel.add(component.component)
-			testFrame.add(cellRenderedPanel)
-			cellRenderedPanel.paintComponent(image.createGraphics(), component.component, cellRenderedPanel,
-				Bounds(Point.origin, imageSize).toAwt)
-			cellRenderedPanel.remove(component.component)
-			component match
-			{
-				case c: Stackable => c.bounds = boundsBefore
-				case _ => component.component.setBounds(boundsBefore.toAwt)
-			}
-			testFrame.dispose()
-			
-			// Returns wrapped image
-			Image.from(image)
 		}
 		else
 			Image.empty

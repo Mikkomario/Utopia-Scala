@@ -6,10 +6,11 @@ import utopia.flow.datastructure.mutable.Lazy
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.animation.Animation
 import utopia.genesis.handling.Actor
+import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.{Drawer, Fps}
-import utopia.inception.handling.{HandlerType, Mortal}
+import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.drawing.mutable.{CustomDrawable, CustomDrawableWrapper}
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
@@ -29,7 +30,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   * @since 17.4.2020, v1.2
   */
 trait AnimatedTransitionLike extends Stackable with ComponentWrapper with CustomDrawable
-	with Actor with StackLeaf with CustomDrawableWrapper with Mortal
+	with StackLeaf with CustomDrawableWrapper
 {
 	// ABSTRACT	------------------------------------
 	
@@ -97,9 +98,6 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 	
 	override def children = super[StackLeaf].children
 	
-	// Dies when animation is completed
-	override def isDead = _state == Finished
-	
 	override def updateLayout() = ()
 	
 	override def stackSize = cachedSize.get
@@ -107,31 +105,6 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 	override def resetCachedSize() = cachedSize.reset()
 	
 	override def stackId = hashCode()
-	
-	override def act(duration: FiniteDuration) =
-	{
-		// Advances the animation, may also finish transition and/or trigger component update
-		passedDuration += duration
-		if (passedDuration >= this.duration)
-		{
-			_state = Finished
-			passedDuration = this.duration
-			completionPromise.success(())
-			cachedImages.reset()
-			revalidate()
-			repaint()
-		}
-		else if (passedDuration > nextUpdateThreshold)
-		{
-			nextUpdateThreshold = passedDuration + maxRefreshRate.interval
-			cachedImages.reset()
-			revalidate()
-			repaint()
-		}
-	}
-	
-	// Only allows handling if in progress of change
-	override def allowsHandlingFrom(handlerType: HandlerType) = _state == Ongoing
 	
 	
 	// OTHER	---------------------------------
@@ -146,12 +119,13 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 	  * Starts this transition progress
 	  * @return A future of transition completion
 	  */
-	def start() =
+	def start(actorHandler: ActorHandler) =
 	{
 		if (_state == NotStarted)
 		{
 			// Starts transition & revalidation loop
 			_state = Ongoing
+			actorHandler += new Animator(actorHandler)
 			revalidate()
 		}
 		completionPromise.future
@@ -167,6 +141,32 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			cachedImages.get.foreach { _.withSize(bounds.size, preserveShape = false).drawWith(drawer, bounds.position) }
+		}
+	}
+	
+	private class Animator(handler: ActorHandler) extends Actor with Handleable
+	{
+		override def act(duration: FiniteDuration) =
+		{
+			// Advances the animation, may also finish transition and/or trigger component update
+			passedDuration += duration
+			if (passedDuration >= AnimatedTransitionLike.this.duration)
+			{
+				_state = Finished
+				handler -= this
+				passedDuration = AnimatedTransitionLike.this.duration
+				completionPromise.success(())
+				cachedImages.reset()
+				revalidate()
+				repaint()
+			}
+			else if (passedDuration > nextUpdateThreshold)
+			{
+				nextUpdateThreshold = passedDuration + maxRefreshRate.interval
+				cachedImages.reset()
+				revalidate()
+				repaint()
+			}
 		}
 	}
 }

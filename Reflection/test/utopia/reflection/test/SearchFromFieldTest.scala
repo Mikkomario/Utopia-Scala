@@ -27,16 +27,13 @@ object SearchFromFieldTest extends App
 	import TestContext._
 	
 	val searchImage = Image.readFrom("test-images/arrow-back-48dp.png").map { _.withColorOverlay(Color.white) }
-	val searchPointer = new PointerWithEvents[Option[String]](None)
 	
 	val background = colorScheme.gray
 	val standardWidth = 320.any
 	val content = baseContext.inContextWithBackground(background).use { bc =>
 		val field = bc.forTextComponents(Alignment.Left).forPrimaryColorButtons.use { implicit fieldC =>
-			SearchFrom.contextualWithTextOnly[String](
-				SearchFrom.noResultsLabel("No results for '%s'", searchPointer),
-				"Search for string", standardWidth, searchIcon = searchImage.toOption,
-				searchFieldPointer = searchPointer)
+			SearchFrom.contextualWithTextOnly[String]("Search for string", standardWidth,
+				searchIcon = searchImage.toOption) { p => SearchFrom.noResultsLabel("No results for '%s'", p) }
 		}
 		
 		field.content = Vector("The first string", "Another piece of text", "More text", "Lorem ipsum", "Tramboliini",

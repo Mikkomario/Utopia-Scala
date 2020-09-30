@@ -5,14 +5,14 @@ import utopia.flow.event.Changing
 import utopia.reflection.color.ColorRole.{Gray, Secondary}
 import utopia.reflection.color.ColorShade
 import utopia.reflection.color.ColorShade.Light
-import utopia.reflection.component.context.{AnimationContextLike, BaseContextLike, ScrollingContextLike, TextContext}
+import utopia.reflection.component.context.{AnimationContextLike, ScrollingContextLike, TextContext}
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.swing.button.{FramedImageButton, ImageAndTextButton, ImageButton, TextButton}
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.display.{PoolWithPointer, Refreshable}
 import utopia.reflection.container.stack.StackLayout.Center
-import utopia.reflection.container.swing.layout.multi.{AnimatedStack, Stack}
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.reflection.image.SingleColorIcon
@@ -98,7 +98,7 @@ class TypeOrSearch
 	private val itemButtonColor = parentContext.colorScheme.secondary.bestAgainst(
 		Vector(parentContext.containerBackground, selectionColor))
 	
-	private val textField = TextField.contextual(optimalTextFieldWidth.any.expanding,
+	private val textField = TextField.contextualForStrings(optimalTextFieldWidth.any.expanding,
 		prompt = textFieldPrompt)(parentContext.forButtons(Gray, preferredTextFieldShade))
 	private val addButton = parentContext.forPrimaryColorButtons.use { implicit c =>
 		val button = addButtonIcon match
@@ -115,11 +115,7 @@ class TypeOrSearch
 		button.registerAction(onAddButtonPressed)
 		button
 	}
-	private val optionsStack =
-	{
-		implicit val c: BaseContextLike = parentContext
-		AnimatedStack.contextualColumn[Display](cap = margin, itemsAreRelated = true)
-	}
+	private val optionsStack = Stack.column[Display](parentContext.relatedItemsStackMargin, margin)
 	private val manager = ContainerSelectionManager.forStatelessItems[String, Display](optionsStack,
 		new BackgroundDrawer(selectionColor)) { new Display(_) }
 	private val view =
@@ -139,12 +135,30 @@ class TypeOrSearch
 	
 	// Updates selectable values when search field content updates (possibly delayed)
 	(if (searchDelay > Duration.Zero) textField.valuePointer.delayedBy(searchDelay) else textField.valuePointer)
-		.mapAsync[Seq[String]](Vector()) { s => optionsForInput(s.getOrElse("")) }
-		.addListener { event =>
+		.mapAsync[Seq[String]](Vector())(optionsForInput).addListener { event =>
+			println("Updating list of selectable items")
 			// Won't include already selected items
 			val selected = selectedItemsPointer.value
-			manager.content = event.newValue.toVector.filterNot(selected.contains)
+			println(s"Now selected: [${selected.mkString(", ")}]")
+			val newContent = event.newValue.toVector.filterNot(selected.contains)
+			println(s"New list: [$newContent]")
+			manager.content = newContent
+			println("Selectable items updated")
 		}
+	
+	// Submits a new item on enter press
+	textField.addEnterListener { text =>
+		manager.selected match
+		{
+			case Some(selected) => onItemSelected(selected)
+			case None =>
+				if (!text.isEmpty)
+					onItemSelected(text)
+		}
+	}
+	
+	manager.enableKeyHandling(parentContext.actorHandler, listenEnabledCondition = Some(() => textField.isInFocus))
+	manager.enableMouseHandling(consumeEvents = false)
 	
 	
 	// IMPLEMENTED  ----------------------------
@@ -193,16 +207,17 @@ class TypeOrSearch
 				old :+ item
 		}
 		// Removes the selected item from displayed items or resets the search
-		if (textField.value.nonEmpty)
-			textField.clear()
-		else
+		if (textField.value.isEmpty)
 			manager.content = manager.content.filterNot { _ == item }
+		else
+			textField.clear()
 	}
 	
 	private def onAddButtonPressed() =
 	{
-		textField.value.foreach { item => onItemSelected(item) }
-		textField.clear()
+		val newItem = textField.value
+		if (!newItem.isEmpty)
+			onItemSelected(newItem)
 		textField.requestFocusInWindow()
 	}
 	

@@ -46,8 +46,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 	{
         threads.update
         {
-            current => 
-                
+            current =>
                 val filtered = current.filterNot { _.isEnded }
                 
                 // First checks if any of the existing threads accepts the task
@@ -102,6 +101,7 @@ private class WorkerThread(name: String, val maxIdleDuration: Duration, initialT
     // ATTRIBUTES    ---------------------
     
     private val ended = new VolatileFlag()
+    // Some(...) when accepting a new task, None when not accepting
     private val waitingTask = VolatileOption[Promise[Runnable]]()
     
     private var nextTask = initialTask
@@ -137,7 +137,7 @@ private class WorkerThread(name: String, val maxIdleDuration: Duration, initialT
             else
             {
                 // Otherwise performs the task (caches errors)
-                Try(next.get.run()).failure.foreach(errorHandler)
+                Try { next.get.run() }.failure.foreach(errorHandler)
                 
                 // Takes the next task right away, if one is available
                 nextTask = getWaitingTask()

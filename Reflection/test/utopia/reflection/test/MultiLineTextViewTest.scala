@@ -33,8 +33,8 @@ object MultiLineTextViewTest extends App
 		// Creates controls to bottom
 		val bottomRow = bc.forGrayFields.use { implicit fieldContext =>
 			// Creates text input
-			val textInput = TextField.contextual(standardWidth, prompt = "Type your own text and press enter")
-			textInput.addEnterListener { _.foreach { s => textView.text = (s: LocalString).localizationSkipped } }
+			val textInput = TextField.contextualForStrings(standardWidth, prompt = "Type your own text and press enter")
+			textInput.addEnterListener { s => textView.text = (s: LocalString).localizationSkipped }
 			
 			val alignSelect = JDropDownWrapper.contextual("Select Alignment", initialChoices = Alignment.values)
 			alignSelect.selectOne(Alignment.Left)

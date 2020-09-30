@@ -10,6 +10,8 @@ of a function action
 - Renamed component .isVisible (getter & setter) to .visible
 - TextField.contextual constructor parameter prompt is now a LocalizedString instead of an Option and an empty string 
 represents the previous None value.
+- Multiple breaking changes to TextField
+- AnimatedVisibilityChange no longer extends Actor and now accepts an ActorHandler in .start(...)
 ### New Features
 - Added LoadingView and LoadingWindow
     - Includes a new ProgressState class for representing background process progress
@@ -22,6 +24,9 @@ represents the previous None value.
 - Added TagFraming class which wraps a component in rounded frames
 - Added TagView component for displaying word tags
 - Added TypeOrSearch component for writing or selecting words
+- Added AwtEventThread class for performing tasks inside the ui thread
+- Added ViewLabel which behaves like an ItemLabel, except that it only displays the result of a changing item and 
+doesn't provide a mutable interface
 ### New Methods
 - Added && and map functions to StackLengthModifier and StackSizeModifier
 - Added .isClosed to Window
@@ -35,6 +40,7 @@ represents the previous None value.
 - Added .map(...) to ColorSet
 - Added a new variation of .forButtons(...) to TextContext
 - Added a new constructor variation to ItemLabel
+- Added a new CollectionView constructor
 ### Deprecations
 - Deprecated StackSize.components in favor of StackSize.dimensions
 ### Fixes
@@ -49,6 +55,7 @@ in undecorated windows and may get disabled by the OS.
 - Fixed priority handling when combining stack lengths
     - Current logic may choose the smaller optimal length if the larger length allows it via priority
 - Fixed StackSize.limitedTo(Size) to primarily affect the maximum size only
+- Many UI-affecting changes are now specifically performed in the awt event thread
 ### Other Changes
 - Frame.title and Dialog.title now default to empty strings in constructors
 - MultiLineTextView now extends AwtContainerRelated
