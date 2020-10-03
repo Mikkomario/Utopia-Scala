@@ -137,14 +137,9 @@ class TypeOrSearch
 	// Updates selectable values when search field content updates (possibly delayed)
 	(if (searchDelay > Duration.Zero) textField.valuePointer.delayedBy(searchDelay) else textField.valuePointer)
 		.mapAsync[Seq[String]](Vector())(optionsForInput).addListener { event =>
-			println("Updating list of selectable items")
 			// Won't include already selected items
 			val selected = selectedItemsPointer.value
-			println(s"Now selected: [${selected.mkString(", ")}]")
-			val newContent = event.newValue.toVector.filterNot(selected.contains)
-			println(s"New list: [$newContent]")
-			manager.content = newContent
-			println("Selectable items updated")
+			manager.content = event.newValue.toVector.filterNot(selected.contains)
 		}
 	
 	// Submits a new item on enter press
