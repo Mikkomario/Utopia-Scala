@@ -21,11 +21,8 @@ class Label extends JWrapper with CustomDrawableWrapper
 {
 	// ATTRIBUTES	-----------------
 	
-	println("Creating underlying JLabel")
-	
 	private val _label = EmptyJComponent()
 	
-	println("Underlying JLabel created")
 	
 	// IMPLEMENTED	-----------------
 	

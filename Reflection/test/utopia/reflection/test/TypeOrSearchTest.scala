@@ -1,7 +1,9 @@
 package utopia.reflection.test
 
+import utopia.flow.async.Loop
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.TimeExtensions._
 import utopia.genesis.image.Image
 import utopia.reflection.color.ColorRole.Primary
 import utopia.reflection.component.context.TextContext
@@ -11,7 +13,7 @@ import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.util.SingleFrameSetup
+import utopia.reflection.util.{AwtEventThread, SingleFrameSetup}
 
 /**
   * Tests typeOrSearch and TagView components
@@ -21,6 +23,8 @@ import utopia.reflection.util.SingleFrameSetup
 object TypeOrSearchTest extends App
 {
 	import TestContext._
+	
+	AwtEventThread.debugMode = true
 	
 	val addIcon = new SingleColorIcon(Image.readFrom("Reflection/test-images/add.png").get)
 	val closeIcon = new SingleColorIcon(Image.readFrom("Reflection/test-images/close.png").get * 0.8)
@@ -61,8 +65,7 @@ object TypeOrSearchTest extends App
 	
 	new SingleFrameSetup(actorHandler, frame).start()
 	
-	/*
 	val testLoop = Loop(1.seconds) { println(AwtEventThread.debugString) }
 	testLoop.registerToStopOnceJVMCloses()
-	testLoop.startAsync()*/
+	testLoop.startAsync()
 }

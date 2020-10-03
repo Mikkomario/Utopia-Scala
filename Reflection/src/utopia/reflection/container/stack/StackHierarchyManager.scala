@@ -1,6 +1,5 @@
 package utopia.reflection.container.stack
 
-import javax.swing.SwingUtilities
 import utopia.flow.async.Loop
 import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.immutable.GraphEdge
@@ -9,7 +8,9 @@ import utopia.flow.util.WaitTarget.WaitDuration
 import utopia.flow.util.{Counter, WaitUtils}
 import utopia.genesis.util.Fps
 import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.util.AwtEventThread
 
+import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
@@ -30,7 +31,7 @@ object StackHierarchyManager
 	// ATTRIBUTES	---------------------
 	
 	private val indexCounter = new Counter(1)
-	// Stakable -> id, used for finding parents
+	// Stackable -> id, used for finding parents
 	private val ids = mutable.HashMap[Int, StackId]()
 	// Id -> Node -> Children, used for finding children
 	private val graph = mutable.HashMap[Int, Node]()
@@ -73,6 +74,49 @@ object StackHierarchyManager
 	
 	
 	// OTHER	-------------------------
+	
+	/**
+	  * Finds the component hierarchy above the specified component (inclusive)
+	  * @param component A component
+	  * @return All components that are above the specified component in this stack hierarchy, from the highest
+	  *         to the lowest. Ends with the specified component. Not empty.
+	  */
+	def upperHierarchyOf(component: Stackable) = ids.get(component.stackId) match
+	{
+		case Some(id) =>
+			// Case: Master component
+			if (id.isMasterId)
+				graph.get(id.masterId).map { _.content }.toVector
+			// Case: Child component
+			else
+				graph.get(id.masterId) match
+				{
+					case Some(masterNode) =>
+						// Collects the whole component path
+						val builder = new VectorBuilder[Stackable]()
+						builder += masterNode.content
+						var lastNode = masterNode
+						var remainingIds = id.parts.drop(1)
+						while (remainingIds.nonEmpty)
+						{
+							(lastNode/remainingIds.head).headOption match
+							{
+								case Some(nextNode) =>
+									builder += nextNode.content
+									lastNode = nextNode
+									remainingIds = remainingIds.drop(1)
+								// Case: Path was invalid / broken => adds the component to the end and finishes
+								case None =>
+									builder += component
+									remainingIds = Vector()
+							}
+						}
+						builder.result()
+					case None => Vector(component)
+				}
+		// Case: Unregistered component => treats it as an individual master component
+		case None => Vector(component)
+	}
 	
 	/**
 	  * Requests validation for the specified item
@@ -379,7 +423,7 @@ private class RevalidateLoop(val validationInterval: Duration) extends Loop
 	override def runOnce() =
 	{
 		// Performs the validation in Swing graphics thread
-		SwingUtilities.invokeAndWait(() => StackHierarchyManager.revalidate())
+		AwtEventThread.blocking { StackHierarchyManager.revalidate() }
 		
 		// May wait until next item needs validation
 		if (!StackHierarchyManager.waitsRevalidation)

@@ -12,7 +12,7 @@ import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.display.{PoolWithPointer, Refreshable}
 import utopia.reflection.container.stack.StackLayout.Center
-import utopia.reflection.container.swing.layout.multi.Stack
+import utopia.reflection.container.swing.layout.multi.{AnimatedStack, Stack}
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.reflection.image.SingleColorIcon
@@ -115,7 +115,8 @@ class TypeOrSearch
 		button.registerAction(onAddButtonPressed)
 		button
 	}
-	private val optionsStack = Stack.column[Display](parentContext.relatedItemsStackMargin, margin)
+	private val optionsStack = parentContext.use { implicit c => AnimatedStack.contextualColumn[Display](itemsAreRelated = true) }
+	// Stack.column[Display](parentContext.relatedItemsStackMargin, margin)
 	private val manager = ContainerSelectionManager.forStatelessItems[String, Display](optionsStack,
 		new BackgroundDrawer(selectionColor)) { new Display(_) }
 	private val view =

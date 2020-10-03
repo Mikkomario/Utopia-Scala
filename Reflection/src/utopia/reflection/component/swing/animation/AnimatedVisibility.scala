@@ -12,7 +12,7 @@ import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.reflection.event.{Visibility, VisibilityChange, VisibilityState}
 import utopia.reflection.event.Visibility.{Invisible, Visible}
-import utopia.reflection.util.ComponentCreationDefaults
+import utopia.reflection.util.{AwtEventThread, ComponentCreationDefaults}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -170,24 +170,26 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 		
 		// Starts the transition in background
 		transition.start(actorHandler).flatMap { _ =>
-			// At transition end, may start a new transition if the target state was changed during
-			// the first transition
-			if (targetState == target)
-			{
-				// Case: Target state reached
-				// Switches to original component or clears this panel
-				if (target.isVisible)
-					panel.set(display)
+			AwtEventThread.blocking {
+				// At transition end, may start a new transition if the target state was changed during
+				// the first transition
+				if (targetState == target)
+				{
+					// Case: Target state reached
+					// Switches to original component or clears this panel
+					if (target.isVisible)
+						panel.set(display)
+					else
+						panel.clear()
+					
+					Future.successful(target)
+				}
 				else
-					panel.clear()
-				
-				Future.successful(target)
-			}
-			else
-			{
-				// Case: Target state was switched
-				// Starts a new transition
-				startTransition(targetState)
+				{
+					// Case: Target state was switched
+					// Starts a new transition
+					startTransition(targetState)
+				}
 			}
 		}
 	}
