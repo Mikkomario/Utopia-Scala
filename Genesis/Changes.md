@@ -19,6 +19,8 @@ new mutable mouse event handlers.
 - Added new variations of .average(...) to RGB and added copies of those methods to Color
 - Added a new variation of .symmetric(...) to InsetsFactory
 - Added .toMap2D to TwoDimensional
+- Added .minAlong(Axis2D), .maxAlong(Axis2D) and overlapsWith(Bounds) to Bounds
+- Added .translated(Vector2DLike) to Drawer
 ### Fixes
 - Dimensional.toMap now properly returns a Map
 ### Other Changes

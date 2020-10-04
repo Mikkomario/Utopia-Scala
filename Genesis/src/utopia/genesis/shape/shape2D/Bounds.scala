@@ -13,6 +13,7 @@ import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
 import utopia.genesis.generic.GenesisValue._
 import utopia.genesis.shape.Axis._
+import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape3D.Vector3D
 import utopia.genesis.shape.template.VectorLike
 
@@ -215,6 +216,20 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     // OTHER METHODS    ----------------
     
     /**
+      * Finds the minimum coordinate along specified axis (assuming positive size of these bounds)
+      * @param axis Targeted axis
+      * @return The coordinate of the top-left corner of these bounds along the specified axis
+      */
+    def minAlong(axis: Axis2D) = position.along(axis)
+    
+    /**
+      * Finds the maximum coordinate along specified axis (assuming positive size of these bounds)
+      * @param axis Targeted axis
+      * @return The coordinate of the bottom-right corner of these bounds along the specified axis
+      */
+    def maxAlong(axis: Axis2D) = position.along(axis) + size.along(axis)
+    
+    /**
      * Creates a rounded rectangle based on this rectangle shape.
      * @param roundingFactor How much the corners are rounded. 0 Means that the corners are not
      * rounded at all, 1 means that the corners are rounded as much as possible, so that the ends of
@@ -251,6 +266,13 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
      * ignored
      */
     def contains(circle: Circle): Boolean = contains(circle.origin) && circleIntersection(circle).isEmpty
+    
+    /**
+      * @param bounds Another set of bounds
+      * @return Whether these bounds overlap with the other set of bounds
+      */
+    def overlapsWith(bounds: Bounds) = Axis2D.values.forall { axis =>
+        maxAlong(axis) > bounds.minAlong(axis) && bounds.maxAlong(axis) > minAlong(axis) }
     
     /**
      * Finds the intersection points between the edges of this rectangle and the provided circle

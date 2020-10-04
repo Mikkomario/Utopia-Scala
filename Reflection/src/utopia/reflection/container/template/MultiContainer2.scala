@@ -1,20 +1,20 @@
 package utopia.reflection.container.template
 
-import utopia.reflection.component.template.ComponentLike
+import utopia.reflection.component.template.ComponentLike2
 
 /**
   * A common trait for both mutable and immutable component containers / hierarchies
   * @author Mikko Hilpinen
-  * @since 13.3.2020, v1
+  * @since 4.10.2020, v2
   */
-trait ContainerLike[+C <: ComponentLike] extends ComponentLike
+trait MultiContainer2[+C <: ComponentLike2] extends ComponentLike2
 {
-	// ABSTRACT    ----------------
+	// ABSTRACT	-------------------
 	
 	/**
-	  * The current components in this container
+	  * @return Components within this container
 	  */
-	def components: Vector[C]
+	def components: Seq[C]
 	
 	
 	// COMPUTED    ----------------
@@ -37,7 +37,7 @@ trait ContainerLike[+C <: ComponentLike] extends ComponentLike
 	
 	// IMPLEMENTED	----------------
 	
-	override def toString = s"${getClass.getSimpleName}(${ components.mkString(", ") })"
+	override def children: Seq[ComponentLike2] = components
 	
-	override def children: Seq[ComponentLike] = components
+	override def toString = s"${getClass.getSimpleName}(${ components.mkString(", ") })"
 }

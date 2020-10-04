@@ -53,6 +53,11 @@ object ShapeTest extends App
     
     // Tests some other bounds methods
     assert(bounds1.bottomSlice(5) == Bounds(Point(0, 5), Size(20, 5)))
+    assert(!bounds1.overlapsWith(bounds2))
+    
+    val bounds3 = Bounds(Point(10, 0), Size(20, 10))
+    
+    assert(bounds3.overlapsWith(bounds1))
     
     println("Success!")
 }

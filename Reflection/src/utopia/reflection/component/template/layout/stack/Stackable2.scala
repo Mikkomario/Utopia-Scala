@@ -36,11 +36,6 @@ trait Stackable2 extends ComponentLike2
 	  */
 	def stackId: Int
 	
-	/**
-	  * Child components under this stackable instance (all of which should be stackable)
-	  */
-	override def children: Seq[Stackable2] = Vector()
-	
 	
 	// COMPUTED	---------------------
 	

@@ -4,7 +4,7 @@ import java.awt.{AlphaComposite, BasicStroke, Font, Graphics, Graphics2D, Image,
 import java.awt.geom.AffineTransform
 
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Bounds, Point, ShapeConvertible, Size, Transformation}
+import utopia.genesis.shape.shape2D.{Bounds, Point, ShapeConvertible, Size, Transformation, Vector2D, Vector2DLike}
 import utopia.flow.util.NullSafe._
 import utopia.genesis.shape.shape3D.Vector3D
 
@@ -232,15 +232,12 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
      */
     def transformed(transform: Transformation): Drawer = transformed(transform.toAffineTransform)
     
-    /*
-     * Creates a transformed copy of this drawer so that it reads from absolute world space and
-     * projects them differently on another absolute world space
-     * @param from The transformation with which the data is read
-     * @param to The transformation with which the data is projected (like in other transform
-     * methods)
-     */
-    //def transformed(from: Transformation, to: Transformation): Drawer =
-    //        transformed(from.toInvertedAffineTransform).transformed(to);
+    /**
+      * @param amount Amount of translation applied
+      * @return A copy of this drawer where the origin coordinates have been translated by the specified amount.
+      *         This translation is applied on top of existing transformations.
+      */
+    def translated(amount: Vector2DLike[_]) = transformed(Transformation.translation(amount))
     
     /**
      * Creates a new instance of this drawer with altered colours
