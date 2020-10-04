@@ -143,6 +143,13 @@ private class DelayedBoundsUpdate[C <: Stackable2](val source: C) extends Area w
     
     // IMPLEMENTED    -----------------
     
+    override def bounds = Bounds(position, size)
+    override def bounds_=(b: Bounds) =
+    {
+        position = b.position
+        size = b.size
+    }
+    
     override def position = nextPosition getOrElse source.position
     override def position_=(p: Point) = nextPosition = Some(p)
     

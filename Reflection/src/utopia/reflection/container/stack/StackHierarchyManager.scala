@@ -7,6 +7,7 @@ import utopia.flow.datastructure.mutable.GraphNode
 import utopia.flow.util.WaitTarget.WaitDuration
 import utopia.flow.util.{Counter, WaitUtils}
 import utopia.genesis.util.Fps
+import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.util.AwtEventThread
 
@@ -55,6 +56,12 @@ object StackHierarchyManager
 	{
 		s"[${graph.values.map(nodeToString).mkString(", ")}]"
 	}
+	
+	/**
+	  * @return Pulls an awt component from the registered components, provided that any are available
+	  */
+	def anyComponent = graph.valuesIterator.find { _.content.isInstanceOf[AwtComponentRelated] }
+		.map { _.asInstanceOf[AwtComponentRelated].component }
 	
 	private def nodeToString(node: Node): String =
 	{

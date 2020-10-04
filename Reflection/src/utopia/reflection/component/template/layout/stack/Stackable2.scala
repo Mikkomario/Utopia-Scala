@@ -29,13 +29,6 @@ trait Stackable2 extends ComponentLike2
 	  */
 	def resetCachedSize(): Unit
 	
-	/**
-	  * @return A unique identifier for this stackable instance. These id's are used in stack hierarchy to
-	  *         distinquish between items. If this stackable simply wraps another item, it should use the same id,
-	  *         otherwise the id should be unique (usually it is enough to return hashCode).
-	  */
-	def stackId: Int
-	
 	
 	// COMPUTED	---------------------
 	

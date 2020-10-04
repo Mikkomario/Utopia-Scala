@@ -16,3 +16,10 @@ import utopia.reflection.text.Font
   */
 case class TextDrawContext(font: Font, color: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
 						   insets: StackInsets = StackInsets.any)
+{
+	/**
+	  * @param other Another text draw context
+	  * @return Whether this context has different size-affecting qualities than the other context
+	  */
+	def hasSameDimensionsAs(other: TextDrawContext) = font == other.font && insets == other.insets
+}

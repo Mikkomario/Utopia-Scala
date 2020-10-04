@@ -1,4 +1,10 @@
 # Utopia Reflection - List of Changes
+## v2 (beta)
+### Breaking Changes
+- Area now leaves bounds implementation up to subclasses
+### New Methods
+- Added .hasSameDimensionsAs(TextDrawContext) to TextDrawContext
+
 ## v1.3 (beta)
 ### Breaking Changes
 - Moved some of the clases in utopia.reflection.shape -package to separate sub-packages

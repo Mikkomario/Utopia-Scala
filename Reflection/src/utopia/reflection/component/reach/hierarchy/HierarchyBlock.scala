@@ -1,6 +1,7 @@
-package utopia.reflection.component.reach
+package utopia.reflection.component.reach.hierarchy
 
 import utopia.flow.event.Changing
+import utopia.reflection.component.reach.template.ReachComponentLike
 
 /**
   * Used for representing individual components within a component hierarchy

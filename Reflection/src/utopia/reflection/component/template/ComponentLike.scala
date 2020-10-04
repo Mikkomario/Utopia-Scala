@@ -6,7 +6,7 @@ import utopia.genesis.color.Color
 import utopia.genesis.event._
 import utopia.genesis.handling.mutable._
 import utopia.genesis.handling.{KeyStateListener, KeyTypedListener, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
-import utopia.genesis.shape.shape2D.Point
+import utopia.genesis.shape.shape2D.{Bounds, Point}
 import utopia.inception.handling.Handleable
 import utopia.reflection.component.template.layout.Area
 import utopia.reflection.event.ResizeListener
@@ -109,6 +109,17 @@ trait ComponentLike extends Area
       *         is returned.
       */
     def absolutePosition: Point = parent.map { _.absolutePosition + position }.getOrElse(position)
+    
+    
+    // IMPLEMENTED  ---------------------
+    
+    override def bounds = Bounds(position, size)
+    
+    override def bounds_=(b: Bounds) =
+    {
+        position = b.position
+        size = b.size
+    }
     
     
     // OTHER    -------------------------

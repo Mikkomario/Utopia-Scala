@@ -1,18 +1,16 @@
-package utopia.reflection.component.reach
+package utopia.reflection.component.reach.hierarchy
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangeEvent, ChangeListener, Changing}
-import utopia.genesis.shape.shape2D.Vector2D
-import utopia.reflection.component.drawing.mutable.CustomDrawable
-import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
+import utopia.flow.event.{ChangeEvent, ChangeListener}
+import utopia.genesis.shape.shape2D.{Bounds, Point, Vector2D}
+import utopia.reflection.text.Font
 
 /**
   * Represents a sequence of components that forms a linear hierarchy
   * @author Mikko Hilpinen
   * @since 3.10.2020, v2
   */
-class ComponentHierarchy(topPointer: Changing[Option[AwtStackable]],
-						 blocks: Vector[HierarchyBlock])
+class ComponentHierarchy(top: HierarchyTop, blocks: Vector[HierarchyBlock])
 {
 	// ATTRIBUTES	----------------------
 	
@@ -34,7 +32,7 @@ class ComponentHierarchy(topPointer: Changing[Option[AwtStackable]],
 	/**
 	  * @return The window that contains this component hierarchy. None if not connected to a window.
 	  */
-	def parentWindow = topPointer.value.flatMap { _.parentWindow }
+	def parentWindow = top.canvas.parentWindow
 	
 	/**
 	  * @return A modifier used when calculating the position of the bottom component (outside this hierarchy)
@@ -46,8 +44,7 @@ class ComponentHierarchy(topPointer: Changing[Option[AwtStackable]],
 	/**
 	  * @return A modifier used for calculating the absolute position of the bottom component (not on this hierarchy)
 	  */
-	def absolutePositionModifier = topPointer.value.map { c =>
-		c.absolutePosition.toVector + positionToTopModifier }
+	def absolutePositionModifier = positionToTopModifier + top.canvas.absolutePosition
 	
 	
 	// OTHER	--------------------------
@@ -57,17 +54,49 @@ class ComponentHierarchy(topPointer: Changing[Option[AwtStackable]],
 	  */
 	def revalidate() =
 	{
-		// Resets cached stack sizes
-		blocks.reverseIterator.foreach { _.component.resetCachedSize() }
-		// Updates top component stack size & layout
-		topPointer.value.foreach { c => c.revalidate() }
+		// Won't revalidate non-linked components
+		val targetComponents = blocks.reverseIterator.takeWhile { _.isLinked }.toVector
+		targetComponents.foreach { _.component.resetCachedSize() }
+		if (targetComponents.size == blocks.size)
+			top.canvas.revalidate()
 	}
+	
+	/**
+	  * Repaints the whole component hierarchy (if linked)
+	  */
+	def repaintAll() = if (isLinked) top.canvas.repaint()
+	
+	/**
+	  * Repaints a sub-section of the bottom component (if linked to top)
+	  * @param area Area inside the bottom component
+	  */
+	def repaint(area: => Bounds) =
+	{
+		if (isLinked)
+			top.canvas.repaint(area + positionToTopModifier)
+	}
+	
+	/**
+	  * Repaints the bottom component
+	  */
+	def repaintBottom() = blocks.lastOption match
+	{
+		case Some(block) => repaint(Bounds(Point.origin, block.component.size))
+		case None => repaintAll()
+	}
+	
+	/**
+	  * @param font Font to use
+	  * @return Metrics for that font
+	  */
+	// TODO: Refactor this once component class hierarchy has been updated
+	def fontMetrics(font: Font) = top.canvas.component.getFontMetrics(font.toAwt)
 	
 	/**
 	  * @param block A hierarchy block to be appended to the end of this hierarchy chain
 	  * @return A hierarchy with specified block included
 	  */
-	def +(block: HierarchyBlock) = new ComponentHierarchy(topPointer, blocks :+ block)
+	def +(block: HierarchyBlock) = new ComponentHierarchy(top, blocks :+ block)
 	
 	
 	// NESTED	--------------------------
@@ -86,23 +115,21 @@ class ComponentHierarchy(topPointer: Changing[Option[AwtStackable]],
 		}
 		
 		
+		// INITIAL CODE	------------------
+		
+		top.attachedPointer.addListener { e => updateStatus(e.newValue) }
+		updateStatus()
+		
+		
 		// OTHER	----------------------
 		
-		def updateStatus() = pointer.value = TopListener.hasTop && blockListeners.forall { _.linked }
+		private def updateStatus(): Unit = updateStatus(top.attachedPointer.value)
+		
+		private def updateStatus(isTopLinked: Boolean) =
+			pointer.value = isTopLinked && blockListeners.forall { _.linked }
 		
 		
 		// NESTED	----------------------
-		
-		object TopListener extends ChangeListener[Option[Any]]
-		{
-			var hasTop = topPointer.value.isDefined
-			
-			override def onChangeEvent(event: ChangeEvent[Option[Any]]) =
-			{
-				hasTop = event.newValue.isDefined
-				updateStatus()
-			}
-		}
 		
 		class BlockListener(initialState: Boolean) extends ChangeListener[Boolean]
 		{

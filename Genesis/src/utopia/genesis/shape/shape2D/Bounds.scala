@@ -164,7 +164,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @param translation Translation applied to these bounds
       * @return A translated set of bounds
       */
-    def +(translation: Point) = translated(translation)
+    def +(translation: VectorLike[_]) = translated(translation)
     
     /**
       * @param insets Insets to add to these bounds
@@ -176,7 +176,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @param translation Translation applied to these bounds
       * @return A translated set of bounds
       */
-    def -(translation: Point) = translated(-translation)
+    def -[V <: VectorLike[V]](translation: V) = translated(-translation)
     
     /**
       * @param insets Insets to subtract from these bounds

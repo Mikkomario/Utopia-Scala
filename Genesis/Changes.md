@@ -26,6 +26,7 @@ new mutable mouse event handlers.
 ### Other Changes
 - Bounds and Point .toAwt conversion now rounds the double values to the closest integers
 - Direction1D now extends RichComparable
+- Bounds + -method now accepts VectorLike instead of only Point 
 
 ## v2.3
 ### Scala
