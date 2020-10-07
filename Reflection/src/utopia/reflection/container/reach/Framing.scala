@@ -4,7 +4,7 @@ import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
-import utopia.reflection.component.context.{BackgroundSensitive, ColorContextLike}
+import utopia.reflection.component.context.{BackgroundSensitive, ColorContext, ColorContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, RoundedBackgroundDrawer}
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
@@ -44,14 +44,13 @@ object Framing
 	  *                Also accepts component creation context.
 	  * @param context Component creation context affecting this framing (will be modified for contents)
 	  * @tparam C Type of wrapped component
-	  * @tparam C2 Type of component creation context used by the component construction function
 	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
 	  * @return A new framing and the produced content component
 	  */
-	def withBackground[C <: ReachComponentLike, R, C2, C1 <: BackgroundSensitive[C2]]
+	def withBackground[C <: ReachComponentLike, R, C1 <: BackgroundSensitive[ColorContext]]
 	(parentHierarchy: ComponentHierarchy, color: ComponentColor, insets: StackInsets,
 	 moreCustomDrawers: Vector[CustomDrawer] = Vector())
-	(content: (ComponentHierarchy, C2) => ComponentCreationResult[C, R])
+	(content: (ComponentHierarchy, ColorContext) => ComponentCreationResult[C, R])
 	(implicit context: C1) =
 		apply(parentHierarchy, insets, new BackgroundDrawer(color) +: moreCustomDrawers) { hierarchy =>
 			content(hierarchy, context.inContextWithBackground(color))
@@ -68,15 +67,15 @@ object Framing
 	  *                Also accepts component creation context.
 	  * @param context Component creation context affecting this framing (will be modified for contents)
 	  * @tparam C Type of wrapped component
-	  * @tparam C2 Type of component creation context used by the component construction function
 	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
 	  * @return A new framing and the produced content component
 	  */
-	def withBackgroundForRole[C <: ReachComponentLike, R, C2, C1 <: ColorContextLike with BackgroundSensitive[C2]]
+	def withBackgroundForRole[C <: ReachComponentLike, R, C1 <: ColorContextLike with BackgroundSensitive[ColorContext]]
 	(parentHierarchy: ComponentHierarchy, role: ColorRole, insets: StackInsets, preferredShade: ColorShade = Standard,
-	 moreCustomDrawers: Vector[CustomDrawer] = Vector())(content: (ComponentHierarchy, C2) => ComponentCreationResult[C, R])
+	 moreCustomDrawers: Vector[CustomDrawer] = Vector())
+	(content: (ComponentHierarchy, ColorContext) => ComponentCreationResult[C, R])
 	(implicit context: C1) =
-		withBackground[C, R, C2, C1](parentHierarchy, context.color(role, preferredShade), insets, moreCustomDrawers)(content)
+		withBackground[C, R, C1](parentHierarchy, context.color(role, preferredShade), insets, moreCustomDrawers)(content)
 	
 	/**
 	  * Creates a new framing that draws a rounded background
@@ -88,14 +87,13 @@ object Framing
 	  *                Also accepts component creation context.
 	  * @param context Component creation context affecting this framing (will be modified for contents)
 	  * @tparam C Type of wrapped component
-	  * @tparam C2 Type of component creation context used by the component construction function
 	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
 	  * @return A new framing and the produced content component
 	  */
-	def rounded[C <: ReachComponentLike, R, C2, C1 <: BackgroundSensitive[C2]]
+	def rounded[C <: ReachComponentLike, R, C1 <: BackgroundSensitive[ColorContext]]
 	(parentHierarchy: ComponentHierarchy, color: ComponentColor, insets: StackInsets,
 	 moreCustomDrawers: Vector[CustomDrawer] = Vector())
-	(content: (ComponentHierarchy, C2) => ComponentCreationResult[C, R])
+	(content: (ComponentHierarchy, ColorContext) => ComponentCreationResult[C, R])
 	(implicit context: C1) =
 	{
 		// The rounding amount is based on insets
@@ -120,15 +118,15 @@ object Framing
 	  *                Also accepts component creation context.
 	  * @param context Component creation context affecting this framing (will be modified for contents)
 	  * @tparam C Type of wrapped component
-	  * @tparam C2 Type of component creation context used by the component construction function
 	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
 	  * @return A new framing and the produced content component
 	  */
-	def roundedForRole[C <: ReachComponentLike, R, C2, C1 <: ColorContextLike with BackgroundSensitive[C2]]
+	def roundedForRole[C <: ReachComponentLike, R, C1 <: ColorContextLike with BackgroundSensitive[ColorContext]]
 	(parentHierarchy: ComponentHierarchy, role: ColorRole, insets: StackInsets, preferredShade: ColorShade = Standard,
-	 moreCustomDrawers: Vector[CustomDrawer] = Vector())(content: (ComponentHierarchy, C2) => ComponentCreationResult[C, R])
+	 moreCustomDrawers: Vector[CustomDrawer] = Vector())
+	(content: (ComponentHierarchy, ColorContext) => ComponentCreationResult[C, R])
 	(implicit context: C1) =
-		rounded[C, R, C2, C1](parentHierarchy, context.color(role, preferredShade), insets, moreCustomDrawers)(content)
+		rounded[C, R, C1](parentHierarchy, context.color(role, preferredShade), insets, moreCustomDrawers)(content)
 }
 
 /**
@@ -143,4 +141,12 @@ class Framing(override val parentHierarchy: ComponentHierarchy, override protect
 	// IMPLEMENTED	---------------------------
 	
 	override protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]) = ()
+	
+	override def updateLayout() =
+	{
+		super.updateLayout()
+		// TODO: Consider whether this is necessary or whether this can be accomplished in a more general way
+		//  (In stack hierarchy manager, the manager calls updateLayout, but in Reach that is unlikely to be the case)
+		content.updateLayout()
+	}
 }

@@ -351,6 +351,7 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
                 position = Point.origin
             
             size = stackSize.optimal
+            updateContentBounds()
         }
         else
         {
@@ -359,6 +360,7 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
             {
                 val oldSize = size
                 size = stackSize.optimal
+                updateContentBounds()
                 
                 val increase = size - oldSize
                 // Window movement is determined by resize alignment
@@ -392,7 +394,10 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
         stackSize.maxHeight.filter { _ < height }.foreach { height = _ }
         
         if (isUnderSized)
+        {
             size = size max stackSize.min
+            updateContentBounds()
+        }
     }
     
     /**

@@ -7,6 +7,8 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.VolatileOption
 import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.genesis.color.Color
+import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.{Bounds, Point}
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.mutable.CustomDrawable
@@ -16,7 +18,7 @@ import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.ReachComponentLike
 import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.Stackable
-import utopia.reflection.container.reach.{ComponentCreationResult, ComponentWrapResult}
+import utopia.reflection.container.reach.ComponentCreationResult
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.StackSize
 
@@ -53,6 +55,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	override var customDrawers = Vector[CustomDrawer]()
 	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
 	private var updateFinishedQueue = VolatileList[() => Unit]()
+	private var buffer = Image.empty
 	
 	private val panel = new CustomDrawPanel()
 	private val repaintNeed = VolatileOption[RepaintNeed](Full)
@@ -69,6 +72,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	
 	// Also requires a full repaint when size changes
 	addResizeListener { event =>
+		currentContent.foreach { _.size = event.newSize }
 		if (event.newSize.isPositive)
 			repaintNeed.setOne(Full)
 	}
@@ -93,10 +97,14 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	
 	override def component: JComponent with Container = panel
 	
+	// TODO: This is called too early (before size has even changed!)
 	override def updateLayout() =
 	{
 		// Updates content layout
-		currentContent.foreach { _.updateLayout() }
+		currentContent.foreach { c =>
+			// c.size = size
+			c.updateLayout()
+		}
 		// Performs the queued tasks
 		updateFinishedQueue.popAll().foreach { _() }
 	}
@@ -118,6 +126,13 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		repaintNeed.setOne(Full)
 		component.repaint()
 	}
+	
+	/*
+	override def revalidate() =
+	{
+		resetCachedSize()
+		super.revalidate()
+	}*/
 	
 	
 	// OTHER	------------------------------
@@ -169,44 +184,61 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		// INITIAL CODE	---------------------
 		
 		setOpaque(false)
+		setBackground(Color.black.toAwt)
 		
 		
 		// IMPLEMENTED	----------------------
 		
-		override def paintComponent(g: Graphics) = Drawer.use(g) { drawer =>
-			// Only repaints if necessary
-			repaintNeed.pop().foreach { need =>
-				// Determines draw area
-				val area = need match
-				{
-					case Full => None
-					case Partial(area) => Some(area)
-				}
-				// Draws background, if defined
-				lazy val fullDrawBounds = drawBounds
-				if (isOpaque)
-					drawer.onlyFill(background).draw(area.getOrElse(fullDrawBounds))
-				val drawersPerLayer = customDrawers.groupBy { _.drawLevel }
-				// Draws background custom drawers and then normal custom drawers, if defined
-				val backgroundAndNormalDrawers = drawersPerLayer.getOrElse(Background, Vector()) ++
-					drawersPerLayer.getOrElse(Normal, Vector())
-				if (backgroundAndNormalDrawers.nonEmpty)
-				{
-					val d = area.map(drawer.clippedTo).getOrElse(drawer)
-					backgroundAndNormalDrawers.foreach { _.draw(d, fullDrawBounds) }
-				}
-				// Draws component content
-				currentContent.foreach { _.paintWith(drawer, area) }
-				// Draws foreground, if defined
-				drawersPerLayer.get(Foreground).foreach { drawers =>
-					val d = area.map(drawer.clippedTo).getOrElse(drawer)
-					drawers.foreach { _.draw(d, fullDrawBounds) }
+		override def paintComponent(g: Graphics) =
+		{
+			// Checks image buffer status first
+			repaintNeed.pop().foreach {
+				// Case: Completely repaints the buffer image
+				case Full => buffer = Image.paint(ReachCanvas.this.size) { drawer => paintWith(drawer, None) }
+				// Case: Repaints a portion of the image
+				case Partial(area) =>
+					buffer = Image.paint(ReachCanvas.this.size) { drawer =>
+					buffer.drawWith(drawer)
+					paintWith(drawer, Some(area))
 				}
 			}
+			
+			// Paints the buffered image
+			Drawer.use(g) { drawer => buffer.drawWith(drawer) }
 		}
 		
 		// Never paints children (because won't have any children)
 		override def paintChildren(g: Graphics) = ()
+		
+		
+		// OTHER	-----------------------------
+		
+		private def paintWith(drawer: Drawer, area: Option[Bounds]) =
+		{
+			// Draws background, if defined
+			lazy val fullDrawBounds = drawBounds
+			if (!ReachCanvas.this.isTransparent)
+				drawer.onlyFill(background).draw(area.getOrElse(fullDrawBounds))
+			
+			val drawersPerLayer = customDrawers.groupBy { _.drawLevel }
+			// Draws background custom drawers and then normal custom drawers, if defined
+			val backgroundAndNormalDrawers = drawersPerLayer.getOrElse(Background, Vector()) ++
+				drawersPerLayer.getOrElse(Normal, Vector())
+			if (backgroundAndNormalDrawers.nonEmpty)
+			{
+				val d = area.map(drawer.clippedTo).getOrElse(drawer)
+				backgroundAndNormalDrawers.foreach { _.draw(d, fullDrawBounds) }
+			}
+			
+			// Draws component content
+			currentContent.foreach { _.paintWith(drawer, area) }
+			
+			// Draws foreground, if defined
+			drawersPerLayer.get(Foreground).foreach { drawers =>
+				val d = area.map(drawer.clippedTo).getOrElse(drawer)
+				drawers.foreach { _.draw(d, fullDrawBounds) }
+			}
+		}
 	}
 	
 	private sealed trait RepaintNeed

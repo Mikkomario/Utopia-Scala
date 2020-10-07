@@ -404,8 +404,8 @@ sealed trait Alignment
 		// Calculates the new position for the area
 		val topLeft = Point.calculateWith { axis =>
 			val (startMargin, endMargin) = margins.sidesAlong(axis)
-			positionWithDirection(fittedArea.along(axis), within.size.along(axis), startMargin, endMargin,
-				directionAlong(axis), !fitWithinBounds)
+			within.position.along(axis) + positionWithDirection(fittedArea.along(axis), within.size.along(axis),
+				startMargin, endMargin, directionAlong(axis), !fitWithinBounds)
 		}
 		
 		Bounds(topLeft, fittedArea)

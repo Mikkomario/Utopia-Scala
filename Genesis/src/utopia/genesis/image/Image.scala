@@ -98,6 +98,24 @@ object Image
 				apply(buffer)
 		}
 	}
+	
+	/**
+	  * Creates a new image by drawing
+	  * @param size Size of the image
+	  * @param draw A function that will draw the image contents. The drawer is clipped to image bounds and
+	  *             (0,0) is at the image top left corner.
+	  * @tparam U Arbitrary result type
+	  * @return Drawn image
+	  */
+	def paint[U](size: Size)(draw: Drawer => U) =
+	{
+		// Creates the new buffer image
+		val buffer = new BufferedImage(size.width.round.toInt, size.height.round.toInt, BufferedImage.TYPE_INT_ARGB)
+		// Draws on the image
+		Drawer.use(buffer.createGraphics()) { d => draw(d.clippedTo(Bounds(Point.origin, size))) }
+		// Wraps the buffer image
+		Image(buffer)
+	}
 }
 
 /**

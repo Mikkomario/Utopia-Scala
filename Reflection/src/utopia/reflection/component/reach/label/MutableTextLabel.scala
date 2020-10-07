@@ -47,7 +47,7 @@ object MutableTextLabel
 	{
 		implicit val c: TextContextLike = context.inContextWithBackground(background)
 		val label = contextual(parentHierarchy, text, isHint)
-		label.addCustomDrawer(new BackgroundDrawer(c.containerBackground))
+		label.addCustomDrawer(new BackgroundDrawer(background))
 		label
 	}
 	
@@ -94,9 +94,12 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 		else
 			revalidateAndThen { repaint() }
 	}
+	addCustomDrawer(drawer)
 	
 	
 	// IMPLEMENTED	-------------------------
+	
+	override def toString = s"Label($text)"
 	
 	override def text = drawer.text
 	override def text_=(newText: LocalizedString) = drawer.text = newText

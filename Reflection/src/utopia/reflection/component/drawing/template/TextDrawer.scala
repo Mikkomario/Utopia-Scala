@@ -60,8 +60,9 @@ trait TextDrawer extends CustomDrawer
 			// Specifies the drawer
 			drawer.withEdgeColor(color).clippedTo(bounds).disposeAfter { d =>
 				// Draws the text with correct positioning
-				d.drawTextPositioned(textToDraw, font.toAwt) { textSize => alignment.position(textSize, bounds,
-					insets) }
+				d.drawTextPositioned(textToDraw, font.toAwt) { textSize =>
+					alignment.position(textSize, bounds, insets)
+				}
 			}
 		}
 	}

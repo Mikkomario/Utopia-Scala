@@ -4,6 +4,9 @@
 - Area now leaves bounds implementation up to subclasses
 ### New Methods
 - Added .hasSameDimensionsAs(TextDrawContext) to TextDrawContext
+### Fixes
+- Alignment.position(...) now properly takes parameter bounds position into account
+- Fixed a small bug where Window content size wouldn't update correctly
 
 ## v1.3 (beta)
 ### Breaking Changes

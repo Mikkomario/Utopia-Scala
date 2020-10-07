@@ -21,12 +21,14 @@ new mutable mouse event handlers.
 - Added .toMap2D to TwoDimensional
 - Added .minAlong(Axis2D), .maxAlong(Axis2D) and overlapsWith(Bounds) to Bounds
 - Added .translated(Vector2DLike) to Drawer
+- Added Image.draw(...) method which can be used for drawing custom images
 ### Fixes
 - Dimensional.toMap now properly returns a Map
 ### Other Changes
 - Bounds and Point .toAwt conversion now rounds the double values to the closest integers
 - Direction1D now extends RichComparable
 - Bounds + -method now accepts VectorLike instead of only Point 
+- Added implicit conversion from a function to a KeyTypedListener
 
 ## v2.3
 ### Scala

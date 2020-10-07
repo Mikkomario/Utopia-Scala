@@ -34,9 +34,9 @@ trait ReachComponent extends ReachComponentLike with CachingStackable2
 	
 	// IMPLEMENTED	-----------------------
 	
-	override def position_=(p: Point) = boundsPointer.update {_.withPosition(p)}
+	override def position_=(p: Point) = boundsPointer.update { _.withPosition(p) }
 	
-	override def size_=(s: Size) = boundsPointer.update {_.withSize(s)}
+	override def size_=(s: Size) = boundsPointer.update { _.withSize(s) }
 	
-	override def bounds_=(b: Bounds) = boundsPointer.value = bounds
+	override def bounds_=(b: Bounds) = boundsPointer.value = b
 }
