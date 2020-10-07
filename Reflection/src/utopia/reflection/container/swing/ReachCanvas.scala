@@ -16,19 +16,36 @@ import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.ReachComponentLike
 import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.container.reach.{ComponentCreationResult, ComponentWrapResult}
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.StackSize
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 
-// TODO: Give the hierarchy pointer at the component creation (and create a custom constructor)
+object ReachCanvas
+{
+	/**
+	  * Creates a new set of canvas with a reach component in them
+	  * @param content Function for producing the content once parent hierarchy is available
+	  * @tparam C Type of created canvas content
+	  * @return A set of canvas with the content inside them and the produced canvas content as well
+	  */
+	def apply[C <: ReachComponentLike, R](content: ComponentHierarchy => ComponentCreationResult[C, R]) =
+	{
+		val contentPromise = Promise[ReachComponentLike]()
+		val canvas = new ReachCanvas(contentPromise.future)
+		val newContent = content(canvas.HierarchyConnection)
+		contentPromise.success(newContent.component)
+		newContent in canvas
+	}
+}
 
 /**
   * The component that connects a reach component hierarchy to the swing component hierarchy
   * @author Mikko Hilpinen
   * @since 4.10.2020, v2
   */
-class ReachCanvas(contentFuture: Future[ReachComponentLike]) extends JWrapper with Stackable
+class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWrapper with Stackable
 	with AwtContainerRelated with SwingComponentRelated with CustomDrawable
 {
 	// ATTRIBUTES	---------------------------

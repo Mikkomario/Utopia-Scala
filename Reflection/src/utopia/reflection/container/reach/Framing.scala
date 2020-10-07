@@ -7,7 +7,7 @@ import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.component.context.{BackgroundSensitive, ColorContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, RoundedBackgroundDrawer}
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.reach.hierarchy.{CompletableComponentHierarchy, ComponentHierarchy, SeedHierarchyBlock}
+import utopia.reflection.component.reach.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reflection.component.reach.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reflection.container.stack.template.layout.FramingLike2
 import utopia.reflection.shape.stack.StackInsets
@@ -20,11 +20,19 @@ object Framing
 	  * @param insets Insets placed around the wrapped component
 	  * @param customDrawers Custom drawers applied to this framing (default = empty)
 	  * @param content Function for producing the framed content when component hierarchy is known
-	  * @return A new framing
+	  * @tparam C Type of wrapped component
+	  * @return A new framing and the produced content component
 	  */
-	def apply(parentHierarchy: ComponentHierarchy, insets: StackInsets, customDrawers: Vector[CustomDrawer] = Vector())
-			 (content: ComponentHierarchy => ReachComponentLike) =
-		new Framing(parentHierarchy, content(new SeedHierarchyBlock(parentHierarchy.top)), insets, customDrawers)
+	def apply[C <: ReachComponentLike, R](parentHierarchy: ComponentHierarchy, insets: StackInsets,
+									   customDrawers: Vector[CustomDrawer] = Vector())
+									  (content: ComponentHierarchy => ComponentCreationResult[C, R]) =
+	{
+		val hierarchy = new SeedHierarchyBlock(parentHierarchy.top)
+		val newContent = content(hierarchy)
+		val framing = new Framing(parentHierarchy, newContent.component, insets, customDrawers)
+		hierarchy.complete(framing)
+		newContent in framing
+	}
 	
 	/**
 	  * Creates a new framing with background color
@@ -35,13 +43,16 @@ object Framing
 	  * @param content Function for producing the framed content when component hierarchy is known.
 	  *                Also accepts component creation context.
 	  * @param context Component creation context affecting this framing (will be modified for contents)
-	  * @return A new framing
+	  * @tparam C Type of wrapped component
+	  * @tparam C2 Type of component creation context used by the component construction function
+	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
+	  * @return A new framing and the produced content component
 	  */
-	def withBackground[C2, C1 <: BackgroundSensitive[C2]](parentHierarchy: ComponentHierarchy, color: ComponentColor,
-														  insets: StackInsets,
-														  moreCustomDrawers: Vector[CustomDrawer] = Vector())
-														 (content: (ComponentHierarchy, C2) => ReachComponentLike)
-														 (implicit context: C1) =
+	def withBackground[C <: ReachComponentLike, R, C2, C1 <: BackgroundSensitive[C2]]
+	(parentHierarchy: ComponentHierarchy, color: ComponentColor, insets: StackInsets,
+	 moreCustomDrawers: Vector[CustomDrawer] = Vector())
+	(content: (ComponentHierarchy, C2) => ComponentCreationResult[C, R])
+	(implicit context: C1) =
 		apply(parentHierarchy, insets, new BackgroundDrawer(color) +: moreCustomDrawers) { hierarchy =>
 			content(hierarchy, context.inContextWithBackground(color))
 		}
@@ -56,13 +67,16 @@ object Framing
 	  * @param content Function for producing the framed content when component hierarchy is known.
 	  *                Also accepts component creation context.
 	  * @param context Component creation context affecting this framing (will be modified for contents)
-	  * @return A new framing
+	  * @tparam C Type of wrapped component
+	  * @tparam C2 Type of component creation context used by the component construction function
+	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
+	  * @return A new framing and the produced content component
 	  */
-	def withBackgroundForRole[C2, C1 <: ColorContextLike with BackgroundSensitive[C2]]
+	def withBackgroundForRole[C <: ReachComponentLike, R, C2, C1 <: ColorContextLike with BackgroundSensitive[C2]]
 	(parentHierarchy: ComponentHierarchy, role: ColorRole, insets: StackInsets, preferredShade: ColorShade = Standard,
-	 moreCustomDrawers: Vector[CustomDrawer] = Vector())(content: (ComponentHierarchy, C2) => ReachComponentLike)
+	 moreCustomDrawers: Vector[CustomDrawer] = Vector())(content: (ComponentHierarchy, C2) => ComponentCreationResult[C, R])
 	(implicit context: C1) =
-		withBackground[C2, C1](parentHierarchy, context.color(role, preferredShade), insets, moreCustomDrawers)(content)
+		withBackground[C, R, C2, C1](parentHierarchy, context.color(role, preferredShade), insets, moreCustomDrawers)(content)
 	
 	/**
 	  * Creates a new framing that draws a rounded background
@@ -73,13 +87,16 @@ object Framing
 	  * @param content Function for producing the framed content when component hierarchy is known.
 	  *                Also accepts component creation context.
 	  * @param context Component creation context affecting this framing (will be modified for contents)
-	  * @return A new framing
+	  * @tparam C Type of wrapped component
+	  * @tparam C2 Type of component creation context used by the component construction function
+	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
+	  * @return A new framing and the produced content component
 	  */
-	def rounded[C2, C1 <: BackgroundSensitive[C2]](parentHierarchy: ComponentHierarchy, color: ComponentColor,
-												   insets: StackInsets,
-												   moreCustomDrawers: Vector[CustomDrawer] = Vector())
-												  (content: (ComponentHierarchy, C2) => ReachComponentLike)
-												  (implicit context: C1) =
+	def rounded[C <: ReachComponentLike, R, C2, C1 <: BackgroundSensitive[C2]]
+	(parentHierarchy: ComponentHierarchy, color: ComponentColor, insets: StackInsets,
+	 moreCustomDrawers: Vector[CustomDrawer] = Vector())
+	(content: (ComponentHierarchy, C2) => ComponentCreationResult[C, R])
+	(implicit context: C1) =
 	{
 		// The rounding amount is based on insets
 		val drawer = insets.sides.map { _.optimal }.filter { _ > 0.0 }.minOption match
@@ -102,13 +119,16 @@ object Framing
 	  * @param content Function for producing the framed content when component hierarchy is known.
 	  *                Also accepts component creation context.
 	  * @param context Component creation context affecting this framing (will be modified for contents)
-	  * @return A new framing
+	  * @tparam C Type of wrapped component
+	  * @tparam C2 Type of component creation context used by the component construction function
+	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
+	  * @return A new framing and the produced content component
 	  */
-	def roundedForRole[C2, C1 <: ColorContextLike with BackgroundSensitive[C2]]
+	def roundedForRole[C <: ReachComponentLike, R, C2, C1 <: ColorContextLike with BackgroundSensitive[C2]]
 	(parentHierarchy: ComponentHierarchy, role: ColorRole, insets: StackInsets, preferredShade: ColorShade = Standard,
-	 moreCustomDrawers: Vector[CustomDrawer] = Vector())(content: (ComponentHierarchy, C2) => ReachComponentLike)
+	 moreCustomDrawers: Vector[CustomDrawer] = Vector())(content: (ComponentHierarchy, C2) => ComponentCreationResult[C, R])
 	(implicit context: C1) =
-		rounded[C2, C1](parentHierarchy, context.color(role, preferredShade), insets, moreCustomDrawers)(content)
+		rounded[C, R, C2, C1](parentHierarchy, context.color(role, preferredShade), insets, moreCustomDrawers)(content)
 }
 
 /**
@@ -120,16 +140,6 @@ class Framing(override val parentHierarchy: ComponentHierarchy, override protect
 			  override val insets: StackInsets, override val customDrawers: Vector[CustomDrawer] = Vector())
 	extends CustomDrawReachComponent with FramingLike2[ReachComponentLike]
 {
-	// INITIAL CODE	---------------------------
-	
-	// Completes the content hierarchy, if possible
-	content.parentHierarchy match
-	{
-		case completable: CompletableComponentHierarchy => completable.complete(this)
-		case _ => ()
-	}
-	
-	
 	// IMPLEMENTED	---------------------------
 	
 	override protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]) = ()
