@@ -27,7 +27,7 @@ object CustomDrawReachComponent
 	
 	private class BasicComponent(override val parentHierarchy: ComponentHierarchy,
 								 override val customDrawers: Vector[CustomDrawer],
-								getStackSize: => StackSize)
+								 getStackSize: => StackSize)
 		extends CustomDrawReachComponent
 	{
 		override protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]) = ()

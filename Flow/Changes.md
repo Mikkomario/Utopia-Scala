@@ -13,6 +13,7 @@
 - Added .mapAsync(...), .tryMapAsync(...), .mapAsyncCatching(...) and .mapAsyncMerging(...) to Changing
 - Added .toPreciseMinutes, .toPreciseHours, .toPreciseDays and .toPreciseWeeks to Duration in TimeExtensions
 - Added .current() to WeekDay
+- Added .popAll() to VolatileList
 ### Fixes
 - Fixed a bug in LocalDate.next(WeekDay) and LocalDate.previous(WeekDay) (returned same day even when 
 includeSelf-parameter was set to false)

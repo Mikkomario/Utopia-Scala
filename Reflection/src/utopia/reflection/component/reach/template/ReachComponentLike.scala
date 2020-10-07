@@ -34,9 +34,10 @@ trait ReachComponentLike extends Stackable2
 	def boundsPointer: Changing[Bounds]
 	
 	/**
-	  * @return Hierarchy containing all this component's parents
+	  * @return Hierarchy containing all this component's parents. This hierarchy should be static/unchanging,
+	  *         since it may be listened by other components.
 	  */
-	protected def parentHierarchy: ComponentHierarchy
+	def parentHierarchy: ComponentHierarchy
 	
 	override def children: Seq[ReachComponentLike] = Vector()
 	
@@ -87,10 +88,23 @@ trait ReachComponentLike extends Stackable2
 	/**
 	  * Indicates that this component's and its hierarchy's layout should be updated
 	  */
-	def revalidate() = {
+	def revalidate() =
+	{
 		// Resets the cached stack size of this and upper components
 		resetCachedSize()
 		parentHierarchy.revalidate()
+	}
+	
+	/**
+	  * Indicates that this component's and its hierarchy's layout should be updated. Calls the specified function
+	  * once layout update has completed (if it has completed)
+	  * @param f A function called when/if the layout has completed. This function will not get called at all if
+	  *          this component is not connected to the main stack hierarchy
+	  */
+	def revalidateAndThen(f: => Unit) =
+	{
+		resetCachedSize()
+		parentHierarchy.revalidateAndThen(f)
 	}
 	
 	/**

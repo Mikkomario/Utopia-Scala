@@ -117,6 +117,12 @@ class VolatileList[T] private(list: Vector[T]) extends Volatile(list)
 	    
 	    }.getOrElse(None -> items)
 	}
+	
+	/**
+	  * Clears this list of all items
+	  * @return All items that were removed from this list
+	  */
+	def popAll() = getAndSet(Vector())
 }
 
 class VolatileListBuilder[A] extends mutable.Builder[A, VolatileList[A]]

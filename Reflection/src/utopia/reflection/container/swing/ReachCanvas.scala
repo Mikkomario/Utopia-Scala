@@ -1,22 +1,27 @@
-package utopia.reflection.container.reach
+package utopia.reflection.container.swing
 
 import java.awt.{Container, Graphics}
 
 import javax.swing.{JComponent, JPanel}
-import utopia.flow.async.VolatileOption
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.async.VolatileOption
+import utopia.flow.collection.VolatileList
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.shape.shape2D.{Bounds, Point}
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.mutable.CustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
+import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.ReachComponentLike
 import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelated}
-import utopia.reflection.component.template.layout.stack.{StackLeaf, Stackable}
-import utopia.reflection.container.swing.AwtContainerRelated
+import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.StackSize
 
 import scala.concurrent.Future
+
+// TODO: Give the hierarchy pointer at the component creation (and create a custom constructor)
 
 /**
   * The component that connects a reach component hierarchy to the swing component hierarchy
@@ -24,20 +29,27 @@ import scala.concurrent.Future
   * @since 4.10.2020, v2
   */
 class ReachCanvas(contentFuture: Future[ReachComponentLike]) extends JWrapper with Stackable
-	with AwtContainerRelated with SwingComponentRelated with CustomDrawable with StackLeaf
+	with AwtContainerRelated with SwingComponentRelated with CustomDrawable
 {
 	// ATTRIBUTES	---------------------------
 	
 	override var customDrawers = Vector[CustomDrawer]()
+	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
+	private var updateFinishedQueue = VolatileList[() => Unit]()
 	
 	private val panel = new CustomDrawPanel()
 	private val repaintNeed = VolatileOption[RepaintNeed](Full)
 	
+	private val _attachmentPointer = new PointerWithEvents(false)
+	
 	
 	// INITIAL CODE	---------------------------
 	
-	// Requires a full repaint after attached to the stack hierarchy
-	addStackHierarchyAttachmentListener { repaintNeed.setOne(Full) }
+	_attachmentPointer.addListener { event =>
+		repaintNeed.setOne(Full)
+		fireStackHierarchyChangeEvent(event.newValue)
+	}
+	
 	// Also requires a full repaint when size changes
 	addResizeListener { event =>
 		if (event.newSize.isPositive)
@@ -47,14 +59,30 @@ class ReachCanvas(contentFuture: Future[ReachComponentLike]) extends JWrapper wi
 	
 	// COMPUTED	-------------------------------
 	
+	/**
+	  * @return A pointer to this canvas' stack hierarchy attachment status
+	  */
+	def attachmentPointer = _attachmentPointer.view
+	
 	private def currentContent = contentFuture.current.flatMap { _.toOption }
 	
 	
 	// IMPLEMENTED	---------------------------
 	
+	override def isAttachedToMainHierarchy = _attachmentPointer.value
+	
+	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
+		_attachmentPointer.value = newAttachmentStatus
+	
 	override def component: JComponent with Container = panel
 	
-	override def updateLayout() = currentContent.foreach { _.updateLayout() }
+	override def updateLayout() =
+	{
+		// Updates content layout
+		currentContent.foreach { _.updateLayout() }
+		// Performs the queued tasks
+		updateFinishedQueue.popAll().foreach { _() }
+	}
 	
 	override def stackSize = currentContent match
 	{
@@ -78,6 +106,18 @@ class ReachCanvas(contentFuture: Future[ReachComponentLike]) extends JWrapper wi
 	// OTHER	------------------------------
 	
 	/**
+	  * Revalidates this component's layout. Calls the specified function when whole component layout has been updated.
+	  * @param f A function called after layout has been updated.
+	  */
+	def revalidateAndThen(f: => Unit) =
+	{
+		// Queues the action
+		updateFinishedQueue :+= (() => f)
+		// Queues revalidation
+		revalidate()
+	}
+	
+	/**
 	  * Repaints a part of this canvas
 	  * @param area Area to paint again
 	  */
@@ -97,6 +137,15 @@ class ReachCanvas(contentFuture: Future[ReachComponentLike]) extends JWrapper wi
 	
 	
 	// NESTED	------------------------------
+	
+	private object HierarchyConnection extends ComponentHierarchy
+	{
+		override def parent = Left(ReachCanvas.this)
+		
+		override def linkPointer = attachmentPointer
+		
+		override def isThisLevelLinked = isLinked
+	}
 	
 	private class CustomDrawPanel extends JPanel(null)
 	{

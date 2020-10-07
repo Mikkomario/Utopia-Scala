@@ -6,7 +6,7 @@ import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.reflection.component.template.layout.stack.CachingStackable2
 
 /**
-  * A common trait for non-wrapping reach components that handle the actual component implementatio
+  * A common trait for <b>non-wrapping</b> reach components that handle the actual component implementation
   * @author Mikko Hilpinen
   * @since 4.10.2020, v2
   */
@@ -21,6 +21,15 @@ trait ReachComponent extends ReachComponentLike with CachingStackable2
 	lazy val mouseButtonHandler = MouseButtonStateHandler()
 	lazy val mouseMoveHandler = MouseMoveHandler()
 	lazy val mouseWheelHandler = MouseWheelHandler()
+	
+	
+	// INITIAL CODE	-----------------------
+	
+	// Whenever component bounds update, repaints the affected area
+	boundsPointer.addListener { event =>
+		Bounds.aroundOption(Vector(event.oldValue, event.newValue).filter { _.size.isPositive })
+			.foreach { parentHierarchy.repaint(_) }
+	}
 	
 	
 	// IMPLEMENTED	-----------------------

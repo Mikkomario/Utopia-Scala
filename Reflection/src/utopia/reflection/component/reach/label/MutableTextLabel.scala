@@ -33,20 +33,12 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 	// INITIAL CODE	-------------------------
 	
 	// Revalidates and/or repaints this component whenever content or styling changes
-	drawer.textPointer.addListener { _ =>
-		revalidate()
-		// TODO: Repaint should only happen after the revalidation process has completed (implement)
-		repaintParent()
-	}
+	drawer.textPointer.addListener { _ => revalidateAndThen { repaint() } }
 	drawer.contextPointer.addListener { event =>
 		if (event.newValue.hasSameDimensionsAs(event.oldValue))
 			repaint()
 		else
-		{
-			revalidate()
-			// TODO: Here also, repaint only after revalidation
-			repaintParent()
-		}
+			revalidateAndThen { repaint() }
 	}
 	
 	
