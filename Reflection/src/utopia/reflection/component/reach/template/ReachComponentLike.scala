@@ -92,7 +92,7 @@ trait ReachComponentLike extends Stackable2
 	{
 		// Resets the cached stack size of this and upper components
 		resetCachedSize()
-		parentHierarchy.revalidate()
+		parentHierarchy.revalidate(Vector(this))
 	}
 	
 	/**
@@ -104,7 +104,7 @@ trait ReachComponentLike extends Stackable2
 	def revalidateAndThen(f: => Unit) =
 	{
 		resetCachedSize()
-		parentHierarchy.revalidateAndThen(f)
+		parentHierarchy.revalidateAndThen(Vector(this))(f)
 	}
 	
 	/**

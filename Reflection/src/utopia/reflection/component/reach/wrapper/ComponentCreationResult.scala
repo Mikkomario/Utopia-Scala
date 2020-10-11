@@ -1,8 +1,8 @@
-package utopia.reflection.container.reach
-
-import scala.language.implicitConversions
+package utopia.reflection.component.reach.wrapper
 
 import utopia.reflection.component.reach.template.ReachComponentLike
+
+import scala.language.implicitConversions
 
 object ComponentCreationResult
 {
@@ -20,7 +20,7 @@ object ComponentCreationResult
   * @author Mikko Hilpinen
   * @since 7.10.2020, v2
   */
-class ComponentCreationResult[+C <: ReachComponentLike, +R](val component: C, val result: R)
+class ComponentCreationResult[+C, +R](val component: C, val result: R)
 {
 	/**
 	  * @param container Container that will hold this component

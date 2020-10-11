@@ -79,15 +79,15 @@ trait ComponentHierarchy
 	  * stack hierarchy)
 	  */
 	@tailrec
-	final def revalidate(): Unit =
+	final def revalidate(layoutUpdateComponents: Seq[ReachComponentLike]): Unit =
 	{
 		if (isThisLevelLinked)
 			parent match
 			{
-				case Left(canvas) => canvas.revalidate()
+				case Left(canvas) => canvas.revalidate(layoutUpdateComponents)
 				case Right((block, component)) =>
 					component.resetCachedSize()
-					block.revalidate()
+					block.revalidate(component +: layoutUpdateComponents)
 			}
 	}
 	
@@ -98,15 +98,15 @@ trait ComponentHierarchy
 	  *          get called at all.
 	  */
 	@tailrec
-	final def revalidateAndThen(f: => Unit): Unit =
+	final def revalidateAndThen(layoutUpdateComponents: Seq[ReachComponentLike])(f: => Unit): Unit =
 	{
 		if (isThisLevelLinked)
 			parent match
 			{
-				case Left(canvas) => canvas.revalidateAndThen(f)
+				case Left(canvas) => canvas.revalidateAndThen(layoutUpdateComponents)(f)
 				case Right((block, component)) =>
 					component.resetCachedSize()
-					block.revalidateAndThen(f)
+					block.revalidateAndThen(component +: layoutUpdateComponents)(f)
 			}
 	}
 	

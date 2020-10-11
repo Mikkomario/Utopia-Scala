@@ -116,7 +116,8 @@ object StackLength
   * @param rawMax Maximum length. None if not limited. Defaults to None.
   * @param priority The priority used for this length
 **/
-class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = None, val priority: LengthPriority = Normal) extends Equatable
+class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = None,
+				  val priority: LengthPriority = Normal) extends Equatable with StackInsetsConvertible
 {
     // ATTRIBUTES    ------------------------
 	
@@ -212,6 +213,8 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	
 	
 	// IMPLEMENTED    -----------------------
+	
+	override def toInsets = StackInsets.symmetric(this)
 	
 	def properties = Vector(min, optimal, max, priority)
 	

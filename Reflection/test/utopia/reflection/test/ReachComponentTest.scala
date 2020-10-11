@@ -5,9 +5,8 @@ import java.awt.event.KeyEvent
 import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.KeyStateListener
-import utopia.reflection.color.ColorRole.{Gray, Primary}
-import utopia.reflection.color.ColorShade.Light
-import utopia.reflection.component.context.{BaseContext, ColorContext, TextContext}
+import utopia.reflection.color.ColorRole.Primary
+import utopia.reflection.component.context.TextContext
 import utopia.reflection.component.reach.label.MutableTextLabel
 import utopia.reflection.container.reach.Framing
 import utopia.reflection.container.swing.ReachCanvas
@@ -29,8 +28,8 @@ object ReachComponentTest extends App
 	import TestContext._
 	
 	val result = ReachCanvas { canvasHierarchy =>
-		val (framing, label) = Framing.withBackground(canvasHierarchy, colorScheme.secondary.light,
-			StackInsets.symmetric(margins.medium.any))
+		val (framing, label) = Framing.buildWithBackground(canvasHierarchy, colorScheme.secondary.light,
+			margins.medium.any)
 		{
 			(framingH, c) =>
 				implicit val context: TextContext = c.forTextComponents(Alignment.Center)

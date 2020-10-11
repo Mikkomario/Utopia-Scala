@@ -33,6 +33,7 @@ object StackInsets extends InsetsFactory[StackLength, StackSize, StackInsets, St
   * @since 2.2.2020, v1
   */
 case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLike[StackLength, StackSize, StackInsets]
+	with StackInsetsConvertible
 {
 	// ATTRIBUTES	-----------------------
 	
@@ -46,7 +47,6 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	  */
 	lazy val min = mapToInsets { _.min }
 	
-	
 	// COMPUTED	---------------------------
 	
 	/**
@@ -57,6 +57,8 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	
 	// IMPLEMENTED	-----------------------
 	
+	@deprecated("There's no need to call this method since 'this' already does this", "v2")
+	override def toInsets = this
 	override protected def makeCopy(newAmounts: Map[Direction2D, StackLength]) = StackInsets(newAmounts)
 	override protected def makeZero  = StackLength.fixedZero
 	override protected def combine(first: StackLength, second: StackLength)  = first + second

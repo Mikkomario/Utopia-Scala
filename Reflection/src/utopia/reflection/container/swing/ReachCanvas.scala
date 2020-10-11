@@ -16,12 +16,13 @@ import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.ReachComponentLike
+import utopia.reflection.component.reach.wrapper.ComponentCreationResult
 import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.Stackable
-import utopia.reflection.container.reach.ComponentCreationResult
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.StackSize
 
+import scala.annotation.tailrec
 import scala.concurrent.{Future, Promise}
 
 object ReachCanvas
@@ -54,6 +55,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	
 	override var customDrawers = Vector[CustomDrawer]()
 	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
+	private var layoutUpdateQueue = VolatileList[Seq[ReachComponentLike]]()
 	private var updateFinishedQueue = VolatileList[() => Unit]()
 	private var buffer = Image.empty
 	
@@ -66,7 +68,12 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	// INITIAL CODE	---------------------------
 	
 	_attachmentPointer.addListener { event =>
-		repaintNeed.setOne(Full)
+		// When attached to the stack hierarchy, makes sure to update immediate content layout and repaint this component
+		if (event.newValue)
+		{
+			repaintNeed.setOne(Full)
+			currentContent.foreach { content => layoutUpdateQueue :+= Vector(content) }
+		}
 		fireStackHierarchyChangeEvent(event.newValue)
 	}
 	
@@ -97,14 +104,13 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	
 	override def component: JComponent with Container = panel
 	
-	// TODO: This is called too early (before size has even changed!)
 	override def updateLayout() =
 	{
 		// Updates content layout
-		currentContent.foreach { c =>
-			// c.size = size
-			c.updateLayout()
-		}
+		val layoutUpdateQueues = layoutUpdateQueue.popAll()
+		if (layoutUpdateQueues.nonEmpty)
+			updateLayoutFor(layoutUpdateQueues.toSet)
+		
 		// Performs the queued tasks
 		updateFinishedQueue.popAll().foreach { _() }
 	}
@@ -138,15 +144,30 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	// OTHER	------------------------------
 	
 	/**
+	  * Revalidates this component, queueing some component layout updates to be done afterwards
+	  * @param updateComponents Sequence of components from hierarchy top downwards that require a layout update once
+	  *                         this canvas has been revalidated
+	  */
+	def revalidate(updateComponents: Seq[ReachComponentLike]): Unit =
+	{
+		val trueQueue = updateComponents.dropWhile { _ == this }
+		if (trueQueue.nonEmpty)
+			layoutUpdateQueue :+= trueQueue
+		revalidate()
+	}
+	
+	/**
 	  * Revalidates this component's layout. Calls the specified function when whole component layout has been updated.
+	  * @param updateComponents Sequence of components from hierarchy top downwards that require a layout update once
+	  *                         this canvas has been revalidated
 	  * @param f A function called after layout has been updated.
 	  */
-	def revalidateAndThen(f: => Unit) =
+	def revalidateAndThen(updateComponents: Seq[ReachComponentLike])(f: => Unit) =
 	{
 		// Queues the action
 		updateFinishedQueue :+= (() => f)
 		// Queues revalidation
-		revalidate()
+		revalidate(updateComponents)
 	}
 	
 	/**
@@ -165,6 +186,18 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 				}
 			case None => Some(Partial(area))
 		}
+	}
+	
+	@tailrec
+	private def updateLayoutFor(componentQueues: Set[Seq[ReachComponentLike]]): Unit =
+	{
+		// TODO: Handle cases where a multi-container's other children need updates as well (due to size changes)
+		// Updates the layout of the next layer (from top to bottom) components
+		componentQueues.map { _.head }.foreach { _.updateLayout() }
+		// Moves to the next layer of components, if there is one
+		val remainingQueues = componentQueues.filter { _.size > 1 }
+		if (remainingQueues.nonEmpty)
+			updateLayoutFor(remainingQueues.map { _.tail })
 	}
 	
 	

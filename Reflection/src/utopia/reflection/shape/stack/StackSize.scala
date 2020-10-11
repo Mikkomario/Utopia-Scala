@@ -116,6 +116,7 @@ object StackSize
 * @since 25.2.2019
 **/
 case class StackSize(width: StackLength, height: StackLength) extends TwoDimensional[StackLength]
+    with StackInsetsConvertible
 {
     // COMPUTED PROPERTIES    --------
     
@@ -218,6 +219,8 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
     
     
     // IMPLEMENTED    ----------------
+    
+    override def toInsets = StackInsets.symmetric(this)
     
     override def dimensions = Vector(width, height)
     
