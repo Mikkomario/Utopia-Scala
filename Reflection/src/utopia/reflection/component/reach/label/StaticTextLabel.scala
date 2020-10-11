@@ -38,7 +38,7 @@ case class StaticTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
 	  * @return A new label
 	  */
-	def apply(text: LocalizedString, font: Font, textColor: Color = Color.textBlack,
+	def custom(text: LocalizedString, font: Font, textColor: Color = Color.textBlack,
 			  alignment: Alignment = Alignment.Left, insets: StackInsets = StackInsets.any,
 			  additionalDrawers: Seq[CustomDrawer] = Vector(), allowTextShrink: Boolean = false) =
 		new StaticTextLabel(parentHierarchy, text, TextDrawContext(font, textColor, alignment, insets),
@@ -52,9 +52,9 @@ case class StaticTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def contextual(text: LocalizedString, additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false)
+	def apply(text: LocalizedString, additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false)
 				  (implicit context: TextContextLike) =
-		apply(text, context.font, if (isHint) context.hintTextColor else context.textColor,
+		custom(text, context.font, if (isHint) context.hintTextColor else context.textColor,
 			context.textAlignment, context.textInsets, additionalDrawers, !context.textHasMinWidth)
 	
 	/**
@@ -66,12 +66,12 @@ case class StaticTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def contextualWithCustomBackground(text: LocalizedString, background: ComponentColor,
+	def withCustomBackground(text: LocalizedString, background: ComponentColor,
 									   additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false)
 									  (implicit context: BackgroundSensitive[TextContextLike]) =
 	{
 		implicit val c: TextContextLike = context.inContextWithBackground(background)
-		contextual(text, new BackgroundDrawer(c.containerBackground) +: additionalDrawers, isHint)
+		apply(text, new BackgroundDrawer(c.containerBackground) +: additionalDrawers, isHint)
 	}
 	
 	/**
@@ -84,10 +84,10 @@ case class StaticTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def contextualWithBackground(text: LocalizedString, role: ColorRole, preferredShade: ColorShade = Standard,
+	def withBackground(text: LocalizedString, role: ColorRole, preferredShade: ColorShade = Standard,
 								 additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false)
 								(implicit context: ColorContextLike with BackgroundSensitive[TextContextLike]) =
-		contextualWithCustomBackground(text, context.color(role, preferredShade), additionalDrawers, isHint)
+		withCustomBackground(text, context.color(role, preferredShade), additionalDrawers, isHint)
 }
 
 /**

@@ -8,7 +8,7 @@ object ComponentCreationResult
 {
 	// IMPLICIT	------------------------------
 	
-	implicit def tupleToResult[C <: ReachComponentLike, R](tuple: (C, R)): ComponentCreationResult[C, R] =
+	implicit def tupleToResult[C, R](tuple: (C, R)): ComponentCreationResult[C, R] =
 		new ComponentCreationResult[C, R](tuple._1, tuple._2)
 	
 	implicit def componentToResult[C <: ReachComponentLike](component: C): ComponentCreationResult[C, Unit] =

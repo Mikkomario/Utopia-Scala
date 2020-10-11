@@ -8,50 +8,63 @@ import utopia.reflection.component.context.{BackgroundSensitive, ColorContext, C
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, RoundedBackgroundDrawer}
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
-import utopia.reflection.component.reach.template.{CustomDrawReachComponent, ReachComponentLike}
-import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, OpenComponent}
+import utopia.reflection.component.reach.template.{BuilderFactory, ComponentFactoryFactory, CustomDrawReachComponent, ReachComponentLike}
+import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reflection.container.stack.template.layout.FramingLike2
 import utopia.reflection.shape.stack.{StackInsets, StackInsetsConvertible}
 
-object Framing
+object Framing extends ComponentFactoryFactory[FramingFactory]
 {
+	override def apply(hierarchy: ComponentHierarchy) = FramingFactory(hierarchy)
+}
+
+case class FramingFactory(parentHierarchy: ComponentHierarchy) extends BuilderFactory[FramingBuilder]
+{
+	// IMPLEMENTED	------------------------------
+	
+	override def builder[F](contentFactory: ComponentFactoryFactory[F]) =
+		FramingBuilder(this, contentFactory)
+	
+	
+	// OTHER	----------------------------------
+	
 	/**
 	  * Creates a new framing
-	  * @param parentHierarchy Parent component hierarchy
 	  * @param content A component that is yet to attach to a component hierarchy
 	  * @param insets Insets placed around the wrapped component
 	  * @param customDrawers Custom drawers applied to this framing (default = empty)
 	  * @tparam C Type of wrapped component
 	  * @return A new framing and the produced content component
 	  */
-	def apply[C <: ReachComponentLike, R](parentHierarchy: ComponentHierarchy, content: OpenComponent[C, R],
-										  insets: StackInsetsConvertible, customDrawers: Vector[CustomDrawer] = Vector()) =
+	def apply[C <: ReachComponentLike, R](content: OpenComponent[C, R], insets: StackInsetsConvertible,
+										  customDrawers: Vector[CustomDrawer] = Vector()) =
 	{
 		val framing = new Framing(parentHierarchy, content, insets.toInsets, customDrawers)
 		// Closes the content
 		content.attachTo(framing)
 	}
-	
+}
+
+case class FramingBuilder[+F](framingFactory: FramingFactory, contentFactory: ComponentFactoryFactory[F])
+{
 	/**
 	  * Creates a new framing
-	  * @param parentHierarchy Parent component hierarchy
 	  * @param insets Insets placed around the wrapped component
 	  * @param customDrawers Custom drawers applied to this framing (default = empty)
 	  * @param content Function for producing the framed content when component hierarchy is known
 	  * @tparam C Type of wrapped component
 	  * @return A new framing and the produced content component
 	  */
-	def build[C <: ReachComponentLike, R](parentHierarchy: ComponentHierarchy, insets: StackInsetsConvertible,
-									   customDrawers: Vector[CustomDrawer] = Vector())
-									  (content: ComponentHierarchy => ComponentCreationResult[C, R]) =
+	def apply[C <: ReachComponentLike, R](insets: StackInsetsConvertible,
+										  customDrawers: Vector[CustomDrawer] = Vector())
+										 (content: F => ComponentCreationResult[C, R]) =
 	{
-		val newContent = OpenComponent(content)(parentHierarchy.top)
-		apply(parentHierarchy, newContent, insets, customDrawers)
+		val newContent = Open.using(contentFactory)(content)(framingFactory.parentHierarchy.top)
+		framingFactory(newContent, insets, customDrawers)
 	}
 	
 	/**
 	  * Creates a new framing with background color
-	  * @param parentHierarchy Parent component hierarchy
 	  * @param color Background color for this framing
 	  * @param insets Insets placed around the wrapped component
 	  * @param moreCustomDrawers Additional custom drawers applied to this framing (default = empty)
@@ -62,18 +75,16 @@ object Framing
 	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
 	  * @return A new framing and the produced content component
 	  */
-	def buildWithBackground[C <: ReachComponentLike, R, C1 <: BackgroundSensitive[ColorContext]]
-	(parentHierarchy: ComponentHierarchy, color: ComponentColor, insets: StackInsetsConvertible,
-	 moreCustomDrawers: Vector[CustomDrawer] = Vector())
-	(content: (ComponentHierarchy, ColorContext) => ComponentCreationResult[C, R])
+	def withBackground[C <: ReachComponentLike, R, C1 <: BackgroundSensitive[ColorContext]]
+	(color: ComponentColor, insets: StackInsetsConvertible, moreCustomDrawers: Vector[CustomDrawer] = Vector())
+	(content: (F, ColorContext) => ComponentCreationResult[C, R])
 	(implicit context: C1) =
-		build(parentHierarchy, insets, new BackgroundDrawer(color) +: moreCustomDrawers) { hierarchy =>
-			content(hierarchy, context.inContextWithBackground(color))
+		apply(insets, new BackgroundDrawer(color) +: moreCustomDrawers) { factory =>
+			content(factory, context.inContextWithBackground(color))
 		}
 	
 	/**
 	  * Creates a new framing with background color
-	  * @param parentHierarchy Parent component hierarchy
 	  * @param role The role that defines the background color used
 	  * @param insets Insets placed around the wrapped component
 	  * @param preferredShade Color shade that is preferred when picking framing color (default = standard shade)
@@ -85,16 +96,16 @@ object Framing
 	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
 	  * @return A new framing and the produced content component
 	  */
-	def buildWithBackgroundForRole[C <: ReachComponentLike, R, C1 <: ColorContextLike with BackgroundSensitive[ColorContext]]
-	(parentHierarchy: ComponentHierarchy, role: ColorRole, insets: StackInsetsConvertible,
+	def buildWithBackgroundForRole[C <: ReachComponentLike, R,
+		C1 <: ColorContextLike with BackgroundSensitive[ColorContext]]
+	(role: ColorRole, insets: StackInsetsConvertible,
 	 preferredShade: ColorShade = Standard, moreCustomDrawers: Vector[CustomDrawer] = Vector())
-	(content: (ComponentHierarchy, ColorContext) => ComponentCreationResult[C, R])
+	(content: (F, ColorContext) => ComponentCreationResult[C, R])
 	(implicit context: C1) =
-		buildWithBackground[C, R, C1](parentHierarchy, context.color(role, preferredShade), insets, moreCustomDrawers)(content)
+		withBackground[C, R, C1](context.color(role, preferredShade), insets, moreCustomDrawers)(content)
 	
 	/**
 	  * Creates a new framing that draws a rounded background
-	  * @param parentHierarchy Parent component hierarchy
 	  * @param color Background color for this framing
 	  * @param insets Insets placed around the wrapped component
 	  * @param moreCustomDrawers Additional custom drawers applied to this framing (default = empty)
@@ -105,10 +116,10 @@ object Framing
 	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
 	  * @return A new framing and the produced content component
 	  */
-	def buildRounded[C <: ReachComponentLike, R, C1 <: BackgroundSensitive[ColorContext]]
-	(parentHierarchy: ComponentHierarchy, color: ComponentColor, insets: StackInsetsConvertible,
+	def rounded[C <: ReachComponentLike, R, C1 <: BackgroundSensitive[ColorContext]]
+	(color: ComponentColor, insets: StackInsetsConvertible,
 	 moreCustomDrawers: Vector[CustomDrawer] = Vector())
-	(content: (ComponentHierarchy, ColorContext) => ComponentCreationResult[C, R])
+	(content: (F, ColorContext) => ComponentCreationResult[C, R])
 	(implicit context: C1) =
 	{
 		val activeInsets = insets.toInsets
@@ -119,13 +130,12 @@ object Framing
 			// If the insets default to 0, uses solid background drawing instead
 			case None => new BackgroundDrawer(color)
 		}
-		build(parentHierarchy, activeInsets, drawer +: moreCustomDrawers) { hierarchy =>
-			content(hierarchy, context.inContextWithBackground(color)) }
+		apply(activeInsets, drawer +: moreCustomDrawers) { factory =>
+			content(factory, context.inContextWithBackground(color)) }
 	}
 	
 	/**
 	  * Creates a new framing that draws a rounded background
-	  * @param parentHierarchy Parent component hierarchy
 	  * @param role The role that defines the background color used
 	  * @param insets Insets placed around the wrapped component
 	  * @param preferredShade Color shade that is preferred when picking framing color (default = standard shade)
@@ -137,12 +147,12 @@ object Framing
 	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
 	  * @return A new framing and the produced content component
 	  */
-	def buildRoundedForRole[C <: ReachComponentLike, R, C1 <: ColorContextLike with BackgroundSensitive[ColorContext]]
-	(parentHierarchy: ComponentHierarchy, role: ColorRole, insets: StackInsetsConvertible,
+	def roundedForRole[C <: ReachComponentLike, R, C1 <: ColorContextLike with BackgroundSensitive[ColorContext]]
+	(role: ColorRole, insets: StackInsetsConvertible,
 	 preferredShade: ColorShade = Standard, moreCustomDrawers: Vector[CustomDrawer] = Vector())
-	(content: (ComponentHierarchy, ColorContext) => ComponentCreationResult[C, R])
+	(content: (F, ColorContext) => ComponentCreationResult[C, R])
 	(implicit context: C1) =
-		buildRounded[C, R, C1](parentHierarchy, context.color(role, preferredShade), insets, moreCustomDrawers)(content)
+		rounded[C, R, C1](context.color(role, preferredShade), insets, moreCustomDrawers)(content)
 }
 
 /**

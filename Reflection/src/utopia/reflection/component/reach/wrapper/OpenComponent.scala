@@ -9,23 +9,15 @@ import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
-import utopia.reflection.component.reach.template.ReachComponentLike
+import utopia.reflection.component.reach.template.{ComponentFactoryFactory, ReachComponentLike}
 import utopia.reflection.container.reach.{Framing, Stack}
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.ReachCanvas
 import utopia.reflection.shape.stack.{StackInsetsConvertible, StackLength}
 
-object OpenComponent
+object Open
 {
-	// IMPLICIT	-----------------------------
-	
-	// Allows one to implicitly access the wrapped component
-	implicit def autoAccessComponent[C](open: OpenComponent[C, _]): C = open.component
-	
-	
-	// OTHER	-----------------------------
-	
 	/**
 	  * Creates a new open component
 	  * @param creation Component creation function (returns a component and a possible additional result)
@@ -41,6 +33,26 @@ object OpenComponent
 		new OpenComponent[C, R](creation(hierarchy), hierarchy)
 	}
 	
+	/**
+	  * Creates a new open component
+	  * @param factory A factory that produces component factories for target contexts
+	  * @param creation Component creation function (returns a component and a possible additional result)
+	  * @param canvas Implicit access to top canvas component
+	  * @tparam C Type of created component
+	  * @return A new open component
+	  */
+	def using[F, C, R](factory: ComponentFactoryFactory[F])(creation: F => ComponentCreationResult[C, R])
+					  (implicit canvas: ReachCanvas) =
+		apply { hierarchy => creation(factory(hierarchy)) }
+}
+
+object OpenComponent
+{
+	// IMPLICIT	-----------------------------
+	
+	// Allows one to implicitly access the wrapped component
+	implicit def autoAccessComponent[C](open: OpenComponent[C, _]): C = open.component
+	
 	
 	// EXTENSIONS	-------------------------
 	
@@ -55,8 +67,8 @@ object OpenComponent
 		  */
 		def framed(insets: StackInsetsConvertible, customDrawers: Vector[CustomDrawer] = Vector()) =
 		{
-			apply { hierarchy =>
-				val wrapping = Framing(hierarchy, c, insets, customDrawers)
+			Open.using(Framing) { ff =>
+				val wrapping = ff(c, insets, customDrawers)
 				wrapping.parent -> wrapping.result
 			}(c.parentHierarchy.top)
 		}
@@ -91,8 +103,8 @@ object OpenComponent
 		def stack(direction: Axis2D = Y, layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 				  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
 			   (implicit context: BaseContextLike, canvas: ReachCanvas) =
-			apply { hierarchy =>
-				val stack = Stack(hierarchy, c, direction, layout, cap, customDrawers, areRelated)
+			Open.using(Stack) { sf =>
+				val stack = sf(c, direction, layout, cap, customDrawers, areRelated)
 				stack.parent -> stack.result
 			}
 		

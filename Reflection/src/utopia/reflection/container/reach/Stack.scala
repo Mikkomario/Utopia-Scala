@@ -7,18 +7,30 @@ import utopia.genesis.util.Drawer
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
-import utopia.reflection.component.reach.template.{CustomDrawReachComponent, ReachComponentLike}
-import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, OpenComponent}
+import utopia.reflection.component.reach.template.{BuilderFactory, ComponentFactoryFactory, CustomDrawReachComponent, ReachComponentLike}
+import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.stack.template.layout.StackLike2
 import utopia.reflection.shape.stack.StackLength
 
-object Stack
+object Stack extends ComponentFactoryFactory[StackFactory]
 {
+	override def apply(hierarchy: ComponentHierarchy) = StackFactory(hierarchy)
+}
+
+case class StackFactory(parentHierarchy: ComponentHierarchy) extends BuilderFactory[StackBuilder]
+{
+	// IMPLEMENTED	----------------------------
+	
+	override def builder[CF](contentFactory: ComponentFactoryFactory[CF]) =
+		StackBuilder(this, contentFactory)
+	
+	
+	// OTHER	--------------------------------
+	
 	/**
 	  * Creates a new stack of items
-	  * @param parentHierarchy Hierarchy this stack is attached to
 	  * @param content Content to attach to this stack
 	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
 	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
@@ -30,8 +42,7 @@ object Stack
 	  * @tparam R Type of component creation result
 	  * @return This stack, along with contextual information
 	  */
-	def custom[C <: ReachComponentLike, R](parentHierarchy: ComponentHierarchy,
-										   content: OpenComponent[Vector[C], R], direction: Axis2D = Y,
+	def custom[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], direction: Axis2D = Y,
 										   layout: StackLayout = Fit, margin: StackLength = StackLength.any,
 										   cap: StackLength = StackLength.fixedZero,
 										   customDrawers: Vector[CustomDrawer] = Vector()) =
@@ -42,7 +53,6 @@ object Stack
 	
 	/**
 	  * Creates a new stack of items
-	  * @param parentHierarchy Hierarchy this stack is attached to
 	  * @param content Content to attach to this stack
 	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
 	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
@@ -56,17 +66,16 @@ object Stack
 	  * @tparam R Type of component creation result
 	  * @return This stack, along with contextual information
 	  */
-	def apply[C <: ReachComponentLike, R](parentHierarchy: ComponentHierarchy, content: OpenComponent[Vector[C], R],
+	def apply[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R],
 										  direction: Axis2D = Y, layout: StackLayout = Fit,
 										  cap: StackLength = StackLength.fixedZero,
 										  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
 										 (implicit context: BaseContextLike) =
-		custom(parentHierarchy, content, direction, layout,
+		custom(content, direction, layout,
 			if (areRelated) context.relatedItemsStackMargin else context.defaultStackMargin, cap, customDrawers)
 	
 	/**
 	  * Creates a new row of items
-	  * @param parentHierarchy Hierarchy this stack is attached to
 	  * @param content Content to attach to this stack
 	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
 	  *               (default = Fit = All components have same breadth as this stack)
@@ -79,15 +88,14 @@ object Stack
 	  * @tparam R Type of component creation result
 	  * @return This stack, along with contextual information
 	  */
-	def row[C <: ReachComponentLike, R](parentHierarchy: ComponentHierarchy, content: OpenComponent[Vector[C], R],
-										layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
+	def row[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], layout: StackLayout = Fit,
+										cap: StackLength = StackLength.fixedZero,
 										customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
 									   (implicit context: BaseContextLike) =
-		apply(parentHierarchy, content, X, layout, cap, customDrawers, areRelated)
+		apply(content, X, layout, cap, customDrawers, areRelated)
 	
 	/**
 	  * Creates a new column of items
-	  * @param parentHierarchy Hierarchy this stack is attached to
 	  * @param content Content to attach to this stack
 	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
 	  *               (default = Fit = All components have same breadth as this stack)
@@ -100,15 +108,17 @@ object Stack
 	  * @tparam R Type of component creation result
 	  * @return This stack, along with contextual information
 	  */
-	def column[C <: ReachComponentLike, R](parentHierarchy: ComponentHierarchy, content: OpenComponent[Vector[C], R],
-										layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
-										customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-									   (implicit context: BaseContextLike) =
-		apply(parentHierarchy, content, Y, layout, cap, customDrawers, areRelated)
-	
+	def column[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], layout: StackLayout = Fit,
+										   cap: StackLength = StackLength.fixedZero,
+										   customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
+										  (implicit context: BaseContextLike) =
+		apply(content, Y, layout, cap, customDrawers, areRelated)
+}
+
+case class StackBuilder[+CF](stackFactory: StackFactory, contentFactory: ComponentFactoryFactory[CF])
+{
 	/**
 	  * Creates a new stack of items
-	  * @param parentHierarchy Hierarchy this stack is attached to
 	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
 	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
 	  *               (default = Fit = All components have same breadth as this stack)
@@ -122,19 +132,18 @@ object Stack
 	  * @tparam R Type of component creation result
 	  * @return This stack, along with the created components and possible additional result value
 	  */
-	def build[C <: ReachComponentLike, R](parentHierarchy: ComponentHierarchy, direction: Axis2D = Y,
-										  layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
+	def apply[C <: ReachComponentLike, R](direction: Axis2D = Y, layout: StackLayout = Fit,
+										  cap: StackLength = StackLength.fixedZero,
 										  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-										 (fill: ComponentHierarchy => ComponentCreationResult[Vector[C], R])
+										 (fill: CF => ComponentCreationResult[Vector[C], R])
 										 (implicit context: BaseContextLike) =
 	{
-		val content = OpenComponent(fill)(parentHierarchy.top)
-		apply(parentHierarchy, content, direction, layout, cap, customDrawers, areRelated)
+		val content = Open.using(contentFactory)(fill)(stackFactory.parentHierarchy.top)
+		stackFactory(content, direction, layout, cap, customDrawers, areRelated)
 	}
 	
 	/**
 	  * Creates a new row of items
-	  * @param parentHierarchy Hierarchy this stack is attached to
 	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
 	  *               (default = Fit = All components have same breadth as this stack)
 	  * @param cap Cap placed at each end of this stack (default = always 0)
@@ -147,16 +156,14 @@ object Stack
 	  * @tparam R Type of component creation result
 	  * @return This stack, along with the created components and possible additional result value
 	  */
-	def buildRow[C <: ReachComponentLike, R](parentHierarchy: ComponentHierarchy, layout: StackLayout = Fit,
-											 cap: StackLength = StackLength.fixedZero,
-											 customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-											(fill: ComponentHierarchy => ComponentCreationResult[Vector[C], R])
-											(implicit context: BaseContextLike) =
-		build(parentHierarchy, X, layout, cap, customDrawers, areRelated)(fill)
+	def row[C <: ReachComponentLike, R](layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
+										customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
+									   (fill: CF => ComponentCreationResult[Vector[C], R])
+									   (implicit context: BaseContextLike) =
+		apply(X, layout, cap, customDrawers, areRelated)(fill)
 	
 	/**
 	  * Creates a new column of items
-	  * @param parentHierarchy Hierarchy this stack is attached to
 	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
 	  *               (default = Fit = All components have same breadth as this stack)
 	  * @param cap Cap placed at each end of this stack (default = always 0)
@@ -169,12 +176,11 @@ object Stack
 	  * @tparam R Type of component creation result
 	  * @return This stack, along with the created components and possible additional result value
 	  */
-	def buildColumn[C <: ReachComponentLike, R](parentHierarchy: ComponentHierarchy, layout: StackLayout = Fit,
-											 cap: StackLength = StackLength.fixedZero,
-											 customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-											(fill: ComponentHierarchy => ComponentCreationResult[Vector[C], R])
-											(implicit context: BaseContextLike) =
-		build(parentHierarchy, Y, layout, cap, customDrawers, areRelated)(fill)
+	def column[C <: ReachComponentLike, R](layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
+										   customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
+										  (fill: CF => ComponentCreationResult[Vector[C], R])
+										  (implicit context: BaseContextLike) =
+		apply(Y, layout, cap, customDrawers, areRelated)(fill)
 }
 
 /**

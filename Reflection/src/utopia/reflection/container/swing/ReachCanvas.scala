@@ -72,6 +72,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		if (event.newValue)
 		{
 			repaintNeed.setOne(Full)
+			// TODO: Needs to update all content layout and not just top content layout
 			currentContent.foreach { content => layoutUpdateQueue :+= Vector(content) }
 		}
 		fireStackHierarchyChangeEvent(event.newValue)

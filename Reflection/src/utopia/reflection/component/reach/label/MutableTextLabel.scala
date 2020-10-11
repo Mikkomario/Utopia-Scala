@@ -9,51 +9,51 @@ import utopia.reflection.component.context.{BackgroundSensitive, ColorContextLik
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
 import utopia.reflection.component.drawing.mutable.TextDrawer
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
-import utopia.reflection.component.reach.template.MutableCustomDrawReachComponent
+import utopia.reflection.component.reach.template.{ComponentFactoryFactory, MutableCustomDrawReachComponent}
 import utopia.reflection.component.template.text.{MutableTextComponent, SingleLineTextComponent2}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
-object MutableTextLabel
+object MutableTextLabel extends ComponentFactoryFactory[MutableTextLabelFactory]
+{
+	override def apply(hierarchy: ComponentHierarchy) = MutableTextLabelFactory(hierarchy)
+}
+
+case class MutableTextLabelFactory(parentHierarchy: ComponentHierarchy)
 {
 	/**
 	  * Creates a new text label utilizing contextual information
-	  * @param parentHierarchy This component's parent hierarchy
 	  * @param text Text displayed on this label
 	  * @param isHint Whether this label should be considered a hint (affects text color)
 	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def contextual(parentHierarchy: ComponentHierarchy, text: LocalizedString, isHint: Boolean = false)
-				  (implicit context: TextContextLike) =
+	def apply(text: LocalizedString, isHint: Boolean = false)(implicit context: TextContextLike) =
 		new MutableTextLabel(parentHierarchy, text, context.font,
 			if (isHint) context.hintTextColor else context.textColor, context.textAlignment,
 			context.textInsets, !context.textHasMinWidth)
 	
 	/**
 	  * Creates a new text label with solid background utilizing contextual information
-	  * @param parentHierarchy This component's parent hierarchy
 	  * @param text Text displayed on this label
 	  * @param background Label background color
 	  * @param isHint Whether this label should be considered a hint (affects text color)
 	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def contextualWithCustomBackground(parentHierarchy: ComponentHierarchy, text: LocalizedString,
-									   background: ComponentColor, isHint: Boolean = false)
+	def withCustomBackground(text: LocalizedString, background: ComponentColor, isHint: Boolean = false)
 									  (implicit context: BackgroundSensitive[TextContextLike]) =
 	{
 		implicit val c: TextContextLike = context.inContextWithBackground(background)
-		val label = contextual(parentHierarchy, text, isHint)
+		val label = apply(text, isHint)
 		label.addCustomDrawer(new BackgroundDrawer(background))
 		label
 	}
 	
 	/**
 	  * Creates a new text label with solid background utilizing contextual information
-	  * @param parentHierarchy This component's parent hierarchy
 	  * @param text Text displayed on this label
 	  * @param role Label background color role
 	  * @param preferredShade Preferred color shade (default = standard)
@@ -61,10 +61,10 @@ object MutableTextLabel
 	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def contextualWithBackground(parentHierarchy: ComponentHierarchy, text: LocalizedString, role: ColorRole,
+	def withBackground(text: LocalizedString, role: ColorRole,
 								 preferredShade: ColorShade = Standard, isHint: Boolean = false)
 								(implicit context: ColorContextLike with BackgroundSensitive[TextContextLike]) =
-		contextualWithCustomBackground(parentHierarchy, text, context.color(role, preferredShade), isHint)
+		withCustomBackground(text, context.color(role, preferredShade), isHint)
 }
 
 /**
