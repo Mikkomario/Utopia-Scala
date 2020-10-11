@@ -3,13 +3,18 @@ package utopia.reflection.component.reach.wrapper
 import scala.language.implicitConversions
 import utopia.flow.event.Changing
 import utopia.genesis.color.Color
+import utopia.genesis.shape.Axis.{X, Y}
+import utopia.genesis.shape.Axis2D
+import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reflection.component.reach.template.ReachComponentLike
-import utopia.reflection.container.reach.Framing
+import utopia.reflection.container.reach.{Framing, Stack}
+import utopia.reflection.container.stack.StackLayout
+import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.ReachCanvas
-import utopia.reflection.shape.stack.StackInsetsConvertible
+import utopia.reflection.shape.stack.{StackInsetsConvertible, StackLength}
 
 object OpenComponent
 {
@@ -66,7 +71,67 @@ object OpenComponent
 			framed(insets, Vector(new BackgroundDrawer(backgroundColor)))
 	}
 	
-	// TODO: Add MultiOpenComponent extension
+	// Extension for sequence of wrapped components
+	implicit class MultiOpenComponent[C <: ReachComponentLike, R](val c: OpenComponent[Vector[C], R]) extends AnyVal
+	{
+		/**
+		  * Creates a stack that will hold these components
+		  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
+		  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
+		  *                  (default = Fit = All components have same breadth as this stack)
+		  * @param cap Cap placed at each end of this stack (default = always 0)
+		  * @param customDrawers Custom drawers attached to this stack (default = empty)
+		  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
+		  *                  (default = false)
+		  * @param context Implicit component creation context
+		  * @param canvas A set of reach canvases to hold these components
+		  * @return A new stack with these components inside. Also contains the same additional creation result
+		  *         as this one.
+		  */
+		def stack(direction: Axis2D = Y, layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
+				  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
+			   (implicit context: BaseContextLike, canvas: ReachCanvas) =
+			apply { hierarchy =>
+				val stack = Stack(hierarchy, c, direction, layout, cap, customDrawers, areRelated)
+				stack.parent -> stack.result
+			}
+		
+		/**
+		  * Creates a stack row that will hold these components
+		  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
+		  *                  (default = Fit = All components have same breadth as this stack)
+		  * @param cap Cap placed at each end of this stack (default = always 0)
+		  * @param customDrawers Custom drawers attached to this stack (default = empty)
+		  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
+		  *                  (default = false)
+		  * @param context Implicit component creation context
+		  * @param canvas A set of reach canvases to hold these components
+		  * @return A new stack with these components inside. Also contains the same additional creation result
+		  *         as this one.
+		  */
+		def row(layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
+				  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
+				 (implicit context: BaseContextLike, canvas: ReachCanvas) =
+			stack(X, layout, cap, customDrawers, areRelated)
+		
+		/**
+		  * Creates a stack column that will hold these components
+		  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
+		  *                  (default = Fit = All components have same breadth as this stack)
+		  * @param cap Cap placed at each end of this stack (default = always 0)
+		  * @param customDrawers Custom drawers attached to this stack (default = empty)
+		  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
+		  *                  (default = false)
+		  * @param context Implicit component creation context
+		  * @param canvas A set of reach canvases to hold these components
+		  * @return A new stack with these components inside. Also contains the same additional creation result
+		  *         as this one.
+		  */
+		def column(layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
+				customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
+			   (implicit context: BaseContextLike, canvas: ReachCanvas) =
+			stack(Y, layout, cap, customDrawers, areRelated)
+	}
 }
 
 /**

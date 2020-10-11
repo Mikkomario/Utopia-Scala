@@ -9,18 +9,26 @@ import utopia.reflection.component.context.{BackgroundSensitive, ColorContextLik
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext, TextDrawer}
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
-import utopia.reflection.component.reach.template.CustomDrawReachComponent
+import utopia.reflection.component.reach.template.{ComponentFactoryFactory, CustomDrawReachComponent}
 import utopia.reflection.component.template.text.SingleLineTextComponent2
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
-object StaticTextLabel
+object StaticTextLabel extends ComponentFactoryFactory[StaticTextLabelFactory]
+{
+	override def apply(hierarchy: ComponentHierarchy) = StaticTextLabelFactory(hierarchy)
+}
+
+/**
+  * Used for constructing new static text labels
+  * @param parentHierarchy A component hierarchy the new labels will be placed in
+  */
+case class StaticTextLabelFactory(parentHierarchy: ComponentHierarchy)
 {
 	/**
 	  * Creates a new text label
-	  * @param parentHierarchy This component's parent hierarchy
 	  * @param text Text displayed on this label
 	  * @param font Font used when drawing the text
 	  * @param textColor Color used when drawing the text (default = standard black)
@@ -30,7 +38,7 @@ object StaticTextLabel
 	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
 	  * @return A new label
 	  */
-	def apply(parentHierarchy: ComponentHierarchy, text: LocalizedString, font: Font, textColor: Color = Color.textBlack,
+	def apply(text: LocalizedString, font: Font, textColor: Color = Color.textBlack,
 			  alignment: Alignment = Alignment.Left, insets: StackInsets = StackInsets.any,
 			  additionalDrawers: Seq[CustomDrawer] = Vector(), allowTextShrink: Boolean = false) =
 		new StaticTextLabel(parentHierarchy, text, TextDrawContext(font, textColor, alignment, insets),
@@ -38,22 +46,19 @@ object StaticTextLabel
 	
 	/**
 	  * Creates a new text label utilizing contextual information
-	  * @param parentHierarchy This component's parent hierarchy
 	  * @param text Text displayed on this label
 	  * @param additionalDrawers Additional custom drawing (default = empty)
 	  * @param isHint Whether this label should be considered a hint (affects text color)
 	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def contextual(parentHierarchy: ComponentHierarchy, text: LocalizedString,
-				   additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false)
+	def contextual(text: LocalizedString, additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false)
 				  (implicit context: TextContextLike) =
-		apply(parentHierarchy, text, context.font, if (isHint) context.hintTextColor else context.textColor,
+		apply(text, context.font, if (isHint) context.hintTextColor else context.textColor,
 			context.textAlignment, context.textInsets, additionalDrawers, !context.textHasMinWidth)
 	
 	/**
 	  * Creates a new text label with solid background utilizing contextual information
-	  * @param parentHierarchy This component's parent hierarchy
 	  * @param text Text displayed on this label
 	  * @param background Label background color
 	  * @param additionalDrawers Additional custom drawing (default = empty)
@@ -61,17 +66,16 @@ object StaticTextLabel
 	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def contextualWithCustomBackground(parentHierarchy: ComponentHierarchy, text: LocalizedString,
-									   background: ComponentColor, additionalDrawers: Seq[CustomDrawer] = Vector(),
-									   isHint: Boolean = false)(implicit context: BackgroundSensitive[TextContextLike]) =
+	def contextualWithCustomBackground(text: LocalizedString, background: ComponentColor,
+									   additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false)
+									  (implicit context: BackgroundSensitive[TextContextLike]) =
 	{
 		implicit val c: TextContextLike = context.inContextWithBackground(background)
-		contextual(parentHierarchy, text, new BackgroundDrawer(c.containerBackground) +: additionalDrawers, isHint)
+		contextual(text, new BackgroundDrawer(c.containerBackground) +: additionalDrawers, isHint)
 	}
 	
 	/**
 	  * Creates a new text label with solid background utilizing contextual information
-	  * @param parentHierarchy This component's parent hierarchy
 	  * @param text Text displayed on this label
 	  * @param role Label background color role
 	  * @param preferredShade Preferred color shade (default = standard)
@@ -80,12 +84,10 @@ object StaticTextLabel
 	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def contextualWithBackground(parentHierarchy: ComponentHierarchy, text: LocalizedString, role: ColorRole,
-								 preferredShade: ColorShade = Standard, additionalDrawers: Seq[CustomDrawer] = Vector(),
-								 isHint: Boolean = false)
+	def contextualWithBackground(text: LocalizedString, role: ColorRole, preferredShade: ColorShade = Standard,
+								 additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false)
 								(implicit context: ColorContextLike with BackgroundSensitive[TextContextLike]) =
-		contextualWithCustomBackground(parentHierarchy, text, context.color(role, preferredShade), additionalDrawers,
-			isHint)
+		contextualWithCustomBackground(text, context.color(role, preferredShade), additionalDrawers, isHint)
 }
 
 /**
