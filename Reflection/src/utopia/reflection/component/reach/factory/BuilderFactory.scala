@@ -1,4 +1,4 @@
-package utopia.reflection.component.reach.template
+package utopia.reflection.component.reach.factory
 
 /**
   * A common trait for instances that produce new container builders. Container builders are used for creating

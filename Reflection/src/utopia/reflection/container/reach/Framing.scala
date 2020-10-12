@@ -7,8 +7,9 @@ import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.component.context.{BackgroundSensitive, ColorContext, ColorContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, RoundedBackgroundDrawer}
 import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.reflection.component.reach.factory.{BuilderFactory, ComponentFactoryFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
-import utopia.reflection.component.reach.template.{BuilderFactory, ComponentFactoryFactory, CustomDrawReachComponent, ReachComponentLike}
+import utopia.reflection.component.reach.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reflection.container.stack.template.layout.FramingLike2
 import utopia.reflection.shape.stack.{StackInsets, StackInsetsConvertible}
@@ -63,6 +64,7 @@ case class FramingBuilder[+F](framingFactory: FramingFactory, contentFactory: Co
 		framingFactory(newContent, insets, customDrawers)
 	}
 	
+	// TODO: Move these to a contextual version of this builder
 	/**
 	  * Creates a new framing with background color
 	  * @param color Background color for this framing

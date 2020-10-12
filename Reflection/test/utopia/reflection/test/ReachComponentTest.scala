@@ -6,9 +6,8 @@ import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.KeyStateListener
 import utopia.reflection.color.ColorRole.Primary
-import utopia.reflection.component.context.TextContext
+import utopia.reflection.component.reach.factory.Mixed
 import utopia.reflection.component.reach.label.{MutableTextLabel, StaticTextLabel}
-import utopia.reflection.component.reach.template.Mixed
 import utopia.reflection.container.reach.{Framing, Stack}
 import utopia.reflection.container.swing.ReachCanvas
 import utopia.reflection.container.swing.window.Frame
@@ -33,14 +32,13 @@ object ReachComponentTest extends App
 		val (stack, _, label) = Stack(canvasHierarchy).builder(Mixed).column() { factories =>
 			val (framing, label) = factories(Framing).builder(MutableTextLabel)
 				.withBackground(colorScheme.secondary.light, margins.medium.any) { (labelFactory, context) =>
-					implicit val c: TextContext = context.forTextComponents(Alignment.Center)
-					labelFactory.withBackground("Hello!", Primary)
+					context.forTextComponents(Alignment.Center).use { implicit context =>
+						labelFactory.withBackground("Hello!", Primary)
+					}
 				}(baseContext).toTuple // TODO: Add method for stack margin override
 			// TODO: The second label "twitches" on content updates
-			val label2 = baseContext.inContextWithBackground(colorScheme.primary).forTextComponents(Alignment.Center)
-				.use { implicit c =>
-					factories(StaticTextLabel).withCustomBackground("Hello 2", c.containerBackground)
-				}
+			val label2 = factories(StaticTextLabel).withContext(baseContext.inContextWithBackground(colorScheme.primary)
+				.forTextComponents(Alignment.Center)).withCustomBackground("Hello 2", colorScheme.primary)
 			Vector(framing, label2) -> label
 		}(baseContext.copy(stackMarginOverride = Some(StackLength.fixedZero))).toTriple
 		

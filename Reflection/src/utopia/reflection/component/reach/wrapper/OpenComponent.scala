@@ -8,8 +8,9 @@ import utopia.genesis.shape.Axis2D
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.reflection.component.reach.factory.ComponentFactoryFactory
 import utopia.reflection.component.reach.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
-import utopia.reflection.component.reach.template.{ComponentFactoryFactory, ReachComponentLike}
+import utopia.reflection.component.reach.template.ReachComponentLike
 import utopia.reflection.container.reach.{Framing, Stack}
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit

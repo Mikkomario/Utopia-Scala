@@ -1,4 +1,4 @@
-package utopia.reflection.component.reach.template
+package utopia.reflection.component.reach.factory
 
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 

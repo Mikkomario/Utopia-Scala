@@ -6,8 +6,9 @@ import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.reflection.component.reach.factory.{BuilderFactory, ComponentFactoryFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
-import utopia.reflection.component.reach.template.{BuilderFactory, ComponentFactoryFactory, CustomDrawReachComponent, ReachComponentLike}
+import utopia.reflection.component.reach.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
@@ -19,6 +20,7 @@ object Stack extends ComponentFactoryFactory[StackFactory]
 	override def apply(hierarchy: ComponentHierarchy) = StackFactory(hierarchy)
 }
 
+// TODO: Create a contextual factory / builder
 case class StackFactory(parentHierarchy: ComponentHierarchy) extends BuilderFactory[StackBuilder]
 {
 	// IMPLEMENTED	----------------------------

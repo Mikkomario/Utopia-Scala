@@ -5,11 +5,12 @@ import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
-import utopia.reflection.component.context.{BackgroundSensitive, ColorContextLike, TextContextLike}
+import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext, TextDrawer}
 import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.reflection.component.reach.factory.{ComponentFactoryFactory, ContextualComponentFactory, ContextualComponentFactoryFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
-import utopia.reflection.component.reach.template.{ComponentFactoryFactory, CustomDrawReachComponent}
+import utopia.reflection.component.reach.template.CustomDrawReachComponent
 import utopia.reflection.component.template.text.SingleLineTextComponent2
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
@@ -26,7 +27,16 @@ object StaticTextLabel extends ComponentFactoryFactory[StaticTextLabelFactory]
   * @param parentHierarchy A component hierarchy the new labels will be placed in
   */
 case class StaticTextLabelFactory(parentHierarchy: ComponentHierarchy)
+	extends ContextualComponentFactoryFactory[TextContextLike, ContextualStaticTextLabelFactory]
 {
+	// IMPLEMENTED	----------------------------
+	
+	override def withContext[C2 <: TextContextLike](context: C2) =
+		ContextualStaticTextLabelFactory(this, context)
+	
+	
+	// OTHER	--------------------------------
+	
 	/**
 	  * Creates a new text label
 	  * @param text Text displayed on this label
@@ -38,56 +48,72 @@ case class StaticTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
 	  * @return A new label
 	  */
-	def custom(text: LocalizedString, font: Font, textColor: Color = Color.textBlack,
+	def apply(text: LocalizedString, font: Font, textColor: Color = Color.textBlack,
 			  alignment: Alignment = Alignment.Left, insets: StackInsets = StackInsets.any,
 			  additionalDrawers: Seq[CustomDrawer] = Vector(), allowTextShrink: Boolean = false) =
 		new StaticTextLabel(parentHierarchy, text, TextDrawContext(font, textColor, alignment, insets),
 			additionalDrawers, allowTextShrink)
+}
+
+object ContextualStaticTextLabelFactory
+{
+	// EXTENSIONS	-----------------------------
+	
+	implicit class ColorChangingStaticTextLabelFactory[N <: TextContextLike with BackgroundSensitive[TextContextLike]]
+	(val f: ContextualStaticTextLabelFactory[N]) extends AnyVal
+	{
+		/**
+		  * Creates a new text label with solid background utilizing contextual information
+		  * @param text Text displayed on this label
+		  * @param background Label background color
+		  * @param additionalDrawers Additional custom drawing (default = empty)
+		  * @param isHint Whether this label should be considered a hint (affects text color)
+		  * @return A new label
+		  */
+		def withCustomBackground(text: LocalizedString, background: ComponentColor,
+								 additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
+		{
+			f.mapContext { _.inContextWithBackground(background) }(text,
+				new BackgroundDrawer(background) +: additionalDrawers, isHint)
+		}
+		
+		/**
+		  * Creates a new text label with solid background utilizing contextual information
+		  * @param text Text displayed on this label
+		  * @param role Label background color role
+		  * @param preferredShade Preferred color shade (default = standard)
+		  * @param additionalDrawers Additional custom drawing (default = empty)
+		  * @param isHint Whether this label should be considered a hint (affects text color)
+		  * @return A new label
+		  */
+		def withBackground(text: LocalizedString, role: ColorRole, preferredShade: ColorShade = Standard,
+						   additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
+			withCustomBackground(text, f.context.color(role, preferredShade), additionalDrawers, isHint)
+	}
+}
+
+case class ContextualStaticTextLabelFactory[+N <: TextContextLike]
+(factory: StaticTextLabelFactory, override val context: N)
+	extends ContextualComponentFactory[N, TextContextLike, ContextualStaticTextLabelFactory]
+{
+	// IMPLEMENTED	-----------------------------
+	
+	override def withContext[C2 <: TextContextLike](newContext: C2) =
+		ContextualStaticTextLabelFactory(factory, newContext)
+	
+	
+	// OTHER	---------------------------------
 	
 	/**
 	  * Creates a new text label utilizing contextual information
 	  * @param text Text displayed on this label
 	  * @param additionalDrawers Additional custom drawing (default = empty)
 	  * @param isHint Whether this label should be considered a hint (affects text color)
-	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def apply(text: LocalizedString, additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false)
-				  (implicit context: TextContextLike) =
-		custom(text, context.font, if (isHint) context.hintTextColor else context.textColor,
+	def apply(text: LocalizedString, additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
+		factory(text, context.font, if (isHint) context.hintTextColor else context.textColor,
 			context.textAlignment, context.textInsets, additionalDrawers, !context.textHasMinWidth)
-	
-	/**
-	  * Creates a new text label with solid background utilizing contextual information
-	  * @param text Text displayed on this label
-	  * @param background Label background color
-	  * @param additionalDrawers Additional custom drawing (default = empty)
-	  * @param isHint Whether this label should be considered a hint (affects text color)
-	  * @param context Implicit component creation context
-	  * @return A new label
-	  */
-	def withCustomBackground(text: LocalizedString, background: ComponentColor,
-									   additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false)
-									  (implicit context: BackgroundSensitive[TextContextLike]) =
-	{
-		implicit val c: TextContextLike = context.inContextWithBackground(background)
-		apply(text, new BackgroundDrawer(c.containerBackground) +: additionalDrawers, isHint)
-	}
-	
-	/**
-	  * Creates a new text label with solid background utilizing contextual information
-	  * @param text Text displayed on this label
-	  * @param role Label background color role
-	  * @param preferredShade Preferred color shade (default = standard)
-	  * @param additionalDrawers Additional custom drawing (default = empty)
-	  * @param isHint Whether this label should be considered a hint (affects text color)
-	  * @param context Implicit component creation context
-	  * @return A new label
-	  */
-	def withBackground(text: LocalizedString, role: ColorRole, preferredShade: ColorShade = Standard,
-								 additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false)
-								(implicit context: ColorContextLike with BackgroundSensitive[TextContextLike]) =
-		withCustomBackground(text, context.color(role, preferredShade), additionalDrawers, isHint)
 }
 
 /**
