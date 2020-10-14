@@ -8,7 +8,7 @@ import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext, TextDrawer}
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.reach.factory.{ComponentFactoryFactory, ContextualComponentFactory, ContextualComponentFactoryFactory}
+import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.CustomDrawReachComponent
 import utopia.reflection.component.template.text.SingleLineTextComponent2
@@ -17,7 +17,8 @@ import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
-object StaticTextLabel extends ComponentFactoryFactory[StaticTextLabelFactory]
+object StaticTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike, StaticTextLabelFactory,
+	ContextualStaticTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = StaticTextLabelFactory(hierarchy)
 }
@@ -27,7 +28,7 @@ object StaticTextLabel extends ComponentFactoryFactory[StaticTextLabelFactory]
   * @param parentHierarchy A component hierarchy the new labels will be placed in
   */
 case class StaticTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextualComponentFactoryFactory[TextContextLike, ContextualStaticTextLabelFactory]
+	extends ContextInsertableComponentFactory[TextContextLike, ContextualStaticTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------
 	

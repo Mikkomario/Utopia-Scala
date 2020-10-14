@@ -13,6 +13,13 @@ object ComponentCreationResult
 	
 	implicit def componentToResult[C <: ReachComponentLike](component: C): ComponentCreationResult[C, Unit] =
 		new ComponentCreationResult[C, Unit](component, ())
+	
+	
+	// OTHER	------------------------------
+	
+	def apply[C, R](component: C, result: R) = new ComponentCreationResult[C, R](component, result)
+	
+	def apply[C](component: C) = new ComponentCreationResult[C, Unit](component, ())
 }
 
 /**

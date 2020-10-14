@@ -6,8 +6,9 @@ import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.KeyStateListener
 import utopia.reflection.color.ColorRole.Primary
+import utopia.reflection.component.context.{BaseContext, ColorContext, TextContext}
 import utopia.reflection.component.reach.factory.Mixed
-import utopia.reflection.component.reach.label.{MutableTextLabel, StaticTextLabel}
+import utopia.reflection.component.reach.label.{ContextualMutableTextLabelFactory, MutableTextLabel, StaticTextLabel}
 import utopia.reflection.container.reach.{Framing, Stack}
 import utopia.reflection.container.swing.ReachCanvas
 import utopia.reflection.container.swing.window.Frame
@@ -30,12 +31,20 @@ object ReachComponentTest extends App
 	val result = ReachCanvas { canvasHierarchy =>
 		// TODO: Handle context passing better
 		val (stack, _, label) = Stack(canvasHierarchy).builder(Mixed).column() { factories =>
+			
+			val (framing, label: MutableTextLabel) = factories(Framing).builderWithMappedContext[ColorContext,
+				TextContext, ContextualMutableTextLabelFactory](MutableTextLabel, baseContext) {
+				_.forTextComponents(Alignment.Center) }
+				.withBackground(colorScheme.secondary.light, margins.medium.any) { labelFactory =>
+					labelFactory.withBackground("Hello!", Primary)
+				}.toTuple
+			/*
 			val (framing, label) = factories(Framing).builder(MutableTextLabel)
 				.withBackground(colorScheme.secondary.light, margins.medium.any) { (labelFactory, context) =>
 					context.forTextComponents(Alignment.Center).use { implicit context =>
-						labelFactory.withBackground("Hello!", Primary)
+						labelFactory.contextual.withBackground("Hello!", Primary)
 					}
-				}(baseContext).toTuple // TODO: Add method for stack margin override
+				}(baseContext).toTuple*/
 			// TODO: The second label "twitches" on content updates
 			val label2 = factories(StaticTextLabel).withContext(baseContext.inContextWithBackground(colorScheme.primary)
 				.forTextComponents(Alignment.Center)).withCustomBackground("Hello 2", colorScheme.primary)

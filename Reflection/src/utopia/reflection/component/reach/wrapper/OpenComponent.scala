@@ -8,7 +8,7 @@ import utopia.genesis.shape.Axis2D
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.reach.factory.ComponentFactoryFactory
+import utopia.reflection.component.reach.factory.{ComponentFactoryFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reflection.component.reach.template.ReachComponentLike
 import utopia.reflection.container.reach.{Framing, Stack}
@@ -24,6 +24,7 @@ object Open
 	  * @param creation Component creation function (returns a component and a possible additional result)
 	  * @param canvas Implicit access to top canvas component
 	  * @tparam C Type of created component
+	  * @tparam R Type of additional creation result
 	  * @return A new open component
 	  */
 	def apply[C, R](creation: ComponentHierarchy => ComponentCreationResult[C, R])(implicit canvas: ReachCanvas) =
@@ -39,12 +40,53 @@ object Open
 	  * @param factory A factory that produces component factories for target contexts
 	  * @param creation Component creation function (returns a component and a possible additional result)
 	  * @param canvas Implicit access to top canvas component
+	  * @tparam F Type of component creation factory
 	  * @tparam C Type of created component
+	  * @tparam R Type of additional creation result
 	  * @return A new open component
 	  */
 	def using[F, C, R](factory: ComponentFactoryFactory[F])(creation: F => ComponentCreationResult[C, R])
 					  (implicit canvas: ReachCanvas) =
 		apply { hierarchy => creation(factory(hierarchy)) }
+	
+	/**
+	  * Creates a new open component using a contextual component factory
+	  * @param factory A factory that can produce contextual component factories when specified with the proper context
+	  * @param context Component creation context
+	  * @param creation Component creation function (accepts a context-specific component creation factory)
+	  * @param canvas Implicit access to top canvas component
+	  * @tparam C Type of created component
+	  * @tparam R Type of additional creation result
+	  * @tparam N Type of component creation context
+	  * @tparam F Type of context specific component creation factory
+	  * @return New component with possible additional creation result
+	  */
+	// FIXME: This method doesn't work without specifying all generic parameter types
+	def withContext[C, R, N <: BaseContextLike, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F], context: N)
+	(creation: F[N] => ComponentCreationResult[C, R])(implicit canvas: ReachCanvas) =
+	{
+		apply { hierarchy =>
+			creation(factory.withContext(hierarchy, context))
+		}
+	}
+	
+	/**
+	  * Creates a new open component using a contextual component factory
+	  * @param factory A factory that can produce contextual component factories when specified with the proper context
+	  * @param creation Component creation function (accepts a context-specific component creation factory)
+	  * @param canvas Implicit access to top canvas component
+	  * @param context Implicit component creation context
+	  * @tparam C Type of created component
+	  * @tparam R Type of additional creation result
+	  * @tparam N Type of component creation context
+	  * @tparam F Type of context specific component creation factory
+	  * @return New component with possible additional creation result
+	  */
+	def contextual[C, R, N <: BaseContextLike, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])(creation: F[N] => ComponentCreationResult[C, R])
+	(implicit canvas: ReachCanvas, context: N) =
+		withContext(factory, context)(creation)
 }
 
 object OpenComponent

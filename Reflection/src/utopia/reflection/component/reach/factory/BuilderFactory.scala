@@ -6,13 +6,13 @@ package utopia.reflection.component.reach.factory
   * @author Mikko Hilpinen
   * @since 11.10.2020, v2
   */
-trait BuilderFactory[+Builder[+CF]]
+trait BuilderFactory[+Builder[+FF]]
 {
 	/**
 	  * Creates a new container builder
 	  * @param contentFactory A factory that produces container content factories
-	  * @tparam CF Type of content factory used
+	  * @tparam FF Type of content factory factory used
 	  * @return A new container builder
 	  */
-	def builder[CF](contentFactory: ComponentFactoryFactory[CF]): Builder[CF]
+	def builder[FF](contentFactory: ComponentFactoryFactory[FF]): Builder[FF]
 }
