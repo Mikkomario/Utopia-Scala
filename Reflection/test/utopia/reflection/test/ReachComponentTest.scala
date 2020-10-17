@@ -1,7 +1,6 @@
 package utopia.reflection.test
 
 import java.awt.event.KeyEvent
-import java.time.{Instant, LocalTime}
 
 import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
