@@ -45,7 +45,7 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam R Type of component creation result
 	  * @return This stack, along with contextual information
 	  */
-	def custom[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], direction: Axis2D = Y,
+	def apply[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], direction: Axis2D = Y,
 										   layout: StackLayout = Fit, margin: StackLength = StackLength.any,
 										   cap: StackLength = StackLength.fixedZero,
 										   customDrawers: Vector[CustomDrawer] = Vector()) =
@@ -53,69 +53,6 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 		val stack = new Stack[C](parentHierarchy, content.component, direction, layout, margin, cap, customDrawers)
 		content attachTo stack
 	}
-	
-	/**
-	  * Creates a new stack of items
-	  * @param content Content to attach to this stack
-	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
-	  *                   (default = false)
-	  * @param context Implicit component creation context
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with contextual information
-	  */
-	def apply[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R],
-										  direction: Axis2D = Y, layout: StackLayout = Fit,
-										  cap: StackLength = StackLength.fixedZero,
-										  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-										 (implicit context: BaseContextLike) =
-		custom(content, direction, layout,
-			if (areRelated) context.relatedItemsStackMargin else context.defaultStackMargin, cap, customDrawers)
-	
-	/**
-	  * Creates a new row of items
-	  * @param content Content to attach to this stack
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
-	  *                   (default = false)
-	  * @param context Implicit component creation context
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with contextual information
-	  */
-	def row[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], layout: StackLayout = Fit,
-										cap: StackLength = StackLength.fixedZero,
-										customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-									   (implicit context: BaseContextLike) =
-		apply(content, X, layout, cap, customDrawers, areRelated)
-	
-	/**
-	  * Creates a new column of items
-	  * @param content Content to attach to this stack
-	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
-	  *               (default = Fit = All components have same breadth as this stack)
-	  * @param cap Cap placed at each end of this stack (default = always 0)
-	  * @param customDrawers Custom drawers attached to this stack (default = empty)
-	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
-	  *                   (default = false)
-	  * @param context Implicit component creation context
-	  * @tparam C Type of wrapped component
-	  * @tparam R Type of component creation result
-	  * @return This stack, along with contextual information
-	  */
-	def column[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], layout: StackLayout = Fit,
-										   cap: StackLength = StackLength.fixedZero,
-										   customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-										  (implicit context: BaseContextLike) =
-		apply(content, Y, layout, cap, customDrawers, areRelated)
 }
 
 case class ContextualStackFactory[N <: BaseContextLike](stackFactory: StackFactory, context: N)
@@ -156,7 +93,7 @@ case class ContextualStackFactory[N <: BaseContextLike](stackFactory: StackFacto
 										  direction: Axis2D = Y, layout: StackLayout = Fit,
 										  cap: StackLength = StackLength.fixedZero,
 										  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false) =
-		stackFactory.custom(content, direction, layout,
+		stackFactory(content, direction, layout,
 			if (areRelated) context.relatedItemsStackMargin else context.defaultStackMargin, cap, customDrawers)
 	
 	/**

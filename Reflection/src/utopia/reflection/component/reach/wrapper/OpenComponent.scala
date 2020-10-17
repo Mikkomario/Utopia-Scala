@@ -62,7 +62,7 @@ object Open
 	  * @return New component with possible additional creation result
 	  */
 	// FIXME: This method doesn't work without specifying all generic parameter types
-	def withContext[C, R, N <: BaseContextLike, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	def withContext[C, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F], context: N)
 	(creation: F[N] => ComponentCreationResult[C, R])(implicit canvas: ReachCanvas) =
 	{
@@ -83,7 +83,7 @@ object Open
 	  * @tparam F Type of context specific component creation factory
 	  * @return New component with possible additional creation result
 	  */
-	def contextual[C, R, N <: BaseContextLike, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	def contextual[C, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])(creation: F[N] => ComponentCreationResult[C, R])
 	(implicit canvas: ReachCanvas, context: N) =
 		withContext(factory, context)(creation)
@@ -146,7 +146,7 @@ object OpenComponent
 		def stack(direction: Axis2D = Y, layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 				  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
 			   (implicit context: BaseContextLike, canvas: ReachCanvas) =
-			Open.using(Stack) { sf =>
+			Open.withContext(Stack, context) { sf =>
 				val stack = sf(c, direction, layout, cap, customDrawers, areRelated)
 				stack.parent -> stack.result
 			}

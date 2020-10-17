@@ -2,22 +2,20 @@ package utopia.reflection.component.reach.factory
 
 import scala.language.implicitConversions
 
-import utopia.reflection.component.context.BaseContextLike
-
+/*
 object ContextInsertableComponentFactory
 {
 	// Automatically inserts the implicit context to the available factory, if possible
-	implicit def autoInsertContext[N <: Top, Top <: BaseContextLike, F[X <: Top] <: ContextualComponentFactory[X, Top, F]]
+	implicit def autoInsertContext[N <: Top, Top, F[X <: Top] <: ContextualComponentFactory[X, Top, F]]
 	(factory: ContextInsertableComponentFactory[Top, F])(implicit context: N): F[N] = factory.withContext(context)
-}
+}*/
 
 /**
   * A factory that can be enriched with component creation context in order to create a contextual component factory
   * @author Mikko Hilpinen
   * @since 12.10.2020, v2
   */
-trait ContextInsertableComponentFactory[Top <: BaseContextLike,
-	+Contextual[X <: Top] <: ContextualComponentFactory[X, Top, Contextual]]
+trait ContextInsertableComponentFactory[Top, +Contextual[X <: Top] <: ContextualComponentFactory[X, Top, Contextual]]
 {
 	// ABSTRACT	-----------------------------
 	

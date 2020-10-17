@@ -1,6 +1,5 @@
 package utopia.reflection.component.reach.factory
 
-import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 
 /**
@@ -8,7 +7,7 @@ import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
   * @author Mikko Hilpinen
   * @since 14.10.2020, v2
   */
-trait ContextInsertableComponentFactoryFactory[Top <: BaseContextLike, +F <: ContextInsertableComponentFactory[Top, CF],
+trait ContextInsertableComponentFactoryFactory[Top, +F <: ContextInsertableComponentFactory[Top, CF],
 	+CF[X <: Top] <: ContextualComponentFactory[X, Top, CF]] extends ComponentFactoryFactory[F]
 {
 	/**

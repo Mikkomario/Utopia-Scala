@@ -1,6 +1,6 @@
 package utopia.reflection.component.reach.factory
 
-import utopia.reflection.component.context.{BaseContextLike, TextContext}
+import utopia.reflection.component.context.TextContext
 import utopia.reflection.shape.Alignment
 import utopia.reflection.text.Font
 
@@ -8,7 +8,7 @@ object ContextualComponentFactory
 {
 	// EXTENSIONS	------------------------
 	
-	implicit class TextContextComponentFactory[N <: TextContext, T >: TextContext <: BaseContextLike, Repr[N2 <: T]]
+	implicit class TextContextComponentFactory[N <: TextContext, T >: TextContext, Repr[N2 <: T]]
 	(val f: ContextualComponentFactory[N, T, Repr]) extends AnyVal
 	{
 		/**
@@ -39,7 +39,7 @@ object ContextualComponentFactory
   * @tparam Top The type limit of accepted context parameters
   * @tparam Repr Implementation type of this factory (generic)
   */
-trait ContextualComponentFactory[+N, Top <: BaseContextLike, +Repr[N2 <: Top]]
+trait ContextualComponentFactory[+N, Top, +Repr[N2 <: Top]]
 {
 	// ABSTRACT	----------------------------
 	
