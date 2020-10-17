@@ -72,8 +72,13 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		if (event.newValue)
 		{
 			repaintNeed.setOne(Full)
-			// TODO: Needs to update all content layout and not just top content layout
-			currentContent.foreach { content => layoutUpdateQueue :+= Vector(content) }
+			currentContent.foreach { content =>
+				val branches = content.toTree.allBranches
+				if (branches.isEmpty)
+					layoutUpdateQueue :+= Vector(content)
+				else
+					layoutUpdateQueue ++= branches.map { content +: _ }
+			}
 		}
 		fireStackHierarchyChangeEvent(event.newValue)
 	}
@@ -110,7 +115,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		// Updates content layout
 		val layoutUpdateQueues = layoutUpdateQueue.popAll()
 		if (layoutUpdateQueues.nonEmpty)
-			updateLayoutFor(layoutUpdateQueues.toSet)
+			updateLayoutFor2(layoutUpdateQueues.toSet, Set())
 		
 		// Performs the queued tasks
 		updateFinishedQueue.popAll().foreach { _() }
@@ -192,13 +197,31 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	@tailrec
 	private def updateLayoutFor(componentQueues: Set[Seq[ReachComponentLike]]): Unit =
 	{
-		// TODO: Handle cases where a multi-container's other children need updates as well (due to size changes)
 		// Updates the layout of the next layer (from top to bottom) components
 		componentQueues.map { _.head }.foreach { _.updateLayout() }
 		// Moves to the next layer of components, if there is one
 		val remainingQueues = componentQueues.filter { _.size > 1 }
 		if (remainingQueues.nonEmpty)
 			updateLayoutFor(remainingQueues.map { _.tail })
+	}
+	
+	@tailrec
+	private def updateLayoutFor2(componentQueues: Set[Seq[ReachComponentLike]], sizeChangedChildren: Set[ReachComponentLike]): Unit =
+	{
+		// Updates the layout of the next layer (from top to bottom) components. Checks for size changes and
+		// also updates the children of components which changed size during the layout update
+		val nextSizeChangeChildren = (componentQueues.map { _.head } ++ sizeChangedChildren).flatMap { c =>
+			val oldSize = c.size
+			c.updateLayout()
+			if (c.size != oldSize)
+				c.children
+			else
+				None
+		}
+		// Moves to the next layer of components, if there is one
+		val remainingQueues = componentQueues.filter { _.size > 1 }
+		if (remainingQueues.nonEmpty || nextSizeChangeChildren.nonEmpty)
+			updateLayoutFor2(remainingQueues.map { _.tail }, nextSizeChangeChildren)
 	}
 	
 	

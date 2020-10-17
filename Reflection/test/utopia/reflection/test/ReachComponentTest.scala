@@ -1,6 +1,7 @@
 package utopia.reflection.test
 
 import java.awt.event.KeyEvent
+import java.time.{Instant, LocalTime}
 
 import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
@@ -29,7 +30,6 @@ object ReachComponentTest extends App
 	import TestContext._
 	
 	val result = ReachCanvas { canvasHierarchy =>
-		// TODO: Handle context passing better
 		val (stack, _, label) = Stack(canvasHierarchy).withContext(baseContext.withStackMargin(StackLength.fixedZero))
 			.builder(Mixed).column() { factories =>
 			
@@ -50,6 +50,7 @@ object ReachComponentTest extends App
 			val label2 = factories.withContext(baseContext.inContextWithBackground(colorScheme.primary)
 				.forTextComponents(Alignment.Center))(StaticTextLabel)
 				.withCustomBackground("Hello 2", colorScheme.primary)
+			
 			Vector(framing, label2) -> label
 		}.toTriple
 		

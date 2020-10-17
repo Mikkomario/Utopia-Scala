@@ -1,5 +1,6 @@
 package utopia.reflection.component.reach.template
 
+import utopia.flow.datastructure.immutable.Tree
 import utopia.flow.event.Changing
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.genesis.util.Drawer
@@ -70,6 +71,12 @@ trait ReachComponentLike extends Stackable2
 	  * @return The position of this component inside the so called top component
 	  */
 	def positionInTop = position + parentHierarchy.positionToTopModifier
+	
+	/**
+	  * @return A tree representation of this component hierarchy (root node represents this component and branches
+	  *         below it are this component's children)
+	  */
+	def toTree: Tree[ReachComponentLike] = Tree(this, children.toVector.map { _.toTree })
 	
 	
 	// IMPLEMENTED	---------------------
