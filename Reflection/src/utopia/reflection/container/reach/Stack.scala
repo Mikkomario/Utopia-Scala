@@ -6,27 +6,28 @@ import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.reach.factory.{BuilderFactory, ComponentFactoryFactory}
+import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.stack.template.layout.StackLike2
+import utopia.reflection.container.swing.ReachCanvas
 import utopia.reflection.shape.stack.StackLength
 
-object Stack extends ComponentFactoryFactory[StackFactory]
+object Stack extends ContextInsertableComponentFactoryFactory[BaseContextLike, StackFactory, ContextualStackFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = StackFactory(hierarchy)
 }
 
-// TODO: Create a contextual factory / builder
-case class StackFactory(parentHierarchy: ComponentHierarchy) extends BuilderFactory[StackBuilder]
+case class StackFactory(parentHierarchy: ComponentHierarchy)
+	extends ContextInsertableComponentFactory[BaseContextLike, ContextualStackFactory]
 {
 	// IMPLEMENTED	----------------------------
 	
-	override def builder[CF](contentFactory: ComponentFactoryFactory[CF]) =
-		StackBuilder(this, contentFactory)
+	override def withContext[N <: BaseContextLike](context: N) =
+		ContextualStackFactory(this, context)
 	
 	
 	// OTHER	--------------------------------
@@ -117,8 +118,89 @@ case class StackFactory(parentHierarchy: ComponentHierarchy) extends BuilderFact
 		apply(content, Y, layout, cap, customDrawers, areRelated)
 }
 
-case class StackBuilder[+CF](stackFactory: StackFactory, contentFactory: ComponentFactoryFactory[CF])
+case class ContextualStackFactory[N <: BaseContextLike](stackFactory: StackFactory, context: N)
+	extends ContextualComponentFactory[N, BaseContextLike, ContextualStackFactory]
 {
+	// IMPLEMENTED	--------------------------------
+	
+	override def withContext[C2 <: BaseContextLike](newContext: C2) = copy(context = newContext)
+	
+	
+	// OTHER	------------------------------------
+	
+	/**
+	  * Creates a new builder that builds both the stack and the content inside
+	  * @param contentFactory A factory that produces content factories
+	  * @tparam F Type of contextual content factories
+	  * @return A new stack builder that uses the same context as in this factory
+	  */
+	def builder[F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	(contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F]) =
+		new ContextualStackBuilder(this, contentFactory)
+	
+	/**
+	  * Creates a new stack of items
+	  * @param content Content to attach to this stack
+	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
+	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
+	  *               (default = Fit = All components have same breadth as this stack)
+	  * @param cap Cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers attached to this stack (default = empty)
+	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
+	  *                   (default = false)
+	  * @tparam C Type of wrapped component
+	  * @tparam R Type of component creation result
+	  * @return This stack, along with contextual information
+	  */
+	def apply[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R],
+										  direction: Axis2D = Y, layout: StackLayout = Fit,
+										  cap: StackLength = StackLength.fixedZero,
+										  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false) =
+		stackFactory.custom(content, direction, layout,
+			if (areRelated) context.relatedItemsStackMargin else context.defaultStackMargin, cap, customDrawers)
+	
+	/**
+	  * Creates a new row of items
+	  * @param content Content to attach to this stack
+	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
+	  *               (default = Fit = All components have same breadth as this stack)
+	  * @param cap Cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers attached to this stack (default = empty)
+	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
+	  *                   (default = false)
+	  * @tparam C Type of wrapped component
+	  * @tparam R Type of component creation result
+	  * @return This stack, along with contextual information
+	  */
+	def row[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], layout: StackLayout = Fit,
+										cap: StackLength = StackLength.fixedZero,
+										customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false) =
+		apply(content, X, layout, cap, customDrawers, areRelated)
+	
+	/**
+	  * Creates a new column of items
+	  * @param content Content to attach to this stack
+	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
+	  *               (default = Fit = All components have same breadth as this stack)
+	  * @param cap Cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers attached to this stack (default = empty)
+	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
+	  *                   (default = false)
+	  * @tparam C Type of wrapped component
+	  * @tparam R Type of component creation result
+	  * @return This stack, along with contextual information
+	  */
+	def column[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], layout: StackLayout = Fit,
+										   cap: StackLength = StackLength.fixedZero,
+										   customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false) =
+		apply(content, Y, layout, cap, customDrawers, areRelated)
+}
+
+class ContextualStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+(stackFactory: ContextualStackFactory[N], contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])
+{
+	private implicit def canvas: ReachCanvas = stackFactory.stackFactory.parentHierarchy.top
+	
 	/**
 	  * Creates a new stack of items
 	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
@@ -129,7 +211,6 @@ case class StackBuilder[+CF](stackFactory: StackFactory, contentFactory: Compone
 	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
 	  *                   (default = false)
 	  * @param fill A function for creating the components that will be placed in this stack
-	  * @param context Implicit component creation context
 	  * @tparam C Type of wrapped component
 	  * @tparam R Type of component creation result
 	  * @return This stack, along with the created components and possible additional result value
@@ -137,10 +218,9 @@ case class StackBuilder[+CF](stackFactory: StackFactory, contentFactory: Compone
 	def apply[C <: ReachComponentLike, R](direction: Axis2D = Y, layout: StackLayout = Fit,
 										  cap: StackLength = StackLength.fixedZero,
 										  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-										 (fill: CF => ComponentCreationResult[Vector[C], R])
-										 (implicit context: BaseContextLike) =
+										 (fill: F[N] => ComponentCreationResult[Vector[C], R]) =
 	{
-		val content = Open.using(contentFactory)(fill)(stackFactory.parentHierarchy.top)
+		val content = Open.withContext(contentFactory, stackFactory.context)(fill)
 		stackFactory(content, direction, layout, cap, customDrawers, areRelated)
 	}
 	
@@ -153,15 +233,13 @@ case class StackBuilder[+CF](stackFactory: StackFactory, contentFactory: Compone
 	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
 	  *                   (default = false)
 	  * @param fill A function for creating the components that will be placed in this stack
-	  * @param context Implicit component creation context
 	  * @tparam C Type of wrapped component
 	  * @tparam R Type of component creation result
 	  * @return This stack, along with the created components and possible additional result value
 	  */
 	def row[C <: ReachComponentLike, R](layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 										customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-									   (fill: CF => ComponentCreationResult[Vector[C], R])
-									   (implicit context: BaseContextLike) =
+									   (fill: F[N] => ComponentCreationResult[Vector[C], R]) =
 		apply(X, layout, cap, customDrawers, areRelated)(fill)
 	
 	/**
@@ -173,15 +251,13 @@ case class StackBuilder[+CF](stackFactory: StackFactory, contentFactory: Compone
 	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
 	  *                   (default = false)
 	  * @param fill A function for creating the components that will be placed in this stack
-	  * @param context Implicit component creation context
 	  * @tparam C Type of wrapped component
 	  * @tparam R Type of component creation result
 	  * @return This stack, along with the created components and possible additional result value
 	  */
 	def column[C <: ReachComponentLike, R](layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 										   customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
-										  (fill: CF => ComponentCreationResult[Vector[C], R])
-										  (implicit context: BaseContextLike) =
+										  (fill: F[N] => ComponentCreationResult[Vector[C], R]) =
 		apply(Y, layout, cap, customDrawers, areRelated)(fill)
 }
 

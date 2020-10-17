@@ -43,7 +43,7 @@ case class FramingFactory(parentHierarchy: ComponentHierarchy) extends BuilderFa
 	def builderWithMappedContext[NT, NC <: BaseContextLike, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
 	(contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F], context: BackgroundSensitive[NT])
 	(makeContext: NT => NC) =
-		new ContextualFramingBuilder[NT, NC, F](context, this, contentFactory)(makeContext)
+		new ContextualFramingBuilder[BackgroundSensitive[NT], NT, NC, F](context, this, contentFactory)(makeContext)
 	
 	/**
 	  * Creates a new framing builder that uses specified component creation context
@@ -185,16 +185,14 @@ case class FramingBuilder[+F](framingFactory: FramingFactory, contentFactory: Co
 		rounded[C, R, C1](context.color(role, preferredShade), insets, moreCustomDrawers)(content)
 }
 
-/*
 object ContextualFramingBuilder
 {
 	// EXTENSIONS	---------------------------
 	
 	// An extension for framing builders which have access to a context with color information
-	implicit class ColorAwareContextualFramingBuilder[+NP <: BackgroundSensitive[NT] with ColorContextLike, NT,
-		NC <: BaseContextLike, +F[X >: NC] <: ContextualComponentFactory[X, _ >: NC, F],
-		+FF <: ContextInsertableComponentFactoryFactory[_ >: NC, _, F]]
-	(val b: ContextualFramingBuilder[NP, NT, NC, F, FF]) extends AnyVal
+	implicit class ColorAwareContextualFramingBuilder[+NP <: BackgroundSensitive[NT] with ColorContextLike,
+		+NT, NC <: BaseContextLike, +F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+	(val b: ContextualFramingBuilder[NP, NT, NC, F]) extends AnyVal
 	{
 		/**
 		  * Creates a new framing with background color
@@ -232,10 +230,11 @@ object ContextualFramingBuilder
 													  (content: F[NC] => ComponentCreationResult[C, R]) =
 			b.rounded(b.context.color(role, preferredShade), insets, moreCustomDrawers)(content)
 	}
-}*/
+}
 
-class ContextualFramingBuilder[+NT, NC <: BaseContextLike, +F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-(val context: BackgroundSensitive[NT], framingFactory: FramingFactory,
+class ContextualFramingBuilder[+NP <: BackgroundSensitive[NT], +NT, NC <: BaseContextLike,
+	+F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+(val context: NP, framingFactory: FramingFactory,
  contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F])(makeContext: NT => NC)
 {
 	// IMPLICIT	-------------------------------

@@ -39,7 +39,7 @@ object ContextualComponentFactory
   * @tparam Top The type limit of accepted context parameters
   * @tparam Repr Implementation type of this factory (generic)
   */
-trait ContextualComponentFactory[+N <: Top, Top <: BaseContextLike, +Repr[N2 <: Top]]
+trait ContextualComponentFactory[+N, Top <: BaseContextLike, +Repr[N2 <: Top]]
 {
 	// ABSTRACT	----------------------------
 	

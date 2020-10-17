@@ -30,4 +30,13 @@ case class BaseContext(actorHandler: ActorHandler, defaultFont: Font, defaultCol
 	override def defaultStackMargin = stackMarginOverride.getOrElse(margins.medium.any)
 	
 	override def relatedItemsStackMargin = stackMarginOverride.map { _ / 2 }.getOrElse(margins.small.downscaling)
+	
+	
+	// OTHER	----------------------------------
+	
+	/**
+	  * @param stackMargin Stack margin to use
+	  * @return A copy of this context with specified stack margin
+	  */
+	def withStackMargin(stackMargin: StackLength) = copy(stackMarginOverride = Some(stackMargin))
 }

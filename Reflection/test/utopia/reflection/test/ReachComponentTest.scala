@@ -6,7 +6,7 @@ import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.KeyStateListener
 import utopia.reflection.color.ColorRole.Primary
-import utopia.reflection.component.context.{BaseContext, ColorContext, TextContext}
+import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.component.reach.factory.Mixed
 import utopia.reflection.component.reach.label.{ContextualMutableTextLabelFactory, MutableTextLabel, StaticTextLabel}
 import utopia.reflection.container.reach.{Framing, Stack}
@@ -30,9 +30,10 @@ object ReachComponentTest extends App
 	
 	val result = ReachCanvas { canvasHierarchy =>
 		// TODO: Handle context passing better
-		val (stack, _, label) = Stack(canvasHierarchy).builder(Mixed).column() { factories =>
+		val (stack, _, label) = Stack(canvasHierarchy).withContext(baseContext.withStackMargin(StackLength.fixedZero))
+			.builder(Mixed).column() { factories =>
 			
-			val (framing, label: MutableTextLabel) = factories(Framing).builderWithMappedContext[ColorContext,
+			val (framing, label) = factories.withoutContext(Framing).builderWithMappedContext[ColorContext,
 				TextContext, ContextualMutableTextLabelFactory](MutableTextLabel, baseContext) {
 				_.forTextComponents(Alignment.Center) }
 				.withBackground(colorScheme.secondary.light, margins.medium.any) { labelFactory =>
@@ -46,10 +47,11 @@ object ReachComponentTest extends App
 					}
 				}(baseContext).toTuple*/
 			// TODO: The second label "twitches" on content updates
-			val label2 = factories(StaticTextLabel).withContext(baseContext.inContextWithBackground(colorScheme.primary)
-				.forTextComponents(Alignment.Center)).withCustomBackground("Hello 2", colorScheme.primary)
+			val label2 = factories.withContext(baseContext.inContextWithBackground(colorScheme.primary)
+				.forTextComponents(Alignment.Center))(StaticTextLabel)
+				.withCustomBackground("Hello 2", colorScheme.primary)
 			Vector(framing, label2) -> label
-		}(baseContext.copy(stackMarginOverride = Some(StackLength.fixedZero))).toTriple
+		}.toTriple
 		
 		stack -> label
 		
