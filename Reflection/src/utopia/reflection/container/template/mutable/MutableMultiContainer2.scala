@@ -8,8 +8,10 @@ import utopia.reflection.container.template.MultiContainer2
 * This trait is extended by classes that may contain one or multiple components
 * @author Mikko Hilpinen
 * @since 25.3.2019
+  * @tparam A Type of items added to this container
+  * @tparam C Type of items held in this container
 **/
-trait MutableMultiContainer2[C <: ComponentLike2] extends MultiContainer2[C]
+trait MutableMultiContainer2[-A, C <: ComponentLike2] extends MultiContainer2[C]
 {
 	// ABSTRACT	-------------------
 	
@@ -18,12 +20,26 @@ trait MutableMultiContainer2[C <: ComponentLike2] extends MultiContainer2[C]
 	  * @param component Component to add
 	  * @param index Index where the component should be added
 	  */
-	protected def add(component: C, index: Int): Unit
+	protected def add(component: A, index: Int): Unit
+	
+	/**
+	  * Adds a number of new items to this container
+	  * @param components Components to add
+	  * @param index Index where the components should be added
+	  */
+	protected def add(components: IterableOnce[A], index: Int): Unit
 	
 	/**
 	  * Removes an item from this container
+	  * @param component component to remove
 	  */
 	protected def remove(component: C): Unit
+	
+	/**
+	  * Removes a number of items from this container
+	  * @param components Components to remove
+	  */
+	protected def remove(components: IterableOnce[C]): Unit
 	
 	
 	// OPERATORS    ---------------
@@ -31,7 +47,7 @@ trait MutableMultiContainer2[C <: ComponentLike2] extends MultiContainer2[C]
 	/**
 	  * Adds a new item to this container
 	  */
-	def +=(component: C, index: Int = components.size) = insert(component, index)
+	def +=(component: A, index: Int = components.size) = insert(component, index)
 	
 	/**
 	  * Removes an item from this container
@@ -41,22 +57,22 @@ trait MutableMultiContainer2[C <: ComponentLike2] extends MultiContainer2[C]
 	/**
 	 * Adds multiple items to this container
 	 */
-	def ++=(components: IterableOnce[C]) = components.iterator.foreach { this += _ }
+	def ++=(newComponents: IterableOnce[A]) = insertMany(newComponents, components.size)
 	
 	/**
 	 * Adds multiple items to this container
 	 */
-	def ++=(first: C, second: C, more: C*): Unit = ++=(Vector(first, second) ++ more)
+	def ++=(first: A, second: A, more: A*): Unit = ++=(Vector(first, second) ++ more)
 	
 	/**
 	 * Removes multiple items from this container
 	 */
-	def --=(components: IterableOnce[C]) = components.iterator.foreach(-=)
+	def --=(components: IterableOnce[C]) = remove(components)
 	
 	/**
 	 * Removes multiple items from this container
 	 */
-	def --=(first: C, second: C, more: C*): Unit = --=(Vector(first, second) ++ more)
+	def --=(first: C, second: C, more: C*): Unit = --=(Set(first, second) ++ more)
 	
 	
 	// OTHER    -------------------
@@ -66,14 +82,14 @@ trait MutableMultiContainer2[C <: ComponentLike2] extends MultiContainer2[C]
 	  * @param component Component to add
 	  * @param index Index where the component should be added
 	  */
-	def insert(component: C, index: Int) = add(component, index)
+	def insert(component: A, index: Int) = add(component, index)
 	
 	/**
 	  * Inserts multiple components to a specific position
 	  * @param components Components to add
 	  * @param index Index where the components should be added
 	  */
-	def insertMany(components: Seq[C], index: Int) = components.foreachWithIndex { (c, i) => insert(c, index + i) }
+	def insertMany(components: IterableOnce[A], index: Int) = add(components, index)
 	
 	/**
 	  * Removes specified range of components from this container
@@ -83,14 +99,14 @@ trait MutableMultiContainer2[C <: ComponentLike2] extends MultiContainer2[C]
 	def removeComponentsIn(range: Range) =
 	{
 		val componentsToRemove = components.slice(range)
-		componentsToRemove.reverseIterator.foreach(-=)
+		remove(componentsToRemove)
 		componentsToRemove
 	}
 	
 	/**
 	 * Removes all items from this container
 	 */
-	def clear() = components.foreach(-=)
+	def clear() = remove(components)
 	
 	/**
 	  * Removes all items except those kept by the filter

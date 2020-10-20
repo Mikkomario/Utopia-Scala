@@ -17,9 +17,10 @@ import scala.math.Ordering.Double.TotalOrdering
   * @tparam Collection Type of collections that combine multiple components
   * @tparam Container Type of container that holds the collections
  */
+// TODO: There might be some problem with these type parameters (added type was added after this trait already existed)
 trait CollectionViewLike2[
-	C <: ComponentLike2, Collection <: MutableMultiContainer2[C],
-	Container <: MutableMultiContainer2[Collection] with Stackable2]
+	C <: ComponentLike2, Collection <: MutableMultiContainer2[C, C],
+	Container <: MutableMultiContainer2[Collection, Collection] with Stackable2]
 	extends MultiContainer2[C] with StackableWrapper2
 {
 	// ABSTRACT	---------------------------
