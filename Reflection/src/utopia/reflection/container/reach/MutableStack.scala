@@ -192,15 +192,6 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	
 	override protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]) = ()
 	
-	
-	// OTHER	-----------------------------
-	
-	/**
-	  * @param component A tested component
-	  * @return Whether this stack contains the specified component
-	  */
-	def contains(component: C) = components.contains(component)
-	
 	/**
 	  * Adds a previously added component back to this stack
 	  * @param component Component to add
@@ -208,7 +199,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	  * @throws NoSuchElementException If the specified component has never been added to this stack previously
 	  */
 	@throws[NoSuchElementException]
-	def addBack(component: C, index: Int = _components.size) =
+	override def addBack(component: C, index: Int = _components.size) =
 	{
 		if (!contains(component))
 		{
@@ -217,6 +208,26 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 			revalidate()
 		}
 	}
+	
+	override def addBack(components: IterableOnce[C], index: Int) =
+	{
+		val newComps = components.iterator.filterNot(contains).toVector
+		if (newComps.nonEmpty)
+		{
+			_components = _components.take(index) ++ newComps ++ _components.drop(index)
+			newComps.foreach { c => pointers(c.hashCode()).set(true) }
+			revalidate()
+		}
+	}
+	
+	
+	// OTHER	-----------------------------
+	
+	/**
+	  * @param component A tested component
+	  * @return Whether this stack contains the specified component
+	  */
+	def contains(component: C) = components.contains(component)
 	
 	private def updatePointerFor(c: OpenComponent[C, _]) =
 	{

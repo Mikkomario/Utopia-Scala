@@ -41,6 +41,24 @@ trait MutableMultiContainer2[-A, C <: ComponentLike2] extends MultiContainer2[C]
 	  */
 	protected def remove(components: IterableOnce[C]): Unit
 	
+	/**
+	  * Adds a previously removed component back to this container
+	  * @param component Component to add back to this container
+	  * @param index Index where the component should be placed
+	  * @throws NoSuchElementException If the specified component hasn't been a component in this container
+	  */
+	@throws[NoSuchElementException]
+	def addBack(component: C, index: Int): Unit
+	
+	/**
+	  * Adds a previously removed components back to this container
+	  * @param components Components to add back to this container
+	  * @param index Index where the components should be placed
+	  * @throws NoSuchElementException If one or more of the specified components hasn't been a component in this container
+	  */
+	@throws[NoSuchElementException]
+	def addBack(components: IterableOnce[C], index: Int): Unit
+	
 	
 	// OPERATORS    ---------------
 	
