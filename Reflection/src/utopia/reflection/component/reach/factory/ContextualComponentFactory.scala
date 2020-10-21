@@ -50,13 +50,18 @@ trait ContextualComponentFactory[+N, Top, +Repr[N2 <: Top]]
 	
 	/**
 	  * @param newContext A new component creation context
-	  * @tparam C2 Type of the new context
+	  * @tparam N2 Type of the new context
 	  * @return A copy of this factory that uses the specified context
 	  */
-	def withContext[C2 <: Top](newContext: C2): Repr[C2]
+	def withContext[N2 <: Top](newContext: N2): Repr[N2]
 	
 	
 	// OTHER	----------------------------
 	
-	def mapContext[C2 <: Top](f: N => C2) = withContext(f(context))
+	/**
+	  * @param f A context mapping function
+	  * @tparam N2 Type of the new context
+	  * @return A copy of this factory that uses the mapped context
+	  */
+	def mapContext[N2 <: Top](f: N => N2) = withContext(f(context))
 }

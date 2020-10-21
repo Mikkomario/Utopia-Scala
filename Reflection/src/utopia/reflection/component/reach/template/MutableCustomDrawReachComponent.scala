@@ -1,7 +1,9 @@
 package utopia.reflection.component.reach.template
 
+import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
+import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
@@ -44,4 +46,13 @@ trait MutableCustomDrawReachComponent extends CustomDrawReachComponent with Muta
 	// ATTRIBUTES	--------------------------
 	
 	var customDrawers = Vector[CustomDrawer]()
+	
+	
+	// OTHER	------------------------------
+	
+	/**
+	  * Adds background drawing to this component
+	  * @param color Color used when drawing component background
+	  */
+	def addBackground(color: Color) = addCustomDrawer(new BackgroundDrawer(color))
 }
