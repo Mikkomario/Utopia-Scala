@@ -9,8 +9,8 @@ import utopia.flow.util.TimeExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.shape.Axis.Y
 import utopia.genesis.shape.shape2D.Size
-import utopia.reflection.component.drawing.immutable.SelectionCircleDrawer
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.view.SelectionCircleViewDrawer
 import utopia.reflection.component.template.input.{InteractionWithPointer, SelectionGroup}
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.swing.button.{ButtonImageSet, CustomDrawableButtonLike, ImageButton}
@@ -87,7 +87,7 @@ object Calendar
 		// INITIAL CODE	-----------------
 		
 		label.component.setFocusable(true)
-		addCustomDrawer(new SelectionCircleDrawer(hoverColor, selectedColor, () => value, () => state))
+		addCustomDrawer(SelectionCircleViewDrawer(hoverColor, selectedColor, valuePointer, statePointer))
 		
 		valuePointer.addListener { _ => repaint() }
 		registerAction { () => value = !value }

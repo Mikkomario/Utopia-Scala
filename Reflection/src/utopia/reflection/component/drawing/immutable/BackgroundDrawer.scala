@@ -11,7 +11,7 @@ import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
   * @author Mikko Hilpine
   * @since 28.2.2020, v1
   */
-class BackgroundDrawer(color: Color, override val drawLevel: DrawLevel = Background) extends CustomDrawer
+case class BackgroundDrawer(color: Color, override val drawLevel: DrawLevel = Background) extends CustomDrawer
 {
 	override def draw(drawer: Drawer, bounds: Bounds) = drawer.onlyFill(color).draw(bounds)
 }

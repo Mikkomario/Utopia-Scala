@@ -2,6 +2,16 @@
 ## v2 (beta)
 ### Breaking Changes
 - Area now leaves bounds implementation up to subclasses
+- CustomDrawer class naming updated
+    - Abstract drawer implementations are now named *Like (Eg. TextDrawerLike)
+    - Immutable drawer implementations keep the previous name (Eg. TextDrawer)
+    - Mutable drawer implementations are now prefixed with Mutable* (Eg. MutableTextDrawer)
+    - View drawers end in *ViewDrawer (Eg. TextViewDrawer)
+- Removed pointer support from mutable custom drawer implementations and added view versions of those drawers
+- Removed isAboveContent -parameter from BorderDrawer implementations and replaced it with drawLevel -parameter
+    - The default draw level is now Normal and not Foreground 
+- Immutable drawers are now all case classes
+- Moved SelectionCircleDrawer from immutable package to view package and refactored and named it accordingly
 ### New Methods
 - Added .hasSameDimensionsAs(TextDrawContext) to TextDrawContext
 ### Fixes

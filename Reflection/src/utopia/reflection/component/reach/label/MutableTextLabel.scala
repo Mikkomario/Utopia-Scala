@@ -1,5 +1,6 @@
 package utopia.reflection.component.reach.label
 
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
@@ -7,7 +8,7 @@ import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
-import utopia.reflection.component.drawing.mutable.TextDrawer
+import utopia.reflection.component.drawing.view.TextViewDrawer
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.MutableCustomDrawReachComponent
@@ -101,34 +102,40 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 {
 	// ATTRIBUTES	-------------------------
 	
-	private val drawer = TextDrawer(initialText, TextDrawContext(initialFont, initialTextColor, initialAlignment,
+	/**
+	  * A mutable pointer that contains this label's text
+	  */
+	val textPointer = new PointerWithEvents(initialText)
+	/**
+	  * A mutable pointer that contains this label's style
+	  */
+	val stylePointer = new PointerWithEvents(TextDrawContext(initialFont, initialTextColor, initialAlignment,
 		initialInsets))
 	
 	
 	// INITIAL CODE	-------------------------
 	
 	// Revalidates and/or repaints this component whenever content or styling changes
-	drawer.textPointer.addListener { _ => revalidateAndThen { repaint() } }
-	drawer.contextPointer.addListener { event =>
+	textPointer.addListener { _ => revalidateAndThen { repaint() } }
+	stylePointer.addListener { event =>
 		if (event.newValue.hasSameDimensionsAs(event.oldValue))
 			repaint()
 		else
 			revalidateAndThen { repaint() }
 	}
-	addCustomDrawer(drawer)
+	addCustomDrawer(TextViewDrawer(textPointer, stylePointer))
 	
 	
 	// IMPLEMENTED	-------------------------
 	
 	override def toString = s"Label($text)"
 	
-	override def text = drawer.text
-	override def text_=(newText: LocalizedString) = drawer.text = newText
+	override def text = textPointer.value
+	override def text_=(newText: LocalizedString) = textPointer.value = newText
 	
-	override def drawContext = drawer.drawContext
-	override def drawContext_=(newContext: TextDrawContext) = drawer.drawContext = newContext
+	override def drawContext = stylePointer.value
+	override def drawContext_=(newContext: TextDrawContext) = stylePointer.value = newContext
 	
 	override protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]) = ()
-	
 	override def updateLayout() = ()
 }

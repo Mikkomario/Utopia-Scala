@@ -13,7 +13,7 @@ import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.context.ScrollingContextLike
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawer}
+import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.reflection.component.swing.template._
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf, Stackable}
@@ -70,7 +70,7 @@ object ScrollCanvas
 class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, actorHandler: ActorHandler,
 				   val contentMouseButtonHandler: MouseButtonStateHandler, val contentMouseMoveHandler: MouseMoveHandler,
 				   val contentMouseWheelHandler: MouseWheelHandler, maxOptimalSize: Option[Size],
-				   scrollBarDrawer: ScrollBarDrawer, scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,
+				   scrollBarDrawer: ScrollBarDrawerLike, scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,
 				   scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
 				   scrollFriction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,
 				   scrollBarIsInsideContent: Boolean = false) extends StackableAwtComponentWrapperWrapper

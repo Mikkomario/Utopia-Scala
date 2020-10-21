@@ -19,7 +19,7 @@ import utopia.genesis.util.Drawer
 import utopia.genesis.view.GlobalMouseEventHandler
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.drawing.template.DrawLevel.Foreground
-import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawer}
+import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.reflection.component.template.layout.stack.{CachingStackable, Stackable}
 import utopia.reflection.container.stack.template.StackContainerLike
 import utopia.reflection.shape.ScrollBarBounds
@@ -325,7 +325,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 		scroll(Vector3D(-xTransition, -yTransition), animated, preservePreviousMomentum = false)
 	}
 	
-	protected def drawWith(barDrawer: ScrollBarDrawer, drawer: Drawer) = Axis2D.values.foreach
+	protected def drawWith(barDrawer: ScrollBarDrawerLike, drawer: Drawer) = Axis2D.values.foreach
 	{
 		axis =>
 			if ((!scrollBarIsInsideContent) || lengthAlong(axis) < contentSize.along(axis))
@@ -337,7 +337,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 	  * @param barDrawer A scroll bar drawer
 	  * @return A custom drawer based on the scroll bar drawer
 	  */
-	protected def scrollBarDrawerToCustomDrawer(barDrawer: ScrollBarDrawer) = CustomDrawer(Foreground) {
+	protected def scrollBarDrawerToCustomDrawer(barDrawer: ScrollBarDrawerLike) = CustomDrawer(Foreground) {
 		(d, _) => drawWith(barDrawer, d) }
 	
 	/**

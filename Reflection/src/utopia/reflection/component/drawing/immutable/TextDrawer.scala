@@ -1,8 +1,7 @@
 package utopia.reflection.component.drawing.immutable
 
 import utopia.genesis.color.Color
-import utopia.reflection.component.drawing.template
-import utopia.reflection.component.drawing.template.DrawLevel
+import utopia.reflection.component.drawing.template.{DrawLevel, TextDrawerLike}
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
@@ -31,5 +30,5 @@ object TextDrawer
   * @author Mikko Hilpinen
   * @since 14.3.2020, v1
   */
-class TextDrawer(override val text: LocalizedString, override val drawContext: TextDrawContext,
-				 override val drawLevel: DrawLevel = Normal) extends template.TextDrawer
+case class TextDrawer(override val text: LocalizedString, override val drawContext: TextDrawContext,
+					  override val drawLevel: DrawLevel) extends TextDrawerLike

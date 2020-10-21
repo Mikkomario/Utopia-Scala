@@ -4,7 +4,7 @@ import utopia.flow.datastructure.mutable.{Lazy, PointerWithEvents}
 import utopia.flow.event.Changing
 import utopia.genesis.color.Color
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
-import utopia.reflection.component.drawing.view.RoundedBackgroundDrawer
+import utopia.reflection.component.drawing.view.RoundedBackgroundViewDrawer
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.container.stack.template.layout.FramingLike
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
@@ -36,7 +36,7 @@ class TagFraming[C <: AwtStackable](initialComponent: C, initialColor: Color) ex
 	// Each time Framing size changes, changes content size too
 	addResizeListener(updateLayout())
 	// Adds rounded background drawing
-	addCustomDrawer(RoundedBackgroundDrawer.withFactor(colorPointer, Changing.wrap(1.0)))
+	addCustomDrawer(RoundedBackgroundViewDrawer.withFactor(colorPointer, Changing.wrap(1.0)))
 	
 	colorPointer.addListener { _ => repaint() }
 	

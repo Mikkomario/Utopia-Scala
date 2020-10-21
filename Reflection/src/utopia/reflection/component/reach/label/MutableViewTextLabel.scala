@@ -8,7 +8,7 @@ import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
-import utopia.reflection.component.drawing.view.TextDrawer
+import utopia.reflection.component.drawing.view.TextViewDrawer
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.MutableCustomDrawReachComponent
@@ -215,7 +215,7 @@ class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 		else
 			revalidateAndThen { repaint() }
 	}
-	addCustomDrawer(TextDrawer(textPointer, stylePointer))
+	addCustomDrawer(TextViewDrawer(textPointer, stylePointer))
 	
 	
 	// IMPLEMENTED	----------------------------------

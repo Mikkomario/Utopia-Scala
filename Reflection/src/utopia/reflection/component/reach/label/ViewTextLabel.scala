@@ -9,7 +9,7 @@ import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.view.TextDrawer
+import utopia.reflection.component.drawing.view.TextViewDrawer
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.CustomDrawReachComponent
@@ -144,7 +144,7 @@ class ViewTextLabel[A](override val parentHierarchy: ComponentHierarchy, overrid
 	// ATTRIBUTE	-------------------------------------
 	
 	val textPointer = contentPointer.map { displayFunction(_) }
-	val customDrawers = TextDrawer(textPointer, Changing.wrap(drawContext)) +: additionalDrawers.toVector
+	val customDrawers = TextViewDrawer(textPointer, Changing.wrap(drawContext)) +: additionalDrawers.toVector
 	
 	
 	// INITIAL CODE	-------------------------------------

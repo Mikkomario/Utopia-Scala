@@ -8,6 +8,7 @@ import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext, TextDrawer}
 import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.CustomDrawReachComponent
@@ -75,7 +76,7 @@ object ContextualStaticTextLabelFactory
 								 additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
 		{
 			f.mapContext { _.inContextWithBackground(background) }(text,
-				new BackgroundDrawer(background) +: additionalDrawers, isHint)
+				BackgroundDrawer(background) +: additionalDrawers, isHint)
 		}
 		
 		/**
@@ -135,7 +136,7 @@ class StaticTextLabel(override val parentHierarchy: ComponentHierarchy, override
 {
 	// ATTRIBUTES	-----------------------------
 	
-	override val customDrawers = additionalDrawers.toVector :+ new TextDrawer(text, drawContext)
+	override val customDrawers = additionalDrawers.toVector :+ new TextDrawer(text, drawContext, Normal)
 	
 	
 	// IMPLEMENTED	-----------------------------

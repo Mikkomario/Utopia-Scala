@@ -7,7 +7,7 @@ import utopia.reflection.component.drawing.template
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.template.DrawLevel.Background
 
-object RoundedBackgroundDrawer
+object RoundedBackgroundViewDrawer
 {
 	/**
 	  * @param colorPointer Drawing color source
@@ -18,7 +18,7 @@ object RoundedBackgroundDrawer
 	  */
 	def withFactor(colorPointer: Changing[Color], roundingFactorPointer: Changing[Double],
 	               drawLevel: DrawLevel = Background) =
-		new RoundedBackgroundDrawer(colorPointer, Right(roundingFactorPointer), drawLevel)
+		new RoundedBackgroundViewDrawer(colorPointer, Right(roundingFactorPointer), drawLevel)
 	
 	/**
 	  * @param colorPointer Drawing color source
@@ -27,7 +27,7 @@ object RoundedBackgroundDrawer
 	  * @return A new background drawer that uses a static radius
 	  */
 	def withRadius(colorPointer: Changing[Color], radiusPointer: Changing[Double], drawLevel: DrawLevel = Background) =
-		new RoundedBackgroundDrawer(colorPointer, Left(radiusPointer), drawLevel)
+		new RoundedBackgroundViewDrawer(colorPointer, Left(radiusPointer), drawLevel)
 }
 
 /**
@@ -35,10 +35,10 @@ object RoundedBackgroundDrawer
   * @author Mikko Hilpinen
   * @since 12.9.2020, v1.3
   */
-class RoundedBackgroundDrawer private(colorPointer: Changing[Color],
-                                      roundingPointer: Either[Changing[Double], Changing[Double]],
-                                      override val drawLevel: DrawLevel = Background)
-	extends template.RoundedBackgroundDrawer
+class RoundedBackgroundViewDrawer private(colorPointer: Changing[Color],
+										  roundingPointer: Either[Changing[Double], Changing[Double]],
+										  override val drawLevel: DrawLevel = Background)
+	extends template.RoundedBackgroundDrawerLike
 {
 	override def color = colorPointer.value
 	

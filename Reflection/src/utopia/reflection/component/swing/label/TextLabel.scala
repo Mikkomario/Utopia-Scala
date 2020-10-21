@@ -1,11 +1,12 @@
 package utopia.reflection.component.swing.label
 
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.mutable.TextDrawer
 import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
+import utopia.reflection.component.drawing.view.TextViewDrawer
 import utopia.reflection.component.template.text.SingleLineTextComponent
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
@@ -77,16 +78,24 @@ class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColo
 {
 	// ATTRIBUTES	------------------
 	
-	private val drawer = TextDrawer(initialText, TextDrawContext(initialFont, initialTextColor, initialAlignment, initialInsets))
+	/**
+	  * A mutable pointer that contains this label's text
+	  */
+	val textPointer = new PointerWithEvents(initialText)
+	/**
+	  * A mutable pointer that contains this label's styling
+	  */
+	val stylePointer = new PointerWithEvents(TextDrawContext(initialFont, initialTextColor, initialAlignment,
+		initialInsets))
 	
 	
 	// INITIAL CODE	------------------
 	
-	addCustomDrawer(drawer)
+	addCustomDrawer(TextViewDrawer(textPointer, stylePointer))
 	component.setFont(initialFont.toAwt)
 	// Whenever context or text changes, revalidates this component
-	drawer.textPointer.addListener { _ => revalidate() }
-	drawer.contextPointer.addListener { e =>
+	textPointer.addListener { _ => revalidate() }
+	stylePointer.addListener { e =>
 		if (e.newValue.font != e.oldValue.font)
 		{
 			component.setFont(e.newValue.font.toAwt)
@@ -104,20 +113,19 @@ class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColo
 	/**
 	  * @return The current drawing context used
 	  */
-	def drawContext = drawer.drawContext
-	def drawContext_=(newContext: TextDrawContext) = drawer.drawContext = newContext
+	def drawContext = stylePointer.value
+	def drawContext_=(newContext: TextDrawContext) = stylePointer.value = newContext
 	
 	
 	// IMPLEMENTED	------------------
 	
 	override protected def updateVisibility(visible: Boolean) = super[Label].visible_=(visible)
 	
-	override def text = drawer.text
+	override def text = textPointer.value
 	/**
 	  * @param newText The new text to be displayed on this label
 	  */
-	// TODO: Possibly revalidate this label?
-	def text_=(newText: LocalizedString) = drawer.text = newText
+	def text_=(newText: LocalizedString) = textPointer.value = newText
 	
 	override def toString = s"Label($text)"
 	

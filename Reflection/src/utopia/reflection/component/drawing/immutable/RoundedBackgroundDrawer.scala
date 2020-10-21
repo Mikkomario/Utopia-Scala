@@ -35,4 +35,4 @@ object RoundedBackgroundDrawer
 case class RoundedBackgroundDrawer private(override val color: Color,
                                            override protected val rounding: Either[Double, Double],
 										   override val drawLevel: DrawLevel = Background)
-	extends template.RoundedBackgroundDrawer
+	extends template.RoundedBackgroundDrawerLike

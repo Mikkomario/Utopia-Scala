@@ -2,7 +2,8 @@ package utopia.reflection.component.swing.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
-import utopia.reflection.component.drawing.mutable.{BorderDrawer, CustomDrawable}
+import utopia.reflection.component.drawing.mutable.CustomDrawable
+import utopia.reflection.component.drawing.view.BorderViewDrawer
 import utopia.reflection.shape.Border
 
 /**
@@ -46,7 +47,7 @@ abstract class ButtonWithBackground(color: Color, borderWidth: Double) extends B
 		// Adds border drawing
 		if (borderWidth > 0)
 		{
-			addCustomDrawer(new BorderDrawer(borderPointer))
+			addCustomDrawer(BorderViewDrawer(borderPointer))
 			borderPointer.addListener { _ => repaint() }
 		}
 	}

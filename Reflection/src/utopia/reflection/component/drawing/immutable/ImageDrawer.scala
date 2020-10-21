@@ -14,4 +14,4 @@ import utopia.reflection.shape.stack.StackInsets
   */
 case class ImageDrawer(override val image: Image, override val insets: StackInsets = StackInsets.any,
 				  override val alignment: Alignment = Alignment.Center, override val drawLevel: DrawLevel = Normal,
-				  override val useUpscaling: Boolean = true) extends template.ImageDrawer
+				  override val useUpscaling: Boolean = true) extends template.ImageDrawerLike

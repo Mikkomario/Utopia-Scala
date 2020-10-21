@@ -2,6 +2,7 @@ package utopia.reflection.component.swing.button
 
 import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.inception.handling.HandlerType
@@ -34,10 +35,16 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 	// ATTRIBUTES	------------------
 	
 	private var actions = Vector[() => Unit]()
-	private var _state = ButtonState.default
+	
+	private val _statePointer = new PointerWithEvents[ButtonState](ButtonState.default)
 	
 	
 	// COMPUTED	----------------------
+	
+	/**
+	  * @return A read-only pointer to this button's state
+	  */
+	def statePointer = _statePointer.view
 	
 	/**
 	  * @return Whether this button is currently enabled
@@ -45,7 +52,7 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 	def enabled = component.isEnabled
 	def enabled_=(newEnabled: Boolean) =
 	{
-		state = _state.copy(isEnabled = newEnabled)
+		state = state.copy(isEnabled = newEnabled)
 		component.setEnabled(newEnabled)
 	}
 	
@@ -62,10 +69,10 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 	/**
 	  * @return This button's current state
 	  */
-	def state = _state
+	def state = _statePointer.value
 	private def state_=(newState: ButtonState) =
 	{
-		_state = newState
+		_statePointer.value = newState
 		updateStyleForState(newState)
 	}
 	

@@ -12,7 +12,7 @@ import scala.collection.immutable.VectorBuilder
   * @author Mikko Hilpinen
   * @since 5.5.2019, v1+
   */
-trait BorderDrawer extends CustomDrawer
+trait BorderDrawerLike extends CustomDrawer
 {
 	// ABSTRACT	----------------------
 	

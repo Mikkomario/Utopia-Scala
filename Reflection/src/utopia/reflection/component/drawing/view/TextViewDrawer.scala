@@ -11,9 +11,9 @@ import utopia.reflection.localization.LocalizedString
   * @author Mikko Hilpinen
   * @since 17.10.2020, v2
   */
-case class TextDrawer(textPointer: Changing[LocalizedString], stylePointer: Changing[TextDrawContext],
-				 override val drawLevel: DrawLevel = Normal)
-	extends utopia.reflection.component.drawing.template.TextDrawer
+case class TextViewDrawer(textPointer: Changing[LocalizedString], stylePointer: Changing[TextDrawContext],
+						  override val drawLevel: DrawLevel = Normal)
+	extends utopia.reflection.component.drawing.template.TextDrawerLike
 {
 	override def drawContext = stylePointer.value
 	

@@ -9,7 +9,7 @@ import utopia.reflection.shape.ScrollBarBounds
   * @author Mikko Hilpinen
   * @since 30.4.2019, v1+
   */
-trait ScrollBarDrawer
+trait ScrollBarDrawerLike
 {
 	/**
 	  * Draws scroll bar

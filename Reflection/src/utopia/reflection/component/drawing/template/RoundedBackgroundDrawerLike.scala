@@ -9,7 +9,7 @@ import utopia.genesis.util.Drawer
   * @author Mikko Hilpinen
   * @since 12.9.2020, v1.3
   */
-trait RoundedBackgroundDrawer extends CustomDrawer
+trait RoundedBackgroundDrawerLike extends CustomDrawer
 {
 	// ABSTRACT ----------------------------
 	

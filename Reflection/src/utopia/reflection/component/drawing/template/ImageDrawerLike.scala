@@ -11,7 +11,7 @@ import utopia.reflection.shape.stack.StackInsets
   * @author Mikko Hilpinen
   * @since 25.3.2020, v1
   */
-trait ImageDrawer extends CustomDrawer
+trait ImageDrawerLike extends CustomDrawer
 {
 	// ABSTRACT	----------------------------
 	
