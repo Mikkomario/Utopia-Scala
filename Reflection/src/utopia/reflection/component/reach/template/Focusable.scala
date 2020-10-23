@@ -7,7 +7,7 @@ import utopia.reflection.event.FocusListener
   * @author Mikko Hilpinen
   * @since 21.10.2020, v2
   */
-trait Focusable
+trait Focusable extends ReachComponentLike
 {
 	// ABSTRACT	--------------------------------
 	

@@ -71,6 +71,17 @@ trait ComponentHierarchy
 	  */
 	def absolutePositionModifier = positionToTopModifier + top.absolutePosition
 	
+	/**
+	  * @return A linear component sequence based on this component hierarchy. The higher hierarchy components are
+	  *         placed in the beginning and the last element is the first direct parent component. If this hierarchy
+	  *         doesn't have parents before the canvas, returns an empty vector.
+	  */
+	def toVector: Vector[ReachComponentLike] = parent match
+	{
+		case Right((parentHierarchy, parentComponent)) => parentHierarchy.toVector :+ parentComponent
+		case Left(_) => Vector()
+	}
+	
 	
 	// OTHER	--------------------------
 	
