@@ -5,6 +5,7 @@
 ### New Features
 - Added a delaying / buffering pointer view class (DelayedView)
 - Added asynchronous mapping support for pointers via AsyncMirror class
+- Added LazyMirror class and .lazyMergeWith(...) to Changing
 ### New Methods
 - Added .notCompletingBefore(Future) to Future in AsyncExtensions
 - Added .subRangeIterator(Int) to Range.Inclusive in CollectionExtensions

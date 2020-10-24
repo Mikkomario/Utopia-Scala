@@ -18,23 +18,23 @@ import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
-object StaticTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike, StaticTextLabelFactory,
-	ContextualStaticTextLabelFactory]
+object TextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike, TextLabelFactory,
+	ContextualTextLabelFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy) = StaticTextLabelFactory(hierarchy)
+	override def apply(hierarchy: ComponentHierarchy) = TextLabelFactory(hierarchy)
 }
 
 /**
   * Used for constructing new static text labels
   * @param parentHierarchy A component hierarchy the new labels will be placed in
   */
-case class StaticTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[TextContextLike, ContextualStaticTextLabelFactory]
+case class TextLabelFactory(parentHierarchy: ComponentHierarchy)
+	extends ContextInsertableComponentFactory[TextContextLike, ContextualTextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------
 	
 	override def withContext[C2 <: TextContextLike](context: C2) =
-		ContextualStaticTextLabelFactory(this, context)
+		ContextualTextLabelFactory(this, context)
 	
 	
 	// OTHER	--------------------------------
@@ -53,16 +53,16 @@ case class StaticTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	def apply(text: LocalizedString, font: Font, textColor: Color = Color.textBlack,
 			  alignment: Alignment = Alignment.Left, insets: StackInsets = StackInsets.any,
 			  additionalDrawers: Seq[CustomDrawer] = Vector(), allowTextShrink: Boolean = false) =
-		new StaticTextLabel(parentHierarchy, text, TextDrawContext(font, textColor, alignment, insets),
+		new TextLabel(parentHierarchy, text, TextDrawContext(font, textColor, alignment, insets),
 			additionalDrawers, allowTextShrink)
 }
 
-object ContextualStaticTextLabelFactory
+object ContextualTextLabelFactory
 {
 	// EXTENSIONS	-----------------------------
 	
 	implicit class ColorChangingStaticTextLabelFactory[N <: TextContextLike with BackgroundSensitive[TextContextLike]]
-	(val f: ContextualStaticTextLabelFactory[N]) extends AnyVal
+	(val f: ContextualTextLabelFactory[N]) extends AnyVal
 	{
 		/**
 		  * Creates a new text label with solid background utilizing contextual information
@@ -94,14 +94,14 @@ object ContextualStaticTextLabelFactory
 	}
 }
 
-case class ContextualStaticTextLabelFactory[+N <: TextContextLike]
-(factory: StaticTextLabelFactory, override val context: N)
-	extends ContextualComponentFactory[N, TextContextLike, ContextualStaticTextLabelFactory]
+case class ContextualTextLabelFactory[+N <: TextContextLike]
+(factory: TextLabelFactory, override val context: N)
+	extends ContextualComponentFactory[N, TextContextLike, ContextualTextLabelFactory]
 {
 	// IMPLEMENTED	-----------------------------
 	
 	override def withContext[C2 <: TextContextLike](newContext: C2) =
-		ContextualStaticTextLabelFactory(factory, newContext)
+		ContextualTextLabelFactory(factory, newContext)
 	
 	
 	// OTHER	---------------------------------
@@ -128,10 +128,10 @@ case class ContextualStaticTextLabelFactory[+N <: TextContextLike]
   * @param additionalDrawers Additional custom drawing (default = empty)
   * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
   */
-class StaticTextLabel(override val parentHierarchy: ComponentHierarchy, override val text: LocalizedString,
-					  override val drawContext: TextDrawContext,
-					  additionalDrawers: Seq[CustomDrawer] = Vector(),
-					  override val allowTextShrink: Boolean = false)
+class TextLabel(override val parentHierarchy: ComponentHierarchy, override val text: LocalizedString,
+				override val drawContext: TextDrawContext,
+				additionalDrawers: Seq[CustomDrawer] = Vector(),
+				override val allowTextShrink: Boolean = false)
 	extends CustomDrawReachComponent with SingleLineTextComponent2
 {
 	// ATTRIBUTES	-----------------------------

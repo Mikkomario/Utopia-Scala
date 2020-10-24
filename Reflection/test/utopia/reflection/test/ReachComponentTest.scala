@@ -8,7 +8,7 @@ import utopia.genesis.handling.KeyStateListener
 import utopia.reflection.color.ColorRole.Primary
 import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.component.reach.factory.Mixed
-import utopia.reflection.component.reach.label.{ContextualMutableTextLabelFactory, MutableTextLabel, StaticTextLabel}
+import utopia.reflection.component.reach.label.{ContextualMutableTextLabelFactory, MutableTextLabel, TextLabel}
 import utopia.reflection.container.reach.{Framing, Stack}
 import utopia.reflection.container.swing.ReachCanvas
 import utopia.reflection.container.swing.window.Frame
@@ -47,7 +47,7 @@ object ReachComponentTest extends App
 				}(baseContext).toTuple*/
 			// TODO: The second label "twitches" on content updates
 			val label2 = factories.withContext(baseContext.inContextWithBackground(colorScheme.primary)
-				.forTextComponents(Alignment.Center))(StaticTextLabel)
+				.forTextComponents(Alignment.Center))(TextLabel)
 				.withCustomBackground("Hello 2", colorScheme.primary)
 			
 			Vector(framing, label2) -> label

@@ -51,7 +51,7 @@ trait ReachComponentLike extends Stackable2
 	  *                  foreground is drawn above child components)
 	  * @param clipZone  Limited drawing area. The drawing should be clipped / limited to that area, if specified.
 	  */
-	protected def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds] = None): Unit
+	def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds] = None): Unit
 	
 	
 	// COMPUTED	------------------------

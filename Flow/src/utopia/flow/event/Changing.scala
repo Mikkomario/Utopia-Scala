@@ -118,6 +118,16 @@ trait Changing[A]
 	def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) = MergeMirror.of(this, other)(f)
 	
 	/**
+	  * @param other Another changing item
+	  * @param f A merge function
+	  * @tparam B Type of the other item's value
+	  * @tparam R Type of merge result
+	  * @return A mirror that lazily merges the values from both of these items
+	  */
+	def lazyMergeWith[B, R](other: Changing[B])(f: (A, B) => R) =
+		LazyMergeMirror.of(this, other)(f)
+	
+	/**
 	  * @param threshold A required pause between changes in this pointer before the view fires a change event
 	  * @param exc Implicit execution context
 	  * @return A view into this pointer that only fires change events when there is a long enough pause in

@@ -54,7 +54,7 @@ trait CustomDrawReachComponent extends ReachComponent with CustomDrawable2
 	
 	override def drawBounds = bounds
 	
-	override protected def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds]) =
+	override def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds]) =
 	{
 		val drawers = customDrawers.filter {_.drawLevel == drawLevel}
 		// On normal draw level, draws the content
