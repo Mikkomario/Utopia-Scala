@@ -151,4 +151,13 @@ trait ReachComponentLike extends Stackable2
 		// Paints foreground
 		paintContent(drawer, Foreground, clipZone)
 	}
+	
+	/**
+	  * Registers a new listener to be called when this component's hierarchy attachment status changes
+	  * @param listener A listener function that will be called each time this component's hierarchy attachment
+	  *                 status changes. The function accepts the new attachment status (true if attached, false if not)
+	  * @tparam U Arbitrary result type
+	  */
+	def addHierarchyListener[U](listener: Boolean => U) = parentHierarchy.linkPointer.addListener { e =>
+		listener(e.newValue) }
 }

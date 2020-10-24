@@ -12,6 +12,7 @@
     - The default draw level is now Normal and not Foreground 
 - Immutable drawers are now all case classes
 - Moved SelectionCircleDrawer from immutable package to view package and refactored and named it accordingly
+- Moved ButtonState from utopia.reflection.component.swing.button -package to utopia.reflection.event -package
 ### New Methods
 - Added .hasSameDimensionsAs(TextDrawContext) to TextDrawContext
 ### Fixes

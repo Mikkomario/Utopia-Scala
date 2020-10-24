@@ -20,12 +20,12 @@ import utopia.reflection.component.context.{AnimationContextLike, BaseContextLik
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.swing.button.ButtonState
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.component.template.layout.stack.StackLeaf
+import utopia.reflection.event.ButtonState
 import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.util.ComponentCreationDefaults
 

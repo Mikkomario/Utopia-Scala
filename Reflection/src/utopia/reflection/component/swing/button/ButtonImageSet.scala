@@ -1,6 +1,7 @@
 package utopia.reflection.component.swing.button
 
 import utopia.genesis.image.Image
+import utopia.reflection.event.ButtonState
 
 object ButtonImageSet
 {

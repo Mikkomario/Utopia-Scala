@@ -6,7 +6,7 @@ import utopia.genesis.shape.shape2D.{Bounds, Circle}
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Background
-import utopia.reflection.component.swing.button.ButtonState
+import utopia.reflection.event.ButtonState
 
 /**
   * Used for drawing selection state using a simple circle on item background

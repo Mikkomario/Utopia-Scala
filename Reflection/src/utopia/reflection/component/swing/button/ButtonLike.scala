@@ -8,6 +8,7 @@ import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, Mous
 import utopia.inception.handling.HandlerType
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.{ComponentLike, Focusable}
+import utopia.reflection.event.ButtonState
 
 object ButtonLike
 {
@@ -187,7 +188,7 @@ trait ButtonLike extends ComponentLike with AwtComponentRelated with Focusable
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.buttonFilter(MouseButton.Left)
 		
 		// Listens to mouse enters & exits
-		override def mouseMoveEventFilter = MouseMoveEvent.enterAreaFilter(bounds) ||
+		override val mouseMoveEventFilter = MouseMoveEvent.enterAreaFilter(bounds) ||
 			MouseMoveEvent.exitedAreaFilter(bounds)
 		
 		// On left mouse within bounds, brightens color and remembers, on release, returns

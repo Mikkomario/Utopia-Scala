@@ -1,4 +1,4 @@
-package utopia.reflection.component.swing.button
+package utopia.reflection.event
 
 import utopia.genesis.color.Color
 

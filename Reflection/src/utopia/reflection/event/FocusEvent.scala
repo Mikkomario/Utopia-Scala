@@ -15,6 +15,12 @@ sealed trait FocusEvent
   * A common trait for events where focus state is actually changed
   */
 sealed trait FocusChangeEvent extends FocusEvent
+{
+	/**
+	  * @return Whether the described component now has focus
+	  */
+	def hasFocus: Boolean
+}
 
 object FocusEvent
 {
@@ -27,6 +33,9 @@ object FocusEvent
 	  * An event generated when an object has gained focus
 	  */
 	case object FocusGained extends FocusChangeEvent
+	{
+		override def hasFocus = true
+	}
 	
 	/**
 	  * An event generated when an object is about to lose focus
@@ -37,4 +46,7 @@ object FocusEvent
 	  * An event generated when an object has lost focus
 	  */
 	case object FocusLost extends FocusChangeEvent
+	{
+		override def hasFocus = false
+	}
 }
