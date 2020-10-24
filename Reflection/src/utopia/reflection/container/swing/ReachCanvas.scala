@@ -1,6 +1,8 @@
 package utopia.reflection.container.swing
 
-import java.awt.{Container, Graphics}
+import java.awt.event.KeyEvent
+import java.awt.{AWTKeyStroke, Container, Graphics, KeyboardFocusManager}
+import java.util
 
 import javax.swing.{JComponent, JPanel}
 import utopia.flow.async.AsyncExtensions._
@@ -8,9 +10,13 @@ import utopia.flow.async.VolatileOption
 import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
+import utopia.genesis.event.KeyStateEvent
+import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.image.Image
+import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Point}
 import utopia.genesis.util.Drawer
+import utopia.inception.handling.HandlerType
 import utopia.reflection.component.drawing.mutable.CustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
@@ -21,6 +27,7 @@ import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelat
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.StackSize
+import utopia.reflection.util.ReachFocusManager
 
 import scala.annotation.tailrec
 import scala.concurrent.{Future, Promise}
@@ -55,12 +62,18 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	
 	override var customDrawers = Vector[CustomDrawer]()
 	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
+	
 	private var layoutUpdateQueue = VolatileList[Seq[ReachComponentLike]]()
 	private var updateFinishedQueue = VolatileList[() => Unit]()
 	private var buffer = Image.empty
 	
 	private val panel = new CustomDrawPanel()
 	private val repaintNeed = VolatileOption[RepaintNeed](Full)
+	
+	/**
+	  * Object that manages focus between the components in this canvas element
+	  */
+	val focusManager = new ReachFocusManager(panel)
 	
 	private val _attachmentPointer = new PointerWithEvents(false)
 	
@@ -90,6 +103,9 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 			repaintNeed.setOne(Full)
 	}
 	
+	// Listens to tabulator key events for manual focus handling
+	addKeyStateListener(FocusKeyListener)
+	
 	
 	// COMPUTED	-------------------------------
 	
@@ -115,7 +131,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		// Updates content layout
 		val layoutUpdateQueues = layoutUpdateQueue.popAll()
 		if (layoutUpdateQueues.nonEmpty)
-			updateLayoutFor2(layoutUpdateQueues.toSet, Set())
+			updateLayoutFor(layoutUpdateQueues.toSet, Set())
 		
 		// Performs the queued tasks
 		updateFinishedQueue.popAll().foreach { _() }
@@ -138,13 +154,6 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		repaintNeed.setOne(Full)
 		component.repaint()
 	}
-	
-	/*
-	override def revalidate() =
-	{
-		resetCachedSize()
-		super.revalidate()
-	}*/
 	
 	
 	// OTHER	------------------------------
@@ -195,18 +204,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	}
 	
 	@tailrec
-	private def updateLayoutFor(componentQueues: Set[Seq[ReachComponentLike]]): Unit =
-	{
-		// Updates the layout of the next layer (from top to bottom) components
-		componentQueues.map { _.head }.foreach { _.updateLayout() }
-		// Moves to the next layer of components, if there is one
-		val remainingQueues = componentQueues.filter { _.size > 1 }
-		if (remainingQueues.nonEmpty)
-			updateLayoutFor(remainingQueues.map { _.tail })
-	}
-	
-	@tailrec
-	private def updateLayoutFor2(componentQueues: Set[Seq[ReachComponentLike]], sizeChangedChildren: Set[ReachComponentLike]): Unit =
+	private def updateLayoutFor(componentQueues: Set[Seq[ReachComponentLike]], sizeChangedChildren: Set[ReachComponentLike]): Unit =
 	{
 		// Updates the layout of the next layer (from top to bottom) components. Checks for size changes and
 		// also updates the children of components which changed size during the layout update
@@ -221,7 +219,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		// Moves to the next layer of components, if there is one
 		val remainingQueues = componentQueues.filter { _.size > 1 }
 		if (remainingQueues.nonEmpty || nextSizeChangeChildren.nonEmpty)
-			updateLayoutFor2(remainingQueues.map { _.tail }, nextSizeChangeChildren)
+			updateLayoutFor(remainingQueues.map { _.tail }, nextSizeChangeChildren)
 	}
 	
 	
@@ -242,6 +240,11 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		
 		setOpaque(false)
 		setBackground(Color.black.toAwt)
+		
+		// Makes this canvas element focusable and disables the default focus traversal keys
+		setFocusable(true)
+		setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, new util.HashSet[AWTKeyStroke]())
+		setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, new util.HashSet[AWTKeyStroke]())
 		
 		
 		// IMPLEMENTED	----------------------
@@ -298,9 +301,40 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		}
 	}
 	
+	
+	// NESTED	---------------------------------
+	
 	private sealed trait RepaintNeed
-	
 	private case object Full extends RepaintNeed
-	
 	private case class Partial(area: Bounds) extends RepaintNeed
+	
+	private object FocusKeyListener extends KeyStateListener
+	{
+		// ATTRIBUTES	------------------------
+		
+		// Only listens to tabulator presses
+		override val keyStateEventFilter = KeyStateEvent.keyFilter(KeyEvent.VK_TAB)
+		
+		
+		// IMPLEMENTED	-----------------------
+		
+		override def onKeyState(event: KeyStateEvent) =
+		{
+			// Moves the focus forwards or backwards
+			val direction = if (event.keyStatus(KeyEvent.VK_SHIFT)) Negative else Positive
+			// Checks whether there are other focusable components to target outside the managed focus system
+			// If not, loops the focus inside the system without yielding it
+			val isNextComponentAvailable = focusManager.canYieldFocus(direction)
+			val foundNext = focusManager.moveFocusInside(direction, allowLooping = !isNextComponentAvailable)
+			// May transfer focus to the next component
+			if (!foundNext && isNextComponentAvailable)
+				direction match
+				{
+					case Positive => panel.transferFocus()
+					case Negative => panel.transferFocusBackward()
+				}
+		}
+		
+		override def allowsHandlingFrom(handlerType: HandlerType) = focusManager.hasFocus
+	}
 }
