@@ -70,11 +70,52 @@ trait ButtonLike extends ReachComponentLike with Focusable
 	
 	// OTHER	------------------------------
 	
+	/**
+	  * Sets up basic event handling in this button. Please note that the <b>focus listening must be set up
+	  * separately</b>, since this trait doesn't have access to the subclasses list of listeners.
+	  * @param statePointer A mutable pointer to this button's state
+	  * @param triggerKeys Keys used for triggering this button while it has focus (default = space & enter)
+	  * @param hotKeys Keys used for triggering this button even while it doesn't have focus (default = empty)
+	  * @param hotKeyCharacters Character keys used for triggering this button even while it doesn't have focus
+	  *                         (default = empty)
+	  */
 	protected def setup(statePointer: PointerLike[ButtonState], triggerKeys: Set[Int] = ButtonLike.defaultTriggerKeys,
 						hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set()) =
 	{
 		// When connected to the main hierarchy, enables focus management and key listening
-		// TODO: Implement
+		val triggerKeyListener =
+		{
+			if (triggerKeys.nonEmpty)
+				Some(new ButtonKeyListener(statePointer, triggerKeys))
+			else
+				None
+		}
+		val hotKeyListener =
+		{
+			if (hotKeys.nonEmpty || hotKeyCharacters.nonEmpty)
+				Some(new ButtonKeyListener(statePointer, hotKeys, hotKeyCharacters, requiresFocus = false))
+			else
+				None
+		}
+		addHierarchyListener { isLinked =>
+			if (isLinked)
+			{
+				triggerKeyListener.foreach(parentHierarchy.top.addKeyStateListener)
+				hotKeyListener.foreach(parentHierarchy.top.addKeyStateListener)
+				register()
+			}
+			else
+			{
+				triggerKeyListener.foreach(parentHierarchy.top.removeListener)
+				hotKeyListener.foreach(parentHierarchy.top.removeListener)
+				unregister()
+			}
+		}
+		
+		// Starts listening to mouse events as well
+		val mouseListener = new ButtonMouseListener(statePointer)
+		addMouseButtonListener(mouseListener)
+		addMouseMoveListener(mouseListener)
 	}
 	
 	
@@ -90,8 +131,9 @@ trait ButtonLike extends ReachComponentLike with Focusable
 			statePointer.update { _.copy(isInFocus = event.hasFocus) }
 	}
 	
-	private class ButtonKeyListener(statePointer: PointerLike[ButtonState], triggerKeys: Set[Int],
-								 triggerCharacters: Iterable[Char], requiresFocus: Boolean) extends KeyStateListener
+	private class ButtonKeyListener(statePointer: PointerLike[ButtonState], triggerKeys: Set[Int] = Set(),
+								 triggerCharacters: Iterable[Char] = Set(), requiresFocus: Boolean = true)
+		extends KeyStateListener
 	{
 		// ATTRIBUTES	---------------------------
 		
