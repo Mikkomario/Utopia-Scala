@@ -169,37 +169,50 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	  *         leave or if the targeted component denied focus enter. Also returns false in cases where the targeted
 	  *         component is not currently managed by this focus manager or when this manager is unable to gain focus.
 	  */
-	def moveFocusTo(newComponent: Focusable, forceFocusLeave: Boolean = false, forceFocusEnter: Boolean = false) =
+	def moveFocusTo(newComponent: Focusable, forceFocusLeave: Boolean = false, forceFocusEnter: Boolean = false): Boolean =
 	{
-		if (targets.contains(newComponent))
+		// Skips the process if the target component already has focus
+		if (isFocusOwner(newComponent))
+			true
+		else
 		{
-			if (hasFocus)
+			// Targeted component must be registered
+			if (targets.contains(newComponent))
 			{
-				if (forceFocusLeave || focusOwner.forall(testFocusLeave))
+				if (hasFocus)
 				{
-					if (forceFocusEnter || testFocusEnter(newComponent))
+					// Tests focus leaving from current focus owner (optional)
+					if (forceFocusLeave || focusOwner.forall(testFocusLeave))
 					{
-						focusOwner match
+						// Tests focus enter to new component (optional)
+						if (forceFocusEnter || testFocusEnter(newComponent))
 						{
-							case Some(current) => moveFocus(current, newComponent)
-							case None => gainFocus(newComponent)
+							// Moves the focus
+							focusOwner match
+							{
+								case Some(current) => moveFocus(current, newComponent)
+								case None => gainFocus(newComponent)
+							}
+							true
 						}
-						true
+						else
+							false
 					}
 					else
 						false
 				}
+				// If this manager doesn't currently have focus, attempts to gain it
+				else if (forceFocusEnter || testFocusEnter(newComponent))
+				{
+					focusOwner = Some(newComponent)
+					canvasComponent.requestFocusInWindow()
+				}
 				else
 					false
 			}
-			else if (forceFocusEnter || testFocusEnter(newComponent))
-			{
-				focusOwner = Some(newComponent)
-				canvasComponent.requestFocusInWindow()
-			}
+			else
+				false
 		}
-		else
-			false
 	}
 	
 	/**
