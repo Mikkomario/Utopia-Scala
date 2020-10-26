@@ -57,6 +57,11 @@ trait ReachComponentLike extends Stackable2
 	// COMPUTED	------------------------
 	
 	/**
+	  * @return The canvas element that contains this component
+	  */
+	def parentCanvas = parentHierarchy.top
+	
+	/**
 	  * @return Window that contains this component
 	  */
 	def parentWindow = parentHierarchy.parentWindow

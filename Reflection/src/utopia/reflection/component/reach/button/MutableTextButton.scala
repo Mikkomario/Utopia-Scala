@@ -170,17 +170,12 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	
 	def enabled_=(newState: Boolean) = _statePointer.update { _.copy(isEnabled = newState) }
 	
-	/**
-	  * @return A pointer to this button's current state
-	  */
-	def statePointer = _statePointer.view
-	
 	
 	// IMPLEMENTED	---------------------------------
 	
 	override protected def drawable = wrapped
 	
-	override def state = _statePointer.value
+	override def statePointer = _statePointer.view
 	
 	override def trigger() = actions.foreach { _() }
 	

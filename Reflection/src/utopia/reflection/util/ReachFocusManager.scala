@@ -97,7 +97,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	def isFocusOwner(component: Any) = focusOwner.contains(component) && hasFocus
 	
 	/**
-	  * Moves the focus one step forward or backward
+	  * Moves the focus one step forward or backward, keeping it always inside this component system
 	  * @param direction Direction towards which the focus is moved (default = Positive = forward)
 	  * @param allowLooping Whether focus should be moved back to the beginning or end of the list when reaching
 	  *                     the other end (default = true)
@@ -106,7 +106,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	  * @return True if new focus target was found and assigned or when current focus target denies focus movement.
 	  *         False when a new focus target was not found or when this manager doesn't currently have focus to move.
 	  */
-	def moveFocusInside(direction: Direction1D = Positive, allowLooping: Boolean = true, forceFocusLeave: Boolean = false) =
+	def moveFocusInside(direction: Direction1D = Positive, allowLooping: Boolean = true, forceFocusLeave: Boolean = false): Boolean =
 	{
 		if (hasFocus)
 		{
@@ -156,6 +156,40 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 		}
 		else
 			false
+	}
+	
+	/**
+	  * Moves the focus one step forward (or backward), possibly yielding it to another component / system entirely
+	  * @param direction Direction towards which the focus is moved (default = Positive = forward)
+	  * @param forceFocusLeave Whether to force the focus to leave the current component without testing its consent.
+	  *                        If true, no FocusLeaving events will be generated. Default = false.
+	  */
+	def moveFocus(direction: Direction1D = Positive, forceFocusLeave: Boolean = false) =
+	{
+		// Checks whether there are other focusable components to target outside the managed focus system
+		// If not, loops the focus inside the system without yielding it
+		val isNextComponentAvailable = canYieldFocus(direction)
+		val foundNext = moveFocusInside(direction, allowLooping = !isNextComponentAvailable, forceFocusLeave)
+		// May transfer focus to the next component
+		if (!foundNext && isNextComponentAvailable)
+			direction match
+			{
+				case Positive => canvasComponent.transferFocus()
+				case Negative => canvasComponent.transferFocusBackward()
+			}
+	}
+	
+	/**
+	  * Moves the focus one step forward (or backward), possibly yielding it to another component / system entirely.
+	  * Only moves the focus if the specified component is the current focus owner
+	  * @param direction Direction towards which the focus is moved (default = Positive = forward)
+	  * @param forceFocusLeave Whether to force the focus to leave the current component without testing its consent.
+	  *                        If true, no FocusLeaving events will be generated. Default = false.
+	  */
+	def moveFocusFrom(component: Focusable, direction: Direction1D = Positive, forceFocusLeave: Boolean = false) =
+	{
+		if (isFocusOwner(component))
+			moveFocus(direction, forceFocusLeave)
 	}
 	
 	/**

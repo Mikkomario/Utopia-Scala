@@ -44,6 +44,21 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	/**
 	  * Creates a new text label
 	  * @param contentPointer Pointer that is reflected on this label
+	  * @param stylePointer A pointer to this label's styling information
+	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param additionalDrawers Additional custom drawing (default = empty)
+	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
+	  * @return A new label
+	  */
+	def apply[A](contentPointer: Changing[A], stylePointer: Changing[TextDrawContext],
+				 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+				 additionalDrawers: Seq[CustomDrawer] = Vector(), allowTextShrink: Boolean = false) =
+		new ViewTextLabel(parentHierarchy, contentPointer, stylePointer, displayFunction, additionalDrawers,
+			allowTextShrink)
+	
+	/**
+	  * Creates a new text label
+	  * @param contentPointer Pointer that is reflected on this label
 	  * @param font Font used when drawing the text
 	  * @param displayFunction Function used when converting content to text (default = toString)
 	  * @param textColor Color used when drawing the text (default = standard black)
@@ -53,12 +68,13 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
 	  * @return A new label
 	  */
-	def apply[A](contentPointer: Changing[A], font: Font, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-				 textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-				 insets: StackInsets = StackInsets.any, additionalDrawers: Seq[CustomDrawer] = Vector(),
-				 allowTextShrink: Boolean = false) =
-		new ViewTextLabel(parentHierarchy, contentPointer, TextDrawContext(font, textColor, alignment, insets),
-			displayFunction, additionalDrawers, allowTextShrink)
+	def withStaticStyle[A](contentPointer: Changing[A], font: Font,
+						   displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+						   textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
+						   insets: StackInsets = StackInsets.any, additionalDrawers: Seq[CustomDrawer] = Vector(),
+						   allowTextShrink: Boolean = false) =
+		apply(contentPointer, Changing.wrap(TextDrawContext(font, textColor, alignment, insets)), displayFunction,
+			additionalDrawers, allowTextShrink)
 }
 
 object ContextualViewTextLabelFactory
@@ -73,16 +89,18 @@ object ContextualViewTextLabelFactory
 		  * @param contentPointer Pointer that is reflected on this label
 		  * @param background Label background color
 		  * @param displayFunction Function used when converting content to text (default = toString)
+		  * @param isHintPointer A pointer that that contains true when this label should be considered a hint
+		  *                      (drawn with lesser opacity). Default = always false.
 		  * @param additionalDrawers Additional custom drawing (default = empty)
-		  * @param isHint Whether this label should be considered a hint (affects text color)
 		  * @return A new label
 		  */
 		def withCustomBackground[A](contentPointer: Changing[A], background: ComponentColor,
 									displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-									additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
+									isHintPointer: Changing[Boolean] = Changing.wrap(false),
+									additionalDrawers: Seq[CustomDrawer] = Vector()) =
 		{
-			f.mapContext { _.inContextWithBackground(background) }(contentPointer, displayFunction,
-				new BackgroundDrawer(background) +: additionalDrawers, isHint)
+			f.mapContext { _.inContextWithBackground(background) }(contentPointer, displayFunction, isHintPointer,
+				BackgroundDrawer(background) +: additionalDrawers)
 		}
 		
 		/**
@@ -91,16 +109,18 @@ object ContextualViewTextLabelFactory
 		  * @param role Label background color role
 		  * @param preferredShade Preferred color shade (default = standard)
 		  * @param displayFunction Function used when converting content to text (default = toString)
+		  * @param isHintPointer A pointer that that contains true when this label should be considered a hint
+		  *                      (drawn with lesser opacity). Default = always false.
 		  * @param additionalDrawers Additional custom drawing (default = empty)
-		  * @param isHint Whether this label should be considered a hint (affects text color)
 		  * @return A new label
 		  */
 		def withBackground[A](contentPointer: Changing[A], role: ColorRole,
 							  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 							  preferredShade: ColorShade = Standard,
+							  isHintPointer: Changing[Boolean] = Changing.wrap(false),
 							  additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
 			withCustomBackground(contentPointer, f.context.color(role, preferredShade), displayFunction,
-				additionalDrawers, isHint)
+				isHintPointer, additionalDrawers)
 	}
 }
 
@@ -120,14 +140,19 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
 	  * Creates a new text label utilizing contextual information
 	  * @param contentPointer Pointer that is reflected on this label
 	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param isHintPointer A pointer that that contains true when this label should be considered a hint
+	  *                      (drawn with lesser opacity). Default = always false.
 	  * @param additionalDrawers Additional custom drawing (default = empty)
-	  * @param isHint Whether this label should be considered a hint (affects text color)
 	  * @return A new label
 	  */
 	def apply[A](contentPointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-				 additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
-		factory(contentPointer, context.font, displayFunction, if (isHint) context.hintTextColor else context.textColor,
-			context.textAlignment, context.textInsets, additionalDrawers, !context.textHasMinWidth)
+				 isHintPointer: Changing[Boolean] = Changing.wrap(false),
+				 additionalDrawers: Seq[CustomDrawer] = Vector()) =
+	{
+		val stylePointer = isHintPointer.map { isHint => TextDrawContext(context.font,
+			if (isHint) context.hintTextColor else context.textColor, context.textAlignment, context.textInsets) }
+		factory(contentPointer, stylePointer, displayFunction, additionalDrawers, !context.textHasMinWidth)
+	}
 }
 
 /**
@@ -136,9 +161,8 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
   * @since 17.10.2020, v2
   */
 class ViewTextLabel[A](override val parentHierarchy: ComponentHierarchy, override val contentPointer: Changing[A],
-					override val drawContext: TextDrawContext, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-					additionalDrawers: Seq[CustomDrawer] = Vector(),
-					override val allowTextShrink: Boolean = false)
+					   stylePointer: Changing[TextDrawContext], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+					   additionalDrawers: Seq[CustomDrawer] = Vector(), override val allowTextShrink: Boolean = false)
 	extends CustomDrawReachComponent with SingleLineTextComponent2 with PoolWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTE	-------------------------------------
@@ -151,9 +175,17 @@ class ViewTextLabel[A](override val parentHierarchy: ComponentHierarchy, overrid
 	
 	// Revalidates and repaints this component on all text changes
 	textPointer.addListener { _ => revalidateAndThen { repaint() } }
+	stylePointer.addListener { e =>
+		if (e.oldValue.hasSameDimensionsAs(e.newValue))
+			repaint()
+		else
+			revalidateAndThen { repaint() }
+	}
 	
 	
 	// IMPLEMENTED	-------------------------------------
+	
+	override def drawContext = stylePointer.value
 	
 	override protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]) = ()
 	

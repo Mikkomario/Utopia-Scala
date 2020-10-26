@@ -27,17 +27,25 @@ trait Focusable extends ReachComponentLike
 	def allowsFocusLeave: Boolean
 	
 	
+	// COMPUTED	-------------------------------
+	
+	/**
+	  * @return The focus manager associated with this component
+	  */
+	def focusManager = parentCanvas.focusManager
+	
+	
 	// OTHER	-------------------------------
 	
 	/**
 	  * Registers this component to the focus manager
 	  */
-	protected def register() = parentHierarchy.top.focusManager.register(this)
+	protected def register() = focusManager.register(this)
 	
 	/**
 	  * Detaches this component from the focus manager
 	  */
-	protected def unregister() = parentHierarchy.top.focusManager.unregister(this)
+	protected def unregister() = focusManager.unregister(this)
 	
 	/**
 	  * Connects this component to the focus manager while linked to the main component hierarchy. Detaches from

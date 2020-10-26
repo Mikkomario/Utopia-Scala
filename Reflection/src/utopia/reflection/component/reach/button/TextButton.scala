@@ -117,17 +117,9 @@ class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, tex
 	setup(_statePointer, hotKeys, hotKeyCharacters)
 	
 	
-	// COMPUTED	---------------------------------
-	
-	/**
-	  * @return A pointer to this button's state
-	  */
-	def statePointer = _statePointer.view
-	
-	
 	// IMPLEMENTED	-----------------------------
 	
-	override def state = _statePointer.value
+	override def statePointer = _statePointer.view
 	
 	override protected def trigger() = action
 }

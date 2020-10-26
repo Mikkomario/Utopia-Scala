@@ -322,17 +322,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		{
 			// Moves the focus forwards or backwards
 			val direction = if (event.keyStatus(KeyEvent.VK_SHIFT)) Negative else Positive
-			// Checks whether there are other focusable components to target outside the managed focus system
-			// If not, loops the focus inside the system without yielding it
-			val isNextComponentAvailable = focusManager.canYieldFocus(direction)
-			val foundNext = focusManager.moveFocusInside(direction, allowLooping = !isNextComponentAvailable)
-			// May transfer focus to the next component
-			if (!foundNext && isNextComponentAvailable)
-				direction match
-				{
-					case Positive => panel.transferFocus()
-					case Negative => panel.transferFocusBackward()
-				}
+			focusManager.moveFocus(direction)
 		}
 		
 		override def allowsHandlingFrom(handlerType: HandlerType) = focusManager.hasFocus

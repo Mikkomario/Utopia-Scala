@@ -25,6 +25,8 @@ includeSelf-parameter was set to false)
 - CsvReader now removes '-characters from the beginnings of columns, if present
 - Changed Duration.description behavior when dealing with over 72 hour durations
 - Added implicit conversion from Period to Duration (activated by importing TimeExtensions._)
+- Overrided a couple of methods in the "Unchanging" Changing implementation so that not so many unnecessary resources 
+will be used, knowing the wrapped value won't change.
 
 ## v1.8
 ### Scala

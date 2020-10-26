@@ -3,6 +3,7 @@ package utopia.reflection.component.reach.template
 import java.awt.event.KeyEvent
 
 import utopia.flow.datastructure.mutable.PointerLike
+import utopia.flow.event.Changing
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.inception.handling.HandlerType
@@ -28,7 +29,7 @@ trait ButtonLike extends ReachComponentLike with Focusable
 	/**
 	  * @return The current state of this button
 	  */
-	def state: ButtonState
+	def statePointer: Changing[ButtonState]
 	
 	/**
 	  * Triggers the actions associated with this button
@@ -37,6 +38,11 @@ trait ButtonLike extends ReachComponentLike with Focusable
 	
 	
 	// COMPUTED	------------------------------
+	
+	/**
+	  * @return This button's current state
+	  */
+	def state = statePointer.value
 	
 	/**
 	  * @return Whether this button is currently enabled
@@ -116,6 +122,9 @@ trait ButtonLike extends ReachComponentLike with Focusable
 		val mouseListener = new ButtonMouseListener(statePointer)
 		addMouseButtonListener(mouseListener)
 		addMouseMoveListener(mouseListener)
+		
+		// Repaints this button whenever it changes
+		this.statePointer.addListener { _ => repaint() }
 	}
 	
 	

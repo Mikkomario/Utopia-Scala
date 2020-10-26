@@ -1,9 +1,11 @@
 package utopia.flow.event
 
 import utopia.flow.async.{AsyncMirror, DelayedView}
+import utopia.flow.datastructure.mutable.Lazy
+import utopia.flow.datastructure.template.LazyLike
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ExecutionContext, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
 
 object Changing
@@ -23,7 +25,46 @@ object Changing
 	
 	private class Unchanging[A](override val value: A) extends Changing[A]
 	{
+		// ATTRIBUTES	-------------
+		
 		var listeners = Vector[ChangeListener[A]]()
+		
+		
+		// IMPLEMENTED	-------------
+		
+		override def addListener(changeListener: ChangeListener[A], generateChangeEventFromOldValue: Option[A]) =
+		{
+			// Will not add the listener since no change in value will ever be made (no events will be fired either)
+			// May fire the initial "simulated" event, however
+			generateChangeEventFromOldValue.filterNot { _ == value }
+				.foreach { old => changeListener.onChangeEvent(ChangeEvent(old, value)) }
+		}
+		
+		override def futureWhere(valueCondition: A => Boolean)(implicit exc: ExecutionContext) =
+		{
+			// Will return either a completed future or a future that never completes.
+			// Will not react or test for changes because there won't be any
+			if (valueCondition(value))
+				Future.successful(value)
+			else
+				Future.never
+		}
+		
+		// Simplifies the mapping function since it's known that the mapping only needs to happen once
+		override def map[B](f: A => B): Changing[B] = new Unchanging(f(value))
+		
+		// Instead of reacting to changes, lazily maps the value once
+		override def lazyMap[B](f: A => B) = Lazy { f(value) }
+		
+		// Since this value won't vary, only reacts to the other pointer's changes
+		override def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) = other.map { f(value, _) }
+		
+		// Since this value won't vary, only reacts to the other pointer's changes (lazily)
+		override def lazyMergeWith[B, R](other: Changing[B])(f: (A, B) => R) =
+			other.lazyMap { f(value, _) }
+		
+		// Delay has no effect on this pointer so it can just return itself
+		override def delayedBy(threshold: Duration)(implicit exc: ExecutionContext): Changing[A] = this
 	}
 }
 
@@ -99,14 +140,14 @@ trait Changing[A]
 	 * @tparam B Mapping result type
 	 * @return A mirrored version of this item, using specified mapping function
 	 */
-	def map[B](f: A => B) = Mirror.of(this)(f)
+	def map[B](f: A => B): Changing[B] = Mirror.of(this)(f)
 	
 	/**
 	  * @param f A mapping function
 	  * @tparam B Mapping result type
 	  * @return A lazily mirrored version of this item that uses the specified mapping function
 	  */
-	def lazyMap[B](f: A => B) = LazyMirror.of(this)(f)
+	def lazyMap[B](f: A => B): LazyLike[B] = LazyMirror.of(this)(f)
 	
 	/**
 	 * @param other Another changing item
@@ -115,7 +156,7 @@ trait Changing[A]
 	 * @tparam R Type of merge result
 	 * @return A mirror that merges the values from both of these items
 	 */
-	def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) = MergeMirror.of(this, other)(f)
+	def mergeWith[B, R](other: Changing[B])(f: (A, B) => R): Changing[R] = MergeMirror.of(this, other)(f)
 	
 	/**
 	  * @param other Another changing item
@@ -124,7 +165,7 @@ trait Changing[A]
 	  * @tparam R Type of merge result
 	  * @return A mirror that lazily merges the values from both of these items
 	  */
-	def lazyMergeWith[B, R](other: Changing[B])(f: (A, B) => R) =
+	def lazyMergeWith[B, R](other: Changing[B])(f: (A, B) => R): LazyLike[R] =
 		LazyMergeMirror.of(this, other)(f)
 	
 	/**
@@ -133,7 +174,8 @@ trait Changing[A]
 	  * @return A view into this pointer that only fires change events when there is a long enough pause in
 	  *         this pointer's changes
 	  */
-	def delayedBy(threshold: Duration)(implicit exc: ExecutionContext) = new DelayedView(this, threshold)
+	def delayedBy(threshold: Duration)(implicit exc: ExecutionContext): Changing[A] =
+		new DelayedView(this, threshold)
 	
 	/**
 	  * Creates an asynchronously mapping view of this changing item
