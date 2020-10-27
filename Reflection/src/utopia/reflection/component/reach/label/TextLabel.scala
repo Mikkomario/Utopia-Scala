@@ -141,7 +141,5 @@ class TextLabel(override val parentHierarchy: ComponentHierarchy, override val t
 	
 	// IMPLEMENTED	-----------------------------
 	
-	override protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]) = ()
-	
 	override def updateLayout() = ()
 }

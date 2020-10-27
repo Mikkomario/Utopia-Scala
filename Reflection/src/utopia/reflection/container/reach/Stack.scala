@@ -2,8 +2,6 @@ package utopia.reflection.container.reach
 
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.Bounds
-import utopia.genesis.util.Drawer
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
@@ -209,7 +207,5 @@ class Stack[C <: ReachComponentLike](override val parentHierarchy: ComponentHier
 									 override val cap: StackLength, override val customDrawers: Vector[CustomDrawer])
 	extends CustomDrawReachComponent with StackLike2[C]
 {
-	override protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]) = ()
-	
 	override def children = components
 }

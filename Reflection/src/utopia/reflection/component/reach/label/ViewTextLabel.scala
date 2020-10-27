@@ -2,8 +2,6 @@ package utopia.reflection.component.reach.label
 
 import utopia.flow.event.Changing
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.Bounds
-import utopia.genesis.util.Drawer
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
@@ -186,8 +184,6 @@ class ViewTextLabel[A](override val parentHierarchy: ComponentHierarchy, overrid
 	// IMPLEMENTED	-------------------------------------
 	
 	override def drawContext = stylePointer.value
-	
-	override protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]) = ()
 	
 	override def text = textPointer.value
 	

@@ -3,8 +3,6 @@ package utopia.reflection.container.reach
 import utopia.flow.datastructure.mutable.{PointerLike, PointerWithEvents}
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.Bounds
-import utopia.genesis.util.Drawer
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
@@ -189,8 +187,6 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	}
 	
 	override def components = _components
-	
-	override protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]) = ()
 	
 	/**
 	  * Adds a previously added component back to this stack

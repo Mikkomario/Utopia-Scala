@@ -2,7 +2,6 @@ package utopia.reflection.component.reach.template
 
 import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.{CustomDrawable2, CustomDrawer, DrawLevel}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.shape.stack.StackSize
@@ -30,8 +29,6 @@ object CustomDrawReachComponent
 								 getStackSize: => StackSize)
 		extends CustomDrawReachComponent
 	{
-		override protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]) = ()
-		
 		override def updateLayout() = ()
 		
 		override def calculatedStackSize = getStackSize
@@ -45,11 +42,6 @@ object CustomDrawReachComponent
   */
 trait CustomDrawReachComponent extends ReachComponent with CustomDrawable2
 {
-	// ABSTRACT	-------------------------
-	
-	protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]): Unit
-	
-	
 	// IMPLEMENTED	---------------------
 	
 	override def drawBounds = bounds
@@ -57,9 +49,6 @@ trait CustomDrawReachComponent extends ReachComponent with CustomDrawable2
 	override def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds]) =
 	{
 		val drawers = customDrawers.filter {_.drawLevel == drawLevel}
-		// On normal draw level, draws the content
-		if (drawLevel == Normal)
-			drawContent(drawer, clipZone)
 		// Draws with custom drawers
 		if (drawers.nonEmpty)
 		{

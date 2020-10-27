@@ -2,8 +2,6 @@ package utopia.reflection.component.reach.label
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.Bounds
-import utopia.genesis.util.Drawer
 import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
@@ -96,7 +94,7 @@ object ContextualMutableViewTextLabelFactory
 			
 			val label = f.mapContext { _.inContextWithBackground(background) }.forPointer(contentPointer,
 				displayFunction, isHint)
-			label.addCustomDrawer(new BackgroundDrawer(background))
+			label.addCustomDrawer(BackgroundDrawer(background))
 			label
 		}
 		
@@ -222,8 +220,6 @@ class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 	
 	override def drawContext = stylePointer.value
 	override def drawContext_=(newContext: TextDrawContext) = stylePointer.value = newContext
-	
-	override protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]) = ()
 	
 	override def text = textPointer.value
 	

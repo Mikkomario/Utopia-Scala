@@ -1,7 +1,5 @@
 package utopia.reflection.container.reach
 
-import utopia.genesis.shape.shape2D.Bounds
-import utopia.genesis.util.Drawer
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.component.context.{BackgroundSensitive, BaseContextLike, ColorContext, ColorContextLike}
@@ -109,7 +107,7 @@ case class FramingBuilder[+F](framingFactory: FramingFactory, contentFactory: Co
 	(color: ComponentColor, insets: StackInsetsConvertible, moreCustomDrawers: Vector[CustomDrawer] = Vector())
 	(content: (F, ColorContext) => ComponentCreationResult[C, R])
 	(implicit context: C1) =
-		apply(insets, new BackgroundDrawer(color) +: moreCustomDrawers) { factory =>
+		apply(insets, BackgroundDrawer(color) +: moreCustomDrawers) { factory =>
 			content(factory, context.inContextWithBackground(color))
 		}
 	
@@ -158,7 +156,7 @@ case class FramingBuilder[+F](framingFactory: FramingFactory, contentFactory: Co
 		{
 			case Some(minSideLength) => RoundedBackgroundDrawer.withRadius(color, minSideLength)
 			// If the insets default to 0, uses solid background drawing instead
-			case None => new BackgroundDrawer(color)
+			case None => BackgroundDrawer(color)
 		}
 		apply(activeInsets, drawer +: moreCustomDrawers) { factory =>
 			content(factory, context.inContextWithBackground(color)) }
@@ -258,7 +256,7 @@ class ContextualFramingBuilder[+NP <: BackgroundSensitive[NT], +NT, NC <: BaseCo
 	def withBackground[C <: ReachComponentLike, R](color: ComponentColor, insets: StackInsetsConvertible,
 												   moreCustomDrawers: Vector[CustomDrawer] = Vector())
 												  (content: F[NC] => ComponentCreationResult[C, R]) =
-		apply(color, insets, new BackgroundDrawer(color) +: moreCustomDrawers)(content)
+		apply(color, insets, BackgroundDrawer(color) +: moreCustomDrawers)(content)
 	
 	/**
 	  * Creates a new framing with background color and rounding at the four corners
@@ -281,7 +279,7 @@ class ContextualFramingBuilder[+NP <: BackgroundSensitive[NT], +NT, NC <: BaseCo
 		{
 			case Some(minSideLength) => RoundedBackgroundDrawer.withRadius(color, minSideLength)
 			// If the insets default to 0, uses solid background drawing instead
-			case None => new BackgroundDrawer(color)
+			case None => BackgroundDrawer(color)
 		}
 		apply(color, activeInsets, drawer +: moreCustomDrawers)(content)
 	}
@@ -304,8 +302,3 @@ class ContextualFramingBuilder[+NP <: BackgroundSensitive[NT], +NT, NC <: BaseCo
 class Framing(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
 			  override val insets: StackInsets, override val customDrawers: Vector[CustomDrawer] = Vector())
 	extends CustomDrawReachComponent with FramingLike2[ReachComponentLike]
-{
-	// IMPLEMENTED	---------------------------
-	
-	override protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]) = ()
-}

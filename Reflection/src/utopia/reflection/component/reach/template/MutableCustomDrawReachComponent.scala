@@ -1,8 +1,6 @@
 package utopia.reflection.component.reach.template
 
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.Bounds
-import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
@@ -28,8 +26,6 @@ object MutableCustomDrawReachComponent
 	private class BasicComponent(override val parentHierarchy: ComponentHierarchy, getSize: => StackSize)
 		extends MutableCustomDrawReachComponent
 	{
-		override protected def drawContent(drawer: Drawer, clipZone: Option[Bounds]) = ()
-		
 		override def calculatedStackSize = getSize
 		
 		override def updateLayout() = ()
@@ -54,5 +50,5 @@ trait MutableCustomDrawReachComponent extends CustomDrawReachComponent with Muta
 	  * Adds background drawing to this component
 	  * @param color Color used when drawing component background
 	  */
-	def addBackground(color: Color) = addCustomDrawer(new BackgroundDrawer(color))
+	def addBackground(color: Color) = addCustomDrawer(BackgroundDrawer(color))
 }
