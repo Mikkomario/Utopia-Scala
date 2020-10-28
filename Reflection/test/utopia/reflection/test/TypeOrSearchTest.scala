@@ -29,7 +29,7 @@ object TypeOrSearchTest extends App
 	val addIcon = new SingleColorIcon(Image.readFrom("Reflection/test-images/add.png").get)
 	val closeIcon = new SingleColorIcon(Image.readFrom("Reflection/test-images/close.png").get * 0.8)
 	
-	implicit val context: TextContext = baseContext.inContextWithBackground(colorScheme.gray.light).forTextComponents()
+	implicit val context: TextContext = baseContext.inContextWithBackground(colorScheme.gray.light).forTextComponents
 	
 	/* TODO: Add following features
 		- Submit on enter

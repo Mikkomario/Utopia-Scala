@@ -2,7 +2,7 @@ package utopia.reflection.shape.stack
 
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.{Size, TwoDimensional}
+import utopia.genesis.shape.shape2D.{Insets, Size, TwoDimensional}
 import utopia.reflection.shape.stack.LengthPriority.Low
 
 object StackSize
@@ -242,6 +242,18 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return A sum of these two sizes (with combined min, optimal and max (if defined))
       */
     def +(other: StackSize) = StackSize(width + other.width, height + other.height)
+    
+    /**
+      * @param insets A set of insets
+      * @return This size extended with the specified insets
+      */
+    def +(insets: StackInsets) = StackSize(width + insets.horizontal, height + insets.vertical)
+    
+    /**
+      * @param insets A set of insets
+      * @return This size extended with the specified insets
+      */
+    def +(insets: Insets) = StackSize(width + insets.horizontal, height + insets.vertical)
     
     /**
       * @param size A decrease in size

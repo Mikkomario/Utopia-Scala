@@ -35,10 +35,10 @@ object TextFieldTest extends App
 		val popupBG = colorScheme.primary.light
 		baseContext.inContextWithBackground(popupBG).use { context =>
 			// Creates pop-up content
-			val okButton = context.forTextComponents(Center).forSecondaryColorButtons
+			val okButton = context.forTextComponents.withTextAlignment(Center).forSecondaryColorButtons
 				.use { implicit btnC => TextButton.contextualWithoutAction("OK") }
 			val popUpContent = Stack.buildRowWithContext() { row =>
-				row += context.forTextComponents().use { implicit txC => TextLabel.contextual(message) }
+				row += context.forTextComponents.use { implicit txC => TextLabel.contextual(message) }
 				row += okButton
 			} (context).framed(margins.medium.downscaling, popupBG)
 			
@@ -52,7 +52,7 @@ object TextFieldTest extends App
 	val content = baseContext.inContextWithBackground(contentBG).use { context =>
 		Stack.buildColumnWithContext() { mainStack =>
 			// Creates the category tab
-			val tab = context.forTextComponents(Center).use { implicit tabC =>
+			val tab = context.forTextComponents.withTextAlignment(Center).use { implicit tabC =>
 				TabSelection.contextual(initialChoices = Vector("Goods", "for", "Purchase"))
 			}
 			tab.selectOne("Goods")
@@ -62,16 +62,18 @@ object TextFieldTest extends App
 			// Adds the main interaction area
 			mainStack += Stack.buildRowWithContext() { row =>
 				// Creates the fields
-				val (productField, amountField, priceField) = context.forTextComponents(Alignment.Left).withPromptFont(context.defaultFont * 0.8).forGrayFields.use { implicit fieldC =>
-					println(s"Field context bg = ${fieldC.containerBackground}, field BG = ${fieldC.buttonColor}, text color = ${fieldC.textColor}")
-					val productField = TextField.contextualForStrings(standardWidth, prompt = "Describe product")
-					val amountField = TextField.contextualForPositiveInts(standardWidth / 2, prompt = "1-999 Too long a prompt")
-					val priceField = TextField.contextualForPositiveDoubles(standardWidth / 2, prompt = "€")
-					(productField, amountField, priceField)
-				}
+				val (productField, amountField, priceField) = context.forTextComponents
+					.withPromptFont(context.defaultFont * 0.8).forGrayFields
+					.use { implicit fieldC =>
+						println(s"Field context bg = ${fieldC.containerBackground}, field BG = ${fieldC.buttonColor}, text color = ${fieldC.textColor}")
+						val productField = TextField.contextualForStrings(standardWidth, prompt = "Describe product")
+						val amountField = TextField.contextualForPositiveInts(standardWidth / 2, prompt = "1-999 Too long a prompt")
+						val priceField = TextField.contextualForPositiveDoubles(standardWidth / 2, prompt = "€")
+						(productField, amountField, priceField)
+					}
 				
 				// Pairs the fields with matching labels
-				context.forTextComponents(Alignment.BottomLeft).withoutInsets.use { implicit labelC =>
+				context.forTextComponents.withTextAlignment(Alignment.BottomLeft).withoutInsets.use { implicit labelC =>
 					val productLabel = TextLabel.contextual("Product")
 					val amountLabel = TextLabel.contextual("Amount")
 					val priceLabel = TextLabel.contextual("Price")

@@ -12,7 +12,7 @@ import utopia.reflection.component.reach.factory.{ContextInsertableComponentFact
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.CustomDrawReachComponent
 import utopia.reflection.component.template.display.PoolWithPointer
-import utopia.reflection.component.template.text.SingleLineTextComponent2
+import utopia.reflection.component.template.text.TextComponent2
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
@@ -45,14 +45,16 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param stylePointer A pointer to this label's styling information
 	  * @param displayFunction Function used when converting content to text (default = toString)
 	  * @param additionalDrawers Additional custom drawing (default = empty)
+	  * @param allowLineBreaks Whether line breaks within the text should be respected and applied (default = true)
 	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
 	  * @return A new label
 	  */
 	def apply[A](contentPointer: Changing[A], stylePointer: Changing[TextDrawContext],
 				 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-				 additionalDrawers: Seq[CustomDrawer] = Vector(), allowTextShrink: Boolean = false) =
+				 additionalDrawers: Seq[CustomDrawer] = Vector(), allowLineBreaks: Boolean = true,
+				 allowTextShrink: Boolean = false) =
 		new ViewTextLabel(parentHierarchy, contentPointer, stylePointer, displayFunction, additionalDrawers,
-			allowTextShrink)
+			allowLineBreaks, allowTextShrink)
 	
 	/**
 	  * Creates a new text label
@@ -62,17 +64,20 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param textColor Color used when drawing the text (default = standard black)
 	  * @param alignment Text alignment (default = left)
 	  * @param insets Insets around the text (default = any insets, preferring zero)
+	  * @param betweenLinesMargin Margin placed between horizontal text lines, in case there are many (default = 0)
 	  * @param additionalDrawers Additional custom drawing (default = empty)
+	  * @param allowLineBreaks Whether line breaks within the text should be respected and applied (default = true)
 	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
 	  * @return A new label
 	  */
 	def withStaticStyle[A](contentPointer: Changing[A], font: Font,
 						   displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 						   textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-						   insets: StackInsets = StackInsets.any, additionalDrawers: Seq[CustomDrawer] = Vector(),
+						   insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
+						   additionalDrawers: Seq[CustomDrawer] = Vector(), allowLineBreaks: Boolean = true,
 						   allowTextShrink: Boolean = false) =
-		apply(contentPointer, Changing.wrap(TextDrawContext(font, textColor, alignment, insets)), displayFunction,
-			additionalDrawers, allowTextShrink)
+		apply(contentPointer, Changing.wrap(TextDrawContext(font, textColor, alignment, insets, betweenLinesMargin)),
+			displayFunction, additionalDrawers, allowLineBreaks, allowTextShrink)
 }
 
 object ContextualViewTextLabelFactory
@@ -116,7 +121,7 @@ object ContextualViewTextLabelFactory
 							  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 							  preferredShade: ColorShade = Standard,
 							  isHintPointer: Changing[Boolean] = Changing.wrap(false),
-							  additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
+							  additionalDrawers: Seq[CustomDrawer] = Vector()) =
 			withCustomBackground(contentPointer, f.context.color(role, preferredShade), displayFunction,
 				isHintPointer, additionalDrawers)
 	}
@@ -148,8 +153,10 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
 				 additionalDrawers: Seq[CustomDrawer] = Vector()) =
 	{
 		val stylePointer = isHintPointer.map { isHint => TextDrawContext(context.font,
-			if (isHint) context.hintTextColor else context.textColor, context.textAlignment, context.textInsets) }
-		factory(contentPointer, stylePointer, displayFunction, additionalDrawers, !context.textHasMinWidth)
+			if (isHint) context.hintTextColor else context.textColor, context.textAlignment, context.textInsets,
+			context.betweenLinesMargin.optimal) }
+		factory(contentPointer, stylePointer, displayFunction, additionalDrawers, context.allowLineBreaks,
+			context.allowTextShrink)
 	}
 }
 
@@ -160,8 +167,9 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
   */
 class ViewTextLabel[A](override val parentHierarchy: ComponentHierarchy, override val contentPointer: Changing[A],
 					   stylePointer: Changing[TextDrawContext], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-					   additionalDrawers: Seq[CustomDrawer] = Vector(), override val allowTextShrink: Boolean = false)
-	extends CustomDrawReachComponent with SingleLineTextComponent2 with PoolWithPointer[A, Changing[A]]
+					   additionalDrawers: Seq[CustomDrawer] = Vector(), override val allowLineBreaks: Boolean = true,
+					   override val allowTextShrink: Boolean = false)
+	extends CustomDrawReachComponent with TextComponent2 with PoolWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTE	-------------------------------------
 	

@@ -22,7 +22,7 @@ trait TextDrawerLike extends CustomDrawer
 	/**
 	  * @return The text being drawn
 	  */
-	def text: LocalizedString
+	def drawnText: Either[LocalizedString, Seq[LocalizedString]]
 	
 	
 	// COMPUTED	---------------------------------
@@ -47,23 +47,40 @@ trait TextDrawerLike extends CustomDrawer
 	  */
 	def insets = drawContext.insets
 	
+	/**
+	  * @return The vertical margin to use when drawing multiple text lines
+	  */
+	def betweenLinesMargin = drawContext.betweenLinesMargin
+	
 	
 	// IMPLEMENTED	-----------------------------
 	
 	override def draw(drawer: Drawer, bounds: Bounds) =
 	{
-		// TODO: Add support for placing multiline text correctly
-		// Only draws non-empty text
-		val textToDraw = text.string
-		if (textToDraw.nonEmpty)
+		drawnText match
 		{
-			// Specifies the drawer
-			drawer.withEdgeColor(color).clippedTo(bounds).disposeAfter { d =>
-				// Draws the text with correct positioning
-				d.drawTextPositioned(textToDraw, font.toAwt) { textSize =>
-					alignment.position(textSize, bounds, insets)
+			case Left(line) =>
+				// Only draws non-empty text
+				val textToDraw = line.string
+				if (textToDraw.nonEmpty)
+				{
+					// Specifies the drawer
+					drawer.withEdgeColor(color).clippedTo(bounds).disposeAfter { d =>
+						// Draws the text with correct positioning
+						d.drawSingleLineTextPositioned(textToDraw, font.toAwt) { textSize =>
+							alignment.position(textSize, bounds, insets)
+						}
+					}
 				}
-			}
+			case Right(lines) =>
+				if (lines.nonEmpty)
+				{
+					drawer.withEdgeColor(color).clippedTo(bounds).disposeAfter { d =>
+						// Draws the text with correct positioning
+						d.drawTextLinesPositioned(lines.map { _.string }, font.toAwt, betweenLinesMargin) { textSize =>
+							alignment.position(textSize, bounds, insets) }(alignment.x)
+					}
+				}
 		}
 	}
 }

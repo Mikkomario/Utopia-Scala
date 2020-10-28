@@ -11,7 +11,7 @@ import utopia.reflection.component.reach.factory.{ContextInsertableComponentFact
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.MutableCustomDrawReachComponent
 import utopia.reflection.component.template.display.RefreshableWithPointer
-import utopia.reflection.component.template.text.{MutableStyleTextComponent, SingleLineTextComponent2}
+import utopia.reflection.component.template.text.{MutableStyleTextComponent, TextComponent2}
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
@@ -42,6 +42,8 @@ class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param textColor Color used when drawing text (default = standard black)
 	  * @param alignment Alignment used when placing text (default = Left)
 	  * @param insets Insets placed around the text (default = any, preferring 0)
+	  * @param betweenLinesMargin Margin placed between lines of text, in case there are many (default = 0.0)
+	  * @param allowLineBreaks Whether line breaks within text should be respected and applied (default = true)
 	  * @param allowTextShrink Whether text should be allowed to shrink to conserve space (default = false)
 	  * @tparam A Type of displayed content
 	  * @return A new label
@@ -49,9 +51,10 @@ class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	def forPointer[A](pointer: PointerWithEvents[A], font: Font,
 					  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 					  textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-					  insets: StackInsets = StackInsets.any, allowTextShrink: Boolean = false) =
-		new MutableViewTextLabel[A](parentHierarchy, pointer, TextDrawContext(font, textColor, alignment, insets),
-			displayFunction, allowTextShrink)
+					  insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
+					  allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
+		new MutableViewTextLabel[A](parentHierarchy, pointer, TextDrawContext(font, textColor, alignment, insets,
+			betweenLinesMargin), displayFunction, allowLineBreaks, allowTextShrink)
 	
 	/**
 	  * Creates a new mutable text view label
@@ -67,9 +70,10 @@ class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  */
 	def apply[A](initialValue: A, font: Font, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 				 textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-				 insets: StackInsets = StackInsets.any, allowTextShrink: Boolean = false) =
+				 insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
+				 allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
 		forPointer[A](new PointerWithEvents[A](initialValue), font, displayFunction, textColor, alignment, insets,
-			allowTextShrink)
+			betweenLinesMargin, allowLineBreaks, allowTextShrink)
 }
 
 object ContextualMutableViewTextLabelFactory
@@ -165,7 +169,7 @@ case class ContextualMutableViewTextLabelFactory[+N <: TextContextLike](labelFac
 					  isHint: Boolean = false) =
 		labelFactory.forPointer(pointer, context.font, displayFunction,
 			if (isHint) context.hintTextColor else context.textColor, context.textAlignment, context.textInsets,
-			!context.textHasMinWidth)
+			context.betweenLinesMargin.optimal, context.allowLineBreaks, context.allowTextShrink)
 	
 	/**
 	  * Creates a new mutable view label. Uses contextual information.
@@ -188,8 +192,9 @@ class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 							  override val contentPointer: PointerWithEvents[A],
 							  initialDrawContext: TextDrawContext,
 							  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+							  override val allowLineBreaks: Boolean = true,
 							  override val allowTextShrink: Boolean = false)
-	extends MutableCustomDrawReachComponent with MutableStyleTextComponent with SingleLineTextComponent2
+	extends MutableCustomDrawReachComponent with MutableStyleTextComponent with TextComponent2
 		with RefreshableWithPointer[A]
 {
 	// ATTRIBUTES	----------------------------------

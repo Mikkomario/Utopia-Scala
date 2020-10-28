@@ -39,8 +39,9 @@ trait ComponentLike2 extends Area
     
     /**
       * Calculates text width within this component
+      * @param font Font being used
       * @param text Text to be presented
-      * @return The with of the would be text
+      * @return The width the text would take in this component, using the specified font
       */
     def textWidthWith(font: Font, text: String) =
     {
@@ -49,8 +50,10 @@ trait ComponentLike2 extends Area
         else
             fontMetrics(font).stringWidth(text)
     }
+    
     /**
-      * @return The text height for the current font used in this component
+      * @param font Font being used
+      * @return The height of a single line of text in this component, using the specified font
       */
     def textHeightWith(font: Font) = fontMetrics(font).getHeight
     

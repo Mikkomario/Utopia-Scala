@@ -47,12 +47,14 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param borderWidth Width of this button's borders (default = 0 = no border)
 	  * @param alignment Text alignment used (default = Center)
 	  * @param textInsets Insets placed around the text (in addition to borders) (default = any, preferring 0)
+	  * @param betweenLinesMargin Margin placed between horizontal text lines, in case there are many (default = 0.0)
 	  * @param hotKeys Keys that can be used for triggering this button even when it doesn't have focus
 	  *                (default = empty)
 	  * @param hotKeyCharacters Character keys that can be used for triggering this button even when it doesn't have
 	  *                         focus (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
+	  * @param allowLineBreaks Whether line breaks within the text should be respected and applied (default = true)
 	  * @param allowTextShrink Whether text size should be allowed to decrease to conserve space when necessary
 	  *                        (default = false)
 	  * @param action The action performed when this button is pressed (accepts currently displayed content)
@@ -63,13 +65,13 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 				 enabledPointer: Changing[Boolean] = Changing.wrap(true),
 				 displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
 				 alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-				 hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
+				 betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
 				 additionalDrawers: Seq[CustomDrawer] = Vector(),
-				 additionalFocusListeners: Seq[FocusListener] = Vector(),
+				 additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
 				 allowTextShrink: Boolean = false)(action: A => Unit) =
 		new ViewTextButton[A](parentHierarchy, font, contentPointer, colorPointer, enabledPointer, displayFunction,
-			borderWidth, alignment, textInsets, hotKeys, hotKeyCharacters, additionalDrawers,
-			additionalFocusListeners, allowTextShrink)(action)
+			borderWidth, alignment, textInsets, betweenLinesMargin, hotKeys, hotKeyCharacters, additionalDrawers,
+			additionalFocusListeners, allowLineBreaks, allowTextShrink)(action)
 }
 
 object ContextualViewTextButtonFactory
@@ -100,8 +102,9 @@ object ContextualViewTextButtonFactory
 		{
 			val context = factory.context
 			factory.factory[A](context.font, contentPointer, Changing.wrap(context.buttonColor), enabledPointer,
-				displayFunction, context.borderWidth, context.textAlignment, context.textInsets, hotKeys, hotKeyCharacters,
-				additionalDrawers, additionalFocusListeners, !context.textHasMinWidth)(action)
+				displayFunction, context.borderWidth, context.textAlignment, context.textInsets,
+				context.betweenLinesMargin.optimal, hotKeys, hotKeyCharacters, additionalDrawers,
+				additionalFocusListeners, context.allowLineBreaks, context.allowTextShrink)(action)
 		}
 	}
 }
@@ -142,8 +145,9 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
 							 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
 							 additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
 		factory[A](context.font, contentPointer, colorPointer, enabledPointer, displayFunction, borderWidth,
-			context.textAlignment, context.textInsets, hotKeys, hotKeyCharacters, additionalDrawers,
-			additionalFocusListeners, !context.textHasMinWidth)(action)
+			context.textAlignment, context.textInsets, context.betweenLinesMargin.optimal, hotKeys,
+			hotKeyCharacters, additionalDrawers, additionalFocusListeners, context.allowLineBreaks,
+			context.allowTextShrink)(action)
 	
 	/**
 	  * Creates a new button that changes its color based on a pointer value
@@ -186,9 +190,9 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, font: Font, content
 						enabledPointer: Changing[Boolean] = Changing.wrap(true),
 						displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
 						alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-						hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-						additionalDrawers: Seq[CustomDrawer] = Vector(),
-						additionalFocusListeners: Seq[FocusListener] = Vector(),
+						betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
+						hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
+						additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
 						allowTextShrink: Boolean = false)(action: A => Unit)
 	extends ButtonLike with ReachComponentWrapper
 {
@@ -200,13 +204,13 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, font: Font, content
 	private val actualTextInsets = if (borderWidth > 0) textInsets + borderWidth else textInsets
 	private val stylePointer = colorPointer.mergeWith(enabledPointer) { (color, enabled) =>
 		TextDrawContext(font, if (enabled) color.defaultTextColor else color.textColorStandard.hintTextColor,
-			alignment, actualTextInsets)
+			alignment, actualTextInsets, betweenLinesMargin)
 	}
 	
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners
 	override protected val wrapped = new ViewTextLabel[A](parentHierarchy, contentPointer, stylePointer,
 		displayFunction, ButtonBackgroundViewDrawer(colorPointer.map { c => c: Color }, statePointer, borderWidth) +:
-			additionalDrawers, allowTextShrink)
+			additionalDrawers, allowLineBreaks, allowTextShrink)
 	
 	
 	// INITIAL CODE	---------------------------------

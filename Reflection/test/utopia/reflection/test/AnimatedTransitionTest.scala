@@ -7,11 +7,10 @@ import utopia.reflection.component.drawing.immutable.BorderDrawer
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.shape.Border
+import utopia.reflection.shape.{Alignment, Border}
 import utopia.reflection.util.SingleFrameSetup
 import utopia.flow.util.TimeExtensions._
 import utopia.reflection.component.swing.animation.AnimatedVisibility
-import utopia.reflection.shape.Alignment.Center
 import utopia.reflection.shape.LengthExtensions._
 
 /**
@@ -26,15 +25,17 @@ object AnimatedTransitionTest extends App
 	// Imports contexts
 	import TestContext._
 	
-	val transitionWrapper = baseContext.inContextWithBackground(colorScheme.primary.light).forTextComponents(Center).use { implicit txc =>
-		// Creates the component to display
-		val originComponent = TextLabel.contextual("I'm Animated :)")
-		originComponent.addCustomDrawer(new BorderDrawer(Border.square(2, txc.secondaryColor)))
-		originComponent.addResizeListener { e => println(s"Component size changed: $e") }
-		
-		// Creates the transition components
-		AnimatedVisibility.contextual(originComponent, Some(Y))
-	}
+	val transitionWrapper = baseContext.inContextWithBackground(colorScheme.primary.light).forTextComponents
+		.withTextAlignment(Alignment.Center)
+		.use { implicit txc =>
+			// Creates the component to display
+			val originComponent = TextLabel.contextual("I'm Animated :)")
+			originComponent.addCustomDrawer(BorderDrawer(Border.square(2, txc.secondaryColor)))
+			originComponent.addResizeListener { e => println(s"Component size changed: $e") }
+			
+			// Creates the transition components
+			AnimatedVisibility.contextual(originComponent, Some(Y))
+		}
 	
 	val content = transitionWrapper.framed(margins.medium.any, colorScheme.primary.light)
 	

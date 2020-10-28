@@ -65,11 +65,11 @@ object DropDown
 		val highlightColor = context.buttonColorHighlighted
 		
 		val dd = new DropDown[A, C](context.actorHandler, noResultsView, icon,
-			new BackgroundDrawer(highlightColor, Normal), highlightColor, selectionPromptText,
+			BackgroundDrawer(highlightColor, Normal), highlightColor, selectionPromptText,
 			context.font, context.textColor, displayFunction, context.textAlignment, context.textInsets,
 			context.textInsets.mapVertical { _.withLowPriority }, context.textColor,
 			context.borderWidth, context.relatedItemsStackMargin, displayStackLayout, contentPointer, valuePointer,
-			context.textHasMinWidth, context.allowImageUpscaling, shouldDisplayPopUpOnFocusGain, sameInstanceCheck,
+			!context.allowTextShrink, context.allowImageUpscaling, shouldDisplayPopUpOnFocusGain, sameInstanceCheck,
 			contentIsStateless)(makeDisplayFunction)
 		dd.background = backgroundColor
 		dd
@@ -166,11 +166,11 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
 	// Adds border drawing to the view
 	{
 		// Draws border around the view
-		view.addCustomDrawer(new BorderDrawer(Border.symmetric(borderWidth, borderColor)))
+		view.addCustomDrawer(BorderDrawer(Border.symmetric(borderWidth, borderColor)))
 		// Draws border at the right side of text
-		textLabel.addCustomDrawer(new BorderDrawer(Border(Insets.right(borderWidth), borderColor)))
+		textLabel.addCustomDrawer(BorderDrawer(Border(Insets.right(borderWidth), borderColor)))
 		// Draws border at each side, except for top of pop-up
-		popupContentView.addCustomDrawer(new BorderDrawer(Border(Insets.symmetric(borderWidth) - Up, borderColor)))
+		popupContentView.addCustomDrawer(BorderDrawer(Border(Insets.symmetric(borderWidth) - Up, borderColor)))
 	}
 	
 	// Updates the item display whenever value changes

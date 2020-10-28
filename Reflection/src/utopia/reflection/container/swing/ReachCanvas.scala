@@ -201,6 +201,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 				}
 			case None => Some(Partial(area))
 		}
+		component.repaint()
 	}
 	
 	@tailrec

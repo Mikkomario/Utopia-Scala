@@ -1,6 +1,5 @@
 package utopia.reflection.test
 
-import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
 import utopia.reflection.component.drawing.immutable.BorderDrawer
 import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
@@ -24,18 +23,19 @@ object ComponentImagesTest extends App
 	import TestContext._
 	
 	val backgroundColor = colorScheme.primary.light
-	val imageLabel = baseContext.inContextWithBackground(backgroundColor).forTextComponents(Center).use { implicit txc =>
-		// Creates the image to draw
-		val originComponent = TextLabel.contextual("This is to be drawn as an image")
-		originComponent.addCustomDrawer(new BorderDrawer(Border.square(2, colorScheme.secondary)))
-		originComponent.setToOptimalSize()
-		val image = originComponent.toImage
-		
-		println(image.size)
-		
-		// Wraps the image to an image label and then draws it
-		ImageLabel.contextual(image)(txc)
-	}
+	val imageLabel = baseContext.inContextWithBackground(backgroundColor).forTextComponents.withTextAlignment(Center)
+		.use { implicit txc =>
+			// Creates the image to draw
+			val originComponent = TextLabel.contextual("This is to be drawn as an image")
+			originComponent.addCustomDrawer(BorderDrawer(Border.square(2, colorScheme.secondary)))
+			originComponent.setToOptimalSize()
+			val image = originComponent.toImage
+			
+			println(image.size)
+			
+			// Wraps the image to an image label and then draws it
+			ImageLabel.contextual(image)(txc)
+		}
 	
 	val content = imageLabel.framed(margins.medium.any, backgroundColor)
 	

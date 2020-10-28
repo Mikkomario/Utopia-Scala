@@ -3,9 +3,6 @@ package utopia.reflection.component.context
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorScheme, ColorSet, ColorShade, ComponentColor}
 import utopia.reflection.localization.Localizer
-import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape.stack.StackInsets
 
 /**
   * This is a more specific instance of base context that also includes information about surrounding container's
@@ -37,6 +34,12 @@ case class ColorContext(base: BaseContextLike, containerBackground: ComponentCol
 	 */
 	def withLightGrayBackground = copy(containerBackground =
 		colorScheme.gray.forBackgroundPreferringLight(containerBackground))
+	
+	/**
+	  * @param localizer Localizer used (default = no localization used)
+	  * @return Copy of this context that can be used for text components
+	  */
+	def forTextComponents(implicit localizer: Localizer): TextContext = TextContext(this, localizer)
 	
 	
 	// IMPLEMENTED	--------------------------
@@ -71,15 +74,4 @@ case class ColorContext(base: BaseContextLike, containerBackground: ComponentCol
 	  */
 	def forChildComponentWithRole(colorRole: ColorRole, preferredShade: ColorShade = Standard) =
 		copy(containerBackground = color(colorRole, preferredShade))
-	
-	/**
-	  * @param textAlignment Text alignment used (default = Left)
-	  * @param textInsets Insets placed around the text when drawn (default = small margins, flexible)
-	  * @param localizer Localizer used (default = no localization used)
-	  * @return Copy of this context that can be used for text components
-	  */
-	def forTextComponents(textAlignment: Alignment = Alignment.Left,
-						  textInsets: StackInsets = StackInsets.symmetric(margins.small.any, margins.verySmall.any))
-						 (implicit localizer: Localizer): TextContext =
-		TextContext(this, textAlignment, textInsets, localizer)
 }

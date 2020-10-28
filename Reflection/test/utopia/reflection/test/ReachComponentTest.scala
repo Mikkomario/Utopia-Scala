@@ -34,7 +34,7 @@ object ReachComponentTest extends App
 			
 			val (framing, label) = factories.withoutContext(Framing).builderWithMappedContext[ColorContext,
 				TextContext, ContextualMutableTextLabelFactory](MutableTextLabel, baseContext) {
-				_.forTextComponents(Alignment.Center) }
+				_.forTextComponents.withTextAlignment(Alignment.Center) }
 				.withBackground(colorScheme.secondary.light, margins.medium.any) { labelFactory =>
 					labelFactory.withBackground("Hello!", Primary)
 				}.toTuple
@@ -47,8 +47,8 @@ object ReachComponentTest extends App
 				}(baseContext).toTuple*/
 			// TODO: The second label "twitches" on content updates
 			val label2 = factories.withContext(baseContext.inContextWithBackground(colorScheme.primary)
-				.forTextComponents(Alignment.Center))(TextLabel)
-				.withCustomBackground("Hello 2", colorScheme.primary)
+				.forTextComponents.withTextAlignment(Alignment.Center))(TextLabel)
+				.withCustomBackground("Hello 2\nThis label contains 2 lines", colorScheme.primary)
 			
 			Vector(framing, label2) -> label
 		}.toTriple

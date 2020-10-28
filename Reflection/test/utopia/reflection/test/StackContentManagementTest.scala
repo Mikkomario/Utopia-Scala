@@ -27,7 +27,7 @@ object StackContentManagementTest extends App
 	val stack = Stack.column[ItemLabel[Int]]()
 	
 	val background = colorScheme.gray
-	val manager = baseContext.inContextWithBackground(background).forTextComponents().use { implicit txc =>
+	val manager = baseContext.inContextWithBackground(background).forTextComponents.use { implicit txc =>
 		ContainerContentManager.forStatelessItems[Int, ItemLabel[Int]](stack, Vector(1, 4, 6)) { i =>
 			val label = ItemLabel.contextual(i)
 			label.addContentListener { e => println(s"Label content changed: $e") }

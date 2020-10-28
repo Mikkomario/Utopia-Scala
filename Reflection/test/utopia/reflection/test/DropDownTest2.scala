@@ -32,7 +32,7 @@ object DropDownTest2 extends App
 	val ddIcon = Image.readOrEmpty("Reflection/test-images/arrow-back-48dp.png")
 	
 	val backgroundColor = colorScheme.primary
-	val stack = baseContext.inContextWithBackground(backgroundColor).forTextComponents().forGrayFields
+	val stack = baseContext.inContextWithBackground(backgroundColor).forTextComponents.forGrayFields
 		.withBorderWidth(1).use { implicit context =>
 			val categorySelect = DropDown.contextualWithTextOnly[String](
 				TextLabel.contextual("No content available", isHint = true), ddIcon, "Select Class")

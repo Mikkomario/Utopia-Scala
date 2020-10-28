@@ -4,8 +4,9 @@ import java.awt.{AlphaComposite, BasicStroke, Font, Graphics, Graphics2D, Image,
 import java.awt.geom.AffineTransform
 
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Bounds, Point, ShapeConvertible, Size, Transformation, Vector2D, Vector2DLike}
+import utopia.genesis.shape.shape2D.{Bounds, Point, ShapeConvertible, Size, Transformation, Vector2DLike}
 import utopia.flow.util.NullSafe._
+import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.shape3D.Vector3D
 
 import scala.util.Try
@@ -136,11 +137,17 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
     def draw(shape: ShapeConvertible): Unit = draw(shape.toShape)
     
     /**
-     * Draws a piece of text so that it is centered in a set of bounds
-     */
-    def drawTextCentered(text: String, font: Font, bounds: Bounds) =
+      * Draws a piece of text so that it is centered in a set of bounds
+      * @param text The text being drawn
+      * @param font Font used when drawing the text
+      * @param bounds Bounds within which the text must fit
+      * @param betweenLinesMargin Margin between lines of text (used if there are multiple lines, default = 0)
+      * @param allowMultipleLines Whether use of multiple text lines should be allowed (default = true)
+      */
+    def drawTextCentered(text: String, font: Font, bounds: Bounds, betweenLinesMargin: Double = 0.0,
+                         allowMultipleLines: Boolean = true) =
     {
-        drawTextPositioned(text, font) { textSize =>
+        drawTextPositioned(text, font, betweenLinesMargin, (lw, tw) => (tw - lw) / 2.0, allowMultipleLines) { textSize =>
             // May downscale the text to fit the bounds
             val scaling = (bounds.size / textSize).minDimension min 1
             val scaledSize = textSize * scaling
@@ -164,13 +171,32 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
     }
     
     /**
-      * Draws a piece of text. Text display size affects the positioning
+      * Draws a piece of text. Specified bounds affect the positioning and possibly scaling.
       * @param text Text to draw
       * @param font Font to use
-      * @param getTextArea A function for determining the bounds of the drawn text when text size is known.
+      * @param betweenLinesMargin Margin placed between lines of text if multiple lines are used (default = 0.0)
+      * @param lineX A function for calculating the left x-coordinate of a text line based on the line width and the
+      *              maximum line width. Default = all lines start at the same position (0)
+      * @param allowMultipleLines Whether use of multiple text lines should be allowed (default = true)
+      * @param getTextArea A function for determining the bounds of the drawn text when text size is known
       */
-    // TODO: Handle multiline text
-    def drawTextPositioned(text: String, font: Font)(getTextArea: Size => Bounds) =
+    def drawTextPositioned(text: String, font: Font, betweenLinesMargin: Double = 0.0,
+                           lineX: (Double, Double) => Double = (_, _) => 0.0, allowMultipleLines: Boolean = true)
+                          (getTextArea: Size => Bounds) =
+    {
+        if (allowMultipleLines)
+            drawMultilineTextPositioned(text, font, betweenLinesMargin)(getTextArea)(lineX)
+        else
+            drawSingleLineTextPositioned(text, font)(getTextArea)
+    }
+    
+    /**
+      * Draws a piece of text as a single horizontal line. Specified bounds affect the positioning and possibly scaling.
+      * @param text Text to draw
+      * @param font Font to use
+      * @param getTextArea A function for determining text draw bounds when text size is known
+      */
+    def drawSingleLineTextPositioned(text: String, font: Font)(getTextArea: Size => Bounds) =
     {
         // Sets up the graphics context
         prepareForTextDraw(font)
@@ -184,9 +210,77 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
         val scaling = (textArea.size / textSize).toVector
         
         if (scaling ~== Vector3D.identity)
-            graphics.drawString(text, topLeft.x.toInt, topLeft.y.toInt + metrics.getAscent)
+            graphics.drawString(text, topLeft.x.round.toInt, topLeft.y.round.toInt + metrics.getAscent)
         else
             transformed(Transformation.position(topLeft).scaled(scaling)).graphics.drawString(text, 0, metrics.getAscent)
+    }
+    
+    /**
+      * Draws a piece of text. Specified bounds affect the positioning and possibly scaling.
+      * @param text Text to draw
+      * @param font Font to use
+      * @param betweenLinesMargin Margin placed between lines of text if multiple lines are used (default = 0.0)
+      * @param getTextArea A function for determining the bounds of the drawn text when text size is known
+      * @param getLineX A function for calculating the left x-coordinate of a text line based on the line width and the
+      *                 maximum line width.
+      */
+    def drawMultilineTextPositioned(text: String, font: Font, betweenLinesMargin: Double = 0.0)
+                                   (getTextArea: Size => Bounds)(getLineX: (Double, Double) => Double) =
+    {
+        val lines = text.linesIterator.toVector
+        if (lines.size > 1)
+            drawTextLinesPositioned(lines, font, betweenLinesMargin)(getTextArea)(getLineX)
+        else
+            drawSingleLineTextPositioned(text, font)(getTextArea)
+    }
+    
+    /**
+      * Draws multiple lines of text. Specified bounds affect the positioning and possibly scaling.
+      * @param lines Lines of text to draw
+      * @param font Font to use
+      * @param betweenLinesMargin Margin placed between lines of text if multiple lines are used (default = 0.0)
+      * @param getTextArea A function for determining the bounds of the drawn text when text size is known
+      * @param getLineX A function for calculating the left x-coordinate of a text line based on the line width and the
+      *                 maximum line width.
+      */
+    def drawTextLinesPositioned(lines: Seq[String], font: Font, betweenLinesMargin: Double = 0.0)
+                               (getTextArea: Size => Bounds)(getLineX: (Double, Double) => Double) =
+    {
+        // TODO: WET WET
+        if (lines.nonEmpty)
+        {
+            // Sets up the graphics context
+            prepareForTextDraw(font)
+            val metrics = graphics.getFontMetrics
+    
+            val lineHeight = metrics.getAscent
+            val lineWidths = lines.map(metrics.stringWidth)
+            val textWidth = lineWidths.max
+            val textHeight = lines.size * lineHeight + ((lines.size - 1) max 0) * betweenLinesMargin
+            
+            val textSize = Size(textWidth, textHeight)
+            val textArea = getTextArea(textSize)
+    
+            // Checks whether the text needs to be scaled
+            val topLeft = textArea.position
+            val scaling = (textArea.size / textSize).toVector
+            
+            // Draws the lines
+            // TODO: WET WET
+            if (scaling ~== Vector3D.identity)
+                lines.foreachWithIndex { (line, index) =>
+                    graphics.drawString(line, (topLeft.x + getLineX(lineWidths(index), textWidth)).round.toInt,
+                        (topLeft.y + index * (lineHeight + betweenLinesMargin)).round.toInt + lineHeight)
+                }
+            else
+            {
+                val drawer = transformed(Transformation.position(topLeft).scaled(scaling)).graphics
+                lines.foreachWithIndex { (line, index) =>
+                    drawer.drawString(line, getLineX(lineWidths(index), textWidth).round.toInt,
+                        (index * (lineHeight + betweenLinesMargin)).round.toInt + lineHeight)
+                }
+            }
+        }
     }
     
     /**

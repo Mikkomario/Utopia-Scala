@@ -10,7 +10,7 @@ import utopia.reflection.component.drawing.view.TextViewDrawer
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.MutableCustomDrawReachComponent
-import utopia.reflection.component.template.text.{MutableTextComponent, SingleLineTextComponent2}
+import utopia.reflection.component.template.text.{MutableTextComponent, TextComponent2}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
@@ -84,7 +84,7 @@ case class ContextualMutableTextLabelFactory[+N <: TextContextLike](parentHierar
 	  */
 	def apply(text: LocalizedString, isHint: Boolean = false) = new MutableTextLabel(parentHierarchy, text,
 		context.font, if (isHint) context.hintTextColor else context.textColor, context.textAlignment,
-		context.textInsets, !context.textHasMinWidth)
+		context.textInsets, context.betweenLinesMargin.optimal, context.allowLineBreaks, context.allowTextShrink)
 }
 
 /**
@@ -95,8 +95,9 @@ case class ContextualMutableTextLabelFactory[+N <: TextContextLike](parentHierar
 class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initialText: LocalizedString,
 					   initialFont: Font, initialTextColor: Color = Color.textBlack,
 					   initialAlignment: Alignment = Alignment.Left, initialInsets: StackInsets = StackInsets.any,
-					   override val allowTextShrink: Boolean = false) extends MutableCustomDrawReachComponent
-	with SingleLineTextComponent2 with MutableTextComponent
+					   initialBetweenLinesMargin: Double = 0.0, override val allowLineBreaks: Boolean = true,
+					   override val allowTextShrink: Boolean = false)
+	extends MutableCustomDrawReachComponent with TextComponent2 with MutableTextComponent
 {
 	// ATTRIBUTES	-------------------------
 	
@@ -108,13 +109,13 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 	  * A mutable pointer that contains this label's style
 	  */
 	val stylePointer = new PointerWithEvents(TextDrawContext(initialFont, initialTextColor, initialAlignment,
-		initialInsets))
+		initialInsets, initialBetweenLinesMargin))
 	
 	
 	// INITIAL CODE	-------------------------
 	
 	// Revalidates and/or repaints this component whenever content or styling changes
-	textPointer.addListener { _ => revalidateAndThen { repaint() } }
+	textPointer.addListener { _ => revalidateAndRepaint() }
 	stylePointer.addListener { event =>
 		if (event.newValue.hasSameDimensionsAs(event.oldValue))
 			repaint()

@@ -24,7 +24,7 @@ object MultiLineTextViewTest extends App
 	
 	val background = colorScheme.primary.light
 	val standardWidth = StackLength(240, 360, 540)
-	val content = baseContext.inContextWithBackground(background).forTextComponents().use { bc =>
+	val content = baseContext.inContextWithBackground(background).forTextComponents.use { bc =>
 		// Displays text view at the top
 		val textView = bc.withoutInsets.use { implicit c =>
 			MultiLineTextView.contextual("Please type in some text and then press enter",

@@ -39,7 +39,7 @@ object TextLabel
 				  (implicit context: TextContextLike) =
 	{
 		val label = new TextLabel(text, context.font, if (isHint) context.hintTextColor else context.textColor,
-			context.textInsets, context.textAlignment, context.textHasMinWidth)
+			context.textInsets, context.textAlignment, !context.allowTextShrink)
 		label
 	}
 	

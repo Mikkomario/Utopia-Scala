@@ -12,10 +12,31 @@ import utopia.reflection.localization.LocalizedString
   * @since 17.10.2020, v2
   */
 case class TextViewDrawer(textPointer: Changing[LocalizedString], stylePointer: Changing[TextDrawContext],
-						  override val drawLevel: DrawLevel = Normal)
+						  override val drawLevel: DrawLevel = Normal, allowMultipleLines: Boolean = true)
 	extends utopia.reflection.component.drawing.template.TextDrawerLike
 {
+	// ATTRIBUTES	----------------------------
+	
+	private val drawnTextPointer =
+	{
+		if (allowMultipleLines)
+			textPointer.lazyMap { t => Right(t.lines) }
+		else
+			textPointer.lazyMap { Left(_) }
+	}
+	
+	
+	// COMPUTED	--------------------------------
+	
+	/**
+	  * @return The text currently being drawn
+	  */
+	def text = textPointer.value
+	
+	
+	// IMPLEMENTED	----------------------------
+	
 	override def drawContext = stylePointer.value
 	
-	override def text = textPointer.value
+	override def drawnText = drawnTextPointer.get
 }

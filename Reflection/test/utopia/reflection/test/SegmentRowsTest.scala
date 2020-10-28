@@ -24,13 +24,13 @@ object SegmentRowsTest extends App
 	
 	// Creates the labels
 	val backgroundContext = baseContext.inContextWithBackground(colorScheme.primary.light)
-	val labels = backgroundContext.forTextComponents(Alignment.Center).expandingHorizontally.use { implicit c =>
+	val labels = backgroundContext.forTextComponents.withTextAlignment(Alignment.Center).expandingHorizontally.use { implicit c =>
 		Vector("Here are some labels", "just for you", "once", "again!").map {
 			TextLabel.contextualWithBackground(colorScheme.secondary.forBackground(c.containerBackground), _) }
 	}
 	
 	// Creates buttons as well
-	val (button1, button2) = backgroundContext.forTextComponents(Alignment.Center).mapFont { _ * 1.2 }
+	val (button1, button2) = backgroundContext.forTextComponents.withTextAlignment(Alignment.Center).mapFont { _ * 1.2 }
 		.expandingHorizontally.forPrimaryColorButtons
 		.use { implicit c =>
 			val button1 = TextButton.contextual("Yeah!") { labels(1).text += "!" }

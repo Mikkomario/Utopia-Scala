@@ -348,6 +348,18 @@ sealed trait Alignment
 	  */
 	def isVertical = supportedAxes.contains(Y)
 	
+	/**
+	  * @return The direction this alignment will move the items horizontally. None if this alignment doesn't
+	  *         specify a direction (centered)
+	  */
+	def horizontalDirection = directionAlong(X)
+	
+	/**
+	  * @return The direction this alignment will move the items vertically. None if this alignment doesn't
+	  *         specify a direction (centered)
+	  */
+	def verticalDirection = directionAlong(Y)
+	
 	
 	// OTHER	----------------
 	
@@ -363,6 +375,44 @@ sealed trait Alignment
 	  *         direction along specified axis (centered)
 	  */
 	def directionAlong(axis: Axis2D) = directions.find { _.axis == axis }
+	
+	/**
+	  * Calculates the desired coordinate for an element along the specified axis
+	  * @param axis Targeted axis
+	  * @param elementLength The length of the targeted element along that axis
+	  * @param areaLength The total length of the available area along that axis
+	  * @return The proposed (top or left) coordinate for the element along that axis
+	  */
+	def positionAlong(axis: Axis2D, elementLength: Double, areaLength: Double) = directionAlong(axis) match
+	{
+		// Case: Specifies the preferred edge
+		case Some(direction) =>
+			direction.sign match
+			{
+				// Case: Move as far as possible
+				case Positive => areaLength - elementLength
+				// Case: Move as little as possible
+				case Negative => 0.0
+			}
+		// Case: Doesn't specify an edge => places the element at the center
+		case None => (areaLength - elementLength) / 2.0
+	}
+	
+	/**
+	  * Calculates the desired x-coordinate for an element
+	  * @param elementWidth The width of the targeted element
+	  * @param areaWidth The total width of the available area
+	  * @return The proposed (left) x-coordinate for the element
+	  */
+	def x(elementWidth: Double, areaWidth: Double) = positionAlong(X, elementWidth, areaWidth)
+	
+	/**
+	  * Calculates the desired y-coordinate for an element
+	  * @param elementHeight The height of the targeted element
+	  * @param areaHeight The total height of the available area
+	  * @return The proposed (top) y-coordinate for the element
+	  */
+	def y(elementHeight: Double, areaHeight: Double) = positionAlong(Y, elementHeight, areaHeight)
 	
 	/**
 	  * Positions the specified area within a set of bounds so that it follows this alignment

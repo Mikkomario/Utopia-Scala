@@ -1,8 +1,6 @@
 package utopia.reflection.component.reach.label
 
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.Bounds
-import utopia.genesis.util.Drawer
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
@@ -12,7 +10,7 @@ import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.CustomDrawReachComponent
-import utopia.reflection.component.template.text.SingleLineTextComponent2
+import utopia.reflection.component.template.text.TextComponent2
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
@@ -46,15 +44,18 @@ case class TextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param textColor Color used when drawing the text (default = standard black)
 	  * @param alignment Text alignment (default = left)
 	  * @param insets Insets around the text (default = any insets, preferring zero)
+	  * @param betweenLinesMargin Margin placed between lines of text when line breaks are used (default = 0)
 	  * @param additionalDrawers Additional custom drawing (default = empty)
+	  * @param allowLineBreaks Whether line breaks in the text should be recognized and respected (default = true)
 	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
 	  * @return A new label
 	  */
 	def apply(text: LocalizedString, font: Font, textColor: Color = Color.textBlack,
 			  alignment: Alignment = Alignment.Left, insets: StackInsets = StackInsets.any,
-			  additionalDrawers: Seq[CustomDrawer] = Vector(), allowTextShrink: Boolean = false) =
-		new TextLabel(parentHierarchy, text, TextDrawContext(font, textColor, alignment, insets),
-			additionalDrawers, allowTextShrink)
+			  betweenLinesMargin: Double = 0.0, additionalDrawers: Seq[CustomDrawer] = Vector(),
+			  allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
+		new TextLabel(parentHierarchy, text, TextDrawContext(font, textColor, alignment, insets, betweenLinesMargin),
+			additionalDrawers, allowLineBreaks, allowTextShrink)
 }
 
 object ContextualTextLabelFactory
@@ -115,7 +116,8 @@ case class ContextualTextLabelFactory[+N <: TextContextLike]
 	  */
 	def apply(text: LocalizedString, additionalDrawers: Seq[CustomDrawer] = Vector(), isHint: Boolean = false) =
 		factory(text, context.font, if (isHint) context.hintTextColor else context.textColor,
-			context.textAlignment, context.textInsets, additionalDrawers, !context.textHasMinWidth)
+			context.textAlignment, context.textInsets, context.betweenLinesMargin.optimal, additionalDrawers,
+			context.allowLineBreaks, context.allowTextShrink)
 }
 
 /**
@@ -129,14 +131,14 @@ case class ContextualTextLabelFactory[+N <: TextContextLike]
   * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
   */
 class TextLabel(override val parentHierarchy: ComponentHierarchy, override val text: LocalizedString,
-				override val drawContext: TextDrawContext,
-				additionalDrawers: Seq[CustomDrawer] = Vector(),
-				override val allowTextShrink: Boolean = false)
-	extends CustomDrawReachComponent with SingleLineTextComponent2
+				override val drawContext: TextDrawContext, additionalDrawers: Seq[CustomDrawer] = Vector(),
+				override val allowLineBreaks: Boolean = true, override val allowTextShrink: Boolean = false)
+	extends CustomDrawReachComponent with TextComponent2
 {
 	// ATTRIBUTES	-----------------------------
 	
-	override val customDrawers = additionalDrawers.toVector :+ new TextDrawer(text, drawContext, Normal)
+	override val customDrawers = additionalDrawers.toVector :+ new TextDrawer(text, drawContext, Normal,
+		allowLineBreaks)
 	
 	
 	// IMPLEMENTED	-----------------------------

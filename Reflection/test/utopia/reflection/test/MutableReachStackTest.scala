@@ -34,7 +34,7 @@ object MutableReachStackTest extends App
 	val dataPointer = new PointerWithEvents[Vector[Int]](Vector(1, 2, 3))
 	ContainerContentDisplayer2.forStatelessItems(stack, dataPointer) { i =>
 		Open.withContext(MutableViewTextLabel,
-			baseContext.inContextWithBackground(bg).forTextComponents(Alignment.Center)) { f =>
+			baseContext.inContextWithBackground(bg).forTextComponents.withTextAlignment(Alignment.Center)) { f =>
 				f.withBackground(i, Secondary)
 		}(canvas)
 	}

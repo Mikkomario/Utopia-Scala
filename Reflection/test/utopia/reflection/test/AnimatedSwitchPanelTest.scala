@@ -21,7 +21,7 @@ import utopia.reflection.util.SingleFrameSetup
   */
 object AnimatedSwitchPanelTest extends App
 {
-	val label1 = baseContext.inContextWithBackground(colorScheme.primary).forTextComponents().mapFont { _ * 2 }
+	val label1 = baseContext.inContextWithBackground(colorScheme.primary).forTextComponents.mapFont { _ * 2 }
 		.use { implicit c => TextLabel.contextual("This is a test") }
 	label1.background = colorScheme.primary
 	val label2 = new EmptyLabel().withStackSize(StackSize.any(Size(320, 128)))

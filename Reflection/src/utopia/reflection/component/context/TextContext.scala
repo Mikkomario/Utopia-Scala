@@ -7,20 +7,33 @@ import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.container.swing.window.interaction.ButtonColor
 import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.stack.StackInsets
+import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font
+import utopia.reflection.shape.LengthExtensions._
 
 /**
   * This class specifies a context for components that display text
   * @author Mikko Hilpinen
   * @since 27.4.2020, v1.2
   */
-case class TextContext(base: ColorContext, textAlignment: Alignment, textInsets: StackInsets,
-					   localizer: Localizer = NoLocalization, fontOverride: Option[Font] = None,
+case class TextContext(base: ColorContext, localizer: Localizer = NoLocalization,
+					   textAlignment: Alignment = Alignment.Left, fontOverride: Option[Font] = None,
 					   promptFontOverride: Option[Font] = None, textColorOverride: Option[Color] = None,
-					   textHasMinWidth: Boolean = true)
+					   textInsetsOverride: Option[StackInsets] = None,
+					   betweenLinesMarginOverride: Option[StackLength] = None,
+					   allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false)
 	extends TextContextLike with ColorContextWrapper with BackgroundSensitive[TextContext] with ScopeUsable[TextContext]
 {
+	// ATTRIBUTES	--------------------------
+	
+	override lazy val textInsets = textInsetsOverride.getOrElse {
+		StackInsets.symmetric(margins.small.any, margins.verySmall.any) }
+	
+	override lazy val betweenLinesMargin = betweenLinesMarginOverride.getOrElse {
+		StackLength(0, margins.verySmall, margins.small)
+	}
+	
+	
 	// COMPUTED	------------------------------
 	
 	/**
@@ -97,7 +110,7 @@ case class TextContext(base: ColorContext, textAlignment: Alignment, textInsets:
 	  * @param newInsets New text insets
 	  * @return A copy of this context with specified insets
 	  */
-	def withInsets(newInsets: StackInsets) = copy(textInsets = newInsets)
+	def withInsets(newInsets: StackInsets) = copy(textInsetsOverride = Some(newInsets))
 	
 	/**
 	  * @param f A mapping function for insets
@@ -110,6 +123,12 @@ case class TextContext(base: ColorContext, textAlignment: Alignment, textInsets:
 	 * @return A copy of this context with insets expanding to that direction
 	 */
 	def expandingTo(direction: Direction2D) = withInsets(textInsets.mapSide(direction) { _.expanding })
+	
+	/**
+	  * @param newMargin New margin to place between lines of text
+	  * @return A copy of this context with the specified margin amount
+	  */
+	def withBetweenLinesMargin(newMargin: StackLength) = copy(betweenLinesMarginOverride = Some(newMargin))
 	
 	/**
 	  * @param textColor New text color

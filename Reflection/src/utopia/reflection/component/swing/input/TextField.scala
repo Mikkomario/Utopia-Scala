@@ -509,16 +509,20 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 		
 		// IMPLEMENTED	-----------------------
 		
-		override def text =
+		override def drawnText =
 		{
-			if (isDisplayingPrompt)
-				prompt match
-				{
-					case Some(prompt) => prompt.text
-					case None => LocalizedString.empty
-				}
-			else
-				LocalizedString.empty
+			val line =
+			{
+				if (isDisplayingPrompt)
+					prompt match
+					{
+						case Some(prompt) => prompt.text
+						case None => LocalizedString.empty
+					}
+				else
+					LocalizedString.empty
+			}
+			Left(line)
 		}
 	}
 	

@@ -33,7 +33,7 @@ object MultiLineTextView
 	def contextual(text: LocalizedString, lineSplitThreshold: Double, useLowPriorityForScalingSides: Boolean = false,
 	               isHint: Boolean = false)(implicit context: TextContextLike) =
 		new MultiLineTextView(text, if (isHint) context.promptFont else context.font, lineSplitThreshold,
-		context.textInsets, StackLength(0, context.margins.verySmall, context.margins.small), useLowPriorityForScalingSides,
+		context.textInsets, context.betweenLinesMargin, useLowPriorityForScalingSides,
 		context.textAlignment, if (isHint) context.hintTextColor else context.textColor)
 }
 

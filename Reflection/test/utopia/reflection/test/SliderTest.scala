@@ -38,7 +38,7 @@ object SliderTest extends App
 	def makeSliderRow(slider: Slider[Double]) =
 		Stack.buildRowWithContext(layout = Center, isRelated = true) { s =>
 			s += slider
-			context.forChildComponentWithRole(Gray).forTextComponents().use { implicit c =>
+			context.forChildComponentWithRole(Gray).forTextComponents.use { implicit c =>
 				val label = ItemLabel.contextual(slider.value,
 					DisplayFunction.noLocalization[Double] { p => (p * 100).toInt.toString })
 				label.background = c.containerBackground

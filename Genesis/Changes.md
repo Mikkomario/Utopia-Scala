@@ -10,6 +10,8 @@ new mutable mouse event handlers.
 ### New Features
 - Added global mouse and keyboard event handling with GlobalMouseEventHandler and GlobalKeyboardEventHandler objects
 - Added SegmentedPath for path / animation based on a set of values
+- Drawer now supports splitting drawn text into multiple lines
+    - Also, added a couple new string drawing methods
 ### Deprecations
 - ConvertingKeyListener was deprecated in favor of GlobalKeyboardEventHandler
 ### New Methods

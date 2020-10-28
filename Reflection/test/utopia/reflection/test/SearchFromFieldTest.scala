@@ -1,6 +1,5 @@
 package utopia.reflection.test
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.image.Image
 import utopia.reflection.component.swing.button.TextButton
@@ -13,7 +12,6 @@ import utopia.genesis.color.Color
 import utopia.reflection.component.swing.input.SearchFrom
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.shape.Alignment.Center
-import utopia.reflection.shape.Alignment
 
 /**
   * Tests SearchFromField
@@ -31,7 +29,7 @@ object SearchFromFieldTest extends App
 	val background = colorScheme.gray
 	val standardWidth = 320.any
 	val content = baseContext.inContextWithBackground(background).use { bc =>
-		val field = bc.forTextComponents(Alignment.Left).forPrimaryColorButtons.use { implicit fieldC =>
+		val field = bc.forTextComponents.forPrimaryColorButtons.use { implicit fieldC =>
 			SearchFrom.contextualWithTextOnly[String]("Search for string", standardWidth,
 				searchIcon = searchImage.toOption) { p => SearchFrom.noResultsLabel("No results for '%s'", p) }
 		}
@@ -40,7 +38,7 @@ object SearchFromFieldTest extends App
 			"Keijupuisto", "Ääkkösiä", "Pulppura", "Potentiaalinen koneisto")
 		field.addValueListener { println }
 		
-		val button = bc.forTextComponents(Center).forSecondaryColorButtons.use { implicit btnC =>
+		val button = bc.forTextComponents.withTextAlignment(Center).forSecondaryColorButtons.use { implicit btnC =>
 			TextButton.contextual("OK") { println(field.value) }
 		}
 		

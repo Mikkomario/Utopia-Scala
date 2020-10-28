@@ -43,22 +43,25 @@ class TextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param alignment Text alignment (default = Center)
 	  * @param textInsets Insets placed around the text (default = any, preferring 0)
 	  * @param borderWidth Width of the border on this button (default = 0 = no border)
+	  * @param betweenLinesMargin Margin placed between horizontal text lines in case there are multiple (default = 0.0)
 	  * @param hotKeys Keys used for triggering this button even when it doesn't have focus (default = empty)
 	  * @param hotKeyCharacters Character keys used for triggering this button even when it doesn't have focus (default = empty)
 	  * @param additionalDrawers Custom drawers applied (default = empty)
 	  * @param additionalFocusListeners Focus listeners applied (default = empty)
+	  * @param allowLineBreaks Whether line breaks in the drawn text should be respected and applied (default = true)
 	  * @param allowTextShrink Whether text size should be allowed to decrease to conserve space (default = false)
 	  * @param action Action performed each time this button is triggered (call by name)
 	  * @return A new text button
 	  */
 	def apply(text: LocalizedString, font: Font, color: Color, textColor: Color = Color.textBlack,
 			  alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-			  borderWidth: Double = 0.0, hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-			  additionalDrawers: Seq[CustomDrawer] = Vector(), additionalFocusListeners: Seq[FocusListener] = Vector(),
+			  borderWidth: Double = 0.0, betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
+			  hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
+			  additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
 			  allowTextShrink: Boolean = false)(action: => Unit) =
-		new TextButton(parentHierarchy, text, TextDrawContext(font, textColor, alignment, textInsets + borderWidth),
-			color, borderWidth, hotKeys, hotKeyCharacters, additionalDrawers, additionalFocusListeners,
-			allowTextShrink)(action)
+		new TextButton(parentHierarchy, text, TextDrawContext(font, textColor, alignment, textInsets + borderWidth,
+			betweenLinesMargin), color, borderWidth, hotKeys, hotKeyCharacters, additionalDrawers,
+			additionalFocusListeners, allowLineBreaks, allowTextShrink)(action)
 }
 
 case class ContextualTextButtonFactory[+N <: ButtonContextLike](buttonFactory: TextButtonFactory, context: N)
@@ -86,8 +89,8 @@ case class ContextualTextButtonFactory[+N <: ButtonContextLike](buttonFactory: T
 			  additionalDrawers: Seq[CustomDrawer] = Vector(), additionalFocusListeners: Seq[FocusListener] = Vector())
 			 (action: => Unit) =
 		buttonFactory(text, context.font, context.buttonColor, context.textColor, context.textAlignment,
-			context.textInsets, context.borderWidth, hotKeys, hotKeyCharacters, additionalDrawers,
-			additionalFocusListeners, !context.textHasMinWidth)(action)
+			context.textInsets, context.borderWidth, context.betweenLinesMargin.optimal, hotKeys, hotKeyCharacters,
+			additionalDrawers, additionalFocusListeners, context.allowLineBreaks, context.allowTextShrink)(action)
 }
 
 /**
@@ -98,8 +101,8 @@ case class ContextualTextButtonFactory[+N <: ButtonContextLike](buttonFactory: T
 class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, textDrawContext: TextDrawContext,
 				 color: Color, borderWidth: Double = 0.0, hotKeys: Set[Int] = Set(),
 				 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
-				 additionalFocusListeners: Seq[FocusListener] = Vector(), allowTextShrink: Boolean = false)
-				(action: => Unit)
+				 additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
+				 allowTextShrink: Boolean = false)(action: => Unit)
 	extends ButtonLike with ReachComponentWrapper
 {
 	// ATTRIBUTES	-----------------------------
@@ -109,7 +112,7 @@ class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, tex
 	override val focusListeners = new ButtonDefaultFocusListener(_statePointer) +: additionalFocusListeners
 	override protected val wrapped = new TextLabel(parentHierarchy, text, textDrawContext,
 		ButtonBackgroundViewDrawer(Changing.wrap(color), statePointer, borderWidth) +: additionalDrawers,
-		allowTextShrink)
+		allowLineBreaks, allowTextShrink)
 	
 	
 	// INITIAL CODE	-----------------------------

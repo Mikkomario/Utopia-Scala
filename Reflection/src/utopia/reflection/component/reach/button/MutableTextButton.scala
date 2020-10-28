@@ -43,18 +43,22 @@ class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param alignment Text alignment (default = Center)
 	  * @param textInsets Insets placed around the text (default = any, preferring 0)
 	  * @param borderWidth Button border width (default = 0 = no border)
+	  * @param betweenLinesMargin Margin placed between horizontal text lines, if there are many (default = 0.0)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
 	  * @param hotKeyCharacters Hotkey characters used for triggering this button even when it doesn't have focus
 	  *                         (default = empty)
+	  * @param allowLineBreaks Whether line breaks in text should be respected and applied (default = true)
 	  * @param allowTextShrink Whether text should be allowed to shrink to conserve space when necessary
 	  *                        (default = false)
 	  * @return A new button
 	  */
 	def withoutAction(text: LocalizedString, font: Font, color: Color, textColor: Color = Color.textBlack,
 					  alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-					  borderWidth: Double = 0.0, hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-					  allowTextShrink: Boolean = false) = new MutableTextButton(parentHierarchy, text, font, color,
-		textColor, alignment, textInsets, borderWidth, hotKeys, hotKeyCharacters, allowTextShrink)
+					  borderWidth: Double = 0.0, betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
+					  hotKeyCharacters: Iterable[Char] = Set(), allowLineBreaks: Boolean = true,
+					  allowTextShrink: Boolean = false) =
+		new MutableTextButton(parentHierarchy, text, font, color, textColor, alignment, textInsets, betweenLinesMargin,
+			borderWidth, hotKeys, hotKeyCharacters, allowLineBreaks, allowTextShrink)
 	
 	/**
 	  * Creates a new button
@@ -65,9 +69,11 @@ class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param alignment Text alignment (default = Center)
 	  * @param textInsets Insets placed around the text (default = any, preferring 0)
 	  * @param borderWidth Button border width (default = 0 = no border)
+	  * @param betweenLinesMargin Margin placed between horizontal text lines, if there are many (default = 0.0)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
 	  * @param hotKeyCharacters Hotkey characters used for triggering this button even when it doesn't have focus
 	  *                         (default = empty)
+	  * @param allowLineBreaks Whether line breaks in text should be respected and applied (default = true)
 	  * @param allowTextShrink Whether text should be allowed to shrink to conserve space when necessary
 	  *                        (default = false)
 	  * @param action Action triggered when this button is pressed
@@ -75,11 +81,12 @@ class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  */
 	def apply(text: LocalizedString, font: Font, color: Color, textColor: Color = Color.textBlack,
 			  alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-			  borderWidth: Double = 0.0, hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
+			  borderWidth: Double = 0.0, betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
+			  hotKeyCharacters: Iterable[Char] = Set(), allowLineBreaks: Boolean = true,
 			  allowTextShrink: Boolean = false)(action: => Unit) =
 	{
-		val button = withoutAction(text, font, color, textColor, alignment, textInsets, borderWidth, hotKeys,
-			hotKeyCharacters, allowTextShrink)
+		val button = withoutAction(text, font, color, textColor, alignment, textInsets, borderWidth, betweenLinesMargin,
+			hotKeys, hotKeyCharacters, allowLineBreaks, allowTextShrink)
 		button.registerAction(action)
 		button
 	}
@@ -108,8 +115,8 @@ case class ContextualMutableTextButtonFactory[+N <: ButtonContextLike](buttonFac
 	def withoutAction(text: LocalizedString = LocalizedString.empty, hotKeys: Set[Int] = Set(),
 					  hotKeyCharacters: Iterable[Char] = Set()) =
 		buttonFactory.withoutAction(text, context.font, context.buttonColor, context.textColor,
-			context.textAlignment, context.textInsets, context.borderWidth, hotKeys, hotKeyCharacters,
-			!context.textHasMinWidth)
+			context.textAlignment, context.textInsets, context.borderWidth, context.betweenLinesMargin.optimal, hotKeys,
+			hotKeyCharacters, context.allowLineBreaks, context.allowTextShrink)
 	
 	/**
 	  * Creates a new button
@@ -137,8 +144,9 @@ case class ContextualMutableTextButtonFactory[+N <: ButtonContextLike](buttonFac
 class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: LocalizedString, initialFont: Font,
 						initialColor: Color, initialTextColor: Color = Color.textBlack,
 						initialAlignment: Alignment = Alignment.Center, initialTextInsets: StackInsets = StackInsets.any,
-						borderWidth: Double = 0.0, hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-						allowTextShrink: Boolean = false)
+						borderWidth: Double = 0.0, initialBetweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
+						hotKeyCharacters: Iterable[Char] = Set(), override val allowLineBreaks: Boolean = true,
+						override val allowTextShrink: Boolean = false)
 	extends ReachComponentWrapper with ButtonLike with MutableTextComponent with MutableFocusable
 		with MutableCustomDrawableWrapper
 {
@@ -147,7 +155,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	private val _statePointer = new PointerWithEvents(ButtonState.default)
 	
 	protected val wrapped = new MutableTextLabel(parentHierarchy, initialText, initialFont, initialTextColor,
-		initialAlignment, initialTextInsets, allowTextShrink)
+		initialAlignment, initialTextInsets, initialBetweenLinesMargin, allowLineBreaks, allowTextShrink)
 	/**
 	  * A mutable pointer to this buttons base color
 	  */
