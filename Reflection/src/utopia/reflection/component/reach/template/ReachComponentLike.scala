@@ -130,6 +130,12 @@ trait ReachComponentLike extends Stackable2
 	def repaintParent() = parentHierarchy.repaintBottom()
 	
 	/**
+	  * Indicates that this component's and its hierarchy's layout should be updated. Once that has been done,
+	  * repaints this component
+	  */
+	def revalidateAndRepaint() = revalidateAndThen { repaint() }
+	
+	/**
 	  * Paints this component and its children
 	  * @param drawer   Drawer to use for drawing this component. Origin coordinates (0,0) should be located at the
 	  *                 top-left corner of the parent component.
