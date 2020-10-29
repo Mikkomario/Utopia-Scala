@@ -9,7 +9,7 @@ import utopia.reflection.component.drawing.view.ButtonBackgroundViewDrawer
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.label.MutableTextLabel
-import utopia.reflection.component.reach.template.{ButtonLike, MutableFocusable, ReachComponentWrapper}
+import utopia.reflection.component.reach.template.ReachComponentWrapper
 import utopia.reflection.component.template.text.MutableTextComponent
 import utopia.reflection.event.{ButtonState, FocusListener}
 import utopia.reflection.localization.LocalizedString
@@ -147,8 +147,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 						borderWidth: Double = 0.0, initialBetweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
 						hotKeyCharacters: Iterable[Char] = Set(), override val allowLineBreaks: Boolean = true,
 						override val allowTextShrink: Boolean = false)
-	extends ReachComponentWrapper with ButtonLike with MutableTextComponent with MutableFocusable
-		with MutableCustomDrawableWrapper
+	extends ReachComponentWrapper with MutableButtonLike with MutableTextComponent with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES	---------------------------------
 	
@@ -163,7 +162,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	
 	var focusListeners: Seq[FocusListener] = Vector(new ButtonDefaultFocusListener(_statePointer))
 	
-	private var actions = Vector[() => Unit]()
+	override protected var actions: Seq[() => Unit] = Vector[() => Unit]()
 	
 	
 	// INITIAL CODE	---------------------------------
@@ -174,12 +173,9 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	wrapped.addCustomDrawer(ButtonBackgroundViewDrawer(colorPointer, statePointer, borderWidth))
 	
 	
-	// COMPUTED	-------------------------------------
-	
-	def enabled_=(newState: Boolean) = _statePointer.update { _.copy(isEnabled = newState) }
-	
-	
 	// IMPLEMENTED	---------------------------------
+	
+	override def enabled_=(newState: Boolean) = _statePointer.update { _.copy(isEnabled = newState) }
 	
 	override protected def drawable = wrapped
 	
@@ -196,13 +192,4 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	override def drawContext = wrapped.drawContext
 	
 	override def repaint() = super[MutableCustomDrawableWrapper].repaint()
-	
-	
-	// OTHER	-------------------------------------
-	
-	/**
-	  * Registers a new action to be performed each time this button is triggered
-	  * @param action An action to perform when this button is triggered
-	  */
-	def registerAction(action: => Unit) = actions :+= (() => action)
 }
