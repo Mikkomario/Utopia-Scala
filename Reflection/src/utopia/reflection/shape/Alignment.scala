@@ -374,7 +374,7 @@ sealed trait Alignment
 	  * @return Direction determined by this alignment on specified axis. None if this alignment doesn't specify a
 	  *         direction along specified axis (centered)
 	  */
-	def directionAlong(axis: Axis2D) = directions.find { _.axis == axis }
+	def directionAlong(axis: Axis2D) = directions.find { _.axis == axis }.map { _.sign }
 	
 	/**
 	  * Calculates the desired coordinate for an element along the specified axis
@@ -387,7 +387,7 @@ sealed trait Alignment
 	{
 		// Case: Specifies the preferred edge
 		case Some(direction) =>
-			direction.sign match
+			direction match
 			{
 				// Case: Move as far as possible
 				case Positive => areaLength - elementLength
@@ -462,7 +462,8 @@ sealed trait Alignment
 	}
 	
 	private def positionWithDirection(length: Double, withinLength: Double, targetStartMargin: StackLength,
-									  targetEndMargin: StackLength, direction: Option[Direction2D], allowStartBelowZero: Boolean) =
+									  targetEndMargin: StackLength, direction: Option[Direction1D],
+									  allowStartBelowZero: Boolean) =
 	{
 		val emptyLength = withinLength - length
 		if (emptyLength < 0 && !allowStartBelowZero)
@@ -474,7 +475,7 @@ sealed trait Alignment
 				case Some(definedDirection) =>
 					// Checks how much margin can be used
 					val totalTargetMargin = targetStartMargin.optimal + targetEndMargin.optimal
-					if (definedDirection.sign.isPositive)
+					if (definedDirection.isPositive)
 					{
 						// Case: Enough space available
 						if (totalTargetMargin <= emptyLength)

@@ -58,7 +58,7 @@ trait AlignFrameLike[C <: Stackable] extends SingleStackContainer[C] with Compon
 				axis -> (align.directionAlong(axis) match
 				{
 					case Some(dir) =>
-						dir.sign match
+						dir match
 						{
 							case Positive => myLength - targetLength
 							case Negative => 0

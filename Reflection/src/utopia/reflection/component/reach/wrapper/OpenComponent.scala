@@ -123,7 +123,7 @@ object OpenComponent
 		  * @return A new framing with this component inside it (contains the same custom result as this one)
 		  */
 		def framed(insets: StackInsetsConvertible, backgroundColor: Color): OpenComponent[Framing, R] =
-			framed(insets, Vector(new BackgroundDrawer(backgroundColor)))
+			framed(insets, Vector(BackgroundDrawer(backgroundColor)))
 	}
 	
 	// Extension for sequence of wrapped components
@@ -226,4 +226,25 @@ class OpenComponent[+C, +R](val creation: ComponentCreationResult[C, R], val hie
 		hierarchy.complete(parent, switchPointer)
 		creation.in(parent)
 	}
+	
+	/**
+	  * @param f A mapping function for the component part
+	  * @tparam C2 Mapping function result
+	  * @return A copy of this component with mapped component
+	  */
+	def mapComponent[C2](f: C => C2) = new OpenComponent(creation.mapComponent(f), hierarchy)
+	
+	/**
+	  * @param newResult New additional result
+	  * @tparam R2 Type of the new result
+	  * @return A copy of this component with the new additional result
+	  */
+	def withResult[R2](newResult: R2) = new OpenComponent(creation.withResult(newResult), hierarchy)
+	
+	/**
+	  * @param f Result mapping function
+	  * @tparam R2 Type of the new result
+	  * @return A copy of this component with mapped additional result
+	  */
+	def mapResult[R2](f: R => R2) = new OpenComponent(creation.mapResult(f), hierarchy)
 }

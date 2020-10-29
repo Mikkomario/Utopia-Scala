@@ -41,7 +41,7 @@ trait AlignFrameLike2[+C <: Stackable2] extends SingleContainer2[C] with Caching
 			axis -> (align.directionAlong(axis) match
 			{
 				case Some(dir) =>
-					dir.sign match
+					dir match
 					{
 						case Positive => myLength - targetLength
 						case Negative => 0

@@ -368,7 +368,7 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
                     val move = resizeAlignment.directionAlong(axis) match
                     {
                         case Some(moveDirection) =>
-                            moveDirection.sign match
+                            moveDirection match
                             {
                                 case Positive => increase.along(axis)
                                 case Negative => 0.0

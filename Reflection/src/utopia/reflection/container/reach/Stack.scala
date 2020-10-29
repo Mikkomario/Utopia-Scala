@@ -2,6 +2,7 @@ package utopia.reflection.container.reach
 
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
@@ -9,9 +10,10 @@ import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reflection.container.stack.StackLayout
-import utopia.reflection.container.stack.StackLayout.Fit
+import utopia.reflection.container.stack.StackLayout.{Center, Fit, Leading, Trailing}
 import utopia.reflection.container.stack.template.layout.StackLike2
 import utopia.reflection.container.swing.ReachCanvas
+import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackLength
 
 object Stack extends ContextInsertableComponentFactoryFactory[BaseContextLike, StackFactory, ContextualStackFactory]
@@ -50,6 +52,58 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 	{
 		val stack = new Stack[C](parentHierarchy, content.component, direction, layout, margin, cap, customDrawers)
 		content attachTo stack
+	}
+	
+	/**
+	  * Creates a new stack that contains two items
+	  * @param content Items to place in this stack
+	  * @param alignment Alignment to use when placing the items. The direction of the alignment determines the
+	  *                  position of the <b>first</b> item in the <i>content</i> parameter. Eg. Left alignment means
+	  *                  that the first item will be placed at the left side and the second item on the right.
+	  *                  Bottom alignment means that the first item will be placed at the bottom and the second at
+	  *                  the top.
+	  * @param margin Margin placed between the items (default = any, preferring 0)
+	  * @param cap Cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers attached to this stack (default = empty)
+	  * @param forceFitLayout Whether layout should always be set to <i>Fit</i>, regardless of alignment
+	  * @tparam C Type of the components
+	  * @tparam R Type of additional creation result
+	  * @return A new stack with the two items in it
+	  */
+	def forPair[C <: ReachComponentLike, R](content: OpenComponent[(_ <: C, _ <: C), R], alignment: Alignment,
+											margin: StackLength = StackLength.any,
+											cap: StackLength = StackLength.fixedZero,
+											customDrawers: Vector[CustomDrawer] = Vector(),
+											forceFitLayout: Boolean = false) =
+	{
+		// Specifies stack axis, layout and item order based on the alignment
+		// The image label always goes to the direction of the alignment
+		// (Eg. Left = Image, then text (centered vertically), Bottom = Text (centered horizontally), then image)
+		val (axis, sign, layout) = alignment.horizontalDirection match
+		{
+			case Some(horizontal) =>
+				val layout = alignment.verticalDirection match
+				{
+					case Some(vertical) =>
+						vertical match
+						{
+							case Positive => Trailing
+							case Negative => Leading
+						}
+					case None => Center
+				}
+				(X, horizontal, layout)
+			case None => (Y, alignment.verticalDirection.getOrElse(Positive), Center)
+		}
+		val orderedContent = content.mapComponent { case (a, b) =>
+			sign match
+			{
+				case Positive => Vector(b, a)
+				case Negative => Vector(a, b)
+			}
+		}
+		// Creates the stack
+		apply(orderedContent, axis, if (forceFitLayout) Fit else layout, margin, cap, customDrawers)
 	}
 }
 
@@ -129,6 +183,31 @@ case class ContextualStackFactory[N <: BaseContextLike](stackFactory: StackFacto
 										   cap: StackLength = StackLength.fixedZero,
 										   customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false) =
 		apply(content, Y, layout, cap, customDrawers, areRelated)
+	
+	/**
+	  * Creates a new stack that contains two items
+	  * @param content Items to place in this stack
+	  * @param alignment Alignment to use when placing the items. The direction of the alignment determines the
+	  *                  position of the <b>first</b> item in the <i>content</i> parameter. Eg. Left alignment means
+	  *                  that the first item will be placed at the left side and the second item on the right.
+	  *                  Bottom alignment means that the first item will be placed at the bottom and the second at
+	  *                  the top.
+	  * @param cap Cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers attached to this stack (default = empty)
+	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
+	  *                   (default = false)
+	  * @param forceFitLayout Whether layout should always be set to <i>Fit</i>, regardless of alignment
+	  * @tparam C Type of the components
+	  * @tparam R Type of additional creation result
+	  * @return A new stack with the two items in it
+	  */
+	def forPair[C <: ReachComponentLike, R](content: OpenComponent[(_ <: C, _ <: C), R], alignment: Alignment,
+											cap: StackLength = StackLength.fixedZero,
+											customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false,
+											forceFitLayout: Boolean = false) =
+		stackFactory.forPair(content, alignment,
+			if (areRelated) context.relatedItemsStackMargin else context.defaultStackMargin, cap, customDrawers,
+			forceFitLayout)
 }
 
 class ContextualStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
@@ -194,6 +273,32 @@ class ContextualStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualCompo
 										   customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
 										  (fill: F[N] => ComponentCreationResult[Vector[C], R]) =
 		apply(Y, layout, cap, customDrawers, areRelated)(fill)
+	
+	/**
+	  * Creates a new stack that contains two items
+	  * @param alignment Alignment to use when placing the items. The direction of the alignment determines the
+	  *                  position of the <b>first</b> item in the <i>content</i> parameter. Eg. Left alignment means
+	  *                  that the first item will be placed at the left side and the second item on the right.
+	  *                  Bottom alignment means that the first item will be placed at the bottom and the second at
+	  *                  the top.
+	  * @param cap Cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers attached to this stack (default = empty)
+	  * @param areRelated Whether the components should be considered closely related (uses smaller margin)
+	  *                   (default = false)
+	  * @param forceFitLayout Whether layout should always be set to <i>Fit</i>, regardless of alignment
+	  * @param fill A function for creating the components that will be placed in this stack
+	  * @tparam C Type of the components
+	  * @tparam R Type of additional creation result
+	  * @return A new stack with the two items in it
+	  */
+	def pair[C <: ReachComponentLike, R](alignment: Alignment, cap: StackLength = StackLength.fixedZero,
+										 customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false,
+										 forceFitLayout: Boolean = false)
+										(fill: F[N] => ComponentCreationResult[(_ <: C, _ <: C), R]) =
+	{
+		val content = Open.withContext(contentFactory, stackFactory.context)(fill)
+		stackFactory.forPair(content, alignment, cap, customDrawers, areRelated, forceFitLayout)
+	}
 }
 
 /**
