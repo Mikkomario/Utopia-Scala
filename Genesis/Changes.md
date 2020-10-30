@@ -19,6 +19,7 @@ new mutable mouse event handlers.
 - Added new variations of .average(...) to RGB and added copies of those methods to Color
 - Added a new variation of .symmetric(...) to InsetsFactory
 - Added .toMap2D to TwoDimensional
+- Added .build(...) to XmlElement
 ### Fixes
 - Dimensional.toMap now properly returns a Map
 ### Other Changes
