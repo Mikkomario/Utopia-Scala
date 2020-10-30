@@ -39,5 +39,8 @@ object CollectionTest extends App
 	assert(splitResult.size == 2)
 	assert(splitResult.forall { _.size == 2 })
 	
+	val numbers = Vector(1, 2, 3, 4, 5)
+	assert(numbers.takeRightWhile { _ > 3 } == Vector(4, 5))
+	
 	println("Success!")
 }
