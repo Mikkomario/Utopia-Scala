@@ -122,6 +122,23 @@ object CollectionExtensions
             val seqOps = seq(coll)
             seqOps.zipWithIndex.foreach { case(item, index) => f(item, index) }
         }
+    
+        /**
+          * Takes items from right to left as long as the specified condition holds
+          * @param f A function that determines whether an item is accepted to the final collection
+          * @param buildFrom A build from (implicit)
+          * @tparam That Resulting collection type
+          * @return A collection that contains the collected items in the same order as they appear in this
+          *         collection (left to right)
+          */
+        def takeRightWhile[That](f: seq.A => Boolean)(implicit buildFrom: BuildFrom[Repr, seq.A, That]): That =
+        {
+            val seqOps = seq(coll)
+            // Collects the items to a buffer first in order to reverse the order afterwards
+            val bufferBuilder = new VectorBuilder[seq.A]()
+            seqOps.reverseIterator.takeWhile(f).foreach { bufferBuilder += _ }
+            buildFrom.fromSpecific(coll)(bufferBuilder.result().reverse)
+        }
     }
     
     implicit def seqOperations[Repr](coll: Repr)(implicit seq: IsSeq[Repr]): SeqOperations[Repr, seq.type] =

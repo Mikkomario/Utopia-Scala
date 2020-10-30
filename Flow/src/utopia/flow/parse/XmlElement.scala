@@ -74,6 +74,20 @@ object XmlElement extends FromModelFactory[XmlElement]
         
         new XmlElement(name, value, attributes, children)
     }
+    
+    /**
+      * Builds an xml element using a separate function
+      * @param name Name of this element
+      * @param attributes Attributes assigned to this element (default = empty)
+      * @param fill A function that adds child elements to the provided buffer
+      * @return A new xml element
+      */
+    def build(name: String, attributes: Model[Constant] = Model(Vector()))(fill: VectorBuilder[XmlElement] => Unit) =
+    {
+        val buffer = new VectorBuilder[XmlElement]()
+        fill(buffer)
+        apply(name, attributes = attributes, children = buffer.result())
+    }
 }
 
 /**

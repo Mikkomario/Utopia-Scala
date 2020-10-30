@@ -14,6 +14,7 @@
 - Added .mapAsync(...), .tryMapAsync(...), .mapAsyncCatching(...) and .mapAsyncMerging(...) to Changing
 - Added .toPreciseMinutes, .toPreciseHours, .toPreciseDays and .toPreciseWeeks to Duration in TimeExtensions
 - Added .current() to WeekDay
+- Added .takeRightWhile(...) to Seq in CollectionExtensions
 - Added .popAll() to VolatileList
 - Added .compareBy(...), .compareWith(...), .merge(...) and .mergeBy(...) methods to ChangeEvent
 ### Fixes
