@@ -73,6 +73,11 @@ case class LocalizedString(original: LocalString, localized: Option[LocalString]
 	  */
 	def isLocalized = localized.isDefined
 	
+	/**
+	  * @return A local string based on this localized string (same as original string if no localization was used)
+	  */
+	def local = localized.getOrElse(original)
+	
 	
 	// IMPLEMENTED	------------------------
 	

@@ -130,6 +130,15 @@ case class LocalString(override val string: String, override val languageCode: O
 	
 	// OTHER	--------------------------
 	
+	/**
+	  * @param start String start index (inclusive)
+	  * @param end String end index (exclusive, default = end of string)
+	  * @return A sub-section of this string
+	  * @throws IndexOutOfBoundsException If start < 0 or end > length of this string
+	  */
+	@throws[IndexOutOfBoundsException]("If start < 0 or end > length of this string")
+	def subString(start: Int, end: Int = string.length) = copy(string = string.substring(start, end))
+	
 	private def parseArguments(field: String, args: Seq[Any]) =
 	{
 		val str = new StringBuilder()

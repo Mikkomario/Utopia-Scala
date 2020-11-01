@@ -35,7 +35,7 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	/**
 	  * Splits this string based on provided regex
 	  * @param regex The part which splits this string
-	  * @return Splitted parts
+	  * @return Split parts
 	  */
 	def split(regex: String): Vector[Repr]
 	
