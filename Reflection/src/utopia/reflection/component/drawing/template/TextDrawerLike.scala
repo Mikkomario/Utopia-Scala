@@ -10,6 +10,7 @@ import utopia.reflection.localization.LocalizedString
   * @author Mikko Hilpinen
   * @since 14.3.2020, v1
   */
+// TODO: Create another version that uses measuredText
 trait TextDrawerLike extends CustomDrawer
 {
 	// ABSTRACT	---------------------------------

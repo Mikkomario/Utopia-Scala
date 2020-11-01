@@ -5,6 +5,8 @@ import utopia.genesis.shape.shape2D.{Bounds, Line, Point, Size}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 
+import scala.collection.immutable.VectorBuilder
+
 /**
   * A text class that contains (context-dependent) measurement information as well. Most calculations are performed
   * lazily.
@@ -40,6 +42,13 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	  * Caret positions based on line and string indices
 	  */
 	lazy val carets = _lines.zip(lineBounds).map { case (line, bounds) => context.caretsFromLine(line, bounds) }
+	
+	/**
+	  * The default text draw targets (texts to draw and the positions where they should be drawn)
+	  */
+	lazy val defaultDrawTargets = lines.indices.iterator.map { lineIndex =>
+		_lines(lineIndex) -> lineBounds(lineIndex).bottomLeft
+	}.toVector
 	
 	
 	// COMPUTED	---------------------------------------
@@ -156,6 +165,90 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 			// Finds the correct line first
 			val lineIndex = lineEndIndices.indexWhereOption { _ > index }.getOrElse(lines.size - 1)
 			lineIndex -> (index - lineStartIndices(lineIndex))
+		}
+	}
+	
+	/**
+	  * @param highlightedRanges Areas within this text to highlight
+	  * @return Standard draw targets + highlight draw targets (which include bounds)
+	  */
+	def drawTargets(highlightedRanges: Iterable[Range] = Vector()) =
+	{
+		// If there aren't any highlighted ranges, uses the cached values
+		if (highlightedRanges.isEmpty)
+			defaultDrawTargets -> Vector()
+		else
+		{
+			// Converts the ranges to { line index: Character ranges } -map
+			val ranges = highlightedRanges.iterator.flatMap { range =>
+				val (startLineIndex, startIndexOnLine) = mapIndex(range.head)
+				val (endLineIndex, endIndexOnLine) = mapIndex(range.last)
+				// Case: Range is contained within a single line
+				if (startLineIndex == endLineIndex)
+					Vector(startLineIndex -> (startIndexOnLine -> Some(endIndexOnLine)))
+				// Case: Range spans multiple lines
+				else
+				{
+					// Adds the end of the starting line
+					val startLine = startLineIndex -> (startIndexOnLine -> None)
+					// Adds the beginning of the ending line
+					val endLine = endLineIndex -> (0, Some(endIndexOnLine))
+					// Adds lines in between
+					if (endLineIndex > startLineIndex + 1)
+						startLine +: (startLineIndex + 1).until(endLineIndex)
+							.map { lineIndex => lineIndex -> (0 -> None) } :+ endLine
+					else
+						Vector(startLine, endLine)
+				}
+			}.toVector.asMultiMap
+			
+			// Collects draw targets, one line at a time
+			val normalStringsBuffer = new VectorBuilder[(String, Point)]
+			val highlightedStringsBuffer = new VectorBuilder[(String, Bounds)]
+			lines.indices.foreach { lineIndex =>
+				// Case: Highlights concern this line
+				if (ranges.contains(lineIndex))
+				{
+					val (string, position) = defaultDrawTargets(lineIndex)
+					val affectingHighlights = ranges(lineIndex).sortBy { _._1 }
+					
+					// Goes through the highlights, adding normal and highlighted areas in sequence
+					var lastHighlightEnd: Option[(Int, Point)] = Some(0 -> position)
+					affectingHighlights.foreach { case (startIndex, endIndex) =>
+						// Adds space between the two highlights, if applicable
+						lastHighlightEnd.foreach { case (lastEndIndex, lastEndPosition) =>
+							if (lastEndIndex < startIndex)
+								normalStringsBuffer += (string.substring(lastEndIndex, startIndex) -> lastEndPosition)
+						}
+						val startCaret = carets(lineIndex)(startIndex)
+						endIndex match
+						{
+							// Case: Highlight doesn't span the whole line
+							case Some(endIndex) =>
+								val endCaret = carets(lineIndex)(endIndex)
+								highlightedStringsBuffer += (string.substring(startIndex, endIndex) ->
+									Bounds.between(startCaret.start, endCaret.end))
+								lastHighlightEnd = Some(endIndex -> endCaret.end)
+							// Case: Highlight takes the rest of the line
+							case None =>
+								highlightedStringsBuffer += (string.substring(startIndex) ->
+									Bounds.between(startCaret.start, lineBounds(lineIndex).bottomRight))
+								lastHighlightEnd = None
+						}
+					}
+					// Adds the space after the last highlight, if applicable
+					lastHighlightEnd.foreach { case (lastEndIndex, lastEndPosition) =>
+						if (string.length > lastEndIndex)
+							normalStringsBuffer += (string.substring(lastEndIndex) -> lastEndPosition)
+					}
+				}
+				// Case: No highlights for this line => returns default values
+				else
+					normalStringsBuffer += defaultDrawTargets(lineIndex)
+			}
+			
+			// Returns both "normal" draw targets and highlight targets
+			normalStringsBuffer.result() -> highlightedStringsBuffer.result()
 		}
 	}
 }

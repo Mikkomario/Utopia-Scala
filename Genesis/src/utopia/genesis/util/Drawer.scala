@@ -167,8 +167,16 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
         // Sets the color, preferring edge color
         prepareForTextDraw(font)
         val metrics = graphics.getFontMetrics
-        graphics.drawString(text, topLeft.x.toInt, topLeft.y.toInt + metrics.getAscent)
+        graphics.drawString(text, topLeft.x.round.toInt, topLeft.y.round.toInt + metrics.getAscent)
     }
+    
+    /**
+      * Draws a piece of text, expecting font to be already set
+      * @param text Text to draw
+      * @param bottomLeft The bottom left position of the text
+      */
+    def drawTextRaw(text: String, bottomLeft: Point) = graphics.drawString(text, bottomLeft.x.round.toInt,
+        bottomLeft.y.round.toInt)
     
     /**
       * Draws a piece of text. Specified bounds affect the positioning and possibly scaling.
@@ -477,6 +485,19 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
      * be reversed but the original instance can still be used for drawing without clipping.
      */
     def clippedTo(shape: ShapeConvertible): Drawer = clippedTo(shape.toShape)
+    
+    /**
+      * Prepares this drawer for drawing text. This is only necessary with the "raw" text draw option.
+      * @param font Font used when drawing text
+      * @param textColor Color to use when drawing text
+      * @return A copy of this drawer, prepared to draw text
+      */
+    def forTextDrawing(font: Font, textColor: Color) =
+    {
+        val drawer = withEdgeColor(textColor)
+        drawer.prepareForTextDraw(font)
+        drawer
+    }
     
     private def prepareForTextDraw(font: Font) =
     {
