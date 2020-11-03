@@ -7,7 +7,7 @@ import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.view.TextViewDrawer
+import utopia.reflection.component.drawing.view.TextViewDrawer2
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.CustomDrawReachComponent
@@ -16,7 +16,7 @@ import utopia.reflection.component.template.text.TextComponent2
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
+import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText}
 
 object ViewTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike, ViewTextLabelFactory,
 	ContextualViewTextLabelFactory]
@@ -167,33 +167,36 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
   */
 class ViewTextLabel[A](override val parentHierarchy: ComponentHierarchy, override val contentPointer: Changing[A],
 					   stylePointer: Changing[TextDrawContext], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-					   additionalDrawers: Seq[CustomDrawer] = Vector(), override val allowLineBreaks: Boolean = true,
+					   additionalDrawers: Seq[CustomDrawer] = Vector(), allowLineBreaks: Boolean = true,
 					   override val allowTextShrink: Boolean = false)
 	extends CustomDrawReachComponent with TextComponent2 with PoolWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTE	-------------------------------------
 	
-	val textPointer = contentPointer.map { displayFunction(_) }
-	val customDrawers = TextViewDrawer(textPointer, Changing.wrap(drawContext)) +: additionalDrawers.toVector
+	/**
+	  * Pointer containing the current (measured) text
+	  */
+	val textPointer = contentPointer.mergeWith(stylePointer) { (content, style) => MeasuredText(displayFunction(content),
+		FontMetricsContext(fontMetrics(style.font), style.betweenLinesMargin), style.alignment, allowLineBreaks) }
+	override val customDrawers =  additionalDrawers.toVector :+ TextViewDrawer2(textPointer, stylePointer)
 	
 	
 	// INITIAL CODE	-------------------------------------
 	
 	// Revalidates and repaints this component on all text changes
-	textPointer.addListener { _ => revalidateAndThen { repaint() } }
-	stylePointer.addListener { e =>
-		if (e.oldValue.hasSameDimensionsAs(e.newValue))
+	textPointer.addListener { event =>
+		if (event.compareBy { _.size })
 			repaint()
 		else
-			revalidateAndThen { repaint() }
+			revalidateAndRepaint()
 	}
 	
 	
 	// IMPLEMENTED	-------------------------------------
 	
-	override def drawContext = stylePointer.value
+	override def measuredText = textPointer.value
 	
-	override def text = textPointer.value
+	override def drawContext = stylePointer.value
 	
 	override def updateLayout() = ()
 }

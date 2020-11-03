@@ -37,8 +37,6 @@ trait MutableStyleTextComponent extends TextComponent2 with Alignable
 	
 	def textColor_=(newColor: Color) = mapDrawContext { _.copy(color = newColor) }
 	
-	def betweenLinesMargin_=(newMargin: Double) = mapDrawContext { _.copy(betweenLinesMargin = newMargin) }
-	
 	
 	// OTHER	--------------------------
 	

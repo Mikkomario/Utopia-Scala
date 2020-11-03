@@ -6,7 +6,7 @@ import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
-import utopia.reflection.component.drawing.view.TextViewDrawer
+import utopia.reflection.component.drawing.view.TextViewDrawer2
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.MutableCustomDrawReachComponent
@@ -15,7 +15,7 @@ import utopia.reflection.component.template.text.{MutableStyleTextComponent, Tex
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
+import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText}
 
 object MutableViewTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike,
 	MutableViewTextLabelFactory, ContextualMutableViewTextLabelFactory]
@@ -192,41 +192,41 @@ class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 							  override val contentPointer: PointerWithEvents[A],
 							  initialDrawContext: TextDrawContext,
 							  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-							  override val allowLineBreaks: Boolean = true,
-							  override val allowTextShrink: Boolean = false)
+							  allowLineBreaks: Boolean = true, override val allowTextShrink: Boolean = false)
 	extends MutableCustomDrawReachComponent with MutableStyleTextComponent with TextComponent2
 		with RefreshableWithPointer[A]
 {
 	// ATTRIBUTES	----------------------------------
 	
 	/**
-	  * Pointer that contains the text currently displayed on this label
-	  */
-	val textPointer = contentPointer.map { displayFunction(_) }
-	/**
 	  * A mutable pointer that contains the currently used text styling
 	  */
 	val stylePointer = new PointerWithEvents(initialDrawContext)
+	/**
+	  * Pointer that contains the text currently displayed on this label
+	  */
+	val textPointer = contentPointer.mergeWith(stylePointer) { (content, style) => MeasuredText(displayFunction(content),
+		FontMetricsContext(fontMetrics(style.font), style.betweenLinesMargin), style.alignment, allowLineBreaks) }
 	
 	
 	// INITIAL CODE	----------------------------------
 	
-	textPointer.addListener { _ => revalidateAndThen { repaint() } }
-	stylePointer.addListener { event =>
-		if (event.oldValue.hasSameDimensionsAs(event.newValue))
+	// Revalidates and repaints this component on all text changes
+	textPointer.addListener { event =>
+		if (event.compareBy { _.size })
 			repaint()
 		else
-			revalidateAndThen { repaint() }
+			revalidateAndRepaint()
 	}
-	addCustomDrawer(TextViewDrawer(textPointer, stylePointer))
+	addCustomDrawer(TextViewDrawer2(textPointer, stylePointer))
 	
 	
 	// IMPLEMENTED	----------------------------------
 	
+	override def measuredText = textPointer.value
+	
 	override def drawContext = stylePointer.value
 	override def drawContext_=(newContext: TextDrawContext) = stylePointer.value = newContext
-	
-	override def text = textPointer.value
 	
 	override def updateLayout() = ()
 }

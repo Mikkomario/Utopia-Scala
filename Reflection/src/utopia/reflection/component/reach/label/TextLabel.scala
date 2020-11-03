@@ -4,9 +4,8 @@ import utopia.genesis.color.Color
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
-import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext, TextDrawer}
+import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext, TextDrawer2}
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.CustomDrawReachComponent
@@ -14,7 +13,7 @@ import utopia.reflection.component.template.text.TextComponent2
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
+import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText}
 
 object TextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike, TextLabelFactory,
 	ContextualTextLabelFactory]
@@ -132,13 +131,15 @@ case class ContextualTextLabelFactory[+N <: TextContextLike]
   */
 class TextLabel(override val parentHierarchy: ComponentHierarchy, override val text: LocalizedString,
 				override val drawContext: TextDrawContext, additionalDrawers: Seq[CustomDrawer] = Vector(),
-				override val allowLineBreaks: Boolean = true, override val allowTextShrink: Boolean = false)
+				allowLineBreaks: Boolean = true, override val allowTextShrink: Boolean = false)
 	extends CustomDrawReachComponent with TextComponent2
 {
 	// ATTRIBUTES	-----------------------------
 	
-	override val customDrawers = additionalDrawers.toVector :+ new TextDrawer(text, drawContext, Normal,
-		allowLineBreaks)
+	override val measuredText = MeasuredText(text, FontMetricsContext(fontMetrics(drawContext.font),
+		drawContext.betweenLinesMargin), drawContext.alignment, allowLineBreaks)
+	override val customDrawers = additionalDrawers.toVector :+
+		TextDrawer2(measuredText, drawContext.font, drawContext.insets, drawContext.color)
 	
 	
 	// IMPLEMENTED	-----------------------------

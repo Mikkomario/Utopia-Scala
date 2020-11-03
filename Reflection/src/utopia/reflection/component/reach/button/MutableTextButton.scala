@@ -15,7 +15,7 @@ import utopia.reflection.event.{ButtonState, FocusListener}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
-import utopia.reflection.text.Font
+import utopia.reflection.text.{Font, MeasuredText}
 
 object MutableTextButton extends ContextInsertableComponentFactoryFactory[ButtonContextLike, MutableTextButtonFactory,
 	ContextualMutableTextButtonFactory]
@@ -145,7 +145,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 						initialColor: Color, initialTextColor: Color = Color.textBlack,
 						initialAlignment: Alignment = Alignment.Center, initialTextInsets: StackInsets = StackInsets.any,
 						borderWidth: Double = 0.0, initialBetweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
-						hotKeyCharacters: Iterable[Char] = Set(), override val allowLineBreaks: Boolean = true,
+						hotKeyCharacters: Iterable[Char] = Set(), override val allowLineBreaksByDefault: Boolean = true,
 						override val allowTextShrink: Boolean = false)
 	extends ReachComponentWrapper with MutableButtonLike with MutableTextComponent with MutableCustomDrawableWrapper
 {
@@ -154,7 +154,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	private val _statePointer = new PointerWithEvents(ButtonState.default)
 	
 	protected val wrapped = new MutableTextLabel(parentHierarchy, initialText, initialFont, initialTextColor,
-		initialAlignment, initialTextInsets, initialBetweenLinesMargin, allowLineBreaks, allowTextShrink)
+		initialAlignment, initialTextInsets, initialBetweenLinesMargin, allowLineBreaksByDefault, allowTextShrink)
 	/**
 	  * A mutable pointer to this buttons base color
 	  */
@@ -175,6 +175,12 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	
 	// IMPLEMENTED	---------------------------------
 	
+	override protected def measuredText_=(newText: MeasuredText) = wrapped.measuredText = newText
+	
+	override def fontMetrics = wrapped.fontMetrics
+	
+	override def measuredText = wrapped.measuredText
+	
 	override def enabled_=(newState: Boolean) = _statePointer.update { _.copy(isEnabled = newState) }
 	
 	override protected def drawable = wrapped
@@ -186,8 +192,6 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	override def text_=(newText: LocalizedString) = wrapped.text = newText
 	
 	override def drawContext_=(newContext: TextDrawContext) = wrapped.drawContext = newContext
-	
-	override def text = wrapped.text
 	
 	override def drawContext = wrapped.drawContext
 	
