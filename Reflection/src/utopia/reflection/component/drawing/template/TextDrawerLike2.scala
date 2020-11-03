@@ -55,7 +55,7 @@ trait TextDrawerLike2 extends CustomDrawer
 	{
 		// Calculates draw bounds and possible scaling
 		val textArea = alignment.position(text.size, bounds, insets)
-		val scaling = (textArea.size / bounds.size).toVector
+		val scaling = (textArea.size / text.size).toVector
 		// Applies transformation during the whole drawing process
 		drawer.transformed(Transformation.position(textArea.position).scaled(scaling)).forTextDrawing(font.toAwt, color)
 			.disposeAfter { drawer =>

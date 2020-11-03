@@ -47,7 +47,7 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	  * The default text draw targets (texts to draw and the positions where they should be drawn)
 	  */
 	lazy val defaultDrawTargets = lines.indices.iterator.map { lineIndex =>
-		_lines(lineIndex) -> lineBounds(lineIndex).bottomLeft
+		_lines(lineIndex) -> lineBounds(lineIndex).position
 	}.toVector
 	
 	

@@ -103,7 +103,7 @@ trait SelectableTextDrawerLike extends CustomDrawer
 				if (highlightedTargets.nonEmpty)
 					drawer.forTextDrawing(font.toAwt, highlightedTextColor).disposeAfter { drawer =>
 						highlightedTargets.foreach { case (string, bounds) =>
-							drawer.drawTextRaw(string, bounds.bottomLeft)
+							drawer.drawTextRaw(string, bounds.position)
 						}
 					}
 				// Draws the caret, if applicable
