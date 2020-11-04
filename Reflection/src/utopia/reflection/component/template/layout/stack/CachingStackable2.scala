@@ -1,6 +1,6 @@
 package utopia.reflection.component.template.layout.stack
 
-import utopia.flow.datastructure.mutable.Lazy
+import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
 
@@ -14,7 +14,7 @@ trait CachingStackable2 extends Stackable2 with Constrainable
 	// ATTRIBUTES	-----------------
 	
 	private var _constraints = Vector[StackSizeModifier]()
-	private val cachedStackSize = Lazy[StackSize] { calculatedStackSizeWithConstraints }
+	private val cachedStackSize = ResettableLazy[StackSize] { calculatedStackSizeWithConstraints }
 	
 	
 	// IMPLEMENTED	-----------------
@@ -27,7 +27,7 @@ trait CachingStackable2 extends Stackable2 with Constrainable
 		resetCachedSize()
 	}
 	
-	override def stackSize = cachedStackSize.get
+	override def stackSize = cachedStackSize.value
 	
 	override def resetCachedSize() = cachedStackSize.reset()
 }

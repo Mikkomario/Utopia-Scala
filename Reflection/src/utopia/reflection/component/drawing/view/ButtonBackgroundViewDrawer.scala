@@ -49,5 +49,5 @@ case class ButtonBackgroundViewDrawer(baseColorPointer: Changing[Color], statePo
 			super.draw(drawer, bounds)
 	}
 	
-	override def border = borderPointer.get
+	override def border = borderPointer.value
 }

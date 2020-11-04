@@ -3,7 +3,7 @@ package utopia.reflection.component.swing.template
 import java.awt.Component
 import java.awt.event.MouseEvent
 
-import utopia.flow.datastructure.mutable.Lazy
+import utopia.flow.datastructure.mutable.MutableLazy
 import utopia.flow.util.NullSafe._
 import utopia.genesis.color.Color
 import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus}
@@ -34,8 +34,8 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     // ATTRIBUTES    ----------------------
     
     // Temporarily cached position and size
-    private val cachedPosition = Lazy { Point(component.getX, component.getY) }
-    private val cachedSize = Lazy { Size(component.getWidth, component.getHeight) }
+    private val cachedPosition = MutableLazy { Point(component.getX, component.getY) }
+    private val cachedSize = MutableLazy { Size(component.getWidth, component.getHeight) }
     
     // Handlers for distributing events
     override val mouseButtonHandler = MouseButtonStateHandler()
@@ -73,26 +73,26 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     /**
       * @return This component's current position
       */
-    override def position = cachedPosition.get
+    override def position = cachedPosition.value
     override def position_=(p: Point) =
     {
-        cachedPosition.set(p)
+        cachedPosition.value = p
         updateBounds()
     }
     
     /**
       * @return This component's current size
       */
-    override def size = cachedSize.get
+    override def size = cachedSize.value
     override def size_=(s: Size) =
     {
         // Informs resize listeners, if there are any
         if (resizeListeners.isEmpty)
-            cachedSize.set(s)
+            cachedSize.value = s
         else
         {
             val oldSize = size
-            cachedSize.set(s)
+            cachedSize.value = s
             
             if (oldSize !~== s)
             {

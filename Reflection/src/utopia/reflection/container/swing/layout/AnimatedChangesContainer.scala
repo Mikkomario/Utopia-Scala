@@ -61,7 +61,7 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 	
 	override protected def wrappers =
 	{
-		wrappersList.get.filterNot { _._2 }.map { _._1 }
+		wrappersList.value.filterNot { _._2 }.map { _._1 }
 		/*
 		val notIncluded = waitingRemoval
 		val wrappersInContainer = container.components

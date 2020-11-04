@@ -26,7 +26,7 @@ class SingleWait(val target: WaitTarget) extends Runnable with Breakable
     /**
      * Whether this wait has already started
      */
-    def hasStarted = _started.get
+    def hasStarted = _started.value
     
     /**
      * A future of the completion of this wait

@@ -96,7 +96,7 @@ object AsyncExtensions
 					
 					// Waits until either future completes
 					wait.run()
-					resultPointer.get.get // Can call get because pointer is always set before wait is stopped
+					resultPointer.value.get // Can call get because pointer is always set before wait is stopped
 				}
 			}
 		}

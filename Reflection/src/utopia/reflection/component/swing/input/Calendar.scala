@@ -341,7 +341,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 			// Adds button listening
 			SelectionGroup(buttons.flatten.map { _._2 }.toSet)
 			buttons.view.flatten.foreach { case (date, button) => button.addValueListener { e =>
-				if (e.newValue) valuePointer.set(Some(date)) else if (value.contains(date)) valuePointer.set(None) } }
+				if (e.newValue) valuePointer.value = Some(date) else if (value.contains(date)) valuePointer.value = None } }
 			
 			// Creates date rows
 			rowElements.map { items => Stack.rowWithItems(segmentGroup.wrap(items), insideCalendarMargin.width) }

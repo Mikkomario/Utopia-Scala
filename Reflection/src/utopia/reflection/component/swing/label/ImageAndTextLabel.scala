@@ -35,7 +35,7 @@ object ImageAndTextLabel
 								(itemToImage: A => Image)(implicit context: TextContextLike) =
 	{
 		new ImageAndTextLabel[A](pointer, context.font, displayFunction, context.textInsets,
-			imageInsets.getOrElse(context.textInsets), context.textAlignment, context.textColor, context.textHasMinWidth,
+			imageInsets.getOrElse(context.textInsets), context.textAlignment, context.textColor, !context.allowTextShrink,
 			context.allowImageUpscaling)(itemToImage)
 	}
 	

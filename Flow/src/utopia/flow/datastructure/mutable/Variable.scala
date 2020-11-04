@@ -21,23 +21,27 @@ object Variable
  * @author Mikko Hilpinen
  * @since 27.11.2016
  * @param name The name of the variable. Immutable
- * @param content The initial content of the variable. This determines the data type of the
+ * @param initialContent The initial content of the variable. This determines the data type of the
  * variable
  */
-class Variable(val name: String, content: Value) extends PointerWithEvents[Value](content) with Property
+class Variable(override val name: String, initialContent: Value)
+    extends PointerWithEvents[Value](initialContent) with Property
 {
-    // ATTRIBUTES    -----------------
+    // ATTRIBUTES   ------------------
     
-    // Makes sure the content is in correct data type
-    override def value_=(value: Value) = super.value_=(value.withType(dataType))
+    override val dataType = initialContent.dataType
     
     
     // COMP. PROPERTIES    -----------
     
-    override def dataType = content.dataType
-    
     /**
      * This variable as a constant copy
      */
-    def toConstant = Constant(name, content)
+    def toConstant = Constant(name, value)
+    
+    
+    // IMPLEMENTED  ------------------
+    
+    // Makes sure the content is in correct data type
+    override def value_=(value: Value) = super.value_=(value.withType(dataType))
 }

@@ -9,5 +9,5 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
   */
 trait InteractionWithPointer[A] extends Interaction[A] with InputWithPointer[A, PointerWithEvents[A]]
 {
-	override def value_=(newValue: A) = valuePointer.set(newValue)
+	override def value_=(newValue: A) = valuePointer.value = newValue
 }

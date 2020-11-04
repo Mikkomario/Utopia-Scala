@@ -1,6 +1,6 @@
 package utopia.reflection.container.reach
 
-import utopia.flow.datastructure.mutable.{PointerLike, PointerWithEvents}
+import utopia.flow.datastructure.mutable.{PointerWithEvents, Settable}
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.reflection.component.context.BaseContextLike
@@ -141,7 +141,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	// ATTRIBUTES	------------------------
 	
 	private var _components = Vector[C]()
-	private var pointers = Map[Int, PointerLike[Boolean]]()
+	private var pointers = Map[Int, Settable[Boolean]]()
 	
 	
 	// IMPLEMENTED	------------------------
@@ -174,7 +174,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	override protected def remove(component: C) =
 	{
 		_components = _components.filterNot { _ == component }
-		pointers.get(component.hashCode()).foreach { _.set(false) }
+		pointers.get(component.hashCode()).foreach { _.value = false }
 		revalidate()
 	}
 	
@@ -182,7 +182,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	{
 		val buffered = components.iterator.toSet
 		_components = _components.filterNot(buffered.contains)
-		buffered.iterator.flatMap { c => pointers.get(c.hashCode()) }.foreach { _.set(false) }
+		buffered.iterator.flatMap { c => pointers.get(c.hashCode()) }.foreach { _.value = false }
 		revalidate()
 	}
 	
@@ -200,7 +200,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 		if (!contains(component))
 		{
 			_components = (_components.take(index) :+ component) ++ _components.drop(index)
-			pointers(component.hashCode()).set(true)
+			pointers(component.hashCode()).value = true
 			revalidate()
 		}
 	}
@@ -211,7 +211,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 		if (newComps.nonEmpty)
 		{
 			_components = _components.take(index) ++ newComps ++ _components.drop(index)
-			newComps.foreach { c => pointers(c.hashCode()).set(true) }
+			newComps.foreach { c => pointers(c.hashCode()).value = true }
 			revalidate()
 		}
 	}
@@ -229,7 +229,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	{
 		pointers.get(c.component.hashCode()) match
 		{
-			case Some(existingPointer) => existingPointer.set(true)
+			case Some(existingPointer) => existingPointer.value = true
 			case None =>
 				val newPointer = new PointerWithEvents(true)
 				pointers += (c.component.hashCode() -> newPointer)

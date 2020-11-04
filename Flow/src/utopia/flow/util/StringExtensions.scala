@@ -1,8 +1,6 @@
 package utopia.flow.util
 
-import utopia.flow.datastructure.mutable.Lazy
-
-import scala.util.Try
+import utopia.flow.datastructure.mutable.ResettableLazy
 
 /**
  * Contains some utility extensions that extend the capabilities of standard strings
@@ -221,7 +219,7 @@ object StringExtensions
 		// ATTRIBUTES	------------------
 		
 		private var lastIndex: Option[Int] = None
-		private val nextIndex: Lazy[Option[Int]] = Lazy {
+		private val nextIndex = ResettableLazy[Option[Int]] {
 			val next = lastIndex match
 			{
 				case Some(last) =>
@@ -236,17 +234,12 @@ object StringExtensions
 		
 		// IMPLEMENTED	------------------
 		
-		override def hasNext = nextIndex.get.isDefined
+		override def hasNext = nextIndex.value.isDefined
 		
-		override def next() =
+		override def next() = nextIndex.pop() match
 		{
-			val result = nextIndex.get
-			nextIndex.reset()
-			result match
-			{
-				case Some(index) => index
-				case None => throw new NoSuchElementException("Iterator.next() called after running out of items")
-			}
+			case Some(index) => index
+			case None => throw new NoSuchElementException("Iterator.next() called after running out of items")
 		}
 	}
 }

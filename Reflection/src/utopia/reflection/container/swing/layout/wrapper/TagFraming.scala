@@ -1,6 +1,6 @@
 package utopia.reflection.container.swing.layout.wrapper
 
-import utopia.flow.datastructure.mutable.{Lazy, PointerWithEvents}
+import utopia.flow.datastructure.mutable.{PointerWithEvents, ResettableLazy}
 import utopia.flow.event.Changing
 import utopia.genesis.color.Color
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
@@ -22,7 +22,7 @@ class TagFraming[C <: AwtStackable](initialComponent: C, initialColor: Color) ex
 	// ATTRIBUTES   --------------------------
 	
 	private val panel = new Panel[C]()
-	private val cachedInsets = new Lazy(calculateInsets)
+	private val cachedInsets = ResettableLazy { calculateInsets() }
 	
 	/**
 	  * Pointer that contains the current tag background color
@@ -52,7 +52,7 @@ class TagFraming[C <: AwtStackable](initialComponent: C, initialColor: Color) ex
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def insets = cachedInsets.get
+	override def insets = cachedInsets.value
 	
 	override protected def container = panel
 	

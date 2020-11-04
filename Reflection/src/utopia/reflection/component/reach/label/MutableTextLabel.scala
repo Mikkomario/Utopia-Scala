@@ -6,6 +6,7 @@ import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, TextDrawContext}
+import utopia.reflection.component.drawing.view.TextViewDrawer2
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.MutableCustomDrawReachComponent
@@ -94,7 +95,7 @@ case class ContextualMutableTextLabelFactory[+N <: TextContextLike](parentHierar
 class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initialText: LocalizedString,
 					   initialFont: Font, initialTextColor: Color = Color.textBlack,
 					   initialAlignment: Alignment = Alignment.Left, initialInsets: StackInsets = StackInsets.any,
-					   initialBetweenLinesMargin: Double = 0.0, override val allowLineBreaksByDefault: Boolean = true,
+					   initialBetweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = true,
 					   override val allowTextShrink: Boolean = false)
 	extends MutableCustomDrawReachComponent with TextComponent2 with MutableTextComponent
 {
@@ -109,34 +110,28 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 	  * A mutable pointer that contains this label's text
 	  */
 	val textPointer = new PointerWithEvents(initialText)
-	private val measuredTextPointer = new PointerWithEvents(calculatedMeasuredText)
+	/**
+	  * A pointer to this label's measured text
+	  */
+	val measuredTextPointer = textPointer.mergeWith(stylePointer) { (text, style) => MeasuredText(text,
+		FontMetricsContext(fontMetrics(style.font), style.betweenLinesMargin), style.alignment, allowLineBreaks) }
 	
 	
 	// INITIAL CODE	-------------------------
 	
 	// Revalidates and/or repaints this component whenever content or styling changes
-	textPointer.addListener { _ => measuredTextPointer.value = calculatedMeasuredText }
-	stylePointer.addListener { _ => measuredTextPointer.value = calculatedMeasuredText }
 	measuredTextPointer.addListener { event =>
 		if (event.compareBy { _.size })
 			repaint()
 		else
 			revalidateAndRepaint()
 	}
-	
-	
-	// COMPUTED	-----------------------------
-	
-	private def calculatedMeasuredText = MeasuredText(textPointer.value, FontMetricsContext(fontMetrics(font),
-		drawContext.betweenLinesMargin), drawContext.alignment, allowLineBreaksByDefault)
+	addCustomDrawer(TextViewDrawer2(measuredTextPointer, stylePointer))
 	
 	
 	// IMPLEMENTED	-------------------------
 	
 	override def measuredText = measuredTextPointer.value
-	override def measuredText_=(newText: MeasuredText) = measuredTextPointer.value = newText
-	
-	override def fontMetrics = fontMetrics(font)
 	
 	override def toString = s"Label($text)"
 	

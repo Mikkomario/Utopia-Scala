@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.view
 
-import utopia.flow.event.Changing
+import utopia.flow.datastructure.template.Viewable
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.{Bounds, Circle}
 import utopia.genesis.util.Drawer
@@ -13,9 +13,11 @@ import utopia.reflection.event.ButtonState
   * @author Mikko Hilpinen
   * @since 3.8.2019, v1+
   */
-case class SelectionCircleViewDrawer(hoverColor: Color, selectedColor: Color, selectionPointer: Changing[Boolean],
-									 statePointer: Changing[ButtonState]) extends CustomDrawer
+case class SelectionCircleViewDrawer(hoverColor: Color, selectedColor: Color, selectionPointer: Viewable[Boolean],
+									 statePointer: Viewable[ButtonState]) extends CustomDrawer
 {
+	// IMPLEMENTED	--------------------------
+	
 	override def drawLevel = Background
 	
 	override def draw(drawer: Drawer, bounds: Bounds) =

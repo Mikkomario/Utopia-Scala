@@ -46,7 +46,7 @@ object ViewLabel
 					 (implicit context: TextContextLike) =
 	{
 		new ViewLabel[A](pointer, displayFunction, context.font, context.textColor, context.textInsets,
-			context.textAlignment, context.textHasMinWidth)
+			context.textAlignment, !context.allowTextShrink)
 	}
 	
 	/**

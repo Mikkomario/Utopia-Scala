@@ -78,7 +78,7 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler,
 	
 	// COMPUTED	------------------------
 	
-	private def transitioning = transitioningFlag.get
+	private def transitioning = transitioningFlag.value
 	
 	private def transitioning_=(newState: Boolean) = transitioningFlag.update { oldState =>
 		// May register or unregister the actor component from the actor handler

@@ -21,15 +21,17 @@ object Pointer
 * @author Mikko Hilpinen
 * @since 23.3.2019
 **/
-class Pointer[A](var value: A) extends PointerLike[A]
+class Pointer[A](override var value: A) extends Settable[A]
 {
 	/**
 	  * The current value in this pointer
 	  */
+	@deprecated("Please use .value instead", "v1.9")
 	def get = value
 	
 	/**
 	  * Updates the value in this pointer
 	  */
+	@deprecated("Please assign directly to the value instead", "v1.9")
 	def set(newVal: A) = value = newVal
 }

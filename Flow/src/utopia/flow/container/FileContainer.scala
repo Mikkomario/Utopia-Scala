@@ -58,8 +58,8 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 	/**
 	  * @return The currently stored data
 	  */
-	def current = _current.get
-	def current_=(newContent: A) = _current.set(newContent)
+	def current = _current.value
+	def current_=(newContent: A) = _current.value = newContent
 	
 	/**
 	  * @return A pointer that holds the current value in this container
@@ -86,7 +86,7 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 		val newSavePromise = Promise[Try[Unit]]()
 		saveCompletion.getAndSet(newSavePromise.future).onComplete { _ =>
 			// Saves current status to file as json
-			val dataToSave = toValue(_current.get)
+			val dataToSave = toValue(_current.value)
 			fileLocation.createParentDirectories()
 			// Completes the promise so that the next save process can start
 			newSavePromise.success(fileLocation.writeJSON(dataToSave).map { _ => () })

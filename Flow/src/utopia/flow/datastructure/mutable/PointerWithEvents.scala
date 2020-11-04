@@ -5,15 +5,15 @@ import utopia.flow.event.{ChangeListener, Changing}
 /**
   * Classes with this trait generate change events when they mutate
   * @author Mikko Hilpinen
-  * @since 25.5.2019, v1.4.1+
+  * @since 25.5.2019, v1.4.1
   */
-class PointerWithEvents[A](initialValue: A) extends PointerLike[A] with Changing[A]
+class PointerWithEvents[A](initialValue: A) extends Settable[A] with Changing[A]
 {
 	// ATTRIBUTES	----------------
 	
 	private var _value = initialValue
 	
-	var listeners = Vector[ChangeListener[A]]()
+	override var listeners = Vector[ChangeListener[A]]()
 	
 	/**
 	 * A read-only view into this pointer
@@ -40,9 +40,14 @@ class PointerWithEvents[A](initialValue: A) extends PointerLike[A] with Changing
 		}
 	}
 	
-	override def get = value
 	
-	override def set(newVal: A) = value = newVal
+	// OTHER	--------------------
+	
+	@deprecated("Please use .value instead", "v1.9")
+	def get = value
+	
+	@deprecated("Please assign directly to .value instead", "v1.9")
+	def set(newVal: A) = value = newVal
 	
 	
 	// NESTED   --------------------

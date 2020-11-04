@@ -2,7 +2,7 @@ package utopia.reflection.component.template.layout.stack
 
 import java.time.Instant
 
-import utopia.flow.datastructure.mutable.Lazy
+import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.animation.Animation
 import utopia.genesis.handling.Actor
@@ -65,8 +65,8 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 	private var nextUpdateThreshold = Duration.Zero
 	private val completionPromise = Promise[Unit]()
 	
-	private val cachedImages = Lazy { imageAnimation(progress) }
-	private val cachedSize = Lazy { sizeAnimation(progress) }
+	private val cachedImages = ResettableLazy { imageAnimation(progress) }
+	private val cachedSize = ResettableLazy { sizeAnimation(progress) }
 	
 	
 	// COMPUTED	------------------------------------
@@ -100,7 +100,7 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 	
 	override def updateLayout() = ()
 	
-	override def stackSize = cachedSize.get
+	override def stackSize = cachedSize.value
 	
 	override def resetCachedSize() = cachedSize.reset()
 	
@@ -140,7 +140,8 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 		
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
-			cachedImages.get.foreach { _.withSize(bounds.size, preserveShape = false).drawWith(drawer, bounds.position) }
+			cachedImages.value
+				.foreach { _.withSize(bounds.size, preserveShape = false).drawWith(drawer, bounds.position) }
 		}
 	}
 	

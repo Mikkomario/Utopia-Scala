@@ -45,7 +45,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	/**
 	  * @return Whether the system is currently in online mode and functioning normally
 	  */
-	def isOnline = isOnlineFlag.get
+	def isOnline = isOnlineFlag.value
 	
 	/**
 	  * @return Whether the system is currently in offline mode and functioning in a limited frequency and width

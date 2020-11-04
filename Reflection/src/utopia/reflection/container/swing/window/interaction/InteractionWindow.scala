@@ -71,7 +71,7 @@ trait InteractionWindow[+A]
 	/**
 	 * @return Currently displayed dialogs from this instance. Empty if no dialogs are being displayed at this time.
 	 */
-	def visibleDialogs = _visibleDialogs.get
+	def visibleDialogs = _visibleDialogs.value
 	
 	/**
 	 * @return Whether a dialog from this instance is currently being displayed (may be hidden, see .isVisible)

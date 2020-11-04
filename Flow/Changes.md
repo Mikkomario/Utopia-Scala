@@ -2,10 +2,20 @@
 ## v1.9 (beta)
 ### Breaking Changes
 - Changed setIfEmpty method variations in VolatileOption to accept a call by name parameter instead of a function
+- Deprecated PointerLike trait and replaced it with Settable trait in all implementations
+- Renamed Lazy to MutableLazy and VolatileLazy to MutableVolatileLazy
+    - Also, Lazy class parameter is now a private call by name parameter and no longer a public function with parameters
+### Deprecations
+- Deprecated LazyLike.get. Lazy instances now behave more like pointers, extending the new Viewable trait.
+- Deprecated Volatile.get in favor of .value
 ### New Features
 - Added a delaying / buffering pointer view class (DelayedView)
 - Added asynchronous mapping support for pointers via AsyncMirror class
 - Added LazyMirror class and .lazyMergeWith(...) to Changing
+- Added Viewable and Settable traits that allow more generic pointer handling
+    - Also, added View for Viewable wrapping
+- Added Lazy, ResettableLazy, VolatileLazy and ResettableVolatileLazy classes to support situations where mutability 
+in a lazy container is not required or desirable
 ### New Methods
 - Added .notCompletingBefore(Future) to Future in AsyncExtensions
 - Added .subRangeIterator(Int) to Range.Inclusive in CollectionExtensions

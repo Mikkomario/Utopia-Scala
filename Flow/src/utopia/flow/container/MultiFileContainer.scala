@@ -83,5 +83,5 @@ abstract class MultiFileContainer[A](fileLocation: Path)(implicit jsonParser: Js
 	/**
 	  * Removes all content from this container
 	  */
-	def clear() = _current.set(empty)
+	def clear() = _current.value = empty
 }

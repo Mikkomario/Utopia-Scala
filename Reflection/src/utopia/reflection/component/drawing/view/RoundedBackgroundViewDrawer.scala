@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.view
 
-import utopia.flow.event.Changing
+import utopia.flow.datastructure.template.Viewable
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.color.Color
 import utopia.reflection.component.drawing.template
@@ -16,7 +16,7 @@ object RoundedBackgroundViewDrawer
 	  * @param drawLevel Depth to use when drawing this background (default = Background = bottom)
 	  * @return A new background drawer
 	  */
-	def withFactor(colorPointer: Changing[Color], roundingFactorPointer: Changing[Double],
+	def withFactor(colorPointer: Viewable[Color], roundingFactorPointer: Viewable[Double],
 	               drawLevel: DrawLevel = Background) =
 		new RoundedBackgroundViewDrawer(colorPointer, Right(roundingFactorPointer), drawLevel)
 	
@@ -26,7 +26,7 @@ object RoundedBackgroundViewDrawer
 	  * @param drawLevel Depth to use when drawing this background (default = Background = bottom)
 	  * @return A new background drawer that uses a static radius
 	  */
-	def withRadius(colorPointer: Changing[Color], radiusPointer: Changing[Double], drawLevel: DrawLevel = Background) =
+	def withRadius(colorPointer: Viewable[Color], radiusPointer: Viewable[Double], drawLevel: DrawLevel = Background) =
 		new RoundedBackgroundViewDrawer(colorPointer, Left(radiusPointer), drawLevel)
 }
 
@@ -35,8 +35,8 @@ object RoundedBackgroundViewDrawer
   * @author Mikko Hilpinen
   * @since 12.9.2020, v1.3
   */
-class RoundedBackgroundViewDrawer private(colorPointer: Changing[Color],
-										  roundingPointer: Either[Changing[Double], Changing[Double]],
+class RoundedBackgroundViewDrawer private(colorPointer: Viewable[Color],
+										  roundingPointer: Either[Viewable[Double], Viewable[Double]],
 										  override val drawLevel: DrawLevel = Background)
 	extends template.RoundedBackgroundDrawerLike
 {

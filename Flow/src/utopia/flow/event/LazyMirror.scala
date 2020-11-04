@@ -1,6 +1,6 @@
 package utopia.flow.event
 
-import utopia.flow.datastructure.mutable.Lazy
+import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.datastructure.template.LazyLike
 
 object LazyMirror
@@ -29,7 +29,7 @@ class LazyMirror[Origin, Reflection](source: Changing[Origin])(f: Origin => Refl
 {
 	// ATTRIBUTES	--------------------------
 	
-	private val cache = Lazy { f(source.value) }
+	private val cache = ResettableLazy { f(source.value) }
 	
 	
 	// INITIAL CODE	--------------------------
@@ -40,7 +40,7 @@ class LazyMirror[Origin, Reflection](source: Changing[Origin])(f: Origin => Refl
 	
 	// IMPLEMENTED	--------------------------
 	
-	override def current = cache.current
+	override def value = cache.value
 	
-	override def get = cache.get
+	override def current = cache.current
 }

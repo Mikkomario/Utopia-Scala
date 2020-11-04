@@ -40,28 +40,28 @@ trait Focusable extends ReachComponentLike
 	/**
 	  * Registers this component to the focus manager
 	  */
-	protected def register() = focusManager.register(this)
+	protected def enableFocusHandling() = focusManager.register(this)
 	
 	/**
 	  * Detaches this component from the focus manager
 	  */
-	protected def unregister() = focusManager.unregister(this)
+	protected def disableFocusHandling() = focusManager.unregister(this)
 	
 	/**
 	  * Connects this component to the focus manager while linked to the main component hierarchy. Detaches from
 	  * the focus manager while not linked.
 	  */
-	protected def registerWhileLinked() =
+	protected def enableFocusHandlingWhileLinked() =
 	{
 		// Updates registration based on link status
 		addHierarchyListener { isLinked =>
 			if (isLinked)
-				register()
+				enableFocusHandling()
 			else
-				unregister()
+				disableFocusHandling()
 		}
 		// Performs the initial registration if already linked
 		if (parentHierarchy.isLinked)
-			register()
+			enableFocusHandling()
 	}
 }

@@ -1,32 +1,17 @@
 package utopia.flow.datastructure.mutable
 
-import utopia.flow.datastructure.template.LazyLike
-
 /**
   * A common trait for lazy container implementations which allow outside manipulation
   * @author Mikko Hilpinen
   * @since 22.7.2020, v1.8
   */
-trait MutableLazyLike[A] extends LazyLike[A]
+trait MutableLazyLike[A] extends ResettableLazyLike[A] with Settable[A]
 {
-	// ABSTRACT	----------------------
-	
-	/**
-	  * Overrides the current value of this lazy container
-	  * @param newValue New value, which may be empty (uninitialized)
-	  */
-	protected def updateValue(newValue: Option[A]): Unit
-	
-	
 	// OTHER	----------------------
 	
 	/**
 	  * @param newValue New value for this lazy container
 	  */
-	def set(newValue: A) = updateValue(Some(newValue))
-	
-	/**
-	  * Resets this lazy container so that a new value is generated the next time get is called
-	  */
-	def reset() = updateValue(None)
+	@deprecated("Please assign directly to .value instead", "v1.9")
+	def set(newValue: A) = value = newValue
 }

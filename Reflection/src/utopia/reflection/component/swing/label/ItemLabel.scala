@@ -60,7 +60,7 @@ object ItemLabel
 								(implicit context: TextContextLike) =
 	{
 		new ItemLabel[A](pointer, displayFunction, context.font, context.textColor, context.textInsets,
-			context.textAlignment, context.textHasMinWidth)
+			context.textAlignment, !context.allowTextShrink)
 	}
 	
 	/**

@@ -40,8 +40,8 @@ object AsyncTest extends App
     
     println("All futures completed, checks results")
     
-    val finalStarts = starts.get.sorted
-    val finalEnds = ends.get.sorted
+    val finalStarts = starts.value.sorted
+    val finalEnds = ends.value.sorted
     
     println("Started:")
     println(finalStarts.map { _.toString() }.reduce { _ + ", " + _ })

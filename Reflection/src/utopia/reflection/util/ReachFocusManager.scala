@@ -47,7 +47,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	private def targets = targetsPointer.value
 	private def targets_=(newTargets: Set[Focusable]) = targetsPointer.value = newTargets
 	
-	private def orderedTargets = orderedTargetsPointer.get
+	private def orderedTargets = orderedTargetsPointer.value
 	
 	
 	// OTHER	---------------------------------

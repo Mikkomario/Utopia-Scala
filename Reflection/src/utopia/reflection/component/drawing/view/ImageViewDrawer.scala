@@ -1,6 +1,7 @@
 package utopia.reflection.component.drawing.view
 
-import utopia.flow.event.Changing
+import utopia.flow.datastructure.immutable.View
+import utopia.flow.datastructure.template.Viewable
 import utopia.genesis.image.Image
 import utopia.reflection.component.drawing.template.{DrawLevel, ImageDrawerLike}
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
@@ -19,10 +20,10 @@ object ImageViewDrawer
 	  *                     (image resolution is still respected) (default = true)
 	  * @return A new image drawer
 	  */
-	def withStaticStyle(imagePointer: Changing[Image], insets: StackInsets = StackInsets.any,
+	def withStaticStyle(imagePointer: Viewable[Image], insets: StackInsets = StackInsets.any,
 						alignment: Alignment = Alignment.Center, drawLevel: DrawLevel = Normal,
 						useUpscaling: Boolean = true) =
-		apply(imagePointer, Changing.wrap(insets), Changing.wrap(alignment), drawLevel, useUpscaling)
+		apply(imagePointer, View(insets), View(alignment), drawLevel, useUpscaling)
 }
 
 /**
@@ -30,8 +31,8 @@ object ImageViewDrawer
   * @author Mikko Hilpinen
   * @since 21.10.2020, v2
   */
-case class ImageViewDrawer(imagePointer: Changing[Image], insetsPointer: Changing[StackInsets],
-						   alignmentPointer: Changing[Alignment], override val drawLevel: DrawLevel = Normal,
+case class ImageViewDrawer(imagePointer: Viewable[Image], insetsPointer: Viewable[StackInsets],
+						   alignmentPointer: Viewable[Alignment], override val drawLevel: DrawLevel = Normal,
 						   override val useUpscaling: Boolean = true) extends ImageDrawerLike
 {
 	// IMPLEMENTED	------------------------

@@ -58,7 +58,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 	{
 		// Checks which invitations are still active
 		val now = Instant.now()
-		val result = cached.get.filterNot { _.wrapped.expireTime > now }
+		val result = cached.value.filterNot { _.wrapped.expireTime > now }
 		// Updates cached data if necessary
 		cached.setIf { _.size != result.size }(result)
 		// Applies id filtering if necessary

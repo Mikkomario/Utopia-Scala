@@ -1,6 +1,6 @@
 package utopia.flow.event
 
-import utopia.flow.datastructure.mutable.Lazy
+import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.datastructure.template.LazyLike
 
 object LazyMergeMirror
@@ -29,7 +29,7 @@ class LazyMergeMirror[O1, O2, Reflection](source1: Changing[O1], source2: Changi
 {
 	// ATTRIBUTES	-------------------------------
 	
-	private val cache = Lazy { merge(source1.value, source2.value) }
+	private val cache = ResettableLazy { merge(source1.value, source2.value) }
 	
 	
 	// INITIAL CODE	-------------------------------
@@ -40,7 +40,7 @@ class LazyMergeMirror[O1, O2, Reflection](source1: Changing[O1], source2: Changi
 	
 	// IMPLEMENTED	-------------------------------
 	
-	override def current = cache.current
+	override def value = cache.value
 	
-	override def get = cache.get
+	override def current = cache.current
 }

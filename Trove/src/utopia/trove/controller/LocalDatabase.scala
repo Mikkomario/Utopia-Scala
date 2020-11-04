@@ -43,7 +43,7 @@ object LocalDatabase
 	/**
 	  * @return Whether this database is currently starting or stopping
 	  */
-	def isProcessing = _statusPointer.get.isProcessing
+	def isProcessing = _statusPointer.value.isProcessing
 	
 	
 	// OTHER	-------------------------------
@@ -232,9 +232,9 @@ object LocalDatabase
 			// Only shuts down the database if there is one and its started
 			if (status.isStarted)
 			{
-				_statusPointer.set(Stopping)
+				_statusPointer.value = Stopping
 				val result = Try { dbPointer.pop().foreach { _.stop() } }
-				_statusPointer.set(NotStarted)
+				_statusPointer.value = NotStarted
 				result
 			}
 			else
@@ -279,7 +279,7 @@ object LocalDatabase
 				
 				// Starts the database (may throw)
 				database.start()
-				_statusPointer.set(Updating)
+				_statusPointer.value = Updating
 				// Closes the database when program closes
 				CloseHook.registerAction { shutDown() }
 				
@@ -293,7 +293,7 @@ object LocalDatabase
 	
 	private class StatusView extends Changing[DatabaseStatus]
 	{
-		override def value = _statusPointer.get
+		override def value = _statusPointer.value
 		override def listeners = _statusPointer.listeners
 		override def listeners_=(newListeners: Vector[ChangeListener[DatabaseStatus]]) =
 			_statusPointer.listeners = newListeners

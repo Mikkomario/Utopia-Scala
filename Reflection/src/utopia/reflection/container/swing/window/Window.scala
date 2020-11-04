@@ -3,7 +3,7 @@ package utopia.reflection.container.swing.window
 import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter, WindowEvent}
 
 import utopia.flow.async.{VolatileFlag, VolatileOption}
-import utopia.flow.datastructure.mutable.Lazy
+import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyStatus, KeyTypedEvent}
 import utopia.genesis.handling.mutable.ActorHandler
@@ -41,7 +41,7 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
     private var _isAttachedToMainHierarchy = false
     private var _constraints = Vector[StackSizeModifier]()
     
-    private val cachedStackSize = Lazy { calculatedStackSizeWithConstraints }
+    private val cachedStackSize = ResettableLazy { calculatedStackSizeWithConstraints }
     private val generatorActivated = new VolatileFlag()
     private val closePromise = Promise[Unit]()
     
@@ -140,7 +140,7 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
     
     override def children = Vector(content)
     
-    override def stackSize = cachedStackSize.get
+    override def stackSize = cachedStackSize.value
     
     override def resetCachedSize() = cachedStackSize.reset()
     

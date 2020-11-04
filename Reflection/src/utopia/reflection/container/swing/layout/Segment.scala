@@ -1,7 +1,7 @@
 package utopia.reflection.container.swing.layout
 
 import utopia.flow.async.VolatileFlag
-import utopia.flow.datastructure.mutable.Lazy
+import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.genesis.shape.Axis.Y
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
@@ -33,7 +33,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 	val alignAxis = direction.perpendicular
 	
 	private var containers = Vector[SegmentContainer]()
-	private val lengthCache = Lazy(calculatedLength)
+	private val lengthCache = ResettableLazy(calculatedLength)
 	
 	
 	// COMPUTED	--------------------------------
@@ -121,7 +121,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 				updateContainers()
 		}
 		
-		override def stackSize = wrappedComponent.stackSize.withSide(lengthCache.get, alignAxis)
+		override def stackSize = wrappedComponent.stackSize.withSide(lengthCache.value, alignAxis)
 		
 		override protected def wrapped = panel
 		

@@ -107,7 +107,7 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 	private val cachedValuePointer = Volatile(initialPlaceHolder)
 	// Contains: (value to map, mapping results (if arrived), queued source value (if required))
 	private val currentCalculation = Volatile[(Origin, Option[Reflection], Option[Origin])](
-		(source.value, Some(cachedValuePointer.get), None))
+		(source.value, Some(cachedValuePointer.value), None))
 	
 	/**
 	  * A pointer that notes whether this mirror is currently performing an asynchronous calculation
@@ -118,7 +118,7 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 	// INITIAL CODE ---------------------
 	
 	// If a placeholder value was provided, immediately starts a new calculation
-	currentCalculation.set(calculateNextValue(source.value))
+	currentCalculation.value = calculateNextValue(source.value)
 	
 	// Whenever source value changes, requests an asynchronous status update
 	source.addListener { event => requestCalculation(event.newValue) }
@@ -126,7 +126,7 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 	
 	// IMPLEMENTED  ---------------------
 	
-	override def value = cachedValuePointer.get
+	override def value = cachedValuePointer.value
 	
 	
 	// OTHER    -------------------------

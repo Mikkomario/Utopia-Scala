@@ -130,12 +130,12 @@ object Stacker2
 			targets.foreach { _() }
 			
 			// Positions the components length-wise (first components with margin and then the final component)
-			var cursor = area.position.along(stackAxis) + caps.head.get
+			var cursor = area.position.along(stackAxis) + caps.head.value
 			components.zip(margins).foreach
 			{
 				case (component, marginPointer) =>
 					component.setCoordinate(cursor, stackAxis)
-					cursor += component.lengthAlong(stackAxis) + marginPointer.get
+					cursor += component.lengthAlong(stackAxis) + marginPointer.value
 			}
 			components.last.setCoordinate(cursor, stackAxis)
 			
@@ -201,7 +201,7 @@ object Stacker2
 		targets.foreach { _() }
 		
 		// Returns the final lengths
-		targets.map { _.target.get }
+		targets.map { _.target.value }
 	}
 	
 	@scala.annotation.tailrec
@@ -304,6 +304,6 @@ object Stacker2
 	
 	private class GapLengthAdjust(val target: Pointer[Double], val length: StackLength) extends LengthAdjust
 	{
-		def setLength(length: Double) = target.set(length)
+		def setLength(length: Double) = target.value = length
 	}
 }

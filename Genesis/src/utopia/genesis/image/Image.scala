@@ -8,7 +8,8 @@ import java.nio.file.{Files, Path}
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.NullSafe._
 import javax.imageio.ImageIO
-import utopia.flow.datastructure.mutable.Lazy
+import utopia.flow.datastructure.immutable.{Lazy, View}
+import utopia.flow.datastructure.template.Viewable
 import utopia.genesis.color.Color
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
 import utopia.genesis.shape.Axis.{X, Y}
@@ -25,7 +26,7 @@ object Image
 	/**
 	 * A zero sized image with no pixel data
 	 */
-	val empty = new Image(None, Vector2D.identity, 1.0, new Lazy(() => PixelTable.empty))
+	val empty = new Image(None, Vector2D.identity, 1.0, View(PixelTable.empty))
 	
 	/**
 	  * Creates a new image
@@ -34,8 +35,8 @@ object Image
 	  * @param alpha The maximum alpha value used when drawing this image [0, 1] (default = 1 = fully visible)
 	  * @return A new image
 	  */
-	def apply(image: BufferedImage, scaling: Vector2D = Vector2D.identity, alpha: Double = 1.0): Image = Image(Some(image),
-		scaling, alpha, Lazy(PixelTable.fromBufferedImage(image)))
+	def apply(image: BufferedImage, scaling: Vector2D = Vector2D.identity, alpha: Double = 1.0): Image =
+		new Image(Some(image), scaling, alpha, Lazy { PixelTable.fromBufferedImage(image) })
 	
 	/**
 	  * Reads an image from a file
@@ -124,7 +125,7 @@ object Image
   * @since 15.6.2019, v2.1+
   */
 case class Image private(private val source: Option[BufferedImage], scaling: Vector2D, alpha: Double,
-						 private val _pixels: Lazy[PixelTable]) extends Scalable[Image]
+						 private val _pixels: Viewable[PixelTable]) extends Scalable[Image]
 {
 	// ATTRIBUTES	----------------
 	
@@ -149,7 +150,7 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	/**
 	  * @return The pixels in this image
 	  */
-	def pixels = _pixels.get
+	def pixels = _pixels.value
 	
 	/**
 	  * @return The width of this image in pixels
@@ -435,7 +436,7 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 		if (source.isDefined)
 		{
 			val newPixels = f(pixels)
-			Image(Some(newPixels.toBufferedImage), scaling, alpha, Lazy(newPixels))
+			Image(Some(newPixels.toBufferedImage), scaling, alpha, View(newPixels))
 		}
 		else
 			this

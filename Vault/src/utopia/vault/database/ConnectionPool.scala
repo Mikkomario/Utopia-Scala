@@ -179,7 +179,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 		
 		def lastLeaveTime = _lastLeaveTime
 		
-		def currentClientCount = clientCount.get
+		def currentClientCount = clientCount.value
 		
 		def isInUse = currentClientCount > 0
 		

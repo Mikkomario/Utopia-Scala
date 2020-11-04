@@ -49,7 +49,7 @@ class DelayedView[A](val source: Changing[A], delay: Duration)(implicit exc: Exe
 					WaitUtils.waitUntil(changeReactionThreshold, waitLock)
 				// Allows new wait and updates current value
 				isWaitingFlag.reset()
-				valuePointer.set(latestReceivedValue)
+				valuePointer.value = latestReceivedValue
 			}
 		}
 	}

@@ -1,8 +1,8 @@
 package utopia.flow.event
 
 import utopia.flow.async.{AsyncMirror, DelayedView}
-import utopia.flow.datastructure.mutable.Lazy
-import utopia.flow.datastructure.template.LazyLike
+import utopia.flow.datastructure.mutable.MutableLazy
+import utopia.flow.datastructure.template.{LazyLike, Viewable}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -54,7 +54,7 @@ object Changing
 		override def map[B](f: A => B): Changing[B] = new Unchanging(f(value))
 		
 		// Instead of reacting to changes, lazily maps the value once
-		override def lazyMap[B](f: A => B) = Lazy { f(value) }
+		override def lazyMap[B](f: A => B) = MutableLazy { f(value) }
 		
 		// Since this value won't vary, only reacts to the other pointer's changes
 		override def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) = other.map { f(value, _) }
@@ -71,16 +71,11 @@ object Changing
 /**
   * Changing instances generate change events
   * @author Mikko Hilpinen
-  * @since 26.5.2019, v1.4.1+
+  * @since 26.5.2019, v1.4.1
   */
-trait Changing[A]
+trait Changing[A] extends Viewable[A]
 {
 	// ABSTRACT	---------------------
-	
-	/**
-	  * @return The current value of this changing element
-	  */
-	def value: A
 	
 	/**
 	 * @return Listeners linked to this changing instance

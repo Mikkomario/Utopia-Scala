@@ -2,7 +2,7 @@ package utopia.reflection.component.reach.template
 
 import java.awt.event.KeyEvent
 
-import utopia.flow.datastructure.mutable.PointerLike
+import utopia.flow.datastructure.mutable.Settable
 import utopia.flow.event.Changing
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
@@ -85,7 +85,7 @@ trait ButtonLike extends ReachComponentLike with Focusable
 	  *                         (default = empty)
 	  * @param triggerKeys Keys used for triggering this button while it has focus (default = space & enter)
 	  */
-	protected def setup(statePointer: PointerLike[ButtonState], hotKeys: Set[Int] = Set(),
+	protected def setup(statePointer: Settable[ButtonState], hotKeys: Set[Int] = Set(),
 						hotKeyCharacters: Iterable[Char] = Set(), triggerKeys: Set[Int] = ButtonLike.defaultTriggerKeys) =
 	{
 		// When connected to the main hierarchy, enables focus management and key listening
@@ -108,13 +108,13 @@ trait ButtonLike extends ReachComponentLike with Focusable
 			{
 				triggerKeyListener.foreach(parentHierarchy.top.addKeyStateListener)
 				hotKeyListener.foreach(parentHierarchy.top.addKeyStateListener)
-				register()
+				enableFocusHandling()
 			}
 			else
 			{
 				triggerKeyListener.foreach(parentHierarchy.top.removeListener)
 				hotKeyListener.foreach(parentHierarchy.top.removeListener)
-				unregister()
+				disableFocusHandling()
 			}
 		}
 		
@@ -134,13 +134,13 @@ trait ButtonLike extends ReachComponentLike with Focusable
 	  * A listener used for updating this button's focus state
 	  * @param statePointer A pointer for updating this button's state
 	  */
-	protected class ButtonDefaultFocusListener(statePointer: PointerLike[ButtonState]) extends FocusChangeListener
+	protected class ButtonDefaultFocusListener(statePointer: Settable[ButtonState]) extends FocusChangeListener
 	{
 		override def onFocusChangeEvent(event: FocusChangeEvent) =
 			statePointer.update { _.copy(isInFocus = event.hasFocus) }
 	}
 	
-	private class ButtonKeyListener(statePointer: PointerLike[ButtonState], triggerKeys: Set[Int] = Set(),
+	private class ButtonKeyListener(statePointer: Settable[ButtonState], triggerKeys: Set[Int] = Set(),
 								 triggerCharacters: Iterable[Char] = Set(), requiresFocus: Boolean = true)
 		extends KeyStateListener
 	{
@@ -159,7 +159,7 @@ trait ButtonLike extends ReachComponentLike with Focusable
 		
 		// COMPUTED	-------------------------------
 		
-		def down = statePointer.get.isPressed
+		def down = statePointer.value.isPressed
 		def down_=(newState: Boolean) = statePointer.update { _.copy(isPressed = newState) }
 		
 		
@@ -179,7 +179,7 @@ trait ButtonLike extends ReachComponentLike with Focusable
 		override def allowsHandlingFrom(handlerType: HandlerType) = enabled && (!requiresFocus || hasFocus)
 	}
 	
-	private class ButtonMouseListener(statePointer: PointerLike[ButtonState]) extends MouseButtonStateListener
+	private class ButtonMouseListener(statePointer: Settable[ButtonState]) extends MouseButtonStateListener
 		with MouseMoveListener
 	{
 		// ATTRIBUTES	----------------------------
@@ -194,7 +194,7 @@ trait ButtonLike extends ReachComponentLike with Focusable
 		
 		// COMPUTED	-------------------------------
 		
-		def down = statePointer.get.isPressed
+		def down = statePointer.value.isPressed
 		def down_=(newState: Boolean) = statePointer.update { _.copy(isPressed = newState) }
 		
 		
