@@ -46,6 +46,41 @@ object StringExtensions
 		def digits = s.filter { _.isDigit }
 		
 		/**
+		  * @param range A range
+		  * @return The portion of this string which falls into the specified range
+		  */
+		def apply(range: Range) =
+		{
+			if (range.isEmpty)
+				""
+			else
+			{
+				val first = (range.start min range.last) max 0
+				val last = (range.start max range.last) min (s.length - 1)
+				s.substring(first, last + 1)
+			}
+		}
+		
+		/**
+		  * Cuts a range out of this string
+		  * @param range Range of characters to cut
+		  * @return The cut away part of this string, then the remaining part of this string
+		  */
+		def cut(range: Range) =
+		{
+			if (range.isEmpty)
+				"" -> s
+			else
+			{
+				val first = (range.start min range.last) max 0
+				val last = (range.start max range.last) min (s.length - 1)
+				val cutText = s.substring(first, last + 1)
+				val remaining = s.take(first) ++ s.drop(last + 1)
+				cutText -> remaining
+			}
+		}
+		
+		/**
 		 * @param other Another string
 		 * @return Whether this string contains specified substring (case-insensitive)
 		 */

@@ -27,6 +27,7 @@ in a lazy container is not required or desirable
 - Added .takeRightWhile(...) to Seq in CollectionExtensions
 - Added .popAll() to VolatileList
 - Added .compareBy(...), .compareWith(...), .merge(...) and .mergeBy(...) methods to ChangeEvent
+- Added new .apply(Range) and .cut(Range) to String though StringExtensions
 ### Fixes
 - Fixed a bug in LocalDate.next(WeekDay) and LocalDate.previous(WeekDay) (returned same day even when 
 includeSelf-parameter was set to false)
