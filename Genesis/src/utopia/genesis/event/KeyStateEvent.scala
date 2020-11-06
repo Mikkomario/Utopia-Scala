@@ -2,6 +2,7 @@ package utopia.genesis.event
 
 import java.awt.event.KeyEvent
 
+import utopia.genesis.shape.shape2D.Direction2D
 import utopia.inception.util.Filter
 
 object KeyStateEvent
@@ -84,6 +85,18 @@ case class KeyStateEvent(index: Int, location: KeyLocation, isDown: Boolean, key
       * @return Whether the key was just released
       */
     def isReleased = !isDown
+    
+    /**
+      * @return The direction of the arrow key that was changed. None if the change didn't affect an arrow key.
+      */
+    def arrow = index match
+    {
+        case KeyEvent.VK_RIGHT => Some(Direction2D.Right)
+        case KeyEvent.VK_LEFT => Some(Direction2D.Left)
+        case KeyEvent.VK_UP => Some(Direction2D.Up)
+        case KeyEvent.VK_DOWN => Some(Direction2D.Down)
+        case _ => None
+    }
     
     
     // IMPLEMENTED  -----------------

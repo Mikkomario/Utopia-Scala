@@ -25,6 +25,7 @@ new mutable mouse event handlers.
 - Added .minAlong(Axis2D), .maxAlong(Axis2D) and overlapsWith(Bounds) to Bounds
 - Added .translated(Vector2DLike) to Drawer
 - Added Image.draw(...) method which can be used for drawing custom images
+- Added .arrow to KeyStateEvent
 ### Fixes
 - Dimensional.toMap now properly returns a Map
 ### Other Changes

@@ -200,6 +200,57 @@ object CollectionExtensions
             else
                 None
         }
+    
+        /**
+          * @param f A mapping function
+          * @param order Ordering for mapped values
+          * @tparam B Type of map result
+          * @return The index in this sequence that contains the largest value when mapped
+          * @throws NoSuchElementException If this sequence is empty
+          */
+        @throws[NoSuchElementException]("Throws when called for an empty sequence")
+        def maxIndexBy[B](f: A => B)(implicit order: Ordering[B]) =
+        {
+            var maxIndex = 0
+            var maxResult = f(seq.head)
+            seq.indices.drop(1).foreach { index =>
+                val result = f(seq(index))
+                if (order.compare(result, maxResult) > 0)
+                {
+                    maxIndex = index
+                    maxResult = result
+                }
+            }
+            maxIndex
+        }
+    
+        /**
+          * @param f A mapping function
+          * @param order Ordering for mapped values
+          * @tparam B Type of map result
+          * @return The index in this sequence that contains the smallest value when mapped
+          * @throws NoSuchElementException If this sequence is empty
+          */
+        @throws[NoSuchElementException]("Throws when called for an empty sequence")
+        def minIndexBy[B](f: A => B)(implicit order: Ordering[B]) = maxIndexBy(f)(order.reverse)
+    
+        /**
+          * @param f A mapping function
+          * @param order Ordering for mapped values
+          * @tparam B Type of map result
+          * @return The index in this sequence that contains the largest value when mapped.
+          *         None if this sequence is empty.
+          */
+        def maxOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) = if (seq.isEmpty) None else Some(maxIndexBy(f))
+    
+        /**
+          * @param f A mapping function
+          * @param order Ordering for mapped values
+          * @tparam B Type of map result
+          * @return The index in this sequence that contains the smallest value when mapped.
+          *         None if this sequence is empty.
+          */
+        def minOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) = maxOptionIndexBy(f)(order.reverse)
         
         /**
           * @return A version of this seq with consecutive items paired. Each item will be present twice in the returned

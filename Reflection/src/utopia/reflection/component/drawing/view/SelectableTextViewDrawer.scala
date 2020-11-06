@@ -1,10 +1,11 @@
 package utopia.reflection.component.drawing.view
 
 import utopia.flow.datastructure.immutable.View
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.datastructure.template.Viewable
 import utopia.flow.event.Changing
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.genesis.shape.shape2D.{Bounds, Point, Vector2D}
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.{DrawLevel, SelectableTextDrawerLike}
@@ -25,6 +26,8 @@ case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePo
 	extends SelectableTextDrawerLike
 {
 	// ATTRIBUTES	------------------------------
+	
+	override protected val lastDrawStatusPointer = new PointerWithEvents(Point.origin -> Vector2D.identity)
 	
 	val drawTargetsPointer = textPointer.lazyMergeWith(selectedRangesPointer) { _.drawTargets(_) }
 	val caretPointer = textPointer.lazyMergeWith(caretPositionPointer) { (text, caretPosition) =>

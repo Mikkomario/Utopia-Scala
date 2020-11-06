@@ -98,6 +98,81 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	}
 	
 	/**
+	  * @param position A position relative to the text top left position
+	  * @return The index of the closest text line and the index of the closest caret on that line
+	  */
+	def caretIndexClosestTo(position: Point) =
+	{
+		if (isEmpty)
+			0 -> 0
+		else
+		{
+			// Finds the line that is closest to the specified position
+			val lineIndex =
+			{
+				if (lines.size > 1)
+					lineBounds.minIndexBy { b =>
+						if (b.y > position.y)
+							b.y - position.y
+						else if (b.bottomY > position.y)
+							position.y - b.bottomY
+						else
+							0.0
+					}
+				else
+					0
+			}
+			// Finds the caret index on the line that is closes to the specified position
+			val indexOnLine = carets(lineIndex).minIndexBy { c => (c.start.x - position.x).abs }
+			lineIndex -> indexOnLine
+		}
+	}
+	
+	/**
+	  * @param index Target caret index
+	  * @return A caret index above the specified index. None if there are no lines above the specified index.
+	  */
+	def caretIndexAbove(index: Int) =
+	{
+		val (lineIndex, indexOnLine) = mapIndex(index)
+		if (lineIndex > 0)
+		{
+			// Finds the specified caret's x-coordinate
+			val x = caretX(lineIndex, indexOnLine)
+			// Finds the caret above the specified coordinate
+			carets(lineIndex - 1).minOptionIndexBy { c => (c.start.x - x).abs }
+		}
+		else
+			None
+	}
+	
+	/**
+	  * @param index Target caret index
+	  * @return A caret index below the specified index. None if there are no lines below the specified index.
+	  */
+	def caretIndexBelow(index: Int) =
+	{
+		val (lineIndex, indexOnLine) = mapIndex(index)
+		if (lineIndex < lines.size - 1)
+		{
+			val x = caretX(lineIndex, indexOnLine)
+			carets(lineIndex + 1).minOptionIndexBy { c => (c.start.x - x).abs }
+		}
+		else
+			None
+	}
+	
+	private def caretX(lineIndex: Int, caretIndexOnLine: Int) =
+	{
+		if (caretIndexOnLine < 0)
+			lineBounds(lineIndex).x
+		else if (caretIndexOnLine >= carets(lineIndex).size)
+			lineBounds(lineIndex).rightX
+		else
+			carets(lineIndex)(caretIndexOnLine).start.x
+	}
+	
+	/**
 	  * Finds information about a sub-string within this text
 	  * @param start The first <b>included</b> string index
 	  * @param end The first <b>excluded</b> string index (default = end of string)
@@ -167,6 +242,13 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 			lineIndex -> (index - lineStartIndices(lineIndex))
 		}
 	}
+	
+	/**
+	  * @param lineIndex Index of the targeted line
+	  * @param indexOnLine Index on the specified line
+	  * @return An index in the text
+	  */
+	def mapIndex(lineIndex: Int, indexOnLine: Int) = _lines.take(lineIndex).map { _.length }.sum + indexOnLine
 	
 	/**
 	  * @param highlightedRanges Areas within this text to highlight

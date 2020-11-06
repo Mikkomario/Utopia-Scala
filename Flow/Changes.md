@@ -19,15 +19,17 @@ in a lazy container is not required or desirable
 ### New Methods
 - Added .notCompletingBefore(Future) to Future in AsyncExtensions
 - Added .subRangeIterator(Int) to Range.Inclusive in CollectionExtensions
+- Added .takeRightWhile(...), maxIndexBy(...), minIndexBy(...), maxOptionIndexBy(...) and minOptionIndexBy(...) to 
+Seq in CollectionExtensions
+- Added new .slice(Range) and .cut(Range) to String though StringExtensions
+- Added .toPreciseMinutes, .toPreciseHours, .toPreciseDays and .toPreciseWeeks to Duration in TimeExtensions
 - Added .getAndUpdate(...) to Volatile
 - Added .delayedBy(Duration) to Changing
 - Added .mapAsync(...), .tryMapAsync(...), .mapAsyncCatching(...) and .mapAsyncMerging(...) to Changing
-- Added .toPreciseMinutes, .toPreciseHours, .toPreciseDays and .toPreciseWeeks to Duration in TimeExtensions
 - Added .current() to WeekDay
-- Added .takeRightWhile(...) to Seq in CollectionExtensions
 - Added .popAll() to VolatileList
 - Added .compareBy(...), .compareWith(...), .merge(...) and .mergeBy(...) methods to ChangeEvent
-- Added new .apply(Range) and .cut(Range) to String though StringExtensions
+
 ### Fixes
 - Fixed a bug in LocalDate.next(WeekDay) and LocalDate.previous(WeekDay) (returned same day even when 
 includeSelf-parameter was set to false)

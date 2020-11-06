@@ -15,7 +15,7 @@
 - Moved ButtonState from utopia.reflection.component.swing.button -package to utopia.reflection.event -package
 - ColorContext.forTextComponents doesn't accept parameters anymore (except for the implicit localizer)
 ### New Methods
-- Added .hasSameDimensionsAs(TextDrawContext) to TextDrawContext
+- Added .hasSameDimensionsAs(TextDrawContext), .mapFont(...) and .mapColor(...) to TextDrawContext
 ### Fixes
 - Alignment.position(...) now properly takes parameter bounds position into account
 - Fixed a small bug where Window content size wouldn't update correctly

@@ -1,7 +1,8 @@
 package utopia.reflection.component.drawing.template
 
+import utopia.flow.datastructure.mutable.Settable
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Bounds, Point, Transformation}
+import utopia.genesis.shape.shape2D.{Bounds, Point, Transformation, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.{Font, MeasuredText}
@@ -14,6 +15,11 @@ import utopia.reflection.text.{Font, MeasuredText}
 trait SelectableTextDrawerLike extends CustomDrawer
 {
 	// ABSTRACT	---------------------------------
+	
+	/**
+	  * @return A pointer that can store the latest draw settings (text top left position + scaling)
+	  */
+	protected def lastDrawStatusPointer: Settable[(Point, Vector2D)]
 	
 	/**
 	  * @return The text being drawn
@@ -74,6 +80,16 @@ trait SelectableTextDrawerLike extends CustomDrawer
 	  */
 	def betweenLinesMargin = text.context.marginBetweenLines
 	
+	/**
+	  * @return The position where the text was drawn the last time (relative to draw origin)
+	  */
+	def lastDrawPosition = lastDrawStatusPointer.value._1
+	
+	/**
+	  * @return 2D Scaling applied the last time the text was drawn
+	  */
+	def lastDrawScaling = lastDrawStatusPointer.value._2
+	
 	
 	// IMPLEMENTED	-----------------------------
 	
@@ -85,6 +101,8 @@ trait SelectableTextDrawerLike extends CustomDrawer
 			// Calculates draw bounds and possible scaling
 			val textArea = alignment.position(text.size, bounds, insets)
 			val scaling = (textArea.size / bounds.size).toVector
+			// Updates recorded text draw settings
+			lastDrawStatusPointer.value = textArea.position -> scaling
 			// Applies transformation during the whole drawing process
 			drawer.transformed(Transformation.position(textArea.position).scaled(scaling)).disposeAfter { drawer =>
 				// Draws highlight backgrounds, if applicable

@@ -49,7 +49,7 @@ object StringExtensions
 		  * @param range A range
 		  * @return The portion of this string which falls into the specified range
 		  */
-		def apply(range: Range) =
+		def slice(range: Range) =
 		{
 			if (range.isEmpty)
 				""
