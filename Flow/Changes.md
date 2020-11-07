@@ -21,7 +21,7 @@ in a lazy container is not required or desirable
 - Added .subRangeIterator(Int) to Range.Inclusive in CollectionExtensions
 - Added .takeRightWhile(...), maxIndexBy(...), minIndexBy(...), maxOptionIndexBy(...) and minOptionIndexBy(...) to 
 Seq in CollectionExtensions
-- Added new .slice(Range) and .cut(Range) to String though StringExtensions
+- Added new .slice(Range), .cut(Range) and .stripControlCharacters to String though StringExtensions
 - Added .toPreciseMinutes, .toPreciseHours, .toPreciseDays and .toPreciseWeeks to Duration in TimeExtensions
 - Added .getAndUpdate(...) to Volatile
 - Added .delayedBy(Duration) to Changing

@@ -9,12 +9,19 @@ import utopia.flow.datastructure.mutable.ResettableLazy
  */
 object StringExtensions
 {
+	private val space = ' '
+	
 	/**
 	 * Extends standard scala string
 	 * @param s String to extend
 	 */
 	implicit class ExtendedString(val s: String) extends AnyVal
 	{
+		/**
+		  * @return A copy of this string with all control characters (\t, \n, \r and so forth) removed
+		  */
+		def stripControlCharacters = s.filter { _ >= space }
+		
 		/**
 		 * @return Words that belong to this string. <b>This includes all non-whitespace characters but not newline characters</b>
 		 */

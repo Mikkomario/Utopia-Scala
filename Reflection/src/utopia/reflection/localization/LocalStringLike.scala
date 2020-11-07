@@ -1,5 +1,7 @@
 package utopia.reflection.localization
 
+import utopia.flow.util.StringExtensions._
+
 /**
   * This trait handles commonalities between different localization strings
   * @author Mikko Hilpinen
@@ -24,6 +26,12 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	  *         (like a number or a whitespace, etc.)
 	  */
 	def languageCode: Option[String]
+	
+	/**
+	  * @param f A string modification function
+	  * @return A modified copy of this string
+	  */
+	def modify(f: String => String): Repr
 	
 	/**
 	  * Adds another string to this string
@@ -78,6 +86,11 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	  * @return This string split on newline characters
 	  */
 	def lines = split("\r?\n|\r")
+	
+	/**
+	  * @return A copy of this string without any control characters in it
+	  */
+	def stripControlCharacters = modify { _.stripControlCharacters }
 	
 	
 	// IMPLEMENTED	----------

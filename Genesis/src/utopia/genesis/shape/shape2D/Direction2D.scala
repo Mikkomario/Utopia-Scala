@@ -41,10 +41,29 @@ sealed trait Direction2D
 	// COMPUTED	--------------------------------
 	
 	/**
+	  * @return This direction if it is horizontal. None otherwise.
+	  */
+	def horizontal = along(X)
+	
+	/**
+	  * @return This direction if it is vertical. None otherwise.
+	  */
+	def vertical = along(Y)
+	
+	/**
 	  * @return Whether this side resides at the positive (true) or the negative (false) side of the axis
 	  */
 	@deprecated("Please use sign instead", "v2.3")
 	def isPositiveDirection = sign.isPositive
+	
+	
+	// OTHER	--------------------------------
+	
+	/**
+	  * @param axis Target axis
+	  * @return This direction, if it is parallel to the specified axis. None otherwise.
+	  */
+	def along(axis: Axis2D) = if (axis == this.axis) Some(this) else None
 }
 
 object Direction2D

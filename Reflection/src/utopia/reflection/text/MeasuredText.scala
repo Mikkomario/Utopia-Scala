@@ -1,7 +1,10 @@
 package utopia.reflection.text
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.shape.shape2D.{Bounds, Line, Point}
+import utopia.genesis.shape.Axis.{X, Y}
+import utopia.genesis.shape.shape1D.Direction1D
+import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
+import utopia.genesis.shape.shape2D.{Bounds, Direction2D, Line, Point}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 
@@ -25,8 +28,18 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	/**
 	  * Individual lines of text
 	  */
-	lazy val lines = if (allowLineBreaks) text.lines else Vector(text)
-	private lazy val _lines = lines.map { _.string.stripLineEnd }
+	lazy val lines =
+	{
+		if (allowLineBreaks)
+		{
+			// Makes sure the line breaks at the end of the text are also included
+			val lineBreaksAtEnd = text.string.reverseIterator.takeWhile { _ == '\n' }.size
+			text.lines.map { _.stripControlCharacters } ++ Vector.fill(lineBreaksAtEnd) { LocalizedString.empty }
+		}
+		else
+			Vector(text.stripControlCharacters)
+	}
+	private lazy val _lines = lines.map { _.string }
 	
 	lazy val (firstLineCaretIndices, lastLineCaretIndices) =
 	{
@@ -80,6 +93,11 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	  */
 	def height = size.height
 	
+	/**
+	  * @return The largest allowed caret index
+	  */
+	def maxCaretIndex = text.string.length
+	
 	
 	// OTHER	---------------------------------------
 	
@@ -87,7 +105,7 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	  * @param index A proposed string index
 	  * @return Whether that string index is a possible caret index
 	  */
-	def isValidCaretIndex(index: Int) = index >= 0 && index <= text.string.length
+	def isValidCaretIndex(index: Int) = index >= 0 && index <= maxCaretIndex
 	
 	/**
 	  * @param index Target string index
@@ -157,34 +175,56 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	  * @param index Target caret index
 	  * @return A caret index above the specified index. None if there are no lines above the specified index.
 	  */
-	def caretIndexAbove(index: Int) =
-	{
-		val (lineIndex, indexOnLine) = mapCaretIndex(index)
-		if (lineIndex > 0)
-		{
-			// Finds the specified caret's x-coordinate
-			val x = caretX(lineIndex, indexOnLine)
-			// Finds the caret above the specified coordinate
-			carets(lineIndex - 1).minOptionIndexBy { c => (c.start.x - x).abs }
-		}
-		else
-			None
-	}
+	def caretIndexAbove(index: Int) = caretIndexParallelTo(index, Negative)
 	
 	/**
 	  * @param index Target caret index
 	  * @return A caret index below the specified index. None if there are no lines below the specified index.
 	  */
-	def caretIndexBelow(index: Int) =
+	def caretIndexBelow(index: Int) = caretIndexParallelTo(index, Positive)
+	/**
+	  * Finds the caret index that is above or below a specified caret index
+	  * @param caretIndex A caret index
+	  * @param direction Vertical direction sign towards which the caret is moved
+	  * @return The next caret index. None if there are no lines in that direction
+	  */
+	def caretIndexParallelTo(caretIndex: Int, direction: Direction1D): Option[Int] =
 	{
-		val (lineIndex, indexOnLine) = mapCaretIndex(index)
-		if (lineIndex < lines.size - 1)
+		val (lineIndex, indexOnLine) = mapCaretIndex(caretIndex)
+		caretIndexParallelTo(lineIndex, indexOnLine, direction).map { case (lineIndex, indexOnLine) =>
+			mapCaretIndex(lineIndex, indexOnLine)
+		}
+	}
+	
+	/**
+	  * Finds the caret index that is above or below a specified caret index
+	  * @param lineIndex Index of the targeted line
+	  * @param indexOnLine Relative caret index on that line
+	  * @param direction Vertical direction sign towards which the caret is moved
+	  * @return The next line and relative caret index. None if there are no lines in that direction
+	  */
+	def caretIndexParallelTo(lineIndex: Int, indexOnLine: Int, direction: Direction1D) =
+	{
+		val nextLineIndex = lineIndex + 1 * direction.modifier
+		if (nextLineIndex < 0 || nextLineIndex > lines.size - 1)
+			None
+		else
 		{
 			val x = caretX(lineIndex, indexOnLine)
-			carets(lineIndex + 1).minOptionIndexBy { c => (c.start.x - x).abs }
+			carets(nextLineIndex).minOptionIndexBy { c => (c.start.x - x).abs }.map { nextLineIndex -> _ }
 		}
-		else
-			None
+	}
+	
+	/**
+	  * Finds the caret index that is next in line to a specific direction
+	  * @param index Starting caret index
+	  * @param direction Direction of movement
+	  * @return The next caret index. None if there are no available indices to that direction.
+	  */
+	def caretIndexNextTo(index: Int, direction: Direction2D) = direction.axis match
+	{
+		case X => Some(index + 1 * direction.sign.modifier).filter(isValidCaretIndex)
+		case Y => caretIndexParallelTo(index, direction.sign)
 	}
 	
 	private def caretX(lineIndex: Int, caretIndexOnLine: Int) =
@@ -419,7 +459,7 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 						// Adds space between the two highlights, if applicable
 						lastHighlightEnd.foreach { case (lastEndIndex, lastEndPosition) =>
 							if (lastEndIndex < startIndex)
-								normalStringsBuffer += (subString(lastEndIndex, startIndex) -> lastEndPosition)
+								normalStringsBuffer += (string.substring(lastEndIndex, startIndex) -> lastEndPosition)
 						}
 						val startCaret = caretAt(lineIndex, startIndex)
 						endIndex match
@@ -427,12 +467,13 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 							// Case: Highlight doesn't span the whole line
 							case Some(endIndex) =>
 								val endCaret = caretAt(lineIndex, endIndex)
-								highlightedStringsBuffer += (subString(startIndex, endIndex) ->
+								// FIXME: Throws an index out of bounds (on ctrl + X)
+								highlightedStringsBuffer += (string.substring(startIndex, endIndex) ->
 									Bounds.between(startCaret.start, endCaret.end))
 								lastHighlightEnd = Some(endIndex -> endCaret.start)
 							// Case: Highlight takes the rest of the line
 							case None =>
-								highlightedStringsBuffer += (subString(startIndex, lastLineCaretIndices(lineIndex)) ->
+								highlightedStringsBuffer += (string.substring(startIndex) ->
 									Bounds.between(startCaret.start, lineBounds(lineIndex).bottomRight))
 								lastHighlightEnd = None
 						}

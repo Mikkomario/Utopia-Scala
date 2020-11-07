@@ -12,7 +12,6 @@ import utopia.genesis.color.Color
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, KeyStatus, KeyTypedEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{Actor, KeyStateListener, KeyTypedHandlerType, KeyTypedListener, MouseButtonStateListener, MouseMoveHandlerType, MouseMoveListener}
-import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Direction2D, Point}
@@ -154,7 +153,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		MeasuredText(text.noLanguageLocalizationSkipped, FontMetricsContext(fontMetrics(style.font),
 			style.betweenLinesMargin), style.alignment, allowLineBreaks)
 	}
-	private val caretIndexPointer = new PointerWithEvents(textPointer.value.length - 1)
+	private val caretIndexPointer = new PointerWithEvents(measuredText.maxCaretIndex)
 	private val caretVisibilityPointer = new PointerWithEvents(false)
 	private val drawnCaretPointer = caretIndexPointer.mergeWith(caretVisibilityPointer) { (index, isVisible) =>
 		if (isVisible && selectable) Some(index) else None }
@@ -164,6 +163,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		selectedRangePointer.map { _.map { case (start, end) => if (start < end) start to end else end to start } },
 		drawnCaretPointer, selectedTextColorPointer, selectionBackgroundColorPointer, caretColor, caretWidth)
 	private val repaintListener: ChangeListener[Any] = _ => repaint()
+	private val showCaretListener: ChangeListener[Any] = _ => CaretBlinker.show()
 	
 	
 	// INITIAL CODE	-------------------------------
@@ -201,6 +201,10 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	selectedRangePointer.addListener(repaintListener)
 	selectedTextColorPointer.addListener(repaintListener)
 	selectionBackgroundColorPointer.addListener(repaintListener)
+	
+	// Whenever text changes or caret position is updated, shows the caret
+	caretIndexPointer.addListener(showCaretListener)
+	textPointer.addListener(showCaretListener)
 	
 	
 	// COMPUTED	-----------------------------------
@@ -279,7 +283,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	/**
 	  * Moves caret to the end of this label's current text
 	  */
-	def moveCaretToEnd() = caretIndexPointer.value = textPointer.value.length - 1
+	def moveCaretToEnd() = caretIndexPointer.value = measuredText.maxCaretIndex
 	
 	/**
 	  * Adds a new condition to be tested before allowing focus leave from this component
@@ -336,24 +340,20 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		else
 		{
 			val previousIndex = caretIndex
-			(direction.axis match
+			val nextIndex =
 			{
-				case X =>
-					if (jumpWord)
+				// Word jump feature is only supported on the horizontal direction
+				if (jumpWord)
+				{
+					if (direction.isHorizontal)
 						skipWord(previousIndex, direction.sign)
 					else
-						direction.sign match
-						{
-							case Positive => if (previousIndex < _text.length) Some(previousIndex + 1) else None
-							case Negative => if (previousIndex > 0) Some(previousIndex - 1) else None
-						}
-				case Y =>
-					direction.sign match
-					{
-						case Positive => measuredText.caretIndexBelow(previousIndex)
-						case Negative => measuredText.caretIndexAbove(previousIndex)
-					}
-			}).foreach { newIndex =>
+						None
+				}
+				else
+					measuredText.caretIndexNextTo(previousIndex, direction)
+			}
+			nextIndex.foreach { newIndex =>
 				// Moves the caret
 				caretIndex = newIndex
 				// Updates text selection, if specified
@@ -417,13 +417,11 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		
 		override def onFocusChangeEvent(event: FocusChangeEvent) =
 		{
-			println(s"Focus event: $event")
-			
 			hasFocus = event.hasFocus
 			if (hasFocus)
 			{
 				moveCaretToEnd()
-				CaretBlinker.resetCounter()
+				CaretBlinker.show()
 				clearSelection()
 			}
 		}
@@ -454,6 +452,12 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		// OTHER	------------------------------
 		
 		def resetCounter() = passedDuration = Duration.Zero
+		
+		def show() =
+		{
+			caretVisibilityPointer.value = true
+			resetCounter()
+		}
 	}
 	
 	private object KeyListener extends KeyTypedListener with KeyStateListener with ClipboardOwner
@@ -461,7 +465,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		// ATTRIBUTES	--------------------------
 		
 		var keyStatus = KeyStatus.empty
-		private val ignoredOnType = Set(KeyEvent.VK_ENTER, KeyEvent.VK_BACK_SPACE, KeyEvent.VK_DELETE)
+		private val ignoredOnType = Set(KeyEvent.VK_ENTER, KeyEvent.VK_BACK_SPACE, KeyEvent.VK_DELETE, KeyEvent.VK_TAB)
 		
 		
 		// COMPUTED	------------------------------
@@ -475,7 +479,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		override def onKeyTyped(event: KeyTypedEvent) =
 		{
 			// Skips cases handled by key state listening
-			if (!event.keyStatus.control && !ignoredOnType.contains(event.index))
+			if (!ignoredOnType.contains(event.index) && font.toAwt.canDisplay(event.typedChar))
 			{
 				// Inserts the typed character into the string (if accepted by the content filter)
 				if (inputFilter.forall { _(event.typedChar.toString) })

@@ -85,6 +85,8 @@ case class LocalizedString(original: LocalString, localized: Option[LocalString]
 	
 	override def languageCode = targetLanguageCode orElse sourceLanguageCode
 	
+	override def modify(f: String => String) = LocalizedString(original.modify(f), localized.map { _.modify(f) })
+	
 	override def +(other: LocalizedString) = LocalizedString(original + other.original, displayed + other.displayed)
 	
 	override def split(regex: String) =

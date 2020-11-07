@@ -92,6 +92,8 @@ case class LocalString(override val string: String, override val languageCode: O
 	
 	override def repr = this
 	
+	override def modify(f: String => String) = copy(string = f(string))
+	
 	override def +(other: LocalString) =
 	{
 		val newCode =
