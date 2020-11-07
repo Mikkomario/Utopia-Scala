@@ -2,12 +2,14 @@ package utopia.reflection.test
 
 import java.awt.event.KeyEvent
 
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.KeyStateListener
 import utopia.reflection.color.ColorRole.Primary
 import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.component.reach.factory.Mixed
+import utopia.reflection.component.reach.input.EditableTextLabel
 import utopia.reflection.component.reach.label.{ContextualMutableTextLabelFactory, MutableTextLabel, TextLabel}
 import utopia.reflection.container.reach.{Framing, Stack}
 import utopia.reflection.container.swing.ReachCanvas
@@ -30,27 +32,27 @@ object ReachComponentTest extends App
 	
 	val result = ReachCanvas { canvasHierarchy =>
 		val (stack, _, label) = Stack(canvasHierarchy).withContext(baseContext.withStackMargin(StackLength.fixedZero))
-			.builder(Mixed).column() { factories =>
+			.build(Mixed).column() { factories =>
 			
-			val (framing, label) = factories.withoutContext(Framing).builderWithMappedContext[ColorContext,
+			val (framing, label) = factories.withoutContext(Framing).buildWithMappedContext[ColorContext,
 				TextContext, ContextualMutableTextLabelFactory](MutableTextLabel, baseContext) {
 				_.forTextComponents.withTextAlignment(Alignment.Center) }
 				.withBackground(colorScheme.secondary.light, margins.medium.any) { labelFactory =>
 					labelFactory.withBackground("Hello!", Primary)
 				}.toTuple
-			/*
-			val (framing, label) = factories(Framing).builder(MutableTextLabel)
-				.withBackground(colorScheme.secondary.light, margins.medium.any) { (labelFactory, context) =>
-					context.forTextComponents(Alignment.Center).use { implicit context =>
-						labelFactory.contextual.withBackground("Hello!", Primary)
-					}
-				}(baseContext).toTuple*/
+			
 			// TODO: The second label "twitches" on content updates
 			val label2 = factories.withContext(baseContext.inContextWithBackground(colorScheme.primary)
 				.forTextComponents.withTextAlignment(Alignment.Center))(TextLabel)
 				.withCustomBackground("Hello 2\nThis label contains 2 lines", colorScheme.primary)
 			
-			Vector(framing, label2) -> label
+			val editLabelFraming = factories.withoutContext(Framing)
+				.buildWithMappedContext(EditableTextLabel, baseContext) {
+					_.forTextComponents.withTextAlignment(Alignment.Center) }
+				.withBackground(colorScheme.primary.light, margins.medium.any) {
+					_(new PointerWithEvents("Type Here")) }.parent
+			
+			Vector(framing, label2, editLabelFraming) -> label
 		}.toTriple
 		
 		stack -> label

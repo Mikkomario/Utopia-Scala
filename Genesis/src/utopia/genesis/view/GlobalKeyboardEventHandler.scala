@@ -25,6 +25,7 @@ object GlobalKeyboardEventHandler
 	private lazy val handlers = HandlerRelay(keyStateHandler, keyTypedHandler)
 	
 	private var _keyStatus = KeyStatus.empty
+	private var lastPressedKeyIndex = 0
 	
 	
 	// INITIAL CODE	-----------------
@@ -32,11 +33,14 @@ object GlobalKeyboardEventHandler
 	// Starts listening to dispatched keyboard events
 	KeyboardFocusManager.getCurrentKeyboardFocusManager.addKeyEventDispatcher((e: KeyEvent) => {
 		if (e.getID == KeyEvent.KEY_PRESSED)
+		{
+			lastPressedKeyIndex = e.getExtendedKeyCode
 			keyStateChanged(e, newState = true)
+		}
 		else if (e.getID == KeyEvent.KEY_RELEASED)
 			keyStateChanged(e, newState = false)
 		else if (e.getID == KeyEvent.KEY_TYPED)
-			keyTypedHandler.onKeyTyped(KeyTypedEvent(e.getKeyChar, _keyStatus))
+			keyTypedHandler.onKeyTyped(KeyTypedEvent(e.getKeyChar, lastPressedKeyIndex, _keyStatus))
 		
 		false
 	})

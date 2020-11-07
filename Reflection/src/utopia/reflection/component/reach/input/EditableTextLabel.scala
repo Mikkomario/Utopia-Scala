@@ -311,6 +311,17 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		}
 	}
 	
+	private def removeAt(index: Int) =
+	{
+		if (index >= 0)
+			textPointer.update { old =>
+				if (index < old.length)
+					old.take(index) + old.drop(index + 1)
+				else
+					old
+			}
+	}
+	
 	private def moveCaret(direction: Direction2D, selecting: Boolean = false, jumpWord: Boolean = false) =
 	{
 		if (selectedRange.nonEmpty && !selecting)
@@ -441,6 +452,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		// ATTRIBUTES	--------------------------
 		
 		var keyStatus = KeyStatus.empty
+		private val ignoredOnType = Set(KeyEvent.VK_ENTER, KeyEvent.VK_BACK_SPACE, KeyEvent.VK_DELETE)
 		
 		
 		// COMPUTED	------------------------------
@@ -453,9 +465,13 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		
 		override def onKeyTyped(event: KeyTypedEvent) =
 		{
-			// Inserts the typed character into the string (if accepted by the content filter)
-			if (inputFilter.forall { _(event.typedChar.toString) })
-				insertToCaret(event.typedChar.toString)
+			// Skips cases handled by key state listening
+			if (!event.keyStatus.control && !ignoredOnType.contains(event.index))
+			{
+				// Inserts the typed character into the string (if accepted by the content filter)
+				if (inputFilter.forall { _(event.typedChar.toString) })
+					insertToCaret(event.typedChar.toString)
+			}
 		}
 		
 		override def onKeyState(event: KeyStateEvent) =
@@ -471,6 +487,17 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 						// Inserts a line-break on enter (if enabled)
 						if (allowLineBreaks && event.index == KeyEvent.VK_ENTER)
 							insertToCaret("\n")
+						// Removes a character on backspace / delete
+						else if (event.index == KeyEvent.VK_BACK_SPACE)
+						{
+							if (caretIndex > 0)
+							{
+								removeAt(caretIndex - 1)
+								caretIndex -= 1
+							}
+						}
+						else if (event.index == KeyEvent.VK_DELETE)
+							removeAt(caretIndex)
 						// Listens to shortcut keys (ctrl + C, V or X)
 						else if (event.keyStatus.control)
 						{

@@ -123,7 +123,7 @@ case class ContextualStackFactory[N <: BaseContextLike](stackFactory: StackFacto
 	  * @tparam F Type of contextual content factories
 	  * @return A new stack builder that uses the same context as in this factory
 	  */
-	def builder[F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	def build[F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 	(contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F]) =
 		new ContextualStackBuilder(this, contentFactory)
 	

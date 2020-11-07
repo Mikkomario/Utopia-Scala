@@ -88,12 +88,32 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	{
 		if (isEmpty)
 			Line(Point.origin, Point(0, context.lineHeight))
+			/*
 		else if (index >= text.string.length)
-			carets.last.last
+			carets.last.last*/
 		else
 		{
 			val (lineIndex, indexOnLine) = mapIndex(index)
-			carets(lineIndex)(indexOnLine)
+			// FIXME: 20 is out of bounds (0 - 15 allowed), probably in line vector (occurs when drawing caret line)
+			/*
+			println(s"Targeting index $index -> $indexOnLine on $lineIndex")
+			println(s"Max index (text length) is ${text.string.length}")
+			println(s"Printing ${carets.size} caret lines:")
+			carets.foreach { carets => println(s"- ${carets.size} caret positions") }*/
+			if (lineIndex < 0)
+				carets.head.head
+			else if (lineIndex >= carets.size)
+				carets.last.last
+			else
+			{
+				val line = carets(lineIndex)
+				if (indexOnLine < 0)
+					line.head
+				else if (indexOnLine >= line.size)
+					line.last
+				else
+					line(indexOnLine)
+			}
 		}
 	}
 	
@@ -238,7 +258,7 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 		else
 		{
 			// Finds the correct line first
-			val lineIndex = lineEndIndices.indexWhereOption { _ > index }.getOrElse(lines.size - 1)
+			val lineIndex = lineEndIndices.indexWhereOption { _ >= index }.getOrElse(lines.size - 1)
 			lineIndex -> (index - lineStartIndices(lineIndex))
 		}
 	}
@@ -310,7 +330,7 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 								val endCaret = carets(lineIndex)(endIndex)
 								highlightedStringsBuffer += (string.substring(startIndex, endIndex) ->
 									Bounds.between(startCaret.start, endCaret.end))
-								lastHighlightEnd = Some(endIndex -> endCaret.end)
+								lastHighlightEnd = Some(endIndex -> endCaret.start)
 							// Case: Highlight takes the rest of the line
 							case None =>
 								highlightedStringsBuffer += (string.substring(startIndex) ->

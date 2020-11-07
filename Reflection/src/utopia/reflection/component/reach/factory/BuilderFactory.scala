@@ -14,5 +14,5 @@ trait BuilderFactory[+Builder[+FF]]
 	  * @tparam FF Type of content factory factory used
 	  * @return A new container builder
 	  */
-	def builder[FF](contentFactory: ComponentFactoryFactory[FF]): Builder[FF]
+	def build[FF](contentFactory: ComponentFactoryFactory[FF]): Builder[FF]
 }

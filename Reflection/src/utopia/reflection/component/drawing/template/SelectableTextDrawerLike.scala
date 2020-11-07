@@ -98,9 +98,15 @@ trait SelectableTextDrawerLike extends CustomDrawer
 		val (normalDrawTargets, highlightedTargets) = drawTargets
 		if (normalDrawTargets.nonEmpty || highlightedTargets.nonEmpty)
 		{
+			// TODO: Remove test prints
+			if (highlightedTargets.nonEmpty)
+			{
+				println(s"Normal targets: [${normalDrawTargets.mkString(", ")}]\nHighlighted targets: [${highlightedTargets.mkString(", ")}]")
+			}
+			
 			// Calculates draw bounds and possible scaling
 			val textArea = alignment.position(text.size, bounds, insets)
-			val scaling = (textArea.size / bounds.size).toVector
+			val scaling = (textArea.size / text.size).toVector
 			// Updates recorded text draw settings
 			lastDrawStatusPointer.value = textArea.position -> scaling
 			// Applies transformation during the whole drawing process

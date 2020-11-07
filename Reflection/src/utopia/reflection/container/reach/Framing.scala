@@ -22,7 +22,7 @@ case class FramingFactory(parentHierarchy: ComponentHierarchy) extends BuilderFa
 {
 	// IMPLEMENTED	------------------------------
 	
-	override def builder[F](contentFactory: ComponentFactoryFactory[F]) =
+	override def build[F](contentFactory: ComponentFactoryFactory[F]) =
 		FramingBuilder(this, contentFactory)
 	
 	
@@ -38,7 +38,7 @@ case class FramingFactory(parentHierarchy: ComponentHierarchy) extends BuilderFa
 	  * @return A new contextual framing builder
 	  */
 	// TODO: Cannot properly interpret these type parameters
-	def builderWithMappedContext[NT, NC <: BaseContextLike, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+	def buildWithMappedContext[NT, NC <: BaseContextLike, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
 	(contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F], context: BackgroundSensitive[NT])
 	(makeContext: NT => NC) =
 		new ContextualFramingBuilder[BackgroundSensitive[NT], NT, NC, F](context, this, contentFactory)(makeContext)
@@ -51,9 +51,9 @@ case class FramingFactory(parentHierarchy: ComponentHierarchy) extends BuilderFa
 	  * @tparam F Type of contextual content factory
 	  * @return A new contextual framing builder
 	  */
-	def builderWithContext[NC <: BaseContextLike, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+	def buildWithContext[NC <: BaseContextLike, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
 	(contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F], context: BackgroundSensitive[NC]) =
-		builderWithMappedContext[NC, NC, F](contentFactory, context) { c => c }
+		buildWithMappedContext[NC, NC, F](contentFactory, context) { c => c }
 	
 	/**
 	  * Creates a new framing
