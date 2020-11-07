@@ -20,6 +20,7 @@
     </JetCodeStyleSettings>
     <ScalaCodeStyleSettings>
       <option name="USE_SCALADOC2_FORMATTING" value="true" />
+      <option name="SPACES_IN_ONE_LINE_BLOCKS" value="true" />
       <option name="TYPE_ANNOTATION_PUBLIC_MEMBER" value="false" />
       <option name="TYPE_ANNOTATION_PROTECTED_MEMBER" value="false" />
       <option name="TYPE_ANNOTATION_UNIT_TYPE" value="false" />

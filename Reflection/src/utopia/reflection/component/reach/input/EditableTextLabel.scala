@@ -104,9 +104,11 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
 			  allowSelectionWhileDisabled: Boolean = true) =
 	{
 		val selectionBackground = context.color(Secondary, Light)
+		val caretColor = context.colorScheme.secondary.bestAgainst(
+			Vector(context.containerBackground, selectionBackground))
 		factory(context.actorHandler, new PointerWithEvents(TextDrawContext.contextual(context)),
 			Changing.wrap(selectionBackground.defaultTextColor), Changing.wrap(Some(selectionBackground)),
-			context.color(Secondary), (context.margins.verySmall / 2) max 1.0, caretBlinkFrequency, textPointer,
+			caretColor, (context.margins.verySmall / 2) max 1.0, caretBlinkFrequency, textPointer,
 			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, context.allowLineBreaks,
 			context.allowTextShrink)
 	}
@@ -157,6 +159,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	private val caretVisibilityPointer = new PointerWithEvents(false)
 	private val drawnCaretPointer = caretIndexPointer.mergeWith(caretVisibilityPointer) { (index, isVisible) =>
 		if (isVisible && selectable) Some(index) else None }
+	// Selected range is in caret indices
 	private val selectedRangePointer = new PointerWithEvents[Option[(Int, Int)]](None)
 	
 	private val drawer = SelectableTextViewDrawer(measuredTextPointer, effectiveStylePointer,
@@ -235,7 +238,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	}
 	
 	/**
-	  * @return Currently selected range of text. None if no range is selected
+	  * @return Currently selected range of text (in caret indices). None if no range is selected
 	  */
 	def selectedRange = selectedRangePointer.value.map { case (start, end) =>
 		if (start < end) start to end else end to start }
@@ -243,7 +246,9 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	/**
 	  * @return Currently selected text inside this label. None if no text is selected.
 	  */
-	def selectedText = selectedRange.map { _text.slice(_) }.filterNot { _.isEmpty }
+	def selectedText = selectedRange
+		.map { r => measuredText.caretIndexToCharacterIndex(r.start) until r.end }
+		.map { _text.slice(_) }.filterNot { _.isEmpty }
 	
 	def text_=(newText: String) = textPointer.value = newText
 	
@@ -299,27 +304,48 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	
 	private def insertToCaret(text: String) =
 	{
-		// May insert only part of the text, due to length limits
-		val textToInsert = maxLength match
+		// If a range of characters is selected, overwrites those, then removes the selection
+		selectedRange match
 		{
-			case Some(maxLength) =>
-				val remainingSpace = maxLength - _text.length
-				if (remainingSpace > 0)
+			case Some(selection) =>
+				val replaceText = maxLength match
 				{
-					if (remainingSpace > text.length) text else text.take(remainingSpace)
+					case Some(maxLength) =>
+						val availableSpace = maxLength - _text.length + selection.length
+						limitedLengthString(availableSpace, text)
+					case None => text
 				}
-				else
-					""
-			case None => text
+				val replaceStartCharIndex = measuredText.caretIndexToCharacterIndex(selection.start)
+				val replaceEndCharIndex = measuredText.caretIndexToCharacterIndex(selection.end)
+				clearSelection()
+				textPointer.update { old => old.take(replaceStartCharIndex) + replaceText + old.drop(replaceEndCharIndex) }
+				caretIndex = selection.start + replaceText.length
+			case None =>
+				// May insert only part of the text, due to length limits
+				val textToInsert = maxLength match
+				{
+					case Some(maxLength) => limitedLengthString(maxLength - _text.length, text)
+					case None => text
+				}
+				if (textToInsert.nonEmpty)
+				{
+					val (before, after) = textPointer.value.splitAt(caretIndex)
+					
+					textPointer.value = before + text + after
+					// Moves the caret to the end of the inserted string
+					caretIndexPointer.update { _ + text.length }
+				}
 		}
-		if (textToInsert.nonEmpty)
+	}
+	
+	private def limitedLengthString(maxLength: Int, original: String) =
+	{
+		if (maxLength > 0)
 		{
-			val (before, after) = textPointer.value.splitAt(caretIndex)
-			
-			textPointer.value = before + text + after
-			// Moves the caret to the end of the inserted string
-			caretIndexPointer.update { _ + text.length }
+			if (maxLength > original.length) original else original.take(maxLength)
 		}
+		else
+			""
 	}
 	
 	private def removeAt(index: Int) =
@@ -331,6 +357,17 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 				else
 					old
 			}
+	}
+	
+	private def removeSelectedText() =
+	{
+		selectedRange.foreach { selection =>
+			caretIndex = selection.start
+			val replaceStartCharIndex = measuredText.caretIndexToCharacterIndex(selection.start)
+			val replaceEndCharIndex = selection.end min _text.length
+			clearSelection()
+			textPointer.update { old => old.take(replaceStartCharIndex) + old.drop(replaceEndCharIndex) }
+		}
 	}
 	
 	private def moveCaret(direction: Direction2D, selecting: Boolean = false, jumpWord: Boolean = false) =
@@ -417,16 +454,20 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		
 		override def onFocusChangeEvent(event: FocusChangeEvent) =
 		{
+			// Tracks focus state
 			hasFocus = event.hasFocus
+			// Alters caret / selection on focus changes
 			if (hasFocus)
 			{
 				moveCaretToEnd()
 				CaretBlinker.show()
-				clearSelection()
 			}
+			else
+				clearSelection()
 		}
 	}
 	
+	// Switches between visible and invisible caret
 	private object CaretBlinker extends Actor
 	{
 		// ATTRIBUTES	--------------------------
@@ -453,6 +494,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		
 		def resetCounter() = passedDuration = Duration.Zero
 		
+		// Makes caret visible for the full duration / refreshes duration if already visible
 		def show() =
 		{
 			caretVisibilityPointer.value = true
@@ -503,23 +545,27 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 						// Removes a character on backspace / delete
 						else if (event.index == KeyEvent.VK_BACK_SPACE)
 						{
-							if (caretIndex > 0)
+							if (selectedRange.nonEmpty)
+								removeSelectedText()
+							else if (caretIndex > 0)
 							{
 								removeAt(caretIndex - 1)
 								caretIndex -= 1
 							}
 						}
 						else if (event.index == KeyEvent.VK_DELETE)
-							removeAt(caretIndex)
+						{
+							if (selectedRange.nonEmpty)
+								removeSelectedText()
+							else
+								removeAt(caretIndex)
+						}
 						// Listens to shortcut keys (ctrl + C, V or X)
 						else if (event.keyStatus.control)
 						{
 							if (event.index == KeyEvent.VK_C)
-								selectedText.filterNot {_.isEmpty}.foreach { selected =>
-									Try {
-										clipBoard.setContents(
-											new StringSelection(selected), this)
-									}
+								selectedText.filterNot { _.isEmpty }.foreach { selected =>
+									Try { clipBoard.setContents(new StringSelection(selected), this) }
 								}
 							else if (event.index == KeyEvent.VK_V && enabled)
 								Try {
@@ -537,15 +583,12 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 									}
 								}
 							else if (event.index == KeyEvent.VK_X && enabled)
-								selectedRange.foreach { range =>
-									val textBefore = textPointer.value
-									val (cut, remain) = textBefore.cut(range)
-									if (cut.nonEmpty) {
-										// Copies the cut content to the clip board. Will not remove the text if copy failed.
-										Try {clipBoard.setContents(new StringSelection(cut), this)} match {
-											case Success(_) => textPointer.value = remain
-											case Failure(_) => ()
-										}
+								selectedText.foreach { textToCopy =>
+									// Copies the cut content to the clip board. Will not remove the text if copy failed.
+									Try { clipBoard.setContents(new StringSelection(textToCopy), this) } match
+									{
+										case Success(_) => removeSelectedText()
+										case Failure(_) => ()
 									}
 								}
 						}
@@ -560,6 +603,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 			case _ => selectable
 		})
 		
+		// Called when clipboard contents are lost. Ignores this event
 		override def lostOwnership(clipboard: Clipboard, contents: Transferable) = ()
 	}
 	

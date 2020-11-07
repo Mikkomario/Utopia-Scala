@@ -157,7 +157,7 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 					lineBounds.minIndexBy { b =>
 						if (b.y > position.y)
 							b.y - position.y
-						else if (b.bottomY > position.y)
+						else if (b.bottomY < position.y)
 							position.y - b.bottomY
 						else
 							0.0
@@ -467,8 +467,7 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 							// Case: Highlight doesn't span the whole line
 							case Some(endIndex) =>
 								val endCaret = caretAt(lineIndex, endIndex)
-								// FIXME: Throws an index out of bounds (on ctrl + X)
-								highlightedStringsBuffer += (string.substring(startIndex, endIndex) ->
+								highlightedStringsBuffer += (string.substring(startIndex, endIndex min string.length) ->
 									Bounds.between(startCaret.start, endCaret.end))
 								lastHighlightEnd = Some(endIndex -> endCaret.start)
 							// Case: Highlight takes the rest of the line

@@ -98,7 +98,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	
 	// Also requires a full repaint when size changes
 	addResizeListener { event =>
-		currentContent.foreach { _.size = event.newSize }
+		// currentContent.foreach { _.size = event.newSize }
 		if (event.newSize.isPositive)
 			repaintNeed.setOne(Full)
 	}
@@ -128,10 +128,28 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	
 	override def updateLayout() =
 	{
+		// Updates content size
+		val contentSizeChanged = currentContent match
+		{
+			case Some(content) =>
+				val requiresSizeUpdate = content.size != size
+				if (requiresSizeUpdate)
+					content.size = size
+				requiresSizeUpdate
+			case None => false
+		}
+		
 		// Updates content layout
 		val layoutUpdateQueues = layoutUpdateQueue.popAll()
+		val sizeChangeTargets: Set[ReachComponentLike] =
+		{
+			if (contentSizeChanged)
+				currentContent.toSet.flatMap { c: ReachComponentLike => c.children }
+			else
+				Set()
+		}
 		if (layoutUpdateQueues.nonEmpty)
-			updateLayoutFor(layoutUpdateQueues.toSet, Set())
+			updateLayoutFor(layoutUpdateQueues.toSet, sizeChangeTargets)
 		
 		// Performs the queued tasks
 		updateFinishedQueue.popAll().foreach { _() }
