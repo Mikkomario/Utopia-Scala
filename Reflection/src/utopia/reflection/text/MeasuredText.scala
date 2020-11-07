@@ -1,7 +1,7 @@
 package utopia.reflection.text
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.shape.shape2D.{Bounds, Line, Point, Size}
+import utopia.genesis.shape.shape2D.{Bounds, Line, Point}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 
@@ -26,18 +26,27 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	  * Individual lines of text
 	  */
 	lazy val lines = if (allowLineBreaks) text.lines else Vector(text)
-	private lazy val _lines = lines.map { _.string }
-	/**
-	  * The first string index on each line
-	  */
-	lazy val lineStartIndices = _lines.dropRight(1).foldMapLeft(0) { (lastIndex, line) => lastIndex + line.length }
-	/**
-	  * The string end index (exclusive) on each line
-	  */
-	lazy val lineEndIndices = _lines.zip(lineStartIndices).map { case (line, start) => start + line.length }
+	private lazy val _lines = lines.map { _.string.stripLineEnd }
 	
+	lazy val (firstLineCaretIndices, lastLineCaretIndices) =
+	{
+		val startBuilder = new VectorBuilder[Int]()
+		val endBuilder = new VectorBuilder[Int]()
+		startBuilder.sizeHint(lines.size)
+		endBuilder.sizeHint(lines.size)
+		
+		var lastCaretIndex = -1
+		_lines.foreach { line =>
+			val start = lastCaretIndex + 1
+			lastCaretIndex = start + line.length
+			
+			startBuilder += start
+			endBuilder += lastCaretIndex
+		}
+		
+		startBuilder.result() -> endBuilder.result()
+	}
 	lazy val (size, lineBounds) = context.boundsOf(_lines, alignment)
-	
 	/**
 	  * Caret positions based on line and string indices
 	  */
@@ -84,22 +93,18 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	  * @param index Target string index
 	  * @return A caret line at the specified index
 	  */
-	def caretAt(index: Int) =
+	def caretAt(index: Int): Line =
+	{
+		val (lineIndex, indexOnLine) = mapCaretIndex(index)
+		caretAt(lineIndex, indexOnLine)
+	}
+	
+	def caretAt(lineIndex: Int, indexOnLine: Int) =
 	{
 		if (isEmpty)
 			Line(Point.origin, Point(0, context.lineHeight))
-			/*
-		else if (index >= text.string.length)
-			carets.last.last*/
 		else
 		{
-			val (lineIndex, indexOnLine) = mapIndex(index)
-			// FIXME: 20 is out of bounds (0 - 15 allowed), probably in line vector (occurs when drawing caret line)
-			/*
-			println(s"Targeting index $index -> $indexOnLine on $lineIndex")
-			println(s"Max index (text length) is ${text.string.length}")
-			println(s"Printing ${carets.size} caret lines:")
-			carets.foreach { carets => println(s"- ${carets.size} caret positions") }*/
 			if (lineIndex < 0)
 				carets.head.head
 			else if (lineIndex >= carets.size)
@@ -154,7 +159,7 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	  */
 	def caretIndexAbove(index: Int) =
 	{
-		val (lineIndex, indexOnLine) = mapIndex(index)
+		val (lineIndex, indexOnLine) = mapCaretIndex(index)
 		if (lineIndex > 0)
 		{
 			// Finds the specified caret's x-coordinate
@@ -172,7 +177,7 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	  */
 	def caretIndexBelow(index: Int) =
 	{
-		val (lineIndex, indexOnLine) = mapIndex(index)
+		val (lineIndex, indexOnLine) = mapCaretIndex(index)
 		if (lineIndex < lines.size - 1)
 		{
 			val x = caretX(lineIndex, indexOnLine)
@@ -192,7 +197,7 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 			carets(lineIndex)(caretIndexOnLine).start.x
 	}
 	
-	/**
+	/*
 	  * Finds information about a sub-string within this text
 	  * @param start The first <b>included</b> string index
 	  * @param end The first <b>excluded</b> string index (default = end of string)
@@ -202,15 +207,17 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	  *         with their relative bounds included.
 	  * @throws IndexOutOfBoundsException If specified start or end indices are not valid sub-string indices
 	  */
+	/*
+		// Handle caret vs. string index problem
 	@throws[IndexOutOfBoundsException]("If specified start or end indices are not valid sub-string indices")
 	def subString(start: Int, end: Int = text.string.length) =
 	{
 		// Calculates the targeted line and caret positions, as well as the resulting string
 		val string = text.local.subString(start, end)
-		val (startLineIndex, startIndexOnLine) = mapIndex(start)
-		val (endLineIndex, endIndexOnLine) = mapIndex(end)
-		val startCaret = carets(startLineIndex)(startIndexOnLine)
-		val endCaret = carets(endLineIndex)(endIndexOnLine)
+		val (startLineIndex, startIndexOnLine) = mapCaretIndex(start)
+		val (endLineIndex, endIndexOnLine) = mapCaretIndex(end)
+		val startCaret = caretAt(startLineIndex, startIndexOnLine)
+		val endCaret = caretAt(endLineIndex, endIndexOnLine)
 		
 		val boundsInfo =
 		{
@@ -244,47 +251,139 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 			}
 		}
 		string -> boundsInfo
+	}*/
+	
+	/**
+	  * Converts an index in the string to a caret index
+	  * @param stringIndex Index of a character in the string
+	  * @param targetEndOfCharacter Whether the caret at the end of that character should be returned. False if the
+	  *                             caret at the beginning of that character should be returned (default)
+	  * @return A line index and a relative caret index
+	  */
+	def stringIndexToCaretIndex(stringIndex: Int, targetEndOfCharacter: Boolean = false) =
+	{
+		if (stringIndex < 0)
+			0 -> 0
+		else
+		{
+			// Iterates through the lines, advancing a simulated cursor
+			_lines.indices.foldLeft[Either[Int, (Int, Int)]](Left(stringIndex)) { (previous, lineIndex) =>
+				previous match
+				{
+					case result: Right[Int, (Int, Int)] => result
+					case Left(remaining) =>
+						val line = _lines(lineIndex)
+						val lineLength = line.length
+						if (lineLength > remaining)
+						{
+							val startCaret = firstLineCaretIndices(lineIndex)
+							if (targetEndOfCharacter)
+								Right(lineIndex -> (startCaret + remaining + 1))
+							else
+								Right(lineIndex -> (startCaret + remaining))
+						}
+						else
+							Left(remaining - lineLength - 1) // Also skips the line break character
+				}
+			} match
+			{
+				case Right(result) => result
+				// Case: Out of bounds
+				case Left(_) =>
+					if (isEmpty)
+						0 -> 0
+					else
+						(lines.size - 1) -> _lines.last.length
+			}
+		}
 	}
 	
 	/**
-	  * Maps a string index to a line index + string index on that line
-	  * @param index A string index
-	  * @return Index of the targeted line + string index on that line
+	  * Converts a caret index to an index in the string
+	  * @param caretIndex A caret index
+	  * @return An index in the string (inside string bounds)
 	  */
-	def mapIndex(index: Int) =
+	def caretIndexToCharacterIndex(caretIndex: Int) =
 	{
-		if (index < 0)
+		if (caretIndex < 0)
+			0
+		else
+			caretIndex min (text.string.length - 1)
+	}
+	
+	/**
+	  * Converts a caret index to an index in the string
+	  * @param lineIndex Index of the targeted line
+	  * @param indexOnLine A relative caret index on the line
+	  * @return An index in the string
+	  */
+	def caretIndexToCharacterIndex(lineIndex: Int, indexOnLine: Int): Int =
+		caretIndexToCharacterIndex(mapCaretIndex(lineIndex, indexOnLine))
+	
+	/**
+	  * @param startCaretIndex The starting point caret index
+	  * @param endCaretIndex Then ending point caret index
+	  * @return A string between the two caret points
+	  */
+	def subString(startCaretIndex: Int, endCaretIndex: Int) =
+	{
+		if (isEmpty)
+			text.string
+		else
+		{
+			val startStringIndex = caretIndexToCharacterIndex(startCaretIndex) // Inclusive
+			val endStringIndex = (endCaretIndex min text.string.length) max startStringIndex // Exclusive
+			text.string.substring(startStringIndex, endStringIndex)
+		}
+	}
+	
+	/**
+	  * Maps a caret index to a line index + caret index on that line
+	  * @param index A string index
+	  * @return Index of the targeted line + caret index on that line
+	  */
+	def mapCaretIndex(index: Int) =
+	{
+		if (index < 0 || lines.isEmpty)
 			0 -> index
 		else
 		{
 			// Finds the correct line first
-			val lineIndex = lineEndIndices.indexWhereOption { _ >= index }.getOrElse(lines.size - 1)
-			lineIndex -> (index - lineStartIndices(lineIndex))
+			val lineIndex = lastLineCaretIndices.indexWhereOption { _ >= index }.getOrElse(lines.size - 1)
+			lineIndex -> (index - firstLineCaretIndices(lineIndex))
 		}
 	}
 	
 	/**
 	  * @param lineIndex Index of the targeted line
-	  * @param indexOnLine Index on the specified line
-	  * @return An index in the text
+	  * @param indexOnLine Relative caret index on the specified line
+	  * @return A caret index
 	  */
-	def mapIndex(lineIndex: Int, indexOnLine: Int) = _lines.take(lineIndex).map { _.length }.sum + indexOnLine
+	def mapCaretIndex(lineIndex: Int, indexOnLine: Int) =
+	{
+		if (isEmpty || lineIndex < 0)
+			0
+		else if (lineIndex >= lines.size)
+			lastLineCaretIndices.last
+		else
+			(firstLineCaretIndices(lineIndex) + indexOnLine) min lastLineCaretIndices(lineIndex)
+	}
 	
 	/**
-	  * @param highlightedRanges Areas within this text to highlight
+	  * @param highlightedCaretRanges Areas within this text to highlight
 	  * @return Standard draw targets + highlight draw targets (which include bounds)
 	  */
-	def drawTargets(highlightedRanges: Iterable[Range] = Vector()) =
+	def drawTargets(highlightedCaretRanges: Iterable[Range] = Vector()) =
 	{
 		// If there aren't any highlighted ranges, uses the cached values
-		if (highlightedRanges.isEmpty)
+		if (highlightedCaretRanges.isEmpty)
 			defaultDrawTargets -> Vector()
 		else
 		{
 			// Converts the ranges to { line index: Character ranges } -map
-			val ranges = highlightedRanges.iterator.flatMap { range =>
-				val (startLineIndex, startIndexOnLine) = mapIndex(range.head)
-				val (endLineIndex, endIndexOnLine) = mapIndex(range.last)
+			val ranges = highlightedCaretRanges.iterator.flatMap { range =>
+				val (startLineIndex, startIndexOnLine) = mapCaretIndex(range.head)
+				val (endLineIndex, endIndexOnLine) = mapCaretIndex(range.last)
 				// Case: Range is contained within a single line
 				if (startLineIndex == endLineIndex)
 					Vector(startLineIndex -> (startIndexOnLine -> Some(endIndexOnLine)))
@@ -320,20 +419,20 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 						// Adds space between the two highlights, if applicable
 						lastHighlightEnd.foreach { case (lastEndIndex, lastEndPosition) =>
 							if (lastEndIndex < startIndex)
-								normalStringsBuffer += (string.substring(lastEndIndex, startIndex) -> lastEndPosition)
+								normalStringsBuffer += (subString(lastEndIndex, startIndex) -> lastEndPosition)
 						}
-						val startCaret = carets(lineIndex)(startIndex)
+						val startCaret = caretAt(lineIndex, startIndex)
 						endIndex match
 						{
 							// Case: Highlight doesn't span the whole line
 							case Some(endIndex) =>
-								val endCaret = carets(lineIndex)(endIndex)
-								highlightedStringsBuffer += (string.substring(startIndex, endIndex) ->
+								val endCaret = caretAt(lineIndex, endIndex)
+								highlightedStringsBuffer += (subString(startIndex, endIndex) ->
 									Bounds.between(startCaret.start, endCaret.end))
 								lastHighlightEnd = Some(endIndex -> endCaret.start)
 							// Case: Highlight takes the rest of the line
 							case None =>
-								highlightedStringsBuffer += (string.substring(startIndex) ->
+								highlightedStringsBuffer += (subString(startIndex, lastLineCaretIndices(lineIndex)) ->
 									Bounds.between(startCaret.start, lineBounds(lineIndex).bottomRight))
 								lastHighlightEnd = None
 						}

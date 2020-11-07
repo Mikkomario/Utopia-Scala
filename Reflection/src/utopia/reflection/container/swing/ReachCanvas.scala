@@ -10,7 +10,7 @@ import utopia.flow.async.VolatileOption
 import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
-import utopia.genesis.event.KeyStateEvent
+import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
@@ -155,6 +155,36 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		component.repaint()
 	}
 	
+	override def distributeMouseButtonEvent(event: MouseButtonStateEvent) =
+	{
+		super.distributeMouseButtonEvent(event) match
+		{
+			case Some(consumed) =>
+				val newEvent = event.consumed(consumed)
+				currentContent.foreach { _.distributeMouseButtonEvent(newEvent) }
+				Some(consumed)
+			case None => currentContent.flatMap { _.distributeMouseButtonEvent(event) }
+		}
+	}
+	
+	override def distributeMouseMoveEvent(event: MouseMoveEvent) =
+	{
+		super.distributeMouseMoveEvent(event)
+		currentContent.foreach { _.distributeMouseMoveEvent(event) }
+	}
+	
+	// TODO: WET WET
+	override def distributeMouseWheelEvent(event: MouseWheelEvent) =
+	{
+		super.distributeMouseWheelEvent(event) match
+		{
+			case Some(consumed) =>
+				val newEvent = event.consumed(consumed)
+				currentContent.foreach { _.distributeMouseWheelEvent(newEvent) }
+				Some(consumed)
+			case None => currentContent.flatMap { _.distributeMouseWheelEvent(event) }
+		}
+	}
 	
 	// OTHER	------------------------------
 	

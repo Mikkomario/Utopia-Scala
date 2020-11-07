@@ -9,16 +9,15 @@ import utopia.flow.event.{ChangeListener, Changing}
 import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
-import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, KeyStatus, KeyTypedEvent, MouseButtonStateEvent, MouseEvent}
+import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, KeyStatus, KeyTypedEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.handling.{Actor, KeyStateListener, KeyTypedHandlerType, KeyTypedListener, MouseButtonStateListener}
+import utopia.genesis.handling.{Actor, KeyStateListener, KeyTypedHandlerType, KeyTypedListener, MouseButtonStateListener, MouseMoveHandlerType, MouseMoveListener}
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
-import utopia.genesis.shape.shape2D.Direction2D
-import utopia.genesis.view.GlobalKeyboardEventHandler
+import utopia.genesis.shape.shape2D.{Direction2D, Point}
+import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
-import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.color.ColorRole.Secondary
 import utopia.reflection.color.ColorShade.Light
 import utopia.reflection.component.context.TextContextLike
@@ -135,6 +134,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	// ATTRIBUTES	-------------------------------
 	
 	private var focusLeaveConditions = Vector[String => (String, Boolean)]()
+	private var draggingMouse = false
 	
 	override var focusListeners: Seq[FocusListener] = Vector(FocusHandler)
 	
@@ -174,16 +174,19 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		{
 			enableFocusHandling()
 			GlobalKeyboardEventHandler.register(KeyListener)
+			GlobalMouseEventHandler.register(GlobalMouseReleaseListener)
 			actorHandler += CaretBlinker
 		}
 		else
 		{
 			disableFocusHandling()
 			GlobalKeyboardEventHandler.unregister(KeyListener)
+			GlobalMouseEventHandler.unregister(GlobalMouseReleaseListener)
 			actorHandler -= CaretBlinker
 		}
 	}
 	addMouseButtonListener(MouseListener)
+	addMouseMoveListener(MouseListener)
 	addCustomDrawer(drawer)
 	
 	// Repaints (and possibly revalidates) this component when content or styling changes
@@ -221,7 +224,11 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	  * @return Current index of the text caret
 	  */
 	def caretIndex = caretIndexPointer.value
-	private def caretIndex_=(newIndex: Int) = caretIndexPointer.value = newIndex
+	private def caretIndex_=(newIndex: Int) =
+	{
+		if (measuredText.isValidCaretIndex(newIndex))
+			caretIndexPointer.value = newIndex
+	}
 	
 	/**
 	  * @return Currently selected range of text. None if no range is selected
@@ -410,6 +417,8 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		
 		override def onFocusChangeEvent(event: FocusChangeEvent) =
 		{
+			println(s"Focus event: $event")
+			
 			hasFocus = event.hasFocus
 			if (hasFocus)
 			{
@@ -550,7 +559,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		override def lostOwnership(clipboard: Clipboard, contents: Transferable) = ()
 	}
 	
-	private object MouseListener extends MouseButtonStateListener with Handleable
+	private object MouseListener extends MouseButtonStateListener with MouseMoveListener
 	{
 		// ATTRIBUTES	---------------------------------
 		
@@ -563,38 +572,74 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		
 		override def onMouseButtonState(event: MouseButtonStateEvent) =
 		{
+			draggingMouse = true
+			updateCaret(event.mousePosition, KeyListener.keyStatus.shift)
+			Some(ConsumeEvent("EditableTextLabel clicked"))
+		}
+		
+		override def onMouseMove(event: MouseMoveEvent) = updateCaret(event.mousePosition, selectArea = true)
+		
+		override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match
+		{
+			case MouseMoveHandlerType => draggingMouse
+			case _ => true
+		}
+		
+		
+		// OTHER	----------------------------------
+		
+		private def updateCaret(mousePosition: Point, selectArea: => Boolean) =
+		{
 			// Calculates and updates the new caret position
 			val previousCaretIndex = caretIndex
 			val (newLineIndex, newIndexOnLine) = measuredText.caretIndexClosestTo(
-				(event.mousePosition - drawer.lastDrawPosition) * drawer.lastDrawScaling)
-			val newCaretIndex = measuredText.mapIndex(newLineIndex, newIndexOnLine)
+				(mousePosition - drawer.lastDrawPosition) * drawer.lastDrawScaling)
+			val newCaretIndex = measuredText.mapCaretIndex(newLineIndex, newIndexOnLine)
 			caretIndex = newCaretIndex
 			
 			// If this component wasn't on focus, requests focus now, otherwise checks if selection should be updated
 			if (hasFocus)
 			{
-				// If same caret position is clicked twice, expands the selection to the word around
 				if (_text.nonEmpty)
 				{
-					if (previousCaretIndex == newCaretIndex)
+					// Shift + click selects an area of text
+					if (selectArea)
+					{
+						if (selectedRangePointer.value.forall { _._2 != newCaretIndex })
+							selectedRangePointer.update
+							{
+								case Some((start, _)) => Some(start -> newCaretIndex)
+								case None => Some(previousCaretIndex -> newCaretIndex)
+							}
+					}
+					// If same caret position is clicked twice, expands the selection to the word around
+					else if (previousCaretIndex == newCaretIndex)
 					{
 						val newSelectionStart = skipWord(previousCaretIndex, Negative).getOrElse(previousCaretIndex)
 						val newSelectionEnd = skipWord(previousCaretIndex, Positive).getOrElse(previousCaretIndex)
 						if (newSelectionStart != newSelectionEnd)
 							selectedRangePointer.value = Some(newSelectionStart -> newSelectionEnd)
 					}
-					else if (KeyListener.keyStatus.shift)
-						selectedRangePointer.update
-						{
-							case Some((start, _)) => Some(start -> newCaretIndex)
-							case None => Some(previousCaretIndex -> newCaretIndex)
-						}
+					// Otherwise may cancel a selection
+					else
+						clearSelection()
 				}
 			}
 			else
 				requestFocus()
-			
-			Some(ConsumeEvent("EditableTextLabel clicked"))
 		}
+	}
+	
+	private object GlobalMouseReleaseListener extends MouseButtonStateListener
+	{
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent.wasReleasedFilter
+		
+		override def onMouseButtonState(event: MouseButtonStateEvent) =
+		{
+			draggingMouse = false
+			None
+		}
+		
+		override def allowsHandlingFrom(handlerType: HandlerType) = draggingMouse
 	}
 }

@@ -144,7 +144,7 @@ trait ComponentLike2 extends Area
     private def distributeEvent[E](event: E, positionsFromEvent: E => Iterable[Point],
                                    translateEvent: (E, Point) => E, childAccept: (ComponentLike2, E) => Unit) =
     {
-        // If has chilren, informs them. Event position is modified and only events within this component's area
+        // If has children, informs them. Event position is modified and only events within this component's area
         // are relayed forward
         val myBounds = bounds
         if (positionsFromEvent(event).exists { myBounds.contains(_) })
