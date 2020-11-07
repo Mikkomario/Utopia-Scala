@@ -1,7 +1,7 @@
 package utopia.reflection.component.reach.template
 
 import utopia.flow.datastructure.immutable.Tree
-import utopia.flow.event.Changing
+import utopia.flow.event.{ChangeListener, Changing}
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.DrawLevel
@@ -169,6 +169,6 @@ trait ReachComponentLike extends Stackable2
 	  *                 status changes. The function accepts the new attachment status (true if attached, false if not)
 	  * @tparam U Arbitrary result type
 	  */
-	def addHierarchyListener[U](listener: Boolean => U) = parentHierarchy.linkPointer.addListener { e =>
-		listener(e.newValue) }
+	def addHierarchyListener[U](listener: Boolean => U) = parentHierarchy.linkPointer.addListener(e =>
+		listener(e.newValue), Some(false))
 }

@@ -4,23 +4,27 @@ import java.awt.Toolkit
 import java.awt.datatransfer.{Clipboard, ClipboardOwner, DataFlavor, StringSelection, Transferable}
 import java.awt.event.KeyEvent
 
-import utopia.flow.datastructure.immutable.View
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.datastructure.template.Viewable
-import utopia.flow.event.Changing
+import utopia.flow.event.{ChangeListener, Changing}
 import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, KeyStatus, KeyTypedEvent, MouseButtonStateEvent, MouseEvent}
+import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{Actor, KeyStateListener, KeyTypedHandlerType, KeyTypedListener, MouseButtonStateListener}
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.Direction2D
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
+import utopia.reflection.color.ColorRole.Secondary
+import utopia.reflection.color.ColorShade.Light
+import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.view.SelectableTextViewDrawer
+import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.{MutableCustomDrawReachComponent, MutableFocusable}
 import utopia.reflection.component.template.text.MutableTextComponent
@@ -32,16 +36,95 @@ import utopia.reflection.localization.LocalString._
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.{Failure, Success, Try}
 
+object EditableTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike, EditableTextLabelFactory,
+	ContextualEditableTextLabelFactory]
+{
+	override def apply(hierarchy: ComponentHierarchy) = new EditableTextLabelFactory(hierarchy)
+}
+
+class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
+	extends ContextInsertableComponentFactory[TextContextLike, ContextualEditableTextLabelFactory]
+{
+	override def withContext[N <: TextContextLike](context: N) =
+		ContextualEditableTextLabelFactory(this, context)
+	
+	/**
+	  * Creates a new editable text label
+	  * @param actorHandler Actor handler that will deliver required action events
+	  * @param stylePointer A pointer to this label's styling
+	  * @param selectedTextColorPointer A pointer to this label's selected text's color (default = always standard black)
+	  * @param selectionBackgroundColorPointer A pointer to this label's selected text's background color, if any
+	  *                                        (default = always None)
+	  * @param caretColor Color used when drawing the caret (default = standard black)
+	  * @param caretWidth Width of the drawn caret (default = 1 pixels)
+	  * @param caretBlinkFrequency Frequency how often caret visibility is changed (default = every 0.5 seconds)
+	  * @param textPointer A pointer to this label's text (default = new empty pointer)
+	  * @param inputFilter A filter regex applied to typed and pasted input, if any (default = None)
+	  * @param maxLength Maximum text length, if any (default = None)
+	  * @param enabledPointer A pointer to this label's enabled state (default = always enabled)
+	  * @param allowSelectionWhileDisabled Whether this label's text should be selectable even while it is disabled
+	  *                                    (default = true)
+	  * @param allowLineBreaks Whether line breaks should be allowed inside this label (default = true)
+	  * @param allowTextShrink Whether the drawn text should be shrank to conserve space when required (default = false)
+	  * @return A new label
+	  */
+	def apply(actorHandler: ActorHandler, stylePointer: PointerWithEvents[TextDrawContext],
+			  selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
+			  selectionBackgroundColorPointer: Changing[Option[Color]] = Changing.wrap(None),
+			  caretColor: Color = Color.textBlack, caretWidth: Double = 1.0,
+			  caretBlinkFrequency: Duration = 0.5.seconds,
+			  textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
+			  inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
+			  enabledPointer: Changing[Boolean] = Changing.wrap(true),
+			  allowSelectionWhileDisabled: Boolean = true, allowLineBreaks: Boolean = true,
+			  allowTextShrink: Boolean = false) =
+		new EditableTextLabel(parentHierarchy, actorHandler, stylePointer, selectedTextColorPointer,
+			selectionBackgroundColorPointer, caretColor, caretWidth, caretBlinkFrequency, textPointer,
+			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, allowLineBreaks, allowTextShrink)
+}
+
+case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: EditableTextLabelFactory, context: N)
+	extends ContextualComponentFactory[N, TextContextLike, ContextualEditableTextLabelFactory]
+{
+	override def withContext[N2 <: TextContextLike](newContext: N2) =
+		copy(context = newContext)
+	
+	/**
+	  * Creates a new editable label
+	  * @param textPointer A pointer to this label's text (default = new empty pointer)
+	  * @param inputFilter A filter regex applied to typed and pasted input, if any (default = None)
+	  * @param maxLength Maximum text length, if any (default = None)
+	  * @param enabledPointer A pointer to this label's enabled state (default = always enabled)
+	  * @param caretBlinkFrequency Frequency how often caret visibility is changed (default = every 0.5 seconds)
+	  * @param allowSelectionWhileDisabled Whether this label's text should be selectable even while it is disabled
+	  *                                    (default = true)
+	  * @return a new label
+	  */
+	def apply(textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
+			  inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
+			  enabledPointer: Changing[Boolean] = Changing.wrap(true), caretBlinkFrequency: Duration = 0.5.seconds,
+			  allowSelectionWhileDisabled: Boolean = true) =
+	{
+		val selectionBackground = context.color(Secondary, Light)
+		factory(context.actorHandler, new PointerWithEvents(TextDrawContext.contextual(context)),
+			Changing.wrap(selectionBackground.defaultTextColor), Changing.wrap(Some(selectionBackground)),
+			context.color(Secondary), (context.margins.verySmall / 2) max 1.0, caretBlinkFrequency, textPointer,
+			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, context.allowLineBreaks,
+			context.allowTextShrink)
+	}
+}
+
 /**
   * Used for requesting user input in text format
   * @author Mikko Hilpinen
   * @since 30.10.2020, v2
   */
-class EditableTextLabel(override val parentHierarchy: ComponentHierarchy,
+class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
 						val baseStylePointer: PointerWithEvents[TextDrawContext],
-						selectedTextColorPointer: Viewable[Color] = View(Color.textBlack),
-						selectionBackgroundColorPointer: Viewable[Option[Color]] = View(None), caretColor: Color,
-						caretWidth: Double = 1.0, caretBlinkFrequency: Duration = 0.5.seconds,
+						selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
+						selectionBackgroundColorPointer: Changing[Option[Color]] = Changing.wrap(None),
+						caretColor: Color = Color.textBlack, caretWidth: Double = 1.0,
+						caretBlinkFrequency: Duration = 0.5.seconds,
 						val textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 						inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
 						enabledPointer: Changing[Boolean] = Changing.wrap(true),
@@ -55,47 +138,100 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy,
 	
 	override var focusListeners: Seq[FocusListener] = Vector(FocusHandler)
 	
+	/**
+	  * A pointer to this label's actual text styling, which takes into account the enabled state
+	  */
 	val effectiveStylePointer = baseStylePointer.mergeWith(enabledPointer) { (style, enabled) =>
 		if (enabled)
 			style
 		else
 			style.mapColor { _.timesAlpha(0.66) }
 	}
+	/**
+	  * A pointer to this label's measured text information
+	  */
 	val measuredTextPointer = textPointer.mergeWith(effectiveStylePointer) { (text, style) =>
 		MeasuredText(text.noLanguageLocalizationSkipped, FontMetricsContext(fontMetrics(style.font),
 			style.betweenLinesMargin), style.alignment, allowLineBreaks)
 	}
 	private val caretIndexPointer = new PointerWithEvents(textPointer.value.length - 1)
 	private val caretVisibilityPointer = new PointerWithEvents(false)
+	private val drawnCaretPointer = caretIndexPointer.mergeWith(caretVisibilityPointer) { (index, isVisible) =>
+		if (isVisible && selectable) Some(index) else None }
 	private val selectedRangePointer = new PointerWithEvents[Option[(Int, Int)]](None)
 	
 	private val drawer = SelectableTextViewDrawer(measuredTextPointer, effectiveStylePointer,
 		selectedRangePointer.map { _.map { case (start, end) => if (start < end) start to end else end to start } },
-		caretIndexPointer.mergeWith(caretVisibilityPointer) { (index, isVisible) =>
-			if (isVisible && selectable) Some(index) else None },
-		selectedTextColorPointer, selectionBackgroundColorPointer, caretColor, caretWidth)
+		drawnCaretPointer, selectedTextColorPointer, selectionBackgroundColorPointer, caretColor, caretWidth)
+	private val repaintListener: ChangeListener[Any] = _ => repaint()
 	
 	
 	// INITIAL CODE	-------------------------------
 	
-	enableFocusHandlingWhileLinked()
-	// TODO: Register listeners and drawers and such
+	// Registers some listeners only while attached to top hierarchy
+	addHierarchyListener { isAttached =>
+		if (isAttached)
+		{
+			enableFocusHandling()
+			GlobalKeyboardEventHandler.register(KeyListener)
+			actorHandler += CaretBlinker
+		}
+		else
+		{
+			disableFocusHandling()
+			GlobalKeyboardEventHandler.unregister(KeyListener)
+			actorHandler -= CaretBlinker
+		}
+	}
+	addMouseButtonListener(MouseListener)
+	addCustomDrawer(drawer)
+	
+	// Repaints (and possibly revalidates) this component when content or styling changes
+	measuredTextPointer.addListener { event =>
+		if (event.compareBy { _.size })
+			repaint()
+		else
+			revalidateAndRepaint()
+	}
+	effectiveStylePointer.addListener(repaintListener)
+	drawnCaretPointer.addListener(repaintListener)
+	selectedRangePointer.addListener(repaintListener)
+	selectedTextColorPointer.addListener(repaintListener)
+	selectionBackgroundColorPointer.addListener(repaintListener)
 	
 	
 	// COMPUTED	-----------------------------------
 	
+	/**
+	  * @return Whether this label is currently the focused component
+	  */
 	def hasFocus = FocusHandler.hasFocus
 	
+	/**
+	  * @return Whether this label is currently enabled
+	  */
 	def enabled = enabledPointer.value
 	
+	/**
+	  * @return Whether text in this label can currently be selected
+	  */
 	def selectable = allowSelectionWhileDisabled || enabled
 	
+	/**
+	  * @return Current index of the text caret
+	  */
 	def caretIndex = caretIndexPointer.value
 	private def caretIndex_=(newIndex: Int) = caretIndexPointer.value = newIndex
 	
+	/**
+	  * @return Currently selected range of text. None if no range is selected
+	  */
 	def selectedRange = selectedRangePointer.value.map { case (start, end) =>
 		if (start < end) start to end else end to start }
 	
+	/**
+	  * @return Currently selected text inside this label. None if no text is selected.
+	  */
 	def selectedText = selectedRange.map { _text.slice(_) }.filterNot { _.isEmpty }
 	
 	def text_=(newText: String) = textPointer.value = newText
@@ -133,6 +269,9 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy,
 	
 	// OTHER	----------------------------------
 	
+	/**
+	  * Moves caret to the end of this label's current text
+	  */
 	def moveCaretToEnd() = caretIndexPointer.value = textPointer.value.length - 1
 	
 	/**
@@ -142,7 +281,10 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy,
 	  */
 	def addFocusLeaveCondition(condition: String => (String, Boolean)) = focusLeaveConditions :+= condition
 	
-	private def clearSelection() = selectedRangePointer.value = None
+	/**
+	  * Clears the current selection area
+	  */
+	def clearSelection() = selectedRangePointer.value = None
 	
 	private def insertToCaret(text: String) =
 	{

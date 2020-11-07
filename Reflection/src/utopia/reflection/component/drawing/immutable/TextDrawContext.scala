@@ -1,9 +1,21 @@
 package utopia.reflection.component.drawing.immutable
 
 import utopia.genesis.color.Color
+import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
+
+object TextDrawContext
+{
+	/**
+	  * Creates a new text draw context utilizing a component creation context
+	  * @param context The component creation context to use (implicit)
+	  * @return A new text draw context with settings from the component creation context
+	  */
+	def contextual(implicit context: TextContextLike) = TextDrawContext(context.font, context.textColor,
+		context.textAlignment, context.textInsets, context.betweenLinesMargin.optimal)
+}
 
 /**
   * Context required when drawing text
