@@ -14,13 +14,15 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{Actor, KeyStateListener, KeyTypedHandlerType, KeyTypedListener, MouseButtonStateListener, MouseMoveHandlerType, MouseMoveListener}
 import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
-import utopia.genesis.shape.shape2D.{Direction2D, Point}
+import utopia.genesis.shape.shape2D.{Bounds, Direction2D, Point}
+import utopia.genesis.util.Drawer
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.reflection.color.ColorRole.Secondary
 import utopia.reflection.color.ColorShade.Light
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
+import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.view.SelectableTextViewDrawer
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
@@ -463,7 +465,10 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 				CaretBlinker.show()
 			}
 			else
+			{
 				clearSelection()
+				CaretBlinker.hide()
+			}
 		}
 	}
 	
@@ -500,6 +505,8 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 			caretVisibilityPointer.value = true
 			resetCounter()
 		}
+		
+		def hide() = caretVisibilityPointer.value = false
 	}
 	
 	private object KeyListener extends KeyTypedListener with KeyStateListener with ClipboardOwner
@@ -591,6 +598,8 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 										case Failure(_) => ()
 									}
 								}
+							else if (event.index == KeyEvent.VK_A)
+								selectedRangePointer.value = Some(0 -> measuredText.maxCaretIndex)
 						}
 				}
 			}

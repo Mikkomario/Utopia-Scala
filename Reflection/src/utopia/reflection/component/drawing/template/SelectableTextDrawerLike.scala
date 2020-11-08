@@ -96,7 +96,7 @@ trait SelectableTextDrawerLike extends CustomDrawer
 	override def draw(drawer: Drawer, bounds: Bounds) =
 	{
 		val (normalDrawTargets, highlightedTargets) = drawTargets
-		if (normalDrawTargets.nonEmpty || highlightedTargets.nonEmpty)
+		if (normalDrawTargets.exists { _._1.nonEmpty } || highlightedTargets.nonEmpty)
 		{
 			// Calculates draw bounds and possible scaling
 			val textArea = alignment.position(text.size, bounds, insets)
@@ -130,5 +130,12 @@ trait SelectableTextDrawerLike extends CustomDrawer
 				}
 			}
 		}
+		// If no text is displayed, may still draw the caret
+		else
+			caret.foreach { caretBounds =>
+				val caretArea = alignment.position(caretBounds.size, bounds, insets)
+				val scaling = (caretArea.size / caretBounds.size).toVector
+				drawer.onlyFill(caretColor).draw(caretBounds.translated(caretArea.position) * scaling)
+			}
 	}
 }

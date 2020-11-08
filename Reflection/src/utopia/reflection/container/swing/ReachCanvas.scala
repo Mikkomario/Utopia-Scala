@@ -362,7 +362,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		// ATTRIBUTES	------------------------
 		
 		// Only listens to tabulator presses
-		override val keyStateEventFilter = KeyStateEvent.keyFilter(KeyEvent.VK_TAB)
+		override val keyStateEventFilter = KeyStateEvent.wasPressedFilter && KeyStateEvent.keyFilter(KeyEvent.VK_TAB)
 		
 		
 		// IMPLEMENTED	-----------------------
@@ -370,7 +370,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		override def onKeyState(event: KeyStateEvent) =
 		{
 			// Moves the focus forwards or backwards
-			val direction = if (event.keyStatus(KeyEvent.VK_SHIFT)) Negative else Positive
+			val direction = if (event.keyStatus.shift) Negative else Positive
 			focusManager.moveFocus(direction)
 		}
 		

@@ -33,6 +33,7 @@ case class FramingFactory(parentHierarchy: ComponentHierarchy) extends BuilderFa
 	  * @param contentFactory Framing content factory
 	  * @param context Framing creation context
 	  * @param makeContext A function for producing a content context
+	  * @tparam NT Temporary context type between the starting context and the final context
 	  * @tparam NC Type of content creation context
 	  * @tparam F Type of contextual content factory
 	  * @return A new contextual framing builder

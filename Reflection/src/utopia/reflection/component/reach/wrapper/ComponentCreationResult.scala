@@ -14,6 +14,12 @@ object ComponentCreationResult
 	implicit def componentToResult[C <: ReachComponentLike](component: C): ComponentCreationResult[C, Unit] =
 		new ComponentCreationResult[C, Unit](component, ())
 	
+	implicit def vectorToResult[C <: ReachComponentLike](components: Vector[C]): ComponentCreationResult[Vector[C], Unit] =
+		new ComponentCreationResult[Vector[C], Unit](components, ())
+	
+	implicit def wrapToResult[P, R](wrapResult: ComponentWrapResult[P, _, R]): ComponentCreationResult[P, R] =
+		new ComponentCreationResult[P, R](wrapResult.parent, wrapResult.result)
+	
 	
 	// OTHER	------------------------------
 	
