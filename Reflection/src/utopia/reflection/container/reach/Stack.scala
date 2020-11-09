@@ -5,7 +5,7 @@ import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reflection.component.reach.factory.{ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, Open, OpenComponent}
@@ -24,6 +24,17 @@ object Stack extends ContextInsertableComponentFactoryFactory[BaseContextLike, S
 case class StackFactory(parentHierarchy: ComponentHierarchy)
 	extends ContextInsertableComponentFactory[BaseContextLike, ContextualStackFactory]
 {
+	// COMPUTED	--------------------------------
+	
+	/**
+	  * Creates a new stack builder
+	  * @param contentFactory Factory used for stack content factories
+	  * @tparam F Type of content factory
+	  * @return A stack builder
+	  */
+	def build[F](contentFactory: ComponentFactoryFactory[F]) = new StackBuilder[F](this, contentFactory)
+	
+	
 	// IMPLEMENTED	----------------------------
 	
 	override def withContext[N <: BaseContextLike](context: N) =
@@ -208,6 +219,65 @@ case class ContextualStackFactory[N <: BaseContextLike](stackFactory: StackFacto
 		stackFactory.forPair(content, alignment,
 			if (areRelated) context.relatedItemsStackMargin else context.defaultStackMargin, cap, customDrawers,
 			forceFitLayout)
+}
+
+class StackBuilder[+F](factory: StackFactory, contentFactory: ComponentFactoryFactory[F])
+{
+	// IMPLICIT	----------------------------
+	
+	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
+	
+	
+	// OTHER	-----------------------------
+	
+	/**
+	  * Builds a new stack of items
+	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
+	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
+	  *               (default = Fit = All components have same breadth as this stack)
+	  * @param margin Margin placed between each component (default = any margin, preferring 0)
+	  * @param cap Cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers attached to this stack (default = empty)
+	  * @param fill A function for filling this stack
+	  * @tparam C Type of wrapped component
+	  * @tparam R Type of component creation result
+	  * @return This stack, along with contextual information
+	  */
+	def apply[C <: ReachComponentLike, R](direction: Axis2D = Y, layout: StackLayout = Fit,
+										  margin: StackLength = StackLength.any,
+										  cap: StackLength = StackLength.fixedZero,
+										  customDrawers: Vector[CustomDrawer] = Vector())
+										 (fill: F => ComponentCreationResult[Vector[C], R]) =
+	{
+		val content = Open.using(contentFactory)(fill)
+		factory(content, direction, layout, margin, cap, customDrawers)
+	}
+	
+	/**
+	  * Builds a new stack that contains two items
+	  * @param alignment Alignment to use when placing the items. The direction of the alignment determines the
+	  *                  position of the <b>first</b> item in the <i>content</i> parameter. Eg. Left alignment means
+	  *                  that the first item will be placed at the left side and the second item on the right.
+	  *                  Bottom alignment means that the first item will be placed at the bottom and the second at
+	  *                  the top.
+	  * @param margin Margin placed between the items (default = any, preferring 0)
+	  * @param cap Cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers attached to this stack (default = empty)
+	  * @param forceFitLayout Whether layout should always be set to <i>Fit</i>, regardless of alignment
+	  * @param fill A function for filling this stack
+	  * @tparam C Type of the components
+	  * @tparam R Type of additional creation result
+	  * @return A new stack with the two items in it
+	  */
+	def forPair[C <: ReachComponentLike, R](alignment: Alignment, margin: StackLength = StackLength.any,
+											cap: StackLength = StackLength.fixedZero,
+											customDrawers: Vector[CustomDrawer] = Vector(),
+											forceFitLayout: Boolean = false)
+										   (fill: F => ComponentCreationResult[(C, C), R]) =
+	{
+		val content = Open.using(contentFactory)(fill)
+		factory.forPair(content, alignment, margin, cap, customDrawers, forceFitLayout)
+	}
 }
 
 class ContextualStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
