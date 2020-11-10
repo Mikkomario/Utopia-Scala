@@ -28,6 +28,11 @@ object DisplayFunction
 	val rawOption = noLocalization[Option[Any]] { _.map { a => LocalString(a.toString) }.getOrElse(LocalString.empty) }
 	
 	/**
+	  * A display function that preserves strings which are already localized
+	  */
+	val identity = new DisplayFunction[LocalizedString](s => s)
+	
+	/**
 	  * A display function that shows hours and minutes, like '13:26'
 	  */
 	val hhmm = forTime(DateTimeFormatter.ofPattern("HH:mm"))

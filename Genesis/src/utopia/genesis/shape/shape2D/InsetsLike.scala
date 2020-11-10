@@ -332,6 +332,12 @@ trait InsetsLike[L, +S, +Repr]
     def withoutSide(direction: Direction2D) = makeCopy(amounts - direction)
     
     /**
+      * @param directions Directions to exclude from these insets
+      * @return A copy of these insets without the specified directions included
+      */
+    def withoutSides(directions: IterableOnce[Direction2D]) = makeCopy(amounts -- directions)
+    
+    /**
       * @param axis Targeted axis
       * @return A copy of these insets with values only on the specified axis (Eg. for X-axis would only contain left and right)
       */
