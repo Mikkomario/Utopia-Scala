@@ -343,6 +343,26 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	// OTHER	--------------------
 	
 	/**
+	  * @param point Targeted point in this image <b>relative to this image's origin</b>
+	  * @return A color of this image at the specified location
+	  */
+	def pixelAt(point: Point) = source match
+	{
+		case Some(image) =>
+			// Converts the point to an image coordinate
+			val pointInImage = ((point - bounds.topLeft) / scaling).rounded
+			if (Bounds(Point.origin, sourceResolution).contains(pointInImage))
+			{
+				// Fetches the pixel color in that location
+				val rgb = image.getRGB(pointInImage.x.toInt, pointInImage.y.toInt)
+				Color.fromInt(rgb)
+			}
+			else
+				Color.transparentBlack
+		case None => Color.transparentBlack
+	}
+	
+	/**
 	  * Creates a copy of this image with adjusted alpha value (transparency)
 	  * @param newAlpha The new alpha value for this image [0, 1]
 	  * @return A new image

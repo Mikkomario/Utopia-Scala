@@ -64,6 +64,15 @@ trait HslLike[Repr <: HslLike[Repr]]
 	def hueAngle = hue
 	
 	/**
+	  * @return Whether this color could be considered 'light' (luminosity above 50%)
+	  */
+	def isLight = luminosity > 0.5
+	/**
+	  * @return Whether this color could be considered 'dark' (luminosity at 50% or below)
+	  */
+	def isDark = luminosity <= 0.5
+	
+	/**
 	  * @return A grayscale version of this color
 	  */
 	def grayscale = withSaturation(0)

@@ -1,7 +1,8 @@
 package utopia.reflection.container.swing
 
 import java.awt.event.KeyEvent
-import java.awt.{AWTKeyStroke, Container, Graphics, KeyboardFocusManager}
+import java.awt.image.BufferedImage
+import java.awt.{AWTKeyStroke, Container, Graphics, KeyboardFocusManager, Toolkit}
 import java.util
 
 import javax.swing.{JComponent, JPanel}
@@ -11,12 +12,13 @@ import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
-import utopia.genesis.handling.KeyStateListener
+import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Point}
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.HandlerType
+import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.drawing.mutable.CustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
@@ -25,25 +27,29 @@ import utopia.reflection.component.reach.template.ReachComponentLike
 import utopia.reflection.component.reach.wrapper.ComponentCreationResult
 import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.cursor.{CursorSet, ReachCursorManager}
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.ReachFocusManager
 
 import scala.annotation.tailrec
 import scala.concurrent.{Future, Promise}
+import scala.util.Try
 
 object ReachCanvas
 {
 	/**
 	  * Creates a new set of canvas with a reach component in them
+	  * @param cursors Cursors to use inside this component. None if this component shouldn't affect the cursor drawing.
 	  * @param content Function for producing the content once parent hierarchy is available
 	  * @tparam C Type of created canvas content
 	  * @return A set of canvas with the content inside them and the produced canvas content as well
 	  */
-	def apply[C <: ReachComponentLike, R](content: ComponentHierarchy => ComponentCreationResult[C, R]) =
+	def apply[C <: ReachComponentLike, R](cursors: Option[CursorSet] = None)
+										 (content: ComponentHierarchy => ComponentCreationResult[C, R]) =
 	{
 		val contentPromise = Promise[ReachComponentLike]()
-		val canvas = new ReachCanvas(contentPromise.future)
+		val canvas = new ReachCanvas(contentPromise.future, cursors)
 		val newContent = content(canvas.HierarchyConnection)
 		contentPromise.success(newContent.component)
 		newContent in canvas
@@ -55,8 +61,8 @@ object ReachCanvas
   * @author Mikko Hilpinen
   * @since 4.10.2020, v2
   */
-class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWrapper with Stackable
-	with AwtContainerRelated with SwingComponentRelated with CustomDrawable
+class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Option[CursorSet])
+	extends JWrapper with Stackable with AwtContainerRelated with SwingComponentRelated with CustomDrawable
 {
 	// ATTRIBUTES	---------------------------
 	
@@ -74,6 +80,11 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	  * Object that manages focus between the components in this canvas element
 	  */
 	val focusManager = new ReachFocusManager(panel)
+	/**
+	  * Object that manages cursor display inside this canvas. None if cursor state is not managed in this canvas.
+	  */
+	val cursorManager = cursors.map { new ReachCursorManager(_) }
+	private val cursorPainter = cursorManager.map { new CursorPainter(_) }
 	
 	private val _attachmentPointer = new PointerWithEvents(false)
 	
@@ -105,6 +116,13 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	
 	// Listens to tabulator key events for manual focus handling
 	addKeyStateListener(FocusKeyListener)
+	// Listens to mouse events for manual cursor drawing
+	cursorPainter.foreach(addMouseMoveListener)
+	// Also, disables the standard cursor drawing if manually handling cursor
+	if (isManagingCursor)
+		Try { Toolkit.getDefaultToolkit.createCustomCursor(
+			new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB),
+			new java.awt.Point(0, 0), "blank cursor") }.foreach { component.setCursor(_) }
 	
 	
 	// COMPUTED	-------------------------------
@@ -113,6 +131,11 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 	  * @return A pointer to this canvas' stack hierarchy attachment status
 	  */
 	def attachmentPointer = _attachmentPointer.view
+	
+	/**
+	  * @return Whether this component uses custom cursor painting features
+	  */
+	def isManagingCursor = cursorManager.nonEmpty
 	
 	private def currentContent = contentFuture.current.flatMap { _.toOption }
 	
@@ -312,8 +335,11 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 				}
 			}
 			
-			// Paints the buffered image
-			Drawer.use(g) { drawer => buffer.drawWith(drawer) }
+			// Paints the buffered image (and possibly the mouse cursor over it)
+			Drawer.use(g) { drawer =>
+				buffer.drawWith(drawer)
+				cursorPainter.foreach { _.paintWith(drawer) }
+			}
 		}
 		
 		// Never paints children (because won't have any children)
@@ -375,5 +401,48 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike]) extends JWr
 		}
 		
 		override def allowsHandlingFrom(handlerType: HandlerType) = focusManager.hasFocus
+	}
+	
+	private class CursorPainter(cursorManager: ReachCursorManager) extends MouseMoveListener with Handleable
+	{
+		// ATTRIBUTES	-----------------------------
+		
+		private val cursorPointer = new PointerWithEvents[Option[(Point, Image)]](None)
+		private val cursorAreaPointer = cursorPointer.map { _.map { case (position, image) =>
+			image.bounds.translated(position) }
+		}
+		
+		
+		// INITIAL CODE	-----------------------------
+		
+		// Repaints the affected area (without updating drawn content)
+		cursorAreaPointer.addListener { change =>
+			change.merge { (oldArea, newArea) =>
+				Bounds.aroundOption((oldArea ++ newArea).filter { _.size.isPositive }) }
+				.foreach { b => component.repaint(b.toAwt) }
+		}
+		
+		
+		// IMPLEMENTED	-----------------------------
+		
+		override def onMouseMove(event: MouseMoveEvent) =
+		{
+			if (bounds.contains(event.mousePosition))
+			{
+				val newMousePosition = event.mousePosition - position
+				val cursorImage = cursorManager.cursorAt(newMousePosition)
+				cursorPointer.value = Some(newMousePosition -> cursorImage)
+			}
+			else
+				cursorPointer.value = None
+		}
+		
+		
+		// OTHER	----------------------------------
+		
+		// TODO: Handle the slight lag in cursor drawing
+		def paintWith(drawer: Drawer) = cursorPointer.value.foreach { case (position, image) =>
+			image.drawWith(drawer, position)
+		}
 	}
 }

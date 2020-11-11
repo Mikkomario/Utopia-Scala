@@ -2,6 +2,7 @@ package utopia.genesis.image
 
 import java.awt.image.BufferedImage
 
+import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.{Area2D, Bounds, Point, Size}
 
@@ -41,6 +42,11 @@ object PixelTable
 case class PixelTable private(_pixels: Vector[Vector[Color]])
 {
 	// COMPUTED	-----------------------
+	
+	/**
+	  * @return Whether this pixel table is completely empty
+	  */
+	def isEmpty = _pixels.headOption.forall { _.isEmpty }
 	
 	/**
 	  * @return The width of this table in pixels
@@ -108,8 +114,51 @@ case class PixelTable private(_pixels: Vector[Vector[Color]])
 	  */
 	def apply(point: Point): Color = apply(point.x.toInt, point.y.toInt)
 	
+	/**
+	  * @param bounds Target area within this pixel table (doesn't have to be contained within this table's area)
+	  * @return An iterator of the pixels which overlap with the specified area
+	  */
+	def apply(bounds: Bounds): Iterator[Color] =
+	{
+		if (isEmpty)
+			Iterator.empty
+		else
+			bounds.within(Bounds(Point.origin, size)) match
+			{
+				case Some(area) => new PixelIterator(area.y.toInt, area.bottomY.toInt, area.x.toInt, area.rightX.toInt)
+				case None => Iterator.empty
+			}
+	}
+	
 	
 	// OTHER	-----------------------
+	
+	/**
+	  * Finds the color value of a single pixel in this table
+	  * @param point Targeted point in this table
+	  * @return The color of the pixel at that location. None if this table doesn't contain such a location.
+	  */
+	def lookup(point: Point) =
+	{
+		val y = point.y.toInt
+		if (y >= 0 && y < _pixels.size)
+		{
+			val row = _pixels(y)
+			val x = point.x.toInt
+			if (x >= 0 && x < row.size)
+				Some(row(x))
+			else
+				None
+		}
+		else
+			None
+	}
+	
+	/**
+	  * @param area Targeted area in this table
+	  * @return The average color value inside the area
+	  */
+	def averageOf(area: Bounds) = Color.average(apply(area).groupMap(200)(Color.average))
 	
 	/**
 	  * Takes a portion of this table that is contained within the target area
@@ -169,4 +218,34 @@ case class PixelTable private(_pixels: Vector[Vector[Color]])
 	
 	private def writeToImageNoCheck(image: BufferedImage, topLeft: Point) = image.setRGB(topLeft.x.toInt, topLeft.y.toInt,
 		width, height, toRGBVector.toArray, 0, width)
+	
+	
+	// NESTED	-------------------------------
+	
+	private class PixelIterator(yStart: Int, yEnd: Int, xStart: Int, xEnd: Int) extends Iterator[Color]
+	{
+		// ATTRIBUTES	-----------------------
+		
+		private var currentY = yStart
+		private var rowIterator = _pixels(currentY).slice(xStart, xEnd).iterator
+		
+		
+		// IMPLEMENTED	-----------------------
+		
+		override def hasNext = rowIterator.hasNext && currentY < yEnd
+		
+		override def next() =
+		{
+			rowIterator.nextOption() match
+			{
+				// Case: Still row left to scan
+				case Some(rowItem) => rowItem
+				// Case: New row needs to be started
+				case None =>
+					currentY += 1
+					rowIterator = _pixels(currentY).slice(xStart, xEnd).iterator
+					rowIterator.next()
+			}
+		}
+	}
 }

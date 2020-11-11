@@ -1,5 +1,6 @@
 package utopia.genesis.color
 
+import utopia.flow.datastructure.mutable.Pointer
 import utopia.genesis.shape.shape1D.Angle
 import utopia.genesis.util.ApproximatelyEquatable
 
@@ -63,6 +64,11 @@ object Color
 	 */
 	val textWhiteDisabled = white.withAlpha(0.6)
 	
+	/**
+	  * A black color which is drawn completely transparent
+	  */
+	val transparentBlack = black.withAlpha(0.0)
+	
 	
 	// IMPLICITS	---------------------
 	
@@ -85,7 +91,22 @@ object Color
 	  * @param alpha Alpha ratio [0, 1]
 	  * @return A new color
 	  */
-	def apply(r: Double, g: Double, b: Double, alpha: Double = 1.0): Color = Color(Right(Rgb(r, g, b)), 0.0 max alpha min 1.0)
+	def apply(r: Double, g: Double, b: Double, alpha: Double = 1.0): Color =
+		Color(Right(Rgb(r, g, b)), 0.0 max alpha min 1.0)
+	
+	/**
+	  * @param rgb An rgb color
+	  * @param alpha Alpha value assigned to this color [0, 1]
+	  * @return A new color based on the rgb values
+	  */
+	def apply(rgb: Rgb, alpha: Double): Color = Color(Right(rgb), 0.0 max alpha min 1.0)
+	
+	/**
+	  * @param hsl An hsl color
+	  * @param alpha Alpha value assigned to this color [0, 1]
+	  * @return A new color based on the hsl values
+	  */
+	def apply(hsl: Hsl, alpha: Double): Color = Color(Left(hsl), 0.0 max alpha min 1.0)
 	
 	
 	// OTHER	-----------------------
@@ -109,6 +130,31 @@ object Color
 	 * @return A color value for the hex. Failure if value couldn't be decoded.
 	 */
 	def fromHex(hex: String) = Try[Color](java.awt.Color.decode(hex))
+	
+	/**
+	  * @param colors A set of colors
+	  * @return The average color
+	  */
+	def average(colors: Iterable[Color]) =
+	{
+		if (colors.isEmpty)
+			transparentBlack
+		else
+		{
+			// Combines the total rgb and alpha values of the colors (weights by color alpha)
+			val totals = RgbChannel.values.map { _ -> new Pointer(0.0) }.toMap
+			var totalAlpha = 0.0
+			colors.foreach { color =>
+				color.ratios.foreach { case (channel, ratio) => totals(channel).update { _ + ratio * color.alpha } }
+				totalAlpha += color.alpha
+			}
+			// Calculates the average value
+			if (totalAlpha == 0.0)
+				transparentBlack
+			else
+				apply(Rgb.withRatios(totals.view.mapValues { _.value / totalAlpha }.toMap), totalAlpha / colors.size)
+		}
+	}
 }
 
 /**
@@ -245,15 +291,41 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double) exte
 	  * @param other Another color
 	  * @return An average between these colors (rgb-wise)
 	  */
-	def average(other: Color) = Color(Right(rgb.average(other.rgb)), (alpha + other.alpha) / 2)
+	def average(other: Color) =
+	{
+		if (other.alpha == 0.0)
+		{
+			if (alpha == 0.0)
+				Color(Right(rgb.average(other.rgb)), 0.0)
+			else
+				timesAlpha(0.5)
+		}
+		else if (alpha == 0.0)
+			other.timesAlpha(0.5)
+		else
+			Color(Right(rgb.average(other.rgb, alpha / other.alpha)), (alpha + other.alpha) / 2)
+	}
 	
 	/**
 	  * @param other Another color
-	  * @param weight A weight modifier for THIS color
+	  * @param weight A weight modifier for <b>this</b> color
 	  * @return A weighted average between these colors (rgb-wise)
 	  */
-	def average(other: Color, weight: Double) = Color(Right(rgb.average(other.rgb, weight)),
-		(alpha * weight + other.alpha) / (1 + weight))
+	def average(other: Color, weight: Double) =
+	{
+		def newAlpha = (alpha * weight + other.alpha) / (1 + weight)
+		if (other.alpha == 0.0)
+		{
+			if (alpha == 0.0)
+				Color(Right(rgb.average(other.rgb, weight)), 0.0)
+			else
+				withAlpha(newAlpha)
+		}
+		else if (alpha == 0.0)
+			other.withAlpha(newAlpha)
+		else
+			Color(Right(rgb.average(other.rgb, weight * alpha / other.alpha)), newAlpha)
+	}
 	
 	/**
 	  * @param other Another color

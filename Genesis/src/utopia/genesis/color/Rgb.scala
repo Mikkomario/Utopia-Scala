@@ -116,8 +116,8 @@ object Rgb
   * @author Mikko Hilpinen
   * @since 24.4.2019, v1+
   */
-// TODO: Rename to Rgb (same with hsl)
-case class Rgb private(override val ratios: Map[RgbChannel, Double]) extends RgbLike[Rgb] with ApproximatelyEquatable[RgbLike[_]]
+case class Rgb private(override val ratios: Map[RgbChannel, Double])
+	extends RgbLike[Rgb] with ApproximatelyEquatable[RgbLike[_]]
 {
 	// COMPUTED	------------------------
 	

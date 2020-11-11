@@ -14,20 +14,19 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{Actor, KeyStateListener, KeyTypedHandlerType, KeyTypedListener, MouseButtonStateListener, MouseMoveHandlerType, MouseMoveListener}
 import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
-import utopia.genesis.shape.shape2D.{Bounds, Direction2D, Point}
-import utopia.genesis.util.Drawer
+import utopia.genesis.shape.shape2D.{Direction2D, Point}
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.reflection.color.ColorRole.Secondary
 import utopia.reflection.color.ColorShade.Light
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.view.SelectableTextViewDrawer
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
-import utopia.reflection.component.reach.template.{MutableCustomDrawReachComponent, MutableFocusable}
+import utopia.reflection.component.reach.template.{CursorDefining, MutableCustomDrawReachComponent, MutableFocusable}
 import utopia.reflection.component.template.text.MutableTextComponent
+import utopia.reflection.cursor.CursorType.{Default, Text}
 import utopia.reflection.event.{FocusChangeEvent, FocusChangeListener, FocusListener}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.text.{FontMetricsContext, MeasuredText, Regex}
@@ -132,7 +131,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 						enabledPointer: Changing[Boolean] = Changing.wrap(true),
 						allowSelectionWhileDisabled: Boolean = true, allowLineBreaks: Boolean = true,
 						override val allowTextShrink: Boolean = false)
-	extends MutableCustomDrawReachComponent with MutableTextComponent with MutableFocusable
+	extends MutableCustomDrawReachComponent with MutableTextComponent with MutableFocusable with CursorDefining
 {
 	// ATTRIBUTES	-------------------------------
 	
@@ -181,6 +180,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 			GlobalKeyboardEventHandler.register(KeyListener)
 			GlobalMouseEventHandler.register(GlobalMouseReleaseListener)
 			actorHandler += CaretBlinker
+			parentCanvas.cursorManager.foreach { _ += this }
 		}
 		else
 		{
@@ -188,6 +188,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 			GlobalKeyboardEventHandler.unregister(KeyListener)
 			GlobalMouseEventHandler.unregister(GlobalMouseReleaseListener)
 			actorHandler -= CaretBlinker
+			parentCanvas.cursorManager.foreach { _ -= this }
 		}
 	}
 	addMouseButtonListener(MouseListener)
@@ -283,6 +284,10 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		textPointer.value = textAfter
 		allowed
 	}
+	
+	override def cursor = if (enabled) Text else Default
+	
+	override def cursorBounds = boundsInsideTop
 	
 	
 	// OTHER	----------------------------------

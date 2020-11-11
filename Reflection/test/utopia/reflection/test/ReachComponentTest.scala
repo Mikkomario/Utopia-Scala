@@ -7,7 +7,7 @@ import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.KeyStateListener
 import utopia.reflection.color.ColorRole.Primary
-import utopia.reflection.component.context.{BaseContext, ColorContext, TextContext}
+import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.component.reach.button.TextButton
 import utopia.reflection.component.reach.factory.Mixed
 import utopia.reflection.component.reach.input.EditableTextLabel
@@ -36,7 +36,7 @@ object ReachComponentTest extends App
 	def focusReporter(componentName: String) = FocusListener { event => println(s"$componentName: $event") }
 	
 	val windowPointer = new Pointer[Option[Window[_]]](None)
-	val result = ReachCanvas { canvasHierarchy =>
+	val result = ReachCanvas(cursors) { canvasHierarchy =>
 		val (stack, _, label) = Stack(canvasHierarchy).withContext(baseContext.withStackMargin(StackLength.fixedZero))
 			.build(Mixed).column() { factories =>
 			

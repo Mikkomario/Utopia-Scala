@@ -24,7 +24,7 @@ object MutableReachStackTest extends App
 	import TestContext._
 	
 	// Creates content stack
-	val (canvas, stack) = ReachCanvas { canvasHierarchy =>
+	val (canvas, stack) = ReachCanvas(cursors) { canvasHierarchy =>
 		MutableStack(canvasHierarchy).column[MutableViewTextLabel[Int]](margin = margins.small.any,
 			cap = margins.medium.any)
 	}.toTuple

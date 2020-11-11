@@ -1,7 +1,7 @@
 package utopia.reflection.component.reach.template
 
 import utopia.flow.datastructure.immutable.Tree
-import utopia.flow.event.{ChangeListener, Changing}
+import utopia.flow.event.Changing
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.DrawLevel
@@ -67,15 +67,25 @@ trait ReachComponentLike extends Stackable2
 	def parentWindow = parentHierarchy.parentWindow
 	
 	/**
-	  * @return The absolute (on-screen) position of this component. None if not connected to main component
-	  *         hierarchy
+	  * @return The absolute (on-screen) position of this component
 	  */
 	def absolutePosition = position + parentHierarchy.absolutePositionModifier
 	
 	/**
-	  * @return The position of this component inside the so called top component
+	  * @return The bounds of this component on the screen (provided this component is connected to a hierarchy
+	  *         reaching a window)
+	  */
+	def absoluteBounds = Bounds(absolutePosition, size)
+	
+	/**
+	  * @return The position of this component inside the so called top component (the canvas element)
 	  */
 	def positionInTop = position + parentHierarchy.positionToTopModifier
+	
+	/**
+	  * @return The bounds of this component inside the top component (canvas element)
+	  */
+	def boundsInsideTop = Bounds(positionInTop, size)
 	
 	/**
 	  * @return A tree representation of this component hierarchy (root node represents this component and branches

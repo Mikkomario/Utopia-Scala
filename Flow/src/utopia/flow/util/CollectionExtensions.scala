@@ -708,6 +708,23 @@ object CollectionExtensions
             
             builder.result()
         }
+    
+        /**
+          * Maps the items in this iterator, one group at a time
+          * @param groupSize The maximum size of an individual group of items to map
+          * @param map a mapping function applied to groups of items
+          * @tparam B Type of map result
+          * @return All map results in order
+          */
+        def groupMap[B](groupSize: Int)(map: Vector[A] => B) =
+        {
+            val resultBuilder = new VectorBuilder[B]()
+            while (i.hasNext)
+            {
+                resultBuilder += map(takeNext(groupSize))
+            }
+            resultBuilder.result()
+        }
     }
     
     class IterableOnceOperations[Repr, I <: IsIterableOnce[Repr]](coll: Repr, iter: I)
