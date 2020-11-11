@@ -32,17 +32,16 @@ object AnimationLabel
 	  * Creates a new label that rotates a static image
 	  * @param actorHandler Actor handler that will deliver action events
 	  * @param image Image to be drawn
-	  * @param origin Image origin (relative to image top-left corner)
 	  * @param rotation Rotation animation
 	  * @param alignment Alignment to use when positioning the image in the label (default = Center)
 	  * @param maxFps Maximum repaint speed for this element (default = 120 frames per second)
 	  * @return A new label
 	  */
-	def withRotatingImage(actorHandler: ActorHandler, image: Image, origin: Point, rotation: TimedAnimation[Rotation],
+	def withRotatingImage(actorHandler: ActorHandler, image: Image, rotation: TimedAnimation[Rotation],
 						  alignment: Alignment = Center, maxFps: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
 	{
-		val animator = TransformingImageAnimator(image, origin, rotation.map(Transformation.rotation))
-		val maxRadius = image.size.toBounds().corners.map { p => (p - origin).length }.max
+		val animator = TransformingImageAnimator(image, rotation.map(Transformation.rotation))
+		val maxRadius = image.size.toBounds().corners.map { p => (p - image.origin).length }.max
 		val stackSize = (maxRadius * 2).any.square
 		new AnimationLabel(actorHandler, animator, stackSize, Point(maxRadius, maxRadius), alignment, maxFps)
 	}
@@ -51,47 +50,42 @@ object AnimationLabel
 	  * Creates a new label that draws a looping sprite / strip
 	  * @param actorHandler Actor handler that will deliver action events
 	  * @param strip Image strip
-	  * @param spriteOrigin Image origin to use
 	  * @param animationSpeed Animation speed in frames per second
 	  * @param alignment Alignment to use when positioning image in this label (default = Center)
 	  * @return A new label
 	  */
-	def withSprite(actorHandler: ActorHandler, strip: Strip, spriteOrigin: Point, animationSpeed: Fps,
+	def withSprite(actorHandler: ActorHandler, strip: Strip, animationSpeed: Fps,
 				   alignment: Alignment = Center) =
 	{
-		val animator = SpriteDrawer(strip.toTimedAnimation(animationSpeed).map { i => i -> spriteOrigin },
-			Transformation.identity)
-		new AnimationLabel(actorHandler, animator, StackSize.any(strip.imageSize), spriteOrigin, alignment,
+		val animator = SpriteDrawer(strip.toTimedAnimation(animationSpeed))
+		new AnimationLabel(actorHandler, animator, StackSize.any(strip.size), strip.drawPosition, alignment,
 			animationSpeed)
 	}
 	
 	/**
 	  * Creates a new label that rotates a static image
 	  * @param image Image to be drawn
-	  * @param origin Image origin (relative to image top-left corner)
 	  * @param rotation Rotation animation
 	  * @param alignment Alignment to use when positioning the image in the label (default = Center)
 	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def contextualWithRotatingImage(image: Image, origin: Point, rotation: TimedAnimation[Rotation],
-									alignment: Alignment = Center,
+	def contextualWithRotatingImage(image: Image, rotation: TimedAnimation[Rotation], alignment: Alignment = Center,
 									maxFps: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
 								   (implicit context: BaseContextLike) =
-		withRotatingImage(context.actorHandler, image, origin, rotation, alignment, maxFps)
+		withRotatingImage(context.actorHandler, image, rotation, alignment, maxFps)
 	
 	/**
 	  * Creates a new label that draws a looping sprite / strip
 	  * @param strip Image strip
-	  * @param spriteOrigin Image origin to use
 	  * @param animationSpeed Animation speed in frames per second
 	  * @param alignment Alignment to use when positioning image in this label (default = Center)
 	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def contextualWithSprite(strip: Strip, spriteOrigin: Point, animationSpeed: Fps, alignment: Alignment = Center)
+	def contextualWithSprite(strip: Strip, animationSpeed: Fps, alignment: Alignment = Center)
 							(implicit context: BaseContextLike) =
-		withSprite(context.actorHandler, strip, spriteOrigin, animationSpeed, alignment)
+		withSprite(context.actorHandler, strip, animationSpeed, alignment)
 }
 
 /**

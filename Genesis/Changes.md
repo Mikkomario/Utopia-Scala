@@ -8,6 +8,7 @@ new mutable mouse event handlers.
 - Renamed RGB, RGBLike and RGBChannel to Rgb RgbLike and RgbChannel
 - Renamed HSL and HSLLike to Hsl and HslLike
 - KeyTypedEvents now contain the associated key index
+- Added origin to Image, therefore removing separate origin features from any animation and image drawing classes
 ### New Features
 - Added global mouse and keyboard event handling with GlobalMouseEventHandler and GlobalKeyboardEventHandler objects
 - Added SegmentedPath for path / animation based on a set of values

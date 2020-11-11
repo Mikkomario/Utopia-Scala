@@ -180,6 +180,12 @@ case class Size(width: Double, height: Double) extends Vector2DLike[Size] with A
     def toBounds(position: Point = Point.origin) = Bounds(position, this)
     
     /**
+      * @param centerPosition Position for the resulting bounds center point
+      * @return A new set of bounds which are centered on the specified point and have this size
+      */
+    def centeredAt(centerPosition: Point) = Bounds(centerPosition - this / 2, this)
+    
+    /**
       * Checks whether this size would fit into the other size
       * @param another Another size
       * @return Whether this size would fit into the other size

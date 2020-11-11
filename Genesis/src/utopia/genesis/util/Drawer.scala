@@ -294,11 +294,10 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
     /**
       * Draws an image
       * @param image The image to be drawn
-      * @param position The position where the origin is drawn
-      * @param origin The relative position of the image's origin, the point which is placed at (0, 0) coordinates (default = (0, 0))
+      * @param position The position where the image origin is drawn
       * @return Whether the image was fully loaded and drawn
       */
-    def drawImage(image: utopia.genesis.image.Image, position: Point, origin: Point): Boolean = image.drawWith(this, position, origin)
+    def drawImage(image: utopia.genesis.image.Image, position: Point): Boolean = image.drawWith(this, position)
     
     /**
       * Draws an image

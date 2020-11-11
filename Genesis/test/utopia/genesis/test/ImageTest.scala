@@ -21,11 +21,11 @@ object ImageTest extends App
 {
 	// Generates the images
 	val original = Image.readFrom(Paths.get("Genesis/test-images/mushrooms.png")).get
-		.withMaxSourceResolution(Size(128, 128)).withSize(Size(96, 96))
+		.withMaxSourceResolution(Size(128, 128)).withSize(Size(96, 96)).withCenterOrigin
 	val leftPartBounds = Bounds(Point.origin, Size(57, 96))
-	val leftHalf = original.subImage(leftPartBounds)
+	val leftHalf = original.subImage(leftPartBounds).withCenterOrigin
 	val partiallyMapped = original.mapArea(leftPartBounds) { _ + Rotation.ofDegrees(90) }
-	val combined = original.withOverlay(original * 0.5, original.size.toPoint / 4)
+	val combined = original.withOverlay(original * 0.5)
 	
 	// Sets up the program
 	val gameWorldSize = Size(800, 300)
@@ -54,6 +54,5 @@ object ImageTest extends App
 
 private class ImageDrawer(val image: Image, position: Point) extends Drawable with Handleable
 {
-	val origin = image.size.toPoint / 2
-	override def draw(drawer: Drawer) = drawer.drawImage(image, position, origin)
+	override def draw(drawer: Drawer) = drawer.drawImage(image, position)
 }

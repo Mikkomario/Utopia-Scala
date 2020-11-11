@@ -1,0 +1,3 @@
+cursor-arrow.png, cursor-hand.png and cursor-text.png
+are downloaded from https://icons8.com/
+and shouldn't be used or redistributed without linking to the site

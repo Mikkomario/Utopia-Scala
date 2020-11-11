@@ -14,6 +14,7 @@
 - Moved SelectionCircleDrawer from immutable package to view package and refactored and named it accordingly
 - Moved ButtonState from utopia.reflection.component.swing.button -package to utopia.reflection.event -package
 - ColorContext.forTextComponents doesn't accept parameters anymore (except for the implicit localizer)
+- Changed AnimatedLabel creation parameters due to changes in Image and animation classes
 ### New Methods
 - Added .hasSameDimensionsAs(TextDrawContext), .mapFont(...) and .mapColor(...) to TextDrawContext
 - Added .stripControlCharacters to LocalStringLike
