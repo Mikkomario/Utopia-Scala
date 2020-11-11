@@ -16,6 +16,7 @@
     - Also, added View for Viewable wrapping
 - Added Lazy, ResettableLazy, VolatileLazy and ResettableVolatileLazy classes to support situations where mutability 
 in a lazy container is not required or desirable
+- Added WeakCache
 ### New Methods
 - Added .notCompletingBefore(Future) to Future in AsyncExtensions
 - Added .subRangeIterator(Int) to Range.Inclusive in CollectionExtensions

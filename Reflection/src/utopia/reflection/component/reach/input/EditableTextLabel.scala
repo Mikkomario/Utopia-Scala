@@ -26,6 +26,7 @@ import utopia.reflection.component.reach.factory.{ContextInsertableComponentFact
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.{CursorDefining, MutableCustomDrawReachComponent, MutableFocusable}
 import utopia.reflection.component.template.text.MutableTextComponent
+import utopia.reflection.cursor.Cursor
 import utopia.reflection.cursor.CursorType.{Default, Text}
 import utopia.reflection.event.{FocusChangeEvent, FocusChangeListener, FocusListener}
 import utopia.reflection.localization.LocalizedString
@@ -285,9 +286,25 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		allowed
 	}
 	
-	override def cursor = if (enabled) Text else Default
+	override def cursorType = if (selectable) Text else Default
 	
 	override def cursorBounds = boundsInsideTop
+	
+	override def cursorToImage(cursor: Cursor, position: Point) =
+	{
+		// If hovering over a selected area, bases cursor color on that
+		// Otherwise proposes standard text color
+		selectionBackgroundColorPointer.value match
+		{
+			case Some(selectedAreaBackground) =>
+				val positionInDrawBounds = this.position + position
+				if (drawer.drawTargets._2.exists { _._2.contains(positionInDrawBounds) })
+					cursor.over(selectedAreaBackground)
+				else
+					cursor.proposing(textColor)
+			case None => cursor.proposing(textColor)
+		}
+	}
 	
 	
 	// OTHER	----------------------------------
@@ -303,6 +320,11 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	  *                  indicating whether focus move is allowed)
 	  */
 	def addFocusLeaveCondition(condition: String => (String, Boolean)) = focusLeaveConditions :+= condition
+	
+	/**
+	  * Clears all text in this label
+	  */
+	def clear() = text = ""
 	
 	/**
 	  * Clears the current selection area
@@ -471,8 +493,8 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 			}
 			else
 			{
-				clearSelection()
 				CaretBlinker.hide()
+				clearSelection()
 			}
 		}
 	}

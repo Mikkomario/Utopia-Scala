@@ -6,7 +6,7 @@ package utopia.genesis.shape.shape2D
   * @author Mikko Hilpinen
   * @since 14.4.2019
   */
-trait Parallelogramic extends Polygonic with TransformProjectable[Parallelogram]
+trait Parallelogramic extends Polygonic with TransformProjectable[Parallelogramic]
 {
 	// ABSTRACT	------------------
 	

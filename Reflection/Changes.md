@@ -18,6 +18,7 @@
 ### New Methods
 - Added .hasSameDimensionsAs(TextDrawContext), .mapFont(...) and .mapColor(...) to TextDrawContext
 - Added .stripControlCharacters to LocalStringLike
+- Added .withShade(ColorShadeVariant) to SingleColorIcon
 ### Fixes
 - Alignment.position(...) now properly takes parameter bounds position into account
 - Fixed a small bug where Window content size wouldn't update correctly

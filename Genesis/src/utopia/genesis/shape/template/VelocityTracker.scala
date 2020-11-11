@@ -61,9 +61,13 @@ abstract class VelocityTracker[X <: Vector2DLike[X], V <: VelocityLike[X, V], A 
 	
 	// OTHER	---------------------------
 	
-	def recordPosition(newPosition: X) =
+	/**
+	  * Records a position at a specific time point
+	  * @param newPosition New recorded position
+	  * @param eventTime Timestamp of the new position (default = current time)
+	  */
+	def recordPosition(newPosition: X, eventTime: Instant = Instant.now()) =
 	{
-		val eventTime = Instant.now()
 		// May ignore some updates if they are too frequent
 		if (minCacheInterval <= Duration.Zero || _positionHistory.lastOption.forall { _._2 <= eventTime - minCacheInterval })
 		{

@@ -9,6 +9,7 @@ new mutable mouse event handlers.
 - Renamed HSL and HSLLike to Hsl and HslLike
 - KeyTypedEvents now contain the associated key index
 - Added origin to Image, therefore removing separate origin features from any animation and image drawing classes
+- Changed Bounds.translate -methods since there was an ambiguous overlap when Vector2D was used 
 ### New Features
 - Added global mouse and keyboard event handling with GlobalMouseEventHandler and GlobalKeyboardEventHandler objects
 - Added SegmentedPath for path / animation based on a set of values
@@ -28,6 +29,8 @@ new mutable mouse event handlers.
 - Added .translated(Vector2DLike) to Drawer
 - Added Image.draw(...) method which can be used for drawing custom images
 - Added .arrow to KeyStateEvent
+- Added a couple new utility methods to MovementHistoryLike and VelocityTracker
+- Added a couple new utility methods to PixelTable
 ### Fixes
 - Dimensional.toMap now properly returns a Map
 ### Other Changes
@@ -35,6 +38,7 @@ new mutable mouse event handlers.
 - Direction1D now extends RichComparable
 - Bounds + -method now accepts VectorLike instead of only Point 
 - Added implicit conversion from a function to a KeyTypedListener
+- Parallelogramic now produces Parallelogramic instead of Parallelogram when transformed
 
 ## v2.3
 ### Scala

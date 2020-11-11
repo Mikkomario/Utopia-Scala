@@ -7,6 +7,8 @@ import utopia.flow.util.TimeExtensions._
 import utopia.genesis.shape.shape2D.Vector2DLike
 import utopia.genesis.util.{Combinable, Scalable}
 
+import scala.concurrent.duration.Duration
+
 /**
   * A common trait for items that contain an object's movement status over a time period
   * @author Mikko Hilpinen
@@ -81,22 +83,7 @@ trait MovementHistoryLike[X <: Vector2DLike[X], V <: VelocityLike[X, V], A <: Ac
 	/**
 	  * @return Current status, based on latest known status and its projection
 	  */
-	def projectedStatus =
-	{
-		positionHistory.lastOption match
-		{
-			case Some((lastPosition, lastTime)) =>
-				// Checks velocity and acceleration that have affected the position since
-				val velocity = averageVelocitySince(lastTime)
-				val acceleration = averageAccelerationSince(lastTime)
-				// Uses function: X = X0 + V0t + 1/2At^2 where X0 = last position, V0 is the velocity at the time
-				// and A is the average acceleration
-				val duration = Instant.now() - lastTime
-				val (travelVector, projectedVelocity) = velocity(duration, acceleration)
-				combine(lastPosition + travelVector, projectedVelocity, acceleration)
-			case None => latestStatus
-		}
-	}
+	def projectedStatus = futureStatusAt(Instant.now())
 	
 	/**
 	  * @return Average position over recorded history
@@ -113,8 +100,55 @@ trait MovementHistoryLike[X <: Vector2DLike[X], V <: VelocityLike[X, V], A <: Ac
 	  */
 	def averageAcceleration = average(accelerationHistory, zeroAcceleration)
 	
+	/**
+	  * @return Whether the tracked movement has stopped (velocity-wise)
+	  */
+	def isNotMoving = velocityHistory.lastOption.forall { _._1.isZero }
+	
+	/**
+	  * @return Whether the tracked movement is still active (has velocity)
+	  */
+	def isMoving = !isNotMoving
+	
+	/**
+	  * @return Whether the tracked movement has stopped accelerating or decelerating
+	  */
+	def isNotAccelerating = accelerationHistory.lastOption.forall { _._1.isZero }
+	
+	/**
+	  * @return Whether the tracked movement is accelerating or decelerating
+	  */
+	def isAccelerating = !isNotAccelerating
+	
 	
 	// OTHER	----------------------------
+	
+	/**
+	  * @param time Target time point (should not be in the past) (call by name)
+	  * @return Projected status at specified time point based on the latest known state
+	  */
+	def futureStatusAt(time: => Instant) =
+	{
+		positionHistory.lastOption match
+		{
+			case Some((lastPosition, lastTime)) =>
+				// Checks velocity and acceleration that have affected the position since
+				val velocity = averageVelocitySince(lastTime)
+				val acceleration = averageAccelerationSince(lastTime)
+				// Uses function: X = X0 + V0t + 1/2At^2 where X0 = last position, V0 is the velocity at the time
+				// and A is the average acceleration
+				val duration = time - lastTime
+				val (travelVector, projectedVelocity) = velocity(duration, acceleration)
+				combine(lastPosition + travelVector, projectedVelocity, acceleration)
+			case None => latestStatus
+		}
+	}
+	
+	/**
+	  * @param duration A time duration
+	  * @return Projected movement status after specified duration has passed
+	  */
+	def futureStatusAfter(duration: => Duration) = futureStatusAt(Instant.now() + duration)
 	
 	/**
 	  * @param threshold Time threshold

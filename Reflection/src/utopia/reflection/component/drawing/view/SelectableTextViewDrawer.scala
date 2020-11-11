@@ -29,7 +29,13 @@ case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePo
 	
 	override protected val lastDrawStatusPointer = new PointerWithEvents(Point.origin -> Vector2D.identity)
 	
+	/**
+	  * Pointer to the currently drawn targets
+	  */
 	val drawTargetsPointer = textPointer.lazyMergeWith(selectedRangesPointer) { _.drawTargets(_) }
+	/**
+	  * Pointer to the currently drawn caret
+	  */
 	val caretPointer = textPointer.lazyMergeWith(caretPositionPointer) { (text, caretPosition) =>
 		caretPosition.map { caretPosition =>
 			val caretLine = text.caretAt(caretPosition)

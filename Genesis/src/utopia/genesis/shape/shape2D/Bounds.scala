@@ -157,6 +157,8 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     override def contains[V <: Vector2DLike[V]](point: V) = point.x >= topLeft.x && point.y >= topLeft.y &&
             point.x <= bottomRight.x && point.y <= bottomRight.y
     
+    override def translated(translation: Vector2DLike[_]) = withPosition(position + translation)
+    
     
     // OPERATORS    --------------------
     
@@ -164,7 +166,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @param translation Translation applied to these bounds
       * @return A translated set of bounds
       */
-    def +(translation: VectorLike[_]) = translated(translation)
+    def +(translation: Vector2DLike[_]) = translated(translation)
     
     /**
       * @param insets Insets to add to these bounds
@@ -176,7 +178,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @param translation Translation applied to these bounds
       * @return A translated set of bounds
       */
-    def -[V <: VectorLike[V]](translation: V) = translated(-translation)
+    def -[V <: Vector2DLike[V]](translation: V) = translated(-translation)
     
     /**
       * @param insets Insets to subtract from these bounds
@@ -352,17 +354,11 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     def mapSize(map: Size => Size) = withSize(map(size))
     
     /**
-      * @param translation Translation applied to position
-      * @return A copy of these bounds with translated position
-      */
-    def translated(translation: VectorLike[_]) = withPosition(position + translation)
-    
-    /**
       * @param x X-translation applied
       * @param y Y-translation applied
       * @return A copy of these bounds with translated position
       */
-    def translated(x: Double, y: Double) = withPosition(position + Vector2D(x, y))
+    def translatedBy(x: Double, y: Double) = withPosition(position + Vector2D(x, y))
     
     /**
       * @param area Another area

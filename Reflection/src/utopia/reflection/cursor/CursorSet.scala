@@ -1,14 +1,32 @@
 package utopia.reflection.cursor
 
-import utopia.genesis.image.Image
+import utopia.genesis.shape.shape2D.Bounds
 
 /**
   * A set of cursors to use in an application
   * @author Mikko Hilpinen
   * @since 11.11.2020, v2
   */
-case class CursorSet(cursors: Map[CursorType, Image], default: Image = Image.empty)
+case class CursorSet(cursors: Map[CursorType, Cursor], default: Cursor)
 {
+	// ATTRIBUTES	--------------------------
+	
+	/**
+	  * Bounds that should (approximately) contain all of the cursor bound variations
+	  */
+	lazy val expectedMaxBounds = Bounds.around(all.map { _.defaultBounds })
+	
+	
+	// COMPUTED	------------------------------
+	
+	/**
+	  * @return All available cursors
+	  */
+	def all = cursors.values.toSet + default
+	
+	
+	// OTHER	------------------------------
+	
 	/**
 	  * @param cursorType Targeted cursor type
 	  * @return Cursor image that best represents the specified cursor type
@@ -19,7 +37,7 @@ case class CursorSet(cursors: Map[CursorType, Image], default: Image = Image.emp
 		case None => cursorType.backup.flatMap { _apply(_, Set(cursorType)) }.getOrElse(default)
 	}
 	
-	private def _apply(cursorType: CursorType, testedTypes: Set[CursorType]): Option[Image] =
+	private def _apply(cursorType: CursorType, testedTypes: Set[CursorType]): Option[Cursor] =
 	{
 		if (testedTypes.contains(cursorType))
 			None

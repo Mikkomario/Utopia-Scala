@@ -24,7 +24,7 @@ trait TransformProjectable[+T]
       * @param translation Amount of translation applied
       * @return A translated copy of this item
       */
-    def translated(translation: Vector2D) = transformedWith(Transformation.translation(translation))
+    def translated(translation: Vector2DLike[_]) = transformedWith(Transformation.translation(translation))
     
     /**
       * @param rotation Amount of rotation applied

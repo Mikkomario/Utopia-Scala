@@ -351,10 +351,12 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 		case Some(image) =>
 			// Converts the point to an image coordinate
 			val pointInImage = ((point - bounds.topLeft) / scaling).rounded
-			if (Bounds(Point.origin, sourceResolution).contains(pointInImage))
+			val x = pointInImage.x.toInt
+			val y = pointInImage.y.toInt
+			if (x >= 0 && y >= 0 && x < image.getWidth && y < image.getHeight)
 			{
 				// Fetches the pixel color in that location
-				val rgb = image.getRGB(pointInImage.x.toInt, pointInImage.y.toInt)
+				val rgb = image.getRGB(x, y)
 				Color.fromInt(rgb)
 			}
 			else

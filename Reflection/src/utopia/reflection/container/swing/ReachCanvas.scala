@@ -3,6 +3,7 @@ package utopia.reflection.container.swing
 import java.awt.event.KeyEvent
 import java.awt.image.BufferedImage
 import java.awt.{AWTKeyStroke, Container, Graphics, KeyboardFocusManager, Toolkit}
+import java.time.Instant
 import java.util
 
 import javax.swing.{JComponent, JPanel}
@@ -10,15 +11,17 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.VolatileOption
 import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.util.TimeExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
-import utopia.genesis.shape.shape2D.{Bounds, Point}
+import utopia.genesis.shape.shape2D.{Bounds, Point, Size, VelocityTracker2D}
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
+import utopia.reflection.color.ColorShade.{Dark, Light}
 import utopia.reflection.component.drawing.mutable.CustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
@@ -297,6 +300,10 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	
 	// NESTED	------------------------------
 	
+	private sealed trait RepaintNeed
+	private case object Full extends RepaintNeed
+	private case class Partial(area: Bounds) extends RepaintNeed
+	
 	private object HierarchyConnection extends ComponentHierarchy
 	{
 		override def parent = Left(ReachCanvas.this)
@@ -376,13 +383,6 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		}
 	}
 	
-	
-	// NESTED	---------------------------------
-	
-	private sealed trait RepaintNeed
-	private case object Full extends RepaintNeed
-	private case class Partial(area: Bounds) extends RepaintNeed
-	
 	private object FocusKeyListener extends KeyStateListener
 	{
 		// ATTRIBUTES	------------------------
@@ -407,42 +407,72 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	{
 		// ATTRIBUTES	-----------------------------
 		
-		private val cursorPointer = new PointerWithEvents[Option[(Point, Image)]](None)
-		private val cursorAreaPointer = cursorPointer.map { _.map { case (position, image) =>
-			image.bounds.translated(position) }
-		}
+		private val projectionLength = 0.065.seconds
+		private val cursorMovementTracker = new VelocityTracker2D(projectionLength, 0.01.seconds)
+		
+		private var lastMoveEventTime = Instant.now() - projectionLength
+		private var lastMousePosition = Point.origin
+		private var lastDrawnCursor: Option[(Point, Image)] = None
+		
+		private val maxCursorBounds = cursorManager.cursors.expectedMaxBounds.enlarged(Size(24, 24))
 		
 		
-		// INITIAL CODE	-----------------------------
+		// COMPUTED	---------------------------------
 		
-		// Repaints the affected area (without updating drawn content)
-		cursorAreaPointer.addListener { change =>
-			change.merge { (oldArea, newArea) =>
-				Bounds.aroundOption((oldArea ++ newArea).filter { _.size.isPositive }) }
-				.foreach { b => component.repaint(b.toAwt) }
-		}
+		def cursorPosition = cursorMovementTracker.projectedStatus.position
 		
 		
 		// IMPLEMENTED	-----------------------------
 		
 		override def onMouseMove(event: MouseMoveEvent) =
 		{
-			if (bounds.contains(event.mousePosition))
+			// Records both the current and previous positions
+			val eventTime = Instant.now()
+			lastMoveEventTime = eventTime
+			val lastPosition = event.previousMousePosition - position
+			val newPosition = event.mousePosition - position
+			lastMousePosition = newPosition
+			// cursorMovementTracker.recordPosition(lastPosition, eventTime - event.duration)
+			cursorMovementTracker.recordPosition(newPosition.toVector, eventTime)
+			
+			if (bounds.contains(event.mousePosition) || bounds.contains(event.previousMousePosition))
 			{
-				val newMousePosition = event.mousePosition - position
-				val cursorImage = cursorManager.cursorAt(newMousePosition)
-				cursorPointer.value = Some(newMousePosition -> cursorImage)
+				val projectedPosition = (event.mousePosition + event.velocity.over(projectionLength)) - position
+				component.repaint(Bounds.around(Vector(lastPosition, projectedPosition).map { maxCursorBounds.translated(_) }).toAwt)
+				// component.repaint()
 			}
-			else
-				cursorPointer.value = None
 		}
 		
 		
 		// OTHER	----------------------------------
 		
-		// TODO: Handle the slight lag in cursor drawing
-		def paintWith(drawer: Drawer) = cursorPointer.value.foreach { case (position, image) =>
-			image.drawWith(drawer, position)
+		def paintWith(drawer: Drawer) =
+		{
+			// If the cursor stayed still, uses previously calculated information
+			lazy val currentCursorPosition =
+			{
+				if (lastMoveEventTime < Instant.now() - projectionLength)
+					lastMousePosition
+				else
+					cursorPosition.toPoint
+			}
+			lastDrawnCursor.filter { case (pos, _) => pos == lastMousePosition || (pos ~== currentCursorPosition) } match
+			{
+				case Some((lastPosition, lastImage)) => lastImage.drawWith(drawer, lastPosition)
+				case None =>
+					// Otherwise needs to recalculate the cursor style
+					// println(currentCursorPosition)
+					if (bounds.contains(currentCursorPosition + position))
+					{
+						val image = cursorManager.cursorAt(currentCursorPosition) { area =>
+							val luminance = buffer.pixelAt(area.center).luminosity
+							// val luminance = buffer.pixels.averageLuminosityOf(area)
+							if (luminance >= 0.5) Light else Dark
+						}
+						lastDrawnCursor = Some(currentCursorPosition -> image)
+						image.drawWith(drawer, currentCursorPosition)
+					}
+			}
 		}
 	}
 }

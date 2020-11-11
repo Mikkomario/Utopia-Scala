@@ -161,6 +161,20 @@ case class PixelTable private(_pixels: Vector[Vector[Color]])
 	def averageOf(area: Bounds) = Color.average(apply(area).groupMap(200)(Color.average))
 	
 	/**
+	  * @param area Targeted area in this table
+	  * @return The average color luminosity inside the area
+	  */
+	def averageLuminosityOf(area: Bounds) =
+	{
+		apply(area).map { c => (c.luminosity * c.alpha) -> c.alpha }
+			.reduceOption { (a, b) => (a._1 + b._1) -> (a._2 + b._2) } match
+		{
+			case Some((totalLuminosity, totalAlpha)) => totalLuminosity / totalAlpha
+			case None => 0.0
+		}
+	}
+	
+	/**
 	  * Takes a portion of this table that is contained within the target area
 	  * @param area Clipping area
 	  * @return A copy of this table that only contains the part within the specified area

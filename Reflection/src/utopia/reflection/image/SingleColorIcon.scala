@@ -2,7 +2,7 @@ package utopia.reflection.image
 
 import utopia.genesis.color.Color
 import utopia.genesis.image.Image
-import utopia.reflection.color.{ColorSet, ComponentColor}
+import utopia.reflection.color.{ColorSet, ColorShade, ColorShadeVariant, ComponentColor}
 import utopia.reflection.color.TextColorStandard.{Dark, Light}
 import utopia.reflection.component.context.{ButtonContextLike, ColorContextLike}
 import utopia.reflection.component.swing.button.ButtonImageSet
@@ -20,7 +20,7 @@ object SingleColorIcon
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1.2
   */
-class SingleColorIcon(original: Image)
+class SingleColorIcon(val original: Image)
 {
 	// ATTRIBUTES	------------------------
 	
@@ -125,6 +125,16 @@ class SingleColorIcon(original: Image)
 	 */
 	def asIndividualButtonWithColor(colors: ColorSet)(implicit context: ColorContextLike) =
 		colors.forBackground(context.containerBackground)
+	
+	/**
+	  * @param shade a color shade
+	  * @return A version of this icon that matches that shade
+	  */
+	def withShade(shade: ColorShadeVariant) = shade match
+	{
+		case ColorShade.Light => white
+		case ColorShade.Dark => black
+	}
 	
 	/**
 	  * @param f A mapping function
