@@ -297,8 +297,9 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		selectionBackgroundColorPointer.value match
 		{
 			case Some(selectedAreaBackground) =>
-				val positionInDrawBounds = this.position + position
-				if (drawer.drawTargets._2.exists { _._2.contains(positionInDrawBounds) })
+				val highlightAreas = drawer.drawTargets._2
+				lazy val positionInTextBounds = ((this.position + position) - drawer.lastDrawPosition) * drawer.lastDrawScaling
+				if (highlightAreas.nonEmpty && highlightAreas.exists { _._2.contains(positionInTextBounds) })
 					cursor.over(selectedAreaBackground)
 				else
 					cursor.proposing(textColor)
