@@ -1,5 +1,6 @@
 package utopia.reflection.image
 
+import utopia.flow.caching.multi.WeakCache
 import utopia.genesis.color.Color
 import utopia.genesis.image.Image
 import utopia.reflection.color.{ColorSet, ColorShade, ColorShadeVariant, ComponentColor}
@@ -23,6 +24,8 @@ object SingleColorIcon
 class SingleColorIcon(val original: Image)
 {
 	// ATTRIBUTES	------------------------
+	
+	private val paintedImageCache = WeakCache[Color, Image] { c => original.withColorOverlay(c) }
 	
 	/**
 	  * A black version of this icon
@@ -111,7 +114,7 @@ class SingleColorIcon(val original: Image)
 	  */
 	def asIndividualButtonWithColor(color: Color) =
 	{
-		val colored = original.withColorOverlay(color)
+		val colored = asImageWithColor(color)
 		if (color.luminosity < 0.6)
 			ButtonImageSet.brightening(colored)
 		else
@@ -123,8 +126,8 @@ class SingleColorIcon(val original: Image)
 	 * @param context Button creation context
 	 * @return A button image set to be used in buttons without text
 	 */
-	def asIndividualButtonWithColor(colors: ColorSet)(implicit context: ColorContextLike) =
-		colors.forBackground(context.containerBackground)
+	def asIndividualButtonWithColor(colors: ColorSet)(implicit context: ColorContextLike): ButtonImageSet =
+		asIndividualButtonWithColor(colors.forBackground(context.containerBackground))
 	
 	/**
 	  * @param shade a color shade
@@ -156,5 +159,5 @@ class SingleColorIcon(val original: Image)
 	  * @param iconColor New color of the icon
 	  * @return An icon image with specified color overlay
 	  */
-	def asImageWithColor(iconColor: Color) = original.withColorOverlay(iconColor)
+	def asImageWithColor(iconColor: Color) = paintedImageCache(iconColor)
 }

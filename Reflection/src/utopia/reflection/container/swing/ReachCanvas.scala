@@ -465,8 +465,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 					if (bounds.contains(currentCursorPosition + position))
 					{
 						val image = cursorManager.cursorAt(currentCursorPosition) { area =>
-							val luminance = buffer.pixelAt(area.center).luminosity
-							// val luminance = buffer.pixels.averageLuminosityOf(area)
+							// val luminance = buffer.pixelAt(area.center).luminosity
+							val luminance = buffer.averageLuminosityOf(area)
 							if (luminance >= 0.5) Light else Dark
 						}
 						lastDrawnCursor = Some(currentCursorPosition -> image)

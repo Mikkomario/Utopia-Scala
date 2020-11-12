@@ -1,6 +1,5 @@
 package utopia.reflection.cursor
 
-import utopia.flow.caching.multi.WeakCache
 import utopia.genesis.color.Color
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.Bounds
@@ -41,11 +40,6 @@ object Cursor
 	
 	private case class SingleColorCursor(icon: SingleColorIcon) extends Cursor
 	{
-		// ATTRIBUTES	--------------------------
-		
-		private val paintedIconCache = WeakCache[Color, Image] { c => icon.asImageWithColor(c) }
-		
-		
 		// IMPLEMENTED	--------------------------
 		
 		override def defaultBounds = icon.original.bounds
@@ -56,7 +50,7 @@ object Cursor
 			case TextColorStandard.Dark => icon.black
 		}
 		
-		override def proposing(color: Color) = paintedIconCache(color)
+		override def proposing(color: Color) = icon.asImageWithColor(color)
 		
 		override def apply(shade: => ColorShadeVariant) = icon.withShade(shade)
 	}

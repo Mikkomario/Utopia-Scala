@@ -8,8 +8,8 @@ import java.nio.file.{Files, Path}
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.NullSafe._
 import javax.imageio.ImageIO
-import utopia.flow.datastructure.immutable.{Lazy, View}
-import utopia.flow.datastructure.template.Viewable
+import utopia.flow.datastructure.immutable.{Lazy, LazyWrapper}
+import utopia.flow.datastructure.template.LazyLike
 import utopia.genesis.color.Color
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
 import utopia.genesis.shape.Axis.{X, Y}
@@ -27,7 +27,7 @@ object Image
 	/**
 	 * A zero sized image with no pixel data
 	 */
-	val empty = new Image(None, Vector2D.identity, 1.0, None, View(PixelTable.empty))
+	val empty = new Image(None, Vector2D.identity, 1.0, None, LazyWrapper(PixelTable.empty))
 	
 	/**
 	  * Creates a new image
@@ -132,7 +132,7 @@ object Image
   * @since 15.6.2019, v2.1
   */
 case class Image private(private val source: Option[BufferedImage], scaling: Vector2D, alpha: Double,
-						 specifiedOrigin: Option[Point], private val _pixels: Viewable[PixelTable])
+						 specifiedOrigin: Option[Point], private val _pixels: LazyLike[PixelTable])
 	extends Scalable[Image]
 {
 	// ATTRIBUTES	----------------
@@ -346,22 +346,82 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	  * @param point Targeted point in this image <b>relative to this image's origin</b>
 	  * @return A color of this image at the specified location
 	  */
-	def pixelAt(point: Point) = source match
+	def pixelAt(point: Point) =
 	{
-		case Some(image) =>
-			// Converts the point to an image coordinate
-			val pointInImage = ((point - bounds.topLeft) / scaling).rounded
-			val x = pointInImage.x.toInt
-			val y = pointInImage.y.toInt
-			if (x >= 0 && y >= 0 && x < image.getWidth && y < image.getHeight)
-			{
-				// Fetches the pixel color in that location
-				val rgb = image.getRGB(x, y)
-				Color.fromInt(rgb)
-			}
-			else
-				Color.transparentBlack
-		case None => Color.transparentBlack
+		// Utilizes a pre-calculated pixel table if one is already available,
+		// although will not create one just for this method call
+		_pixels.current match
+		{
+			case Some(pixels) => pixels.lookup(point).getOrElse(Color.transparentBlack)
+			case None =>
+				source match
+				{
+					case Some(image) =>
+						// Converts the point to an image coordinate
+						val pointInImage = ((point - bounds.topLeft) / scaling).rounded
+						val x = pointInImage.x.toInt
+						val y = pointInImage.y.toInt
+						if (x >= 0 && y >= 0 && x < image.getWidth && y < image.getHeight)
+						{
+							// Fetches the pixel color in that location
+							val rgb = image.getRGB(x, y)
+							Color.fromInt(rgb)
+						}
+						else
+							Color.transparentBlack
+					case None => Color.transparentBlack
+				}
+		}
+	}
+	
+	/**
+	  * @param area Targeted area within this image. The (0,0) location is relative to the top left corner of this image
+	  * @return An iterator that traverses through the pixels in that area
+	  */
+	def pixelsAt(area: Bounds) =
+	{
+		// Uses a pixel table if one is available
+		_pixels.current match
+		{
+			case Some(pixels) => pixels(area / scaling)
+			case None =>
+				(area / scaling).within(Bounds(Point.origin, sourceResolution)) match
+				{
+					case Some(insideArea) =>
+						if (insideArea.size.isPositive)
+						{
+							// If the specified area covers 50% of this image or more, calculates the whole pixel table
+							if (insideArea.area >= sourceResolution.area * 0.5)
+								pixels(insideArea)
+							else
+							{
+								source match
+								{
+									// Iterates over the targeted pixels
+									case Some(image) =>
+										new ImageIterator(image, insideArea.x.toInt, insideArea.y.toInt,
+											insideArea.rightX.toInt - 1, insideArea.bottomY.toInt - 1)
+									case None => Vector().iterator
+								}
+							}
+						}
+						else
+							Vector().iterator
+					case None => Vector().iterator
+				}
+		}
+	}
+	
+	/**
+	  * @param area Targeted area within this image. The (0,0) is at the top left corner of this image
+	  * @return The average luminosity of the pixels in the targeted area
+	  */
+	// Copied from PixelTable
+	def averageLuminosityOf(area: Bounds) = pixelsAt(area).map { c => (c.luminosity * c.alpha) -> c.alpha }
+		.reduceOption { (a, b) => (a._1 + b._1) -> (a._2 + b._2) } match
+	{
+		case Some((totalLuminosity, totalAlpha)) => totalLuminosity / totalAlpha
+		case None => 0.0
 	}
 	
 	/**
@@ -588,7 +648,7 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 		if (source.isDefined)
 		{
 			val newPixels = f(pixels)
-			Image(Some(newPixels.toBufferedImage), scaling, alpha, specifiedOrigin, View(newPixels))
+			Image(Some(newPixels.toBufferedImage), scaling, alpha, specifiedOrigin, LazyWrapper(newPixels))
 		}
 		else
 			this
@@ -765,6 +825,37 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 					
 				case None => overlayImage
 			}
+	}
+}
+
+private class ImageIterator(image: BufferedImage, startX: Int, startY: Int, endX: Int, endY: Int)
+	extends Iterator[Color]
+{
+	// ATTRIBUTES	-----------------------
+	
+	private val lastX = endX - 1
+	
+	private var nextX = startX
+	private var nextY = startY
+	
+	
+	// IMPLEMENTED	-----------------------
+	
+	override def hasNext = nextY < endY && nextX < endX
+	
+	override def next() =
+	{
+		// Fetches the color
+		val rgb = image.getRGB(nextX, nextY)
+		// Moves the cursor
+		if (nextX < lastX)
+			nextX += 1
+		else
+		{
+			nextX = startX
+			nextY += 1
+		}
+		Color.fromInt(rgb)
 	}
 }
 
