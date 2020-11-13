@@ -2,7 +2,8 @@ package utopia.reflection.component.reach.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.Changing
-import utopia.reflection.color.{ColorRole, ColorShade}
+import utopia.genesis.shape.shape2D.Point
+import utopia.reflection.color.{ColorRole, ColorShade, ColorShadeVariant}
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.component.context.ColorContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
@@ -11,6 +12,7 @@ import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.label.ViewImageLabel
 import utopia.reflection.component.reach.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reflection.component.swing.button.ButtonImageSet
+import utopia.reflection.cursor.Cursor
 import utopia.reflection.event.{ButtonState, FocusListener}
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.shape.Alignment
@@ -157,13 +159,29 @@ class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changi
 		additionalDrawers, allowUpscaling, useLowPrioritySize)
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners
 	
+	/**
+	  * A pointer to this button's current overall shade (based on the focused-state)
+	  */
+	val shadePointer = imagesPointer.lazyMap { images =>
+		ColorShadeVariant.forLuminosity(images.focusImage.pixels.averageLuminosity) }
+	
 	
 	// INITIAL CODE	-----------------------------
 	
 	setup(baseStatePointer, hotKeys, hotKeyCharacters)
 	
 	
+	// COMPUTED	---------------------------------
+	
+	/**
+	  * @return The current overall shade of this button (based on the focused-state)
+	  */
+	def shade = shadePointer.value
+	
+	
 	// IMPLEMENTED	-----------------------------
 	
 	override protected def trigger() = action
+	
+	override def cursorToImage(cursor: Cursor, position: Point) = cursor(shade)
 }

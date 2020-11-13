@@ -7,6 +7,7 @@ import utopia.flow.event.Changing
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.inception.handling.HandlerType
+import utopia.reflection.cursor.CursorType.{Default, Interactive}
 import utopia.reflection.event.{ButtonState, FocusChangeEvent, FocusChangeListener}
 
 object ButtonLike
@@ -22,7 +23,7 @@ object ButtonLike
   * @author Mikko Hilpinen
   * @since 24.10.2020, v2
   */
-trait ButtonLike extends ReachComponentLike with Focusable
+trait ButtonLike extends ReachComponentLike with Focusable with CursorDefining
 {
 	// ABSTRACT	------------------------------
 	
@@ -67,6 +68,10 @@ trait ButtonLike extends ReachComponentLike with Focusable
 	
 	// IMPLEMENTED	--------------------------
 	
+	override def cursorType = if (enabled) Interactive else Default
+	
+	override def cursorBounds = boundsInsideTop
+	
 	// By default, buttons always allow focus enter as long as they're enabled
 	override def allowsFocusEnter = enabled
 	
@@ -109,12 +114,14 @@ trait ButtonLike extends ReachComponentLike with Focusable
 				triggerKeyListener.foreach(parentHierarchy.top.addKeyStateListener)
 				hotKeyListener.foreach(parentHierarchy.top.addKeyStateListener)
 				enableFocusHandling()
+				parentCanvas.cursorManager.foreach { _ += this }
 			}
 			else
 			{
 				triggerKeyListener.foreach(parentHierarchy.top.removeListener)
 				hotKeyListener.foreach(parentHierarchy.top.removeListener)
 				disableFocusHandling()
+				parentCanvas.cursorManager.foreach { _ -= this }
 			}
 		}
 		

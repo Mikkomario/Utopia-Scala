@@ -2,6 +2,7 @@ package utopia.reflection.component.reach.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.Changing
+import utopia.genesis.shape.shape2D.Point
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
@@ -11,6 +12,7 @@ import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.label.ViewImageAndTextLabel
 import utopia.reflection.component.reach.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reflection.component.swing.button.ButtonImageSet
+import utopia.reflection.cursor.Cursor
 import utopia.reflection.event.{ButtonState, FocusListener}
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
@@ -329,6 +331,14 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPoin
 	}
 	
 	
+	// COMPUTED	----------------------------------
+	
+	/**
+	  * @return This button's current background color
+	  */
+	def color = colorPointer.value
+	
+	
 	// INITIAL CODE	------------------------------
 	
 	setup(baseStatePointer, hotKeys, hotKeyCharacters)
@@ -338,4 +348,6 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPoin
 	// IMPLEMENTED	------------------------------
 	
 	override protected def trigger() = action(contentPointer.value)
+	
+	override def cursorToImage(cursor: Cursor, position: Point) = cursor.over(color)
 }

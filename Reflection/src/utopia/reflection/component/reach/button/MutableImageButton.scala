@@ -1,12 +1,15 @@
 package utopia.reflection.component.reach.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.genesis.shape.shape2D.Point
+import utopia.reflection.color.ColorShadeVariant
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.factory.ComponentFactoryFactory
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.label.ViewImageLabel
 import utopia.reflection.component.reach.template.ReachComponentWrapper
 import utopia.reflection.component.swing.button.ButtonImageSet
+import utopia.reflection.cursor.Cursor
 import utopia.reflection.event.{ButtonState, FocusListener}
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
@@ -98,6 +101,11 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	  * A pointer to this button's currently displayed image
 	  */
 	val imagePointer = _statePointer.mergeWith(imagesPointer) { (state, images) => images(state) }
+	/**
+	  * A pointer to the current overall shade of this button (based on the focused-image)
+	  */
+	val shadePointer = imagesPointer.lazyMap { images =>
+		ColorShadeVariant.forLuminosity(images.focusImage.pixels.averageLuminosity) }
 	
 	override var focusListeners: Seq[FocusListener] = Vector[FocusListener](new ButtonDefaultFocusListener(_statePointer))
 	override protected var actions: Seq[() => Unit] = Vector()
@@ -130,6 +138,11 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	def alignment = alignmentPointer.value
 	def alignment_=(newAlignment: Alignment) = alignmentPointer.value = newAlignment
 	
+	/**
+	  * Current overall shade of this button (based on the focused-image)
+	  */
+	def shade = shadePointer.value
+	
 	
 	// IMPLEMENTED	-------------------------------
 	
@@ -138,4 +151,6 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	override def statePointer = _statePointer
 	
 	override protected def trigger() = actions.foreach { _() }
+	
+	override def cursorToImage(cursor: Cursor, position: Point) = cursor(shade)
 }

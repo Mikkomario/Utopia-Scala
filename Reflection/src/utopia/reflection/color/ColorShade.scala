@@ -61,3 +61,14 @@ object ColorShade
 		}
 	}
 }
+
+object ColorShadeVariant
+{
+	import ColorShade._
+	
+	/**
+	  * @param luminosity A luminosity level
+	  * @return A color shade variant matching that luminosity level
+	  */
+	def forLuminosity(luminosity: Double) = if (luminosity > 0.5) Light else Dark
+}

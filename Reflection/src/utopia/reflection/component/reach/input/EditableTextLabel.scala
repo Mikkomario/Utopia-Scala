@@ -213,6 +213,17 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	caretIndexPointer.addListener(showCaretListener)
 	textPointer.addListener(showCaretListener)
 	
+	// Clears or limits selected range whenever the text is updated
+	textPointer.addListener { event =>
+		selectedRangePointer.value.foreach { case (start, end) =>
+			val maxIndex = event.newValue.length
+			if (start >= maxIndex)
+				clearSelection()
+			else if (end > maxIndex)
+				selectedRangePointer.value = Some(start -> maxIndex)
+		}
+	}
+	
 	
 	// COMPUTED	-----------------------------------
 	

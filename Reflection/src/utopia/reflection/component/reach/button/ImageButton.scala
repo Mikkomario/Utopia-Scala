@@ -1,8 +1,9 @@
 package utopia.reflection.component.reach.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.genesis.shape.shape2D.Point
 import utopia.reflection.color.ColorShade.Standard
-import utopia.reflection.color.{ColorRole, ColorShade}
+import utopia.reflection.color.{ColorRole, ColorShade, ColorShadeVariant}
 import utopia.reflection.component.context.ColorContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
@@ -10,6 +11,7 @@ import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.label.ViewImageLabel
 import utopia.reflection.component.reach.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reflection.component.swing.button.ButtonImageSet
+import utopia.reflection.cursor.Cursor
 import utopia.reflection.event.{ButtonState, FocusListener}
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.shape.Alignment
@@ -142,6 +144,11 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, i
 		useLowPrioritySize)
 	override val focusListeners = new ButtonDefaultFocusListener(_statePointer) +: additionalFocusListeners
 	
+	/**
+	  * The overall shade of this button (calculated based on the focused-state)
+	  */
+	lazy val shade = ColorShadeVariant.forLuminosity(images.focusImage.pixels.averageLuminosity)
+	
 	
 	// INITIAL CODE	-----------------------------
 	
@@ -153,4 +160,6 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, i
 	override def statePointer = _statePointer.view
 	
 	override protected def trigger() = action
+	
+	override def cursorToImage(cursor: Cursor, position: Point) = cursor(shade.opposite)
 }

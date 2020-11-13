@@ -24,6 +24,7 @@ in a lazy container is not required or desirable
 Seq in CollectionExtensions
 - Added new .slice(Range), .cut(Range) and .stripControlCharacters to String though StringExtensions
 - Added .toPreciseMinutes, .toPreciseHours, .toPreciseDays and .toPreciseWeeks to Duration in TimeExtensions
+- Added multiple new file write and append methods to FileExtensions
 - Added .getAndUpdate(...) to Volatile
 - Added .delayedBy(Duration) to Changing
 - Added .mapAsync(...), .tryMapAsync(...), .mapAsyncCatching(...) and .mapAsyncMerging(...) to Changing

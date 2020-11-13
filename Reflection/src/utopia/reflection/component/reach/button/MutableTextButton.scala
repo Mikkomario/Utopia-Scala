@@ -2,6 +2,7 @@ package utopia.reflection.component.reach.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
+import utopia.genesis.shape.shape2D.Point
 import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawableWrapper
@@ -11,6 +12,7 @@ import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.label.MutableTextLabel
 import utopia.reflection.component.reach.template.ReachComponentWrapper
 import utopia.reflection.component.template.text.MutableTextComponent
+import utopia.reflection.cursor.Cursor
 import utopia.reflection.event.{ButtonState, FocusListener}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
@@ -156,7 +158,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	protected val wrapped = new MutableTextLabel(parentHierarchy, initialText, initialFont, initialTextColor,
 		initialAlignment, initialTextInsets, initialBetweenLinesMargin, allowLineBreaks, allowTextShrink)
 	/**
-	  * A mutable pointer to this buttons base color
+	  * A mutable pointer to this button's base color
 	  */
 	val colorPointer = new PointerWithEvents(initialColor)
 	
@@ -171,6 +173,15 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	
 	// Adds background drawing
 	wrapped.addCustomDrawer(ButtonBackgroundViewDrawer(colorPointer, statePointer, borderWidth))
+	
+	
+	// COMPUTED	-------------------------------------
+	
+	/**
+	  * @return The current color of this button
+	  */
+	def color = colorPointer.value
+	def color_=(newColor: Color) = colorPointer.value = newColor
 	
 	
 	// IMPLEMENTED	---------------------------------
@@ -192,4 +203,6 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	override def drawContext = wrapped.drawContext
 	
 	override def repaint() = super[MutableCustomDrawableWrapper].repaint()
+	
+	override def cursorToImage(cursor: Cursor, position: Point) = cursor.over(color)
 }

@@ -275,7 +275,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 				}
 			case None => Some(Partial(area))
 		}
-		component.repaint()
+		component.repaint(area.toAwt)
 	}
 	
 	@tailrec

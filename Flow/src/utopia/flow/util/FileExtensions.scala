@@ -1,7 +1,7 @@
 package utopia.flow.util
 
 import java.awt.Desktop
-import java.io.{BufferedOutputStream, FileInputStream, FileNotFoundException, FileOutputStream, IOException, InputStream, Reader}
+import java.io.{BufferedOutputStream, FileInputStream, FileNotFoundException, FileOutputStream, IOException, InputStream, OutputStreamWriter, PrintWriter, Reader}
 import java.nio.file.{DirectoryNotEmptyException, Files, Path, Paths, StandardCopyOption, StandardOpenOption}
 
 import utopia.flow.parse.JsonConvertible
@@ -573,26 +573,56 @@ object FileExtensions
 			StandardOpenOption.APPEND, StandardOpenOption.CREATE) }
 		
 		/**
+		  * Writes a json-convertible instance to this file
+		  * @param json A json-convertible instance that will produce contents of this file
+		  * @return This path. Failure if writing failed.
+		  */
+		@deprecated("Replaced with writeJson", "v1.9")
+		def writeJSON(json: JsonConvertible) = write(json.toJson)(Codec.UTF8)
+		
+		/**
 		 * Writes a json-convertible instance to this file
 		 * @param json A json-convertible instance that will produce contents of this file
 		 * @return This path. Failure if writing failed.
 		 */
-		def writeJSON(json: JsonConvertible) = write(json.toJson)(Codec.UTF8)
+		def writeJson(json: JsonConvertible) = write(json.toJson)(Codec.UTF8)
+		
+		/**
+		  * Writes the specified text lines to a file
+		  * @param lines Lines to write to the file
+		  * @param append Whether the lines should be appended to the end of the existing data (true) or whether
+		  *               to overwrite the current contents of the file (false). Default = false.
+		  * @param codec Encoding used (implicit)
+		  */
+		def writeLines(lines: IterableOnce[String], append: Boolean = false)(implicit codec: Codec) =
+		{
+			Try { new FileOutputStream(p.toFile, append)
+				.consume { new OutputStreamWriter(_, codec.charSet)
+					.consume { new PrintWriter(_).consume { writer =>
+						lines.iterator.foreach(writer.println)
+					} } }
+			}
+		}
 		
 		/**
 		 * Writes into this file with a function. An output stream is opened for the duration of the function.
 		 * @param writer A writer function that uses an output stream (may throw)
-		 * @return This path. Failure if writing function threw or stream couldn't be opened (Eg. trying to write to a file).
+		 * @return This path. Failure if writing function threw or stream couldn't be opened
 		 */
-		def writeWith[U](writer: BufferedOutputStream => U) =
-			Try { new FileOutputStream(p.toFile).consume { new BufferedOutputStream(_).consume(writer) } }.map { _ => p }
+		def writeWith[U](writer: BufferedOutputStream => U) = _writeWith(append = false)(writer)
+		
+		private def _writeWith[U](append: Boolean)(writer: BufferedOutputStream => U) =
+			Try { new FileOutputStream(p.toFile, append).consume { new BufferedOutputStream(_).consume(writer) } }
+				.map { _ => p }
 		
 		/**
 		  * Writes into this file by reading data from a reader.
 		  * @param reader Reader that supplies the data
+		  * @param append Whether the lines should be appended to the end of the existing data (true) or whether
+		  *               to overwrite the current contents of the file (false). Default = false.
 		  * @return This path. Failure if reading or writing failed or the file stream couldn't be opened
 		  */
-		def writeFromReader(reader: Reader) = writeWith { output =>
+		def writeFromReader(reader: Reader, append: Boolean = false) = _writeWith(append) { output =>
 			// See: https://stackoverflow.com/questions/6927873/
 			// how-can-i-read-a-file-to-an-inputstream-then-write-it-into-an-outputstream-in-sc
 			Iterator.continually(reader.read)
@@ -605,13 +635,31 @@ object FileExtensions
 		  * @param inputStream Reader that supplies the data
 		  * @return This path. Failure if reading or writing failed or the file stream couldn't be opened
 		  */
-		def writeStream(inputStream: InputStream)/*(implicit codec: Codec)*/ =
-		{
-			Try { Files.copy(inputStream, p, StandardCopyOption.REPLACE_EXISTING) }.map { _ => p }
-			/*
-			new InputStreamReader(inputStream, codec.charSet).consume { streamReader =>
-				new BufferedReader(streamReader).consume(writeFromReader) }*/
-		}
+		def writeStream(inputStream: InputStream) = Try { Files.copy(inputStream, p,
+			StandardCopyOption.REPLACE_EXISTING) }.map { _ => p }
+		
+		/**
+		  * Writes into this file with a function. An output stream is opened for the duration of the function.
+		  * Doesn't overwrite the current contents of this file but appends to them instead.
+		  * @param writer A writer function that uses an output stream (may throw)
+		  * @return This path. Failure if writing function threw or stream couldn't be opened
+		  */
+		def appendWith[U](writer: BufferedOutputStream => U) = _writeWith(append = true)(writer)
+		
+		/**
+		  * Writes the specified text lines to the end of this file
+		  * @param lines Lines to write to the file
+		  * @param codec Encoding used (implicit)
+		  */
+		def appendLines(lines: IterableOnce[String])(implicit codec: Codec) = writeLines(lines, append = true)
+		
+		/**
+		  * Writes into this file by reading data from a reader. Doesn't overwrite existing file data but appends
+		  * to it instead.
+		  * @param reader Reader that supplies the data
+		  * @return This path. Failure if reading or writing failed or the file stream couldn't be opened
+		  */
+		def appendFromReader(reader: Reader) = writeFromReader(reader, append = true)
 		
 		/**
 		 * Reads data from this file

@@ -416,7 +416,7 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	def drawTargets(highlightedCaretRanges: Iterable[Range] = Vector()) =
 	{
 		// If there aren't any highlighted ranges, uses the cached values
-		if (highlightedCaretRanges.isEmpty)
+		if (highlightedCaretRanges.isEmpty || isEmpty)
 			defaultDrawTargets -> Vector()
 		else
 		{

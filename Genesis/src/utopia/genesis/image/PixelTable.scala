@@ -39,14 +39,9 @@ object PixelTable
   * @since 15.6.2019, v2.1+
   */
 // First y-coordinate, then x-coordinate
-case class PixelTable private(_pixels: Vector[Vector[Color]])
+case class PixelTable private(_pixels: Vector[Vector[Color]]) extends Iterable[Color]
 {
 	// COMPUTED	-----------------------
-	
-	/**
-	  * @return Whether this pixel table is completely empty
-	  */
-	def isEmpty = _pixels.headOption.forall { _.isEmpty }
 	
 	/**
 	  * @return The width of this table in pixels
@@ -61,17 +56,17 @@ case class PixelTable private(_pixels: Vector[Vector[Color]])
 	/**
 	  * @return The size of this table in pixels
 	  */
-	def size = Size(width, height)
+	def area = Size(width, height)
 	
 	/**
-	  * @return A vector containing each pixel color value
+	  * @return The average luminosity of the pixels in this table
 	  */
-	private def toVector = _pixels.flatten
+	def averageLuminosity = Color.averageLuminosityOf(this)
 	
 	/**
 	  * @return A vector containing each pixel color rgb value
 	  */
-	private def toRGBVector = toVector.map { _.toInt }
+	private def rgbIterator = iterator.map { _.toInt }
 	
 	/**
 	  * @return A buffered image based on this pixel data
@@ -123,12 +118,22 @@ case class PixelTable private(_pixels: Vector[Vector[Color]])
 		if (isEmpty)
 			Iterator.empty
 		else
-			bounds.within(Bounds(Point.origin, size)) match
+			bounds.within(Bounds(Point.origin, area)) match
 			{
 				case Some(area) => new PixelIterator(area.y.toInt, area.bottomY.toInt, area.x.toInt, area.rightX.toInt)
 				case None => Iterator.empty
 			}
 	}
+	
+	
+	// IMPLEMENTED	-------------------
+	
+	/**
+	  * @return Whether this pixel table is completely empty
+	  */
+	override def isEmpty = _pixels.headOption.forall { _.isEmpty }
+	
+	override def iterator = _pixels.iterator.flatten
 	
 	
 	// OTHER	-----------------------
@@ -164,15 +169,7 @@ case class PixelTable private(_pixels: Vector[Vector[Color]])
 	  * @param area Targeted area in this table
 	  * @return The average color luminosity inside the area
 	  */
-	def averageLuminosityOf(area: Bounds) =
-	{
-		apply(area).map { c => (c.luminosity * c.alpha) -> c.alpha }
-			.reduceOption { (a, b) => (a._1 + b._1) -> (a._2 + b._2) } match
-		{
-			case Some((totalLuminosity, totalAlpha)) => totalLuminosity / totalAlpha
-			case None => 0.0
-		}
-	}
+	def averageLuminosityOf(area: Bounds) = Color.averageLuminosityOf(apply(area))
 	
 	/**
 	  * Takes a portion of this table that is contained within the target area
@@ -220,7 +217,7 @@ case class PixelTable private(_pixels: Vector[Vector[Color]])
 	def writeToImage(image: BufferedImage, topLeft: Point = Point.origin) =
 	{
 		val imageBounds = Bounds(Point.origin, Size(image.getWidth, image.getHeight))
-		val writeBounds = Bounds(topLeft, size)
+		val writeBounds = Bounds(topLeft, area)
 		
 		// Default case: Written area is within image area
 		if (imageBounds.contains(writeBounds))
@@ -231,7 +228,7 @@ case class PixelTable private(_pixels: Vector[Vector[Color]])
 	}
 	
 	private def writeToImageNoCheck(image: BufferedImage, topLeft: Point) = image.setRGB(topLeft.x.toInt, topLeft.y.toInt,
-		width, height, toRGBVector.toArray, 0, width)
+		width, height, rgbIterator.toArray, 0, width)
 	
 	
 	// NESTED	-------------------------------

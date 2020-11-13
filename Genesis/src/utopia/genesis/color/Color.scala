@@ -155,6 +155,18 @@ object Color
 				apply(Rgb.withRatios(totals.view.mapValues { _.value / totalAlpha }.toMap), totalAlpha / colors.size)
 		}
 	}
+	
+	/**
+	  * @param colors A collection of colors
+	  * @return The average luminosity of those colors
+	  */
+	def averageLuminosityOf(colors: IterableOnce[Color]) = colors.iterator
+		.map { c => (c.luminosity * c.alpha) -> c.alpha }
+		.reduceOption { (a, b) => (a._1 + b._1) -> (a._2 + b._2) } match
+		{
+			case Some((totalLuminosity, totalAlpha)) => totalLuminosity / totalAlpha
+			case None => 0.0
+		}
 }
 
 /**

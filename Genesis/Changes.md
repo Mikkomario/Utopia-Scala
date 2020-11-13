@@ -31,6 +31,7 @@ new mutable mouse event handlers.
 - Added .arrow to KeyStateEvent
 - Added a couple new utility methods to MovementHistoryLike and VelocityTracker
 - Added a couple new utility methods to PixelTable
+- Added .averageLuminosityOf(...) to Color
 ### Fixes
 - Dimensional.toMap now properly returns a Map
 ### Other Changes
@@ -39,6 +40,7 @@ new mutable mouse event handlers.
 - Bounds + -method now accepts VectorLike instead of only Point 
 - Added implicit conversion from a function to a KeyTypedListener
 - Parallelogramic now produces Parallelogramic instead of Parallelogram when transformed
+- PixelTable now extends IterableOnce(Color)
 
 ## v2.3
 ### Scala

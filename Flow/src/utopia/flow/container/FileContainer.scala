@@ -89,7 +89,7 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 			val dataToSave = toValue(_current.value)
 			fileLocation.createParentDirectories()
 			// Completes the promise so that the next save process can start
-			newSavePromise.success(fileLocation.writeJSON(dataToSave).map { _ => () })
+			newSavePromise.success(fileLocation.writeJson(dataToSave).map { _ => () })
 		}
 		newSavePromise.future
 	}

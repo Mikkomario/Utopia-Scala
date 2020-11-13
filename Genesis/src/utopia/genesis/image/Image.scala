@@ -400,7 +400,7 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 									// Iterates over the targeted pixels
 									case Some(image) =>
 										new ImageIterator(image, insideArea.x.toInt, insideArea.y.toInt,
-											insideArea.rightX.toInt - 1, insideArea.bottomY.toInt - 1)
+											insideArea.rightX.toInt, insideArea.bottomY.toInt)
 									case None => Vector().iterator
 								}
 							}
@@ -416,13 +416,7 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	  * @param area Targeted area within this image. The (0,0) is at the top left corner of this image
 	  * @return The average luminosity of the pixels in the targeted area
 	  */
-	// Copied from PixelTable
-	def averageLuminosityOf(area: Bounds) = pixelsAt(area).map { c => (c.luminosity * c.alpha) -> c.alpha }
-		.reduceOption { (a, b) => (a._1 + b._1) -> (a._2 + b._2) } match
-	{
-		case Some((totalLuminosity, totalAlpha)) => totalLuminosity / totalAlpha
-		case None => 0.0
-	}
+	def averageLuminosityOf(area: Bounds) = Color.averageLuminosityOf(pixelsAt(area))
 	
 	/**
 	  * Creates a copy of this image with adjusted alpha value (transparency)
