@@ -160,6 +160,23 @@ case class ContextualStackFactory[N <: BaseContextLike](stackFactory: StackFacto
 			if (areRelated) context.relatedItemsStackMargin else context.defaultStackMargin, cap, customDrawers)
 	
 	/**
+	  * Creates a new stack of items with no margin between them
+	  * @param content Content to attach to this stack
+	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
+	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
+	  *               (default = Fit = All components have same breadth as this stack)
+	  * @param cap Cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers attached to this stack (default = empty)
+	  * @tparam C Type of wrapped component
+	  * @tparam R Type of component creation result
+	  * @return This stack, along with contextual information
+	  */
+	def withoutMargin[C <: ReachComponentLike, R](content: OpenComponent[Vector[C], R], direction: Axis2D = Y,
+												  layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
+												  customDrawers: Vector[CustomDrawer] = Vector()) =
+		stackFactory(content, direction, layout, StackLength.fixedZero, cap, customDrawers)
+	
+	/**
 	  * Creates a new row of items
 	  * @param content Content to attach to this stack
 	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
@@ -306,6 +323,27 @@ class ContextualStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualCompo
 	{
 		val content = Open.withContext(contentFactory, stackFactory.context)(fill)
 		stackFactory(content, direction, layout, cap, customDrawers, areRelated)
+	}
+	
+	/**
+	  * Creates a new stack of items with no margin between them
+	  * @param direction Axis along which the components are stacked / form a line (default = Y = column)
+	  * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
+	  *               (default = Fit = All components have same breadth as this stack)
+	  * @param cap Cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers attached to this stack (default = empty)
+	  * @param fill A function for creating the components that will be placed in this stack
+	  * @tparam C Type of wrapped component
+	  * @tparam R Type of component creation result
+	  * @return This stack, along with the created components and possible additional result value
+	  */
+	def withoutMargin[C <: ReachComponentLike, R](direction: Axis2D = Y, layout: StackLayout = Fit,
+												  cap: StackLength = StackLength.fixedZero,
+												  customDrawers: Vector[CustomDrawer] = Vector())
+												 (fill: F[N] => ComponentCreationResult[Vector[C], R]) =
+	{
+		val content = Open.withContext(contentFactory, stackFactory.context)(fill)
+		stackFactory.withoutMargin(content, direction, layout, cap, customDrawers)
 	}
 	
 	/**

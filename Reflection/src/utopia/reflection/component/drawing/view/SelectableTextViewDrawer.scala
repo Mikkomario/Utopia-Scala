@@ -21,7 +21,8 @@ case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePo
 									caretPositionPointer: Changing[Option[Int]],
 									highlightedTextColorPointer: Viewable[Color],
 									highlightedBackgroundPointer: Viewable[Option[Color]] = View(None),
-									override val caretColor: Color = Color.textBlack, caretWidth: Double = 1.0,
+									caretColorPointer: Viewable[Color] = Changing.wrap(Color.textBlack),
+									caretWidth: Double = 1.0,
 									override val drawLevel: DrawLevel = Normal)
 	extends SelectableTextDrawerLike
 {
@@ -61,4 +62,6 @@ case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePo
 	override def highlightedTextColor = highlightedTextColorPointer.value
 	
 	override def highlightedTextBackground = highlightedBackgroundPointer.value
+	
+	override def caretColor = caretColorPointer.value
 }

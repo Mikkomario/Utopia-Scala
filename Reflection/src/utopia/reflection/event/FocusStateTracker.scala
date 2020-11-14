@@ -1,5 +1,7 @@
 package utopia.reflection.event
 
+import utopia.flow.datastructure.mutable.PointerWithEvents
+
 /**
   * A focus listener used for tracking focus status
   * @author Mikko Hilpinen
@@ -9,18 +11,23 @@ class FocusStateTracker(hasFocusInitially: Boolean) extends FocusChangeListener
 {
 	// ATTRIBUTES	-------------------------
 	
-	private var state = hasFocusInitially
+	private val pointer = new PointerWithEvents(hasFocusInitially)
 	
 	
 	// COMPUTED	-----------------------------
 	
 	/**
+	  * @return A pointer to the tracked focus state
+	  */
+	def focusPointer = pointer.view
+	
+	/**
 	  * @return Whether the tracked component currently holds focus
 	  */
-	def hasFocus = state
+	def hasFocus = pointer.value
 	
 	
 	// IMPLEMENTED	-------------------------
 	
-	override def onFocusChangeEvent(event: FocusChangeEvent) = state = event.hasFocus
+	override def onFocusChangeEvent(event: FocusChangeEvent) = pointer.value = event.hasFocus
 }

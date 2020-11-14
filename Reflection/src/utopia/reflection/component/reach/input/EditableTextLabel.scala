@@ -45,8 +45,13 @@ object EditableTextLabel extends ContextInsertableComponentFactoryFactory[TextCo
 class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	extends ContextInsertableComponentFactory[TextContextLike, ContextualEditableTextLabelFactory]
 {
+	// IMPLEMENTED	----------------------------------
+	
 	override def withContext[N <: TextContextLike](context: N) =
 		ContextualEditableTextLabelFactory(this, context)
+	
+	
+	// OTHER	--------------------------------------
 	
 	/**
 	  * Creates a new editable text label
@@ -55,7 +60,7 @@ class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param selectedTextColorPointer A pointer to this label's selected text's color (default = always standard black)
 	  * @param selectionBackgroundColorPointer A pointer to this label's selected text's background color, if any
 	  *                                        (default = always None)
-	  * @param caretColor Color used when drawing the caret (default = standard black)
+	  * @param caretColorPointer A pointer to the color used when drawing the caret (default = always standard black)
 	  * @param caretWidth Width of the drawn caret (default = 1 pixels)
 	  * @param caretBlinkFrequency Frequency how often caret visibility is changed (default = every 0.5 seconds)
 	  * @param textPointer A pointer to this label's text (default = new empty pointer)
@@ -71,7 +76,7 @@ class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	def apply(actorHandler: ActorHandler, stylePointer: PointerWithEvents[TextDrawContext],
 			  selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
 			  selectionBackgroundColorPointer: Changing[Option[Color]] = Changing.wrap(None),
-			  caretColor: Color = Color.textBlack, caretWidth: Double = 1.0,
+			  caretColorPointer: Changing[Color] = Changing.wrap(Color.textBlack), caretWidth: Double = 1.0,
 			  caretBlinkFrequency: Duration = 0.5.seconds,
 			  textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 			  inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
@@ -79,7 +84,7 @@ class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
 			  allowSelectionWhileDisabled: Boolean = true, allowLineBreaks: Boolean = true,
 			  allowTextShrink: Boolean = false) =
 		new EditableTextLabel(parentHierarchy, actorHandler, stylePointer, selectedTextColorPointer,
-			selectionBackgroundColorPointer, caretColor, caretWidth, caretBlinkFrequency, textPointer,
+			selectionBackgroundColorPointer, caretColorPointer, caretWidth, caretBlinkFrequency, textPointer,
 			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, allowLineBreaks, allowTextShrink)
 }
 
@@ -110,7 +115,7 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
 			Vector(context.containerBackground, selectionBackground))
 		factory(context.actorHandler, new PointerWithEvents(TextDrawContext.contextual(context)),
 			Changing.wrap(selectionBackground.defaultTextColor), Changing.wrap(Some(selectionBackground)),
-			caretColor, (context.margins.verySmall / 2) max 1.0, caretBlinkFrequency, textPointer,
+			Changing.wrap(caretColor), (context.margins.verySmall / 2) max 1.0, caretBlinkFrequency, textPointer,
 			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, context.allowLineBreaks,
 			context.allowTextShrink)
 	}
@@ -121,11 +126,13 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
   * @author Mikko Hilpinen
   * @since 30.10.2020, v2
   */
+// TODO: Create a global default value for the caret blink frequency
+// TODO: Also create a password mode where text is not displayed nor copyable
 class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
 						val baseStylePointer: PointerWithEvents[TextDrawContext],
 						selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
 						selectionBackgroundColorPointer: Changing[Option[Color]] = Changing.wrap(None),
-						caretColor: Color = Color.textBlack, caretWidth: Double = 1.0,
+						caretColorPointer: Changing[Color] = Changing.wrap(Color.textBlack), caretWidth: Double = 1.0,
 						caretBlinkFrequency: Duration = 0.5.seconds,
 						val textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 						inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
@@ -166,9 +173,9 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	
 	private val drawer = SelectableTextViewDrawer(measuredTextPointer, effectiveStylePointer,
 		selectedRangePointer.map { _.map { case (start, end) => if (start < end) start to end else end to start } },
-		drawnCaretPointer, selectedTextColorPointer, selectionBackgroundColorPointer, caretColor, caretWidth)
-	private val repaintListener: ChangeListener[Any] = _ => repaint()
-	private val showCaretListener: ChangeListener[Any] = _ => CaretBlinker.show()
+		drawnCaretPointer, selectedTextColorPointer, selectionBackgroundColorPointer, caretColorPointer, caretWidth)
+	private val repaintListener = ChangeListener.onAnyChange { repaint() }
+	private val showCaretListener = ChangeListener.onAnyChange { CaretBlinker.show() }
 	
 	
 	// INITIAL CODE	-------------------------------
@@ -205,6 +212,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	}
 	effectiveStylePointer.addListener(repaintListener)
 	drawnCaretPointer.addListener(repaintListener)
+	caretColorPointer.addListener(repaintListener)
 	selectedRangePointer.addListener(repaintListener)
 	selectedTextColorPointer.addListener(repaintListener)
 	selectionBackgroundColorPointer.addListener(repaintListener)
@@ -228,9 +236,14 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	// COMPUTED	-----------------------------------
 	
 	/**
+	  * @return A pointer to this label's focus state
+	  */
+	def focusPointer = FocusHandler.focusPointer
+	
+	/**
 	  * @return Whether this label is currently the focused component
 	  */
-	def hasFocus = FocusHandler.hasFocus
+	def hasFocus = FocusHandler.focus
 	
 	/**
 	  * @return Whether this label is currently enabled
@@ -488,7 +501,15 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	{
 		// ATTRIBUTES	--------------------------
 		
-		var hasFocus = false
+		private val _focusPointer = new PointerWithEvents(false)
+		
+		
+		// COMPUTED	------------------------------
+		
+		def focusPointer = _focusPointer.view
+		
+		def focus = _focusPointer.value
+		private def focus_=(newState: Boolean) = _focusPointer.value = newState
 		
 		
 		// IMPLEMENTED	--------------------------
@@ -496,9 +517,9 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		override def onFocusChangeEvent(event: FocusChangeEvent) =
 		{
 			// Tracks focus state
-			hasFocus = event.hasFocus
+			focus = event.hasFocus
 			// Alters caret / selection on focus changes
-			if (hasFocus)
+			if (event.hasFocus)
 			{
 				moveCaretToEnd()
 				CaretBlinker.show()

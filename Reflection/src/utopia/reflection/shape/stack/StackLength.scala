@@ -116,6 +116,7 @@ object StackLength
   * @param rawMax Maximum length. None if not limited. Defaults to None.
   * @param priority The priority used for this length
 **/
+// TODO: Change this into a case class and set constructor to private
 class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = None,
 				  val priority: LengthPriority = Normal) extends Equatable with StackInsetsConvertible
 {
@@ -301,7 +302,14 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * Creates a copy of this length with a new priority
 	  * @param newPriority New priority for this length
 	  */
-	def withPriority(newPriority: LengthPriority) = if (priority == newPriority) this else copy(newPriority = newPriority)
+	def withPriority(newPriority: LengthPriority) =
+		if (priority == newPriority) this else copy(newPriority = newPriority)
+	
+	/**
+	  * @param f A function for mapping priority
+	  * @return A copy of this length with mapped priority
+	  */
+	def mapPriority(f: LengthPriority => LengthPriority) = withPriority(f(priority))
 	
 	/**
 	  * @param newMin A new minimum value

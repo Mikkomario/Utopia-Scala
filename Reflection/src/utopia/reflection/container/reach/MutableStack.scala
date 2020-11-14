@@ -100,6 +100,19 @@ case class ContextualMutableStackFactory[+N <: BaseContextLike](hierarchy: Compo
 			if (areRelated) context.relatedItemsStackMargin else context.defaultStackMargin, cap)
 	
 	/**
+	  * Creates a new stack with no margin between items
+	  * @param direction Direction along which the components are "stacked" (X = row, Y = column (default))
+	  * @param layout Layout used when determining component length perpendicular to stack direction
+	  *               (default = Fit = All components have same length)
+	  * @param cap Margin placed at each end of this stack (default = always 0)
+	  * @tparam C Type of components within this stack
+	  * @return A new stack
+	  */
+	def withoutMargin[C <: ReachComponentLike](direction: Axis2D = Y, layout: StackLayout = Fit,
+											   cap: StackLength = StackLength.fixedZero) =
+		new MutableStack[C](hierarchy, direction, layout, StackLength.fixedZero, cap)
+	
+	/**
 	  * Creates a new horizontal stack
 	  * @param layout Layout used when determining component length perpendicular to stack direction
 	  *               (default = Fit = All components have same length)
@@ -134,8 +147,8 @@ case class ContextualMutableStackFactory[+N <: BaseContextLike](hierarchy: Compo
   * @since 17.10.2020, v2
   */
 class MutableStack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
-											override val direction: Axis2D, override val layout: StackLayout,
-											override val margin: StackLength, override val cap: StackLength)
+											initialDirection: Axis2D, initialLayout: StackLayout,
+											initialMargin: StackLength, initialCap: StackLength)
 	extends MutableCustomDrawReachComponent with StackLike2[C] with MutableMultiContainer2[OpenComponent[C, _], C]
 {
 	// ATTRIBUTES	------------------------
@@ -143,8 +156,53 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	private var _components = Vector[C]()
 	private var pointers = Map[Int, Settable[Boolean]]()
 	
+	private var _direction = initialDirection
+	private var _layout = initialLayout
+	private var _margin = initialMargin
+	private var _cap = initialCap
+	
 	
 	// IMPLEMENTED	------------------------
+	
+	override def direction = _direction
+	def direction_=(newDirection: Axis2D) =
+	{
+		if (_direction != newDirection)
+		{
+			_direction = newDirection
+			revalidate()
+		}
+	}
+	
+	override def layout = _layout
+	def layout_=(newLayout: StackLayout) =
+	{
+		if (_layout != newLayout)
+		{
+			_layout = newLayout
+			revalidate()
+		}
+	}
+	
+	override def margin = _margin
+	def margin_=(newMargin: StackLength) =
+	{
+		if (_margin != newMargin)
+		{
+			_margin = newMargin
+			revalidate()
+		}
+	}
+	
+	override def cap = _cap
+	def cap_=(newCap: StackLength) =
+	{
+		if (_cap != newCap)
+		{
+			_cap = newCap
+			revalidate()
+		}
+	}
 	
 	override def children = components
 	

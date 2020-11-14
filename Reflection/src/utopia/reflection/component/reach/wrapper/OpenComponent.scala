@@ -17,6 +17,8 @@ import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.ReachCanvas
 import utopia.reflection.shape.stack.{StackInsetsConvertible, StackLength}
 
+import scala.collection.immutable.VectorBuilder
+
 object Open
 {
 	/**
@@ -36,6 +38,37 @@ object Open
 	}
 	
 	/**
+	  * Creates a number of new open components at once. This method should be used only when the components have
+	  * individual conditions for connecting with the parent component. If the components share a condition or don't
+	  * use one, one should use .apply(...) instead.
+	  * @param creation A creation function that accepts an infinite iterator that provides new component hierarchies.
+	  *                 Returns the created components, along with pointers that indicate whether those components
+	  *                 should be attached to the parent component or not. The number of returned items should match
+	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
+	  *                 to share a created hierarchy between multiple components.
+	  * @param canvas Canvas element that will ultimately host these components (implicit)
+	  * @tparam C Type of created components
+	  * @return New open components, with their connection pointers as results (if defined)
+	  */
+	def many[C](creation: Iterator[ComponentHierarchy] => IterableOnce[(C, Option[Changing[Boolean]])])
+				  (implicit canvas: ReachCanvas) =
+	{
+		// Provides the creation function with an infinite iterator that creates new component hierarchies as requested
+		// Collects all created component hierarchies
+		val hierarchiesBuilder = new VectorBuilder[SeedHierarchyBlock]()
+		val moreHierarchiesIterator = Iterator.continually[ComponentHierarchy] {
+			val hierarchy = new SeedHierarchyBlock(canvas)
+			hierarchiesBuilder += hierarchy
+			hierarchy
+		}
+		// Combines the created components with the created component hierarchies (amounts should match)
+		creation(moreHierarchiesIterator).iterator.zip(hierarchiesBuilder.result()).map { case (result, hierarchy) =>
+			val (component, connectPointer) = result
+			new OpenComponent(ComponentCreationResult(component, connectPointer), hierarchy)
+		}.toVector
+	}
+	
+	/**
 	  * Creates a new open component
 	  * @param factory A factory that produces component factories for target contexts
 	  * @param creation Component creation function (returns a component and a possible additional result)
@@ -48,6 +81,26 @@ object Open
 	def using[F, C, R](factory: ComponentFactoryFactory[F])(creation: F => ComponentCreationResult[C, R])
 					  (implicit canvas: ReachCanvas) =
 		apply { hierarchy => creation(factory(hierarchy)) }
+	
+	/**
+	  * Creates a number of new open components at once. This method should be used only when the components have
+	  * individual conditions for connecting with the parent component. If the components share a condition or don't
+	  * use one, one should use .apply(...) instead.
+	  * @param factory A factory that produces component factories
+	  * @param creation A creation function that accepts an infinite iterator that provides new component hierarchies.
+	  *                 Returns the created components, along with pointers that indicate whether those components
+	  *                 should be attached to the parent component or not. The number of returned items should match
+	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
+	  *                 to share a created hierarchy between multiple components.
+	  * @param canvas Canvas element that will ultimately host these components (implicit)
+	  * @tparam F Type of component factory
+	  * @tparam C Type of created components
+	  * @return New open components, with their connection pointers as results (if defined)
+	  */
+	def manyUsing[F, C](factory: ComponentFactoryFactory[F])
+					   (creation: Iterator[F] => IterableOnce[(C, Option[Changing[Boolean]])])
+					   (implicit canvas: ReachCanvas) =
+		many[C] { hierarchies => creation(hierarchies.map(factory.apply)) }
 	
 	/**
 	  * Creates a new open component using a contextual component factory
@@ -72,6 +125,28 @@ object Open
 	}
 	
 	/**
+	  * Creates a number of new open components at once. This method should be used only when the components have
+	  * individual conditions for connecting with the parent component. If the components share a condition or don't
+	  * use one, one should use .apply(...) instead.
+	  * @param factory A factory that produces context-aware component factories
+	  * @param context Component creation context used in the produced factories
+	  * @param creation A creation function that accepts an infinite iterator that provides new component hierarchies.
+	  *                 Returns the created components, along with pointers that indicate whether those components
+	  *                 should be attached to the parent component or not. The number of returned items should match
+	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
+	  *                 to share a created hierarchy between multiple components.
+	  * @param canvas Canvas element that will ultimately host these components (implicit)
+	  * @tparam C Type of created components
+	  * @tparam N Type of component creation context
+	  * @tparam F Type of component creation factory
+	  * @return New open components, with their connection pointers as results (if defined)
+	  */
+	def manyWithContext[C, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F], context: N)
+	(creation: Iterator[F[N]] => IterableOnce[(C, Option[Changing[Boolean]])])(implicit canvas: ReachCanvas) =
+		many { hierarchies => creation(hierarchies.map { factory.withContext(_, context) }) }
+	
+	/**
 	  * Creates a new open component using a contextual component factory
 	  * @param factory A factory that can produce contextual component factories when specified with the proper context
 	  * @param creation Component creation function (accepts a context-specific component creation factory)
@@ -87,6 +162,29 @@ object Open
 	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])(creation: F[N] => ComponentCreationResult[C, R])
 	(implicit canvas: ReachCanvas, context: N) =
 		withContext(factory, context)(creation)
+	
+	/**
+	  * Creates a number of new open components at once. This method should be used only when the components have
+	  * individual conditions for connecting with the parent component. If the components share a condition or don't
+	  * use one, one should use .apply(...) instead.
+	  * @param factory A factory that produces context-aware component factories
+	  * @param creation A creation function that accepts an infinite iterator that provides new component hierarchies.
+	  *                 Returns the created components, along with pointers that indicate whether those components
+	  *                 should be attached to the parent component or not. The number of returned items should match
+	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
+	  *                 to share a created hierarchy between multiple components.
+	  * @param canvas Canvas element that will ultimately host these components (implicit)
+	  * @param context Component creation context used in the produced factories
+	  * @tparam C Type of created components
+	  * @tparam N Type of component creation context
+	  * @tparam F Type of component creation factory
+	  * @return New open components, with their connection pointers as results (if defined)
+	  */
+	def contextualMany[C, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])
+	(creation: Iterator[F[N]] => IterableOnce[(C, Option[Changing[Boolean]])])
+	(implicit canvas: ReachCanvas, context: N) =
+		manyWithContext(factory, context)(creation)
 }
 
 object OpenComponent
