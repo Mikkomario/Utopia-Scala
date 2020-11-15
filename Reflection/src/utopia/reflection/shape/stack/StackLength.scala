@@ -1,6 +1,7 @@
 package utopia.reflection.shape.stack
 
 import utopia.flow.util.Equatable
+import utopia.genesis.util.Scalable
 import utopia.reflection.shape.stack.LengthPriority.{Expanding, Low, Normal, Shrinking}
 
 object StackLength
@@ -116,9 +117,9 @@ object StackLength
   * @param rawMax Maximum length. None if not limited. Defaults to None.
   * @param priority The priority used for this length
 **/
-// TODO: Change this into a case class and set constructor to private
 class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = None,
-				  val priority: LengthPriority = Normal) extends Equatable with StackInsetsConvertible
+				  val priority: LengthPriority = Normal)
+	extends Equatable with StackInsetsConvertible
 {
     // ATTRIBUTES    ------------------------
 	

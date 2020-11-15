@@ -24,6 +24,11 @@ sealed trait Direction1D extends RichComparable[Direction1D]
 	  */
 	def modifier: Short
 	
+	/**
+	  * @return Direction opposite to this one
+	  */
+	def opposite: Direction1D
+	
 	
 	// COMPUTED	----------------------------
 	
@@ -93,6 +98,8 @@ object Direction1D
 		override val isPositive = true
 		override val modifier = 1
 		
+		override def opposite = Negative
+		
 		override def compareTo(o: Direction1D) = o match
 		{
 			case Positive => 0
@@ -107,6 +114,8 @@ object Direction1D
 	{
 		override val isPositive = false
 		override val modifier = -1
+		
+		override def opposite = Positive
 		
 		override def compareTo(o: Direction1D) = o match
 		{

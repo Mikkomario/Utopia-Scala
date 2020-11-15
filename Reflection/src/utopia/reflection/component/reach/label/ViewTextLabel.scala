@@ -13,7 +13,7 @@ import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.CustomDrawReachComponent
 import utopia.reflection.component.template.display.PoolWithPointer
 import utopia.reflection.component.template.text.TextComponent2
-import utopia.reflection.localization.DisplayFunction
+import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText}
@@ -78,6 +78,42 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 						   allowTextShrink: Boolean = false) =
 		apply(contentPointer, Changing.wrap(TextDrawContext(font, textColor, alignment, insets, betweenLinesMargin)),
 			displayFunction, additionalDrawers, allowLineBreaks, allowTextShrink)
+	
+	/**
+	  * Creates a new text label
+	  * @param contentPointer Pointer to the text displayed on this label
+	  * @param stylePointer A pointer to this label's styling information
+	  * @param additionalDrawers Additional custom drawing (default = empty)
+	  * @param allowLineBreaks Whether line breaks within the text should be respected and applied (default = true)
+	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
+	  * @return A new label
+	  */
+	def forText(contentPointer: Changing[LocalizedString], stylePointer: Changing[TextDrawContext],
+				additionalDrawers: Seq[CustomDrawer] = Vector(), allowLineBreaks: Boolean = true,
+				allowTextShrink: Boolean = false) =
+		apply[LocalizedString](contentPointer, stylePointer, DisplayFunction.identity, additionalDrawers,
+			allowLineBreaks, allowTextShrink)
+	
+	/**
+	  * Creates a new text label
+	  * @param contentPointer Pointer to the text displayed on this label
+	  * @param font Font used when drawing the text
+	  * @param textColor Color used when drawing the text (default = standard black)
+	  * @param alignment Text alignment (default = left)
+	  * @param insets Insets around the text (default = any insets, preferring zero)
+	  * @param betweenLinesMargin Margin placed between horizontal text lines, in case there are many (default = 0)
+	  * @param additionalDrawers Additional custom drawing (default = empty)
+	  * @param allowLineBreaks Whether line breaks within the text should be respected and applied (default = true)
+	  * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
+	  * @return A new label
+	  */
+	def forTextWithStaticStyle(contentPointer: Changing[LocalizedString], font: Font,
+						   textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
+						   insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0,
+						   additionalDrawers: Seq[CustomDrawer] = Vector(), allowLineBreaks: Boolean = true,
+						   allowTextShrink: Boolean = false) =
+		withStaticStyle[LocalizedString](contentPointer, font, DisplayFunction.identity, textColor, alignment, insets,
+			betweenLinesMargin, additionalDrawers, allowLineBreaks, allowTextShrink)
 }
 
 object ContextualViewTextLabelFactory
@@ -158,6 +194,18 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
 		factory(contentPointer, stylePointer, displayFunction, additionalDrawers, context.allowLineBreaks,
 			context.allowTextShrink)
 	}
+	
+	/**
+	  * Creates a new text label utilizing contextual information
+	  * @param contentPointer Pointer to the text displayed on this label
+	  * @param isHintPointer A pointer that that contains true when this label should be considered a hint
+	  *                      (drawn with lesser opacity). Default = always false.
+	  * @param additionalDrawers Additional custom drawing (default = empty)
+	  * @return A new label
+	  */
+	def forText(contentPointer: Changing[LocalizedString], isHintPointer: Changing[Boolean] = Changing.wrap(false),
+				 additionalDrawers: Seq[CustomDrawer] = Vector()) =
+		apply[LocalizedString](contentPointer, DisplayFunction.identity, isHintPointer, additionalDrawers)
 }
 
 /**

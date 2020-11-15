@@ -32,6 +32,7 @@ new mutable mouse event handlers.
 - Added a couple new utility methods to MovementHistoryLike and VelocityTracker
 - Added a couple new utility methods to PixelTable
 - Added .averageLuminosityOf(...) to Color
+- Added .opposite to Direction1D
 ### Fixes
 - Dimensional.toMap now properly returns a Map
 ### Other Changes

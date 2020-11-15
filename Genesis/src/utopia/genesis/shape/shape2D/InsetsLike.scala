@@ -4,6 +4,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.Direction2D._
+import utopia.genesis.util.Scalable
 
 import scala.collection.immutable.HashMap
 
@@ -120,7 +121,7 @@ trait InsetsFactory[L, S, +Repr, +I <: InsetsLike[L, S, Repr]]
 * @author Mikko Hilpinen
 * @since 25.3.2019
 **/
-trait InsetsLike[L, +S, +Repr]
+trait InsetsLike[L, +S, +Repr] extends Scalable[Repr]
 {
     // ABSTRACT ------------------
     
@@ -250,15 +251,15 @@ trait InsetsLike[L, +S, +Repr]
     
     override def toString = s"[${amounts.map { case (d, l) => s"$d:$l" }.mkString(", ")}]"
     
-    
-    // OPERATORS    --------------
-    
     /**
       * Multiplies each side of these insets
       * @param multi A multiplier
       * @return Multiplied insets
       */
-    def *(multi: Double) = makeCopy(amounts.map { case (side, length) => side -> multiply(length, multi) })
+    override def *(multi: Double) = makeCopy(amounts.map { case (side, length) => side -> multiply(length, multi) })
+    
+    
+    // OPERATORS    --------------
     
     /**
      * @param multi A multiplier (may be different for different axes)
@@ -266,13 +267,6 @@ trait InsetsLike[L, +S, +Repr]
      */
     def *(multi: Vector2D) = makeCopy(amounts.map { case (side, length) =>
         side -> multiply(length, multi.along(side.axis)) })
-    
-    /**
-      * Divides each side of these insets
-      * @param div A divider
-      * @return Divided insets
-      */
-    def /(div: Double) = this * (1/div)
     
     /**
       * Adds two insets together

@@ -25,11 +25,10 @@ import utopia.reflection.component.drawing.view.SelectableTextViewDrawer
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.{CursorDefining, MutableCustomDrawReachComponent, MutableFocusable}
-import utopia.reflection.component.template.text.MutableTextComponent
+import utopia.reflection.component.template.text.TextComponent2
 import utopia.reflection.cursor.Cursor
 import utopia.reflection.cursor.CursorType.{Default, Text}
 import utopia.reflection.event.{FocusChangeEvent, FocusChangeListener, FocusListener}
-import utopia.reflection.localization.LocalizedString
 import utopia.reflection.text.{FontMetricsContext, MeasuredText, Regex}
 import utopia.reflection.localization.LocalString._
 
@@ -73,7 +72,7 @@ class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param allowTextShrink Whether the drawn text should be shrank to conserve space when required (default = false)
 	  * @return A new label
 	  */
-	def apply(actorHandler: ActorHandler, stylePointer: PointerWithEvents[TextDrawContext],
+	def apply(actorHandler: ActorHandler, stylePointer: Changing[TextDrawContext],
 			  selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
 			  selectionBackgroundColorPointer: Changing[Option[Color]] = Changing.wrap(None),
 			  caretColorPointer: Changing[Color] = Changing.wrap(Color.textBlack), caretWidth: Double = 1.0,
@@ -113,7 +112,7 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
 		val selectionBackground = context.color(Secondary, Light)
 		val caretColor = context.colorScheme.secondary.bestAgainst(
 			Vector(context.containerBackground, selectionBackground))
-		factory(context.actorHandler, new PointerWithEvents(TextDrawContext.contextual(context)),
+		factory(context.actorHandler, Changing.wrap(TextDrawContext.contextual(context)),
 			Changing.wrap(selectionBackground.defaultTextColor), Changing.wrap(Some(selectionBackground)),
 			Changing.wrap(caretColor), (context.margins.verySmall / 2) max 1.0, caretBlinkFrequency, textPointer,
 			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, context.allowLineBreaks,
@@ -129,7 +128,7 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
 // TODO: Create a global default value for the caret blink frequency
 // TODO: Also create a password mode where text is not displayed nor copyable
 class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
-						val baseStylePointer: PointerWithEvents[TextDrawContext],
+						baseStylePointer: Changing[TextDrawContext],
 						selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
 						selectionBackgroundColorPointer: Changing[Option[Color]] = Changing.wrap(None),
 						caretColorPointer: Changing[Color] = Changing.wrap(Color.textBlack), caretWidth: Double = 1.0,
@@ -139,7 +138,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 						enabledPointer: Changing[Boolean] = Changing.wrap(true),
 						allowSelectionWhileDisabled: Boolean = true, allowLineBreaks: Boolean = true,
 						override val allowTextShrink: Boolean = false)
-	extends MutableCustomDrawReachComponent with MutableTextComponent with MutableFocusable with CursorDefining
+	extends MutableCustomDrawReachComponent with TextComponent2 with MutableFocusable with CursorDefining
 {
 	// ATTRIBUTES	-------------------------------
 	
@@ -285,15 +284,11 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	
 	// IMPLEMENTED	-------------------------------
 	
-	override def text_=(newText: LocalizedString) = textPointer.value = newText.string
-	
 	override def updateLayout() = ()
-	
-	override def drawContext_=(newContext: TextDrawContext) = baseStylePointer.value = newContext
 	
 	override def measuredText = measuredTextPointer.value
 	
-	override def drawContext = baseStylePointer.value
+	override def drawContext = effectiveStylePointer.value
 	
 	override def allowsFocusEnter = selectable
 	
