@@ -6,7 +6,6 @@ import java.awt.event.KeyEvent
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeListener, Changing}
-import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, KeyStatus, KeyTypedEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
@@ -31,6 +30,7 @@ import utopia.reflection.cursor.CursorType.{Default, Text}
 import utopia.reflection.event.{FocusChangeEvent, FocusChangeListener, FocusListener}
 import utopia.reflection.text.{FontMetricsContext, MeasuredText, Regex}
 import utopia.reflection.localization.LocalString._
+import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.{Failure, Success, Try}
@@ -76,7 +76,7 @@ class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
 			  selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
 			  selectionBackgroundColorPointer: Changing[Option[Color]] = Changing.wrap(None),
 			  caretColorPointer: Changing[Color] = Changing.wrap(Color.textBlack), caretWidth: Double = 1.0,
-			  caretBlinkFrequency: Duration = 0.5.seconds,
+			  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 			  textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 			  inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
 			  enabledPointer: Changing[Boolean] = Changing.wrap(true),
@@ -106,7 +106,8 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
 	  */
 	def apply(textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 			  inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-			  enabledPointer: Changing[Boolean] = Changing.wrap(true), caretBlinkFrequency: Duration = 0.5.seconds,
+			  enabledPointer: Changing[Boolean] = Changing.wrap(true),
+			  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 			  allowSelectionWhileDisabled: Boolean = true) =
 	{
 		val selectionBackground = context.color(Secondary, Light)
@@ -125,14 +126,13 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
   * @author Mikko Hilpinen
   * @since 30.10.2020, v2
   */
-// TODO: Create a global default value for the caret blink frequency
-// TODO: Also create a password mode where text is not displayed nor copyable
+// TODO: Create a password mode where text is not displayed nor copyable
 class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
 						baseStylePointer: Changing[TextDrawContext],
 						selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
 						selectionBackgroundColorPointer: Changing[Option[Color]] = Changing.wrap(None),
 						caretColorPointer: Changing[Color] = Changing.wrap(Color.textBlack), caretWidth: Double = 1.0,
-						caretBlinkFrequency: Duration = 0.5.seconds,
+						caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 						val textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 						inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
 						enabledPointer: Changing[Boolean] = Changing.wrap(true),

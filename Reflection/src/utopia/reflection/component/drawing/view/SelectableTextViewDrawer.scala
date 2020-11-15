@@ -17,9 +17,9 @@ import utopia.reflection.text.MeasuredText
   * @since 4.11.2020, v2
   */
 case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePointer: Viewable[TextDrawContext],
-									selectedRangesPointer: Changing[Iterable[Range]],
-									caretPositionPointer: Changing[Option[Int]],
-									highlightedTextColorPointer: Viewable[Color],
+									selectedRangesPointer: Changing[Iterable[Range]] = Changing.wrap(Vector()),
+									caretPositionPointer: Changing[Option[Int]] = Changing.wrap(None),
+									highlightedTextColorPointer: Viewable[Color] = View(Color.textBlack),
 									highlightedBackgroundPointer: Viewable[Option[Color]] = View(None),
 									caretColorPointer: Viewable[Color] = Changing.wrap(Color.textBlack),
 									caretWidth: Double = 1.0,

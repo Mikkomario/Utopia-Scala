@@ -1,7 +1,6 @@
 package utopia.reflection.shape.stack
 
 import utopia.flow.util.Equatable
-import utopia.genesis.util.Scalable
 import utopia.reflection.shape.stack.LengthPriority.{Expanding, Low, Normal, Shrinking}
 
 object StackLength
@@ -253,6 +252,17 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	{
 	    val newMax = if (max.isDefined && other.max.isDefined) Some(max.get + other.max.get) else None
 	    StackLength(min + other.min, optimal + other.optimal, newMax, priority min other.priority)
+	}
+	
+	/**
+	  * Subtracts another length from this one. Only works properly if this length is larger
+	  * @param other Another stack length
+	  * @return A subtraction of these stack lengths where minimum, optimal and maximum values are decreased
+	  */
+	def -(other: StackLength) =
+	{
+		val newMax = if (max.isDefined && other.max.isDefined) Some(max.get - other.max.get) else None
+		StackLength(min - other.min, optimal - other.optimal, newMax, priority)
 	}
 	
 	/**

@@ -50,4 +50,9 @@ object ComponentCreationDefaults
 	  * Icon used in frames by default. Default = standard java icon.
 	  */
 	var windowIcon = Image.empty
+	
+	/**
+	  * How often should a text field caret change its visibility when idle
+	  */
+	var caretBlinkFrequency = 0.5.seconds
 }

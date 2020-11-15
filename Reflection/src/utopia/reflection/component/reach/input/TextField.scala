@@ -2,26 +2,29 @@ package utopia.reflection.component.reach.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.Changing
+import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis.X
 import utopia.genesis.shape.shape2D.Insets
-import utopia.reflection.color.ColorRole.Error
+import utopia.reflection.color.ColorRole.{Error, Secondary}
 import utopia.reflection.color.{ColorRole, ColorScheme, ComponentColor}
 import utopia.reflection.component.drawing.immutable.TextDrawContext
-import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderViewDrawer}
+import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, SelectableTextViewDrawer}
 import utopia.reflection.component.reach.factory.Mixed
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.label.{ViewTextLabel, ViewTextLabelFactory}
-import utopia.reflection.component.reach.template.{Focusable, ReachComponentWrapper}
-import utopia.reflection.component.reach.wrapper.Open
-import utopia.reflection.container.reach.{MutableStack, StackFactory, ViewStack, ViewStackFactory}
+import utopia.reflection.component.reach.template.ReachComponentWrapper
+import utopia.reflection.component.template.input.InputWithPointer
+import utopia.reflection.container.reach.{ViewStack, ViewStackFactory}
 import utopia.reflection.event.FocusStateTracker
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.{Alignment, Border}
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
-import utopia.reflection.text.{Font, Regex}
+import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText, Regex}
 import utopia.reflection.localization.LocalString._
+import utopia.reflection.shape.stack.modifier.MaxBetweenModifier
+import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.Duration
 
@@ -30,54 +33,33 @@ import scala.concurrent.duration.Duration
   * @author Mikko Hilpinen
   * @since 14.11.2020, v2
   */
-/*
-val baseStylePointer: PointerWithEvents[TextDrawContext],
-						selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
-						selectionBackgroundColorPointer: Changing[Option[Color]] = Changing.wrap(None),
-						caretColor: Color = Color.textBlack, caretWidth: Double = 1.0,
-						caretBlinkFrequency: Duration = 0.5.seconds,
-						val textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
-						inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-						enabledPointer: Changing[Boolean] = Changing.wrap(true),
-						allowSelectionWhileDisabled: Boolean = true, allowLineBreaks: Boolean = true,
-						override val allowTextShrink: Boolean = false)
- */
+// TODO: Hint pointer and error pointers should be optional
 class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, colorScheme: ColorScheme,
 				   contextBackgroundPointer: Changing[ComponentColor], defaultWidth: StackLength,
-				   font: Font, alignment: Alignment, textInsets: StackInsets,
-				   fieldNamePointer: Option[Changing[LocalizedString]], promptPointer: Changing[LocalizedString],
-				   hintPointer: Changing[LocalizedString], errorMessagePointer: Changing[LocalizedString],
-				   textPointer: PointerWithEvents[String],
-				   selectedTextColorPointer: Changing[Color],
-				   selectionBackgroundPointer: Changing[Option[Color]],
-				   highlightStylePointer: Changing[Option[ColorRole]], focusColorRole: ColorRole,
-				   defaultBorderWidth: Double, focusBorderWidth: Double, hintScaleFactor: Double, caretWidth: Double,
-				   caretBlinkFrequency: Duration, betweenLinesMargin: Double, inputFilter: Option[Regex],
-				   resultFilter: Option[Regex], maxLength: Option[Int], enabledPointer: Changing[Boolean],
-				   fillBackground: Boolean, allowLineBreaks: Boolean, allowTextShrink: Boolean,
-				   showCharacterCount: Boolean)
+				   font: Font, alignment: Alignment = Alignment.Left, textInsets: StackInsets = StackInsets.any,
+				   fieldNamePointer: Option[Changing[LocalizedString]] = None,
+				   promptPointer: Option[Changing[LocalizedString]] = None,
+				   hintPointer: Changing[LocalizedString] = Changing.wrap(LocalizedString.empty),
+				   errorMessagePointer: Changing[LocalizedString] = Changing.wrap(LocalizedString.empty),
+				   textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
+				   selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
+				   selectionBackgroundPointer: Changing[Option[Color]] = Changing.wrap(None),
+				   highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
+				   focusColorRole: ColorRole = Secondary, defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
+				   hintScaleFactor: Double = 0.5, caretWidth: Double = 1.0,
+				   caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
+				   betweenLinesMargin: Double = 0.0, inputFilter: Option[Regex] = None,
+				   resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
+				   enabledPointer: Changing[Boolean] = Changing.wrap(true), fillBackground: Boolean = true,
+				   allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false,
+				   showCharacterCount: Boolean = false)
 				  (parseResult: Option[String] => A)
-	extends ReachComponentWrapper
+	extends ReachComponentWrapper with InputWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTES	------------------------------------------
 	
-	/*
-	private val actualTextInsets =
-	{
-		// Text insets always expand horizontally
-		val base = textInsets.expandingHorizontallyAccordingTo(alignment)
-		// Top inset is increased (based on border) only if field name pointer is not used and border is
-		// drawn on all sides
-		val borderInsets =
-		{
-			if (fillBackground)
-				Insets.bottom(focusBorderWidth)
-			else
-				Insets(focusBorderWidth, focusBorderWidth, if (fieldNamePointer.isDefined) 0 else focusBorderWidth,
-					focusBorderWidth)
-		}
-		base + borderInsets
-	}*/
+	private val defaultHintInsets = textInsets.expandingHorizontallyAccordingTo(alignment)
+		.mapVertical { _ * hintScaleFactor }
 	
 	private val focusTracker = new FocusStateTracker(false)
 	
@@ -128,15 +110,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 			case None => default
 		}
 	}
-	/*
-	private val normalTextStylePointer = editTextColorPointer.map { color => TextDrawContext(font, color, alignment,
-		actualTextInsets, betweenLinesMargin) }
-		*/
-	private val hintTextStylePointer = hintColorPointer.map { color =>
-		TextDrawContext(font * hintScaleFactor, color, alignment,
-			textInsets.expandingHorizontallyAccordingTo(alignment) * hintScaleFactor,
-			betweenLinesMargin * hintScaleFactor)
-	}
+	private val hintTextStylePointer = hintColorPointer.map { makeHintStyle(_) }
 	
 	private val borderPointer =
 	{
@@ -162,20 +136,32 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 				Border.symmetric(if (focus) focusBorderWidth else defaultBorderWidth, color)
 			}
 	}
+	private val borderDrawer = BorderViewDrawer(borderPointer)
 	
-	/*
-	private val openMainLabel = Open.using(EditableTextLabel) { factory =>
-		factory.apply(actorHandler, ???, selectedTextColorPointer, selectionBackgroundPointer, highlightColorPointer,
-			caretWidth, caretBlinkFrequency, textPointer, inputFilter, maxLength, enabledPointer,
-			allowLineBreaks = allowLineBreaks, allowTextShrink = allowTextShrink)
-	}(parentHierarchy.top)*/
+	override protected val wrapped = ViewStack(parentHierarchy).builder(Mixed)
+		.withFixedStyle(margin = StackLength.fixedZero) { factories =>
+			// Input part may contain a name label, if enabled
+			val inputPart = fieldNamePointer match
+			{
+				case Some(fieldNamePointer) => makeTextAndNameArea(factories.next()(ViewStack), fieldNamePointer)
+				case None => makeTextLabelOnly(factories.next()(EditableTextLabel))
+			}
+			val hintPartAndPointer = makeHintArea(factories.next())
+			// Input part is above and below it is hint part, which may sometimes be hidden
+			Vector(inputPart -> None, hintPartAndPointer)
+		}.parent
 	
-	// The main vertical stack contains the label portion and a hint / info portion, which might not always be displayed
-	/*private val mainStack = ViewStack(parentHierarchy).builder(Mixed).withFixedStyle(margin = StackLength.fixedZero) { ff =>
-		
-		// val labelArea = ff.next()()
-		???
-	}*/
+	override val valuePointer = resultFilter match
+	{
+		case Some(filter) => textPointer.map { text => parseResult(filter.filter(text).notEmpty) }
+		case None => textPointer.map { text => parseResult(text.notEmpty) }
+	}
+	
+	
+	// INITIAL CODE	------------------------------------------
+	
+	// Will not shrink below the default width
+	wrapped.addConstraintOver(X)(MaxBetweenModifier(defaultWidth))
 	
 	
 	// COMPUTED	----------------------------------------------
@@ -183,11 +169,6 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 	def hasFocus = focusTracker.hasFocus
 	
 	def focusPointer = focusTracker.focusPointer
-	
-	
-	// IMPLEMENTED	------------------------------------------
-	
-	override protected def wrapped = ???
 	
 	
 	// OTHER	----------------------------------------------
@@ -201,23 +182,79 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		val borderInsets = if (fillBackground) Insets.bottom(focusBorderWidth) else Insets.symmetric(focusBorderWidth)
 		val insets = baseInsets + borderInsets
 		
-		val textStylePointer = editTextColorPointer.map { color => TextDrawContext(font, color, alignment,
-			insets, betweenLinesMargin) }
-		val label = factory.apply(actorHandler, textStylePointer, selectedTextColorPointer, selectionBackgroundPointer,
-			contentColorPointer, caretWidth, caretBlinkFrequency, textPointer, inputFilter, maxLength, enabledPointer,
-			allowSelectionWhileDisabled = false, allowLineBreaks, allowTextShrink)
+		val textStylePointer = editTextColorPointer.map { makeTextStyle(_, insets) }
+		val label = makeMainTextLabel(factory, textStylePointer)
 		
 		// Draws background (optional) and border
 		if (fillBackground)
-			label.addCustomDrawer(BackgroundViewDrawer(innerBackgroundPointer.lazyMap { c => c }))
-		label.addCustomDrawer(BorderViewDrawer(borderPointer))
+			label.addCustomDrawer(makeBackgroundDrawer())
+		label.addCustomDrawer(borderDrawer)
+		
+		// May draw a prompt while the field is empty
+		promptPointer.foreach { promptPointer =>
+			val emptyText = measureText(LocalizedString.empty)
+			val promptStylePointer = textStylePointer.map { _.mapColor { _.timesAlpha(0.66) } }
+			val displayedPromptPointer = promptPointer.mergeWith(textPointer) { (prompt, text) =>
+				if (text.isEmpty) measureText(prompt) else emptyText }
+			label.addCustomDrawer(SelectableTextViewDrawer(displayedPromptPointer, promptStylePointer))
+		}
 		
 		label
 	}
 	
 	private def makeTextAndNameArea(factories: ViewStackFactory, fieldNamePointer: Changing[LocalizedString]) =
 	{
-		// TODO: Implement
+		val drawers = if (fillBackground) Vector(makeBackgroundDrawer(), borderDrawer) else Vector(borderDrawer)
+		factories.builder(Mixed).withFixedStyle(margin = StackLength.fixedZero,
+			cap = StackLength.fixed(focusBorderWidth), customDrawers = drawers) { factories =>
+			// Creates the field name label first
+			// Field name is displayed when
+			// a) it is available AND
+			// b) The edit label has focus OR c) The edit label is empty
+			val nameShouldBeSeparatePointer = focusPointer.mergeWith(textPointer) { _ || _.nonEmpty }
+			val nameVisibilityPointer = fieldNamePointer.mergeWith(nameShouldBeSeparatePointer) { _.nonEmpty && _ }
+			val nameStylePointer = contentColorPointer.map { makeHintStyle(_, !fillBackground) }
+			val nameLabel = factories.next()(ViewTextLabel).forText(fieldNamePointer, nameStylePointer,
+				allowLineBreaks = false, allowTextShrink = true)
+			
+			// When displaying only the input label, accommodates name label size increase into the vertical insets
+			// While displaying both, applies only half of the main text insets at top
+			val baseTextInsets = textInsets.expandingHorizontallyAccordingTo(alignment)
+			val defaultTextInsets =
+			{
+				if (fillBackground)
+					baseTextInsets
+				else
+					baseTextInsets + Insets.horizontal(focusBorderWidth)
+			}
+			val comboTextInsets = defaultTextInsets.mapTop { _ / 2 }
+			val requiredIncrease = comboTextInsets.vertical + nameLabel.stackSize.height - defaultTextInsets.vertical
+			val individualTextInsets = defaultTextInsets.mapVertical { _ + requiredIncrease / 2 }
+			val textStylePointer = editTextColorPointer.mergeWith(nameVisibilityPointer) { (color, nameIsVisible) =>
+				makeTextStyle(color, if (nameIsVisible) comboTextInsets else individualTextInsets)
+			}
+			val textLabel = makeMainTextLabel(factories.next()(EditableTextLabel), textStylePointer)
+			
+			// While only the text label is being displayed, shows the field name as a prompt. Otherwise may show
+			// the other specified prompt (if defined)
+			val promptStylePointer = textStylePointer.map { _.mapColor { _.timesAlpha(0.66) } }
+			val emptyText = measureText(LocalizedString.empty)
+			// Only draws the name while it is not displayed elsewhere
+			val namePromptPointer = fieldNamePointer.mergeWith(nameShouldBeSeparatePointer) { (name, isSeparate) =>
+				if (isSeparate) emptyText else measureText(name) }
+			textLabel.addCustomDrawer(SelectableTextViewDrawer(namePromptPointer, promptStylePointer))
+			
+			// May also display another prompt while the field has focus and is empty (not blocked by name or text)
+			promptPointer.foreach { promptPointer =>
+				val shouldDisplayPromptPointer = textPointer.mergeWith(focusPointer) { _.isEmpty && _ }
+				val additionalPromptPointer = shouldDisplayPromptPointer.mergeWith(promptPointer) { (display, content) =>
+					if (display) measureText(content) else emptyText }
+				textLabel.addCustomDrawer(SelectableTextViewDrawer(additionalPromptPointer, promptStylePointer))
+			}
+			
+			// Displays one or both of the items
+			Vector(nameLabel -> Some(nameVisibilityPointer), textLabel -> None)
+		}.parent
 	}
 	
 	// Returns the generated component, along with its visibility pointer (if applicable)
@@ -251,6 +288,36 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		}
 	}
 	
+	private def makeMainTextLabel(factory: EditableTextLabelFactory, stylePointer: Changing[TextDrawContext]) =
+	{
+		val label = factory.apply(actorHandler, stylePointer, selectedTextColorPointer, selectionBackgroundPointer,
+		contentColorPointer, caretWidth, caretBlinkFrequency, textPointer, inputFilter, maxLength, enabledPointer,
+		allowSelectionWhileDisabled = false, allowLineBreaks, allowTextShrink)
+		
+		label.addFocusListener(focusTracker)
+		label
+	}
+	
 	private def makeHintLabel(factory: ViewTextLabelFactory) =
 		factory.forText(actualHintTextPointer, hintTextStylePointer, allowLineBreaks = false, allowTextShrink = true)
+	
+	private def makeHintStyle(textColor: Color, includeHorizontalBorder: Boolean = false) =
+	{
+		val insets =
+		{
+			if (includeHorizontalBorder)
+				defaultHintInsets + Insets.horizontal(focusBorderWidth)
+			else
+				defaultHintInsets
+		}
+		TextDrawContext(font * hintScaleFactor, textColor, alignment, insets, betweenLinesMargin * hintScaleFactor)
+	}
+	
+	private def makeTextStyle(color: Color, insets: StackInsets) = TextDrawContext(font, color, alignment,
+		insets, betweenLinesMargin)
+	
+	private def makeBackgroundDrawer() = BackgroundViewDrawer(innerBackgroundPointer.lazyMap { c => c })
+	
+	private def measureText(text: LocalizedString) = MeasuredText(text, FontMetricsContext(fontMetrics(font),
+		betweenLinesMargin), alignment, allowLineBreaks)
 }
