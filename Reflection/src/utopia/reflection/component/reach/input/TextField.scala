@@ -3,44 +3,187 @@ package utopia.reflection.component.reach.input
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.Changing
 import utopia.flow.util.StringExtensions._
+import utopia.flow.generic.ValueConversions._
 import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis.X
 import utopia.genesis.shape.shape2D.Insets
 import utopia.reflection.color.ColorRole.{Error, Secondary}
+import utopia.reflection.color.ColorShade.Light
 import utopia.reflection.color.{ColorRole, ColorScheme, ComponentColor}
+import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, SelectableTextViewDrawer}
 import utopia.reflection.component.reach.factory.Mixed
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.label.{ViewTextLabel, ViewTextLabelFactory}
-import utopia.reflection.component.reach.template.ReachComponentWrapper
+import utopia.reflection.component.reach.template.{ReachComponent, ReachComponentWrapper}
 import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.container.reach.{ViewStack, ViewStackFactory}
 import utopia.reflection.event.FocusStateTracker
-import utopia.reflection.localization.{DisplayFunction, LocalizedString}
+import utopia.reflection.localization.{DisplayFunction, LocalizedString, Localizer}
 import utopia.reflection.shape.{Alignment, Border}
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText, Regex}
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.stack.modifier.MaxBetweenModifier
 import utopia.reflection.util.ComponentCreationDefaults
+import utopia.reflection.shape.LengthExtensions.{LengthNumber, _}
 
 import scala.concurrent.duration.Duration
+
+object TextField
+{
+
+}
+
+class TextFieldFactory(val parentHierarchy: ComponentHierarchy)
+{
+	def apply[A](actorHandler: ActorHandler, colorScheme: ColorScheme,
+				 contextBackgroundPointer: Changing[ComponentColor], defaultWidth: StackLength,
+				 font: Font, alignment: Alignment = Alignment.Left, textInsets: StackInsets = StackInsets.any,
+				 fieldNamePointer: Option[Changing[LocalizedString]] = None,
+				 promptPointer: Option[Changing[LocalizedString]] = None,
+				 hintPointer: Option[Changing[LocalizedString]] = None,
+				 errorMessagePointer: Option[Changing[LocalizedString]] = None,
+				 textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
+				 selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
+				 selectionBackgroundPointer: Changing[Option[Color]] = Changing.wrap(None),
+				 highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
+				 focusColorRole: ColorRole = Secondary, defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
+				 hintScaleFactor: Double = 0.5, caretWidth: Double = 1.0,
+				 caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
+				 betweenLinesMargin: Double = 0.0, inputFilter: Option[Regex] = None,
+				 resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
+				 enabledPointer: Changing[Boolean] = Changing.wrap(true), fillBackground: Boolean = true,
+				 allowLineBreaks: Boolean = false, allowTextShrink: Boolean = false,
+				 showCharacterCount: Boolean = false)
+				(parseResult: Option[String] => A) =
+		new TextField(parentHierarchy, actorHandler, colorScheme, contextBackgroundPointer, defaultWidth, font,
+			alignment, textInsets, fieldNamePointer, promptPointer, hintPointer, errorMessagePointer, textPointer,
+			selectedTextColorPointer, selectionBackgroundPointer, highlightStylePointer, focusColorRole,
+			defaultBorderWidth, focusBorderWidth, hintScaleFactor, caretWidth, caretBlinkFrequency, betweenLinesMargin,
+			inputFilter, resultFilter, maxLength, enabledPointer, fillBackground, allowLineBreaks, allowTextShrink,
+			showCharacterCount)(parseResult)
+}
+
+case class ContextualTextFieldFactory[+N <: TextContextLike](factory: TextFieldFactory, context: N)
+{
+	private lazy val textMeasureContext = FontMetricsContext(factory.parentHierarchy.fontMetrics(context.font),
+		context.betweenLinesMargin.optimal)
+	
+	private implicit def localizer: Localizer = context.localizer
+	private implicit def languageCode: String = "en"
+	
+	def apply[A](defaultWidth: StackLength, fieldNamePointer: Option[Changing[LocalizedString]] = None,
+				 promptPointer: Option[Changing[LocalizedString]] = None,
+				 hintPointer: Option[Changing[LocalizedString]] = None,
+				 errorMessagePointer: Option[Changing[LocalizedString]] = None,
+				 textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
+				 highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
+				 hintScaleFactor: Double = 0.5,
+				 caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
+				 inputFilter: Option[Regex] = None, resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
+				 enabledPointer: Changing[Boolean] = Changing.wrap(true), fillBackground: Boolean = true,
+				 showCharacterCount: Boolean = false)(parseResult: Option[String] => A) =
+	{
+		val selectionBackground = context.color(Secondary, Light)
+		val selectedTextColor = selectionBackground.defaultTextColor
+		
+		val focusBorderWidth = (context.margins.verySmall / 2) max 3
+		val defaultBorderWidth = focusBorderWidth / 3
+		val caretWidth = (context.margins.verySmall / 2) max 1
+		
+		factory[A](context.actorHandler, context.colorScheme, Changing.wrap(context.containerBackground), defaultWidth,
+			context.font, context.textAlignment, context.textInsets, fieldNamePointer, promptPointer, hintPointer,
+			errorMessagePointer, textPointer, Changing.wrap(selectedTextColor), Changing.wrap(Some(selectionBackground)),
+			highlightStylePointer, Secondary, defaultBorderWidth, focusBorderWidth, hintScaleFactor, caretWidth,
+			caretBlinkFrequency, context.betweenLinesMargin.optimal, inputFilter, resultFilter, maxLength,
+			enabledPointer, fillBackground, context.allowLineBreaks, context.allowTextShrink,
+			showCharacterCount)(parseResult)
+	}
+	
+	def forIntegers(fieldNamePointer: Option[Changing[LocalizedString]] = None,
+					promptPointer: Option[Changing[LocalizedString]] = None,
+					hintPointer: Option[Changing[LocalizedString]] = None,
+					errorMessagePointer: Option[Changing[LocalizedString]] = None,
+					highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
+					enabledPointer: Changing[Boolean] = Changing.wrap(true),
+					initialValue: Option[Int] = None, minValue: Int = Int.MinValue, maxValue: Int = Int.MaxValue,
+					hintScaleFactor: Double = 0.5,
+					caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
+					fillBackground: Boolean = true, allowAutoHint: Boolean = true) =
+	{
+		val minString = minValue.toString
+		val maxString = maxValue.toString
+		val maxLength = minString.length max maxString.length
+		val minStringWidth = widthOf(minString)
+		val maxStringWidth = widthOf(maxString)
+		val defaultWidth = (minStringWidth max maxStringWidth).downTo(minStringWidth min maxStringWidth)
+		
+		// May display min / max values as hints
+		val effectiveHintPointer =
+		{
+			if (allowAutoHint)
+			{
+				val autoHint =
+				{
+					if (maxValue < Int.MaxValue)
+					{
+						if (minValue > Int.MinValue && minValue != 0)
+							Some(s"$minValue - $maxValue".noLanguageLocalizationSkipped)
+						else
+							Some(s"Up to %s".autoLocalized.interpolated(Vector(maxValue)))
+					}
+					else if (minValue > Int.MinValue && minValue != 0)
+						Some(s"$minValue+".noLanguageLocalizationSkipped)
+					else
+						None
+				}
+				autoHint match
+				{
+					case Some(autoHint) =>
+						hintPointer match
+						{
+							case Some(hint) => Some(hint.map { _.notEmpty.getOrElse(autoHint) })
+							case None => Some(Changing.wrap(autoHint))
+						}
+					case None => hintPointer
+				}
+			}
+			else
+				hintPointer
+		}
+		val initialText = initialValue.map { _.toString }.getOrElse("")
+		
+		// Only accepts integer numbers
+		val inputFilter = if (minValue < 0) Regex.numericParts else Regex.digit
+		val resultFilter = if (minValue < 0) Regex.numeric else Regex.numericPositive
+		
+		// Displays an error if the value is outside of accepted range
+		// TODO: Implement
+		
+		apply[Option[Int]](defaultWidth, fieldNamePointer, promptPointer, effectiveHintPointer, errorMessagePointer,
+			new PointerWithEvents(initialText), highlightStylePointer, hintScaleFactor, caretBlinkFrequency,
+			Some(inputFilter), Some(resultFilter), Some(maxLength), enabledPointer, fillBackground) { _.int }
+	}
+	
+	private def widthOf(text: String) = textMeasureContext.lineWidthOf(text)
+}
 
 /**
   * Used for requesting text input from the user
   * @author Mikko Hilpinen
   * @since 14.11.2020, v2
   */
-// TODO: Hint pointer and error pointers should be optional
+// TODO: Format text based on resultFilter when focus is lost
 class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, colorScheme: ColorScheme,
 				   contextBackgroundPointer: Changing[ComponentColor], defaultWidth: StackLength,
 				   font: Font, alignment: Alignment = Alignment.Left, textInsets: StackInsets = StackInsets.any,
 				   fieldNamePointer: Option[Changing[LocalizedString]] = None,
 				   promptPointer: Option[Changing[LocalizedString]] = None,
-				   hintPointer: Changing[LocalizedString] = Changing.wrap(LocalizedString.empty),
-				   errorMessagePointer: Changing[LocalizedString] = Changing.wrap(LocalizedString.empty),
+				   hintPointer: Option[Changing[LocalizedString]] = None,
+				   errorMessagePointer: Option[Changing[LocalizedString]] = None,
 				   textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 				   selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
 				   selectionBackgroundPointer: Changing[Option[Color]] = Changing.wrap(None),
@@ -51,27 +194,39 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 				   betweenLinesMargin: Double = 0.0, inputFilter: Option[Regex] = None,
 				   resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
 				   enabledPointer: Changing[Boolean] = Changing.wrap(true), fillBackground: Boolean = true,
-				   allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false,
+				   allowLineBreaks: Boolean = false, allowTextShrink: Boolean = false,
 				   showCharacterCount: Boolean = false)
 				  (parseResult: Option[String] => A)
 	extends ReachComponentWrapper with InputWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTES	------------------------------------------
 	
-	private val defaultHintInsets = textInsets.expandingHorizontallyAccordingTo(alignment)
+	private lazy val defaultHintInsets = textInsets.expandingHorizontallyAccordingTo(alignment)
 		.mapVertical { _ * hintScaleFactor }
 	
 	private val focusTracker = new FocusStateTracker(false)
 	
-	// Displays an error if there is one, otherwise displays the hint (provided there is one)
-	private val actualHintTextPointer = hintPointer.mergeWith(errorMessagePointer) { (hint, error) =>
-		error.notEmpty getOrElse hint }
-	private val hintVisibilityPointer = actualHintTextPointer.map { _.nonEmpty }
+	// Displays an error if there is one, otherwise displays the hint (provided there is one). None if neither is used.
+	private lazy val actualHintTextPointer = hintPointer match
+	{
+		case Some(hint) =>
+			errorMessagePointer match
+			{
+				case Some(error) => Some(hint.mergeWith(error) { (hint, error) => error.notEmpty getOrElse hint })
+				case None => Some(hint)
+			}
+		case None => errorMessagePointer
+	}
+	private lazy val hintVisibilityPointer = actualHintTextPointer.map { _.map { _.nonEmpty } }
 	
 	// A pointer to whether this field currently highlights an error
-	private val errorStatePointer = errorMessagePointer.map { _.nonEmpty }
-	private val externalHighlightStatePointer =
-		highlightStylePointer.mergeWith(errorStatePointer) { (custom, isError) => if (isError) Some(Error) else custom }
+	private val errorStatePointer = errorMessagePointer.map { _.map { _.nonEmpty } }
+	private val externalHighlightStatePointer = errorStatePointer match
+	{
+		case Some(errorPointer) =>
+			highlightStylePointer.mergeWith(errorPointer) { (custom, isError) => if (isError) Some(Error) else custom }
+		case None => highlightStylePointer
+	}
 	private val highlightStatePointer = focusPointer.mergeWith(externalHighlightStatePointer) { (focus, custom) =>
 		custom.orElse { if (focus) Some(focusColorRole) else None }
 	}
@@ -101,16 +256,23 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 			}
 		}
 	private val defaultHintColorPointer = contextBackgroundPointer.map { _.textColorStandard.hintTextColor }
-	private val errorHintColorPointer = contextBackgroundPointer.mergeWith(errorStatePointer) { (background, isError) =>
-		if (isError) Some(colorScheme.error.forBackground(background)) else None }
-	private val hintColorPointer = defaultHintColorPointer.mergeWith(errorHintColorPointer) { (default, error) =>
-		error match
-		{
-			case Some(color) => color: Color
-			case None => default
-		}
+	private val errorHintColorPointer = errorStatePointer.map { errorPointer =>
+		contextBackgroundPointer.mergeWith(errorPointer) { (background, isError) =>
+			if (isError) Some(colorScheme.error.forBackground(background)) else None }
 	}
-	private val hintTextStylePointer = hintColorPointer.map { makeHintStyle(_) }
+	private lazy val hintColorPointer = errorHintColorPointer match
+	{
+		case Some(errorColorPointer) =>
+			defaultHintColorPointer.mergeWith(errorColorPointer) { (default, error) =>
+				error match {
+					case Some(color) => color: Color
+					case None => default
+				}
+			}
+		case None => defaultHintColorPointer
+	}
+	
+	private lazy val hintTextStylePointer = hintColorPointer.map { makeHintStyle(_) }
 	
 	private val borderPointer =
 	{
@@ -138,18 +300,22 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 	}
 	private val borderDrawer = BorderViewDrawer(borderPointer)
 	
-	override protected val wrapped = ViewStack(parentHierarchy).builder(Mixed)
-		.withFixedStyle(margin = StackLength.fixedZero) { factories =>
-			// Input part may contain a name label, if enabled
-			val inputPart = fieldNamePointer match
-			{
-				case Some(fieldNamePointer) => makeTextAndNameArea(factories.next()(ViewStack), fieldNamePointer)
-				case None => makeTextLabelOnly(factories.next()(EditableTextLabel))
-			}
-			val hintPartAndPointer = makeHintArea(factories.next())
-			// Input part is above and below it is hint part, which may sometimes be hidden
-			Vector(inputPart -> None, hintPartAndPointer)
-		}.parent
+	override protected val wrapped: ReachComponent =
+	{
+		// Checks whether a separate hint area is required
+		if (hintPointer.nonEmpty || errorMessagePointer.nonEmpty || (showCharacterCount && maxLength.isDefined))
+		{
+			ViewStack(parentHierarchy).builder(Mixed).withFixedStyle(margin = StackLength.fixedZero) { factories =>
+				// Input part may contain a name label, if enabled
+				val inputPart = makeInputArea(factories.next())
+				val hintPartAndPointer = makeHintArea(factories.next())
+				// Input part is above and below it is hint part, which may sometimes be hidden
+				Vector(inputPart -> None) ++ hintPartAndPointer
+			}.parent
+		}
+		else
+			makeInputArea(Mixed(parentHierarchy))
+	}
 	
 	override val valuePointer = resultFilter match
 	{
@@ -257,8 +423,18 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		}.parent
 	}
 	
-	// Returns the generated component, along with its visibility pointer (if applicable)
-	private def makeHintArea(factories: Mixed) =
+	private def makeInputArea(factories: Mixed) =
+	{
+		// Input part may contain a name label, if enabled
+		fieldNamePointer match
+		{
+			case Some(fieldNamePointer) => makeTextAndNameArea(factories(ViewStack), fieldNamePointer)
+			case None => makeTextLabelOnly(factories(EditableTextLabel))
+		}
+	}
+	
+	// Returns the generated component (if any), along with its visibility pointer (if applicable)
+	private def makeHintArea(factories: => Mixed) =
 	{
 		// In some cases, displays both message field and character count label
 		// In other cases only the message field (which is hidden while empty)
@@ -266,25 +442,30 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		{
 			// Case: Character count should be displayed => Always displays at least the counter
 			case Some(maxLength) =>
-				// Places caps to stack equal to horizontal content margin
-				val cap = textInsets.horizontal / 2 + (if (fillBackground) 0 else defaultBorderWidth)
-				val stack = factories(ViewStack).builder(ViewTextLabel).withFixedStyle(X,
-					margin = StackLength.any, cap = cap) { labelFactories =>
-					val hintLabel = makeHintLabel(labelFactories.next())
-					
-					val countStylePointer = defaultHintColorPointer.map { color =>
-						TextDrawContext(font * hintScaleFactor, color, Alignment.Right, textInsets * hintScaleFactor) }
-					val textLengthPointer = textPointer.map { _.length }
-					val countLabel = labelFactories.next()(textLengthPointer, countStylePointer,
-						DisplayFunction.noLocalization[Int] { length => s"$length / $maxLength".noLanguage })
-					
-					// Hint label is only displayed while there is a hint to display,
-					// Count label is always displayed
-					Vector(hintLabel -> Some(hintVisibilityPointer), countLabel -> None)
-				}.parent
-				stack -> None
-			// Case: Only hint label should be displayed (only when there's a message to show)
-			case None => makeHintLabel(factories(ViewTextLabel)) -> Some(hintVisibilityPointer)
+				actualHintTextPointer match
+				{
+					// Case: Hints are sometimes displayed
+					case Some(hintTextPointer) =>
+						// Places caps to stack equal to horizontal content margin
+						val cap = textInsets.horizontal / 2 + (if (fillBackground) 0 else defaultBorderWidth)
+						val stack = factories(ViewStack).builder(ViewTextLabel).withFixedStyle(X,
+							margin = StackLength.any, cap = cap) { labelFactories =>
+							val hintLabel = makeHintLabel(labelFactories.next(), hintTextPointer)
+							val countLabel = makeCharacterCountLabel(labelFactories.next(), maxLength)
+							
+							// Hint label is only displayed while there is a hint to display,
+							// Count label is always displayed
+							Vector(hintLabel -> hintVisibilityPointer, countLabel -> None)
+						}.parent
+						Some(stack -> None)
+					// Case: Only the character count element should be displayed
+					case None => Some(makeCharacterCountLabel(factories(ViewTextLabel), maxLength) -> None)
+				}
+			case None =>
+				// Case: No character count should be displayed => May display a hint label still (occasionally)
+				actualHintTextPointer.map { hintTextPointer =>
+					makeHintLabel(factories(ViewTextLabel), hintTextPointer) -> hintVisibilityPointer
+				}
 		}
 	}
 	
@@ -298,8 +479,17 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		label
 	}
 	
-	private def makeHintLabel(factory: ViewTextLabelFactory) =
-		factory.forText(actualHintTextPointer, hintTextStylePointer, allowLineBreaks = false, allowTextShrink = true)
+	private def makeHintLabel(factory: ViewTextLabelFactory, textPointer: Changing[LocalizedString]) =
+		factory.forText(textPointer, hintTextStylePointer, allowLineBreaks = false, allowTextShrink = true)
+	
+	private def makeCharacterCountLabel(factory: ViewTextLabelFactory, maxLength: Int) =
+	{
+		val countStylePointer = defaultHintColorPointer.map { color =>
+			TextDrawContext(font * hintScaleFactor, color, Alignment.Right, textInsets * hintScaleFactor) }
+		val textLengthPointer = textPointer.map { _.length }
+		factory(textLengthPointer, countStylePointer,
+			DisplayFunction.noLocalization[Int] { length => s"$length / $maxLength".noLanguage })
+	}
 	
 	private def makeHintStyle(textColor: Color, includeHorizontalBorder: Boolean = false) =
 	{
