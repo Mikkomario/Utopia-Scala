@@ -2,7 +2,7 @@ package utopia.reflection.container.swing
 
 import java.awt.event.KeyEvent
 import java.awt.image.BufferedImage
-import java.awt.{AWTKeyStroke, Container, Graphics, KeyboardFocusManager, Toolkit}
+import java.awt.{AWTKeyStroke, Container, Graphics, KeyboardFocusManager, Rectangle, Toolkit}
 import java.time.Instant
 import java.util
 
@@ -170,10 +170,16 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		val sizeChangeTargets: Set[ReachComponentLike] =
 		{
 			if (contentSizeChanged)
-				currentContent.toSet.flatMap { c: ReachComponentLike => c.children }
+				currentContent.toSet
 			else
 				Set()
 		}
+		/*
+		println()
+		println(s"Content update (size changed = $contentSizeChanged)")
+		println(s"${layoutUpdateQueues.size} update queues:")
+		layoutUpdateQueues.foreach { q => println(s"\t- [${q.map { _.getClass.getSimpleName }.mkString(" -> ")}]") }
+		 */
 		if (layoutUpdateQueues.nonEmpty)
 			updateLayoutFor(layoutUpdateQueues.toSet, sizeChangeTargets)
 		
@@ -275,21 +281,23 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 				}
 			case None => Some(Partial(area))
 		}
-		component.repaint(area.toAwt)
+		component.repaint(new Rectangle(area.x.toInt, area.y.toInt,area.width.toInt + 1,area.height.toInt + 1))
 	}
 	
 	@tailrec
 	private def updateLayoutFor(componentQueues: Set[Seq[ReachComponentLike]], sizeChangedChildren: Set[ReachComponentLike]): Unit =
 	{
+		/*
+		println("--------------")
+		println(s"Updating based on size changes (${sizeChangedChildren.size}): [${sizeChangedChildren.map { _.getClass.getSimpleName }.mkString(", ")}]")
+		println(s"Updating based on revalidation (${componentQueues.size}): [${componentQueues.flatMap { _.headOption }.map { _.getClass.getSimpleName }.mkString(", ")}]")
+		*/
 		// Updates the layout of the next layer (from top to bottom) components. Checks for size changes and
 		// also updates the children of components which changed size during the layout update
 		val nextSizeChangeChildren = (componentQueues.map { _.head } ++ sizeChangedChildren).flatMap { c =>
-			val oldSize = c.size
+			val oldChildSizes = c.children.map { c => c -> c.size }
 			c.updateLayout()
-			if (c.size != oldSize)
-				c.children
-			else
-				None
+			oldChildSizes.flatMap { case (child, oldSize) => if (child.size != oldSize) Some(child) else None }
 		}
 		// Moves to the next layer of components, if there is one
 		val remainingQueues = componentQueues.filter { _.size > 1 }
@@ -338,7 +346,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 				case Partial(area) =>
 					buffer = Image.paint(ReachCanvas.this.size) { drawer =>
 					buffer.drawWith(drawer)
-					paintWith(drawer, Some(area))
+					paintWith(drawer, Some(area.ceil))
 				}
 			}
 			

@@ -133,6 +133,11 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       */
     def bottomY = y + height
     
+    /**
+      * @return A copy of these bounds that rounds values for increased size and decreased position
+      */
+    def ceil = Bounds(position.floor, size.ceil)
+    
     
     // IMPLEMENTED METHODS    ----------
     

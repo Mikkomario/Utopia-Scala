@@ -209,7 +209,12 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		else
 			revalidateAndRepaint()
 	}
-	effectiveStylePointer.addListener(repaintListener)
+	effectiveStylePointer.addListener { change =>
+		if (change.compareWith { _.hasSameDimensionsAs })
+			repaint()
+		else
+			revalidateAndRepaint()
+	}
 	drawnCaretPointer.addListener(repaintListener)
 	caretColorPointer.addListener(repaintListener)
 	selectedRangePointer.addListener(repaintListener)

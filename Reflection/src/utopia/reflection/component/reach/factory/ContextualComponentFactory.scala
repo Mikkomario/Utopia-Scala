@@ -1,6 +1,6 @@
 package utopia.reflection.component.reach.factory
 
-import utopia.reflection.component.context.TextContext
+import utopia.reflection.component.context.{ScopeUsable, TextContext}
 import utopia.reflection.shape.Alignment
 import utopia.reflection.text.Font
 

@@ -1,7 +1,8 @@
 package utopia.reflection.component.reach.input
 
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.Changing
+import utopia.flow.event.{ChangeListener, Changing}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.generic.ValueConversions._
 import utopia.genesis.color.Color
@@ -14,13 +15,14 @@ import utopia.reflection.color.{ColorRole, ColorScheme, ComponentColor}
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, SelectableTextViewDrawer}
-import utopia.reflection.component.reach.factory.Mixed
+import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.label.{ViewTextLabel, ViewTextLabelFactory}
-import utopia.reflection.component.reach.template.{ReachComponent, ReachComponentWrapper}
+import utopia.reflection.component.reach.template.{MutableFocusableWrapper, ReachComponent, ReachComponentWrapper}
 import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.container.reach.{ViewStack, ViewStackFactory}
-import utopia.reflection.event.FocusStateTracker
+import utopia.reflection.event.FocusEvent.FocusLost
+import utopia.reflection.event.{FocusChangeEvent, FocusChangeListener}
 import utopia.reflection.localization.{DisplayFunction, LocalizedString, Localizer}
 import utopia.reflection.shape.{Alignment, Border}
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
@@ -28,17 +30,72 @@ import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText, Regex}
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.stack.modifier.MaxBetweenModifier
 import utopia.reflection.util.ComponentCreationDefaults
-import utopia.reflection.shape.LengthExtensions.{LengthNumber, _}
 
 import scala.concurrent.duration.Duration
 
-object TextField
+object TextField extends ContextInsertableComponentFactoryFactory[TextContextLike, TextFieldFactory,
+	ContextualTextFieldFactory]
 {
-
+	/**
+	  * Default factor used for scaling the hint elements
+	  */
+	val defaultHintScaleFactor = 0.7
+	
+	override def apply(hierarchy: ComponentHierarchy) = new TextFieldFactory(hierarchy)
 }
 
 class TextFieldFactory(val parentHierarchy: ComponentHierarchy)
+	extends ContextInsertableComponentFactory[TextContextLike, ContextualTextFieldFactory]
 {
+	// IMPLEMENTED	----------------------------
+	
+	override def withContext[N <: TextContextLike](context: N) =
+		ContextualTextFieldFactory(this, context)
+	
+	
+	// OTHER	--------------------------------
+	
+	/**
+	  * Creates a new text field
+	  * @param actorHandler Actor handler that will deliver action events for this component (for caret-blinking)
+	  * @param colorScheme Color scheme used in this component
+	  * @param contextBackgroundPointer A pointer to the container component's background color
+	  * @param defaultWidth Standard width used for this component
+	  * @param font Font used for the main text area
+	  * @param alignment Text alignment used (default = Left)
+	  * @param textInsets Insets placed around the main text area (default = any, preferring 0)
+	  * @param fieldNamePointer A pointer to this field's name (optional)
+	  * @param promptPointer A pointer to the prompt displayed on this field (optional)
+	  * @param hintPointer A pointer to a hint displayed on this field (optional)
+	  * @param errorMessagePointer A pointer to an error message displayed on this field (optional)
+	  * @param textPointer A mutable pointer for this field's text (default = new empty pointer)
+	  * @param selectedTextColorPointer A pointer to the color used in the selected text
+	  *                                 (default = always use standard black text)
+	  * @param selectionBackgroundPointer A pointer to the selected text area's background color, if any
+	  *                                   (default = never any background)
+	  * @param highlightStylePointer A pointer to a highlighting applied to this component (default = always None)
+	  * @param focusColorRole Color role used when this field has focus (default = Secondary)
+	  * @param defaultBorderWidth Border width used by default (default = 1 px)
+	  * @param focusBorderWidth Border width used when this field has focus (default = 3 px)
+	  * @param hintScaleFactor A scaling factor applied for hint texts (default = 0.5 = 50%)
+	  * @param caretWidth Width of the drawn caret (default = 1 px)
+	  * @param caretBlinkFrequency Frequency how often the caret changes visibility when idle (default = global default)
+	  * @param betweenLinesMargin Vertical margin placed between two text lines (default = 0.0)
+	  * @param inputFilter A filter applied for all input characters (optional)
+	  * @param resultFilter A filter applied for resulting text (optional). Applied to field results and shown when
+	  *                     this field loses focus.
+	  * @param maxLength Maximum text length in number of characters (optional)
+	  * @param enabledPointer A pointer to this field's enabled status (default = always enabled)
+	  * @param inputValidation A function for producing an error message based on current value (optional)
+	  * @param fillBackground Whether input area should be filled with color (default = true)
+	  * @param allowLineBreaks Whether line breaks should be allowed in text (default = false)
+	  * @param allowTextShrink Whether text should be allowed to shrink to preserve space (default = false)
+	  * @param showCharacterCount Whether the current character count should be displayed in this component
+	  *                           (default = false)
+	  * @param parseResult A function for parsing a result from a non-empty string
+	  * @tparam A Type of parsed result
+	  * @return A new field
+	  */
 	def apply[A](actorHandler: ActorHandler, colorScheme: ColorScheme,
 				 contextBackgroundPointer: Changing[ComponentColor], defaultWidth: StackLength,
 				 font: Font, alignment: Alignment = Alignment.Left, textInsets: StackInsets = StackInsets.any,
@@ -51,11 +108,12 @@ class TextFieldFactory(val parentHierarchy: ComponentHierarchy)
 				 selectionBackgroundPointer: Changing[Option[Color]] = Changing.wrap(None),
 				 highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
 				 focusColorRole: ColorRole = Secondary, defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
-				 hintScaleFactor: Double = 0.5, caretWidth: Double = 1.0,
+				 hintScaleFactor: Double = TextField.defaultHintScaleFactor, caretWidth: Double = 1.0,
 				 caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 				 betweenLinesMargin: Double = 0.0, inputFilter: Option[Regex] = None,
 				 resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-				 enabledPointer: Changing[Boolean] = Changing.wrap(true), fillBackground: Boolean = true,
+				 enabledPointer: Changing[Boolean] = Changing.wrap(true),
+				 inputValidation: Option[A => LocalizedString] = None, fillBackground: Boolean = true,
 				 allowLineBreaks: Boolean = false, allowTextShrink: Boolean = false,
 				 showCharacterCount: Boolean = false)
 				(parseResult: Option[String] => A) =
@@ -63,29 +121,70 @@ class TextFieldFactory(val parentHierarchy: ComponentHierarchy)
 			alignment, textInsets, fieldNamePointer, promptPointer, hintPointer, errorMessagePointer, textPointer,
 			selectedTextColorPointer, selectionBackgroundPointer, highlightStylePointer, focusColorRole,
 			defaultBorderWidth, focusBorderWidth, hintScaleFactor, caretWidth, caretBlinkFrequency, betweenLinesMargin,
-			inputFilter, resultFilter, maxLength, enabledPointer, fillBackground, allowLineBreaks, allowTextShrink,
-			showCharacterCount)(parseResult)
+			inputFilter, resultFilter, maxLength, enabledPointer, inputValidation, fillBackground, allowLineBreaks,
+			allowTextShrink, showCharacterCount)(parseResult)
 }
 
 case class ContextualTextFieldFactory[+N <: TextContextLike](factory: TextFieldFactory, context: N)
+	extends ContextualComponentFactory[N, TextContextLike, ContextualTextFieldFactory]
 {
+	// ATTRIBUTES	--------------------------------
+	
 	private lazy val textMeasureContext = FontMetricsContext(factory.parentHierarchy.fontMetrics(context.font),
 		context.betweenLinesMargin.optimal)
+	
+	
+	// IMPLICIT	------------------------------------
 	
 	private implicit def localizer: Localizer = context.localizer
 	private implicit def languageCode: String = "en"
 	
+	
+	// IMPLEMENTED	--------------------------------
+	
+	override def withContext[N2 <: TextContextLike](newContext: N2) = copy(context = newContext)
+	
+	
+	// OTHER	------------------------------------
+	
+	/**
+	  * Creates a new text field
+	  * @param defaultWidth Standard width used for this component
+	  * @param fieldNamePointer A pointer to this field's name (optional)
+	  * @param promptPointer A pointer to the prompt displayed on this field (optional)
+	  * @param hintPointer A pointer to a hint displayed on this field (optional)
+	  * @param errorMessagePointer A pointer to an error message displayed on this field (optional)
+	  * @param textPointer A mutable pointer for this field's text (default = new empty pointer)
+	  * @param highlightStylePointer A pointer to a highlighting applied to this component (default = always None)
+	  * @param hintScaleFactor A scaling factor applied for hint texts (default = 0.5 = 50%)
+	  * @param caretBlinkFrequency Frequency how often the caret changes visibility when idle (default = global default)
+	  * @param inputFilter A filter applied for all input characters (optional)
+	  * @param resultFilter A filter applied for resulting text (optional). Applied to field results and shown when
+	  *                     this field loses focus.
+	  * @param maxLength Maximum text length in number of characters (optional)
+	  * @param enabledPointer A pointer to this field's enabled status (default = always enabled)
+	  * @param inputValidation A function for producing an error message based on current value (optional)
+	  * @param fillBackground Whether input area should be filled with color (default = true)
+	  * @param showCharacterCount Whether the current character count should be displayed in this component
+	  *                           (default = false)
+	  * @param allowLineBreaks Whether line breaks should be allowed in text (default = context-defined)
+	  * @param parseResult A function for parsing a result from a non-empty string
+	  * @tparam A Type of parsed result
+	  * @return A new field
+	  */
 	def apply[A](defaultWidth: StackLength, fieldNamePointer: Option[Changing[LocalizedString]] = None,
 				 promptPointer: Option[Changing[LocalizedString]] = None,
 				 hintPointer: Option[Changing[LocalizedString]] = None,
 				 errorMessagePointer: Option[Changing[LocalizedString]] = None,
 				 textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 				 highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
-				 hintScaleFactor: Double = 0.5,
+				 hintScaleFactor: Double = TextField.defaultHintScaleFactor,
 				 caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 				 inputFilter: Option[Regex] = None, resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-				 enabledPointer: Changing[Boolean] = Changing.wrap(true), fillBackground: Boolean = true,
-				 showCharacterCount: Boolean = false)(parseResult: Option[String] => A) =
+				 enabledPointer: Changing[Boolean] = Changing.wrap(true),
+				 inputValidation: Option[A => LocalizedString] = None, fillBackground: Boolean = true,
+				 showCharacterCount: Boolean = false, allowLineBreaks: Boolean = context.allowLineBreaks)
+				(parseResult: Option[String] => A) =
 	{
 		val selectionBackground = context.color(Secondary, Light)
 		val selectedTextColor = selectionBackground.defaultTextColor
@@ -99,43 +198,157 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](factory: TextFieldF
 			errorMessagePointer, textPointer, Changing.wrap(selectedTextColor), Changing.wrap(Some(selectionBackground)),
 			highlightStylePointer, Secondary, defaultBorderWidth, focusBorderWidth, hintScaleFactor, caretWidth,
 			caretBlinkFrequency, context.betweenLinesMargin.optimal, inputFilter, resultFilter, maxLength,
-			enabledPointer, fillBackground, context.allowLineBreaks, context.allowTextShrink,
+			enabledPointer, inputValidation, fillBackground, context.allowLineBreaks, context.allowTextShrink,
 			showCharacterCount)(parseResult)
 	}
 	
-	def forIntegers(fieldNamePointer: Option[Changing[LocalizedString]] = None,
-					promptPointer: Option[Changing[LocalizedString]] = None,
-					hintPointer: Option[Changing[LocalizedString]] = None,
-					errorMessagePointer: Option[Changing[LocalizedString]] = None,
-					highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
-					enabledPointer: Changing[Boolean] = Changing.wrap(true),
-					initialValue: Option[Int] = None, minValue: Int = Int.MinValue, maxValue: Int = Int.MaxValue,
-					hintScaleFactor: Double = 0.5,
-					caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
-					fillBackground: Boolean = true, allowAutoHint: Boolean = true) =
+	/**
+	  * Creates a new text field
+	  * @param defaultWidth Standard width used for this component
+	  * @param fieldNamePointer A pointer to this field's name (optional)
+	  * @param promptPointer A pointer to the prompt displayed on this field (optional)
+	  * @param hintPointer A pointer to a hint displayed on this field (optional)
+	  * @param errorMessagePointer A pointer to an error message displayed on this field (optional)
+	  * @param textPointer A mutable pointer for this field's text (default = new empty pointer)
+	  * @param highlightStylePointer A pointer to a highlighting applied to this component (default = always None)
+	  * @param hintScaleFactor A scaling factor applied for hint texts (default = 0.5 = 50%)
+	  * @param caretBlinkFrequency Frequency how often the caret changes visibility when idle (default = global default)
+	  * @param inputFilter A filter applied for all input characters (optional)
+	  * @param resultFilter A filter applied for resulting text (optional). Applied to field results and shown when
+	  *                     this field loses focus.
+	  * @param maxLength Maximum text length in number of characters (optional)
+	  * @param enabledPointer A pointer to this field's enabled status (default = always enabled)
+	  * @param fillBackground Whether input area should be filled with color (default = true)
+	  * @param showCharacterCount Whether the current character count should be displayed in this component
+	  *                           (default = false)
+	  * @return A new field
+	  */
+	def forString(defaultWidth: StackLength, fieldNamePointer: Option[Changing[LocalizedString]] = None,
+				  promptPointer: Option[Changing[LocalizedString]] = None,
+				  hintPointer: Option[Changing[LocalizedString]] = None,
+				  errorMessagePointer: Option[Changing[LocalizedString]] = None,
+				  textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
+				  highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
+				  hintScaleFactor: Double = TextField.defaultHintScaleFactor,
+				  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
+				  inputFilter: Option[Regex] = None, resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
+				  enabledPointer: Changing[Boolean] = Changing.wrap(true), fillBackground: Boolean = true,
+				  showCharacterCount: Boolean = false) =
 	{
+		apply[String](defaultWidth, fieldNamePointer, promptPointer, hintPointer, errorMessagePointer, textPointer,
+			highlightStylePointer, hintScaleFactor, caretBlinkFrequency, inputFilter, resultFilter, maxLength,
+			enabledPointer, None, fillBackground, showCharacterCount) { _ getOrElse "" }
+	}
+	
+	/**
+	  * Creates a new text field
+	  * @param fieldNamePointer A pointer to this field's name (optional)
+	  * @param promptPointer A pointer to the prompt displayed on this field (optional)
+	  * @param hintPointer A pointer to a hint displayed on this field (optional)
+	  * @param errorMessagePointer A pointer to an error message displayed on this field (optional)
+	  * @param highlightStylePointer A pointer to a highlighting applied to this component (default = always None)
+	  * @param enabledPointer A pointer to this field's enabled status (default = always enabled)
+	  * @param initialValue Initially displayed value (optional)
+	  * @param minValue Smallest allowed value (default = smallest possible integer value)
+	  * @param maxValue Largest allowed value (default = largest possible integer value)
+	  * @param hintScaleFactor A scaling factor applied for hint texts (default = 0.5 = 50%)
+	  * @param caretBlinkFrequency Frequency how often the caret changes visibility when idle (default = global default)
+	  * @param fillBackground Whether input area should be filled with color (default = true)
+	  * @param allowAutoHint Whether automatic input value hint should be allowed (default = true)
+	  * @return A new field
+	  */
+	def forInt(fieldNamePointer: Option[Changing[LocalizedString]] = None,
+			   promptPointer: Option[Changing[LocalizedString]] = None,
+			   hintPointer: Option[Changing[LocalizedString]] = None,
+			   errorMessagePointer: Option[Changing[LocalizedString]] = None,
+			   highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
+			   enabledPointer: Changing[Boolean] = Changing.wrap(true), initialValue: Option[Int] = None,
+			   minValue: Int = Int.MinValue, maxValue: Int = Int.MaxValue, hintScaleFactor: Double = TextField.defaultHintScaleFactor,
+			   caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
+			   fillBackground: Boolean = true, allowAutoHint: Boolean = true) =
+	{
+		// Only accepts integer numbers
+		val inputFilter = if (minValue < 0) Regex.numericParts else Regex.digit
+		val resultFilter = if (minValue < 0) Regex.numeric else Regex.numericPositive
+		
+		forNumbers(minValue, maxValue, inputFilter, resultFilter, fieldNamePointer, promptPointer, hintPointer,
+			errorMessagePointer, highlightStylePointer, enabledPointer, initialValue, hintScaleFactor,
+			caretBlinkFrequency, allowAutoHint && minValue > Int.MinValue && minValue != 0,
+			allowAutoHint && maxValue < Int.MaxValue, fillBackground) { _.int }
+	}
+	
+	/**
+	  * Creates a new text field
+	  * @param minValue Smallest allowed value
+	  * @param maxValue Largest allowed value
+	  * @param fieldNamePointer A pointer to this field's name (optional)
+	  * @param promptPointer A pointer to the prompt displayed on this field (optional)
+	  * @param hintPointer A pointer to a hint displayed on this field (optional)
+	  * @param errorMessagePointer A pointer to an error message displayed on this field (optional)
+	  * @param highlightStylePointer A pointer to a highlighting applied to this component (default = always None)
+	  * @param enabledPointer A pointer to this field's enabled status (default = always enabled)
+	  * @param initialValue Initially displayed value (optional)
+	  * @param hintScaleFactor A scaling factor applied for hint texts (default = 0.5 = 50%)
+	  * @param caretBlinkFrequency Frequency how often the caret changes visibility when idle (default = global default)
+	  * @param fillBackground Whether input area should be filled with color (default = true)
+	  * @param allowAutoHint Whether automatic input value hint should be allowed (default = true)
+	  * @return A new field
+	  */
+	def forDouble(minValue: Double, maxValue: Double, fieldNamePointer: Option[Changing[LocalizedString]] = None,
+				  promptPointer: Option[Changing[LocalizedString]] = None,
+				  hintPointer: Option[Changing[LocalizedString]] = None,
+				  errorMessagePointer: Option[Changing[LocalizedString]] = None,
+				  highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
+				  enabledPointer: Changing[Boolean] = Changing.wrap(true), initialValue: Option[Double] = None,
+				  hintScaleFactor: Double = TextField.defaultHintScaleFactor,
+				  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
+				  fillBackground: Boolean = true, allowAutoHint: Boolean = true) =
+	{
+		// Only accepts integer numbers
+		val inputFilter = if (minValue < 0) Regex.decimalParts else Regex.decimalPositiveParts
+		val resultFilter = if (minValue < 0) Regex.decimal else Regex.decimalPositive
+		
+		forNumbers(minValue, maxValue, inputFilter, resultFilter, fieldNamePointer, promptPointer, hintPointer,
+			errorMessagePointer, highlightStylePointer, enabledPointer, initialValue, hintScaleFactor,
+			caretBlinkFrequency, allowAutoHint && minValue != 0, allowAutoHint, fillBackground) { _.double }
+	}
+	
+	private def forNumbers[A](minValue: A, maxValue: A, inputRegex: Regex, resultRegex: Regex,
+							  fieldNamePointer: Option[Changing[LocalizedString]] = None,
+							  promptPointer: Option[Changing[LocalizedString]] = None,
+							  hintPointer: Option[Changing[LocalizedString]] = None,
+							  errorMessagePointer: Option[Changing[LocalizedString]] = None,
+							  highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
+							  enabledPointer: Changing[Boolean] = Changing.wrap(true),
+							  initialValue: Option[A] = None, hintScaleFactor: Double = TextField.defaultHintScaleFactor,
+							  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
+							  markMinimumValue: Boolean = false, markMaximumValue: Boolean = false,
+							  fillBackground: Boolean = true)
+							 (parse: Value => Option[A])(implicit ordering: Ordering[A]) =
+	{
+		// Field width is based on minimum and maximum values and their lengths
 		val minString = minValue.toString
 		val maxString = maxValue.toString
 		val maxLength = minString.length max maxString.length
 		val minStringWidth = widthOf(minString)
 		val maxStringWidth = widthOf(maxString)
-		val defaultWidth = (minStringWidth max maxStringWidth).downTo(minStringWidth min maxStringWidth)
+		val defaultWidth = StackLength(minStringWidth min maxStringWidth, minStringWidth max maxStringWidth)
 		
 		// May display min / max values as hints
 		val effectiveHintPointer =
 		{
-			if (allowAutoHint)
+			if (markMinimumValue || markMaximumValue)
 			{
 				val autoHint =
 				{
-					if (maxValue < Int.MaxValue)
+					if (markMaximumValue)
 					{
-						if (minValue > Int.MinValue && minValue != 0)
+						if (markMinimumValue)
 							Some(s"$minValue - $maxValue".noLanguageLocalizationSkipped)
 						else
 							Some(s"Up to %s".autoLocalized.interpolated(Vector(maxValue)))
 					}
-					else if (minValue > Int.MinValue && minValue != 0)
+					else if (markMinimumValue)
 						Some(s"$minValue+".noLanguageLocalizationSkipped)
 					else
 						None
@@ -156,16 +369,23 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](factory: TextFieldF
 		}
 		val initialText = initialValue.map { _.toString }.getOrElse("")
 		
-		// Only accepts integer numbers
-		val inputFilter = if (minValue < 0) Regex.numericParts else Regex.digit
-		val resultFilter = if (minValue < 0) Regex.numeric else Regex.numericPositive
-		
 		// Displays an error if the value is outside of accepted range
-		// TODO: Implement
+		def validateInput(input: Option[A]) = input match
+		{
+			case Some(input) =>
+				if (ordering.compare(input, minValue) < 0)
+					"Minimum value is %i".autoLocalized.interpolated(Vector(minValue))
+				else if (ordering.compare(input, maxValue) > 0)
+					"Maximum value is %i".autoLocalized.interpolated(Vector(maxValue))
+				else
+					LocalizedString.empty
+			case None => LocalizedString.empty
+		}
 		
-		apply[Option[Int]](defaultWidth, fieldNamePointer, promptPointer, effectiveHintPointer, errorMessagePointer,
+		apply[Option[A]](defaultWidth, fieldNamePointer, promptPointer, effectiveHintPointer, errorMessagePointer,
 			new PointerWithEvents(initialText), highlightStylePointer, hintScaleFactor, caretBlinkFrequency,
-			Some(inputFilter), Some(resultFilter), Some(maxLength), enabledPointer, fillBackground) { _.int }
+			Some(inputRegex), Some(resultRegex), Some(maxLength), enabledPointer, Some(validateInput),
+			fillBackground, allowLineBreaks = false) { parse(_) }
 	}
 	
 	private def widthOf(text: String) = textMeasureContext.lineWidthOf(text)
@@ -176,7 +396,6 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](factory: TextFieldF
   * @author Mikko Hilpinen
   * @since 14.11.2020, v2
   */
-// TODO: Format text based on resultFilter when focus is lost
 class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, colorScheme: ColorScheme,
 				   contextBackgroundPointer: Changing[ComponentColor], defaultWidth: StackLength,
 				   font: Font, alignment: Alignment = Alignment.Left, textInsets: StackInsets = StackInsets.any,
@@ -189,62 +408,82 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 				   selectionBackgroundPointer: Changing[Option[Color]] = Changing.wrap(None),
 				   highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
 				   focusColorRole: ColorRole = Secondary, defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
-				   hintScaleFactor: Double = 0.5, caretWidth: Double = 1.0,
+				   hintScaleFactor: Double = TextField.defaultHintScaleFactor, caretWidth: Double = 1.0,
 				   caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 				   betweenLinesMargin: Double = 0.0, inputFilter: Option[Regex] = None,
 				   resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-				   enabledPointer: Changing[Boolean] = Changing.wrap(true), fillBackground: Boolean = true,
+				   enabledPointer: Changing[Boolean] = Changing.wrap(true),
+				   inputValidation: Option[A => LocalizedString] = None, fillBackground: Boolean = true,
 				   allowLineBreaks: Boolean = false, allowTextShrink: Boolean = false,
 				   showCharacterCount: Boolean = false)
 				  (parseResult: Option[String] => A)
-	extends ReachComponentWrapper with InputWithPointer[A, Changing[A]]
+	extends ReachComponentWrapper with InputWithPointer[A, Changing[A]] with MutableFocusableWrapper
 {
 	// ATTRIBUTES	------------------------------------------
+	
+	override val valuePointer = resultFilter match
+	{
+		case Some(filter) => textPointer.map { text => parseResult(filter.filter(text).notEmpty) }
+		case None => textPointer.map { text => parseResult(text.notEmpty) }
+	}
 	
 	private lazy val defaultHintInsets = textInsets.expandingHorizontallyAccordingTo(alignment)
 		.mapVertical { _ * hintScaleFactor }
 	
-	private val focusTracker = new FocusStateTracker(false)
+	private val _focusPointer = new PointerWithEvents(false)
 	
+	// Uses either the outside error message, an input validator, both or neither as the error message pointer
+	private val actualErrorPointer = inputValidation match
+	{
+		case Some(validation) =>
+			val validationErrorPointer = valuePointer.map(validation)
+			errorMessagePointer match
+			{
+				case Some(outsideError) => Some(outsideError.mergeWith(validationErrorPointer) { (default, validation) =>
+					default.notEmpty.getOrElse(validation) })
+				case None => Some(validationErrorPointer)
+			}
+		case None => errorMessagePointer
+	}
 	// Displays an error if there is one, otherwise displays the hint (provided there is one). None if neither is used.
 	private lazy val actualHintTextPointer = hintPointer match
 	{
 		case Some(hint) =>
-			errorMessagePointer match
+			actualErrorPointer match
 			{
 				case Some(error) => Some(hint.mergeWith(error) { (hint, error) => error.notEmpty getOrElse hint })
 				case None => Some(hint)
 			}
-		case None => errorMessagePointer
+		case None => actualErrorPointer
 	}
 	private lazy val hintVisibilityPointer = actualHintTextPointer.map { _.map { _.nonEmpty } }
 	
 	// A pointer to whether this field currently highlights an error
-	private val errorStatePointer = errorMessagePointer.map { _.map { _.nonEmpty } }
+	private val errorStatePointer = actualErrorPointer.map { _.map { _.nonEmpty } }
 	private val externalHighlightStatePointer = errorStatePointer match
 	{
 		case Some(errorPointer) =>
 			highlightStylePointer.mergeWith(errorPointer) { (custom, isError) => if (isError) Some(Error) else custom }
 		case None => highlightStylePointer
 	}
-	private val highlightStatePointer = focusPointer.mergeWith(externalHighlightStatePointer) { (focus, custom) =>
+	private val highlightStatePointer = _focusPointer.mergeWith(externalHighlightStatePointer) { (focus, custom) =>
 		custom.orElse { if (focus) Some(focusColorRole) else None }
 	}
-	private val highlightColorPointer = highlightStatePointer
-		.mergeWith(contextBackgroundPointer) { (state, background) =>
-			state.map { s => colorScheme(s).forBackground(background) } }
 	// If a separate background color is used for this component, it depends from this component's state
 	private val innerBackgroundPointer =
 	{
 		// TODO: Handle mouse over state (highlights one more time)
 		if (fillBackground)
-			contextBackgroundPointer.mergeWith(focusPointer) { (context, focus) =>
-				val base = context.highlighted
-				if (focus) base.highlighted else base
+			contextBackgroundPointer.mergeWith(_focusPointer) { (context, focus) =>
+				context.highlightedBy(if (focus) 0.15 else 0.075)
 			}
 		else
 			contextBackgroundPointer
 	}
+	private val highlightColorPointer = highlightStatePointer
+		.mergeWith(innerBackgroundPointer) { (state, background) =>
+			state.map { s => colorScheme(s).forBackground(background) }
+		}
 	
 	private val editTextColorPointer = innerBackgroundPointer.map { _.defaultTextColor }
 	private val contentColorPointer: Changing[Color] = highlightColorPointer
@@ -252,7 +491,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 			highlight match
 			{
 				case Some(color) => color: Color
-				case None => default
+				case None => default.timesAlpha(0.66)
 			}
 		}
 	private val defaultHintColorPointer = contextBackgroundPointer.map { _.textColorStandard.hintTextColor }
@@ -287,41 +526,36 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 				contentColorPointer.map { Border.bottom(defaultBorderWidth, _) }
 			// Otherwise uses a different height border when focused
 			else
-				contentColorPointer.mergeWith(focusPointer) { (color, focus) =>
+				contentColorPointer.mergeWith(_focusPointer) { (color, focus) =>
 					Border.bottom(if (focus) focusBorderWidth else defaultBorderWidth, color)
 				}
 		}
 		else if (defaultBorderWidth == focusBorderWidth)
 			contentColorPointer.map { color => Border.symmetric(defaultBorderWidth, color) }
 		else
-			contentColorPointer.mergeWith(focusPointer) { (color, focus) =>
+			contentColorPointer.mergeWith(_focusPointer) { (color, focus) =>
 				Border.symmetric(if (focus) focusBorderWidth else defaultBorderWidth, color)
 			}
 	}
 	private val borderDrawer = BorderViewDrawer(borderPointer)
 	
-	override protected val wrapped: ReachComponent =
+	private val (_wrapped, label) =
 	{
 		// Checks whether a separate hint area is required
-		if (hintPointer.nonEmpty || errorMessagePointer.nonEmpty || (showCharacterCount && maxLength.isDefined))
+		if (hintPointer.nonEmpty || actualErrorPointer.nonEmpty || (showCharacterCount && maxLength.isDefined))
 		{
 			ViewStack(parentHierarchy).builder(Mixed).withFixedStyle(margin = StackLength.fixedZero) { factories =>
 				// Input part may contain a name label, if enabled
-				val inputPart = makeInputArea(factories.next())
+				val (inputPart, editLabel) = makeInputArea(factories.next())
 				val hintPartAndPointer = makeHintArea(factories.next())
 				// Input part is above and below it is hint part, which may sometimes be hidden
-				Vector(inputPart -> None) ++ hintPartAndPointer
-			}.parent
+				(Vector(inputPart -> None) ++ hintPartAndPointer) -> editLabel
+			}.parentAndResult
 		}
 		else
 			makeInputArea(Mixed(parentHierarchy))
 	}
-	
-	override val valuePointer = resultFilter match
-	{
-		case Some(filter) => textPointer.map { text => parseResult(filter.filter(text).notEmpty) }
-		case None => textPointer.map { text => parseResult(text.notEmpty) }
-	}
+	private val repaintListener = ChangeListener.onAnyChange { repaint() }
 	
 	
 	// INITIAL CODE	------------------------------------------
@@ -329,12 +563,23 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 	// Will not shrink below the default width
 	wrapped.addConstraintOver(X)(MaxBetweenModifier(defaultWidth))
 	
+	_focusPointer.addListener(repaintListener)
+	innerBackgroundPointer.addListener(repaintListener)
+	borderPointer.addListener(repaintListener)
+	
 	
 	// COMPUTED	----------------------------------------------
 	
-	def hasFocus = focusTracker.hasFocus
+	def hasFocus = _focusPointer.value
 	
-	def focusPointer = focusTracker.focusPointer
+	def focusPointer = _focusPointer.view
+	
+	
+	// IMPLEMENTED	------------------------------------------
+	
+	override protected def wrapped: ReachComponent = _wrapped
+	
+	override protected def focusable = label
 	
 	
 	// OTHER	----------------------------------------------
@@ -356,12 +601,12 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 			label.addCustomDrawer(makeBackgroundDrawer())
 		label.addCustomDrawer(borderDrawer)
 		
-		// May draw a prompt while the field is empty
+		// May draw a prompt while the field is empty (or starting with the prompt text)
 		promptPointer.foreach { promptPointer =>
 			val emptyText = measureText(LocalizedString.empty)
 			val promptStylePointer = textStylePointer.map { _.mapColor { _.timesAlpha(0.66) } }
 			val displayedPromptPointer = promptPointer.mergeWith(textPointer) { (prompt, text) =>
-				if (text.isEmpty) measureText(prompt) else emptyText }
+				if (text.isEmpty || prompt.string.startsWith(text)) measureText(prompt) else emptyText }
 			label.addCustomDrawer(SelectableTextViewDrawer(displayedPromptPointer, promptStylePointer))
 		}
 		
@@ -377,7 +622,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 			// Field name is displayed when
 			// a) it is available AND
 			// b) The edit label has focus OR c) The edit label is empty
-			val nameShouldBeSeparatePointer = focusPointer.mergeWith(textPointer) { _ || _.nonEmpty }
+			val nameShouldBeSeparatePointer = _focusPointer.mergeWith(textPointer) { _ || _.nonEmpty }
 			val nameVisibilityPointer = fieldNamePointer.mergeWith(nameShouldBeSeparatePointer) { _.nonEmpty && _ }
 			val nameStylePointer = contentColorPointer.map { makeHintStyle(_, !fillBackground) }
 			val nameLabel = factories.next()(ViewTextLabel).forText(fieldNamePointer, nameStylePointer,
@@ -410,26 +655,32 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 				if (isSeparate) emptyText else measureText(name) }
 			textLabel.addCustomDrawer(SelectableTextViewDrawer(namePromptPointer, promptStylePointer))
 			
-			// May also display another prompt while the field has focus and is empty (not blocked by name or text)
+			// May also display another prompt while the field has focus and is empty / starting with the prompt
+			// (not blocked by name or text)
 			promptPointer.foreach { promptPointer =>
-				val shouldDisplayPromptPointer = textPointer.mergeWith(focusPointer) { _.isEmpty && _ }
-				val additionalPromptPointer = shouldDisplayPromptPointer.mergeWith(promptPointer) { (display, content) =>
-					if (display) measureText(content) else emptyText }
-				textLabel.addCustomDrawer(SelectableTextViewDrawer(additionalPromptPointer, promptStylePointer))
+				val promptContentPointer = promptPointer.mergeWith(textPointer) { (prompt, text) =>
+					if (text.isEmpty || prompt.string.startsWith(text)) measureText(prompt) else emptyText
+				}
+				val displayedPromptPointer = promptContentPointer.mergeWith(_focusPointer) { (prompt, focus) =>
+					if (focus) prompt else emptyText }
+				textLabel.addCustomDrawer(SelectableTextViewDrawer(displayedPromptPointer, promptStylePointer))
 			}
 			
 			// Displays one or both of the items
-			Vector(nameLabel -> Some(nameVisibilityPointer), textLabel -> None)
-		}.parent
+			Vector(nameLabel -> Some(nameVisibilityPointer), textLabel -> None) -> textLabel
+		}
 	}
 	
+	// Returns input area + editable label
 	private def makeInputArea(factories: Mixed) =
 	{
 		// Input part may contain a name label, if enabled
 		fieldNamePointer match
 		{
-			case Some(fieldNamePointer) => makeTextAndNameArea(factories(ViewStack), fieldNamePointer)
-			case None => makeTextLabelOnly(factories(EditableTextLabel))
+			case Some(fieldNamePointer) => makeTextAndNameArea(factories(ViewStack), fieldNamePointer).parentAndResult
+			case None =>
+				val label = makeTextLabelOnly(factories(EditableTextLabel))
+				label -> label
 		}
 	}
 	
@@ -438,7 +689,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 	{
 		// In some cases, displays both message field and character count label
 		// In other cases only the message field (which is hidden while empty)
-		(if (showCharacterCount) None else maxLength) match
+		(if (showCharacterCount) maxLength else None) match
 		{
 			// Case: Character count should be displayed => Always displays at least the counter
 			case Some(maxLength) =>
@@ -475,7 +726,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		contentColorPointer, caretWidth, caretBlinkFrequency, textPointer, inputFilter, maxLength, enabledPointer,
 		allowSelectionWhileDisabled = false, allowLineBreaks, allowTextShrink)
 		
-		label.addFocusListener(focusTracker)
+		label.addFocusListener(FocusTracker)
 		label
 	}
 	
@@ -508,6 +759,24 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 	
 	private def makeBackgroundDrawer() = BackgroundViewDrawer(innerBackgroundPointer.lazyMap { c => c })
 	
-	private def measureText(text: LocalizedString) = MeasuredText(text, FontMetricsContext(fontMetrics(font),
-		betweenLinesMargin), alignment, allowLineBreaks)
+	private def measureText(text: LocalizedString, isHint: Boolean = false) =
+	{
+		MeasuredText(text,
+			FontMetricsContext(parentHierarchy.fontMetrics(font), betweenLinesMargin), alignment, allowLineBreaks)
+	}
+	
+	
+	// NESTED	-----------------------------------
+	
+	private object FocusTracker extends FocusChangeListener
+	{
+		override def onFocusChangeEvent(event: FocusChangeEvent) =
+		{
+			// Updates focus status
+			_focusPointer.value = event.hasFocus
+			// May format text contents as well
+			if (event == FocusLost)
+				resultFilter.foreach { filter => textPointer.update(filter.filter) }
+		}
+	}
 }

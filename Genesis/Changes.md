@@ -18,7 +18,7 @@ new mutable mouse event handlers.
 ### Deprecations
 - ConvertingKeyListener was deprecated in favor of GlobalKeyboardEventHandler
 ### New Methods
-- Added .toRoundedRectangleWithRadius(Double) to Bounds
+- Added .toRoundedRectangleWithRadius(Double) and .ceil to Bounds
 - Added .oneTimeListener(Filter)(...) to KeyStateListener
 - Added .withOverlay(Image, Point) to Image (can also be called with +)
 - Added new variations of .average(...) to RGB and added copies of those methods to Color

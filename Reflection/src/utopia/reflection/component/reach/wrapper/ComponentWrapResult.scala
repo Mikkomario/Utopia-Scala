@@ -42,6 +42,8 @@ object ComponentWrapResult
   */
 class ComponentWrapResult[+P, +C, +R](val parent: P, val child: C, val result: R)
 {
+	// COMPUTED	----------------------------
+	
 	/**
 	  * @return This wrap result as a tuple with both parent and child components
 	  */
@@ -51,4 +53,26 @@ class ComponentWrapResult[+P, +C, +R](val parent: P, val child: C, val result: R
 	  * @return This wrap result as a tuple with parent, child and result
 	  */
 	def toTriple = (parent, child, result)
+	
+	/**
+	  * @return This wrap result as a tuple with parent and result
+	  */
+	def parentAndResult = parent -> result
+	
+	
+	// OTHER	----------------------------
+	
+	/**
+	  * @param newResult New additional result
+	  * @tparam R2 Type of the new result
+	  * @return A copy of this wrap result with specified additional value
+	  */
+	def withResult[R2](newResult: R2) = new ComponentWrapResult(parent, child, newResult)
+	
+	/**
+	  * @param f A mapping function for the additional result
+	  * @tparam R2 Type of the mapped result
+	  * @return A copy of this wrap result with mapped additional result
+	  */
+	def mapResult[R2](f: R => R2) = withResult(f(result))
 }

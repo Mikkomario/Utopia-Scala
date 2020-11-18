@@ -9,7 +9,7 @@ import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.factory.{ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.{CustomDrawReachComponent, ReachComponentLike}
-import utopia.reflection.component.reach.wrapper.{ComponentWrapResult, Open, OpenComponent}
+import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.stack.template.layout.StackLike2
@@ -219,15 +219,16 @@ class ViewStackBuilder[+F](factory: ViewStackFactory, contentFactory: ComponentF
 	  * @tparam C Type of components in this stack
 	  * @return A new stack
 	  */
-	def apply[C <: ReachComponentLike](directionPointer: Changing[Axis2D] = Changing.wrap(Y),
+	def apply[C <: ReachComponentLike, R](directionPointer: Changing[Axis2D] = Changing.wrap(Y),
 									   layoutPointer: Changing[StackLayout] = Changing.wrap(Fit),
 									   marginPointer: Changing[StackLength] = Changing.wrap(StackLength.any),
 									   capPointer: Changing[StackLength] = Changing.wrap(StackLength.fixedZero),
 									   customDrawers: Vector[CustomDrawer] = Vector())
-									  (fill: Iterator[F] => IterableOnce[(C, Option[Changing[Boolean]])]) =
+									  (fill: Iterator[F] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R]) =
 	{
 		val content = Open.manyUsing(contentFactory)(fill)
-		factory(content, directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
+		factory(content.component, directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
+			.withResult(content.result)
 	}
 	
 	/**
@@ -245,12 +246,12 @@ class ViewStackBuilder[+F](factory: ViewStackFactory, contentFactory: ComponentF
 	  * @tparam C Type of components in this stack
 	  * @return A new stack
 	  */
-	def withFixedStyle[C <: ReachComponentLike](direction: Axis2D = Y, layout: StackLayout = Fit,
+	def withFixedStyle[C <: ReachComponentLike, R](direction: Axis2D = Y, layout: StackLayout = Fit,
 												margin: StackLength = StackLength.any,
 												cap: StackLength = StackLength.fixedZero,
 												customDrawers: Vector[CustomDrawer] = Vector())
-											   (fill: Iterator[F] => IterableOnce[(C, Option[Changing[Boolean]])]) =
-		apply[C](Changing.wrap(direction), Changing.wrap(layout), Changing.wrap(margin), Changing.wrap(cap),
+											   (fill: Iterator[F] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R]) =
+		apply[C, R](Changing.wrap(direction), Changing.wrap(layout), Changing.wrap(margin), Changing.wrap(cap),
 			customDrawers)(fill)
 }
 
@@ -287,15 +288,16 @@ class ContextualViewStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualC
 	  * @tparam C Type of components in this stack
 	  * @return A new stack
 	  */
-	def apply[C <: ReachComponentLike](directionPointer: Changing[Axis2D] = Changing.wrap(Y),
+	def apply[C <: ReachComponentLike, R](directionPointer: Changing[Axis2D] = Changing.wrap(Y),
 									   layoutPointer: Changing[StackLayout] = Changing.wrap(Fit),
 									   marginPointer: Changing[StackLength] = Changing.wrap(context.defaultStackMargin),
 									   capPointer: Changing[StackLength] = Changing.wrap(StackLength.fixedZero),
 									   customDrawers: Vector[CustomDrawer] = Vector())
-									  (fill: Iterator[F[N]] => IterableOnce[(C, Option[Changing[Boolean]])]) =
+									  (fill: Iterator[F[N]] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R]) =
 	{
 		val content = Open.manyWithContext(contentFactory, stackFactory.context)(fill)
-		stackFactory(content, directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
+		stackFactory(content.component, directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
+			.withResult(content.result)
 	}
 	
 	/**
@@ -314,12 +316,12 @@ class ContextualViewStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualC
 	  * @tparam C Type of components in this stack
 	  * @return A new stack
 	  */
-	def withChangingDirection[C <: ReachComponentLike](directionPointer: Changing[Axis2D], layout: StackLayout = Fit,
+	def withChangingDirection[C <: ReachComponentLike, R](directionPointer: Changing[Axis2D], layout: StackLayout = Fit,
 													   cap: StackLength = StackLength.fixedZero,
 													   customDrawers: Vector[CustomDrawer] = Vector(),
 													   areRelated: Boolean = false)
-													  (fill: Iterator[F[N]] => IterableOnce[(C, Option[Changing[Boolean]])]) =
-		apply[C](directionPointer, Changing.wrap(layout),
+													  (fill: Iterator[F[N]] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R]) =
+		apply[C, R](directionPointer, Changing.wrap(layout),
 			Changing.wrap(if (areRelated) context.defaultStackMargin else context.relatedItemsStackMargin),
 			Changing.wrap(cap), customDrawers)(fill)
 	
@@ -339,12 +341,12 @@ class ContextualViewStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualC
 	  * @tparam C Type of components in this stack
 	  * @return A new stack
 	  */
-	def withFixedStyle[C <: ReachComponentLike](direction: Axis2D = Y, layout: StackLayout = Fit,
+	def withFixedStyle[C <: ReachComponentLike, R](direction: Axis2D = Y, layout: StackLayout = Fit,
 												cap: StackLength = StackLength.fixedZero,
 												customDrawers: Vector[CustomDrawer] = Vector(),
 												areRelated: Boolean = false)
-											   (fill: Iterator[F[N]] => IterableOnce[(C, Option[Changing[Boolean]])]) =
-		withChangingDirection[C](Changing.wrap(direction), layout, cap, customDrawers, areRelated)(fill)
+											   (fill: Iterator[F[N]] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R]) =
+		withChangingDirection[C, R](Changing.wrap(direction), layout, cap, customDrawers, areRelated)(fill)
 }
 
 /**

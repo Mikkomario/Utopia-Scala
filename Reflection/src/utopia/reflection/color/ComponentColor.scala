@@ -45,6 +45,27 @@ case class ComponentColor(background: Color, textColorStandard: TextColorStandar
 	// IMPLEMENTED	--------------------------
 	
 	override def toString = background.toString
+	
+	
+	// OTHER	------------------------------
+	
+	/**
+	  * @param amount Amount of highlighting to do [0, 1]
+	  * @return A modified version of this color
+	  */
+	def highlightedBy(amount: Double) =
+	{
+		// Either darkens or lightens the color, depending on original color lightness
+		val newBG =
+		{
+			val originalLuminosity = background.luminosity
+			if (originalLuminosity < 0.6)
+				background.lightened(1 + originalLuminosity + amount)
+			else
+				background.darkened(1 + (1 - originalLuminosity + amount))
+		}
+		copy(background = newBG)
+	}
 }
 
 object ComponentColor

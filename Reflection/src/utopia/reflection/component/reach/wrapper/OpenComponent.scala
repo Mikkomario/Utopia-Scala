@@ -50,7 +50,7 @@ object Open
 	  * @tparam C Type of created components
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def many[C](creation: Iterator[ComponentHierarchy] => IterableOnce[(C, Option[Changing[Boolean]])])
+	def many[C, R](creation: Iterator[ComponentHierarchy] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R])
 				  (implicit canvas: ReachCanvas) =
 	{
 		// Provides the creation function with an infinite iterator that creates new component hierarchies as requested
@@ -62,10 +62,12 @@ object Open
 			hierarchy
 		}
 		// Combines the created components with the created component hierarchies (amounts should match)
-		creation(moreHierarchiesIterator).iterator.zip(hierarchiesBuilder.result()).map { case (result, hierarchy) =>
-			val (component, connectPointer) = result
-			new OpenComponent(ComponentCreationResult(component, connectPointer), hierarchy)
-		}.toVector
+		creation(moreHierarchiesIterator).mapComponent {
+			_.iterator.zip(hierarchiesBuilder.result()).map { case (result, hierarchy) =>
+				val (component, connectPointer) = result
+				new OpenComponent(ComponentCreationResult(component, connectPointer), hierarchy)
+			}.toVector
+		}
 	}
 	
 	/**
@@ -97,10 +99,10 @@ object Open
 	  * @tparam C Type of created components
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def manyUsing[F, C](factory: ComponentFactoryFactory[F])
-					   (creation: Iterator[F] => IterableOnce[(C, Option[Changing[Boolean]])])
+	def manyUsing[F, C, R](factory: ComponentFactoryFactory[F])
+					   (creation: Iterator[F] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R])
 					   (implicit canvas: ReachCanvas) =
-		many[C] { hierarchies => creation(hierarchies.map(factory.apply)) }
+		many[C, R] { hierarchies => creation(hierarchies.map(factory.apply)) }
 	
 	/**
 	  * Creates a new open component using a contextual component factory
@@ -141,9 +143,10 @@ object Open
 	  * @tparam F Type of component creation factory
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def manyWithContext[C, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	def manyWithContext[C, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F], context: N)
-	(creation: Iterator[F[N]] => IterableOnce[(C, Option[Changing[Boolean]])])(implicit canvas: ReachCanvas) =
+	(creation: Iterator[F[N]] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R])
+	(implicit canvas: ReachCanvas) =
 		many { hierarchies => creation(hierarchies.map { factory.withContext(_, context) }) }
 	
 	/**
@@ -180,9 +183,9 @@ object Open
 	  * @tparam F Type of component creation factory
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def contextualMany[C, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	def contextualMany[C, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])
-	(creation: Iterator[F[N]] => IterableOnce[(C, Option[Changing[Boolean]])])
+	(creation: Iterator[F[N]] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R])
 	(implicit canvas: ReachCanvas, context: N) =
 		manyWithContext(factory, context)(creation)
 }
