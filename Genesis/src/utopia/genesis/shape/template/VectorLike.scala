@@ -91,6 +91,11 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	def isZero = dimensions.forall { _ == 0 }
 	
 	/**
+	  * @return Whether one or more of this instance's dimensions are not zero
+	  */
+	def nonZero = !isZero
+	
+	/**
 	  * This vector with length of 1
 	  */
 	def toUnit = this / length

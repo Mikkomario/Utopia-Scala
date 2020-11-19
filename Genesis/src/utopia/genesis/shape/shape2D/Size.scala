@@ -87,11 +87,6 @@ case class Size(width: Double, height: Double) extends Vector2DLike[Size] with A
     override def isZero = width == 0 || height == 0
     
     /**
-     * @return Whether this size has a non-zero area (positive or negative)
-     */
-    def nonZero = !isZero
-    
-    /**
      * The area of this size (width * height)
      */
     def area = width * height
