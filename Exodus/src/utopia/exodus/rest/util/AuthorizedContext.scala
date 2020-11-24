@@ -17,6 +17,24 @@ import utopia.vault.database.Connection
 import scala.math.Ordering.Double.TotalOrdering
 import scala.util.{Failure, Success, Try}
 
+object AuthorizedContext
+{
+	/**
+	  * Creates a new authorized request context
+	  * @param request Request wrapped by this context
+	  * @param resultParser Parser that determines what server responses should look like. Default =
+	  *                     use simple json bodies and http statuses.
+	  * @param errorHandler A function for handling possible errors thrown during request handling and database
+	  *                     interactions.
+	  * @param serverSettings Applied server settings (implicit)
+	  * @param jsonParser Json parser used for interpreting request json content (implicit)
+	  * @return A new request context
+	  */
+	def apply(request: Request, resultParser: ResultParser = UseRawJSON)(errorHandler: Throwable => Unit)
+			 (implicit serverSettings: ServerSettings, jsonParser: JsonParser) =
+		new AuthorizedContext(request, resultParser)(errorHandler)
+}
+
 /**
   * This context variation checks user authorization (when required)
   * @author Mikko Hilpinen
