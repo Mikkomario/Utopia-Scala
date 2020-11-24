@@ -2,8 +2,8 @@ package utopia.exodus.rest.util
 
 import utopia.access.http.Status.{BadRequest, Forbidden, InternalServerError, Unauthorized}
 import utopia.exodus.database.access.many.DbLanguages
-import utopia.exodus.database.access.single.{DbDeviceKey, DbMembership, DbUser, DbUserSession}
-import utopia.exodus.model.stored.{DeviceKey, UserSession}
+import utopia.exodus.database.access.single.{DbApiKey, DbDeviceKey, DbMembership, DbUser, DbUserSession}
+import utopia.exodus.model.stored.{ApiKey, DeviceKey, UserSession}
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.parse.JsonParser
@@ -182,6 +182,36 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 			case None => Result.Failure(Unauthorized, "Authorization header is required").toResponse(this)
 		}
 	}
+	
+	/**
+	  * Authorizes the request using an api key in the bearer auth header. Uses existing database connection.
+	  * @param f A function called if the request is authorized (accepts valid api key)
+	  * @param connection Implicit database connection
+	  * @return Function result if the request was authorized, otherwise an authorization failure
+	  */
+	def apiKeyAuthorizedWithConnection(f: ApiKey => Result)(implicit connection: Connection) =
+	{
+		// Checks the bearer auth token
+		request.headers.bearerAuthorization match
+		{
+			case Some(token) =>
+				// Makes sure the token is registered in the database
+				DbApiKey(token) match
+				{
+					case Some(key) => f(key)
+					case None => Result.Failure(Unauthorized, "Invalid api key")
+				}
+			case None => Result.Failure(Unauthorized, "Please provide a api key in the auth bearer header")
+		}
+	}
+	
+	/**
+	  * Authorizes the request using an api key in the bearer auth header
+	  * @param f A function called if the request is authorized (accepts valid api key and database connection)
+	  * @return Function result if the request was authorized, otherwise an authorization failure
+	  */
+	def apiKeyAuthorized(f: (ApiKey, Connection) => Result) =
+		tokenAuthorized("api key", f) { (key, connection) => DbApiKey(key)(connection) }
 	
 	/**
 	  * Performs the specified function if the user is authorized (using session key) and they are a member of the

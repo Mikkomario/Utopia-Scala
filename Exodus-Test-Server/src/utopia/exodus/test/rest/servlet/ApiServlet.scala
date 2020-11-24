@@ -47,7 +47,8 @@ class ApiServlet extends HttpServlet
 	private implicit val jsonParser: JsonParser = JsonBunny
 	
 	private val handler = new RequestHandler(
-		Vector(UsersNode, DevicesNode, OrganizationsNode, LanguagesNode, DescriptionRolesNode, RolesNode, TasksNode),
+		Vector(UsersNode.forApiKey, DevicesNode, OrganizationsNode, LanguagesNode.public, DescriptionRolesNode.public,
+			RolesNode, TasksNode),
 		Some(Path("exodus", "api", "v1")), r => AuthorizedContext(r) { _.printStackTrace() })
 	
 	

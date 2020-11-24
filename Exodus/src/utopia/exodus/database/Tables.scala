@@ -54,6 +54,12 @@ object Tables
 	def languageFamiliarityDescription = apply("language_familiarity_description")
 	
 	/**
+	  * @return A table containing registered API-keys. This table might not be used in all applications, depending
+	  *         on their choice of authentication and access control.
+	  */
+	def apiKey = apply("api_key")
+	
+	/**
 	  * @return Table that contains users
 	  */
 	def user = apply("user")

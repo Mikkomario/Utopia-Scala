@@ -35,6 +35,21 @@ CREATE TABLE language_familiarity
 INSERT INTO language_familiarity (id, order_index) VALUES
     (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6);
 
+-- OPTIONAL table
+-- Contains API-keys used in authenticating requests for nodes which don't require a user session for authentication
+-- (E.g. User creation or accessing the list of available languages)
+-- Expected API-key format is that of a standard UUID. For example: "a2de1cbc-4ae9-4778-892c-4ad36875f38b"
+CREATE TABLE api_key
+(
+    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `key` VARCHAR(36) NOT NULL,
+    name VARCHAR(64) NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX (`key`)
+
+)Engine=InnoDB DEFAULT CHARSET=latin1;
+
 -- Describes individual users
 CREATE TABLE `user`
 (

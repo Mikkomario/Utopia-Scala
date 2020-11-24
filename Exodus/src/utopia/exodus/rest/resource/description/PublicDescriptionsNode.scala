@@ -28,6 +28,15 @@ trait PublicDescriptionsNode[Item, Combined <: ModelConvertible] extends Resourc
 	// ABSTRACT	------------------------------------
 	
 	/**
+	  * Authorizes the incoming request
+	  * @param onAuthorized A function to call if the request is authorized. Produces final result
+	  * @param context Request context
+	  * @param connection Database connection (implicit)
+	  * @return Function result if authorized, otherwise a failure indicating a suitable authorization problem.
+	  */
+	protected def authorize(onAuthorized: => Result)(implicit context: AuthorizedContext, connection: Connection): Result
+	
+	/**
 	  * @param connection DB Connection (implicit)
 	  * @return All returned items
 	  */
