@@ -76,6 +76,7 @@ CREATE TABLE email_validation
     expires_in DATETIME NOT NULL,
     actualized_in DATETIME,
 
+    INDEX ev_email_idx (email),
     INDEX ev_key_idx (`key`),
     INDEX ev_resend_idx (resend_key),
     INDEX ev_validity_idx (expires_in, actualized_in),

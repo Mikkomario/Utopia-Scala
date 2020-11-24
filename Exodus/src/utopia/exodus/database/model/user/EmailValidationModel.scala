@@ -14,6 +14,18 @@ object EmailValidationModel
 	// OTHER	----------------------------
 	
 	/**
+	  * @param validationId Id of the targeted validation
+	  * @return A model with only id set
+	  */
+	def withId(validationId: Int) = apply(Some(validationId))
+	
+	/**
+	  * @param email An email address
+	  * @return A model with specified email address
+	  */
+	def withEmail(email: String) = apply(email = Some(email))
+	
+	/**
 	  * @param key An email validation key
 	  * @return A model with only validation key set
 	  */
@@ -56,8 +68,27 @@ case class EmailValidationModel(id: Option[Int] = None, purposeId: Option[Int] =
 								actualization: Option[Instant] = None)
 	extends StorableWithFactory[EmailValidation]
 {
+	// COMPUTED	------------------------------
+	
+	/**
+	  * @return A copy of this model that has just been marked as actualized / answered
+	  */
+	def nowActualized = copy(actualization = Some(Instant.now()))
+	
+	
+	// IMPLEMENTED	--------------------------
+	
 	override def factory = EmailValidationFactory
 	
 	override def valueProperties = Vector("id" -> id, "purposeId" -> purposeId, "email" -> email, "key" -> key,
 		"resendKey" -> resendKey, "created" -> created, "expiresIn" -> expiration, "actualizedIn" -> actualization)
+	
+	
+	// OTHER	------------------------------
+	
+	/**
+	  * @param purposeId Id of the purpose of this validation
+	  * @return A model with purpose id set
+	  */
+	def withPurposeId(purposeId: Int) = copy(purposeId = Some(purposeId))
 }
