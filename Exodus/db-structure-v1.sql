@@ -46,9 +46,58 @@ CREATE TABLE api_key
     name VARCHAR(64) NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    INDEX (`key`)
+    INDEX ak_api_key_idx (`key`)
 
 )Engine=InnoDB DEFAULT CHARSET=latin1;
+
+-- Contains a list of purposes for email validation (server-side only)
+-- This is to limit the possible misuse of these validation tokens to contexts for which they were created
+CREATE TABLE email_validation_purpose
+(
+    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    name_en VARCHAR(16) NOT NULL
+
+)Engine=InnoDB DEFAULT CHARSET=latin1;
+
+INSERT INTO email_validation_purpose(id, name_en) VALUES
+    (1, 'User Creation'),
+    (2, 'Password Reset'),
+    (3, 'Email Change');
+
+-- Contains email validation tokens
+CREATE TABLE email_validation
+(
+    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    purpose_id INT NOT NULL,
+    email VARCHAR(128) NOT NULL,
+    `key` VARCHAR(36) NOT NULL,
+    resend_key VARCHAR(36) NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_in DATETIME NOT NULL,
+    actualized_in DATETIME,
+
+    INDEX ev_key_idx (`key`),
+    INDEX ev_resend_idx (resend_key),
+    INDEX ev_validity_idx (expires_in, actualized_in),
+
+    CONSTRAINT ev_evp_validation_purpose_link_fk FOREIGN KEY ev_evp_validation_purpose_link_idx
+        REFERENCES email_validation_purpose(id) ON DELETE CASCADE
+
+)Engine=InnoDB DEFAULT CHARSET=latin1;
+
+-- Records resend attempts in order to limit possible spam
+CREATE TABLE email_validation_resend
+(
+    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    validation_id INT NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT evr_ev_validation_link_fb FOREIGN KEY evr_ev_validation_link_idk (validation_id)
+        REFERENCES email_validation(id) ON DELETE CASCADE
+
+)Engine=InnoDB DEFAULT CHARSET=latin1;
+
+-- Describes prompted new users which are waiting for an email validation & completion
 
 -- Describes individual users
 CREATE TABLE `user`
@@ -168,6 +217,11 @@ CREATE TABLE description_role_description
 
 )Engine=InnoDB DEFAULT CHARSET=latin1;
 
+-- Description #1 = Name description role name
+INSERT INTO description (id, role_id, language_id, `text`) VALUES
+    (1, 1, 1, 'Name');
+INSERT INTO description_role_description (role_id, description_id) VALUES (1, 1);
+
 -- Links descriptions with languages
 CREATE TABLE language_description
 (
@@ -187,6 +241,11 @@ CREATE TABLE language_description
 
 )Engine=InnoDB DEFAULT CHARSET=latin1;
 
+-- Description #2 = English language name
+INSERT INTO description (id, role_id, language_id, `text`) VALUES
+    (2, 1, 1, 'English');
+INSERT INTO language_description (language_id, description_id) VALUES (1, 2);
+
 -- Links descriptions with language familiarity levels
 CREATE TABLE language_familiarity_description
 (
@@ -205,6 +264,17 @@ CREATE TABLE language_familiarity_description
         REFERENCES description(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARSET=latin1;
+
+-- Descriptions #3-8 = Language familiarity level names
+INSERT INTO description (id, role_id, language_id, `text`) VALUES
+    (3, 1, 1, 'Primary Language'),
+    (4, 1, 1, 'Fluent and Preferred'),
+    (5, 1, 1, 'Fluent'),
+    (6, 1, 1, 'OK'),
+    (7, 1, 1, 'OK, less preferred'),
+    (8, 1, 1, 'Better than Nothing');
+INSERT INTO language_familiarity_description (familiarity_id, description_id) VALUES
+    (1, 3), (2, 4), (3, 5), (4, 6), (5, 7), (6, 8);
 
 -- Organizations represent user groups (Eg. company)
 CREATE TABLE organization
@@ -272,6 +342,17 @@ CREATE TABLE task_description
 
 )Engine=InnoDB DEFAULT CHARSET=latin1;
 
+-- Descriptions #9-14 = Task description names
+INSERT INTO description (id, role_id, language_id, `text`) VALUES
+    (9, 1, 1, 'Delete Organization'),
+    (10, 1, 1, 'Change User Roles'),
+    (11, 1, 1, 'Invite Users'),
+    (12, 1, 1, 'Edit Organization Description'),
+    (13, 1, 1, 'Remove Users'),
+    (14, 1, 1, 'Cancel Organization Deletion');
+INSERT INTO task_description (task_id, description_id) VALUES
+    (1, 9), (2, 10), (3, 11), (4, 12), (5, 13), (6, 14);
+
 -- An enumeration for various roles within an organization. One user may have multiple roles within an organization.
 CREATE TABLE organization_user_role
 (
@@ -306,6 +387,13 @@ CREATE TABLE user_role_description
         REFERENCES description(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARSET=latin1;
+
+-- Descriptions #15-16 = User role names
+INSERT INTO description (id, role_id, language_id, `text`) VALUES
+    (15, 1, 1, 'Owner'),
+    (16, 1, 1, 'Admin');
+INSERT INTO user_role_description (role_id, description_id) VALUES
+    (1, 15), (2, 16);
 
 -- Links user roles to one or more tasks the users in that role are allowed to perform
 CREATE TABLE user_role_right
@@ -508,26 +596,6 @@ CREATE TABLE client_device_user
 
 )Engine=InnoDB DEFAULT CHARSET=latin1;
 
--- Registers temporary password reset requests, along with their reset codes (these are sent via email)
-CREATE TABLE password_reset_request
-(
-    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    device_id INT NOT NULL,
-    reset_code VARCHAR(6) NOT NULL,
-    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expires_in DATETIME NOT NULL,
-
-    INDEX (expires_in),
-
-    FOREIGN KEY prr_u_password_owner (user_id)
-        REFERENCES `user`(id) ON DELETE CASCADE,
-
-    FOREIGN KEY prr_cd_source_device (device_id)
-        REFERENCES client_device(id) ON DELETE CASCADE
-
-)Engine=InnoDB DEFAULT CHARSET=latin1;
-
 -- Used for allowing a private device access to user account
 CREATE TABLE device_authentication_key
 (
@@ -568,5 +636,3 @@ CREATE TABLE user_session
         REFERENCES client_device(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARSET=latin1;
-
--- TODO: Insert initial descriptions
