@@ -5,7 +5,7 @@
 new mutable mouse event handlers.
 - Added absoluteMousePosition to all MouseEvents
 - Path no longer extends DistanceLike
-- Renamed RGB, RGBLike and RGBChannel to Rgb RgbLike and RgbChannel
+- Renamed RGB, RGBLike, RGBChannel and RGBTransform to Rgb... (camel case)
 - Renamed HSL and HSLLike to Hsl and HslLike
 - KeyTypedEvents now contain the associated key index
 - Added origin to Image, therefore removing separate origin features from any animation and image drawing classes
@@ -26,7 +26,7 @@ new mutable mouse event handlers.
 - Added .toMap2D to TwoDimensional
 - Added .build(...) to XmlElement
 - Added .minAlong(Axis2D), .maxAlong(Axis2D) and overlapsWith(Bounds) to Bounds
-- Added .translated(Vector2DLike) to Drawer
+- Added .translated(Vector2DLike), .copyArea(...) and .clipBounds to Drawer
 - Added Image.draw(...) method which can be used for drawing custom images
 - Added .arrow to KeyStateEvent
 - Added a couple new utility methods to MovementHistoryLike and VelocityTracker
@@ -42,6 +42,7 @@ new mutable mouse event handlers.
 - Added implicit conversion from a function to a KeyTypedListener
 - Parallelogramic now produces Parallelogramic instead of Parallelogram when transformed
 - PixelTable now extends IterableOnce(Color)
+- Added implicit conversion from awt Rectangle to Bounds
 
 ## v2.3
 ### Scala

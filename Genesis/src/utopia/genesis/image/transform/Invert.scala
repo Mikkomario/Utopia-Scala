@@ -5,7 +5,7 @@ package utopia.genesis.image.transform
   * @author Mikko Hilpinen
   * @since 16.6.2019, v2.1+
   */
-object Invert extends RGBTransform
+object Invert extends RgbTransform
 {
 	override def apply(originalRatio: Double) = 1 - originalRatio
 }

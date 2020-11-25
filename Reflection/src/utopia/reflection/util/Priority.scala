@@ -24,6 +24,16 @@ sealed trait Priority extends RichComparable[Priority]
 
 object Priority
 {
+	// ATTRIBUTES	------------------------
+	
+	/**
+	  * Available priorities in descending order
+	  */
+	val descending = Vector[Priority](VeryHigh, High, Normal, Low, VeryLow)
+	
+	
+	// NESTED	----------------------------
+	
 	/**
 	  * The highest priority
 	  */

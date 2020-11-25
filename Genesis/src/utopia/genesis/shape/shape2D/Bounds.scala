@@ -1,5 +1,7 @@
 package utopia.genesis.shape.shape2D
 
+import scala.language.implicitConversions
+
 import java.awt.geom.RoundRectangle2D
 
 import utopia.flow.generic.ValueConvertible
@@ -29,9 +31,16 @@ object Bounds extends FromModelFactory[Bounds]
     val zero = Bounds(Point.origin, Size.zero)
     
     
+    // IMPLICIT ---------------------------
+    
+    implicit def fromAwt(awtBounds: java.awt.Rectangle): Bounds = Bounds(Point(awtBounds.x, awtBounds.y),
+        Size(awtBounds.width, awtBounds.height))
+    
+    
     // OPERATORS    -----------------------
     
-    override def apply(model: template.Model[Property]) = Success(Bounds(model("position").getPoint, model("size").getSize))
+    override def apply(model: template.Model[Property]) =
+        Success(Bounds(model("position").getPoint, model("size").getSize))
     
     
     // OTHER METHODS    -------------------

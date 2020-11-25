@@ -4,7 +4,7 @@ import java.awt.{AlphaComposite, BasicStroke, Font, Graphics, Graphics2D, Image,
 import java.awt.geom.AffineTransform
 
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Bounds, Point, ShapeConvertible, Size, Transformation, Vector2DLike}
+import utopia.genesis.shape.shape2D.{Bounds, Point, ShapeConvertible, Size, Transformation, TwoDimensional, Vector2DLike}
 import utopia.flow.util.NullSafe._
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.shape3D.Vector3D
@@ -48,6 +48,11 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
     // TODO: Add rendering hints
     
     // ATTRIBUTES    ----------------------
+    
+    /**
+      * The current clipping bounds assigned to this drawer (None if no clipping bounds have been assigned)
+      */
+    lazy val clipBounds = Option(graphics.getClipBounds).map { r => r: Bounds }
     
     private var children = Vector[Drawer]()
     
@@ -312,6 +317,19 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
         graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
         
         graphics.drawImage(image, position.x.toInt, position.y.toInt, null)
+    }
+    
+    /**
+      * Copies a region of the drawn area to another location
+      * @param area Area that is copied
+      * @param translation The amount of translation applied to the area
+      */
+    def copyArea(area: Bounds, translation: TwoDimensional[Double]) =
+    {
+        if (translation.dimensions2D.exists { _ != 0 })
+            graphics.copyArea(
+                area.x.round.toInt, area.y.round.toInt, area.width.round.toInt, area.height.round.toInt,
+                translation.x.round.toInt, translation.y.round.toInt)
     }
     
     /**

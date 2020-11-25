@@ -1,6 +1,6 @@
 package utopia.genesis.image.transform
 
-import utopia.genesis.image.Image
+import utopia.genesis.image.{Image, MutableImage}
 
 /**
   * These filters are used for transforming image data
@@ -18,6 +18,12 @@ trait ImageTransform
 	  */
 	def apply(source: Image): Image
 	
+	/**
+	  * Applies this transformation directly to a mutable image
+	  * @param target Target image that will be affected by this transformation
+	  */
+	def apply(target: MutableImage): Unit
+	
 	
 	// OPERATORS	---------------
 	
@@ -32,4 +38,10 @@ trait ImageTransform
 private case class AndImageTransform(first: ImageTransform, second: ImageTransform) extends ImageTransform
 {
 	override def apply(source: Image) = second(first(source))
+	
+	override def apply(target: MutableImage) =
+	{
+		first(target)
+		second(target)
+	}
 }

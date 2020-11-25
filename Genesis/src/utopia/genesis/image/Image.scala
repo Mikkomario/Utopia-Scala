@@ -14,9 +14,8 @@ import utopia.genesis.color.Color
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape1D.{Angle, Rotation}
-import utopia.genesis.shape.shape2D.{Area2D, Bounds, Direction2D, Insets, Point, Size, Transformation, Vector2D}
+import utopia.genesis.shape.shape2D.{Area2D, Bounds, Direction2D, Insets, Point, Size, Vector2D}
 import utopia.genesis.shape.template.{Dimensional, VectorLike}
 import utopia.genesis.util.{Drawer, Scalable}
 
@@ -124,6 +123,11 @@ object Image
 		// Wraps the buffer image
 		Image(buffer)
 	}
+	
+	
+	// NESTED	------------------------
+	
+	private class NoImageReaderAvailableException(message: String) extends RuntimeException(message)
 }
 
 /**
@@ -131,65 +135,30 @@ object Image
   * @author Mikko Hilpinen
   * @since 15.6.2019, v2.1
   */
-case class Image private(private val source: Option[BufferedImage], scaling: Vector2D, alpha: Double,
-						 specifiedOrigin: Option[Point], private val _pixels: LazyLike[PixelTable])
-	extends Scalable[Image]
+case class Image private(override protected val source: Option[BufferedImage], override val scaling: Vector2D,
+						 override val alpha: Double, override val specifiedOrigin: Option[Point],
+						 private val _pixels: LazyLike[PixelTable])
+	extends ImageLike with Scalable[Image]
 {
 	// ATTRIBUTES	----------------
 	
 	/**
 	  * The size of the original image
 	  */
-	val sourceResolution = source.map { s => Size(s.getWidth, s.getHeight) }.getOrElse(Size.zero)
+	override val sourceResolution = source.map { s => Size(s.getWidth, s.getHeight) }.getOrElse(Size.zero)
 	
 	/**
 	  * @return The size of this image in pixels
 	  */
-	val size = sourceResolution * scaling
+	override val size = sourceResolution * scaling
 	
 	/**
 	  * The bounds of this image when origin and size are both counted
 	  */
-	lazy val bounds = Bounds(-origin, size)
+	override lazy val bounds = Bounds(-origin, size)
 	
 	
 	// COMPUTED	--------------------
-	
-	/**
-	 * @return Whether this image is actually completely empty
-	 */
-	def isEmpty = source.isEmpty
-	
-	/**
-	  * @return The pixels in this image
-	  */
-	def pixels = _pixels.value
-	
-	/**
-	  * @return The width of this image in pixels
-	  */
-	def width = size.width
-	
-	/**
-	  * @return The height of this image in pixels
-	  */
-	def height = size.height
-	
-	/**
-	  * @return Whether this image has a specified origin
-	  */
-	def specifiesOrigin = specifiedOrigin.isDefined
-	
-	/**
-	  * @return The origin of this image that is relative to this image's source resolution and not necessarily
-	  *         the current size.
-	  */
-	def sourceResolutionOrigin = specifiedOrigin.getOrElse(Point.origin)
-	
-	/**
-	  * @return The origin of this image that is relative to the image size and not source resolution
-	  */
-	def origin = specifiedOrigin.map { _ * scaling }.getOrElse(Point.origin)
 	
 	/**
 	  * @return A copy of this image without a specified origin location
@@ -267,18 +236,6 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 		withSourceResolution(size min sourceResolution, preserveUseSize = true)
 	
 	/**
-	  * Calculates the length of this image from the origin to the specified direction (Eg. if origin is at
-	  * the center of this image, returns width or height halved)
-	  * @param direction Direction towards which the distance is counted
-	  * @return Starting from this image's origin, the length of this image towards that direction
-	  */
-	def lengthTowards(direction: Direction2D) = direction.sign match
-	{
-		case Positive => size.along(direction.axis) - origin.along(direction.axis)
-		case Negative => origin.along(direction.axis)
-	}
-	
-	/**
 	  * @return A buffered image copied from the source data of this image. None if this image is empty.
 	  */
 	def toAwt =
@@ -295,18 +252,21 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	
 	// IMPLEMENTED	----------------
 	
+	override def preCalculatedPixels = _pixels.current
+	
+	/**
+	  * @return Whether this image is actually completely empty
+	  */
+	override def isEmpty = source.isEmpty
+	
+	/**
+	  * @return The pixels in this image
+	  */
+	override def pixels = _pixels.value
+	
 	override def repr = this
 	
-	override def toString =
-	{
-		val alphaPortion = if (alpha == 1) "" else s" ${(alpha * 100).toInt}% Alpha"
-		val originPortion = specifiedOrigin match
-		{
-			case Some(origin) => s" Origin at ${origin * scaling}"
-			case None => ""
-		}
-		s"Image ($size$alphaPortion$originPortion)"
-	}
+	override def *(scaling: Double): Image = this * Vector2D(scaling, scaling)
 	
 	
 	// OPERATORS	----------------
@@ -317,13 +277,6 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	  * @return A scaled version of this image
 	  */
 	def *(scaling: VectorLike[_]): Image = withScaling(this.scaling * scaling)
-	
-	/**
-	  * Scales this image
-	  * @param scaling The scaling factor
-	  * @return A scaled version of this image
-	  */
-	override def *(scaling: Double): Image = this * Vector2D(scaling, scaling)
 	
 	/**
 	  * Downscales this image
@@ -341,82 +294,6 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	  * @param point Targeted point in this image <b>relative to this image's origin</b>
-	  * @return A color of this image at the specified location
-	  */
-	def pixelAt(point: Point) =
-	{
-		// Utilizes a pre-calculated pixel table if one is already available,
-		// although will not create one just for this method call
-		_pixels.current match
-		{
-			case Some(pixels) => pixels.lookup(point).getOrElse(Color.transparentBlack)
-			case None =>
-				source match
-				{
-					case Some(image) =>
-						// Converts the point to an image coordinate
-						val pointInImage = ((point - bounds.topLeft) / scaling).rounded
-						val x = pointInImage.x.toInt
-						val y = pointInImage.y.toInt
-						if (x >= 0 && y >= 0 && x < image.getWidth && y < image.getHeight)
-						{
-							// Fetches the pixel color in that location
-							val rgb = image.getRGB(x, y)
-							Color.fromInt(rgb)
-						}
-						else
-							Color.transparentBlack
-					case None => Color.transparentBlack
-				}
-		}
-	}
-	
-	/**
-	  * @param area Targeted area within this image. The (0,0) location is relative to the top left corner of this image
-	  * @return An iterator that traverses through the pixels in that area
-	  */
-	def pixelsAt(area: Bounds) =
-	{
-		// Uses a pixel table if one is available
-		_pixels.current match
-		{
-			case Some(pixels) => pixels(area / scaling)
-			case None =>
-				(area / scaling).within(Bounds(Point.origin, sourceResolution)) match
-				{
-					case Some(insideArea) =>
-						if (insideArea.size.isPositive)
-						{
-							// If the specified area covers 50% of this image or more, calculates the whole pixel table
-							if (insideArea.area >= sourceResolution.area * 0.5)
-								pixels(insideArea)
-							else
-							{
-								source match
-								{
-									// Iterates over the targeted pixels
-									case Some(image) =>
-										new ImageIterator(image, insideArea.x.toInt, insideArea.y.toInt,
-											insideArea.rightX.toInt, insideArea.bottomY.toInt)
-									case None => Vector().iterator
-								}
-							}
-						}
-						else
-							Vector().iterator
-					case None => Vector().iterator
-				}
-		}
-	}
-	
-	/**
-	  * @param area Targeted area within this image. The (0,0) is at the top left corner of this image
-	  * @return The average luminosity of the pixels in the targeted area
-	  */
-	def averageLuminosityOf(area: Bounds) = Color.averageLuminosityOf(pixelsAt(area))
 	
 	/**
 	  * Creates a copy of this image with adjusted alpha value (transparency)
@@ -540,24 +417,6 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 		val subImageSize = Size(subImageWidth, height)
 		Strip((0 until numberOfParts).map {
 			index => subImage(Bounds(Point(index * (subImageWidth + marginBetweenParts), 0), subImageSize)) }.toVector)
-	}
-	
-	/**
-	  * Draws this image using a specific drawer
-	  * @param drawer A drawer
-	  * @param position The position where this image's origin is drawn (default = (0, 0))
-	  * @return Whether this image was fully drawn
-	  */
-	def drawWith(drawer: Drawer, position: Point = Point.origin) =
-	{
-		source.forall { s =>
-			val transformed = drawer.transformed(Transformation.position(position).scaled(scaling))
-			val drawPosition = specifiedOrigin.map { -_ }.getOrElse(Point.origin)
-			if (alpha == 1.0)
-				transformed.drawImage(s, drawPosition)
-			else
-				transformed.withAlpha(alpha).drawImage(s, drawPosition)
-		}
 	}
 	
 	/**
@@ -820,37 +679,21 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 				case None => overlayImage
 			}
 	}
-}
-
-private class ImageIterator(image: BufferedImage, startX: Int, startY: Int, endX: Int, endY: Int)
-	extends Iterator[Color]
-{
-	// ATTRIBUTES	-----------------------
 	
-	private val lastX = endX - 1
-	
-	private var nextX = startX
-	private var nextY = startY
-	
-	
-	// IMPLEMENTED	-----------------------
-	
-	override def hasNext = nextY < endY && nextX < endX
-	
-	override def next() =
+	/**
+	  * @param paint A function for painting over this image. Accepts a drawer that is clipped to this image's area
+	  *              ((0,0) is at the top left corner if this image).
+	  * @return A copy of this image with the paint operation applied
+	  */
+	def paintedOver(paint: Drawer => Unit) =
 	{
-		// Fetches the color
-		val rgb = image.getRGB(nextX, nextY)
-		// Moves the cursor
-		if (nextX < lastX)
-			nextX += 1
-		else
+		toAwt match
 		{
-			nextX = startX
-			nextY += 1
+			case Some(buffer) =>
+				// Paints into created buffer
+				Drawer.use(buffer.createGraphics())(paint)
+				Image(buffer, scaling, alpha, specifiedOrigin)
+			case None => this
 		}
-		Color.fromInt(rgb)
 	}
 }
-
-private class NoImageReaderAvailableException(message: String) extends RuntimeException(message)

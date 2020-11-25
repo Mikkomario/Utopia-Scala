@@ -7,7 +7,7 @@ import utopia.genesis.color.Color
   * @author Mikko Hilpinen
   * @since 16.6.2019, v2.1+
   */
-trait RGBTransform extends PixelTransform
+trait RgbTransform extends PixelTransform
 {
 	// ABSTRACT	------------------
 	
@@ -31,10 +31,10 @@ trait RGBTransform extends PixelTransform
 	  * @param another Another transformation
 	  * @return A transformation that applies 'this' first and then 'another'
 	  */
-	def +(another: RGBTransform): RGBTransform = AndRGBTransform(this, another)
+	def +(another: RgbTransform): RgbTransform = AndRgbTransform(this, another)
 }
 
-private case class AndRGBTransform(first: RGBTransform, second: RGBTransform) extends RGBTransform
+private case class AndRgbTransform(first: RgbTransform, second: RgbTransform) extends RgbTransform
 {
 	override def apply(originalRatio: Double) = second(first(originalRatio))
 }

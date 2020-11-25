@@ -33,10 +33,10 @@ import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.cursor.{CursorSet, ReachCursorManager}
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.StackSize
-import utopia.reflection.util.ReachFocusManager
+import utopia.reflection.util.{ReachFocusManager, RealTimeReachPaintManager}
 
 import scala.annotation.tailrec
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
 
 object ReachCanvas
@@ -49,7 +49,8 @@ object ReachCanvas
 	  * @return A set of canvas with the content inside them and the produced canvas content as well
 	  */
 	def apply[C <: ReachComponentLike, R](cursors: Option[CursorSet] = None)
-										 (content: ComponentHierarchy => ComponentCreationResult[C, R]) =
+										 (content: ComponentHierarchy => ComponentCreationResult[C, R])
+										 (implicit exc: ExecutionContext) =
 	{
 		val contentPromise = Promise[ReachComponentLike]()
 		val canvas = new ReachCanvas(contentPromise.future, cursors)
@@ -65,6 +66,7 @@ object ReachCanvas
   * @since 4.10.2020, v2
   */
 class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Option[CursorSet])
+						 (implicit exc: ExecutionContext)
 	extends JWrapper with Stackable with AwtContainerRelated with SwingComponentRelated with CustomDrawable
 {
 	// ATTRIBUTES	---------------------------
@@ -74,10 +76,10 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	
 	private var layoutUpdateQueue = VolatileList[Seq[ReachComponentLike]]()
 	private var updateFinishedQueue = VolatileList[() => Unit]()
-	private var buffer = Image.empty
+	// private var buffer = Image.empty
 	
 	private val panel = new CustomDrawPanel()
-	private val repaintNeed = VolatileOption[RepaintNeed](Full)
+	// private val repaintNeed = VolatileOption[RepaintNeed](Full)
 	
 	/**
 	  * Object that manages focus between the components in this canvas element
@@ -88,6 +90,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	  */
 	val cursorManager = cursors.map { new ReachCursorManager(_) }
 	private val cursorPainter = cursorManager.map { new CursorPainter2(_) }
+	private val painterPromise = contentFuture.map { c => RealTimeReachPaintManager(c) {
+		cursorPainter.flatMap { _.cursor } } { cursorPainter.map { _.cursorBounds } } }
 	
 	private val _attachmentPointer = new PointerWithEvents(false)
 	
@@ -98,7 +102,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		// When attached to the stack hierarchy, makes sure to update immediate content layout and repaint this component
 		if (event.newValue)
 		{
-			repaintNeed.setOne(Full)
+			// repaintNeed.setOne(Full)
 			currentContent.foreach { content =>
 				val branches = content.toTree.allBranches
 				if (branches.isEmpty)
@@ -114,7 +118,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	addResizeListener { event =>
 		// currentContent.foreach { _.size = event.newSize }
 		if (event.newSize.isPositive)
-			repaintNeed.setOne(Full)
+			currentPainter.foreach { _.repaintAll() }
+		// repaintNeed.setOne(Full)
 	}
 	
 	// Listens to tabulator key events for manual focus handling
@@ -141,6 +146,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	def isManagingCursor = cursorManager.nonEmpty
 	
 	private def currentContent = contentFuture.current.flatMap { _.toOption }
+	
+	private def currentPainter = painterPromise.current.flatMap { _.toOption }
 	
 	
 	// IMPLEMENTED	---------------------------
@@ -201,8 +208,11 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	
 	override def repaint() =
 	{
+		currentPainter.foreach { _.repaintAll() }
+		/*
 		repaintNeed.setOne(Full)
 		component.repaint()
+		 */
 	}
 	
 	override def distributeMouseButtonEvent(event: MouseButtonStateEvent) =
@@ -271,6 +281,9 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	  */
 	def repaint(area: Bounds) =
 	{
+		// TODO: Add priority
+		currentPainter.foreach { _.repaintRegion(area) }
+		/*
 		repaintNeed.update
 		{
 			case Some(old) =>
@@ -282,6 +295,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 			case None => Some(Partial(area))
 		}
 		component.repaint(new Rectangle(area.x.toInt, area.y.toInt,area.width.toInt + 1,area.height.toInt + 1))
+		 */
 	}
 	
 	@tailrec
@@ -336,8 +350,12 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		
 		// IMPLEMENTED	----------------------
 		
+		override def paint(g: Graphics) = paintComponent(g)
+		
 		override def paintComponent(g: Graphics) =
 		{
+			currentPainter.foreach { p => Drawer.use(g)(p.paintWith) }
+			/*
 			// Checks image buffer status first
 			repaintNeed.pop().foreach {
 				// Case: Completely repaints the buffer image
@@ -354,7 +372,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 			Drawer.use(g) { drawer =>
 				buffer.drawWith(drawer)
 				cursorPainter.foreach { _.paintWith(drawer) }
-			}
+			}*/
 		}
 		
 		// Never paints children (because won't have any children)
@@ -412,6 +430,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	}
 	
 	// TODO: Remove or drastically improve this implementation
+	/*
 	private class CursorPainter(cursorManager: ReachCursorManager) extends MouseMoveListener with Handleable
 	{
 		// ATTRIBUTES	-----------------------------
@@ -483,7 +502,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 					}
 			}
 		}
-	}
+	}*/
 	
 	private class CursorPainter2(cursorManager: ReachCursorManager) extends MouseMoveListener with Handleable
 	{
@@ -495,6 +514,37 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		private var lastDrawnCursor: Option[(Point, Image)] = None
 		
 		private val maxCursorBounds = cursorManager.cursors.expectedMaxBounds.enlarged(Size(24, 24))
+		
+		
+		// COMPUTED	---------------------------------
+		
+		def cursorBounds = maxCursorBounds + lastMousePosition
+		
+		def cursor =
+		{
+			// Uses previously calculated data, if still effective
+			val cached = lastDrawnCursor.filter { case (pos, _) => pos == lastMousePosition }
+			if (cached.nonEmpty)
+				cached
+			else
+			{
+				// Needs to recalculate the cursor style
+				if (bounds.contains(lastMousePosition + position))
+				{
+					val image = cursorManager.cursorAt(lastMousePosition) { area =>
+						// FIXME: Luminance calculation doesn't work here
+						// val luminance = buffer.averageLuminosityOf(area)
+						val luminance = 1.0
+						if (luminance >= 0.5) Light else Dark
+					}
+					val next = Some(lastMousePosition -> image)
+					lastDrawnCursor = next
+					next
+				}
+				else
+					None
+			}
+		}
 		
 		
 		// IMPLEMENTED	-----------------------------
@@ -516,25 +566,6 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		
 		// OTHER	----------------------------------
 		
-		def paintWith(drawer: Drawer) =
-		{
-			lastDrawnCursor.filter { case (pos, _) => pos == lastMousePosition } match
-			{
-				case Some((lastPosition, lastImage)) => lastImage.drawWith(drawer, lastPosition)
-				case None =>
-					// Otherwise needs to recalculate the cursor style
-					// println(currentCursorPosition)
-					if (bounds.contains(lastMousePosition + position))
-					{
-						val image = cursorManager.cursorAt(lastMousePosition) { area =>
-							// val luminance = buffer.pixelAt(area.center).luminosity
-							val luminance = buffer.averageLuminosityOf(area)
-							if (luminance >= 0.5) Light else Dark
-						}
-						lastDrawnCursor = Some(lastMousePosition -> image)
-						image.drawWith(drawer, lastMousePosition)
-					}
-			}
-		}
+		def paintWith(drawer: Drawer) = cursor.foreach { case (position, image) => image.drawWith(drawer, position) }
 	}
 }
