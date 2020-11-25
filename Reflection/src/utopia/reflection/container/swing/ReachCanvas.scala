@@ -87,7 +87,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	  * Object that manages cursor display inside this canvas. None if cursor state is not managed in this canvas.
 	  */
 	val cursorManager = cursors.map { new ReachCursorManager(_) }
-	private val cursorPainter = cursorManager.map { new CursorPainter(_) }
+	private val cursorPainter = cursorManager.map { new CursorPainter2(_) }
 	
 	private val _attachmentPointer = new PointerWithEvents(false)
 	
@@ -411,6 +411,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		override def allowsHandlingFrom(handlerType: HandlerType) = focusManager.hasFocus
 	}
 	
+	// TODO: Remove or drastically improve this implementation
 	private class CursorPainter(cursorManager: ReachCursorManager) extends MouseMoveListener with Handleable
 	{
 		// ATTRIBUTES	-----------------------------
@@ -479,6 +480,59 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 						}
 						lastDrawnCursor = Some(currentCursorPosition -> image)
 						image.drawWith(drawer, currentCursorPosition)
+					}
+			}
+		}
+	}
+	
+	private class CursorPainter2(cursorManager: ReachCursorManager) extends MouseMoveListener with Handleable
+	{
+		// ATTRIBUTES	-----------------------------
+		
+		private val projectionLength = 0.065.seconds
+		
+		private var lastMousePosition = Point.origin
+		private var lastDrawnCursor: Option[(Point, Image)] = None
+		
+		private val maxCursorBounds = cursorManager.cursors.expectedMaxBounds.enlarged(Size(24, 24))
+		
+		
+		// IMPLEMENTED	-----------------------------
+		
+		override def onMouseMove(event: MouseMoveEvent) =
+		{
+			val newPosition = event.mousePosition - position
+			lastMousePosition = newPosition
+			
+			if (bounds.contains(event.mousePosition) || bounds.contains(event.previousMousePosition))
+			{
+				val projectedPosition = (event.mousePosition + event.velocity.over(projectionLength)) - position
+				component.repaint(Bounds.around(Vector(event.previousMousePosition - position, projectedPosition)
+					.map { maxCursorBounds.translated(_) }).toAwt)
+				// component.repaint()
+			}
+		}
+		
+		
+		// OTHER	----------------------------------
+		
+		def paintWith(drawer: Drawer) =
+		{
+			lastDrawnCursor.filter { case (pos, _) => pos == lastMousePosition } match
+			{
+				case Some((lastPosition, lastImage)) => lastImage.drawWith(drawer, lastPosition)
+				case None =>
+					// Otherwise needs to recalculate the cursor style
+					// println(currentCursorPosition)
+					if (bounds.contains(lastMousePosition + position))
+					{
+						val image = cursorManager.cursorAt(lastMousePosition) { area =>
+							// val luminance = buffer.pixelAt(area.center).luminosity
+							val luminance = buffer.averageLuminosityOf(area)
+							if (luminance >= 0.5) Light else Dark
+						}
+						lastDrawnCursor = Some(lastMousePosition -> image)
+						image.drawWith(drawer, lastMousePosition)
 					}
 			}
 		}

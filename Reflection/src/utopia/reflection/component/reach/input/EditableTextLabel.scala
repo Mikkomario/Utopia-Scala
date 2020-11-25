@@ -174,7 +174,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		selectedRangePointer.map { _.map { case (start, end) => if (start < end) start to end else end to start } },
 		drawnCaretPointer, selectedTextColorPointer, selectionBackgroundColorPointer, caretColorPointer, caretWidth)
 	private val repaintListener = ChangeListener.onAnyChange { repaint() }
-	private val showCaretListener = ChangeListener.onAnyChange { CaretBlinker.show() }
+	private val showCaretListener = ChangeListener.onAnyChange { if (hasFocus) CaretBlinker.show() }
 	
 	
 	// INITIAL CODE	-------------------------------

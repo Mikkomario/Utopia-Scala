@@ -1,5 +1,6 @@
 package utopia.reflection.component.reach.wrapper
 
+import utopia.flow.event.Changing
 import utopia.reflection.component.reach.template.ReachComponentLike
 
 import scala.language.implicitConversions
@@ -14,9 +15,25 @@ object ComponentCreationResult
 	implicit def componentToResult[C <: ReachComponentLike](component: C): ComponentCreationResult[C, Unit] =
 		new ComponentCreationResult[C, Unit](component, ())
 	
+	/*
 	implicit def vectorToResult[C](components: Vector[C]): ComponentCreationResult[Vector[C], Unit] =
 		new ComponentCreationResult[Vector[C], Unit](components, ())
+	*/
 	
+	implicit def componentVectorToResult[C <: ReachComponentLike]
+	(components: Vector[C]): ComponentCreationResult[Vector[C], Unit] =
+		new ComponentCreationResult[Vector[C], Unit](components, ())
+	
+	/*
+	implicit def containerVectorToResult[P, W <: ComponentWrapResult[P, _, _]]
+	(containers: Vector[W]): ComponentCreationResult[Vector[P], Unit] =
+		new ComponentCreationResult[Vector[P], Unit](containers.map { _.parent }, ())
+	*/
+	/*
+	implicit def componentAndVisibilityPointerVectorToResult[C <: ReachComponentLike]
+	(components: Vector[(C, Option[Changing[Boolean]])]): ComponentCreationResult[Vector[(C, Option[Changing[Boolean]])], Unit] =
+		new ComponentCreationResult[Vector[(C, Option[Changing[Boolean]])], Unit](components, ())
+	*/
 	implicit def wrapToResult[P, R](wrapResult: ComponentWrapResult[P, _, R]): ComponentCreationResult[P, R] =
 		new ComponentCreationResult[P, R](wrapResult.parent, wrapResult.result)
 	

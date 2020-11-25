@@ -41,25 +41,25 @@ object ReachTextFieldTest extends App
 							maxLength = Some(32), showCharacterCount = true)
 						val summary = row1(ViewTextLabel)(field.valuePointer)
 						Vector(field, summary)
-					}.parent,
+					},
 					rows.build(Mixed).row(layout = Trailing, customDrawers = Vector(BackgroundDrawer(Color.magenta)), areRelated = true) { row2 =>
 						val field = row2(TextField).forInt(Some(Changing.wrap("Int")), fillBackground = false)
 						val summary = row2(ViewTextLabel)(field.valuePointer, DisplayFunction.rawOption)
 						Vector(field, summary)
-					}.parent,
+					},
 					rows.build(Mixed).row(layout = Trailing, areRelated = true) { row3 =>
 						val field = row3(TextField).forInt(Some(Changing.wrap("Int+")),
 							minValue = 0, maxValue = 10, fillBackground = false)
 						val summary = row3(ViewTextLabel)(field.valuePointer, DisplayFunction.rawOption)
 						Vector(field, summary)
-					}.parent,
+					},
 					rows.build(Mixed).row(layout = Trailing, areRelated = true) { row4 =>
 						val field = row4(TextField).forDouble(0.0, 1.0,
 							Some(Changing.wrap("Double")), Some(Changing.wrap("0.".noLanguageLocalizationSkipped)))
 						val summary = row4(ViewTextLabel)(field.valuePointer, DisplayFunction.rawOption)
 						Vector(field, summary)
-					}.parent
-				)
+					}
+				).map { _.parent }
 			}
 		}
 	}.parent

@@ -207,7 +207,7 @@ trait ButtonLike extends ReachComponentLike with Focusable with CursorDefining
 		
 		// IMPLEMENTED	----------------------------
 		
-		// On left mouse within bounds, brightens color and remembers, on release, returns
+		// On left mouse within bounds, brightens color, gains focus and remembers, on release, returns
 		override def onMouseButtonState(event: MouseButtonStateEvent) =
 		{
 			if (down)
@@ -221,9 +221,11 @@ trait ButtonLike extends ReachComponentLike with Focusable with CursorDefining
 				else
 					None
 			}
-			else if (event.isOverArea(bounds))
+			else if (event.wasPressed && event.isOverArea(bounds))
 			{
 				down = true
+				if (!hasFocus)
+					requestFocus()
 				Some(ConsumeEvent("Button pressed"))
 			}
 			else

@@ -33,7 +33,7 @@ object Switch extends ContextInsertableComponentFactoryFactory[ColorContextLike,
 {
 	// ATTRIBUTES	--------------------------------
 	
-	private val shadowColor = Color.black.withAlpha(0.2)
+	private val shadowColor = Color.black.withAlpha(0.1)
 	
 	
 	// IMPLEMENTED	--------------------------------
@@ -101,9 +101,10 @@ case class ContextualSwitchFactory[N <: ColorContextLike](factory: SwitchFactory
 			 (implicit animationContext: AnimationContextLike) =
 	{
 		val knobR = context.margins.medium * 0.75
-		val offset = (knobR * 0.1) min 1.0
+		val xOffset = (knobR * 0.1) min 1.0
+		val yOffset = (knobR * 0.2) min 2.0
 		factory(animationContext.actorHandler, context.color(colorRole), knobR * 2, knobR * 0.75,
-			Vector2D(-offset, offset), valuePointer, enabledPointer, animationContext.animationDuration,
+			Vector2D(-xOffset, yOffset), valuePointer, enabledPointer, animationContext.animationDuration,
 			customDrawers, focusListeners)
 	}
 }
@@ -204,6 +205,8 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		{
 			if (bounds.size.isPositive)
 			{
+				val actualDrawer = if (enabled) drawer else drawer.withAlpha(0.66)
+				
 				// Calculates drawn area bounds
 				val shorterSide = bounds.size.minDimension
 				val knobR = knobRadius min (shorterSide / 2)
@@ -224,18 +227,18 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 					val hoverAlpha =
 					{
 						if (isPressed)
-							0.2
+							0.25
 						else if (hasFocus)
-							0.15
+							0.2
 						else if (isMouseOver)
-							0.1
+							0.15
 						else
 							0.0
 					}
 					if (hoverAlpha > 0)
 					{
-						val baseHoverColor = if (value) color else Color.black
-						drawer.onlyFill(baseHoverColor.timesAlpha(hoverAlpha))
+						val baseHoverColor = if (value) color else Color.textBlackDisabled
+						actualDrawer.onlyFill(baseHoverColor.timesAlpha(hoverAlpha))
 							.draw(Circle(Point(knobX, y), knobR + hoverR))
 					}
 				}
@@ -246,35 +249,31 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 				val barHeight = 2 * barR
 				if (progress < 1)
 				{
-					val baseGrayColor = color.timesAlpha(0.66).grayscale
-					drawer.onlyFill(if (enabled) baseGrayColor else baseGrayColor.timesAlpha(0.66))
-						.draw(Bounds(Point(knobX - barR, barStartY), Size(maxKnobX - knobX + 2 * barR, barHeight)))
+					actualDrawer.onlyFill(color.timesAlpha(0.66).grayscale)
+						.draw(Bounds(Point(knobX - barR, barStartY), Size(maxKnobX - knobX + 2 * barR, barHeight))
+							.toRoundedRectangle(1.0))
 				}
 				if (progress > 0)
 				{
-					val fillColor = if (enabled) color.timesAlpha(0.5) else color.timesAlpha(0.5 * 0.66)
-					drawer.onlyFill(fillColor)
-						.draw(Bounds(Point(minKnobX - barR, barStartY), Size(knobX - minKnobX + 2 * barR, barHeight)))
+					actualDrawer.onlyFill(color.timesAlpha(0.5))
+						.draw(Bounds(Point(minKnobX - barR, barStartY), Size(knobX - minKnobX + 2 * barR, barHeight))
+							.toRoundedRectangle(1.0))
 				}
 				
 				// Draws knob shadow and the knob itself
 				val knobColor =
 				{
-					val base =
-					{
-						if (progress >= 1)
-							color
-						else if (progress <= 0)
-							Color.white
-						else
-							color.average(Color.white, progress, 1 - progress)
-					}
-					if (enabled) base else base.timesAlpha(0.66)
+					if (progress >= 1)
+						color
+					else if (progress <= 0)
+						Color.white
+					else
+						color.average(Color.white, progress, 1 - progress)
 				}
 				val knob = Circle(Point(knobX, y), knobR)
-				if (knobShadowOffset.nonZero)
-					drawer.onlyFill(Switch.shadowColor).draw(knob + knobShadowOffset)
-				drawer.onlyFill(knobColor).draw(knob)
+				if (enabled && knobShadowOffset.nonZero)
+					actualDrawer.onlyFill(Switch.shadowColor).draw(knob + knobShadowOffset)
+				actualDrawer.onlyFill(knobColor).draw(knob)
 			}
 		}
 		

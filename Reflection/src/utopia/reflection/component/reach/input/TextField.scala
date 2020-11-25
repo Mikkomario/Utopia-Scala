@@ -19,6 +19,7 @@ import utopia.reflection.component.reach.factory.{ContextInsertableComponentFact
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.label.{ViewTextLabel, ViewTextLabelFactory}
 import utopia.reflection.component.reach.template.{MutableFocusableWrapper, ReachComponent, ReachComponentWrapper}
+import utopia.reflection.component.reach.wrapper.ComponentCreationResult
 import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.container.reach.{ViewStack, ViewStackFactory}
 import utopia.reflection.event.FocusEvent.FocusLost
@@ -706,7 +707,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 							
 							// Hint label is only displayed while there is a hint to display,
 							// Count label is always displayed
-							Vector(hintLabel -> hintVisibilityPointer, countLabel -> None)
+							ComponentCreationResult(Vector(hintLabel -> hintVisibilityPointer, countLabel -> None))
 						}.parent
 						Some(stack -> None)
 					// Case: Only the character count element should be displayed
