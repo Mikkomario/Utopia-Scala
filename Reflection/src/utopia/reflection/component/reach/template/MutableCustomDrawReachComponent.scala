@@ -14,11 +14,18 @@ object MutableCustomDrawReachComponent
 	/**
 	  * Creates a new simplistic custom draw component
 	  * @param parentHierarchy This component's parent hierarchy
+	  * @param customDrawers Custom drawers initially assigned to this component (default = empty)
 	  * @param stackSize Stack size for this component (call by name)
 	  * @return A new component
 	  */
-	def apply(parentHierarchy: ComponentHierarchy)(stackSize: => StackSize): MutableCustomDrawReachComponent =
-		new BasicComponent(parentHierarchy, stackSize)
+	def apply(parentHierarchy: ComponentHierarchy, customDrawers: Vector[CustomDrawer] = Vector())
+			 (stackSize: => StackSize): MutableCustomDrawReachComponent =
+	{
+		val c = new BasicComponent(parentHierarchy, stackSize)
+		if (customDrawers.nonEmpty)
+			c.customDrawers = customDrawers
+		c
+	}
 	
 	
 	// NESTED	---------------------------
@@ -26,6 +33,8 @@ object MutableCustomDrawReachComponent
 	private class BasicComponent(override val parentHierarchy: ComponentHierarchy, getSize: => StackSize)
 		extends MutableCustomDrawReachComponent
 	{
+		// IMPLEMENTED	-------------------
+		
 		override def calculatedStackSize = getSize
 		
 		override def updateLayout() = ()

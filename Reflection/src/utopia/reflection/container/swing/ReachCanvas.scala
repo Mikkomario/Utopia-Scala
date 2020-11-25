@@ -325,7 +325,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	{
 		// INITIAL CODE	---------------------
 		
-		setOpaque(false)
+		setOpaque(true)
 		setBackground(Color.black.toAwt)
 		
 		// Makes this canvas element focusable and disables the default focus traversal keys

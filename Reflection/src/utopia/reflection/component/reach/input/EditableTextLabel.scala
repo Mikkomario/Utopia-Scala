@@ -31,6 +31,7 @@ import utopia.reflection.event.{FocusChangeEvent, FocusChangeListener, FocusList
 import utopia.reflection.text.{FontMetricsContext, MeasuredText, Regex}
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.util.ComponentCreationDefaults
+import utopia.reflection.util.Priority.VeryHigh
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.{Failure, Success, Try}

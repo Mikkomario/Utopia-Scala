@@ -13,6 +13,8 @@ import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.stack.template.layout.StackLike2
 import utopia.reflection.container.template.mutable.MutableMultiContainer2
 import utopia.reflection.shape.stack.StackLength
+import utopia.reflection.util.Priority
+import utopia.reflection.util.Priority.Normal
 
 object MutableStack extends ContextInsertableComponentFactoryFactory[BaseContextLike, MutableStackFactory,
 	ContextualMutableStackFactory]

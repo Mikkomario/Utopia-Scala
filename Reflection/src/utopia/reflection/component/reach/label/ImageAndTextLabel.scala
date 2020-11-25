@@ -16,6 +16,7 @@ import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font
+import utopia.reflection.util.Priority.{Low, VeryLow}
 
 object ImageAndTextLabel extends ContextInsertableComponentFactoryFactory[TextContextLike, ImageAndTextLabelFactory,
 	ContextualImageAndTextLabelFactory]

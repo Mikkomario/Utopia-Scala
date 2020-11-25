@@ -4,6 +4,8 @@ import scala.annotation.unchecked.uncheckedVariance
 
 object RichComparable
 {
+	// IMPLICIT	--------------------------
+	
     // Extension for existing comparables
     implicit class ExtendedComparable[T](val c: Comparable[T]) extends RichComparable[T]
     {
@@ -24,16 +26,34 @@ object RichComparable
 	{
 		override def compareTo(o: Double) = if (d < o) -1 else if (d > o) 1 else 0
 	}
+	
+	implicit class ExtendedRichComparable[A, C <: RichComparable[A] with A](val c: C) extends AnyVal
+	{
+		/**
+		  * @param other Another item
+		  * @return The smaller between these two items
+		  */
+		def min(other: A): A = if (c > other) other else c
+		
+		/**
+		  * @param other Another item
+		  * @return The larger between these to items
+		  */
+		def max(other: A): A = if (c < other) other else c
+	}
+	
+	
+	// OTHER	------------------------
     
     /**
      * Finds the smaller of the two provided values
      */
-    def min[T <: Comparable[T]](a: T, b: T) = if (a > b) b else a
+    def min[A <: Comparable[A]](a: A, b: A) = if (a > b) b else a
     
     /**
      * Finds the larger of the two values
      */
-    def max[T <: Comparable[T]](a: T, b: T) = if (a < b) b else a
+    def max[A <: Comparable[A]](a: A, b: A) = if (a < b) b else a
 }
 
 /**
@@ -42,32 +62,34 @@ object RichComparable
 * @since 17.11.2018
 **/
 //noinspection ScalaUnnecessaryParentheses
-trait RichComparable[-T] extends Comparable[T @uncheckedVariance]
+trait RichComparable[-A] extends Comparable[A @uncheckedVariance]
 {
+	// OTHER	-----------------------
+	
     /**
      * Checks whether this item is larger than the specified item
      */
-	def >(other: T) = compareTo(other) > 0
+	def >(other: A) = compareTo(other) > 0
 	
 	/**
 	 * Checks whether this item is smaller than the specified item
 	 */
-	def <(other: T) = compareTo(other) < 0
+	def <(other: A) = compareTo(other) < 0
 	
 	/**
 	 * Checks whether this item is equal or larger than the specified item
 	 */
-	def >=(other: T) = !(<(other))
+	def >=(other: A) = !(<(other))
 	
 	/**
 	 * Checks whether this item is equal or smaller than the specified item
 	 */
-	def <=(other: T) = !(>(other))
+	def <=(other: A) = !(>(other))
 	
 	/**
 	 * Checks whether this item may be considered equal with the specified item
 	 */
-	def isEqualTo(other: T) = compareTo(other) == 0
+	def isEqualTo(other: A) = compareTo(other) == 0
 	
 	/**
 	 * Compares this item with another, but if they are equal, provides a backup result
@@ -75,7 +97,7 @@ trait RichComparable[-T] extends Comparable[T @uncheckedVariance]
 	 * @param backUp a function for providing a backup result in case the first one doesn't
 	 * separate the values
 	 */
-	def compareOr(other: T)(backUp: => Int) =
+	def compareOr(other: A)(backUp: => Int) =
 	{
 	    val primary = compareTo(other)
 	    if (primary == 0)

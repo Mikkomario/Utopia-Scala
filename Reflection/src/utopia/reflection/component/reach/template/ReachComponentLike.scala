@@ -151,7 +151,8 @@ trait ReachComponentLike extends Stackable2
 	  *                 top-left corner of the parent component.
 	  * @param clipZone Bounds where the drawing is limited. None if whole component area should be drawn.
 	  */
-	def paintWith(drawer: Drawer, clipZone: Option[Bounds] = None): Unit = {
+	def paintWith(drawer: Drawer, clipZone: Option[Bounds] = None): Unit =
+	{
 		// Paints background and normal levels
 		paintContent(drawer, Background, clipZone)
 		paintContent(drawer, Normal, clipZone)
