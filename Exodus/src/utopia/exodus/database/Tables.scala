@@ -54,6 +54,27 @@ object Tables
 	def languageFamiliarityDescription = apply("language_familiarity_description")
 	
 	/**
+	  * @return A table containing registered API-keys. This table might not be used in all applications, depending
+	  *         on their choice of authentication and access control.
+	  */
+	def apiKey = apply("api_key")
+	
+	/**
+	  * @return Contains a list of purposes for which email validation is used
+	  */
+	def emailValidationPurpose = apply("email_validation_purpose")
+	
+	/**
+	  * @return Contains email validation attempts / records
+	  */
+	def emailValidation = apply("email_validation")
+	
+	/**
+	  * @return Contains email validation resend attempts / records
+	  */
+	def emailValidationResend = apply("email_validation_resend")
+	
+	/**
 	  * @return Table that contains users
 	  */
 	def user = apply("user")
