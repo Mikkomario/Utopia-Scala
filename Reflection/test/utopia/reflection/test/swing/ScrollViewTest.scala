@@ -1,15 +1,15 @@
-package utopia.reflection.test
+package utopia.reflection.test.swing
 
 import java.awt.event.KeyEvent
 
-import utopia.flow.util.TimeExtensions._
 import utopia.flow.async.{Loop, ThreadPool}
 import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.WaitTarget
 import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.handling.{ActorLoop, KeyStateListener, MouseButtonStateListener}
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.{ActorLoop, KeyStateListener, MouseButtonStateListener}
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.shape1D.Rotation
 import utopia.genesis.view.GlobalMouseEventHandler
@@ -18,10 +18,10 @@ import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.component.template.display.Refreshable
 import utopia.reflection.container.stack.StackHierarchyManager
+import utopia.reflection.container.swing.layout.multi.AnimatedStack
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.container.swing.layout.multi.AnimatedStack
 import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.reflection.localization.{DisplayFunction, Localizer, NoLocalization}
 import utopia.reflection.shape.LengthExtensions._

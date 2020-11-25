@@ -1,4 +1,4 @@
-package utopia.reflection.test
+package utopia.reflection.test.swing
 
 import java.awt.Color
 
@@ -6,7 +6,7 @@ import utopia.flow.async.ThreadPool
 import utopia.flow.generic.DataType
 import utopia.genesis.event.{MouseEvent, MouseMoveEvent}
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.handling.{ActorLoop, KeyStateListener, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
+import utopia.genesis.handling._
 import utopia.genesis.shape.shape2D.Size
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.swing.label.Label
@@ -33,8 +33,7 @@ object MouseTest extends App
 	
 	private class MouseEnterExitListener(val area: Area) extends MouseMoveListener with Handleable
 	{
-		override val mouseMoveEventFilter = e =>
-		{
+		override val mouseMoveEventFilter = e => {
 			val b = area.bounds
 			e.enteredArea(b) || e.exitedArea(b)
 		}
@@ -62,9 +61,11 @@ object MouseTest extends App
 	// Sets up mouse listening
 	items.head.addMouseMoveListener(new MouseEnterExitListener(items.head))
 	items(1).addMouseMoveListener(MouseMoveListener(MouseEvent.isOverAreaFilter(items(1).bounds)) { e =>
-		println("Moving " + e.mousePosition) })
+		println("Moving " + e.mousePosition)
+	})
 	items(2).addMouseButtonListener(MouseButtonStateListener.onLeftPressedInside(items(2).bounds) {
-		e => println(e.mousePosition); None })
+		e => println(e.mousePosition); None
+	})
 	items(2).addMouseWheelListener(MouseWheelListener.onWheelInsideArea(items(2).bounds) { e => println(e.wheelTurn); None })
 	
 	frame.addKeyStateListener(KeyStateListener()(println))

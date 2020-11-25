@@ -1,6 +1,5 @@
-package utopia.reflection.test
+package utopia.reflection.test.swing
 
-import utopia.reflection.shape.LengthExtensions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.reflection.component.swing.display.MultiLineTextView
 import utopia.reflection.component.swing.input.{JDropDownWrapper, TextField}
@@ -9,7 +8,9 @@ import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.localization.LocalString
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackLength
+import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
+import utopia.reflection.shape.LengthExtensions._
 
 /**
   * Tests text display with multiple lines
@@ -19,9 +20,9 @@ import utopia.reflection.util.SingleFrameSetup
 object MultiLineTextViewTest extends App
 {
 	GenesisDataType.setup()
-	
+
 	import TestContext._
-	
+
 	val background = colorScheme.primary.light
 	val standardWidth = StackLength(240, 360, 540)
 	val content = baseContext.inContextWithBackground(background).forTextComponents.use { bc =>
@@ -35,11 +36,11 @@ object MultiLineTextViewTest extends App
 			// Creates text input
 			val textInput = TextField.contextualForStrings(standardWidth, prompt = "Type your own text and press enter")
 			textInput.addEnterListener { s => textView.text = (s: LocalString).localizationSkipped }
-			
+
 			val alignSelect = JDropDownWrapper.contextual("Select Alignment", initialChoices = Alignment.values)
 			alignSelect.selectOne(Alignment.Left)
 			alignSelect.addValueListener { _.newValue.foreach { a => textView.alignment = a } }
-			
+
 			Stack.buildRowWithContext(isRelated = true) { row =>
 				row += textInput
 				row += alignSelect
@@ -53,6 +54,6 @@ object MultiLineTextViewTest extends App
 			}
 		}
 	}.framed(margins.medium.any, background)
-	
+
 	new SingleFrameSetup(actorHandler, Frame.windowed(content, "Multi Line Text View Test")).start()
 }

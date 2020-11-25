@@ -1,16 +1,17 @@
-package utopia.reflection.test
+package utopia.reflection.test.swing
 
 import utopia.flow.util.WaitUtils
+import utopia.flow.util.TimeExtensions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.shape.Axis.Y
 import utopia.reflection.component.drawing.immutable.BorderDrawer
+import utopia.reflection.component.swing.animation.AnimatedVisibility
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.shape.{Alignment, Border}
+import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
-import utopia.flow.util.TimeExtensions._
-import utopia.reflection.component.swing.animation.AnimatedVisibility
 import utopia.reflection.shape.LengthExtensions._
 
 /**
@@ -23,6 +24,7 @@ object AnimatedTransitionTest extends App
 	GenesisDataType.setup()
 	
 	// Imports contexts
+	
 	import TestContext._
 	
 	val transitionWrapper = baseContext.inContextWithBackground(colorScheme.primary.light).forTextComponents

@@ -1,6 +1,5 @@
-package utopia.reflection.test
+package utopia.reflection.test.swing
 
-import utopia.reflection.shape.LengthExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.image.Image
@@ -10,7 +9,9 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.AnimatedSizeContainer
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
+import utopia.reflection.shape.LengthExtensions._
 
 import scala.collection.immutable.HashMap
 
@@ -34,21 +35,21 @@ object DropDownTest2 extends App
 	val backgroundColor = colorScheme.primary
 	val stack = baseContext.inContextWithBackground(backgroundColor).forTextComponents.forGrayFields
 		.withBorderWidth(1).use { implicit context =>
-			val categorySelect = DropDown.contextualWithTextOnly[String](
-				TextLabel.contextual("No content available", isHint = true), ddIcon, "Select Class")
-			val characterSelect = DropDown.contextualWithTextOnly[String](
-				TextLabel.contextual("No content available", isHint = true), ddIcon, "Select Character")
-			
-			// Adds item listeners
-			categorySelect.addValueListener { c => characterSelect.content = c.newValue.flatMap(data.get) getOrElse Vector() }
-			characterSelect.addValueListener { c => println(c.newValue.map { _ + " is ready for adventure!" } getOrElse "No character selected") }
-			
-			// Adds initial content
-			categorySelect.content = data.keySet.toVector.sorted
-			
-			Stack.buildColumnWithContext() { stack =>
-				stack += AnimatedSizeContainer(categorySelect, actorHandler)
-				stack += AnimatedSizeContainer(characterSelect, actorHandler)
+		val categorySelect = DropDown.contextualWithTextOnly[String](
+			TextLabel.contextual("No content available", isHint = true), ddIcon, "Select Class")
+		val characterSelect = DropDown.contextualWithTextOnly[String](
+			TextLabel.contextual("No content available", isHint = true), ddIcon, "Select Character")
+		
+		// Adds item listeners
+		categorySelect.addValueListener { c => characterSelect.content = c.newValue.flatMap(data.get) getOrElse Vector() }
+		characterSelect.addValueListener { c => println(c.newValue.map { _ + " is ready for adventure!" } getOrElse "No character selected") }
+		
+		// Adds initial content
+		categorySelect.content = data.keySet.toVector.sorted
+		
+		Stack.buildColumnWithContext() { stack =>
+			stack += AnimatedSizeContainer(categorySelect, actorHandler)
+			stack += AnimatedSizeContainer(characterSelect, actorHandler)
 		}
 	}
 	val content = stack.framed(margins.medium.any, backgroundColor)

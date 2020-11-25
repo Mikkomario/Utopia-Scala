@@ -1,4 +1,4 @@
-package utopia.reflection.test
+package utopia.reflection.test.swing
 
 import utopia.genesis.animation.Animation
 import utopia.reflection.color.ColorRole.Gray
@@ -9,8 +9,9 @@ import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.localization.DisplayFunction
-import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
+import utopia.reflection.shape.LengthExtensions._
 
 /**
   * Tests different slider implementations
@@ -19,6 +20,7 @@ import utopia.reflection.util.SingleFrameSetup
   */
 object SliderTest extends App
 {
+	
 	import TestContext._
 	
 	implicit val context: ColorContext = baseContext.inContextWithBackground(colorScheme.gray.light)

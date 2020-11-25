@@ -9,7 +9,7 @@ import utopia.genesis.color.Color
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{Actor, KeyStateListener}
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Vector2D}
+import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Size, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
@@ -215,7 +215,8 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 				
 				val minKnobX = minX + knobR
 				val maxKnobX = maxX - knobR
-				val knobX = minKnobX + (maxKnobX - minKnobX) * state
+				val progress = state
+				val knobX = minKnobX + (maxKnobX - minKnobX) * progress
 				
 				// Draws the hover area, if necessary
 				if (hoverR > 0 && enabled)
@@ -239,20 +240,35 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 					}
 				}
 				
-				// Draws the bar
-				val barColor =
-				{
-					val base = if (value) color.timesAlpha(0.5) else color.timesAlpha(0.66).grayscale
-					if (enabled) base else base.timesAlpha(0.66)
-				}
+				// Draws the bar (gray + coloured)
 				val barR = knobR * 0.7
-				drawer.onlyFill(barColor).draw(Bounds.between(Point(minKnobX - barR, y - barR),
-					Point(maxKnobX + barR, y + barR)).toRoundedRectangle(1))
+				val barStartY = y - barR
+				val barHeight = 2 * barR
+				if (progress < 1)
+				{
+					val baseGrayColor = color.timesAlpha(0.66).grayscale
+					drawer.onlyFill(if (enabled) baseGrayColor else baseGrayColor.timesAlpha(0.66))
+						.draw(Bounds(Point(knobX - barR, barStartY), Size(maxKnobX - knobX + 2 * barR, barHeight)))
+				}
+				if (progress > 0)
+				{
+					val fillColor = if (enabled) color.timesAlpha(0.5) else color.timesAlpha(0.5 * 0.66)
+					drawer.onlyFill(fillColor)
+						.draw(Bounds(Point(minKnobX - barR, barStartY), Size(knobX - minKnobX + 2 * barR, barHeight)))
+				}
 				
 				// Draws knob shadow and the knob itself
 				val knobColor =
 				{
-					val base = if (value) color else Color.white
+					val base =
+					{
+						if (progress >= 1)
+							color
+						else if (progress <= 0)
+							Color.white
+						else
+							color.average(Color.white, progress, 1 - progress)
+					}
 					if (enabled) base else base.timesAlpha(0.66)
 				}
 				val knob = Circle(Point(knobX, y), knobR)

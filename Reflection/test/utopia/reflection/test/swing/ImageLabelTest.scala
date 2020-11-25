@@ -1,4 +1,4 @@
-package utopia.reflection.test
+package utopia.reflection.test.swing
 
 import java.nio.file.Paths
 
@@ -25,29 +25,29 @@ object ImageLabelTest extends App
 	private def run() =
 	{
 		implicit val context: ExecutionContext = new ThreadPool("ImageLabelTest").executionContext
-		
+
 		val originalImage = Image.readFrom(Paths.get("Reflection/test-images/mushrooms.png")).get.withSize(Size(128, 128))
 			.downscaled
 		val smaller = originalImage.withSize(Size(64, 64))
-		
+
 		val big = new ImageLabel(originalImage, allowUpscaling = true)
 		val small1 = new ImageLabel(smaller)
 		val small2 = new ImageLabel(smaller, alwaysFillArea = false)
 		val small3 = new ImageLabel(smaller, alwaysFillArea = false, allowUpscaling = true)
-		
+
 		Vector(big, small1, small2, small3).foreach { _.background = Color.yellow }
-		
+
 		val smallStack = small1.rowWith(Vector(small2, small3))
 		val mainStack = big.columnWith(Vector(smallStack), StackLength.fixed(0))
-		
+
 		implicit val language: String = "en"
 		implicit val localizer: Localizer = NoLocalization
 		val frame = Frame.windowed(mainStack, "Switch Test", User)
 		frame.setToExitOnClose()
-		
+
 		StackHierarchyManager.startRevalidationLoop()
 		frame.visible = true
 	}
-	
+
 	run()
 }

@@ -1,4 +1,4 @@
-package utopia.reflection.test
+package utopia.reflection.test.reach
 
 import java.awt.event.KeyEvent
 
@@ -15,14 +15,15 @@ import utopia.reflection.component.reach.label.{ContextualMutableTextLabelFactor
 import utopia.reflection.container.reach.{ContextualStackFactory, Framing, Stack}
 import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.ReachCanvas
-import utopia.reflection.container.swing.window.{Frame, Window}
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.reflection.container.swing.window.{Frame, Window}
 import utopia.reflection.event.FocusListener
 import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.util.SingleFrameSetup
-import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.stack.StackLength
+import utopia.reflection.test.TestContext
+import utopia.reflection.util.SingleFrameSetup
+import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.localization.LocalString._
 
 /**
   * A simple test for the reach component implementation
@@ -42,7 +43,8 @@ object ReachComponentTest extends App
 			
 			val (framing, label) = factories.withoutContext(Framing).buildWithMappedContext[ColorContext,
 				TextContext, ContextualMutableTextLabelFactory](MutableTextLabel, baseContext) {
-				_.forTextComponents.withTextAlignment(Alignment.Center) }
+				_.forTextComponents.withTextAlignment(Alignment.Center)
+			}
 				.withBackground(colorScheme.secondary.light, margins.medium.any) { labelFactory =>
 					labelFactory.withBackground("Hello!", Primary)
 				}.toTuple
@@ -54,7 +56,8 @@ object ReachComponentTest extends App
 			
 			val editLabelFraming = factories.withoutContext(Framing)
 				.buildWithMappedContext[ColorContext, TextContext, ContextualStackFactory](Stack, baseContext) {
-					_.forTextComponents.withTextAlignment(Alignment.Center) }
+					_.forTextComponents.withTextAlignment(Alignment.Center)
+				}
 				.withBackground(colorScheme.primary.light, margins.medium.any) {
 					_.build(Mixed).column(Center) { factories =>
 						val editableLabel = factories(EditableTextLabel)(new PointerWithEvents("Type Here"))
@@ -63,11 +66,13 @@ object ReachComponentTest extends App
 							val clearButton = factories.mapContext { _.forSecondaryColorButtons }(TextButton)
 								.apply("Clear (F1)", Set(KeyEvent.VK_F1),
 									additionalFocusListeners = Vector(focusReporter("Clear Button"))) {
-									editableLabel.text = "" }
+									editableLabel.text = ""
+								}
 							val closeButton = factories.mapContext { _.forPrimaryColorButtons }(TextButton)
 								.apply("Close (esc)", Set(KeyEvent.VK_ESCAPE),
 									additionalFocusListeners = Vector(focusReporter("Close Button"))) {
-									windowPointer.value.foreach { _.close() } }
+									windowPointer.value.foreach { _.close() }
+								}
 							Vector(clearButton, closeButton)
 						}
 						Vector(editableLabel, buttonStack.parent)
@@ -97,10 +102,11 @@ object ReachComponentTest extends App
 	
 	val label = result.result
 	
-	println(s"Canvas stack size: ${canvas.stackSize}")
-	println(s"Label bounds: ${label.bounds}")
+	println(s"Canvas stack size: ${ canvas.stackSize }")
+	println(s"Label bounds: ${ label.bounds }")
 	
 	frame.addKeyTypedListener { event: KeyTypedEvent => label.text += event.typedChar.toString }
 	frame.addKeyStateListener(KeyStateListener(KeyStateEvent.keyFilter(KeyEvent.VK_BACK_SPACE)) { _ =>
-		label.text = label.text.string.drop(1).noLanguageLocalizationSkipped })
+		label.text = label.text.string.drop(1).noLanguageLocalizationSkipped
+	})
 }

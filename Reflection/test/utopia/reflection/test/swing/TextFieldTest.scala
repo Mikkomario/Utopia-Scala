@@ -1,20 +1,20 @@
-package utopia.reflection.test
+package utopia.reflection.test.swing
 
-import utopia.flow.generic.ValueConversions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.shape.shape2D.Point
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.input.{TabSelection, TextField}
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackLayout.Leading
-import utopia.reflection.container.swing.window.{Frame, Popup}
-import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.multi.Stack
+import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
+import utopia.reflection.container.swing.window.WindowResizePolicy.User
+import utopia.reflection.container.swing.window.{Frame, Popup}
 import utopia.reflection.shape.Alignment
-import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.Alignment.Center
+import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
+import utopia.reflection.shape.LengthExtensions._
 
 /**
   * This is a simple test implementation of text fields with content filtering
@@ -40,7 +40,7 @@ object TextFieldTest extends App
 			val popUpContent = Stack.buildRowWithContext() { row =>
 				row += context.forTextComponents.use { implicit txC => TextLabel.contextual(message) }
 				row += okButton
-			} (context).framed(margins.medium.downscaling, popupBG)
+			}(context).framed(margins.medium.downscaling, popupBG)
 			
 			val popUp = Popup(origin, popUpContent, actorHandler) { (c, p) => Point(c.width + margins.large, (c.height - p.height) / 2) }
 			okButton.registerAction { () => popUp.close() }
@@ -65,7 +65,7 @@ object TextFieldTest extends App
 				val (productField, amountField, priceField) = context.forTextComponents
 					.withPromptFont(context.defaultFont * 0.8).forGrayFields
 					.use { implicit fieldC =>
-						println(s"Field context bg = ${fieldC.containerBackground}, field BG = ${fieldC.buttonColor}, text color = ${fieldC.textColor}")
+						println(s"Field context bg = ${ fieldC.containerBackground }, field BG = ${ fieldC.buttonColor }, text color = ${ fieldC.textColor }")
 						val productField = TextField.contextualForStrings(standardWidth, prompt = "Describe product")
 						val amountField = TextField.contextualForPositiveInts(standardWidth / 2, prompt = "1-999 Too long a prompt")
 						val priceField = TextField.contextualForPositiveDoubles(standardWidth / 2, prompt = "€")
@@ -88,20 +88,19 @@ object TextFieldTest extends App
 				}
 				
 				// Adds field interactions
-				productField.valuePointer.addListener { e => println(s"Product: ${e.newValue}") }
+				productField.valuePointer.addListener { e => println(s"Product: ${ e.newValue }") }
 				priceField.addEnterListener { p =>
 					val product = productField.value
 					val amount = amountField.value
 					val price = p
 					
-					if (product.isDefined && amount.isDefined && price.isDefined)
-					{
+					if (product.nonEmpty && amount.isDefined && price.isDefined) {
 						productField.clear()
 						amountField.clear()
 						priceField.clear()
 						productField.requestFocusInWindow()
 						
-						showPopup(priceField, s"${amount.get} x $product = ${amount.get * price.get} €")
+						showPopup(priceField, s"${ amount.get } x $product = ${ amount.get * price.get } €")
 					}
 					else
 						println("Please select product + amount + price")

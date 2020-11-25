@@ -1,4 +1,4 @@
-package utopia.reflection.test
+package utopia.reflection.test.swing
 
 import utopia.genesis.generic.GenesisDataType
 import utopia.reflection.component.swing.button.TextButton
@@ -7,9 +7,10 @@ import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.Alignment
+import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
+import utopia.reflection.shape.LengthExtensions._
 
 /**
   * A test implementation of segmentation using Segment and SegmentGroup classes
@@ -19,16 +20,17 @@ import utopia.reflection.util.SingleFrameSetup
 object SegmentRowsTest extends App
 {
 	GenesisDataType.setup()
-	
+
 	import TestContext._
-	
+
 	// Creates the labels
 	val backgroundContext = baseContext.inContextWithBackground(colorScheme.primary.light)
 	val labels = backgroundContext.forTextComponents.withTextAlignment(Alignment.Center).expandingHorizontally.use { implicit c =>
 		Vector("Here are some labels", "just for you", "once", "again!").map {
-			TextLabel.contextualWithBackground(colorScheme.secondary.forBackground(c.containerBackground), _) }
+			TextLabel.contextualWithBackground(colorScheme.secondary.forBackground(c.containerBackground), _)
+		}
 	}
-	
+
 	// Creates buttons as well
 	val (button1, button2) = backgroundContext.forTextComponents.withTextAlignment(Alignment.Center).mapFont { _ * 1.2 }
 		.expandingHorizontally.forPrimaryColorButtons
@@ -37,7 +39,7 @@ object SegmentRowsTest extends App
 			val button2 = TextButton.contextual("For Sure!") { labels.last.text += "!" }
 			button1 -> button2
 		}
-	
+
 	// Creates the rows and the main stack
 	val group = new SegmentGroup()
 	val stack = backgroundContext.use { implicit c =>
@@ -50,10 +52,10 @@ object SegmentRowsTest extends App
 			}
 		}
 	}
-	
+
 	val frame = Frame.windowed(stack.framed(margins.medium.downscaling, backgroundContext.containerBackground),
 		"Segment Test", Program)
 	frame.setToCloseOnEsc()
-	
+
 	new SingleFrameSetup(actorHandler, frame).start()
 }

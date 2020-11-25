@@ -1,13 +1,13 @@
-package utopia.reflection.test
+package utopia.reflection.test.swing
 
 import java.awt.event.KeyEvent
 
 import utopia.flow.async.ThreadPool
 import utopia.genesis.color.Color
-import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseWheelEvent}
+import utopia.genesis.event._
 import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.handling.{ActorLoop, Drawable, KeyStateListener, MouseButtonStateListener, MouseWheelListener}
-import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler, MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
+import utopia.genesis.handling.ActorLoop
+import utopia.genesis.handling.mutable._
 import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Size}
 import utopia.genesis.util.{Drawer, Fps}
 import utopia.inception.handling.immutable.Handleable

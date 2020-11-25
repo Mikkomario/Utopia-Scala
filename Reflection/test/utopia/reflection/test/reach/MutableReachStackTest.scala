@@ -1,4 +1,4 @@
-package utopia.reflection.test
+package utopia.reflection.test.reach
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.event.KeyTypedEvent
@@ -21,7 +21,7 @@ import utopia.reflection.util.SingleFrameSetup
   */
 object MutableReachStackTest extends App
 {
-	import TestContext._
+	import utopia.reflection.test.TestContext._
 	
 	// Creates content stack
 	val (canvas, stack) = ReachCanvas(cursors) { canvasHierarchy =>
@@ -35,7 +35,7 @@ object MutableReachStackTest extends App
 	ContainerContentDisplayer2.forStatelessItems(stack, dataPointer) { i =>
 		Open.withContext(MutableViewTextLabel,
 			baseContext.inContextWithBackground(bg).forTextComponents.withTextAlignment(Alignment.Center)) { f =>
-				f.withBackground(i, Secondary)
+			f.withBackground(i, Secondary)
 		}(canvas)
 	}
 	canvas.background = bg
@@ -47,8 +47,7 @@ object MutableReachStackTest extends App
 	// Updates content in background
 	var lastIndex = 3
 	frame.addKeyTypedListener { event: KeyTypedEvent =>
-		if (event.typedChar.isDigit)
-		{
+		if (event.typedChar.isDigit) {
 			val newIndex = event.typedChar.asDigit
 			if (newIndex >= lastIndex)
 				dataPointer.value = (lastIndex to newIndex).toVector

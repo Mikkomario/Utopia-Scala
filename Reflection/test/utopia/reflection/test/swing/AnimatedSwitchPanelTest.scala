@@ -1,8 +1,7 @@
-package utopia.reflection.test
+package utopia.reflection.test.swing
 
 import java.awt.event.KeyEvent
 
-import TestContext._
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.shape.shape2D.Size
@@ -21,6 +20,8 @@ import utopia.reflection.util.SingleFrameSetup
   */
 object AnimatedSwitchPanelTest extends App
 {
+	import utopia.reflection.test.TestContext._
+	
 	val label1 = baseContext.inContextWithBackground(colorScheme.primary).forTextComponents.mapFont { _ * 2 }
 		.use { implicit c => TextLabel.contextual("This is a test") }
 	label1.background = colorScheme.primary
@@ -30,15 +31,15 @@ object AnimatedSwitchPanelTest extends App
 	label3.background = colorScheme.primary.light
 	val label4 = new EmptyLabel().withStackSize(StackSize.any(Size(228, 64)))
 	label4.background = colorScheme.primary.dark
-	
+
 	val labels = Vector(label1, label2, label3, label4)
-	
+
 	val panel = AnimatedSwitchPanel.contextual[AwtStackable](label1)
 	val frame = Frame.windowed(panel, "AnimatedSwitchPanel Test", Program)
-	
+
 	val setup = new SingleFrameSetup(actorHandler, frame)
 	setup.start()
-	
+
 	val indexPointer = new PointerWithEvents(0)
 	frame.addKeyStateListener(KeyStateListener.onAnyKeyPressed { event =>
 		if (event.index == KeyEvent.VK_RIGHT)

@@ -1,4 +1,4 @@
-package utopia.reflection.test
+package utopia.reflection.test.swing
 
 import utopia.flow.async.Loop
 import utopia.flow.util.FileExtensions._
@@ -12,8 +12,9 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.image.SingleColorIcon
-import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.test.TestContext
 import utopia.reflection.util.{AwtEventThread, SingleFrameSetup}
+import utopia.reflection.shape.LengthExtensions._
 
 /**
   * Tests typeOrSearch and TagView components
@@ -22,6 +23,7 @@ import utopia.reflection.util.{AwtEventThread, SingleFrameSetup}
   */
 object TypeOrSearchTest extends App
 {
+	
 	import TestContext._
 	
 	AwtEventThread.debugMode = true

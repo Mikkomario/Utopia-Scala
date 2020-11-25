@@ -1,4 +1,4 @@
-package utopia.reflection.test
+package utopia.reflection.test.swing
 
 import java.nio.file.Paths
 import java.time.format.TextStyle
@@ -6,7 +6,6 @@ import java.time.{DayOfWeek, Month, Year}
 import java.util.Locale
 
 import utopia.flow.async.ThreadPool
-import utopia.reflection.shape.LengthExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.ActorLoop
@@ -22,6 +21,7 @@ import utopia.reflection.localization.{DisplayFunction, Localizer, NoLocalizatio
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
+import utopia.reflection.shape.LengthExtensions._
 
 import scala.concurrent.ExecutionContext
 
@@ -42,7 +42,7 @@ object CalendarTest extends App
 	val smallFont = basicFont * 0.75
 	
 	val yearSelect = new JDropDownWrapper[Year](StackInsets.symmetric(16.any, 4.upscaling), "Year", basicFont,
-		Color.white, Color.magenta, initialContent = (1999 to 2050).map {Year.of}.toVector)
+		Color.white, Color.magenta, initialContent = (1999 to 2050).map { Year.of }.toVector)
 	val monthSelect = new JDropDownWrapper[Month](StackInsets.symmetric(16.any, 4.upscaling), "Month", basicFont,
 		Color.white, Color.magenta, initialContent = Month.values().toVector)
 	
@@ -53,9 +53,9 @@ object CalendarTest extends App
 	val calendar = Calendar(monthSelect, yearSelect, forwardImages, backImages, 8.any, StackLength(0, 8, 16),
 		DisplayFunction.noLocalization[DayOfWeek] { _.getDisplayName(TextStyle.SHORT, Locale.getDefault) }, smallFont,
 		Color.textBlack, StackInsets.symmetric(4.upscaling, 8.upscaling), smallFont, Color.textBlack,
-		StackInsets.symmetric(4.upscaling, 6.upscaling) , Color.black.withAlpha(0.33), Color.cyan)
+		StackInsets.symmetric(4.upscaling, 6.upscaling), Color.black.withAlpha(0.33), Color.cyan)
 	
-	calendar.addValueListener { e => println(s"New selected date: ${e.newValue}") }
+	calendar.addValueListener { e => println(s"New selected date: ${ e.newValue }") }
 	
 	// Creates the frame and displays it
 	val actorHandler = ActorHandler()
@@ -67,7 +67,7 @@ object CalendarTest extends App
 	val frame = Frame.windowed(framing, "Calendar Test", User)
 	frame.setToExitOnClose()
 	
-	println(s"Final connection status (from Frame): ${frame.attachmentDescription}")
+	println(s"Final connection status (from Frame): ${ frame.attachmentDescription }")
 	
 	actionLoop.registerToStopOnceJVMCloses()
 	actionLoop.startAsync()

@@ -1,11 +1,11 @@
-package utopia.reflection.test
+package utopia.reflection.test.reach
 
 import utopia.flow.event.Changing
 import utopia.flow.generic.DataType
 import utopia.genesis.color.Color
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.reach.factory.Mixed
-import utopia.reflection.component.reach.input.{EditableTextLabel, TextField}
+import utopia.reflection.component.reach.input.TextField
 import utopia.reflection.component.reach.label.ViewTextLabel
 import utopia.reflection.container.reach.{Framing, Stack}
 import utopia.reflection.container.stack.StackLayout.Trailing
@@ -13,9 +13,10 @@ import utopia.reflection.container.swing.ReachCanvas
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.localization.DisplayFunction
+import utopia.reflection.test.TestContext
+import utopia.reflection.util.SingleFrameSetup
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.localization.LocalString._
-import utopia.reflection.util.SingleFrameSetup
 
 /**
   * A simple test for text fields
