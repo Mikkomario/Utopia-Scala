@@ -2,6 +2,7 @@ package utopia.reflection.test.reach
 
 import java.awt.event.KeyEvent
 
+import javax.swing.JFrame
 import utopia.flow.datastructure.mutable.{Pointer, PointerWithEvents}
 import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
@@ -33,6 +34,8 @@ import utopia.reflection.localization.LocalString._
 object ReachComponentTest extends App
 {
 	import TestContext._
+	
+	System.setProperty("sun.java2d.noddraw", true.toString)
 	
 	def focusReporter(componentName: String) = FocusListener { event => println(s"$componentName: $event") }
 	

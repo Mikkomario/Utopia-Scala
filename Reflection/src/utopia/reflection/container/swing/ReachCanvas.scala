@@ -115,12 +115,13 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	}
 	
 	// Also requires a full repaint when size changes
+	/*
 	addResizeListener { event =>
 		// currentContent.foreach { _.size = event.newSize }
 		if (event.newSize.isPositive)
 			currentPainter.foreach { _.repaintAll() }
 		// repaintNeed.setOne(Full)
-	}
+	}*/
 	
 	// Listens to tabulator key events for manual focus handling
 	addKeyStateListener(FocusKeyListener)
@@ -385,6 +386,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		{
 			// Draws background, if defined
 			lazy val fullDrawBounds = drawBounds
+			// TODO: Remove background drawing?
 			if (!ReachCanvas.this.isTransparent)
 				drawer.onlyFill(background).draw(area.getOrElse(fullDrawBounds))
 			
@@ -557,8 +559,10 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 			if (bounds.contains(event.mousePosition) || bounds.contains(event.previousMousePosition))
 			{
 				val projectedPosition = (event.mousePosition + event.velocity.over(projectionLength)) - position
-				component.repaint(Bounds.around(Vector(event.previousMousePosition - position, projectedPosition)
-					.map { maxCursorBounds.translated(_) }).toAwt)
+				repaint(Bounds.around(Vector(event.previousMousePosition - position, projectedPosition)
+					.map { maxCursorBounds.translated(_) }))
+				// component.repaint(Bounds.around(Vector(event.previousMousePosition - position, projectedPosition)
+				// 	.map { maxCursorBounds.translated(_) }).toAwt)
 				// component.repaint()
 			}
 		}

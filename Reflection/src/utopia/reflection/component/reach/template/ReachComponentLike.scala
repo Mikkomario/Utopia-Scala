@@ -2,6 +2,7 @@ package utopia.reflection.component.reach.template
 
 import utopia.flow.datastructure.immutable.Tree
 import utopia.flow.event.Changing
+import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.DrawLevel
@@ -93,6 +94,18 @@ trait ReachComponentLike extends Stackable2
 	  */
 	def toTree: Tree[ReachComponentLike] = Tree(this, children.toVector.map { _.toTree })
 	
+	/**
+	  * @return An image of this component with its current size
+	  */
+	def toImage =
+	{
+		// Places the drawer so that after applying component position, drawer will draw to (0,0)
+		if (size.isPositive)
+			Image.paint(size) { d => paintWith(d.translated(-position)) }
+		else
+			Image.empty
+	}
+	
 	
 	// IMPLEMENTED	---------------------
 	
@@ -158,20 +171,43 @@ trait ReachComponentLike extends Stackable2
 		paintContent(drawer, Normal, clipZone)
 		// Paints child components (only those that overlap with the clipping bounds)
 		val components = children
-		if (components.nonEmpty) {
+		if (components.nonEmpty)
+		{
 			// Calculates new clipping zone and drawer origin
-			val newClipZone = clipZone.map {_ - position}
+			val newClipZone = clipZone.map { _ - position }
 			val remainingComponents = newClipZone match {
-				case Some(zone) => components.filter {_.bounds.overlapsWith(zone)}
+				case Some(zone) => components.filter { _.bounds.overlapsWith(zone) }
 				case None => components
 			}
 			if (remainingComponents.nonEmpty)
 				drawer.translated(position).disposeAfter { d =>
-					remainingComponents.foreach {_.paintWith(d, newClipZone)}
+					remainingComponents.foreach { _.paintWith(d, newClipZone) }
 				}
 		}
 		// Paints foreground
 		paintContent(drawer, Foreground, clipZone)
+	}
+	
+	/**
+	  * @param region Targeted region inside this component (should be relative to this component's top left corner)
+	  * @return Image containing the specified region
+	  */
+	def regionToImage(region: Bounds) =
+	{
+		if (size.isPositive)
+		{
+			// Places the drawer so that the top left corner of the region will be drawn to (0,0)
+			region.within(Bounds(Point.origin, size)) match
+			{
+				case Some(actualRegion) =>
+					Image.paint(actualRegion.size) { d =>
+						paintWith(d.translated(-position - region.position), Some(region))
+					}
+				case None => Image.empty
+			}
+		}
+		else
+			Image.empty
 	}
 	
 	/**
