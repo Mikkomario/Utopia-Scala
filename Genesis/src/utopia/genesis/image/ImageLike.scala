@@ -72,6 +72,11 @@ trait ImageLike
 	// COMPUTED	--------------------
 	
 	/**
+	  * @return Whether this image contains some data
+	  */
+	def nonEmpty = !isEmpty
+	
+	/**
 	  * @return The width of this image in pixels
 	  */
 	def width = size.width

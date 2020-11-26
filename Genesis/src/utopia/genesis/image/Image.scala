@@ -119,7 +119,7 @@ object Image
 		// Creates the new buffer image
 		val buffer = new BufferedImage(size.width.round.toInt, size.height.round.toInt, BufferedImage.TYPE_INT_ARGB)
 		// Draws on the image
-		Drawer.use(buffer.createGraphics()) { d => draw(d.clippedTo(Bounds(Point.origin, size))) }
+		Drawer.use(buffer.createGraphics()) { draw(_) } // { d => draw(d.clippedTo(Bounds(Point.origin, size))) }
 		// Wraps the buffer image
 		Image(buffer)
 	}
@@ -532,7 +532,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @param intensity The blurring intensity [0, 1], defaults to 1
 	  * @return A blurred version of this image
 	  */
-	def blurred(intensity: Int = 1) = Blur(intensity)(this)
+	def blurred(intensity: Double = 1) = Blur(intensity)(this)
 	
 	/**
 	  * Creates a sharpened copy of this image
@@ -691,7 +691,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 		{
 			case Some(buffer) =>
 				// Paints into created buffer
-				Drawer.use(buffer.createGraphics())(paint)
+				Drawer.use(buffer.createGraphics()) { d => paint(d.clippedTo(Bounds(Point.origin, sourceResolution))) }
 				Image(buffer, scaling, alpha, specifiedOrigin)
 			case None => this
 		}
