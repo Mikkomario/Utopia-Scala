@@ -5,20 +5,26 @@ import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import utopia.access.http.Method
 import utopia.access.http.Status.BadRequest
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.exodus.rest.resource.description.{DescriptionRolesNode, LanguagesNode, RolesNode, TasksNode}
+import utopia.exodus.rest.resource.description.{DescriptionRolesNode, LanguageFamiliaritiesNode, LanguagesNode, RolesNode, TasksNode}
 import utopia.exodus.rest.resource.device.DevicesNode
 import utopia.exodus.rest.resource.organization.OrganizationsNode
 import utopia.exodus.rest.resource.user.UsersNode
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.exodus.util.ExodusContext
+import utopia.flow.async.ThreadPool
 import utopia.flow.generic.DataType
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.StringExtensions.ExtendedString
+import utopia.flow.util.FileExtensions._
 import utopia.nexus.http.{Path, ServerSettings}
 import utopia.nexus.rest.RequestHandler
-import utopia.vault.database.Connection
+import utopia.vault.database.{Connection, ConnectionPool}
 import utopia.vault.util.ErrorHandling
 import utopia.vault.util.ErrorHandlingPrinciple.Custom
 import utopia.nexus.servlet.HttpExtensions._
+
+import scala.concurrent.ExecutionContext
+import scala.util.{Failure, Success}
 
 /**
   * A servlet that serves the test environment api
@@ -35,7 +41,25 @@ class ApiServlet extends HttpServlet
 	// INITIAL CODE	----------------------------
 	
 	DataType.setup()
+	
+	private implicit val exc: ExecutionContext = new ThreadPool("Exodus-Test-Server").executionContext
+	private implicit val connectionPool: ConnectionPool = new ConnectionPool()
+	
+	val dbSettings = JsonBunny.munchPath("settings/exodus-db-settings.json").map { _.getModel }
+	
+	ExodusContext.setup(exc, connectionPool,
+		dbSettings.toOption.flatMap { _("db_name").string }.getOrElse("exodus-test")) { (error, message) =>
+		println(message)
+		error.printStackTrace()
+	}
 	Connection.modifySettings { _.copy(driver = Some("org.mariadb.jdbc.Driver")) }
+	dbSettings match
+	{
+		case Success(settings) => Connection.modifySettings { _.copy(password = settings("password").getString) }
+		case Failure(error) =>
+			println("Database settings read failed (error below). Continues with no password and database name 'exodus-test'")
+			error.printStackTrace()
+	}
 	// TODO: Change this once more advanced logging systems are available and in production
 	ErrorHandling.defaultPrinciple = Custom { _.printStackTrace() }
 	
@@ -47,7 +71,8 @@ class ApiServlet extends HttpServlet
 	private implicit val jsonParser: JsonParser = JsonBunny
 	
 	private val handler = new RequestHandler(
-		Vector(UsersNode.forApiKey, DevicesNode, OrganizationsNode, LanguagesNode.public, DescriptionRolesNode.public,
+		Vector(UsersNode.forApiKey, DevicesNode, OrganizationsNode, LanguagesNode.public,
+			LanguageFamiliaritiesNode.public, DescriptionRolesNode.public,
 			RolesNode, TasksNode),
 		Some(Path("exodus", "api", "v1")), r => AuthorizedContext(r) { _.printStackTrace() })
 	

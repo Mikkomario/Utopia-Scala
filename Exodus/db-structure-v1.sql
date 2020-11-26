@@ -81,7 +81,7 @@ CREATE TABLE email_validation
     INDEX ev_resend_idx (resend_key),
     INDEX ev_validity_idx (expires_in, actualized_in),
 
-    CONSTRAINT ev_evp_validation_purpose_link_fk FOREIGN KEY ev_evp_validation_purpose_link_idx
+    CONSTRAINT ev_evp_validation_purpose_link_fk FOREIGN KEY ev_evp_validation_purpose_link_idx (purpose_id)
         REFERENCES email_validation_purpose(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARSET=latin1;
