@@ -40,6 +40,6 @@
 
    <servlet-mapping>
       <servlet-name>ExodusTestServlet</servlet-name>
-      <url-pattern>/exodus/api/v1/*</url-pattern>
+      <url-pattern>/api/v1/*</url-pattern>
    </servlet-mapping>
 </web-app>
