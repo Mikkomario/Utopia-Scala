@@ -3,7 +3,7 @@ package utopia.reflection.util
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.swing.window.{Frame, Window}
+import utopia.reflection.container.swing.window.Frame
 
 import scala.concurrent.ExecutionContext
 

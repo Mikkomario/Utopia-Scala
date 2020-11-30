@@ -2,13 +2,11 @@ package utopia.reflection.container.swing
 
 import java.awt.event.KeyEvent
 import java.awt.image.BufferedImage
-import java.awt.{AWTKeyStroke, Container, Graphics, KeyboardFocusManager, Rectangle, Toolkit}
-import java.time.Instant
+import java.awt.{AWTKeyStroke, Container, Graphics, KeyboardFocusManager, Toolkit}
 import java.util
 
 import javax.swing.{JComponent, JPanel}
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.VolatileOption
 import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.TimeExtensions._
@@ -17,7 +15,7 @@ import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEven
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size, VelocityTracker2D}
+import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
@@ -33,7 +31,8 @@ import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.cursor.{CursorSet, ReachCursorManager}
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.StackSize
-import utopia.reflection.util.{ReachFocusManager, RealTimeReachPaintManager}
+import utopia.reflection.util.Priority.VeryHigh
+import utopia.reflection.util.{Priority, ReachFocusManager, RealTimeReachPaintManager}
 
 import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -279,11 +278,11 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	/**
 	  * Repaints a part of this canvas
 	  * @param area Area to paint again
+	  * @param priority Priority to use for this repaint. The high level priority areas are painted first.
 	  */
-	def repaint(area: Bounds) =
+	def repaint(area: Bounds, priority: Priority = Priority.Normal) =
 	{
-		// TODO: Add priority
-		currentPainter.foreach { _.repaintRegion(area) }
+		currentPainter.foreach { _.repaintRegion(area, priority) }
 		/*
 		repaintNeed.update
 		{
@@ -560,7 +559,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 			{
 				val projectedPosition = (event.mousePosition + event.velocity.over(projectionLength)) - position
 				repaint(Bounds.around(Vector(event.previousMousePosition - position, projectedPosition)
-					.map { maxCursorBounds.translated(_) }))
+					.map { maxCursorBounds.translated(_) }), VeryHigh)
 				// component.repaint(Bounds.around(Vector(event.previousMousePosition - position, projectedPosition)
 				// 	.map { maxCursorBounds.translated(_) }).toAwt)
 				// component.repaint()

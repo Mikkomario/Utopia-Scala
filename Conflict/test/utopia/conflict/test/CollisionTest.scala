@@ -17,6 +17,8 @@ import scala.concurrent.ExecutionContext
  */
 object CollisionTest extends App
 {
+    implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
+    
     // Sets up the program
     val worldSize = Size(800, 600)
     
@@ -58,6 +60,5 @@ object CollisionTest extends App
     */
     
     // Starts the program
-    implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
     setup.start()
 }

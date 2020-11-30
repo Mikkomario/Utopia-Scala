@@ -11,7 +11,8 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 20.4.2019, v1+
   */
-class DefaultSetup(initialGameWorldSize: Size, title: String, maxFPS: Fps = Fps.default) extends Setup
+class DefaultSetup(initialGameWorldSize: Size, title: String, maxFPS: Fps = Fps.default)
+				  (implicit context: ExecutionContext) extends Setup
 {
 	// ATTRIBUTES	------------------
 	
@@ -60,5 +61,5 @@ class DefaultSetup(initialGameWorldSize: Size, title: String, maxFPS: Fps = Fps.
 	
 	override def handlers = genesisSetup.handlers
 	
-	override def start()(implicit context: ExecutionContext) = genesisSetup.start()
+	override def start() = genesisSetup.start()
 }

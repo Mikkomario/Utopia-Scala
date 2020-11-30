@@ -23,6 +23,8 @@
 ### Fixes
 - Alignment.position(...) now properly takes parameter bounds position into account
 - Fixed a small bug where Window content size wouldn't update correctly
+### Other Changes
+- Background custom drawer and some other custom drawers now optimize around drawer clipping zone
 
 ## v1.3 (beta)
 ### Breaking Changes

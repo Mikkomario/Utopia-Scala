@@ -206,9 +206,9 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	// Repaints (and possibly revalidates) this component when content or styling changes
 	measuredTextPointer.addListener { event =>
 		if (event.compareBy { _.size })
-			repaint()
+			repaint(VeryHigh)
 		else
-			revalidateAndRepaint()
+			revalidateAndRepaint(VeryHigh)
 	}
 	effectiveStylePointer.addListener { change =>
 		if (change.compareWith { _.hasSameDimensionsAs })

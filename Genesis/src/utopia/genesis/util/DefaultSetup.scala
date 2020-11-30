@@ -15,7 +15,8 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 20.4.2019, v2+
   */
-class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = Fps.default) extends Setup
+class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = Fps.default)
+				  (implicit context: ExecutionContext) extends Setup
 {
 	// ATTRIBUTES	--------------------
 	
@@ -62,11 +63,12 @@ class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = 
 	
 	// INITIAL CODE	-------------------
 	
-	// Sets up datatypes, if not already
+	// Sets up data types, if not already
 	GenesisDataType.setup()
 	
 	// Registers generators
 	actorHandler += mouseEventGenerator
+	GlobalKeyboardEventHandler.specifyExecutionContext(context)
 	
 	
 	// COMPUTED	-----------------------
@@ -94,10 +96,8 @@ class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = 
 	
 	/**
 	  * Starts the program (only works once)
-	  * @param context The execution context for asynchronous operations (implicit).
-	  *                You can use utopia.flow.async.ThreadPool, for example
 	  */
-	override def start()(implicit context: ExecutionContext) =
+	override def start() =
 	{
 		started.runAndSet
 		{

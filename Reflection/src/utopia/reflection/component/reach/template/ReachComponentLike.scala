@@ -10,6 +10,7 @@ import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreg
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.template.layout.stack.Stackable2
 import utopia.reflection.text.Font
+import utopia.reflection.util.Priority
 
 /**
   * A common trait for "Reach" (no-swing) style components
@@ -148,15 +149,24 @@ trait ReachComponentLike extends Stackable2
 	def repaint() = parentHierarchy.repaint(bounds)
 	
 	/**
-	  * Paints this component's parent again
+	  * Paints this component again
 	  */
-	def repaintParent() = parentHierarchy.repaintBottom()
+	def repaint(priority: Priority) = parentHierarchy.repaint(bounds, priority)
+	
+	/**
+	  * Paints this component's parent again
+	  * @param priority Priority to use for the repaint operation. Higher priority components are drawn first.
+	  *                 (Default = Normal).
+	  */
+	def repaintParent(priority: Priority = Priority.Normal) = parentHierarchy.repaintBottom(priority)
 	
 	/**
 	  * Indicates that this component's and its hierarchy's layout should be updated. Once that has been done,
 	  * repaints this component
+	  * @param priority Priority to use for the repaint operation. Higher priority components are drawn first.
+	  *                 (Default = Normal).
 	  */
-	def revalidateAndRepaint() = revalidateAndThen { repaint() }
+	def revalidateAndRepaint(priority: Priority = Priority.Normal) = revalidateAndThen { repaint(priority) }
 	
 	/**
 	  * Paints this component and its children
@@ -175,7 +185,8 @@ trait ReachComponentLike extends Stackable2
 		{
 			// Calculates new clipping zone and drawer origin
 			val newClipZone = clipZone.map { _ - position }
-			val remainingComponents = newClipZone match {
+			val remainingComponents = newClipZone match
+			{
 				case Some(zone) => components.filter { _.bounds.overlapsWith(zone) }
 				case None => components
 			}

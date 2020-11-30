@@ -22,6 +22,8 @@ import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.Alignment.TopLeft
 
+import scala.concurrent.ExecutionContext
+
 /**
   * Used for converting components to pop-ups
   * @author Mikko Hilpinen
@@ -48,7 +50,8 @@ object Popup
 													   actorHandler: ActorHandler,
 													   autoCloseLogic: PopupAutoCloseLogic = Never,
 													   resizeAlignment: Alignment = TopLeft)
-													  (getTopLeft: (Size, Size) => Point) =
+													  (getTopLeft: (Size, Size) => Point)
+													  (implicit exc: ExecutionContext) =
 	{
 		// If context isn't in a window (which it should), has to use a Frame instead of a dialog
 		val owner = context.parentWindow

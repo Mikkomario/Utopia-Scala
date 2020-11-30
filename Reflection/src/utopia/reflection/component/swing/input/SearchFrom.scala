@@ -57,7 +57,7 @@ object SearchFrom
 		val backgroundColor = searchField.background
 		val highlightColor = (backgroundColor: ComponentColor).highlighted
 		val field = new SearchFrom[A, C](searchField, noResultsView, context.actorHandler,
-			new BackgroundDrawer(highlightColor, Normal), context.relatedItemsStackMargin, displayStackLayout, searchIcon,
+			BackgroundDrawer(highlightColor, Normal), context.relatedItemsStackMargin, displayStackLayout, searchIcon,
 			context.textInsets, contentPointer, selectedValuePointer, shouldDisplayPopUpOnFocusGain, sameInstanceCheck,
 			contentIsStateless)(makeDisplay)(itemToSearchString)
 		field.background = backgroundColor

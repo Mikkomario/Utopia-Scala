@@ -42,13 +42,18 @@ case class BoxScrollBarDrawer(barColor: Color, backgroundColor: Option[Color] = 
 {
 	override def draw(drawer: Drawer, bounds: ScrollBarBounds, barDirection: Axis2D) =
 	{
-		// Fills background and bar
-		drawer.noEdges.disposeAfter
+		val clipArea = drawer.clipBounds
+		if (clipArea.forall { _.overlapsWith(bounds.area) })
 		{
-			d =>
+			// Fills background and bar
+			drawer.noEdges.disposeAfter { d =>
 				backgroundColor.foreach { d.withFillColor(_).draw(bounds.area) }
-				val bar = if (rounded) bounds.bar.toRoundedRectangle(1) else bounds.bar.toShape
-				d.withFillColor(barColor).draw(bar)
+				if (clipArea.forall { _.overlapsWith(bounds.bar) })
+				{
+					val bar = if (rounded) bounds.bar.toRoundedRectangle(1) else bounds.bar.toShape
+					d.withFillColor(barColor).draw(bar)
+				}
+			}
 		}
 	}
 }

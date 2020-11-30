@@ -30,6 +30,8 @@ import scala.concurrent.ExecutionContext
  */
 object MouseTest extends App
 {
+	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
+	
     class TestObject(position: Point, radius: Double) extends Drawable with
             MouseMoveListener with MouseButtonStateListener with MouseWheelListener with Handleable
 	{
@@ -104,8 +106,6 @@ object MouseTest extends App
 	actorHandler += mouseEventGen
 	
     // Displays the frame
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
-	
 	actorLoop.startAsync()
 	canvas.startAutoRefresh()
 	

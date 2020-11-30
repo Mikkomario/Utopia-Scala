@@ -5,6 +5,8 @@ import utopia.genesis.shape.shape2D.{Bounds, Vector2D}
 import utopia.reflection.component.reach.template.ReachComponentLike
 import utopia.reflection.container.swing.ReachCanvas
 import utopia.reflection.text.Font
+import utopia.reflection.util.Priority
+import utopia.reflection.util.Priority.Normal
 
 import scala.annotation.tailrec
 
@@ -129,23 +131,25 @@ trait ComponentHierarchy
 	/**
 	  * Repaints a sub-section of the bottom component (if linked to top)
 	  * @param area Area inside the bottom component
+	  * @param priority Priority used for this repaint operation. Higher priority areas are painted first
+	  *                 (default = Normal)
 	  */
-	def repaint(area: => Bounds) =
+	def repaint(area: => Bounds, priority: Priority = Normal) =
 	{
 		if (isLinked)
-			top.repaint(area + positionToTopModifier)
+			top.repaint(area + positionToTopModifier, priority)
 	}
 	
 	/**
 	  * Repaints the bottom component
 	  */
-	def repaintBottom() =
+	def repaintBottom(priority: Priority = Normal) =
 	{
 		if (isLinked)
 			parent match
 			{
 				case Left(canvas) => canvas.repaint()
-				case Right((block, component)) => block.repaint(component.bounds)
+				case Right((block, component)) => block.repaint(component.bounds, priority)
 			}
 	}
 	

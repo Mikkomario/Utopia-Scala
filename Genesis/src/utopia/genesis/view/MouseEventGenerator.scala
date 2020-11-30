@@ -11,6 +11,7 @@ import utopia.genesis.shape.shape2D.Point
 import utopia.inception.handling.mutable.Killable
 import utopia.inception.handling.{HandlerType, Mortal}
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
 import scala.ref.WeakReference
 import scala.util.Try
@@ -22,7 +23,8 @@ import scala.util.Try
  * @author Mikko Hilpinen
  * @since 22.1.2017
  */
-class MouseEventGenerator(c: Component, scaling: => Double = 1.0) extends Actor with Mortal with Killable
+class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: ExecutionContext)
+    extends Actor with Mortal with Killable
 {
     // ATTRIBUTES    -----------------
     
@@ -142,9 +144,11 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0) extends Actor 
         private def distributeEvent(event: MouseEvent, isDown: Boolean) =
         {
             buttonStatus += (event.getButton, isDown)
-            _buttonHandler.foreach {
-                _.onMouseButtonState(MouseButtonStateEvent(event.getButton, isDown, lastMousePosition,
-                    lastAbsoluteMousePosition, buttonStatus))
+            _buttonHandler.foreach { handler =>
+                val newEvent = MouseButtonStateEvent(event.getButton, isDown, lastMousePosition,
+                    lastAbsoluteMousePosition, buttonStatus)
+                // Distributes the event asynchronously
+                Future { handler.onMouseButtonState(newEvent) }
             }
         }
     }
@@ -152,7 +156,11 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0) extends Actor 
     private object MouseWheelEventReceiver extends MouseWheelListener
     {
         override def mouseWheelMoved(e: java.awt.event.MouseWheelEvent) =
-            _wheelHandler.foreach { _.onMouseWheelRotated(MouseWheelEvent(e.getWheelRotation, lastMousePosition,
-                lastAbsoluteMousePosition, buttonStatus)) }
+            _wheelHandler.foreach { handler =>
+                val event = MouseWheelEvent(e.getWheelRotation, lastMousePosition, lastAbsoluteMousePosition,
+                    buttonStatus)
+                // Distributes the event asynchronously
+                Future { handler.onMouseWheelRotated(event) }
+            }
     }
 }

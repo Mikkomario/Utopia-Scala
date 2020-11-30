@@ -55,11 +55,15 @@ trait TextDrawerLike2 extends CustomDrawer
 	{
 		// Calculates draw bounds and possible scaling
 		val textArea = alignment.position(text.size, bounds, insets)
-		val scaling = (textArea.size / text.size).toVector
-		// Applies transformation during the whole drawing process
-		drawer.transformed(Transformation.position(textArea.position).scaled(scaling)).forTextDrawing(font.toAwt, color)
-			.disposeAfter { drawer =>
-				text.defaultDrawTargets.foreach { case (string, position) => drawer.drawTextRaw(string, position) }
-			}
+		// Skips drawing if the text is outside the clipping area
+		if (drawer.clipBounds.forall { _.overlapsWith(textArea) })
+		{
+			val scaling = (textArea.size / text.size).toVector
+			// Applies transformation during the whole drawing process
+			drawer.transformed(Transformation.position(textArea.position).scaled(scaling)).forTextDrawing(font.toAwt, color)
+				.disposeAfter { drawer =>
+					text.defaultDrawTargets.foreach { case (string, position) => drawer.drawTextRaw(string, position) }
+				}
+		}
 	}
 }

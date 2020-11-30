@@ -19,6 +19,8 @@ import scala.concurrent.ExecutionContext
   */
 object ImageTest extends App
 {
+	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
+	
 	// Generates the images
 	val original = Image.readFrom(Paths.get("Genesis/test-images/mushrooms.png")).get
 		.withMaxSourceResolution(Size(128, 128)).withSize(Size(96, 96)).withCenterOrigin
@@ -48,7 +50,6 @@ object ImageTest extends App
 	)
 	
 	// Starts the program
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
 	setup.start()
 }
 

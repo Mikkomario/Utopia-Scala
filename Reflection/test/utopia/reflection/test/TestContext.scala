@@ -8,6 +8,7 @@ import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.Point
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.reflection.color.{ColorScheme, ColorSet}
 import utopia.reflection.component.context.{AnimationContext, BaseContext, ScrollingContext}
 import utopia.reflection.cursor.{Cursor, CursorSet, CursorType}
@@ -38,6 +39,7 @@ object TestContext
 	val baseContext: BaseContext = BaseContext(actorHandler, font, colorScheme, margins)
 	
 	implicit val exc: ExecutionContext = new ThreadPool("Reflection").executionContext
+	GlobalKeyboardEventHandler.specifyExecutionContext(exc)
 	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)
 	implicit val scrollingContext: ScrollingContext = ScrollingContext.withDarkRoundedBar(actorHandler)
 	

@@ -24,6 +24,8 @@ import scala.concurrent.ExecutionContext
  */
 object KeyTest extends App
 {
+    implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
+    
     private class TestObject(startPosition: Point) extends KeyStateListener with Handleable
     {
         // ATTRIBUTES    -----------------
@@ -97,6 +99,5 @@ object KeyTest extends App
 	setup.registerObjects(testObj, view, new KeyTypePrinter())
 	
 	// Starts the program
-    implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
 	setup.start()
 }

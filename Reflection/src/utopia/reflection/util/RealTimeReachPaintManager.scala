@@ -4,7 +4,6 @@ import java.awt.Toolkit
 
 import javax.swing.RepaintManager
 import utopia.flow.async.{Volatile, VolatileOption}
-import utopia.flow.collection.VolatileList
 import utopia.flow.util.TimeLogger
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Vector2D}
@@ -19,11 +18,14 @@ object RealTimeReachPaintManager
 	/**
 	  * Creates a new repaint manager
 	  * @param component Component to paint
+	  * @param maxQueueSize The maximum amount of paint updates that can be queued before the whole component
+	  *                     is repainted instead (default = 30)
 	  * @param cursor Function for cursor location + image
 	  * @param cursorBounds Function for assumed cursor bounds
 	  * @return A new paint manager
 	  */
-	def apply(component: ReachComponentLike)(cursor: => Option[(Point, Image)])(cursorBounds: => Option[Bounds]) =
+	def apply(component: ReachComponentLike, maxQueueSize: Int = 30)(cursor: => Option[(Point, Image)])
+			 (cursorBounds: => Option[Bounds]) =
 		new RealTimeReachPaintManager(component)(cursor)(cursorBounds)
 }
 
@@ -33,8 +35,8 @@ object RealTimeReachPaintManager
   * @author Mikko Hilpinen
   * @since 25.11.2020, v2
   */
-class RealTimeReachPaintManager(component: ReachComponentLike)(cursor: => Option[(Point, Image)])
-							   (cursorBounds: => Option[Bounds])
+class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int = 30)
+							   (cursor: => Option[(Point, Image)])(cursorBounds: => Option[Bounds])
 	extends PaintManager
 {
 	// ATTRIBUTES	---------------------------------
@@ -46,7 +48,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike)(cursor: => Option
 	private val queuePointer = Volatile[(Option[Bounds], Map[Priority, Vector[Bounds]])](None -> Map())
 	private val bufferSizePointer = Volatile(Size.zero)
 	private val bufferPointer = VolatileOption[Image]()
-	private val queuedUpdatesPointer = VolatileList[(Image, Point)]()
+	private val queuedUpdatesPointer = VolatileOption[Vector[(Image, Point)]]()
 	
 	private val tracker = new TimeLogger()
 	
@@ -59,7 +61,6 @@ class RealTimeReachPaintManager(component: ReachComponentLike)(cursor: => Option
 		// Checks whether component size changed. Invalidates buffer if so.
 		val currentSize = canvas.size
 		val sizeWasChanged = bufferSizePointer.pop { old => (old != currentSize) -> currentSize }
-		// TODO: Paint updates too?
 		if (sizeWasChanged)
 		{
 			/*
@@ -81,22 +82,24 @@ class RealTimeReachPaintManager(component: ReachComponentLike)(cursor: => Option
 		{
 			if (shouldAddUpdates)
 			{
-				// TODO: Problem: component is repainted before size change, still accepting all hundreds of updates
-				//  (For some reason, paint is called, before resize, at resize and after resize)
-				val updates = queuedUpdatesPointer.popAll()
-				println(s"Painting ${updates.size} updates")
-				updates.foldLeft(baseImage) { (image, update) =>
-					image.withOverlay(update._1, update._2)
+				// If the update buffer was overfilled, recreates the buffer completely
+				queuedUpdatesPointer.getAndSet(Some(Vector())) match
+				{
+					case Some(updates) =>
+						println(s"Painting ${updates.size} updates")
+						updates.foldLeft(baseImage) { (image, update) =>
+							image.withOverlay(update._1, update._2)
+						}
+					case None =>
+						val newImage = component.toImage
+						bufferPointer.setOne(newImage)
+						newImage
 				}
-				/*
-				queuedUpdatesPointer.popAll().foldLeft(baseImage) { (image, update) =>
-					image.withOverlay(update._1, update._2)
-				}*/
 			}
 			else
 			{
 				println("Painting all again")
-				queuedUpdatesPointer.clear()
+				queuedUpdatesPointer.setOne(Vector())
 				baseImage
 			}
 		}
@@ -237,8 +240,17 @@ class RealTimeReachPaintManager(component: ReachComponentLike)(cursor: => Option
 		// Draws the buffered area using the drawer (may also draw the cursor)
 		drawer.clippedTo(region).disposeAfter { d => drawn.drawWith(d, region.position) }
 		// Queues the buffer to be drawn when component will be fully painted next time
-		queuedUpdatesPointer.update { old => old.filterNot { case (image, position) =>
-			region.contains(Bounds(position, image.size)) } :+ (buffered -> region.position) }
+		queuedUpdatesPointer.update
+		{
+			case Some(queue) =>
+				// If the queue reaches maximum size, invalidates it
+				if (queue.size < maxQueueSize)
+					Some(queue.filterNot { case (image, position) =>
+						region.contains(Bounds(position, image.size)) } :+ (buffered -> region.position))
+				else
+					None
+			case None => None
+		}
 	}
 	
 	private def paint(f: Drawer => Unit) =

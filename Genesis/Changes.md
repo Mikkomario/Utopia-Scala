@@ -3,6 +3,7 @@
 ### Breaking Changes
 - MouseEventGenerator and CanvasMouseEventGenerator no longer accept listeners as parameters. Instead, they now create 
 new mutable mouse event handlers.
+    - Also, MouseEventGenerators now take an implicit execution context as a parameter
 - Added absoluteMousePosition to all MouseEvents
 - Path no longer extends DistanceLike
 - Renamed RGB, RGBLike, RGBChannel and RGBTransform to Rgb... (camel case)
@@ -10,8 +11,12 @@ new mutable mouse event handlers.
 - KeyTypedEvents now contain the associated key index
 - Added origin to Image, therefore removing separate origin features from any animation and image drawing classes
 - Changed Bounds.translate -methods since there was an ambiguous overlap when Vector2D was used 
+- Setup.start() no longer accepts an implicit execution context. 
+Usually such context is now requested as a constructor parameter instead.
 ### New Features
 - Added global mouse and keyboard event handling with GlobalMouseEventHandler and GlobalKeyboardEventHandler objects
+    - Asynchronous keyboard event handling is possible after calling 
+    GlobalKeyboardEventHandler.specifyExecutionContext(ExecutionContext)
 - Added SegmentedPath for path / animation based on a set of values
 - Drawer now supports splitting drawn text into multiple lines
     - Also, added a couple new string drawing methods

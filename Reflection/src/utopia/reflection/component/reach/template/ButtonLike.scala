@@ -9,6 +9,7 @@ import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, Mous
 import utopia.inception.handling.HandlerType
 import utopia.reflection.cursor.CursorType.{Default, Interactive}
 import utopia.reflection.event.{ButtonState, FocusChangeEvent, FocusChangeListener}
+import utopia.reflection.util.Priority.High
 
 object ButtonLike
 {
@@ -131,7 +132,7 @@ trait ButtonLike extends ReachComponentLike with Focusable with CursorDefining
 		addMouseMoveListener(mouseListener)
 		
 		// Repaints this button whenever it changes
-		this.statePointer.addListener { _ => repaint() }
+		this.statePointer.addListener { _ => repaint(High) }
 	}
 	
 	

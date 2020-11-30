@@ -43,10 +43,18 @@ case class ButtonBackgroundViewDrawer(baseColorPointer: Changing[Color], statePo
 	
 	override def draw(drawer: Drawer, bounds: Bounds) =
 	{
-		// Draws the background, then the border
-		drawer.onlyFill(color).draw(bounds)
-		if (drawsBorder)
-			super.draw(drawer, bounds)
+		if (bounds.size.isPositive)
+		{
+			// Draws the background, then the border
+			val backgroundArea = drawer.clipBounds match
+			{
+				case Some(clipArea) => bounds.within(clipArea)
+				case None => Some(bounds)
+			}
+			backgroundArea.foreach { drawer.onlyFill(color).draw(_) }
+			if (drawsBorder)
+				super.draw(drawer, bounds)
+		}
 	}
 	
 	override def border = borderPointer.value

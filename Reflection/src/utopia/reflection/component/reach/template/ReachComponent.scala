@@ -26,12 +26,11 @@ trait ReachComponent extends ReachComponentLike with CachingStackable2
 	// INITIAL CODE	-----------------------
 	
 	// Whenever component bounds update, repaints the affected area
-	// TODO: add back?
-	/*
 	boundsPointer.addListener { event =>
+		// TODO: Use copy area instead of full repaint when size stays the same
 		Bounds.aroundOption(Vector(event.oldValue, event.newValue).filter { _.size.isPositive })
 			.foreach { parentHierarchy.repaint(_) }
-	}*/
+	}
 	
 	
 	// IMPLEMENTED	-----------------------

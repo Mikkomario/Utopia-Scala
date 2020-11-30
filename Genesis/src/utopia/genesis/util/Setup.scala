@@ -3,8 +3,6 @@ package utopia.genesis.util
 import utopia.inception.handling.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 
-import scala.concurrent.ExecutionContext
-
 /**
   * Setups are used for quickly setting up a program
   * @author Mikko Hilpinen
@@ -21,10 +19,8 @@ trait Setup
 	
 	/**
 	  * Starts the program based on this setup
-	  * @param context The execution context for asynchronous operations. You can use utopia.flow.async.ThreadPool
-	  *                for creating the context, for example.
 	  */
-	def start()(implicit context: ExecutionContext): Unit
+	def start(): Unit
 	
 	
 	// OTHER	--------------------

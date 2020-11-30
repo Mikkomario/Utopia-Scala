@@ -18,6 +18,8 @@ import scala.concurrent.ExecutionContext
 
 object CameraTest extends App
 {
+	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
+	
     class GridNumberDrawer(private val grid: GridDrawer) extends Drawable with Handleable
     {
         private val font = new Font("Arial", 0, 14)
@@ -60,8 +62,6 @@ object CameraTest extends App
     camera.drawHandler ++= Vector(grid, numbers)
     
 	// Starts the program
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
-	
 	actorLoop.startAsync()
 	canvas.startAutoRefresh(Fps(120))
     frame.display()

@@ -97,6 +97,8 @@ trait InputWindow[+A] extends InteractionWindow[A]
 	
 	override protected def buttonBlueprints =
 	{
+		implicit val exc: ExecutionContext = executionContext
+		
 		val okButton = new DialogButtonBlueprint[A](okButtonText, okButtonIcon, ButtonColor.secondary)(() =>
 		{
 			// Checks the results. If failed, returns focus to an item and displays a message
@@ -125,7 +127,7 @@ trait InputWindow[+A] extends InteractionWindow[A]
 					}
 					
 					// Closes the pop-up if any key is pressed or after a delay
-					WaitUtils.delayed(5.seconds) { popup.close() }(executionContext)
+					WaitUtils.delayed(5.seconds) { popup.close() }
 					popup.display(false)
 					None -> false
 			}

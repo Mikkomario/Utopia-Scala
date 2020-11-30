@@ -98,35 +98,46 @@ trait SelectableTextDrawerLike extends CustomDrawer
 		val (normalDrawTargets, highlightedTargets) = drawTargets
 		if (normalDrawTargets.exists { _._1.nonEmpty } || highlightedTargets.nonEmpty)
 		{
+			val clipArea = drawer.clipBounds
 			// Calculates draw bounds and possible scaling
 			val textArea = alignment.position(text.size, bounds, insets)
-			val scaling = (textArea.size / text.size).toVector
-			// Updates recorded text draw settings
-			lastDrawStatusPointer.value = textArea.position -> scaling
-			// Applies transformation during the whole drawing process
-			drawer.transformed(Transformation.position(textArea.position).scaled(scaling)).disposeAfter { drawer =>
-				// Draws highlight backgrounds, if applicable
-				if (highlightedTargets.nonEmpty)
-					highlightedTextBackground.foreach { bg =>
-						drawer.onlyFill(bg).disposeAfter { drawer =>
-							highlightedTargets.foreach { case (_, area) => drawer.draw(area) }
+			// Skips drawing if text area is outside of the clipping zone
+			if (clipArea.forall { _.overlapsWith(textArea) })
+			{
+				val scaling = (textArea.size / text.size).toVector
+				// Updates recorded text draw settings
+				lastDrawStatusPointer.value = textArea.position -> scaling
+				
+				val drawnHighlightTargets = clipArea match
+				{
+					case Some(clipArea) => highlightedTargets.filter { _._2.overlapsWith(clipArea) }
+					case None => highlightedTargets
+				}
+				// Applies transformation during the whole drawing process
+				drawer.transformed(Transformation.position(textArea.position).scaled(scaling)).disposeAfter { drawer =>
+					// Draws highlight backgrounds, if applicable
+					if (drawnHighlightTargets.nonEmpty)
+						highlightedTextBackground.foreach { bg =>
+							drawer.onlyFill(bg).disposeAfter { drawer =>
+								drawnHighlightTargets.foreach { case (_, area) => drawer.draw(area) }
+							}
 						}
-					}
-				// Draws the normal text, if applicable
-				if (normalDrawTargets.nonEmpty)
-					drawer.forTextDrawing(font.toAwt, normalTextColor).disposeAfter { drawer =>
-						normalDrawTargets.foreach { case (string, position) => drawer.drawTextRaw(string, position) }
-					}
-				// Draws the highlighted text, if applicable
-				if (highlightedTargets.nonEmpty)
-					drawer.forTextDrawing(font.toAwt, highlightedTextColor).disposeAfter { drawer =>
-						highlightedTargets.foreach { case (string, bounds) =>
-							drawer.drawTextRaw(string, bounds.position)
+					// Draws the normal text, if applicable
+					if (normalDrawTargets.nonEmpty)
+						drawer.forTextDrawing(font.toAwt, normalTextColor).disposeAfter { drawer =>
+							normalDrawTargets.foreach { case (string, position) => drawer.drawTextRaw(string, position) }
 						}
+					// Draws the highlighted text, if applicable
+					if (drawnHighlightTargets.nonEmpty)
+						drawer.forTextDrawing(font.toAwt, highlightedTextColor).disposeAfter { drawer =>
+							drawnHighlightTargets.foreach { case (string, bounds) =>
+								drawer.drawTextRaw(string, bounds.position)
+							}
+						}
+					// Draws the caret, if applicable
+					caret.foreach { caretBounds =>
+						drawer.onlyFill(caretColor).draw(caretBounds)
 					}
-				// Draws the caret, if applicable
-				caret.foreach { caretBounds =>
-					drawer.onlyFill(caretColor).draw(caretBounds)
 				}
 			}
 		}
@@ -135,7 +146,9 @@ trait SelectableTextDrawerLike extends CustomDrawer
 			caret.foreach { caretBounds =>
 				val caretArea = alignment.position(caretBounds.size, bounds, insets)
 				val scaling = (caretArea.size / caretBounds.size).toVector
-				drawer.onlyFill(caretColor).draw(caretBounds.translated(caretArea.position) * scaling)
+				val drawnCaretBounds = caretBounds.translated(caretArea.position) * scaling
+				if (drawer.clipBounds.forall { _.overlapsWith(drawnCaretBounds) })
+					drawer.onlyFill(caretColor).draw(drawnCaretBounds)
 			}
 	}
 }

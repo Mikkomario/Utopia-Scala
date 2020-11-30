@@ -31,6 +31,7 @@ import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText, Regex}
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.stack.modifier.MaxBetweenModifier
 import utopia.reflection.util.ComponentCreationDefaults
+import utopia.reflection.util.Priority.High
 
 import scala.concurrent.duration.Duration
 
@@ -556,7 +557,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		else
 			makeInputArea(Mixed(parentHierarchy))
 	}
-	private val repaintListener = ChangeListener.onAnyChange { repaint() }
+	private val repaintListener = ChangeListener.onAnyChange { repaint(High) }
 	
 	
 	// INITIAL CODE	------------------------------------------

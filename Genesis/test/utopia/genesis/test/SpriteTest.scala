@@ -19,6 +19,8 @@ import scala.concurrent.ExecutionContext
   */
 object SpriteTest extends App
 {
+	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
+	
 	// Sets up the program
 	val gameWorldSize = Size(800, 600)
 	val setup = new DefaultSetup(gameWorldSize, "Sprite Test")
@@ -35,7 +37,6 @@ object SpriteTest extends App
 	setup.registerObjects(drawer1, drawer2)
 	
 	// Starts the program
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
 	setup.start()
 }
 

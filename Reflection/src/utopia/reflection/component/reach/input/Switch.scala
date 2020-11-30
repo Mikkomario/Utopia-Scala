@@ -26,6 +26,7 @@ import utopia.reflection.cursor.Cursor
 import utopia.reflection.event.{ButtonState, FocusListener}
 import utopia.reflection.shape.stack.{StackLength, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
+import utopia.reflection.util.Priority.VeryHigh
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -281,7 +282,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		{
 			val increment = duration / animationDuration
 			currentProgress = (currentProgress + increment) min 1.0
-			repaint()
+			repaint(VeryHigh)
 		}
 		
 		

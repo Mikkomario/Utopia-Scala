@@ -25,7 +25,7 @@ import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.modifier.StackSizeModifier
 import utopia.reflection.util.AwtEventThread
 
-import scala.concurrent.Promise
+import scala.concurrent.{ExecutionContext, Promise}
 import scala.jdk.CollectionConverters.SeqHasAsJava
 import scala.util.Try
 
@@ -245,7 +245,7 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
       * Starts mouse event generation for this window
       * @param actorHandler An ActorHandler that generates the necessary action events
       */
-    def startEventGenerators(actorHandler: ActorHandler) =
+    def startEventGenerators(actorHandler: ActorHandler)(implicit exc: ExecutionContext) =
     {
         generatorActivated.runAndSet
         {
