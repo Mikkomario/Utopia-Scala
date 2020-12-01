@@ -14,6 +14,8 @@
 - Added .toPreciseMinutes, .toPreciseHours, .toPreciseDays and .toPreciseWeeks to Duration in TimeExtensions
 - Added .current() to WeekDay
 - Added .takeRightWhile(...) to Seq in CollectionExtensions
+- Added .toSimpleModel and some other methods to XmlElement
+    - This new method allows somewhat heuristic xml to json conversion
 ### Fixes
 - Fixed a bug in LocalDate.next(WeekDay) and LocalDate.previous(WeekDay) (returned same day even when 
 includeSelf-parameter was set to false)

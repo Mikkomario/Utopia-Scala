@@ -8,6 +8,7 @@ import utopia.exodus.database.factory.user.SessionFactory
 import utopia.exodus.database.model.user.SessionModel
 import utopia.exodus.model.partial.UserSessionData
 import utopia.exodus.model.stored.UserSession
+import utopia.exodus.util.UuidGenerator
 import utopia.flow.util.TimeExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.{SingleModelAccess, UniqueAccess}
@@ -84,12 +85,12 @@ object DbUserSession extends SingleModelAccess[UserSession]
 		  * @param connection DB Connection (implicit)
 		  * @return New user session
 		  */
-		def start()(implicit connection: Connection) =
+		def start()(implicit connection: Connection, uuidGenerator: UuidGenerator) =
 		{
 			// Before starting a new session, makes sure to terminate existing user sessions for this device
 			DbUserSessions.forDeviceWithId(deviceId).end()
 			// Creates a new session that lasts for 24 hours or until logged out
-			model.insert(UserSessionData(userId, deviceId, randomUUID().toString, Instant.now() + 24.hours))
+			model.insert(UserSessionData(userId, deviceId, uuidGenerator.next(), Instant.now() + 24.hours))
 		}
 	}
 }

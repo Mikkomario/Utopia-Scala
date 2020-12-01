@@ -72,6 +72,7 @@ CREATE TABLE email_validation
     email VARCHAR(128) NOT NULL,
     `key` VARCHAR(36) NOT NULL,
     resend_key VARCHAR(36) NOT NULL,
+    owner_id INT,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_in DATETIME NOT NULL,
     actualized_in DATETIME,
@@ -82,7 +83,10 @@ CREATE TABLE email_validation
     INDEX ev_validity_idx (expires_in, actualized_in),
 
     CONSTRAINT ev_evp_validation_purpose_link_fk FOREIGN KEY ev_evp_validation_purpose_link_idx (purpose_id)
-        REFERENCES email_validation_purpose(id) ON DELETE CASCADE
+        REFERENCES email_validation_purpose(id) ON DELETE CASCADE,
+
+    CONSTRAINT ev_u_email_owner_link_fk FOREIGN KEY ev_u_email_owner_link_idx (owner_id)
+            REFERENCES `user`(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARSET=latin1;
 

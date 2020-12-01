@@ -7,6 +7,7 @@ import utopia.flow.generic.StringType
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
+import utopia.flow.util.CollectionExtensions._
 
 import scala.collection.immutable.VectorBuilder
 import scala.util.{Failure, Success, Try}
@@ -23,14 +24,14 @@ object XmlElement extends FromModelFactory[XmlElement]
     /**
      * Parses an xml element from a model
      * @param name the name for the xml element
-     * @param model the model that contains the element attributes. The following attribute names 
-     * are used:<br>
+     * @param model the model that contains the element attributes. The following attribute names are used:<br>
      * - value / text: Element value<br>
      * - children: Element children (array of models)<br>
      * - attributes: Element attributes (model)<br>
      * Unused attributes are converted into children or attributes if some of the primary attributes 
      * were missing.
      */
+    // TODO: Handle vector value types
     def apply(name: String, model: template.Model[Property]): XmlElement = 
     {
         // Value is either in 'value' or 'text' attribute
@@ -144,6 +145,104 @@ case class XmlElement(name: String, value: Value = Value.emptyWithType(StringTyp
         }
     }
     
+    /**
+      * @return A simplified model representation of this xml element
+      */
+    def toSimpleModel =
+    {
+        val nameProperty = Constant("name", name)
+        toConstants match
+        {
+            // Case: This element consists of a single property
+            case Left(constant) =>
+                // Doesn't use element name as a property key. Uses 'value' instead.
+                if (constant.name == name)
+                    Model.withConstants(Vector(nameProperty, constant.withName("value")))
+                // Specifies element name if possible
+                else if (constant.name == "name")
+                    Model.withConstants(Vector(constant))
+                else
+                    Model.withConstants(Vector(nameProperty, constant))
+            // Case: This element consists of multiple properties => wraps those properties into a model
+            case Right(constants) =>
+                val base = Model.withConstants(constants)
+                // Includes the name property if possible
+                if (base.contains("name"))
+                    base
+                else
+                    base + Constant("name", name)
+        }
+    }
+    
+    private def toConstants: Either[Constant, Vector[Constant]] =
+    {
+        // Case: No children
+        if (children.isEmpty)
+        {
+            // Case: Empty element with no attributes => Converts to name value pair
+            if (attributes.isEmpty)
+                Left(Constant(name, value))
+            // Case: Empty element with attributes => returns those
+            else if (text.isEmpty)
+                Right(attributes.attributes)
+            // Case: Attributes and value are defined => wraps them into a model, possibly overwriting 'value' attribute
+            else
+                Right((attributes + Constant("value", value)).attributes)
+        }
+        // Case: Wraps a single child => Attempts to convert it into a single property
+        else if (children.size == 1)
+        {
+            val childName = children.head.name
+            children.head.toConstants match
+            {
+                // Case: The wrapped element consists of a single property
+                case Left(childProperty) =>
+                    val actualProperty =
+                    {
+                        if (childProperty.name == childName)
+                            childProperty
+                        else
+                            childProperty.mapName { name => s"$childName.$name" }
+                    }
+                    propertyWithAttributes(actualProperty)
+                // Case: The wrapped element needs to be expressed as a model
+                case Right(constants) => propertyWithAttributes(Constant(childName, Model.withConstants(constants)))
+            }
+        }
+        // Case: All children have the same name and can therefore be expressed as a single array
+        else if (children.map { _.name }.toSet.size == 1)
+        {
+            // val childName = children.head.name
+            val childrenProperty = Constant(name, groupChildren(children))
+            propertyWithAttributes(childrenProperty)
+        }
+        else
+        {
+            val childConstants = children.map { _.name }.distinct.map { childName =>
+                val children = childrenWithName(childName)
+                if (children.size > 1)
+                    Constant(childName, groupChildren(children))
+                else
+                    children.head.toConstants match
+                    {
+                        case Left(constant) =>
+                            if (constant.name == childName)
+                                constant
+                            else
+                                constant.mapName { n => s"$childName.$n" }
+                        case Right(constants) => Constant(childName, Model.withConstants(constants))
+                    }
+            }
+            if (attributes.isEmpty)
+                Right(childConstants)
+            else if (childConstants.exists { c => attributes.contains(c.name) })
+                Right(Vector(
+                    Constant("attributes", attributes), Constant("children", Model.withConstants(childConstants))))
+            else
+                Right(attributes.attributes ++ childConstants)
+        }
+    }
+    
     // Eg. 'att1="abc" att2="3"'. None if empty
     private def attributesString = attributes.attributes.map(a => 
             s"${a.name}=${"\""}${a.value.stringOr()}${"\""}").reduceOption(_ + " " + _)
@@ -173,4 +272,88 @@ case class XmlElement(name: String, value: Value = Value.emptyWithType(StringTyp
      * Finds the value for an attribute with the specified name
      */
     def valueForAttribute(attName: String) = attributes(attName)
+    
+    /**
+      * @param value New value for this element
+      * @return A copy of this element with specified value
+      */
+    def withValue(value: Value) = copy(value = value)
+    
+    /**
+      * @param text New text for this element
+      * @return A copy of this element with new text
+      */
+    def withText(text: String) = withValue(if (text.isEmpty) Value.emptyWithType(StringType) else text)
+    
+    /**
+      * @param attributes New set of attributes for this element
+      * @return A copy of this element with those attributes
+      */
+    def withAttributes(attributes: Model[Constant]) = copy(attributes = attributes)
+    
+    /**
+      * @param newAttributes Additional attributes for this element
+      * @return A copy of this element with those attributes added
+      */
+    def withAttributesAdded(newAttributes: Model[Constant]) = withAttributes(attributes ++ newAttributes)
+    
+    /**
+      * @param attribute A new attribute for this element
+      * @return A copy of this element with specified attribute added
+      */
+    def withAttribute(attribute: Constant) = withAttributes(attributes + attribute)
+    
+    /**
+      * @param attName Attribute name
+      * @param value Attribute value
+      * @return A copy of this element with specified attribute added
+      */
+    def withAttribute(attName: String, value: Value): XmlElement = withAttribute(Constant(attName, value))
+    
+    /**
+      * @param children New set of children
+      * @return A copy of this element with exactly those children
+      */
+    def withChildren(children: Vector[XmlElement]) = copy(children = children)
+    
+    /**
+      * @param newChildren New children to add
+      * @return A copy of this element with those children added
+      */
+    def withChildrenAdded(newChildren: IterableOnce[XmlElement]) = withChildren(children ++ newChildren)
+    
+    /**
+      * @param child A new child to add
+      * @return A copy of this element with specified child added
+      */
+    def withChildAdded(child: XmlElement) = withChildren(children :+ child)
+    
+    /**
+      * @param child A child element
+      * @return A copy of this element with only that child
+      */
+    def withChild(child: XmlElement) = withChildren(Vector(child))
+    
+    private def groupChildren(children: Vector[XmlElement]): Value =
+    {
+        val childResults = children.map { _.toConstants }
+        if (childResults.forall { _.isLeft })
+            childResults.flatMap { _.leftOption }.map { _.value }
+        else
+            childResults.map
+            {
+                case Left(constant) => Model.withConstants(Vector(constant))
+                case Right(constants) => Model.withConstants(constants)
+            }
+    }
+    
+    private def propertyWithAttributes(property: Constant) =
+    {
+        if (attributes.isEmpty)
+            Left(property)
+        else if (attributes.contains(property.name) && property.name.toLowerCase != "attributes")
+            Right(Vector(Constant("attributes", attributes), property))
+        else
+            Right((attributes + property).attributes)
+    }
 }

@@ -1,7 +1,17 @@
 package utopia.exodus.util
 
+import java.util.UUID.randomUUID
+
 object UuidGenerator
 {
+	// ATTRIBUTES	-------------------------
+	
+	/**
+	  * A unique user id generator that uses Java's UUID.randomUUID function
+	  */
+	val default = apply { randomUUID().toString }
+	
+	
 	// OTHER	-----------------------------
 	
 	/**
