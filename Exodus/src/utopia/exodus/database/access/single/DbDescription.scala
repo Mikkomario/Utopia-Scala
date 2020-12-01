@@ -40,7 +40,7 @@ object DbDescription
 	  * @return An access point to individual descriptions of that user role
 	  */
 	def ofRoleWithId(roleId: Int) =
-		DescriptionOfSingle(roleId, DescriptionLinkFactory.role, DescriptionLinkModel.role)
+		DescriptionOfSingle(roleId, DescriptionLinkFactory.userRole, DescriptionLinkModel.userRole)
 	
 	/**
 	  * @param languageId Language id

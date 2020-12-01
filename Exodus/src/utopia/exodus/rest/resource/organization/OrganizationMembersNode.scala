@@ -1,6 +1,7 @@
 package utopia.exodus.rest.resource.organization
 
-import utopia.access.http.Status.NotImplemented
+import utopia.access.http.Method.Get
+import utopia.exodus.database.access.single.DbOrganization
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._
@@ -8,6 +9,7 @@ import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
 import utopia.nexus.rest.ResourceSearchResult.{Error, Follow}
 import utopia.nexus.result.Result
+import utopia.vault.database.Connection
 
 /**
   * An access points to various users in the described organization
@@ -18,10 +20,19 @@ case class OrganizationMembersNode(organizationId: Int) extends Resource[Authori
 {
 	override val name = "users"
 	
-	override val allowedMethods = Vector()
+	override val allowedMethods = Vector(Get)
 	
-	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) = Result.Failure(
-		NotImplemented, "Organization members resource doesn't support any methods yet").toResponse
+	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
+	{
+		// User must be a member of the organization to see data from other members
+		context.authorizedInOrganization(organizationId) { (_, _, connection) =>
+			implicit val c: Connection = connection
+			// Retrieves all memberships, associated task ids and user settings
+			val membershipData = DbOrganization(organizationId).memberships.described
+			// Produces a response based on the read data
+			Result.Success(membershipData.map { _.toModel })
+		}
+	}
 	
 	override def follow(path: Path)(implicit context: AuthorizedContext) =
 	{
