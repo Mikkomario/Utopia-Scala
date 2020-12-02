@@ -4,7 +4,6 @@ import java.awt.event.KeyEvent
 import java.awt.image.BufferedImage
 import java.awt.{AWTKeyStroke, Container, Graphics, KeyboardFocusManager, Toolkit}
 import java.util
-
 import javax.swing.{JComponent, JPanel}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.VolatileList
@@ -15,7 +14,7 @@ import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEven
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
@@ -32,7 +31,7 @@ import utopia.reflection.cursor.{CursorSet, ReachCursorManager}
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.Priority.VeryHigh
-import utopia.reflection.util.{Priority, ReachFocusManager, RealTimeReachPaintManager}
+import utopia.reflection.util.{AwtEventThread, Priority, ReachFocusManager, RealTimeReachPaintManager}
 
 import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -88,9 +87,9 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	  * Object that manages cursor display inside this canvas. None if cursor state is not managed in this canvas.
 	  */
 	val cursorManager = cursors.map { new ReachCursorManager(_) }
-	private val cursorPainter = cursorManager.map { new CursorPainter2(_) }
-	private val painterPromise = contentFuture.map { c => RealTimeReachPaintManager(c) {
-		cursorPainter.flatMap { _.cursor } } { cursorPainter.map { _.cursorBounds } } }
+	private val cursorPainter = cursorManager.map { new CursorSwapper(_) }
+	private val painterPromise = contentFuture.map { c => RealTimeReachPaintManager(c) /*{
+		cursorPainter.flatMap { _.cursor } } { cursorPainter.map { _.cursorBounds } }*/ }
 	
 	private val _attachmentPointer = new PointerWithEvents(false)
 	
@@ -127,11 +126,12 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	// Listens to mouse events for manual cursor drawing
 	cursorPainter.foreach(addMouseMoveListener)
 	// Also, disables the standard cursor drawing if manually handling cursor
+	/*
 	if (isManagingCursor)
 		Try { Toolkit.getDefaultToolkit.createCustomCursor(
 			new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB),
 			new java.awt.Point(0, 0), "blank cursor") }.foreach { component.setCursor(_) }
-	
+	*/
 	
 	// COMPUTED	-------------------------------
 	
@@ -297,6 +297,14 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		component.repaint(new Rectangle(area.x.toInt, area.y.toInt,area.width.toInt + 1,area.height.toInt + 1))
 		 */
 	}
+	
+	/**
+	  * Shifts a painted region inside these canvases
+	  * @param originalArea The area to shift (relative to this canvas' top left corner)
+	  * @param translation Translation vector to apply to the area
+	  */
+	def shiftArea(originalArea: Bounds, translation: Vector2D) =
+		currentPainter.foreach { _.shift(originalArea, translation) }
 	
 	@tailrec
 	private def updateLayoutFor(componentQueues: Set[Seq[ReachComponentLike]], sizeChangedChildren: Set[ReachComponentLike]): Unit =
@@ -504,7 +512,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 			}
 		}
 	}*/
-	
+	/*
 	private class CursorPainter2(cursorManager: ReachCursorManager) extends MouseMoveListener with Handleable
 	{
 		// ATTRIBUTES	-----------------------------
@@ -532,7 +540,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 				// Needs to recalculate the cursor style
 				if (bounds.contains(lastMousePosition + position))
 				{
-					val image = cursorManager.cursorAt(lastMousePosition) { area =>
+					val image = cursorManager.cursorImageAt(lastMousePosition) { area =>
 						// FIXME: Luminance calculation doesn't work here
 						// val luminance = buffer.averageLuminosityOf(area)
 						val luminance = 1.0
@@ -570,5 +578,65 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		// OTHER	----------------------------------
 		
 		def paintWith(drawer: Drawer) = cursor.foreach { case (position, image) => image.drawWith(drawer, position) }
+	}*/
+	
+	private class CursorSwapper(cursorManager: ReachCursorManager) extends MouseMoveListener with Handleable
+	{
+		// ATTRIBUTES	-----------------------------
+		
+		private var lastMousePosition = Point.origin
+		private var lastCursorImage: Option[Image] = None
+		
+		
+		// COMPUTED	---------------------------------
+		
+		/*
+		def cursor =
+		{
+			// Uses previously calculated data, if still effective
+			val cached = lastCursor.filter { case (pos, _) => pos == lastMousePosition }
+			if (cached.nonEmpty)
+				cached
+			else
+			{
+				// Needs to recalculate the cursor style
+				if (bounds.contains(lastMousePosition + position))
+				{
+					val image = cursorManager.cursorImageAt(lastMousePosition) { area =>
+						// FIXME: Luminance calculation doesn't work here
+						// val luminance = buffer.averageLuminosityOf(area)
+						val luminance = 1.0
+						if (luminance >= 0.5) Light else Dark
+					}
+					val next = Some(lastMousePosition -> image)
+					lastCursor = next
+					next
+				}
+				else
+					None
+			}
+		}*/
+		
+		
+		// IMPLEMENTED	-----------------------------
+		
+		override def onMouseMove(event: MouseMoveEvent) =
+		{
+			val newPosition = event.mousePosition - position
+			if (lastMousePosition != newPosition)
+			{
+				lastMousePosition = newPosition
+				if (bounds.contains(event.mousePosition))
+				{
+					val shade = Dark // TODO: Add actual calculation
+					val newImage = cursorManager.cursorImageAt(newPosition)(_ => shade)
+					if (!lastCursorImage.contains(newImage))
+					{
+						lastCursorImage = Some(newImage)
+						cursorManager.cursorForImage(newImage).foreach(component.setCursor)
+					}
+				}
+			}
+		}
 	}
 }

@@ -31,7 +31,7 @@ trait TwoDimensional[+A] extends Dimensional[A]
 	/**
 	  * @return A map that contains this item's first two dimensions (if available), tied to X and Y axes.
 	  */
-	def toMap2D: Map[Axis2D with Product, A] =
+	def toMap2D: Map[Axis2D, A] =
 	{
 		val dims = dimensions2D
 		if (dims.size >= 2)

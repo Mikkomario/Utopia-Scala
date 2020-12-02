@@ -154,6 +154,17 @@ trait ComponentHierarchy
 	}
 	
 	/**
+	  * Shifts a painted area by specified amount
+	  * @param area A region in this component hierarchy (lowest parent's position system) to shift
+	  * @param translation The amount of translation applied to the area
+	  */
+	def shiftArea(area: => Bounds, translation: => Vector2D) =
+	{
+		if (isLinked)
+			top.shiftArea(area + positionToTopModifier, translation)
+	}
+	
+	/**
 	  * @param font Font to use
 	  * @return Metrics for that font
 	  */

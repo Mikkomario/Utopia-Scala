@@ -35,6 +35,7 @@ Seq in CollectionExtensions
 - Added .popAll() to VolatileList
 - Added .compareBy(...), .compareWith(...), .merge(...) and .mergeBy(...) methods to ChangeEvent
 - Added .onAnyChange(...) to ChangeListener (type)
+- Added .releasing(...) to TryCache
 
 ### Fixes
 - Fixed a bug in LocalDate.next(WeekDay) and LocalDate.previous(WeekDay) (returned same day even when 

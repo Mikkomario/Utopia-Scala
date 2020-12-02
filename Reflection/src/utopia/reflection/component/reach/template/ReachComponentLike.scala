@@ -3,7 +3,7 @@ package utopia.reflection.component.reach.template
 import utopia.flow.datastructure.immutable.Tree
 import utopia.flow.event.Changing
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
@@ -167,6 +167,13 @@ trait ReachComponentLike extends Stackable2
 	  *                 (Default = Normal).
 	  */
 	def revalidateAndRepaint(priority: Priority = Priority.Normal) = revalidateAndThen { repaint(priority) }
+	
+	/**
+	  * Paints movement of this component, translating it by specified amount
+	  * @param movement Amount to translate this component in the drawn image.
+	  *                 <b>Will only affect visual results and not touch the position information of this component</b>
+	  */
+	def paintMovement(movement: => Vector2D) = parentHierarchy.shiftArea(bounds, movement)
 	
 	/**
 	  * Paints this component and its children

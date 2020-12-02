@@ -1,11 +1,12 @@
 package utopia.reflection.util
 
 import java.awt.Toolkit
-
 import javax.swing.RepaintManager
 import utopia.flow.async.{Volatile, VolatileOption}
 import utopia.flow.util.TimeLogger
 import utopia.genesis.image.Image
+import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.reach.template.ReachComponentLike
@@ -24,9 +25,9 @@ object RealTimeReachPaintManager
 	  * @param cursorBounds Function for assumed cursor bounds
 	  * @return A new paint manager
 	  */
-	def apply(component: ReachComponentLike, maxQueueSize: Int = 30)(cursor: => Option[(Point, Image)])
-			 (cursorBounds: => Option[Bounds]) =
-		new RealTimeReachPaintManager(component)(cursor)(cursorBounds)
+	def apply(component: ReachComponentLike, maxQueueSize: Int = 30)/*(cursor: => Option[(Point, Image)])
+			 (cursorBounds: => Option[Bounds])*/ =
+		new RealTimeReachPaintManager(component)/*(cursor)(cursorBounds)*/
 }
 
 /**
@@ -36,7 +37,7 @@ object RealTimeReachPaintManager
   * @since 25.11.2020, v2
   */
 class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int = 30)
-							   (cursor: => Option[(Point, Image)])(cursorBounds: => Option[Bounds])
+							   /*(cursor: => Option[(Point, Image)])(cursorBounds: => Option[Bounds])*/
 	extends PaintManager
 {
 	// ATTRIBUTES	---------------------------------
@@ -106,9 +107,11 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 		imageToPaint.drawWith(drawer)
 		
 		// Paints the cursor afterwards
+		/*
 		tracker.checkPoint("Painting cursor")
 		cursor.foreach { case (point, image) => image.drawWith(drawer, point) }
 		tracker.checkPoint("Finished cursor painting")
+		 */
 	}
 	
 	override def repaint(region: Option[Bounds], priority: Priority) = region.map { _.ceil } match
@@ -174,8 +177,34 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	
 	override def shift(originalArea: Bounds, transition: Vector2D) =
 	{
-		paint { _.copyArea(originalArea, transition) }
-		bufferPointer.clear()
+		if (transition.nonZero)
+		{
+			// Copies the area
+			paint { _.copyArea(originalArea, transition) }
+			// Invalidates buffer
+			bufferPointer.clear()
+			// Repaints the old area
+			val transitionDimensions = transition.toMap2D
+			Axis2D.values.find { transitionDimensions.get(_).forall { _ == 0.0 } } match
+			{
+				// If the translation only affected one axis, uses minimum repaint area
+				case Some(noMovementAxis) =>
+					val movementAxis = noMovementAxis.perpendicular
+					val transitionAmount = transition.along(movementAxis)
+					val overlapAmount = originalArea.size.along(movementAxis) - transitionAmount.abs
+					if (overlapAmount > 0.0)
+					{
+						// Case: Moving right or down => area at the end of the original bounds is repainted
+						// Case: Moving left or up => area at the start of the original bounds is repainted
+						repaintRegion(originalArea.slice(
+							movementAxis.toDirection(if (transitionAmount > 0) Positive else Negative), overlapAmount))
+					}
+					else
+						repaintRegion(originalArea)
+				// Otherwise paints the original area completely
+				case None => repaintRegion(originalArea)
+			}
+		}
 	}
 	
 	
@@ -224,6 +253,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 		// First draws the component region to a separate image
 		val buffered = component.regionToImage(region)
 		// May add the cursor to the buffered image
+		/*
 		val drawn =
 		{
 			if (cursorBounds.exists { _.overlapsWith(region) })
@@ -236,9 +266,9 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 			}
 			else
 				buffered
-		}
+		}*/
 		// Draws the buffered area using the drawer (may also draw the cursor)
-		drawer.clippedTo(region).disposeAfter { d => drawn.drawWith(d, region.position) }
+		drawer.clippedTo(region).disposeAfter { d => buffered.drawWith(d, region.position) }
 		// Queues the buffer to be drawn when component will be fully painted next time
 		queuedUpdatesPointer.update
 		{

@@ -2,7 +2,6 @@ package utopia.reflection.test.reach
 
 import java.awt.event.KeyEvent
 
-import javax.swing.JFrame
 import utopia.flow.datastructure.mutable.{Pointer, PointerWithEvents}
 import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}

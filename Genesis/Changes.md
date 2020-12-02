@@ -13,6 +13,7 @@ new mutable mouse event handlers.
 - Changed Bounds.translate -methods since there was an ambiguous overlap when Vector2D was used 
 - Setup.start() no longer accepts an implicit execution context. 
 Usually such context is now requested as a constructor parameter instead.
+- Altered the return value type of TwoDimensional.toMap2D 
 ### New Features
 - Added global mouse and keyboard event handling with GlobalMouseEventHandler and GlobalKeyboardEventHandler objects
     - Asynchronous keyboard event handling is possible after calling 

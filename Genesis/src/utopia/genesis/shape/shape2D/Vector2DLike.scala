@@ -37,6 +37,12 @@ trait Vector2DLike[+Repr <: Vector2DLike[Repr]] extends VectorLike[Repr] with Tw
 		0, 1
 	)
 	
+	/**
+	  * @return X and Y components that form this vector. Zero vectors are not included.
+	  */
+	def components = toMap2D.flatMap { case (axis, length) =>
+		if (length != 0) Some(axis(length)) else None }
+	
 	
 	// OTHER	--------------------------
 	
