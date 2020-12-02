@@ -36,4 +36,10 @@ case class Constant(name: String, value: Value) extends Property
       * @return A copy of this constant with provided name
       */
     def withName(name: String) = copy(name = name)
+    
+    /**
+      * @param f A mapping function for this constant's name
+      * @return A copy of this constant with a mapped name
+      */
+    def mapName(f: String => String) = copy(name = f(name))
 }

@@ -28,6 +28,11 @@ object UserSettingsModel
 	def table = Tables.userSettings
 	
 	/**
+	  * @return Column that contains user id information
+	  */
+	def userIdColumn = table(userIdAttName)
+	
+	/**
 	  * @return A model that has just been marked as deprecated
 	  */
 	def nowDeprecated = apply(deprecatedAfter = Some(Instant.now()))

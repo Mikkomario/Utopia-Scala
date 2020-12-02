@@ -72,7 +72,7 @@ object DescriptionLinkFactory
 	/**
 	  * Role description factory
 	  */
-	lazy val role = apply(DescriptionLinkModel.role)
+	lazy val userRole = apply(DescriptionLinkModel.userRole)
 	
 	/**
 	  * Task description factory

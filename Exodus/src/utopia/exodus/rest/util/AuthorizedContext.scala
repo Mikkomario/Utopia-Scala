@@ -1,11 +1,14 @@
 package utopia.exodus.rest.util
 
+import utopia.access.http.ContentCategory.{Application, Text}
 import utopia.access.http.Status.{BadRequest, Forbidden, InternalServerError, Unauthorized}
+import utopia.access.http.error.ContentTypeException
 import utopia.exodus.database.access.many.DbLanguages
 import utopia.exodus.database.access.single.{DbApiKey, DbDeviceKey, DbMembership, DbUser, DbUserSession}
 import utopia.exodus.model.stored.{ApiKey, DeviceKey, UserSession}
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.FromModelFactory
+import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
@@ -265,18 +268,31 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  * @param f Function that will be called if the value was successfully read. Returns an http result.
 	  * @return Function result or a failure result if no value could be read.
 	  */
-	def handlePost(f: Value => Result) =
+	def handleValuePost(f: Value => Result) =
 	{
 		// Parses the post body first
 		request.body.headOption match
 		{
 			case Some(body) =>
-				body.bufferedJson.contents match
+				// Accepts json, xml and text content types
+				val value = body.contentType.subType.toLowerCase match
+				{
+					case "json" => body.bufferedJson.contents
+					case "xml" => body.bufferedXml.contents.map { _.toSimpleModel: Value }
+					case _ =>
+						body.contentType.category match
+						{
+							case Text => body.bufferedToString.contents.map { s => s: Value }
+							case _ => Failure(ContentTypeException.notAccepted(body.contentType,
+								Vector(Application.json, Application.xml, Text.plain)))
+						}
+				}
+				value match
 				{
 					case Success(value) => f(value)
 					case Failure(error) => Result.Failure(BadRequest, error.getMessage)
 				}
-			case None => Result.Failure(BadRequest, "Please provide a json-body with the response")
+			case None => Result.Failure(BadRequest, "Please specify a body in the request")
 		}
 	}
 	
@@ -289,7 +305,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  */
 	def handlePost[A](parser: FromModelFactory[A])(f: A => Result): Result =
 	{
-		handlePost { value =>
+		handleValuePost { value =>
 			value.model match
 			{
 				case Some(model) =>
@@ -310,7 +326,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  * @param f Function that will be called if a json body was present. Accepts a vector of values. Returns result.
 	  * @return Function result or a failure if no value could be read
 	  */
-	def handleArrayPost(f: Vector[Value] => Result) = handlePost { v: Value =>
+	def handleArrayPost(f: Vector[Value] => Result) = handleValuePost { v: Value =>
 		if (v.isEmpty)
 			f(Vector())
 		else

@@ -43,7 +43,7 @@ object DbDescriptions
 	/**
 	  * An access point to all role descriptions
 	  */
-	val ofAllRoles = DescriptionsOfAll(DescriptionLinkFactory.role, DescriptionLinkModel.role)
+	val ofAllUserRoles = DescriptionsOfAll(DescriptionLinkFactory.userRole, DescriptionLinkModel.userRole)
 	
 	/**
 	  * An access point to all task descriptions
@@ -103,7 +103,7 @@ object DbDescriptions
 	  */
 	@deprecated("Use .ofRoleWithId(Int) instead", "v1")
 	def ofRole(role: UserRole) =
-		DescriptionsOfSingle(role.id, DescriptionLinkFactory.role, DescriptionLinkModel.role)
+		DescriptionsOfSingle(role.id, DescriptionLinkFactory.userRole, DescriptionLinkModel.userRole)
 	
 	/**
 	  * @param roles Roles
@@ -111,7 +111,7 @@ object DbDescriptions
 	  */
 	@deprecated("Use .ofRolesWithIds(...) instead", "v1")
 	def ofRoles(roles: Set[UserRole]) = DescriptionsOfMany(roles.map { _.id },
-		DescriptionLinkFactory.role, DescriptionLinkModel.role)
+		DescriptionLinkFactory.userRole, DescriptionLinkModel.userRole)
 	
 	/**
 	  * @param taskId Task id
@@ -131,15 +131,15 @@ object DbDescriptions
 	  * @param roleId User role id
 	  * @return An access point to descriptions of that user role
 	  */
-	def ofRoleWithId(roleId: Int) =
-		DescriptionsOfSingle(roleId, DescriptionLinkFactory.role, DescriptionLinkModel.role)
+	def ofUserRoleWithId(roleId: Int) =
+		DescriptionsOfSingle(roleId, DescriptionLinkFactory.userRole, DescriptionLinkModel.userRole)
 	
 	/**
 	  * @param roleIds Ids of targeted user roles
 	  * @return An access point to descriptions of those roles
 	  */
-	def ofRolesWithIds(roleIds: Set[Int]) = DescriptionsOfMany(roleIds,
-		DescriptionLinkFactory.role, DescriptionLinkModel.role)
+	def ofUserRolesWithIds(roleIds: Set[Int]) = DescriptionsOfMany(roleIds,
+		DescriptionLinkFactory.userRole, DescriptionLinkModel.userRole)
 	
 	/**
 	  * @param languageId Language id

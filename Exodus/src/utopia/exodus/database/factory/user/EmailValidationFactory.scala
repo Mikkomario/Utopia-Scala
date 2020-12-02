@@ -38,7 +38,7 @@ object EmailValidationFactory extends FromValidatedRowModelFactory[EmailValidati
 	
 	override protected def fromValidatedModel(model: Model[Constant]) = EmailValidation(model("id"),
 		EmailValidationData(model("purposeId"), model("email"), model("key"), model("resendKey"),
-			model("expiresIn"), model("created"), model("actualizedIn")))
+			model("expiresIn"), model("ownerId"), model("created"), model("actualizedIn")))
 	
 	override def table = Tables.emailValidation
 	

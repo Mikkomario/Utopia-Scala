@@ -30,7 +30,7 @@ object RolesNode extends Resource[AuthorizedContext]
 			// Reads all user roles and their allowed tasks
 			val roles = DbUserRoles.withRights
 			// Reads role descriptions and combines them with roles
-			val descriptions = DbDescriptions.ofAllRoles.inLanguages(languageIds)
+			val descriptions = DbDescriptions.ofAllUserRoles.inLanguages(languageIds)
 			val rolesWithDescriptions = roles.map { role =>
 				DescribedRole(role, descriptions.getOrElse(role.roleId, Set()).toSet) }
 			Result.Success(rolesWithDescriptions.map { _.toModel })

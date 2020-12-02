@@ -51,7 +51,7 @@ object EmailValidationModel
 	  */
 	def insert(data: EmailValidationData)(implicit connection: Connection) =
 	{
-		val id = apply(None, Some(data.purposeId), Some(data.email), Some(data.key), Some(data.resendKey),
+		val id = apply(None, Some(data.purposeId), Some(data.email), Some(data.key), Some(data.resendKey), data.ownerId,
 			Some(data.created), Some(data.expiration), data.actualized).insert().getInt
 		EmailValidation(id, data)
 	}
@@ -64,8 +64,8 @@ object EmailValidationModel
   */
 case class EmailValidationModel(id: Option[Int] = None, purposeId: Option[Int] = None, email: Option[String] = None,
 								key: Option[String] = None, resendKey: Option[String] = None,
-								created: Option[Instant] = None, expiration: Option[Instant] = None,
-								actualization: Option[Instant] = None)
+								ownerId: Option[Int] = None, created: Option[Instant] = None,
+								expiration: Option[Instant] = None, actualization: Option[Instant] = None)
 	extends StorableWithFactory[EmailValidation]
 {
 	// COMPUTED	------------------------------
@@ -81,7 +81,8 @@ case class EmailValidationModel(id: Option[Int] = None, purposeId: Option[Int] =
 	override def factory = EmailValidationFactory
 	
 	override def valueProperties = Vector("id" -> id, "purposeId" -> purposeId, "email" -> email, "key" -> key,
-		"resendKey" -> resendKey, "created" -> created, "expiresIn" -> expiration, "actualizedIn" -> actualization)
+		"resendKey" -> resendKey, "ownerId" -> ownerId, "created" -> created, "expiresIn" -> expiration,
+		"actualizedIn" -> actualization)
 	
 	
 	// OTHER	------------------------------

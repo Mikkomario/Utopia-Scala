@@ -29,6 +29,9 @@ Seq in CollectionExtensions
 - Added .delayedBy(Duration) to Changing
 - Added .mapAsync(...), .tryMapAsync(...), .mapAsyncCatching(...) and .mapAsyncMerging(...) to Changing
 - Added .current() to WeekDay
+- Added .takeRightWhile(...) to Seq in CollectionExtensions
+- Added .toSimpleModel and some other methods to XmlElement
+    - This new method allows somewhat heuristic xml to json conversion
 - Added .popAll() to VolatileList
 - Added .compareBy(...), .compareWith(...), .merge(...) and .mergeBy(...) methods to ChangeEvent
 - Added .onAnyChange(...) to ChangeListener (type)

@@ -1,5 +1,9 @@
 # Utopia Access - List of Changes
 
+## v1.2.2 (beta)
+### Other Changes
+- ContentTypeException class added
+
 ## v1.2.1
 ### Scala
 - Module is now based on Scala v2.13.3

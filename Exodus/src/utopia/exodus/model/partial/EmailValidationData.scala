@@ -8,7 +8,8 @@ import java.time.Instant
   * @since 24.11.2020, v1
   */
 case class EmailValidationData(purposeId: Int, email: String, key: String, resendKey: String, expiration: Instant,
-							   created: Instant = Instant.now(), actualized: Option[Instant] = None)
+							   ownerId: Option[Int] = None, created: Instant = Instant.now(),
+							   actualized: Option[Instant] = None)
 {
 	/**
 	  * @return Whether this validation was actually answered

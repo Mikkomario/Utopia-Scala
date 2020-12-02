@@ -1,16 +1,15 @@
 package utopia.exodus.database.access.single
 
 import utopia.exodus.database.access.id.UserId
-import utopia.exodus.database.access.many.{DbDescriptions, DbLanguageFamiliarities, InvitationsAccess}
-import utopia.exodus.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory, RoleRightFactory}
+import utopia.exodus.database.access.many.{DbDescriptions, DbLanguageFamiliarities, DbUserRoles, InvitationsAccess}
+import utopia.exodus.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory}
 import utopia.exodus.database.factory.user.{FullUserLanguageFactory, UserFactory, UserLanguageFactory, UserSettingsFactory}
-import utopia.exodus.database.model.organization.{MembershipModel, RoleRightModel}
+import utopia.exodus.database.model.organization.MembershipModel
 import utopia.exodus.database.model.user.{UserAuthModel, UserDeviceModel, UserLanguageModel, UserSettingsModel}
 import utopia.exodus.util.PasswordHash
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.language.{DescribedLanguage, DescribedLanguageFamiliarity}
-import utopia.metropolis.model.combined.organization.RoleWithRights
 import utopia.metropolis.model.combined.user.{DescribedUserLanguage, MyOrganization}
 import utopia.metropolis.model.error.AlreadyUsedException
 import utopia.metropolis.model.partial.user.{UserLanguageData, UserSettingsData}
@@ -362,12 +361,8 @@ object DbUser extends SingleModelAccess[User]
 				{
 					// TODO: Add proper language filtering
 					val organizationDescriptions = DbDescriptions.ofOrganizationsWithIds(organizationIds).all
-					// Reads all task links
-					val roleIds = memberships.flatMap { _.roleIds }.toSet
-					val roleRights = RoleRightFactory.getMany(RoleRightModel.roleIdColumn.in(roleIds))
-					// Groups the information
-					val rolesWithRights = roleRights.groupBy { _.roleId }.map { case (roleId, links) =>
-						RoleWithRights(roleId, links.map { _.taskId }.toSet) }
+					// Reads all role right information concerning the targeted roles
+					val rolesWithRights = DbUserRoles(memberships.flatMap { _.roleIds }.toSet).withRights
 					
 					memberships.map { membership =>
 						val organizationId = membership.wrapped.organizationId

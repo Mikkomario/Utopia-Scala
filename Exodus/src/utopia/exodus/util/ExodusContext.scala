@@ -24,19 +24,41 @@ object ExodusContext
 	  * @return Execution context used in this project (implicit)
 	  * @throws EnvironmentNotSetupException If setup(...) hasn't been called yet
 	  */
+	@throws[EnvironmentNotSetupException](".setup(...) hasn't been called yet")
 	implicit def executionContext: ExecutionContext = get.exc
 	
 	/**
 	  * @return Database connection pool to use in this project (implicit)
 	  * @throws EnvironmentNotSetupException If setup(...) hasn't been called yet
 	  */
+	@throws[EnvironmentNotSetupException](".setup(...) hasn't been called yet")
 	implicit def connectionPool: ConnectionPool = get.connectionPool
 	
 	/**
-	  * @return Name of the database that contains the project specific tables
+	  * @return Unique user id generator to use in this project (implicit)
+	  * @throws EnvironmentNotSetupException If .setup(...) hasn't been called yet
 	  */
+	@throws[EnvironmentNotSetupException](".setup(...) hasn't been called yet")
+	implicit def uuidGenerator: UuidGenerator = get.uuidGenerator
+	
+	/**
+	  * @return Name of the database that contains the project specific tables
+	  * @throws EnvironmentNotSetupException If .setup(...) hasn't been called yet
+	  */
+	@throws[EnvironmentNotSetupException](".setup(...) hasn't been called yet")
 	def databaseName = get.databaseName
 	
+	/**
+	  * @return Email validation implementation to use. None if no implementation has been provided.
+	  */
+	def emailValidator = data.flatMap { _.emailValidator }
+	
+	/**
+	  * @return Whether email validation is supported on this implementation
+	  */
+	def isEmailValidationSupported = data.exists { _.emailValidator.isDefined }
+	
+	@throws[EnvironmentNotSetupException]("If .setup(...) hasn't been called yet")
 	private def get = data match
 	{
 		case Some(data) => data
@@ -51,13 +73,16 @@ object ExodusContext
 	  * @param executionContext Execution context used
 	  * @param connectionPool Database connection pool used
 	  * @param databaseName Name of the primary database where user data is stored
+	  * @param uuidGenerator A generator which produce new unique user ids (default = Java's random UUID)
+	  * @param emailValidator Email validation implementation, if enabled (optional)
 	  * @param handleErrors A function for handling thrown errors
 	  */
-	def setup(executionContext: ExecutionContext, connectionPool: ConnectionPool, databaseName: String)
+	def setup(executionContext: ExecutionContext, connectionPool: ConnectionPool, databaseName: String,
+			  uuidGenerator: UuidGenerator = UuidGenerator.default, emailValidator: Option[EmailValidator] = None)
 			 (handleErrors: (Throwable, String) => Unit) =
 	{
 		DataType.setup()
-		data = Some(Data(executionContext, connectionPool, databaseName, handleErrors))
+		data = Some(Data(executionContext, connectionPool, databaseName, uuidGenerator, emailValidator, handleErrors))
 	}
 	
 	/**
@@ -71,5 +96,6 @@ object ExodusContext
 	// NESTED	--------------------------------------
 	
 	private case class Data(exc: ExecutionContext, connectionPool: ConnectionPool, databaseName: String,
+							uuidGenerator: UuidGenerator, emailValidator: Option[EmailValidator],
 							errorHandler: (Throwable, String) => Unit)
 }

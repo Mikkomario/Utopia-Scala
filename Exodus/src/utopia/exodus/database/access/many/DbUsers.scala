@@ -3,6 +3,7 @@ package utopia.exodus.database.access.many
 import utopia.exodus.database.access.single.{DbDevice, DbLanguage}
 import utopia.exodus.database.factory.user.{UserFactory, UserSettingsFactory}
 import utopia.exodus.database.model.user.{UserDeviceModel, UserLanguageModel, UserModel, UserSettingsModel}
+import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.user.UserWithLinks
 import utopia.metropolis.model.error.{AlreadyUsedException, IllegalPostModelException}
 import utopia.metropolis.model.partial.user.UserLanguageData
@@ -10,6 +11,7 @@ import utopia.metropolis.model.post.NewUser
 import utopia.metropolis.model.stored.user.User
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.sql.Extensions._
 
 import scala.util.{Failure, Success, Try}
 
@@ -35,6 +37,12 @@ object DbUsers extends ManyModelAccess[User]
 	
 	
 	// OTHER	-------------------------------
+	
+	/**
+	  * @param userIds Targeted user ids
+	  * @return An access point to those users' data
+	  */
+	def apply(userIds: Set[Int]) = new DbUsersSubgroup(userIds)
 	
 	/**
 	  * Checks whether a user name is currently in use
@@ -109,5 +117,28 @@ object DbUsers extends ManyModelAccess[User]
 			else
 				Failure(new IllegalPostModelException("device_id and language_id must point to existing data"))
 		}
+	}
+	
+	
+	// NESTED	--------------------------------
+	
+	class DbUsersSubgroup(userIds: Set[Int]) extends ManyModelAccess[User]
+	{
+		// IMPLEMENTED	------------------------
+		
+		override def factory = DbUsers.factory
+		
+		override def globalCondition =
+			Some(DbUsers.mergeCondition(factory.table.primaryColumn.get.in(userIds)))
+		
+		
+		// COMPUTED	----------------------------
+		
+		/**
+		  * @param connection Database connection (implicit)
+		  * @return Current settings for users with these ids
+		  */
+		def settings(implicit connection: Connection) = settingsFactory.getMany(
+			settingsFactory.nonDeprecatedCondition && settingsModel.userIdColumn.in(userIds))
 	}
 }
