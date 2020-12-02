@@ -4,9 +4,9 @@ import scala.math.Ordering.Double.TotalOrdering
 import java.awt.image.{BufferedImage, BufferedImageOp}
 import java.io.FileNotFoundException
 import java.nio.file.{Files, Path}
-
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.NullSafe._
+
 import javax.imageio.ImageIO
 import utopia.flow.datastructure.immutable.{Lazy, LazyWrapper}
 import utopia.flow.datastructure.template.LazyLike
@@ -15,7 +15,7 @@ import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.{Angle, Rotation}
-import utopia.genesis.shape.shape2D.{Area2D, Bounds, Direction2D, Insets, Point, Size, Vector2D}
+import utopia.genesis.shape.shape2D.{Area2D, Bounds, Circle, Direction2D, Insets, Point, Size, Vector2D}
 import utopia.genesis.shape.template.{Dimensional, VectorLike}
 import utopia.genesis.util.{Drawer, Scalable}
 
@@ -695,5 +695,27 @@ case class Image private(override protected val source: Option[BufferedImage], o
 				Image(buffer, scaling, alpha, specifiedOrigin)
 			case None => this
 		}
+	}
+	
+	/**
+	  * Draws this image on an empty image with predefined size. Places this image at the center of the other image.
+	  * If the new image size is smaller than the (scaled) size of this image, crops some parts of this image out.
+	  * Also, if this image contains an alpha modifier, that modifier is applied directly into the specified image's
+	  * source pixels.
+	  * @param targetSize The source resolution size of the resulting image
+	  * @return A new image with this image drawn at the center. The image origin is preserved, if it was defined
+	  *         in this image.
+	  */
+	def paintedToCanvas(targetSize: Size) =
+	{
+		// Creates the new buffer image
+		val buffer = new BufferedImage(targetSize.width.round.toInt, targetSize.height.round.toInt,
+			BufferedImage.TYPE_INT_ARGB)
+		// Draws this image to the center of the image
+		val topLeftPosition = (targetSize - size).toPoint / 2
+		val originDrawPosition = topLeftPosition + origin
+		Drawer.use(buffer.createGraphics()) { drawer => drawWith(drawer, originDrawPosition) }
+		// Wraps the image
+		Image(buffer, origin = if (specifiesOrigin) Some(originDrawPosition) else None)
 	}
 }

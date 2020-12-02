@@ -3,7 +3,6 @@ package utopia.reflection.util
 import java.awt.Toolkit
 import javax.swing.RepaintManager
 import utopia.flow.async.{Volatile, VolatileOption}
-import utopia.flow.util.TimeLogger
 import utopia.genesis.image.Image
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
@@ -21,8 +20,6 @@ object RealTimeReachPaintManager
 	  * @param component Component to paint
 	  * @param maxQueueSize The maximum amount of paint updates that can be queued before the whole component
 	  *                     is repainted instead (default = 30)
-	  * @param cursor Function for cursor location + image
-	  * @param cursorBounds Function for assumed cursor bounds
 	  * @return A new paint manager
 	  */
 	def apply(component: ReachComponentLike, maxQueueSize: Int = 30)/*(cursor: => Option[(Point, Image)])
@@ -51,14 +48,14 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	private val bufferPointer = VolatileOption[Image]()
 	private val queuedUpdatesPointer = VolatileOption[Vector[(Image, Point)]]()
 	
-	private val tracker = new TimeLogger()
+	// private val tracker = new TimeLogger()
 	
 	
 	// IMPLEMENTED	---------------------------------
 	
 	override def paintWith(drawer: Drawer) =
 	{
-		tracker.checkPoint("Starting full repaint")
+		// tracker.checkPoint("Starting full repaint")
 		// Checks whether component size changed. Invalidates buffer if so.
 		val currentSize = canvas.size
 		val sizeWasChanged = bufferSizePointer.pop { old => (old != currentSize) -> currentSize }
@@ -87,7 +84,6 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 				queuedUpdatesPointer.getAndSet(Some(Vector())) match
 				{
 					case Some(updates) =>
-						println(s"Painting ${updates.size} updates")
 						updates.foldLeft(baseImage) { (image, update) =>
 							image.withOverlay(update._1, update._2)
 						}
@@ -99,7 +95,6 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 			}
 			else
 			{
-				println("Painting all again")
 				queuedUpdatesPointer.setOne(Vector())
 				baseImage
 			}
@@ -117,7 +112,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	override def repaint(region: Option[Bounds], priority: Priority) = region.map { _.ceil } match
 	{
 		case Some(region) =>
-			tracker.checkPoint("Starting region painting")
+			// tracker.checkPoint("Starting region painting")
 			// Extends the queue. May start the drawing process as well
 			val firstDrawArea = queuePointer.pop { case (processing, queue) =>
 				// Case: No draw process currently active => starts drawing
@@ -213,7 +208,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	// Pass None if whole component should be painted
 	private def paintQueue(first: Option[Bounds]) =
 	{
-		tracker.checkPoint("Painting first item in queue")
+		// tracker.checkPoint("Painting first item in queue")
 		paint { drawer =>
 			var nextArea = first
 			do
@@ -224,7 +219,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 					case Some(region) => paintArea(drawer, region)
 					case None => paintWith(drawer)
 				}
-				tracker.checkPoint("Painting queue updates")
+				// tracker.checkPoint("Painting queue updates")
 				nextArea = queuePointer.pop { case (_, queue) =>
 					// Picks the next highest priority area (preferring smaller areas)
 					Priority.descending.find(queue.contains) match
@@ -245,7 +240,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 			}
 			while (nextArea.nonEmpty)
 		}
-		tracker.checkPoint("Queue painting finished")
+		// tracker.checkPoint("Queue painting finished")
 	}
 	
 	private def paintArea(drawer: Drawer, region: Bounds) =
@@ -285,10 +280,10 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	
 	private def paint(f: Drawer => Unit) =
 	{
-		tracker.checkPoint("Accessing awt thread")
+		// tracker.checkPoint("Accessing awt thread")
 		// Painting is performed in the AWT event thread
 		AwtEventThread.async {
-			tracker.checkPoint("Starting paint")
+			// tracker.checkPoint("Starting paint")
 			// Suppresses double buffering for the duration of the paint operation
 			val repaintManager = RepaintManager.currentManager(jComponent)
 			val wasDoubleBuffered = repaintManager.isDoubleBufferingEnabled
@@ -301,7 +296,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 			Try { Toolkit.getDefaultToolkit.sync() }
 			
 			repaintManager.setDoubleBufferingEnabled(wasDoubleBuffered)
-			tracker.checkPoint("Finished paint")
+			// tracker.checkPoint("Finished paint")
 		}
 	}
 }

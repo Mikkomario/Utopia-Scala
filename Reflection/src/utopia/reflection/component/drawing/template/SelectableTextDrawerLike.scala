@@ -98,23 +98,23 @@ trait SelectableTextDrawerLike extends CustomDrawer
 		val (normalDrawTargets, highlightedTargets) = drawTargets
 		if (normalDrawTargets.exists { _._1.nonEmpty } || highlightedTargets.nonEmpty)
 		{
-			val clipArea = drawer.clipBounds
 			// Calculates draw bounds and possible scaling
 			val textArea = alignment.position(text.size, bounds, insets)
 			// Skips drawing if text area is outside of the clipping zone
-			if (clipArea.forall { _.overlapsWith(textArea) })
+			if (drawer.clipBounds.forall { _.overlapsWith(textArea) })
 			{
 				val scaling = (textArea.size / text.size).toVector
 				// Updates recorded text draw settings
 				lastDrawStatusPointer.value = textArea.position -> scaling
 				
-				val drawnHighlightTargets = clipArea match
-				{
-					case Some(clipArea) => highlightedTargets.filter { _._2.overlapsWith(clipArea) }
-					case None => highlightedTargets
-				}
 				// Applies transformation during the whole drawing process
 				drawer.transformed(Transformation.position(textArea.position).scaled(scaling)).disposeAfter { drawer =>
+					val drawnHighlightTargets = drawer.clipBounds match
+					{
+						case Some(clipArea) => highlightedTargets.filter { _._2.overlapsWith(clipArea) }
+						case None => highlightedTargets
+					}
+					
 					// Draws highlight backgrounds, if applicable
 					if (drawnHighlightTargets.nonEmpty)
 						highlightedTextBackground.foreach { bg =>

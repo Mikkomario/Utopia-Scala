@@ -4,13 +4,19 @@ import utopia.flow.caching.multi.TryCache
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.{Bounds, Point}
+import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.reflection.color.ColorShadeVariant
 import utopia.reflection.component.reach.template.CursorDefining
 
 import java.awt.Toolkit
 import java.awt.image.BufferedImage
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
+/*
+object ReachCursorManager
+{
+	// The forced cursor size in the operating system
+	// private val osCursorSize = Toolkit.getDefaultToolkit.getBestCursorSize(1, 1)// Size(32, 32)
+}*/
 
 /**
   * Used for determining, which cursor image should be drawn
@@ -28,23 +34,26 @@ class ReachCursorManager(val cursors: CursorSet)
 	
 	private var cursorComponents = Vector[CursorDefining]()
 	
-	// FIXME: Cursors appear twice as large in the actual program (cause: windows always uses 32x32 cursors. Will need to scale accordingly)
-	private val cursorCache = TryCache.releasing[Image, java.awt.Cursor](1.minutes, 3.minutes) { image =>
-		// Applies alpha changes directly to the image, if necessary
-		val appliedImage =
+	private val cursorCache = TryCache.releasing[Image, java.awt.Cursor](1.minutes, 5.minutes) { image =>
+		// Applies the image with proper os-supported measurements and applied alpha value. Will not crop the image.
+		val osCursorSize = Try { Size.of(Toolkit.getDefaultToolkit.getBestCursorSize(
+			image.width.round.toInt, image.height.round.toInt)) }
+		val correctedImage = osCursorSize match
 		{
-			if (image.alpha >= 1.0)
-				image
-			else
-				image.withAlpha(1.0).mapPixels { _.timesAlpha(image.alpha) }
+			case Success(targetSize) => image.smallerThan(targetSize).paintedToCanvas(targetSize)
+			case Failure(_) =>
+				if (image.alpha >= 1)
+					image
+				else
+					image.mapPixels { _.timesAlpha(image.alpha) }
 		}
-		appliedImage.toAwt match
+		correctedImage.toAwt match
 		{
 			case Some(awtImage) =>
 				// Converts the source image to a new cursor
 				Try {
 					Toolkit.getDefaultToolkit.createCustomCursor(awtImage,
-						appliedImage.sourceResolutionOrigin.toAwtPoint,
+						correctedImage.sourceResolutionOrigin.toAwtPoint,
 						s"Reach-cursor-${cursorIndexGenerator.next()}")
 				}
 			case None => blankCursor
