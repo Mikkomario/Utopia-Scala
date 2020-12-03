@@ -2,15 +2,14 @@ package utopia.exodus.rest.resource.email
 
 import utopia.access.http.Method
 import utopia.access.http.Method.Post
-import utopia.access.http.Status.{BadRequest, NotImplemented}
-import utopia.exodus.database.access.many.DbEmailValidations
+import utopia.access.http.Status.{BadRequest, Forbidden, NotImplemented}
+import utopia.exodus.database.access.many.{DbEmailValidations, DbUsers}
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.UserCreation
+import utopia.exodus.rest.resource.ResourceWithChildren
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.{EmailValidator, ExodusContext}
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path
-import utopia.nexus.rest.ResourceSearchResult.Error
-import utopia.nexus.rest.Resource
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -19,13 +18,19 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 1.12.2020, v1
   */
-object EmailsNode extends Resource[AuthorizedContext]
+object EmailsNode extends ResourceWithChildren[AuthorizedContext]
 {
 	// ATTRIBUTES	---------------------------
 	
 	private val defaultSupportedMethods = Vector[Method](Post)
 	
 	override val name = "emails"
+	
+	// TODO: Add other children
+	override val children = Vector(EmailResendsNode)
+	
+	
+	// IMPLEMENTED	---------------------------
 	
 	override def allowedMethods =
 		if (ExodusContext.isEmailValidationSupported) defaultSupportedMethods else Vector()
@@ -46,13 +51,19 @@ object EmailsNode extends Resource[AuthorizedContext]
 						{
 							case Some(email) =>
 								implicit val c: Connection = connection
-								implicit val v: EmailValidator = validator
-								// Sends an email validation, if possible
-								DbEmailValidations.place(email, UserCreation.id) match
+								// Makes sure no user is currently using that email address
+								if (DbUsers.existsUserWithEmail(email))
+									Result.Failure(Forbidden, "Specified email address is already in use")
+								else
 								{
-									// On success returns the resend key
-									case Right(newValidation) => Result.Success(newValidation.resendKey)
-									case Left((status, message)) => Result.Failure(status, message)
+									implicit val v: EmailValidator = validator
+									// Sends an email validation, if possible
+									DbEmailValidations.place(email, UserCreation.id) match
+									{
+										// On success returns the resend key
+										case Right(newValidation) => Result.Success(newValidation.resendKey)
+										case Left((status, message)) => Result.Failure(status, message)
+									}
 								}
 							case None =>
 								Result.Failure(BadRequest,
@@ -63,8 +74,4 @@ object EmailsNode extends Resource[AuthorizedContext]
 			case None => Result.Failure(NotImplemented, "Email validation features are not implemented").toResponse
 		}
 	}
-	
-	// TODO: Implement other validation features
-	override def follow(path: Path)(implicit context: AuthorizedContext) =
-		Error(NotImplemented, Some("Specific email validation nodes haven't been implemented yet"))
 }

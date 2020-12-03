@@ -7,6 +7,7 @@ import utopia.access.http.Status.BadRequest
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.exodus.rest.resource.description.{DescriptionRolesNode, LanguageFamiliaritiesNode, LanguagesNode, RolesNode, TasksNode}
 import utopia.exodus.rest.resource.device.DevicesNode
+import utopia.exodus.rest.resource.email.EmailsNode
 import utopia.exodus.rest.resource.organization.OrganizationsNode
 import utopia.exodus.rest.resource.user.UsersNode
 import utopia.exodus.rest.util.AuthorizedContext
@@ -71,9 +72,11 @@ class ApiServlet extends HttpServlet
 	private implicit val jsonParser: JsonParser = JsonBunny
 	
 	private val handler = new RequestHandler(
-		Vector(UsersNode.forApiKey, DevicesNode, OrganizationsNode, LanguagesNode.public,
-			LanguageFamiliaritiesNode.public, DescriptionRolesNode.public,
-			RolesNode, TasksNode),
+		Vector(
+			DescriptionRolesNode.public, LanguagesNode.public, LanguageFamiliaritiesNode.public, RolesNode, TasksNode,
+			UsersNode.forApiKey, DevicesNode, OrganizationsNode,
+			EmailsNode
+		),
 		Some(Path("exodus", "api", "v1")), r => AuthorizedContext(r) { _.printStackTrace() })
 	
 	

@@ -5,7 +5,7 @@ import utopia.access.http.Status.{BadRequest, Forbidden, InternalServerError, Un
 import utopia.access.http.error.ContentTypeException
 import utopia.exodus.database.access.many.DbLanguages
 import utopia.exodus.database.access.single.{DbApiKey, DbDeviceKey, DbMembership, DbUser, DbUserSession}
-import utopia.exodus.model.stored.{ApiKey, DeviceKey, UserSession}
+import utopia.exodus.model.stored.{ApiKey, DeviceKey, EmailValidation, UserSession}
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.generic.ValueConversions._
@@ -133,9 +133,9 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  */
 	def deviceKeyAuthorized(f: (DeviceKey, Connection) => Result) =
 	{
-		tokenAuthorized("device authentication key", f) { (token, connection) =>
+		tokenAuthorized("device authentication key") { (token, connection) =>
 			DbDeviceKey.matching(token)(connection)
-		}
+		}(f)
 	}
 	
 	/**
@@ -145,7 +145,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  */
 	def sessionKeyAuthorized(f: (UserSession, Connection) => Result) =
 	{
-		tokenAuthorized("session key", f) { (token, connection) => DbUserSession.matching(token)(connection) }
+		tokenAuthorized("session key") { (token, connection) => DbUserSession.matching(token)(connection) }(f)
 	}
 	
 	/**
@@ -214,7 +214,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  * @return Function result if the request was authorized, otherwise an authorization failure
 	  */
 	def apiKeyAuthorized(f: (ApiKey, Connection) => Result) =
-		tokenAuthorized("api key", f) { (key, connection) => DbApiKey(key)(connection) }
+		tokenAuthorized("api key") { (key, connection) => DbApiKey(key)(connection) }(f)
 	
 	/**
 	  * Performs the specified function if the user is authorized (using session key) and they are a member of the
@@ -261,6 +261,40 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 				Result.Failure(Forbidden,
 					"You haven't been granted the right to perform this task within this organization")
 		}
+	}
+	
+	/**
+	  * Authorizes a request using bearer token authorization
+	  * @param keyTypeName Name used for the key (Eg. 'api key')
+	  * @param testKey A function for testing key validity. Accepts the provided token and a database connection.
+	  *                Returns a valid item associated with the key (if present)
+	  * @param f A function that performs the operation when authentication succeeds. Accepts 1) the item associated
+	  *          with the provided token and 2) a database connection and produces a response for the client.
+	  * @tparam K Type of item associated with the token
+	  * @return Response containing either function <i>f</i> result or an authentication failure
+	  *         (if <i>testKey</i> returned None or the token was missing)
+	  */
+	def tokenAuthorized[K](keyTypeName: => String)(testKey: (String, Connection) => Option[K])
+						  (f: (K, Connection) => Result) =
+	{
+		// Checks the key from token
+		val result = request.headers.bearerAuthorization match
+		{
+			case Some(key) =>
+				// Validates the device key against database
+				connectionPool.tryWith { connection =>
+					testKey(key, connection) match
+					{
+						case Some(authorizedKey) => f(authorizedKey, connection)
+						case None => Result.Failure(Unauthorized, s"Invalid or expired $keyTypeName")
+					}
+				}.getOrMap { e =>
+					errorHandler(e)
+					Result.Failure(InternalServerError, e.getMessage)
+				}
+			case None => Result.Failure(Unauthorized, s"Please provided a bearer auth hearer with a $keyTypeName")
+		}
+		result.toResponse(this)
 	}
 	
 	/**
@@ -364,27 +398,4 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  */
 	def handleModelArrayPost[A](parser: FromModelFactory[A])(f: Vector[A] => Result): Result =
 		handleModelArrayPost[A] { m: Model[Constant] => parser(m) }(f)
-	
-	private def tokenAuthorized[K](keyTypeName: => String, f: (K, Connection) => Result)(
-		testKey: (String, Connection) => Option[K]) =
-	{
-		// Checks the key from token
-		val result = request.headers.bearerAuthorization match
-		{
-			case Some(key) =>
-				// Validates the device key against database
-				connectionPool.tryWith { connection =>
-					testKey(key, connection) match
-					{
-						case Some(authorizedKey) => f(authorizedKey, connection)
-						case None => Result.Failure(Unauthorized, s"Invalid or expired $keyTypeName")
-					}
-				}.getOrMap { e =>
-					errorHandler(e)
-					Result.Failure(InternalServerError, e.getMessage)
-				}
-			case None => Result.Failure(Unauthorized, s"Please provided a bearer auth hearer with a $keyTypeName")
-		}
-		result.toResponse(this)
-	}
 }
