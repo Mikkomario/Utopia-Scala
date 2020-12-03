@@ -2,7 +2,7 @@ package utopia.exodus.database.access.single
 
 import utopia.access.http.Status
 import utopia.access.http.Status.{Forbidden, Unauthorized}
-import utopia.exodus.database.access.id.EmailValidationId
+import utopia.exodus.database.access.id.DbEmailValidationId
 import utopia.exodus.database.factory.user.EmailValidationFactory
 import utopia.exodus.database.model.user.EmailValidationResendModel
 import utopia.exodus.model.error.{InvalidKeyException, TooManyRequestsException}
@@ -34,7 +34,7 @@ object DbEmailValidation extends SingleModelAccess[EmailValidation]
 	/**
 	  * @return An access point to individual validation ids
 	  */
-	def id = EmailValidationId
+	def id = DbEmailValidationId
 	
 	private def model = factory.model
 	

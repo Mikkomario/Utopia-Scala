@@ -1,6 +1,6 @@
 package utopia.exodus.database.access.single
 
-import utopia.exodus.database.access.id.UserId
+import utopia.exodus.database.access.id.DbUserId
 import utopia.exodus.database.access.many.{DbDescriptions, DbLanguageFamiliarities, DbUserRoles, InvitationsAccess}
 import utopia.exodus.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory}
 import utopia.exodus.database.factory.user.{FullUserLanguageFactory, UserFactory, UserLanguageFactory, UserSettingsFactory}
@@ -55,7 +55,7 @@ object DbUser extends SingleModelAccess[User]
 	def tryAuthenticate(email: String, password: String)(implicit connection: Connection) =
 	{
 		// Finds user id and checks the password
-		UserId.forEmail(email).filter { id =>
+		DbUserId.forEmail(email).filter { id =>
 			apply(id).passwordHash.exists { correctHash => PasswordHash.validatePassword(password, correctHash) }
 		}
 	}
@@ -104,8 +104,8 @@ object DbUser extends SingleModelAccess[User]
 		  */
 		def passwordHash(implicit connection: Connection) =
 		{
-			connection(Select(UserAuthModel.table, UserAuthModel.hashAttName) + Where(UserAuthModel.withUserId(userId).toCondition))
-				.firstValue.string
+			connection(Select(UserAuthModel.table, UserAuthModel.hashAttName) +
+				Where(UserAuthModel.withUserId(userId).toCondition)).firstValue.string
 		}
 		
 		/**
@@ -161,6 +161,20 @@ object DbUser extends SingleModelAccess[User]
 			}
 		}
 		
+		/**
+		  * Updates this user's password
+		  * @param newPassword New password for this user
+		  * @param connection DB Connection (implicit)
+		  * @return Whether any user's password was actually affected
+		  */
+		def changePassword(newPassword: String)(implicit connection: Connection) =
+		{
+			// Hashes the password
+			val newHash = PasswordHash.createHash(newPassword)
+			// Updates the password hash in the DB
+			UserAuthModel.withUserId(userId).withHash(newHash).update()
+		}
+		
 		
 		// NESTED	-----------------------
 		
@@ -189,7 +203,7 @@ object DbUser extends SingleModelAccess[User]
 			def update(newSettings: UserSettingsData)(implicit connection: Connection) =
 			{
 				// Makes sure the email address is still available (or belongs to this user)
-				if (UserId.forEmail(newSettings.email).forall { _ == userId })
+				if (DbUserId.forEmail(newSettings.email).forall { _ == userId })
 				{
 					// Deprecates the old settings
 					model.nowDeprecated.updateWhere(condition)

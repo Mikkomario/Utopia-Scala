@@ -10,7 +10,7 @@ import utopia.vault.nosql.access.{SingleIdAccess, UniqueAccess}
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1
   */
-object LanguageId extends SingleIdAccess[Int]
+object DbLanguageId extends SingleIdAccess[Int]
 {
 	// IMPLEMENTED	---------------------------
 	
@@ -47,10 +47,10 @@ object LanguageId extends SingleIdAccess[Int]
 		
 		override def condition = model.withIsoCode(languageCode).toCondition
 		
-		override def target = LanguageId.target
+		override def target = DbLanguageId.target
 		
 		override def valueToId(value: Value) = value.int
 		
-		override def table = LanguageId.table
+		override def table = DbLanguageId.table
 	}
 }

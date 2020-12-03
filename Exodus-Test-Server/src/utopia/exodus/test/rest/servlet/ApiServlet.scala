@@ -75,7 +75,7 @@ class ApiServlet extends HttpServlet
 		Vector(
 			DescriptionRolesNode.public, LanguagesNode.public, LanguageFamiliaritiesNode.public, RolesNode, TasksNode,
 			UsersNode.forApiKey, DevicesNode, OrganizationsNode,
-			EmailsNode
+			EmailsNode.forApiKey
 		),
 		Some(Path("exodus", "api", "v1")), r => AuthorizedContext(r) { _.printStackTrace() })
 	

@@ -1,6 +1,6 @@
 package utopia.exodus.database.access.many
 
-import utopia.exodus.database.access.id.DescriptionRoleIds
+import utopia.exodus.database.access.id.DbDescriptionRoleIds
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 
@@ -38,7 +38,7 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 				// In the first iteration, reads all descriptions. After that divides into sub-groups
 				val readDescriptions = inLanguageWithId(languageId).all.groupBy { _.targetId }
 				// Reads the rest of the data using recursion
-				readRemaining(languageIds, DescriptionRoleIds.all.toSet, this, readDescriptions)
+				readRemaining(languageIds, DbDescriptionRoleIds.all.toSet, this, readDescriptions)
 			case None => Map()
 		}
 	}

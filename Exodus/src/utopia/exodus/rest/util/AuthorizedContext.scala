@@ -4,7 +4,7 @@ import utopia.access.http.ContentCategory.{Application, Text}
 import utopia.access.http.Status.{BadRequest, Forbidden, InternalServerError, Unauthorized}
 import utopia.access.http.error.ContentTypeException
 import utopia.exodus.database.access.many.DbLanguages
-import utopia.exodus.database.access.single.{DbApiKey, DbDeviceKey, DbMembership, DbUser, DbUserSession}
+import utopia.exodus.database.access.single.{DbApiKey, DbDeviceKey, DbEmailValidation, DbMembership, DbUser, DbUserSession}
 import utopia.exodus.model.stored.{ApiKey, DeviceKey, EmailValidation, UserSession}
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.FromModelFactory
@@ -295,6 +295,42 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 			case None => Result.Failure(Unauthorized, s"Please provided a bearer auth hearer with a $keyTypeName")
 		}
 		result.toResponse(this)
+	}
+	
+	/**
+	  * Authorizes this request using an email activation token from the bearer token authorization header
+	  * @param emailPurposeId Id of the purpose the email is used for (must match the purpose id the validation was
+	  *                       first registered with)
+	  * @param f A function that is performed if the specified token was valid.
+	  *          Accepts an open email validation attempt and a database connection.
+	  *          Returns 1) a boolean indicating whether the validation should be closed and
+	  *          2) result to send back to the client.
+	  * @return A response based on the function result if authorization was successful. A failure response otherwise.
+	  */
+	def emailAuthorized(emailPurposeId: Int)(f: (EmailValidation, Connection) => (Boolean, Result)) =
+	{
+		request.headers.bearerAuthorization match
+		{
+			case Some(key) =>
+				connectionPool.tryWith { implicit connection =>
+					DbEmailValidation.activateWithKey(key, emailPurposeId) { f(_, connection) }
+				} match
+				{
+					case Success(result) =>
+						result match
+						{
+							case Success(result) => result.toResponse(this)
+							case Failure(error) => Result.Failure(Unauthorized, error.getMessage).toResponse(this)
+						}
+					case Failure(error) =>
+						errorHandler(error)
+						Result.Failure(InternalServerError, error.getMessage).toResponse(this)
+				}
+			case None =>
+				Result.Failure(Unauthorized,
+					"Please provide a bearer authorization header containing an email validation token")
+					.toResponse(this)
+		}
 	}
 	
 	/**

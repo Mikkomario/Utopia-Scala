@@ -12,7 +12,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.journey.model.UserCredentials
 import utopia.annex.model.error.{EmptyResponseException, RequestFailedException, UnauthorizedRequestException}
 import utopia.metropolis.model.combined.device.FullDevice
-import utopia.metropolis.model.combined.user.UserWithLinks
+import utopia.metropolis.model.combined.user.UserCreationResult
 import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.post.{NewDevice, NewLanguageProficiency, NewUser}
 
@@ -48,12 +48,15 @@ class UnauthorizedExodusApi(override val rootPath: String) extends Api
 							   languages: Vector[NewLanguageProficiency], device: NewDevice)
 							  (implicit exc: ExecutionContext) =
 	{
-		implicit val userParser: UserWithLinks.type = UserWithLinks
+		implicit val userParser: UserCreationResult.type = UserCreationResult
 		
-		val newUser = NewUser(UserSettingsData(userName, credentials.email), credentials.password, languages, Left(device))
+		// TODO: Add support for email validation (current implementation expects email validation to not be used)
+		val newUser = NewUser(Right(UserSettingsData(userName, credentials.email)), credentials.password, languages,
+			Left(device), credentials.allowDeviceKeyUse)
 		
 		// Posts new user data to the server
-		post("users", newUser.toModel).tryFlatMapIfSuccess {
+		post("users", newUser.toModel).tryMapIfSuccess
+		{
 			// Checks response status and parses user data from the body
 			case Response.Success(status, body) =>
 				body match
@@ -61,30 +64,21 @@ class UnauthorizedExodusApi(override val rootPath: String) extends Api
 					case c: Content =>
 						c.single.parsed.map { user =>
 							// TODO: Cache user information
-							user.deviceIds.headOption match
+							// Stores received device id, possible device key and session key
+							LocalDevice.preInitialize(user.deviceId, device.name, user.userId)
+							user.deviceKey.foreach { LocalDevice.key = _ }
+							val apiCredentials = user.deviceKey match
 							{
-								case Some(deviceId) =>
-									// Stores received device id
-									LocalDevice.preInitialize(deviceId, device.name, user.id)
-									// Log in with the device, possibly creating a device key
-									if (credentials.allowDeviceKeyUse)
-										retrieveAndUseDeviceKey(deviceId, credentials)
-									else
-										login(Left(credentials), deviceId)
-								case None => asyncFailure(
-									new RequestFailedException(
-										s"Expected to receive device id in new user response. Received ${body.value}"))
+								case Some(deviceKey) => Right(deviceKey)
+								case None => Left(credentials)
 							}
-						} match
-						{
-							case Success(future) => future
-							case Failure(e) => asyncFailure(e)
+							new ExodusApi(rootPath, apiCredentials, user.sessionKey)
 						}
-					case Empty => asyncFailure(new EmptyResponseException(
+					case Empty => Failure(new EmptyResponseException(
 						s"Expected to receive new user data. Instead received an empty response with status $status"))
 				}
 			case Response.Failure(status, message) =>
-				asyncFailure(new RequestFailedException(message.getOrElse(s"Received $status when posting new user")))
+				Failure(new RequestFailedException(message.getOrElse(s"Received $status when posting new user")))
 		}
 	}
 	

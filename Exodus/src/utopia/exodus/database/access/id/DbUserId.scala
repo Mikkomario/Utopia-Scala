@@ -10,7 +10,7 @@ import utopia.vault.sql.{Select, Where}
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
-object UserId
+object DbUserId
 {
 	/**
 	  * @param userName User name

@@ -6,7 +6,7 @@ import utopia.exodus.database.model.user.{UserDeviceModel, UserLanguageModel, Us
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.user.UserWithLinks
 import utopia.metropolis.model.error.{AlreadyUsedException, IllegalPostModelException}
-import utopia.metropolis.model.partial.user.UserLanguageData
+import utopia.metropolis.model.partial.user.{UserLanguageData, UserSettingsData}
 import utopia.metropolis.model.post.NewUser
 import utopia.metropolis.model.stored.user.User
 import utopia.vault.database.Connection
@@ -73,11 +73,10 @@ object DbUsers extends ManyModelAccess[User]
 	  * @return Newly inserted data. Failure with IllegalPostModelException if posted data was invalid. Failure with
 	  *         AlreadyUsedException if user name or email was already in use.
 	  */
-	def tryInsert(newUser: NewUser)(implicit connection: Connection): Try[UserWithLinks] =
+	def tryInsert(newUser: NewUser, email: String)(implicit connection: Connection): Try[UserWithLinks] =
 	{
 		// Checks whether the proposed email already exist
-		val email = newUser.settings.email.trim
-		val userName = newUser.settings.name.trim
+		val userName = newUser.userName.trim
 		
 		if (!email.contains('@'))
 			Failure(new IllegalPostModelException("Email must be a valid email address"))
@@ -99,7 +98,7 @@ object DbUsers extends ManyModelAccess[User]
 				// Makes sure all the specified languages are also valid
 				DbLanguage.validateProposedProficiencies(newUser.languages).flatMap { languages =>
 					// Inserts new user data
-					val user = UserModel.insert(newUser.settings, newUser.password)
+					val user = UserModel.insert(UserSettingsData(userName, email), newUser.password)
 					val insertedLanguages = languages.map { case (languageId, familiarity) =>
 						UserLanguageModel.insert(UserLanguageData(user.id, languageId, familiarity)) }
 					// Links user with device (uses existing or a new device)
