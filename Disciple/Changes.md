@@ -1,4 +1,9 @@
 # Utopia Disciple - List of Changes
+## v1.3.1
+### New Methods
+- StringBody.type
+  - Added .urlEncodedForm(...) method which can be used for creating url encoded forms as request bodies
+
 ## v1.3
 ### Scala
 - Module is now based on Scala v2.13.3
