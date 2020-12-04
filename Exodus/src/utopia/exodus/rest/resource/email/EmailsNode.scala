@@ -5,7 +5,7 @@ import utopia.access.http.Method.Post
 import utopia.access.http.Status.{BadRequest, Forbidden, NotFound, NotImplemented}
 import utopia.exodus.database.access.id.DbUserId
 import utopia.exodus.database.access.many.{DbEmailValidations, DbUsers}
-import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.{PasswordReset, UserCreation}
+import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.{EmailChange, PasswordReset, UserCreation}
 import utopia.exodus.rest.resource.{CustomAuthorizationResourceFactory, ResourceWithChildren}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.{EmailValidator, ExodusContext}
@@ -35,7 +35,7 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 	
 	override val name = "emails"
 	
-	override val children = Vector(EmailResendsNode, PasswordResetNode)
+	override val children = Vector(EmailResendsNode, EmailChangeNode, PasswordResetNode)
 	
 	
 	// IMPLEMENTED	---------------------------
@@ -62,13 +62,13 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 		{
 			case Some(validator) =>
 				// Authorizes the request using specified authorization method
-				authorize(context, c => handleEmailUsing(f)(context, c, validator))
+				authorize(context, c => handleEmailUsing { email => f(email, validator, c) }(context, c))
 			case None => Result.Failure(NotImplemented, "Email validation features are not implemented").toResponse
 		}
 	}
 	
-	private def handleEmailUsing(f: (String, EmailValidator, Connection) => Result)
-								(implicit context: AuthorizedContext, connection: Connection, validator: EmailValidator) =
+	private def handleEmailUsing(f: String => Result)
+								(implicit context: AuthorizedContext, connection: Connection) =
 	{
 		// The request body must contain either a json object with "email" property,
 		// or the email address as a string or value
@@ -76,7 +76,7 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 			body.model.flatMap { _("email").string }.orElse(body.string)
 				.map { _.trim.toLowerCase }.filterNot { _.isEmpty } match
 			{
-				case Some(email) => f(email, validator, connection)
+				case Some(email) => f(email)
 				case None =>
 					Result.Failure(BadRequest,
 						"Please provide a json object body with property 'email' or pass the email address as the request body")
@@ -141,5 +141,50 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 				case None => Result.Failure(NotFound, "There doesn't exist any user account for the specified email address")
 			}
 		}
+	}
+	
+	private object EmailChangeNode extends Resource[AuthorizedContext]
+	{
+		// ATTRIBUTES   -------------------
+		
+		override val name = "changes"
+		
+		
+		// IMPLEMENTED  -------------------
+		
+		override def allowedMethods = EmailsNode.this.allowedMethods
+		
+		override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
+		{
+			// Request must be authorized with session key
+			context.sessionKeyAuthorized { (session, connection) =>
+				ExodusContext.emailValidator match
+				{
+					case Some(validator) =>
+						implicit val c: Connection = connection
+						handleEmailUsing { email =>
+							// Makes sure the email address is not yet in use
+							if (DbUsers.existsUserWithEmail(email))
+								Result.Failure(Forbidden, "Specified email address is already in use")
+							else
+							{
+								// Places a new email validation
+								implicit val v: EmailValidator = validator
+								DbEmailValidations.place(email, EmailChange.id, Some(session.userId)) match
+								{
+									case Right(validation) =>
+										// Returns a resend code on success
+										Result.Success(validation.resendKey)
+									case Left((status, message)) => Result.Failure(status, message)
+								}
+							}
+						}
+					case None => Result.Failure(NotImplemented, "Email validation is not implemented")
+				}
+			}
+		}
+		
+		override def follow(path: Path)(implicit context: AuthorizedContext) =
+			Error(message = Some(s"$name doesn't have any child nodes"))
 	}
 }
