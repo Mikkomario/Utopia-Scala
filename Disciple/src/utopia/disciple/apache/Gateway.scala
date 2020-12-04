@@ -243,7 +243,7 @@ object Gateway
 	 */
 	@deprecated("Replaced with ResponseParser.tryString", "v1.3")
 	def stringFromResponse(stream: InputStream, headers: Headers) = Try {
-		Source.fromInputStream(stream)(headers.codec.getOrElse(defaultResponseEncoding)).consume { _.getLines.mkString } }
+		Source.fromInputStream(stream)(headers.codec.getOrElse(defaultResponseEncoding)).consume { _.getLines().mkString } }
 	
 	/**
 	  * Performs an asynchronous request and parses response body into a value (empty value on empty responses and
@@ -472,7 +472,7 @@ object Gateway
 	        None
 	    else
 	    {
-	        val paramsList = params.attributes.map(c => new BasicNameValuePair(c.name, c.value.stringOr()))
+	        val paramsList = params.attributes.map { c => new BasicNameValuePair(c.name, c.value.getString) }
 	        Some(new UrlEncodedFormEntity(paramsList.asJava, Consts.UTF_8))
 	    }
 	}

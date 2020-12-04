@@ -29,7 +29,6 @@ object MySettingsNode extends Resource[AuthorizedContext]
 	
 	override val allowedMethods = Vector(Get, Put, Patch)
 	
-	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		context.sessionKeyAuthorized { (session, connection) =>
