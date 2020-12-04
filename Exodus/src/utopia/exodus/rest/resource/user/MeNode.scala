@@ -20,7 +20,7 @@ object MeNode extends ResourceWithChildren[AuthorizedContext]
 	override val name = "me"
 	
 	override val children = Vector(MyInvitationsNode, MyOrganizationsNode, MyLanguagesNode, MySettingsNode,
-		MyPasswordResetNode)
+		MyPasswordNode)
 	
 	override val allowedMethods = Vector(Get)
 	

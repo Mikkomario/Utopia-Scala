@@ -228,6 +228,12 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
             None
     }
     
+    /**
+      * @return Whether a bearer (token) authorization has been specified in this request
+      *         (Authorization header starts with 'bearer ')
+      */
+    def containsBearerAuthorization = authorization.exists { _.startsWithIgnoreCase("Bearer ") }
+    
     
     // OPERATORS    ---------------
     

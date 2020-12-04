@@ -162,6 +162,15 @@ object DbUser extends SingleModelAccess[User]
 		}
 		
 		/**
+		  * Checks whether the specified password matches this user's current password
+		  * @param password Password to test
+		  * @param connection DB Connection (implicit)
+		  * @return Whether the specified password is this user's current password
+		  */
+		def checkPassword(password: String)(implicit connection: Connection) =
+			passwordHash.exists { PasswordHash.validatePassword(password, _) }
+		
+		/**
 		  * Updates this user's password
 		  * @param newPassword New password for this user
 		  * @param connection DB Connection (implicit)

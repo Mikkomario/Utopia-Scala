@@ -1,7 +1,9 @@
 <component name="ProjectCodeStyleConfiguration">
   <code_scheme name="Project" version="173">
     <ScalaCodeStyleSettings>
+      <option name="KEEP_ONE_LINE_LAMBDAS_IN_ARG_LIST" value="true" />
       <option name="USE_SCALADOC2_FORMATTING" value="true" />
+      <option name="SPACES_IN_ONE_LINE_BLOCKS" value="true" />
       <option name="TYPE_ANNOTATION_PUBLIC_MEMBER" value="false" />
       <option name="TYPE_ANNOTATION_PROTECTED_MEMBER" value="false" />
       <option name="TYPE_ANNOTATION_UNIT_TYPE" value="false" />
@@ -23,7 +25,7 @@
     </codeStyleSettings>
     <codeStyleSettings language="Scala">
       <option name="CLASS_BRACE_STYLE" value="2" />
-      <option name="ELSE_ON_NEW_LINE" value="true" />
+      <option name="METHOD_BRACE_STYLE" value="2" />
       <option name="KEEP_SIMPLE_BLOCKS_IN_ONE_LINE" value="true" />
       <option name="KEEP_SIMPLE_METHODS_IN_ONE_LINE" value="true" />
       <indentOptions>
@@ -31,6 +33,7 @@
         <option name="CONTINUATION_INDENT_SIZE" value="4" />
         <option name="TAB_SIZE" value="4" />
         <option name="USE_TAB_CHARACTER" value="true" />
+        <option name="SMART_TABS" value="true" />
         <option name="KEEP_INDENTS_ON_EMPTY_LINES" value="true" />
       </indentOptions>
     </codeStyleSettings>

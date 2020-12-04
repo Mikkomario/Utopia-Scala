@@ -58,6 +58,11 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	// COMPUTED	----------------------------
 	
 	/**
+	  * @return Whether the request in this context contains a bearer token authorization
+	  */
+	def isTokenAuthorized = request.headers.containsBearerAuthorization
+	
+	/**
 	  * @param connection DB Connection (implicit)
 	  * @return Languages that were requested in the Accept-Language header. The languages are listed from most to
 	  *         least preferred. May be empty.
