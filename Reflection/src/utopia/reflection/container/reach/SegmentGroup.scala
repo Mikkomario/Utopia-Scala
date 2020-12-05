@@ -107,6 +107,6 @@ class SegmentGroup(val rowDirection: Axis2D = X, layouts: Vector[StackLayout] = 
 			}
 			segments ++= newSegments
 		}
-		segments.zip(row).map { case (segment, component) => segment.wrap(nextHierarchy, component) }
+		row.indices.map { i => segments(i).wrap(nextHierarchy, row(i), i + 1) }.toVector
 	}
 }

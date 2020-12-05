@@ -8,7 +8,7 @@ import utopia.reflection.component.reach.input.{ContextualSwitchFactory, Switch}
 import utopia.reflection.component.reach.label.{TextLabel, ViewTextLabel}
 import utopia.reflection.component.reach.wrapper.ComponentCreationResult
 import utopia.reflection.container.reach.{Framing, SegmentGroup, Stack}
-import utopia.reflection.container.stack.StackLayout.Center
+import utopia.reflection.container.stack.StackLayout.{Center, Leading, Trailing}
 import utopia.reflection.container.swing.ReachCanvas
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
@@ -31,17 +31,15 @@ object ReachSwitchTest extends App
 	val canvas = ReachCanvas(cursors) { hierarchy =>
 		val content = Framing(hierarchy).buildWithContext(Stack, baseContext).withBackground(colorScheme.gray, margins.medium.any) { colF =>
 			colF.build(Stack).column() { rowF =>
-				val rowGroup = SegmentGroup.rows
+				val rowGroup = SegmentGroup.rowsWithLayouts(Trailing, Center, Leading)
 				// Creates a single row with 1) name label, 2) switch and 3) switch value label
 				def makeRow(fieldName: LocalizedString)(makeSwitch: ContextualSwitchFactory[ColorContext] => Switch) =
 				{
 					rowF.build(Mixed).segmented(rowGroup, layout = Center, areRelated = true) { factories =>
+						val nameLabel = factories.next().mapContext { _.forTextComponents.withTextAlignment(Alignment.Right)
+							.mapFont { _.bold } }(TextLabel).apply(fieldName)
 						val switch = makeSwitch(factories.next()(Switch))
-						ComponentCreationResult(Vector(
-							// Field name label
-							factories.next().mapContext { _.forTextComponents.withTextAlignment(Alignment.Right)
-								.mapFont { _.bold } }(TextLabel).apply(fieldName),
-							switch,
+						ComponentCreationResult(Vector(nameLabel, switch,
 							// Switch value label
 							factories.next().mapContext { _.forTextComponents }(ViewTextLabel)
 								.apply(switch.valuePointer, isHintPointer = Changing.wrap(true))

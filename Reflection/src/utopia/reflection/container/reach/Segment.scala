@@ -14,8 +14,6 @@ import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.shape.stack.StackLength
 
-import java.time.LocalTime
-
 /**
   * Segments are used for aligning multiple components from different stacks / containers so that their lengths
   * along a specific axis match
@@ -65,11 +63,12 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 	  * Wraps a component in a container that aligns with the other elements in this segment
 	  * @param parentHierarchy Hierarchy that will contain the segment wrapper
 	  * @param component (Open) component to wrap
+	  * @param index Index of this segment
 	  * @return Container that now wraps the specified component (as a wrap result)
 	  */
-	def wrap[C <: ReachComponentLike, R](parentHierarchy: ComponentHierarchy, component: OpenComponent[C, R]) =
+	def wrap[C <: ReachComponentLike, R](parentHierarchy: ComponentHierarchy, component: OpenComponent[C, R], index: Int) =
 	{
-		val container: ReachComponent = new SegmentContainer(parentHierarchy, component)
+		val container: ReachComponent = new SegmentContainer(parentHierarchy, component, index)
 		component.attachTo(container)
 	}
 	
@@ -96,7 +95,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 	// NESTED	---------------------------------
 	
 	private class SegmentContainer(override val parentHierarchy: ComponentHierarchy,
-								   val wrappedComponent: ReachComponentLike) extends ReachComponent
+								   val wrappedComponent: ReachComponentLike, index: Int) extends ReachComponent
 	{
 		// ATTRIBUTES	-------------------------
 		
@@ -114,6 +113,8 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		
 		
 		// IMPLEMENTED	-------------------------
+		
+		override def toString = s"Segment($index)"
 		
 		override def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds]) = ()
 		

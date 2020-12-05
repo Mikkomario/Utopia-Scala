@@ -52,7 +52,6 @@ trait CustomDrawReachComponent extends ReachComponent with CustomDrawable2
 		// Draws with custom drawers
 		if (drawers.nonEmpty)
 		{
-			println(s"Drawing ${drawers.size} custom elements for ${getClass.getSimpleName}")
 			val targetBounds = drawBounds
 			val d = clipZone.map(drawer.clippedTo).getOrElse(drawer)
 			drawers.foreach {_.draw(d, targetBounds)}

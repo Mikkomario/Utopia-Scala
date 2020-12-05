@@ -1,6 +1,7 @@
 package utopia.reflection.container.stack.template.layout
 
 import utopia.flow.util.CollectionExtensions._
+import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.reflection.component.template.layout.{Area, AreaOfItems}
@@ -58,6 +59,12 @@ trait StackLike2[C <: Stackable2] extends MultiContainer2[C] with StackSizeCalcu
     
     
     // IMPLEMENTED    -------------------
+    
+    override def toString = direction match
+    {
+        case X => s"Row[$count]"
+        case Y => s"Column[$count]"
+    }
     
     override def calculatedStackSize = Stacker2.calculateStackSize(components.map { _.stackSize }, direction,
         margin, cap, layout)

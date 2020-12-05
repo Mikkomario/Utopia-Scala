@@ -197,8 +197,6 @@ trait ReachComponentLike extends Stackable2
 				case Some(zone) => components.filter { _.bounds.overlapsWith(zone) }
 				case None => components
 			}
-			// TODO: Remove test prints
-			println(s"$position ${getClass.getSimpleName}: ${components.size} -> ${remainingComponents.size} (${remainingComponents.map { _.getClass.getSimpleName }.mkString(", ")})")
 			if (remainingComponents.nonEmpty)
 				drawer.translated(position).disposeAfter { d =>
 					remainingComponents.foreach { _.paintWith(d, newClipZone) }

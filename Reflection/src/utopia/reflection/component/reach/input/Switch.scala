@@ -27,7 +27,6 @@ import utopia.reflection.shape.stack.{StackLength, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
 import utopia.reflection.util.Priority.VeryHigh
 
-import java.time.LocalTime
 import scala.concurrent.duration.FiniteDuration
 
 object Switch extends ContextInsertableComponentFactoryFactory[ColorContextLike, SwitchFactory, ContextualSwitchFactory]
@@ -204,8 +203,6 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
-			// TODO: Remove test prints
-			println("Drawing switch")
 			if (bounds.size.isPositive)
 			{
 				val actualDrawer = if (enabled) drawer else drawer.withAlpha(0.66)
@@ -284,9 +281,6 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		{
 			val increment = duration / animationDuration
 			currentProgress = (currentProgress + increment) min 1.0
-			// TODO: Remove test prints
-			println(parentHierarchy.toVector.map { c => s"${c.getClass.getSimpleName} (${c.position})" }.mkString(" -> "))
-			println(s"$bounds + ${parentHierarchy.positionToTopModifier} = $boundsInsideTop")
 			repaint(VeryHigh)
 		}
 		
