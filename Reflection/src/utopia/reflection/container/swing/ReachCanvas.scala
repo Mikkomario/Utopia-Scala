@@ -7,8 +7,8 @@ import javax.swing.{JComponent, JPanel}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
+import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
@@ -22,11 +22,15 @@ import utopia.reflection.component.drawing.mutable.CustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.ReachComponentLike
-import utopia.reflection.component.reach.wrapper.ComponentCreationResult
+import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, ComponentWrapResult}
 import utopia.reflection.component.swing.template.{JWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.Stackable
+import utopia.reflection.container.swing.window.Popup
+import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
+import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.Never
 import utopia.reflection.cursor.{CursorSet, ReachCursorManager}
 import utopia.reflection.event.StackHierarchyListener
+import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.{Priority, ReachFocusManager, RealTimeReachPaintManager}
 
@@ -103,6 +107,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 					layoutUpdateQueue :+= Vector(content)
 				else
 					layoutUpdateQueue ++= branches.map { content +: _ }
+				updateLayout()
 			}
 		}
 		fireStackHierarchyChangeEvent(event.newValue)
@@ -163,7 +168,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 				Set()
 		}
 		if (layoutUpdateQueues.nonEmpty)
-			updateLayoutFor2(layoutUpdateQueues, sizeChangeTargets).foreach { repaint(_) }
+			updateLayoutFor(layoutUpdateQueues, sizeChangeTargets).foreach { repaint(_) }
 		
 		// Performs the queued tasks
 		updateFinishedQueue.popAll().foreach { _() }
@@ -259,10 +264,48 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	def shiftArea(originalArea: Bounds, translation: Vector2D) =
 		currentPainter.foreach { _.shift(originalArea, translation) }
 	
+	/**
+	  * Creates a pop-up over the specified component-area
+	  * @param actorHandler Actor handler that will deliver action events for the pop-up
+	  * @param over Area over which the pop-up will be displayed
+	  * @param alignment Alignment to use when placing the pop-up (default = Right)
+	  * @param margin Margin to place between the area and the pop-up (not used with Center alignment)
+	  * @param autoCloseLogic Logic used for closing the pop-up (default = won't automatically close the pop-up)
+	  * @param makeContent A function for producing pop-up contents based on a component hierarchy
+	  * @tparam C Type of created component
+	  * @tparam R Type of additional result
+	  * @return A component wrapping result that contains the pop-up, the created component inside the canvas and
+	  *         the additional result returned by 'makeContent'
+	  */
+	def createPopup[C <: ReachComponentLike, R](actorHandler: ActorHandler, over: Bounds,
+											  alignment: Alignment = Alignment.Right, margin: Double = 0.0,
+											  autoCloseLogic: PopupAutoCloseLogic = Never)
+											 (makeContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
+	{
+		val newCanvas = ReachCanvas(cursors)(makeContent)
+		newCanvas.isTransparent = true
+		val popup = Popup(this, newCanvas.parent, actorHandler, autoCloseLogic, alignment) { (_, popupSize) =>
+			// Calculates pop-up top left coordinates based on alignment
+			Point.calculateWith { axis =>
+				alignment.directionAlong(axis) match
+				{
+					case Some(direction) =>
+						direction match
+						{
+							case Positive => over.maxAlong(axis) + margin
+							case Negative => over.minAlong(axis) - popupSize.along(axis) - margin
+						}
+					case None => over.center.along(axis) - popupSize.along(axis) / 2
+				}
+			}
+		}
+		ComponentWrapResult(popup, newCanvas.child, newCanvas.result)
+	}
+	
 	// Second parameter in queues is whether a repaint operation has already been queued for them
 	// Resized children are expected to have their repaints already queued
 	// Returns areas to repaint afterwards
-	private def updateLayoutFor2(componentQueues: Set[(Seq[ReachComponentLike], Boolean)],
+	private def updateLayoutFor(componentQueues: Set[(Seq[ReachComponentLike], Boolean)],
 								 sizeChangedChildren: Set[ReachComponentLike]): Vector[Bounds] =
 	{
 		val nextSizeChangeChildrenBuilder = new VectorBuilder[ReachComponentLike]()
@@ -317,7 +360,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		if (nextQueues.isEmpty && nextSizeChangedChildren.isEmpty)
 			repaintZones
 		else
-			 repaintZones ++ updateLayoutFor2(nextQueues, nextSizeChangedChildren)
+			 repaintZones ++ updateLayoutFor(nextQueues, nextSizeChangedChildren)
 	}
 	
 	
@@ -337,7 +380,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		// INITIAL CODE	---------------------
 		
 		setOpaque(true)
-		setBackground(Color.black.toAwt)
+		// setBackground(Color.black.toAwt)
 		
 		// Makes this canvas element focusable and disables the default focus traversal keys
 		setFocusable(true)

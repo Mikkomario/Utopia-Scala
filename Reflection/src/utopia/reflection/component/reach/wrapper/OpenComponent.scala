@@ -18,8 +18,6 @@ import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.ReachCanvas
 import utopia.reflection.shape.stack.{StackInsetsConvertible, StackLength}
 
-import scala.collection.immutable.VectorBuilder
-
 object Open
 {
 	/**
@@ -52,23 +50,34 @@ object Open
 	  * @return New open components, with additional results included (if defined). Also contains the primary
 	  *         additional creation result.
 	  */
-	def many[C, CR, R](creation: Iterator[ComponentHierarchy] => CreationsResult[C, CR, R])
+	def many[C <: ReachComponentLike, CR, R](creation: Iterator[ComponentHierarchy] => CreationsResult[C, CR, R])
 					  (implicit canvas: ReachCanvas) =
 	{
 		// Provides the creation function with an infinite iterator that creates new component hierarchies as requested
 		// Collects all created component hierarchies
-		val hierarchiesBuilder = new VectorBuilder[SeedHierarchyBlock]()
-		val moreHierarchiesIterator = Iterator.continually[ComponentHierarchy] {
+		// val hierarchiesBuilder = new VectorBuilder[SeedHierarchyBlock]()
+		val moreHierarchiesIterator = Iterator.continually[ComponentHierarchy] { new SeedHierarchyBlock(canvas) }
+			/*
 			val hierarchy = new SeedHierarchyBlock(canvas)
-			hierarchiesBuilder += hierarchy
+			// hierarchiesBuilder += hierarchy
 			hierarchy
-		}
-		// Combines the created components with the created component hierarchies (amounts should match)
+		}*/
+		// Wraps the created components
+		creation(moreHierarchiesIterator).mapComponent {
+			_.iterator.flatMap { component =>
+				// Components must use provided seed hierarchies
+				component.component.parentHierarchy match
+				{
+					case seed: SeedHierarchyBlock => Some(new OpenComponent(component, seed))
+					case _ => None
+				}
+			}.toVector
+		}/*
 		creation(moreHierarchiesIterator).mapComponent {
 			_.iterator.zip(hierarchiesBuilder.result()).map { case (result, hierarchy) =>
 				new OpenComponent(result, hierarchy)
 			}.toVector
-		}
+		}*/
 	}
 	
 	/**
@@ -100,7 +109,7 @@ object Open
 	  * @tparam C Type of created components
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def manyUsing[F, C, CR, R](factory: ComponentFactoryFactory[F])
+	def manyUsing[F, C <: ReachComponentLike, CR, R](factory: ComponentFactoryFactory[F])
 							  (creation: Iterator[F] => CreationsResult[C, CR, R])
 							  (implicit canvas: ReachCanvas) =
 		many[C, CR, R] { hierarchies => creation(hierarchies.map(factory.apply)) }
@@ -144,7 +153,7 @@ object Open
 	  * @tparam F Type of component creation factory
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def manyWithContext[C, CR, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	def manyWithContext[C <: ReachComponentLike, CR, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F], context: N)
 	(creation: Iterator[F[N]] => CreationsResult[C, CR, R])
 	(implicit canvas: ReachCanvas) =
@@ -184,7 +193,7 @@ object Open
 	  * @tparam F Type of component creation factory
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def contextualMany[C, CR, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	def contextualMany[C <: ReachComponentLike, CR, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])
 	(creation: Iterator[F[N]] => CreationsResult[C, CR, R])
 	(implicit canvas: ReachCanvas, context: N) =

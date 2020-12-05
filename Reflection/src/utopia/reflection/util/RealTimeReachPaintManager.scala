@@ -3,6 +3,7 @@ package utopia.reflection.util
 import java.awt.Toolkit
 import javax.swing.RepaintManager
 import utopia.flow.async.{Volatile, VolatileOption}
+import utopia.genesis.color.Color
 import utopia.genesis.image.Image
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
@@ -58,26 +59,11 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	{
 		// tracker.checkPoint("Starting full repaint")
 		// Checks whether component size changed. Invalidates buffer if so.
-		val currentSize = canvas.size
+		val currentSize = component.size
 		val sizeWasChanged = bufferSizePointer.pop { old => (old != currentSize) -> currentSize }
 		if (sizeWasChanged)
-		{
-			/*
-			drawer.onlyFill(Color.magenta).draw(Bounds(Point.origin, currentSize))
-			bufferPointer.pop().foreach { buffer => buffer.drawWith(drawer) }
-			println("Painted placeholder")
-			 */
 			bufferPointer.clear()
-		}
-		// Draws the updated image
 		flatten().drawWith(drawer)
-		
-		// Paints the cursor afterwards
-		/*
-		tracker.checkPoint("Painting cursor")
-		cursor.foreach { case (point, image) => image.drawWith(drawer, point) }
-		tracker.checkPoint("Finished cursor painting")
-		 */
 	}
 	
 	override def repaint(region: Option[Bounds], priority: Priority) = region.map { _.ceil } match

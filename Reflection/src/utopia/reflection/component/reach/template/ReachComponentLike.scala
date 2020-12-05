@@ -2,13 +2,18 @@ package utopia.reflection.component.reach.template
 
 import utopia.flow.datastructure.immutable.Tree
 import utopia.flow.event.Changing
+import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
+import utopia.reflection.component.reach.wrapper.ComponentCreationResult
 import utopia.reflection.component.template.layout.stack.Stackable2
+import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
+import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.Never
+import utopia.reflection.shape.Alignment
 import utopia.reflection.text.Font
 import utopia.reflection.util.Priority
 
@@ -236,4 +241,21 @@ trait ReachComponentLike extends Stackable2
 	  */
 	def addHierarchyListener[U](listener: Boolean => U) = parentHierarchy.linkPointer.addListener(e =>
 		listener(e.newValue), Some(false))
+	
+	/**
+	  * Creates a pop-up next to this component
+	  * @param actorHandler Actor handler that will deliver action events for the pop-up
+	  * @param alignment Alignment to use when placing the pop-up (default = Right)
+	  * @param margin Margin to place between this component and the pop-up (not used with Center alignment)
+	  * @param autoCloseLogic Logic used for closing the pop-up (default = won't automatically close the pop-up)
+	  * @param makeContent A function for producing pop-up contents based on a component hierarchy
+	  * @tparam C Type of created component
+	  * @tparam R Type of additional result
+	  * @return A component wrapping result that contains the pop-up, the created component inside the canvas and
+	  *         the additional result returned by 'makeContent'
+	  */
+	def createPopup[C <: ReachComponentLike, R](actorHandler: ActorHandler, alignment: Alignment = Alignment.Right,
+											  margin: Double = 0.0, autoCloseLogic: PopupAutoCloseLogic = Never)
+											 (makeContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
+		parentCanvas.createPopup(actorHandler, boundsInsideTop, alignment, margin, autoCloseLogic)(makeContent)
 }
