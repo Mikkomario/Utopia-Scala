@@ -2,6 +2,7 @@ package utopia.reflection.util
 
 import utopia.genesis.shape.shape2D.{Bounds, Vector2D}
 import utopia.genesis.util.Drawer
+import utopia.reflection.color.ColorShadeVariant
 import utopia.reflection.util.Priority.Normal
 
 /**
@@ -35,6 +36,12 @@ trait PaintManager
 	  * @param transition Amount of translation applied to the region
 	  */
 	def shift(originalArea: Bounds, transition: Vector2D): Unit
+	
+	/**
+	  * @param area A sub-region of the painted / managed region
+	  * @return The average shade (dark or light) of the targeted area
+	  */
+	def averageShadeOf(area: Bounds): ColorShadeVariant
 	
 	
 	// OTHER	-------------------------------

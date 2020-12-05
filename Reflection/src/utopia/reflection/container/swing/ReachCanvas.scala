@@ -1,27 +1,25 @@
 package utopia.reflection.container.swing
 
 import java.awt.event.KeyEvent
-import java.awt.image.BufferedImage
-import java.awt.{AWTKeyStroke, Container, Graphics, KeyboardFocusManager, Toolkit}
+import java.awt.{AWTKeyStroke, Container, Graphics, KeyboardFocusManager}
 import java.util
 import javax.swing.{JComponent, JPanel}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.util.TimeExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Vector2D}
+import utopia.genesis.shape.shape2D.{Bounds, Point, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
-import utopia.reflection.color.ColorShade.{Dark, Light}
+import utopia.reflection.color.ColorShade.Dark
+import utopia.reflection.color.ColorShadeVariant
 import utopia.reflection.component.drawing.mutable.CustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.ReachComponentLike
 import utopia.reflection.component.reach.wrapper.ComponentCreationResult
@@ -30,12 +28,10 @@ import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.cursor.{CursorSet, ReachCursorManager}
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.StackSize
-import utopia.reflection.util.Priority.VeryHigh
-import utopia.reflection.util.{AwtEventThread, Priority, ReachFocusManager, RealTimeReachPaintManager}
+import utopia.reflection.util.{Priority, ReachFocusManager, RealTimeReachPaintManager}
 
 import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.Try
 
 object ReachCanvas
 {
@@ -83,13 +79,13 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	  * Object that manages focus between the components in this canvas element
 	  */
 	val focusManager = new ReachFocusManager(panel)
+	private val painterPromise = contentFuture.map { c => RealTimeReachPaintManager(c) /*{
+		cursorPainter.flatMap { _.cursor } } { cursorPainter.map { _.cursorBounds } }*/ }
 	/**
 	  * Object that manages cursor display inside this canvas. None if cursor state is not managed in this canvas.
 	  */
 	val cursorManager = cursors.map { new ReachCursorManager(_) }
 	private val cursorPainter = cursorManager.map { new CursorSwapper(_) }
-	private val painterPromise = contentFuture.map { c => RealTimeReachPaintManager(c) /*{
-		cursorPainter.flatMap { _.cursor } } { cursorPainter.map { _.cursorBounds } }*/ }
 	
 	private val _attachmentPointer = new PointerWithEvents(false)
 	
@@ -389,6 +385,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		
 		// OTHER	-----------------------------
 		
+		/*
 		private def paintWith(drawer: Drawer, area: Option[Bounds]) =
 		{
 			// Draws background, if defined
@@ -415,7 +412,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 				val d = area.map(drawer.clippedTo).getOrElse(drawer)
 				drawers.foreach { _.draw(d, fullDrawBounds) }
 			}
-		}
+		}*/
 	}
 	
 	private object FocusKeyListener extends KeyStateListener
@@ -587,6 +584,10 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		private var lastMousePosition = Point.origin
 		private var lastCursorImage: Option[Image] = None
 		
+		private val shadeCalculatorFuture = painterPromise.map[Bounds => ColorShadeVariant] { painter =>
+			area => painter.averageShadeOf(area)
+		}
+		
 		
 		// COMPUTED	---------------------------------
 		
@@ -628,8 +629,13 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 				lastMousePosition = newPosition
 				if (bounds.contains(event.mousePosition))
 				{
-					val shade = Dark // TODO: Add actual calculation
-					val newImage = cursorManager.cursorImageAt(newPosition)(_ => shade)
+					val newImage = cursorManager.cursorImageAt(newPosition) { area =>
+						shadeCalculatorFuture.currentSuccess  match
+						{
+							case Some(calculate) => calculate(area)
+							case None => Dark
+						}
+					}
 					if (!lastCursorImage.contains(newImage))
 					{
 						lastCursorImage = Some(newImage)

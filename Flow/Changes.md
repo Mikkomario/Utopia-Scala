@@ -18,24 +18,45 @@
 in a lazy container is not required or desirable
 - Added WeakCache
 ### New Methods
-- Added .notCompletingBefore(Future) to Future in AsyncExtensions
-- Added .subRangeIterator(Int) to Range.Inclusive in CollectionExtensions
-- Added .takeRightWhile(...), maxIndexBy(...), minIndexBy(...), maxOptionIndexBy(...) and minOptionIndexBy(...) to 
-Seq in CollectionExtensions
-- Added new .slice(Range), .cut(Range) and .stripControlCharacters to String though StringExtensions
-- Added .toPreciseMinutes, .toPreciseHours, .toPreciseDays and .toPreciseWeeks to Duration in TimeExtensions
-- Added multiple new file write and append methods to FileExtensions
-- Added .getAndUpdate(...) to Volatile
-- Added .delayedBy(Duration) to Changing
-- Added .mapAsync(...), .tryMapAsync(...), .mapAsyncCatching(...) and .mapAsyncMerging(...) to Changing
-- Added .current() to WeekDay
-- Added .takeRightWhile(...) to Seq in CollectionExtensions
-- Added .toSimpleModel and some other methods to XmlElement
-    - This new method allows somewhat heuristic xml to json conversion
-- Added .popAll() to VolatileList
-- Added .compareBy(...), .compareWith(...), .merge(...) and .mergeBy(...) methods to ChangeEvent
-- Added .onAnyChange(...) to ChangeListener (type)
-- Added .releasing(...) to TryCache
+- AsyncExtensions
+  - Future
+    - .notCompletedBefore(Future)
+    - .currentSuccess
+- CollectionExtensions
+  - Range.Inclusive
+    - .subRangeIterator(Int)
+  - Seq
+    - .takeRightWhile(...)
+    - .maxIndexBy(...), minIndexBy(...), maxOptionIndexBy(...), minOptionIndexBy(...)
+- FileExtensions
+  - Path
+    - Multiple new file write and append methods
+- StringExtensions
+  - String
+    - .slice(Range) & .cut(Range)
+    - .stripControlCharacters
+- TimeExtensions
+  - Duration
+    - .toPreciseMinutes, .toPreciseHours, .toPreciseDays and .toPreciseWeeks
+- ChangeEvent
+  - .compareBy(...) and .compareWith(...)
+  - .merge(...) and .mergeBy(...)
+- ChangeListener.type
+  - .onAnyChange(...)
+- Changing
+  - .delayedBy(Duration)
+  - .mapAsync(...), .tryMapAsync(...), .mapAsyncCatching(...) and .mapAsyncMerging(...)
+- TryCache.type
+  - .releasing(...)
+- Volatile
+  - .getAndUpdate(...)
+- VolatileList
+  - .popAll()
+- WeekDay.type
+  - .current()
+- XmlElement
+  - .toSimpleModel, which allows somewhat heuristic xml to json conversion
+  - Other utility methods
 
 ### Fixes
 - Fixed a bug in LocalDate.next(WeekDay) and LocalDate.previous(WeekDay) (returned same day even when 

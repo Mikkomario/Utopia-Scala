@@ -66,6 +66,11 @@ object AsyncExtensions
 		def current = if (f.isCompleted) Some(waitFor()) else None
 		
 		/**
+		  * @return Current result of this future, if completed and successful. None otherwise.
+		  */
+		def currentSuccess = current.flatMap { _.toOption }
+		
+		/**
 		 * Makes this future "race" with another future so that only the earliest result is returned
 		 * @param other Another future
 		 * @param exc Execution context (implicit)

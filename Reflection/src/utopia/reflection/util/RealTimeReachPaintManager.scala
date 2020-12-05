@@ -8,6 +8,7 @@ import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Vector2D}
 import utopia.genesis.util.Drawer
+import utopia.reflection.color.ColorShadeVariant
 import utopia.reflection.component.reach.template.ReachComponentLike
 
 import scala.collection.immutable.VectorBuilder
@@ -68,38 +69,8 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 			 */
 			bufferPointer.clear()
 		}
-		
-		// Updates the buffer, then paints it
-		val (shouldAddUpdates, baseImage) = bufferPointer.pop {
-			case Some(existing) => (true, existing) -> Some(existing)
-			case None =>
-				val newImage = component.toImage
-				(false, newImage) -> Some(newImage)
-		}
-		val imageToPaint =
-		{
-			if (shouldAddUpdates)
-			{
-				// If the update buffer was overfilled, recreates the buffer completely
-				queuedUpdatesPointer.getAndSet(Some(Vector())) match
-				{
-					case Some(updates) =>
-						updates.foldLeft(baseImage) { (image, update) =>
-							image.withOverlay(update._1, update._2)
-						}
-					case None =>
-						val newImage = component.toImage
-						bufferPointer.setOne(newImage)
-						newImage
-				}
-			}
-			else
-			{
-				queuedUpdatesPointer.setOne(Vector())
-				baseImage
-			}
-		}
-		imageToPaint.drawWith(drawer)
+		// Draws the updated image
+		flatten().drawWith(drawer)
 		
 		// Paints the cursor afterwards
 		/*
@@ -202,8 +173,57 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 		}
 	}
 	
+	// Updates the buffer and processes data from the image
+	override def averageShadeOf(area: Bounds) =
+		ColorShadeVariant.forLuminosity(flatten().averageLuminosityOf(area))
+	
 	
 	// OTHER	-------------------------------------
+	
+	// Makes sure the buffer is updated (prepares the buffer applies any queued updates)
+	private def flatten() =
+	{
+		// Prepares the buffer
+		val (shouldAddUpdates, baseImage) = bufferPointer.pop {
+			case Some(existing) => (true, existing) -> Some(existing)
+			case None =>
+				val newImage = component.toImage
+				(false, newImage) -> Some(newImage)
+		}
+		
+		// Applies or discards updates
+		if (shouldAddUpdates)
+		{
+			// If the update buffer was overfilled (None), recreates the buffer completely
+			queuedUpdatesPointer.getAndSet(Some(Vector())) match
+			{
+				// Case: Update buffer was not overfilled
+				case Some(updates) =>
+					// Case: There were updates queued => Updates the buffer also
+					if (updates.nonEmpty)
+					{
+						val newImage = updates.foldLeft(baseImage) { (image, update) =>
+							image.withOverlay(update._1, update._2)
+						}
+						bufferPointer.setOne(newImage)
+						newImage
+					}
+					// Case: No updates were queued
+					else
+						baseImage
+				// Case: There were too many updates
+				case None =>
+					val newImage = component.toImage
+					bufferPointer.setOne(newImage)
+					newImage
+			}
+		}
+		else
+		{
+			queuedUpdatesPointer.setOne(Vector())
+			baseImage
+		}
+	}
 	
 	// Pass None if whole component should be painted
 	private def paintQueue(first: Option[Bounds]) =
