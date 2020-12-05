@@ -83,6 +83,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	override def repaint(region: Option[Bounds], priority: Priority) = region.map { _.ceil } match
 	{
 		case Some(region) =>
+			println(s"Repainting $region")
 			// tracker.checkPoint("Starting region painting")
 			// Extends the queue. May start the drawing process as well
 			val firstDrawArea = queuePointer.pop { case (processing, queue) =>

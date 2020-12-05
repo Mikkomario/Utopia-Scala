@@ -59,6 +59,11 @@ class ComponentWrapResult[+P, +C, +R](val parent: P, val child: C, val result: R
 	  */
 	def parentAndResult = parent -> result
 	
+	/**
+	  * @return A component creation result based on this wrap result
+	  */
+	def toCreationResult = ComponentCreationResult(parent, result)
+	
 	
 	// OTHER	----------------------------
 	

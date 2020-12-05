@@ -9,7 +9,8 @@ import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.factory.{ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.{CustomDrawReachComponent, ReachComponentLike}
-import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
+import utopia.reflection.component.reach.wrapper.ComponentCreationResult.SwitchableCreations
+import utopia.reflection.component.reach.wrapper.{ComponentWrapResult, Open, OpenComponent}
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.stack.template.layout.StackLike2
@@ -25,6 +26,11 @@ object ViewStack extends ContextInsertableComponentFactoryFactory[BaseContextLik
 case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 	extends ContextInsertableComponentFactory[BaseContextLike, ContextualViewStackFactory]
 {
+	// COMPUTED	----------------------------------
+	
+	private implicit def canvas: ReachCanvas = parentHierarchy.top
+	
+	
 	// IMPLEMENTED	------------------------------
 	
 	override def withContext[N <: BaseContextLike](context: N) =
@@ -84,12 +90,57 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 												customDrawers: Vector[CustomDrawer] = Vector()) =
 		apply[C](content, Changing.wrap(direction), Changing.wrap(layout), Changing.wrap(margin), Changing.wrap(cap),
 			customDrawers)
+	
+	/**
+	  * Creates a new stack with content aligned with that of some other container
+	  * @param group A segmented group that defines content alignment
+	  * @param content Content to place on this stack. Each component is paired with an optional pointer that
+	  *                determines whether it should be connected to this stack.
+	  *                None is considered to always be connected.
+	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
+	  * @param marginPointer A pointer to the margin between the items in this stack (default = always any, preferring 0)
+	  * @param capPointer A pointer to the cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers applied to this stack (default = empty)
+	  * @return A new stack
+	  */
+	def segmented(group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, Option[Changing[Boolean]]]],
+				  layoutPointer: Changing[StackLayout] = Changing.wrap(Fit),
+				  marginPointer: Changing[StackLength] = Changing.wrap(StackLength.any),
+				  capPointer: Changing[StackLength] = Changing.wrap(StackLength.fixedZero),
+				  customDrawers: Vector[CustomDrawer] = Vector()) =
+	{
+		val wrappers = Open.many { hierarchies =>
+			group.wrap(content) { hierarchies.next() }.map { _.parentAndResult }
+		}.component
+		apply(wrappers, Changing.wrap(group.rowDirection), layoutPointer, marginPointer, capPointer, customDrawers)
+	}
+	
+	/**
+	  * Creates a new stack with content aligned with that of some other container
+	  * @param group A segmented group that defines content alignment
+	  * @param content Content to place on this stack. Each component is paired with an optional pointer that
+	  *                determines whether it should be connected to this stack.
+	  *                None is considered to always be connected.
+	  * @param layout this stack's layout (default = Fit)
+	  * @param margin the margin between the items in this stack (default = any, preferring 0)
+	  * @param cap the cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers applied to this stack (default = empty)
+	  * @return A new stack
+	  */
+	def segmentedWithFixedStyle(group: SegmentGroup,
+								content: Vector[OpenComponent[ReachComponentLike, Option[Changing[Boolean]]]],
+								layout: StackLayout = Fit, margin: StackLength = StackLength.any,
+								cap: StackLength = StackLength.fixedZero,
+								customDrawers: Vector[CustomDrawer] = Vector()) =
+		segmented(group, content, Changing.wrap(layout), Changing.wrap(margin), Changing.wrap(cap), customDrawers)
 }
 
 case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewStackFactory, context: N)
 	extends ContextualComponentFactory[N, BaseContextLike, ContextualViewStackFactory]
 {
 	// COMPUTED	------------------------------------
+	
+	private implicit def canvas: ReachCanvas = stackFactory.parentHierarchy.top
 	
 	/**
 	  * @return A version of this factory which doesn't utilize component creation context
@@ -193,6 +244,50 @@ case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewSt
 											   customDrawers: Vector[CustomDrawer] = Vector()) =
 		stackFactory[C](content, Changing.wrap(direction), Changing.wrap(layout), Changing.wrap(StackLength.fixedZero),
 			Changing.wrap(cap), customDrawers)
+	
+	/**
+	  * Creates a new stack with content aligned with that of some other container
+	  * @param group A segmented group that defines content alignment
+	  * @param content Content to place on this stack. Each component is paired with an optional pointer that
+	  *                determines whether it should be connected to this stack.
+	  *                None is considered to always be connected.
+	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
+	  * @param marginPointer A pointer to the margin between the items in this stack (default = determined by context)
+	  * @param capPointer A pointer to the cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers applied to this stack (default = empty)
+	  * @return A new stack
+	  */
+	def segmented(group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, Option[Changing[Boolean]]]],
+				  layoutPointer: Changing[StackLayout] = Changing.wrap(Fit),
+				  marginPointer: Changing[StackLength] = Changing.wrap(context.defaultStackMargin),
+				  capPointer: Changing[StackLength] = Changing.wrap(StackLength.fixedZero),
+				  customDrawers: Vector[CustomDrawer] = Vector()) =
+	{
+		val wrappers = Open.many { hierarchies =>
+			group.wrap(content) { hierarchies.next() }.map { _.parentAndResult }
+		}.component
+		apply(wrappers, Changing.wrap(group.rowDirection), layoutPointer, marginPointer, capPointer, customDrawers)
+	}
+	
+	/**
+	  * Creates a new stack with content aligned with that of some other container
+	  * @param group A segmented group that defines content alignment
+	  * @param content Content to place on this stack. Each component is paired with an optional pointer that
+	  *                determines whether it should be connected to this stack.
+	  *                None is considered to always be connected.
+	  * @param layout this stack's layout (default = Fit)
+	  * @param cap the cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers applied to this stack (default = empty)
+	  * @param areRelated Whether the items in this stack should be considered closely related (affects margin used)
+	  *                   (default = false)
+	  * @return A new stack
+	  */
+	def segmentedWithFixedStyle(group: SegmentGroup,
+								content: Vector[OpenComponent[ReachComponentLike, Option[Changing[Boolean]]]],
+								layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
+								customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false) =
+		stackFactory.segmentedWithFixedStyle(group, content, layout,
+			if (areRelated) context.defaultStackMargin else context.relatedItemsStackMargin, cap, customDrawers)
 }
 
 class ViewStackBuilder[+F](factory: ViewStackFactory, contentFactory: ComponentFactoryFactory[F])
@@ -224,7 +319,7 @@ class ViewStackBuilder[+F](factory: ViewStackFactory, contentFactory: ComponentF
 									   marginPointer: Changing[StackLength] = Changing.wrap(StackLength.any),
 									   capPointer: Changing[StackLength] = Changing.wrap(StackLength.fixedZero),
 									   customDrawers: Vector[CustomDrawer] = Vector())
-									  (fill: Iterator[F] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R]) =
+									  (fill: Iterator[F] => SwitchableCreations[C, R]) =
 	{
 		val content = Open.manyUsing(contentFactory)(fill)
 		factory(content.component, directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
@@ -250,9 +345,56 @@ class ViewStackBuilder[+F](factory: ViewStackFactory, contentFactory: ComponentF
 												margin: StackLength = StackLength.any,
 												cap: StackLength = StackLength.fixedZero,
 												customDrawers: Vector[CustomDrawer] = Vector())
-											   (fill: Iterator[F] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R]) =
+												  (fill: Iterator[F] => SwitchableCreations[C, R]) =
 		apply[C, R](Changing.wrap(direction), Changing.wrap(layout), Changing.wrap(margin), Changing.wrap(cap),
 			customDrawers)(fill)
+	
+	/**
+	  * Builds a new segmented stack
+	  * @param group A segmented group that defines content alignment
+	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
+	  * @param marginPointer A pointer to the margin between the items in this stack (default = always any, preferring 0)
+	  * @param capPointer A pointer to the cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers applied to this stack (default = empty)
+	  * @param fill A function for producing the contents inside this stack. Accepts an infinite iterator that produces
+	  *             a component factory for each component separately. Returns possibly multiple components, with their
+	  *             individual connection pointers (if defined). The number of returned components should match exactly
+	  *             the number of calls to the passed iterator's next(). Sharing a component hierarchy or a factory
+	  *             between multiple components is not allowed.
+	  * @tparam R Type of additional creation result
+	  * @return A new stack
+	  */
+	def segmented[R](group: SegmentGroup, layoutPointer: Changing[StackLayout] = Changing.wrap(Fit),
+					 marginPointer: Changing[StackLength] = Changing.wrap(StackLength.any),
+					 capPointer: Changing[StackLength] = Changing.wrap(StackLength.fixedZero),
+					 customDrawers: Vector[CustomDrawer] = Vector())
+					(fill: Iterator[F] => SwitchableCreations[ReachComponentLike, R]) =
+	{
+		val content = Open.manyUsing(contentFactory)(fill)
+		factory.segmented(group, content.component, layoutPointer, marginPointer, capPointer, customDrawers)
+			.withResult(content.result)
+	}
+	
+	/**
+	  * Builds a new segmented stack
+	  * @param group A segmented group that defines content alignment
+	  * @param layout this stack's layout (default = Fit)
+	  * @param margin the margin between the items in this stack (default = any, preferring 0)
+	  * @param cap the cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers applied to this stack (default = empty)
+	  * @param fill A function for producing the contents inside this stack. Accepts an infinite iterator that produces
+	  *             a component factory for each component separately. Returns possibly multiple components, with their
+	  *             individual connection pointers (if defined). The number of returned components should match exactly
+	  *             the number of calls to the passed iterator's next(). Sharing a component hierarchy or a factory
+	  *             between multiple components is not allowed.
+	  * @tparam R Type of additional creation result
+	  * @return A new stack
+	  */
+	def segmentedWithFixedStyle[R](group: SegmentGroup, layout: StackLayout = Fit,
+								   margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixedZero,
+								   customDrawers: Vector[CustomDrawer] = Vector())
+								  (fill: Iterator[F] => SwitchableCreations[ReachComponentLike, R]) =
+		segmented(group, Changing.wrap(layout), Changing.wrap(margin), Changing.wrap(cap), customDrawers)(fill)
 }
 
 class ContextualViewStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
@@ -293,7 +435,7 @@ class ContextualViewStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualC
 									   marginPointer: Changing[StackLength] = Changing.wrap(context.defaultStackMargin),
 									   capPointer: Changing[StackLength] = Changing.wrap(StackLength.fixedZero),
 									   customDrawers: Vector[CustomDrawer] = Vector())
-									  (fill: Iterator[F[N]] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R]) =
+									  (fill: Iterator[F[N]] => SwitchableCreations[C, R]) =
 	{
 		val content = Open.manyWithContext(contentFactory, stackFactory.context)(fill)
 		stackFactory(content.component, directionPointer, layoutPointer, marginPointer, capPointer, customDrawers)
@@ -320,7 +462,7 @@ class ContextualViewStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualC
 													   cap: StackLength = StackLength.fixedZero,
 													   customDrawers: Vector[CustomDrawer] = Vector(),
 													   areRelated: Boolean = false)
-													  (fill: Iterator[F[N]] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R]) =
+													  (fill: Iterator[F[N]] => SwitchableCreations[C, R]) =
 		apply[C, R](directionPointer, Changing.wrap(layout),
 			Changing.wrap(if (areRelated) context.defaultStackMargin else context.relatedItemsStackMargin),
 			Changing.wrap(cap), customDrawers)(fill)
@@ -345,8 +487,58 @@ class ContextualViewStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualC
 												cap: StackLength = StackLength.fixedZero,
 												customDrawers: Vector[CustomDrawer] = Vector(),
 												areRelated: Boolean = false)
-											   (fill: Iterator[F[N]] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R]) =
+											   (fill: Iterator[F[N]] => SwitchableCreations[C, R]) =
 		withChangingDirection[C, R](Changing.wrap(direction), layout, cap, customDrawers, areRelated)(fill)
+	
+	/**
+	  * Builds a new segmented stack
+	  * @param group A segmented group that defines content alignment
+	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
+	  * @param marginPointer A pointer to the margin between the items in this stack (default = always any, preferring 0)
+	  * @param capPointer A pointer to the cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers applied to this stack (default = empty)
+	  * @param fill A function for producing the contents inside this stack. Accepts an infinite iterator that produces
+	  *             a component factory for each component separately. Returns possibly multiple components, with their
+	  *             individual connection pointers (if defined). The number of returned components should match exactly
+	  *             the number of calls to the passed iterator's next(). Sharing a component hierarchy or a factory
+	  *             between multiple components is not allowed.
+	  * @tparam R Type of additional creation result
+	  * @return A new stack
+	  */
+	def segmented[R](group: SegmentGroup, layoutPointer: Changing[StackLayout] = Changing.wrap(Fit),
+					 marginPointer: Changing[StackLength] = Changing.wrap(context.defaultStackMargin),
+					 capPointer: Changing[StackLength] = Changing.wrap(StackLength.fixedZero),
+					 customDrawers: Vector[CustomDrawer] = Vector())
+					(fill: Iterator[F[N]] => SwitchableCreations[ReachComponentLike, R]) =
+	{
+		val content = Open.manyWithContext(contentFactory, context)(fill)
+		stackFactory.segmented(group, content.component, layoutPointer, marginPointer, capPointer, customDrawers)
+			.withResult(content.result)
+	}
+	
+	/**
+	  * Builds a new segmented stack
+	  * @param group A segmented group that defines content alignment
+	  * @param layout this stack's layout (default = Fit)
+	  * @param cap the cap placed at each end of this stack (default = always 0)
+	  * @param customDrawers Custom drawers applied to this stack (default = empty)
+	  * @param areRelated Whether the items in this stack should be considered closely related (affects margin used)
+	  *                   (default = false)
+	  * @param fill A function for producing the contents inside this stack. Accepts an infinite iterator that produces
+	  *             a component factory for each component separately. Returns possibly multiple components, with their
+	  *             individual connection pointers (if defined). The number of returned components should match exactly
+	  *             the number of calls to the passed iterator's next(). Sharing a component hierarchy or a factory
+	  *             between multiple components is not allowed.
+	  * @tparam R Type of additional creation result
+	  * @return A new stack
+	  */
+	def segmentedWithFixedStyle[R](group: SegmentGroup, layout: StackLayout = Fit,
+								   cap: StackLength = StackLength.fixedZero,
+								   customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
+								  (fill: Iterator[F[N]] => SwitchableCreations[ReachComponentLike, R]) =
+		segmented(group, Changing.wrap(layout),
+			Changing.wrap(if (areRelated) context.defaultStackMargin else context.relatedItemsStackMargin),
+			Changing.wrap(cap), customDrawers)(fill)
 }
 
 /**

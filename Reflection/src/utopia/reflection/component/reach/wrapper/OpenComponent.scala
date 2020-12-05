@@ -11,6 +11,7 @@ import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.reach.factory.{ComponentFactoryFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reflection.component.reach.template.ReachComponentLike
+import utopia.reflection.component.reach.wrapper.ComponentCreationResult.CreationsResult
 import utopia.reflection.container.reach.{Framing, Stack}
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
@@ -38,20 +39,21 @@ object Open
 	}
 	
 	/**
-	  * Creates a number of new open components at once. This method should be used only when the components have
-	  * individual conditions for connecting with the parent component. If the components share a condition or don't
-	  * use one, one should use .apply(...) instead.
+	  * Creates a number of new open components at once. This method should be used only when the components won't
+	  * share the same container. If the components will be placed in identical container hierarchies,
+	  * apply(...) should be used instead.
 	  * @param creation A creation function that accepts an infinite iterator that provides new component hierarchies.
-	  *                 Returns the created components, along with pointers that indicate whether those components
-	  *                 should be attached to the parent component or not. The number of returned items should match
-	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
-	  *                 to share a created hierarchy between multiple components.
+	  *                 Returns the created components, along optional additional results.
+	  *                 The number of returned items should match exactly the number of new component hierarchies
+	  *                 requested from the iterator. It is not allowed to share a created hierarchy between multiple
+	  *                 components.
 	  * @param canvas Canvas element that will ultimately host these components (implicit)
 	  * @tparam C Type of created components
-	  * @return New open components, with their connection pointers as results (if defined)
+	  * @return New open components, with additional results included (if defined). Also contains the primary
+	  *         additional creation result.
 	  */
-	def many[C, R](creation: Iterator[ComponentHierarchy] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R])
-				  (implicit canvas: ReachCanvas) =
+	def many[C, CR, R](creation: Iterator[ComponentHierarchy] => CreationsResult[C, CR, R])
+					  (implicit canvas: ReachCanvas) =
 	{
 		// Provides the creation function with an infinite iterator that creates new component hierarchies as requested
 		// Collects all created component hierarchies
@@ -64,8 +66,7 @@ object Open
 		// Combines the created components with the created component hierarchies (amounts should match)
 		creation(moreHierarchiesIterator).mapComponent {
 			_.iterator.zip(hierarchiesBuilder.result()).map { case (result, hierarchy) =>
-				val (component, connectPointer) = result
-				new OpenComponent(ComponentCreationResult(component, connectPointer), hierarchy)
+				new OpenComponent(result, hierarchy)
 			}.toVector
 		}
 	}
@@ -85,11 +86,11 @@ object Open
 		apply { hierarchy => creation(factory(hierarchy)) }
 	
 	/**
-	  * Creates a number of new open components at once. This method should be used only when the components have
-	  * individual conditions for connecting with the parent component. If the components share a condition or don't
-	  * use one, one should use .apply(...) instead.
+	  * Creates a number of new open components at once. This method should be used only when the components won't
+	  * share the same container. If the components will be placed in identical container hierarchies,
+	  * apply(...) should be used instead.
 	  * @param factory A factory that produces component factories
-	  * @param creation A creation function that accepts an infinite iterator that provides new component hierarchies.
+	  * @param creation A creation function that accepts an infinite iterator that provides new component factories.
 	  *                 Returns the created components, along with pointers that indicate whether those components
 	  *                 should be attached to the parent component or not. The number of returned items should match
 	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
@@ -99,10 +100,10 @@ object Open
 	  * @tparam C Type of created components
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def manyUsing[F, C, R](factory: ComponentFactoryFactory[F])
-					   (creation: Iterator[F] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R])
-					   (implicit canvas: ReachCanvas) =
-		many[C, R] { hierarchies => creation(hierarchies.map(factory.apply)) }
+	def manyUsing[F, C, CR, R](factory: ComponentFactoryFactory[F])
+							  (creation: Iterator[F] => CreationsResult[C, CR, R])
+							  (implicit canvas: ReachCanvas) =
+		many[C, CR, R] { hierarchies => creation(hierarchies.map(factory.apply)) }
 	
 	/**
 	  * Creates a new open component using a contextual component factory
@@ -127,12 +128,12 @@ object Open
 	}
 	
 	/**
-	  * Creates a number of new open components at once. This method should be used only when the components have
-	  * individual conditions for connecting with the parent component. If the components share a condition or don't
-	  * use one, one should use .apply(...) instead.
+	  * Creates a number of new open components at once. This method should be used only when the components won't
+	  * share the same container. If the components will be placed in identical container hierarchies,
+	  * apply(...) should be used instead.
 	  * @param factory A factory that produces context-aware component factories
 	  * @param context Component creation context used in the produced factories
-	  * @param creation A creation function that accepts an infinite iterator that provides new component hierarchies.
+	  * @param creation A creation function that accepts an infinite iterator that provides new component factories.
 	  *                 Returns the created components, along with pointers that indicate whether those components
 	  *                 should be attached to the parent component or not. The number of returned items should match
 	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
@@ -143,9 +144,9 @@ object Open
 	  * @tparam F Type of component creation factory
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def manyWithContext[C, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	def manyWithContext[C, CR, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F], context: N)
-	(creation: Iterator[F[N]] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R])
+	(creation: Iterator[F[N]] => CreationsResult[C, CR, R])
 	(implicit canvas: ReachCanvas) =
 		many { hierarchies => creation(hierarchies.map { factory.withContext(_, context) }) }
 	
@@ -167,9 +168,9 @@ object Open
 		withContext(factory, context)(creation)
 	
 	/**
-	  * Creates a number of new open components at once. This method should be used only when the components have
-	  * individual conditions for connecting with the parent component. If the components share a condition or don't
-	  * use one, one should use .apply(...) instead.
+	  * Creates a number of new open components at once. This method should be used only when the components won't
+	  * share the same container. If the components will be placed in identical container hierarchies,
+	  * apply(...) should be used instead.
 	  * @param factory A factory that produces context-aware component factories
 	  * @param creation A creation function that accepts an infinite iterator that provides new component hierarchies.
 	  *                 Returns the created components, along with pointers that indicate whether those components
@@ -183,9 +184,9 @@ object Open
 	  * @tparam F Type of component creation factory
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def contextualMany[C, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	def contextualMany[C, CR, R, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])
-	(creation: Iterator[F[N]] => ComponentCreationResult[IterableOnce[(C, Option[Changing[Boolean]])], R])
+	(creation: Iterator[F[N]] => CreationsResult[C, CR, R])
 	(implicit canvas: ReachCanvas, context: N) =
 		manyWithContext(factory, context)(creation)
 }

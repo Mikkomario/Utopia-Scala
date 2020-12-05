@@ -7,12 +7,35 @@ import scala.language.implicitConversions
 
 object ComponentCreationResult
 {
+	// TYPES	------------------------------
+	
+	/**
+	  * Component creation result without additional result value
+	  */
+	type CreationWrapper[C] = ComponentCreationResult[C, Unit]
+	
+	/**
+	  * A wrapper that wraps multiple creation results, containing an additional result of its own
+	  */
+	type CreationsResult[C, CR, R] = ComponentCreationResult[IterableOnce[ComponentCreationResult[C, CR]], R]
+	
+	/**
+	  * A wrapper that wraps multiple creation results with no additional value
+	  */
+	type CreationsWrapper[C, CR] = CreationsResult[C, CR, Unit]
+	
+	/**
+	  * Component creation result wrapping multiple components that have individual visibility states
+	  */
+	type SwitchableCreations[C, R] = CreationsResult[C, Option[Changing[Boolean]], R]
+	
+	
 	// IMPLICIT	------------------------------
 	
 	implicit def tupleToResult[C, R](tuple: (C, R)): ComponentCreationResult[C, R] =
 		new ComponentCreationResult[C, R](tuple._1, tuple._2)
 	
-	implicit def componentToResult[C <: ReachComponentLike](component: C): ComponentCreationResult[C, Unit] =
+	implicit def componentToResult[C <: ReachComponentLike](component: C): CreationWrapper[C] =
 		new ComponentCreationResult[C, Unit](component, ())
 	
 	/*
@@ -20,20 +43,19 @@ object ComponentCreationResult
 		new ComponentCreationResult[Vector[C], Unit](components, ())
 	*/
 	
-	implicit def componentVectorToResult[C <: ReachComponentLike]
-	(components: Vector[C]): ComponentCreationResult[Vector[C], Unit] =
+	implicit def componentVectorToResult[C <: ReachComponentLike](components: Vector[C]): CreationWrapper[Vector[C]] =
 		new ComponentCreationResult[Vector[C], Unit](components, ())
+	
+	implicit def componentAndVisibilityPointersToResult[C <: ReachComponentLike]
+	(components: IterableOnce[(C, Option[Changing[Boolean]])]): SwitchableCreations[C, Unit] =
+		apply(components.iterator.map { case (c, p) => apply(c, p) })
 	
 	/*
 	implicit def containerVectorToResult[P, W <: ComponentWrapResult[P, _, _]]
 	(containers: Vector[W]): ComponentCreationResult[Vector[P], Unit] =
 		new ComponentCreationResult[Vector[P], Unit](containers.map { _.parent }, ())
 	*/
-	/*
-	implicit def componentAndVisibilityPointerVectorToResult[C <: ReachComponentLike]
-	(components: Vector[(C, Option[Changing[Boolean]])]): ComponentCreationResult[Vector[(C, Option[Changing[Boolean]])], Unit] =
-		new ComponentCreationResult[Vector[(C, Option[Changing[Boolean]])], Unit](components, ())
-	*/
+	
 	implicit def wrapToResult[P, R](wrapResult: ComponentWrapResult[P, _, R]): ComponentCreationResult[P, R] =
 		new ComponentCreationResult[P, R](wrapResult.parent, wrapResult.result)
 	

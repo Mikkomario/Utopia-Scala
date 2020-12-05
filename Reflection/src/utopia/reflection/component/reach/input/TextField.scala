@@ -18,7 +18,7 @@ import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderVie
 import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.label.{ViewTextLabel, ViewTextLabelFactory}
-import utopia.reflection.component.reach.template.{MutableFocusableWrapper, ReachComponent, ReachComponentWrapper}
+import utopia.reflection.component.reach.template.{MutableFocusableWrapper, ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reflection.component.reach.wrapper.ComponentCreationResult
 import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.container.reach.{ViewStack, ViewStackFactory}
@@ -551,7 +551,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 				val (inputPart, editLabel) = makeInputArea(factories.next())
 				val hintPartAndPointer = makeHintArea(factories.next())
 				// Input part is above and below it is hint part, which may sometimes be hidden
-				(Vector(inputPart -> None) ++ hintPartAndPointer) -> editLabel
+				(Vector(ComponentCreationResult(inputPart, None)) ++ hintPartAndPointer) -> editLabel
 			}.parentAndResult
 		}
 		else
@@ -669,7 +669,8 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 			}
 			
 			// Displays one or both of the items
-			Vector(nameLabel -> Some(nameVisibilityPointer), textLabel -> None) -> textLabel
+			Vector(ComponentCreationResult(nameLabel, Some(nameVisibilityPointer)),
+				ComponentCreationResult(textLabel, None)) -> textLabel
 		}
 	}
 	
@@ -687,7 +688,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 	}
 	
 	// Returns the generated component (if any), along with its visibility pointer (if applicable)
-	private def makeHintArea(factories: => Mixed) =
+	private def makeHintArea(factories: => Mixed): Option[ComponentCreationResult[ReachComponentLike, Option[Changing[Boolean]]]] =
 	{
 		// In some cases, displays both message field and character count label
 		// In other cases only the message field (which is hidden while empty)
@@ -708,7 +709,9 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 							
 							// Hint label is only displayed while there is a hint to display,
 							// Count label is always displayed
-							ComponentCreationResult(Vector(hintLabel -> hintVisibilityPointer, countLabel -> None))
+							// TODO: Too difficult a type
+							Vector(hintLabel -> hintVisibilityPointer, countLabel -> None)
+							// ComponentCreationResult(Vector[ComponentCreationResult[ReachComponentLike, Option[Changing[Boolean]]]](hintLabel -> hintVisibilityPointer, countLabel -> None))
 						}.parent
 						Some(stack -> None)
 					// Case: Only the character count element should be displayed

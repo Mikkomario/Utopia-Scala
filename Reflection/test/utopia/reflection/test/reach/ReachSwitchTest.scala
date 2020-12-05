@@ -7,7 +7,7 @@ import utopia.reflection.component.reach.factory.Mixed
 import utopia.reflection.component.reach.input.{ContextualSwitchFactory, Switch}
 import utopia.reflection.component.reach.label.{TextLabel, ViewTextLabel}
 import utopia.reflection.component.reach.wrapper.ComponentCreationResult
-import utopia.reflection.container.reach.{Framing, Stack}
+import utopia.reflection.container.reach.{Framing, SegmentGroup, Stack}
 import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.ReachCanvas
 import utopia.reflection.container.swing.window.Frame
@@ -29,20 +29,21 @@ object ReachSwitchTest extends App
 	import utopia.reflection.test.TestContext._
 	
 	val canvas = ReachCanvas(cursors) { hierarchy =>
-		Framing(hierarchy).buildWithContext(Stack, baseContext).withBackground(colorScheme.gray, margins.medium.any) { colF =>
+		val content = Framing(hierarchy).buildWithContext(Stack, baseContext).withBackground(colorScheme.gray, margins.medium.any) { colF =>
 			colF.build(Stack).column() { rowF =>
+				val rowGroup = SegmentGroup.rows
 				// Creates a single row with 1) name label, 2) switch and 3) switch value label
 				def makeRow(fieldName: LocalizedString)(makeSwitch: ContextualSwitchFactory[ColorContext] => Switch) =
 				{
-					rowF.build(Mixed).row(layout = Center, areRelated = true) { factory =>
-						val switch = makeSwitch(factory(Switch))
+					rowF.build(Mixed).segmented(rowGroup, layout = Center, areRelated = true) { factories =>
+						val switch = makeSwitch(factories.next()(Switch))
 						ComponentCreationResult(Vector(
 							// Field name label
-							factory.mapContext { _.forTextComponents.withTextAlignment(Alignment.Right)
+							factories.next().mapContext { _.forTextComponents.withTextAlignment(Alignment.Right)
 								.mapFont { _.bold } }(TextLabel).apply(fieldName),
 							switch,
 							// Switch value label
-							factory.mapContext { _.forTextComponents }(ViewTextLabel)
+							factories.next().mapContext { _.forTextComponents }(ViewTextLabel)
 								.apply(switch.valuePointer, isHintPointer = Changing.wrap(true))
 						), switch)
 					}
@@ -57,6 +58,8 @@ object ReachSwitchTest extends App
 				).map { _.parent }
 			}
 		}
+		println(content.parent.toTree)
+		content
 	}.parent
 	
 	val frame = Frame.windowed(canvas, "Reach Test", Program)
