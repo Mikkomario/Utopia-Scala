@@ -2,7 +2,7 @@ package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.{Get, Put}
 import utopia.access.http.Status.NotFound
-import utopia.exodus.database.access.id.DescriptionRoleIds
+import utopia.exodus.database.access.id.DbDescriptionRoleIds
 import utopia.exodus.database.access.many.DbDescriptions
 import utopia.exodus.database.access.single.DbLanguage
 import utopia.exodus.model.enumeration.StandardTask.DocumentOrganization
@@ -57,7 +57,7 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends Resource[Au
 						// Returns new version of organization's descriptions (in specified language)
 						val otherDescriptions =
 						{
-							val missingRoleIds = DescriptionRoleIds.all.toSet --
+							val missingRoleIds = DbDescriptionRoleIds.all.toSet --
 								insertedDescriptions.map { _.description.roleId }.toSet
 							if (missingRoleIds.nonEmpty)
 								dbDescriptions.inLanguages(Vector(newDescription.languageId), missingRoleIds)

@@ -472,7 +472,7 @@ object Gateway
 	        None
 	    else
 	    {
-	        val paramsList = params.attributes.map(c => new BasicNameValuePair(c.name, c.value.stringOr()))
+	        val paramsList = params.attributes.map { c => new BasicNameValuePair(c.name, c.value.getString) }
 	        Some(new UrlEncodedFormEntity(paramsList.asJava, Consts.UTF_8))
 	    }
 	}

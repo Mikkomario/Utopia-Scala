@@ -23,6 +23,7 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 20.6.2020, v1
   */
+// Credentials is either basic credentials (left) or a device key (right)
 class ExodusApi(override val rootPath: String, credentials: Either[UserCredentials, String], initialSessionKey: String)
 	extends Api
 {

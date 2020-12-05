@@ -1,6 +1,6 @@
 package utopia.exodus.database.access.many
 
-import utopia.exodus.database.access.id.UserRoleIds
+import utopia.exodus.database.access.id.DbUserRoleIds
 import utopia.exodus.database.factory.organization.RoleRightFactory
 import utopia.exodus.database.model.organization.RoleRightModel
 import utopia.flow.generic.ValueConversions._
@@ -30,7 +30,7 @@ object DbUserRoles
 		// Reads all role rights
 		val rights = rightsFactory.getAll().groupBy { _.roleId }
 		// Combines roles with rights
-		UserRoleIds.all.map { roleId => RoleWithRights(roleId, rights.getOrElse(roleId, Set()).map { _.taskId }.toSet) }
+		DbUserRoleIds.all.map { roleId => RoleWithRights(roleId, rights.getOrElse(roleId, Set()).map { _.taskId }.toSet) }
 	}
 	
 	/**

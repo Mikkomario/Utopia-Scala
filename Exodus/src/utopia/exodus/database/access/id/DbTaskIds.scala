@@ -13,7 +13,7 @@ import utopia.vault.sql.Extensions._
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
-object TaskIds extends ManyIntIdAccess
+object DbTaskIds extends ManyIntIdAccess
 {
 	// IMPLEMENTED	-----------------------
 	

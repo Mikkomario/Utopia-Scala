@@ -8,7 +8,7 @@ import utopia.vault.nosql.access.ManyIntIdAccess
   * @author Mikko Hilpinen
   * @since 25.7.2020, v1
   */
-object DescriptionRoleIds extends ManyIntIdAccess
+object DbDescriptionRoleIds extends ManyIntIdAccess
 {
 	// COMPUTED	------------------------------
 	

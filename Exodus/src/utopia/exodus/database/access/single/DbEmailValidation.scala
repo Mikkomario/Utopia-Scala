@@ -1,10 +1,13 @@
 package utopia.exodus.database.access.single
 
-import utopia.exodus.database.access.id.EmailValidationId
+import utopia.access.http.Status
+import utopia.access.http.Status.{Forbidden, Unauthorized}
+import utopia.exodus.database.access.id.DbEmailValidationId
 import utopia.exodus.database.factory.user.EmailValidationFactory
 import utopia.exodus.database.model.user.EmailValidationResendModel
 import utopia.exodus.model.error.{InvalidKeyException, TooManyRequestsException}
 import utopia.exodus.model.stored.EmailValidation
+import utopia.exodus.util.EmailValidator
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.{SingleIdModelAccess, SingleModelAccess}
@@ -31,7 +34,7 @@ object DbEmailValidation extends SingleModelAccess[EmailValidation]
 	/**
 	  * @return An access point to individual validation ids
 	  */
-	def id = EmailValidationId
+	def id = DbEmailValidationId
 	
 	private def model = factory.model
 	
@@ -58,28 +61,77 @@ object DbEmailValidation extends SingleModelAccess[EmailValidation]
 		find(model.withEmail(email).withPurposeId(purposeId).toCondition)
 	
 	/**
+	  * Finds an active / open, non-actualized, non-deprecated email validation that corresponds with the specified
+	  * validation key and purpose. Performs the specified operation using this validation's data and possibly closes
+	  * it afterwards.
+	  * @param key An email validation key (usually send with the email)
+	  * @param purposeId Id of the purpose for which this key was created / for which it is being used
+	  *                  (these must match)
+	  * @param f A function called if there existed a valid matching key for the specified purpose.
+	  *          The function accepts email validation data and returns
+	  *          1) a boolean indicating whether the validation should be closed and
+	  *          2) additional final result
+	  * @param connection DB Connection (implicit)
+	  * @return The final result of the specified function on success. Failure if the specified key couldn't be
+	  *         validated for the specified purpose (key was invalid, expired, for a different purpose or
+	  *         already closed).
+	  */
+	def activateWithKey[A](key: String, purposeId: Int)(f: EmailValidation => (Boolean, A))
+						  (implicit connection: Connection) =
+		find(model.withKey(key).withPurposeId(purposeId).toCondition) match
+		{
+			// Case: Specified key is valid
+			case Some(openValidation) =>
+				// Performs the requested operation
+				val (closeValidation, result) = f(openValidation)
+				// May close / actualize this email validation
+				if (closeValidation)
+					model.withId(openValidation.id).nowActualized.update()
+				Success(result)
+			// Case: Specified key is invalid
+			case None => Failure(new InvalidKeyException("Specified email activation key is either invalid or expired"))
+		}
+	
+	/**
+	  * @param resendKey A resend key
+	  * @param connection DB Connection (implicit)
+	  * @return An email validation matching that resend key
+	  */
+	def withResendKey(resendKey: String)(implicit connection: Connection) =
+		find(model.withResendKey(resendKey).toCondition)
+	
+	/**
 	  * Records an email validation resend using the specified resend key
 	  * @param resendKey A resend key
-	  * @param maxResends Maximum number of resends allowed in total for the targeted validation
 	  * @param connection DB Connection (implicit)
-	  * @return Current number of resends for this validation. Failure if the maximum number of resends was exceeded or
-	  *         if the specified resend key was invalid.
+	  * @param validator An email validator that will perform the actual resend operation (implicit)
+	  * @return Either<br>
+	  *         Right) Unit on success or<br>
+	  *         Left) Proposed error status code and a description / message (failure state)
 	  */
-	def resendWith(resendKey: String, maxResends: Int = 5)(implicit connection: Connection) =
+	def resendWith(resendKey: String)
+				  (implicit connection: Connection, validator: EmailValidator): Either[(Status, String), Unit] =
 	{
-		id.forResendKey(resendKey) match
+		withResendKey(resendKey) match
 		{
-			case Some(validationId) => apply(validationId).recordResend(maxResends)
-			case None => Failure(new InvalidKeyException("Specified resend key is invalid or expired"))
+			case Some(validation) =>
+				// Records the resend (attempt) and checks whether maximum number of resends was exceeded
+				apply(validation.id).recordResend(validator.maximumResendsPerValidation) match
+				{
+					case Success(_) => Right(validator.resend(validation))
+					case Failure(error) => Left(Forbidden -> error.getMessage)
+				}
+			case None => Left(Unauthorized -> "Specified resend key is invalid or expired")
 		}
 	}
 	
-	/**
+	/*
 	  * Attempts to actualize / answer an email validation
 	  * @param validationKey An email validation key
 	  * @param connection DB Connection (implicit)
 	  * @return A now validated email matching that key. Failure if the specified key was invalid or expired.
 	  */
+		/*
 	def actualizeWith(validationKey: String)(implicit connection: Connection) =
 	{
 		find(model.withKey(validationKey).toCondition) match
@@ -89,7 +141,7 @@ object DbEmailValidation extends SingleModelAccess[EmailValidation]
 				Success(validation.email)
 			case None => Failure(new InvalidKeyException("Specified validation key is invalid or expired"))
 		}
-	}
+	}*/
 	
 	
 	// NESTED	----------------------------------

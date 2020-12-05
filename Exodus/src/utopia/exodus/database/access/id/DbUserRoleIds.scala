@@ -13,7 +13,7 @@ import utopia.vault.sql.{SelectDistinct, Where}
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
-object UserRoleIds extends ManyIntIdAccess
+object DbUserRoleIds extends ManyIntIdAccess
 {
 	// IMPLEMENTED	------------------------
 	
@@ -33,7 +33,7 @@ object UserRoleIds extends ManyIntIdAccess
 	  *         "below" this role.
 	  */
 	def belowOrEqualTo(roleId: Int)(implicit connection: Connection) =
-		allowingOnlyTasksWithIds(TaskIds.forRoleWithId(roleId).toSet)
+		allowingOnlyTasksWithIds(DbTaskIds.forRoleWithId(roleId).toSet)
 	
 	/**
 	  * @param roleIds A set of user role ids
@@ -41,7 +41,7 @@ object UserRoleIds extends ManyIntIdAccess
 	  * @return List of roles that allow all of, or a subset of tasks allowed for any of the specified roles
 	  */
 	def belowOrEqualTo(roleIds: Set[Int])(implicit connection: Connection) =
-		allowingOnlyTasksWithIds(TaskIds.forRoleCombination(roleIds).toSet)
+		allowingOnlyTasksWithIds(DbTaskIds.forRoleCombination(roleIds).toSet)
 	
 	/**
 	  * @param taskIds Ids of allowed tasks

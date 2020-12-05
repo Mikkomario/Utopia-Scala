@@ -9,7 +9,7 @@ import utopia.vault.nosql.access.SingleIntIdAccess
   * @author Mikko Hilpinen
   * @since 24.11.2020, v1
   */
-object EmailValidationId extends SingleIntIdAccess
+object DbEmailValidationId extends SingleIntIdAccess
 {
 	// IMPLEMENTED	--------------------------
 	
