@@ -25,6 +25,8 @@ import utopia.reflection.localization.LocalString._
   */
 object ReachTextFieldTest extends App
 {
+	System.setProperty("sun.java2d.noddraw", true.toString)
+	
 	DataType.setup()
 	
 	import TestContext._

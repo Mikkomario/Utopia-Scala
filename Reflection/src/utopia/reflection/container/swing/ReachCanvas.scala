@@ -30,7 +30,7 @@ import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.{Priority, ReachFocusManager, RealTimeReachPaintManager}
 
-import scala.annotation.tailrec
+import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
 object ReachCanvas
@@ -79,8 +79,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	  * Object that manages focus between the components in this canvas element
 	  */
 	val focusManager = new ReachFocusManager(panel)
-	private val painterPromise = contentFuture.map { c => RealTimeReachPaintManager(c) /*{
-		cursorPainter.flatMap { _.cursor } } { cursorPainter.map { _.cursorBounds } }*/ }
+	// TODO: Allow custom repainters
+	private val painterPromise = contentFuture.map { c => RealTimeReachPaintManager(c) }
 	/**
 	  * Object that manages cursor display inside this canvas. None if cursor state is not managed in this canvas.
 	  */
@@ -108,26 +108,11 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		fireStackHierarchyChangeEvent(event.newValue)
 	}
 	
-	// Also requires a full repaint when size changes
-	/*
-	addResizeListener { event =>
-		// currentContent.foreach { _.size = event.newSize }
-		if (event.newSize.isPositive)
-			currentPainter.foreach { _.repaintAll() }
-		// repaintNeed.setOne(Full)
-	}*/
-	
 	// Listens to tabulator key events for manual focus handling
 	addKeyStateListener(FocusKeyListener)
 	// Listens to mouse events for manual cursor drawing
 	cursorPainter.foreach(addMouseMoveListener)
-	// Also, disables the standard cursor drawing if manually handling cursor
-	/*
-	if (isManagingCursor)
-		Try { Toolkit.getDefaultToolkit.createCustomCursor(
-			new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB),
-			new java.awt.Point(0, 0), "blank cursor") }.foreach { component.setCursor(_) }
-	*/
+	
 	
 	// COMPUTED	-------------------------------
 	
@@ -169,7 +154,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		}
 		
 		// Updates content layout
-		val layoutUpdateQueues = layoutUpdateQueue.popAll()
+		val layoutUpdateQueues = layoutUpdateQueue.popAll().toSet.map { q: Seq[ReachComponentLike] => q -> contentSizeChanged }
 		val sizeChangeTargets: Set[ReachComponentLike] =
 		{
 			if (contentSizeChanged)
@@ -177,14 +162,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 			else
 				Set()
 		}
-		/*
-		println()
-		println(s"Content update (size changed = $contentSizeChanged)")
-		println(s"${layoutUpdateQueues.size} update queues:")
-		layoutUpdateQueues.foreach { q => println(s"\t- [${q.map { _.getClass.getSimpleName }.mkString(" -> ")}]") }
-		 */
 		if (layoutUpdateQueues.nonEmpty)
-			updateLayoutFor(layoutUpdateQueues.toSet, sizeChangeTargets)
+			updateLayoutFor2(layoutUpdateQueues, sizeChangeTargets).foreach { repaint(_) }
 		
 		// Performs the queued tasks
 		updateFinishedQueue.popAll().foreach { _() }
@@ -202,14 +181,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	
 	override def drawBounds = Bounds(Point.origin, size)
 	
-	override def repaint() =
-	{
-		currentPainter.foreach { _.repaintAll() }
-		/*
-		repaintNeed.setOne(Full)
-		component.repaint()
-		 */
-	}
+	override def repaint() = currentPainter.foreach { _.repaintAll() }
 	
 	override def distributeMouseButtonEvent(event: MouseButtonStateEvent) =
 	{
@@ -277,22 +249,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	  * @param priority Priority to use for this repaint. The high level priority areas are painted first.
 	  */
 	def repaint(area: Bounds, priority: Priority = Priority.Normal) =
-	{
 		currentPainter.foreach { _.repaintRegion(area, priority) }
-		/*
-		repaintNeed.update
-		{
-			case Some(old) =>
-				old match
-				{
-					case Full => Some(old)
-					case Partial(oldArea) => Some(Partial(Bounds.around(Vector(oldArea, area))))
-				}
-			case None => Some(Partial(area))
-		}
-		component.repaint(new Rectangle(area.x.toInt, area.y.toInt,area.width.toInt + 1,area.height.toInt + 1))
-		 */
-	}
 	
 	/**
 	  * Shifts a painted region inside these canvases
@@ -302,33 +259,69 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	def shiftArea(originalArea: Bounds, translation: Vector2D) =
 		currentPainter.foreach { _.shift(originalArea, translation) }
 	
-	@tailrec
-	private def updateLayoutFor(componentQueues: Set[Seq[ReachComponentLike]], sizeChangedChildren: Set[ReachComponentLike]): Unit =
+	// Second parameter in queues is whether a repaint operation has already been queued for them
+	// Resized children are expected to have their repaints already queued
+	// Returns areas to repaint afterwards
+	private def updateLayoutFor2(componentQueues: Set[(Seq[ReachComponentLike], Boolean)],
+								 sizeChangedChildren: Set[ReachComponentLike]): Vector[Bounds] =
 	{
-		/*
-		println("--------------")
-		println(s"Updating based on size changes (${sizeChangedChildren.size}): [${sizeChangedChildren.map { _.getClass.getSimpleName }.mkString(", ")}]")
-		println(s"Updating based on revalidation (${componentQueues.size}): [${componentQueues.flatMap { _.headOption }.map { _.getClass.getSimpleName }.mkString(", ")}]")
-		*/
-		// Updates the layout of the next layer (from top to bottom) components. Checks for size changes and
-		// also updates the children of components which changed size during the layout update
-		val nextSizeChangeChildren = (componentQueues.map { _.head } ++ sizeChangedChildren).flatMap { c =>
-			val oldChildSizes = c.children.map { c => c -> c.size }
-			c.updateLayout()
-			oldChildSizes.flatMap { case (child, oldSize) => if (child.size != oldSize) Some(child) else None }
+		val nextSizeChangeChildrenBuilder = new VectorBuilder[ReachComponentLike]()
+		val nextPositionChangeChildrenBuilder = new VectorBuilder[ReachComponentLike]()
+		val repaintZonesBuilder = new VectorBuilder[Bounds]()
+		
+		// Component -> Whether paint operation has already been queued
+		val nextTargets = componentQueues.map { case (queue, wasPainted) => queue.head -> wasPainted } ++
+			sizeChangedChildren.map { _ -> true }
+		// Updates the layout of the next layer (from top to bottom) components.
+		// Checks for size (and possible position) changes and queues updates for the children of components which
+		// changed size during the layout update
+		// Also, collects any repaint requirements
+		nextTargets.foreach { case (component, wasPainted) =>
+			// Caches bounds before update
+			val oldChildBounds = component.children.map { c => c -> c.bounds }
+			// Applies component update
+			component.updateLayout()
+			// Queues child updates (on size changes) and possible repaints
+			// (only in components where no repaint has occurred yet)
+			if (wasPainted)
+				oldChildBounds.foreach { case (child, oldBounds) =>
+					if (child.size != oldBounds.size)
+						nextSizeChangeChildrenBuilder += child
+				}
+			else
+				oldChildBounds.foreach { case (child, oldBounds) =>
+					val currentBounds = child.bounds
+					if (currentBounds != oldBounds)
+					{
+						repaintZonesBuilder += (Bounds.around(Vector(oldBounds, currentBounds)) +
+							child.parentHierarchy.positionToTopModifier)
+						if (oldBounds.size != currentBounds.size)
+							nextSizeChangeChildrenBuilder += child
+						else
+							nextPositionChangeChildrenBuilder += child
+					}
+				}
 		}
+		
 		// Moves to the next layer of components, if there is one
-		val remainingQueues = componentQueues.filter { _.size > 1 }
-		if (remainingQueues.nonEmpty || nextSizeChangeChildren.nonEmpty)
-			updateLayoutFor(remainingQueues.map { _.tail }, nextSizeChangeChildren)
+		val nextSizeChangedChildren = nextSizeChangeChildrenBuilder.result().toSet
+		val paintedChildren = nextSizeChangedChildren ++ nextPositionChangeChildrenBuilder.result()
+		val nextQueues = componentQueues.filter { _._1.size > 1 }.map { case (queue, wasPainted) =>
+			if (wasPainted)
+				queue.tail -> wasPainted
+			else
+				// Checks whether a paint operation was queued for this component already
+				queue.tail -> paintedChildren.contains(queue(1))
+		}
+		val repaintZones = repaintZonesBuilder.result()
+		if (nextQueues.isEmpty && nextSizeChangedChildren.isEmpty)
+			repaintZones
+		else
+			 repaintZones ++ updateLayoutFor2(nextQueues, nextSizeChangedChildren)
 	}
 	
 	
 	// NESTED	------------------------------
-	
-	private sealed trait RepaintNeed
-	private case object Full extends RepaintNeed
-	private case class Partial(area: Bounds) extends RepaintNeed
 	
 	private object HierarchyConnection extends ComponentHierarchy
 	{
@@ -356,63 +349,10 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		
 		override def paint(g: Graphics) = paintComponent(g)
 		
-		override def paintComponent(g: Graphics) =
-		{
-			currentPainter.foreach { p => Drawer.use(g)(p.paintWith) }
-			/*
-			// Checks image buffer status first
-			repaintNeed.pop().foreach {
-				// Case: Completely repaints the buffer image
-				case Full => buffer = Image.paint(ReachCanvas.this.size) { drawer => paintWith(drawer, None) }
-				// Case: Repaints a portion of the image
-				case Partial(area) =>
-					buffer = Image.paint(ReachCanvas.this.size) { drawer =>
-					buffer.drawWith(drawer)
-					paintWith(drawer, Some(area.ceil))
-				}
-			}
-			
-			// Paints the buffered image (and possibly the mouse cursor over it)
-			Drawer.use(g) { drawer =>
-				buffer.drawWith(drawer)
-				cursorPainter.foreach { _.paintWith(drawer) }
-			}*/
-		}
+		override def paintComponent(g: Graphics) = currentPainter.foreach { p => Drawer.use(g)(p.paintWith) }
 		
 		// Never paints children (because won't have any children)
 		override def paintChildren(g: Graphics) = ()
-		
-		
-		// OTHER	-----------------------------
-		
-		/*
-		private def paintWith(drawer: Drawer, area: Option[Bounds]) =
-		{
-			// Draws background, if defined
-			lazy val fullDrawBounds = drawBounds
-			// TODO: Remove background drawing?
-			if (!ReachCanvas.this.isTransparent)
-				drawer.onlyFill(background).draw(area.getOrElse(fullDrawBounds))
-			
-			val drawersPerLayer = customDrawers.groupBy { _.drawLevel }
-			// Draws background custom drawers and then normal custom drawers, if defined
-			val backgroundAndNormalDrawers = drawersPerLayer.getOrElse(Background, Vector()) ++
-				drawersPerLayer.getOrElse(Normal, Vector())
-			if (backgroundAndNormalDrawers.nonEmpty)
-			{
-				val d = area.map(drawer.clippedTo).getOrElse(drawer)
-				backgroundAndNormalDrawers.foreach { _.draw(d, fullDrawBounds) }
-			}
-			
-			// Draws component content
-			currentContent.foreach { _.paintWith(drawer, area) }
-			
-			// Draws foreground, if defined
-			drawersPerLayer.get(Foreground).foreach { drawers =>
-				val d = area.map(drawer.clippedTo).getOrElse(drawer)
-				drawers.foreach { _.draw(d, fullDrawBounds) }
-			}
-		}*/
 	}
 	
 	private object FocusKeyListener extends KeyStateListener
@@ -435,148 +375,6 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		override def allowsHandlingFrom(handlerType: HandlerType) = focusManager.hasFocus
 	}
 	
-	// TODO: Remove or drastically improve this implementation
-	/*
-	private class CursorPainter(cursorManager: ReachCursorManager) extends MouseMoveListener with Handleable
-	{
-		// ATTRIBUTES	-----------------------------
-		
-		private val projectionLength = 0.065.seconds
-		private val cursorMovementTracker = new VelocityTracker2D(projectionLength, 0.01.seconds)
-		
-		private var lastMoveEventTime = Instant.now() - projectionLength
-		private var lastMousePosition = Point.origin
-		private var lastDrawnCursor: Option[(Point, Image)] = None
-		
-		private val maxCursorBounds = cursorManager.cursors.expectedMaxBounds.enlarged(Size(24, 24))
-		
-		
-		// COMPUTED	---------------------------------
-		
-		def cursorPosition = cursorMovementTracker.projectedStatus.position
-		
-		
-		// IMPLEMENTED	-----------------------------
-		
-		override def onMouseMove(event: MouseMoveEvent) =
-		{
-			// Records both the current and previous positions
-			val eventTime = Instant.now()
-			lastMoveEventTime = eventTime
-			val lastPosition = event.previousMousePosition - position
-			val newPosition = event.mousePosition - position
-			lastMousePosition = newPosition
-			// cursorMovementTracker.recordPosition(lastPosition, eventTime - event.duration)
-			cursorMovementTracker.recordPosition(newPosition.toVector, eventTime)
-			
-			if (bounds.contains(event.mousePosition) || bounds.contains(event.previousMousePosition))
-			{
-				val projectedPosition = (event.mousePosition + event.velocity.over(projectionLength)) - position
-				component.repaint(Bounds.around(Vector(lastPosition, projectedPosition).map { maxCursorBounds.translated(_) }).toAwt)
-				// component.repaint()
-			}
-		}
-		
-		
-		// OTHER	----------------------------------
-		
-		def paintWith(drawer: Drawer) =
-		{
-			// If the cursor stayed still, uses previously calculated information
-			lazy val currentCursorPosition =
-			{
-				if (lastMoveEventTime < Instant.now() - projectionLength)
-					lastMousePosition
-				else
-					cursorPosition.toPoint
-			}
-			lastDrawnCursor.filter { case (pos, _) => pos == lastMousePosition || (pos ~== currentCursorPosition) } match
-			{
-				case Some((lastPosition, lastImage)) => lastImage.drawWith(drawer, lastPosition)
-				case None =>
-					// Otherwise needs to recalculate the cursor style
-					// println(currentCursorPosition)
-					if (bounds.contains(currentCursorPosition + position))
-					{
-						val image = cursorManager.cursorAt(currentCursorPosition) { area =>
-							// val luminance = buffer.pixelAt(area.center).luminosity
-							val luminance = buffer.averageLuminosityOf(area)
-							if (luminance >= 0.5) Light else Dark
-						}
-						lastDrawnCursor = Some(currentCursorPosition -> image)
-						image.drawWith(drawer, currentCursorPosition)
-					}
-			}
-		}
-	}*/
-	/*
-	private class CursorPainter2(cursorManager: ReachCursorManager) extends MouseMoveListener with Handleable
-	{
-		// ATTRIBUTES	-----------------------------
-		
-		private val projectionLength = 0.065.seconds
-		
-		private var lastMousePosition = Point.origin
-		private var lastDrawnCursor: Option[(Point, Image)] = None
-		
-		private val maxCursorBounds = cursorManager.cursors.expectedMaxBounds.enlarged(Size(24, 24))
-		
-		
-		// COMPUTED	---------------------------------
-		
-		def cursorBounds = maxCursorBounds + lastMousePosition
-		
-		def cursor =
-		{
-			// Uses previously calculated data, if still effective
-			val cached = lastDrawnCursor.filter { case (pos, _) => pos == lastMousePosition }
-			if (cached.nonEmpty)
-				cached
-			else
-			{
-				// Needs to recalculate the cursor style
-				if (bounds.contains(lastMousePosition + position))
-				{
-					val image = cursorManager.cursorImageAt(lastMousePosition) { area =>
-						// FIXME: Luminance calculation doesn't work here
-						// val luminance = buffer.averageLuminosityOf(area)
-						val luminance = 1.0
-						if (luminance >= 0.5) Light else Dark
-					}
-					val next = Some(lastMousePosition -> image)
-					lastDrawnCursor = next
-					next
-				}
-				else
-					None
-			}
-		}
-		
-		
-		// IMPLEMENTED	-----------------------------
-		
-		override def onMouseMove(event: MouseMoveEvent) =
-		{
-			val newPosition = event.mousePosition - position
-			lastMousePosition = newPosition
-			
-			if (bounds.contains(event.mousePosition) || bounds.contains(event.previousMousePosition))
-			{
-				val projectedPosition = (event.mousePosition + event.velocity.over(projectionLength)) - position
-				repaint(Bounds.around(Vector(event.previousMousePosition - position, projectedPosition)
-					.map { maxCursorBounds.translated(_) }), VeryHigh)
-				// component.repaint(Bounds.around(Vector(event.previousMousePosition - position, projectedPosition)
-				// 	.map { maxCursorBounds.translated(_) }).toAwt)
-				// component.repaint()
-			}
-		}
-		
-		
-		// OTHER	----------------------------------
-		
-		def paintWith(drawer: Drawer) = cursor.foreach { case (position, image) => image.drawWith(drawer, position) }
-	}*/
-	
 	private class CursorSwapper(cursorManager: ReachCursorManager) extends MouseMoveListener with Handleable
 	{
 		// ATTRIBUTES	-----------------------------
@@ -587,36 +385,6 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		private val shadeCalculatorFuture = painterPromise.map[Bounds => ColorShadeVariant] { painter =>
 			area => painter.averageShadeOf(area)
 		}
-		
-		
-		// COMPUTED	---------------------------------
-		
-		/*
-		def cursor =
-		{
-			// Uses previously calculated data, if still effective
-			val cached = lastCursor.filter { case (pos, _) => pos == lastMousePosition }
-			if (cached.nonEmpty)
-				cached
-			else
-			{
-				// Needs to recalculate the cursor style
-				if (bounds.contains(lastMousePosition + position))
-				{
-					val image = cursorManager.cursorImageAt(lastMousePosition) { area =>
-						// FIXME: Luminance calculation doesn't work here
-						// val luminance = buffer.averageLuminosityOf(area)
-						val luminance = 1.0
-						if (luminance >= 0.5) Light else Dark
-					}
-					val next = Some(lastMousePosition -> image)
-					lastCursor = next
-					next
-				}
-				else
-					None
-			}
-		}*/
 		
 		
 		// IMPLEMENTED	-----------------------------

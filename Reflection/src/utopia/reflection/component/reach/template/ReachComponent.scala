@@ -23,23 +23,6 @@ trait ReachComponent extends ReachComponentLike with CachingStackable2
 	lazy val mouseWheelHandler = MouseWheelHandler()
 	
 	
-	// INITIAL CODE	-----------------------
-	
-	// Whenever component bounds update, repaints the affected area
-	boundsPointer.addListener { event =>
-		// Case: Component size changed => repaints affected area (including both old and new bounds)
-		// TODO: Fix copy issue
-		// TODO: Also, leaves some of the old area unpainted (like one pixel to the right)
-		/*
-		if (event.compareBy { _.size })*/
-			Bounds.aroundOption(Vector(event.oldValue, event.newValue).filter { _.size.isPositive }/*.map { _.ceil }*/)
-				.foreach { parentHierarchy.repaint(_) }
-		// Case: Only position changed => shifts this component, copying already painted region
-		/*else if (event.newValue.size.isPositive)
-			paintMovement((event.newValue.position - event.oldValue.position).toVector)*/
-	}
-	
-	
 	// IMPLEMENTED	-----------------------
 	
 	override def position_=(p: Point) = boundsPointer.update { _.withPosition(p) }

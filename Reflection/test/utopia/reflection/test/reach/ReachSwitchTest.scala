@@ -24,6 +24,8 @@ import utopia.reflection.util.SingleFrameSetup
   */
 object ReachSwitchTest extends App
 {
+	System.setProperty("sun.java2d.noddraw", true.toString)
+	
 	import utopia.reflection.test.TestContext._
 	
 	val canvas = ReachCanvas(cursors) { hierarchy =>
