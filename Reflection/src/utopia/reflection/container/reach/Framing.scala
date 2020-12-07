@@ -2,10 +2,10 @@ package utopia.reflection.container.reach
 
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
-import utopia.reflection.component.context.{BackgroundSensitive, BaseContextLike, ColorContext, ColorContextLike}
+import utopia.reflection.component.context.{BackgroundSensitive, ColorContextLike}
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, RoundedBackgroundDrawer}
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.reach.factory.{BuilderFactory, ComponentFactoryFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reflection.component.reach.factory.{BuilderFactory, ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, Open, OpenComponent}
@@ -18,9 +18,12 @@ object Framing extends ComponentFactoryFactory[FramingFactory]
 	override def apply(hierarchy: ComponentHierarchy) = FramingFactory(hierarchy)
 }
 
-case class FramingFactory(parentHierarchy: ComponentHierarchy) extends BuilderFactory[FramingBuilder]
+case class FramingFactory(parentHierarchy: ComponentHierarchy)
+	extends ContextInsertableComponentFactory[Any, ContextualFramingFactory] with BuilderFactory[FramingBuilder]
 {
 	// IMPLEMENTED	------------------------------
+	
+	override def withContext[N <: Any](context: N) = ContextualFramingFactory(this, context)
 	
 	override def build[F](contentFactory: ComponentFactoryFactory[F]) =
 		FramingBuilder(this, contentFactory)
@@ -29,32 +32,70 @@ case class FramingFactory(parentHierarchy: ComponentHierarchy) extends BuilderFa
 	// OTHER	----------------------------------
 	
 	/**
-	  * Creates a new framing builder that uses specified component creation context
-	  * @param contentFactory Framing content factory
+	  * Creates a new framing builder that fills the framing area with a background color
 	  * @param context Framing creation context
+	  * @param background Background color to fill the framing with
+	  * @param contentFactory Framing content factory
+	  * @tparam NC Type of content creation context
+	  * @tparam F Type of contextual content factory
+	  * @return A new contextual framing builder
+	  */
+	def buildFilledWithContext[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+	(context: BackgroundSensitive[NC], background: ComponentColor,
+	 contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F]) =
+		new ContextualFilledFramingBuilder[NC, F](this, background, context.inContextWithBackground(background),
+			contentFactory)
+	
+	/**
+	  * Creates a new framing builder that fills the framing area with a background color
+	  * @param context Framing creation context
+	  * @param background Background color to fill the framing with
+	  * @param contentFactory Framing content factory
 	  * @param makeContext A function for producing a content context
 	  * @tparam NT Temporary context type between the starting context and the final context
 	  * @tparam NC Type of content creation context
 	  * @tparam F Type of contextual content factory
 	  * @return A new contextual framing builder
 	  */
-	// TODO: Cannot properly interpret these type parameters
-	def buildWithMappedContext[NT, NC <: BaseContextLike, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-	(contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F], context: BackgroundSensitive[NT])
-	(makeContext: NT => NC) =
-		new ContextualFramingBuilder[BackgroundSensitive[NT], NT, NC, F](context, this, contentFactory)(makeContext)
+	def buildFilledWithMappedContext[NT, NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+	(context: BackgroundSensitive[NT], background: ComponentColor,
+	 contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F])(makeContext: NT => NC) =
+		new ContextualFilledFramingBuilder[NC, F](this, background,
+			makeContext(context.inContextWithBackground(background)), contentFactory)
 	
 	/**
-	  * Creates a new framing builder that uses specified component creation context
-	  * @param contentFactory Framing content factory
+	  * Creates a new framing builder that fills the framing area with a background color
 	  * @param context Framing creation context
+	  * @param role Role this framing will have (color-wise)
+	  * @param contentFactory Framing content factory
+	  * @param preferredShade Preferred colouring shade to use (default = standard)
 	  * @tparam NC Type of content creation context
 	  * @tparam F Type of contextual content factory
 	  * @return A new contextual framing builder
 	  */
-	def buildWithContext[NC <: BaseContextLike, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-	(contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F], context: BackgroundSensitive[NC]) =
-		buildWithMappedContext[NC, NC, F](contentFactory, context) { c => c }
+	def buildFilledWithContextForRole[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+	(context: BackgroundSensitive[NC] with ColorContextLike, role: ColorRole,
+	 contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F], preferredShade: ColorShade = Standard) =
+		buildFilledWithContext[NC, F](context, context.color(role, preferredShade), contentFactory)
+	
+	/**
+	  * Creates a new framing builder that fills the framing area with a background color
+	  * @param context Framing creation context
+	  * @param role Role this framing will have (color-wise)
+	  * @param contentFactory Framing content factory
+	  * @param preferredShade Preferred colouring shade to use (default = standard)
+	  * @param makeContext A function for producing a content context
+	  * @tparam NT Temporary context type between the starting context and the final context
+	  * @tparam NC Type of content creation context
+	  * @tparam F Type of contextual content factory
+	  * @return A new contextual framing builder
+	  */
+	def buildFilledWithMappedContextForRole[NT, NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+	(context: BackgroundSensitive[NT] with ColorContextLike, role: ColorRole,
+	 contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F], preferredShade: ColorShade = Standard)
+	(makeContext: NT => NC) =
+		buildFilledWithMappedContext[NT, NC, F](context, context.color(role, preferredShade),
+			contentFactory)(makeContext)
 	
 	/**
 	  * Creates a new framing
@@ -73,179 +114,122 @@ case class FramingFactory(parentHierarchy: ComponentHierarchy) extends BuilderFa
 	}
 }
 
+object ContextualFramingFactory
+{
+	implicit class BackgroundSensitiveFramingFactory[N <: BackgroundSensitive[NT], NT](val f: ContextualFramingFactory[N])
+		extends AnyVal
+	{
+		/**
+		  * @param background Background color used in the created framing(s)
+		  * @param contentFactory Factory that will produce the component factories used
+		  * @param mapContext A function for altering this framing's context
+		  * @tparam NC Type of context used when creating framing contents
+		  * @tparam F Type of component creation factory used
+		  * @return A framing builder that fills the framing area with a background color
+		  */
+		def buildFilledWithMappedContext[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+		(background: ComponentColor, contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F])
+		(mapContext: NT => NC) =
+			new ContextualFilledFramingBuilder[NC, F](f.factory, background,
+				mapContext(f.context.inContextWithBackground(background)), contentFactory)
+		
+		/**
+		  * @param background Background color used in the created framing(s)
+		  * @param contentFactory Factory that will produce the component factories used
+		  * @tparam F Type of component creation factory used
+		  * @return A framing builder that fills the framing area with a background color
+		  */
+		def buildFilled[F[X <: NT] <: ContextualComponentFactory[X, _ >: NT, F]]
+		(background: ComponentColor, contentFactory: ContextInsertableComponentFactoryFactory[_ >: NT, _, F]) =
+			new ContextualFilledFramingBuilder[NT, F](f.factory, background,
+				f.context.inContextWithBackground(background), contentFactory)
+	}
+}
+
+case class ContextualFramingFactory[N](factory: FramingFactory, context: N)
+	extends ContextualComponentFactory[N, Any, ContextualFramingFactory]
+{
+	// COMPUTED	----------------------------
+	
+	/**
+	  * @return A copy of this factory with no contextual data attached
+	  */
+	def withoutContext = factory
+	
+	
+	// IMPLEMENTED	------------------------
+	
+	override def withContext[N2 <: Any](newContext: N2) = copy(context = newContext)
+	
+	
+	// OTHER	----------------------------
+	
+	/**
+	  * @param contentFactory A factory used for creating contextual component factories
+	  * @tparam F Type of component factories used
+	  * @return A new framing builder that will also construct framing contents
+	  */
+	def build[F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	(contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F]) =
+		new ContextualFramingBuilder[N, F](factory, context, contentFactory)
+}
+
 case class FramingBuilder[+F](framingFactory: FramingFactory, contentFactory: ComponentFactoryFactory[F])
 {
 	/**
-	  * Creates a new framing
-	  * @param insets Insets placed around the wrapped component
-	  * @param customDrawers Custom drawers applied to this framing (default = empty)
-	  * @param content Function for producing the framed content when component hierarchy is known
-	  * @tparam C Type of wrapped component
-	  * @return A new framing and the produced content component
+	  * Creates a new framing and content inside it
+	  * @param insets Insets to place around the content
+	  * @param customDrawers Custom drawers to assign to this framing (default = empty)
+	  * @param fill A function for creating the content that will fill this framing
+	  * @tparam C Type of created content
+	  * @tparam R Type of additional creation result
+	  * @return A new framing filled with content
 	  */
 	def apply[C <: ReachComponentLike, R](insets: StackInsetsConvertible,
 										  customDrawers: Vector[CustomDrawer] = Vector())
-										 (content: F => ComponentCreationResult[C, R]) =
+										 (fill: F => ComponentCreationResult[C, R]) =
 	{
-		val newContent = Open.using(contentFactory)(content)(framingFactory.parentHierarchy.top)
+		val newContent = Open.using(contentFactory)(fill)(framingFactory.parentHierarchy.top)
 		framingFactory(newContent, insets, customDrawers)
 	}
-	
-	// TODO: Move these to a contextual version of this builder
-	/**
-	  * Creates a new framing with background color
-	  * @param color Background color for this framing
-	  * @param insets Insets placed around the wrapped component
-	  * @param moreCustomDrawers Additional custom drawers applied to this framing (default = empty)
-	  * @param content Function for producing the framed content when component hierarchy is known.
-	  *                Also accepts component creation context.
-	  * @param context Component creation context affecting this framing (will be modified for contents)
-	  * @tparam C Type of wrapped component
-	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
-	  * @return A new framing and the produced content component
-	  */
-	def withBackground[C <: ReachComponentLike, R, C1 <: BackgroundSensitive[ColorContext]]
-	(color: ComponentColor, insets: StackInsetsConvertible, moreCustomDrawers: Vector[CustomDrawer] = Vector())
-	(content: (F, ColorContext) => ComponentCreationResult[C, R])
-	(implicit context: C1) =
-		apply(insets, BackgroundDrawer(color) +: moreCustomDrawers) { factory =>
-			content(factory, context.inContextWithBackground(color))
-		}
-	
-	/**
-	  * Creates a new framing with background color
-	  * @param role The role that defines the background color used
-	  * @param insets Insets placed around the wrapped component
-	  * @param preferredShade Color shade that is preferred when picking framing color (default = standard shade)
-	  * @param moreCustomDrawers Additional custom drawers applied to this framing (default = empty)
-	  * @param content Function for producing the framed content when component hierarchy is known.
-	  *                Also accepts component creation context.
-	  * @param context Component creation context affecting this framing (will be modified for contents)
-	  * @tparam C Type of wrapped component
-	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
-	  * @return A new framing and the produced content component
-	  */
-	def buildWithBackgroundForRole[C <: ReachComponentLike, R,
-		C1 <: ColorContextLike with BackgroundSensitive[ColorContext]]
-	(role: ColorRole, insets: StackInsetsConvertible,
-	 preferredShade: ColorShade = Standard, moreCustomDrawers: Vector[CustomDrawer] = Vector())
-	(content: (F, ColorContext) => ComponentCreationResult[C, R])
-	(implicit context: C1) =
-		withBackground[C, R, C1](context.color(role, preferredShade), insets, moreCustomDrawers)(content)
-	
-	/**
-	  * Creates a new framing that draws a rounded background
-	  * @param color Background color for this framing
-	  * @param insets Insets placed around the wrapped component
-	  * @param moreCustomDrawers Additional custom drawers applied to this framing (default = empty)
-	  * @param content Function for producing the framed content when component hierarchy is known.
-	  *                Also accepts component creation context.
-	  * @param context Component creation context affecting this framing (will be modified for contents)
-	  * @tparam C Type of wrapped component
-	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
-	  * @return A new framing and the produced content component
-	  */
-	def rounded[C <: ReachComponentLike, R, C1 <: BackgroundSensitive[ColorContext]]
-	(color: ComponentColor, insets: StackInsetsConvertible,
-	 moreCustomDrawers: Vector[CustomDrawer] = Vector())
-	(content: (F, ColorContext) => ComponentCreationResult[C, R])
-	(implicit context: C1) =
-	{
-		val activeInsets = insets.toInsets
-		// The rounding amount is based on insets
-		val drawer = activeInsets.sides.map { _.optimal }.filter { _ > 0.0 }.minOption match
-		{
-			case Some(minSideLength) => RoundedBackgroundDrawer.withRadius(color, minSideLength)
-			// If the insets default to 0, uses solid background drawing instead
-			case None => BackgroundDrawer(color)
-		}
-		apply(activeInsets, drawer +: moreCustomDrawers) { factory =>
-			content(factory, context.inContextWithBackground(color)) }
-	}
-	
-	/**
-	  * Creates a new framing that draws a rounded background
-	  * @param role The role that defines the background color used
-	  * @param insets Insets placed around the wrapped component
-	  * @param preferredShade Color shade that is preferred when picking framing color (default = standard shade)
-	  * @param moreCustomDrawers Additional custom drawers applied to this framing (default = empty)
-	  * @param content Function for producing the framed content when component hierarchy is known.
-	  *                Also accepts component creation context.
-	  * @param context Component creation context affecting this framing (will be modified for contents)
-	  * @tparam C Type of wrapped component
-	  * @tparam C1 Type of component creation context that is used to produce the altered creation context
-	  * @return A new framing and the produced content component
-	  */
-	def roundedForRole[C <: ReachComponentLike, R, C1 <: ColorContextLike with BackgroundSensitive[ColorContext]]
-	(role: ColorRole, insets: StackInsetsConvertible,
-	 preferredShade: ColorShade = Standard, moreCustomDrawers: Vector[CustomDrawer] = Vector())
-	(content: (F, ColorContext) => ComponentCreationResult[C, R])
-	(implicit context: C1) =
-		rounded[C, R, C1](context.color(role, preferredShade), insets, moreCustomDrawers)(content)
 }
 
-object ContextualFramingBuilder
+class ContextualFramingBuilder[N, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+(factory: FramingFactory, context: N, contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])
 {
-	// EXTENSIONS	---------------------------
+	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
 	
-	// An extension for framing builders which have access to a context with color information
-	implicit class ColorAwareContextualFramingBuilder[+NP <: BackgroundSensitive[NT] with ColorContextLike,
-		+NT, NC <: BaseContextLike, +F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-	(val b: ContextualFramingBuilder[NP, NT, NC, F]) extends AnyVal
+	/**
+	  * Builds a framing with content
+	  * @param insets Insets placed around the content
+	  * @param customDrawers Custom drawers to assign to this framing (default = empty)
+	  * @param fill A function for creating the contents of this framing. Accepts a contextual component factory.
+	  * @tparam C Type of component wrapped in this framing
+	  * @tparam R Type of additional creation result
+	  * @return A framing filled with created content
+	  */
+	def apply[C <: ReachComponentLike, R](insets: StackInsetsConvertible,
+										  customDrawers: Vector[CustomDrawer] = Vector())
+										 (fill: F[N] => ComponentCreationResult[C, R]) =
 	{
-		/**
-		  * Creates a new framing with background color
-		  * @param role Role for this framing's background color
-		  * @param insets Insets placed around the wrapped component
-		  * @param preferredShade Preferred shade to use with framing background color (default = standard)
-		  * @param moreCustomDrawers Additional custom drawers applied to this framing (default = empty)
-		  * @param content Function for producing the framed content when component hierarchy and component creation
-		  *                context are known
-		  * @tparam C Type of wrapped component
-		  * @tparam R Type of additional component creation result
-		  * @return A new framing and the produced content component
-		  */
-		def withBackgroundForRole[C <: ReachComponentLike, R](role: ColorRole, insets: StackInsetsConvertible,
-															  preferredShade: ColorShade = Standard,
-															  moreCustomDrawers: Vector[CustomDrawer] = Vector())
-															 (content: F[NC] => ComponentCreationResult[C, R]) =
-			b.withBackground(b.context.color(role, preferredShade), insets, moreCustomDrawers)(content)
-		
-		/**
-		  * Creates a new framing with background color and rounded corners
-		  * @param role Role for this framing's background color
-		  * @param insets Insets placed around the wrapped component
-		  * @param preferredShade Preferred shade to use with framing background color (default = standard)
-		  * @param moreCustomDrawers Additional custom drawers applied to this framing (default = empty)
-		  * @param content Function for producing the framed content when component hierarchy and component creation
-		  *                context are known
-		  * @tparam C Type of wrapped component
-		  * @tparam R Type of additional component creation result
-		  * @return A new framing and the produced content component
-		  */
-		def roundedForRole[C <: ReachComponentLike, R](role: ColorRole, insets: StackInsetsConvertible,
-													   preferredShade: ColorShade = Standard,
-													   moreCustomDrawers: Vector[CustomDrawer] = Vector())
-													  (content: F[NC] => ComponentCreationResult[C, R]) =
-			b.rounded(b.context.color(role, preferredShade), insets, moreCustomDrawers)(content)
+		val content = Open.withContext(contentFactory, context)(fill)
+		factory(content, insets, customDrawers)
 	}
 }
 
-class ContextualFramingBuilder[+NP <: BackgroundSensitive[NT], +NT, NC <: BaseContextLike,
-	+F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-(val context: NP, framingFactory: FramingFactory,
- contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F])(makeContext: NT => NC)
+class ContextualFilledFramingBuilder[N, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+(factory: FramingFactory, background: ComponentColor, context: N,
+ contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F])
 {
 	// IMPLICIT	-------------------------------
 	
-	private implicit def canvas: ReachCanvas = framingFactory.parentHierarchy.top
+	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
 	
 	
 	// OTHER	-------------------------------
 	
 	/**
 	  * Creates a new framing with background color
-	  * @param color Background color for this framing
 	  * @param insets Insets placed around the wrapped component
 	  * @param moreCustomDrawers Additional custom drawers applied to this framing (default = empty)
 	  * @param content Function for producing the framed content when component hierarchy and component creation
@@ -254,14 +238,13 @@ class ContextualFramingBuilder[+NP <: BackgroundSensitive[NT], +NT, NC <: BaseCo
 	  * @tparam R Type of additional component creation result
 	  * @return A new framing and the produced content component
 	  */
-	def withBackground[C <: ReachComponentLike, R](color: ComponentColor, insets: StackInsetsConvertible,
-												   moreCustomDrawers: Vector[CustomDrawer] = Vector())
-												  (content: F[NC] => ComponentCreationResult[C, R]) =
-		apply(color, insets, BackgroundDrawer(color) +: moreCustomDrawers)(content)
+	def apply[C <: ReachComponentLike, R](insets: StackInsetsConvertible,
+										  moreCustomDrawers: Vector[CustomDrawer] = Vector())
+										 (content: F[N] => ComponentCreationResult[C, R]) =
+		_apply(insets, BackgroundDrawer(background) +: moreCustomDrawers)(content)
 	
 	/**
 	  * Creates a new framing with background color and rounding at the four corners
-	  * @param color Background color for this framing
 	  * @param insets Insets placed around the wrapped component
 	  * @param moreCustomDrawers Additional custom drawers applied to this framing (default = empty)
 	  * @param content Function for producing the framed content when component hierarchy and component creation
@@ -270,28 +253,27 @@ class ContextualFramingBuilder[+NP <: BackgroundSensitive[NT], +NT, NC <: BaseCo
 	  * @tparam R Type of additional component creation result
 	  * @return A new framing and the produced content component
 	  */
-	def rounded[C <: ReachComponentLike, R](color: ComponentColor, insets: StackInsetsConvertible,
+	def rounded[C <: ReachComponentLike, R](insets: StackInsetsConvertible,
 											moreCustomDrawers: Vector[CustomDrawer] = Vector())
-										   (content: F[NC] => ComponentCreationResult[C, R]) =
+										   (content: F[N] => ComponentCreationResult[C, R]) =
 	{
 		val activeInsets = insets.toInsets
 		// The rounding amount is based on insets
 		val drawer = activeInsets.sides.map { _.optimal }.filter { _ > 0.0 }.minOption match
 		{
-			case Some(minSideLength) => RoundedBackgroundDrawer.withRadius(color, minSideLength)
+			case Some(minSideLength) => RoundedBackgroundDrawer.withRadius(background, minSideLength)
 			// If the insets default to 0, uses solid background drawing instead
-			case None => BackgroundDrawer(color)
+			case None => BackgroundDrawer(background)
 		}
-		apply(color, activeInsets, drawer +: moreCustomDrawers)(content)
+		_apply(activeInsets, drawer +: moreCustomDrawers)(content)
 	}
 	
-	private def apply[C <: ReachComponentLike, R](background: ComponentColor, insets: StackInsetsConvertible,
-												  customDrawers: Vector[CustomDrawer] = Vector())
-												 (content: F[NC] => ComponentCreationResult[C, R]) =
+	private def _apply[C <: ReachComponentLike, R](insets: StackInsetsConvertible,
+												   customDrawers: Vector[CustomDrawer] = Vector())
+												  (fill: F[N] => ComponentCreationResult[C, R]) =
 	{
-		val contentContext: NC = makeContext(context.inContextWithBackground(background))
-		val newContent = Open.withContext(contentFactory, contentContext)(content)
-		framingFactory(newContent, insets, customDrawers)
+		val newContent = Open.withContext(contentFactory, context)(fill)
+		factory(newContent, insets, customDrawers)
 	}
 }
 

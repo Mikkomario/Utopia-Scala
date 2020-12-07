@@ -43,11 +43,10 @@ object ReachComponentTest extends App
 		val (stack, _, label) = Stack(canvasHierarchy).withContext(baseContext.withStackMargin(StackLength.fixedZero))
 			.build(Mixed).column() { factories =>
 			
-			val (framing, label) = factories.withoutContext(Framing).buildWithMappedContext[ColorContext,
-				TextContext, ContextualMutableTextLabelFactory](MutableTextLabel, baseContext) {
-				_.forTextComponents.withTextAlignment(Alignment.Center)
-			}
-				.withBackground(colorScheme.secondary.light, margins.medium.any) { labelFactory =>
+			val (framing, label) = factories.withoutContext(Framing).buildFilledWithMappedContext[ColorContext,
+				TextContext, ContextualMutableTextLabelFactory](baseContext, colorScheme.secondary.light,
+				MutableTextLabel) { _.forTextComponents.withTextAlignment(Alignment.Center) }
+				.apply(margins.medium.any) { labelFactory =>
 					labelFactory.withBackground("Hello!", Primary)
 				}.toTuple
 			
@@ -57,10 +56,9 @@ object ReachComponentTest extends App
 				.withCustomBackground("Hello 2\nThis label contains 2 lines", colorScheme.primary)
 			
 			val editLabelFraming = factories.withoutContext(Framing)
-				.buildWithMappedContext[ColorContext, TextContext, ContextualStackFactory](Stack, baseContext) {
-					_.forTextComponents.withTextAlignment(Alignment.Center)
-				}
-				.withBackground(colorScheme.primary.light, margins.medium.any) {
+				.buildFilledWithMappedContext[ColorContext, TextContext, ContextualStackFactory](baseContext,
+					colorScheme.primary.light, Stack) { _.forTextComponents.withTextAlignment(Alignment.Center) }
+				.apply(margins.medium.any) {
 					_.build(Mixed).column(Center) { factories =>
 						val editableLabel = factories(EditableTextLabel)(new PointerWithEvents("Type Here"))
 						editableLabel.addFocusListener(focusReporter("Label"))

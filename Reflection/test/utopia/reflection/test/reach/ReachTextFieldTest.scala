@@ -33,7 +33,7 @@ object ReachTextFieldTest extends App
 	
 	// Creates text fields (+ result views)
 	val canvas = ReachCanvas(cursors) { hierarchy =>
-		Framing(hierarchy).buildWithContext(Stack, baseContext).withBackground(colorScheme.gray, margins.medium.any.square) { stack =>
+		Framing(hierarchy).buildFilledWithContext(baseContext, colorScheme.gray, Stack).apply(margins.medium.any.square) { stack =>
 			stack.build(Stack).column() { r =>
 				val rows = r.mapContext { _.forTextComponents }
 				Vector(
