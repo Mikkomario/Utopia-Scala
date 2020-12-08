@@ -10,7 +10,7 @@ import utopia.nexus.rest.{Context, Resource}
   * @author Mikko Hilpinen
   * @since 6.5.2020, v1
   */
-trait ResourceWithChildren[C <: Context] extends Resource[C]
+trait ResourceWithChildren[-C <: Context] extends Resource[C]
 {
 	// ABSTRACT	--------------------------
 	

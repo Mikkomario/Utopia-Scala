@@ -11,7 +11,30 @@ import utopia.vault.model.immutable.StorableWithFactory
 
 object SessionModel
 {
+	// ATTRIBUTES   -------------------------------
+	
+	/**
+	  * Name of the attribute which contains the id of the device the user is logged in on
+	  */
+	val deviceIdAttName = "deviceId"
+	
+	
 	// COMPUTED	-----------------------------------
+	
+	/**
+	  * @return Factory used by this model class
+	  */
+	def factory = SessionFactory
+	
+	/**
+	  * @return Table used by this model class
+	  */
+	def table = factory.table
+	
+	/**
+	  * @return Column that contains the device id the user is logged in on
+	  */
+	def deviceIdColumn = table(deviceIdAttName)
 	
 	/**
 	  * @return A new model that has just been marked as logged out
@@ -53,7 +76,7 @@ object SessionModel
 	  */
 	def insert(data: UserSessionData)(implicit connection: Connection) =
 	{
-		val newId = apply(None, Some(data.userId), Some(data.deviceId), Some(data.key), Some(data.expires)).insert().getInt
+		val newId = apply(None, Some(data.userId), data.deviceId, Some(data.key), Some(data.expires)).insert().getInt
 		UserSession(newId, data)
 	}
 }
@@ -67,11 +90,13 @@ case class SessionModel(id: Option[Int] = None, userId: Option[Int] = None, devi
 						key: Option[String] = None, expires: Option[Instant] = None, logoutTime: Option[Instant] = None)
 	extends StorableWithFactory[UserSession]
 {
+	import SessionModel._
+	
 	// IMPLEMENTED	-------------------------------
 	
-	override def factory = SessionFactory
+	override def factory = SessionModel.factory
 	
-	override def valueProperties = Vector("id" -> id, "userId" -> userId, "deviceId" -> deviceId, "key" -> key,
+	override def valueProperties = Vector("id" -> id, "userId" -> userId, deviceIdAttName -> deviceId, "key" -> key,
 		"expiresIn" -> expires, "logoutTime" -> logoutTime)
 	
 	

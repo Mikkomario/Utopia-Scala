@@ -1,7 +1,6 @@
 package utopia.exodus.database.access.single
 
 import java.time.Instant
-import java.util.UUID.randomUUID
 
 import utopia.exodus.database.access.many.DbUserSessions
 import utopia.exodus.database.factory.user.SessionFactory
@@ -36,10 +35,23 @@ object DbUserSession extends SingleModelAccess[UserSession]
 	
 	/**
 	  * @param userId Id of targeted user
+	  * @param deviceId Id of targeted device (None if not targeting any specific device)
+	  * @return An access point to the user's session on the specified device
+	  */
+	def apply(userId: Int, deviceId: Option[Int]) = new SingleDeviceSession(userId, deviceId)
+	
+	/**
+	  * @param userId Id of targeted user
 	  * @param deviceId Id of targeted device
 	  * @return An access point to the user's session on the specified device
 	  */
-	def apply(userId: Int, deviceId: Int) = new SingleDeviceSession(userId, deviceId)
+	def apply(userId: Int, deviceId: Int): SingleDeviceSession = apply(userId, Some(deviceId))
+	
+	/**
+	  * @param userId Id of targeted user
+	  * @return An access point to the user's session that's not connected to any device
+	  */
+	def deviceless(userId: Int) = apply(userId, None)
 	
 	/**
 	  * @param sessionKey A session key
@@ -52,12 +64,21 @@ object DbUserSession extends SingleModelAccess[UserSession]
 	
 	// NESTED	----------------------------------
 	
-	class SingleDeviceSession(userId: Int, deviceId: Int) extends UniqueAccess[UserSession]
+	class SingleDeviceSession(userId: Int, deviceId: Option[Int]) extends UniqueAccess[UserSession]
 		with SingleModelAccess[UserSession]
 	{
 		// ATTRIBUTES	---------------------------
 		
-		private val targetingCondition = model.withUserId(userId).withDeviceId(deviceId).toCondition
+		private val targetingCondition =
+		{
+			// Targets either session on a device or the user's deviceless session
+			val base = model.withUserId(userId)
+			deviceId match
+			{
+				case Some(deviceId) => base.withDeviceId(deviceId).toCondition
+				case None => base.toCondition && model.deviceIdColumn.isNull
+			}
+		}
 		
 		
 		// IMPLEMENTED	---------------------------
@@ -88,9 +109,14 @@ object DbUserSession extends SingleModelAccess[UserSession]
 		def start()(implicit connection: Connection, uuidGenerator: UuidGenerator) =
 		{
 			// Before starting a new session, makes sure to terminate existing user sessions for this device
-			DbUserSessions.forDeviceWithId(deviceId).end()
+			// On deviceless sessions, terminates the previous deviceless session
+			deviceId match
+			{
+				case Some(deviceId) => DbUserSessions.forDeviceWithId(deviceId).end()
+				case None => end()
+			}
 			// Creates a new session that lasts for 24 hours or until logged out
-			model.insert(UserSessionData(userId, deviceId, uuidGenerator.next(), Instant.now() + 24.hours))
+			model.insert(UserSessionData(userId, uuidGenerator.next(), Instant.now() + 24.hours, deviceId))
 		}
 	}
 }

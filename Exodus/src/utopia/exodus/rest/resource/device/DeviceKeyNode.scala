@@ -47,12 +47,13 @@ case class DeviceKeyNode(deviceId: Int) extends Resource[AuthorizedContext]
 					Result.Failure(NotFound, s"There exists no device with id $deviceId")
 			}
 		}
-		// On DELETE, deprecates the authorized user's (session auth) device key for this device
+		// On DELETE, deprecates the authorized user's (session auth) device key for THIS device
 		else
 		{
 			context.sessionKeyAuthorized { (session, connection) =>
 				implicit val c: Connection = connection
-				DbDevice(session.deviceId).authenticationKey.releaseFromUserWithId(session.userId)
+				// Doesn't target the device associated with the session but with this node
+				DbDevice(deviceId).authenticationKey.releaseFromUserWithId(session.userId)
 				Empty
 			}
 		}

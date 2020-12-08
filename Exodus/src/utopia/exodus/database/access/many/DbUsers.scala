@@ -87,7 +87,7 @@ object DbUsers extends ManyModelAccess[User]
 		else
 		{
 			// Makes sure provided device id or language id matches data in the DB
-			val idsAreValid = newUser.device match
+			val idsAreValid = newUser.device.forall
 			{
 				case Right(deviceId) => DbDevice(deviceId).isDefined
 				case Left(newDevice) => DbLanguage(newDevice.languageId).isDefined
@@ -101,16 +101,15 @@ object DbUsers extends ManyModelAccess[User]
 					val user = UserModel.insert(UserSettingsData(userName, email), newUser.password)
 					val insertedLanguages = languages.map { case (languageId, familiarity) =>
 						UserLanguageModel.insert(UserLanguageData(user.id, languageId, familiarity)) }
-					// Links user with device (uses existing or a new device)
-					val deviceId = newUser.device match
+					// Links user with device (if device has been specified) (uses existing or a new device)
+					val deviceId = newUser.device.map
 					{
 						case Right(deviceId) => deviceId
-						case Left(newDevice) =>
-							DbDevices.insert(newDevice.name, newDevice.languageId, user.id).targetId
+						case Left(newDevice) => DbDevices.insert(newDevice.name, newDevice.languageId, user.id).targetId
 					}
-					UserDeviceModel.insert(user.id, deviceId)
+					deviceId.foreach { UserDeviceModel.insert(user.id, _) }
 					// Returns inserted user
-					Success(UserWithLinks(user, insertedLanguages, Vector(deviceId)))
+					Success(UserWithLinks(user, insertedLanguages, deviceId.toVector))
 				}
 			}
 			else
