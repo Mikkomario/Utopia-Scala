@@ -11,7 +11,7 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.shape.Alignment.BottomLeft
 import utopia.reflection.shape.LengthExtensions.LengthNumber
-import utopia.reflection.shape.stack.modifier.{ExpandingLengthModifier, NoShrinkingConstraint}
+import utopia.reflection.shape.stack.modifier.{ExpandingLengthModifier, NoShrinkingLengthModifier}
 import utopia.reflection.util.ProgressState
 
 import scala.concurrent.ExecutionContext
@@ -49,7 +49,7 @@ class LoadingView(loadingLabel: AwtStackable, progressPointer: Changing[Progress
 	}
 	private val statusLabel = context.expandingToRight.withTextAlignment(BottomLeft).expandingTo(Up).use { implicit c =>
 		val label = TextLabel.contextual(progressPointer.value.description)
-		label.addWidthConstraint(new NoShrinkingConstraint(defaultWidth.any.expanding) && ExpandingLengthModifier)
+		label.addWidthConstraint(new NoShrinkingLengthModifier(defaultWidth.any.expanding) && ExpandingLengthModifier)
 		label
 	}
 	private lazy val progressListener: ChangeListener[ProgressState] = e => statusLabel.text = e.newValue.description

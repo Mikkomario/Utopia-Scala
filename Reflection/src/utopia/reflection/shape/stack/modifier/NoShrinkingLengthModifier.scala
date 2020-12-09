@@ -8,7 +8,7 @@ import utopia.reflection.shape.stack.StackLength
   * @since 30.8.2020, v1.2.1
   * @param startLength Initial length value (default = flexible 0)
   */
-class NoShrinkingConstraint(startLength: StackLength = StackLength.any.expanding) extends StackLengthModifier
+class NoShrinkingLengthModifier(startLength: StackLength = StackLength.any.expanding) extends StackLengthModifier
 {
 	// ATTRIBUTES   ----------------------
 	

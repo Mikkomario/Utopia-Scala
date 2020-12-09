@@ -2,10 +2,6 @@ package utopia.reflection.container.stack.template.scrolling
 
 import utopia.genesis.shape.Axis2D
 import utopia.reflection.component.template.layout.stack.Stackable2
-import utopia.reflection.shape.stack.StackLengthLimit
-
-import scala.collection.immutable.HashMap
-
 /**
   * Scroll views are containers that allow horizontal or vertical content scrolling
   * @author Mikko Hilpinen
@@ -19,10 +15,6 @@ trait ScrollViewLike2[C <: Stackable2] extends ScrollAreaLike2[C]
 	  * @return The scrolling axis of this scroll view
 	  */
 	def axis: Axis2D
-	/**
-	  * @return The length limits of this scroll view
-	  */
-	def lengthLimit: StackLengthLimit
 	
 	
 	// COMPUTED	--------------------
@@ -77,8 +69,6 @@ trait ScrollViewLike2[C <: Stackable2] extends ScrollAreaLike2[C]
 	// IMPLEMENTED	----------------
 	
 	override def axes = Vector(axis)
-	
-	override def lengthLimits = HashMap(axis -> lengthLimit)
 	
 	
 	// OTHER	----------------------

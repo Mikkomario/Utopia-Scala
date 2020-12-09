@@ -3,9 +3,9 @@
 ### Breaking Changes
 - Area now leaves bounds implementation up to subclasses
 - CustomDrawer class naming updated
-    - Abstract drawer implementations are now named *Like (Eg. TextDrawerLike)
-    - Immutable drawer implementations keep the previous name (Eg. TextDrawer)
-    - Mutable drawer implementations are now prefixed with Mutable* (Eg. MutableTextDrawer)
+    - Abstract drawer implementations are now named *Like (E.g. TextDrawerLike)
+    - Immutable drawer implementations keep the previous name (E.g. TextDrawer)
+    - Mutable drawer implementations are now prefixed with Mutable* (E.g. MutableTextDrawer)
     - View drawers end in *ViewDrawer (Eg. TextViewDrawer)
 - Removed pointer support from mutable custom drawer implementations and added view versions of those drawers
 - Removed isAboveContent -parameter from BorderDrawer implementations and replaced it with drawLevel -parameter
@@ -15,11 +15,19 @@
 - Moved ButtonState from utopia.reflection.component.swing.button -package to utopia.reflection.event -package
 - ColorContext.forTextComponents doesn't accept parameters anymore (except for the implicit localizer)
 - Changed AnimatedLabel creation parameters due to changes in Image and animation classes
+- Renamed multiple stack length and stack size modifiers. The new naming convention is:
+  - For stack length modifiers: XLengthModifier
+  - For stack size modifiers: XSizeModifier
 ### New Methods
-- Added .hasSameDimensionsAs(TextDrawContext), .mapFont(...) and .mapColor(...) to TextDrawContext
-- Added .stripControlCharacters to LocalStringLike
-- Added .withShade(ColorShadeVariant) to SingleColorIcon
-- Added .forLuminosity(Double) to ColorShadeVariant
+- ColorShadeVariant.type
+  - .forLuminosity(Double)
+- LocalStringLike
+  - .stripControlCharacters
+- SingleColorIcon
+  - .withShade(ColorShadeVariant)
+- TextDrawContext
+  - .hasSameDimensionsAs(TextDrawContext)
+  - .mapFont(...) and .mapColor(...)
 ### Fixes
 - Alignment.position(...) now properly takes parameter bounds position into account
 - Fixed a small bug where Window content size wouldn't update correctly

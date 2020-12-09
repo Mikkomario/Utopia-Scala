@@ -18,7 +18,7 @@ import utopia.reflection.component.drawing.template.DrawLevel.Foreground
 import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.reflection.component.template.layout.stack.{CachingStackable2, Stackable2}
 import utopia.reflection.shape.ScrollBarBounds
-import utopia.reflection.shape.stack.{StackLengthLimit, StackSize}
+import utopia.reflection.shape.stack.StackSize
 
 import java.awt.event.KeyEvent
 import java.time.Instant
@@ -56,10 +56,6 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 	  */
 	def scrollBarMargin: Size
 	/**
-	  * @return Limits applied to this area's stack lengths
-	  */
-	def lengthLimits: Map[Axis2D, StackLengthLimit]
-	/**
 	  * @return Whether this scroll view's maximum length should be limited to content length
 	  */
 	def limitsToContentSize: Boolean
@@ -89,9 +85,8 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 	
 	/**
 	  * Repaints this scroll view
-	  * @param bounds The area that needs repainting
 	  */
-	def repaint(bounds: Bounds): Unit
+	def repaint(): Unit
 	
 	
 	// COMPUTED	--------------------
@@ -106,8 +101,12 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 	def contentOrigin = content.position
 	def contentOrigin_=(pos: Point) =
 	{
-		content.position = minContentOrigin.bottomRight(pos).topLeft(Point.origin)
-		updateScrollBarBounds()
+		val newContentPosition = minContentOrigin.bottomRight(pos).topLeft(Point.origin)
+		if (content.position != newContentPosition)
+		{
+			content.position = newContentPosition
+			updateScrollBarBounds(repaintAfter = true)
+		}
 	}
 	
 	/**
@@ -146,7 +145,8 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 		if (scrollBarIsInsideContent)
 			Size.zero
 		else
-			axes.map { Size(0, scrollBarWidth, _) } reduceOption { _ + _ } getOrElse Size.zero
+			axes.map { axis => Size(0, scrollBarWidth + scrollBarMargin.width, axis) }
+				.reduceOption { _ + _ }.getOrElse(Size.zero)
 	}
 	
 	
@@ -165,10 +165,12 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 				{
 					// Uses content size but may limit it in process
 					val raw = contentSize.along(axis)
-					val limit = lengthLimits.get(axis)
-					val limited = limit.map(raw.within) getOrElse raw
-					axis -> (if (limitsToContentSize) limited else if (limit.exists { _.max.isDefined }) limited else
-						limited.noMax).withLowPriority.noMin
+					val limited = (if (limitsToContentSize) raw else raw.noMax).withLowPriority.noMin
+					// May also expand according to scroll bar width
+					if (scrollBarIsInsideContent)
+						axis -> limited
+					else
+						axis -> (limited + scrollBarWidth + scrollBarMargin.width)
 				}
 				else
 					axis -> contentSize.along(axis)
@@ -442,7 +444,11 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 			contentOrigin = newContentOrigin
 	}
 	
-	private def updateScrollBarBounds() =
+	/**
+	  * Updates the scroll bar position and size etc
+	  * @param repaintAfter Whether this scroll area should be repainted afterwards (default = false)
+	  */
+	protected def updateScrollBarBounds(repaintAfter: Boolean = false) =
 	{
 		if (contentSize.area == 0)
 		{
@@ -476,8 +482,11 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 					Bounds(barAreaPosition, barAreaSize), axis)
 			}.toMap
 			
+			// Repaints scroll area and content
+			if (repaintAfter)
+				repaint()
 			// Repaints the newly calculated bar area(s)
-			barBounds.foreach { case (_, bounds) => repaint(bounds.area) }
+			// barBounds.foreach { case (_, bounds) => repaint(bounds.area) }
 		}
 	}
 	

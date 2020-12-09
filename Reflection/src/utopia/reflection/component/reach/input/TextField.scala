@@ -29,7 +29,7 @@ import utopia.reflection.shape.{Alignment, Border}
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText, Regex}
 import utopia.reflection.localization.LocalString._
-import utopia.reflection.shape.stack.modifier.MaxBetweenModifier
+import utopia.reflection.shape.stack.modifier.MaxBetweenLengthModifier
 import utopia.reflection.util.ComponentCreationDefaults
 import utopia.reflection.util.Priority.High
 
@@ -563,7 +563,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 	// INITIAL CODE	------------------------------------------
 	
 	// Will not shrink below the default width
-	wrapped.addConstraintOver(X)(MaxBetweenModifier(defaultWidth))
+	wrapped.addConstraintOver(X)(MaxBetweenLengthModifier(defaultWidth))
 	
 	_focusPointer.addListener(repaintListener)
 	innerBackgroundPointer.addListener(repaintListener)

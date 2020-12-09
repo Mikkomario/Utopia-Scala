@@ -2,6 +2,15 @@ package utopia.reflection.component.reach.factory
 
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 
+object ContextInsertableComponentFactoryFactory
+{
+	/**
+	  * Type of component factory factory commonly used in contextual container builders
+	  */
+	type ContextualBuilderContentFactory[N, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]] =
+		ContextInsertableComponentFactoryFactory[_ >: N, _, F]
+}
+
 /**
   * A factory that creates factories that can be enriched with component creation contexts
   * @author Mikko Hilpinen

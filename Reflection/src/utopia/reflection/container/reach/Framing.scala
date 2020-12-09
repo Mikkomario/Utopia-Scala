@@ -1,11 +1,11 @@
 package utopia.reflection.container.reach
 
-import utopia.reflection.color.ColorShade.Standard
-import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
-import utopia.reflection.component.context.{BackgroundSensitive, ColorContextLike}
+import utopia.reflection.color.ComponentColor
+import utopia.reflection.component.context.BackgroundSensitive
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, RoundedBackgroundDrawer}
 import utopia.reflection.component.drawing.template.CustomDrawer
-import utopia.reflection.component.reach.factory.{BuilderFactory, ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
+import utopia.reflection.component.reach.factory.ContextInsertableComponentFactoryFactory.ContextualBuilderContentFactory
+import utopia.reflection.component.reach.factory.{BuilderFactory, ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, SimpleFilledBuilderFactory}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, Open, OpenComponent}
@@ -20,6 +20,7 @@ object Framing extends ComponentFactoryFactory[FramingFactory]
 
 case class FramingFactory(parentHierarchy: ComponentHierarchy)
 	extends ContextInsertableComponentFactory[Any, ContextualFramingFactory] with BuilderFactory[FramingBuilder]
+		with SimpleFilledBuilderFactory[ContextualFilledFramingBuilder]
 {
 	// IMPLEMENTED	------------------------------
 	
@@ -28,74 +29,12 @@ case class FramingFactory(parentHierarchy: ComponentHierarchy)
 	override def build[F](contentFactory: ComponentFactoryFactory[F]) =
 		FramingBuilder(this, contentFactory)
 	
+	protected def makeBuilder[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+	(background: ComponentColor, contentContext: NC, contentFactory: ContextualBuilderContentFactory[NC, F]) =
+		new ContextualFilledFramingBuilder[NC, F](this, background, contentContext, contentFactory)
+	
 	
 	// OTHER	----------------------------------
-	
-	/**
-	  * Creates a new framing builder that fills the framing area with a background color
-	  * @param context Framing creation context
-	  * @param background Background color to fill the framing with
-	  * @param contentFactory Framing content factory
-	  * @tparam NC Type of content creation context
-	  * @tparam F Type of contextual content factory
-	  * @return A new contextual framing builder
-	  */
-	def buildFilledWithContext[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-	(context: BackgroundSensitive[NC], background: ComponentColor,
-	 contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F]) =
-		new ContextualFilledFramingBuilder[NC, F](this, background, context.inContextWithBackground(background),
-			contentFactory)
-	
-	/**
-	  * Creates a new framing builder that fills the framing area with a background color
-	  * @param context Framing creation context
-	  * @param background Background color to fill the framing with
-	  * @param contentFactory Framing content factory
-	  * @param makeContext A function for producing a content context
-	  * @tparam NT Temporary context type between the starting context and the final context
-	  * @tparam NC Type of content creation context
-	  * @tparam F Type of contextual content factory
-	  * @return A new contextual framing builder
-	  */
-	def buildFilledWithMappedContext[NT, NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-	(context: BackgroundSensitive[NT], background: ComponentColor,
-	 contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F])(makeContext: NT => NC) =
-		new ContextualFilledFramingBuilder[NC, F](this, background,
-			makeContext(context.inContextWithBackground(background)), contentFactory)
-	
-	/**
-	  * Creates a new framing builder that fills the framing area with a background color
-	  * @param context Framing creation context
-	  * @param role Role this framing will have (color-wise)
-	  * @param contentFactory Framing content factory
-	  * @param preferredShade Preferred colouring shade to use (default = standard)
-	  * @tparam NC Type of content creation context
-	  * @tparam F Type of contextual content factory
-	  * @return A new contextual framing builder
-	  */
-	def buildFilledWithContextForRole[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-	(context: BackgroundSensitive[NC] with ColorContextLike, role: ColorRole,
-	 contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F], preferredShade: ColorShade = Standard) =
-		buildFilledWithContext[NC, F](context, context.color(role, preferredShade), contentFactory)
-	
-	/**
-	  * Creates a new framing builder that fills the framing area with a background color
-	  * @param context Framing creation context
-	  * @param role Role this framing will have (color-wise)
-	  * @param contentFactory Framing content factory
-	  * @param preferredShade Preferred colouring shade to use (default = standard)
-	  * @param makeContext A function for producing a content context
-	  * @tparam NT Temporary context type between the starting context and the final context
-	  * @tparam NC Type of content creation context
-	  * @tparam F Type of contextual content factory
-	  * @return A new contextual framing builder
-	  */
-	def buildFilledWithMappedContextForRole[NT, NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-	(context: BackgroundSensitive[NT] with ColorContextLike, role: ColorRole,
-	 contentFactory: ContextInsertableComponentFactoryFactory[_ >: NC, _, F], preferredShade: ColorShade = Standard)
-	(makeContext: NT => NC) =
-		buildFilledWithMappedContext[NT, NC, F](context, context.color(role, preferredShade),
-			contentFactory)(makeContext)
 	
 	/**
 	  * Creates a new framing

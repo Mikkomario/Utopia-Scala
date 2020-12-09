@@ -3,7 +3,6 @@ package utopia.reflection.util
 import java.awt.Toolkit
 import javax.swing.RepaintManager
 import utopia.flow.async.{Volatile, VolatileOption}
-import utopia.genesis.color.Color
 import utopia.genesis.image.Image
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}

@@ -2,10 +2,10 @@ package utopia.reflection.test.reach
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.Changing
-import utopia.reflection.component.context.ColorContext
+import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.component.reach.factory.Mixed
 import utopia.reflection.component.reach.input.{ContextualSwitchFactory, Switch}
-import utopia.reflection.component.reach.label.{TextLabel, ViewTextLabel}
+import utopia.reflection.component.reach.label.{ContextualTextLabelFactory, TextLabel, ViewTextLabel}
 import utopia.reflection.component.reach.wrapper.ComponentCreationResult
 import utopia.reflection.container.reach.{Framing, SegmentGroup, Stack}
 import utopia.reflection.container.stack.StackLayout.{Center, Leading, Trailing}
@@ -67,8 +67,9 @@ object ReachSwitchTest extends App
 	enabledSwitch.valuePointer.addListener { event =>
 		AwtEventThread.async {
 			val popup = enabledSwitch.createPopup(actorHandler, margin = margins.medium, autoCloseLogic = WhenClickedOutside) { hierarchy =>
-				Framing(hierarchy).buildFilledWithMappedContext(baseContext, colorScheme.info,
-					TextLabel) { _.forTextComponents }.rounded(margins.small.any) {
+				Framing(hierarchy).buildFilledWithMappedContext[ColorContext, TextContext, ContextualTextLabelFactory](
+					baseContext, colorScheme.info, TextLabel) { _.forTextComponents }
+					.rounded(margins.small.any) {
 						_.apply(if (event.newValue) "Enabled!" else "Disabled!")
 					}
 				// TextLabel(hierarchy).withContext(baseContext.inContextWithBackground(colorScheme.info).forTextComponents)

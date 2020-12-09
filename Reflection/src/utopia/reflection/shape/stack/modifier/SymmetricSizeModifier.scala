@@ -7,7 +7,7 @@ import utopia.reflection.shape.stack.{StackLength, StackSize}
   * @author Mikko Hilpinen
   * @since 24.4.2020, v1.2
   */
-object SymmetricStackSizeConstraint extends StackSizeModifier
+object SymmetricSizeModifier extends StackSizeModifier
 {
 	override def apply(size: StackSize) = {
 		val sides = size.dimensions2D

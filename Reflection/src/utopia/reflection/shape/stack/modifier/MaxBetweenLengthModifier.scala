@@ -7,7 +7,7 @@ import utopia.reflection.shape.stack.StackLength
   * @author Mikko Hilpinen
   * @since 15.11.2020, v2
   */
-case class MaxBetweenModifier(min: StackLength) extends StackLengthModifier
+case class MaxBetweenLengthModifier(min: StackLength) extends StackLengthModifier
 {
 	override def apply(length: StackLength) = length max min
 }

@@ -50,11 +50,8 @@ object ComponentCreationResult
 	(components: IterableOnce[(C, Option[Changing[Boolean]])]): SwitchableCreations[C, Unit] =
 		apply(components.iterator.map { case (c, p) => apply(c, p) })
 	
-	/*
-	implicit def containerVectorToResult[P, W <: ComponentWrapResult[P, _, _]]
-	(containers: Vector[W]): ComponentCreationResult[Vector[P], Unit] =
-		new ComponentCreationResult[Vector[P], Unit](containers.map { _.parent }, ())
-	*/
+	implicit def containerVectorToResult[P](containers: Vector[ComponentWrapResult[P, _, _]]): CreationWrapper[Vector[P]] =
+		ComponentCreationResult[Vector[P]](containers.map { _.parent })
 	
 	implicit def wrapToResult[P, R](wrapResult: ComponentWrapResult[P, _, R]): ComponentCreationResult[P, R] =
 		new ComponentCreationResult[P, R](wrapResult.parent, wrapResult.result)
