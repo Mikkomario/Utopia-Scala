@@ -2,6 +2,7 @@ package utopia.reflection.container.reach
 
 import utopia.flow.event.ChangeListener
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.shape.Axis.Y
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.genesis.shape.shape2D.Size
@@ -14,183 +15,175 @@ import utopia.reflection.component.reach.factory.{BuilderFactory, ComponentFacto
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
 import utopia.reflection.component.reach.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reflection.container.stack.template.scrolling.ScrollAreaLike2
+import utopia.reflection.container.stack.template.scrolling.ScrollViewLike2
 import utopia.reflection.container.swing.ReachCanvas
-import utopia.reflection.shape.stack.modifier.MaxOptimalSizeModifier
+import utopia.reflection.shape.stack.modifier.MaxOptimalLengthModifier
 import utopia.reflection.util.ComponentCreationDefaults
 
-object ScrollArea extends ContextInsertableComponentFactoryFactory[Any, ScrollAreaFactory, ContextualScrollAreaFactory]
+object ScrollView extends ContextInsertableComponentFactoryFactory[Any, ScrollViewFactory, ContextualScrollViewFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new ScrollAreaFactory(hierarchy)
+	override def apply(hierarchy: ComponentHierarchy) = new ScrollViewFactory(hierarchy)
 }
 
-class ScrollAreaFactory(val parentHierarchy: ComponentHierarchy)
-	extends ContextInsertableComponentFactory[Any, ContextualScrollAreaFactory] with BuilderFactory[ScrollAreaBuilder]
-		with SimpleFilledBuilderFactory[ContextualFilledScrollAreaBuilder]
+class ScrollViewFactory(val parentHierarchy: ComponentHierarchy)
+	extends ContextInsertableComponentFactory[Any, ContextualScrollViewFactory] with BuilderFactory[ScrollViewBuilder]
+		with SimpleFilledBuilderFactory[ContextualFilledScrollViewBuilder]
 {
-	// IMPLEMENTED	----------------------------------
+	// IMPLEMENTED	------------------------------
 	
 	override def withContext[N <: Any](context: N) =
-		ContextualScrollAreaFactory(this, context)
+		ContextualScrollViewFactory(this, context)
 	
-	override def build[F](contentFactory: ComponentFactoryFactory[F]) =
-		new ScrollAreaBuilder[F](this, contentFactory)
+	override def build[FF](contentFactory: ComponentFactoryFactory[FF]) =
+		new ScrollViewBuilder(this, contentFactory)
 	
 	protected def makeBuilder[NC, F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
 	(background: ComponentColor, contentContext: NC, contentFactory: ContextualBuilderContentFactory[NC, F]) =
-		new ContextualFilledScrollAreaBuilder[NC, F](this, background, contentContext, contentFactory)
+		new ContextualFilledScrollViewBuilder[NC, F](this, background, contentContext, contentFactory)
 	
 	
-	// OTHER	--------------------------------------
+	// OTHER	-----------------------------------
 	
 	/**
-	  * Creates a new scroll area
+	  * Creates a new scroll view
 	  * @param content Content that will be placed inside this area
+	  * @param axis Axis along which the scrolling occurs (default = Y = Vertical scrolling)
 	  * @param scrollBarMargin Margins placed around the scroll bars (wider margin as X and thinner edge margins as Y)
 	  *                        (default = 0x0)
-	  * @param maxOptimalSize Limits placed on the optimal size of this scroll area (optional)
+	  * @param maxOptimalLength Limits placed on the optimal length of this scroll view (optional)
 	  * @param customDrawers Custom drawers assigned to this scroll area (default = empty)
 	  * @param limitsToContentSize Whether scroll area size should be limited to content size (default = false)
 	  * @param context Contextual scrolling information
 	  * @tparam C Type of component inside this scroll area
 	  * @tparam R Type of additional creation result
-	  * @return A new scroll area
+	  * @return A new scroll view
 	  */
-	def apply[C <: ReachComponentLike, R](content: OpenComponent[C, R], scrollBarMargin: Size = Size.zero,
-										  maxOptimalSize: Option[Size] = None,
+	def apply[C <: ReachComponentLike, R](content: OpenComponent[C, R], axis: Axis2D = Y,
+										  scrollBarMargin: Size = Size.zero, maxOptimalLength: Option[Double] = None,
 										  customDrawers: Vector[CustomDrawer] = Vector(),
 										  limitsToContentSize: Boolean = false)(implicit context: ScrollingContextLike) =
 	{
-		val area = new ScrollArea(parentHierarchy, content.component, context.actorHandler, context.scrollBarDrawer,
-			context.scrollBarWidth, scrollBarMargin, context.scrollPerWheelClick, context.scrollFriction,
+		val view = new ScrollView(parentHierarchy, content.component, context.actorHandler, context.scrollBarDrawer,
+			axis, context.scrollBarWidth, scrollBarMargin, context.scrollPerWheelClick, context.scrollFriction,
 			customDrawers, limitsToContentSize, context.scrollBarIsInsideContent)
-		maxOptimalSize.foreach { maxOptimal => area.addConstraint(MaxOptimalSizeModifier(maxOptimal)) }
-		content.attachTo(area)
+		maxOptimalLength.foreach { maxOptimal => view.addConstraintOver(axis)(MaxOptimalLengthModifier(maxOptimal)) }
+		content.attachTo(view)
 	}
 }
 
-case class ContextualScrollAreaFactory[N](factory: ScrollAreaFactory, context: N)
-	extends ContextualComponentFactory[N, Any, ContextualScrollAreaFactory]
+case class ContextualScrollViewFactory[N](factory: ScrollViewFactory, context: N)
+	extends ContextualComponentFactory[N, Any, ContextualScrollViewFactory]
 {
-	// IMPLEMENTED	--------------------------
-	
-	override def withContext[N2 <: Any](newContext: N2) = copy(context = newContext)
-	
-	
-	// COMPUTED	------------------------------
+	override def withContext[N2 <: Any](newContext: N2) =
+		copy(context = newContext)
 	
 	/**
-	  * @return A version of this factory which doesn't utilize component creation context
+	  * @return A copy of this factory that doesn't use component creation context
 	  */
 	def withoutContext = factory
-	
-	
-	// OTHER	-----------------------------
-	
-	/**
-	  * @param contentFactory Scroll area content factory factory
-	  * @tparam F Type of content component factory
-	  * @return A new scroll area builder
-	  */
-	def build[F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]](contentFactory: ContextualBuilderContentFactory[N, F]) =
-		new ContextualScrollAreaBuilder[N, F](factory, context, contentFactory)
 }
 
-class ScrollAreaBuilder[+F](factory: ScrollAreaFactory, contentFactory: ComponentFactoryFactory[F])
+class ScrollViewBuilder[+F](factory: ScrollViewFactory, contentFactory: ComponentFactoryFactory[F])
 {
 	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
 	
 	/**
-	  * Creates a new scroll area
+	  * Creates a new scroll view
+	  * @param axis Axis along which the scrolling occurs (default = Y = Vertical scrolling)
 	  * @param scrollBarMargin Margins placed around the scroll bars (wider margin as X and thinner edge margins as Y)
 	  *                        (default = 0x0)
-	  * @param maxOptimalSize Limits placed on the optimal size of this scroll area (optional)
+	  * @param maxOptimalLength Limits placed on the optimal length of this scroll view (optional)
 	  * @param customDrawers Custom drawers assigned to this scroll area (default = empty)
 	  * @param limitsToContentSize Whether scroll area size should be limited to content size (default = false)
-	  * @param fill A function for producing scroll area content. Accepts a component factory.
+	  * @param fill A function for creating the contents of this scroll view. Accepts component creation factory.
 	  * @param context Contextual scrolling information
 	  * @tparam C Type of component inside this scroll area
 	  * @tparam R Type of additional creation result
-	  * @return A new scroll area
+	  * @return A new scroll view
 	  */
-	def apply[C <: ReachComponentLike, R](scrollBarMargin: Size = Size.zero, maxOptimalSize: Option[Size] = None,
+	def apply[C <: ReachComponentLike, R](axis: Axis2D = Y, scrollBarMargin: Size = Size.zero,
+										  maxOptimalLength: Option[Double] = None,
 										  customDrawers: Vector[CustomDrawer] = Vector(),
 										  limitsToContentSize: Boolean = false)
 										 (fill: F => ComponentCreationResult[C, R])
 										 (implicit context: ScrollingContextLike) =
 	{
 		val content = Open.using(contentFactory)(fill)
-		factory(content, scrollBarMargin, maxOptimalSize, customDrawers, limitsToContentSize)
+		factory(content, axis, scrollBarMargin, maxOptimalLength, customDrawers, limitsToContentSize)
 	}
 }
 
-class ContextualScrollAreaBuilder[N, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
-(factory: ScrollAreaFactory, context: N, contentFactory: ContextualBuilderContentFactory[N, F])
+class ContextualScrollViewBuilder[N, +F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+(factory: ScrollViewFactory, context: N, contentFactory: ContextualBuilderContentFactory[N, F])
 {
 	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
 	
 	/**
-	  * Creates a new scroll area
+	  * Creates a new scroll view
+	  * @param axis Axis along which the scrolling occurs (default = Y = Vertical scrolling)
 	  * @param scrollBarMargin Margins placed around the scroll bars (wider margin as X and thinner edge margins as Y)
 	  *                        (default = 0x0)
-	  * @param maxOptimalSize Limits placed on the optimal size of this scroll area (optional)
+	  * @param maxOptimalLength Limits placed on the optimal length of this scroll view (optional)
 	  * @param customDrawers Custom drawers assigned to this scroll area (default = empty)
 	  * @param limitsToContentSize Whether scroll area size should be limited to content size (default = false)
-	  * @param fill A function for producing scroll area content. Accepts a component factory.
+	  * @param fill A function for creating the contents of this scroll view. Accepts component creation factory.
 	  * @param scrollingContext Contextual scrolling information
 	  * @tparam C Type of component inside this scroll area
 	  * @tparam R Type of additional creation result
-	  * @return A new scroll area
+	  * @return A new scroll view
 	  */
-	def apply[C <: ReachComponentLike, R](scrollBarMargin: Size = Size.zero, maxOptimalSize: Option[Size] = None,
+	def apply[C <: ReachComponentLike, R](axis: Axis2D = Y, scrollBarMargin: Size = Size.zero,
+										  maxOptimalLength: Option[Double] = None,
 										  customDrawers: Vector[CustomDrawer] = Vector(),
 										  limitsToContentSize: Boolean = false)
 										 (fill: F[N] => ComponentCreationResult[C, R])
 										 (implicit scrollingContext: ScrollingContextLike) =
 	{
 		val content = Open.withContext(contentFactory, context)(fill)
-		factory(content, scrollBarMargin, maxOptimalSize, customDrawers, limitsToContentSize)
+		factory(content, axis, scrollBarMargin, maxOptimalLength, customDrawers, limitsToContentSize)
 	}
 }
 
-class ContextualFilledScrollAreaBuilder[NC, +F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
-(factory: ScrollAreaFactory, background: ComponentColor, contentContext: NC,
+class ContextualFilledScrollViewBuilder[NC, +F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]
+(factory: ScrollViewFactory, background: ComponentColor, contentContext: NC,
  contentFactory: ContextualBuilderContentFactory[NC, F])
 {
 	private implicit def canvas: ReachCanvas = factory.parentHierarchy.top
 	
 	/**
-	  * Creates a new scroll area
+	  * Creates a new scroll view
+	  * @param axis Axis along which the scrolling occurs (default = Y = Vertical scrolling)
 	  * @param scrollBarMargin Margins placed around the scroll bars (wider margin as X and thinner edge margins as Y)
 	  *                        (default = 0x0)
-	  * @param maxOptimalSize Limits placed on the optimal size of this scroll area (optional)
+	  * @param maxOptimalLength Limits placed on the optimal length of this scroll view (optional)
 	  * @param customDrawers Custom drawers assigned to this scroll area (default = empty)
 	  * @param limitsToContentSize Whether scroll area size should be limited to content size (default = false)
-	  * @param fill A function for producing scroll area content. Accepts a component factory.
-	  * @param scrollContext Contextual scrolling information
+	  * @param fill A function for creating the contents of this scroll view. Accepts component creation factory.
+	  * @param scrollingContext Contextual scrolling information
 	  * @tparam C Type of component inside this scroll area
 	  * @tparam R Type of additional creation result
-	  * @return A new scroll area
+	  * @return A new scroll view
 	  */
-	def apply[C <: ReachComponentLike, R](scrollBarMargin: Size = Size.zero, maxOptimalSize: Option[Size] = None,
+	def apply[C <: ReachComponentLike, R](axis: Axis2D = Y, scrollBarMargin: Size = Size.zero,
+										  maxOptimalLength: Option[Double] = None,
 										  customDrawers: Vector[CustomDrawer] = Vector(),
 										  limitsToContentSize: Boolean = false)
 										 (fill: F[NC] => ComponentCreationResult[C, R])
-										 (implicit scrollContext: ScrollingContextLike) =
+										 (implicit scrollingContext: ScrollingContextLike) =
 	{
 		val content = Open.withContext(contentFactory, contentContext)(fill)
-		factory(content, scrollBarMargin, maxOptimalSize, customDrawers :+ BackgroundDrawer(background),
+		factory(content, axis, scrollBarMargin, maxOptimalLength, BackgroundDrawer(background) +: customDrawers,
 			limitsToContentSize)
 	}
 }
 
 /**
-  * A component wrapper which allows content scrolling
+  * A component wrapper which allows scrolling along one axis
   * @author Mikko Hilpinen
-  * @since 7.12.2020, v2
+  * @since 9.12.2020, v2
   */
-class ScrollArea(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
-				 actorHandler: ActorHandler, barDrawer: ScrollBarDrawerLike,
+class ScrollView(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
+				 actorHandler: ActorHandler, barDrawer: ScrollBarDrawerLike, override val axis: Axis2D = Y,
 				 override val scrollBarWidth: Double = ComponentCreationDefaults.scrollBarWidth,
 				 override val scrollBarMargin: Size = Size.zero,
 				 scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
@@ -198,7 +191,7 @@ class ScrollArea(override val parentHierarchy: ComponentHierarchy, override val 
 				 additionalDrawers: Vector[CustomDrawer] = Vector(),
 				 override val limitsToContentSize: Boolean = false,
 				 override val scrollBarIsInsideContent: Boolean = true)
-	extends CustomDrawReachComponent with ScrollAreaLike2[ReachComponentLike]
+	extends CustomDrawReachComponent with ScrollViewLike2[ReachComponentLike]
 {
 	// ATTRIBUTES	----------------------------
 	
@@ -209,9 +202,4 @@ class ScrollArea(override val parentHierarchy: ComponentHierarchy, override val 
 	
 	setupMouseHandling(actorHandler, scrollPerWheelClick)
 	sizePointer.addListener(ChangeListener.onAnyChange { updateScrollBarBounds() })
-	
-	
-	// IMPLEMENTED	----------------------------
-	
-	override def axes = Axis2D.values
 }
