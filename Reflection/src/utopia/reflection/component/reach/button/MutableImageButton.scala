@@ -112,6 +112,8 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	override protected val wrapped = new ViewImageLabel(parentHierarchy, imagePointer, insetsPointer, alignmentPointer,
 		additionalDrawers, allowUpscaling, useLowPrioritySize)
 	
+	override val focusId = hashCode()
+	
 	
 	// INITIAL CODE	-------------------------------
 	

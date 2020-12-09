@@ -1,9 +1,8 @@
 package utopia.reflection.container.swing.window
 
 import java.time.Instant
-
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.event.Changing
+import utopia.flow.event.ChangingLike
 import utopia.flow.util.WaitUtils
 import utopia.flow.util.TimeExtensions._
 import utopia.reflection.component.context.{AnimationContextLike, TextContext}
@@ -27,7 +26,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param context Component creation context (implicit)
   * @param animationContext Component animation context (implicit)
   */
-class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: Changing[ProgressState], defaultWidth: Double,
+class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: ChangingLike[ProgressState], defaultWidth: Double,
 					title: LocalizedString = LocalizedString.empty)
 				   (implicit context: TextContext, animationContext: AnimationContextLike)
 {

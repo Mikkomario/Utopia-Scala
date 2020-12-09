@@ -14,6 +14,11 @@ trait Focusable extends ReachComponentLike
 	// ABSTRACT	--------------------------------
 	
 	/**
+	  * @return Unique identifier for this focusable component
+	  */
+	def focusId: Int
+	
+	/**
 	  * @return Listeners that will be informed of this component's focus changes
 	  */
 	def focusListeners: Seq[FocusListener]

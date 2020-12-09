@@ -1,6 +1,6 @@
 package utopia.reflection.component.reach.hierarchy
 
-import utopia.flow.event.Changing
+import utopia.flow.event.ChangingLike
 import utopia.reflection.component.reach.template.ReachComponentLike
 
 /**
@@ -9,7 +9,7 @@ import utopia.reflection.component.reach.template.ReachComponentLike
   * @author Mikko Hilpinen
   * @since 7.10.2020, v2
   */
-class SwitchingHierarchyBlock(parentComponent: ReachComponentLike, switchPointer: Changing[Boolean])
+class SwitchingHierarchyBlock(parentComponent: ReachComponentLike, switchPointer: ChangingLike[Boolean])
 	extends ComponentHierarchy
 {
 	// ATTRIBUTES	---------------------------

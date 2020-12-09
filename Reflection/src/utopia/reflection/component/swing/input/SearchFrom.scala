@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.Changing
+import utopia.flow.event.ChangingLike
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
@@ -92,7 +92,7 @@ object SearchFrom
 	 selectedValuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
-	(makeNoResultsView: Changing[String] => AwtStackable)
+	(makeNoResultsView: ChangingLike[String] => AwtStackable)
 	(makeDisplay: A => C)(itemToSearchString: A => String)
 	(implicit context: ButtonContextLike, exc: ExecutionContext) =
 	{
@@ -130,7 +130,7 @@ object SearchFrom
 								  shouldDisplayPopUpOnFocusGain: Boolean = true,
 								  sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b,
 								  contentIsStateless: Boolean = true)
-								 (makeNoResultsView: Changing[String] => AwtStackable)
+								 (makeNoResultsView: ChangingLike[String] => AwtStackable)
 								 (implicit context: ButtonContextLike, exc: ExecutionContext) =
 	{
 		def makeField(item: A) = ItemLabel.contextual(item, displayFunction)
@@ -150,7 +150,7 @@ object SearchFrom
 	  * @param context Component creation context (implicit)
 	  * @return New label that adjusts itself based on changes in the search filter
 	  */
-	def noResultsLabel(noResultsText: LocalizedString, searchStringPointer: Changing[String])
+	def noResultsLabel(noResultsText: LocalizedString, searchStringPointer: ChangingLike[String])
 					  (implicit context: TextContextLike) =
 		ViewLabel.contextual(searchStringPointer,
 			new DisplayFunction[String](s => noResultsText.interpolated(Vector(s))))
@@ -224,12 +224,12 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 	}
 	
 	// When content updates, changes selection options and updates field size
-	addContentListener({ e =>
+	addContentListenerAndSimulateEvent(Vector()) { e =>
 		currentOptions = e.newValue.map { a => itemToSearchString(a) -> a }
 		updateDisplayedOptions()
 		searchField.targetWidth = (if (content.isEmpty) defaultWidth else currentSearchStackSize.width) +
 			searchIcon.map { _.width + searchIconInsets.horizontal.optimal }.getOrElse(0.0)
-	}, Some(Vector()))
+	}
 	
 	// When text field updates (while no value is selected)
 	searchField.addValueListener { event =>
@@ -241,7 +241,7 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 		}
 	}
 	
-	addValueListener({e =>
+	addValueListenerAndSimulateEvent(None) {e =>
 		e.newValue match
 		{
 			case Some(newValue) =>
@@ -251,7 +251,7 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 				currentSearchString = ""
 				searchField.clear()
 		}
-	}, Some(None))
+	}
 	
 	// Possibly adds custom drawing for the search image
 	searchIcon.foreach { img => searchField.addCustomDrawer(ImageDrawer(img, searchIconInsets, Alignment.Right)) }

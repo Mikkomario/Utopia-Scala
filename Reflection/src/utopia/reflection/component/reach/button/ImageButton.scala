@@ -144,6 +144,8 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, i
 		useLowPrioritySize)
 	override val focusListeners = new ButtonDefaultFocusListener(_statePointer) +: additionalFocusListeners
 	
+	override val focusId = hashCode()
+	
 	/**
 	  * The overall shade of this button (calculated based on the focused-state)
 	  */

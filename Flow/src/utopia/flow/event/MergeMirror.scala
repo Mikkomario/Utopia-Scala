@@ -12,8 +12,21 @@ object MergeMirror
 	 * @tparam R Merged / mapped item type
 	 * @return A new mirror
 	 */
-	def of[O1, O2, R](firstSource: Changing[O1], secondSource: Changing[O2])(f: (O1, O2) => R) =
-		new MergeMirror(firstSource, secondSource)(f)
+	def of[O1, O2, R](firstSource: ChangingLike[O1], secondSource: ChangingLike[O2])(f: (O1, O2) => R) =
+	{
+		// Uses mapping functions or even a fixed value if possible
+		if (firstSource.isChanging)
+		{
+			if (secondSource.isChanging)
+				apply(firstSource, secondSource)(f)
+			else
+				firstSource.map { f(_, secondSource.value) }
+		}
+		else if (secondSource.isChanging)
+			secondSource.map { f(firstSource.value, _) }
+		else
+			Fixed(f(firstSource.value, secondSource.value))
+	}
 }
 
 /**
@@ -27,8 +40,9 @@ object MergeMirror
  * @tparam O2 Type of the second mirror origin (value from second source item)
  * @tparam Reflection Type of mirror reflection (value from this item)
  */
-class MergeMirror[O1, O2, Reflection](val firstSource: Changing[O1], val secondSource: Changing[O2])(
-	f: (O1, O2) => Reflection) extends Changing[Reflection]
+case class MergeMirror[O1, O2, Reflection](firstSource: ChangingLike[O1], secondSource: ChangingLike[O2])
+										  (f: (O1, O2) => Reflection)
+	extends Changing[Reflection]
 {
 	// ATTRIBUTES   ------------------------------
 	
@@ -48,8 +62,10 @@ class MergeMirror[O1, O2, Reflection](val firstSource: Changing[O1], val secondS
 	
 	override def value = _value
 	
+	override def isChanging = firstSource.isChanging || secondSource.isChanging
 	
-	// OTHER    ----------------------------------
+	
+	// OTHER	---------------------------------
 	
 	private def updateValue(newValue: Reflection) =
 	{

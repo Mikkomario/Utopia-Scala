@@ -1,7 +1,7 @@
 package utopia.reflection.component.reach.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.Changing
+import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.genesis.shape.shape2D.Point
 import utopia.reflection.color.{ColorRole, ColorShade, ColorShadeVariant}
 import utopia.reflection.color.ColorShade.Standard
@@ -52,7 +52,7 @@ class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param action Action performed each time this button is triggered
 	  * @return A new button
 	  */
-	def apply(imagesPointer: Changing[ButtonImageSet], enabledPointer: Changing[Boolean] = Changing.wrap(true),
+	def apply(imagesPointer: ChangingLike[ButtonImageSet], enabledPointer: ChangingLike[Boolean] = Fixed(true),
 			  insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
 			  hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
 			  additionalDrawers: Vector[CustomDrawer] = Vector(),
@@ -93,7 +93,7 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
 	  * @param action Action performed each time this button is triggered
 	  * @return A new button
 	  */
-	def withIcon(iconPointer: Changing[SingleColorIcon], enabledPointer: Changing[Boolean] = Changing.wrap(true),
+	def withIcon(iconPointer: ChangingLike[SingleColorIcon], enabledPointer: ChangingLike[Boolean] = Fixed(true),
 				 insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
 				 hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
 				 additionalDrawers: Vector[CustomDrawer] = Vector(),
@@ -119,8 +119,8 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
 	  * @param action Action performed each time this button is triggered
 	  * @return A new button
 	  */
-	def withColouredIcon(iconPointer: Changing[SingleColorIcon], rolePointer: Changing[ColorRole],
-						 enabledPointer: Changing[Boolean] = Changing.wrap(true),
+	def withColouredIcon(iconPointer: ChangingLike[SingleColorIcon], rolePointer: ChangingLike[ColorRole],
+						 enabledPointer: ChangingLike[Boolean] = Fixed(true),
 						 preferredShade: ColorShade = Standard, insets: StackInsets = StackInsets.zero,
 						 alignment: Alignment = Alignment.Center, hotKeys: Set[Int] = Set(),
 						 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
@@ -139,8 +139,8 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
   * @author Mikko Hilpinen
   * @since 29.10.2020, v2
   */
-class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changing[ButtonImageSet],
-					  enabledPointer: Changing[Boolean] = Changing.wrap(true),
+class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: ChangingLike[ButtonImageSet],
+					  enabledPointer: ChangingLike[Boolean] = Fixed(true),
 					  insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
 					  hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
 					  additionalDrawers: Vector[CustomDrawer] = Vector(),
@@ -158,6 +158,7 @@ class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changi
 		statePointer.mergeWith(imagesPointer) { (state, images) => images(state) }, insets, alignment,
 		additionalDrawers, allowUpscaling, useLowPrioritySize)
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners
+	override val focusId = hashCode()
 	
 	/**
 	  * A pointer to this button's current overall shade (based on the focused-state)

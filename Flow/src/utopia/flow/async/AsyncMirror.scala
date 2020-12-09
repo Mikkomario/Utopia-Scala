@@ -1,6 +1,6 @@
 package utopia.flow.async
 
-import utopia.flow.event.{ChangeListener, Changing}
+import utopia.flow.event.{ChangeListener, Changing, ChangingLike}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -18,19 +18,22 @@ object AsyncMirror
 	  * @tparam Reflection Successful mapping result type
 	  * @return A new asynchronously mirroring pointer
 	  */
-	def trying[Origin, Reflection](source: Changing[Origin], placeHolder: Reflection)
+	def trying[Origin, Reflection](source: ChangingLike[Origin], placeHolder: Reflection)
 	                                (synchronousMap: Origin => Try[Reflection])(errorHandler: Throwable => Unit)
 	                                (implicit exc: ExecutionContext) =
 	{
-		new AsyncMirror[Origin, Try[Reflection], Reflection](source, placeHolder)(synchronousMap)({ (previous, result) =>
-			result.flatten match
-			{
-				case Success(value) => value
-				case Failure(error) =>
-					errorHandler(error)
-					previous
-			}
-		})
+		if (source.isChanging)
+			new AsyncMirror[Origin, Try[Reflection], Reflection](source, placeHolder)(synchronousMap)({ (previous, result) =>
+				result.flatten match
+				{
+					case Success(value) => value
+					case Failure(error) =>
+						errorHandler(error)
+						previous
+				}
+			})
+		else
+			new ChangeFuture[Reflection](placeHolder, Future { synchronousMap(source.value).getOrElse(placeHolder) })
 	}
 	
 	/**
@@ -44,19 +47,22 @@ object AsyncMirror
 	  * @tparam Reflection Successful mapping result type
 	  * @return A new asynchronously mirroring pointer
 	  */
-	def catching[Origin, Reflection](source: Changing[Origin], placeHolder: Reflection)
+	def catching[Origin, Reflection](source: ChangingLike[Origin], placeHolder: Reflection)
 	                                (synchronousMap: Origin => Reflection)(errorHandler: Throwable => Unit)
 	                                (implicit exc: ExecutionContext) =
 	{
-		new AsyncMirror[Origin, Reflection, Reflection](source, placeHolder)(synchronousMap)({ (previous, result) =>
-			result match
-			{
-				case Success(value) => value
-				case Failure(error) =>
-					errorHandler(error)
-					previous
-			}
-		})
+		if (source.isChanging)
+			new AsyncMirror[Origin, Reflection, Reflection](source, placeHolder)(synchronousMap)({ (previous, result) =>
+				result match
+				{
+					case Success(value) => value
+					case Failure(error) =>
+						errorHandler(error)
+						previous
+				}
+			})
+		else
+			new ChangeFuture[Reflection](placeHolder, Future { synchronousMap(source.value) })
 	}
 	
 	/**
@@ -70,7 +76,7 @@ object AsyncMirror
 	  * @tparam Reflection Successful mapping result type
 	  * @return A new asynchronously mirroring pointer
 	  */
-	def apply[Origin, Reflection](source: Changing[Origin], placeHolder: Reflection)
+	def apply[Origin, Reflection](source: ChangingLike[Origin], placeHolder: Reflection)
 	                             (synchronousMap: Origin => Reflection)(implicit exc: ExecutionContext) =
 		catching[Origin, Reflection](source, placeHolder)(synchronousMap) { _.printStackTrace() }
 }
@@ -92,7 +98,7 @@ object AsyncMirror
   * @tparam Result Mapping result type before merging
   * @tparam Reflection Mapping result type after merging
   */
-class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], initialPlaceHolder: Reflection)
+class AsyncMirror[Origin, Result, Reflection](val source: ChangingLike[Origin], initialPlaceHolder: Reflection)
                                              (synchronousMap: Origin => Result)
                                              (merge: (Reflection, Try[Result]) => Reflection)
                                              (implicit exc: ExecutionContext)
@@ -124,7 +130,17 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 	source.addListener { event => requestCalculation(event.newValue) }
 	
 	
+	// COMPUTED	-------------------------
+	
+	/**
+	  * @return Whether this mirror is currently processing a change
+	  */
+	def isProcessing = isProcessingPointer.value
+	
+	
 	// IMPLEMENTED  ---------------------
+	
+	override def isChanging = source.isChanging || isProcessing
 	
 	override def value = cachedValuePointer.value
 	

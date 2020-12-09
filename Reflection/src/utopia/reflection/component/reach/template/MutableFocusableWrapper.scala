@@ -19,6 +19,8 @@ trait MutableFocusableWrapper extends MutableFocusable
 	
 	// IMPLEMENTED	-------------------------
 	
+	override def focusId = focusable.focusId
+	
 	override def focusListeners_=(newListeners: Seq[FocusListener]) = focusable.focusListeners = newListeners
 	
 	override def focusListeners = focusable.focusListeners

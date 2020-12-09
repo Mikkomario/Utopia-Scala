@@ -1,7 +1,7 @@
 package utopia.reflection.component.reach.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.Changing
+import utopia.flow.event.Fixed
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.Point
 import utopia.reflection.component.context.ButtonContextLike
@@ -112,8 +112,9 @@ class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, tex
 	private val _statePointer = new PointerWithEvents(ButtonState.default)
 	
 	override val focusListeners = new ButtonDefaultFocusListener(_statePointer) +: additionalFocusListeners
+	override val focusId = hashCode()
 	override protected val wrapped = new TextLabel(parentHierarchy, text, textDrawContext,
-		ButtonBackgroundViewDrawer(Changing.wrap(color), statePointer, borderWidth) +: additionalDrawers,
+		ButtonBackgroundViewDrawer(Fixed(color), statePointer, borderWidth) +: additionalDrawers,
 		allowLineBreaks, allowTextShrink)
 	
 	

@@ -163,6 +163,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	val colorPointer = new PointerWithEvents(initialColor)
 	
 	var focusListeners: Seq[FocusListener] = Vector(new ButtonDefaultFocusListener(_statePointer))
+	override val focusId = hashCode()
 	
 	override protected var actions: Seq[() => Unit] = Vector[() => Unit]()
 	

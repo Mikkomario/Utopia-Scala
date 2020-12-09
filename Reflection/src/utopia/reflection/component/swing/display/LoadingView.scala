@@ -1,6 +1,6 @@
 package utopia.reflection.component.swing.display
 
-import utopia.flow.event.{ChangeListener, Changing}
+import utopia.flow.event.{ChangeListener, ChangingLike}
 import utopia.genesis.shape.shape2D.Direction2D.Up
 import utopia.reflection.component.context.{AnimationContextLike, TextContext}
 import utopia.reflection.component.swing.label.TextLabel
@@ -27,7 +27,7 @@ object LoadingView
 	  * @param animationContext Animation context (implicit)
 	  * @return A new loading view
 	  */
-	def apply(loadingLabel: AwtStackable, progressPointer: Changing[ProgressState], defaultWidth: Double)
+	def apply(loadingLabel: AwtStackable, progressPointer: ChangingLike[ProgressState], defaultWidth: Double)
 			 (implicit context: TextContext, animationContext: AnimationContextLike) =
 		new LoadingView(loadingLabel, progressPointer, defaultWidth, context)
 }
@@ -37,7 +37,7 @@ object LoadingView
   * @author Mikko Hilpinen
   * @since 30.8.2020, v1.2.1
   */
-class LoadingView(loadingLabel: AwtStackable, progressPointer: Changing[ProgressState], defaultWidth: Double,
+class LoadingView(loadingLabel: AwtStackable, progressPointer: ChangingLike[ProgressState], defaultWidth: Double,
 				  context: TextContext)(implicit animationContext: AnimationContextLike)
 	extends StackableAwtComponentWrapperWrapper with AwtContainerRelated
 {

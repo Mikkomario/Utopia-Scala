@@ -5,6 +5,8 @@
 - Deprecated PointerLike trait and replaced it with Settable trait in all implementations
 - Renamed Lazy to MutableLazy and VolatileLazy to MutableVolatileLazy
     - Also, Lazy class parameter is now a private call by name parameter and no longer a public function with parameters
+- Replaced Changing with ChangingLike in most places
+  - Also, replaced Changing.wrap(...) with Fixed(...)
 ### Deprecations
 - Deprecated LazyLike.get. Lazy instances now behave more like pointers, extending the new Viewable trait.
 - Deprecated Volatile.get in favor of .value
@@ -57,7 +59,6 @@ in a lazy container is not required or desirable
 - XmlElement
   - .toSimpleModel, which allows somewhat heuristic xml to json conversion
   - Other utility methods
-
 ### Fixes
 - Fixed a bug in LocalDate.next(WeekDay) and LocalDate.previous(WeekDay) (returned same day even when 
 includeSelf-parameter was set to false)
@@ -68,8 +69,6 @@ includeSelf-parameter was set to false)
 - CsvReader now removes '-characters from the beginnings of columns, if present
 - Changed Duration.description behavior when dealing with over 72 hour durations
 - Added implicit conversion from Period to Duration (activated by importing TimeExtensions._)
-- Overrided a couple of methods in the "Unchanging" Changing implementation so that not so many unnecessary resources 
-will be used, knowing the wrapped value won't change.
 
 ## v1.8
 ### Scala

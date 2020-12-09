@@ -23,6 +23,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	private val targetsPointer = new PointerWithEvents(Set[Focusable]())
 	private val orderedTargetsPointer = targetsPointer.lazyMap { targets =>
 		sortComponents(targets.map { c => c.parentHierarchy.toVector -> c }.toVector) }
+	private val targetIdsPointer = targetsPointer.lazyMap { _.map { _.focusId } }
 	
 	private var focusOwner: Option[Focusable] = None
 	
@@ -48,6 +49,8 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	private def targets_=(newTargets: Set[Focusable]) = targetsPointer.value = newTargets
 	
 	private def orderedTargets = orderedTargetsPointer.value
+	
+	private def targetIds = targetIdsPointer.value
 	
 	
 	// OTHER	---------------------------------
@@ -94,7 +97,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	  * @param component A component
 	  * @return Whether that component is the current focus owner
 	  */
-	def isFocusOwner(component: Any) = focusOwner.contains(component) && hasFocus
+	def isFocusOwner(component: Focusable) = focusOwner.exists { _.focusId == component.focusId } && hasFocus
 	
 	/**
 	  * Moves the focus one step forward or backward, keeping it always inside this component system
@@ -211,7 +214,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 		else
 		{
 			// Targeted component must be registered
-			if (targets.contains(newComponent))
+			if (targetIds.contains(newComponent.focusId))
 			{
 				if (hasFocus)
 				{

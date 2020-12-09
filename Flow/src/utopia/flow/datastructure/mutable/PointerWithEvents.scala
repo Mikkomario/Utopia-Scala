@@ -23,6 +23,8 @@ class PointerWithEvents[A](initialValue: A) extends Settable[A] with Changing[A]
 	
 	// IMPLEMENTED	----------------
 	
+	override def isChanging = true
+	
 	/**
 	  * @return The current value in this mutable
 	  */
@@ -55,6 +57,8 @@ class PointerWithEvents[A](initialValue: A) extends Settable[A] with Changing[A]
 	private class View extends Changing[A]
 	{
 		override def value = PointerWithEvents.this.value
+		
+		override def isChanging = PointerWithEvents.this.isChanging
 		
 		override def listeners = PointerWithEvents.this.listeners
 		

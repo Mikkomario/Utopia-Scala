@@ -1,7 +1,7 @@
 package utopia.reflection.component.reach.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.Changing
+import utopia.flow.event.Fixed
 import utopia.genesis.color.Color
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.Point
@@ -153,6 +153,7 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, image: Image, text
 	private val _statePointer = new PointerWithEvents(ButtonState.default)
 	
 	override val focusListeners = new ButtonDefaultFocusListener(_statePointer) +: additionalFocusListeners
+	override val focusId = hashCode()
 	
 	override protected val wrapped =
 	{
@@ -160,7 +161,7 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, image: Image, text
 		val actualTextInsets = textInsets + commonInsets.withoutSides(alignment.directions) + borderWidth
 		new ImageAndTextLabel(parentHierarchy, image, text, font, textColor, alignment,
 			actualImageInsets, actualTextInsets, betweenLinesMargin,
-			ButtonBackgroundViewDrawer(Changing.wrap(color), statePointer, borderWidth) +: additionalDrawers,
+			ButtonBackgroundViewDrawer(Fixed(color), statePointer, borderWidth) +: additionalDrawers,
 			allowLineBreaks, allowImageUpscaling, allowTextShrink, useLowPriorityImageSize, forceEqualBreadth)
 	}
 	

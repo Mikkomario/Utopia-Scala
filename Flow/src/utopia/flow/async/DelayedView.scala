@@ -1,13 +1,40 @@
 package utopia.flow.async
 
 import java.time.Instant
-
-import utopia.flow.event.{ChangeListener, Changing}
+import utopia.flow.event.{ChangeListener, Changing, ChangingLike}
 import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.WaitUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration
+
+object DelayedView
+{
+	/**
+	  * Creates a delayed view into the specified item's value. This delayed view will only fire change events after
+	  * there's a long enough of period without changes in the original item
+	  * @param source A changing item
+	  * @param delay Delay to apply to item value changes
+	  * @param exc Implicit execution context
+	  * @tparam A Type of item values
+	  * @return A new delayed view into the item (where all change events are delayed at least by <i>delay</i>)
+	  */
+	def of[A](source: ChangingLike[A], delay: => Duration)(implicit exc: ExecutionContext) =
+	{
+		// Won't wrap non-changing items
+		if (source.isChanging)
+		{
+			val cachedDelay = delay
+			// If there is no delay, there is no need to wrap the source item
+			if (cachedDelay > Duration.Zero)
+				new DelayedView(source, delay)
+			else
+				source
+		}
+		else
+			source
+	}
+}
 
 /**
   * This view to a changing item waits slightly before updating its value / propagating change events. Only when the
@@ -21,7 +48,7 @@ import scala.concurrent.duration.Duration
   * @param exc Implicit execution context
   * @tparam A Type of original pointer value
   */
-class DelayedView[A](val source: Changing[A], delay: Duration)(implicit exc: ExecutionContext) extends Changing[A]
+class DelayedView[A](val source: ChangingLike[A], delay: Duration)(implicit exc: ExecutionContext) extends Changing[A]
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -61,4 +88,5 @@ class DelayedView[A](val source: Changing[A], delay: Duration)(implicit exc: Exe
 	override def value = valuePointer.value
 	override def listeners = valuePointer.listeners
 	override def listeners_=(newListeners: Vector[ChangeListener[A]]) = valuePointer.listeners = newListeners
+	override def isChanging = source.isChanging || isWaitingFlag.isSet
 }

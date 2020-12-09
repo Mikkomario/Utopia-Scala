@@ -10,7 +10,13 @@ object Mirror
 	 * @tparam R Reflected / mapped item type
 	 * @return A new mirror
 	 */
-	def of[O, R](source: Changing[O])(f: O => R) = new Mirror(source)(f)
+	def of[O, R](source: ChangingLike[O])(f: O => R) =
+	{
+		if (source.isChanging)
+			apply(source)(f)
+		else
+			Fixed(f(source.value))
+	}
 }
 
 /**
@@ -22,7 +28,7 @@ object Mirror
  * @tparam Origin Type of the mirror origin (value from source item)
  * @tparam Reflection Type of mirror reflection (value from this item)
  */
-class Mirror[Origin, Reflection](val source: Changing[Origin])(f: Origin => Reflection) extends Changing[Reflection]
+case class Mirror[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => Reflection) extends Changing[Reflection]
 {
 	// ATTRIBUTES   ------------------------------
 	
@@ -48,4 +54,6 @@ class Mirror[Origin, Reflection](val source: Changing[Origin])(f: Origin => Refl
 	// IMPLEMENTED  ------------------------------
 	
 	override def value = _value
+	
+	override def isChanging = source.isChanging
 }

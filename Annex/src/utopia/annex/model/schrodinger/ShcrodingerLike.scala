@@ -1,7 +1,7 @@
 package utopia.annex.model.schrodinger
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.event.Changing
+import utopia.flow.event.ChangingLike
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration
@@ -14,14 +14,14 @@ import scala.concurrent.duration.Duration
   * @tparam R Type of received response
   * @tparam I Type of instance within response
   */
-trait ShcrodingerLike[R, I]
+trait ShcrodingerLike[+R, +I]
 {
 	// ABSTRACT ---------------------------
 	
 	/**
 	  * @return A pointer to the currently tracked instance value
 	  */
-	def instancePointer: Changing[I]
+	def instancePointer: ChangingLike[I]
 	
 	/**
 	  * @param exc Implicit execution context
@@ -38,7 +38,7 @@ trait ShcrodingerLike[R, I]
 	  * @return A pointer to the currently tracked server response. Contains None while the server response hasn't been
 	  *         received or resolved.
 	  */
-	def serverResultPointer: Changing[Option[R]]
+	def serverResultPointer: ChangingLike[Option[R]]
 	
 	
 	// COMPUTED ---------------------------

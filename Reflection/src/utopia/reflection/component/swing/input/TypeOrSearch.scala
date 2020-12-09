@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.Changing
+import utopia.flow.event.ChangingLike
 import utopia.reflection.color.ColorRole.{Gray, Secondary}
 import utopia.reflection.color.ColorShade
 import utopia.reflection.color.ColorShade.Light
@@ -85,7 +85,7 @@ class TypeOrSearch
  searchDelay: Duration = Duration.Zero)
 (optionsForInput: String => Seq[String])
 (implicit scrollingContext: ScrollingContextLike, animationContext: AnimationContextLike, exc: ExecutionContext)
-	extends StackableAwtComponentWrapperWrapper with PoolWithPointer[Vector[String], Changing[Vector[String]]]
+	extends StackableAwtComponentWrapperWrapper with PoolWithPointer[Vector[String], ChangingLike[Vector[String]]]
 {
 	// ATTRIBUTES   ----------------------------
 	
@@ -112,13 +112,13 @@ class TypeOrSearch
 			case None => TextButton.contextualWithoutAction(
 				addButtonText.notEmpty.getOrElse { "Add".autoLocalized })
 		}
-		button.registerAction(onAddButtonPressed)
+		button.registerAction { () => onAddButtonPressed() }
 		button
 	}
 	private val optionsStack = parentContext.use { implicit c => AnimatedStack.contextualColumn[Display](itemsAreRelated = true) }
 	// Stack.column[Display](parentContext.relatedItemsStackMargin, margin)
 	private val manager = ContainerSelectionManager.forStatelessItems[String, Display](optionsStack,
-		new BackgroundDrawer(selectionColor)) { new Display(_) }
+		BackgroundDrawer(selectionColor)) { new Display(_) }
 	private val view =
 	{
 		val upperPart = Stack.rowWithItems(Vector(textField, addButton), StackLength.fixedZero)

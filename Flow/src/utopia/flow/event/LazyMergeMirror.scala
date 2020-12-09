@@ -1,5 +1,6 @@
 package utopia.flow.event
 
+import utopia.flow.datastructure.immutable.Lazy
 import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.datastructure.template.LazyLike
 
@@ -15,8 +16,21 @@ object LazyMergeMirror
 	  * @tparam Reflection Type of merge function result
 	  * @return A new lazily merging mirror
 	  */
-	def of[O1, O2, Reflection](source1: Changing[O1], source2: Changing[O2])(merge: (O1, O2) => Reflection) =
-		new LazyMergeMirror(source1, source2)(merge)
+	def of[O1, O2, Reflection](source1: ChangingLike[O1], source2: ChangingLike[O2])(merge: (O1, O2) => Reflection) =
+	{
+		// Uses lazy mapping or even lazy wrapping if possible
+		if (source1.isChanging)
+		{
+			if (source2.isChanging)
+				apply(source1, source2)(merge)
+			else
+				source1.lazyMap { merge(_, source2.value) }
+		}
+		else if (source2.isChanging)
+			source2.lazyMap { merge(source1.value, _) }
+		else
+			Lazy { merge(source1.value, source2.value) }
+	}
 }
 
 /**
@@ -24,18 +38,20 @@ object LazyMergeMirror
   * @author Mikko Hilpinen
   * @since 24.10.2020, v1.9
   */
-class LazyMergeMirror[O1, O2, Reflection](source1: Changing[O1], source2: Changing[O2])(merge: (O1, O2) => Reflection)
+case class LazyMergeMirror[O1, O2, Reflection](source1: ChangingLike[O1], source2: ChangingLike[O2])
+											  (merge: (O1, O2) => Reflection)
 	extends LazyLike[Reflection]
 {
 	// ATTRIBUTES	-------------------------------
 	
 	private val cache = ResettableLazy { merge(source1.value, source2.value) }
+	private lazy val listener = ChangeListener.onAnyChange { cache.reset() }
 	
 	
 	// INITIAL CODE	-------------------------------
 	
-	source1.addListener { _ => cache.reset() }
-	source2.addListener { _ => cache.reset() }
+	source1.addListener(listener)
+	source2.addListener(listener)
 	
 	
 	// IMPLEMENTED	-------------------------------

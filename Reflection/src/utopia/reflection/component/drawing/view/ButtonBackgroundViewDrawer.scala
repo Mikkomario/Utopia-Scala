@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.view
 
-import utopia.flow.event.Changing
+import utopia.flow.event.ChangingLike
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
@@ -20,7 +20,7 @@ import utopia.reflection.shape.Border
   * @param borderColorVariance Color variance modifier applied on the raised border (default = 0.5)
   * @param drawLevel Drawing level used when using this drawer (default = Background)
   */
-case class ButtonBackgroundViewDrawer(baseColorPointer: Changing[Color], statePointer: Changing[ButtonState],
+case class ButtonBackgroundViewDrawer(baseColorPointer: ChangingLike[Color], statePointer: ChangingLike[ButtonState],
 									  borderWidth: Double = 0.0, colorChangeIntensity: Double = 1.0,
 									  borderColorVariance: Double = 0.5, override val drawLevel: DrawLevel = Background)
 	extends BorderDrawerLike

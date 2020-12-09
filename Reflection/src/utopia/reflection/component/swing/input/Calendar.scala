@@ -316,7 +316,8 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 		}
 	}
 	
-	private class DaySelection(yearMonth: YearMonth) extends StackableAwtComponentWrapperWrapper with InteractionWithPointer[Option[LocalDate]]
+	private class DaySelection(yearMonth: YearMonth) extends StackableAwtComponentWrapperWrapper
+		with InteractionWithPointer[Option[LocalDate]]
 	{
 		// ATTRIBUTES	-------------------
 		

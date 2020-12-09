@@ -3,7 +3,7 @@ package utopia.reflection.component.drawing.view
 import utopia.flow.datastructure.immutable.View
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.datastructure.template.Viewable
-import utopia.flow.event.Changing
+import utopia.flow.event.{Changing, ChangingLike, Fixed}
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.{Bounds, Point, Vector2D}
 import utopia.reflection.component.drawing.immutable.TextDrawContext
@@ -16,12 +16,12 @@ import utopia.reflection.text.MeasuredText
   * @author Mikko Hilpinen
   * @since 4.11.2020, v2
   */
-case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePointer: Viewable[TextDrawContext],
-									selectedRangesPointer: Changing[Iterable[Range]] = Changing.wrap(Vector()),
-									caretPositionPointer: Changing[Option[Int]] = Changing.wrap(None),
+case class SelectableTextViewDrawer(textPointer: ChangingLike[MeasuredText], stylePointer: Viewable[TextDrawContext],
+									selectedRangesPointer: ChangingLike[Iterable[Range]] = Fixed(Vector()),
+									caretPositionPointer: ChangingLike[Option[Int]] = Fixed(None),
 									highlightedTextColorPointer: Viewable[Color] = View(Color.textBlack),
 									highlightedBackgroundPointer: Viewable[Option[Color]] = View(None),
-									caretColorPointer: Viewable[Color] = Changing.wrap(Color.textBlack),
+									caretColorPointer: Viewable[Color] = Fixed(Color.textBlack),
 									caretWidth: Double = 1.0,
 									override val drawLevel: DrawLevel = Normal)
 	extends SelectableTextDrawerLike

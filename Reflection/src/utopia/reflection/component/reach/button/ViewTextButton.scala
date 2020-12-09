@@ -1,7 +1,7 @@
 package utopia.reflection.component.reach.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.Changing
+import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.Point
 import utopia.reflection.color.ColorShade.Standard
@@ -63,8 +63,8 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam A Type of displayed content
 	  * @return A new button
 	  */
-	def apply[A](contentPointer: Changing[A], font: Font, colorPointer: Changing[ComponentColor],
-				 enabledPointer: Changing[Boolean] = Changing.wrap(true),
+	def apply[A](contentPointer: ChangingLike[A], font: Font, colorPointer: ChangingLike[ComponentColor],
+				 enabledPointer: ChangingLike[Boolean] = Fixed(true),
 				 displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
 				 alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
 				 betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
@@ -98,14 +98,14 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param action The action performed when this button is pressed
 	  * @return A new button
 	  */
-	def withStaticText(text: LocalizedString, font: Font, colorPointer: Changing[ComponentColor],
-					   enabledPointer: Changing[Boolean] = Changing.wrap(true), borderWidth: Double = 0.0,
+	def withStaticText(text: LocalizedString, font: Font, colorPointer: ChangingLike[ComponentColor],
+					   enabledPointer: ChangingLike[Boolean] = Fixed(true), borderWidth: Double = 0.0,
 					   alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
 					   betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
 					   hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
 					   additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
 					   allowTextShrink: Boolean = false)(action: => Unit) =
-		new ViewTextButton[LocalizedString](parentHierarchy, Changing.wrap(text), font, colorPointer, enabledPointer,
+		new ViewTextButton[LocalizedString](parentHierarchy, Fixed(text), font, colorPointer, enabledPointer,
 			DisplayFunction.identity, borderWidth, alignment, textInsets, betweenLinesMargin, hotKeys, hotKeyCharacters,
 			additionalDrawers, additionalFocusListeners, allowLineBreaks, allowTextShrink)(_ => action)
 }
@@ -131,13 +131,13 @@ object ContextualViewTextButtonFactory
 		  * @tparam A Type of displayed content
 		  * @return A new button
 		  */
-		def apply[A](contentPointer: Changing[A], enabledPointer: Changing[Boolean] = Changing.wrap(true),
+		def apply[A](contentPointer: ChangingLike[A], enabledPointer: ChangingLike[Boolean] = Fixed(true),
 					 displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[Int] = Set(),
 					 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
 					 additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
 		{
 			val context = factory.context
-			factory.factory[A](contentPointer, context.font, Changing.wrap(context.buttonColor), enabledPointer,
+			factory.factory[A](contentPointer, context.font, Fixed(context.buttonColor), enabledPointer,
 				displayFunction, context.borderWidth, context.textAlignment, context.textInsets,
 				context.betweenLinesMargin.optimal, hotKeys, hotKeyCharacters, additionalDrawers,
 				additionalFocusListeners, context.allowLineBreaks, context.allowTextShrink)(action)
@@ -157,11 +157,11 @@ object ContextualViewTextButtonFactory
 		  * @param action The action performed when this button is pressed
 		  * @return A new button
 		  */
-		def withStaticText(text: LocalizedString, enabledPointer: Changing[Boolean] = Changing.wrap(true),
+		def withStaticText(text: LocalizedString, enabledPointer: ChangingLike[Boolean] = Fixed(true),
 						   hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
 						   additionalDrawers: Seq[CustomDrawer] = Vector(),
 						   additionalFocusListeners: Seq[FocusListener] = Vector())(action: => Unit) =
-			apply[LocalizedString](Changing.wrap(text), enabledPointer, DisplayFunction.identity, hotKeys,
+			apply[LocalizedString](Fixed(text), enabledPointer, DisplayFunction.identity, hotKeys,
 				hotKeyCharacters, additionalDrawers, additionalFocusListeners) { _ => action }
 	}
 }
@@ -195,8 +195,8 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
 	  * @tparam A Type of displayed content
 	  * @return A new button
 	  */
-	def withChangingColor[A](contentPointer: Changing[A], colorPointer: Changing[ComponentColor],
-							 enabledPointer: Changing[Boolean] = Changing.wrap(true),
+	def withChangingColor[A](contentPointer: ChangingLike[A], colorPointer: ChangingLike[ComponentColor],
+							 enabledPointer: ChangingLike[Boolean] = Fixed(true),
 							 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 							 borderWidth: Double = context.margins.verySmall, hotKeys: Set[Int] = Set(),
 							 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
@@ -225,8 +225,8 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
 	  * @tparam A Type of displayed content
 	  * @return A new button
 	  */
-	def withChangingRole[A](contentPointer: Changing[A], rolePointer: Changing[ColorRole],
-							enabledPointer: Changing[Boolean] = Changing.wrap(true),
+	def withChangingRole[A](contentPointer: ChangingLike[A], rolePointer: ChangingLike[ColorRole],
+							enabledPointer: ChangingLike[Boolean] = Fixed(true),
 							displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 							preferredShade: ColorShade = Standard, borderWidth: Double = context.margins.verySmall,
 							hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
@@ -242,9 +242,9 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
   * @author Mikko Hilpinen
   * @since 26.10.2020, v2
   */
-class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Changing[A], font: Font,
-						colorPointer: Changing[ComponentColor],
-						enabledPointer: Changing[Boolean] = Changing.wrap(true),
+class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: ChangingLike[A], font: Font,
+						colorPointer: ChangingLike[ComponentColor],
+						enabledPointer: ChangingLike[Boolean] = Fixed(true),
 						displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
 						alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
 						betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
@@ -265,6 +265,7 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Cha
 	}
 	
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners
+	override val focusId = hashCode()
 	override protected val wrapped = new ViewTextLabel[A](parentHierarchy, contentPointer, stylePointer,
 		displayFunction, ButtonBackgroundViewDrawer(colorPointer.map { c => c: Color }, statePointer, borderWidth) +:
 			additionalDrawers, allowLineBreaks, allowTextShrink)

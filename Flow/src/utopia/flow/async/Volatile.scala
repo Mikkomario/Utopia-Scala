@@ -23,6 +23,11 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
     
     override var listeners = Vector[ChangeListener[A]]()
     
+    /**
+      * An immutable view of this volatile instance
+      */
+    lazy val valueView: Changing[A] = new View()
+    
     
     // COMPUTED    -----------------
     
@@ -38,6 +43,8 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
     override def value = this.synchronized { _value }
     
     override def value_=(newValue: A) = this.synchronized { setValue(newValue) }
+    
+    override def isChanging = true
     
     
     // OTHER    --------------------
@@ -148,5 +155,19 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
         val oldValue = _value
         _value = newValue
         fireChangeEvent(oldValue)
+    }
+    
+    
+    // NESTED   ---------------------------
+    
+    private class View extends Changing[A]
+    {
+        override def listeners = Volatile.this.listeners
+    
+        override def listeners_=(newListeners: Vector[ChangeListener[A]]) = Volatile.this.listeners = newListeners
+    
+        override def isChanging = Volatile.this.isChanging
+    
+        override def value = Volatile.this.value
     }
 }

@@ -1,6 +1,6 @@
 package utopia.reflection.component.reach.label
 
-import utopia.flow.event.Changing
+import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.genesis.image.Image
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.view.ImageViewDrawer
@@ -28,8 +28,8 @@ class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param useLowPrioritySize Whether low priority size constraints should be used (default = false)
 	  * @return A new image label
 	  */
-	def apply(imagePointer: Changing[Image], insetsPointer: Changing[StackInsets] = Changing.wrap(StackInsets.zero),
-			  alignmentPointer: Changing[Alignment] = Changing.wrap(Alignment.Center),
+	def apply(imagePointer: ChangingLike[Image], insetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.zero),
+			  alignmentPointer: ChangingLike[Alignment] = Fixed(Alignment.Center),
 			  additionalCustomDrawers: Vector[CustomDrawer] = Vector(), allowUpscaling: Boolean = true,
 			  useLowPrioritySize: Boolean = false) =
 		new ViewImageLabel(parentHierarchy, imagePointer, insetsPointer, alignmentPointer, additionalCustomDrawers,
@@ -45,11 +45,11 @@ class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param useLowPrioritySize Whether low priority size constraints should be used (default = false)
 	  * @return A new image label
 	  */
-	def withStaticLayout(imagePointer: Changing[Image], insets: StackInsets = StackInsets.zero,
+	def withStaticLayout(imagePointer: ChangingLike[Image], insets: StackInsets = StackInsets.zero,
 						 alignment: Alignment = Alignment.Center,
 						 additionalCustomDrawers: Vector[CustomDrawer] = Vector(), allowUpscaling: Boolean = true,
 						 useLowPrioritySize: Boolean = false) =
-		apply(imagePointer, Changing.wrap(insets), Changing.wrap(alignment), additionalCustomDrawers, allowUpscaling,
+		apply(imagePointer, Fixed(insets), Fixed(alignment), additionalCustomDrawers, allowUpscaling,
 			useLowPrioritySize)
 }
 
@@ -58,8 +58,8 @@ class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy)
   * @author Mikko Hilpinen
   * @since 28.10.2020, v2
   */
-class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePointer: Changing[Image],
-					 insetsPointer: Changing[StackInsets], alignmentPointer: Changing[Alignment],
+class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePointer: ChangingLike[Image],
+					 insetsPointer: ChangingLike[StackInsets], alignmentPointer: ChangingLike[Alignment],
 					 additionalCustomDrawers: Vector[CustomDrawer] = Vector(),
 					 override val allowUpscaling: Boolean = true, override val useLowPrioritySize: Boolean = false)
 	extends CustomDrawReachComponent with ImageLabelLike

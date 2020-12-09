@@ -2,7 +2,7 @@ package utopia.reflection.component.reach.input
 
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangeListener, Changing}
+import utopia.flow.event.{ChangeListener, ChangingLike, Fixed}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.generic.ValueConversions._
 import utopia.genesis.color.Color
@@ -99,22 +99,22 @@ class TextFieldFactory(val parentHierarchy: ComponentHierarchy)
 	  * @return A new field
 	  */
 	def apply[A](actorHandler: ActorHandler, colorScheme: ColorScheme,
-				 contextBackgroundPointer: Changing[ComponentColor], defaultWidth: StackLength,
+				 contextBackgroundPointer: ChangingLike[ComponentColor], defaultWidth: StackLength,
 				 font: Font, alignment: Alignment = Alignment.Left, textInsets: StackInsets = StackInsets.any,
-				 fieldNamePointer: Option[Changing[LocalizedString]] = None,
-				 promptPointer: Option[Changing[LocalizedString]] = None,
-				 hintPointer: Option[Changing[LocalizedString]] = None,
-				 errorMessagePointer: Option[Changing[LocalizedString]] = None,
+				 fieldNamePointer: Option[ChangingLike[LocalizedString]] = None,
+				 promptPointer: Option[ChangingLike[LocalizedString]] = None,
+				 hintPointer: Option[ChangingLike[LocalizedString]] = None,
+				 errorMessagePointer: Option[ChangingLike[LocalizedString]] = None,
 				 textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
-				 selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
-				 selectionBackgroundPointer: Changing[Option[Color]] = Changing.wrap(None),
-				 highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
+				 selectedTextColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),
+				 selectionBackgroundPointer: ChangingLike[Option[Color]] = Fixed(None),
+				 highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
 				 focusColorRole: ColorRole = Secondary, defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
 				 hintScaleFactor: Double = TextField.defaultHintScaleFactor, caretWidth: Double = 1.0,
 				 caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 				 betweenLinesMargin: Double = 0.0, inputFilter: Option[Regex] = None,
 				 resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-				 enabledPointer: Changing[Boolean] = Changing.wrap(true),
+				 enabledPointer: ChangingLike[Boolean] = Fixed(true),
 				 inputValidation: Option[A => LocalizedString] = None, fillBackground: Boolean = true,
 				 allowLineBreaks: Boolean = false, allowTextShrink: Boolean = false,
 				 showCharacterCount: Boolean = false)
@@ -174,16 +174,16 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](factory: TextFieldF
 	  * @tparam A Type of parsed result
 	  * @return A new field
 	  */
-	def apply[A](defaultWidth: StackLength, fieldNamePointer: Option[Changing[LocalizedString]] = None,
-				 promptPointer: Option[Changing[LocalizedString]] = None,
-				 hintPointer: Option[Changing[LocalizedString]] = None,
-				 errorMessagePointer: Option[Changing[LocalizedString]] = None,
+	def apply[A](defaultWidth: StackLength, fieldNamePointer: Option[ChangingLike[LocalizedString]] = None,
+				 promptPointer: Option[ChangingLike[LocalizedString]] = None,
+				 hintPointer: Option[ChangingLike[LocalizedString]] = None,
+				 errorMessagePointer: Option[ChangingLike[LocalizedString]] = None,
 				 textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
-				 highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
+				 highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
 				 hintScaleFactor: Double = TextField.defaultHintScaleFactor,
 				 caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 				 inputFilter: Option[Regex] = None, resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-				 enabledPointer: Changing[Boolean] = Changing.wrap(true),
+				 enabledPointer: ChangingLike[Boolean] = Fixed(true),
 				 inputValidation: Option[A => LocalizedString] = None, fillBackground: Boolean = true,
 				 showCharacterCount: Boolean = false, allowLineBreaks: Boolean = context.allowLineBreaks)
 				(parseResult: Option[String] => A) =
@@ -195,9 +195,9 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](factory: TextFieldF
 		val defaultBorderWidth = focusBorderWidth / 3
 		val caretWidth = (context.margins.verySmall / 2) max 1
 		
-		factory[A](context.actorHandler, context.colorScheme, Changing.wrap(context.containerBackground), defaultWidth,
+		factory[A](context.actorHandler, context.colorScheme, Fixed(context.containerBackground), defaultWidth,
 			context.font, context.textAlignment, context.textInsets, fieldNamePointer, promptPointer, hintPointer,
-			errorMessagePointer, textPointer, Changing.wrap(selectedTextColor), Changing.wrap(Some(selectionBackground)),
+			errorMessagePointer, textPointer, Fixed(selectedTextColor), Fixed(Some(selectionBackground)),
 			highlightStylePointer, Secondary, defaultBorderWidth, focusBorderWidth, hintScaleFactor, caretWidth,
 			caretBlinkFrequency, context.betweenLinesMargin.optimal, inputFilter, resultFilter, maxLength,
 			enabledPointer, inputValidation, fillBackground, context.allowLineBreaks, context.allowTextShrink,
@@ -225,16 +225,16 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](factory: TextFieldF
 	  *                           (default = false)
 	  * @return A new field
 	  */
-	def forString(defaultWidth: StackLength, fieldNamePointer: Option[Changing[LocalizedString]] = None,
-				  promptPointer: Option[Changing[LocalizedString]] = None,
-				  hintPointer: Option[Changing[LocalizedString]] = None,
-				  errorMessagePointer: Option[Changing[LocalizedString]] = None,
+	def forString(defaultWidth: StackLength, fieldNamePointer: Option[ChangingLike[LocalizedString]] = None,
+				  promptPointer: Option[ChangingLike[LocalizedString]] = None,
+				  hintPointer: Option[ChangingLike[LocalizedString]] = None,
+				  errorMessagePointer: Option[ChangingLike[LocalizedString]] = None,
 				  textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
-				  highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
+				  highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
 				  hintScaleFactor: Double = TextField.defaultHintScaleFactor,
 				  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 				  inputFilter: Option[Regex] = None, resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-				  enabledPointer: Changing[Boolean] = Changing.wrap(true), fillBackground: Boolean = true,
+				  enabledPointer: ChangingLike[Boolean] = Fixed(true), fillBackground: Boolean = true,
 				  showCharacterCount: Boolean = false) =
 	{
 		apply[String](defaultWidth, fieldNamePointer, promptPointer, hintPointer, errorMessagePointer, textPointer,
@@ -259,12 +259,12 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](factory: TextFieldF
 	  * @param allowAutoHint Whether automatic input value hint should be allowed (default = true)
 	  * @return A new field
 	  */
-	def forInt(fieldNamePointer: Option[Changing[LocalizedString]] = None,
-			   promptPointer: Option[Changing[LocalizedString]] = None,
-			   hintPointer: Option[Changing[LocalizedString]] = None,
-			   errorMessagePointer: Option[Changing[LocalizedString]] = None,
-			   highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
-			   enabledPointer: Changing[Boolean] = Changing.wrap(true), initialValue: Option[Int] = None,
+	def forInt(fieldNamePointer: Option[ChangingLike[LocalizedString]] = None,
+			   promptPointer: Option[ChangingLike[LocalizedString]] = None,
+			   hintPointer: Option[ChangingLike[LocalizedString]] = None,
+			   errorMessagePointer: Option[ChangingLike[LocalizedString]] = None,
+			   highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
+			   enabledPointer: ChangingLike[Boolean] = Fixed(true), initialValue: Option[Int] = None,
 			   minValue: Int = Int.MinValue, maxValue: Int = Int.MaxValue, hintScaleFactor: Double = TextField.defaultHintScaleFactor,
 			   caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 			   fillBackground: Boolean = true, allowAutoHint: Boolean = true) =
@@ -296,12 +296,12 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](factory: TextFieldF
 	  * @param allowAutoHint Whether automatic input value hint should be allowed (default = true)
 	  * @return A new field
 	  */
-	def forDouble(minValue: Double, maxValue: Double, fieldNamePointer: Option[Changing[LocalizedString]] = None,
-				  promptPointer: Option[Changing[LocalizedString]] = None,
-				  hintPointer: Option[Changing[LocalizedString]] = None,
-				  errorMessagePointer: Option[Changing[LocalizedString]] = None,
-				  highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
-				  enabledPointer: Changing[Boolean] = Changing.wrap(true), initialValue: Option[Double] = None,
+	def forDouble(minValue: Double, maxValue: Double, fieldNamePointer: Option[ChangingLike[LocalizedString]] = None,
+				  promptPointer: Option[ChangingLike[LocalizedString]] = None,
+				  hintPointer: Option[ChangingLike[LocalizedString]] = None,
+				  errorMessagePointer: Option[ChangingLike[LocalizedString]] = None,
+				  highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
+				  enabledPointer: ChangingLike[Boolean] = Fixed(true), initialValue: Option[Double] = None,
 				  hintScaleFactor: Double = TextField.defaultHintScaleFactor,
 				  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 				  fillBackground: Boolean = true, allowAutoHint: Boolean = true) =
@@ -316,12 +316,12 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](factory: TextFieldF
 	}
 	
 	private def forNumbers[A](minValue: A, maxValue: A, inputRegex: Regex, resultRegex: Regex,
-							  fieldNamePointer: Option[Changing[LocalizedString]] = None,
-							  promptPointer: Option[Changing[LocalizedString]] = None,
-							  hintPointer: Option[Changing[LocalizedString]] = None,
-							  errorMessagePointer: Option[Changing[LocalizedString]] = None,
-							  highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
-							  enabledPointer: Changing[Boolean] = Changing.wrap(true),
+							  fieldNamePointer: Option[ChangingLike[LocalizedString]] = None,
+							  promptPointer: Option[ChangingLike[LocalizedString]] = None,
+							  hintPointer: Option[ChangingLike[LocalizedString]] = None,
+							  errorMessagePointer: Option[ChangingLike[LocalizedString]] = None,
+							  highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
+							  enabledPointer: ChangingLike[Boolean] = Fixed(true),
 							  initialValue: Option[A] = None, hintScaleFactor: Double = TextField.defaultHintScaleFactor,
 							  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 							  markMinimumValue: Boolean = false, markMaximumValue: Boolean = false,
@@ -361,7 +361,7 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](factory: TextFieldF
 						hintPointer match
 						{
 							case Some(hint) => Some(hint.map { _.notEmpty.getOrElse(autoHint) })
-							case None => Some(Changing.wrap(autoHint))
+							case None => Some(Fixed(autoHint))
 						}
 					case None => hintPointer
 				}
@@ -399,27 +399,27 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](factory: TextFieldF
   * @since 14.11.2020, v2
   */
 class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, colorScheme: ColorScheme,
-				   contextBackgroundPointer: Changing[ComponentColor], defaultWidth: StackLength,
+				   contextBackgroundPointer: ChangingLike[ComponentColor], defaultWidth: StackLength,
 				   font: Font, alignment: Alignment = Alignment.Left, textInsets: StackInsets = StackInsets.any,
-				   fieldNamePointer: Option[Changing[LocalizedString]] = None,
-				   promptPointer: Option[Changing[LocalizedString]] = None,
-				   hintPointer: Option[Changing[LocalizedString]] = None,
-				   errorMessagePointer: Option[Changing[LocalizedString]] = None,
+				   fieldNamePointer: Option[ChangingLike[LocalizedString]] = None,
+				   promptPointer: Option[ChangingLike[LocalizedString]] = None,
+				   hintPointer: Option[ChangingLike[LocalizedString]] = None,
+				   errorMessagePointer: Option[ChangingLike[LocalizedString]] = None,
 				   textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
-				   selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
-				   selectionBackgroundPointer: Changing[Option[Color]] = Changing.wrap(None),
-				   highlightStylePointer: Changing[Option[ColorRole]] = Changing.wrap(None),
+				   selectedTextColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),
+				   selectionBackgroundPointer: ChangingLike[Option[Color]] = Fixed(None),
+				   highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
 				   focusColorRole: ColorRole = Secondary, defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
 				   hintScaleFactor: Double = TextField.defaultHintScaleFactor, caretWidth: Double = 1.0,
 				   caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 				   betweenLinesMargin: Double = 0.0, inputFilter: Option[Regex] = None,
 				   resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-				   enabledPointer: Changing[Boolean] = Changing.wrap(true),
+				   enabledPointer: ChangingLike[Boolean] = Fixed(true),
 				   inputValidation: Option[A => LocalizedString] = None, fillBackground: Boolean = true,
 				   allowLineBreaks: Boolean = false, allowTextShrink: Boolean = false,
 				   showCharacterCount: Boolean = false)
 				  (parseResult: Option[String] => A)
-	extends ReachComponentWrapper with InputWithPointer[A, Changing[A]] with MutableFocusableWrapper
+	extends ReachComponentWrapper with InputWithPointer[A, ChangingLike[A]] with MutableFocusableWrapper
 {
 	// ATTRIBUTES	------------------------------------------
 	
@@ -488,7 +488,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		}
 	
 	private val editTextColorPointer = innerBackgroundPointer.map { _.defaultTextColor }
-	private val contentColorPointer: Changing[Color] = highlightColorPointer
+	private val contentColorPointer: ChangingLike[Color] = highlightColorPointer
 		.mergeWith(editTextColorPointer) { (highlight, default) =>
 			highlight match
 			{
@@ -519,7 +519,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 	{
 		// Border widths at 0 => No border is drawn
 		if (defaultBorderWidth <= 0 && focusBorderWidth <= 0)
-			Changing.wrap(Border.zero)
+			Fixed(Border.zero)
 		// When using filled background style, only draws the bottom border which varies in style based state
 		else if (fillBackground)
 		{
@@ -615,7 +615,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		label
 	}
 	
-	private def makeTextAndNameArea(factories: ViewStackFactory, fieldNamePointer: Changing[LocalizedString]) =
+	private def makeTextAndNameArea(factories: ViewStackFactory, fieldNamePointer: ChangingLike[LocalizedString]) =
 	{
 		val drawers = if (fillBackground) Vector(makeBackgroundDrawer(), borderDrawer) else Vector(borderDrawer)
 		factories.builder(Mixed).withFixedStyle(margin = StackLength.fixedZero,
@@ -688,7 +688,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 	}
 	
 	// Returns the generated component (if any), along with its visibility pointer (if applicable)
-	private def makeHintArea(factories: => Mixed): Option[ComponentCreationResult[ReachComponentLike, Option[Changing[Boolean]]]] =
+	private def makeHintArea(factories: => Mixed): Option[ComponentCreationResult[ReachComponentLike, Option[ChangingLike[Boolean]]]] =
 	{
 		// In some cases, displays both message field and character count label
 		// In other cases only the message field (which is hidden while empty)
@@ -709,9 +709,8 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 							
 							// Hint label is only displayed while there is a hint to display,
 							// Count label is always displayed
-							// TODO: Too difficult a type
 							Vector(hintLabel -> hintVisibilityPointer, countLabel -> None)
-							// ComponentCreationResult(Vector[ComponentCreationResult[ReachComponentLike, Option[Changing[Boolean]]]](hintLabel -> hintVisibilityPointer, countLabel -> None))
+							// ComponentCreationResult(Vector[ComponentCreationResult[ReachComponentLike, Option[ChangingLike[Boolean]]]](hintLabel -> hintVisibilityPointer, countLabel -> None))
 						}.parent
 						Some(stack -> None)
 					// Case: Only the character count element should be displayed
@@ -725,7 +724,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		}
 	}
 	
-	private def makeMainTextLabel(factory: EditableTextLabelFactory, stylePointer: Changing[TextDrawContext]) =
+	private def makeMainTextLabel(factory: EditableTextLabelFactory, stylePointer: ChangingLike[TextDrawContext]) =
 	{
 		val label = factory.apply(actorHandler, stylePointer, selectedTextColorPointer, selectionBackgroundPointer,
 		contentColorPointer, caretWidth, caretBlinkFrequency, textPointer, inputFilter, maxLength, enabledPointer,
@@ -735,7 +734,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		label
 	}
 	
-	private def makeHintLabel(factory: ViewTextLabelFactory, textPointer: Changing[LocalizedString]) =
+	private def makeHintLabel(factory: ViewTextLabelFactory, textPointer: ChangingLike[LocalizedString]) =
 		factory.forText(textPointer, hintTextStylePointer, allowLineBreaks = false, allowTextShrink = true)
 	
 	private def makeCharacterCountLabel(factory: ViewTextLabelFactory, maxLength: Int) =

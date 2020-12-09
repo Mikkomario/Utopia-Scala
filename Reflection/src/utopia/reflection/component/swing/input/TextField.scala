@@ -2,12 +2,11 @@ package utopia.reflection.component.swing.input
 
 import java.awt.Graphics
 import java.awt.event.{ActionEvent, ActionListener, FocusEvent, FocusListener}
-
 import javax.swing.JTextField
 import javax.swing.event.{DocumentEvent, DocumentListener}
 import javax.swing.text.{Document, PlainDocument}
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.Changing
+import utopia.flow.event.ChangingLike
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
@@ -250,7 +249,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 				   prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
 				   initialAlignment: Alignment = Alignment.Left,
 				   resultFilter: Option[Regex] = None)(resultsParser: Option[String] => A)
-	extends JWrapper with CachingStackable with InputWithPointer[A, Changing[A]] with Alignable with Focusable
+	extends JWrapper with CachingStackable with InputWithPointer[A, ChangingLike[A]] with Alignable with Focusable
 		with CustomDrawableWrapper with StackLeaf
 {
 	// ATTRIBUTES	----------------------

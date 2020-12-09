@@ -7,7 +7,6 @@ import utopia.flow.async.{CloseHook, Volatile, VolatileOption}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.event.{ChangeListener, Changing}
 import utopia.trove.database.{DbDatabaseVersion, DbDatabaseVersions}
 import utopia.trove.event.DatabaseSetupEvent.{DatabaseConfigured, DatabaseStarted, SetupFailed, SetupSucceeded, UpdateApplied, UpdateFailed, UpdatesFound}
 import utopia.trove.event.{DatabaseSetupEvent, DatabaseSetupListener}
@@ -32,11 +31,6 @@ object LocalDatabase
 	private val _statusPointer = Volatile[DatabaseStatus](NotStarted)
 	private val dbPointer = VolatileOption[DB]()
 	
-	/**
-	  * A pointer to this database's status
-	  */
-	lazy val statusPointer: Changing[DatabaseStatus] = new StatusView()
-	
 	
 	// COMPUTED	-------------------------------
 	
@@ -44,6 +38,11 @@ object LocalDatabase
 	  * @return Whether this database is currently starting or stopping
 	  */
 	def isProcessing = _statusPointer.value.isProcessing
+	
+	/**
+	  * A pointer to this database's status
+	  */
+	def statusPointer = _statusPointer.valueView
 	
 	
 	// OTHER	-------------------------------
@@ -286,16 +285,5 @@ object LocalDatabase
 				listener.foreach { _.onDatabaseSetupEvent(DatabaseStarted) }
 			}
 		}
-	}
-	
-	
-	// NESTED	--------------------------
-	
-	private class StatusView extends Changing[DatabaseStatus]
-	{
-		override def value = _statusPointer.value
-		override def listeners = _statusPointer.listeners
-		override def listeners_=(newListeners: Vector[ChangeListener[DatabaseStatus]]) =
-			_statusPointer.listeners = newListeners
 	}
 }

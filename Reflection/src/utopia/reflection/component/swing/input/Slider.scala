@@ -1,9 +1,8 @@
 package utopia.reflection.component.swing.input
 
 import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
-
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangeEvent, ChangeListener, Changing}
+import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
 import utopia.genesis.animation.Animation
 import utopia.genesis.color.Color
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
@@ -246,12 +245,12 @@ object Slider
   * @param rightHeightModifier A modifier applied to right bar height (default = 1.0)
   * @param initialValue Value assigned to this slider initially [0, 1] (default = 0.0)
   */
-class Slider[A](range: Animation[A], targetKnobDiameter: Double, targetWidth: StackLength,
+class Slider[+A](range: Animation[A], targetKnobDiameter: Double, targetWidth: StackLength,
                 leftColor: Color, rightColor: Color, knobColor: Animation[Color], colorVariationIntensity: Double = 1.0,
                 stickyPoints: Seq[Double] = Vector(), arrowMovement: Double = 0.1,
                 leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0, initialValue: Double = 0.0)
 	extends AwtComponentWrapperWrapper with StackLeaf with Focusable with CustomDrawableWrapper
-		with InputWithPointer[A, Changing[A]]
+		with InputWithPointer[A, ChangingLike[A]]
 {
 	// ATTRIBUTES   -------------------------
 	

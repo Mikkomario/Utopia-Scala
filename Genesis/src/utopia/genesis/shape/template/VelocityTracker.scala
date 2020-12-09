@@ -50,6 +50,8 @@ abstract class VelocityTracker[X <: Vector2DLike[X], V <: VelocityLike[X, V], A 
 	
 	// IMPLEMENTED	------------------------
 	
+	override def isChanging = true
+	
 	override def value = cachedValue.getOrElse(combineHistory(_positionHistory, _velocityHistory, _accelerationHistory))
 	
 	override def positionHistory = _positionHistory

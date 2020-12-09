@@ -1,7 +1,7 @@
 package utopia.reflection.component.reach.template
 
 import utopia.flow.datastructure.immutable.Tree
-import utopia.flow.event.Changing
+import utopia.flow.event.ChangingLike
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Vector2D}
@@ -29,17 +29,17 @@ trait ReachComponentLike extends Stackable2
 	/**
 	  * @return A pointer to the current position of this component
 	  */
-	def positionPointer: Changing[Point]
+	def positionPointer: ChangingLike[Point]
 	
 	/**
 	  * @return A pointer to the current size of this component
 	  */
-	def sizePointer: Changing[Size]
+	def sizePointer: ChangingLike[Size]
 	
 	/**
 	  * @return A pointer to the current bounds (position + size) of this component
 	  */
-	def boundsPointer: Changing[Bounds]
+	def boundsPointer: ChangingLike[Bounds]
 	
 	/**
 	  * @return Hierarchy containing all this component's parents. This hierarchy should be static/unchanging,
@@ -239,8 +239,8 @@ trait ReachComponentLike extends Stackable2
 	  *                 status changes. The function accepts the new attachment status (true if attached, false if not)
 	  * @tparam U Arbitrary result type
 	  */
-	def addHierarchyListener[U](listener: Boolean => U) = parentHierarchy.linkPointer.addListener(e =>
-		listener(e.newValue), Some(false))
+	def addHierarchyListener[U](listener: Boolean => U) = parentHierarchy.linkPointer
+		.addListenerAndSimulateEvent(false) { e => listener(e.newValue) }
 	
 	/**
 	  * Creates a pop-up next to this component

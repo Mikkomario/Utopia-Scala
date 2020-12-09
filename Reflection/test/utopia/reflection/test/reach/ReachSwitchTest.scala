@@ -1,7 +1,7 @@
 package utopia.reflection.test.reach
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.Changing
+import utopia.flow.event.Fixed
 import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.component.reach.factory.Mixed
 import utopia.reflection.component.reach.input.{ContextualSwitchFactory, Switch}
@@ -46,7 +46,7 @@ object ReachSwitchTest extends App
 						ComponentCreationResult(Vector(nameLabel, switch,
 							// Switch value label
 							factories.next().mapContext { _.forTextComponents }(ViewTextLabel)
-								.apply(switch.valuePointer, isHintPointer = Changing.wrap(true))
+								.apply(switch.valuePointer, isHintPointer = Fixed(true))
 						), switch)
 					}
 				}

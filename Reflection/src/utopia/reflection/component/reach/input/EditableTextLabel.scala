@@ -3,9 +3,8 @@ package utopia.reflection.component.reach.input
 import java.awt.Toolkit
 import java.awt.datatransfer.{Clipboard, ClipboardOwner, DataFlavor, StringSelection, Transferable}
 import java.awt.event.KeyEvent
-
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangeListener, Changing}
+import utopia.flow.event.{ChangeListener, ChangingLike, Fixed}
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, KeyStatus, KeyTypedEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
@@ -73,14 +72,14 @@ class EditableTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	  * @param allowTextShrink Whether the drawn text should be shrank to conserve space when required (default = false)
 	  * @return A new label
 	  */
-	def apply(actorHandler: ActorHandler, stylePointer: Changing[TextDrawContext],
-			  selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
-			  selectionBackgroundColorPointer: Changing[Option[Color]] = Changing.wrap(None),
-			  caretColorPointer: Changing[Color] = Changing.wrap(Color.textBlack), caretWidth: Double = 1.0,
+	def apply(actorHandler: ActorHandler, stylePointer: ChangingLike[TextDrawContext],
+			  selectedTextColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),
+			  selectionBackgroundColorPointer: ChangingLike[Option[Color]] = Fixed(None),
+			  caretColorPointer: ChangingLike[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
 			  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 			  textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 			  inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-			  enabledPointer: Changing[Boolean] = Changing.wrap(true),
+			  enabledPointer: ChangingLike[Boolean] = Fixed(true),
 			  allowSelectionWhileDisabled: Boolean = true, allowLineBreaks: Boolean = true,
 			  allowTextShrink: Boolean = false) =
 		new EditableTextLabel(parentHierarchy, actorHandler, stylePointer, selectedTextColorPointer,
@@ -107,16 +106,16 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
 	  */
 	def apply(textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 			  inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-			  enabledPointer: Changing[Boolean] = Changing.wrap(true),
+			  enabledPointer: ChangingLike[Boolean] = Fixed(true),
 			  caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 			  allowSelectionWhileDisabled: Boolean = true) =
 	{
 		val selectionBackground = context.color(Secondary, Light)
 		val caretColor = context.colorScheme.secondary.bestAgainst(
 			Vector(context.containerBackground, selectionBackground))
-		factory(context.actorHandler, Changing.wrap(TextDrawContext.contextual(context)),
-			Changing.wrap(selectionBackground.defaultTextColor), Changing.wrap(Some(selectionBackground)),
-			Changing.wrap(caretColor), (context.margins.verySmall / 2) max 1.0, caretBlinkFrequency, textPointer,
+		factory(context.actorHandler, Fixed(TextDrawContext.contextual(context)),
+			Fixed(selectionBackground.defaultTextColor), Fixed(Some(selectionBackground)),
+			Fixed(caretColor), (context.margins.verySmall / 2) max 1.0, caretBlinkFrequency, textPointer,
 			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, context.allowLineBreaks,
 			context.allowTextShrink)
 	}
@@ -129,14 +128,14 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
   */
 // TODO: Create a password mode where text is not displayed nor copyable
 class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
-						baseStylePointer: Changing[TextDrawContext],
-						selectedTextColorPointer: Changing[Color] = Changing.wrap(Color.textBlack),
-						selectionBackgroundColorPointer: Changing[Option[Color]] = Changing.wrap(None),
-						caretColorPointer: Changing[Color] = Changing.wrap(Color.textBlack), caretWidth: Double = 1.0,
+						baseStylePointer: ChangingLike[TextDrawContext],
+						selectedTextColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),
+						selectionBackgroundColorPointer: ChangingLike[Option[Color]] = Fixed(None),
+						caretColorPointer: ChangingLike[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
 						caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 						val textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 						inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
-						enabledPointer: Changing[Boolean] = Changing.wrap(true),
+						enabledPointer: ChangingLike[Boolean] = Fixed(true),
 						allowSelectionWhileDisabled: Boolean = true, allowLineBreaks: Boolean = true,
 						override val allowTextShrink: Boolean = false)
 	extends MutableCustomDrawReachComponent with TextComponent2 with MutableFocusable with CursorDefining
@@ -147,6 +146,7 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	private var draggingMouse = false
 	
 	override var focusListeners: Seq[FocusListener] = Vector(FocusHandler)
+	override val focusId = hashCode()
 	
 	/**
 	  * A pointer to this label's actual text styling, which takes into account the enabled state
