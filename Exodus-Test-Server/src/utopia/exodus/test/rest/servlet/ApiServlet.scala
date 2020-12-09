@@ -9,7 +9,7 @@ import utopia.exodus.rest.resource.description.{DescriptionRolesNode, LanguageFa
 import utopia.exodus.rest.resource.device.DevicesNode
 import utopia.exodus.rest.resource.email.EmailsNode
 import utopia.exodus.rest.resource.organization.OrganizationsNode
-import utopia.exodus.rest.resource.user.UsersNode
+import utopia.exodus.rest.resource.user.{QuestSessionsNode, UsersNode}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
 import utopia.flow.async.ThreadPool
@@ -74,7 +74,7 @@ class ApiServlet extends HttpServlet
 	private val handler = new RequestHandler(
 		Vector(
 			DescriptionRolesNode.public, LanguagesNode.public, LanguageFamiliaritiesNode.public, RolesNode, TasksNode,
-			UsersNode.forApiKey, DevicesNode, OrganizationsNode,
+			UsersNode.forApiKey, DevicesNode, OrganizationsNode, QuestSessionsNode,
 			EmailsNode.forApiKey
 		),
 		Some(Path("exodus", "api", "v1")), r => AuthorizedContext(r) { _.printStackTrace() })

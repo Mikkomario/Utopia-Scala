@@ -24,8 +24,8 @@ object SessionFactory extends FromValidatedRowModelFactory[UserSession] with Dep
 		model.expiringIn(Instant.now()).toConditionWithOperator(Larger)
 	
 	override protected def fromValidatedModel(model: Model[Constant]) = UserSession(model("id").getInt,
-		UserSessionData(model("userId").getInt, model("deviceId").getInt, model("key").getString,
-			model("expiresIn").getInstant))
+		UserSessionData(model("userId").getInt, model("key").getString, model("expiresIn").getInstant,
+			model("deviceId").int))
 	
 	override def table = Tables.userSession
 	

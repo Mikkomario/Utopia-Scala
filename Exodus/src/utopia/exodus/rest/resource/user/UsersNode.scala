@@ -7,7 +7,6 @@ import utopia.exodus.database.access.single.{DbDevice, DbUserSession}
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.UserCreation
 import utopia.exodus.rest.resource.CustomAuthorizationResourceFactory
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.exodus.util.ExodusContext.handleError
 import utopia.exodus.util.ExodusContext
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._
@@ -71,27 +70,17 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 					{
 						case Success(userData) =>
 							// Returns a summary of the new data, along with a session key and a possible device key
-							userData.deviceIds.headOption match
-							{
-								case Some(deviceId) =>
-									val userId = userData.id
-									val deviceKey =
-									{
-										if (newUser.rememberOnDevice)
-											Some(acquireDeviceKey(userId, deviceId))
-										else
-											None
-									}
-									val sessionKey = acquireSessionKey(userId, deviceId)
-									val creationResult = UserCreationResult(userId, deviceId, userData,
-										sessionKey, deviceKey)
-									Result.Success(creationResult.toModel, Created)
-								case None =>
-									handleError(new NoSuchElementException(
-										"Device id was not available after new user creation"),
-										"Device id was not available after new user creation")
-									Result.Failure(InternalServerError, "Device id couldn't be acquired")
+							val deviceId = userData.deviceIds.headOption
+							val userId = userData.id
+							val deviceKey = deviceId.flatMap { deviceId =>
+								if (newUser.rememberOnDevice)
+									Some(acquireDeviceKey(userId, deviceId))
+								else
+									None
 							}
+							val sessionKey = acquireSessionKey(userId, deviceId)
+							val creationResult = UserCreationResult(userId, userData, sessionKey, deviceId, deviceKey)
+							Result.Success(creationResult.toModel, Created)
 						case Failure(error) =>
 							error match
 							{
@@ -107,7 +96,7 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 	private def acquireDeviceKey(userId: Int, deviceId: Int)(implicit connection: Connection) =
 		DbDevice(deviceId).authenticationKey.assignToUserWithId(userId).key
 	
-	private def acquireSessionKey(userId: Int, deviceId: Int)(implicit connection: Connection) =
+	private def acquireSessionKey(userId: Int, deviceId: Option[Int])(implicit connection: Connection) =
 		DbUserSession(userId, deviceId).start().key
 }
 

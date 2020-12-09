@@ -626,7 +626,7 @@ CREATE TABLE user_session
 (
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
-    device_id INT NOT NULL,
+    device_id INT,
     `key` VARCHAR(36) NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_in DATETIME NOT NULL,
