@@ -160,4 +160,14 @@ class SingleColorIcon(val original: Image)
 	  * @return An icon image with specified color overlay
 	  */
 	def asImageWithColor(iconColor: Color) = paintedImageCache(iconColor)
+	
+	/**
+	  * @param background Background color
+	  * @return A version of this icon (black or white) that is better against that background
+	  */
+	def singleColorImageAgainst(background: ComponentColor) = background.textColorStandard match
+	{
+		case Dark => black
+		case Light => white
+	}
 }

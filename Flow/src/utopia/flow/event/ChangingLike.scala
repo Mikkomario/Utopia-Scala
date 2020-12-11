@@ -104,6 +104,25 @@ trait ChangingLike[+A] extends Viewable[A]
 	// OTHER	--------------------
 	
 	/**
+	  * @param condition A condition to test fixed values with
+	  * @return Whether this changing item is fixed to a value that fulfils the specified condition
+	  */
+	def existsFixed(condition: A => Boolean) = if (isChanging) false else condition(value)
+	
+	/**
+	  * @param condition A condition to test fixed values with
+	  * @return This item if changing or not fixed to a value the specified condition returns true for
+	  */
+	def notFixedWhere(condition: A => Boolean) =
+	{
+		if (isChanging)
+			Some(this)
+		else if (condition(value))
+			Some(this)
+		else None
+	}
+	
+	/**
 	  * Adds a new function to be called whenever this item's value changes
 	  * @param onChange A function that will be called whenever this item's value changes but which won't receive the
 	  *                 change event itself

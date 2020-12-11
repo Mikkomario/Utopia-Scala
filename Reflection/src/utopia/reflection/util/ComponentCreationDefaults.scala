@@ -4,7 +4,6 @@ import java.util.concurrent.TimeUnit
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.LinearAcceleration
-import utopia.genesis.shape.shape2D.Size
 import utopia.genesis.util.Fps
 
 /**
@@ -55,4 +54,9 @@ object ComponentCreationDefaults
 	  * How often should a text field caret change its visibility when idle
 	  */
 	var caretBlinkFrequency = 0.5.seconds
+	
+	/**
+	  * Whether a filled style should be used in input fields (true) or an outline style should be used (false)
+	  */
+	var useFillStyleFields = true
 }

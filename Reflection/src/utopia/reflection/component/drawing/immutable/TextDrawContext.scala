@@ -30,6 +30,15 @@ object TextDrawContext
 case class TextDrawContext(font: Font, color: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
 						   insets: StackInsets = StackInsets.any, betweenLinesMargin: Double = 0.0)
 {
+	// COMPUTED	------------------------------------
+	
+	/**
+	  * @return A copy of this context that expands the horizontal text insets to a direction most suitable for the
+	  *         currently selected text alignment
+	  */
+	def expandingHorizontally = mapInsets { _.expandingHorizontallyAccordingTo(alignment) }
+	
+	
 	// OTHER	------------------------------------
 	
 	/**
@@ -50,4 +59,10 @@ case class TextDrawContext(font: Font, color: Color = Color.textBlack, alignment
 	  * @return A copy of this context with mapped text color
 	  */
 	def mapColor(f: Color => Color) = copy(color = f(color))
+	
+	/**
+	  * @param f A mapping function for text insets
+	  * @return A copy of this context with mapped text insets
+	  */
+	def mapInsets(f: StackInsets => StackInsets) = copy(insets = f(insets))
 }

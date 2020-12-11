@@ -3,48 +3,277 @@ package utopia.reflection.component.reach.input
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeListener, ChangingLike, Fixed}
 import utopia.genesis.color.Color
+import utopia.genesis.image.Image
 import utopia.genesis.shape.Axis.X
-import utopia.genesis.shape.shape2D.Insets
+import utopia.genesis.shape.shape2D.{Direction2D, Insets}
 import utopia.reflection.color.ColorRole.{Error, Secondary}
 import utopia.reflection.color.{ColorRole, ColorScheme, ComponentColor}
+import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, TextViewDrawer2}
-import utopia.reflection.component.reach.factory.Mixed
+import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reflection.component.reach.hierarchy.ComponentHierarchy
-import utopia.reflection.component.reach.label.{ViewTextLabel, ViewTextLabelFactory}
+import utopia.reflection.component.reach.label.{ImageLabel, ViewImageLabel, ViewTextLabel, ViewTextLabelFactory}
 import utopia.reflection.component.reach.template.{Focusable, ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reflection.container.reach.{Framing, FramingFactory, ViewStack}
+import utopia.reflection.container.reach.{Framing, FramingFactory, Stack, ViewStack}
+import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.ReachCanvas
 import utopia.reflection.event.{FocusChangeEvent, FocusChangeListener}
+import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.shape.{Alignment, Border}
 import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText}
 import utopia.reflection.util.Priority.High
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.util.ComponentCreationDefaults
 
+/**
+  * A set of context variables provided when creating field contents
+  * @param parentHierarchy Component hierarchy to use
+  * @param focusListener Focus listener to assign to the created component
+  * @param textStylePointer Proposed text style to use
+  * @param promptDrawers Custom drawers to assign for prompt drawing
+  * @param backgroundPointer A pointer to the contextual background color
+  */
 case class FieldCreationContext(parentHierarchy: ComponentHierarchy, focusListener: FocusChangeListener,
-								textStylePointer: ChangingLike[TextDrawContext], promptDrawers: Vector[CustomDrawer])
+								textStylePointer: ChangingLike[TextDrawContext], promptDrawers: Vector[CustomDrawer],
+								backgroundPointer: ChangingLike[ComponentColor])
+
+/**
+  * A set of context variables provided when creating an additional right side label
+  * @param content Field content
+  * @param font Proposed font
+  * @param backgroundPointer Pointer to contextual background color
+  * @tparam C Type of field contents
+  */
+case class ExtraFieldCreationContext[C](content: C, font: Font, backgroundPointer: ChangingLike[ComponentColor])
+
+object Field extends ContextInsertableComponentFactoryFactory[TextContextLike, FieldFactory, ContextualFieldFactory]
+{
+	override def apply(hierarchy: ComponentHierarchy) = new FieldFactory(hierarchy)
+}
+
+class FieldFactory(parentHierarchy: ComponentHierarchy)
+	extends ContextInsertableComponentFactory[TextContextLike, ContextualFieldFactory]
+{
+	override def withContext[N <: TextContextLike](context: N) =
+		ContextualFieldFactory(this, context)
+	
+	/**
+	  * Creates a new field
+	  * @param colorScheme Color scheme to use
+	  * @param isEmptyPointer A pointer that contains true when the content of this field is considered empty
+	  *                       (of text / selection etc.)
+	  * @param contextBackgroundPointer A pointer that contains the background color of the parent component
+	  * @param font Font used in this field and the wrapped component
+	  * @param alignment Text alignment to use (default = Left)
+	  * @param textInsets Insets to place around the content and other text by default (default = any, preferring zero)
+	  * @param fieldNamePointer A pointer to this field's name (default = always empty)
+	  * @param promptPointer A pointer to a prompt text shown on this field (default = always empty)
+	  * @param hintPointer A pointer to an additional hint shown under this field (default = always empty)
+	  * @param errorMessagePointer A pointer to an error message shown under this field (default = always empty)
+	  * @param leftIconPointer A pointer to the icon to display on the left side of content, if any (default = always empty)
+	  * @param rightIconPointer A pointer to the icon to display on the right side of content, if any (default = always empty)
+	  * @param iconOutsideMargins Margins to place around the icon(s) on the outer field edges (default = any, preferring zero)
+	  * @param highlightStylePointer A pointer to an extra highlight color style to apply to this field (default = always None)
+	  * @param focusColorRole Color role to use for the focused state on this field (default = secondary)
+	  * @param defaultBorderWidth Default width of field border(s) (default = 1)
+	  * @param focusBorderWidth Width of field border(s) when focused (default = 3)
+	  * @param hintScaleFactor A scaling factor to apply on displayed hint text (default = 70%)
+	  * @param fillBackground Whether a filled style should be used (true) or whether an outlined style should be
+	  *                       used (false) (default = true)
+	  * @param makeField A function for creating field contents (accepts contextual data)
+	  * @param makeRightHintLabel A function for producing an additional right edge hint field (accepts created main
+	  *                           field, returns an open component or None if no label should be placed)
+	  * @tparam C Type of wrapped component
+	  * @return A new field
+	  */
+	def apply[C <: ReachComponentLike with Focusable]
+	(colorScheme: ColorScheme, isEmptyPointer: ChangingLike[Boolean],
+	 contextBackgroundPointer: ChangingLike[ComponentColor], font: Font, alignment: Alignment = Alignment.Left,
+	 textInsets: StackInsets = StackInsets.any,
+	 fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+	 rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+	 iconOutsideMargins: StackSize = StackSize.any, highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
+	 focusColorRole: ColorRole = Secondary, defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
+	 hintScaleFactor: Double = TextField.defaultHintScaleFactor,
+	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
+	(makeField: FieldCreationContext => C)
+	(makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponentLike, Any]]) =
+		new Field[C](parentHierarchy, colorScheme, isEmptyPointer, contextBackgroundPointer, font, alignment, textInsets,
+			fieldNamePointer, promptPointer, hintPointer, errorMessagePointer, leftIconPointer, rightIconPointer,
+			iconOutsideMargins, highlightStylePointer, focusColorRole, defaultBorderWidth, focusBorderWidth,
+			hintScaleFactor, fillBackground)(makeField)(makeRightHintLabel)
+	
+	/**
+	  * Creates a new field
+	  * @param colorScheme Color scheme to use
+	  * @param isEmptyPointer A pointer that contains true when the content of this field is considered empty
+	  *                       (of text / selection etc.)
+	  * @param contextBackgroundPointer A pointer that contains the background color of the parent component
+	  * @param font Font used in this field and the wrapped component
+	  * @param alignment Text alignment to use (default = Left)
+	  * @param textInsets Insets to place around the content and other text by default (default = any, preferring zero)
+	  * @param fieldNamePointer A pointer to this field's name (default = always empty)
+	  * @param promptPointer A pointer to a prompt text shown on this field (default = always empty)
+	  * @param hintPointer A pointer to an additional hint shown under this field (default = always empty)
+	  * @param errorMessagePointer A pointer to an error message shown under this field (default = always empty)
+	  * @param leftIconPointer A pointer to the icon to display on the left side of content, if any (default = always empty)
+	  * @param rightIconPointer A pointer to the icon to display on the right side of content, if any (default = always empty)
+	  * @param iconOutsideMargins Margins to place around the icon(s) on the outer field edges (default = any, preferring zero)
+	  * @param highlightStylePointer A pointer to an extra highlight color style to apply to this field (default = always None)
+	  * @param focusColorRole Color role to use for the focused state on this field (default = secondary)
+	  * @param defaultBorderWidth Default width of field border(s) (default = 1)
+	  * @param focusBorderWidth Width of field border(s) when focused (default = 3)
+	  * @param hintScaleFactor A scaling factor to apply on displayed hint text (default = 70%)
+	  * @param fillBackground Whether a filled style should be used (true) or whether an outlined style should be
+	  *                       used (false) (default = true)
+	  * @param makeField A function for creating field contents (accepts contextual data)
+	  * @tparam C Type of wrapped component
+	  * @return A new field
+	  */
+	def withoutExtraLabel[C <: ReachComponentLike with Focusable]
+	(colorScheme: ColorScheme, isEmptyPointer: ChangingLike[Boolean],
+	 contextBackgroundPointer: ChangingLike[ComponentColor], font: Font, alignment: Alignment = Alignment.Left,
+	 textInsets: StackInsets = StackInsets.any,
+	 fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+	 rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+	 iconOutsideMargins: StackSize = StackSize.any, highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
+	 focusColorRole: ColorRole = Secondary, defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
+	 hintScaleFactor: Double = TextField.defaultHintScaleFactor,
+	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
+	(makeField: FieldCreationContext => C) =
+		apply[C](colorScheme, isEmptyPointer, contextBackgroundPointer, font, alignment, textInsets,
+			fieldNamePointer, promptPointer, hintPointer, errorMessagePointer, leftIconPointer, rightIconPointer,
+			iconOutsideMargins, highlightStylePointer, focusColorRole, defaultBorderWidth, focusBorderWidth,
+			hintScaleFactor, fillBackground)(makeField) { _ => None }
+}
+
+case class ContextualFieldFactory[+N <: TextContextLike](factory: FieldFactory, context: N)
+	extends ContextualComponentFactory[N, TextContextLike, ContextualFieldFactory]
+{
+	override def withContext[N2 <: TextContextLike](newContext: N2) = copy(context = newContext)
+	
+	/**
+	  * Creates a new field
+	  * @param isEmptyPointer A pointer that contains true when the content of this field is considered empty
+	  *                       (of text / selection etc.)
+	  * @param fieldNamePointer A pointer to this field's name (default = always empty)
+	  * @param promptPointer A pointer to a prompt text shown on this field (default = always empty)
+	  * @param hintPointer A pointer to an additional hint shown under this field (default = always empty)
+	  * @param errorMessagePointer A pointer to an error message shown under this field (default = always empty)
+	  * @param leftIconPointer A pointer to the icon to display on the left side of content, if any (default = always empty)
+	  * @param rightIconPointer A pointer to the icon to display on the right side of content, if any (default = always empty)
+	  * @param iconOutsideMargins Margins to place around the icon(s) on the outer field edges (default = determined by context)
+	  * @param highlightStylePointer A pointer to an extra highlight color style to apply to this field (default = always None)
+	  * @param focusColorRole Color role to use for the focused state on this field (default = secondary)
+	  * @param hintScaleFactor A scaling factor to apply on displayed hint text (default = 70%)
+	  * @param fillBackground Whether a filled style should be used (true) or whether an outlined style should be
+	  *                       used (false) (default = true)
+	  * @param makeField A function for creating field contents
+	  *                  (accepts contextual data (specific context and context of this factory))
+	  * @param makeRightHintLabel A function for producing an additional right edge hint field (accepts created main
+	  *                           field and component creation context, returns an open component or None
+	  *                           if no label should be placed)
+	  * @tparam C Type of wrapped component
+	  * @return A new field
+	  */
+	def apply[C <: ReachComponentLike with Focusable]
+	(isEmptyPointer: ChangingLike[Boolean],
+	 fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+	 rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+	 iconOutsideMargins: StackSize = context.textInsets.total / 2,
+	 highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
+	 focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = TextField.defaultHintScaleFactor,
+	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
+	(makeField: (FieldCreationContext, N) => C)
+	(makeRightHintLabel: (ExtraFieldCreationContext[C], N) => Option[OpenComponent[ReachComponentLike, Any]]) =
+	{
+		val focusBorderWidth = (context.margins.verySmall / 2) max 3
+		val defaultBorderWidth = focusBorderWidth / 3
+		
+		factory[C](context.colorScheme, isEmptyPointer, Fixed(context.containerBackground), context.font,
+			context.textAlignment, context.textInsets, fieldNamePointer, promptPointer, hintPointer,
+			errorMessagePointer, leftIconPointer, rightIconPointer, iconOutsideMargins, highlightStylePointer,
+			focusColorRole, defaultBorderWidth, focusBorderWidth, hintScaleFactor, fillBackground) {
+			makeField(_, context) } { makeRightHintLabel(_, context) }
+	}
+	
+	/**
+	  * Creates a new field
+	  * @param isEmptyPointer A pointer that contains true when the content of this field is considered empty
+	  *                       (of text / selection etc.)
+	  * @param fieldNamePointer A pointer to this field's name (default = always empty)
+	  * @param promptPointer A pointer to a prompt text shown on this field (default = always empty)
+	  * @param hintPointer A pointer to an additional hint shown under this field (default = always empty)
+	  * @param errorMessagePointer A pointer to an error message shown under this field (default = always empty)
+	  * @param leftIconPointer A pointer to the icon to display on the left side of content, if any (default = always empty)
+	  * @param rightIconPointer A pointer to the icon to display on the right side of content, if any (default = always empty)
+	  * @param iconOutsideMargins Margins to place around the icon(s) on the outer field edges (default = determined by context)
+	  * @param highlightStylePointer A pointer to an extra highlight color style to apply to this field (default = always None)
+	  * @param focusColorRole Color role to use for the focused state on this field (default = secondary)
+	  * @param hintScaleFactor A scaling factor to apply on displayed hint text (default = 70%)
+	  * @param fillBackground Whether a filled style should be used (true) or whether an outlined style should be
+	  *                       used (false) (default = true)
+	  * @param makeField A function for creating field contents
+	  *                  (accepts contextual data (specific context and context of this factory))
+	  * @tparam C Type of wrapped component
+	  * @return A new field
+	  */
+	def withoutExtraLabel[C <: ReachComponentLike with Focusable]
+	(isEmptyPointer: ChangingLike[Boolean],
+	 fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+	 leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+	 rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+	 iconOutsideMargins: StackSize = context.textInsets.total / 2,
+	 highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
+	 focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = TextField.defaultHintScaleFactor,
+	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
+	(makeField: (FieldCreationContext, N) => C) =
+		apply(isEmptyPointer, fieldNamePointer, promptPointer, hintPointer, errorMessagePointer, leftIconPointer,
+			rightIconPointer, iconOutsideMargins, highlightStylePointer, focusColorRole, hintScaleFactor,
+			fillBackground)(makeField) { (_, _) => None }
+}
 
 /**
   * Wraps another component in an interactive container that indicates an input field
   * @author Mikko Hilpinen
   * @since 14.11.2020, v2
+  * @tparam C Type of wrapped field
   */
-class Field[C <: ReachComponentLike with Focusable, R <: ReachComponentLike]
+class Field[C <: ReachComponentLike with Focusable]
 (parentHierarchy: ComponentHierarchy, colorScheme: ColorScheme, isEmptyPointer: ChangingLike[Boolean],
  contextBackgroundPointer: ChangingLike[ComponentColor], font: Font, alignment: Alignment = Alignment.Left,
- textInsets: StackInsets = StackInsets.any, fieldNamePointer: Option[ChangingLike[LocalizedString]] = None,
- promptPointer: Option[ChangingLike[LocalizedString]] = None, hintPointer: Option[ChangingLike[LocalizedString]] = None,
- errorMessagePointer: Option[ChangingLike[LocalizedString]] = None,
+ textInsets: StackInsets = StackInsets.any, fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+ promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+ hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+ errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
+ leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+ rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None), iconOutsideMargins: StackSize = StackSize.any,
  highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
  defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
- hintScaleFactor: Double = TextField.defaultHintScaleFactor, betweenLinesMargin: Double = 0.0,
- fillBackground: Boolean = true, allowLineBreaks: Boolean = false)
+ hintScaleFactor: Double = TextField.defaultHintScaleFactor,
+ fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 (makeField: FieldCreationContext => C)
-(makeRightHintLabel: C => Option[OpenComponent[R, Any]])
+(makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponentLike, Any]])
 	extends ReachComponentWrapper with Focusable
 {
 	// ATTRIBUTES	------------------------------------------
@@ -57,26 +286,22 @@ class Field[C <: ReachComponentLike with Focusable, R <: ReachComponentLike]
 	private val _focusPointer = new PointerWithEvents(false)
 	
 	// Displays an error if there is one, otherwise displays the hint (provided there is one). None if neither is used.
-	private lazy val actualHintTextPointer = hintPointer match
+	private lazy val actualHintTextPointer = hintPointer.notFixedWhere { _.isEmpty } match
 	{
 		case Some(hint) =>
-			errorMessagePointer match
+			errorMessagePointer.notFixedWhere { _.isEmpty } match
 			{
 				case Some(error) => Some(hint.mergeWith(error) { (hint, error) => error.notEmpty getOrElse hint })
 				case None => Some(hint)
 			}
-		case None => errorMessagePointer
+		case None => errorMessagePointer.notFixedWhere { _.isEmpty }
 	}
 	private lazy val hintVisibilityPointer = actualHintTextPointer.map { _.map { _.nonEmpty } }
 	
 	// A pointer to whether this field currently highlights an error
-	private val errorStatePointer = errorMessagePointer.map { _.map { _.nonEmpty } }
-	private val externalHighlightStatePointer = errorStatePointer match
-	{
-		case Some(errorPointer) =>
-			highlightStylePointer.mergeWith(errorPointer) { (custom, isError) => if (isError) Some(Error) else custom }
-		case None => highlightStylePointer
-	}
+	private val errorStatePointer = errorMessagePointer.map { _.nonEmpty }
+	private val externalHighlightStatePointer = highlightStylePointer.mergeWith(errorStatePointer) { (custom, isError) =>
+		if (isError) Some(Error) else custom }
 	private val highlightStatePointer = _focusPointer.mergeWith(externalHighlightStatePointer) { (focus, custom) =>
 		custom.orElse { if (focus) Some(focusColorRole) else None }
 	}
@@ -106,11 +331,10 @@ class Field[C <: ReachComponentLike with Focusable, R <: ReachComponentLike]
 			}
 		}
 	private val defaultHintColorPointer = contextBackgroundPointer.map { _.textColorStandard.hintTextColor }
-	private val errorHintColorPointer = errorStatePointer.map { errorPointer =>
-		contextBackgroundPointer.mergeWith(errorPointer) { (background, isError) =>
-			if (isError) Some(colorScheme.error.forBackground(background)) else None }
+	private val errorHintColorPointer = contextBackgroundPointer.mergeWith(errorStatePointer) { (background, isError) =>
+			if (isError) Some(colorScheme.error.forBackground(background)) else None
 	}
-	private lazy val hintColorPointer = errorHintColorPointer match
+	private lazy val hintColorPointer = errorHintColorPointer.notFixedWhere { _.isEmpty } match
 	{
 		case Some(errorColorPointer) =>
 			defaultHintColorPointer.mergeWith(errorColorPointer) { (default, error) =>
@@ -181,10 +405,19 @@ class Field[C <: ReachComponentLike with Focusable, R <: ReachComponentLike]
 	
 	override def focusId = field.focusId
 	
+	/**
+	  * @return The main component inside this wrapper
+	  */
 	def wrappedField = field
 	
+	/**
+	  * @return Whether this component currently has focus
+	  */
 	def hasFocus = _focusPointer.value
 	
+	/**
+	  * @return A pointer to this component's focus state
+	  */
 	def focusPointer = _focusPointer.view
 	
 	
@@ -203,10 +436,30 @@ class Field[C <: ReachComponentLike with Focusable, R <: ReachComponentLike]
 	
 	private def makeContentFraming[C2 <: ReachComponentLike](factory: FramingFactory, content: OpenComponent[C2, C]) =
 	{
+		// If extra icons are used, places them with the main content in a stack view
+		val framingContent =
+		{
+			if (leftIconPointer.isChanging || rightIconPointer.isChanging)
+				Open.using(ViewStack) { stackF =>
+					stackF.withFixedStyle(Vector(
+						makeOpenViewImageLabel(leftIconPointer, Direction2D.Right),
+						content.withResult(None),
+						makeOpenViewImageLabel(rightIconPointer, Direction2D.Left)), X, Center,
+						StackLength.fixedZero)
+				}
+			else if (leftIconPointer.value.isDefined || rightIconPointer.value.isDefined)
+				Open.using(Stack) { stackF =>
+					val leftLabel = leftIconPointer.value.map { makeImageLabel(content.hierarchy, _, Direction2D.Right) }
+					val rightLabel = rightIconPointer.value.map { makeImageLabel(content.hierarchy, _, Direction2D.Left) }
+					stackF.withoutMargin(content.mapComponent { c => Vector(leftLabel, Some(c), rightLabel).flatten },
+						X, Center)
+				}
+			else
+				content
+		}
 		// Wraps the field component in a Framing (that applies border)
 		// Top and side inset are increased if border is drawn on all sides
 		val borderInsets = if (fillBackground) Insets.bottom(focusBorderWidth) else Insets.symmetric(focusBorderWidth)
-		// val textStylePointer = editTextColorPointer.mergeWith(textInsetsPointer)(makeTextStyle)
 		// Draws background (optional) and border
 		val drawers =
 		{
@@ -215,7 +468,30 @@ class Field[C <: ReachComponentLike with Focusable, R <: ReachComponentLike]
 			else
 				Vector(borderDrawer)
 		}
-		factory(content, borderInsets.fixed, drawers)
+		factory(framingContent, borderInsets.fixed, drawers).withResult(content.result)
+	}
+	
+	private def makeViewImageLabel(hierarchy: ComponentHierarchy, pointer: ChangingLike[Option[SingleColorIcon]],
+							   noMarginSide: Direction2D) =
+		 ViewImageLabel(hierarchy).withStaticLayout(pointer.mergeWith(innerBackgroundPointer) { (icon, bg) =>
+			icon match
+			{
+				case Some(icon) => icon.singleColorImageAgainst(bg)
+				case None => Image.empty
+			}
+		}, iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
+	
+	private def makeOpenViewImageLabel(pointer: ChangingLike[Option[SingleColorIcon]], noMarginSide: Direction2D) =
+		Open { makeViewImageLabel(_, pointer, noMarginSide) }.withResult(Some(pointer.map { _.isDefined }))
+	
+	private def makeImageLabel(hierarchy: ComponentHierarchy, icon: SingleColorIcon, noMarginSide: Direction2D) =
+	{
+		if (contextBackgroundPointer.isChanging)
+			ViewImageLabel(hierarchy).withStaticLayout(innerBackgroundPointer.map(icon.singleColorImageAgainst),
+				iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
+		else
+			ImageLabel(hierarchy).apply(icon.singleColorImageAgainst(contextBackgroundPointer.value),
+				iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
 	}
 	
 	private def makeContentAndNameArea(fieldNamePointer: ChangingLike[LocalizedString]) =
@@ -252,15 +528,15 @@ class Field[C <: ReachComponentLike with Focusable, R <: ReachComponentLike]
 				
 				// May also display another prompt while the field has focus and is empty / starting with the prompt
 				// (not blocked by name or text)
-				val promptDrawer = promptPointer.map { promptPointer =>
-					val promptContentPointer = promptPointer.map(measureText)
+				val promptDrawer = promptPointer.notFixedWhere { _.isEmpty }.map { promptPointer =>
+					val promptContentPointer = promptPointer.map { measureText(_, allowLineBreaks = true) }
 					val displayedPromptPointer = promptContentPointer.mergeWith(_focusPointer) { (prompt, focus) =>
 						if (focus) prompt else emptyText }
 					TextViewDrawer2(displayedPromptPointer, promptStylePointer)
 				}
 				
 				val wrappedField = makeField(FieldCreationContext(factories.next().parentHierarchy, FocusTracker,
-					textStylePointer, Vector(namePromptDrawer) ++ promptDrawer))
+					textStylePointer, Vector(namePromptDrawer) ++ promptDrawer, innerBackgroundPointer))
 				
 				// Displays one or both of the items
 				Vector(ComponentCreationResult(nameLabel, Some(nameVisibilityPointer)),
@@ -273,23 +549,23 @@ class Field[C <: ReachComponentLike with Focusable, R <: ReachComponentLike]
 	private def makeInputArea() =
 	{
 		// Input part may contain a name label, if enabled
-		fieldNamePointer match
+		if (fieldNamePointer.existsFixed { _.isEmpty })
 		{
-			case Some(fieldNamePointer) => makeContentAndNameArea(fieldNamePointer)
-			case None =>
-				val textStylePointer = editTextColorPointer.map { makeTextStyle(_, textInsets) }
-				// May draw a prompt while the field is empty (or starting with the prompt text)
-				val promptDrawer = promptPointer.map { promptPointer =>
-					val promptStylePointer = textStylePointer.map { _.mapColor { _.timesAlpha(0.66) } }
-					val displayedPromptPointer = promptPointer.map(measureText)
-					TextViewDrawer2(displayedPromptPointer, promptStylePointer)
-				}
-				Open { hierarchy =>
-					val field = makeField(FieldCreationContext(hierarchy, FocusTracker, textStylePointer,
-						promptDrawer.toVector))
-					field -> field
-				}
+			val textStylePointer = editTextColorPointer.map { makeTextStyle(_, textInsets) }
+			// May draw a prompt while the field is empty (or starting with the prompt text)
+			val promptDrawer = promptPointer.notFixedWhere { _.isEmpty }.map { promptPointer =>
+				val promptStylePointer = textStylePointer.map { _.mapColor { _.timesAlpha(0.66) } }
+				val displayedPromptPointer = promptPointer.map { measureText(_, allowLineBreaks = true) }
+				TextViewDrawer2(displayedPromptPointer, promptStylePointer)
+			}
+			Open { hierarchy =>
+				val field = makeField(FieldCreationContext(hierarchy, FocusTracker, textStylePointer,
+					promptDrawer.toVector, innerBackgroundPointer))
+				field -> field
+			}
 		}
+		else
+			makeContentAndNameArea(fieldNamePointer)
 	}
 	
 	// Returns the generated open component (if any), along with its visibility pointer (if applicable)
@@ -297,7 +573,7 @@ class Field[C <: ReachComponentLike with Focusable, R <: ReachComponentLike]
 	{
 		// In some cases, displays both message field and extra right side label
 		// In other cases only the message field (which is hidden while empty)
-		makeRightHintLabel(wrappedField) match
+		makeRightHintLabel(ExtraFieldCreationContext(wrappedField, font * hintScaleFactor, contextBackgroundPointer)) match
 		{
 			case Some(rightComponent) =>
 				actualHintTextPointer match
@@ -335,16 +611,15 @@ class Field[C <: ReachComponentLike with Focusable, R <: ReachComponentLike]
 			else
 				defaultHintInsets
 		}
-		TextDrawContext(font * hintScaleFactor, textColor, alignment, insets, betweenLinesMargin * hintScaleFactor)
+		TextDrawContext(font * hintScaleFactor, textColor, alignment, insets)
 	}
 	
-	private def makeTextStyle(color: Color, insets: StackInsets) = TextDrawContext(font, color, alignment,
-		insets, betweenLinesMargin)
+	private def makeTextStyle(color: Color, insets: StackInsets) = TextDrawContext(font, color, alignment, insets)
 	
 	private def makeBackgroundDrawer() = BackgroundViewDrawer(innerBackgroundPointer.lazyMap { c => c })
 	
-	private def measureText(text: LocalizedString) = MeasuredText(text,
-		FontMetricsContext(parentHierarchy.fontMetrics(font), betweenLinesMargin), alignment, allowLineBreaks)
+	private def measureText(text: LocalizedString, allowLineBreaks: Boolean = false) = MeasuredText(text,
+		FontMetricsContext(parentHierarchy.fontMetrics(font), 0.0), alignment)
 	
 	
 	// NESTED	-----------------------------------
