@@ -124,14 +124,12 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
      */
     def draw(shape: Shape) =
     {
-        if (fillPaint.isDefined)
-        {
-            graphics.setPaint(fillPaint.get)
+        fillPaint.foreach { fill =>
+            graphics.setPaint(fill)
             graphics.fill(shape)
         }
-        if (edgePaint.isDefined)
-        {
-            graphics.setPaint(edgePaint.get)
+        edgePaint.foreach { edge =>
+            graphics.setPaint(edge)
             graphics.draw(shape)
         }
     }

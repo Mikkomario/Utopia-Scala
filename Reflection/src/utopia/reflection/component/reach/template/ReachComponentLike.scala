@@ -203,8 +203,12 @@ trait ReachComponentLike extends Stackable2
 				case None => components
 			}
 			if (remainingComponents.nonEmpty)
+				/*
 				drawer.translated(position).disposeAfter { d =>
-					remainingComponents.foreach { _.paintWith(d, newClipZone) }
+					remainingComponents.foreach { c => c.paintWith(d.clippedTo(c.bounds), newClipZone) }
+				}*/
+				drawer.translated(position).disposeAfter { d =>
+					remainingComponents.foreach { c => c.paintWith(d, newClipZone) }
 				}
 		}
 		// Paints foreground

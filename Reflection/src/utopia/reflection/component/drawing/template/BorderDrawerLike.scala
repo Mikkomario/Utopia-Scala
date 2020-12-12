@@ -35,17 +35,19 @@ trait BorderDrawerLike extends CustomDrawer
 	
 	private def drawBorder(drawer: Drawer, bounds: Bounds, border: Border): Unit =
 	{
-		if (bounds.width > 0 && bounds.height > 0)
+		val roundedBounds = bounds.floor
+		
+		if (roundedBounds.width > 0 && roundedBounds.height > 0)
 		{
 			// Sets the color & draws the borders
 			border.color.foreach { color =>
-				val boundsToDraw = boundsFromInsets(bounds, border.insets)
+				val boundsToDraw = boundsFromInsets(roundedBounds, border.insets)
 				if (boundsToDraw.nonEmpty)
 					drawer.withColor(color, color).disposeAfter { d => boundsToDraw.foreach(d.draw) }
 			}
 			
 			// Moves to the inner border
-			border.inner.foreach { b2 => drawBorder(drawer, boundsInsideInsets(bounds, border.insets), b2) }
+			border.inner.foreach { b2 => drawBorder(drawer, boundsInsideInsets(roundedBounds, border.insets), b2) }
 		}
 	}
 	
