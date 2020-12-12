@@ -97,10 +97,9 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam R Type of an individual component creation result
 	  * @return A new stack
 	  */
-	def segmented[R](group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, R]],
-											  layout: StackLayout = Fit, margin: StackLength = StackLength.any,
-											  cap: StackLength = StackLength.fixedZero,
-											  customDrawers: Vector[CustomDrawer] = Vector()) =
+	def segmented[R](group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, R]], layout: StackLayout = Fit,
+					 margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixedZero,
+					 customDrawers: Vector[CustomDrawer] = Vector()) =
 	{
 		// Wraps the components in segments first
 		val wrapped = Open { hierarchy =>
@@ -272,9 +271,9 @@ case class ContextualStackFactory[N <: BaseContextLike](stackFactory: StackFacto
 	  * @tparam R Type of an individual component creation result
 	  * @return A new stack
 	  */
-	def segmented[R](group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, R]],
-											layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
-											customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false) =
+	def segmented[R](group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, R]], layout: StackLayout = Fit,
+					 cap: StackLength = StackLength.fixedZero, customDrawers: Vector[CustomDrawer] = Vector(),
+					 areRelated: Boolean = false) =
 		stackFactory.segmented(group, content, layout,
 			if (areRelated) context.defaultStackMargin else context.relatedItemsStackMargin, cap, customDrawers)
 	

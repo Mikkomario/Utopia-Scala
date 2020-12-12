@@ -85,6 +85,16 @@ object ComponentCreationResult
   */
 class ComponentCreationResult[+C, +R](val component: C, val result: R)
 {
+	// COMPUTED	-----------------------------
+	
+	/**
+	  * @return Wrapped component, then additional result
+	  */
+	def toTuple = component -> result
+	
+	
+	// OTHER	-----------------------------
+	
 	/**
 	  * @param container Container that will hold this component
 	  * @tparam P Type of parent container

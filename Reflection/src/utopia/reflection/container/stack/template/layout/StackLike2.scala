@@ -118,14 +118,12 @@ trait StackLike2[C <: Stackable2] extends MultiContainer2[C] with StackSizeCalcu
         val p = relativePoint.along(direction)
         val c = components
         // Finds the first item past the relative point
-        c.indexWhereOption { _.coordinateAlong(direction) > p }.map
-        {
-            nextIndex =>
-                // Selects the next item if a) it's the first item or b) it's closer to point than the previous item
-                if (nextIndex == 0 || c(nextIndex).coordinateAlong(direction) - p < p - c(nextIndex - 1).maxCoordinateAlong(direction))
-                    c(nextIndex)
-                else
-                    c(nextIndex - 1)
+        c.indexWhereOption { _.coordinateAlong(direction) > p }.map { nextIndex =>
+            // Selects the next item if a) it's the first item or b) it's closer to point than the previous item
+            if (nextIndex == 0 || c(nextIndex).coordinateAlong(direction) - p < p - c(nextIndex - 1).maxCoordinateAlong(direction))
+                c(nextIndex)
+            else
+                c(nextIndex - 1)
             
         }.orElse(c.lastOption)
     }

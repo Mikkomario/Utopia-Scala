@@ -4,6 +4,42 @@ import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.Positive
 import utopia.reflection.event.FocusListener
 
+object Focusable
+{
+	// OTHER	--------------------------------
+	
+	/**
+	  * Wraps a component as a focusable item
+	  * @param component A component to wrap
+	  * @param focusListeners Focus listeners to assign to this component
+	  * @return The wrapped component
+	  */
+	def wrap(component: ReachComponentLike, focusListeners: Seq[FocusListener]): Focusable =
+		new FocusWrapper(component, focusListeners)
+	
+	
+	// NESTED	--------------------------------
+	
+	private class FocusWrapper(override protected val wrapped: ReachComponentLike,
+							   override val focusListeners: Seq[FocusListener])
+		extends Focusable with ReachComponentWrapper
+	{
+		// INITIAL CODE	------------------------
+		
+		// Enables focus management while attached to the main hierarchy
+		enableFocusHandlingWhileLinked()
+		
+		
+		// IMPLEMENTED	------------------------
+		
+		override def focusId = hashCode()
+		
+		override def allowsFocusEnter = true
+		
+		override def allowsFocusLeave = true
+	}
+}
+
 /**
   * A common trait for focusable (reach) components
   * @author Mikko Hilpinen

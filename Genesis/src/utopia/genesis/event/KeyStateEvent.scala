@@ -1,7 +1,9 @@
 package utopia.genesis.event
 
-import java.awt.event.KeyEvent
+import utopia.genesis.shape.Axis.{X, Y}
+import utopia.genesis.shape.Axis2D
 
+import java.awt.event.KeyEvent
 import utopia.genesis.shape.shape2D.Direction2D
 import utopia.inception.util.Filter
 
@@ -87,15 +89,41 @@ case class KeyStateEvent(index: Int, location: KeyLocation, isDown: Boolean, key
     def isReleased = !isDown
     
     /**
-      * @return The direction of the arrow key that was changed. None if the change didn't affect an arrow key.
+      * @return Direction of the horizontal arrow key (left, right) that was changed. None if the change didn't affect
+      *         a horizontal arrow key.
       */
-    def arrow = index match
+    def horizontalArrow = index match
     {
         case KeyEvent.VK_RIGHT => Some(Direction2D.Right)
         case KeyEvent.VK_LEFT => Some(Direction2D.Left)
+        case _ => None
+    }
+    
+    /**
+      * @return Direction of the vertical arrow key (up, down) that was changed. None if the change didn't affect
+      *         a vertical arrow key.
+      */
+    def verticalArrow = index match
+    {
         case KeyEvent.VK_UP => Some(Direction2D.Up)
         case KeyEvent.VK_DOWN => Some(Direction2D.Down)
         case _ => None
+    }
+    
+    /**
+      * @return The direction of the arrow key that was changed. None if the change didn't affect an arrow key.
+      */
+    def arrow = horizontalArrow orElse verticalArrow
+    
+    /**
+      * @param axis Target axis
+      * @return Direction of the arrow key that lies in the specified axis and was changed. None if the change
+      *         didn't affect an arrow key on the specified axis.
+      */
+    def arrowAlong(axis: Axis2D) = axis match
+    {
+        case X => horizontalArrow
+        case Y => verticalArrow
     }
     
     

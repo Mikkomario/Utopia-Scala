@@ -23,6 +23,16 @@ object ChangeFuture
 			case Some(v) => Fixed(v)
 			case None => new ChangeFuture[A](placeHolder, future)
 		}
+	
+	/**
+	  * Wraps a future, containing None until that future is completed
+	  * @param future A future
+	  * @param exc Implicit execution context
+	  * @tparam A Type of item this future will eventually contain
+	  * @return A new change future
+	  */
+	def noneUntilCompleted[A](future: Future[A])(implicit exc: ExecutionContext) =
+		wrap(future.map { Some(_) }, None)
 }
 
 /**

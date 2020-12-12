@@ -4,7 +4,8 @@ import utopia.flow.event.ChangeListener
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.LinearAcceleration
-import utopia.genesis.shape.shape2D.Size
+import utopia.genesis.shape.shape2D.{Bounds, Size}
+import utopia.genesis.util.Drawer
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.ScrollingContextLike
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
@@ -214,4 +215,10 @@ class ScrollArea(override val parentHierarchy: ComponentHierarchy, override val 
 	// IMPLEMENTED	----------------------------
 	
 	override def axes = Axis2D.values
+	
+	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) = clipZone match
+	{
+		case Some(clip) => clip.within(bounds).foreach { c => super.paintWith(drawer, Some(c)) }
+		case None => super.paintWith(drawer, Some(bounds))
+	}
 }
