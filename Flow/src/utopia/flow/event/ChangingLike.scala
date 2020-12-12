@@ -118,8 +118,8 @@ trait ChangingLike[+A] extends Viewable[A]
 		if (isChanging)
 			Some(this)
 		else if (condition(value))
-			Some(this)
-		else None
+			None
+		else Some(this)
 	}
 	
 	/**

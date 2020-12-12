@@ -145,7 +145,14 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     /**
       * @return A copy of these bounds that rounds values for increased size and decreased position
       */
-    def ceil = Bounds(position.floor, size.ceil)
+    def ceil =
+    {
+        val newPosition = position.floor
+        if (newPosition == position)
+            Bounds(newPosition, size.ceil)
+        else
+            Bounds(newPosition, Size((rightX - newPosition.x).ceil, (bottomY - newPosition.y).ceil))
+    }
     
     
     // IMPLEMENTED METHODS    ----------

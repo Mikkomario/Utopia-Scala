@@ -2,10 +2,9 @@ package utopia.reflection.test.reach
 
 import utopia.flow.event.Fixed
 import utopia.flow.generic.DataType
-import utopia.genesis.color.Color
-import utopia.reflection.component.drawing.immutable.BackgroundDrawer
+import utopia.reflection.component.context.TextContext
 import utopia.reflection.component.reach.factory.Mixed
-import utopia.reflection.component.reach.input.TextField
+import utopia.reflection.component.reach.input.{ContextualTextFieldFactory, TextField}
 import utopia.reflection.component.reach.label.ViewTextLabel
 import utopia.reflection.container.reach.{Framing, Stack}
 import utopia.reflection.container.stack.StackLayout.Trailing
@@ -36,32 +35,23 @@ object ReachTextFieldTest extends App
 		Framing(hierarchy).buildFilledWithContext(baseContext, colorScheme.gray, Stack).apply(margins.medium.any.square) { stack =>
 			stack.build(Stack).column() { r =>
 				val rows = r.mapContext { _.forTextComponents }
+				def makeRow[A](displayFunction: DisplayFunction[A])(makeField: ContextualTextFieldFactory[TextContext] => TextField[A]) =
+				{
+					rows.build(Mixed).row(layout = Trailing, areRelated = true) { row =>
+						val field = makeField(row(TextField))
+						val summary = row(ViewTextLabel)(field.valuePointer, displayFunction)
+						Vector(field, summary)
+					}.parent
+				}
 				Vector(
-					// TODO: WET WET
-					rows.build(Mixed).row(layout = Trailing, areRelated = true) { row1 =>
-						val field = row1(TextField).forString(320.any, Some(Fixed("Text")),
-							maxLength = Some(32), showCharacterCount = true)
-						val summary = row1(ViewTextLabel)(field.valuePointer)
-						Vector(field, summary)
-					},
-					rows.build(Mixed).row(layout = Trailing, customDrawers = Vector(BackgroundDrawer(Color.magenta)), areRelated = true) { row2 =>
-						val field = row2(TextField).forInt(Some(Fixed("Int")), fillBackground = false)
-						val summary = row2(ViewTextLabel)(field.valuePointer, DisplayFunction.rawOption)
-						Vector(field, summary)
-					},
-					rows.build(Mixed).row(layout = Trailing, areRelated = true) { row3 =>
-						val field = row3(TextField).forInt(Some(Fixed("Int+")),
-							minValue = 0, maxValue = 10, fillBackground = false)
-						val summary = row3(ViewTextLabel)(field.valuePointer, DisplayFunction.rawOption)
-						Vector(field, summary)
-					},
-					rows.build(Mixed).row(layout = Trailing, areRelated = true) { row4 =>
-						val field = row4(TextField).forDouble(0.0, 1.0,
-							Some(Fixed("Double")), Some(Fixed("0.".noLanguageLocalizationSkipped)))
-						val summary = row4(ViewTextLabel)(field.valuePointer, DisplayFunction.rawOption)
-						Vector(field, summary)
-					}
-				).map { _.parent }
+					makeRow[String](DisplayFunction.raw) { _.forString(320.any, Fixed("Text"), maxLength = Some(32),
+						showCharacterCount = true) },
+					makeRow[Option[Int]](DisplayFunction.rawOption) { _.forInt(Fixed("Int"), fillBackground = false) },
+					makeRow[Option[Int]](DisplayFunction.rawOption) { _.forInt(Fixed("Int+"),
+						minValue = 0, maxValue = 10, fillBackground = false) },
+					makeRow[Option[Double]](DisplayFunction.rawOption) { _.forDouble(0.0, 1.0,
+						Fixed("Double"), Fixed("0.".noLanguageLocalizationSkipped), proposedNumberOfDecimals = 2) }
+				)
 			}
 		}
 	}.parent

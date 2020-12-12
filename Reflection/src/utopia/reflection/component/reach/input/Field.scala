@@ -53,6 +53,16 @@ case class ExtraFieldCreationContext[C](content: C, font: Font, backgroundPointe
 
 object Field extends ContextInsertableComponentFactoryFactory[TextContextLike, FieldFactory, ContextualFieldFactory]
 {
+	// ATTRIBUTES	--------------------------
+	
+	/**
+	  * Default factor used for scaling the hint elements
+	  */
+	val defaultHintScaleFactor = 0.7
+	
+	
+	// IMPLEMENTED	--------------------------
+	
 	override def apply(hierarchy: ComponentHierarchy) = new FieldFactory(hierarchy)
 }
 
@@ -103,7 +113,7 @@ class FieldFactory(parentHierarchy: ComponentHierarchy)
 	 rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
 	 iconOutsideMargins: StackSize = StackSize.any, highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
 	 focusColorRole: ColorRole = Secondary, defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
-	 hintScaleFactor: Double = TextField.defaultHintScaleFactor,
+	 hintScaleFactor: Double = Field.defaultHintScaleFactor,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 	(makeField: FieldCreationContext => C)
 	(makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponentLike, Any]]) =
@@ -151,7 +161,7 @@ class FieldFactory(parentHierarchy: ComponentHierarchy)
 	 rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
 	 iconOutsideMargins: StackSize = StackSize.any, highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
 	 focusColorRole: ColorRole = Secondary, defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
-	 hintScaleFactor: Double = TextField.defaultHintScaleFactor,
+	 hintScaleFactor: Double = Field.defaultHintScaleFactor,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 	(makeField: FieldCreationContext => C) =
 		apply[C](colorScheme, isEmptyPointer, contextBackgroundPointer, font, alignment, textInsets,
@@ -199,7 +209,7 @@ case class ContextualFieldFactory[+N <: TextContextLike](factory: FieldFactory, 
 	 rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
 	 iconOutsideMargins: StackSize = context.textInsets.total / 2,
 	 highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
-	 focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = TextField.defaultHintScaleFactor,
+	 focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = Field.defaultHintScaleFactor,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 	(makeField: (FieldCreationContext, N) => C)
 	(makeRightHintLabel: (ExtraFieldCreationContext[C], N) => Option[OpenComponent[ReachComponentLike, Any]]) =
@@ -245,7 +255,7 @@ case class ContextualFieldFactory[+N <: TextContextLike](factory: FieldFactory, 
 	 rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
 	 iconOutsideMargins: StackSize = context.textInsets.total / 2,
 	 highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
-	 focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = TextField.defaultHintScaleFactor,
+	 focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = Field.defaultHintScaleFactor,
 	 fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 	(makeField: (FieldCreationContext, N) => C) =
 		apply(isEmptyPointer, fieldNamePointer, promptPointer, hintPointer, errorMessagePointer, leftIconPointer,
@@ -270,7 +280,7 @@ class Field[C <: ReachComponentLike with Focusable]
  rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None), iconOutsideMargins: StackSize = StackSize.any,
  highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None), focusColorRole: ColorRole = Secondary,
  defaultBorderWidth: Double = 1, focusBorderWidth: Double = 3,
- hintScaleFactor: Double = TextField.defaultHintScaleFactor,
+ hintScaleFactor: Double = Field.defaultHintScaleFactor,
  fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 (makeField: FieldCreationContext => C)
 (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponentLike, Any]])

@@ -306,7 +306,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	// Resized children are expected to have their repaints already queued
 	// Returns areas to repaint afterwards
 	private def updateLayoutFor(componentQueues: Set[(Seq[ReachComponentLike], Boolean)],
-								 sizeChangedChildren: Set[ReachComponentLike]): Vector[Bounds] =
+								sizeChangedChildren: Set[ReachComponentLike]): Vector[Bounds] =
 	{
 		val nextSizeChangeChildrenBuilder = new VectorBuilder[ReachComponentLike]()
 		val nextPositionChangeChildrenBuilder = new VectorBuilder[ReachComponentLike]()

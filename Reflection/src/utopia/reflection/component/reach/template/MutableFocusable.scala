@@ -1,6 +1,6 @@
 package utopia.reflection.component.reach.template
 
-import utopia.reflection.event.FocusListener
+import utopia.reflection.event.{FocusChangeListener, FocusListener}
 
 /**
   * A mutable variation of the focusable trait
@@ -27,4 +27,16 @@ trait MutableFocusable extends Focusable
 	  * @param listener A listener to no longer inform of focus events
 	  */
 	def removeFocusListener(listener: Any) = focusListeners = focusListeners.filterNot { _ == listener }
+	
+	/**
+	  * Registers a new function to be called on focus gained events
+	  * @param f A function to call on focus gained events
+	  */
+	def addFocusGainedListener(f: => Unit) = addFocusListener(FocusChangeListener.onFocusGain(f))
+	
+	/**
+	  * Registers a new function to be called on focus lost events
+	  * @param f A function to call on focus lost events
+	  */
+	def addFocusLostListener(f: => Unit) = addFocusListener(FocusChangeListener.onFocusLost(f))
 }
