@@ -159,7 +159,8 @@ class XmlWriter(stream: OutputStream, val charset: Charset = StandardCharsets.UT
      * @param element the element tree that is written
      */
     def write(element: XmlElement): Unit = writeElement(element.name, 
-            element.attributes.attributeMap.view.mapValues(a => a.value.stringOr()), element.text) { element.children.foreach(write) }
+            element.attributes.attributes.map { a => a.name -> a.value.getString }, element.text) {
+        element.children.foreach(write) }
     
     private def writeCharacters(text: String) = 
     {
@@ -174,7 +175,7 @@ class XmlWriter(stream: OutputStream, val charset: Charset = StandardCharsets.UT
     {
         val i = c.toInt
         // Character is not allowed if it lies in an invalid char range or is specifically invalid
-        XmlWriter.invalidCharRanges.find(_.end >= i).exists(_.start <= i) || 
+        XmlWriter.invalidCharRanges.find { _.end >= i }.exists { _.start <= i } ||
                 XmlWriter.invalidExtraChars.contains(i)
     }
 }
