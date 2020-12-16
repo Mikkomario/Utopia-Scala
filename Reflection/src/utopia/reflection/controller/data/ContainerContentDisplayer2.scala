@@ -13,6 +13,9 @@ object ContainerContentDisplayer2
 	  */
 	private type P[X] = ChangingLike[Vector[X]]
 	
+	/**
+	  * Short version for a refreshable display component
+	  */
 	private type D[X] = ComponentLike2 with Refreshable[X]
 	
 	/**
