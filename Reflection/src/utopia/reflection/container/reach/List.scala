@@ -17,6 +17,7 @@ import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.ColorContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
+import utopia.reflection.component.reach.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reflection.component.reach.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reflection.component.reach.template.{Focusable, ReachComponentLike}
 import utopia.reflection.component.reach.wrapper.{ComponentCreationResult, Open, OpenComponent}
@@ -38,15 +39,34 @@ case class ListRowContent(components: IterableOnce[ReachComponentLike], context:
   * @author Mikko Hilpinen
   * @since 12.12.2020, v2
   */
-object List
+object List extends ContextInsertableComponentFactoryFactory[ColorContextLike, ListFactory, ContextualListFactory]
 {
-	
+	override def apply(hierarchy: ComponentHierarchy) = new ListFactory(hierarchy)
 }
 
 class ListFactory(parentHierarchy: ComponentHierarchy)
+	extends ContextInsertableComponentFactory[ColorContextLike, ContextualListFactory]
 {
 	private implicit val canvas: ReachCanvas = parentHierarchy.top
 	
+	override def withContext[N <: ColorContextLike](context: N) =
+		ContextualListFactory(this, context)
+	
+	/**
+	  * Creates a new list with content
+	  * @param group Group that determines column alignment
+	  * @param contextBackgroundPointer A pointer to the background color of the parent container
+	  * @param insideRowLayout Layout to use for the column segments inside rows (default = Fit)
+	  * @param rowMargin Margin placed between rows (default = any, preferring 0)
+	  * @param columnMargin Margin placed between columns (default = any, preferring 0)
+	  * @param edgeMargins Margins placed at the outer edges of this list (default = always 0)
+	  * @param customDrawers Custom drawers assigned to this list (default = empty)
+	  * @param focusListeners Focus listeners assigned to this list (default = empty)
+	  * @param fill A function that accepts an infinite iterator of contexts for new rows and produces the desirable
+	  *             amount of row content, along with a possible additional result
+	  * @tparam R Type of additional result created
+	  * @return A new list (wrap result)
+	  */
 	def apply[R](group: SegmentGroup, contextBackgroundPointer: ChangingLike[ComponentColor],
 				 insideRowLayout: StackLayout = Fit, rowMargin: StackLength = StackLength.any,
 				 columnMargin: StackLength = StackLength.any, edgeMargins: StackSize = StackSize.fixedZero,
@@ -120,7 +140,23 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualListFactory[+N <: ColorContextLike](factory: ListFactory, context: N)
+	extends ContextualComponentFactory[N, ColorContextLike, ContextualListFactory]
 {
+	override def withContext[N2 <: ColorContextLike](newContext: N2) =
+		copy(context = newContext)
+	
+	/**
+	  * Creates a new list with content
+	  * @param group Group that determines column alignment
+	  * @param insideRowLayout Layout to use for the column segments inside rows (default = Fit)
+	  * @param edgeMargins Margins placed at the outer edges of this list (default = always 0)
+	  * @param customDrawers Custom drawers assigned to this list (default = empty)
+	  * @param focusListeners Focus listeners assigned to this list (default = empty)
+	  * @param fill A function that accepts an infinite iterator of contexts for new rows and produces the desirable
+	  *             amount of row content, along with a possible additional result
+	  * @tparam R Type of additional result created
+	  * @return A new list (wrap result)
+	  */
 	def apply[R](group: SegmentGroup, insideRowLayout: StackLayout = Fit, edgeMargins: StackSize = StackSize.fixedZero,
 				 customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
 				(fill: Iterator[ListRowContext] => ComponentCreationResult[IterableOnce[ListRowContent], R]) =
