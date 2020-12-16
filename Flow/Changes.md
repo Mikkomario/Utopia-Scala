@@ -64,6 +64,7 @@ in a lazy container is not required or desirable
 includeSelf-parameter was set to false)
 - Fixed a bug in period comparison (didn't compare day value)
 - Fixed a bug in WeekDay.forIndex(Int) (didn't accept 0 or negative values)
+- Fixed a bug in XmlWriter where attributes were written in lowercase letters
 ### Other Changes
 - Exceptions thrown by Loop.runOnce() implementations are now caught and printed, not propagated further.
 - CsvReader now removes '-characters from the beginnings of columns, if present
