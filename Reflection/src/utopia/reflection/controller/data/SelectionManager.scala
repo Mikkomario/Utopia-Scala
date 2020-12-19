@@ -11,6 +11,7 @@ import utopia.reflection.component.template.display.Refreshable
   * @author Mikko Hilpinen
   * @since 22.5.2019, v1+
   */
+// TODO: Create a new version which doesn't require a mutable pool (extends ContentDisplayer and SelectionWithPointers)
 trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with SelectableWithPointers[Option[A], Vector[A]]
 {
 	// ATTRIBUTES	-------------------

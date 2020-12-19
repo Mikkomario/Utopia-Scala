@@ -81,6 +81,7 @@ object ContainerContentDisplayer2
   * @author Mikko Hilpinen
   * @since 9.5.2020, v1.2
   * @tparam A The type of content displayed in the container
+  * @tparam W A display wrapper class used when one is being added to a container
   * @tparam Display The type of display where a single item is displayed
  *  @tparam P Type of pointer reflected by this displayer
   * @param container The container managed through this manager
@@ -92,7 +93,7 @@ object ContainerContentDisplayer2
   *                    (= 'sameItemCheck' is enough)
   * @param makeItem A function for producing new displays
   */
-class ContainerContentDisplayer2[A, W, Display <: Refreshable[A] with ComponentLike2, +P <: ChangingLike[Vector[A]]]
+class ContainerContentDisplayer2[A, -W, Display <: Refreshable[A] with ComponentLike2, +P <: ChangingLike[Vector[A]]]
 (protected val container: MutableMultiContainer2[W, Display], override val contentPointer: P,
  sameItemCheck: (A, A) => Boolean = { (a: A, b: A) =>  a == b }, equalsCheck: Option[(A, A) => Boolean] = None)
 (makeItem: A => W) extends ContentDisplayer[A, Display, P]
