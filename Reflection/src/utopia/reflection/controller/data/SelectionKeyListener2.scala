@@ -3,6 +3,8 @@ package utopia.reflection.controller.data
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.{Actor, ActorHandlerType, KeyStateListener}
+import utopia.genesis.shape.Axis.{X, Y}
+import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.inception.handling.HandlerType
@@ -48,6 +50,28 @@ object SelectionKeyListener2
 				   scrollDelayModifier: Double = 0.8, minScrollDelay: Duration = 0.05.seconds)
 				  (moveSelection: Int => Unit) = new SelectionKeyListener2(KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
 		listenEnabledCondition, initialScrollDelay, scrollDelayModifier, minScrollDelay)(moveSelection)
+	
+	/**
+	  * Creates a new selection key listener. Remember to add it to both an <b>ActorHandler</b> and
+	  * a <b>KeyStateHandler</b>
+	  * @param axis Axis along which the selection is moved
+	  * @param listenEnabledCondition A function that is used for testing whether button presses should be recognized
+	  *                               (default = always true)
+	  * @param initialScrollDelay Delay after key becomes pressed, before selection is moved automatically (provided that
+	  *                           the button is still being held down) (default = 0.4 seconds)
+	  * @param scrollDelayModifier A modifier applied to next scroll step delay after each step ]0, 1] where 0 means no
+	  *                            delay and 1 means same delay as before (default = 0.8)
+	  * @param minScrollDelay Minimum delay between each selection move (default = 0.05 seconds)
+	  * @param moveSelection A function for moving selection by specified amount
+	  * @return A new selection listener
+	  */
+	def along(axis: Axis2D, listenEnabledCondition: => Boolean = true, initialScrollDelay: Duration = 0.4.seconds,
+			  scrollDelayModifier: Double = 0.8, minScrollDelay: Duration = 0.05.seconds)
+			 (moveSelection: Int => Unit) = axis match
+	{
+		case X => horizontal(listenEnabledCondition, initialScrollDelay, scrollDelayModifier, minScrollDelay)(moveSelection)
+		case Y => vertical(listenEnabledCondition, initialScrollDelay, scrollDelayModifier, minScrollDelay)(moveSelection)
+	}
 }
 
 /**

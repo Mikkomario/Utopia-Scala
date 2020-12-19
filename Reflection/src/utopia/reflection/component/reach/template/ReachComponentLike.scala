@@ -166,6 +166,14 @@ trait ReachComponentLike extends Stackable2
 	def repaintParent(priority: Priority = Priority.Normal) = parentHierarchy.repaintBottom(priority)
 	
 	/**
+	  * Repaints a sub-section of this component's area
+	  * @param relativeArea An area to repaint (where (0,0) is located at the top left corner of this component)
+	  * @param priority Priority to use for the repaint (default = normal)
+	  */
+	def repaintArea(relativeArea: Bounds, priority: Priority = Priority.Normal) =
+		parentHierarchy.repaint(relativeArea + position, priority)
+	
+	/**
 	  * Indicates that this component's and its hierarchy's layout should be updated. Once that has been done,
 	  * repaints this component
 	  * @param priority Priority to use for the repaint operation. Higher priority components are drawn first.
