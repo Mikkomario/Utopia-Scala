@@ -315,7 +315,10 @@ class Field[C <: ReachComponentLike with Focusable]
 		custom.orElse { if (focus) Some(focusColorRole) else None }
 	}
 	// If a separate background color is used for this component, it depends from this component's state
-	private val innerBackgroundPointer =
+	/**
+	  * A pointer to this field's current inner background color. May vary based on state.
+	  */
+	val innerBackgroundPointer =
 	{
 		// TODO: Handle mouse over state (highlights one more time)
 		if (fillBackground)

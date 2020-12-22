@@ -56,6 +56,11 @@ class SingleColorIcon(val original: Image)
 	// COMPUTED	---------------------------
 	
 	/**
+	  * @return Size of this icon
+	  */
+	def size = original.size
+	
+	/**
 	  * @return A full size version of this icon where icon size matches the source resolution
 	  */
 	def fullSize =

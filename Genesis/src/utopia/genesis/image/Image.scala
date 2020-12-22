@@ -15,7 +15,7 @@ import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.{Angle, Rotation}
-import utopia.genesis.shape.shape2D.{Area2D, Bounds, Circle, Direction2D, Insets, Point, Size, Vector2D}
+import utopia.genesis.shape.shape2D.{Area2D, Bounds, Direction2D, Insets, Point, Size, Vector2D}
 import utopia.genesis.shape.template.{Dimensional, VectorLike}
 import utopia.genesis.util.{Drawer, Scalable}
 
@@ -708,14 +708,19 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  */
 	def paintedToCanvas(targetSize: Size) =
 	{
-		// Creates the new buffer image
-		val buffer = new BufferedImage(targetSize.width.round.toInt, targetSize.height.round.toInt,
-			BufferedImage.TYPE_INT_ARGB)
-		// Draws this image to the center of the image
-		val topLeftPosition = (targetSize - size).toPoint / 2
-		val originDrawPosition = topLeftPosition + origin
-		Drawer.use(buffer.createGraphics()) { drawer => drawWith(drawer, originDrawPosition) }
-		// Wraps the image
-		Image(buffer, origin = if (specifiesOrigin) Some(originDrawPosition) else None)
+		if (size == targetSize)
+			this
+		else
+		{
+			// Creates the new buffer image
+			val buffer = new BufferedImage(targetSize.width.round.toInt, targetSize.height.round.toInt,
+				BufferedImage.TYPE_INT_ARGB)
+			// Draws this image to the center of the image
+			val topLeftPosition = (targetSize - size).toPoint / 2
+			val originDrawPosition = topLeftPosition + origin
+			Drawer.use(buffer.createGraphics()) { drawer => drawWith(drawer, originDrawPosition) }
+			// Wraps the image
+			Image(buffer, origin = if (specifiesOrigin) Some(originDrawPosition) else None)
+		}
 	}
 }
