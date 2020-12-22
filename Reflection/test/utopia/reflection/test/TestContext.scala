@@ -1,19 +1,11 @@
 package utopia.reflection.test
 
-import java.nio.file.Path
-
 import utopia.flow.async.ThreadPool
-import utopia.flow.util.FileExtensions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.Point
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.reflection.color.{ColorScheme, ColorSet}
 import utopia.reflection.component.context.{AnimationContext, BaseContext, ScrollingContext}
-import utopia.reflection.cursor.{Cursor, CursorSet, CursorType}
-import utopia.reflection.cursor.CursorType.{Default, Interactive, Text}
-import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.Margins
 import utopia.reflection.text.Font
@@ -45,18 +37,4 @@ object TestContext
 	
 	implicit val defaultLanguageCode: String = "EN"
 	implicit val localizer: Localizer = NoLocalization
-	
-	private val cursorsDirectory: Path = "Reflection/test-images"
-	// TODO: Fix cursor setup
-	lazy val cursors: Option[CursorSet] = Image.readFrom(cursorsDirectory/"cursor-arrow.png").toOption.map { arrowImage =>
-		val arrowCursor = Cursor(new SingleColorIcon(arrowImage.withSourceResolutionOrigin(Point(7, 4))))
-		val handImage = Image.readFrom(cursorsDirectory/"cursor-hand.png").toOption.map { i =>
-			new SingleColorIcon(i.withSourceResolutionOrigin(Point(9, 1))) }
-		val textImage = Image.readFrom(cursorsDirectory/"cursor-text.png").toOption.map { i =>
-			new SingleColorIcon(i.withCenterOrigin) }
-		
-		CursorSet(Vector(Interactive -> handImage, Text -> textImage)
-			.flatMap { case (cursorType, cursor) => cursor.map { cursorType -> Cursor(_) } }
-			.toMap[CursorType, Cursor] + (Default -> arrowCursor), arrowCursor)
-	}
 }
