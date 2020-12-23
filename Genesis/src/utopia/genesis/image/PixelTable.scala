@@ -1,7 +1,6 @@
 package utopia.genesis.image
 
 import java.awt.image.BufferedImage
-
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.{Area2D, Bounds, Point, Size}

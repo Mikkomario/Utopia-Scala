@@ -1,7 +1,6 @@
 package utopia.genesis.test
 
 import java.nio.file.Paths
-
 import utopia.flow.async.ThreadPool
 import utopia.genesis.handling.Drawable
 import utopia.genesis.image.Image
@@ -30,11 +29,12 @@ object ImageTest extends App
 	val combined = original.withOverlay(original * 0.5)
 	
 	// Sets up the program
-	val gameWorldSize = Size(800, 300)
+	val gameWorldSize = Size(900, 300)
 	
 	val setup = new DefaultSetup(gameWorldSize, "Image Test")
 	
-	setup.registerObjects(new ImageDrawer(original, Point(50, 50)),
+	setup.registerObjects(
+		new ImageDrawer(original, Point(50, 50)),
 		new ImageDrawer(original.flippedHorizontally, Point(150, 50)),
 		new ImageDrawer(original.flippedVertically, Point(250, 50)),
 		new ImageDrawer(original.withIncreasedContrast, Point(350, 50)),
@@ -46,7 +46,11 @@ object ImageTest extends App
 		new ImageDrawer(original.withAdjustedHue(Angle.red, Angle.ofDegrees(90), Angle.blue), Point(250, 150)),
 		new ImageDrawer(original.withThreshold(3), Point(350, 150)),
 		new ImageDrawer(original * 2, Point(450, 150)),
-		new ImageDrawer(combined, Point(550, 150))
+		new ImageDrawer(combined, Point(550, 150)),
+		/*new ImageDrawer(leftHalf.transformedWith(
+			/*Transformation.rotation(Rotation.ofDegrees(90, Counterclockwise))),*/
+			Transformation.scaling(2)),
+			Point(650, 50))*/
 	)
 	
 	// Starts the program

@@ -15,7 +15,7 @@ import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.{Angle, Rotation}
-import utopia.genesis.shape.shape2D.{Area2D, Bounds, Direction2D, Insets, Point, Size, Vector2D}
+import utopia.genesis.shape.shape2D.{Area2D, Bounds, Circle, Direction2D, Insets, Point, Size, Transformation, Vector2D}
 import utopia.genesis.shape.template.{Dimensional, VectorLike}
 import utopia.genesis.util.{Drawer, Scalable}
 
@@ -723,4 +723,37 @@ case class Image private(override protected val source: Option[BufferedImage], o
 			Image(buffer, origin = if (specifiesOrigin) Some(originDrawPosition) else None)
 		}
 	}
+	
+	/*
+	  * Transforms this image using specified transformation. The resulting image is based on a drawn copy of this image.
+	  * @param transformation Transformation to apply to this image
+	  * @return Transformed copy of this image
+	  */
+		/*
+	def transformedWith(transformation: Transformation) =
+	{
+		if (isEmpty)
+			this
+		else
+		{
+			// Calculates new bounds
+			val transformedBounds = transformation(bounds).bounds
+			val transformedOrigin = transformation(Point.origin)
+			println(s"Bounds: $bounds => $transformedBounds")
+			println(s"Origin: (0,0) => $transformedOrigin")
+			// Creates the buffer image
+			val buffer = new BufferedImage(transformedBounds.width.round.toInt, transformedBounds.height.round.toInt,
+				BufferedImage.TYPE_INT_ARGB)
+			// Draws on the buffer
+			Drawer.use(buffer.createGraphics()) { d =>
+				// val transformed = d.transformed(transformation)
+				d.onlyFill(Color.blue.withAlpha(0.3)).draw(Bounds(Point.origin, transformedBounds.size))
+				d.onlyFill(Color.red).draw(Circle(-transformedBounds.position, 5))
+				
+				drawWith(d, Point.origin, Some(transformation))
+			}
+			// Wraps the image
+			Image(buffer, origin = if (specifiesOrigin) Some(transformedBounds.position - transformedOrigin) else None)
+		}
+	}*/
 }
