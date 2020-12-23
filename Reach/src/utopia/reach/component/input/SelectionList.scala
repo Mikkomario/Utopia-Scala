@@ -13,16 +13,18 @@ import utopia.genesis.util.Drawer
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
-import utopia.reflection.color.ComponentColor
+import utopia.reflection.color.{ColorShadeVariant, ComponentColor}
 import utopia.reflection.component.context.ColorContextLike
 import utopia.reflection.component.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{MutableFocusable, ReachComponent, ReachComponentLike, ReachComponentWrapper}
+import utopia.reach.component.template.{CursorDefining, MutableFocusable, ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.{MutableStack, ReachCanvas}
+import utopia.reach.cursor.Cursor
+import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
 import utopia.reach.util.Priority.High
 import utopia.reflection.component.template.display.Refreshable
@@ -115,7 +117,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
  sameItemCheck: Option[(A, A) => Boolean])
 (makeDisplay: (ComponentHierarchy, A) => C)
 	extends ReachComponentWrapper with MutableCustomDrawableWrapper with MutableFocusable
-		with SelectionWithPointers[Option[A], PointerWithEvents[Option[A]], Vector[A], P]
+		with SelectionWithPointers[Option[A], PointerWithEvents[Option[A]], Vector[A], P] with CursorDefining
 {
 	// ATTRIBUTES	---------------------------------
 	
@@ -150,6 +152,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			addCustomDrawer(SelectionDrawer)
 			SelectionDrawer.selectedAreaPointer.addListener(repaintAreaListener)
 			SelectionDrawer.hoverAreaPointer.addListener(repaintAreaListener)
+			canvas.cursorManager.foreach { _ += this }
 		}
 		else
 		{
@@ -159,6 +162,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			removeCustomDrawer(SelectionDrawer)
 			SelectionDrawer.selectedAreaPointer.removeListener(repaintAreaListener)
 			SelectionDrawer.hoverAreaPointer.removeListener(repaintAreaListener)
+			canvas.cursorManager.foreach { _ -= this }
 		}
 	}
 	
@@ -206,6 +210,13 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	override protected def wrapped: ReachComponent = stack
 	
 	override def repaint() = super[MutableCustomDrawableWrapper].repaint()
+	
+	override def cursorType = if (isEmpty) Default else Interactive
+	
+	override def cursorBounds = boundsInsideTop
+	
+	override def cursorToImage(cursor: Cursor, position: Point) =
+		cursor(ColorShadeVariant.forLuminosity(contextBackgroundPointer.value.luminosity))
 	
 	
 	// NESTED	------------------------------------

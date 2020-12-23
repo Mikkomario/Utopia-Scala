@@ -20,14 +20,18 @@ object Focusable
 	  * @param focusListeners Focus listeners to assign to this component
 	  * @return The wrapped component
 	  */
-	def wrap(component: ReachComponentLike, focusListeners: Seq[FocusListener]): Focusable =
+	def wrap[C <: ReachComponentLike](component: C, focusListeners: Seq[FocusListener]) =
 		new FocusWrapper(component, focusListeners)
 	
 	
 	// NESTED	--------------------------------
 	
-	private class FocusWrapper(override protected val wrapped: ReachComponentLike,
-							   override val focusListeners: Seq[FocusListener])
+	/**
+	  * Used for wrapping another non-focusable component to produce a focusable component
+	  * @param wrapped Component to wrap
+	  * @param focusListeners Focus listeners to assign to the component
+	  */
+	class FocusWrapper[+C <: ReachComponentLike](override val wrapped: C, override val focusListeners: Seq[FocusListener])
 		extends Focusable with ReachComponentWrapper
 	{
 		// INITIAL CODE	------------------------

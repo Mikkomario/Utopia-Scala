@@ -190,6 +190,8 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	
 	override def measuredText = wrapped.measuredText
 	
+	override def measure(text: LocalizedString) = wrapped.measure(text)
+	
 	override def enabled_=(newState: Boolean) = _statePointer.update { _.copy(isEnabled = newState) }
 	
 	override protected def drawable = wrapped

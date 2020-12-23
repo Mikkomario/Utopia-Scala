@@ -136,8 +136,8 @@ class TextLabel(override val parentHierarchy: ComponentHierarchy, override val t
 {
 	// ATTRIBUTES	-----------------------------
 	
-	override val measuredText = MeasuredText(text, FontMetricsContext(fontMetrics(drawContext.font),
-		drawContext.betweenLinesMargin), drawContext.alignment, allowLineBreaks)
+	val fontMetricsContext = FontMetricsContext(fontMetrics(drawContext.font), drawContext.betweenLinesMargin)
+	override val measuredText = MeasuredText(text, fontMetricsContext, drawContext.alignment, allowLineBreaks)
 	override val customDrawers = additionalDrawers.toVector :+
 		TextDrawer2(measuredText, drawContext.font, drawContext.insets, drawContext.color)
 	
@@ -145,4 +145,6 @@ class TextLabel(override val parentHierarchy: ComponentHierarchy, override val t
 	// IMPLEMENTED	-----------------------------
 	
 	override def updateLayout() = ()
+	
+	override def measure(text: LocalizedString) = MeasuredText(text, fontMetricsContext, alignment, allowLineBreaks)
 }

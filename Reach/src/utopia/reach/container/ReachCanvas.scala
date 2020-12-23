@@ -65,6 +65,7 @@ object ReachCanvas
   * @author Mikko Hilpinen
   * @since 4.10.2020, v2
   */
+// TODO: Stack hierarchy attachment link should be considered broken while this component is invisible or otherwise not shown
 class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Option[CursorSet])
 						 (implicit exc: ExecutionContext)
 	extends JWrapper with Stackable with AwtContainerRelated with SwingComponentRelated with CustomDrawable

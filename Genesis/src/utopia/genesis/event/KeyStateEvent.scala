@@ -5,6 +5,7 @@ import utopia.genesis.shape.Axis2D
 
 import java.awt.event.KeyEvent
 import utopia.genesis.shape.shape2D.Direction2D
+import utopia.genesis.shape.shape2D.Direction2D.{Down, Up}
 import utopia.inception.util.Filter
 
 object KeyStateEvent
@@ -33,6 +34,12 @@ object KeyStateEvent
      * This event filter only accepts events for the specified key index + location
      */
     def keyFilter(index: Int, location: KeyLocation): Filter[KeyStateEvent] = e => e.index == index && e.location == location
+    
+    /**
+      * @param direction An arrow key direction
+      * @return A filter that only accepts events concerning that arrow key
+      */
+    def arrowKeyFilter(direction: Direction2D) = keyFilter(arrowKeyIndex(direction))
     
     /**
      * This event filter only accepts events for the specified character key
@@ -68,6 +75,18 @@ object KeyStateEvent
      * @return A filter that only accepts events where control is being held down while specified character key is pressed
      */
     def controlCharComboFilter(char: Char): Filter[KeyStateEvent] = controlDownFilter && wasPressedFilter && charFilter(char)
+    
+    /**
+      * @param direction Arrow key direction
+      * @return A key code matching that arrow key
+      */
+    def arrowKeyIndex(direction: Direction2D) = direction match
+    {
+        case Up => KeyEvent.VK_UP
+        case Down => KeyEvent.VK_DOWN
+        case Direction2D.Left => KeyEvent.VK_LEFT
+        case Direction2D.Right => KeyEvent.VK_RIGHT
+    }
 }
 
 /**

@@ -30,6 +30,7 @@ import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener, FocusListener}
 import utopia.reach.util.Priority.VeryHigh
 import utopia.reflection.text.{FontMetricsContext, MeasuredText, Regex}
 import utopia.reflection.localization.LocalString._
+import utopia.reflection.localization.LocalizedString
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -157,12 +158,14 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 		else
 			style.mapColor { _.timesAlpha(0.66) }
 	}
+	private val measurerPointer = effectiveStylePointer.map { style =>
+		FontMetricsContext(fontMetrics(style.font), style.betweenLinesMargin) -> style.alignment
+	}
 	/**
 	  * A pointer to this label's measured text information
 	  */
-	val measuredTextPointer = textPointer.mergeWith(effectiveStylePointer) { (text, style) =>
-		MeasuredText(text.noLanguageLocalizationSkipped, FontMetricsContext(fontMetrics(style.font),
-			style.betweenLinesMargin), style.alignment, allowLineBreaks)
+	val measuredTextPointer = textPointer.mergeWith(measurerPointer) { (text, measures) =>
+		MeasuredText(text.noLanguageLocalizationSkipped, measures._1, measures._2, allowLineBreaks)
 	}
 	private val caretIndexPointer = new PointerWithEvents(measuredText.maxCaretIndex)
 	private val caretVisibilityPointer = new PointerWithEvents(false)
@@ -295,6 +298,9 @@ class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorH
 	override def measuredText = measuredTextPointer.value
 	
 	override def drawContext = effectiveStylePointer.value
+	
+	override def measure(text: LocalizedString) = MeasuredText(text, measurerPointer.value._1, alignment,
+		allowLineBreaks)
 	
 	override def allowsFocusEnter = selectable
 	

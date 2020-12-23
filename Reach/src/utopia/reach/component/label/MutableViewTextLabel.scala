@@ -12,7 +12,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.MutableCustomDrawReachComponent
 import utopia.reflection.component.template.display.RefreshableWithPointer
 import utopia.reflection.component.template.text.{MutableStyleTextComponent, TextComponent2}
-import utopia.reflection.localization.DisplayFunction
+import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.{Font, FontMetricsContext, MeasuredText}
@@ -202,11 +202,15 @@ class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 	  * A mutable pointer that contains the currently used text styling
 	  */
 	val stylePointer = new PointerWithEvents(initialDrawContext)
+	private val measurerPointer = stylePointer.map { style =>
+		FontMetricsContext(fontMetrics(style.font), style.betweenLinesMargin) -> style.alignment
+	}
 	/**
 	  * Pointer that contains the text currently displayed on this label
 	  */
-	val textPointer = contentPointer.mergeWith(stylePointer) { (content, style) => MeasuredText(displayFunction(content),
-		FontMetricsContext(fontMetrics(style.font), style.betweenLinesMargin), style.alignment, allowLineBreaks) }
+	val textPointer = contentPointer.mergeWith(measurerPointer) { (content, measures) =>
+		MeasuredText(displayFunction(content), measures._1, measures._2, allowLineBreaks)
+	}
 	
 	
 	// INITIAL CODE	----------------------------------
@@ -227,6 +231,9 @@ class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 	
 	override def drawContext = stylePointer.value
 	override def drawContext_=(newContext: TextDrawContext) = stylePointer.value = newContext
+	
+	override def measure(text: LocalizedString) = MeasuredText(text, measurerPointer.value._1, alignment,
+		allowLineBreaks)
 	
 	override def updateLayout() = ()
 }

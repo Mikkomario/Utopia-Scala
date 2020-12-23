@@ -67,6 +67,14 @@ object DisplayFunction
 	// OTHER	----------------------
 	
 	/**
+	  * Wraps a function as a display function
+	  * @param handle A function for handling conversion and localization
+	  * @tparam A Type of converted item
+	  * @return A new display function
+	  */
+	def wrap[A](handle: A => LocalizedString) = new DisplayFunction[A](handle)
+	
+	/**
 	  * Creates a new display function from two separate functions
 	  * @param transform A transform function that transforms an item to string
 	  * @param localize A localization function that localizes the produced string

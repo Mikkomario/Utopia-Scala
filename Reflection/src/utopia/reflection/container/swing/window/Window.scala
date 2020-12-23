@@ -33,6 +33,7 @@ import scala.util.Try
 * @author Mikko Hilpinen
 * @since 25.3.2019
 **/
+// TODO: Component revalidation should be delayed while this window is invisible
 trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable with AwtContainerRelated with Constrainable
 {
     // ATTRIBUTES   ----------------
@@ -316,6 +317,11 @@ trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable w
      * Makes it so that this window will close one escape is pressed
      */
     def setToCloseOnEsc() = addKeyStateListener(KeyStateListener.onKeyPressed(KeyEvent.VK_ESCAPE) { _ => close() })
+    
+    /**
+      * Makes this window become invisible whenever it loses focus
+      */
+    def setToHideWhenNotInFocus() = component.addWindowFocusListener(new HideWindowOnFocusLostListener)
     
     /**
       * Updates the bounds of this window's contents to match those of this window

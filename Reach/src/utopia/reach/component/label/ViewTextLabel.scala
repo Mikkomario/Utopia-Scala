@@ -213,7 +213,7 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
   * @author Mikko Hilpinen
   * @since 17.10.2020, v2
   */
-class ViewTextLabel[A](override val parentHierarchy: ComponentHierarchy, override val contentPointer: ChangingLike[A],
+class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, override val contentPointer: ChangingLike[A],
 					   stylePointer: ChangingLike[TextDrawContext], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 					   additionalDrawers: Seq[CustomDrawer] = Vector(), allowLineBreaks: Boolean = true,
 					   override val allowTextShrink: Boolean = false)
@@ -222,16 +222,23 @@ class ViewTextLabel[A](override val parentHierarchy: ComponentHierarchy, overrid
 	// ATTRIBUTE	-------------------------------------
 	
 	/**
+	  * A pointer containing the current text measurement context and alignment
+	  */
+	val measurementsContextPointer = stylePointer.map { style =>
+		FontMetricsContext(fontMetrics(style.font), style.betweenLinesMargin) -> style.alignment
+	}
+	/**
 	  * Pointer containing the current (measured) text
 	  */
-	val textPointer = contentPointer.mergeWith(stylePointer) { (content, style) => MeasuredText(displayFunction(content),
-		FontMetricsContext(fontMetrics(style.font), style.betweenLinesMargin), style.alignment, allowLineBreaks) }
+	val textPointer = contentPointer.mergeWith(measurementsContextPointer) { (content, context) =>
+		MeasuredText(displayFunction(content), context._1, context._2, allowLineBreaks) }
 	override val customDrawers =  additionalDrawers.toVector :+ TextViewDrawer2(textPointer, stylePointer)
 	
 	
 	// INITIAL CODE	-------------------------------------
 	
 	// Revalidates and repaints this component on all text changes
+	// TODO: Also revalidate / repaint on style updates (like color or alignment change)
 	textPointer.addListener { event =>
 		if (event.compareBy { _.size })
 			repaint()
@@ -240,7 +247,17 @@ class ViewTextLabel[A](override val parentHierarchy: ComponentHierarchy, overrid
 	}
 	
 	
+	// COMPUTED	-----------------------------------------
+	
+	/**
+	  * @return Measurement context currently used in this label
+	  */
+	def textMeasurementContext = measurementsContextPointer.value._1
+	
+	
 	// IMPLEMENTED	-------------------------------------
+	
+	override def measure(text: LocalizedString) = MeasuredText(text, textMeasurementContext, alignment, allowLineBreaks)
 	
 	override def measuredText = textPointer.value
 	

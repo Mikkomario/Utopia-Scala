@@ -110,11 +110,14 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 	  * A mutable pointer that contains this label's text
 	  */
 	val textPointer = new PointerWithEvents(initialText)
+	private val measurerPointer = stylePointer.map { style =>
+		FontMetricsContext(fontMetrics(style.font), style.betweenLinesMargin) -> style.alignment
+	}
 	/**
 	  * A pointer to this label's measured text
 	  */
-	val measuredTextPointer = textPointer.mergeWith(stylePointer) { (text, style) => MeasuredText(text,
-		FontMetricsContext(fontMetrics(style.font), style.betweenLinesMargin), style.alignment, allowLineBreaks) }
+	val measuredTextPointer = textPointer.mergeWith(measurerPointer) { (text, measures) => MeasuredText(text,
+		measures._1, measures._2, allowLineBreaks) }
 	
 	
 	// INITIAL CODE	-------------------------
@@ -142,4 +145,7 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 	override def drawContext_=(newContext: TextDrawContext) = stylePointer.value = newContext
 	
 	override def updateLayout() = ()
+	
+	override def measure(text: LocalizedString) = MeasuredText(text, measurerPointer.value._1, alignment,
+		allowLineBreaks)
 }
