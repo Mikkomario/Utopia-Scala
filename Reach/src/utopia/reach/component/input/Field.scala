@@ -15,10 +15,10 @@ import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderVie
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.{ImageLabel, ViewImageLabel, ViewTextLabel, ViewTextLabelFactory}
-import utopia.reach.component.template.{Focusable, ReachComponent, ReachComponentLike, ReachComponentWrapper}
+import utopia.reach.component.template.{Focusable, FocusableWrapper, ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.{Framing, FramingFactory, ReachCanvas, Stack, ViewStack}
-import utopia.reach.event.{FocusChangeEvent, FocusChangeListener}
+import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 import utopia.reach.util.Priority.High
 import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.image.SingleColorIcon
@@ -283,7 +283,7 @@ class Field[C <: ReachComponentLike with Focusable]
  fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 (makeField: FieldCreationContext => C)
 (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponentLike, Any]])
-	extends ReachComponentWrapper with Focusable
+	extends ReachComponentWrapper with FocusableWrapper
 {
 	// ATTRIBUTES	------------------------------------------
 	
@@ -415,8 +415,6 @@ class Field[C <: ReachComponentLike with Focusable]
 	
 	// COMPUTED	----------------------------------------------
 	
-	override def focusId = field.focusId
-	
 	/**
 	  * @return The main component inside this wrapper
 	  */
@@ -435,13 +433,9 @@ class Field[C <: ReachComponentLike with Focusable]
 	
 	// IMPLEMENTED	------------------------------------------
 	
+	override protected def focusable = field
+	
 	override protected def wrapped: ReachComponent = _wrapped
-	
-	override def focusListeners = field.focusListeners
-	
-	override def allowsFocusEnter = field.allowsFocusEnter
-	
-	override def allowsFocusLeave = field.allowsFocusLeave
 	
 	
 	// OTHER	----------------------------------------------

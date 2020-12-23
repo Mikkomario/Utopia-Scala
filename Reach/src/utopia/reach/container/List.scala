@@ -17,7 +17,7 @@ import utopia.reach.component.factory.{ContextInsertableComponentFactory, Contex
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.{Focusable, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.event.{FocusListener, FocusStateTracker}
+import utopia.reach.focus.{FocusListener, FocusStateTracker}
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.ColorContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer

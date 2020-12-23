@@ -1,7 +1,5 @@
 package utopia.reflection.util
 
-import utopia.reflection.component.swing.template.AwtComponentRelated
-
 import scala.language.implicitConversions
 
 /**
@@ -31,6 +29,14 @@ object AwtComponentExtensions
 		  * @return The first window that contains this component. None if this component isn't attached to any window
 		  */
 		def parentWindow = parents.find { _.isInstanceOf[java.awt.Window] }
+			.map { _.asInstanceOf[java.awt.Window] }
+		
+		/**
+		  * @return An iterator that returns the series of windows this component is attached to, with the closest
+		  *         window returned first and the owner of that window returned after that. If this component is
+		  *         not attached to any window, an empty iterator is returned.
+		  */
+		def parentWindows = parents.filter { _.isInstanceOf[java.awt.Window] }
 			.map { _.asInstanceOf[java.awt.Window] }
 		
 		/**

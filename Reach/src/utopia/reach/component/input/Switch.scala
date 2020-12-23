@@ -22,7 +22,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
 import utopia.reflection.component.template.input.InteractionWithPointer
 import utopia.reach.cursor.Cursor
-import utopia.reach.event.FocusListener
+import utopia.reach.focus.FocusListener
 import utopia.reach.util.Priority.VeryHigh
 import utopia.reflection.event.ButtonState
 import utopia.reflection.shape.stack.{StackLength, StackSize}

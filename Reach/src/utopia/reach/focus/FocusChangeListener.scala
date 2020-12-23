@@ -1,6 +1,6 @@
-package utopia.reach.event
+package utopia.reach.focus
 
-import utopia.reach.event.FocusEvent.{FocusGained, FocusLost}
+import utopia.reach.focus.FocusEvent.{FocusGained, FocusLost}
 
 import scala.language.implicitConversions
 

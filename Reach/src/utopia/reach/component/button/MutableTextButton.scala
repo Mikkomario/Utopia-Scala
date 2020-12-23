@@ -13,7 +13,7 @@ import utopia.reach.component.label.MutableTextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reflection.component.template.text.MutableTextComponent
 import utopia.reach.cursor.Cursor
-import utopia.reach.event.FocusListener
+import utopia.reach.focus.FocusListener
 import utopia.reflection.event.ButtonState
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment

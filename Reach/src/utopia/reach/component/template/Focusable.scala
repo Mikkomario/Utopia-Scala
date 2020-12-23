@@ -1,8 +1,14 @@
 package utopia.reach.component.template
 
+import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.Positive
-import utopia.reach.event.FocusListener
+import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.wrapper.ComponentCreationResult
+import utopia.reach.focus.FocusListener
+import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
+import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.Never
+import utopia.reflection.shape.Alignment
 
 object Focusable
 {
@@ -126,4 +132,33 @@ trait Focusable extends ReachComponentLike
 	  */
 	def yieldFocus(direction: Direction1D = Positive, forceFocusLeave: Boolean = false) =
 		focusManager.moveFocusFrom(this, direction, forceFocusLeave)
+	
+	/**
+	  * Informs the focus management system that this component now owns the specified window. While the specified
+	  * window has focus, this component will also be treated as having focus. The ownership relationship will
+	  * automatically terminate when the window closes.
+	  * @param window The window this component will own
+	  */
+	def registerOwnershipOf(window: java.awt.Window) = focusManager.registerWindowOwnership(this, window)
+	
+	/**
+	  * Creates a pop-up next to this component. Registers this component as the owner of that pop-up window
+	  * @param actorHandler Actor handler that will deliver action events for the pop-up
+	  * @param alignment Alignment to use when placing the pop-up (default = Right)
+	  * @param margin Margin to place between this component and the pop-up (not used with Center alignment)
+	  * @param autoCloseLogic Logic used for closing the pop-up (default = won't automatically close the pop-up)
+	  * @param makeContent A function for producing pop-up contents based on a component hierarchy
+	  * @tparam C Type of created component
+	  * @tparam R Type of additional result
+	  * @return A component wrapping result that contains the pop-up, the created component inside the canvas and
+	  *         the additional result returned by 'makeContent'
+	  */
+	def createOwnedPopup[C <: ReachComponentLike, R](actorHandler: ActorHandler, alignment: Alignment = Alignment.Right,
+													 margin: Double = 0.0, autoCloseLogic: PopupAutoCloseLogic = Never)
+													(makeContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
+	{
+		val popup = createPopup[C, R](actorHandler, alignment, margin, autoCloseLogic)(makeContent)
+		registerOwnershipOf(popup.component)
+		popup
+	}
 }

@@ -60,6 +60,20 @@ class CachingViewSwapperFactory(parentHierarchy: ComponentHierarchy)
 																customDrawers: Vector[CustomDrawer] = Vector())
 															   (makeContent: A => OpenComponent[C, _]) =
 		new CachingViewSwapper[A, C, P](parentHierarchy, valuePointer, customDrawers)(makeContent)
+	
+	/**
+	  * Creates a new swapper, uses the most generic available type arguments (Use this method when you don't want to
+	  * specify type arguments)
+	  * @param valuePointer Pointer to the mirrored value
+	  * @param customDrawers Custom drawers assigned to this container (default = empty)
+	  * @param makeContent A function for producing a new component for an item
+	  *                    (called only once for each encountered item)
+	  * @tparam A Type of items being mirrored
+	  * @return A new swapper container
+	  */
+	def generic[A](valuePointer: ChangingLike[A], customDrawers: Vector[CustomDrawer] = Vector())
+				  (makeContent: A => OpenComponent[ReachComponentLike, _]) =
+		apply[A, ReachComponentLike, ChangingLike[A]](valuePointer, customDrawers)(makeContent)
 }
 
 case class ContextualCachingViewSwapperFactory[N](factory: CachingViewSwapperFactory, context: N)
@@ -93,6 +107,18 @@ class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentF
 																customDrawers: Vector[CustomDrawer] = Vector())
 															   (makeContent: (F, A) => C) =
 		factory[A, C, P](valuePointer, customDrawers) { item => Open.using(contentFactory) { makeContent(_, item) } }
+	
+	/**
+	  * Creates a new swapper without specifying additional type arguments
+	  * @param valuePointer A pointer to the mirrored value
+	  * @param customDrawers Custom drawers assigned to this swapper (default = empty)
+	  * @param makeContent A function for producing a component using component a creation factory and a displayed item
+	  * @tparam A Type of mirrored value
+	  * @return A new swapper
+	  */
+	def generic[A](valuePointer: ChangingLike[A], customDrawers: Vector[CustomDrawer] = Vector())
+				  (makeContent: (F, A) => ReachComponentLike) =
+		apply[A, ReachComponentLike, ChangingLike[A]](valuePointer, customDrawers)(makeContent)
 }
 
 class ContextualViewSwapperBuilder[N, +F[X] <: ContextualComponentFactory[X, _ >: N, F]]
@@ -116,6 +142,18 @@ class ContextualViewSwapperBuilder[N, +F[X] <: ContextualComponentFactory[X, _ >
 		factory[A, C, P](valuePointer, customDrawers) { item =>
 			Open.withContext(contentFactory, context) { makeContent(_, item) }
 		}
+	
+	/**
+	  * Creates a new swapper
+	  * @param valuePointer A pointer to the mirrored value
+	  * @param customDrawers Custom drawers assigned to this swapper (default = empty)
+	  * @param makeContent A function for producing a component using component a creation factory and a displayed item
+	  * @tparam A Type of mirrored value
+	  * @return A new swapper
+	  */
+	def generic[A](valuePointer: ChangingLike[A], customDrawers: Vector[CustomDrawer] = Vector())
+				  (makeContent: (F[N], A) => ReachComponentLike) =
+		apply[A, ReachComponentLike, ChangingLike[A]](valuePointer, customDrawers)(makeContent)
 }
 
 /**

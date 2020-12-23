@@ -13,7 +13,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.ImageAndTextLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
-import utopia.reach.event.FocusListener
+import utopia.reach.focus.FocusListener
 import utopia.reflection.event.ButtonState
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString

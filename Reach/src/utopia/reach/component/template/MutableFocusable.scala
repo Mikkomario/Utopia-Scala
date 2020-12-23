@@ -1,6 +1,6 @@
 package utopia.reach.component.template
 
-import utopia.reach.event.{FocusChangeListener, FocusListener}
+import utopia.reach.focus.{FocusChangeListener, FocusListener}
 
 /**
   * A mutable variation of the focusable trait

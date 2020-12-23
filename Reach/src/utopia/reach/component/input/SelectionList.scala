@@ -23,7 +23,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{MutableFocusable, ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.{MutableStack, ReachCanvas}
-import utopia.reach.event.{FocusListener, FocusStateTracker}
+import utopia.reach.focus.{FocusListener, FocusStateTracker}
 import utopia.reach.util.Priority.High
 import utopia.reflection.component.template.display.Refreshable
 import utopia.reflection.component.template.input.SelectionWithPointers

@@ -26,7 +26,8 @@ import utopia.reflection.container.swing.window.Popup
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.Never
 import utopia.reach.cursor.{CursorSet, ReachCursorManager}
-import utopia.reach.util.{Priority, ReachFocusManager, RealTimeReachPaintManager}
+import utopia.reach.focus.ReachFocusManager
+import utopia.reach.util.{Priority, RealTimeReachPaintManager}
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackSize

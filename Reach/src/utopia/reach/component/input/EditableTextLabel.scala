@@ -26,7 +26,7 @@ import utopia.reach.component.template.{CursorDefining, MutableCustomDrawReachCo
 import utopia.reflection.component.template.text.TextComponent2
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Text}
-import utopia.reach.event.{FocusChangeEvent, FocusChangeListener, FocusListener}
+import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener, FocusListener}
 import utopia.reach.util.Priority.VeryHigh
 import utopia.reflection.text.{FontMetricsContext, MeasuredText, Regex}
 import utopia.reflection.localization.LocalString._

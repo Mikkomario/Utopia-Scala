@@ -1,4 +1,4 @@
-package utopia.reach.event
+package utopia.reach.focus
 
 import scala.language.implicitConversions
 

@@ -7,7 +7,7 @@ import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButt
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.inception.handling.HandlerType
 import utopia.reach.cursor.CursorType.{Default, Interactive}
-import utopia.reach.event.{FocusChangeEvent, FocusChangeListener}
+import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 import utopia.reach.util.Priority.High
 import utopia.reflection.event.ButtonState
 

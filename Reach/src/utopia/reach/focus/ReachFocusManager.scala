@@ -1,4 +1,4 @@
-package utopia.reach.util
+package utopia.reach.focus
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.CollectionExtensions._
@@ -7,9 +7,11 @@ import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.Point
 import utopia.reach.component.template.{Focusable, ReachComponentLike}
-import utopia.reach.event.FocusEvent.{FocusEntering, FocusGained, FocusLeaving, FocusLost}
+import utopia.reach.focus.FocusEvent.{FocusEntering, FocusGained, FocusLeaving, FocusLost}
+import utopia.reflection.util.AwtComponentExtensions._
 
-import java.awt.event.FocusEvent
+import java.awt.event.{FocusEvent, WindowAdapter, WindowEvent}
+import scala.collection.immutable.HashMap
 
 /**
   * This object manages focus traversal inside a reach canvas
@@ -20,16 +22,22 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 {
 	// ATTRIBUTES	-----------------------------
 	
+	// Orders points from top to bottom, left to right
+	private implicit val focusOrdering: Ordering[Point] =
+		new CombinedOrdering[Point](Vector(Ordering.by { _.y }, Ordering.by { _.x }))
+	
 	private val targetsPointer = new PointerWithEvents(Set[Focusable]())
 	private val orderedTargetsPointer = targetsPointer.lazyMap { targets =>
 		sortComponents(targets.map { c => c.parentHierarchy.toVector -> c }.toVector) }
 	private val targetIdsPointer = targetsPointer.lazyMap { _.map { _.focusId } }
 	
-	private var focusOwner: Option[Focusable] = None
+	// Focus id -> Owned window
+	private var windowOwnerships: Map[Int, java.awt.Window] = HashMap()
+	// Owned window -> owner component
+	private var reverseWindowOwnerships: Map[java.awt.Window, Focusable] = HashMap()
+	private var currentOwnershipFocus: Option[(Focusable, java.awt.Window)] = None
 	
-	// Orders points from top to bottom, left to right
-	private implicit val focusOrdering: Ordering[Point] =
-		new CombinedOrdering[Point](Vector(Ordering.by { _.y }, Ordering.by { _.x }))
+	private var focusOwner: Option[Focusable] = None
 	
 	
 	// INITIAL CODE	-----------------------------
@@ -69,35 +77,91 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	}
 	
 	/**
+	  * Registers an ownership relationship between a component and a window. Whenever the specified window has
+	  * focus, the component will also be considered to have focus. This relationship is automatically terminated when
+	  * the window closes (is disposed).
+	  * @param owner The component that owns the window
+	  * @param window The window being owned. <b>Shouldn't contain this focus management system</b>.
+	  */
+	def registerWindowOwnership(owner: Focusable, window: java.awt.Window) =
+	{
+		windowOwnerships += owner.focusId -> window
+		reverseWindowOwnerships += window -> owner
+		window.addWindowFocusListener(OwnedWindowListener)
+		window.addWindowListener(OwnedWindowListener)
+		
+		// Checks whether the window has focus and should share it with the new owner
+		if (window.isFocused)
+		{
+			currentOwnershipFocus = Some(owner, window)
+			focusOwner = Some(owner)
+			owner.focusListeners.foreach { _.onFocusEvent(FocusGained) }
+		}
+	}
+	
+	/**
 	  * Removes a component from the list of available focus targets
 	  * @param component A component to remove
 	  */
 	def unregister(component: Focusable) =
 	{
 		// If the target component is the current focus owner, attempts to move the focus away first
+		// (only if this manager has focus, otherwise simply informs the component about lost focus)
 		if (isFocusOwner(component))
 		{
-			// If there weren't other components to receive the focus, simply removes the focus without a recipient
-			if (!moveFocusInside(allowLooping = false, forceFocusLeave = true) &&
-				!moveFocusInside(Negative, allowLooping = false, forceFocusLeave = true))
+			if (hasFocus)
+			{
+				// If there weren't other components to receive the focus, simply removes the focus without a recipient
+				if (!moveFocusInside(allowLooping = false, forceFocusLeave = true) &&
+					!moveFocusInside(Negative, allowLooping = false, forceFocusLeave = true))
+				{
+					component.focusListeners.foreach { _.onFocusEvent(FocusLost) }
+					focusOwner = None
+					// May yield focus from this whole system
+					if (hasFocus)
+						canvasComponent.transferFocus()
+				}
+			}
+			else
 			{
 				component.focusListeners.foreach { _.onFocusEvent(FocusLost) }
 				focusOwner = None
-				// May yield focus from this whole system
-				if (hasFocus)
-					canvasComponent.transferFocus()
 			}
 		}
 		// Removes the component from the list of available focus targets
 		targets -= component
+		windowOwnerships -= component.focusId
+		reverseWindowOwnerships = reverseWindowOwnerships.filterNot { _._2.focusId == component.focusId }
+		if (currentOwnershipFocus.exists { _._1.focusId == component.focusId })
+			currentOwnershipFocus = None
 	}
 	
 	/**
-	  * Tests whether a component is the current focus owner
+	  * Removes any ownership relation associated with the specified window
+	  * @param window Window to no longer affect / share focus
+	  */
+	def removeOwnershipOf(window: java.awt.Window) =
+	{
+		windowOwnerships = windowOwnerships.filterNot { _._2 == window }
+		reverseWindowOwnerships -= window
+		// Informs focus lost if that window is the current focus target
+		currentOwnershipFocus.filter { _._2 == window }.foreach { case (owner, _) =>
+			currentOwnershipFocus = None
+			owner.focusListeners.foreach { _.onFocusEvent(FocusLost) }
+		}
+		// Stops listening
+		window.removeWindowFocusListener(OwnedWindowListener)
+		window.removeWindowListener(OwnedWindowListener)
+	}
+	
+	/**
+	  * Tests whether a component is the current focus owner (in current system or whether it owns a focused window)
 	  * @param component A component
 	  * @return Whether that component is the current focus owner
 	  */
-	def isFocusOwner(component: Focusable) = focusOwner.exists { _.focusId == component.focusId } && hasFocus
+	// Needs to have focus directly or be the owner of owned focused window
+	def isFocusOwner(component: Focusable) = (focusOwner.exists { _.focusId == component.focusId } && hasFocus) ||
+		currentOwnershipFocus.exists { _._1.focusId == component.focusId }
 	
 	/**
 	  * Moves the focus one step forward or backward, keeping it always inside this component system
@@ -320,6 +384,8 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	
 	private object CanvasFocusListener extends java.awt.event.FocusListener
 	{
+		// IMPLEMENTED	-------------------------------
+		
 		override def focusGained(e: FocusEvent) =
 		{
 			// Checks focus traversal direction (unfortunately there is no direct method call available for this)
@@ -327,7 +393,11 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 			// Informs the current focus owner or finds a new one
 			focusOwner match
 			{
-				case Some(current) => current.focusListeners.foreach { _.onFocusEvent(FocusGained) }
+				case Some(current) =>
+					// If the focus owner owned the previous focus system, doesn't generate a new focus gained event
+					// TODO: Another kind of event may be generated, however
+					if (!componentOwnsOppositeIn(current, e))
+						current.focusListeners.foreach { _.onFocusEvent(FocusGained) }
 				case None =>
 					focusTargetsIterator(direction).find(testFocusEnter) match
 					{
@@ -348,8 +418,117 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 		
 		override def focusLost(e: FocusEvent) =
 		{
-			// Informs the current focus owner of focus lost
-			focusOwner.foreach { _.focusListeners.foreach { _.onFocusEvent(FocusLost) } }
+			// Informs the current focus owner of focus lost, unless the current focus owner also owns the
+			// window the focus was moved to
+			focusOwner.foreach { owner =>
+				if (!componentOwnsOppositeIn(owner, e))
+					owner.focusListeners.foreach { _.onFocusEvent(FocusLost) }
+			}
 		}
+		
+		
+		// OTHER	----------------------------------
+		
+		private def componentOwnsOppositeIn(component: Focusable, event: FocusEvent) =
+			windowOwnerships.get(component.focusId).exists { owned => windowsFrom(event).contains(owned) }
+		
+		private def windowsFrom(event: FocusEvent) = Option(event.getOppositeComponent) match
+		{
+			case Some(component) => component.parentWindows.toVector
+			case None => Vector()
+		}
+	}
+	
+	private object OwnedWindowListener extends WindowAdapter
+	{
+		// COMPUTED	---------------------------------
+		
+		private def managedWindow = canvasComponent.parentWindow
+		
+		
+		// IMPLEMENTED	-----------------------------
+		
+		override def windowGainedFocus(e: WindowEvent) =
+		{
+			// Registers the current window ownership, if present
+			val newFocusWindow = e.getWindow
+			reverseWindowOwnerships.get(newFocusWindow).foreach { owner =>
+				currentOwnershipFocus = Some(owner -> newFocusWindow)
+				val previousFocusOwner = focusOwner
+				focusOwner = Some(owner)
+				def informNewFocusOwner() = owner.focusListeners.foreach { _.onFocusEvent(FocusGained) }
+				// May inform the focus owner, if it wasn't already in focus
+				Option(e.getOppositeWindow) match
+				{
+					case Some(oldFocusWindow) =>
+						reverseWindowOwnerships.get(oldFocusWindow) match
+						{
+							case Some(previousOwner) =>
+								// Expects the previous focus owner to already be informed about the focus lost event
+								if (previousOwner.focusId != owner.focusId)
+									informNewFocusOwner()
+							case None =>
+								// Checks if focus moved away from managed component
+								if (isManagedWindow(oldFocusWindow) && canvasIsOrWasFocusedIn(oldFocusWindow))
+								{
+									if (previousFocusOwner.forall { _.focusId != owner.focusId })
+										informNewFocusOwner()
+								}
+								else
+									informNewFocusOwner()
+						}
+					case None => informNewFocusOwner()
+				}
+			}
+		}
+		
+		override def windowLostFocus(e: WindowEvent) =
+		{
+			val oldFocusWindow = e.getWindow
+			currentOwnershipFocus.foreach { case (owner, ownedWindow) =>
+				// Makes sure the owned window is up to date
+				if (ownedWindow == oldFocusWindow)
+				{
+					// Informs the owner about the focus lost event, except if it will own the new window or be the
+					// targeted component in this (managed) window
+					def informFocusLost() = owner.focusListeners.foreach { _.onFocusEvent(FocusLost) }
+					Option(e.getOppositeWindow) match
+					{
+						case Some(newFocusWindow) =>
+							reverseWindowOwnerships.get(newFocusWindow) match
+							{
+								// Case: Focus will move to another owned window
+								case Some(newOwner) => if (newOwner.focusId != owner.focusId) informFocusLost()
+								case None =>
+									// Checks whether focus will move to this (managed) window and managed canvas
+									if (isManagedWindow(newFocusWindow) && canvasIsOrWasFocusedIn(newFocusWindow))
+									{
+										// Fires focus lost event if the focus won't be given directly to
+										// that same component
+										if (focusOwner.forall { _.focusId != owner.focusId })
+											informFocusLost()
+									}
+									else
+										informFocusLost()
+							}
+						// Case: Focus will move outside Java
+						case None => informFocusLost()
+					}
+				}
+			}
+			currentOwnershipFocus = None
+		}
+		
+		override def windowClosing(e: WindowEvent) = removeOwnershipOf(e.getWindow)
+		
+		override def windowClosed(e: WindowEvent) = removeOwnershipOf(e.getWindow)
+		
+		
+		// OTHER	--------------------------
+		
+		private def isManagedWindow(window: java.awt.Window) = managedWindow.contains(window)
+		
+		private def canvasIsOrWasFocusedIn(window: java.awt.Window) =
+			Option(window.getFocusOwner).orElse(Option(window.getMostRecentFocusOwner)).contains(canvasComponent)
 	}
 }
