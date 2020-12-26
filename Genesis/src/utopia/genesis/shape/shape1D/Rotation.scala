@@ -135,6 +135,36 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	  */
 	def isCounterClockwise = direction == Counterclockwise
 	
+	/**
+	  * @return Sine of this rotation (clockwise) angle
+	  */
+	def sine = math.sin(clockwiseRadians)
+	
+	/**
+	  * @return Arc sine of this rotation (clockwise) angle
+	  */
+	def arcSine = math.asin(clockwiseRadians)
+	
+	/**
+	  * @return Cosine of this rotation (clockwise) angle
+	  */
+	def cosine = math.cos(clockwiseRadians)
+	
+	/**
+	  * @return Arc cosine of this rotation (clockwise) angle
+	  */
+	def arcCosine = math.acos(clockwiseRadians)
+	
+	/**
+	  * @return Tangent (tan) of this rotation (clockwise) angle
+	  */
+	def tangent = math.tan(clockwiseRadians)
+	
+	/**
+	  * @return Arc tangent (atan) of this rotation (clockwise) angle
+	  */
+	def arcTangent = math.atan(clockwiseRadians)
+	
 	
 	// IMPLEMENTED    --------------------
 	

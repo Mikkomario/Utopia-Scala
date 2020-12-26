@@ -1,8 +1,15 @@
 package utopia.genesis.shape.shape2D
 
+import utopia.genesis.shape.Axis.{X, Y}
+import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape1D.Rotation
+import utopia.genesis.shape.shape1D.RotationDirection.Counterclockwise
 import utopia.genesis.shape.shape3D.Matrix3D
 import utopia.genesis.shape.template.MatrixLike
 
+import java.awt.geom.AffineTransform
+
+// See: https://en.wikipedia.org/wiki/Transformation_matrix
 object Matrix2D
 {
 	// ATTRIBUTES	---------------------------
@@ -14,6 +21,19 @@ object Matrix2D
 		1, 0,
 		0, 1
 	)
+	
+	/**
+	  * A linear rotation transformation that rotates items 90 degrees clockwise
+	  */
+	lazy val quarterRotationClockwise = rotation(Rotation.ofDegrees(90))
+	/**
+	  * A linear rotation transformation that rotates items 90 degrees counter-clockwise
+	  */
+	lazy val quarterRotationCounterClockwise = rotation(Rotation.ofDegrees(90, Counterclockwise))
+	/**
+	  * A linear rotation transformation that rotates items 180 degrees
+	  */
+	lazy val rotation180Degrees = rotation(Rotation.ofDegrees(180))
 	
 	
 	// OTHER	-------------------------------
@@ -27,6 +47,54 @@ object Matrix2D
 	  * @return A matrix that consists of the two transformations
 	  */
 	def apply(xx: Double, yx: Double, xy: Double, yy: Double): Matrix2D = Matrix2D(Vector2D(xx, xy), Vector2D(yx, yy))
+	
+	/**
+	  * Creates a new linear scaling transformation matrix
+	  * @param xScaling Scaling applied to x-axis coordinates
+	  * @param yScaling Scaling applied to y-axis coordinates
+	  * @return A scaling transformation matrix
+	  */
+	def scaling(xScaling: Double, yScaling: Double) = apply(
+		xScaling, 0,
+		0, yScaling)
+	
+	/**
+	  * Creates a linear scaling transformation matrix
+	  * @param modifier A scaling modifier applied to both x and y axes
+	  * @return A new scaling transformation matrix
+	  */
+	def scaling(modifier: Double): Matrix2D = scaling(modifier, modifier)
+	
+	/**
+	  * @param modifier Scaling modifier to apply
+	  * @param axis The axis to target with the scaling
+	  * @return A new linear scaling transformation
+	  */
+	def scaling(modifier: Double, axis: Axis2D): Matrix2D = axis match
+	{
+		case X => scaling(modifier, 1)
+		case Y => scaling(1, modifier)
+	}
+	
+	/**
+	  * Creates a new linear rotation transformation matrix
+	  * @param amount Rotation amount
+	  * @return A rotation transformation matrix that rotates items by the specified amount
+	  */
+	// See: https://en.wikipedia.org/wiki/Rotation_matrix
+	def rotation(amount: Rotation) = apply(
+		amount.cosine, amount.sine,
+		-amount.sine, amount.cosine)
+	
+	/**
+	  * Creates a new linear shearing transformation matrix
+	  * @param xShearing Shearing along x-axis
+	  * @param yShearing Shearing along y-axis
+	  * @return A shearing transformation matrix
+	  */
+	def shearing(xShearing: Double, yShearing: Double) = apply(
+		1, xShearing,
+		yShearing, 1)
 }
 
 /**
@@ -35,7 +103,8 @@ object Matrix2D
   * @since 15.7.2020, v2.3
   */
 case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D = Vector2D.zero)
-	extends MatrixLike[Vector2D, Matrix2D] with TwoDimensional[Vector2D]
+	extends MatrixLike[Vector2D, Matrix2D] with TwoDimensional[Vector2D] with LinearTransformable[Matrix2D]
+		with AffineTransformable[Matrix3D] with JavaAffineTransformConvertible
 {
 	// COMPUTED	--------------------------------
 	
@@ -91,4 +160,23 @@ case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D =
 	}
 	
 	override protected def zeroDimension = Vector2D.zero
+	
+	override def transformedWith(transformation: Matrix2D) = transformation.apply(this)
+	
+	override def transformedWith(transformation: Matrix3D) = transformation(this)
+	
+	override def toJavaAffineTransform = new AffineTransform(
+		apply(0,0), apply(1,0),
+		apply(0,1), apply(1,1), 0, 0)
+	
+	
+	// OTHER	---------------------------------
+	
+	/**
+	  * Transforms the specified instance
+	  * @param transformable A transformable instance
+	  * @tparam A Type of resulting item
+	  * @return A transformed copy of the specified instance
+	  */
+	def transform[A](transformable: LinearTransformable[A]) = transformable.transformedWith(this)
 }

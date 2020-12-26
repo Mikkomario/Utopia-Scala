@@ -2,8 +2,8 @@ package utopia.genesis.shape.shape2D
 
 import utopia.genesis.util.Extensions._
 import utopia.flow.generic.ValueConversions._
-import java.awt.Dimension
 
+import java.awt.Dimension
 import utopia.flow.generic.ValueConvertible
 import utopia.flow.datastructure.immutable.Value
 import utopia.genesis.generic.SizeType
@@ -16,8 +16,9 @@ import utopia.flow.datastructure.template.Property
 import utopia.genesis.util.ApproximatelyEquatable
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.Axis._
-import java.awt.Insets
+import utopia.genesis.shape.shape3D.Vector3D
 
+import java.awt.Insets
 import scala.util.Success
 
 object Size extends FromModelFactory[Size]
@@ -117,6 +118,10 @@ case class Size(width: Double, height: Double) extends Vector2DLike[Size] with A
     
     
     // IMPLEMENTED    -----------------------
+    
+    override def buildCopy(vector: Vector2D) = Size(vector.x, vector.y)
+    
+    override def buildCopy(vector: Vector3D) = Size(vector.x, vector.y)
     
     override def repr = this
     

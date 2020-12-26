@@ -147,7 +147,7 @@ trait ImageLike
 				{
 					case Some(image) =>
 						// Converts the point to an image coordinate
-						val pointInImage = ((point - bounds.topLeft) / scaling).rounded
+						val pointInImage = ((point - bounds.topLeft) / scaling).round
 						val x = pointInImage.x.toInt
 						val y = pointInImage.y.toInt
 						if (x >= 0 && y >= 0 && x < image.getWidth && y < image.getHeight)

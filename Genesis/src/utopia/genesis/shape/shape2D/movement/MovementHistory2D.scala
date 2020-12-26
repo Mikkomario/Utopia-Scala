@@ -1,8 +1,9 @@
-package utopia.genesis.shape.shape2D
+package utopia.genesis.shape.shape2D.movement
+
+import utopia.genesis.shape.shape2D.Vector2D
+import utopia.genesis.shape.template.MovementHistoryLike
 
 import java.time.Instant
-
-import utopia.genesis.shape.template.MovementHistoryLike
 
 /**
   * Contains recorded position, velocity and acceleration history

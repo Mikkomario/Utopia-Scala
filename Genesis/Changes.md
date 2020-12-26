@@ -14,6 +14,7 @@ new mutable mouse event handlers.
 - Setup.start() no longer accepts an implicit execution context. 
 Usually such context is now requested as a constructor parameter instead.
 - Altered the return value type of TwoDimensional.toMap2D 
+- Moved velocity and acceleration -related classes to package utopia.genesis.shape.shape2D.movement
 ### New Features
 - Added global mouse and keyboard event handling with GlobalMouseEventHandler and GlobalKeyboardEventHandler objects
     - Asynchronous keyboard event handling is possible after calling 

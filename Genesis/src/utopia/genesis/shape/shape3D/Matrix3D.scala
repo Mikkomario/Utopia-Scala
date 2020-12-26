@@ -2,8 +2,10 @@ package utopia.genesis.shape.shape3D
 
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis
-import utopia.genesis.shape.shape2D.Matrix2D
+import utopia.genesis.shape.shape2D.{AffineTransformable, JavaAffineTransformConvertible, LinearTransformable, Matrix2D, Vector2D, Vector2DLike}
 import utopia.genesis.shape.template.MatrixLike
+
+import java.awt.geom.AffineTransform
 
 object Matrix3D
 {
@@ -58,6 +60,26 @@ object Matrix3D
 		val columns = (0 until 3).map { i => r.map { row => row.dimensions(i) } }.map(Vector3D.withDimensions)
 		Matrix3D(columns.head, columns(1), columns(2))
 	}
+	
+	/**
+	  * Creates an affine transformation by combining a linear transformation and a translation transformation
+	  * @param linear Linear transformation to apply
+	  * @param translation Translation to apply
+	  * @return A new affine transformation that applies both the linear transformation and the translation
+	  */
+	// See: https://en.wikipedia.org/wiki/Transformation_matrix
+	def affineTransform(linear: Matrix2D, translation: Vector2D) = apply(linear.xTransform.in3D,
+		linear.yTransform.in3D, translation.withZ(1))
+	
+	/**
+	  * Creates a translating affine transformation
+	  * @param amount Amount of translation to apply
+	  * @return A new affine transformation that only translates the shape
+	  */
+	def translation(amount: Vector2DLike[_]) = apply(
+		1, 0, amount.x,
+		0, 1, amount.y,
+		0, 0, 1)
 }
 
 /**
@@ -67,7 +89,8 @@ object Matrix3D
   */
 case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D = Vector3D.zero,
 					zTransform: Vector3D = Vector3D.zero)
-	extends MatrixLike[Vector3D, Matrix3D] with ThreeDimensional[Vector3D]
+	extends MatrixLike[Vector3D, Matrix3D] with ThreeDimensional[Vector3D] with AffineTransformable[Matrix3D]
+		with JavaAffineTransformConvertible with LinearTransformable[Matrix3D]
 {
 	// COMPUTED	----------------------------------
 	
@@ -141,6 +164,18 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 		}
 	}
 	
+	/**
+	  * @return A copy of this matrix that has been reduced to two dimensions. Will lose the z-component of each
+	  *         transformation and the z-transformation entirely.
+	  */
+	def in2D = Matrix2D(xTransform.in2D, yTransform.in2D)
+	
+	/**
+	  * @return The linear transform portion and the translation portion of this matrix when it is considered an
+	  *         affine transformation
+	  */
+	def linearAndTranslation = in2D -> zTransform.in2D
+	
 	
 	// IMPLEMENTED	------------------------------
 	
@@ -161,6 +196,18 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	}
 	
 	override protected def zeroDimension = Vector3D.zero
+	
+	override def transformedWith(transformation: Matrix3D) = transformation(this)
+	
+	override def transformedWith(transformation: Matrix2D) = transformation.to3D(this)
+	
+	/**
+	  * @return A java geom AffineTransform based on this matrix. Assumes the first two z-transformation arguments to
+	  *         be x and y translations and the top left 2x2 matrix to be the linear transformation part.
+	  */
+	override def toJavaAffineTransform = new AffineTransform(
+		apply(0,0), apply(1,0),
+		apply(0,1), apply(1,1), apply(2,0), apply(2,1))
 	
 	
 	// OTHER	-------------------------------
@@ -187,4 +234,11 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	  */
 	def dropTo2D(transformationToDrop: Axis, dimensionToDrop: Axis): Matrix2D =
 		dropTo2D(indexForAxis(transformationToDrop), indexForAxis(dimensionToDrop))
+	
+	/**
+	  * @param transformable An instance to transform
+	  * @tparam A Type of transformation result
+	  * @return Transformed instance
+	  */
+	def transform[A](transformable: AffineTransformable[A]) = transformable.transformedWith(this)
 }

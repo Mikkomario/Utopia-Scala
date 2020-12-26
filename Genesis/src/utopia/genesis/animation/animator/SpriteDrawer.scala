@@ -3,7 +3,7 @@ package utopia.genesis.animation.animator
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.animation.TimedAnimation
 import utopia.genesis.image.{Image, Strip}
-import utopia.genesis.shape.shape2D.{Point, Transformable, Transformation}
+import utopia.genesis.shape.shape2D.{Point, MutableTransformable, Transformation}
 import utopia.genesis.util.Drawer
 
 import scala.concurrent.duration.Duration
@@ -26,7 +26,7 @@ object SpriteDrawer
   */
 class SpriteDrawer(val spritePointer: PointerWithEvents[TimedAnimation[Image]],
 				   val transformationPointer: PointerWithEvents[Transformation] = new PointerWithEvents(Transformation.identity))
-	extends Animator[Image] with Transformable
+	extends Animator[Image] with MutableTransformable
 {
 	// COMPUTED	---------------------------
 	

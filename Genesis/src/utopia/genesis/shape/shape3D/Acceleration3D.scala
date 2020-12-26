@@ -2,7 +2,8 @@ package utopia.genesis.shape.shape3D
 
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.shape.shape1D.LinearAcceleration
-import utopia.genesis.shape.shape2D.Acceleration2D
+import utopia.genesis.shape.shape2D.movement
+import utopia.genesis.shape.shape2D.movement.Acceleration2D
 import utopia.genesis.shape.template.{AccelerationLike, VectorLike}
 
 import scala.concurrent.duration.{Duration, TimeUnit}
@@ -34,7 +35,7 @@ case class Acceleration3D(override val amount: Velocity3D, override val duration
 	/**
 	  * @return A 2D copy of this acceleration (where z-acceleration is 0)
 	  */
-	def in2D = Acceleration2D(amount.in2D, duration)
+	def in2D = movement.Acceleration2D(amount.in2D, duration)
 	
 	
 	// IMPLEMENTED	-------------------

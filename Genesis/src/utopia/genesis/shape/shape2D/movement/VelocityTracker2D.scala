@@ -1,9 +1,9 @@
-package utopia.genesis.shape.shape2D
+package utopia.genesis.shape.shape2D.movement
 
-import java.time.Instant
-
+import utopia.genesis.shape.shape2D.Vector2D
 import utopia.genesis.shape.template.VelocityTracker
 
+import java.time.Instant
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /**

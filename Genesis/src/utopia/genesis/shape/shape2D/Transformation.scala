@@ -318,7 +318,7 @@ case class Transformation(translation: Vector2D = Vector2D.zero, scaling: Vector
      * @return the rotated transformation
      */
     def absoluteRotated(rotation: Rotation, origin: Point) = 
-            withTranslation(translation.rotated(rotation, origin.toVector)).rotated(rotation)
+            withTranslation(translation.rotatedAround(rotation, origin.toVector)).rotated(rotation)
     
     /**
      * Rotates the transformation around an absolute origin point

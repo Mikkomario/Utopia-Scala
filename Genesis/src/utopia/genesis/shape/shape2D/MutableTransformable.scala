@@ -11,7 +11,7 @@ import utopia.genesis.shape.template.VectorLike
   * @author Mikko Hilpinen
   * @since 28.3.2020, v2.1
   */
-trait Transformable
+trait MutableTransformable
 {
 	// ABSTRACT	-------------------------
 	

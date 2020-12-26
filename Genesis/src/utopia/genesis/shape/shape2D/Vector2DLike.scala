@@ -2,6 +2,7 @@ package utopia.genesis.shape.shape2D
 
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.shape1D.{Angle, Rotation}
+import utopia.genesis.shape.shape3D.{Matrix3D, Vector3D}
 import utopia.genesis.shape.template.{Dimensional, VectorLike}
 
 /**
@@ -10,7 +11,15 @@ import utopia.genesis.shape.template.{Dimensional, VectorLike}
   * @since 14.7.2020, v2.3
   */
 trait Vector2DLike[+Repr <: Vector2DLike[Repr]] extends VectorLike[Repr] with TwoDimensional[Double]
+	with LinearTransformable[Repr] with AffineTransformable[Repr]
 {
+	// ABSTRACT	--------------------------
+	
+	def buildCopy(vector: Vector2D): Repr
+	
+	def buildCopy(vector: Vector3D): Repr
+	
+	
 	// COMPUTED	--------------------------
 	
 	/**
@@ -44,6 +53,19 @@ trait Vector2DLike[+Repr <: Vector2DLike[Repr]] extends VectorLike[Repr] with Tw
 		if (length != 0) Some(axis(length)) else None }
 	
 	
+	// IMPLEMENTED	----------------------
+	
+	override def transformedWith(transformation: Matrix2D) = buildCopy(transformation(this))
+	
+	override def transformedWith(transformation: Matrix3D) = buildCopy(transformation(this))
+	
+	override def scaled(xScaling: Double, yScaling: Double) = this * Vector(xScaling, yScaling)
+	
+	override def scaled(modifier: Double) = this * modifier
+	
+	override def translated(translation: Vector2DLike[_]) = this + translation
+	
+	
 	// OTHER	--------------------------
 	
 	/**
@@ -59,10 +81,10 @@ trait Vector2DLike[+Repr <: Vector2DLike[Repr]] extends VectorLike[Repr] with Tw
 	/**
 	  * Rotates this vector around a certain origin point
 	  * @param rotation The amount of rotation
-	  * @param origin The point this vector is rotated around (defaults to (0,0))
+	  * @param origin The point this vector is rotated around
 	  * @return The rotated version of this vector
 	  */
-	def rotated(rotation: Rotation, origin: Dimensional[Double] = Vector2D.zero) =
+	def rotatedAround(rotation: Rotation, origin: Dimensional[Double]) =
 	{
 		val separator = (this - origin).in2D
 		val twoDimensional = separator.withDirection(separator.direction + rotation) + origin

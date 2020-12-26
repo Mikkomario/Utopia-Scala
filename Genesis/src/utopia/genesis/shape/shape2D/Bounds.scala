@@ -151,7 +151,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
         if (newPosition == position)
             Bounds(newPosition, size.round)
         else
-            Bounds(newPosition, Size((rightX - newPosition.x).round, (bottomY - newPosition.y).round))
+            Bounds(newPosition, Size((rightX - newPosition.x).round.toDouble, (bottomY - newPosition.y).round.toDouble))
     }
     
     /**

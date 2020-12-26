@@ -104,6 +104,10 @@ case class Point(override val x: Double, override val y: Double) extends Vector2
 	
 	override lazy val dimensions = Vector(x, y)
 	
+	override def buildCopy(vector: Vector2D) = Point(vector.x, vector.y)
+	
+	override def buildCopy(vector: Vector3D) = Point(vector.x, vector.y)
+	
 	override def buildCopy(dimensions: Vector[Double]) =
 	{
 		if (dimensions.size >= 2)

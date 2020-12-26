@@ -265,6 +265,10 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
 	  */
 	override def dimensions = toVector
 	
+	override def buildCopy(vector: Vector2D) = vector.in3D
+	
+	override def buildCopy(vector: Vector3D) = vector
+	
 	/**
 	  * Builds a new vectorlike instance from the provided dimensions
 	  * @param dimensions A set of dimensions

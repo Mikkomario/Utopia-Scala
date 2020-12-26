@@ -4,6 +4,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.shape1D.Angle
+import utopia.genesis.shape.shape2D.movement.Velocity2D
 import utopia.genesis.shape.shape3D.Vector3D
 
 import scala.concurrent.duration.Duration
@@ -78,6 +79,10 @@ case class Vector2D(override val x: Double = 0.0, override val y: Double = 0.0) 
 	override def in2D = this
 	
 	override val dimensions = Vector(x, y)
+	
+	override def buildCopy(vector: Vector2D) = vector
+	
+	override def buildCopy(vector: Vector3D) = vector.in2D
 	
 	override def buildCopy(dimensions: Vector[Double]) =
 	{

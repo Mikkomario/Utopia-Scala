@@ -1,7 +1,8 @@
-package utopia.genesis.shape.shape2D
+package utopia.genesis.shape.shape2D.movement
 
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.shape.shape1D.LinearVelocity
+import utopia.genesis.shape.shape2D.{TwoDimensional, Vector2D}
 import utopia.genesis.shape.shape3D.Velocity3D
 import utopia.genesis.shape.template.{VectorLike, VelocityLike}
 

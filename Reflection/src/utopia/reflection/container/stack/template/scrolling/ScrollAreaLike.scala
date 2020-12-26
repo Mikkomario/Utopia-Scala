@@ -3,16 +3,16 @@ package utopia.reflection.container.stack.template.scrolling
 import java.awt.event.KeyEvent
 import java.time.Instant
 import java.util.concurrent.TimeUnit
-
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.event._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
 import utopia.genesis.shape.Axis._
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Velocity2D}
+import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.genesis.shape._
 import utopia.genesis.shape.shape1D.LinearAcceleration
+import utopia.genesis.shape.shape2D.movement.Velocity2D
 import utopia.genesis.shape.shape3D.Vector3D
 import utopia.genesis.shape.template.VectorLike
 import utopia.genesis.util.Drawer
