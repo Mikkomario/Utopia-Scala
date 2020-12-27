@@ -180,6 +180,7 @@ object GenesisValueCaster extends ValueCaster
         }
     }
     
+    // TODO: Update data types and replace Transformation
     private def transformationOf(value: Value): Option[Transformation] = 
     {
         if (value.dataType isOfType ModelType) Transformation(value.modelOr()).toOption else None

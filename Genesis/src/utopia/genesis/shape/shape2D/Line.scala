@@ -1,8 +1,8 @@
 package utopia.genesis.shape.shape2D
 
 import utopia.genesis.util.Extensions._
-import java.awt.geom.Line2D
 
+import java.awt.geom.Line2D
 import scala.collection.mutable.ListBuffer
 import utopia.flow.generic.ValueConvertible
 import utopia.flow.datastructure.immutable.Value
@@ -15,7 +15,8 @@ import utopia.flow.datastructure.template.Property
 import utopia.genesis.generic.GenesisValue._
 import utopia.genesis.generic.LineType
 import utopia.genesis.shape.path.LinearPathLike
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.shape2D.transform.Transformable
+import utopia.genesis.shape.shape3D.{Matrix3D, Vector3D}
 import utopia.genesis.shape.template.VectorLike
 import utopia.genesis.util.DistanceLike
 
@@ -81,9 +82,9 @@ object Line extends FromModelFactory[Line]
  * @author Mikko Hilpinen
  * @since 13.12.2016
  */
-case class Line(override val start: Point, override val end: Point) extends ShapeConvertible with
-        ValueConvertible with ModelConvertible with TransformProjectable[Line] with Projectable
-    with LinearPathLike[Point] with DistanceLike
+case class Line(override val start: Point, override val end: Point)
+    extends ShapeConvertible with ValueConvertible with ModelConvertible with Projectable with LinearPathLike[Point]
+        with DistanceLike with Transformable[Line]
 {
     // ATTRIBUTES    -------------------
     
@@ -137,6 +138,10 @@ case class Line(override val start: Point, override val end: Point) extends Shap
     
     // IMPLEMENTED METHODS    ----------
     
+    override def transformedWith(transformation: Matrix3D) = map { transformation(_).toPoint }
+    
+    override def transformedWith(transformation: Matrix2D) = map { transformation(_).toPoint }
+    
     override def length = vector.length
     
     override def projectedOver(axis: Vector2D) = Line(start.toVector.projectedOver(axis).toPoint,
@@ -145,8 +150,11 @@ case class Line(override val start: Point, override val end: Point) extends Shap
     
     // OTHER METHODS    ----------------
     
-    override def transformedWith(transformation: Transformation) = Line(transformation(start), 
-            transformation(end))
+    /**
+      * @param f A mapping function for both the start and end point of this line
+      * @return A mapped copy of this line
+      */
+    def map(f: Point => Point) = Line(f(start), f(end))
     
     /**
      * Calculates the intersection point between this and another line

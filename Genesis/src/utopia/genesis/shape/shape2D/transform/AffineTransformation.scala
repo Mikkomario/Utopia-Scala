@@ -1,19 +1,54 @@
 package utopia.genesis.shape.shape2D.transform
 
+import utopia.genesis.animation.Animation
+import utopia.genesis.animation.transform.{AnimatedAffineTransformable, AnimatedAffineTransformation, AnimatedLinearTransformable}
 import utopia.genesis.shape.shape1D.Rotation
-import utopia.genesis.shape.shape2D.{JavaAffineTransformConvertible, Point, Vector2D}
+import utopia.genesis.shape.shape2D.{JavaAffineTransformConvertible, Matrix2D, Point, Vector2D, Vector2DLike}
 import utopia.genesis.shape.shape3D.Matrix3D
 import utopia.genesis.shape.template.Dimensional
 import utopia.genesis.util.ApproximatelyEquatable
+
+object AffineTransformation
+{
+    // ATTRIBUTES   --------------------------
+    
+    /**
+      * An identity transformation which doesn't have any effect
+      */
+    val identity = apply(Vector2D.zero, LinearTransformation.identity)
+    
+    
+    // OTHER    ------------------------------
+    
+    /**
+      * Creates a new transformation
+      * @param translation Translation portion of this transformation (applied last) (default = zero vector)
+      * @param scaling Scaling portion of this transformation (default = identity vector)
+      * @param rotation Rotation portion of this transformation (default = 0 degrees)
+      * @param shear Shear portion of this transformation (default = zero vector)
+      * @return A new affine transformation
+      */
+    def apply(translation: Vector2D = Vector2D.zero, scaling: Vector2D = Vector2D.identity,
+              rotation: Rotation = Rotation.zero, shear: Vector2D = Vector2D.zero): AffineTransformation =
+        apply(translation, LinearTransformation(scaling, rotation, shear))
+    
+    /**
+      * @param amount Translation to apply
+      * @return An affine transformation that only translates instances
+      */
+    def translation(amount: Vector2D) = apply(amount, LinearTransformation.identity)
+}
 
 /**
  * A transformation state that consists of a linear transformation (scaling, rotation, shear) and a transition
  * @author Mikko Hilpinen
  * @since 26.12.2020, v2.4
  */
-case class AffineTransformation(translation: Vector2D = Vector2D.zero, linear: LinearTransformation)
+case class AffineTransformation(translation: Vector2D, linear: LinearTransformation)
     extends LinearTransformationLike[AffineTransformation] with JavaAffineTransformConvertible
-        with ApproximatelyEquatable[AffineTransformation]
+        with ApproximatelyEquatable[AffineTransformation] with AffineTransformable[Matrix3D]
+        with LinearTransformable[Matrix3D] with AnimatedLinearTransformable[AnimatedAffineTransformation]
+        with AnimatedAffineTransformable[AnimatedAffineTransformation]
 {
     // ATTRIBUTES   -----------------
     
@@ -38,6 +73,20 @@ case class AffineTransformation(translation: Vector2D = Vector2D.zero, linear: L
     
     // IMPLEMENTED  -----------------
     
+    override def toString =
+    {
+        if (translation.nonZero)
+        {
+            val translationSegment = s"Translation $translation"
+            if (linear.isIdentity)
+                translationSegment
+            else
+                s"$translationSegment & $linear"
+        }
+        else
+            linear.toString
+    }
+    
     override def scaling = linear.scaling
     
     override def shear = linear.shear
@@ -50,6 +99,16 @@ case class AffineTransformation(translation: Vector2D = Vector2D.zero, linear: L
     override def toJavaAffineTransform = toMatrix.toJavaAffineTransform
     
     override def ~==(other: AffineTransformation) = (translation ~== other.translation) && (linear ~== other.linear)
+    
+    override def transformedWith(transformation: Matrix3D) = toMatrix.transformedWith(transformation)
+    
+    override def transformedWith(transformation: Matrix2D) = toMatrix.transformedWith(transformation)
+    
+    override def transformedWith(transformation: Animation[Matrix2D]) =
+        AnimatedAffineTransformation { p => this * transformation(p) }
+    
+    override def affineTransformedWith(transformation: Animation[Matrix3D]) =
+        AnimatedAffineTransformation { p => transformation(p)(toMatrix) }
     
     
     // OPERATORS    -----------------
@@ -78,7 +137,7 @@ case class AffineTransformation(translation: Vector2D = Vector2D.zero, linear: L
       * Transforms a vector into this transformed coordinate system
       * @param vector a (relative) vector that will be transformed to this coordinate system
       */
-    def apply(vector: Dimensional[Double]) = toMatrix(vector)
+    def apply[V <: Vector2DLike[V]](vector: V) = vector * toMatrix
     
     
     // OTHER METHODS    -------------
@@ -89,25 +148,38 @@ case class AffineTransformation(translation: Vector2D = Vector2D.zero, linear: L
       * @return The (relative) vector that would produce the specified vector when transformed. None if this
       *         transformation maps all vectors to a single line or a point (scaling of 0 was applied)
       */
-    def invert(vector: Dimensional[Double]) = toMatrix.inverse.map { _(vector) }
-    /*
-    /**
-     * Rotates the transformation around an absolute origin point
-     * @param rotation the amount of rotation applied to this transformation
-     * @param origin the point of origin around which the transformation is rotated
-     * @return the rotated transformation
-     */
-    def absoluteRotated(rotation: Rotation, origin: Point) = 
-            withTranslation(translation.rotatedAround(rotation, origin.toVector)).rotated(rotation)
+    def invert[V <: Vector2DLike[V]](vector: V) = toMatrix.inverse.map { vector * _ }
     
     /**
-     * Rotates the transformation around a relative origin point
-     * @param rotation the amount of rotation applied to this transformation
-     * @param origin the point of origin around which the transformation is rotated
-     * @return the rotated transformation
-     */
-    def relativeRotated(rotation: Rotation, origin: Point) = absoluteRotated(rotation, apply(origin))
-    */
+      * Rotates this transformation around the specified point or origin
+      * @param origin Point around which this transformation is rotated (in transformed coordinate system)
+      * @param rotation Rotation to apply
+      * @tparam V Type of origin point vector
+      * @return Rotated copy of this transformation
+      */
+    def rotatedAround[V <: Vector2DLike[V]](origin: V, rotation: Rotation) =
+    {
+        if (rotation.isZero)
+            toMatrix
+        else if (origin.isZero)
+            rotated(rotation)
+        else
+        {
+            // Translates so that the origin is at (0,0), then rotates and then translates back
+            translated(-origin).rotated(rotation).translated(origin)
+        }
+    }
+    
+    /**
+      * Rotates this transformation around the specified point or origin
+      * @param origin Point around which this transformation is rotated (in pre-transformed coordinate system)
+      * @param rotation Rotation to apply
+      * @tparam V Type of origin point vector
+      * @return Rotated copy of this transformation
+      */
+    def rotatedAroundRelative[V <: Vector2DLike[V]](origin: V, rotation: Rotation) =
+        rotatedAround(apply(origin), rotation)
+    
     /**
      * Copies this transformation, giving it a new translation vector
      */
@@ -124,4 +196,11 @@ case class AffineTransformation(translation: Vector2D = Vector2D.zero, linear: L
      * Copies this transformation, giving it a new position
      */
     def withPosition(position: Point) = withTranslation(position.toVector)
+    
+    /**
+      * @param transformable An instance to transform
+      * @tparam A Type of transformation result
+      * @return Transformation result
+      */
+    def transform[A](transformable: AffineTransformable[A]) = transformable.transformedWith(toMatrix)
 }

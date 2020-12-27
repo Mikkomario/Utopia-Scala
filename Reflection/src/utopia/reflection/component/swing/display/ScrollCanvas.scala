@@ -6,7 +6,7 @@ import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent, MouseWheelEv
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
 import utopia.genesis.shape.shape1D.LinearAcceleration
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Transformation}
+import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.genesis.util.{Drawer, Fps}
 import utopia.genesis.view.RepaintLoop
 import utopia.inception.handling.immutable.Handleable
@@ -180,7 +180,7 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 		// Draws the game world items with scaling
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
-			val scaledDrawer = if (_scaling == 1.0) drawer else drawer.transformed(Transformation.scaling(_scaling))
+			val scaledDrawer = if (_scaling == 1.0) drawer else drawer.scaled(_scaling)
 			drawHandler.draw(scaledDrawer)
 		}
 	}

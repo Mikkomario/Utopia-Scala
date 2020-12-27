@@ -1,11 +1,12 @@
 package utopia.genesis.shape.shape2D
 
 import java.awt.Shape
-
 import scala.math.Ordering.Double.TotalOrdering
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.shape1D.Rotation
 import utopia.genesis.shape.shape1D.RotationDirection.Clockwise
+import utopia.genesis.shape.shape2D.transform.Transformable
+import utopia.genesis.shape.shape3D.Matrix3D
 
 import scala.collection.immutable.VectorBuilder
 
@@ -14,7 +15,7 @@ import scala.collection.immutable.VectorBuilder
   * @author Mikko Hilpinen
   * @since 14.4.2019, v2+
   */
-trait Polygonic extends ShapeConvertible with Projectable with Area2D with TransformProjectable[Polygonic]
+trait Polygonic extends ShapeConvertible with Projectable with Area2D with Transformable[Polygonic]
 {
 	// ABSTRACT	----------------
 	
@@ -235,7 +236,9 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 	
 	override def contains[V <: Vector2DLike[V]](point: V) = collisionAxes.forall { containsProjection(point, _) }
 	
-	override def transformedWith(transformation: Transformation): Polygonic = Polygon(corners.map { transformation(_) } )
+	override def transformedWith(transformation: Matrix3D): Polygonic = Polygon(corners.map { transformation(_).toPoint })
+	
+	override def transformedWith(transformation: Matrix2D): Polygonic = Polygon(corners.map { transformation(_).toPoint })
 	
 	
 	// OTHER	---------------

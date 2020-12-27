@@ -57,7 +57,7 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with Scalable
 	override def toString =
 	{
 		val content = toMap.map { case (axis, vector) =>
-			s"$axis: [${vector.dimensions.mkString(",")}]" }.mkString(", ")
+			s"$axis: [${vector.dimensions.mkString(", ")}]" }.mkString(", ")
 		s"{$content}"
 	}
 	

@@ -41,6 +41,7 @@ object GenesisValue
         /**
          * A transformation value of this value. None if the value couldn't be casted.
          */
+        @deprecated("This method or its result type will be replaced in a future release", "v2.4")
         def transformation = v.objectValue(TransformationType).map { _.asInstanceOf[Transformation] }
         
         /**
@@ -89,6 +90,7 @@ object GenesisValue
          * @param default The default transformation value. Defaults to identity transformation,
          * which doesn't modify an object's state
          */
+        @deprecated("This method or its result type will be replaced in a future release", "v2.4")
         def transformationOr(default: => Transformation = Transformation.identity) = 
                 transformation.getOrElse(default)
     
@@ -125,6 +127,7 @@ object GenesisValue
         /**
           * @return Transformation of this value or an identity transformation
           */
+        @deprecated("This method or its result type will be replaced in a future release", "v2.4")
         def getTransformation = transformationOr()
     }
 }

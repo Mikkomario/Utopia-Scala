@@ -7,7 +7,7 @@ import utopia.genesis.event.MouseButton
 import utopia.genesis.event.MouseMoveEvent
 import utopia.genesis.handling.mutable.MouseButtonStateListener
 import utopia.genesis.handling.{Drawable, MouseMoveListener}
-import utopia.genesis.shape.shape2D.{Line, Point, Projectable, Transformation}
+import utopia.genesis.shape.shape2D.{Line, Point, Projectable}
 
 /**
  * This object visually displays shape projection on a line drawn by the user
@@ -66,6 +66,6 @@ class ProjectionDrawer(val target: Projectable) extends Drawable with MouseButto
     {
         // Creates a new projection
         mouseLine = Line(lastClickPosition, event.mousePosition)
-        projection = Transformation.translation(lastClickPosition.toVector)(target.projectedOver(mouseLine.vector))
+        projection = target.projectedOver(mouseLine.vector).translated(lastClickPosition)
     }
 }

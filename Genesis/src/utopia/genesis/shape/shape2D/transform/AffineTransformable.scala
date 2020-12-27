@@ -1,5 +1,6 @@
-package utopia.genesis.shape.shape2D
+package utopia.genesis.shape.shape2D.transform
 
+import utopia.genesis.shape.shape2D.Vector2DLike
 import utopia.genesis.shape.shape3D.Matrix3D
 
 /**
@@ -25,6 +26,12 @@ trait AffineTransformable[+Transformed]
 	  * @return A transformed copy of this instance
 	  */
 	def *(transformation: Matrix3D) = transformedWith(transformation)
+	
+	/**
+	  * @param transformation Transformation to apply to this instance
+	  * @return A transformed copy of this instance
+	  */
+	def *(transformation: AffineTransformation) = transformedWith(transformation.toMatrix)
 	
 	/**
 	  * @param translation Amount of translation to apply

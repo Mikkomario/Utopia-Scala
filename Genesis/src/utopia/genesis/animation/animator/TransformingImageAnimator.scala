@@ -2,7 +2,7 @@ package utopia.genesis.animation.animator
 
 import utopia.genesis.animation.{Animation, TimedAnimation}
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.Transformation
+import utopia.genesis.shape.shape3D.Matrix3D
 import utopia.genesis.util.Drawer
 
 /**
@@ -10,7 +10,7 @@ import utopia.genesis.util.Drawer
   * @author Mikko Hilpinen
   * @since 28.3.2020, v2.1
   */
-trait TransformingImageAnimator extends Animator[(Image, Transformation)]
+trait TransformingImageAnimator extends Animator[(Image, Matrix3D)]
 {
 	// ABSTRACT	---------------------------
 	
@@ -22,7 +22,7 @@ trait TransformingImageAnimator extends Animator[(Image, Transformation)]
 	/**
 	  * @return Animation that determines transformation used at any given time
 	  */
-	def transformationAnimation: TimedAnimation[Transformation]
+	def transformationAnimation: TimedAnimation[Matrix3D]
 	
 	
 	// IMPLEMENTED	------------------------
@@ -32,7 +32,7 @@ trait TransformingImageAnimator extends Animator[(Image, Transformation)]
 	override protected def apply(progress: Double) =
 		image(progress) -> transformationAnimation(progress)
 	
-	override protected def draw(drawer: Drawer, item: (Image, Transformation)) =
+	override protected def draw(drawer: Drawer, item: (Image, Matrix3D)) =
 		item._1.drawWith(drawer.transformed(item._2))
 }
 
@@ -46,7 +46,7 @@ object TransformingImageAnimator
 	  * @param transformation Transformation animation applied
 	  * @return A new animator
 	  */
-	def apply(image: Image, transformation: TimedAnimation[Transformation]): TransformingImageAnimator =
+	def apply(image: Image, transformation: TimedAnimation[Matrix3D]): TransformingImageAnimator =
 		new TransformingStaticImageAnimator(image, transformation)
 	
 	/**
@@ -55,21 +55,21 @@ object TransformingImageAnimator
 	  * @param transformation Transformation animation applied
 	  * @return A new animator
 	  */
-	def apply(strip: Animation[Image], transformation: TimedAnimation[Transformation]): TransformingImageAnimator =
+	def apply(strip: Animation[Image], transformation: TimedAnimation[Matrix3D]): TransformingImageAnimator =
 		new TransformingStripAnimator(strip, transformation)
 	
 	
 	// NESTED	---------------------------
 	
 	private class TransformingStaticImageAnimator(image: Image,
-												  override val transformationAnimation: TimedAnimation[Transformation])
+												  override val transformationAnimation: TimedAnimation[Matrix3D])
 		extends TransformingImageAnimator
 	{
 		override def image(progress: Double) = image
 	}
 	
 	private class TransformingStripAnimator(strip: Animation[Image],
-											override val transformationAnimation: TimedAnimation[Transformation])
+											override val transformationAnimation: TimedAnimation[Matrix3D])
 		extends TransformingImageAnimator
 	{
 		override def image(progress: Double) = strip(progress)

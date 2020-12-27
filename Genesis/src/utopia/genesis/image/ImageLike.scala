@@ -1,10 +1,10 @@
 package utopia.genesis.image
 
 import java.awt.image.BufferedImage
-
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
-import utopia.genesis.shape.shape2D.{Bounds, Direction2D, Point, Size, Transformation, Vector2D}
+import utopia.genesis.shape.shape2D.transform.AffineTransformation
+import utopia.genesis.shape.shape2D.{Bounds, Direction2D, Matrix2D, Point, Size, Vector2D}
 import utopia.genesis.util.Drawer
 
 /**
@@ -213,15 +213,25 @@ trait ImageLike
 	  * @param position The position where this image's origin is drawn (default = (0, 0))
 	  * @return Whether this image was fully drawn
 	  */
-	def drawWith(drawer: Drawer, position: Point = Point.origin) =
+		// FIXME: These transformations don't work at this time
+	def drawWith(drawer: Drawer, position: Point = Point.origin, transformation: Option[Matrix2D] = None) =
 	{
 		source.forall { s =>
-			val transformed = drawer.transformed(Transformation.position(position).scaled(scaling))
-			val drawPosition = specifiedOrigin.map { -_ }.getOrElse(Point.origin)
+			// Translates the drawer so that the desired image origin lies at (0,0)
+			// Then applies scaling and other transformation(s)
+			// TODO: Skip unnecessary transformations
+			val baseTransform = AffineTransformation(position.toVector).scaled(scaling) //Matrix2D.scaling(scaling).translated(position.toVector)
+			val transformedDrawer = transformation match
+			{
+				case Some(t) => drawer * baseTransform * t
+				case None => drawer * baseTransform
+			}
+			// Finally draws the image to -origin location so that the image origin will overlap with the desired
+			// position
 			if (alpha == 1.0)
-				transformed.drawImage(s, drawPosition)
+				transformedDrawer.drawImage(s, -origin)
 			else
-				transformed.withAlpha(alpha).drawImage(s, drawPosition)
+				transformedDrawer.withAlpha(alpha).drawImage(s, -origin)
 		}
 	}
 }

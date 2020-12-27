@@ -2,7 +2,8 @@ package utopia.reflection.component.drawing.template
 
 import utopia.flow.datastructure.mutable.Settable
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Bounds, Point, Transformation, Vector2D}
+import utopia.genesis.shape.shape2D.transform.AffineTransformation
+import utopia.genesis.shape.shape2D.{Bounds, Point, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.{Font, MeasuredText}
@@ -108,7 +109,7 @@ trait SelectableTextDrawerLike extends CustomDrawer
 				lastDrawStatusPointer.value = textArea.position -> scaling
 				
 				// Applies transformation during the whole drawing process
-				drawer.transformed(Transformation.position(textArea.position).scaled(scaling)).disposeAfter { drawer =>
+				drawer.transformed(AffineTransformation(textArea.position.toVector, scaling = scaling)).disposeAfter { drawer =>
 					val drawnHighlightTargets = drawer.clipBounds match
 					{
 						case Some(clipArea) => highlightedTargets.filter { _._2.overlapsWith(clipArea) }

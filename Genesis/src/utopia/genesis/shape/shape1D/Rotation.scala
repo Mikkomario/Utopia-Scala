@@ -13,6 +13,26 @@ object Rotation
      * A zero rotation
      */
     val zero = Rotation(0)
+	
+	/**
+	  * A full 360 degrees rotation clockwise
+	  */
+	val clockwiseCircle = ofCircles(1)
+	
+	/**
+	  * A full 360 degrees rotation counter-clockwise
+	  */
+	val counterclockwiseCircle = ofCircles(1, Counterclockwise)
+	
+	/**
+	  * A 90 degrees rotation clockwise
+	  */
+	val quarterClockwise = ofCircles(0.25)
+	
+	/**
+	  * A 90 degrees rotation counter-clockwise
+	  */
+	val quarterCounterclockwise = ofCircles(0.25, Counterclockwise)
     
 	
 	// OTHER	--------------------------
@@ -84,6 +104,11 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	  * @return Whether this rotation is exactly zero
 	  */
 	def isZero = radians == 0
+	
+	/**
+	  * @return Whether this rotation is not exactly zero
+	  */
+	def nonZero = !isZero
 	
 	/**
 	  * This rotation in degrees (>= 0)

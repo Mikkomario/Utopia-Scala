@@ -73,6 +73,11 @@ case class Vector2D(override val x: Double = 0.0, override val y: Double = 0.0) 
 	  */
 	def toSize = Size(x, y)
 	
+	/**
+	  * @return Whether this vector is an identity vector (1,1)
+	  */
+	def isIdentity = x == 1 && y == 1
+	
 	
 	// IMPLEMENTED	-----------------------------
 	

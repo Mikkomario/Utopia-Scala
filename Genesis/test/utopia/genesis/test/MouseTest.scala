@@ -1,9 +1,9 @@
 package utopia.genesis.test
 
-import utopia.genesis.shape.shape2D.{Circle, Line, Point, Size, Transformation}
+import utopia.genesis.shape.shape2D.{Circle, Line, Point, Size}
 import utopia.genesis.util.Drawer
-import java.awt.Color
 
+import java.awt.Color
 import utopia.flow.async.ThreadPool
 import utopia.genesis.event.MouseMoveEvent
 import utopia.genesis.shape.Axis._
@@ -15,6 +15,7 @@ import utopia.genesis.event.MouseEvent
 import utopia.genesis.event.MouseWheelEvent
 import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler}
 import utopia.genesis.handling.{ActorLoop, Drawable, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
+import utopia.genesis.shape.shape2D.transform.{AffineTransformation, LinearTransformation}
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 
@@ -40,7 +41,7 @@ object MouseTest extends App
         private var lastMousePosition = Point.origin
         private var mouseOver = false
         private var isOn = false
-        private var transformation = Transformation.translation(position.toVector)
+        private var transformation = AffineTransformation.translation(position.toVector)
         
         override def draw(drawer: Drawer) = 
         {
@@ -72,11 +73,11 @@ object MouseTest extends App
         
         override def onMouseWheelRotated(event: MouseWheelEvent) =
 		{
-			transformation = transformation.scaled(1 + event.wheelTurn * 0.2)
+			transformation = transformation + LinearTransformation.scaling(1 + event.wheelTurn * 0.2)
 			None
 		}
         
-        private def contains2D(point: Point) = area.contains(transformation.invert(point))
+        private def contains2D(point: Point) = transformation.invert(point).exists { area.contains(_) }
     }
     
     // Creates the handlers

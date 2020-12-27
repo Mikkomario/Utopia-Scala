@@ -18,6 +18,7 @@ import utopia.genesis.shape.template.{Dimensional, VectorLike}
 
 import scala.util.Success
 
+@deprecated("Replaced with AffineTransformation, LinearTransformation, Matrix3D and Matrix2D", "v2.4")
 object Transformation extends FromModelFactory[Transformation]
 {
     // ATTRIBUTES    -----------------
@@ -101,9 +102,11 @@ object Transformation extends FromModelFactory[Transformation]
  * @author Mikko Hilpinen
  * @since 29.12.2016
  */
+@deprecated("Replaced with AffineTransformation, LinearTransformation, Matrix3D and Matrix2D", "v2.4")
 case class Transformation(translation: Vector2D = Vector2D.zero, scaling: Vector2D = Vector2D.identity,
                           rotation: Rotation = Rotation.zero, shear: Vector2D = Vector2D.zero,
                           useReverseOrder: Boolean = false) extends ValueConvertible with ModelConvertible
+    with JavaAffineTransformConvertible
 {
     // COMPUTED PROPERTIES    -------
     
@@ -195,6 +198,11 @@ case class Transformation(translation: Vector2D = Vector2D.zero, scaling: Vector
      * The shear component of this transformation
      */
     def shearTransformation = Transformation.shear(shear)
+    
+    
+    // IMPLEMENTED  -----------------
+    
+    override def toJavaAffineTransform = toAffineTransform
     
     
     // OPERATORS    -----------------

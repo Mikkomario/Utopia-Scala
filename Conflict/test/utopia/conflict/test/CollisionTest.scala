@@ -1,11 +1,11 @@
 package utopia.conflict.test
 
 import utopia.conflict.test.TestCollisionGroups.Obstacle
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Polygon, Size, Transformation, Vector2D}
+import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Polygon, Size, Vector2D}
 import utopia.conflict.collision.Extensions._
 import utopia.conflict.util.DefaultSetup
 import utopia.flow.async.ThreadPool
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.shape2D.transform.AffineTransformation
 
 import scala.collection.immutable.HashSet
 import scala.concurrent.ExecutionContext
@@ -26,14 +26,14 @@ object CollisionTest extends App
     
     
     val simplePolygon = Polygon(Point(-32, -32), Point(0, 64), Point(32, 32), Point.origin)
-    val transformedPolygon = Transformation.translation(worldSize.toVector / 2).scaled(2)(simplePolygon)
+    val transformedPolygon = AffineTransformation(worldSize.toVector / 2, scaling = Vector2D(2, 2)).transform(simplePolygon)
     
     val nonConvexPolygon = Polygon(Point(-32, -32), Point(-0.5, 0), Point(-32, 32), Point(32, 32), Point(0.5, 0), Point(32, -32))
     
     val obstacle1 = new TestPolygonObstacle(transformedPolygon)
     val obstacle2 = new TestPolygonObstacle(Circle(Point(96, 228), 64).toPolygon(12))
     val obstacle3 = new TestPolygonObstacle(Bounds(worldSize.toPoint - Vector2D(128, 128), Size(64, 64)))
-    val obstacle4 = new TestPolygonObstacle(Transformation.translation(Vector3D(worldSize.x - 128, 32))(nonConvexPolygon))
+    val obstacle4 = new TestPolygonObstacle(AffineTransformation.translation(Vector2D(worldSize.x - 128, 32)).transform(nonConvexPolygon))
     
     val obstacle5 = new TestCircleObstacle(Circle(worldSize.toPoint - Vector2D(128, 128), 96))
     

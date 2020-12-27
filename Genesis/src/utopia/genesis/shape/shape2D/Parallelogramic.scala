@@ -1,12 +1,15 @@
 package utopia.genesis.shape.shape2D
 
+import utopia.genesis.shape.shape2D.transform.Transformable
+import utopia.genesis.shape.shape3D.Matrix3D
+
 /**
   * This trait is extended by 2D shapes that have 4 corners and where the opposite sides (left + right, top + bottom)
   * are always identical
   * @author Mikko Hilpinen
   * @since 14.4.2019
   */
-trait Parallelogramic extends Polygonic with TransformProjectable[Parallelogramic]
+trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 {
 	// ABSTRACT	------------------
 	
@@ -62,18 +65,25 @@ trait Parallelogramic extends Polygonic with TransformProjectable[Parallelogrami
 	
 	// IMPLEMENTED	--------------
 	
+	override def transformedWith(transformation: Matrix3D) = map { transformation(_).in2D }
+	
+	override def transformedWith(transformation: Matrix2D) = map { transformation(_) }
+	
 	override def center = topLeft + (top / 2) + (left / 2)
 	
 	override def corners = Vector(topLeft, topRight, bottomRight, bottomLeft)
 	
 	override def collisionAxes = Vector(top, left).map { _.normal2D }
 	
-	override def transformedWith(transformation: Transformation) =
+	
+	// OTHER	----------------
+	
+	private def map(f: Point => Vector2D) =
 	{
-		val topLeft2 = transformation(topLeft)
-		val topRight2 = transformation(topRight)
-		val bottomLeft2 = transformation(bottomLeft)
+		val topLeft2 = f(topLeft)
+		val topRight2 = f(topRight)
+		val bottomLeft2 = f(bottomLeft)
 		
-		Parallelogram(topLeft2, (topRight2 - topLeft2).toVector, (bottomLeft2 - topLeft2).toVector)
+		Parallelogram(topLeft2.toPoint, topRight2 - topLeft2, bottomLeft2 - topLeft2)
 	}
 }

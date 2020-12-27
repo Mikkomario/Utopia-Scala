@@ -3,7 +3,7 @@ package utopia.genesis.shape.shape2D
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.Rotation
-import utopia.genesis.shape.shape1D.RotationDirection.Counterclockwise
+import utopia.genesis.shape.shape2D.transform.{AffineTransformable, LinearTransformable}
 import utopia.genesis.shape.shape3D.Matrix3D
 import utopia.genesis.shape.template.MatrixLike
 
@@ -21,15 +21,20 @@ object Matrix2D
 		1, 0,
 		0, 1
 	)
-	
+	// cos -sin sin cos
+	// cos = 0, sin = 1
 	/**
 	  * A linear rotation transformation that rotates items 90 degrees clockwise
 	  */
-	lazy val quarterRotationClockwise = rotation(Rotation.ofDegrees(90))
+	lazy val quarterRotationClockwise = apply(
+		0, -1,
+		1, 0)
 	/**
 	  * A linear rotation transformation that rotates items 90 degrees counter-clockwise
 	  */
-	lazy val quarterRotationCounterClockwise = rotation(Rotation.ofDegrees(90, Counterclockwise))
+	lazy val quarterRotationCounterClockwise = apply(
+		0, 1,
+		-1, 0)
 	/**
 	  * A linear rotation transformation that rotates items 180 degrees
 	  */
@@ -77,14 +82,26 @@ object Matrix2D
 	}
 	
 	/**
+	  * Creates a linear scaling transformation matrix
+	  * @param vector A vector containing scaling modifiers for x and y axes
+	  * @return A new scaling transformation matrix
+	  */
+	def scaling(vector: Vector2DLike[_]): Matrix2D = scaling(vector.x, vector.y)
+	
+	/**
 	  * Creates a new linear rotation transformation matrix
 	  * @param amount Rotation amount
 	  * @return A rotation transformation matrix that rotates items by the specified amount
 	  */
 	// See: https://en.wikipedia.org/wiki/Rotation_matrix
-	def rotation(amount: Rotation) = apply(
-		amount.cosine, amount.sine,
-		-amount.sine, amount.cosine)
+	def rotation(amount: Rotation) =
+	{
+		val cos = amount.cosine
+		val sin = amount.sine
+		apply(
+			cos, -sin,
+			sin, cos)
+	}
 	
 	/**
 	  * Creates a new linear shearing transformation matrix
@@ -143,6 +160,12 @@ case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D =
 		apply(0,1), apply(1,1), 0,
 		0, 0, 1
 	)
+	
+	/**
+	  * @return Whether this matrix simply scales both x and y axes equally, when used as a linear transformation.
+	  *         False if this transformation contains shearing or is unequal between the two axes.
+	  */
+	def isEqualScaling = apply(1, 0) == 0 && apply(0, 1) == 0 && apply(0, 0) == apply(1, 1)
 	
 	
 	// IMPLEMENTED	----------------------------

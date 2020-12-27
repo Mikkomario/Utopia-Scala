@@ -1,7 +1,8 @@
-package utopia.genesis.shape.shape2D
+package utopia.genesis.shape.shape2D.transform
 
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.Rotation
+import utopia.genesis.shape.shape2D.{Matrix2D, Vector2DLike}
 
 /**
   * A common trait for shapes etc. which can be transformed using linear transformations
@@ -26,6 +27,12 @@ trait LinearTransformable[+Transformed]
 	  * @return A transformed copy of this instance
 	  */
 	def *(transformation: Matrix2D) = transformedWith(transformation)
+	
+	/**
+	  * @param transformation A linear transformation to apply to this instance
+	  * @return A transformed copy of this instance
+	  */
+	def *(transformation: LinearTransformation) = transformedWith(transformation.toMatrix)
 	
 	/**
 	  * @return A copy of this instance that has been rotated 90 degrees clockwise
@@ -69,7 +76,13 @@ trait LinearTransformable[+Transformed]
 	def scaled(modifier: Double) = transformedWith(Matrix2D.scaling(modifier))
 	
 	/**
-	  * @param axis Target axis
+	  * @param vector A vector that represents x- and y-scaling
+	  * @return A scaled copy of this instance
+	  */
+	def scaled(vector: Vector2DLike[_]): Transformed = scaled(vector.x, vector.y)
+	
+	/**
+	  * @param axis     Target axis
 	  * @param modifier Scaling amount applied along that axis
 	  * @return A scaled copy of this instance
 	  */

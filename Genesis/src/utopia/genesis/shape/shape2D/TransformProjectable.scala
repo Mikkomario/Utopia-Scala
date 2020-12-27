@@ -8,6 +8,7 @@ import utopia.genesis.shape.shape1D.Rotation
  * @author Mikko Hilpinen
  * @since 9.7.2017
  */
+@deprecated("Replaced with Transformable (or Linear-/AffineTransformable)", "v2.4")
 trait TransformProjectable[+T]
 {
     // ABSTRACT --------------------------

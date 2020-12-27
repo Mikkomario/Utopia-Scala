@@ -2,12 +2,12 @@ package utopia.genesis.util
 
 import java.awt.{AlphaComposite, BasicStroke, Font, Graphics, Graphics2D, Image, Paint, RenderingHints, Shape, Stroke, Toolkit}
 import java.awt.geom.AffineTransform
-
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Bounds, Point, ShapeConvertible, Size, Transformation, TwoDimensional, Vector2DLike}
+import utopia.genesis.shape.shape2D.{Bounds, JavaAffineTransformConvertible, Matrix2D, Point, ShapeConvertible, Size, TwoDimensional}
 import utopia.flow.util.NullSafe._
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.shape2D.transform.{AffineTransformable, AffineTransformation, LinearTransformable}
+import utopia.genesis.shape.shape3D.{Matrix3D, Vector3D}
 
 import scala.util.Try
 
@@ -44,6 +44,7 @@ object Drawer
  */
 class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.awt.Color.WHITE),
              val edgePaint: Option[Paint] = Some(java.awt.Color.BLACK))
+    extends LinearTransformable[Drawer] with AffineTransformable[Drawer]
 {
     // TODO: Add rendering hints
     
@@ -78,6 +79,13 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
       * @return A version of this drawer that only fills shapes. May return this drawer.
       */
     def noEdges = onlyFill
+    
+    
+    // IMPLEMENTED  -----------------------
+    
+    override def transformedWith(transformation: Matrix2D) = transformed(transformation)
+    
+    override def transformedWith(transformation: Matrix3D) = transformed(transformation)
     
     
     // OTHER METHODS    -------------------
@@ -223,7 +231,8 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
         if (scaling ~== Vector3D.identity)
             graphics.drawString(text, topLeft.x.round.toInt, topLeft.y.round.toInt + metrics.getAscent)
         else
-            transformed(Transformation.position(topLeft).scaled(scaling)).graphics.drawString(text, 0, metrics.getAscent)
+            transformed(AffineTransformation(topLeft.toVector, scaling = scaling))
+                .graphics.drawString(text, 0, metrics.getAscent)
     }
     
     /**
@@ -285,7 +294,7 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
                 }
             else
             {
-                val drawer = transformed(Transformation.position(topLeft).scaled(scaling)).graphics
+                val drawer = transformed(AffineTransformation(topLeft.toVector, scaling = scaling)).graphics
                 lines.foreachWithIndex { (line, index) =>
                     drawer.drawString(line, getLineX(lineWidths(index), textWidth).round.toInt,
                         (index * (lineHeight + betweenLinesMargin)).round.toInt + lineHeight)
@@ -343,18 +352,11 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
     }
     
     /**
-     * Creates a transformed copy of this
-     * drawer so that it will use the provided transformation to draw relative
-     * elements into absolute space
-     */
-    def transformed(transform: Transformation): Drawer = transformed(transform.toAffineTransform)
-    
-    /**
-      * @param amount Amount of translation applied
-      * @return A copy of this drawer where the origin coordinates have been translated by the specified amount.
-      *         This translation is applied on top of existing transformations.
+      * Creates a transformed copy of this drawer, affecting all future paint operations
+      * @param transform A transformation to apply
+      * @return A transformed copy of this drawer
       */
-    def translated(amount: Vector2DLike[_]) = transformed(Transformation.translation(amount))
+    def transformed(transform: JavaAffineTransformConvertible): Drawer = transformed(transform.toJavaAffineTransform)
     
     /**
      * Creates a new instance of this drawer with altered colours

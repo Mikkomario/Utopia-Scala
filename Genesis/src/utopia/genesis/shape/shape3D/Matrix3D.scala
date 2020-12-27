@@ -2,7 +2,8 @@ package utopia.genesis.shape.shape3D
 
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis
-import utopia.genesis.shape.shape2D.{AffineTransformable, JavaAffineTransformConvertible, LinearTransformable, Matrix2D, Vector2D, Vector2DLike}
+import utopia.genesis.shape.shape2D.transform.{AffineTransformable, LinearTransformable}
+import utopia.genesis.shape.shape2D.{JavaAffineTransformConvertible, Matrix2D, Vector2D, Vector2DLike}
 import utopia.genesis.shape.template.MatrixLike
 
 import java.awt.geom.AffineTransform
@@ -121,9 +122,9 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 			}
 		}
 		
-		// Adds the components together using x - y + z, if columns were swapped, inverts the result
+		// Adds the components together using x - y + z, if columns were swapped (so that sign is affected), inverts the result
 		val combination = components.head - components(1) + components(2)
-		if (referenceRowIndex != 0)
+		if (referenceRowIndex == 1)
 			-combination
 		else
 			combination

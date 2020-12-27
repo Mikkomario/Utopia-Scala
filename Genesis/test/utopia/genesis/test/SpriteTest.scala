@@ -9,6 +9,7 @@ import utopia.flow.util.FileExtensions._
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.animation.Animation
 import utopia.genesis.shape.shape1D.Rotation
+import utopia.genesis.shape.shape2D.transform.AffineTransformation
 
 import scala.concurrent.ExecutionContext
 
@@ -32,15 +33,10 @@ object SpriteTest extends App
 	
 	val image2 = Image.readFrom("Genesis/test-images/mushrooms.png").get.fitting(Size.square(200)).withCenterOrigin
 	val drawer2 = TransformingImageAnimator(image2,
-		new RotationAnimation(Transformation.translation(200, 200)).over(3.seconds))
+		AffineTransformation.translation(Vector2D(200, 200)).rotated360ClockwiseOverTime.over(3.seconds))
 	
 	setup.registerObjects(drawer1, drawer2)
 	
 	// Starts the program
 	setup.start()
-}
-
-private class RotationAnimation(base: Transformation) extends Animation[Transformation]
-{
-	override def apply(progress: Double) = base.rotated(Rotation.ofCircles(progress))
 }

@@ -8,7 +8,8 @@ import utopia.conflict.test.TestCollisionGroups.UserInput
 import utopia.genesis.util.Drawer
 import utopia.genesis.event.MouseMoveEvent
 import utopia.genesis.handling.{Drawable, MouseMoveListener}
-import utopia.genesis.shape.shape2D.{Polygonic, Transformation}
+import utopia.genesis.shape.shape2D.transform.AffineTransformation
+import utopia.genesis.shape.shape2D.Polygonic
 import utopia.inception.handling.immutable.Handleable
 
 /**
@@ -22,12 +23,12 @@ class MousePolygonObstacle(private val relativePolygon: Polygonic) extends Colli
     // ATTRIBUTES    ------------------
     
     private val relativeCollisionShape = CollisionShape(relativePolygon)
-    private var currentTransformation = Transformation.identity
+    private var currentTransformation = AffineTransformation.identity
     
     
     // IMPLEMENTED PROPERTIES    -----
     
-    override def collisionShape = currentTransformation.toAbsolute(relativeCollisionShape)
+    override def collisionShape = relativeCollisionShape * currentTransformation
     
     override def collisionGroups = HashSet(UserInput)
     
@@ -36,6 +37,6 @@ class MousePolygonObstacle(private val relativePolygon: Polygonic) extends Colli
     
     override def draw(drawer: Drawer) = drawer.transformed(currentTransformation).draw(relativePolygon)
     
-    override def onMouseMove(event: MouseMoveEvent) = currentTransformation = Transformation.translation(
+    override def onMouseMove(event: MouseMoveEvent) = currentTransformation = AffineTransformation.translation(
         event.mousePosition.toVector)
 }

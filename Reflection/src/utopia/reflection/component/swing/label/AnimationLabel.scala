@@ -1,7 +1,6 @@
 package utopia.reflection.component.swing.label
 
 import java.time.Instant
-
 import scala.math.Ordering.Double.TotalOrdering
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.animation.TimedAnimation
@@ -10,7 +9,8 @@ import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.{Image, Strip}
 import utopia.genesis.shape.shape1D.Rotation
-import utopia.genesis.shape.shape2D.{Bounds, Point, Transformation}
+import utopia.genesis.shape.shape2D.transform.AffineTransformation
+import utopia.genesis.shape.shape2D.{Bounds, Matrix2D, Point}
 import utopia.genesis.util.{Drawer, Fps}
 import utopia.inception.handling.HandlerType
 import utopia.reflection.component.context.BaseContextLike
@@ -40,7 +40,7 @@ object AnimationLabel
 	def withRotatingImage(actorHandler: ActorHandler, image: Image, rotation: TimedAnimation[Rotation],
 						  alignment: Alignment = Center, maxFps: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
 	{
-		val animator = TransformingImageAnimator(image, rotation.map(Transformation.rotation))
+		val animator = TransformingImageAnimator(image, rotation.map { Matrix2D.rotation(_).to3D })
 		val maxRadius = image.size.toBounds().corners.map { p => (p - image.origin).length }.max
 		val stackSize = (maxRadius * 2).any.square
 		new AnimationLabel(actorHandler, animator, stackSize, Point(maxRadius, maxRadius), alignment, maxFps)
@@ -160,7 +160,7 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 			val drawBounds = alignment.position(originalSize, bounds)
 			val scaling = (drawBounds.size / originalSize).toVector
 			// Performs the actual drawing
-			drawer.transformed(Transformation.position(drawBounds.position + drawOrigin * scaling).scaled(scaling))
+			drawer.transformed(AffineTransformation(drawBounds.position.toVector + drawOrigin * scaling, scaling = scaling))
 				.disposeAfter(animator.draw)
 		}
 	}

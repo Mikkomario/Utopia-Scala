@@ -2,6 +2,7 @@ package utopia.genesis.shape.shape2D
 
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.shape1D.{Angle, Rotation}
+import utopia.genesis.shape.shape2D.transform.Transformable
 import utopia.genesis.shape.shape3D.{Matrix3D, Vector3D}
 import utopia.genesis.shape.template.{Dimensional, VectorLike}
 
@@ -11,7 +12,7 @@ import utopia.genesis.shape.template.{Dimensional, VectorLike}
   * @since 14.7.2020, v2.3
   */
 trait Vector2DLike[+Repr <: Vector2DLike[Repr]] extends VectorLike[Repr] with TwoDimensional[Double]
-	with LinearTransformable[Repr] with AffineTransformable[Repr]
+	with Transformable[Repr]
 {
 	// ABSTRACT	--------------------------
 	
@@ -57,7 +58,7 @@ trait Vector2DLike[+Repr <: Vector2DLike[Repr]] extends VectorLike[Repr] with Tw
 	
 	override def transformedWith(transformation: Matrix2D) = buildCopy(transformation(this))
 	
-	override def transformedWith(transformation: Matrix3D) = buildCopy(transformation(this))
+	override def transformedWith(transformation: Matrix3D) = buildCopy(transformation(Vector3D(x, y, 1)))
 	
 	override def scaled(xScaling: Double, yScaling: Double) = this * Vector(xScaling, yScaling)
 	

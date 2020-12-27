@@ -1,7 +1,8 @@
 package utopia.reflection.component.drawing.template
 
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Bounds, Transformation}
+import utopia.genesis.shape.shape2D.transform.AffineTransformation
+import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.{Font, MeasuredText}
@@ -60,7 +61,8 @@ trait TextDrawerLike2 extends CustomDrawer
 		{
 			val scaling = (textArea.size / text.size).toVector
 			// Applies transformation during the whole drawing process
-			drawer.transformed(Transformation.position(textArea.position).scaled(scaling)).forTextDrawing(font.toAwt, color)
+			drawer.transformed(AffineTransformation(textArea.position.toVector, scaling = scaling))
+				.forTextDrawing(font.toAwt, color)
 				.disposeAfter { drawer =>
 					text.defaultDrawTargets.foreach { case (string, position) => drawer.drawTextRaw(string, position) }
 				}
