@@ -53,8 +53,6 @@ object Gateway
 {
     // ATTRIBUTES    -------------------------
     
-    private var _introducedStatuses = Status.values
-    
     private val connectionManager = new PoolingHttpClientConnectionManager()
     
 	// TODO: Add customizable timeouts (see https://www.baeldung.com/httpclient-timeout)
@@ -100,6 +98,12 @@ object Gateway
         connectionManager.setMaxTotal(max)
         invalidateClient()
     }
+	
+	/**
+	  * @return Statuses that are recognized by this interface
+	  */
+	@deprecated("Please use Status.values instead", "v1.3.1")
+	def introducedStatuses = Status.values
     
     
     // OTHER METHODS    ----------------------
@@ -112,20 +116,16 @@ object Gateway
 	  * will replace a possible existing status with the same code.
 	  * @param status Status to recognize in future responses
 	  */
-	def introduceStatus(status: Status) =
-		_introducedStatuses = _introducedStatuses.filterNot { _.code == status.code } :+ status
+	@deprecated("Please use Status.introduce instead", "v1.3.1")
+	def introduceStatus(status: Status) = Status.introduce(status)
 	
 	/**
 	  * Introduces a number of new statuses so that they are recognized by this interface. New status versions will
 	  * replace possible already existing statuses with same codes.
 	  * @param statuses Statues to recognize in future responses.
 	  */
-	def introduceStatuses(statuses: Iterable[Status]) =
-	{
-		val newStatuses = statuses.distinctBy { _.code }
-		_introducedStatuses = _introducedStatuses.filterNot { s =>
-			newStatuses.exists { _.code == s.code } } ++ newStatuses
-	}
+	@deprecated("Please use Status.values instead", "v1.3.1")
+	def introduceStatuses(statuses: Iterable[Status]) = Status.introduce(statuses)
 	
     /**
      * Performs a synchronous request over a HTTP connection, calling the provided function 
@@ -485,8 +485,7 @@ object Gateway
 	    new StreamedResponse(status, headers)({ Option(response.getEntity).map { _.getContent } })
 	}
 	
-	private def statusForCode(code: Int) = _introducedStatuses.find(
-	        _.code == code).getOrElse(new Status("Other", code))
+	private def statusForCode(code: Int) = Status.values.find { _.code == code }.getOrElse(new Status("Other", code))
 	
 	
 	// IMPLICIT CASTS    ------------------------

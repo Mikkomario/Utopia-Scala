@@ -1,6 +1,10 @@
 # Utopia Access - List of Changes
 
-## v1.2.2 (beta)
+## v1.3 (beta)
+### Breaking Changes
+- Status.setup() must be called before using Status.values
+### New Features
+- Status.values can now be expanded by calling Status.introduce(...) first
 ### Other Changes
 - ContentTypeException class added
 
