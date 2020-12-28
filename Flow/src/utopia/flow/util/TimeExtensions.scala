@@ -122,6 +122,12 @@ object TimeExtensions
 		  * @return Whether this instant is equal or larger to the other instant
 		  */
 		def >=(other: Instant) = !(this < other)
+		
+		/**
+		  * @param other Another instant
+		  * @return Whether these two instants are the same, milliseconds-wise
+		  */
+		def ~==(other: Instant) = i.toEpochMilli == other.toEpochMilli
 	}
 	
 	implicit class ExtendedLocalDateTime(val d: LocalDateTime) extends RichComparable[LocalDateTime]

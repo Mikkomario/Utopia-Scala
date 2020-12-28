@@ -9,7 +9,7 @@ package utopia.flow.generic
  * @param target The target data type
  * @param reliability The reliability of the conversion
  */
-case class Conversion(val source: DataType, val target: DataType, val reliability: ConversionReliability)
+case class Conversion(source: DataType, target: DataType, reliability: ConversionReliability)
 {
     // COMP. PROPERTIES    -------
     

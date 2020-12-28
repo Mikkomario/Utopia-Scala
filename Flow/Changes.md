@@ -2,6 +2,7 @@
 ## v1.9 (beta)
 ### Breaking Changes
 - Changed setIfEmpty method variations in VolatileOption to accept a call by name parameter instead of a function
+- XmlReader and XmlWriter objects now support Path instead of File
 - Deprecated PointerLike trait and replaced it with Settable trait in all implementations
 - Renamed Lazy to MutableLazy and VolatileLazy to MutableVolatileLazy
     - Also, Lazy class parameter is now a private call by name parameter and no longer a public function with parameters
@@ -19,6 +20,7 @@
 - Added Lazy, ResettableLazy, VolatileLazy and ResettableVolatileLazy classes to support situations where mutability 
 in a lazy container is not required or desirable
 - Added WeakCache
+- XmlWriter.writeFile(...) and .writeElementToFile(...) now create the target directory if it didn't exist yet
 ### New Methods
 - AsyncExtensions
   - Future

@@ -21,6 +21,7 @@ import utopia.disciple.http.request.{FileBody, Request}
 object GatewayTest extends App
 {
     DataType.setup()
+    // println(Gateway.statusForCode(200))
     Gateway.maxConnectionsPerRoute = 10
     Gateway.maxConnectionsTotal = 70
     

@@ -1,10 +1,77 @@
 package utopia.access.http
 
+import utopia.flow.generic.EnvironmentNotSetupException
 import utopia.flow.util.Equatable
 
 object Status
 {
-    // VALUES   ----------------------------
+    // ATTRIBUTES   -----------------------------
+    
+    private var _values = Vector[Status]()
+    private var setupDone = false
+    
+    
+    // COMPUTED ---------------------------------
+    
+    /**
+      * All Values listed in this project
+      * @throws EnvironmentNotSetupException If Status.setup() hasn't been called yet
+      */
+    @throws[EnvironmentNotSetupException]("Status.setup() must be called first")
+    def values =  if (setupDone) _values else throw EnvironmentNotSetupException(
+        "Status.values should only be called after Status.setup() has been called")
+    
+    
+    // OTHER    ---------------------------------
+    
+    /**
+      * Sets up the initial status codes. This must be called before using other methods in this object.
+      */
+    def setup() =
+    {
+        if (!setupDone)
+        {
+            setupDone = true
+            _values = Vector(OK, Created, Accepted, NoContent, NotModified, BadRequest, Unauthorized, Forbidden,
+                NotFound, MethodNotAllowed, InternalServerError, NotImplemented, ServiceUnavailable)
+        }
+    }
+    
+    /**
+      * Introduces a new known status
+      * @param status New status to register
+      * @throws EnvironmentNotSetupException If Status.setup() hasn't been called yet
+      */
+    @throws[EnvironmentNotSetupException]("Status.setup() must be called first")
+    def introduce(status: Status) =
+    {
+        if (setupDone)
+        {
+            if (_values.forall { _.code != status.code })
+                _values :+= status
+        }
+        else
+            throw EnvironmentNotSetupException(
+                "Status.introduce(Status) should only be called after Status.setup() has been called")
+    }
+    
+    /**
+      * Introduces new known statuses
+      * @param statuses Statuses to register
+      * @throws EnvironmentNotSetupException If Status.setup() hasn't been called yet
+      */
+    @throws[EnvironmentNotSetupException]("Status.setup() must be called first")
+    def introduce(statuses: IterableOnce[Status]) =
+    {
+        if (setupDone)
+            _values ++= statuses.iterator.filterNot { s => _values.exists { _.code == s.code } }
+        else
+            throw EnvironmentNotSetupException(
+                "Status.introduce(IterableOnce[Status]) should only be called after Status.setup() has been called")
+    }
+    
+    
+    // NESTED   ---------------------------------
     
     /**
       * The request has succeeded.
@@ -126,15 +193,6 @@ object Status
       * would for a 500 response.
       */
     case object ServiceUnavailable extends Status("Service Unavailable", 503, isTemporary = true)
-    
-    
-    // OTHER    ----------------------------
-    
-    /**
-      * All Values listed in this project
-      */
-    val values = Vector[Status](OK, Created, Accepted, NoContent, NotModified, BadRequest, Unauthorized, Forbidden,
-        NotFound, MethodNotAllowed, InternalServerError, NotImplemented, ServiceUnavailable)
 }
 
 /**

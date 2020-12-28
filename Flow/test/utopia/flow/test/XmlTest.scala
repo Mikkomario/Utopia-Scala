@@ -1,13 +1,15 @@
 package utopia.flow.test
 
 import utopia.flow.generic.ValueConversions._
-
 import utopia.flow.generic.DataType
 import utopia.flow.parse.XmlElement
 import utopia.flow.datastructure.immutable.Model
-import java.io.File
+
 import utopia.flow.parse.XmlWriter
 import utopia.flow.parse.XmlReader
+import utopia.flow.util.FileExtensions._
+
+import java.nio.file.Paths
 import scala.util.Try
 
 /**
@@ -44,8 +46,8 @@ object XmlTest extends App
     assert(parsed.get == root)
     
     // Tries to write the xml data to a file
-    val testFile = new File("test/XmlTest.xml")
-    testFile.getParentFile.mkdirs()
+    val testFile = Paths.get("test/XmlTest.xml")
+    testFile.createParentDirectories()
     assert(XmlWriter.writeElementToFile(testFile, root).isSuccess)
     
     // Parses the contents of the xml file (dom)
@@ -57,11 +59,13 @@ object XmlTest extends App
     assert(parsed2.get == root)
     
     // Parses an element from the xml file (sax)
-    val parsed3 = XmlReader.readFile(file = testFile, contentReader = reader => Try
+    val parsed3 = XmlReader.readFile(file = testFile) { reader =>
+        Try
         {
             reader.toNextChildWithName("c")
             reader.readElement().get
-        })
+        }
+    }
     
     println(parsed3.get.toXml)
     println(parsed3.get.toJson)

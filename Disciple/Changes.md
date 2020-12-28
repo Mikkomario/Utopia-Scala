@@ -1,5 +1,7 @@
 # Utopia Disciple - List of Changes
 ## v1.3.1
+### Deprecations
+- Gateway.introduceStatus and .introduceStatuses are now deprecated. Status.introduce should be used instead.
 ### New Methods
 - StringBody.type
   - Added .urlEncodedForm(...) method which can be used for creating url encoded forms as request bodies
