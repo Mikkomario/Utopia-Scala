@@ -2,16 +2,16 @@ package utopia.flow.parse
 
 import utopia.flow.util.AutoClose._
 import utopia.flow.generic.ValueConversions._
+
 import java.io.{File, FileInputStream, InputStream, InputStreamReader, Reader}
 import java.nio.charset.Charset
-
 import javax.xml.stream.XMLInputFactory
 import java.nio.charset.StandardCharsets
-
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.StringType
 
+import java.nio.file.Path
 import scala.collection.immutable.VectorBuilder
 import scala.util.Try
 import scala.util.Success
@@ -59,8 +59,19 @@ object XmlReader
      * @param contentReader the function that uses the reader to parse the file contents
      * @return The data parsed from the file (may fail)
      */
-    def readFile[A](file: File, charset: Charset = StandardCharsets.UTF_8, contentReader: XmlReader => Try[A]) =
+    @deprecated("Please use method version which accepts Path instead of File", "v1.9")
+    def readFile[A](file: File, charset: Charset, contentReader: XmlReader => Try[A]) =
         Try(new FileInputStream(file).consume { readStream(_, charset)(contentReader) }).flatten
+    
+    /**
+      * Reads the contents of an xml file using the specified reader function
+      * @param file the target file
+      * @param charset the charset of the file contents
+      * @param contentReader the function that uses the reader to parse the file contents
+      * @return The data parsed from the file (may fail)
+      */
+    def readFile[A](file: Path, charset: Charset = StandardCharsets.UTF_8)(contentReader: XmlReader => Try[A]) =
+        Try(new FileInputStream(file.toFile).consume { readStream(_, charset)(contentReader) }).flatten
     
     /**
       * Parses reader contents into an xml element
@@ -88,8 +99,18 @@ object XmlReader
      * @param charset the target charset
      * @return The element parsed from the file (may fail)
      */
-    def parseFile(file: File, charset: Charset = StandardCharsets.UTF_8) =
+    @deprecated("Please use the method version which accepts Path instead of File", "v1.9")
+    def parseFile(file: File, charset: Charset) =
         Try(new FileInputStream(file).consume { parseStream(_, charset) }).flatten
+    
+    /**
+      * Parses the contents of an xml file into an xml element
+      * @param file the target file
+      * @param charset the target charset (default = UTF-8)
+      * @return The element parsed from the file (may fail)
+      */
+    def parseFile(file: Path, charset: Charset = StandardCharsets.UTF_8) =
+        Try(new FileInputStream(file.toFile).consume { parseStream(_, charset) }).flatten
     
     /**
       * Parses a value from a string

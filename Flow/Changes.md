@@ -2,9 +2,11 @@
 ## v1.9 (beta)
 ### Breaking Changes
 - Changed setIfEmpty method variations in VolatileOption to accept a call by name parameter instead of a function
+- XmlReader and XmlWriter objects now support Path instead of File
 ### New Features
 - Added a delaying / buffering pointer view class (DelayedView)
 - Added asynchronous mapping support for pointers via AsyncMirror class
+- XmlWriter.writeFile(...) and .writeElementToFile(...) now create the target directory if it didn't exist yet
 ### New Methods
 - Added .notCompletingBefore(Future) to Future in AsyncExtensions
 - Added .subRangeIterator(Int) to Range.Inclusive in CollectionExtensions
@@ -16,6 +18,7 @@
 - Added .takeRightWhile(...) to Seq in CollectionExtensions
 - Added .toSimpleModel and some other methods to XmlElement
     - This new method allows somewhat heuristic xml to json conversion
+- Added ~== to Instant
 ### Fixes
 - Fixed a bug in LocalDate.next(WeekDay) and LocalDate.previous(WeekDay) (returned same day even when 
 includeSelf-parameter was set to false)

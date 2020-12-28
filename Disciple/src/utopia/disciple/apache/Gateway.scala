@@ -510,7 +510,18 @@ object Gateway
 		
 		override def getContentLength() = b.contentLength.getOrElse(-1)
 		
-		override def getContentType() = new BasicHeader("Content-Type", b.contentType.toString() + b.charset.map(_.name()).getOrElse(""))
+		// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
+		// Content-Type: text/html; charset=UTF-8
+		override def getContentType() =
+		{
+			// TODO: Charset should be put to content type parameters and not separately
+			val charsetPart = b.charset match
+			{
+				case Some(charset) => s"; charset=${charset.name()}"
+				case None => ""
+			}
+			new BasicHeader("Content-Type", s"${b.contentType}$charsetPart")
+		}
 		
 		override def isChunked() = b.chunked
 		

@@ -481,11 +481,11 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     private def setValues(statement: PreparedStatement, values: Seq[Value]) = 
     {
         values.indices.foreach { i =>
-            val conversionResult = Connection.sqlValueConverter(values(i))
-            if (conversionResult.isDefined)
-                statement.setObject(i + 1, conversionResult.get._1, conversionResult.get._2)
-            else
-                statement.setNull(i + 1, Types.NULL)
+            Connection.sqlValueConverter(values(i)) match
+            {
+                case Some((objectValue, jdbcType)) => statement.setObject(i + 1, objectValue, jdbcType)
+                case None => statement.setNull(i + 1, Types.NULL)
+            }
         }
     }
     
