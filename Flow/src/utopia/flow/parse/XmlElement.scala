@@ -244,8 +244,8 @@ case class XmlElement(name: String, value: Value = Value.emptyWithType(StringTyp
     }
     
     // Eg. 'att1="abc" att2="3"'. None if empty
-    private def attributesString = attributes.attributes.map(a => 
-            s"${a.name}=${"\""}${a.value.stringOr()}${"\""}").reduceOption(_ + " " + _)
+    private def attributesString = attributes.attributes.map { a =>
+            s"${a.name}=${"\""}${a.value.getString}${"\""}" }.reduceOption { _ + " " + _ }
     
     
     // IMPLEMENTED  ----------------------------

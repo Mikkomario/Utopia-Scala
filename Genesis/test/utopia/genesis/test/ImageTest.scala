@@ -5,11 +5,10 @@ import utopia.flow.async.ThreadPool
 import utopia.genesis.handling.Drawable
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.{Angle, Rotation}
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Matrix2D, Point, Size}
+import utopia.genesis.shape.shape2D.{Bounds, Matrix2D, Point, Size}
 import utopia.genesis.util.{DefaultSetup, Drawer}
 import utopia.inception.handling.immutable.Handleable
 
-import java.awt.Color
 import scala.concurrent.ExecutionContext
 
 /**
@@ -37,7 +36,7 @@ object ImageTest extends App
 	setup.registerObjects(
 		new GridDrawer(gameWorldSize, Size(50, 50)),
 		new ImageDrawer(original, Point(50, 50)),
-		/*new ImageDrawer(original.flippedHorizontally, Point(150, 50)),
+		new ImageDrawer(original.flippedHorizontally, Point(150, 50)),
 		new ImageDrawer(original.flippedVertically, Point(250, 50)),
 		new ImageDrawer(original.withIncreasedContrast, Point(350, 50)),
 		new ImageDrawer(original.inverted, Point(450, 50)),
@@ -48,11 +47,8 @@ object ImageTest extends App
 		new ImageDrawer(original.withAdjustedHue(Angle.red, Angle.ofDegrees(90), Angle.blue), Point(250, 150)),
 		new ImageDrawer(original.withThreshold(3), Point(350, 150)),
 		new ImageDrawer(original * 2, Point(450, 150)),
-		new ImageDrawer(combined, Point(550, 150)),*/
-		/*new ImageDrawer(leftHalf.transformedWith(
-			/*Transformation.rotation(Rotation.ofDegrees(90, Counterclockwise))),*/
-			Transformation.scaling(2)),
-			Point(650, 50))*/
+		new ImageDrawer(combined, Point(550, 150)),
+		new ImageDrawer(leftHalf.transformedWith(Matrix2D.quarterRotationCounterClockwise), Point(650, 150))
 	)
 	
 	// Starts the program
@@ -63,7 +59,7 @@ private class ImageDrawer(val image: Image, position: Point) extends Drawable wi
 {
 	override def draw(drawer: Drawer) =
 	{
-		image.drawWith(drawer, position, Some(Matrix2D.quarterRotationCounterClockwise))
-		drawer.onlyFill(Color.red).draw(Circle(position, 3))
+		image.drawWith(drawer, position/*, Some(Matrix2D.quarterRotationCounterClockwise)*/)
+		// drawer.onlyFill(Color.red).draw(Circle(position, 3))
 	}
 }

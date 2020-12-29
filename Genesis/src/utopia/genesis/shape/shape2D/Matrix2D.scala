@@ -188,9 +188,11 @@ case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D =
 	
 	override def transformedWith(transformation: Matrix3D) = transformation(this)
 	
+	// This matrix uses coordinates (column (x), row (y))
+	// Affine transform uses coordinates (row (y), column (x))
 	override def toJavaAffineTransform = new AffineTransform(
-		apply(0,0), apply(1,0),
-		apply(0,1), apply(1,1), 0, 0)
+		apply(0,0), apply(0,1),
+		apply(1,0), apply(1,1), 0, 0)
 	
 	
 	// OTHER	---------------------------------

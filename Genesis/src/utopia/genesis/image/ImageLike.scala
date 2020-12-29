@@ -1,10 +1,12 @@
 package utopia.genesis.image
 
 import java.awt.image.BufferedImage
+import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.transform.AffineTransformation
-import utopia.genesis.shape.shape2D.{Bounds, Direction2D, Matrix2D, Point, Size, Vector2D}
+import utopia.genesis.shape.shape2D.{Bounds, Direction2D, JavaAffineTransformConvertible, Matrix2D, Point, Size, Vector2D}
+import utopia.genesis.shape.shape3D.Matrix3D
 import utopia.genesis.util.Drawer
 
 /**
@@ -211,27 +213,46 @@ trait ImageLike
 	  * Draws this image using a specific drawer
 	  * @param drawer A drawer
 	  * @param position The position where this image's origin is drawn (default = (0, 0))
+	  * @param transformation An additional linear transformation to apply (optional)
 	  * @return Whether this image was fully drawn
 	  */
-		// FIXME: These transformations don't work at this time
 	def drawWith(drawer: Drawer, position: Point = Point.origin, transformation: Option[Matrix2D] = None) =
 	{
 		source.forall { s =>
-			// Translates the drawer so that the desired image origin lies at (0,0)
-			// Then applies scaling and other transformation(s)
-			// TODO: Skip unnecessary transformations
-			val baseTransform = AffineTransformation(position.toVector).scaled(scaling) //Matrix2D.scaling(scaling).translated(position.toVector)
-			val transformedDrawer = transformation match
+			// Uses transformations in following order:
+			// 1) Translates so that image origin is at (0,0)
+			// 2) Performs scaling
+			// 3) Performs additional transformation
+			// 4) Positions correctly
+			val baseTransform = specifiedOrigin match
 			{
-				case Some(t) => drawer * baseTransform * t
-				case None => drawer * baseTransform
+				case Some(origin) =>
+					val originTransform = Matrix3D.translation(-origin)
+					Right(if (scaling.isIdentity) originTransform else originTransform.scaled(scaling))
+				case None => Left(Matrix2D.scaling(scaling))
 			}
-			// Finally draws the image to -origin location so that the image origin will overlap with the desired
-			// position
-			if (alpha == 1.0)
-				transformedDrawer.drawImage(s, -origin)
-			else
-				transformedDrawer.withAlpha(alpha).drawImage(s, -origin)
+			val transformed = transformation match
+			{
+				case Some(t) => baseTransform.mapBoth { _ * t } { _ * t }
+				case None => baseTransform
+			}
+			val finalTransform =
+			{
+				if (position.isZero)
+					transformed.mapToSingle[JavaAffineTransformConvertible] { m => m } { m => m }
+				else
+					transformed.mapToSingle { _.translated(position) } { _.translated(position) }
+			}
+			
+			// Performs the actual drawing
+			val transformedDrawer =
+			{
+				if (alpha == 1)
+					drawer.transformed(finalTransform)
+				else
+					drawer.withAlpha(alpha).transformed(finalTransform)
+			}
+			transformedDrawer.drawImage(s)
 		}
 	}
 }

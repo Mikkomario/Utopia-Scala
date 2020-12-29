@@ -111,6 +111,7 @@ class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = 
 			
 			canvas.startAutoRefresh(maxFPS)
 			
+			frame.setLocationRelativeTo(null)
 			frame.display()
 		}
 	}

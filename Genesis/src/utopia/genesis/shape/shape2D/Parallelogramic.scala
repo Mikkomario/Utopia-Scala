@@ -65,9 +65,9 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	
 	// IMPLEMENTED	--------------
 	
-	override def transformedWith(transformation: Matrix3D) = map { transformation(_).in2D }
+	override def transformedWith(transformation: Matrix3D) = map { _ * transformation }
 	
-	override def transformedWith(transformation: Matrix2D) = map { transformation(_) }
+	override def transformedWith(transformation: Matrix2D) = map { _ * transformation }
 	
 	override def center = topLeft + (top / 2) + (left / 2)
 	
@@ -78,12 +78,12 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	
 	// OTHER	----------------
 	
-	private def map(f: Point => Vector2D) =
+	private def map(f: Point => Point) =
 	{
 		val topLeft2 = f(topLeft)
-		val topRight2 = f(topRight)
-		val bottomLeft2 = f(bottomLeft)
+		val topRight2 = f(topRight).toVector
+		val bottomLeft2 = f(bottomLeft).toVector
 		
-		Parallelogram(topLeft2.toPoint, topRight2 - topLeft2, bottomLeft2 - topLeft2)
+		Parallelogram(topLeft2, topRight2 - topLeft2, bottomLeft2 - topLeft2)
 	}
 }

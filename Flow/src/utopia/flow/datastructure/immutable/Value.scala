@@ -133,22 +133,22 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
      * @param ofType The targeted data type
      * @return The value's contents as an instance of the provided type
      */
-    def objectValue(ofType: DataType) = withType(ofType).content
+    def objectValue(ofType: DataType): Option[Any] = withType(ofType).content
     
     /**
      * The string value of this value or None if the value can't be casted
      */
-    def string = objectValue(StringType).map { _.asInstanceOf[String]}
+    def string: Option[String] = objectValue(StringType).map { _.asInstanceOf[String]}
     
     /**
      * The integer value of this value or None if the value can't be casted
      */
-    def int = objectValue(IntType).map { _.asInstanceOf[Int] }
+    def int: Option[Int] = objectValue(IntType).map { _.asInstanceOf[Int] }
     
     /**
      * The double value of this value or None if the value can't be casted
      */
-    def double = objectValue(DoubleType).map { _.asInstanceOf[Double]}
+    def double: Option[Double] = objectValue(DoubleType).map { _.asInstanceOf[Double]}
     
     /**
      * The float value of this value or None if the value can't be casted

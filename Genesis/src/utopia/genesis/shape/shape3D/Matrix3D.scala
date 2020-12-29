@@ -206,9 +206,11 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	  * @return A java geom AffineTransform based on this matrix. Assumes the first two z-transformation arguments to
 	  *         be x and y translations and the top left 2x2 matrix to be the linear transformation part.
 	  */
+	// This matrix uses coordinates (column (x), row (y))
+	// Affine transform uses coordinates (row (y), column (x))
 	override def toJavaAffineTransform = new AffineTransform(
-		apply(0,0), apply(1,0),
-		apply(0,1), apply(1,1), apply(2,0), apply(2,1))
+		apply(0,0), apply(0,1),
+		apply(1,0), apply(1,1), apply(2,0), apply(2,1))
 	
 	
 	// OTHER	-------------------------------

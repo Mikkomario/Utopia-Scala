@@ -15,6 +15,10 @@ new mutable mouse event handlers.
 Usually such context is now requested as a constructor parameter instead.
 - Altered the return value type of TwoDimensional.toMap2D 
 - Moved velocity and acceleration -related classes to package utopia.genesis.shape.shape2D.movement
+- Replaced Transformation and AnimatedTransformation classes with Matrix2D, Matrix3D, LinearTransformation, 
+  AffineTransformation, AnimatedLinearTransformation and AnimatedAffineTransformation
+  - Renamed Transformable to MutableTransformable and deprecated it
+  - Deprecated TransformProjectable in favor of LinearTransformable, AffineTransformable and Transformable
 ### New Features
 - Added global mouse and keyboard event handling with GlobalMouseEventHandler and GlobalKeyboardEventHandler objects
     - Asynchronous keyboard event handling is possible after calling 
@@ -22,6 +26,7 @@ Usually such context is now requested as a constructor parameter instead.
 - Added SegmentedPath for path / animation based on a set of values
 - Drawer now supports splitting drawn text into multiple lines
     - Also, added a couple new string drawing methods
+- Added transformation support to image drawing
 ### Deprecations
 - ConvertingKeyListener was deprecated in favor of GlobalKeyboardEventHandler
 ### New Methods

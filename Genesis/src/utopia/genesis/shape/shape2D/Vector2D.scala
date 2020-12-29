@@ -101,6 +101,8 @@ case class Vector2D(override val x: Double = 0.0, override val y: Double = 0.0) 
 	
 	override def repr = this
 	
+	override def toString = s"($x, $y)"
+	
 	
 	// OTHER	---------------------------------
 	
