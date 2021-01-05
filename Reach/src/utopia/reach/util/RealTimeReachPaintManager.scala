@@ -269,7 +269,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 				buffered
 		}*/
 		// Draws the buffered area using the drawer (may also draw the cursor)
-		drawer.clippedTo(region).disposeAfter { d => buffered.drawWith(d, region.position) }
+		drawer.clippedTo(region).disposeAfter { d =>buffered.drawWith(d, region.position) }
 		// Queues the buffer to be drawn when component will be fully painted next time
 		queuedUpdatesPointer.update
 		{

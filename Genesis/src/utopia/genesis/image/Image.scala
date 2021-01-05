@@ -739,8 +739,6 @@ case class Image private(override protected val source: Option[BufferedImage], o
 			val transformedBounds = (bounds * transformation).bounds
 			val transformedOrigin = Point.origin * transformation
 			
-			println(s"Bounds: $bounds => $transformedBounds")
-			println(s"Origin: (0,0) => $transformedOrigin")
 			// Creates the buffer image
 			val buffer = new BufferedImage(transformedBounds.width.round.toInt, transformedBounds.height.round.toInt,
 				BufferedImage.TYPE_INT_ARGB)

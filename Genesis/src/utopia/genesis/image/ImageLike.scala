@@ -4,7 +4,6 @@ import java.awt.image.BufferedImage
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
-import utopia.genesis.shape.shape2D.transform.AffineTransformation
 import utopia.genesis.shape.shape2D.{Bounds, Direction2D, JavaAffineTransformConvertible, Matrix2D, Point, Size, Vector2D}
 import utopia.genesis.shape.shape3D.Matrix3D
 import utopia.genesis.util.Drawer
@@ -229,19 +228,25 @@ trait ImageLike
 				case Some(origin) =>
 					val originTransform = Matrix3D.translation(-origin)
 					Right(if (scaling.isIdentity) originTransform else originTransform.scaled(scaling))
-				case None => Left(Matrix2D.scaling(scaling))
+				case None => Left(if (scaling.isIdentity) None else Some(Matrix2D.scaling(scaling)))
 			}
 			val transformed = transformation match
 			{
-				case Some(t) => baseTransform.mapBoth { _ * t } { _ * t }
+				case Some(t) => baseTransform.mapBoth {
+					case Some(b) => Some(b * t)
+					case None => Some(t)
+				} { _ * t }
 				case None => baseTransform
 			}
 			val finalTransform =
 			{
 				if (position.isZero)
-					transformed.mapToSingle[JavaAffineTransformConvertible] { m => m } { m => m }
+					transformed.mapToSingle[JavaAffineTransformConvertible] { m => m.getOrElse(Matrix2D.identity) } { m => m }
 				else
-					transformed.mapToSingle { _.translated(position) } { _.translated(position) }
+					transformed.mapToSingle {
+						case Some(t) => t.translated(position)
+						case None => Matrix3D.translation(position)
+					} { _.translated(position) }
 			}
 			
 			// Performs the actual drawing

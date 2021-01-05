@@ -48,6 +48,8 @@ case class ContextualDropDownFactory[+N <: TextContextLike](parentHierarchy: Com
 {
 	override def withContext[N2 <: TextContextLike](newContext: N2) = copy(context = newContext)
 	
+	// TODO: Add enabled pointer parameter
+	
 	/**
 	  * Creates a new field that utilizes a selection pop-up
 	  * @param contentPointer Pointer to the available options in this field
@@ -119,7 +121,7 @@ case class ContextualDropDownFactory[+N <: TextContextLike](parentHierarchy: Com
 					Focusable.wrap(label, Vector(fieldContext.focusListener))
 				}(makeDisplay) { (_, _) => None }
 		// Adds mouse interaction to the field
-		field.addMouseButtonListener(new FieldFocusMouseListener(field.field))
+		field.addMouseButtonListener(new FieldFocusMouseListener(field))
 		CursorDefining.defineCursorFor(field, View(Interactive), field.field.innerBackgroundPointer.lazyMap { c =>
 			ColorShadeVariant.forLuminosity(c.luminosity) })
 		field
@@ -177,7 +179,7 @@ case class ContextualDropDownFactory[+N <: TextContextLike](parentHierarchy: Com
 	// TODO: Add a variant that also displays an icon
 }
 
-private class FieldFocusMouseListener(field: Field[_]) extends MouseButtonStateListener
+private class FieldFocusMouseListener(field: FieldWithSelectionPopup[_, _, _, _, _]) extends MouseButtonStateListener
 {
 	// ATTRIBUTES	-------------------
 	
@@ -189,10 +191,14 @@ private class FieldFocusMouseListener(field: Field[_]) extends MouseButtonStateL
 	
 	override def onMouseButtonState(event: MouseButtonStateEvent) =
 	{
-		field.requestFocus()
+		// Requests focus or opens the field
+		if (field.field.hasFocus)
+			field.openSelection()
+		else
+			field.requestFocus()
 		None
 	}
 	
-	override def allowsHandlingFrom(handlerType: HandlerType) = !field.hasFocus
+	override def allowsHandlingFrom(handlerType: HandlerType) = true
 }
 

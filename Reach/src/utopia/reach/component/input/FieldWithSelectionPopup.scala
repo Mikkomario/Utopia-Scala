@@ -2,6 +2,7 @@ package utopia.reach.component.input
 
 import utopia.flow.datastructure.mutable.{PointerWithEvents, ResettableLazy}
 import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.genesis.color.Color
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.shape.Axis.Y
@@ -18,6 +19,7 @@ import utopia.reach.container.{CachingViewSwapper, ReachCanvas, ScrollView}
 import utopia.reflection.color.ColorRole
 import utopia.reflection.color.ColorRole.Secondary
 import utopia.reflection.component.context.{ScrollingContextLike, TextContextLike}
+import utopia.reflection.component.drawing.view.BackgroundViewDrawer
 import utopia.reflection.component.template.display.Refreshable
 import utopia.reflection.component.template.input.SelectionWithPointers
 import utopia.reflection.container.stack.StackLayout
@@ -192,6 +194,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	
 	// Creates the pop-up when necessary
 	private val lazyPopup = ResettableLazy {
+		println("Creating pop-up")
 		// Automatically hides the pop-up when it loses focus
 		val popup = field.createOwnedPopup(context.actorHandler, BottomLeft) { hierarchy =>
 			implicit val canvas: ReachCanvas = hierarchy.top
@@ -216,12 +219,16 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 				case None => openList
 			}
 			// Wraps the content in a scroll view with custom background drawing
-			ScrollView(hierarchy).apply(scrollContent, scrollBarMargin = Size(context.margins.small, listCap.optimal),
-				limitsToContentSize = true).withResult(openList.component)
+			ScrollView(hierarchy).apply(scrollContent,
+				scrollBarMargin = Size(context.margins.small, listCap.optimal), limitsToContentSize = true,
+				customDrawers = Vector(BackgroundViewDrawer(field.innerBackgroundPointer.lazyMap { c => c: Color })))
+				.withResult(openList.component)
 		}.parent
+		println("Setting up pop-up")
 		popup.component.addComponentListener(PopupVisibilityTracker)
 		popup.setToHideWhenNotInFocus()
 		popup.addKeyStateListener(PopupKeyListener)
+		println("Pop-up set up")
 		popup
 	}
 	
@@ -236,6 +243,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		{
 			GlobalKeyboardEventHandler -= FieldKeyListener
 			cachedPopup.foreach { popup =>
+				println("Disposing of pop-up")
 				popup.close()
 				lazyPopup.reset()
 				popUpDisplayPointer.value = false
@@ -245,11 +253,13 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	}
 	
 	// Updates pop-up location when field bounds change
+	// TODO: Should be based on the absolute bounds
 	field.boundsPointer.mergeWith(popUpDisplayPointer) { (fieldBounds, popupIsVisible) =>
 		if (popupIsVisible)
 			cachedPopup.foreach { popup =>
+				println("Repositions the pop-up")
 				// Positions the pop-up
-				popup.position = fieldBounds.bottomLeft
+				popup.position = field.absolutePosition.plusY(fieldBounds.height)
 				// Matches field width, if possible
 				val stackWidth = popup.stackSize.width
 				if (fieldBounds.width < stackWidth.min)
@@ -281,7 +291,10 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	/**
 	  * Displays the selection pop-up
 	  */
-	def openSelection() = lazyPopup.value.display()
+	def openSelection() = {
+		println("Displaying pop-up")
+		lazyPopup.value.display()
+	}
 	
 	
 	// NESTED	---------------------------------
@@ -315,10 +328,12 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		
 		override def onKeyState(event: KeyStateEvent) =
 		{
+			println("Hides the pop-up")
 			// Hides the pop-up
 			cachedPopup.foreach { _.visible = false }
 			// On tabulator press, yields focus afterwards
-			yieldFocus(if (event.keyStatus.shift) Negative else Positive)
+			if (event.index == KeyEvent.VK_TAB)
+				yieldFocus(if (event.keyStatus.shift) Negative else Positive)
 		}
 		
 		// Only reacts to events while the pop-up is visible
