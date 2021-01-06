@@ -160,7 +160,7 @@ case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewSt
 	  * @tparam F Type of component creation factories used
 	  * @return A new view stack builder
 	  */
-	def builder[F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+	def build[F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
 	(contentFactory: ContextInsertableComponentFactoryFactory[_ >: N, _, F]) =
 		new ContextualViewStackBuilder[N, F](this, contentFactory)
 	
@@ -567,6 +567,7 @@ class ViewStack[C <: ReachComponentLike](override val parentHierarchy: Component
 	
 	private val revalidateOnChange = ChangeListener.onAnyChange { revalidate() }
 	private lazy val resetActiveComponentsOnChange = ChangeListener.onAnyChange {
+		println("View stack contents changed")
 		activeComponentsCache.reset()
 		revalidate()
 	}

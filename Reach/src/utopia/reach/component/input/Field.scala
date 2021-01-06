@@ -287,6 +287,9 @@ class Field[C <: ReachComponentLike with Focusable]
 {
 	// ATTRIBUTES	------------------------------------------
 	
+	// TODO: Remove test prints
+	rightIconPointer.addListener(println)
+	
 	private implicit def c: ReachCanvas = parentHierarchy.top
 	
 	private lazy val defaultHintInsets = textInsets.expandingHorizontallyAccordingTo(alignment)
@@ -446,6 +449,8 @@ class Field[C <: ReachComponentLike with Focusable]
 		val framingContent =
 		{
 			if (leftIconPointer.isChanging || rightIconPointer.isChanging)
+			{
+				println("Creating stack for changing icons")
 				Open.using(ViewStack) { stackF =>
 					stackF.withFixedStyle(Vector(
 						makeOpenViewImageLabel(leftIconPointer, Direction2D.Right),
@@ -453,15 +458,22 @@ class Field[C <: ReachComponentLike with Focusable]
 						makeOpenViewImageLabel(rightIconPointer, Direction2D.Left)), X, Center,
 						StackLength.fixedZero)
 				}
+			}
 			else if (leftIconPointer.value.isDefined || rightIconPointer.value.isDefined)
+			{
+				println("Creating stack for fixed icon(s)")
 				Open.using(Stack) { stackF =>
 					val leftLabel = leftIconPointer.value.map { makeImageLabel(content.hierarchy, _, Direction2D.Right) }
 					val rightLabel = rightIconPointer.value.map { makeImageLabel(content.hierarchy, _, Direction2D.Left) }
 					stackF.withoutMargin(content.mapComponent { c => Vector(leftLabel, Some(c), rightLabel).flatten },
 						X, Center)
 				}
+			}
 			else
+			{
+				println("No icons used")
 				content
+			}
 		}
 		// Wraps the field component in a Framing (that applies border)
 		// Top and side inset are increased if border is drawn on all sides
@@ -479,25 +491,38 @@ class Field[C <: ReachComponentLike with Focusable]
 	
 	private def makeViewImageLabel(hierarchy: ComponentHierarchy, pointer: ChangingLike[Option[SingleColorIcon]],
 							   noMarginSide: Direction2D) =
-		 ViewImageLabel(hierarchy).withStaticLayout(pointer.mergeWith(innerBackgroundPointer) { (icon, bg) =>
+	{
+		 val label = ViewImageLabel(hierarchy).withStaticLayout(pointer.mergeWith(innerBackgroundPointer) { (icon, bg) =>
 			icon match
 			{
 				case Some(icon) => icon.singleColorImageAgainst(bg)
 				case None => Image.empty
 			}
 		}, iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
+		// TODO: Remove test prints
+		label.boundsPointer.addListener(println)
+		label.parentHierarchy.linkPointer.addListener(println)
+		label
+	}
 	
 	private def makeOpenViewImageLabel(pointer: ChangingLike[Option[SingleColorIcon]], noMarginSide: Direction2D) =
 		Open { makeViewImageLabel(_, pointer, noMarginSide) }.withResult(Some(pointer.map { _.isDefined }))
 	
 	private def makeImageLabel(hierarchy: ComponentHierarchy, icon: SingleColorIcon, noMarginSide: Direction2D) =
 	{
-		if (contextBackgroundPointer.isChanging)
-			ViewImageLabel(hierarchy).withStaticLayout(innerBackgroundPointer.map(icon.singleColorImageAgainst),
-				iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
-		else
-			ImageLabel(hierarchy).apply(icon.singleColorImageAgainst(contextBackgroundPointer.value),
-				iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
+		// TODO: Remove test prints
+		val label =
+		{
+			if (contextBackgroundPointer.isChanging)
+				ViewImageLabel(hierarchy).withStaticLayout(innerBackgroundPointer.map(icon.singleColorImageAgainst),
+					iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
+			else
+				ImageLabel(hierarchy).apply(icon.singleColorImageAgainst(contextBackgroundPointer.value),
+					iconOutsideMargins.toInsets - noMarginSide, useLowPrioritySize = true)
+		}
+		label.boundsPointer.addListener(println)
+		println(label.bounds)
+		label
 	}
 	
 	private def makeContentAndNameArea(fieldNamePointer: ChangingLike[LocalizedString]) =

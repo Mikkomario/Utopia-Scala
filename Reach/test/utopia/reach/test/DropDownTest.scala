@@ -27,6 +27,7 @@ import utopia.reflection.util.SingleFrameSetup
 object DropDownTest extends App
 {
 	GenesisDataType.setup()
+	System.setProperty("sun.java2d.noddraw", true.toString)
 	
 	import utopia.reflection.test.TestContext._
 	import TestCursors._
