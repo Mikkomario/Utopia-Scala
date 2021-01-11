@@ -7,6 +7,7 @@
 - Added a delaying / buffering pointer view class (DelayedView)
 - Added asynchronous mapping support for pointers via AsyncMirror class
 - XmlWriter.writeFile(...) and .writeElementToFile(...) now create the target directory if it didn't exist yet
+- Added date range support (DateRange, YearlyDateRange) which includes a number of new methods in TimeExtensions
 ### New Methods
 - Added .notCompletingBefore(Future) to Future in AsyncExtensions
 - Added .subRangeIterator(Int) to Range.Inclusive in CollectionExtensions
