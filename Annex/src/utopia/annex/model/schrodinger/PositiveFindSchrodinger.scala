@@ -35,4 +35,30 @@ trait PositiveFindSchrodinger[S, I] extends Schrodinger[Either[RequestNotSent, O
 			}
 		case None => localResult
 	}
+	
+	
+	// OTHER    ---------------------------
+	
+	/**
+	  * Completes this schrödinger with a failure result
+	  * @param notSent Failure (request was not sent)
+	  */
+	def failWith(notSent: RequestNotSent) = complete(Left(notSent))
+	
+	/**
+	  * Completes this schrödinger with a successful server response
+	  * @param searchResult Server search response
+	  */
+	def succeedWith(searchResult: Option[I]) = complete(Right(searchResult))
+	
+	/**
+	  * Completes this schrödinger with a successful search result
+	  * @param result Server search result
+	  */
+	def succeedWithFoundResult(result: I) = succeedWith(Some(result))
+	
+	/**
+	  * Completes this schrödinger by indicating that server response was successful but no item was found
+	  */
+	def succeedWithNoResultsFound() = succeedWith(None)
 }
