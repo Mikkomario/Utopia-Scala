@@ -21,6 +21,7 @@
 in a lazy container is not required or desirable
 - Added WeakCache
 - XmlWriter.writeFile(...) and .writeElementToFile(...) now create the target directory if it didn't exist yet
+- Added date range support (DateRange, YearlyDateRange) which includes a number of new methods in TimeExtensions
 ### New Methods
 - AsyncExtensions
   - Future

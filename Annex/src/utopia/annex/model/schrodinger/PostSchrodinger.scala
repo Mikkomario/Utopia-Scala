@@ -1,6 +1,6 @@
 package utopia.annex.model.schrodinger
 
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 /**
   * This schrödinger item is used when posting new data to the server
@@ -30,4 +30,25 @@ trait PostSchrodinger[S, I] extends Schrodinger[Try[I], Try[S]]
 		case Some(serverResult) => serverResult.map(spiritOf)
 		case None => Success(postSpirit)
 	}
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	  * Successfully completes this schrödinger instance
+	  * @param successResult Successful result
+	  */
+	def succeedWith(successResult: I) = complete(Success(successResult))
+	
+	/**
+	  * Completes this Sscrödinger with a failure result
+	  * @param failureResult A failure result
+	  */
+	def failWith(failureResult: Failure[I]) = complete(failureResult)
+	
+	/**
+	  * Completes this Sscrödinger with a failure result
+	  * @param error Error assigned as failure
+	  */
+	def failWith(error: Throwable): Unit = failWith(Failure(error))
 }

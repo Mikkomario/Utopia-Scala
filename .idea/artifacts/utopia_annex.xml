@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="utopia-annex">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_annex</output-path>
+    <root id="archive" name="utopia-annex.jar">
+      <element id="module-output" name="Annex" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/Annex/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-source" name="Annex" />
+    </root>
+  </artifact>
+</component>
