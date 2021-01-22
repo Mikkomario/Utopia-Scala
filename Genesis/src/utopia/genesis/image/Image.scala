@@ -116,12 +116,18 @@ object Image
 	  */
 	def paint[U](size: Size)(draw: Drawer => U) =
 	{
-		// Creates the new buffer image
-		val buffer = new BufferedImage(size.width.round.toInt, size.height.round.toInt, BufferedImage.TYPE_INT_ARGB)
-		// Draws on the image
-		Drawer.use(buffer.createGraphics()) { draw(_) } // { d => draw(d.clippedTo(Bounds(Point.origin, size))) }
-		// Wraps the buffer image
-		Image(buffer)
+		// If some of the dimensions were 0, simply creates an empty image
+		if (size.isPositive)
+		{
+			// Creates the new buffer image
+			val buffer = new BufferedImage(size.width.round.toInt, size.height.round.toInt, BufferedImage.TYPE_INT_ARGB)
+			// Draws on the image
+			Drawer.use(buffer.createGraphics()) { draw(_) }
+			// Wraps the buffer image
+			Image(buffer)
+		}
+		else
+			empty
 	}
 	
 	
