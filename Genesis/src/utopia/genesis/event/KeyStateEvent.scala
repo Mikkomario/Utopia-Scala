@@ -21,6 +21,11 @@ object KeyStateEvent
     val wasReleasedFilter: Filter[KeyStateEvent] = e => e.isReleased
     
     /**
+     * This filter only accepts arrow key events
+     */
+    val arrowKeysFilter = keysFilter(Direction2D.values.map(arrowKeyIndex).toSet)
+    
+    /**
      * This event filter only accepts key events while control key is being held down (includes presses of ctrl key itself)
      */
     val controlDownFilter: Filter[KeyStateEvent] = e => e.keyStatus.apply(KeyEvent.VK_CONTROL)

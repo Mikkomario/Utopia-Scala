@@ -25,11 +25,22 @@ case class Triangle(origin: Point, side1: Vector2D, side2: Vector2D) extends Pol
 {
 	// IMPLEMENTED	----------------
 	
-	override def transformedWith(transformation: Matrix3D) = Triangle(transformation(origin).toPoint,
-		transformation(side1).in2D, transformation(side2).in2D)
+	override def transformedWith(transformation: Matrix3D) = mapCorners { _ * transformation }
 	
-	override def transformedWith(transformation: Matrix2D) = Triangle(transformation(origin).toPoint,
-		transformation(side1), transformation(side2))
+	override def transformedWith(transformation: Matrix2D) = mapCorners { _ * transformation }
 	
 	lazy val corners = Vector(origin, origin + side1, origin + side2)
+	
+	
+	// OTHER    -------------------
+	
+	/**
+	 * @param f A mapping function
+	 * @return A copy of this triangle with mapped corners
+	 */
+	def mapCorners(f: Point => Point) =
+	{
+		val mapped = corners.map(f)
+		Triangle.withCorners(mapped.head, mapped(1), mapped(2))
+	}
 }

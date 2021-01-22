@@ -2,15 +2,16 @@ package utopia.genesis.shape.shape2D
 
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.Direction1D
+import utopia.genesis.shape.shape1D.{Angle, Direction1D}
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
+import utopia.genesis.util.Scalable
 
 /**
  * Represents a single side of a 2D rectangle, Eg. top
  * @author Mikko Hilpinen
  * @since 3.11.2019, v2.1+
  */
-sealed trait Direction2D
+sealed trait Direction2D extends Scalable[Vector2D]
 {
 	// ABSTRACT	-------------------------------
 	
@@ -37,6 +38,11 @@ sealed trait Direction2D
 	 */
 	def isVertical = axis == Y
 	
+	/**
+	 * @return An angle based on this direction
+	 */
+	def toAngle: Angle
+	
 	
 	// COMPUTED	--------------------------------
 	
@@ -55,6 +61,13 @@ sealed trait Direction2D
 	  */
 	@deprecated("Please use sign instead", "v2.3")
 	def isPositiveDirection = sign.isPositive
+	
+	
+	// IMPLEMENTED  ----------------------------
+	
+	override def repr = axis(sign.modifier)
+	
+	override def *(mod: Double) = axis(mod * sign.modifier)
 	
 	
 	// OTHER	--------------------------------
@@ -78,6 +91,8 @@ object Direction2D
 		override def sign = Negative
 		
 		override def opposite = Down
+		
+		override def toAngle = Angle.up
 	}
 	
 	/**
@@ -90,6 +105,8 @@ object Direction2D
 		override def sign = Positive
 		
 		override def opposite = Up
+		
+		override def toAngle = Angle.down
 	}
 	
 	/**
@@ -102,6 +119,8 @@ object Direction2D
 		override def sign = Positive
 		
 		override def opposite = Left
+		
+		override def toAngle = Angle.right
 	}
 	
 	/**
@@ -114,6 +133,8 @@ object Direction2D
 		override def sign = Negative
 		
 		override def opposite = Right
+		
+		override def toAngle = Angle.left
 	}
 	
 	/**
