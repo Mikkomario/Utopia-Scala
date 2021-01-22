@@ -45,6 +45,7 @@ Usually such context is now requested as a constructor parameter instead.
 - Added a couple new utility methods to PixelTable
 - Added .averageLuminosityOf(...) to Color
 - Added .opposite to Direction1D
+- Added a number of utility methods to Direction2D
 ### Fixes
 - Dimensional.toMap now properly returns a Map
 ### Other Changes

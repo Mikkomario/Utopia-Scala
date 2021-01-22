@@ -2,8 +2,9 @@ package utopia.genesis.shape.shape2D
 
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.{Angle, Direction1D}
+import utopia.genesis.shape.shape1D.{Angle, Direction1D, RotationDirection}
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
+import utopia.genesis.shape.shape1D.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.genesis.util.Scalable
 
 /**
@@ -57,6 +58,16 @@ sealed trait Direction2D extends Scalable[Vector2D]
 	def vertical = along(Y)
 	
 	/**
+	 * @return A direction that is 90 degree clockwise of this direction
+	 */
+	def rotatedQuarterClockwise = rotatedQuarterTowards(Clockwise)
+	
+	/**
+	 * @return A direction that is 90 degree counter-clockwise of this direction
+	 */
+	def rotatedQuarterCounterClockwise = rotatedQuarterTowards(Counterclockwise)
+	
+	/**
 	  * @return Whether this side resides at the positive (true) or the negative (false) side of the axis
 	  */
 	@deprecated("Please use sign instead", "v2.3")
@@ -77,6 +88,12 @@ sealed trait Direction2D extends Scalable[Vector2D]
 	  * @return This direction, if it is parallel to the specified axis. None otherwise.
 	  */
 	def along(axis: Axis2D) = if (axis == this.axis) Some(this) else None
+	
+	/**
+	 * @param direction Target direction
+	 * @return Direction which is 90 degrees towards the specified rotation direction from this direction
+	 */
+	def rotatedQuarterTowards(direction: RotationDirection): Direction2D
 }
 
 object Direction2D
@@ -93,6 +110,12 @@ object Direction2D
 		override def opposite = Down
 		
 		override def toAngle = Angle.up
+		
+		override def rotatedQuarterTowards(direction: RotationDirection) = direction match
+		{
+			case Clockwise => Right
+			case Counterclockwise => Left
+		}
 	}
 	
 	/**
@@ -107,6 +130,12 @@ object Direction2D
 		override def opposite = Up
 		
 		override def toAngle = Angle.down
+		
+		override def rotatedQuarterTowards(direction: RotationDirection) = direction match
+		{
+			case Clockwise => Left
+			case Counterclockwise => Right
+		}
 	}
 	
 	/**
@@ -121,6 +150,12 @@ object Direction2D
 		override def opposite = Left
 		
 		override def toAngle = Angle.right
+		
+		override def rotatedQuarterTowards(direction: RotationDirection) = direction match
+		{
+			case Clockwise => Down
+			case Counterclockwise => Up
+		}
 	}
 	
 	/**
@@ -135,6 +170,12 @@ object Direction2D
 		override def opposite = Right
 		
 		override def toAngle = Angle.left
+		
+		override def rotatedQuarterTowards(direction: RotationDirection) = direction match
+		{
+			case Clockwise => Up
+			case Counterclockwise => Down
+		}
 	}
 	
 	/**
