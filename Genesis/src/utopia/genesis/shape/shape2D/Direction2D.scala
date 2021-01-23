@@ -84,6 +84,12 @@ sealed trait Direction2D extends Scalable[Vector2D]
 	// OTHER	--------------------------------
 	
 	/**
+	 * @param length A vector length
+	 * @return A vector with specified length and this direction
+	 */
+	def apply(length: Double) = this * length
+	
+	/**
 	  * @param axis Target axis
 	  * @return This direction, if it is parallel to the specified axis. None otherwise.
 	  */
