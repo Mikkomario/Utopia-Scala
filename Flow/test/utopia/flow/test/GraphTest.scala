@@ -49,7 +49,7 @@ object GraphTest extends App
     // The shortest route should be 1 -> 4 -> 5
     assert(node1.shortestRouteTo(node5).get.size == 2)
     // The cheapest route (weights considered) should be 1 -> 2 -> 3 -> 5
-    val cheapestRoute = node1.cheapestRouteTo(node5, edge => edge.content)
+    val cheapestRoute = node1.cheapestRouteTo(node5) { edge => edge.content }
     assert(cheapestRoute.get.size == 3)
     
     // After disconnecting node 5 from node 4. Only one route should remain

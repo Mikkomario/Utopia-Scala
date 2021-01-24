@@ -115,7 +115,7 @@ object ConversionHandler
     private def optimalRouteTo(sourceType: DataType, targetType: DataType) = 
         optimalRoutes.getOrElseUpdate(sourceType -> targetType,
             {
-                val route = nodeForType(sourceType).cheapestRouteTo(nodeForType(targetType), { _.content.cost } )
+                val route = nodeForType(sourceType).cheapestRouteTo(nodeForType(targetType)) { _.content.cost }
                 route.map { r => ConversionRoute(r.map { _.content }) }
             })
     

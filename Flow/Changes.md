@@ -8,6 +8,7 @@
     - Also, Lazy class parameter is now a private call by name parameter and no longer a public function with parameters
 - Replaced Changing with ChangingLike in most places
   - Also, replaced Changing.wrap(...) with Fixed(...)
+- GraphNode.cheapestRouteTo(...) now accepts the cost function in a separate parameter list
 ### Deprecations
 - Deprecated LazyLike.get. Lazy instances now behave more like pointers, extending the new Viewable trait.
 - Deprecated Volatile.get in favor of .value

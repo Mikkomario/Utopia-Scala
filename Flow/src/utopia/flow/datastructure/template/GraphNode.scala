@@ -152,7 +152,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
      * @param node the node traversed to
      * @return The shortest route from this node to the provided node, if any exist
      */
-    def shortestRouteTo(node: AnyNode) = cheapestRouteTo(node, { _ => 1 })
+    def shortestRouteTo(node: AnyNode) = cheapestRouteTo(node) { _ => 1 }
     
     /**
      * Finds the 'cheapest' route from this node to the provided node, if there is one. A special
@@ -162,7 +162,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
      * contents, for example)
      * @return The cheapest route found, if any exist
      */
-    def cheapestRouteTo(node: AnyNode, costOf: Edge => Double) =
+    def cheapestRouteTo(node: AnyNode)(costOf: Edge => Double) =
     {
         val routes = routesTo(node)
         if (routes.isEmpty)

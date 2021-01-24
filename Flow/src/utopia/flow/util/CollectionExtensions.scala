@@ -519,16 +519,15 @@ object CollectionExtensions
          * Finds the item(s) that best match the specified conditions
          * @param matchers Search conditions used. The conditions that are introduced first are considered more
          *                 important than those which are introduced the last.
-         * @param factory A factory for the final result (implicit)
          * @tparam That Target collection type
          * @return The items in this collection that best match the specified conditions
          */
-        def bestMatch[That](matchers: Seq[A => Boolean])(implicit factory: Factory[A, That]): That =
+        def bestMatch[That](matchers: Seq[A => Boolean]): Vector[A] =
         {
             // If there is only a single option, that is the best match. If there are 0 options, there's no best match
             // If there are no matchers left, cannot make a distinction between items
             if (t.size < 2 || matchers.isEmpty)
-                factory.fromSpecific(t)
+                t.toVector
             else
             {
                 val nextMatcher = matchers.head
@@ -599,7 +598,7 @@ object CollectionExtensions
           * @tparam O Type of items collection
           * @return Whether this collection of items contains all of the specified items
           */
-        def containsAll[O](items: Iterable[O]) = items.forall { item => t.exists { _ == item } }
+        def containsAll[O >: A](items: Iterable[O]) = items.forall { item => t.exists { _ == item } }
     }
     
     implicit class RichIterableLike[A, CC[X], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
