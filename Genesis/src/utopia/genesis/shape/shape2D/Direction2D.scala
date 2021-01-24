@@ -44,6 +44,12 @@ sealed trait Direction2D extends Scalable[Vector2D]
 	 */
 	def toAngle: Angle
 	
+	/**
+	 * @param direction Target direction
+	 * @return Direction which is 90 degrees towards the specified rotation direction from this direction
+	 */
+	def rotatedQuarterTowards(direction: RotationDirection): Direction2D
+	
 	
 	// COMPUTED	--------------------------------
 	
@@ -66,6 +72,12 @@ sealed trait Direction2D extends Scalable[Vector2D]
 	 * @return A direction that is 90 degree counter-clockwise of this direction
 	 */
 	def rotatedQuarterCounterClockwise = rotatedQuarterTowards(Counterclockwise)
+	
+	/**
+	 * @return Directions perpendicular to this direction. First the direction to counterclockwise direction,
+	 *         then the direction to clockwise direction
+	 */
+	def perpendicular = Vector(rotatedQuarterCounterClockwise, rotatedQuarterClockwise)
 	
 	/**
 	  * @return Whether this side resides at the positive (true) or the negative (false) side of the axis
@@ -94,12 +106,6 @@ sealed trait Direction2D extends Scalable[Vector2D]
 	  * @return This direction, if it is parallel to the specified axis. None otherwise.
 	  */
 	def along(axis: Axis2D) = if (axis == this.axis) Some(this) else None
-	
-	/**
-	 * @param direction Target direction
-	 * @return Direction which is 90 degrees towards the specified rotation direction from this direction
-	 */
-	def rotatedQuarterTowards(direction: RotationDirection): Direction2D
 }
 
 object Direction2D
