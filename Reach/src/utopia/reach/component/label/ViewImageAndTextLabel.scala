@@ -14,6 +14,8 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open}
 import utopia.reach.container.Stack
+import utopia.reflection.component.drawing.view.BackgroundViewDrawer
+import utopia.reflection.component.template.layout.stack.ConstrainableWrapper
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.Alignment
@@ -106,8 +108,8 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 							 imageInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
 							 textInsetsPointer: ChangingLike[StackInsets] = Fixed(context.textInsets),
 							 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-							 additionalDrawers: Vector[CustomDrawer], useLowPriorityImageSize: Boolean = false,
-							 forceEqualBreadth: Boolean = false) =
+							 additionalDrawers: Vector[CustomDrawer] = Vector(),
+							 useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false) =
 		factory[A](itemPointer, imagePointer, fontPointer, textColorPointer, imageInsetsPointer, textInsetsPointer,
 			context.textAlignment, displayFunction, context.betweenLinesMargin.optimal, additionalDrawers,
 			context.allowLineBreaks, context.allowImageUpscaling, context.allowTextShrink, useLowPriorityImageSize,
@@ -178,6 +180,38 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 		apply(itemPointer, iconPointer.mergeWith(rolePointer) { (icon, role) =>
 			icon.asImageWithColor(context.color(role, preferredShade)) }, imageInsets, displayFunction, customDrawers,
 			useLowPriorityImageSize, forceEqualBreadth)
+	
+	/**
+	  * Creates a new label which displays both image and text
+	  * @param itemPointer A pointer to this label's (text-determining) content
+	  * @param iconPointer A pointer to the displayed icon
+	  * @param rolePointer A pointer to the color role used in label background
+	  * @param preferredShade Preferred color shade to use (default = standard)
+	  * @param imageInsets Insets placed around the image (default = any, preferring 0)
+	  * @param displayFunction Display function used when converting the item to text (default = toString)
+	  * @param customDrawers Custom drawers assigned to this component (default = empty)
+	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image part
+	  *                                (default = false)
+	  * @param forceEqualBreadth Whether the image and text should be forced to have the same breadth, no matter the
+	  *                          alignment (default = false)
+	  * @tparam A Type of content in this label
+	  * @return A new label
+	  */
+	def withIconAndChangingBackground[A](itemPointer: ChangingLike[A], iconPointer: ChangingLike[SingleColorIcon],
+										 rolePointer: ChangingLike[ColorRole], preferredShade: ColorShade = Standard,
+										 imageInsets: StackInsets = StackInsets.any,
+										 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+										 customDrawers: Vector[CustomDrawer] = Vector(),
+										 useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false) =
+	{
+		val backgroundPointer = rolePointer.map { context.color(_, preferredShade) }
+		val backgroundDrawer = BackgroundViewDrawer(backgroundPointer.map { c => c })
+		val imagePointer = iconPointer.mergeWith(backgroundPointer) { _.singleColorImageAgainst(_) }
+		withChangingStyle(itemPointer, imagePointer, textColorPointer = backgroundPointer.map { _.defaultTextColor },
+			imageInsetsPointer = Fixed(imageInsets), displayFunction = displayFunction,
+			additionalDrawers = backgroundDrawer +: customDrawers, useLowPriorityImageSize = useLowPriorityImageSize,
+			forceEqualBreadth = forceEqualBreadth)
+	}
 }
 
 /**
@@ -195,7 +229,8 @@ class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, val itemPoin
 							   betweenLinesMargin: Double = 0.0, additionalDrawers: Vector[CustomDrawer] = Vector(),
 							   allowLineBreaks: Boolean = true, allowImageUpscaling: Boolean = true,
 							   allowTextShrink: Boolean = false, useLowPriorityImageSize: Boolean = false,
-							   forceEqualBreadth: Boolean = false) extends ReachComponentWrapper
+							   forceEqualBreadth: Boolean = false)
+	extends ReachComponentWrapper with ConstrainableWrapper
 {
 	// ATTRIBUTES	-------------------------------
 	

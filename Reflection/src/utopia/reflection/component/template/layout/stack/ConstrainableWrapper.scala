@@ -14,7 +14,7 @@ trait ConstrainableWrapper extends Constrainable
 	/**
 	  * @return Wrapped constrainable instance
 	  */
-	def wrapped: Constrainable
+	protected def wrapped: Constrainable
 	
 	
 	// IMPLEMENTED	-------------------
