@@ -186,7 +186,7 @@ case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D =
 	
 	override def transformedWith(transformation: Matrix2D) = transformation.apply(this)
 	
-	override def transformedWith(transformation: Matrix3D) = transformation(this)
+	override def transformedWith(transformation: Matrix3D) = transformation(to3D)
 	
 	// This matrix uses coordinates (column (x), row (y))
 	// Affine transform uses coordinates (row (y), column (x))

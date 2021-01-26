@@ -74,7 +74,9 @@ trait ImageDrawerLike extends CustomDrawer
 		// Draws the image
 		imageToDraw.foreach { img =>
 			val position = alignment.position(img.size, bounds, insets, fitWithinBounds = false).position
-			img.drawWith(drawer, position)
+			// Since 'position' represents the desired top left corner of the drawn image,
+			// has to adjust according to image origin
+			img.drawWith(drawer, position + image.origin)
 		}
 	}
 }
