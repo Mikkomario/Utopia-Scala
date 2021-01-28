@@ -167,6 +167,18 @@ object Color
 			case Some((totalLuminosity, totalAlpha)) => totalLuminosity / totalAlpha
 			case None => 0.0
 		}
+	
+	/**
+	  * @param colors A collection of colors
+	  * @return The average relative luminance of those colors
+	  */
+	def averageRelativeLuminanceOf(colors: IterableOnce[Color]) = colors.iterator
+		.map { c => (c.relativeLuminance * c.alpha) -> c.alpha }
+		.reduceOption { (a, b) => (a._1 + b._1) -> (a._2 + b._2) } match
+		{
+			case Some((totalLuminance, totalAlpha)) => totalLuminance / totalAlpha
+			case None => 0.0
+		}
 }
 
 /**
@@ -187,6 +199,9 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double) exte
 	  * An RGB representation of this color
 	  */
 	lazy val rgb: Rgb = data.fold(_.toRGB, c => c)
+	
+	// Relative luminance is lazily cached
+	override lazy val relativeLuminance = super.relativeLuminance
 	
 	
 	// COMPUTED	--------------------------
@@ -244,6 +259,19 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double) exte
 	def withSaturation(saturation: Double) = withHSL(hsl.withSaturation(saturation))
 	
 	def withLuminosity(luminosity: Double) = withHSL(hsl.withLuminosity(luminosity))
+	
+	override def contrastAgainst(other: RgbLike[_]) =
+	{
+		// Takes alpha value into account
+		if (isTransparent)
+		{
+			val rawContrast = super.contrastAgainst(other)
+			// Multiplies the contrast above the 1.0 (same color) level by alpha
+			(rawContrast - 1.0) * alpha + 1.0
+		}
+		else
+			super.contrastAgainst(other)
+	}
 	
 	override def toString =
 	{

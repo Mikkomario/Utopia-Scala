@@ -209,6 +209,12 @@ trait ImageLike
 	def averageLuminosityOf(area: Bounds) = Color.averageLuminosityOf(pixelsAt(area))
 	
 	/**
+	  * @param area Targeted area within this image. The (0,0) is at the top left corner of this image
+	  * @return The average relative luminance (perceived lightness) of the pixels in the targeted area
+	  */
+	def averageRelativeLuminanceOf(area: Bounds) = Color.averageRelativeLuminanceOf(pixelsAt(area))
+	
+	/**
 	  * Draws this image using a specific drawer
 	  * @param drawer A drawer
 	  * @param position The position where this image's origin is drawn (default = (0, 0))

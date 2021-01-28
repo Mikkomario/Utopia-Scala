@@ -1,9 +1,10 @@
 package utopia.reflection.component.context
 
-import utopia.genesis.color.Color
+import utopia.genesis.color.ColorContrastStandard.Enhanced
+import utopia.genesis.color.{Color, ColorContrastStandard}
 import utopia.genesis.shape.shape2D.Direction2D
 import utopia.reflection.color.ColorShade.Standard
-import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
+import utopia.reflection.color.{ColorRole, ColorSet, ColorShade, ComponentColor}
 import utopia.reflection.container.swing.window.interaction.ButtonColor
 import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.Alignment
@@ -135,6 +136,18 @@ case class TextContext(base: ColorContext, localizer: Localizer = NoLocalization
 	  * @return A copy of this context with the new text color
 	  */
 	def withTextColor(textColor: Color) = copy(textColorOverride = Some(textColor))
+	
+	/**
+	  * @param textColorSet A set of text color options
+	  * @param requiredLegibility Targeted text legibility level (default = Enhanced)
+	  * @return A copy of this context with the best text color from the specified set for this
+	  *         context (background & font)
+	  */
+	def withTextColorFrom(textColorSet: ColorSet, requiredLegibility: ColorContrastStandard = Enhanced) =
+	{
+		val minimumContrast = requiredLegibility.minimumContrastForText(font.size, font.isBold)
+		textColorSet.forBackground(containerBackground, minimumContrast)
+	}
 	
 	/**
 	  * @param localizer A new localizer

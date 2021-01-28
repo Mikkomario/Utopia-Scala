@@ -78,6 +78,23 @@ trait RgbLike[Repr <: RgbLike[Repr]]
 	  */
 	def minRatio = RgbChannel.values.map(ratio).min
 	
+	/**
+	  * @return The relative luminance of this color, which is used in contrast calculations, for example
+	  * @see https://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
+	  */
+	def relativeLuminance =
+	{
+		// Calculation based on:
+		// https://stackoverflow.com/questions/61525100/convert-from-relative-luminance-to-hsl
+		// Each color channel has its own multiplier
+		Map(Red -> 0.2126, Green -> 0.7152, Blue -> 0.0722).map { case (channel, multiplier) =>
+			// Calculates the relative luminance value for each channel and applies the multiplier
+			val ratio = this.ratio(channel)
+			val gammaAdjusted = if (ratio <= 0.03928) ratio / 12.92 else math.pow((ratio + 0.055) / 1.055, 2.4)
+			gammaAdjusted * multiplier
+		}.sum // The returned luminance is the sum of the individual channel values (with multipliers applied)
+	}
+	
 	
 	// OPERATORS	--------------------
 	
@@ -161,4 +178,21 @@ trait RgbLike[Repr <: RgbLike[Repr]]
 	  * @return A copy of this color with mapped rgb ratios
 	  */
 	def mapRatios(f: Double => Double) = withRatios(ratios.view.mapValues(f).toMap)
+	
+	
+	// OTHER	------------------------------
+	
+	/**
+	  * Calculates the contrast between these two colors
+	  * @param other Another color
+	  * @return The color contrast ratio between these two colors
+	  * @see https://webaim.org/articles/contrast/
+	  */
+	def contrastAgainst(other: RgbLike[_]) =
+	{
+		// Calculation from: https://stackoverflow.com/questions/61525100/convert-from-relative-luminance-to-hsl
+		// Compares the relative luminosities of these two colors
+		val ratio = (relativeLuminance + 0.05) / (other.relativeLuminance + 0.05)
+		ColorContrast(if (ratio >= 1) ratio else 1.0 / ratio)
+	}
 }

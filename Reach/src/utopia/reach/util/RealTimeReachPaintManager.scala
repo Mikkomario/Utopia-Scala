@@ -161,7 +161,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	
 	// Updates the buffer and processes data from the image
 	override def averageShadeOf(area: Bounds) =
-		ColorShadeVariant.forLuminosity(flatten().averageLuminosityOf(area))
+		ColorShadeVariant.forLuminosity(flatten().averageRelativeLuminanceOf(area))
 	
 	
 	// OTHER	-------------------------------------

@@ -1,19 +1,30 @@
 package utopia.reflection.color
 
+import utopia.flow.datastructure.immutable.Lazy
 import utopia.genesis.color.Color
+import utopia.genesis.color.ColorContrastStandard.Minimum
 import utopia.reflection.color.ColorShade.{Dark, Light, Standard}
 import utopia.reflection.component.context.ColorContextLike
 
-import scala.math.Ordering.Double.TotalOrdering
 import scala.language.implicitConversions
 
 object ColorSet
 {
+	// IMPLICIT	--------------------------
+	
 	/**
 	  * @param set A color set
 	  * @return Default color for the set
 	  */
 	implicit def setToColor(set: ColorSet): Color = set.default
+	
+	
+	// COMPUTED	---------------------------
+	
+	private def defaultMinimumContrast = Minimum.defaultMinimumContrast
+	
+	
+	// OTHER	---------------------------
 	
 	/**
 	  * Converts a set of hexes into a color set
@@ -22,9 +33,12 @@ object ColorSet
 	  * @param darkHex A hex for the dark version
 	  * @return A color set based on the hexes. Fails if some values couldn't be parsed
 	  */
-	def fromHexes(defaultHex: String, lightHex: String, darkHex: String) = Color.fromHex(defaultHex).flatMap { normal =>
-		Color.fromHex(lightHex).flatMap { light => Color.fromHex(darkHex).map { dark => ColorSet(normal, light, dark) } }
-	}
+	def fromHexes(defaultHex: String, lightHex: String, darkHex: String) =
+		Color.fromHex(defaultHex).flatMap { normal =>
+			Color.fromHex(lightHex).flatMap { light =>
+				Color.fromHex(darkHex).map { dark => ColorSet(normal, light, dark) }
+			}
+		}
 }
 
 /**
@@ -37,6 +51,8 @@ object ColorSet
   */
 case class ColorSet(default: ComponentColor, light: ComponentColor, dark: ComponentColor)
 {
+	import ColorSet.defaultMinimumContrast
+	
 	// COMPUTED	----------------------------
 	
 	/**
@@ -54,13 +70,15 @@ case class ColorSet(default: ComponentColor, light: ComponentColor, dark: Compon
 	  * @param context Color context
 	  * @return A color from this set most suited for that context (preferring light shade)
 	  */
-	def lightInContext(implicit context: ColorContextLike) = forBackgroundPreferringLight(context.containerBackground)
+	def lightInContext(implicit context: ColorContextLike) =
+		forBackgroundPreferringLight(context.containerBackground)
 	
 	/**
 	  * @param context Color context
 	  * @return A color from this set most suited for that context (preferring dark shade)
 	  */
-	def darkInContext(implicit context: ColorContextLike) = forBackgroundPreferringDark(context.containerBackground)
+	def darkInContext(implicit context: ColorContextLike) =
+		forBackgroundPreferringDark(context.containerBackground)
 	
 	
 	// OTHER	----------------------------
@@ -88,44 +106,57 @@ case class ColorSet(default: ComponentColor, light: ComponentColor, dark: Compon
 	  * Picks the best color set for the specific background (best being one that has enough contrast difference,
 	  * preferring the default color)
 	  * @param backgroundColor A background / contrasting color
+	  * @param minimumContrast Minimum contrast level required for simply picking the default color
+	  *                        (default = minimum legibility default = 4.5:1)
 	  * @return The best color in this color set in a context with specified color
 	  */
-	def forBackground(backgroundColor: Color): ComponentColor =
+	def forBackground(backgroundColor: Color, minimumContrast: Double = defaultMinimumContrast): ComponentColor =
 	{
-		val contrastLuminosity = backgroundColor.luminosity
-		if ((default.luminosity - contrastLuminosity).abs > 0.2)
+		if (default.contrastAgainst(backgroundColor) > minimumContrast)
 			default
 		else
-			Vector(light, dark).maxBy { c => (c.luminosity - contrastLuminosity).abs }
+			Vector(light, dark).maxBy { _.contrastAgainst(backgroundColor) }
 	}
 	
 	/**
 	  * Picks the best color set for the specific background (best being one that has enough contrast difference,
 	  * preferring light color)
 	  * @param backgroundColor A background / contrasting color
+	  * @param minimumContrast Minimum contrast level required for simply picking the default color
+	  *                        (default = minimum legibility default = 4.5:1)
 	  * @return The best color in this color set in a context with specified color
 	  */
-	def forBackgroundPreferringLight(backgroundColor: Color): ComponentColor = forBackground(backgroundColor, Light)
+	def forBackgroundPreferringLight(backgroundColor: Color,
+									 minimumContrast: Double = defaultMinimumContrast): ComponentColor =
+		forBackground(backgroundColor, Light, minimumContrast)
 	
 	/**
 	  * Picks the best color set for the specific background (best being one that has enough contrast difference,
 	  * preferring dark color)
 	  * @param backgroundColor A background / contrasting color
+	  * @param minimumContrast Minimum contrast level required for simply picking the default color
+	  *                        (default = minimum legibility default = 4.5:1)
 	  * @return The best color in this color set in a context with specified color
 	  */
-	def forBackgroundPreferringDark(backgroundColor: Color): ComponentColor = forBackground(backgroundColor, Dark)
+	def forBackgroundPreferringDark(backgroundColor: Color,
+									minimumContrast: Double = defaultMinimumContrast): ComponentColor =
+		forBackground(backgroundColor, Dark, minimumContrast)
 	
 	/**
 	  * Picks the color in this set that is suitable for the specified background color, preferring specified shade
 	  * @param backgroundColor A background / contrasting color
 	  * @param shade Preferred color shade
+	  * @param minimumContrast Minimum contrast level required for simply picking the default color
+	  *                        (default = minimum legibility default = 4.5:1)
 	  * @return A color in this set most suitable against the specified background color
 	  */
-	def forBackgroundPreferring(backgroundColor: Color, shade: ColorShade): ComponentColor = shade match
-	{
-		case Standard => forBackground(backgroundColor)
-		case variant: ColorShadeVariant => forBackground(backgroundColor, variant)
-	}
+	def forBackgroundPreferring(backgroundColor: Color, shade: ColorShade,
+								minimumContrast: Double = defaultMinimumContrast): ComponentColor =
+		shade match
+		{
+			case Standard => forBackground(backgroundColor, minimumContrast)
+			case variant: ColorShadeVariant => forBackground(backgroundColor, variant, minimumContrast)
+		}
 	
 	/**
 	  * Picks the color that most resembles the specified color
@@ -134,26 +165,22 @@ case class ColorSet(default: ComponentColor, light: ComponentColor, dark: Compon
 	  */
 	def mostLike(anotherColor: Color) =
 	{
-		val contrastLuminosity = anotherColor.luminosity
-		Vector(default, light, dark).minBy { c => (c.luminosity - contrastLuminosity).abs }
+		Vector(default, light, dark).minBy { _.contrastAgainst(anotherColor) }
 	}
 	
 	/**
 	  * Picks a shade from this color set that works best against multiple colors
 	  * @param colors A set of colors selected color should work with
+	  * @param minimumContrast Minimum contrast level required for simply picking the default color
+	  *                        (default = minimum legibility default = 4.5:1)
 	  * @return The best color in this set to be used against those colors
 	  */
-	def bestAgainst(colors: Iterable[Color]) =
+	def bestAgainst(colors: Iterable[Color], minimumContrast: Double = defaultMinimumContrast) =
 	{
-		val contrastLuminosities = colors.map { _.luminosity }.toSet
-		val defaultLuminosity = default.luminosity
-		if (contrastLuminosities.forall { l => (defaultLuminosity - l).abs > 0.2 })
+		if (colors.forall { default.contrastAgainst(_) >= minimumContrast })
 			default
 		else
-			Vector(default, light, dark).maxBy { c =>
-				val luminosity = c.luminosity
-				contrastLuminosities.map { l => (luminosity - l).abs }.sum
-			}
+			Vector(default, light, dark).maxBy { c => colors.map { c.contrastAgainst(_) }.reduce { _ + _ } }
 	}
 	
 	/**
@@ -168,13 +195,12 @@ case class ColorSet(default: ComponentColor, light: ComponentColor, dark: Compon
 	 */
 	def map(f: ComponentColor => ComponentColor) = ColorSet(f(default), f(light), f(dark))
 	
-	private def forBackground(backgroundColor: Color, preference: ColorShadeVariant) =
+	private def forBackground(backgroundColor: Color, preference: ColorShadeVariant, minimumContrast: Double) =
 	{
 		val order = Vector(preference, Standard, preference.opposite).map(apply)
-		val contrastLuminosity = backgroundColor.luminosity
+		val contrasts = order.map { color => color -> Lazy { color.contrastAgainst(backgroundColor) } }
 		// Finds the first shade that has enough contrast to the background
 		// If none of the shades are suitable, picks one with the greatest contrast
-		order.find { shade => (shade.luminosity - contrastLuminosity).abs > 0.2 }
-			.getOrElse { order.maxBy { shade => (shade.luminosity - contrastLuminosity).abs } }
+		contrasts.find { _._2.value >= minimumContrast }.getOrElse { contrasts.maxBy { _._2.value } }._1
 	}
 }

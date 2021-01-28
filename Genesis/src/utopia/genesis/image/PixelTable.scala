@@ -63,6 +63,11 @@ case class PixelTable private(_pixels: Vector[Vector[Color]]) extends Iterable[C
 	def averageLuminosity = Color.averageLuminosityOf(this)
 	
 	/**
+	  * @return The average relative luminance (perceived lightness) of the pixels in this table
+	  */
+	def averageRelativeLuminance = Color.averageRelativeLuminanceOf(this)
+	
+	/**
 	  * @return A vector containing each pixel color rgb value
 	  */
 	private def rgbIterator = iterator.map { _.toInt }
@@ -169,6 +174,12 @@ case class PixelTable private(_pixels: Vector[Vector[Color]]) extends Iterable[C
 	  * @return The average color luminosity inside the area
 	  */
 	def averageLuminosityOf(area: Bounds) = Color.averageLuminosityOf(apply(area))
+	
+	/**
+	  * @param area Targeted area in this table
+	  * @return The average relative luminance (perceived lightness) inside the area
+	  */
+	def averageRelativeLuminanceOf(area: Bounds) = Color.averageRelativeLuminanceOf(apply(area))
 	
 	/**
 	  * Takes a portion of this table that is contained within the target area
