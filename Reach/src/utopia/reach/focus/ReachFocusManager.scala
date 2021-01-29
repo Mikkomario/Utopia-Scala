@@ -173,7 +173,8 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	  * @return True if new focus target was found and assigned or when current focus target denies focus movement.
 	  *         False when a new focus target was not found or when this manager doesn't currently have focus to move.
 	  */
-	def moveFocusInside(direction: Direction1D = Positive, allowLooping: Boolean = true, forceFocusLeave: Boolean = false): Boolean =
+	def moveFocusInside(direction: Direction1D = Positive, allowLooping: Boolean = true,
+						forceFocusLeave: Boolean = false): Boolean =
 	{
 		if (hasFocus)
 		{
@@ -327,11 +328,12 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 		val focusPolicy = focusCycleRoot.getFocusTraversalPolicy
 		// Checks whether there are other focusable components to target outside the managed focus system
 		// If not, loops the focus inside the system without yielding it
-		(direction match
+		val nextComp = direction match
 		{
 			case Positive => focusPolicy.getComponentAfter(focusCycleRoot, canvasComponent)
 			case Negative => focusPolicy.getComponentBefore(focusCycleRoot, canvasComponent)
-		}) == null
+		}
+		nextComp != null && nextComp != canvasComponent
 	}
 	
 	private def moveFocus(from: Focusable, to: Focusable) =

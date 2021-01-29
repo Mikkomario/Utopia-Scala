@@ -48,13 +48,15 @@ object ReachCanvas
 	  *                               This is to make the drawing process faster (default = true)
 	  * @param syncAfterDraw Whether display syncing should be activated after a single draw event has completed.
 	  *                      This is to make the drawing results more responsive (default = true)
+	  * @param focusEnabled Whether focus handling features should be enabled in this canvas (default = true).
+	  *                     Set to false only when you specifically want to disable all focus handling.
 	  * @param content Function for producing the content once parent hierarchy is available
 	  * @tparam C Type of created canvas content
 	  * @return A set of canvas with the content inside them and the produced canvas content as well
 	  */
 	def apply[C <: ReachComponentLike, R](cursors: Option[CursorSet] = None,
 										  disableDoubleBufferingDuringDraw: Boolean = true,
-										  syncAfterDraw: Boolean = true)
+										  syncAfterDraw: Boolean = true, focusEnabled: Boolean = true)
 										 (content: ComponentHierarchy => ComponentCreationResult[C, R])
 										 (implicit exc: ExecutionContext) =
 	{
@@ -73,7 +75,8 @@ object ReachCanvas
   */
 // TODO: Stack hierarchy attachment link should be considered broken while this component is invisible or otherwise not shown
 class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Option[CursorSet],
-						  disableDoubleBufferingDuringDraw: Boolean = true, syncAfterDraw: Boolean = true)
+						  disableDoubleBufferingDuringDraw: Boolean = true, syncAfterDraw: Boolean = true,
+						  focusEnabled: Boolean = true)
 						 (implicit exc: ExecutionContext)
 	extends JWrapper with Stackable with AwtContainerRelated with SwingComponentRelated with CustomDrawable
 {
@@ -125,7 +128,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	}
 	
 	// Listens to tabulator key events for manual focus handling
-	addKeyStateListener(FocusKeyListener)
+	if (focusEnabled)
+		addKeyStateListener(FocusKeyListener)
 	// Listens to mouse events for manual cursor drawing
 	cursorPainter.foreach(addMouseMoveListener)
 	
@@ -394,9 +398,12 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		// setBackground(Color.black.toAwt)
 		
 		// Makes this canvas element focusable and disables the default focus traversal keys
-		setFocusable(true)
-		setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, new util.HashSet[AWTKeyStroke]())
-		setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, new util.HashSet[AWTKeyStroke]())
+		if (focusEnabled)
+		{
+			setFocusable(true)
+			setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, new util.HashSet[AWTKeyStroke]())
+			setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, new util.HashSet[AWTKeyStroke]())
+		}
 		
 		
 		// IMPLEMENTED	----------------------

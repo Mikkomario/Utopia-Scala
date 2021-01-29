@@ -452,4 +452,12 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 	override protected def wrapped = _wrapped
 	
 	override protected def focusable = _wrapped.wrappedField
+	
+	
+	// OTHER	----------------------------------------------
+	
+	/**
+	  * Clears this field of all text
+	  */
+	def clear() = textPointer.value = ""
 }
