@@ -22,11 +22,15 @@ object RealTimeReachPaintManager
 	  * @param component Component to paint
 	  * @param maxQueueSize The maximum amount of paint updates that can be queued before the whole component
 	  *                     is repainted instead (default = 30)
+	  * @param disableDoubleBuffering Whether double buffering should be disabled during draw operations.
+	  *                               This is to make the drawing process faster (default = true)
+	  * @param syncAfterDraw Whether display syncing should be activated after a single draw event has completed.
+	  *                      This is to make the drawing results more responsive (default = true)
 	  * @return A new paint manager
 	  */
-	def apply(component: ReachComponentLike, maxQueueSize: Int = 30)/*(cursor: => Option[(Point, Image)])
-			 (cursorBounds: => Option[Bounds])*/ =
-		new RealTimeReachPaintManager(component)/*(cursor)(cursorBounds)*/
+	def apply(component: ReachComponentLike, maxQueueSize: Int = 30, disableDoubleBuffering: Boolean = true,
+			  syncAfterDraw: Boolean = true) =
+		new RealTimeReachPaintManager(component)
 }
 
 /**
@@ -35,7 +39,8 @@ object RealTimeReachPaintManager
   * @author Mikko Hilpinen
   * @since 25.11.2020, v2
   */
-class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int = 30)
+class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int = 30,
+								disableDoubleBuffering: Boolean = true, syncAfterDraw: Boolean = true)
 							   /*(cursor: => Option[(Point, Image)])(cursorBounds: => Option[Bounds])*/
 	extends PaintManager
 {
@@ -289,20 +294,29 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 		// tracker.checkPoint("Accessing awt thread")
 		// Painting is performed in the AWT event thread
 		AwtEventThread.async {
-			// tracker.checkPoint("Starting paint")
-			// Suppresses double buffering for the duration of the paint operation
-			val repaintManager = RepaintManager.currentManager(jComponent)
-			val wasDoubleBuffered = repaintManager.isDoubleBufferingEnabled
-			
-			repaintManager.setDoubleBufferingEnabled(false)
-			// Paints using the component's own graphics instance (which may not be available)
-			Option(jComponent.getGraphics).foreach { g =>
-				Drawer.use(g)(f)
+			if (disableDoubleBuffering)
+			{
+				// Suppresses double buffering for the duration of the paint operation (optional)
+				val repaintManager = RepaintManager.currentManager(jComponent)
+				val wasDoubleBuffered = repaintManager.isDoubleBufferingEnabled
+				
+				repaintManager.setDoubleBufferingEnabled(false)
+				draw(f)
+				repaintManager.setDoubleBufferingEnabled(wasDoubleBuffered)
 			}
-			Try { Toolkit.getDefaultToolkit.sync() }
-			
-			repaintManager.setDoubleBufferingEnabled(wasDoubleBuffered)
-			// tracker.checkPoint("Finished paint")
+			else
+				draw(f)
 		}
+	}
+	
+	// Doesn't perform any preparation, as in paint
+	private def draw(f: Drawer => Unit) =
+	{
+		// Paints using the component's own graphics instance (which may not be available)
+		Option(jComponent.getGraphics).foreach { g =>
+			Drawer.use(g)(f)
+		}
+		if (syncAfterDraw)
+			Try { Toolkit.getDefaultToolkit.sync() }
 	}
 }

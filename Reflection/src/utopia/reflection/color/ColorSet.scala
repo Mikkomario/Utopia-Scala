@@ -21,7 +21,7 @@ object ColorSet
 	
 	// COMPUTED	---------------------------
 	
-	private def defaultMinimumContrast = Minimum.defaultMinimumContrast
+	private def defaultMinimumContrast = Minimum.largeTextMinimumContrast
 	
 	
 	// OTHER	---------------------------

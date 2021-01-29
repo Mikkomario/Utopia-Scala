@@ -14,6 +14,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open}
 import utopia.reach.container.Stack
+import utopia.reach.util.Priority.Low
 import utopia.reflection.component.drawing.view.BackgroundViewDrawer
 import utopia.reflection.component.template.layout.stack.ConstrainableWrapper
 import utopia.reflection.image.SingleColorIcon
@@ -207,10 +208,13 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 		val backgroundPointer = rolePointer.map { context.color(_, preferredShade) }
 		val backgroundDrawer = BackgroundViewDrawer(backgroundPointer.map { c => c })
 		val imagePointer = iconPointer.mergeWith(backgroundPointer) { _.singleColorImageAgainst(_) }
-		withChangingStyle(itemPointer, imagePointer, textColorPointer = backgroundPointer.map { _.defaultTextColor },
-			imageInsetsPointer = Fixed(imageInsets), displayFunction = displayFunction,
-			additionalDrawers = backgroundDrawer +: customDrawers, useLowPriorityImageSize = useLowPriorityImageSize,
-			forceEqualBreadth = forceEqualBreadth)
+		val label = withChangingStyle(itemPointer, imagePointer,
+			textColorPointer = backgroundPointer.map { _.defaultTextColor }, imageInsetsPointer = Fixed(imageInsets),
+			displayFunction = displayFunction, additionalDrawers = backgroundDrawer +: customDrawers,
+			useLowPriorityImageSize = useLowPriorityImageSize, forceEqualBreadth = forceEqualBreadth)
+		// Repaints this component whenever background color changes
+		backgroundPointer.addAnyChangeListener { label.repaint(Low) }
+		label
 	}
 }
 

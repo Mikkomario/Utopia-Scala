@@ -1,7 +1,6 @@
 package utopia.reach.test
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.Fixed
 import utopia.flow.util.FileExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.event.KeyStateEvent

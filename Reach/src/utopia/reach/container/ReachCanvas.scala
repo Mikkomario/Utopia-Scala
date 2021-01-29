@@ -44,11 +44,17 @@ object ReachCanvas
 	/**
 	  * Creates a new set of canvas with a reach component in them
 	  * @param cursors Cursors to use inside this component. None if this component shouldn't affect the cursor drawing.
+	  * @param disableDoubleBufferingDuringDraw Whether double buffering should be disabled during draw operations.
+	  *                               This is to make the drawing process faster (default = true)
+	  * @param syncAfterDraw Whether display syncing should be activated after a single draw event has completed.
+	  *                      This is to make the drawing results more responsive (default = true)
 	  * @param content Function for producing the content once parent hierarchy is available
 	  * @tparam C Type of created canvas content
 	  * @return A set of canvas with the content inside them and the produced canvas content as well
 	  */
-	def apply[C <: ReachComponentLike, R](cursors: Option[CursorSet] = None)
+	def apply[C <: ReachComponentLike, R](cursors: Option[CursorSet] = None,
+										  disableDoubleBufferingDuringDraw: Boolean = true,
+										  syncAfterDraw: Boolean = true)
 										 (content: ComponentHierarchy => ComponentCreationResult[C, R])
 										 (implicit exc: ExecutionContext) =
 	{
@@ -66,7 +72,8 @@ object ReachCanvas
   * @since 4.10.2020, v2
   */
 // TODO: Stack hierarchy attachment link should be considered broken while this component is invisible or otherwise not shown
-class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Option[CursorSet])
+class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Option[CursorSet],
+						  disableDoubleBufferingDuringDraw: Boolean = true, syncAfterDraw: Boolean = true)
 						 (implicit exc: ExecutionContext)
 	extends JWrapper with Stackable with AwtContainerRelated with SwingComponentRelated with CustomDrawable
 {
@@ -87,7 +94,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	  */
 	val focusManager = new ReachFocusManager(panel)
 	// TODO: Allow custom repainters
-	private val painterPromise = contentFuture.map { c => RealTimeReachPaintManager(c) }
+	private val painterPromise = contentFuture.map { c => RealTimeReachPaintManager(c,
+		disableDoubleBuffering = disableDoubleBufferingDuringDraw, syncAfterDraw = syncAfterDraw) }
 	/**
 	  * Object that manages cursor display inside this canvas. None if cursor state is not managed in this canvas.
 	  */
