@@ -2,7 +2,7 @@ package utopia.reach.component.label
 
 import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.genesis.color.Color
-import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextualComponentFactory}
+import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.reflection.color.ColorShade.Standard
@@ -12,9 +12,10 @@ import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.view.BackgroundViewDrawer
 import utopia.reflection.shape.stack.StackSize
 
-object ViewEmptyLabel
+object ViewEmptyLabel extends ContextInsertableComponentFactoryFactory[ColorContextLike, ViewEmptyLabelFactory,
+	ContextualViewEmptyLabelFactory]
 {
-
+	override def apply(hierarchy: ComponentHierarchy) = new ViewEmptyLabelFactory(hierarchy)
 }
 
 class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy)
