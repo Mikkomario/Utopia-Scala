@@ -74,13 +74,30 @@ class ScrollViewFactory(val parentHierarchy: ComponentHierarchy)
 case class ContextualScrollViewFactory[N](factory: ScrollViewFactory, context: N)
 	extends ContextualComponentFactory[N, Any, ContextualScrollViewFactory]
 {
+	// COMPUTED ------------------------------
+	
+	/**
+	 * @return A copy of this factory that doesn't use component creation context
+	 */
+	def withoutContext = factory
+	
+	
+	// IMPLEMENTED  --------------------------
+	
 	override def withContext[N2 <: Any](newContext: N2) =
 		copy(context = newContext)
 	
+	
+	// OTHER    ------------------------------
+	
 	/**
-	  * @return A copy of this factory that doesn't use component creation context
-	  */
-	def withoutContext = factory
+	 * @param contentFactory A factory for scroll view contents
+	 * @tparam F Type of component creation factory
+	 * @return A new scroll view builder
+	 */
+	def build[F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
+		(contentFactory: ContextualBuilderContentFactory[N, F]) =
+		new ContextualScrollViewBuilder(factory, context, contentFactory)
 }
 
 class ScrollViewBuilder[+F](factory: ScrollViewFactory, contentFactory: ComponentFactoryFactory[F])
