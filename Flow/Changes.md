@@ -45,7 +45,7 @@ in a lazy container is not required or desirable
   - Duration
     - .toPreciseMinutes, .toPreciseHours, .toPreciseDays and .toPreciseWeeks
 - ChangeEvent
-  - .compareBy(...) and .compareWith(...)
+  - .compareBy(...), .differentBy(...) and .compareWith(...)
   - .merge(...) and .mergeBy(...)
 - ChangeListener.type
   - .onAnyChange(...)
