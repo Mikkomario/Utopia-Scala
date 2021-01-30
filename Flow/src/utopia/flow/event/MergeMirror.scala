@@ -18,7 +18,7 @@ object MergeMirror
 		if (firstSource.isChanging)
 		{
 			if (secondSource.isChanging)
-				apply(firstSource, secondSource)(f)
+				new MergeMirror(firstSource, secondSource)(f)
 			else
 				firstSource.map { f(_, secondSource.value) }
 		}
@@ -40,7 +40,7 @@ object MergeMirror
  * @tparam O2 Type of the second mirror origin (value from second source item)
  * @tparam Reflection Type of mirror reflection (value from this item)
  */
-case class MergeMirror[O1, O2, Reflection](firstSource: ChangingLike[O1], secondSource: ChangingLike[O2])
+class MergeMirror[+O1, +O2, Reflection](firstSource: ChangingLike[O1], secondSource: ChangingLike[O2])
 										  (f: (O1, O2) => Reflection)
 	extends Changing[Reflection]
 {

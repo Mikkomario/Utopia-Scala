@@ -64,6 +64,15 @@ case class ComponentColor(background: Color)
 	def defaultTextColor: Color = textColorStandard.defaultTextColor
 	
 	/**
+	 * @return The overall shade of this color (either darker or lighter)
+	 */
+	def shade = textColorStandard match
+	{
+		case Light => ColorShade.Dark
+		case Dark => ColorShade.Light
+	}
+	
+	/**
 	  * @return A highlighted copy of this component color
 	  */
 	def highlighted =

@@ -167,6 +167,14 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
 (factory: ViewTextLabelFactory, override val context: N)
 	extends ContextualComponentFactory[N, TextContextLike, ContextualViewTextLabelFactory]
 {
+	// COMPUTED ---------------------------------
+	
+	/**
+	 * @return A copy of this factory without contextual information
+	 */
+	def withoutContext = factory
+	
+	
 	// IMPLEMENTED	-----------------------------
 	
 	override def withContext[N2 <: TextContextLike](newContext: N2) =

@@ -178,6 +178,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 	
 	override protected def trigger() = value = !value
 	
+	// TODO: Handle unselected color selection better
 	override def cursorToImage(cursor: Cursor, position: Point) =
 		if (value) cursor.over(color) else cursor.over(Color.white)
 	
@@ -226,17 +227,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 				// Draws the hover area, if necessary
 				if (hoverR > 0 && enabled)
 				{
-					val hoverAlpha =
-					{
-						if (isPressed)
-							0.25
-						else if (hasFocus)
-							0.2
-						else if (isMouseOver)
-							0.15
-						else
-							0.0
-					}
+					val hoverAlpha = Switch.this.state.hoverAlpha
 					if (hoverAlpha > 0)
 					{
 						val baseHoverColor = if (value) color else Color.textBlackDisabled

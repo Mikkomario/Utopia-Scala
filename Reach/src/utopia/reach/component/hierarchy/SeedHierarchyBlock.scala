@@ -1,7 +1,7 @@
 package utopia.reach.component.hierarchy
 
 import utopia.flow.async.DelayedView
-import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike, LazyMergeMirror, LazyMirror, MergeMirror, Mirror}
+import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike, LazyMergeMirror, LazyMirror, MergeMirror, Mirror, TripleMergeMirror}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
 
@@ -148,6 +148,9 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		
 		override def mergeWith[B, R](other: ChangingLike[B])(f: (Boolean, B) => R) =
 			MergeMirror.of(this, other)(f)
+		
+		override def mergeWith[B, C, R](first: ChangingLike[B], second: ChangingLike[C])(merge: (Boolean, B, C) => R) =
+			TripleMergeMirror.of(this, first, second)(merge)
 		
 		override def lazyMergeWith[B, R](other: ChangingLike[B])(f: (Boolean, B) => R) =
 			LazyMergeMirror.of(this, other)(f)

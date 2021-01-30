@@ -26,6 +26,14 @@ case class ChangeEvent[+A](oldValue: A, newValue: A)
 	def compareBy[B](map: A => B) = map(oldValue) == map(newValue)
 	
 	/**
+	 * Checks whether certain aspects of the old and new value are different
+	 * @param map A mapping function applied for both the old and the new value
+	 * @tparam B Type of the mapped value
+	 * @return True if the mapped values are different, false otherwise
+	 */
+	def differentBy[B](map: A => B) = !compareBy(map)
+	
+	/**
 	  * Applies a function from the old value to the new value
 	  * @param f A function for mapping into the applied function in the old value
 	  * @tparam R Result type of the found function

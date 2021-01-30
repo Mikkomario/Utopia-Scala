@@ -1,7 +1,6 @@
 package utopia.flow.event
 
 import utopia.flow.async.DelayedView
-import utopia.flow.datastructure.immutable.Lazy
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext
@@ -57,16 +56,16 @@ trait Changing[A] extends ChangingLike[A]
 	override def futureWhere(valueCondition: A => Boolean)(implicit exc: ExecutionContext) =
 		defaultFutureWhere(valueCondition)
 	
-	override def map[B](f: A => B) = if (isChanging) Mirror(this)(f) else Fixed(f(value))
+	override def map[B](f: A => B) = Mirror.of(this)(f)
 	
-	override def lazyMap[B](f: A => B) = if (isChanging) LazyMirror(this)(f) else Lazy { f(value) }
+	override def lazyMap[B](f: A => B) = LazyMirror.of(this)(f)
 	
 	override def mergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R) =
 	{
 		if (other.isChanging)
 		{
 			if (isChanging)
-				MergeMirror(this, other)(f)
+				new MergeMirror(this, other)(f)
 			else
 				other.map { f(value, _) }
 		}
@@ -74,12 +73,16 @@ trait Changing[A] extends ChangingLike[A]
 			map { f(_, other.value) }
 	}
 	
+	override def mergeWith[B, C, R](first: ChangingLike[B], second: ChangingLike[C])
+	                               (merge: (A, B, C) => R): ChangingLike[R] =
+		TripleMergeMirror.of(this, first, second)(merge)
+	
 	override def lazyMergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R) =
 	{
 		if (other.isChanging)
 		{
 			if (isChanging)
-				LazyMergeMirror(this, other)(f)
+				new LazyMergeMirror(this, other)(f)
 			else
 				other.lazyMap { f(value, _) }
 		}

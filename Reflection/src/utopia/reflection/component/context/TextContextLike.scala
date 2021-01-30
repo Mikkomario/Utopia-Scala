@@ -1,6 +1,7 @@
 package utopia.reflection.component.context
 
 import utopia.genesis.color.Color
+import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.localization.Localizer
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
@@ -70,6 +71,11 @@ trait TextContextLike extends ColorContextLike
 	  */
 	@deprecated("Replaced with allowTextShrink", "v2")
 	def textHasMinWidth = !allowTextShrink
+	
+	/**
+	 * @return The text draw context defined by this context
+	 */
+	def textDrawContext = TextDrawContext(font, textColor, textAlignment, textInsets, betweenLinesMargin.optimal)
 	
 	
 	// OTHER	--------------------------

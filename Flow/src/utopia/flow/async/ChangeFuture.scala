@@ -2,7 +2,7 @@ package utopia.flow.async
 
 import AsyncExtensions._
 import utopia.flow.datastructure.immutable.Lazy
-import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike, Fixed, LazyMergeMirror, LazyMirror, MergeMirror}
+import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike, Fixed, LazyMergeMirror, LazyMirror, MergeMirror, TripleMergeMirror}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
@@ -88,7 +88,7 @@ class ChangeFuture[A](placeHolder: A, val future: Future[A])(implicit exc: Execu
 	override def map[B](f: A => B) =
 		if (isCompleted) Fixed(f(value)) else new ChangeFuture[B](f(placeHolder), future.map(f))
 	
-	override def lazyMap[B](f: A => B) = if (isCompleted) Lazy { f(value) } else LazyMirror(this)(f)
+	override def lazyMap[B](f: A => B) = if (isCompleted) Lazy { f(value) } else new LazyMirror(this)(f)
 	
 	override def mergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R) =
 	{
@@ -97,6 +97,9 @@ class ChangeFuture[A](placeHolder: A, val future: Future[A])(implicit exc: Execu
 		else
 			map { f(_, other.value) }
 	}
+	
+	override def mergeWith[B, C, R](first: ChangingLike[B], second: ChangingLike[C])(merge: (A, B, C) => R) =
+		TripleMergeMirror.of(this, first, second)(merge)
 	
 	override def lazyMergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R) =
 	{

@@ -22,7 +22,7 @@ object LazyMergeMirror
 		if (source1.isChanging)
 		{
 			if (source2.isChanging)
-				apply(source1, source2)(merge)
+				new LazyMergeMirror(source1, source2)(merge)
 			else
 				source1.lazyMap { merge(_, source2.value) }
 		}
@@ -38,7 +38,7 @@ object LazyMergeMirror
   * @author Mikko Hilpinen
   * @since 24.10.2020, v1.9
   */
-case class LazyMergeMirror[O1, O2, Reflection](source1: ChangingLike[O1], source2: ChangingLike[O2])
+class LazyMergeMirror[O1, O2, Reflection](source1: ChangingLike[O1], source2: ChangingLike[O2])
 											  (merge: (O1, O2) => Reflection)
 	extends LazyLike[Reflection]
 {

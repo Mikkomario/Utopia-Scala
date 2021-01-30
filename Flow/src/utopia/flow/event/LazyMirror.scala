@@ -16,7 +16,7 @@ object LazyMirror
 	def of[O, R](pointer: ChangingLike[O])(f: O => R) =
 	{
 		if (pointer.isChanging)
-			apply(pointer)(f)
+			new LazyMirror(pointer)(f)
 		else
 			Lazy { f(pointer.value) }
 	}
@@ -32,7 +32,7 @@ object LazyMirror
   * @tparam Origin Type of item before mirroring
   * @tparam Reflection Type of item after mirroring
   */
-case class LazyMirror[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => Reflection)
+class LazyMirror[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => Reflection)
 	extends LazyLike[Reflection]
 {
 	// ATTRIBUTES	--------------------------

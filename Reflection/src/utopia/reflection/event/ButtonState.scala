@@ -21,6 +21,26 @@ object ButtonState
   */
 case class ButtonState(isEnabled: Boolean, isInFocus: Boolean, isMouseOver: Boolean, isPressed: Boolean)
 {
+	// COMPUTED --------------------------
+	
+	/**
+	 * @return A hover effect alpha level that should be used for this state
+	 */
+	def hoverAlpha =
+	{
+		if (!isEnabled)
+			0.0
+		else if (isPressed)
+			0.25
+		else if (isInFocus)
+			0.2
+		else if (isMouseOver)
+			0.15
+		else
+			0.0
+	}
+	
+	
 	// IMPLEMENTED	----------------------
 	
 	override def toString =

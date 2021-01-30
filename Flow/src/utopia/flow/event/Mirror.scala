@@ -13,7 +13,7 @@ object Mirror
 	def of[O, R](source: ChangingLike[O])(f: O => R) =
 	{
 		if (source.isChanging)
-			apply(source)(f)
+			new Mirror(source)(f)
 		else
 			Fixed(f(source.value))
 	}
@@ -28,7 +28,7 @@ object Mirror
  * @tparam Origin Type of the mirror origin (value from source item)
  * @tparam Reflection Type of mirror reflection (value from this item)
  */
-case class Mirror[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => Reflection) extends Changing[Reflection]
+class Mirror[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => Reflection) extends Changing[Reflection]
 {
 	// ATTRIBUTES   ------------------------------
 	

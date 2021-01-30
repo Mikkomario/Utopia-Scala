@@ -76,6 +76,17 @@ trait ChangingLike[+A] extends Viewable[A]
 	def mergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R): ChangingLike[R]
 	
 	/**
+	 * @param first Another changing item
+	 * @param second Yet another changing item
+	 * @param merge A merge function
+	 * @tparam B Type of the second changing item
+	 * @tparam C Type of the third changing item
+	 * @tparam R Type of merge result
+	 * @return A mirror that merges the values from all three of these items
+	 */
+	def mergeWith[B, C, R](first: ChangingLike[B], second: ChangingLike[C])(merge: (A, B, C) => R): ChangingLike[R]
+	
+	/**
 	  * @param other Another changing item
 	  * @param f A merge function
 	  * @tparam B Type of the other item's value
