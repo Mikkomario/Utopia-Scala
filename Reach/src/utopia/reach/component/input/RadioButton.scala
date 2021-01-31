@@ -59,7 +59,7 @@ class RadioButtonFactory(parentHierarchy: ComponentHierarchy)
 	             customDrawers: Vector[CustomDrawer] = Vector(),
 	             focusListeners: Seq[FocusListener] = Vector())(implicit colorScheme: ColorScheme) =
 		new RadioButton[A](parentHierarchy, selectedValuePointer, value, backgroundColorPointer, diameter,
-			hoverExtraRadius, ringWidth, ringWidth * 1.25, selectedColorRole, enabledPointer, customDrawers,
+			hoverExtraRadius, ringWidth, (ringWidth * 1.25).round.toDouble, selectedColorRole, enabledPointer, customDrawers,
 			focusListeners)
 }
 
@@ -97,9 +97,12 @@ case class ContextualRadioButtonFactory[+N <: ColorContextLike](factory: RadioBu
 	             backgroundColorPointer: ChangingLike[ComponentColor] = Fixed(context.containerBackground),
 	             customDrawers: Vector[CustomDrawer] = Vector(),
 	             focusListeners: Seq[FocusListener] = Vector()) =
-		factory(selectedValuePointer, value, backgroundColorPointer, context.margins.medium * 2,
-			context.margins.medium * 0.8, (context.margins.medium * 0.3) max 1.0, selectedColorRole, enabledPointer,
-			customDrawers, focusListeners)
+	{
+		
+		factory(selectedValuePointer, value, backgroundColorPointer, (context.margins.medium * 2).round.toDouble,
+			(context.margins.medium * 0.8).round.toDouble, ((context.margins.medium * 0.25) max 1.0).round.toDouble,
+			selectedColorRole, enabledPointer, customDrawers, focusListeners)
+	}
 }
 
 /**
@@ -198,7 +201,7 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 			val maxRadius = bounds.minDimension / 2
 			if (maxRadius > 1.0)
 			{
-				val buttonRadius = (diameter / 2) min maxRadius
+				val buttonRadius = (diameter / 2).round.toDouble min maxRadius
 				
 				// Draws the full (outer) circle first
 				val mainDrawer = drawer.onlyFill(colorPointer.value)
@@ -208,9 +211,9 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 				val emptyCircleRadius =
 				{
 					val base = buttonRadius - ringWidth
-					if (selected) base max 2.0 else base
+					(if (selected) base max 2.0 else base).round.toDouble
 				}
-				if (emptyCircleRadius > 0.0)
+				if (emptyCircleRadius > 0)
 					drawer.onlyFill(backgroundColorPointer.value).draw(Circle(center, emptyCircleRadius))
 				
 				// Draws the hover effect, if necessary

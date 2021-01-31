@@ -35,12 +35,6 @@ case class Circle(origin: Point, radius: Double) extends ShapeConvertible with A
 {
     // COMPUTED PROPERTIES    ---------
     
-    override def toShape = new Ellipse2D.Double(origin.x - radius, origin.y - radius, radius * 2, radius * 2)
-    
-    override def toValue = new Value(Some(this), CircleType)
-    
-    override def toModel = Model(Vector("origin" -> origin, "radius" -> radius))
-    
     /**
      * The diameter of this circle, from one side to another
      */
@@ -72,6 +66,12 @@ case class Circle(origin: Point, radius: Double) extends ShapeConvertible with A
     
     
     // IMPLEMENTED METHODS    ---------
+    
+    override def toShape = new Ellipse2D.Double(origin.x - radius, origin.y - radius, radius * 2, radius * 2)
+    
+    override def toValue = new Value(Some(this), CircleType)
+    
+    override def toModel = Model(Vector("origin" -> origin, "radius" -> radius))
     
     override def contains[V <: Vector2DLike[V]](point: V) = point.distanceFrom(origin) <= radius
     
