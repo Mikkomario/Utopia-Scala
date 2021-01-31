@@ -45,4 +45,19 @@ trait Setup
 	  * @param obj An object
 	  */
 	def registerObject(obj: Handleable) = handlers += obj
+	
+	/**
+	 * Removes specified objects from the handlers in this setup
+	 * @param objects Objects to remove
+	 */
+	def removeObjects(objects: Iterable[Handleable]): Unit = handlers --= objects
+	
+	/**
+	 * Removes specified objects from the handlers in this setup
+	 * @param first First object to remove
+	 * @param second Second object to remove
+	 * @param more More objects to remove
+	 */
+	def removeObjects(first: Handleable, second: Handleable, more: Handleable*): Unit =
+		removeObjects(Vector(first, second) ++ more)
 }

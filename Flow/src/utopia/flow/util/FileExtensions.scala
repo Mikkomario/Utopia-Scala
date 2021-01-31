@@ -25,7 +25,7 @@ object FileExtensions
 	/**
 	 * Converts a string to a path
 	 */
-	implicit def stringToPath(pathString: String): Path = Paths.get(pathString)
+	implicit def stringToPath(pathString: String): Path = Paths.get(pathString.stripControlCharacters)
 	
 	implicit class RichPath(val p: Path) extends AnyVal
 	{
