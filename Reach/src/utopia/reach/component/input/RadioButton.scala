@@ -10,6 +10,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
+import utopia.reach.util.Priority.High
 import utopia.reflection.color.ColorRole.Secondary
 import utopia.reflection.color.{ColorRole, ColorScheme, ComponentColor}
 import utopia.reflection.component.context.ColorContextLike
@@ -97,7 +98,7 @@ case class ContextualRadioButtonFactory[+N <: ColorContextLike](factory: RadioBu
 	             customDrawers: Vector[CustomDrawer] = Vector(),
 	             focusListeners: Seq[FocusListener] = Vector()) =
 		factory(selectedValuePointer, value, backgroundColorPointer, context.margins.medium * 2,
-			context.margins.medium * 0.8, (context.margins.medium * 0.1) max 1.0, selectedColorRole, enabledPointer,
+			context.margins.medium * 0.8, (context.margins.medium * 0.3) max 1.0, selectedColorRole, enabledPointer,
 			customDrawers, focusListeners)
 }
 
@@ -158,6 +159,7 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 	// INITIAL CODE ---------------------------------
 	
 	setup(baseStatePointer)
+	selectedPointer.addAnyChangeListener { repaint(High) }
 	
 	
 	// COMPUTED -------------------------------------
@@ -192,7 +194,7 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			// Calculates dimensions
-			val center = bounds.center
+			val center = bounds.center.round
 			val maxRadius = bounds.minDimension / 2
 			if (maxRadius > 1.0)
 			{
@@ -206,7 +208,7 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 				val emptyCircleRadius =
 				{
 					val base = buttonRadius - ringWidth
-					if (selected) base min 2.0 else base
+					if (selected) base max 2.0 else base
 				}
 				if (emptyCircleRadius > 0.0)
 					drawer.onlyFill(backgroundColorPointer.value).draw(Circle(center, emptyCircleRadius))
