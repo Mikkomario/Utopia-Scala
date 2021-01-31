@@ -76,6 +76,15 @@ object ComponentCreationResult
 	  * @return A new component creation result
 	  */
 	def apply[C](component: C) = new ComponentCreationResult[C, Unit](component, ())
+	
+	/**
+	 * @param items Multiple created items
+	 * @param result Additional creation result
+	 * @tparam C Type of individual items
+	 * @tparam R Type of additional result
+	 * @return A new component creation result
+	 */
+	def many[C, R](items: Vector[C], result: R) = new ComponentCreationResult(items, result)
 }
 
 /**

@@ -14,7 +14,7 @@ import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.ViewTextLabel
-import utopia.reach.component.template.{MutableFocusableWrapper, ReachComponentWrapper}
+import utopia.reach.component.template.{FocusableWithState, MutableFocusableWrapper, ReachComponentWrapper}
 import utopia.reach.component.wrapper.Open
 import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.image.SingleColorIcon
@@ -366,6 +366,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 				   showCharacterCount: Boolean = false)
 				  (parseResult: Option[String] => A)(implicit context: TextContextLike)
 	extends ReachComponentWrapper with InputWithPointer[A, ChangingLike[A]] with MutableFocusableWrapper
+		with FocusableWithState
 {
 	// ATTRIBUTES	------------------------------------------
 	
@@ -448,6 +449,8 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 	
 	
 	// IMPLEMENTED	------------------------------------------
+	
+	override def hasFocus = _wrapped.hasFocus
 	
 	override protected def wrapped = _wrapped
 	

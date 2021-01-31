@@ -67,6 +67,11 @@ case class TextContext(base: ColorContext, localizer: Localizer = NoLocalization
 	 */
 	def expandingToRight = expandingTo(Direction2D.Right)
 	
+	/**
+	 * @return A copy of this context without line breaks allowed
+	 */
+	def noLineBreaksAllowed = if (allowLineBreaks) copy(allowLineBreaks = false) else this
+	
 	
 	// IMPLEMENTED	--------------------------
 	
