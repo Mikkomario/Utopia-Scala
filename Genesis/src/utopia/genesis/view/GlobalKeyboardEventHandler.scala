@@ -2,8 +2,7 @@ package utopia.genesis.view
 
 import java.awt.event.KeyEvent
 import java.awt.KeyboardFocusManager
-
-import utopia.flow.async.SynchronousExecutionContext
+import utopia.flow.async.ActionQueue
 import utopia.genesis.event.KeyLocation.Standard
 import utopia.genesis.event.{KeyLocation, KeyStateEvent, KeyStatus, KeyTypedEvent}
 import utopia.genesis.handling.{KeyStateListener, KeyTypedListener}
@@ -11,7 +10,7 @@ import utopia.genesis.handling.mutable
 import utopia.inception.handling.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 /**
   * This key listener converts java.awt.KeyEvents to various Utopia Genesis key events
@@ -27,9 +26,11 @@ object GlobalKeyboardEventHandler
 	
 	private lazy val handlers = HandlerRelay(keyStateHandler, keyTypedHandler)
 	
-	private implicit var exc: ExecutionContext = SynchronousExecutionContext
 	private var _keyStatus = KeyStatus.empty
 	private var lastPressedKeyIndex = 0
+	
+	// Event queue is used after the execution context has been specified
+	private var eventQueue: Option[ActionQueue] = None
 	
 	
 	// INITIAL CODE	-----------------
@@ -46,8 +47,8 @@ object GlobalKeyboardEventHandler
 		else if (e.getID == KeyEvent.KEY_TYPED)
 		{
 			val newEvent = KeyTypedEvent(e.getKeyChar, lastPressedKeyIndex, _keyStatus)
-			// Distributes the event asynchronously
-			Future { keyTypedHandler.onKeyTyped(newEvent) }
+			// Distributes the event asynchronously, if possible
+			performEvent { keyTypedHandler.onKeyTyped(newEvent) }
 		}
 		
 		false
@@ -73,7 +74,7 @@ object GlobalKeyboardEventHandler
 	  * Sets up the execution context that is used for distributing keyboard events
 	  * @param context An execution context used when distributing keyboard events
 	  */
-	def specifyExecutionContext(context: ExecutionContext) = exc = context
+	def specifyExecutionContext(context: ExecutionContext) = eventQueue = Some(new ActionQueue()(context))
 	
 	/**
 	  * Adds a new keyboard state listener
@@ -122,8 +123,14 @@ object GlobalKeyboardEventHandler
 		{
 			_keyStatus += (e.getExtendedKeyCode, location, newState)
 			val newEvent = new KeyStateEvent(e.getExtendedKeyCode, location, newState, _keyStatus)
-			// Distributes the event asynchronously
-			Future { keyStateHandler.onKeyState(newEvent) }
+			// Distributes the event asynchronously, if possible
+			performEvent { keyStateHandler.onKeyState(newEvent) }
 		}
+	}
+	
+	private def performEvent(action: => Unit): Unit = eventQueue match
+	{
+		case Some(queue) => queue.push(action)
+		case None => action
 	}
 }

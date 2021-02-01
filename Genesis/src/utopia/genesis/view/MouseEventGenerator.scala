@@ -2,8 +2,7 @@ package utopia.genesis.view
 
 import java.awt.{Component, MouseInfo}
 import java.awt.event.{MouseEvent, MouseListener, MouseWheelListener}
-
-import utopia.flow.async.VolatileOption
+import utopia.flow.async.{ActionQueue, VolatileOption}
 import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
 import utopia.genesis.handling.Actor
@@ -11,7 +10,7 @@ import utopia.genesis.shape.shape2D.Point
 import utopia.inception.handling.mutable.Killable
 import utopia.inception.handling.{HandlerType, Mortal}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import scala.ref.WeakReference
 import scala.util.Try
@@ -27,6 +26,9 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
     extends Actor with Mortal with Killable
 {
     // ATTRIBUTES    -----------------
+    
+    // Generated events are fired one at a time using an event queue
+    private val eventQueue = new ActionQueue()
     
     private val componentPointer = WeakReference(c)
     
@@ -100,7 +102,7 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
                     _moveHandler.foreach { handler =>
                         val event = new MouseMoveEvent(mousePosition, previousMousePosition, absoluteMousePosition,
                             buttonStatus, duration)
-                        handler.onMouseMove(event)
+                        eventQueue.push { handler.onMouseMove(event) }
                     }
                 }
             }
@@ -126,7 +128,7 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
                 oldButtonStatus.downButtons.foreach { releasedButton =>
                     val event = MouseButtonStateEvent(releasedButton.buttonIndex, isDown = false, lastMousePosition,
                         lastAbsoluteMousePosition, buttonStatus)
-                    Future { handler.onMouseButtonState(event) }
+                    eventQueue.push { handler.onMouseButtonState(event) }
                 }
             }
         }
@@ -171,7 +173,7 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
                 val newEvent = MouseButtonStateEvent(event.getButton, isDown, lastMousePosition,
                     lastAbsoluteMousePosition, buttonStatus)
                 // Distributes the event asynchronously
-                Future { handler.onMouseButtonState(newEvent) }
+                eventQueue.push { handler.onMouseButtonState(newEvent) }
             }
         }
     }
@@ -183,7 +185,7 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
                 val event = MouseWheelEvent(e.getWheelRotation, lastMousePosition, lastAbsoluteMousePosition,
                     buttonStatus)
                 // Distributes the event asynchronously
-                Future { handler.onMouseWheelRotated(event) }
+                eventQueue.push { handler.onMouseWheelRotated(event) }
             }
     }
 }
