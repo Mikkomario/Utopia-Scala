@@ -54,6 +54,23 @@ object CursorDefining
 		
 		override def cursorToImage(cursor: Cursor, position: Point) = cursor(shadePointer.value)
 	}
+	
+	
+	// EXTENSIONS   ----------------------------
+	
+	implicit class CursorDefiningComponent(val c: ReachComponentLike with CursorDefining) extends AnyVal
+	{
+		/**
+		 * Registers this component to the parent canvases cursor manager, if available.
+		 * Only keeps this component managed while attached to the main stack hierarchy.
+		 */
+		def register() =
+		{
+			c.parentCanvas.cursorManager.foreach { manager =>
+				c.addHierarchyListener { isAttached => if (isAttached) manager += c else manager -= c }
+			}
+		}
+	}
 }
 
 /**
