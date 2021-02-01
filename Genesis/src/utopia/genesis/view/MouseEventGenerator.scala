@@ -110,6 +110,28 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
     
     // OTHER METHODS    --------------
     
+    /**
+      * Simulates the release of all currently held-down mouse buttons
+      */
+    def releaseAllKeys() =
+    {
+        // Updates local button status
+        if (buttonStatus.isAnyButtonPressed)
+        {
+            val oldButtonStatus = buttonStatus
+            buttonStatus = MouseButtonStatus.empty
+    
+            // Informs attached listeners for each released key
+            _buttonHandler.foreach { handler =>
+                oldButtonStatus.downButtons.foreach { releasedButton =>
+                    val event = MouseButtonStateEvent(releasedButton.buttonIndex, isDown = false, lastMousePosition,
+                        lastAbsoluteMousePosition, buttonStatus)
+                    Future { handler.onMouseButtonState(event) }
+                }
+            }
+        }
+    }
+    
     @scala.annotation.tailrec
     private def pointInPanel(point: Point, panel: Component): Point =
     {
@@ -131,6 +153,7 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
     {
         // IMPLEMENTED  -------------
         
+        // TODO: Use an action queue in the simulated events to make sure release events are distributed AFTER the press events
         override def mousePressed(e: MouseEvent) =  distributeEvent(e, isDown = true)
         override def mouseReleased(e: MouseEvent) = distributeEvent(e, isDown = false)
         

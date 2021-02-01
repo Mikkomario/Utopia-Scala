@@ -45,6 +45,16 @@ case class MouseButtonStatus private(downIndices: Set[Int])
     // COMPUTED PROPERTIES    ------
     
     /**
+      * @return Whether this status is empty (no mouse button is currently down)
+      */
+    def isEmpty = downIndices.isEmpty
+    
+    /**
+      * @return Whether one or more mouse buttons are currently held down
+      */
+    def isAnyButtonPressed = downIndices.nonEmpty
+    
+    /**
      * Whether the left mouse button is currently being held down
      */
     def isLeftDown = apply(Left)
@@ -192,11 +202,11 @@ case class MouseButtonStatus private(downIndices: Set[Int])
       * @param button Target button
       * @return A copy of this status with specified button down
       */
-    def withButtonDown(button: MouseButton) = withStatus(button, true)
+    def withButtonDown(button: MouseButton) = withStatus(button, status = true)
     
     /**
       * @param button Target button
       * @return A copy of this status with specified button up / released
       */
-    def withButtonReleased(button: MouseButton) = withStatus(button, false)
+    def withButtonReleased(button: MouseButton) = withStatus(button, status = false)
 }
