@@ -27,7 +27,7 @@ object ComponentCreationResult
 	/**
 	  * Component creation result wrapping multiple components that have individual visibility states
 	  */
-	type SwitchableCreations[C, R] = CreationsResult[C, Option[ChangingLike[Boolean]], R]
+	type SwitchableCreations[C, R] = CreationsResult[C, ChangingLike[Boolean], R]
 	
 	
 	// IMPLICIT	------------------------------
@@ -47,7 +47,7 @@ object ComponentCreationResult
 		new ComponentCreationResult[Vector[C], Unit](components, ())
 	
 	implicit def componentAndVisibilityPointersToResult[C <: ReachComponentLike]
-	(components: IterableOnce[(C, Option[ChangingLike[Boolean]])]): SwitchableCreations[C, Unit] =
+	(components: IterableOnce[(C, ChangingLike[Boolean])]): SwitchableCreations[C, Unit] =
 		apply(components.iterator.map { case (c, p) => apply(c, p) })
 	
 	implicit def containerVectorToResult[P](containers: Vector[ComponentWrapResult[P, _, _]]): CreationWrapper[Vector[P]] =

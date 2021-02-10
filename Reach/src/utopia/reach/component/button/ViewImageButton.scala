@@ -1,7 +1,7 @@
 package utopia.reach.component.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.genesis.shape.shape2D.Point
 import utopia.reflection.color.{ColorRole, ColorShade, ColorShadeVariant}
 import utopia.reflection.color.ColorShade.Standard
@@ -53,7 +53,7 @@ class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param action Action performed each time this button is triggered
 	  * @return A new button
 	  */
-	def apply(imagesPointer: ChangingLike[ButtonImageSet], enabledPointer: ChangingLike[Boolean] = Fixed(true),
+	def apply(imagesPointer: ChangingLike[ButtonImageSet], enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 			  insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
 			  hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
 			  additionalDrawers: Vector[CustomDrawer] = Vector(),
@@ -94,7 +94,7 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
 	  * @param action Action performed each time this button is triggered
 	  * @return A new button
 	  */
-	def withIcon(iconPointer: ChangingLike[SingleColorIcon], enabledPointer: ChangingLike[Boolean] = Fixed(true),
+	def withIcon(iconPointer: ChangingLike[SingleColorIcon], enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 				 insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
 				 hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
 				 additionalDrawers: Vector[CustomDrawer] = Vector(),
@@ -121,7 +121,7 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
 	  * @return A new button
 	  */
 	def withColouredIcon(iconPointer: ChangingLike[SingleColorIcon], rolePointer: ChangingLike[ColorRole],
-						 enabledPointer: ChangingLike[Boolean] = Fixed(true),
+						 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 						 preferredShade: ColorShade = Standard, insets: StackInsets = StackInsets.zero,
 						 alignment: Alignment = Alignment.Center, hotKeys: Set[Int] = Set(),
 						 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
@@ -141,7 +141,7 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
   * @since 29.10.2020, v2
   */
 class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: ChangingLike[ButtonImageSet],
-					  enabledPointer: ChangingLike[Boolean] = Fixed(true),
+					  enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 					  insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
 					  hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
 					  additionalDrawers: Vector[CustomDrawer] = Vector(),

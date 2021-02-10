@@ -2,7 +2,7 @@ package utopia.reach.component.input
 
 import java.awt.event.KeyEvent
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.genesis.animation.Animation
 import utopia.genesis.color.Color
 import utopia.genesis.event.KeyStateEvent
@@ -70,7 +70,7 @@ class SwitchFactory(parentHierarchy: ComponentHierarchy)
 	def apply(actorHandler: ActorHandler, color: Color,
 			  knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
 			  valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-			  enabledPointer: ChangingLike[Boolean] = Fixed(true),
+			  enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 			  animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
 			  customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector()) =
 		new Switch(parentHierarchy, actorHandler, color, knobDiameter, hoverExtraRadius, knobShadowOffset,
@@ -97,7 +97,7 @@ case class ContextualSwitchFactory[N <: ColorContextLike](factory: SwitchFactory
 	  * @return A new switch
 	  */
 	def apply(valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-			  enabledPointer: ChangingLike[Boolean] = Fixed(true), colorRole: ColorRole = Secondary,
+			  enabledPointer: ChangingLike[Boolean] = AlwaysTrue, colorRole: ColorRole = Secondary,
 			  customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
 			 (implicit animationContext: AnimationContextLike) =
 	{
@@ -118,7 +118,7 @@ case class ContextualSwitchFactory[N <: ColorContextLike](factory: SwitchFactory
 class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, color: Color,
 			 knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
 			 override val valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
-			 enabledPointer: ChangingLike[Boolean] = Fixed(true),
+			 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 			 animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
 			 additionalDrawers: Vector[CustomDrawer] = Vector(),
 			 additionalFocusListeners: Seq[FocusListener] = Vector())

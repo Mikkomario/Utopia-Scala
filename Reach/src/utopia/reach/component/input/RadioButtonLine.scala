@@ -1,7 +1,7 @@
 package utopia.reach.component.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.genesis.event.ConsumeEvent
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
@@ -62,9 +62,9 @@ case class ContextualRadioButtonLineFactory[+N <: TextContextLike](parentHierarc
 	 * @return A new radio button and associated label
 	 */
 	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A, labelText: LocalizedString,
-	             selectedColorRole: ColorRole = Secondary, enabledPointer: ChangingLike[Boolean] = Fixed(true),
-	             backgroundColorPointer: ChangingLike[ComponentColor] = Fixed(context.containerBackground),
-	             customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector()) =
+				 selectedColorRole: ColorRole = Secondary, enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
+				 backgroundColorPointer: ChangingLike[ComponentColor] = Fixed(context.containerBackground),
+				 customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector()) =
 	{
 		Stack(parentHierarchy).withContext(context).build(Mixed)
 			.row(Center, customDrawers = customDrawers, areRelated = true) { factories =>

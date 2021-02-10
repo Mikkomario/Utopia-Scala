@@ -6,8 +6,7 @@ import utopia.flow.util.TimeExtensions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.shape.Axis.X
 import utopia.reach.component.label.TextLabel
-import utopia.reach.component.wrapper.ComponentCreationResult
-import utopia.reach.container.{Framing, ReachCanvas, Stack, ViewStack}
+import utopia.reach.container.{Framing, ReachCanvas, ViewStack}
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.shape.LengthExtensions._
@@ -34,7 +33,7 @@ object ViewStackTest extends App
 				stackF.mapContext { _.forTextComponents.expandingToRight }.build(TextLabel).withFixedStyle(X) { labelFactories =>
 					(1 to 9).map { i =>
 						labelFactories.next().apply(i.toString.noLanguageLocalizationSkipped) ->
-							Some(numberPointer.map { _ >= i })
+							numberPointer.map { _ >= i }
 					}.toVector
 				}
 			}

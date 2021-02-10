@@ -2,7 +2,7 @@ package utopia.reach.component.input
 
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
@@ -103,7 +103,7 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 				 textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 				 leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
 				 rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-				 enabledPointer: ChangingLike[Boolean] = Fixed(true),
+				 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 				 selectionStylePointer: ChangingLike[ColorRole] = Fixed(Secondary),
 				 highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
 				 focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = Field.defaultHintScaleFactor,
@@ -153,7 +153,7 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 				  textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 				  leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
 				  rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-				  enabledPointer: ChangingLike[Boolean] = Fixed(true),
+				  enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 				  selectionStylePointer: ChangingLike[ColorRole] = Fixed(Secondary),
 				  highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
 				  focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = Field.defaultHintScaleFactor,
@@ -196,7 +196,7 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 			   errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
 			   leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
 			   rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-			   enabledPointer: ChangingLike[Boolean] = Fixed(true), initialValue: Option[Int] = None,
+			   enabledPointer: ChangingLike[Boolean] = AlwaysTrue, initialValue: Option[Int] = None,
 			   minValue: Int = Int.MinValue, maxValue: Int = Int.MaxValue,
 			   selectionStylePointer: ChangingLike[ColorRole] = Fixed(Secondary),
 			   highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
@@ -245,7 +245,7 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 				  errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
 				  leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
 				  rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-				  enabledPointer: ChangingLike[Boolean] = Fixed(true), initialValue: Option[Double] = None,
+				  enabledPointer: ChangingLike[Boolean] = AlwaysTrue, initialValue: Option[Double] = None,
 				  proposedNumberOfDecimals: Int = 4, selectionStylePointer: ChangingLike[ColorRole] = Fixed(Secondary),
 				  highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
 				  focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = Field.defaultHintScaleFactor,
@@ -355,7 +355,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 				   textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 				   leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
 				   rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
-				   enabledPointer: ChangingLike[Boolean] = Fixed(true),
+				   enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 				   selectionStylePointer: ChangingLike[ColorRole] = Fixed(Secondary),
 				   highlightStylePointer: ChangingLike[Option[ColorRole]] = Fixed(None),
 				   focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = Field.defaultHintScaleFactor,

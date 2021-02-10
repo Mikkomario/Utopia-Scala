@@ -1,7 +1,7 @@
 package utopia.reach.component.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.genesis.shape.shape2D.Point
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.ButtonContextLike
@@ -64,7 +64,7 @@ class ViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  */
 	def apply[A](contentPointer: ChangingLike[A], imagesPointer: ChangingLike[ButtonImageSet],
 				 colorPointer: ChangingLike[ComponentColor], fontPointer: ChangingLike[Font],
-				 enabledPointer: ChangingLike[Boolean] = Fixed(true),
+				 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 				 imageInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
 				 textInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
 				 commonInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any), borderWidth: Double = 0.0,
@@ -108,7 +108,7 @@ class ViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  */
 	def withStaticText(text: LocalizedString, imagesPointer: ChangingLike[ButtonImageSet],
 					   colorPointer: ChangingLike[ComponentColor], fontPointer: ChangingLike[Font],
-					   enabledPointer: ChangingLike[Boolean] = Fixed(true),
+					   enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 					   imageInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
 					   textInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
 					   commonInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any), borderWidth: Double = 0.0,
@@ -160,7 +160,7 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	def withChangingStyle[A](contentPointer: ChangingLike[A], imagesPointer: ChangingLike[ButtonImageSet],
 							 colorPointer: ChangingLike[ComponentColor] = Fixed(context.buttonColor),
 							 fontPointer: ChangingLike[Font] = Fixed(context.font),
-							 enabledPointer: ChangingLike[Boolean] = Fixed(true),
+							 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 							 imageInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
 							 textInsetsPointer: ChangingLike[StackInsets] = Fixed(context.textInsets / 2),
 							 commonInsetsPointer: ChangingLike[StackInsets] = Fixed(context.textInsets / 2),
@@ -195,7 +195,7 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @return A new button
 	  */
 	def apply[A](contentPointer: ChangingLike[A], imagesPointer: ChangingLike[ButtonImageSet],
-				 enabledPointer: ChangingLike[Boolean] = Fixed(true),
+				 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 				 displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[Int] = Set(),
 				 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 				 additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
@@ -224,7 +224,7 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @return A new button
 	  */
 	def withIcon[A](contentPointer: ChangingLike[A], iconPointer: ChangingLike[SingleColorIcon],
-					enabledPointer: ChangingLike[Boolean] = Fixed(true),
+					enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 					displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[Int] = Set(),
 					hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 					additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
@@ -250,7 +250,7 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @return A new button
 	  */
 	def withStaticText(text: LocalizedString, imagesPointer: ChangingLike[ButtonImageSet],
-					   enabledPointer: ChangingLike[Boolean] = Fixed(true), hotKeys: Set[Int] = Set(),
+					   enabledPointer: ChangingLike[Boolean] = AlwaysTrue, hotKeys: Set[Int] = Set(),
 					   hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 					   additionalFocusListeners: Seq[FocusListener] = Vector(),
 					   useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: => Unit) =
@@ -275,7 +275,7 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @return A new button
 	  */
 	def withStaticTextAndIcon(text: LocalizedString, icon: SingleColorIcon,
-							  enabledPointer: ChangingLike[Boolean] = Fixed(true), hotKeys: Set[Int] = Set(),
+							  enabledPointer: ChangingLike[Boolean] = AlwaysTrue, hotKeys: Set[Int] = Set(),
 							  hotKeyCharacters: Iterable[Char] = Set(),
 							  additionalDrawers: Vector[CustomDrawer] = Vector(),
 							  additionalFocusListeners: Seq[FocusListener] = Vector(),
@@ -293,7 +293,7 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: ChangingLike[A],
 								imagesPointer: ChangingLike[ButtonImageSet], colorPointer: ChangingLike[ComponentColor],
 								fontPointer: ChangingLike[Font],
-								enabledPointer: ChangingLike[Boolean] = Fixed(true),
+								enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 								imageInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
 								textInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
 								commonInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),

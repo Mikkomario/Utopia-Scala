@@ -1,6 +1,6 @@
 package utopia.reach.component.label
 
-import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.event.{AlwaysFalse, ChangingLike, Fixed}
 import utopia.genesis.color.Color
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
@@ -135,7 +135,7 @@ object ContextualViewTextLabelFactory
 		  */
 		def withCustomBackground[A](contentPointer: ChangingLike[A], background: ComponentColor,
 									displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-									isHintPointer: ChangingLike[Boolean] = Fixed(false),
+									isHintPointer: ChangingLike[Boolean] = AlwaysFalse,
 									additionalDrawers: Seq[CustomDrawer] = Vector()) =
 		{
 			f.mapContext { _.inContextWithBackground(background) }(contentPointer, displayFunction, isHintPointer,
@@ -156,7 +156,7 @@ object ContextualViewTextLabelFactory
 		def withBackground[A](contentPointer: ChangingLike[A], role: ColorRole,
 							  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 							  preferredShade: ColorShade = Standard,
-							  isHintPointer: ChangingLike[Boolean] = Fixed(false),
+							  isHintPointer: ChangingLike[Boolean] = AlwaysFalse,
 							  additionalDrawers: Seq[CustomDrawer] = Vector()) =
 			withCustomBackground(contentPointer, f.context.color(role, preferredShade), displayFunction,
 				isHintPointer, additionalDrawers)
@@ -193,7 +193,7 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
 	  * @return A new label
 	  */
 	def apply[A](contentPointer: ChangingLike[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-				 isHintPointer: ChangingLike[Boolean] = Fixed(false),
+				 isHintPointer: ChangingLike[Boolean] = AlwaysFalse,
 				 additionalDrawers: Seq[CustomDrawer] = Vector()) =
 	{
 		val stylePointer = isHintPointer.map { isHint => TextDrawContext(context.font,
@@ -211,7 +211,7 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
 	  * @param additionalDrawers Additional custom drawing (default = empty)
 	  * @return A new label
 	  */
-	def forText(contentPointer: ChangingLike[LocalizedString], isHintPointer: ChangingLike[Boolean] = Fixed(false),
+	def forText(contentPointer: ChangingLike[LocalizedString], isHintPointer: ChangingLike[Boolean] = AlwaysFalse,
 				 additionalDrawers: Seq[CustomDrawer] = Vector()) =
 		apply[LocalizedString](contentPointer, DisplayFunction.identity, isHintPointer, additionalDrawers)
 }

@@ -1,7 +1,7 @@
 package utopia.reach.component.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangeListener, ChangingLike, Fixed}
+import utopia.flow.event.{AlwaysFalse, AlwaysTrue, ChangeListener, ChangingLike, Fixed}
 import utopia.genesis.color.Color
 import utopia.genesis.image.Image
 import utopia.genesis.shape.Axis.X
@@ -305,7 +305,11 @@ class Field[C <: ReachComponentLike with Focusable]
 			}
 		case None => errorMessagePointer.notFixedWhere { _.isEmpty }
 	}
-	private lazy val hintVisibilityPointer = actualHintTextPointer.map { _.map { _.nonEmpty } }
+	private lazy val hintVisibilityPointer = actualHintTextPointer match
+	{
+		case Some(hintTextPointer) => hintTextPointer.map { _.nonEmpty }
+		case None => AlwaysFalse
+	}
 	
 	// A pointer to whether this field currently highlights an error
 	private val errorStatePointer = errorMessagePointer.map { _.nonEmpty }
@@ -396,7 +400,7 @@ class Field[C <: ReachComponentLike with Focusable]
 			// Case: Both main and hint area used => uses a view stack
 			case Some(openHintArea) =>
 				val framedMainArea = Open.using(Framing) { makeContentFraming(_, openMainArea) }
-				ViewStack(parentHierarchy).withFixedStyle(Vector(framedMainArea.withResult(None), openHintArea),
+				ViewStack(parentHierarchy).withFixedStyle(Vector(framedMainArea.withResult(AlwaysTrue), openHintArea),
 					margin = StackLength.fixedZero).parent
 			// Case: Only main area used => uses framing only
 			case None => makeContentFraming(Framing(parentHierarchy), openMainArea).parent
@@ -444,7 +448,7 @@ class Field[C <: ReachComponentLike with Focusable]
 				Open.using(ViewStack) { stackF =>
 					stackF.withFixedStyle(Vector(
 						makeOpenViewImageLabel(leftIconPointer, Direction2D.Right),
-						content.withResult(None),
+						content.withResult(AlwaysTrue),
 						makeOpenViewImageLabel(rightIconPointer, Direction2D.Left)), X, Center,
 						StackLength.fixedZero)
 				}
@@ -485,7 +489,7 @@ class Field[C <: ReachComponentLike with Focusable]
 	}
 	
 	private def makeOpenViewImageLabel(pointer: ChangingLike[Option[SingleColorIcon]], noMarginSide: Direction2D) =
-		Open { makeViewImageLabel(_, pointer, noMarginSide) }.withResult(Some(pointer.map { _.isDefined }))
+		Open { makeViewImageLabel(_, pointer, noMarginSide) }.withResult(pointer.map { _.isDefined })
 	
 	private def makeImageLabel(hierarchy: ComponentHierarchy, icon: SingleColorIcon, noMarginSide: Direction2D) =
 	{
@@ -542,8 +546,8 @@ class Field[C <: ReachComponentLike with Focusable]
 					textStylePointer, Vector(namePromptDrawer) ++ promptDrawer, innerBackgroundPointer))
 				
 				// Displays one or both of the items
-				Vector(ComponentCreationResult(nameLabel, Some(nameVisibilityPointer)),
-					ComponentCreationResult(wrappedField, None)) -> wrappedField
+				Vector(ComponentCreationResult(nameLabel,nameVisibilityPointer),
+					ComponentCreationResult(wrappedField, AlwaysTrue)) -> wrappedField
 			}
 		}
 	}
@@ -572,7 +576,7 @@ class Field[C <: ReachComponentLike with Focusable]
 	}
 	
 	// Returns the generated open component (if any), along with its visibility pointer (if applicable)
-	private def makeHintArea(wrappedField: C): Option[OpenComponent[ReachComponentLike, Option[ChangingLike[Boolean]]]] =
+	private def makeHintArea(wrappedField: C): Option[OpenComponent[ReachComponentLike, ChangingLike[Boolean]]] =
 	{
 		// In some cases, displays both message field and extra right side label
 		// In other cases only the message field (which is hidden while empty)
@@ -587,12 +591,12 @@ class Field[C <: ReachComponentLike with Focusable]
 						val cap = textInsets.horizontal / 2 + (if (fillBackground) 0 else defaultBorderWidth)
 						val hintLabel = Open.using(ViewTextLabel) { makeHintLabel(_, hintTextPointer) }
 						val stack = Open.using(ViewStack) { _.withFixedStyle(
-							Vector(hintLabel.withResult(hintVisibilityPointer), rightComponent.withResult(None)), X,
+							Vector(hintLabel.withResult(hintVisibilityPointer), rightComponent.withResult(AlwaysTrue)), X,
 							margin = StackLength.any, cap = cap).parent
 						}
-						Some(stack.withResult(None))
+						Some(stack.withResult(AlwaysTrue))
 					// Case: Only the right hint element should be displayed
-					case None => Some(rightComponent.withResult(None))
+					case None => Some(rightComponent.withResult(AlwaysTrue))
 				}
 			case None =>
 				// Case: No additional hint should be displayed => May display a hint label still (occasionally)

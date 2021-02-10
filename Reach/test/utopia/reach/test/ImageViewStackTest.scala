@@ -48,9 +48,9 @@ object ImageViewStackTest extends App
 			.withFixedStyle(X, Center, margins.verySmall.downscaling.withLowPriority,
 				customDrawers = Vector(BackgroundDrawer(Color.magenta))) { factories =>
 				Vector(
-					factories.next()(ImageLabel).apply(icon1, additionalCustomDrawers = Vector(BackgroundDrawer(Color.green))) -> Some(pointer1),
+					factories.next()(ImageLabel).apply(icon1, additionalCustomDrawers = Vector(BackgroundDrawer(Color.green))) -> pointer1,
 					factories.next()(ViewImageLabel).apply(pointer3.map { if (_) icon2 else icon3 },
-						additionalCustomDrawers = Vector(BackgroundDrawer(Color.cyan))) -> Some(pointer2)
+						additionalCustomDrawers = Vector(BackgroundDrawer(Color.cyan))) -> pointer2
 				)
 			}
 	}

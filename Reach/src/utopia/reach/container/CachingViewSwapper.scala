@@ -180,7 +180,7 @@ class CachingViewSwapper[A, +C <: ReachComponentLike, +P <: ChangingLike[A]]
 		// Creates the item in open form first
 		val open = makeContent(item)
 		// Attaches this item based on the selected value
-		open.attachTo(this, Some(valuePointer.map { _ == item })).child
+		open.attachTo(this, valuePointer.map { _ == item }).child
 	}
 	
 	/**

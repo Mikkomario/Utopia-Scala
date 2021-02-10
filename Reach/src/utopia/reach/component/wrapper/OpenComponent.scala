@@ -1,7 +1,7 @@
 package utopia.reach.component.wrapper
 
 import scala.language.implicitConversions
-import utopia.flow.event.ChangingLike
+import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.genesis.color.Color
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
@@ -325,13 +325,13 @@ class OpenComponent[+C, +R](val creation: ComponentCreationResult[C, R], val hie
 	/**
 	  * Attaches this component to a parent container
 	  * @param parent A parent container
-	  * @param switchPointer A pointer to the changing attachment status (optional)
+	  * @param switchPointer A pointer to the changing attachment status (default = always attached)
 	  * @tparam P Type of parent container
 	  * @throws IllegalStateException if this component was already attached to a parent container
 	  * @return A result with the wrapping parent container, the wrapped component and component creation result
 	  */
 	@throws[IllegalStateException]
-	def attachTo[P <: ReachComponentLike](parent: P, switchPointer: Option[ChangingLike[Boolean]] = None) =
+	def attachTo[P <: ReachComponentLike](parent: P, switchPointer: ChangingLike[Boolean] = AlwaysTrue) =
 	{
 		hierarchy.complete(parent, switchPointer)
 		creation.in(parent)

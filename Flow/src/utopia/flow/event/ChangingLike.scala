@@ -7,6 +7,80 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.concurrent.duration.Duration
 import scala.util.Try
 
+object ChangingLike
+{
+	// EXTENSIONS	-----------------
+	
+	implicit class ChangingFlag(val c: ChangingLike[Boolean]) extends AnyVal
+	{
+		// COMPUTED	-----------------
+		
+		/**
+		  * @return Whether this flag will always remain true
+		  */
+		def isAlwaysTrue = c.existsFixed { b => b }
+		
+		/**
+		  * @return Whether this flag will always remain false
+		  */
+		def isAlwaysFalse = c.existsFixed { !_ }
+		
+		/**
+		  * @return A reversed copy of this flag
+		  */
+		def unary_! = c.fixedValue match
+		{
+			case Some(fixed) => if (fixed) AlwaysFalse else AlwaysTrue
+			case None => c.map { !_ }
+		}
+		
+		
+		// OTHER	-----------------
+		
+		/**
+		  * @param other Another flag
+		  * @return A flag that contains true when both of these flags contain true
+		  */
+		def &&(other: ChangingLike[Boolean]) =
+		{
+			// If one of the pointers is always false, returns always false
+			// If one of the pointers is always true, returns the other pointer
+			// If both are changing, returns a combination of these pointers
+			c.fixedValue match
+			{
+				case Some(fixed) => if (fixed) other else AlwaysFalse
+				case None =>
+					other.fixedValue match
+					{
+						case Some(fixed) => if (fixed) c else AlwaysFalse
+						case None => c.mergeWith(other) { _ && _ }
+					}
+			}
+		}
+		
+		/**
+		  * @param other Another flag
+		  * @return A flag that contains true when either one of these flags contains true
+		  */
+		def ||(other: ChangingLike[Boolean]) =
+		{
+			// If one of the pointers is always false, returns the other pointer
+			// If one of the pointers is always true, returns always true
+			// If both are changing, returns a combination of these pointers
+			c.fixedValue match
+			{
+				case Some(fixed) => if (fixed) AlwaysTrue else other
+				case None =>
+					other.fixedValue match
+					{
+						case Some(fixed) => if (fixed) AlwaysTrue else c
+						case None => c.mergeWith(other) { _ || _ }
+					}
+			}
+		}
+	}
+}
+
 /**
   * A common trait for items which have the potential of changing their contents and generating change events, although
   * they may not utilize it.
@@ -110,6 +184,11 @@ trait ChangingLike[+A] extends Viewable[A]
 	  * @return Whether this item will <b>never</b> change its value
 	  */
 	def isFixed: Boolean = !isChanging
+	
+	/**
+	  * @return The current fixed value of this pointer (will continue to remain the same)
+	  */
+	def fixedValue = if (isChanging) None else Some(value)
 	
 	
 	// OTHER	--------------------

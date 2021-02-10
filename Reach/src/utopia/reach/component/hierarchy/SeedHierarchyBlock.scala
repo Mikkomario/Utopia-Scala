@@ -1,7 +1,7 @@
 package utopia.reach.component.hierarchy
 
 import utopia.flow.async.DelayedView
-import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike, LazyMergeMirror, LazyMirror, MergeMirror, Mirror, TripleMergeMirror}
+import utopia.flow.event.{AlwaysTrue, ChangeEvent, ChangeListener, ChangingLike, Fixed, LazyMergeMirror, LazyMirror, MergeMirror, Mirror, TripleMergeMirror}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
 
@@ -30,7 +30,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	
 	override def isThisLevelLinked = LinkManager.isThisLevelLinked
 	
-	override def complete(parent: ReachComponentLike): Unit = complete(parent, None)
+	override def complete(parent: ReachComponentLike): Unit = complete(parent, AlwaysTrue)
 	
 	
 	// OTHER	------------------------------
@@ -38,12 +38,11 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	/**
 	  * Completes this component hierarchy by attaching it to a parent component
 	  * @param parent Parent component to connect to
-	  * @param switchConditionPointer A pointer that determines whether this connection is active (optional). None if
-	  *                               this connection should be static (always active)
+	  * @param switchConditionPointer A pointer that determines whether this connection is active. Default = always active.
 	  * @throws IllegalStateException If this hierarchy was already completed (These hierarchies mustn't be completed twice)
 	  */
 	@throws[IllegalStateException]("If already completed previously")
-	def complete(parent: ReachComponentLike, switchConditionPointer: Option[ChangingLike[Boolean]]) =
+	def complete(parent: ReachComponentLike, switchConditionPointer: ChangingLike[Boolean]) =
 	{
 		foundParent match
 		{
@@ -65,23 +64,12 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	}
 	
 	/**
-	  * Completes this component hierarchy by attaching it to a parent component
-	  * @param parent Parent component to connect to
-	  * @param switchConditionPointer A pointer that determines whether this connection is active (optional). None if
-	  *                               this connection should be static (always active)
-	  * @throws IllegalStateException If this hierarchy was already completed (These hierarchies mustn't be completed twice)
-	  */
-	@throws[IllegalStateException]("If already completed previously")
-	def complete(parent: ReachComponentLike, switchConditionPointer: ChangingLike[Boolean]): Unit =
-		complete(parent, Some(switchConditionPointer))
-	
-	/**
 	  * Completes this component hierarchy by attaching it directly to the canvas at the top
-	  * @param switchConditionPointer An additional link condition pointer (optional)
+	  * @param switchConditionPointer An additional link condition pointer. Default = always linked.
 	  * @throws IllegalStateException If this hierarchy was already completed (These hierarchies mustn't be completed twice)
 	  */
 	@throws[IllegalStateException]("If already completed previously")
-	def lockToTop(switchConditionPointer: Option[ChangingLike[Boolean]] = None) = foundParent match
+	def lockToTop(switchConditionPointer: ChangingLike[Boolean] = AlwaysTrue) = foundParent match
 	{
 		case Some(existingParent) =>
 			existingParent match
@@ -166,27 +154,12 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		
 		// OTHER	--------------------------
 		
-		// TODO: Handle fixed pointers separately
 		def onParentFound(defaultPointer: ChangingLike[Boolean],
-						  additionalConditionPointer: Option[ChangingLike[Boolean]]) =
-		{
-			val finalPointer = additionalConditionPointer match
-			{
-				case Some(additional) => defaultPointer.mergeWith(additional) { _ && _ }
-				case None => defaultPointer
-			}
-			specifyFinalPointer(finalPointer)
-		}
+						  additionalConditionPointer: ChangingLike[Boolean]) =
+			specifyFinalPointer(defaultPointer && additionalConditionPointer)
 		
-		def onLinkedToCanvas(additionalConditionPointer: Option[ChangingLike[Boolean]]) =
-		{
-			val finalPointer = additionalConditionPointer match
-			{
-				case Some(additional) => top.attachmentPointer.mergeWith(additional) { _ && _ }
-				case None => top.attachmentPointer
-			}
-			specifyFinalPointer(finalPointer)
-		}
+		def onLinkedToCanvas(additionalConditionPointer: ChangingLike[Boolean]) =
+			specifyFinalPointer(top.attachmentPointer && additionalConditionPointer)
 		
 		private def specifyFinalPointer(pointer: ChangingLike[Boolean]) =
 		{

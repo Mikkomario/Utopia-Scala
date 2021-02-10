@@ -1,7 +1,7 @@
 package utopia.reach.component.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.genesis.color.ColorContrastStandard.Minimum
 import utopia.genesis.shape.shape2D.{Bounds, Circle, Point}
 import utopia.genesis.util.Drawer
@@ -55,7 +55,7 @@ class RadioButtonFactory(parentHierarchy: ComponentHierarchy)
 	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A,
 	             backgroundColorPointer: ChangingLike[ComponentColor], diameter: Double,
 	             hoverExtraRadius: Double, ringWidth: Double = 1.0, selectedColorRole: ColorRole = ColorRole.Secondary,
-	             enabledPointer: ChangingLike[Boolean] = Fixed(true),
+	             enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 	             customDrawers: Vector[CustomDrawer] = Vector(),
 	             focusListeners: Seq[FocusListener] = Vector())(implicit colorScheme: ColorScheme) =
 		new RadioButton[A](parentHierarchy, selectedValuePointer, value, backgroundColorPointer, diameter,
@@ -93,7 +93,7 @@ case class ContextualRadioButtonFactory[+N <: ColorContextLike](factory: RadioBu
 	 */
 	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A,
 	             selectedColorRole: ColorRole = ColorRole.Secondary,
-	             enabledPointer: ChangingLike[Boolean] = Fixed(true),
+	             enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 	             backgroundColorPointer: ChangingLike[ComponentColor] = Fixed(context.containerBackground),
 	             customDrawers: Vector[CustomDrawer] = Vector(),
 	             focusListeners: Seq[FocusListener] = Vector()) =
@@ -111,11 +111,11 @@ case class ContextualRadioButtonFactory[+N <: ColorContextLike](factory: RadioBu
  * @since 30.1.2021, v1
  */
 class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedValuePointer: PointerWithEvents[A],
-                     representing: A, backgroundColorPointer: ChangingLike[ComponentColor],
-                     diameter: Double, hoverExtraRadius: Double, ringWidth: Double = 1.0, emptyRingWidth: Double = 1.25,
-                     selectedColorRole: ColorRole = Secondary, enabledPointer: ChangingLike[Boolean] = Fixed(true),
-                     additionalDrawers: Vector[CustomDrawer] = Vector(),
-                     additionalFocusListeners: Seq[FocusListener] = Vector())
+					 representing: A, backgroundColorPointer: ChangingLike[ComponentColor],
+					 diameter: Double, hoverExtraRadius: Double, ringWidth: Double = 1.0, emptyRingWidth: Double = 1.25,
+					 selectedColorRole: ColorRole = Secondary, enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
+					 additionalDrawers: Vector[CustomDrawer] = Vector(),
+					 additionalFocusListeners: Seq[FocusListener] = Vector())
                     (implicit colorScheme: ColorScheme)
 	extends CustomDrawReachComponent with ButtonLike
 {

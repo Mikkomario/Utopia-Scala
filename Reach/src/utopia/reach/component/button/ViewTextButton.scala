@@ -1,7 +1,7 @@
 package utopia.reach.component.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.Point
 import utopia.reflection.color.ColorShade.Standard
@@ -65,7 +65,7 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new button
 	  */
 	def apply[A](contentPointer: ChangingLike[A], font: Font, colorPointer: ChangingLike[ComponentColor],
-				 enabledPointer: ChangingLike[Boolean] = Fixed(true),
+				 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 				 displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
 				 alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
 				 betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
@@ -100,7 +100,7 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new button
 	  */
 	def withStaticText(text: LocalizedString, font: Font, colorPointer: ChangingLike[ComponentColor],
-					   enabledPointer: ChangingLike[Boolean] = Fixed(true), borderWidth: Double = 0.0,
+					   enabledPointer: ChangingLike[Boolean] = AlwaysTrue, borderWidth: Double = 0.0,
 					   alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
 					   betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
 					   hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
@@ -132,7 +132,7 @@ object ContextualViewTextButtonFactory
 		  * @tparam A Type of displayed content
 		  * @return A new button
 		  */
-		def apply[A](contentPointer: ChangingLike[A], enabledPointer: ChangingLike[Boolean] = Fixed(true),
+		def apply[A](contentPointer: ChangingLike[A], enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 					 displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[Int] = Set(),
 					 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
 					 additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
@@ -158,7 +158,7 @@ object ContextualViewTextButtonFactory
 		  * @param action The action performed when this button is pressed
 		  * @return A new button
 		  */
-		def withStaticText(text: LocalizedString, enabledPointer: ChangingLike[Boolean] = Fixed(true),
+		def withStaticText(text: LocalizedString, enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 						   hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
 						   additionalDrawers: Seq[CustomDrawer] = Vector(),
 						   additionalFocusListeners: Seq[FocusListener] = Vector())(action: => Unit) =
@@ -197,7 +197,7 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
 	  * @return A new button
 	  */
 	def withChangingColor[A](contentPointer: ChangingLike[A], colorPointer: ChangingLike[ComponentColor],
-							 enabledPointer: ChangingLike[Boolean] = Fixed(true),
+							 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 							 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 							 borderWidth: Double = context.margins.verySmall, hotKeys: Set[Int] = Set(),
 							 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
@@ -227,7 +227,7 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
 	  * @return A new button
 	  */
 	def withChangingRole[A](contentPointer: ChangingLike[A], rolePointer: ChangingLike[ColorRole],
-							enabledPointer: ChangingLike[Boolean] = Fixed(true),
+							enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 							displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 							preferredShade: ColorShade = Standard, borderWidth: Double = context.margins.verySmall,
 							hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
@@ -245,7 +245,7 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
   */
 class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: ChangingLike[A], font: Font,
 						colorPointer: ChangingLike[ComponentColor],
-						enabledPointer: ChangingLike[Boolean] = Fixed(true),
+						enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 						displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
 						alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
 						betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),

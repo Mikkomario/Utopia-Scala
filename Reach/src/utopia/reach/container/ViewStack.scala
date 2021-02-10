@@ -47,7 +47,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 	
 	/**
 	  * Creates a new stack
-	  * @param content Content placed in the stack. Each component needs to have an optional attachment pointer
+	  * @param content Content placed in the stack. Each component needs to have an attachment pointer
 	  *                as a creation result
 	  * @param directionPointer A pointer determining the direction of this stack (default = always vertical (Y))
 	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
@@ -57,7 +57,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam C Type of components in this stack
 	  * @return A new stack
 	  */
-	def apply[C <: ReachComponentLike](content: Vector[OpenComponent[C, Option[ChangingLike[Boolean]]]],
+	def apply[C <: ReachComponentLike](content: Vector[OpenComponent[C, ChangingLike[Boolean]]],
 									   directionPointer: ChangingLike[Axis2D] = Fixed(Y),
 									   layoutPointer: ChangingLike[StackLayout] = Fixed(Fit),
 									   marginPointer: ChangingLike[StackLength] = Fixed(StackLength.any),
@@ -72,7 +72,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 	
 	/**
 	  * Creates a new stack with immutable style
-	  * @param content Content placed in the stack. Each component needs to have an optional attachment pointer
+	  * @param content Content placed in the stack. Each component needs to have an attachment pointer
 	  *                as a creation result
 	  * @param direction the direction of this stack (default = vertical = Y)
 	  * @param layout this stack's layout (default = Fit)
@@ -82,7 +82,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam C Type of components in this stack
 	  * @return A new stack
 	  */
-	def withFixedStyle[C <: ReachComponentLike](content: Vector[OpenComponent[C, Option[ChangingLike[Boolean]]]],
+	def withFixedStyle[C <: ReachComponentLike](content: Vector[OpenComponent[C, ChangingLike[Boolean]]],
 												direction: Axis2D = Y, layout: StackLayout = Fit,
 												margin: StackLength = StackLength.any,
 												cap: StackLength = StackLength.fixedZero,
@@ -93,7 +93,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 	/**
 	  * Creates a new stack with content aligned with that of some other container
 	  * @param group A segmented group that defines content alignment
-	  * @param content Content to place on this stack. Each component is paired with an optional pointer that
+	  * @param content Content to place on this stack. Each component is paired with a pointer that
 	  *                determines whether it should be connected to this stack.
 	  *                None is considered to always be connected.
 	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
@@ -102,7 +102,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 	  * @param customDrawers Custom drawers applied to this stack (default = empty)
 	  * @return A new stack
 	  */
-	def segmented(group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, Option[ChangingLike[Boolean]]]],
+	def segmented(group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, ChangingLike[Boolean]]],
 				  layoutPointer: ChangingLike[StackLayout] = Fixed(Fit),
 				  marginPointer: ChangingLike[StackLength] = Fixed(StackLength.any),
 				  capPointer: ChangingLike[StackLength] = Fixed(StackLength.fixedZero),
@@ -127,7 +127,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new stack
 	  */
 	def segmentedWithFixedStyle(group: SegmentGroup,
-								content: Vector[OpenComponent[ReachComponentLike, Option[ChangingLike[Boolean]]]],
+								content: Vector[OpenComponent[ReachComponentLike, ChangingLike[Boolean]]],
 								layout: StackLayout = Fit, margin: StackLength = StackLength.any,
 								cap: StackLength = StackLength.fixedZero,
 								customDrawers: Vector[CustomDrawer] = Vector()) =
@@ -166,7 +166,7 @@ case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewSt
 	
 	/**
 	  * Creates a new stack
-	  * @param content Content placed in the stack. Each component needs to have an optional attachment pointer
+	  * @param content Content placed in the stack. Each component needs to have an attachment pointer
 	  *                as a creation result
 	  * @param directionPointer A pointer determining the direction of this stack (default = always vertical (Y))
 	  * @param layoutPointer A pointer to this stack's layout (default = always Fit)
@@ -176,7 +176,7 @@ case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewSt
 	  * @tparam C Type of components in this stack
 	  * @return A new stack
 	  */
-	def apply[C <: ReachComponentLike](content: Vector[OpenComponent[C, Option[ChangingLike[Boolean]]]],
+	def apply[C <: ReachComponentLike](content: Vector[OpenComponent[C, ChangingLike[Boolean]]],
 									   directionPointer: ChangingLike[Axis2D] = Fixed(Y),
 									   layoutPointer: ChangingLike[StackLayout] = Fixed(Fit),
 									   marginPointer: ChangingLike[StackLength] = Fixed(context.defaultStackMargin),
@@ -197,7 +197,7 @@ case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewSt
 	  * @tparam C Type of components in this stack
 	  * @return A new stack
 	  */
-	def withChangingDirection[C <: ReachComponentLike](content: Vector[OpenComponent[C, Option[ChangingLike[Boolean]]]],
+	def withChangingDirection[C <: ReachComponentLike](content: Vector[OpenComponent[C, ChangingLike[Boolean]]],
 													   directionPointer: ChangingLike[Axis2D], layout: StackLayout = Fit,
 													   cap: StackLength = StackLength.fixedZero,
 													   customDrawers: Vector[CustomDrawer] = Vector(),
@@ -219,7 +219,7 @@ case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewSt
 	  * @tparam C Type of components in this stack
 	  * @return A new stack
 	  */
-	def withFixedStyle[C <: ReachComponentLike](content: Vector[OpenComponent[C, Option[ChangingLike[Boolean]]]],
+	def withFixedStyle[C <: ReachComponentLike](content: Vector[OpenComponent[C, ChangingLike[Boolean]]],
 												direction: Axis2D = Y, layout: StackLayout = Fit,
 												cap: StackLength = StackLength.fixedZero,
 												customDrawers: Vector[CustomDrawer] = Vector(),
@@ -237,7 +237,7 @@ case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewSt
 	  * @tparam C Type of components in this stack
 	  * @return A new stack
 	  */
-	def withoutMargin[C <: ReachComponentLike](content: Vector[OpenComponent[C, Option[ChangingLike[Boolean]]]],
+	def withoutMargin[C <: ReachComponentLike](content: Vector[OpenComponent[C, ChangingLike[Boolean]]],
 											   direction: Axis2D = Y, layout: StackLayout = Fit,
 											   cap: StackLength = StackLength.fixedZero,
 											   customDrawers: Vector[CustomDrawer] = Vector()) =
@@ -256,7 +256,7 @@ case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewSt
 	  * @param customDrawers Custom drawers applied to this stack (default = empty)
 	  * @return A new stack
 	  */
-	def segmented(group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, Option[ChangingLike[Boolean]]]],
+	def segmented(group: SegmentGroup, content: Seq[OpenComponent[ReachComponentLike, ChangingLike[Boolean]]],
 				  layoutPointer: ChangingLike[StackLayout] = Fixed(Fit),
 				  marginPointer: ChangingLike[StackLength] = Fixed(context.defaultStackMargin),
 				  capPointer: ChangingLike[StackLength] = Fixed(StackLength.fixedZero),
@@ -282,7 +282,7 @@ case class ContextualViewStackFactory[N <: BaseContextLike](stackFactory: ViewSt
 	  * @return A new stack
 	  */
 	def segmentedWithFixedStyle(group: SegmentGroup,
-								content: Vector[OpenComponent[ReachComponentLike, Option[ChangingLike[Boolean]]]],
+								content: Vector[OpenComponent[ReachComponentLike, ChangingLike[Boolean]]],
 								layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 								customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false) =
 		stackFactory.segmentedWithFixedStyle(group, content, layout,
@@ -546,7 +546,7 @@ class ContextualViewStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualC
   * @since 14.11.2020, v2
   */
 class ViewStack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
-										 componentData: Vector[(C, Option[ChangingLike[Boolean]])],
+										 componentData: Vector[(C, ChangingLike[Boolean])],
 										 directionPointer: ChangingLike[Axis2D] = Fixed(Y),
 										 layoutPointer: ChangingLike[StackLayout] = Fixed(Fit),
 										 marginPointer: ChangingLike[StackLength] = Fixed(StackLength.any),
@@ -558,10 +558,7 @@ class ViewStack[C <: ReachComponentLike](override val parentHierarchy: Component
 	
 	private val activeComponentsCache = ResettableLazy {
 		componentData.flatMap { case (component, pointer) =>
-			if (pointer.forall { _.value })
-				Some(component)
-			else
-				None
+			if (pointer.value) Some(component) else None
 		}
 	}
 	
@@ -575,7 +572,7 @@ class ViewStack[C <: ReachComponentLike](override val parentHierarchy: Component
 	// INITIAL CODE	-------------------------------
 	
 	// Updates components list when component pointers get updated
-	componentData.flatMap { _._2 }.foreach { _.addListener(resetActiveComponentsOnChange) }
+	componentData.map { _._2 }.foreach { _.addListener(resetActiveComponentsOnChange) }
 	// Revalidates this component on other layout changes
 	directionPointer.addListener(revalidateOnChange)
 	layoutPointer.addListener(revalidateOnChange)

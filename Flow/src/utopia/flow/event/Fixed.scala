@@ -44,5 +44,12 @@ case class Fixed[+A](override val value: A) extends ChangingLike[A]
 	override def delayedBy(threshold: Duration)(implicit exc: ExecutionContext) = this
 }
 
+/**
+  * A pointer that always contains 'true'
+  */
+object AlwaysTrue extends Fixed(true)
 
-
+/**
+  * A pointer that always contains 'false'
+  */
+object AlwaysFalse extends Fixed(false)

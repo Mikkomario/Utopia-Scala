@@ -1,16 +1,13 @@
 package utopia.reach.container
 
-import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.ChangeFuture
 import utopia.flow.datastructure.mutable.ResettableLazy
-import utopia.flow.event.{ChangeListener, Changing, ChangingLike, Fixed}
+import utopia.flow.event.{AlwaysFalse, ChangeListener, Changing, ChangingLike}
 import utopia.flow.util.CollectionExtensions._
-import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.OpenComponent
 
-import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.concurrent.duration.Duration
+import scala.concurrent.{ExecutionContext, Promise}
 
 /**
   * A simulated window within a reach canvas
@@ -41,7 +38,7 @@ class ReachWindow(content: OpenComponent[ReachComponentLike, _], visibilityPoint
 		if (!open)
 		{
 			open = true
-			content.hierarchy.lockToTop(Some(WindowConnectionState))
+			content.hierarchy.lockToTop(WindowConnectionState)
 			// TODO: Handle focus acquisition
 		}
 	}
@@ -60,7 +57,7 @@ class ReachWindow(content: OpenComponent[ReachComponentLike, _], visibilityPoint
 					if (visibilityPointer.value)
 						ChangeFuture.wrap(closeFuture.map { _ => false }, true)
 					else
-						Fixed(false)
+						AlwaysFalse
 				)
 			else
 				Left(ResettableLazy { !closeFuture.isCompleted && visibilityPointer.value })
