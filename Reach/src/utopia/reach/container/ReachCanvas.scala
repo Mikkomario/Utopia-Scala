@@ -8,7 +8,7 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
-import utopia.genesis.shape.shape2D.{Bounds, Point, Vector2D}
+import utopia.genesis.shape.shape2D.{Bounds, Point}
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
@@ -27,7 +27,7 @@ import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.Never
 import utopia.reach.cursor.{CursorSet, ReachCursorManager}
 import utopia.reach.focus.ReachFocusManager
-import utopia.reach.util.{Priority, RealTimeReachPaintManager}
+import utopia.reach.util.RealTimeReachPaintManager
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackSize
@@ -36,7 +36,6 @@ import java.awt.event.KeyEvent
 import java.awt.{AWTKeyStroke, Container, Graphics, KeyboardFocusManager}
 import java.util
 import javax.swing.{JComponent, JPanel}
-import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
 object ReachCanvas
@@ -71,14 +70,15 @@ object ReachCanvas
 /**
   * The component that connects a reach component hierarchy to the swing component hierarchy
   * @author Mikko Hilpinen
-  * @since 4.10.2020, v2
+  * @since 4.10.2020, v1
   */
 // TODO: Stack hierarchy attachment link should be considered broken while this component is invisible or otherwise not shown
 class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Option[CursorSet],
 						  disableDoubleBufferingDuringDraw: Boolean = true, syncAfterDraw: Boolean = true,
 						  focusEnabled: Boolean = true)
 						 (implicit exc: ExecutionContext)
-	extends JWrapper with Stackable with AwtContainerRelated with SwingComponentRelated with CustomDrawable
+	extends ReachCanvasLike with JWrapper with Stackable with AwtContainerRelated with SwingComponentRelated
+		with CustomDrawable
 {
 	// ATTRIBUTES	---------------------------
 	
@@ -87,22 +87,15 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	
 	private var layoutUpdateQueue = VolatileList[Seq[ReachComponentLike]]()
 	private var updateFinishedQueue = VolatileList[() => Unit]()
-	// private var buffer = Image.empty
 	
 	private val panel = new CustomDrawPanel()
-	// private val repaintNeed = VolatileOption[RepaintNeed](Full)
 	
-	/**
-	  * Object that manages focus between the components in this canvas element
-	  */
-	val focusManager = new ReachFocusManager(panel)
+	override val focusManager = new ReachFocusManager(panel)
 	// TODO: Allow custom repainters
 	private val painterPromise = contentFuture.map { c => RealTimeReachPaintManager(c,
 		disableDoubleBuffering = disableDoubleBufferingDuringDraw, syncAfterDraw = syncAfterDraw) }
-	/**
-	  * Object that manages cursor display inside this canvas. None if cursor state is not managed in this canvas.
-	  */
-	val cursorManager = cursors.map { new ReachCursorManager(_) }
+	
+	override val cursorManager = cursors.map { new ReachCursorManager(_) }
 	private val cursorPainter = cursorManager.map { new CursorSwapper(_) }
 	
 	private val _attachmentPointer = new PointerWithEvents(false)
@@ -114,15 +107,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		// When attached to the stack hierarchy, makes sure to update immediate content layout and repaint this component
 		if (event.newValue)
 		{
-			// repaintNeed.setOne(Full)
-			currentContent.foreach { content =>
-				val branches = content.toTree.allBranches
-				if (branches.isEmpty)
-					layoutUpdateQueue :+= Vector(content)
-				else
-					layoutUpdateQueue ++= branches.map { content +: _ }
-				updateLayout()
-			}
+			layoutUpdateQueue.clear()
+			updateWholeLayout(size)
 		}
 		fireStackHierarchyChangeEvent(event.newValue)
 	}
@@ -141,17 +127,12 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	  */
 	def attachmentPointer = _attachmentPointer.view
 	
-	/**
-	  * @return Whether this component uses custom cursor painting features
-	  */
-	def isManagingCursor = cursorManager.nonEmpty
-	
-	private def currentContent = contentFuture.current.flatMap { _.toOption }
-	
-	private def currentPainter = painterPromise.current.flatMap { _.toOption }
-	
 	
 	// IMPLEMENTED	---------------------------
+	
+	override protected def currentContent = contentFuture.current.flatMap { _.toOption }
+	
+	override protected def currentPainter = painterPromise.current.flatMap { _.toOption }
 	
 	override def isAttachedToMainHierarchy = _attachmentPointer.value
 	
@@ -160,30 +141,10 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	
 	override def component: JComponent with Container = panel
 	
-	override def updateLayout() =
+	override def updateLayout(): Unit =
 	{
-		// Updates content size
-		val contentSizeChanged = currentContent match
-		{
-			case Some(content) =>
-				val requiresSizeUpdate = content.size != size
-				if (requiresSizeUpdate)
-					content.size = size
-				requiresSizeUpdate
-			case None => false
-		}
-		
-		// Updates content layout
-		val layoutUpdateQueues = layoutUpdateQueue.popAll().toSet.map { q: Seq[ReachComponentLike] => q -> contentSizeChanged }
-		val sizeChangeTargets: Set[ReachComponentLike] =
-		{
-			if (contentSizeChanged)
-				currentContent.toSet
-			else
-				Set()
-		}
-		if (layoutUpdateQueues.nonEmpty)
-			updateLayoutFor(layoutUpdateQueues, sizeChangeTargets).foreach { repaint(_) }
+		// Updates content size and layout
+		updateLayout(layoutUpdateQueue.popAll().toSet, size)
 		
 		// Performs the queued tasks
 		updateFinishedQueue.popAll().foreach { _() }
@@ -201,7 +162,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	
 	override def drawBounds = Bounds(Point.origin, size)
 	
-	override def repaint() = currentPainter.foreach { _.repaintAll() }
+	override def repaint() = super[ReachCanvasLike].repaint()
 	
 	override def distributeMouseButtonEvent(event: MouseButtonStateEvent) =
 	{
@@ -234,18 +195,15 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		}
 	}
 	
-	// OTHER	------------------------------
-	
 	/**
 	  * Revalidates this component, queueing some component layout updates to be done afterwards
 	  * @param updateComponents Sequence of components from hierarchy top downwards that require a layout update once
 	  *                         this canvas has been revalidated
 	  */
-	def revalidate(updateComponents: Seq[ReachComponentLike]): Unit =
+	override def revalidate(updateComponents: Seq[ReachComponentLike]): Unit =
 	{
-		val trueQueue = updateComponents.dropWhile { _ == this }
-		if (trueQueue.nonEmpty)
-			layoutUpdateQueue :+= trueQueue
+		if (updateComponents.nonEmpty)
+			layoutUpdateQueue :+= updateComponents
 		revalidate()
 	}
 	
@@ -255,7 +213,7 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	  *                         this canvas has been revalidated
 	  * @param f A function called after layout has been updated.
 	  */
-	def revalidateAndThen(updateComponents: Seq[ReachComponentLike])(f: => Unit) =
+	override def revalidateAndThen(updateComponents: Seq[ReachComponentLike])(f: => Unit) =
 	{
 		// Queues the action
 		updateFinishedQueue :+= (() => f)
@@ -263,21 +221,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 		revalidate(updateComponents)
 	}
 	
-	/**
-	  * Repaints a part of this canvas
-	  * @param area Area to paint again
-	  * @param priority Priority to use for this repaint. The high level priority areas are painted first.
-	  */
-	def repaint(area: Bounds, priority: Priority = Priority.Normal) =
-		currentPainter.foreach { _.repaintRegion(area, priority) }
 	
-	/**
-	  * Shifts a painted region inside these canvases
-	  * @param originalArea The area to shift (relative to this canvas' top left corner)
-	  * @param translation Translation vector to apply to the area
-	  */
-	def shiftArea(originalArea: Bounds, translation: Vector2D) =
-		currentPainter.foreach { _.shift(originalArea, translation) }
+	// OTHER	------------------------------
 	
 	/**
 	  * Creates a pop-up over the specified component-area
@@ -298,7 +243,9 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 											 (makeContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
 	{
 		val newCanvas = ReachCanvas(cursors)(makeContent)
-		newCanvas.isTransparent = true
+		// FIXME: Normal paint operations don't work while isTransparent = true, but partially transparent windows
+		//  don't work when it is false. Avoid this by creating a new pop-up system
+		// newCanvas.isTransparent = true
 		val popup = Popup(this, newCanvas.parent, actorHandler, autoCloseLogic, alignment) { (_, popupSize) =>
 			// Calculates pop-up top left coordinates based on alignment
 			Point.calculateWith { axis =>
@@ -315,67 +262,6 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 			}
 		}
 		ComponentWrapResult(popup, newCanvas.child, newCanvas.result)
-	}
-	
-	// Second parameter in queues is whether a repaint operation has already been queued for them
-	// Resized children are expected to have their repaints already queued
-	// Returns areas to repaint afterwards
-	private def updateLayoutFor(componentQueues: Set[(Seq[ReachComponentLike], Boolean)],
-								sizeChangedChildren: Set[ReachComponentLike]): Vector[Bounds] =
-	{
-		val nextSizeChangeChildrenBuilder = new VectorBuilder[ReachComponentLike]()
-		val nextPositionChangeChildrenBuilder = new VectorBuilder[ReachComponentLike]()
-		val repaintZonesBuilder = new VectorBuilder[Bounds]()
-		
-		// Component -> Whether paint operation has already been queued
-		val nextTargets = componentQueues.map { case (queue, wasPainted) => queue.head -> wasPainted } ++
-			sizeChangedChildren.map { _ -> true }
-		// Updates the layout of the next layer (from top to bottom) components.
-		// Checks for size (and possible position) changes and queues updates for the children of components which
-		// changed size during the layout update
-		// Also, collects any repaint requirements
-		nextTargets.foreach { case (component, wasPainted) =>
-			// Caches bounds before update
-			val oldChildBounds = component.children.map { c => c -> c.bounds }
-			// Applies component update
-			component.updateLayout()
-			// Queues child updates (on size changes) and possible repaints
-			// (only in components where no repaint has occurred yet)
-			if (wasPainted)
-				oldChildBounds.foreach { case (child, oldBounds) =>
-					if (child.size != oldBounds.size)
-						nextSizeChangeChildrenBuilder += child
-				}
-			else
-				oldChildBounds.foreach { case (child, oldBounds) =>
-					val currentBounds = child.bounds
-					if (currentBounds != oldBounds)
-					{
-						repaintZonesBuilder += (Bounds.around(Vector(oldBounds, currentBounds)) +
-							child.parentHierarchy.positionToTopModifier)
-						if (oldBounds.size != currentBounds.size)
-							nextSizeChangeChildrenBuilder += child
-						else
-							nextPositionChangeChildrenBuilder += child
-					}
-				}
-		}
-		
-		// Moves to the next layer of components, if there is one
-		val nextSizeChangedChildren = nextSizeChangeChildrenBuilder.result().toSet
-		val paintedChildren = nextSizeChangedChildren ++ nextPositionChangeChildrenBuilder.result()
-		val nextQueues = componentQueues.filter { _._1.size > 1 }.map { case (queue, wasPainted) =>
-			if (wasPainted)
-				queue.tail -> wasPainted
-			else
-				// Checks whether a paint operation was queued for this component already
-				queue.tail -> paintedChildren.contains(queue(1))
-		}
-		val repaintZones = repaintZonesBuilder.result()
-		if (nextQueues.isEmpty && nextSizeChangedChildren.isEmpty)
-			repaintZones
-		else
-			 repaintZones ++ updateLayoutFor(nextQueues, nextSizeChangedChildren)
 	}
 	
 	

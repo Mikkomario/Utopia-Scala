@@ -21,6 +21,16 @@ trait PaintManager
 	def paintWith(drawer: Drawer): Unit
 	
 	/**
+	  * Paints (a portion of) the managed region. Doesn't require and a buffer or state update, unless that's necessary
+	  * to perform the actual drawing.
+	  * @param region Region that should be painted. None if the whole managed region should be painted (default).
+	  * @param priority Requested priority for handling this paint call. Higher priority requests should result in
+	  *                 faster / prioritized painting, although the actual effect of this parameter is
+	  *                 implementation dependent.
+	  */
+	def paint(region: Option[Bounds] = None, priority: Priority = Normal): Unit
+	
+	/**
 	  * Requests a repaint of (a portion of) the managed region
 	  * @param region   Targeted sub-region within the managed region.
 	  *                 None if the whole region should be repainted (default).

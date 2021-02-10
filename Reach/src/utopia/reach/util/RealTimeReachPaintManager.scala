@@ -1,6 +1,7 @@
 package utopia.reach.util
 
 import utopia.flow.async.{Volatile, VolatileOption}
+import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.image.Image
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
@@ -39,9 +40,10 @@ object RealTimeReachPaintManager
   * @author Mikko Hilpinen
   * @since 25.11.2020, v2
   */
+// TODO: Add a position modifier (call by name) that affects all draw operations
+//  (used for moving window contents while still keeping component position as (0,0))
 class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int = 30,
 								disableDoubleBuffering: Boolean = true, syncAfterDraw: Boolean = true)
-							   /*(cursor: => Option[(Point, Image)])(cursorBounds: => Option[Bounds])*/
 	extends PaintManager
 {
 	// ATTRIBUTES	---------------------------------
@@ -53,28 +55,39 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	private val queuePointer = Volatile[(Option[Bounds], Map[Priority, Vector[Bounds]])](None -> Map())
 	private val bufferSizePointer = Volatile(Size.zero)
 	private val bufferPointer = VolatileOption[Image]()
+	// None while overfilled, a vector of update images otherwise
 	private val queuedUpdatesPointer = VolatileOption[Vector[(Image, Point)]]()
-	
-	// private val tracker = new TimeLogger()
 	
 	
 	// IMPLEMENTED	---------------------------------
 	
 	override def paintWith(drawer: Drawer) =
 	{
-		// tracker.checkPoint("Starting full repaint")
 		// Checks whether component size changed. Invalidates buffer if so.
-		val currentSize = component.size
-		val sizeWasChanged = bufferSizePointer.pop { old => (old != currentSize) -> currentSize }
-		if (sizeWasChanged)
-			bufferPointer.clear()
-		flatten().drawWith(drawer)
+		checkForSizeChanges()
+		flatten().drawWith(drawer, component.position)
+	}
+	
+	override def paint(region: Option[Bounds], priority: Priority): Unit =
+	{
+		// May have to repaint if component size had changed since the last paint
+		checkForSizeChanges()
+		// Makes sure the image buffer is up to date
+		val newImage = flatten(region)
+		// Paints the image buffer, at least partially
+		paint { drawer =>
+			val modifiedDrawer = region match
+			{
+				case Some(region) => drawer.clippedTo(region)
+				case None => drawer
+			}
+			newImage.drawWith(modifiedDrawer, component.position)
+		}
 	}
 	
 	override def repaint(region: Option[Bounds], priority: Priority) = region.map { _.ceil } match
 	{
 		case Some(region) =>
-			// tracker.checkPoint("Starting region painting")
 			// Extends the queue. May start the drawing process as well
 			val firstDrawArea = queuePointer.pop { case (processing, queue) =>
 				// Case: No draw process currently active => starts drawing
@@ -171,8 +184,19 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	
 	// OTHER	-------------------------------------
 	
+	// Checks whether component size has changed since the last draw. Invalidates the drawn buffer if so.
+	private def checkForSizeChanges() =
+	{
+		val currentSize = component.size
+		val sizeWasChanged = bufferSizePointer.pop { old => (old != currentSize) -> currentSize }
+		if (sizeWasChanged)
+			bufferPointer.clear()
+	}
+	
 	// Makes sure the buffer is updated (prepares the buffer applies any queued updates)
-	private def flatten() =
+	// Accepts a region to flatten. None if whole image should be flattened.
+	// If Some(X), updates outside area X are not applied yet.
+	private def flatten(region: Option[Bounds] = None) =
 	{
 		// Prepares the buffer
 		val (shouldAddUpdates, baseImage) = bufferPointer.pop {
@@ -186,27 +210,40 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 		if (shouldAddUpdates)
 		{
 			// If the update buffer was overfilled (None), recreates the buffer completely
-			queuedUpdatesPointer.getAndSet(Some(Vector())) match
-			{
+			queuedUpdatesPointer.pop {
 				// Case: Update buffer was not overfilled
 				case Some(updates) =>
-					// Case: There were updates queued => Updates the buffer also
-					if (updates.nonEmpty)
+					// Checks for updates to apply, based on the targeted region
+					val (updatesToDelay, updatesToApply) = region match
 					{
-						val newImage = updates.foldLeft(baseImage) { (image, update) =>
-							image.withOverlay(update._1, update._2)
-						}
-						bufferPointer.setOne(newImage)
-						newImage
+						case Some(region) =>
+							updates.divideBy { case (image, position) =>
+								Bounds(position, image.size).overlapsWith(region)
+							}
+						case None => Vector() -> updates
 					}
-					// Case: No updates were queued
-					else
-						baseImage
+					// Calculates the new buffer state
+					val newImage =
+					{
+						// Case: There were updates queued => Updates the buffer also
+						if (updatesToApply.nonEmpty)
+						{
+							val updatedBuffer = updatesToApply.foldLeft(baseImage) { (image, update) =>
+								image.withOverlay(update._1, update._2)
+							}
+							bufferPointer.setOne(updatedBuffer)
+							updatedBuffer
+						}
+						// Case: No updates were queued
+						else
+							baseImage
+					}
+					newImage -> Some(updatesToDelay)
 				// Case: There were too many updates
 				case None =>
 					val newImage = component.toImage
 					bufferPointer.setOne(newImage)
-					newImage
+					newImage -> Some(Vector())
 			}
 		}
 		else
@@ -219,7 +256,6 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	// Pass None if whole component should be painted
 	private def paintQueue(first: Option[Bounds]) =
 	{
-		// tracker.checkPoint("Painting first item in queue")
 		paint { drawer =>
 			var nextArea = first
 			do
@@ -230,7 +266,6 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 					case Some(region) => paintArea(drawer, region)
 					case None => paintWith(drawer)
 				}
-				// tracker.checkPoint("Painting queue updates")
 				nextArea = queuePointer.pop { case (_, queue) =>
 					// Picks the next highest priority area (preferring smaller areas)
 					Priority.descending.find(queue.contains) match
@@ -251,30 +286,14 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 			}
 			while (nextArea.nonEmpty)
 		}
-		// tracker.checkPoint("Queue painting finished")
 	}
 	
 	private def paintArea(drawer: Drawer, region: Bounds) =
 	{
 		// First draws the component region to a separate image
 		val buffered = component.regionToImage(region)
-		// May add the cursor to the buffered image
-		/*
-		val drawn =
-		{
-			if (cursorBounds.exists { _.overlapsWith(region) })
-			{
-				cursor match
-				{
-					case Some((p, cursorImage)) => buffered.withOverlay(cursorImage, p - region.position)
-					case None => buffered
-				}
-			}
-			else
-				buffered
-		}*/
 		// Draws the buffered area using the drawer (may also draw the cursor)
-		drawer.clippedTo(region).disposeAfter { d =>buffered.drawWith(d, region.position) }
+		drawer.clippedTo(region).disposeAfter { d => buffered.drawWith(d, component.position + region.position) }
 		// Queues the buffer to be drawn when component will be fully painted next time
 		queuedUpdatesPointer.update
 		{
@@ -291,7 +310,6 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	
 	private def paint(f: Drawer => Unit) =
 	{
-		// tracker.checkPoint("Accessing awt thread")
 		// Painting is performed in the AWT event thread
 		AwtEventThread.async {
 			if (disableDoubleBuffering)
@@ -313,9 +331,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 	private def draw(f: Drawer => Unit) =
 	{
 		// Paints using the component's own graphics instance (which may not be available)
-		Option(jComponent.getGraphics).foreach { g =>
-			Drawer.use(g)(f)
-		}
+		Option(jComponent.getGraphics).foreach { g => Drawer.use(g)(f) }
 		if (syncAfterDraw)
 			Try { Toolkit.getDefaultToolkit.sync() }
 	}

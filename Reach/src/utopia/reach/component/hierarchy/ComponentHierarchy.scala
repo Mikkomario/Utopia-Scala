@@ -88,6 +88,36 @@ trait ComponentHierarchy
 	// OTHER	--------------------------
 	
 	/**
+	  * @param hierarchy A component hierarchy
+	  * @return Whether this component hierarchy block is under specified component hierarchy
+	  */
+	@tailrec
+	final def isChildOf(hierarchy: ComponentHierarchy): Boolean = parent match
+	{
+		case Right((parentHierarchy, _)) => parentHierarchy == hierarchy || parentHierarchy.isChildOf(hierarchy)
+		case Left(_) => false
+	}
+	
+	/**
+	  * @param component A component
+	  * @return Whether this component hierarchy block is under specified component
+	  */
+	@tailrec
+	final def isChildOf(component: ReachComponentLike): Boolean = parent match
+	{
+		case Right((parentHierarchy, parentComponent)) =>
+			parentComponent == component || parentHierarchy.isChildOf(component)
+		case Left(_) => false
+	}
+	
+	/**
+	  * @param component A component
+	  * @return Whether that component is part of this hierarchy (either below or above)
+	  */
+	def contains(component: ReachComponentLike) =
+		component.parentHierarchy == this || component.isChildOf(this) || isChildOf(component)
+	
+	/**
 	  * Revalidates this component hierarchy (provided this part of the hierarchy is currently linked to the main
 	  * stack hierarchy)
 	  */

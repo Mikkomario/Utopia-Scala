@@ -10,3 +10,9 @@ package utopia.genesis.event
   * @param keyStatus The keyboard status during this event
  */
 case class KeyTypedEvent(typedChar: Char, index: Int, keyStatus: KeyStatus)
+{
+	/**
+	  * @return The digit typed, if the typed character was a digit. None otherwise.
+	  */
+	def digit = if (typedChar.isDigit) Some(typedChar.asDigit) else None
+}

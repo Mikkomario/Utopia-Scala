@@ -15,7 +15,7 @@ import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderVie
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.{ImageLabel, ViewImageLabel, ViewTextLabel, ViewTextLabelFactory}
-import utopia.reach.component.template.{Focusable, FocusableWithState, FocusableWrapper, ReachComponent, ReachComponentLike, ReachComponentWrapper}
+import utopia.reach.component.template.{Focusable, FocusableWithPointer, FocusableWrapper, ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.{Framing, FramingFactory, ReachCanvas, Stack, ViewStack}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
@@ -283,7 +283,7 @@ class Field[C <: ReachComponentLike with Focusable]
  fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
 (makeField: FieldCreationContext => C)
 (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponentLike, Any]])
-	extends ReachComponentWrapper with FocusableWrapper with FocusableWithState
+	extends ReachComponentWrapper with FocusableWrapper with FocusableWithPointer
 {
 	// ATTRIBUTES	------------------------------------------
 	
@@ -420,18 +420,13 @@ class Field[C <: ReachComponentLike with Focusable]
 	  */
 	def wrappedField = field
 	
-	/**
-	  * @return A pointer to this component's focus state
-	  */
-	def focusPointer = _focusPointer.view
-	
 	
 	// IMPLEMENTED	------------------------------------------
 	
 	/**
-	 * @return Whether this component currently has focus
-	 */
-	override def hasFocus = _focusPointer.value
+	  * @return A pointer to this component's focus state
+	  */
+	override def focusPointer = _focusPointer.view
 	
 	override protected def focusable = field
 	

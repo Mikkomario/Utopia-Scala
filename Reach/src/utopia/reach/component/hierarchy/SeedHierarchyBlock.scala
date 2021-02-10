@@ -77,10 +77,11 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	
 	/**
 	  * Completes this component hierarchy by attaching it directly to the canvas at the top
+	  * @param switchConditionPointer An additional link condition pointer (optional)
 	  * @throws IllegalStateException If this hierarchy was already completed (These hierarchies mustn't be completed twice)
 	  */
 	@throws[IllegalStateException]("If already completed previously")
-	def lockToTop() = foundParent match
+	def lockToTop(switchConditionPointer: Option[ChangingLike[Boolean]] = None) = foundParent match
 	{
 		case Some(existingParent) =>
 			existingParent match
@@ -88,7 +89,11 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 				case Left(_) => ()
 				case Right((_, component)) => throw new IllegalStateException(s"Already connected to component $component")
 			}
-		case None => foundParent = Some(Left(top))
+		case None =>
+			// Directly attaches to the top
+			foundParent = Some(Left(top))
+			// Also informs the link manager
+			LinkManager.onLinkedToCanvas(switchConditionPointer)
 	}
 	
 	
@@ -161,22 +166,38 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		
 		// OTHER	--------------------------
 		
-		def onParentFound(defaultPointer: ChangingLike[Boolean], additionalConditionPointer: Option[ChangingLike[Boolean]]) =
+		// TODO: Handle fixed pointers separately
+		def onParentFound(defaultPointer: ChangingLike[Boolean],
+						  additionalConditionPointer: Option[ChangingLike[Boolean]]) =
 		{
 			val finalPointer = additionalConditionPointer match
 			{
 				case Some(additional) => defaultPointer.mergeWith(additional) { _ && _ }
 				case None => defaultPointer
 			}
-			
+			specifyFinalPointer(finalPointer)
+		}
+		
+		def onLinkedToCanvas(additionalConditionPointer: Option[ChangingLike[Boolean]]) =
+		{
+			val finalPointer = additionalConditionPointer match
+			{
+				case Some(additional) => top.attachmentPointer.mergeWith(additional) { _ && _ }
+				case None => top.attachmentPointer
+			}
+			specifyFinalPointer(finalPointer)
+		}
+		
+		private def specifyFinalPointer(pointer: ChangingLike[Boolean]) =
+		{
 			// Updates the pointer(s)
-			finalManagedPointer = Some(finalPointer)
+			finalManagedPointer = Some(pointer)
 			// Transfers listeners, if any were queued
 			if (queuedListeners.nonEmpty)
 			{
-				queuedListeners.foreach { finalPointer.addListener(_) }
+				queuedListeners.foreach { pointer.addListener(_) }
 				// Informs the listeners of this new change
-				if (finalPointer.value)
+				if (pointer.value)
 				{
 					val event = ChangeEvent(false, true)
 					queuedListeners.foreach { _.onChangeEvent(event) }

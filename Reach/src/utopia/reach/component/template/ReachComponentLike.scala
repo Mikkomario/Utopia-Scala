@@ -127,6 +127,18 @@ trait ReachComponentLike extends Stackable2
 	// OTHER	-------------------------
 	
 	/**
+	  * @param another Another component
+	  * @return Whether this component is a child (below in hierarchy) of the specified component
+	  */
+	def isChildOf(another: ReachComponentLike) = parentHierarchy.isChildOf(another)
+	
+	/**
+	  * @param hierarchy A component hierarchy
+	  * @return Whether this component is a child (below) of the specified component hierarchy
+	  */
+	def isChildOf(hierarchy: ComponentHierarchy) = parentHierarchy.isChildOf(hierarchy)
+	
+	/**
 	  * Indicates that this component's and its hierarchy's layout should be updated
 	  */
 	def revalidate() =

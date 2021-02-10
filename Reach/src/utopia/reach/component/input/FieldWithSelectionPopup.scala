@@ -13,7 +13,7 @@ import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{Focusable, FocusableWrapper, ReachComponentLike, ReachComponentWrapper}
+import utopia.reach.component.template.{Focusable, FocusableWithPointerWrapper, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{Open, OpenComponent}
 import utopia.reach.container.{CachingViewSwapper, ReachCanvas, ScrollView}
 import utopia.reflection.color.ColorRole
@@ -151,7 +151,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 (makeDisplay: (ComponentHierarchy, A) => D)
 (makeRightHintLabel: (ExtraFieldCreationContext[C], N) => Option[OpenComponent[ReachComponentLike, Any]])
 (implicit scrollingContext: ScrollingContextLike)
-	extends ReachComponentWrapper with FocusableWrapper
+	extends ReachComponentWrapper with FocusableWithPointerWrapper
 		with SelectionWithPointers[Option[A], PointerWithEvents[Option[A]], Vector[A], P]
 {
 	// ATTRIBUTES	------------------------------
@@ -273,6 +273,11 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 			}
 	}
 	
+	// When gains focus, displays the pop-up. Hides the pop-up when focus is lost.
+	focusPointer.addListenerAndSimulateEvent(false) { event =>
+		if (event.newValue) openPopup() else hidePopup()
+	}
+	
 	
 	// COMPUTED	---------------------------------
 	
@@ -291,10 +296,12 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	/**
 	  * Displays the selection pop-up
 	  */
-	def openSelection() = {
+	def openPopup() = {
 		println("Displaying pop-up")
 		lazyPopup.value.display()
 	}
+	
+	private def hidePopup() = cachedPopup.foreach { _.visible = false }
 	
 	
 	// NESTED	---------------------------------
@@ -309,7 +316,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		
 		// IMPLEMENTED	-------------------------
 		
-		override def onKeyState(event: KeyStateEvent) = openSelection()
+		override def onKeyState(event: KeyStateEvent) = openPopup()
 		
 		// Is interested in key events while the field has focus and pop-up is not open
 		override def allowsHandlingFrom(handlerType: HandlerType) = !popUpDisplayPointer.value && field.hasFocus
@@ -330,7 +337,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		{
 			println("Hides the pop-up")
 			// Hides the pop-up
-			cachedPopup.foreach { _.visible = false }
+			hidePopup()
 			// On tabulator press, yields focus afterwards
 			if (event.index == KeyEvent.VK_TAB)
 				yieldFocus(if (event.keyStatus.shift) Negative else Positive)

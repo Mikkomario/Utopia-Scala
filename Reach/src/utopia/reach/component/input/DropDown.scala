@@ -193,7 +193,7 @@ private class FieldFocusMouseListener(field: FieldWithSelectionPopup[_, _, _, _,
 	{
 		// Requests focus or opens the field
 		if (field.field.hasFocus)
-			field.openSelection()
+			field.openPopup()
 		else
 			field.requestFocus()
 		None
