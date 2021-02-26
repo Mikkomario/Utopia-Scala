@@ -25,7 +25,22 @@ import utopia.reflection.shape.LengthExtensions._
 object CheckBox
 	extends ContextInsertableComponentFactoryFactory[ColorContextLike, CheckBoxFactory, ContextualCheckBoxFactory]
 {
+	// IMPLEMENTED	-------------------------
+	
 	override def apply(hierarchy: ComponentHierarchy) = new CheckBoxFactory(hierarchy)
+	
+	
+	// OTHER	-----------------------------
+	
+	/**
+	  * Creates a version of this factory which uses specific global settings when creating components
+	  * @param onIcon Icon that represents a ticked check box state
+	  * @param offIcon Icon that represents an unticked check box state
+	  * @param selectionColorRole Color role used in the selected state (default = secondary)
+	  * @return A new check box factory factory
+	  */
+	def full(onIcon: SingleColorIcon, offIcon: SingleColorIcon, selectionColorRole: ColorRole = Secondary) =
+		new FullCheckBoxFactoryFactory(onIcon, offIcon, selectionColorRole)
 }
 
 class CheckBoxFactory(parentHierarchy: ComponentHierarchy)
@@ -83,6 +98,53 @@ case class ContextualCheckBoxFactory[+N <: ColorContextLike](factory: CheckBoxFa
 		factory(onIcon.asImageWithColor(selectedColor), offIcon.singleColorImage, selectedColor,
 			context.containerBackground.defaultTextColor.withAlpha(1.0),
 			context.margins.medium.round.toDouble, valuePointer, enabledPointer, customDrawers, focusListeners)
+	}
+}
+
+class FullCheckBoxFactoryFactory(onIcon: SingleColorIcon, offIcon: SingleColorIcon,
+								 selectionColorRole: ColorRole = Secondary)
+	extends ContextInsertableComponentFactoryFactory[ColorContextLike, FullCheckBoxFactory, FullContextualCheckBoxFactory]
+{
+	override def apply(hierarchy: ComponentHierarchy) = new FullCheckBoxFactory(new CheckBoxFactory(hierarchy), onIcon,
+		offIcon, selectionColorRole)
+}
+
+class FullCheckBoxFactory(factory: CheckBoxFactory, onIcon: SingleColorIcon, offIcon: SingleColorIcon,
+						  selectionColorRole: ColorRole = Secondary)
+	extends ContextInsertableComponentFactory[ColorContextLike, FullContextualCheckBoxFactory]
+{
+	override def withContext[N <: ColorContextLike](context: N) =
+		FullContextualCheckBoxFactory(factory.withContext(context), onIcon, offIcon, selectionColorRole)
+}
+
+case class FullContextualCheckBoxFactory[+N <: ColorContextLike](factory: ContextualCheckBoxFactory[N],
+																 onIcon: SingleColorIcon, offIcon: SingleColorIcon,
+																 selectionColorRole: ColorRole = Secondary)
+	extends ContextualComponentFactory[N, ColorContextLike, FullContextualCheckBoxFactory]
+{
+	// IMPLEMENTED	----------------------------
+	
+	override def context = factory.context
+	
+	override def withContext[N2 <: ColorContextLike](newContext: N2) =
+		copy(factory = factory.withContext(newContext))
+	
+	
+	// OTHER	--------------------------------
+	
+	/**
+	  * Creates a new check box
+	  * @param valuePointer Mutable pointer to currently selected value (default = new pointer)
+	  * @param enabledPointer Pointer to this component's enabled state (default = always enabled)
+	  * @param customDrawers Custom drawers assigned to this component (default = empty)
+	  * @param focusListeners Focus listeners assigned to this component (default = empty)
+	  * @return A new check box
+	  */
+	def apply(valuePointer: PointerWithEvents[Boolean] = new PointerWithEvents(false),
+			  enabledPointer: ChangingLike[Boolean] = AlwaysTrue, customDrawers: Vector[CustomDrawer] = Vector(),
+			  focusListeners: Seq[FocusListener] = Vector()) =
+	{
+		factory(onIcon, offIcon, valuePointer, enabledPointer, customDrawers, focusListeners, selectionColorRole)
 	}
 }
 

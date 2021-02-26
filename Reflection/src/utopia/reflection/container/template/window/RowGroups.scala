@@ -1,4 +1,4 @@
-package utopia.reflection.container.swing.window.interaction
+package utopia.reflection.container.template.window
 
 object RowGroups
 {
