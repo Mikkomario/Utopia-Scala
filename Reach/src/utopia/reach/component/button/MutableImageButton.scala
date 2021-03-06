@@ -11,7 +11,7 @@ import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reflection.component.swing.button.ButtonImageSet
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.event.ButtonState
+import utopia.reflection.event.{ButtonState, HotKey}
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
 
@@ -28,8 +28,6 @@ class MutableImageButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param insets Insets placed around the image (default = always 0)
 	  * @param alignment Alignment used when placing the image (default = center)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Character keys used for triggering this button even when it doesn't have
-	  *                         focus (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 	  * @param allowUpscaling Whether the images should be allowed to scale up to their source resolution
 	  *                       (default = true)
@@ -37,10 +35,10 @@ class MutableImageButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new image button
 	  */
 	def withoutAction(images: ButtonImageSet, insets: StackInsets = StackInsets.zero,
-					  alignment: Alignment = Alignment.Center, hotKeys: Set[Int] = Set(),
-					  hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
+					  alignment: Alignment = Alignment.Center, hotKeys: Set[HotKey] = Set(),
+					  additionalDrawers: Vector[CustomDrawer] = Vector(),
 					  allowUpscaling: Boolean = true, useLowPrioritySize: Boolean = false) =
-		new MutableImageButton(parentHierarchy, images, insets, alignment, hotKeys, hotKeyCharacters, additionalDrawers,
+		new MutableImageButton(parentHierarchy, images, insets, alignment, hotKeys, additionalDrawers,
 			allowUpscaling, useLowPrioritySize)
 	
 	/**
@@ -49,8 +47,6 @@ class MutableImageButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param insets Insets placed around the image (default = always 0)
 	  * @param alignment Alignment used when placing the image (default = center)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Character keys used for triggering this button even when it doesn't have
-	  *                         focus (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 	  * @param allowUpscaling Whether the images should be allowed to scale up to their source resolution
 	  *                       (default = true)
@@ -59,11 +55,11 @@ class MutableImageButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new image button
 	  */
 	def apply(images: ButtonImageSet, insets: StackInsets = StackInsets.zero,
-			  alignment: Alignment = Alignment.Center, hotKeys: Set[Int] = Set(),
-			  hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
+			  alignment: Alignment = Alignment.Center, hotKeys: Set[HotKey] = Set(),
+			  additionalDrawers: Vector[CustomDrawer] = Vector(),
 			  allowUpscaling: Boolean = true, useLowPrioritySize: Boolean = false)(action: => Unit) =
 	{
-		val button = withoutAction(images, insets, alignment, hotKeys, hotKeyCharacters, additionalDrawers,
+		val button = withoutAction(images, insets, alignment, hotKeys, additionalDrawers,
 			allowUpscaling, useLowPrioritySize)
 		button.registerAction(action)
 		button
@@ -77,8 +73,7 @@ class MutableImageButtonFactory(parentHierarchy: ComponentHierarchy)
   */
 class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: ButtonImageSet,
 						 initialInsets: StackInsets = StackInsets.zero, initialAlignment: Alignment = Alignment.Center,
-						 hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-						 additionalDrawers: Vector[CustomDrawer] = Vector(),
+						 hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 						 allowUpscaling: Boolean = true, useLowPrioritySize: Boolean = false)
 	extends ReachComponentWrapper with MutableButtonLike
 {
@@ -118,7 +113,7 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	
 	// INITIAL CODE	-------------------------------
 	
-	setup(_statePointer, hotKeys, hotKeyCharacters)
+	setup(_statePointer, hotKeys)
 	
 	
 	// COMPUTED	-----------------------------------

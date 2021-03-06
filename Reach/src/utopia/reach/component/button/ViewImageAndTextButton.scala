@@ -14,7 +14,7 @@ import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reflection.component.swing.button.ButtonImageSet
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.event.ButtonState
+import utopia.reflection.event.{ButtonState, HotKey}
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.Alignment
@@ -48,8 +48,6 @@ class ViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param displayFunction Function for converting content to text (default = toString)
 	  * @param betweenLinesMargin Vertical margin between text lines (default = 0)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Hotkey characters used for triggering this button even when it doesn't have focus
-	  *                         (default = empty)
 	  * @param additionalDrawers Custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param allowLineBreaks Whether text should be allowed to use line breaks (default = true)
@@ -69,14 +67,14 @@ class ViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 				 textInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
 				 commonInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any), borderWidth: Double = 0.0,
 				 alignment: Alignment = Alignment.Left, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-				 betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
+				 betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
 				 additionalDrawers: Vector[CustomDrawer] = Vector(),
 				 additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
 				 allowImageUpscaling: Boolean = true, allowTextShrink: Boolean = false,
 				 useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: A => Unit) =
 		new ViewImageAndTextButton[A](parentHierarchy, contentPointer, imagesPointer, colorPointer, fontPointer,
 			enabledPointer, imageInsetsPointer, textInsetsPointer, commonInsetsPointer, borderWidth, alignment,
-			displayFunction, betweenLinesMargin, hotKeys, hotKeyCharacters, additionalDrawers, additionalFocusListeners,
+			displayFunction, betweenLinesMargin, hotKeys, additionalDrawers, additionalFocusListeners,
 			allowLineBreaks, allowImageUpscaling, allowTextShrink, useLowPriorityImageSize, forceEqualBreadth)(action)
 	
 	/**
@@ -93,8 +91,6 @@ class ViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param alignment Alignment used for the text (default = Left)
 	  * @param betweenLinesMargin Vertical margin between text lines (default = 0)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Hotkey characters used for triggering this button even when it doesn't have focus
-	  *                         (default = empty)
 	  * @param additionalDrawers Custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param allowLineBreaks Whether text should be allowed to use line breaks (default = true)
@@ -113,14 +109,13 @@ class ViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 					   textInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
 					   commonInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any), borderWidth: Double = 0.0,
 					   alignment: Alignment = Alignment.Left, betweenLinesMargin: Double = 0.0,
-					   hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-					   additionalDrawers: Vector[CustomDrawer] = Vector(),
+					   hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 					   additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
 					   allowImageUpscaling: Boolean = true, allowTextShrink: Boolean = false,
 					   useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: => Unit) =
 		apply[LocalizedString](Fixed(text), imagesPointer, colorPointer, fontPointer, enabledPointer,
 			imageInsetsPointer, textInsetsPointer, commonInsetsPointer, borderWidth, alignment,
-			DisplayFunction.identity, betweenLinesMargin, hotKeys, hotKeyCharacters, additionalDrawers,
+			DisplayFunction.identity, betweenLinesMargin, hotKeys, additionalDrawers,
 			additionalFocusListeners, allowLineBreaks, allowImageUpscaling, allowTextShrink, useLowPriorityImageSize,
 			forceEqualBreadth) { _ => action }
 }
@@ -146,8 +141,6 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @param commonInsetsPointer Pointer to insets placed around this button (default = determined by context)
 	  * @param displayFunction Function for converting content to text (default = toString)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Hotkey characters used for triggering this button even when it doesn't have focus
-	  *                         (default = empty)
 	  * @param additionalDrawers Custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
@@ -164,15 +157,14 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 							 imageInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
 							 textInsetsPointer: ChangingLike[StackInsets] = Fixed(context.textInsets / 2),
 							 commonInsetsPointer: ChangingLike[StackInsets] = Fixed(context.textInsets / 2),
-							 displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[Int] = Set(),
-							 hotKeyCharacters: Iterable[Char] = Set(),
+							 displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
 							 additionalDrawers: Vector[CustomDrawer] = Vector(),
 							 additionalFocusListeners: Seq[FocusListener] = Vector(),
 							 useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)
 							(action: A => Unit) =
 		factory[A](contentPointer, imagesPointer, colorPointer, fontPointer, enabledPointer, imageInsetsPointer,
 			textInsetsPointer, commonInsetsPointer, context.borderWidth, context.textAlignment, displayFunction,
-			context.betweenLinesMargin.optimal, hotKeys, hotKeyCharacters, additionalDrawers, additionalFocusListeners,
+			context.betweenLinesMargin.optimal, hotKeys, additionalDrawers, additionalFocusListeners,
 			context.allowLineBreaks, context.allowImageUpscaling, context.allowTextShrink, useLowPriorityImageSize,
 			forceEqualBreadth)(action)
 	
@@ -183,8 +175,6 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @param enabledPointer Pointer to this button's enabled state (default = always enabled)
 	  * @param displayFunction Function for converting content to text (default = toString)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Hotkey characters used for triggering this button even when it doesn't have focus
-	  *                         (default = empty)
 	  * @param additionalDrawers Custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
@@ -196,12 +186,12 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  */
 	def apply[A](contentPointer: ChangingLike[A], imagesPointer: ChangingLike[ButtonImageSet],
 				 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-				 displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[Int] = Set(),
-				 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
+				 displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
+				 additionalDrawers: Vector[CustomDrawer] = Vector(),
 				 additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
 				 forceEqualBreadth: Boolean = false)(action: A => Unit) =
 		withChangingStyle[A](contentPointer, imagesPointer, enabledPointer = enabledPointer,
-			displayFunction = displayFunction, hotKeys = hotKeys, hotKeyCharacters = hotKeyCharacters,
+			displayFunction = displayFunction, hotKeys = hotKeys,
 			additionalDrawers = additionalDrawers, additionalFocusListeners = additionalFocusListeners,
 			useLowPriorityImageSize = useLowPriorityImageSize, forceEqualBreadth = forceEqualBreadth)(action)
 	
@@ -212,8 +202,6 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @param enabledPointer Pointer to this button's enabled state (default = always enabled)
 	  * @param displayFunction Function for converting content to text (default = toString)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Hotkey characters used for triggering this button even when it doesn't have focus
-	  *                         (default = empty)
 	  * @param additionalDrawers Custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
@@ -225,12 +213,12 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  */
 	def withIcon[A](contentPointer: ChangingLike[A], iconPointer: ChangingLike[SingleColorIcon],
 					enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-					displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[Int] = Set(),
-					hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
+					displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
+					additionalDrawers: Vector[CustomDrawer] = Vector(),
 					additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
 					forceEqualBreadth: Boolean = false)(action: A => Unit) =
 		apply[A](contentPointer, iconPointer.map { _.inButton }, enabledPointer, displayFunction, hotKeys,
-			hotKeyCharacters, additionalDrawers, additionalFocusListeners, useLowPriorityImageSize,
+			additionalDrawers, additionalFocusListeners, useLowPriorityImageSize,
 			forceEqualBreadth)(action)
 	
 	/**
@@ -239,8 +227,6 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @param imagesPointer Pointer to the displayed image set
 	  * @param enabledPointer Pointer to this button's enabled state (default = always enabled)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Hotkey characters used for triggering this button even when it doesn't have focus
-	  *                         (default = empty)
 	  * @param additionalDrawers Custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
@@ -250,13 +236,12 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @return A new button
 	  */
 	def withStaticText(text: LocalizedString, imagesPointer: ChangingLike[ButtonImageSet],
-					   enabledPointer: ChangingLike[Boolean] = AlwaysTrue, hotKeys: Set[Int] = Set(),
-					   hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
+					   enabledPointer: ChangingLike[Boolean] = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
+					   additionalDrawers: Vector[CustomDrawer] = Vector(),
 					   additionalFocusListeners: Seq[FocusListener] = Vector(),
 					   useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: => Unit) =
 		apply[LocalizedString](Fixed(text), imagesPointer, enabledPointer, DisplayFunction.identity, hotKeys,
-			hotKeyCharacters, additionalDrawers, additionalFocusListeners, useLowPriorityImageSize,
-			forceEqualBreadth) { _ => action }
+			additionalDrawers, additionalFocusListeners, useLowPriorityImageSize, forceEqualBreadth) { _ => action }
 	
 	/**
 	  * Creates a new button with image and text
@@ -264,8 +249,6 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @param icon Icon displayed on this button
 	  * @param enabledPointer Pointer to this button's enabled state (default = always enabled)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Hotkey characters used for triggering this button even when it doesn't have focus
-	  *                         (default = empty)
 	  * @param additionalDrawers Custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
@@ -275,13 +258,12 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 	  * @return A new button
 	  */
 	def withStaticTextAndIcon(text: LocalizedString, icon: SingleColorIcon,
-							  enabledPointer: ChangingLike[Boolean] = AlwaysTrue, hotKeys: Set[Int] = Set(),
-							  hotKeyCharacters: Iterable[Char] = Set(),
+							  enabledPointer: ChangingLike[Boolean] = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
 							  additionalDrawers: Vector[CustomDrawer] = Vector(),
 							  additionalFocusListeners: Seq[FocusListener] = Vector(),
 							  useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)
 							 (action: => Unit) =
-		withStaticText(text, Fixed(icon.inButton), enabledPointer, hotKeys, hotKeyCharacters, additionalDrawers,
+		withStaticText(text, Fixed(icon.inButton), enabledPointer, hotKeys, additionalDrawers,
 			additionalFocusListeners, useLowPriorityImageSize, forceEqualBreadth)(action)
 }
 
@@ -299,8 +281,7 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPoin
 								commonInsetsPointer: ChangingLike[StackInsets] = Fixed(StackInsets.any),
 								borderWidth: Double = 0.0, alignment: Alignment = Alignment.Left,
 								displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-								betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
-								hotKeyCharacters: Iterable[Char] = Set(),
+								betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
 								additionalDrawers: Vector[CustomDrawer] = Vector(),
 								additionalFocusListeners: Seq[FocusListener] = Vector(),
 								allowLineBreaks: Boolean = true, allowImageUpscaling: Boolean = true,
@@ -343,7 +324,7 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPoin
 	
 	// INITIAL CODE	------------------------------
 	
-	setup(baseStatePointer, hotKeys, hotKeyCharacters)
+	setup(baseStatePointer, hotKeys)
 	colorPointer.addListener { _ => repaint() }
 	
 	

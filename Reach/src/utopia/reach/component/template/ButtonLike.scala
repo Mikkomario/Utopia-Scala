@@ -9,7 +9,7 @@ import utopia.inception.handling.HandlerType
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 import utopia.reach.util.Priority.High
-import utopia.reflection.event.ButtonState
+import utopia.reflection.event.{ButtonState, HotKey}
 
 object ButtonLike
 {
@@ -24,7 +24,7 @@ object ButtonLike
   * @author Mikko Hilpinen
   * @since 24.10.2020, v2
   */
-trait ButtonLike extends ReachComponentLike with Focusable with CursorDefining
+trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorDefining
 {
 	// ABSTRACT	------------------------------
 	
@@ -52,11 +52,6 @@ trait ButtonLike extends ReachComponentLike with Focusable with CursorDefining
 	def enabled = state.isEnabled
 	
 	/**
-	  * @return Whether this button currently has focus
-	  */
-	def hasFocus = state.isInFocus
-	
-	/**
 	  * @return Whether The mouse is currently over this button
 	  */
 	def isMouseOver = state.isMouseOver
@@ -79,6 +74,11 @@ trait ButtonLike extends ReachComponentLike with Focusable with CursorDefining
 	// By default, buttons always allow focus leave
 	override def allowsFocusLeave = true
 	
+	/**
+	  * @return Whether this button currently has focus
+	  */
+	override def hasFocus = state.isInFocus
+	
 	
 	// OTHER	------------------------------
 	
@@ -87,25 +87,23 @@ trait ButtonLike extends ReachComponentLike with Focusable with CursorDefining
 	  * separately</b>, since this trait doesn't have access to the subclasses list of listeners.
 	  * @param statePointer A mutable pointer to this button's state
 	  * @param hotKeys Keys used for triggering this button even while it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Character keys used for triggering this button even while it doesn't have focus
-	  *                         (default = empty)
 	  * @param triggerKeys Keys used for triggering this button while it has focus (default = space & enter)
 	  */
-	protected def setup(statePointer: Settable[ButtonState], hotKeys: Set[Int] = Set(),
-						hotKeyCharacters: Iterable[Char] = Set(), triggerKeys: Set[Int] = ButtonLike.defaultTriggerKeys) =
+	protected def setup(statePointer: Settable[ButtonState], hotKeys: Set[HotKey] = Set(),
+						triggerKeys: Set[Int] = ButtonLike.defaultTriggerKeys) =
 	{
 		// When connected to the main hierarchy, enables focus management and key listening
 		val triggerKeyListener =
 		{
 			if (triggerKeys.nonEmpty)
-				Some(new ButtonKeyListener(statePointer, triggerKeys))
+				Some(new ButtonKeyListener(statePointer, triggerKeys.map(HotKey.keyWithIndex)))
 			else
 				None
 		}
 		val hotKeyListener =
 		{
-			if (hotKeys.nonEmpty || hotKeyCharacters.nonEmpty)
-				Some(new ButtonKeyListener(statePointer, hotKeys, hotKeyCharacters, requiresFocus = false))
+			if (hotKeys.nonEmpty)
+				Some(new ButtonKeyListener(statePointer, hotKeys, requiresFocus = false))
 			else
 				None
 		}
@@ -148,20 +146,23 @@ trait ButtonLike extends ReachComponentLike with Focusable with CursorDefining
 			statePointer.update { _.copy(isInFocus = event.hasFocus) }
 	}
 	
-	private class ButtonKeyListener(statePointer: Settable[ButtonState], triggerKeys: Set[Int] = Set(),
-								 triggerCharacters: Iterable[Char] = Set(), requiresFocus: Boolean = true)
+	private class ButtonKeyListener(statePointer: Settable[ButtonState], hotKeys: Set[HotKey],
+									requiresFocus: Boolean = true)
 		extends KeyStateListener
 	{
 		// ATTRIBUTES	---------------------------
 		
 		override val keyStateEventFilter =
 		{
-			if (triggerKeys.isEmpty)
-				KeyStateEvent.charsFilter(triggerCharacters)
-			else if (triggerCharacters.isEmpty)
-				KeyStateEvent.keysFilter(triggerKeys)
+			val allIndices = hotKeys.flatMap { _.keyIndices }
+			val allChars = hotKeys.flatMap { _.characters }
+			
+			if (allIndices.isEmpty)
+				KeyStateEvent.charsFilter(allChars)
+			else if (allChars.isEmpty)
+				KeyStateEvent.keysFilter(allIndices)
 			else
-				KeyStateEvent.keysFilter(triggerKeys) || KeyStateEvent.charsFilter(triggerCharacters)
+				KeyStateEvent.keysFilter(allIndices) || KeyStateEvent.charsFilter(allChars)
 		}
 		
 		
@@ -175,7 +176,7 @@ trait ButtonLike extends ReachComponentLike with Focusable with CursorDefining
 		
 		override def onKeyState(event: KeyStateEvent) =
 		{
-			if (triggerKeys.exists { event.keyStatus(_) } || triggerCharacters.exists { event.keyStatus(_) })
+			if (hotKeys.exists { _.isTriggeredWith(event.keyStatus) })
 				down = true
 			else if (down)
 			{

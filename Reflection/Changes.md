@@ -18,6 +18,8 @@
 - Renamed multiple stack length and stack size modifiers. The new naming convention is:
   - For stack length modifiers: XLengthModifier
   - For stack size modifiers: XSizeModifier
+- Alignment.horizontalDirection and .verticalDirection now return 
+  HorizontalDirection / VerticalDirection respectively, instead of Direction1D
 ### New Methods
 - ColorShadeVariant.type
   - .forLuminosity(Double)

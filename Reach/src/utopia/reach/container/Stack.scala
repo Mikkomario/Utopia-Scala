@@ -3,6 +3,7 @@ package utopia.reach.container
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
+import utopia.genesis.shape.shape2D.Direction2D.{Down, Up}
 import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
@@ -142,13 +143,13 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 					case Some(vertical) =>
 						vertical match
 						{
-							case Positive => Trailing
-							case Negative => Leading
+							case Down => Trailing
+							case Up => Leading
 						}
 					case None => Center
 				}
-				(X, horizontal, layout)
-			case None => (Y, alignment.verticalDirection.getOrElse(Positive), Center)
+				(X, horizontal.sign, layout)
+			case None => (Y, alignment.verticalDirectionSign.getOrElse(Positive), Center)
 		}
 		val orderedContent = content.mapComponent { case (a, b) =>
 			sign match

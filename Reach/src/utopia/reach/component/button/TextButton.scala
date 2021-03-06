@@ -14,7 +14,7 @@ import utopia.reach.component.label.TextLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.event.ButtonState
+import utopia.reflection.event.{ButtonState, HotKey}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
@@ -48,7 +48,6 @@ class TextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param borderWidth Width of the border on this button (default = 0 = no border)
 	  * @param betweenLinesMargin Margin placed between horizontal text lines in case there are multiple (default = 0.0)
 	  * @param hotKeys Keys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Character keys used for triggering this button even when it doesn't have focus (default = empty)
 	  * @param additionalDrawers Custom drawers applied (default = empty)
 	  * @param additionalFocusListeners Focus listeners applied (default = empty)
 	  * @param allowLineBreaks Whether line breaks in the drawn text should be respected and applied (default = true)
@@ -58,12 +57,11 @@ class TextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  */
 	def apply(text: LocalizedString, font: Font, color: Color, textColor: Color = Color.textBlack,
 			  alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-			  borderWidth: Double = 0.0, betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
-			  hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
-			  additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
-			  allowTextShrink: Boolean = false)(action: => Unit) =
+			  borderWidth: Double = 0.0, betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
+			  additionalDrawers: Seq[CustomDrawer] = Vector(), additionalFocusListeners: Seq[FocusListener] = Vector(),
+			  allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false)(action: => Unit) =
 		new TextButton(parentHierarchy, text, TextDrawContext(font, textColor, alignment, textInsets + borderWidth,
-			betweenLinesMargin), color, borderWidth, hotKeys, hotKeyCharacters, additionalDrawers,
+			betweenLinesMargin), color, borderWidth, hotKeys, additionalDrawers,
 			additionalFocusListeners, allowLineBreaks, allowTextShrink)(action)
 }
 
@@ -82,18 +80,16 @@ case class ContextualTextButtonFactory[+N <: ButtonContextLike](buttonFactory: T
 	  * Creates a new text button
 	  * @param text The text displayed on this button
 	  * @param hotKeys Keys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Character keys used for triggering this button even when it doesn't have focus (default = empty)
 	  * @param additionalDrawers Custom drawers applied (default = empty)
 	  * @param additionalFocusListeners Focus listeners applied (default = empty)
 	  * @param action Action performed each time this button is triggered (call by name)
 	  * @return A new text button
 	  */
-	def apply(text: LocalizedString, hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-			  additionalDrawers: Seq[CustomDrawer] = Vector(), additionalFocusListeners: Seq[FocusListener] = Vector())
-			 (action: => Unit) =
+	def apply(text: LocalizedString, hotKeys: Set[HotKey] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
+			  additionalFocusListeners: Seq[FocusListener] = Vector())(action: => Unit) =
 		buttonFactory(text, context.font, context.buttonColor, context.textColor, context.textAlignment,
-			context.textInsets, context.borderWidth, context.betweenLinesMargin.optimal, hotKeys, hotKeyCharacters,
-			additionalDrawers, additionalFocusListeners, context.allowLineBreaks, context.allowTextShrink)(action)
+			context.textInsets, context.borderWidth, context.betweenLinesMargin.optimal, hotKeys, additionalDrawers,
+			additionalFocusListeners, context.allowLineBreaks, context.allowTextShrink)(action)
 }
 
 /**
@@ -102,8 +98,8 @@ case class ContextualTextButtonFactory[+N <: ButtonContextLike](buttonFactory: T
   * @since 24.10.2020, v2
   */
 class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, textDrawContext: TextDrawContext,
-				 color: Color, borderWidth: Double = 0.0, hotKeys: Set[Int] = Set(),
-				 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
+				 color: Color, borderWidth: Double = 0.0, hotKeys: Set[HotKey] = Set(),
+				 additionalDrawers: Seq[CustomDrawer] = Vector(),
 				 additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
 				 allowTextShrink: Boolean = false)(action: => Unit)
 	extends ButtonLike with ReachComponentWrapper
@@ -121,7 +117,7 @@ class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, tex
 	
 	// INITIAL CODE	-----------------------------
 	
-	setup(_statePointer, hotKeys, hotKeyCharacters)
+	setup(_statePointer, hotKeys)
 	
 	
 	// IMPLEMENTED	-----------------------------

@@ -16,7 +16,7 @@ import utopia.reach.component.label.ViewTextLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.event.ButtonState
+import utopia.reflection.event.{ButtonState, HotKey}
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
@@ -53,8 +53,6 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param betweenLinesMargin Margin placed between horizontal text lines, in case there are many (default = 0.0)
 	  * @param hotKeys Keys that can be used for triggering this button even when it doesn't have focus
 	  *                (default = empty)
-	  * @param hotKeyCharacters Character keys that can be used for triggering this button even when it doesn't have
-	  *                         focus (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param allowLineBreaks Whether line breaks within the text should be respected and applied (default = true)
@@ -68,12 +66,12 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 				 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 				 displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
 				 alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-				 betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
+				 betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
 				 additionalDrawers: Seq[CustomDrawer] = Vector(),
 				 additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
 				 allowTextShrink: Boolean = false)(action: A => Unit) =
 		new ViewTextButton[A](parentHierarchy, contentPointer, font, colorPointer, enabledPointer, displayFunction,
-			borderWidth, alignment, textInsets, betweenLinesMargin, hotKeys, hotKeyCharacters, additionalDrawers,
+			borderWidth, alignment, textInsets, betweenLinesMargin, hotKeys, additionalDrawers,
 			additionalFocusListeners, allowLineBreaks, allowTextShrink)(action)
 	
 	/**
@@ -89,8 +87,6 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param betweenLinesMargin Margin placed between horizontal text lines, in case there are many (default = 0.0)
 	  * @param hotKeys Keys that can be used for triggering this button even when it doesn't have focus
 	  *                (default = empty)
-	  * @param hotKeyCharacters Character keys that can be used for triggering this button even when it doesn't have
-	  *                         focus (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param allowLineBreaks Whether line breaks within the text should be respected and applied (default = true)
@@ -102,12 +98,12 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	def withStaticText(text: LocalizedString, font: Font, colorPointer: ChangingLike[ComponentColor],
 					   enabledPointer: ChangingLike[Boolean] = AlwaysTrue, borderWidth: Double = 0.0,
 					   alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-					   betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
-					   hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
+					   betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
+					   additionalDrawers: Seq[CustomDrawer] = Vector(),
 					   additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
 					   allowTextShrink: Boolean = false)(action: => Unit) =
 		new ViewTextButton[LocalizedString](parentHierarchy, Fixed(text), font, colorPointer, enabledPointer,
-			DisplayFunction.identity, borderWidth, alignment, textInsets, betweenLinesMargin, hotKeys, hotKeyCharacters,
+			DisplayFunction.identity, borderWidth, alignment, textInsets, betweenLinesMargin, hotKeys,
 			additionalDrawers, additionalFocusListeners, allowLineBreaks, allowTextShrink)(_ => action)
 }
 
@@ -124,8 +120,6 @@ object ContextualViewTextButtonFactory
 		  * @param displayFunction A function for converting the displayed value to a localized string (default = toString)
 		  * @param hotKeys Keys that can be used for triggering this button even when it doesn't have focus
 		  *                (default = empty)
-		  * @param hotKeyCharacters Character keys that can be used for triggering this button even when it doesn't have
-		  *                         focus (default = empty)
 		  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 		  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 		  * @param action The action performed when this button is pressed (accepts currently displayed content)
@@ -133,14 +127,14 @@ object ContextualViewTextButtonFactory
 		  * @return A new button
 		  */
 		def apply[A](contentPointer: ChangingLike[A], enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-					 displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[Int] = Set(),
-					 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
+					 displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
+					 additionalDrawers: Seq[CustomDrawer] = Vector(),
 					 additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
 		{
 			val context = factory.context
 			factory.factory[A](contentPointer, context.font, Fixed(context.buttonColor), enabledPointer,
 				displayFunction, context.borderWidth, context.textAlignment, context.textInsets,
-				context.betweenLinesMargin.optimal, hotKeys, hotKeyCharacters, additionalDrawers,
+				context.betweenLinesMargin.optimal, hotKeys, additionalDrawers,
 				additionalFocusListeners, context.allowLineBreaks, context.allowTextShrink)(action)
 		}
 		
@@ -151,19 +145,16 @@ object ContextualViewTextButtonFactory
 		  *                       Default = always enabled.
 		  * @param hotKeys Keys that can be used for triggering this button even when it doesn't have focus
 		  *                (default = empty)
-		  * @param hotKeyCharacters Character keys that can be used for triggering this button even when it doesn't have
-		  *                         focus (default = empty)
 		  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 		  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 		  * @param action The action performed when this button is pressed
 		  * @return A new button
 		  */
 		def withStaticText(text: LocalizedString, enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
-						   hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-						   additionalDrawers: Seq[CustomDrawer] = Vector(),
+						   hotKeys: Set[HotKey] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
 						   additionalFocusListeners: Seq[FocusListener] = Vector())(action: => Unit) =
 			apply[LocalizedString](Fixed(text), enabledPointer, DisplayFunction.identity, hotKeys,
-				hotKeyCharacters, additionalDrawers, additionalFocusListeners) { _ => action }
+				additionalDrawers, additionalFocusListeners) { _ => action }
 	}
 }
 
@@ -188,8 +179,6 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
 	  * @param borderWidth Width of this button's borders (default = border equal to very small margins)
 	  * @param hotKeys Keys that can be used for triggering this button even when it doesn't have focus
 	  *                (default = empty)
-	  * @param hotKeyCharacters Character keys that can be used for triggering this button even when it doesn't have
-	  *                         focus (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param action The action performed when this button is pressed (accepts currently displayed content)
@@ -199,12 +188,12 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
 	def withChangingColor[A](contentPointer: ChangingLike[A], colorPointer: ChangingLike[ComponentColor],
 							 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 							 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-							 borderWidth: Double = context.margins.verySmall, hotKeys: Set[Int] = Set(),
-							 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
+							 borderWidth: Double = context.margins.verySmall, hotKeys: Set[HotKey] = Set(),
+							 additionalDrawers: Seq[CustomDrawer] = Vector(),
 							 additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
 		factory[A](contentPointer, context.font, colorPointer, enabledPointer, displayFunction, borderWidth,
 			context.textAlignment, context.textInsets, context.betweenLinesMargin.optimal, hotKeys,
-			hotKeyCharacters, additionalDrawers, additionalFocusListeners, context.allowLineBreaks,
+			additionalDrawers, additionalFocusListeners, context.allowLineBreaks,
 			context.allowTextShrink)(action)
 	
 	/**
@@ -218,8 +207,6 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
 	  * @param borderWidth Width of this button's borders (default = border equal to very small margins)
 	  * @param hotKeys Keys that can be used for triggering this button even when it doesn't have focus
 	  *                (default = empty)
-	  * @param hotKeyCharacters Character keys that can be used for triggering this button even when it doesn't have
-	  *                         focus (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param action The action performed when this button is pressed (accepts currently displayed content)
@@ -230,11 +217,10 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
 							enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 							displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 							preferredShade: ColorShade = Standard, borderWidth: Double = context.margins.verySmall,
-							hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-							additionalDrawers: Seq[CustomDrawer] = Vector(),
+							hotKeys: Set[HotKey] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
 							additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
 		withChangingColor[A](contentPointer, rolePointer.map { role => context.color(role, preferredShade) },
-			enabledPointer, displayFunction, borderWidth, hotKeys, hotKeyCharacters, additionalDrawers,
+			enabledPointer, displayFunction, borderWidth, hotKeys, additionalDrawers,
 			additionalFocusListeners)(action)
 }
 
@@ -248,8 +234,8 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Cha
 						enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 						displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
 						alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-						betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
-						hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
+						betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
+						additionalDrawers: Seq[CustomDrawer] = Vector(),
 						additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
 						allowTextShrink: Boolean = false)(action: A => Unit)
 	extends ButtonLike with ReachComponentWrapper
@@ -274,7 +260,7 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Cha
 	
 	// INITIAL CODE	---------------------------------
 	
-	setup(baseStatePointer, hotKeys, hotKeyCharacters)
+	setup(baseStatePointer, hotKeys)
 	colorPointer.addListener { _ => repaint() }
 	
 	

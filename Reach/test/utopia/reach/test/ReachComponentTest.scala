@@ -15,6 +15,7 @@ import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.container.swing.window.{Frame, Window}
+import utopia.reflection.event.HotKey
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.test.TestContext
@@ -31,7 +32,6 @@ import java.awt.event.KeyEvent
   */
 object ReachComponentTest extends App
 {
-	
 	import TestContext._
 	import TestCursors._
 	
@@ -65,12 +65,12 @@ object ReachComponentTest extends App
 						editableLabel.addFocusListener(focusReporter("Label"))
 						val buttonStack = factories(Stack).build(Mixed).row(areRelated = true) { factories =>
 							val clearButton = factories.mapContext { _.forSecondaryColorButtons }(TextButton)
-								.apply("Clear (F1)", Set(KeyEvent.VK_F1),
+								.apply("Clear (F1)", Set(HotKey.keyWithIndex(KeyEvent.VK_F1)),
 									additionalFocusListeners = Vector(focusReporter("Clear Button"))) {
 									editableLabel.text = ""
 								}
 							val closeButton = factories.mapContext { _.forPrimaryColorButtons }(TextButton)
-								.apply("Close (esc)", Set(KeyEvent.VK_ESCAPE),
+								.apply("Close (esc)", Set(HotKey.keyWithIndex(KeyEvent.VK_ESCAPE)),
 									additionalFocusListeners = Vector(focusReporter("Close Button"))) {
 									windowPointer.value.foreach { _.close() }
 								}

@@ -14,7 +14,7 @@ import utopia.reach.component.label.ImageAndTextLabel
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.event.ButtonState
+import utopia.reflection.event.{ButtonState, HotKey}
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
@@ -47,8 +47,6 @@ class ImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param borderWidth Width of the border in this button (default = 0 = no border)
 	  * @param betweenLinesMargin Vertical margin between text lines (default = 0)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Hotkey characters used for triggering this button even when it doesn't have focus
-	  *                         (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned for this component (default = empty)
 	  * @param additionalFocusListeners Additional focus listeners assigned to this button (default = empty)
 	  * @param allowLineBreaks Whether text should be allowed to use line breaks (default = true)
@@ -63,13 +61,13 @@ class ImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	def apply(image: Image, text: LocalizedString, color: Color, font: Font, textColor: Color = Color.textBlack,
 			  alignment: Alignment = Alignment.Left, imageInsets: StackInsets = StackInsets.any,
 			  textInsets: StackInsets = StackInsets.any, commonInsets: StackInsets = StackInsets.any,
-			  borderWidth: Double = 0.0, betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
-			  hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
+			  borderWidth: Double = 0.0, betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
+			  additionalDrawers: Vector[CustomDrawer] = Vector(),
 			  additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
 			  allowImageUpscaling: Boolean = true, allowTextShrink: Boolean = false,
 			  useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: => Unit) =
 		new ImageAndTextButton(parentHierarchy, image, text, color, font, textColor, alignment, imageInsets,
-			textInsets, commonInsets, borderWidth, betweenLinesMargin, hotKeys, hotKeyCharacters, additionalDrawers,
+			textInsets, commonInsets, borderWidth, betweenLinesMargin, hotKeys, additionalDrawers,
 			additionalFocusListeners, allowLineBreaks, allowImageUpscaling, allowTextShrink, useLowPriorityImageSize,
 			forceEqualBreadth)(action)
 }
@@ -88,8 +86,6 @@ case class ContextualImageAndTextButtonFactory[+N <: ButtonContextLike](factory:
 	  * @param text Text displayed on this button
 	  * @param imageInsets Insets placed around the image (default = any, preferring 0)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Hotkey characters used for triggering this button even when it doesn't have focus
-	  *                         (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned for this component (default = empty)
 	  * @param additionalFocusListeners Additional focus listeners assigned to this button (default = empty)
 	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
@@ -99,13 +95,12 @@ case class ContextualImageAndTextButtonFactory[+N <: ButtonContextLike](factory:
 	  * @return A new button
 	  */
 	def apply(image: Image, text: LocalizedString, imageInsets: StackInsets = StackInsets.any,
-			  hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-			  additionalDrawers: Vector[CustomDrawer] = Vector(),
+			  hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 			  additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
 			  forceEqualBreadth: Boolean = false)(action: => Unit) =
 		factory(image, text, context.buttonColor, context.font, context.textColor, context.textAlignment, imageInsets,
 			context.textInsets / 2, context.textInsets / 2, context.borderWidth, context.betweenLinesMargin.optimal,
-			hotKeys, hotKeyCharacters, additionalDrawers, additionalFocusListeners, context.allowLineBreaks,
+			hotKeys, additionalDrawers, additionalFocusListeners, context.allowLineBreaks,
 			context.allowImageUpscaling, context.allowTextShrink, useLowPriorityImageSize, forceEqualBreadth)(action)
 	
 	/**
@@ -114,8 +109,6 @@ case class ContextualImageAndTextButtonFactory[+N <: ButtonContextLike](factory:
 	  * @param text Text displayed on this button
 	  * @param imageInsets Insets placed around the image (default = any, preferring 0)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Hotkey characters used for triggering this button even when it doesn't have focus
-	  *                         (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned for this component (default = empty)
 	  * @param additionalFocusListeners Additional focus listeners assigned to this button (default = empty)
 	  * @param useLowPriorityImageSize Whether low priority size constraints should be used for the image
@@ -125,11 +118,10 @@ case class ContextualImageAndTextButtonFactory[+N <: ButtonContextLike](factory:
 	  * @return A new button
 	  */
 	def withIcon(icon: SingleColorIcon, text: LocalizedString, imageInsets: StackInsets = StackInsets.any,
-				 hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-				 additionalDrawers: Vector[CustomDrawer] = Vector(),
+				 hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 				 additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPriorityImageSize: Boolean = false,
 				 forceEqualBreadth: Boolean = false)(action: => Unit) =
-		apply(icon.singleColorImage, text, imageInsets, hotKeys, hotKeyCharacters, additionalDrawers,
+		apply(icon.singleColorImage, text, imageInsets, hotKeys, additionalDrawers,
 			additionalFocusListeners, useLowPriorityImageSize, forceEqualBreadth)(action)
 }
 
@@ -142,8 +134,8 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, image: Image, text
 						 font: Font, textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
 						 imageInsets: StackInsets = StackInsets.any, textInsets: StackInsets = StackInsets.any,
 						 commonInsets: StackInsets = StackInsets.zero, borderWidth: Double = 0.0,
-						 betweenLinesMargin: Double = 0.0, hotKeys: Set[Int] = Set(),
-						 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
+						 betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
+						 additionalDrawers: Vector[CustomDrawer] = Vector(),
 						 additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
 						 allowImageUpscaling: Boolean = true, allowTextShrink: Boolean = false,
 						 useLowPriorityImageSize: Boolean = false, forceEqualBreadth: Boolean = false)(action: => Unit)
@@ -169,7 +161,7 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, image: Image, text
 	
 	// INITIAL CODE	------------------------------
 	
-	setup(_statePointer, hotKeys, hotKeyCharacters)
+	setup(_statePointer, hotKeys)
 	
 	
 	// IMPLEMENTED	------------------------------

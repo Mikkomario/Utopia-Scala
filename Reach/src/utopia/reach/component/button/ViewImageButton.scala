@@ -1,7 +1,7 @@
 package utopia.reach.component.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
+import utopia.flow.event.{AlwaysTrue, ChangingLike}
 import utopia.genesis.shape.shape2D.Point
 import utopia.reflection.color.{ColorRole, ColorShade, ColorShadeVariant}
 import utopia.reflection.color.ColorShade.Standard
@@ -14,7 +14,7 @@ import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reflection.component.swing.button.ButtonImageSet
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.event.ButtonState
+import utopia.reflection.event.{ButtonState, HotKey}
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
@@ -43,8 +43,6 @@ class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param insets Insets placed around the image (default = always 0)
 	  * @param alignment Alignment used when placing the image within bounds (default = Center)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Character keys used for triggering this button even when it doesn't have
-	  *                         focus (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Additional focus listeners assigned to this button (default = empty)
 	  * @param allowUpscaling Whether the images should be allowed to scale up to their source resolution
@@ -55,11 +53,10 @@ class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy)
 	  */
 	def apply(imagesPointer: ChangingLike[ButtonImageSet], enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 			  insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
-			  hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-			  additionalDrawers: Vector[CustomDrawer] = Vector(),
+			  hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 			  additionalFocusListeners: Seq[FocusListener] = Vector(), allowUpscaling: Boolean = true,
 			  useLowPrioritySize: Boolean = false)(action: => Unit) =
-		new ViewImageButton(parentHierarchy, imagesPointer, enabledPointer, insets, alignment, hotKeys, hotKeyCharacters,
+		new ViewImageButton(parentHierarchy, imagesPointer, enabledPointer, insets, alignment, hotKeys,
 			additionalDrawers, additionalFocusListeners, allowUpscaling, useLowPrioritySize)(action)
 }
 
@@ -86,8 +83,6 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
 	  * @param insets Insets placed around the image (default = always 0)
 	  * @param alignment Alignment used when placing the image within bounds (default = Center)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Character keys used for triggering this button even when it doesn't have
-	  *                         focus (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Additional focus listeners assigned to this button (default = empty)
 	  * @param useLowPrioritySize Whether low priority size constraints should be used (default = false)
@@ -96,11 +91,10 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
 	  */
 	def withIcon(iconPointer: ChangingLike[SingleColorIcon], enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 				 insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
-				 hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-				 additionalDrawers: Vector[CustomDrawer] = Vector(),
+				 hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 				 additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPrioritySize: Boolean = false)
 				(action: => Unit) =
-		factory(iconPointer.map { _.asIndividualButton }, enabledPointer, insets, alignment, hotKeys, hotKeyCharacters,
+		factory(iconPointer.map { _.asIndividualButton }, enabledPointer, insets, alignment, hotKeys,
 			additionalDrawers, additionalFocusListeners, context.allowImageUpscaling, useLowPrioritySize)(action)
 	
 	/**
@@ -112,8 +106,6 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
 	  * @param insets Insets placed around the image (default = always 0)
 	  * @param alignment Alignment used when placing the image within bounds (default = Center)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Character keys used for triggering this button even when it doesn't have
-	  *                         focus (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Additional focus listeners assigned to this button (default = empty)
 	  * @param useLowPrioritySize Whether low priority size constraints should be used (default = false)
@@ -123,14 +115,14 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
 	def withColouredIcon(iconPointer: ChangingLike[SingleColorIcon], rolePointer: ChangingLike[ColorRole],
 						 enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 						 preferredShade: ColorShade = Standard, insets: StackInsets = StackInsets.zero,
-						 alignment: Alignment = Alignment.Center, hotKeys: Set[Int] = Set(),
-						 hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
+						 alignment: Alignment = Alignment.Center, hotKeys: Set[HotKey] = Set(),
+						 additionalDrawers: Vector[CustomDrawer] = Vector(),
 						 additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPrioritySize: Boolean = false)
 						(action: => Unit) =
 	{
 		val colorPointer = rolePointer.map { context.color(_, preferredShade) }
 		val imagesPointer = iconPointer.mergeWith(colorPointer) { _.asIndividualButtonWithColor(_) }
-		factory(imagesPointer, enabledPointer, insets, alignment, hotKeys, hotKeyCharacters, additionalDrawers,
+		factory(imagesPointer, enabledPointer, insets, alignment, hotKeys, additionalDrawers,
 			additionalFocusListeners, context.allowImageUpscaling, useLowPrioritySize)(action)
 	}
 }
@@ -143,8 +135,7 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
 class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: ChangingLike[ButtonImageSet],
 					  enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 					  insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
-					  hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-					  additionalDrawers: Vector[CustomDrawer] = Vector(),
+					  hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 					  additionalFocusListeners: Seq[FocusListener] = Vector(), allowUpscaling: Boolean = true,
 					  useLowPrioritySize: Boolean = false)(action: => Unit)
 	extends ReachComponentWrapper with ButtonLike
@@ -170,7 +161,7 @@ class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changi
 	
 	// INITIAL CODE	-----------------------------
 	
-	setup(baseStatePointer, hotKeys, hotKeyCharacters)
+	setup(baseStatePointer, hotKeys)
 	
 	
 	// COMPUTED	---------------------------------

@@ -1,7 +1,7 @@
 package utopia.reach.container
 
 import utopia.flow.datastructure.mutable.ResettableLazy
-import utopia.flow.event.{ChangeListener, ChangingLike, Fixed}
+import utopia.flow.event.{AlwaysFalse, AlwaysTrue, ChangeListener, ChangingLike, Fixed}
 import utopia.genesis.shape.Axis.Y
 import utopia.genesis.shape.Axis2D
 import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
@@ -566,6 +566,21 @@ class ViewStack[C <: ReachComponentLike](override val parentHierarchy: Component
 	private lazy val resetActiveComponentsOnChange = ChangeListener.onAnyChange {
 		activeComponentsCache.reset()
 		revalidateAndRepaint()
+	}
+	
+	/**
+	  * A pointer to this stack's visibility state.
+	  * This stack is visible while there is one or more components visible inside.
+	  */
+	lazy val visibilityPointer =
+	{
+		val pointers = componentData.map { _._2 }
+		if (pointers.isEmpty)
+			AlwaysFalse
+		else if (pointers.exists { _.isAlwaysTrue })
+			AlwaysTrue
+		else
+			pointers.reduce { _ || _ }
 	}
 	
 	

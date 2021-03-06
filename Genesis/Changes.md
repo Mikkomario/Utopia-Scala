@@ -56,6 +56,7 @@ Usually such context is now requested as a constructor parameter instead.
 - Parallelogramic now produces Parallelogramic instead of Parallelogram when transformed
 - PixelTable now extends IterableOnce(Color)
 - Added implicit conversion from awt Rectangle to Bounds
+- Direction2D now contains HorizontalDirection and VerticalDirection subtraits
 
 ## v2.3
 ### Scala

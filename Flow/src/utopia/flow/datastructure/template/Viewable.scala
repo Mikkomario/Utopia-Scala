@@ -1,5 +1,25 @@
 package utopia.flow.datastructure.template
 
+object Viewable
+{
+	// OTHER	-----------------------------
+	
+	/**
+	  * @param getValue A function for retrieving the viewed value
+	  * @tparam A Type of accessed value
+	  * @return A viewable instance that uses the specified function
+	  */
+	def apply[A](getValue: => A): Viewable[A] = new ViewableWrapper[A](getValue)
+	
+	
+	// NESTED	-----------------------------
+	
+	private class ViewableWrapper[+A](_value: => A) extends Viewable[A]
+	{
+		override def value = _value
+	}
+}
+
 /**
   * A common trait for value wrappers that allow others to access (but not necessarily mutate) the underlying value
   * @author Mikko Hilpinen

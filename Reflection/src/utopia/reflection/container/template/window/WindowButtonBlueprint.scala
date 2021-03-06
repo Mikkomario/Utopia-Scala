@@ -2,6 +2,7 @@ package utopia.reflection.container.template.window
 
 import utopia.reflection.color.ColorRole
 import utopia.reflection.color.ColorRole.Primary
+import utopia.reflection.event.HotKey
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
@@ -18,13 +19,14 @@ object WindowButtonBlueprint
 	  * @param icon Icon displayed on this button (optional)
 	  * @param role Color role of this button (default = primary)
 	  * @param location Location on the window where this button should be placed (default = bottom right)
+	  * @param hotkey Hotkey that is used for triggering this button, even when it is not in focus (optional)
 	  * @param result A function for generating the result
 	  * @tparam A Type of yielded result
 	  * @return A new button blueprint
 	  */
 	def closeWithResult[A](text: LocalizedString, icon: Option[SingleColorIcon] = None, role: ColorRole = Primary,
-						   location: Alignment = BottomRight)(result: => A) =
-		apply[A](text, icon, role, location) { _.tryComplete(Try { result }) }
+						   location: Alignment = BottomRight, hotkey: Option[HotKey] = None)(result: => A) =
+		apply[A](text, icon, role, location, hotkey) { _.tryComplete(Try { result }) }
 }
 
 /**
@@ -35,9 +37,12 @@ object WindowButtonBlueprint
   * @param icon Icon to use on the generated buttons (None if no icon should be used, default)
   * @param role Color role used by this button (default = primary).
  *  @param location The location where the button should be placed (default = bottom right)
+  * @param hotkey Hotkey that is used for triggering this button, even when it is not in focus (optional)
+  * @param isDefault Whether this button should be treated as the window's default button (default = false)
   * @param pressAction A function called when this button is pressed. Accepts a promise that accepts the final
   *                    result and will close the parent window when completed.
   */
 case class WindowButtonBlueprint[A](text: LocalizedString, icon: Option[SingleColorIcon] = None,
-									 role: ColorRole = Primary, location: Alignment = BottomRight)
-									(val pressAction: Promise[A] => Unit)
+									role: ColorRole = Primary, location: Alignment = BottomRight,
+									hotkey: Option[HotKey] = None, isDefault: Boolean = false)
+								   (val pressAction: Promise[A] => Unit)

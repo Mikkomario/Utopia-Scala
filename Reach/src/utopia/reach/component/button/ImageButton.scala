@@ -13,7 +13,7 @@ import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reflection.component.swing.button.ButtonImageSet
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-import utopia.reflection.event.ButtonState
+import utopia.reflection.event.{ButtonState, HotKey}
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets
@@ -41,8 +41,6 @@ class ImageButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @param insets Insets placed around the image (default = always 0)
 	  * @param alignment Alignment used when placing the image within bounds (default = Center)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Character keys used for triggering this button even when it doesn't have
-	  *                         focus (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Additional focus listeners assigned to this button (default = empty)
 	  * @param allowUpscaling Whether the images should be allowed to scale up to their source resolution
@@ -52,11 +50,10 @@ class ImageButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new button
 	  */
 	def apply(images: ButtonImageSet, insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
-			  hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-			  additionalDrawers: Vector[CustomDrawer] = Vector(),
+			  hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 			  additionalFocusListeners: Seq[FocusListener] = Vector(), allowUpscaling: Boolean = true,
 			  useLowPrioritySize: Boolean = false)(action: => Unit) =
-		new ImageButton(parentHierarchy, images, insets, alignment, hotKeys, hotKeyCharacters, additionalDrawers,
+		new ImageButton(parentHierarchy, images, insets, alignment, hotKeys, additionalDrawers,
 			additionalFocusListeners, allowUpscaling, useLowPrioritySize)(action)
 }
 
@@ -82,8 +79,6 @@ case class ContextualImageButtonFactory[+N <: ColorContextLike](factory: ImageBu
 	  * @param insets Insets placed around the image (default = always 0)
 	  * @param alignment Alignment used when placing the image within bounds (default = Center)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Character keys used for triggering this button even when it doesn't have
-	  *                         focus (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Additional focus listeners assigned to this button (default = empty)
 	  * @param useLowPrioritySize Whether low priority size constraints should be used (default = false)
@@ -91,11 +86,10 @@ case class ContextualImageButtonFactory[+N <: ColorContextLike](factory: ImageBu
 	  * @return A new button
 	  */
 	def withIcon(icon: SingleColorIcon, insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
-				 hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-				 additionalDrawers: Vector[CustomDrawer] = Vector(),
+				 hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 				 additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPrioritySize: Boolean = false)
 				(action: => Unit) =
-		factory(icon.asIndividualButton, insets, alignment, hotKeys, hotKeyCharacters, additionalDrawers,
+		factory(icon.asIndividualButton, insets, alignment, hotKeys, additionalDrawers,
 			additionalFocusListeners, context.allowImageUpscaling, useLowPrioritySize)(action)
 	
 	/**
@@ -106,8 +100,6 @@ case class ContextualImageButtonFactory[+N <: ColorContextLike](factory: ImageBu
 	  * @param insets Insets placed around the image (default = always 0)
 	  * @param alignment Alignment used when placing the image within bounds (default = Center)
 	  * @param hotKeys Hotkeys used for triggering this button even when it doesn't have focus (default = empty)
-	  * @param hotKeyCharacters Character keys used for triggering this button even when it doesn't have
-	  *                         focus (default = empty)
 	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
 	  * @param additionalFocusListeners Additional focus listeners assigned to this button (default = empty)
 	  * @param useLowPrioritySize Whether low priority size constraints should be used (default = false)
@@ -116,13 +108,11 @@ case class ContextualImageButtonFactory[+N <: ColorContextLike](factory: ImageBu
 	  */
 	def withColouredIcon(icon: SingleColorIcon, role: ColorRole, preferredShade: ColorShade = Standard,
 						 insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
-						 hotKeys: Set[Int] = Set(), hotKeyCharacters: Iterable[Char] = Set(),
-						 additionalDrawers: Vector[CustomDrawer] = Vector(),
+						 hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
 						 additionalFocusListeners: Seq[FocusListener] = Vector(), useLowPrioritySize: Boolean = false)
 						(action: => Unit) =
 		factory(icon.asIndividualButtonWithColor(context.color(role, preferredShade)), insets, alignment, hotKeys,
-			hotKeyCharacters, additionalDrawers, additionalFocusListeners, context.allowImageUpscaling,
-			useLowPrioritySize)(action)
+			additionalDrawers, additionalFocusListeners, context.allowImageUpscaling, useLowPrioritySize)(action)
 }
 
 /**
@@ -131,8 +121,8 @@ case class ContextualImageButtonFactory[+N <: ColorContextLike](factory: ImageBu
   * @since 29.10.2020, v2
   */
 class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, insets: StackInsets = StackInsets.zero,
-				  alignment: Alignment = Alignment.Center, hotKeys: Set[Int] = Set(),
-				  hotKeyCharacters: Iterable[Char] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
+				  alignment: Alignment = Alignment.Center, hotKeys: Set[HotKey] = Set(),
+				  additionalDrawers: Vector[CustomDrawer] = Vector(),
 				  additionalFocusListeners: Seq[FocusListener] = Vector(), allowUpscaling: Boolean = true,
 				  useLowPrioritySize: Boolean = false)(action: => Unit) extends ReachComponentWrapper with ButtonLike
 {
@@ -155,7 +145,7 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, i
 	
 	// INITIAL CODE	-----------------------------
 	
-	setup(_statePointer, hotKeys, hotKeyCharacters)
+	setup(_statePointer, hotKeys)
 	
 	
 	// IMPLEMENTED	-----------------------------
