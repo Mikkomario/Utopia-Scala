@@ -63,7 +63,8 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	  * @param context Additional context item created in inputTemplate
 	  * @return Combined component
 	  */
-	protected def buildLayout(content: Vector[OpenComponent[ReachComponentLike, ChangingLike[Boolean]]],
+	protected def buildLayout(factories: ContextualMixed[ColorContext],
+							  content: Vector[OpenComponent[ReachComponentLike, ChangingLike[Boolean]]],
 							  context: N): ReachComponentLike
 	
 	/**
@@ -101,7 +102,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		}
 		
 		// Builds the final layout
-		val content = buildLayout(openGroups, dialogContext)
+		val content = buildLayout(factories, openGroups, dialogContext)
 		
 		// Creates the data interface (reading input data from fields)
 		val fields = managedFieldsBuilder.result().toMap

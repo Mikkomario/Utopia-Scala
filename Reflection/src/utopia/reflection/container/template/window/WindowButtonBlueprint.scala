@@ -19,13 +19,15 @@ object WindowButtonBlueprint
 	  * @param icon Icon displayed on this button (optional)
 	  * @param role Color role of this button (default = primary)
 	  * @param location Location on the window where this button should be placed (default = bottom right)
+	  * @param isDefault Whether this button should be treated as the window's default button (default = false)
 	  * @param hotkey Hotkey that is used for triggering this button, even when it is not in focus (optional)
 	  * @param result A function for generating the result
 	  * @tparam A Type of yielded result
 	  * @return A new button blueprint
 	  */
 	def closeWithResult[A](text: LocalizedString, icon: Option[SingleColorIcon] = None, role: ColorRole = Primary,
-						   location: Alignment = BottomRight, hotkey: Option[HotKey] = None)(result: => A) =
+						   location: Alignment = BottomRight, hotkey: Option[HotKey] = None,
+						   isDefault: Boolean = false)(result: => A) =
 		apply[A](text, icon, role, location, hotkey) { _.tryComplete(Try { result }) }
 }
 

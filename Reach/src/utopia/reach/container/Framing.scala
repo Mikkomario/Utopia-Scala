@@ -12,7 +12,7 @@ import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.container.stack.template.layout.FramingLike2
 import utopia.reflection.shape.stack.{StackInsets, StackInsetsConvertible}
 
-object Framing extends ComponentFactoryFactory[FramingFactory]
+object Framing extends ContextInsertableComponentFactoryFactory[Any, FramingFactory, ContextualFramingFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = FramingFactory(hierarchy)
 }

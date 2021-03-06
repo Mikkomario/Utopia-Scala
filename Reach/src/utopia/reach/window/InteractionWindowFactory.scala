@@ -22,6 +22,7 @@ import utopia.reflection.shape.stack.StackLength
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{ExecutionContext, Promise}
+import scala.util.Try
 
 /**
   * A common trait for creating dialogs that are used for user-interactions, usually for requesting some sort of input
@@ -81,7 +82,7 @@ trait InteractionWindowFactory[A]
 	  * Displays an interactive dialog to the user. Blocks while the dialog is visible
 	  * @param parentWindow Window over which this window is displayed (optional)
 	  */
-	def displayBlocking(parentWindow: Option[java.awt.Window] = None, cursors: Option[CursorSet] = None): Unit =
+	def displayBlocking(parentWindow: Option[java.awt.Window] = None, cursors: Option[CursorSet] = None): Try[A] =
 		display(parentWindow, cursors).waitFor()
 	
 	/**
