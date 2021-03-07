@@ -6,19 +6,22 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.flow.util.FileExtensions._
 import utopia.genesis.generic.GenesisDataType
+import utopia.genesis.handling.ActorLoop
 import utopia.genesis.image.Image
 import utopia.genesis.util.DistanceExtensions._
 import utopia.reach.component.factory.ContextualMixed
-import utopia.reach.component.input.{ContextualTextFieldFactory, TextField}
+import utopia.reach.component.input.{CheckBox, ContextualCheckBoxFactory, ContextualTextFieldFactory, TextField}
 import utopia.reach.component.template.{Focusable, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
-import utopia.reach.container.Framing
+import utopia.reach.container.{Framing, Stack, ViewStack}
 import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
 import utopia.reflection.color.ColorRole
 import utopia.reflection.color.ColorRole.Secondary
-import utopia.reflection.component.context.{ColorContext, TextContextLike}
+import utopia.reflection.component.context.{ColorContext, ColorContextLike, TextContext}
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
+import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.template.window.{ManagedField, RowGroups, WindowButtonBlueprint}
+import ManagedField._
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
@@ -37,8 +40,8 @@ object InputWindowTest extends App
 	import utopia.reflection.test.TestContext._
 	import TestCursors._
 	
-	// FIXME: Input checking doesn't work
-	// FIXME: Text fields don't properly show field names while focused
+	val selectedBoxIcon = new SingleColorIcon(Image.readFrom("Reach/test-images/check-box-selected.png").get)
+	val unselectedBoxIcon = new SingleColorIcon(Image.readFrom("Reach/test-images/check-box-empty.png").get)
 	
 	object TestWindows extends InputWindowFactory[Model[Constant], Unit]
 	{
@@ -52,7 +55,7 @@ object InputWindowTest extends App
 		override protected lazy val standardContext = baseContext.inContextWithBackground(colorScheme.primary)
 		
 		override protected lazy val fieldCreationContext =
-			baseContext.inContextWithBackground(colorScheme.primary.light).forTextComponents
+			baseContext.inContextWithBackground(colorScheme.primary.light).forTextComponents.noLineBreaksAllowed
 		
 		
 		// IMPLEMENTED	-------------------------
@@ -63,16 +66,14 @@ object InputWindowTest extends App
 		override protected def inputTemplate =
 		{
 			val nameErrorPointer = new PointerWithEvents(LocalizedString.empty)
-			// TODO: TextContext didn't work (required textContextLike)
-			val firstNameField = InputRowBlueprint.using(TextField, "firstName", fieldAlignment = Alignment.Left) { fieldF: ContextualTextFieldFactory[TextContextLike] =>
+			val firstNameField = InputRowBlueprint.using(TextField, "firstName", fieldAlignment = Alignment.Center) { fieldF: ContextualTextFieldFactory[TextContext] =>
 				val textPointer = new PointerWithEvents[String]("")
 				val displayErrorPointer = nameErrorPointer.mergeWith(textPointer) { (error, text) =>
 					if (text.isEmpty) error else LocalizedString.empty
 				}
 				val field = fieldF.forString(defaultFieldWidth, Fixed("First Name"),
-					errorMessagePointer = displayErrorPointer)
-				// TODO: These conversions don't work without specifying types first
-				ManagedField.test[String, TextField[String]](field) { s =>
+					errorMessagePointer = displayErrorPointer, textPointer = textPointer)
+				field.testWith { s =>
 					if (s.isEmpty)
 					{
 						nameErrorPointer.value = "Required Field"
@@ -82,20 +83,51 @@ object InputWindowTest extends App
 						None
 				}
 			}
-			val lastNameField = InputRowBlueprint.using(TextField, "lastName", fieldAlignment = Alignment.Left) { fieldF: ContextualTextFieldFactory[TextContextLike] =>
-				ManagedField.autoConvert[String, TextField[String]](fieldF.forString(defaultFieldWidth, Fixed("Last Name")))
+			val lastNameField = InputRowBlueprint.using(TextField, "lastName", fieldAlignment = Alignment.Center) { fieldF: ContextualTextFieldFactory[TextContext] =>
+				val field: TextField[String] = fieldF.forString(defaultFieldWidth, Fixed("Last Name"), hintPointer = Fixed("Optional"))
+				// field.withValueConversion { s: String => s }
+				//ManagedField.autoConvert2(field)
+				// ManagedField.autoConvert()
+				field.managed
+				// [String, TextField[String]]
 			}
 			
-			Vector(RowGroups.singleGroup(firstNameField, lastNameField)) -> ()
+			val acceptTermsField: InputRowBlueprint[CheckBox, ColorContextLike] = InputRowBlueprint.using(CheckBox, "accept",
+				"I accept the terms and conditions of use", fieldAlignment = Alignment.Left, isScalable = false) { fieldF: ContextualCheckBoxFactory[ColorContextLike] =>
+				val field = fieldF(selectedBoxIcon, unselectedBoxIcon)
+				// TODO: There should be a better way to do this
+				ManagedField(field) {
+					if (field.value)
+						Right(true)
+					else
+						Left("You must accept the terms and conditions to continue")
+				}
+			}
+			
+			Vector(RowGroups.singleGroup(firstNameField, lastNameField), RowGroups.singleRow(acceptTermsField)) -> ()
 		}
 		
 		override protected def buildLayout(factories: ContextualMixed[ColorContext],
 										   content: Vector[OpenComponent[ReachComponentLike, ChangingLike[Boolean]]],
 										   context: Unit) =
 		{
-			// Expects a single group only, which is framed
-			factories(Framing).withoutContext(content.head, margins.small.any,
-				Vector(BackgroundDrawer(fieldCreationContext.containerBackground)))
+			val framingMargin = margins.medium.downscaling x margins.medium.any
+			
+			// Frames content
+			if (content.size == 1)
+				factories(Framing).withoutContext(content.head, framingMargin,
+					Vector(BackgroundDrawer(fieldCreationContext.containerBackground)))
+			// If there are many, wraps them in a stack also
+			else if (content.forall { _.result.isAlwaysTrue })
+				factories(Stack).build(Framing).column() { framingF =>
+					content.map { c => framingF.withoutContext(c, framingMargin,
+						Vector(BackgroundDrawer(fieldCreationContext.containerBackground))) }
+				}
+			else
+				factories(ViewStack).build(Framing).withFixedStyle() { factories =>
+					content.map { c => factories.next().withoutContext(c, framingMargin,
+						Vector(BackgroundDrawer(fieldCreationContext.containerBackground))).parentAndResult }
+				}
 		}
 		
 		override protected def specifyButtons(context: Unit, input: => Either[(String, Focusable), Model[Constant]],
@@ -119,6 +151,12 @@ object InputWindowTest extends App
 		
 		override protected def title = "Test"
 	}
+	
+	// Starts events
+	val actionLoop = new ActorLoop(actorHandler)
+	actionLoop.registerToStopOnceJVMCloses()
+	actionLoop.startAsync()
+	StackHierarchyManager.startRevalidationLoop()
 	
 	// Displays a dialog
 	val result = TestWindows.displayBlocking(cursors = cursors).get

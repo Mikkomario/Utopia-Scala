@@ -180,6 +180,11 @@ class CheckBox(parentHierarchy: ComponentHierarchy, onImage: Image, offImage: Im
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners
 	
 	
+	// INITIAL CODE	--------------------------
+	
+	setup(baseStatePointer)
+	
+	
 	// IMPLEMENTED	--------------------------
 	
 	override protected def trigger() = valuePointer.update { !_ }

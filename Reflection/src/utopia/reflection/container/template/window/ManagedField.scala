@@ -14,14 +14,35 @@ object ManagedField
 	/**
 	  * Implicitly converts an input field into a managed field (without failure state)
 	  * @param field An input field
+	  * @tparam C Type of wrapped field
+	  * @return A new managed field
+	  */
+	implicit def autoConvertDirect[C <: Input[ValueConvertible]](field: C): ManagedField[C] =
+		alwaysSucceed(field) { field.value.toValue }
+	
+	/**
+	  * Implicitly converts an input field into a managed field (without failure state)
+	  * @param field An input field
 	  * @param autoConvert An implicit conversion from field result type to value
 	  * @tparam V Type of intermediate ValueConvertible type
 	  * @tparam C Type of wrapped field
 	  * @return A new managed field
 	  */
-	implicit def autoConvert[V, C <: Input[V]](field: C)(implicit autoConvert: V => ValueConvertible): ManagedField[C] =
-		alwaysSucceed(field) { autoConvert(field.value).toValue }
+	implicit def autoConvert[V, C[A] <: Input[A]](field: C[V])(implicit autoConvert: V => Value): ManagedField[C[V]] =
+		alwaysSucceed(field) { autoConvert(field.value) }
 	
+	/*
+	  * Implicitly converts an input field into a managed field (without failure state)
+	  * @param field An input field
+	  * @param autoConvert An implicit conversion from field result type to value
+	  * @tparam V Type of intermediate ValueConvertible type
+	  * @tparam C Type of wrapped field
+	  * @return A new managed field
+	  */
+	/*
+	implicit def autoConvert2[V, C <: Input[V]](field: C)(implicit autoConvert: V => Value): ManagedField[C] =
+		alwaysSucceed(field) { autoConvert(field.value) }
+	*/
 	
 	// OTHER	--------------------------
 	
@@ -52,7 +73,7 @@ object ManagedField
 	  * @tparam C Type of wrapped field
 	  * @return A new managed field
 	  */
-	def convert[A, C <: Input[A]](field: C)(convert: A => Value): ManagedField[C] =
+	def convert[A, C[X] <: Input[X]](field: C[A])(convert: A => Value): ManagedField[C[A]] =
 		alwaysSucceed(field) { convert(field.value) }
 	
 	/**
@@ -64,7 +85,7 @@ object ManagedField
 	  * @tparam C Type of wrapped field
 	  * @return A new managed field
 	  */
-	def testAndConvert[A, C <: Input[A]](field: C)(process: A => Either[LocalizedString, Value]) =
+	def testAndConvert[A, C[X] <: Input[X]](field: C[A])(process: A => Either[LocalizedString, Value]) =
 		apply(field) { process(field.value) }
 	
 	/**
@@ -76,14 +97,14 @@ object ManagedField
 	  * @tparam C Type of wrapped field
 	  * @return A new managed field
 	  */
-	def test[V, C <: Input[V]](field: C)(test: V => Option[LocalizedString])
-											(implicit autoConvert: V => ValueConvertible): ManagedField[C] =
+	def test[V, C[X] <: Input[X]](field: C[V])(test: V => Option[LocalizedString])
+											(implicit autoConvert: V => Value): ManagedField[C[V]] =
 		apply(field) {
 			val raw = field.value
 			test(raw) match
 			{
 				case Some(error) => Left(error)
-				case None => Right(autoConvert(raw).toValue)
+				case None => Right(autoConvert(raw))
 			}
 		}
 	
@@ -94,6 +115,52 @@ object ManagedField
 		extends ManagedField[C]
 	{
 		override def currentValue = value
+	}
+	
+	
+	// EXTENSIONS	----------------------
+	
+	implicit class ManageableField[V, C[A] <: Input[A]](val field: C[V]) extends AnyVal
+	{
+		// COMPUTED	----------------------
+		
+		/**
+		  * @param conversion Implicit conversion from field input type to a valueConvertible class
+		  * @return A managed version of this field without any failure checking
+		  */
+		def managed(implicit conversion: V => Value) =
+			withValueConversion { conversion(_) }
+		
+		
+		// OTHER	----------------------
+		
+		/**
+		  * @param test A function for testing input values. Returns a localized string on error and None on success
+		  * @param conversion Implicit conversion from field input type to a valueConvertible class
+		  * @return A managed version of this field with failure checking
+		  */
+		def testWith(test: V => Option[LocalizedString])(implicit conversion: V => Value) =
+			manageWith { v =>
+				test(v) match
+				{
+					case Some(error) => Left(error)
+					case None => Right(conversion(v))
+				}
+			}
+		
+		/**
+		  * @param conversion A function for converting the input to a value
+		  * @return A managed version of this field without any failure checking
+		  */
+		def withValueConversion(conversion: V => Value) = manageWith { v => Right(conversion(v)) }
+		
+		/**
+		  * @param conversion A function that takes this field's input value and returns either an error
+		  *                   message (Left) or a converted value (Right)
+		  * @return A managed version of this field using the specified function
+		  */
+		def manageWith(conversion: V => Either[LocalizedString, Value]): ManagedField[C[V]] =
+			new ManagedFieldWrapper[C[V]](field)(conversion(field.value))
 	}
 }
 

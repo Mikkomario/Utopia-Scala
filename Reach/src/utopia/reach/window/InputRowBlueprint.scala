@@ -21,12 +21,13 @@ object InputRowBlueprint
 	  * @param createField A function for creating a new managed field when component creation context is known.
 	  *                    Accepts component creation factory and produces a managed field.
 	  * @tparam C Type of wrapped field
+	  * @tparam Top Type of most abstract allowed component creation context
 	  * @tparam N Type of utilized component creation context
 	  * @tparam F Type of contextual component factory version
 	  * @return A new input row blueprint
 	  */
-	def using[C, N, F[X <: N] <: ContextualComponentFactory[X, _ >: N, F]]
-	(factory: ContextInsertableComponentFactoryFactory[_ >: N, _, F], key: String,
+	def using[C, Top, N <: Top, F[X <: Top] <: ContextualComponentFactory[X, _ >: Top, F]]
+	(factory: ContextInsertableComponentFactoryFactory[_ >: Top, _, F], key: String,
 	 displayName: LocalizedString  = LocalizedString.empty,
 	 fieldAlignment: Alignment = Alignment.Right, visibilityPointer: ChangingLike[Boolean] = AlwaysTrue,
 	 isScalable: Boolean = true)(createField: F[N] => ManagedField[C]) =
