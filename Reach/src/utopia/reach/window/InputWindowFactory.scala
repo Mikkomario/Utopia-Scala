@@ -337,6 +337,8 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 								   fieldNameIsFirst: Boolean, expandLabel: Boolean)
 								  (implicit fieldContext: TextContext) =
 	{
+		// TODO: Possibly add a way for the blueprint to edit a) label creation context and b) label during or after
+		//  creation (E.g. by adding mouse listeners)
 		val labelFactory =
 		{
 			if (expandLabel)

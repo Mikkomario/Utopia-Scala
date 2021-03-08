@@ -84,16 +84,12 @@ object InputWindowTest extends App
 				}
 			}
 			val lastNameField = InputRowBlueprint.using(TextField, "lastName", fieldAlignment = Alignment.Center) { fieldF: ContextualTextFieldFactory[TextContext] =>
-				val field: TextField[String] = fieldF.forString(defaultFieldWidth, Fixed("Last Name"), hintPointer = Fixed("Optional"))
-				// field.withValueConversion { s: String => s }
-				//ManagedField.autoConvert2(field)
-				// ManagedField.autoConvert()
-				field.managed
-				// [String, TextField[String]]
+				fieldF.forString(defaultFieldWidth, Fixed("Last Name"), hintPointer = Fixed("Optional"))
 			}
 			
-			val acceptTermsField: InputRowBlueprint[CheckBox, ColorContextLike] = InputRowBlueprint.using(CheckBox, "accept",
-				"I accept the terms and conditions of use", fieldAlignment = Alignment.Left, isScalable = false) { fieldF: ContextualCheckBoxFactory[ColorContextLike] =>
+			val acceptTermsField = InputRowBlueprint.using(CheckBox, "accept",
+				"I accept the terms and conditions of use", fieldAlignment = Alignment.Left,
+				isScalable = false) { fieldF: ContextualCheckBoxFactory[ColorContextLike] =>
 				val field = fieldF(selectedBoxIcon, unselectedBoxIcon)
 				// TODO: There should be a better way to do this
 				ManagedField(field) {
