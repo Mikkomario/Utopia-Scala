@@ -11,11 +11,21 @@ import scala.util.Failure
   */
 sealed trait RequestNotSent
 {
+	// ABSTRACT	----------------------------
+	
+	/**
+	  * @return A throwable error based on this state
+	  */
+	def toException: Throwable
+	
+	
+	// COMPUTED	---------------------------
+	
 	/**
 	  * @tparam A Type of failure
 	  * @return A failure based on this state
 	  */
-	def toFailure[A]: Failure[A]
+	def toFailure[A] = Failure[A](toException)
 }
 
 object RequestNotSent
@@ -25,7 +35,7 @@ object RequestNotSent
 	  */
 	case object RequestWasDeprecated extends RequestNotSent
 	{
-		override def toFailure[A] = Failure[A](new RequestFailedException("Request was deprecated"))
+		override def toException = new RequestFailedException("Request was deprecated")
 	}
 	
 	/**
@@ -34,6 +44,6 @@ object RequestNotSent
 	  */
 	case class RequestFailed(error: Throwable) extends RequestNotSent
 	{
-		override def toFailure[A] = Failure[A](error)
+		override def toException = error
 	}
 }

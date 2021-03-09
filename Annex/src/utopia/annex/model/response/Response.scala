@@ -51,6 +51,11 @@ sealed trait Response extends RequestResult
 	def status: Status
 	
 	/**
+	  * @return Either an empty success or a failure, based on this response's status
+	  */
+	def toEmptyTry: Try[Unit]
+	
+	/**
 	  * If this is a successful response, attempts to parse its contents into a single entity
 	  * @param parser Parser used to interpret response body
 	  * @tparam A Type of parse result
@@ -97,6 +102,8 @@ object Response
 	{
 		override def isSuccess = true
 		
+		override def toEmptyTry = scala.util.Success(())
+		
 		override def singleParsedFromSuccess[A](parser: FromModelFactory[A]) = body.tryParseSingleWith(parser)
 		
 		override def manyParsedFromSuccess[A](parser: FromModelFactory[A]) = body.vector(parser).parsed
@@ -138,6 +145,8 @@ object Response
 		// IMPLEMENTED  ----------------------
 		
 		override def isSuccess = false
+		
+		override def toEmptyTry = toFailure
 		
 		override def singleParsedFromSuccess[A](parser: FromModelFactory[A]) = toFailure
 		
