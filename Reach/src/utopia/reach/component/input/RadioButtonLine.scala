@@ -59,7 +59,8 @@ case class ContextualRadioButtonLineFactory[+N <: TextContextLike](parentHierarc
 	 * @param customDrawers Custom drawers to assign (default = empty)
 	 * @param focusListeners Focus listeners to assign (default = empty)
 	 * @tparam A Type of selected value
-	 * @return A new radio button and associated label
+	 * @return A new radio button and associated label in a stack. The created radio button is added
+	  *         as an additional result.
 	 */
 	def apply[A](selectedValuePointer: PointerWithEvents[A], value: A, labelText: LocalizedString,
 				 selectedColorRole: ColorRole = Secondary, enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
@@ -86,7 +87,7 @@ case class ContextualRadioButtonLineFactory[+N <: TextContextLike](parentHierarc
 					backgroundColorPointer.map { _.shade })
 				
 				// Places the radio button on the left and the text field on the right
-				Vector(radioButton, label)
+				Vector(radioButton, label) -> radioButton
 			}
 	}
 }
