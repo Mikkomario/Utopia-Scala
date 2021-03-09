@@ -2,15 +2,17 @@ package utopia.reach.component.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{Changing, ChangingLike, Fixed}
-import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.event.KeyStateEvent
+import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.shape.Axis.Y
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.Direction1D
+import utopia.genesis.view.GlobalKeyboardEventHandler
+import utopia.inception.handling.HandlerType
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{FocusableWithState, ReachComponentWrapper}
+import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.container.Stack
+import utopia.reach.focus.ManyFocusableWrapper
 import utopia.reflection.color.{ColorRole, ComponentColor}
 import utopia.reflection.color.ColorRole.Secondary
 import utopia.reflection.component.context.TextContext
@@ -82,7 +84,7 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, options: Vector[(
 						  initialValue: A, backgroundColorPointer: ChangingLike[ComponentColor], direction: Axis2D = Y,
 						  selectedColorRole: ColorRole = Secondary, customDrawers: Vector[CustomDrawer] = Vector())
 						 (implicit context: TextContext)
-	extends ReachComponentWrapper with Pool[Vector[A]] with InputWithPointer[A, Changing[A]] with FocusableWithState
+	extends ReachComponentWrapper with Pool[Vector[A]] with InputWithPointer[A, Changing[A]] with ManyFocusableWrapper
 {
 	// ATTRIBUTES	------------------------
 	
@@ -105,14 +107,11 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, options: Vector[(
 	// While focused, allows the user to change items with arrow keys
 	if (buttons.size > 1)
 	{
-		addFilteredKeyListenerWhileFocused(KeyStateEvent.arrowKeysFilter) { event =>
-			event.arrowAlong(direction).foreach { direction =>
-				buttons.indexWhereOption { _.hasFocus }.foreach { currentFocusIndex =>
-					// Moves the focus according to the arrow key (if possible)
-					val nextFocusIndex = currentFocusIndex + direction.sign.modifier
-					buttons.getOption(nextFocusIndex).foreach { _.requestFocus(forceFocusLeave = true) }
-				}
-			}
+		addHierarchyListener { isAttached =>
+			if (isAttached)
+				GlobalKeyboardEventHandler += ArrowKeyListener
+			else
+				GlobalKeyboardEventHandler -= ArrowKeyListener
 		}
 	}
 	
@@ -121,21 +120,21 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, options: Vector[(
 	
 	override protected def wrapped = _wrapped
 	
+	override protected def focusTargets = buttons
+	
 	override def valuePointer = _valuePointer.view
 	
-	override def hasFocus = buttons.exists { _.hasFocus }
 	
-	override def focusId = hashCode()
+	// NESTED	----------------------------
 	
-	override def focusListeners = Vector()
-	
-	override def allowsFocusEnter = false
-	
-	override def allowsFocusLeave = true
-	
-	override def requestFocus(forceFocusLeave: Boolean, forceFocusEnter: Boolean) =
-		if (!hasFocus) buttons.headOption.exists { _.requestFocus(forceFocusLeave, forceFocusEnter) } else true
-	
-	override def yieldFocus(direction: Direction1D, forceFocusLeave: Boolean) =
-		buttons.find { _.hasFocus }.foreach { _.yieldFocus(direction, forceFocusLeave) }
+	private object ArrowKeyListener extends KeyStateListener
+	{
+		override def keyStateEventFilter = KeyStateEvent.arrowKeysFilter
+		
+		override def onKeyState(event: KeyStateEvent) = event.arrowAlong(direction).foreach { direction =>
+			moveFocusInside(direction.sign, forceFocusLeave = true)
+		}
+		
+		override def allowsHandlingFrom(handlerType: HandlerType) = hasFocus
+	}
 }

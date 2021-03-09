@@ -5,7 +5,7 @@ import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.Positive
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.wrapper.ComponentCreationResult
-import utopia.reach.focus.FocusListener
+import utopia.reach.focus.{FocusListener, FocusRequestable}
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.Never
 import utopia.reflection.shape.Alignment
@@ -55,7 +55,7 @@ object Focusable
   * @author Mikko Hilpinen
   * @since 21.10.2020, v2
   */
-trait Focusable extends ReachComponentLike
+trait Focusable extends ReachComponentLike with FocusRequestable
 {
 	// ABSTRACT	--------------------------------
 	
@@ -88,6 +88,18 @@ trait Focusable extends ReachComponentLike
 	def focusManager = parentCanvas.focusManager
 	
 	
+	// IMPLEMENTED	---------------------------
+	
+	/**
+	  * Requests a focus gain for this component
+	  * @param forceFocusLeave Whether focus should be forced to leave from the current focus owner (default = false)
+	  * @param forceFocusEnter Whether focus should be forced to enter this component (default = false)
+	  * @return Whether this component received (or is likely to receive) focus
+	  */
+	override def requestFocus(forceFocusLeave: Boolean = false, forceFocusEnter: Boolean = false) =
+		focusManager.moveFocusTo(this, forceFocusLeave, forceFocusEnter)
+	
+	
 	// OTHER	-------------------------------
 	
 	/**
@@ -117,15 +129,6 @@ trait Focusable extends ReachComponentLike
 		if (parentHierarchy.isLinked)
 			enableFocusHandling()
 	}
-	
-	/**
-	  * Requests a focus gain for this component
-	  * @param forceFocusLeave Whether focus should be forced to leave from the current focus owner (default = false)
-	  * @param forceFocusEnter Whether focus should be forced to enter this component (default = false)
-	  * @return Whether this component received (or is likely to receive) focus
-	  */
-	def requestFocus(forceFocusLeave: Boolean = false, forceFocusEnter: Boolean = false) =
-		focusManager.moveFocusTo(this, forceFocusLeave, forceFocusEnter)
 	
 	/**
 	  * Moves the focus one step forward (or backward) from this component.

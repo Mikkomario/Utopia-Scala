@@ -5,22 +5,15 @@ import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.inception.util.Filter
+import utopia.reach.focus.FocusTracking
 
 /**
  * A common trait for focusable items which keep track of their focus state
  * @author Mikko Hilpinen
  * @since 31.1.2021, v1
  */
-trait FocusableWithState extends Focusable
+trait FocusableWithState extends Focusable with FocusTracking
 {
-	// ABSTRACT ----------------------------------
-	
-	/**
-	 * @return Whether this component currently has focus
-	 */
-	def hasFocus: Boolean
-	
-	
 	// OTHER    ----------------------------------
 	
 	/**

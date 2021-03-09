@@ -7,7 +7,7 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
   * @author Mikko Hilpinen
   * @since 4.11.2020, v2
   */
-class FocusStateTracker(hasFocusInitially: Boolean) extends FocusChangeListener
+class FocusStateTracker(hasFocusInitially: Boolean) extends FocusChangeListener with FocusTracking
 {
 	// ATTRIBUTES	-------------------------
 	
@@ -21,13 +21,13 @@ class FocusStateTracker(hasFocusInitially: Boolean) extends FocusChangeListener
 	  */
 	def focusPointer = pointer.view
 	
+	
+	// IMPLEMENTED	-------------------------
+	
 	/**
 	  * @return Whether the tracked component currently holds focus
 	  */
-	def hasFocus = pointer.value
-	
-	
-	// IMPLEMENTED	-------------------------
+	override def hasFocus = pointer.value
 	
 	override def onFocusChangeEvent(event: FocusChangeEvent) = pointer.value = event.hasFocus
 }

@@ -11,7 +11,7 @@ import utopia.genesis.image.Image
 import utopia.genesis.util.DistanceExtensions._
 import utopia.reach.component.factory.ContextualMixed
 import utopia.reach.component.input.{CheckBox, ContextualCheckBoxFactory, ContextualTextFieldFactory, TextField}
-import utopia.reach.component.template.{Focusable, ReachComponentLike}
+import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.{Framing, Stack, ViewStack}
 import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
@@ -22,6 +22,7 @@ import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.template.window.{ManagedField, RowGroups, WindowButtonBlueprint}
 import ManagedField._
+import utopia.reach.focus.FocusRequestable
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
@@ -129,7 +130,8 @@ object InputWindowTest extends App
 				}
 		}
 		
-		override protected def specifyButtons(context: Unit, input: => Either[(String, Focusable), Model[Constant]],
+		override protected def specifyButtons(context: Unit,
+											  input: => Either[(String, ReachComponentLike with FocusRequestable), Model[Constant]],
 											  warn: (String, LocalizedString) => Unit) =
 		{
 			val okButton = WindowButtonBlueprint[Model[Constant]]("OK", role = Secondary, isDefault = true) { promise =>

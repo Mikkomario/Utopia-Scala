@@ -352,7 +352,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 				   promptPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
 				   hintPointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
 				   errorMessagePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),
-				   textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
+				   textContentPointer: PointerWithEvents[String] = new PointerWithEvents(""),
 				   leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
 				   rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
 				   enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
@@ -361,7 +361,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 				   focusColorRole: ColorRole = Secondary, hintScaleFactor: Double = Field.defaultHintScaleFactor,
 				   caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
 				   inputFilter: Option[Regex] = None,
-				   resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
+				   resultFilter: Option[Regex] = None, val maxLength: Option[Int] = None,
 				   inputValidation: Option[A => LocalizedString] = None, fillBackground: Boolean = true,
 				   showCharacterCount: Boolean = false)
 				  (parseResult: Option[String] => A)(implicit context: TextContextLike)
@@ -372,8 +372,8 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 	
 	override val valuePointer = resultFilter match
 	{
-		case Some(filter) => textPointer.map { text => parseResult(filter.filter(text).notEmpty) }
-		case None => textPointer.map { text => parseResult(text.notEmpty) }
+		case Some(filter) => textContentPointer.map { text => parseResult(filter.filter(text).notEmpty) }
+		case None => textContentPointer.map { text => parseResult(text.notEmpty) }
 	}
 	
 	// Uses either the outside error message, an input validator, both or neither as the error message pointer
@@ -394,12 +394,12 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 	{
 		case Some(promptPointer) =>
 			// Displays the prompt while text starts with the same characters or is empty
-			promptPointer.mergeWith(textPointer) { (prompt, text) =>
+			promptPointer.mergeWith(textContentPointer) { (prompt, text) =>
 				if (text.isEmpty || text.startsWith(prompt.string)) prompt else LocalizedString.empty }
 		case None => promptPointer
 	}
 	
-	private val isEmptyPointer = textPointer.map { _.isEmpty }
+	private val isEmptyPointer = textContentPointer.map { _.isEmpty }
 	
 	private val _wrapped = Field(parentHierarchy).withContext(context).apply[EditableTextLabel](isEmptyPointer,
 		fieldNamePointer, actualPromptPointer, hintPointer, actualErrorPointer, leftIconPointer, rightIconPointer,
@@ -416,7 +416,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 		
 		val label = EditableTextLabel(fc.parentHierarchy).apply(tc.actorHandler, stylePointer,
 			selectedTextColorPointer, selectedBackgroundPointer.map { Some(_) }, caretColorPointer, caretWidth,
-			caretBlinkFrequency, textPointer, inputFilter, maxLength,
+			caretBlinkFrequency, textContentPointer, inputFilter, maxLength,
 			enabledPointer, allowSelectionWhileDisabled = false, tc.allowLineBreaks, tc.allowTextShrink)
 		label.addFocusListener(fc.focusListener)
 		fc.promptDrawers.foreach(label.addCustomDrawer)
@@ -428,7 +428,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 				implicit val localizer: Localizer = tc.localizer
 				val countStylePointer = fc.backgroundPointer.map { background => TextDrawContext(fc.font,
 					background.textColorStandard.hintTextColor, Alignment.Right, tc.textInsets * hintScaleFactor) }
-				val textLengthPointer = textPointer.map { _.length }
+				val textLengthPointer = textContentPointer.map { _.length }
 				Open.using(ViewTextLabel) { _.apply(textLengthPointer, countStylePointer,
 					DisplayFunction.functionToDisplayFunction[Int] { length =>
 						s"%i / %i".noLanguage.localized.interpolated(Vector(length, maxLength)) },
@@ -445,7 +445,15 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 	_wrapped.wrappedField.addConstraintOver(X)(MaxBetweenLengthModifier(defaultWidth))
 	
 	// Formats text contents whenever focus is lost
-	resultFilter.foreach { filter => addFocusLostListener { textPointer.update(filter.filter) } }
+	resultFilter.foreach { filter => addFocusLostListener { textContentPointer.update(filter.filter) } }
+	
+	
+	// COMPUTED	----------------------------------------------
+	
+	/**
+	  * @return A read-only version of this text field's text pointer
+	  */
+	def textPointer = textContentPointer.view
 	
 	
 	// IMPLEMENTED	------------------------------------------
@@ -462,5 +470,5 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 	/**
 	  * Clears this field of all text
 	  */
-	def clear() = textPointer.value = ""
+	def clear() = textContentPointer.value = ""
 }
