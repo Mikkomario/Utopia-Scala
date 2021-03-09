@@ -55,7 +55,7 @@ object InputWindowTest extends App
 		override protected lazy val standardContext = baseContext.inContextWithBackground(colorScheme.primary)
 		
 		override protected lazy val fieldCreationContext =
-			baseContext.inContextWithBackground(colorScheme.primary.light).forTextComponents.noLineBreaksAllowed
+			baseContext.inContextWithBackground(colorScheme.primary.light)
 		
 		
 		// IMPLEMENTED	-------------------------
@@ -102,6 +102,9 @@ object InputWindowTest extends App
 			
 			Vector(RowGroups.singleGroup(firstNameField, lastNameField), RowGroups.singleRow(acceptTermsField)) -> ()
 		}
+		
+		override protected def makeFieldNameAndFieldContext(base: ColorContext) =
+			base.forTextComponents.mapFont { _ * 0.8 } -> base.forTextComponents.noLineBreaksAllowed
 		
 		override protected def buildLayout(factories: ContextualMixed[ColorContext],
 										   content: Vector[OpenComponent[ReachComponentLike, ChangingLike[Boolean]]],

@@ -38,9 +38,9 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	// ABSTRACT	---------------------------------
 	
 	/**
-	  * @return Component creation context used when creating input fields and their labels
+	  * @return Component creation context used as the base when creating input fields and their labels
 	  */
-	protected def fieldCreationContext: TextContext
+	protected def fieldCreationContext: ColorContext
 	
 	/**
 	  * @return Component creation context used in the warning pop-up. Determines pop-up background also.
@@ -56,6 +56,12 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	  * @return Icon representing window close action (used in warning pop-ups and the default close button)
 	  */
 	protected def closeIcon: SingleColorIcon
+	
+	/**
+	  * @param base The basic field creation context
+	  * @return 1) Context to use for the field name labels and 2) Context to use for the fields themselves
+	  */
+	protected def makeFieldNameAndFieldContext(base: ColorContext): (TextContext, TextContext)
 	
 	/**
 	  * Combines components to a single layout
@@ -92,6 +98,8 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		implicit val canvas: ReachCanvas = factories.parentHierarchy.top
 		val (template, dialogContext) = inputTemplate
 		val context = fieldCreationContext
+		val (nameContext, fieldContext) = makeFieldNameAndFieldContext(context)
+		implicit val rowContext: FieldRowContext = FieldRowContext(nameContext, fieldContext)
 		val managedFieldsBuilder = new VectorBuilder[(String, ManagedField[Focusable])]
 		
 		// Creates component layouts based on the template row groups
@@ -184,9 +192,10 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		WaitUtils.delayed(5.seconds) { window.close() }
 	}
 	
-	private def groupsToComponent(factories: ContextualMixed[TextContext],
+	private def groupsToComponent(factories: ContextualMixed[ColorContext],
 								  groups: RowGroups[InputRowBlueprint[Focusable, TextContext]],
-								  fieldsBuffer: VectorBuilder[(String, ManagedField[Focusable])]): (ReachComponentLike, ChangingLike[Boolean]) =
+								  fieldsBuffer: VectorBuilder[(String, ManagedField[Focusable])])
+								 (implicit context: FieldRowContext): (ReachComponentLike, ChangingLike[Boolean]) =
 	{
 		// Checks whether segmentation should be used
 		val segmentGroup =
@@ -227,10 +236,11 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		
 	}
 	
-	private def groupToComponent(factories: ContextualMixed[TextContext],
+	private def groupToComponent(factories: ContextualMixed[ColorContext],
 								 group: RowGroup[InputRowBlueprint[Focusable, TextContext]],
 								 segmentGroup: Option[SegmentGroup],
-								 fieldsBuffer: VectorBuilder[(String, ManagedField[Focusable])]): (ReachComponentLike, ChangingLike[Boolean]) =
+								 fieldsBuffer: VectorBuilder[(String, ManagedField[Focusable])])
+								(implicit context: FieldRowContext): (ReachComponentLike, ChangingLike[Boolean]) =
 	{
 		// If this group consists of multiple rows, wraps them in a stack. Otherwise presents the row as is
 		if (group.isSingleRow)
@@ -254,12 +264,11 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		}
 	}
 	
-	private def actualizeRow(factories: ContextualMixed[TextContext],
+	private def actualizeRow(factories: ContextualMixed[ColorContext],
 							 blueprint: InputRowBlueprint[Focusable, TextContext], segmentGroup: Option[SegmentGroup],
-							 fieldsBuilder: VectorBuilder[(String, ManagedField[Focusable])]): (ReachComponentLike, ChangingLike[Boolean]) =
+							 fieldsBuilder: VectorBuilder[(String, ManagedField[Focusable])])
+							(implicit context: FieldRowContext): (ReachComponentLike, ChangingLike[Boolean]) =
 	{
-		implicit val fieldContext: TextContext = factories.context
-		
 		// Case: Two components are used
 		if (blueprint.displaysName)
 		{
@@ -308,46 +317,47 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 			// => it is attached directly to the stack
 			if (blueprint.isScalable)
 			{
-				val field = blueprint(factories.parentHierarchy, fieldContext)
+				val field = blueprint(factories.parentHierarchy, context.fieldContext)
 				fieldsBuilder += blueprint.key -> field
 				field.field -> blueprint.visibilityPointer
 			}
 			// Case: Field needs to be aligned => it is wrapped before adding to the layout
 			else
 				factories(AlignFrame).build(Mixed)(blueprint.fieldAlignment) { factories =>
-					val field = blueprint(factories.parentHierarchy, fieldContext)
+					val field = blueprint(factories.parentHierarchy, context.fieldContext)
 					fieldsBuilder += blueprint.key -> field
 					field.field
 				}.parent -> blueprint.visibilityPointer
 		}
 	}
 	
-	private def createHorizontalFieldAndNameRow(factories: => ContextualMixed[TextContext],
+	private def createHorizontalFieldAndNameRow(factories: => ContextualMixed[ColorContext],
 												blueprint: InputRowBlueprint[Focusable, TextContext],
 												fieldsBuilder: VectorBuilder[(String, ManagedField[Focusable])])
-											   (implicit fieldContext: TextContext) =
+											   (implicit context: FieldRowContext) =
 	{
 		val fieldNameComesFirst = blueprint.fieldAlignment.horizontal != Alignment.Left
 		createFieldAndName(factories, blueprint, fieldsBuilder, fieldNameComesFirst, expandLabel = false)
 	}
 	
-	private def createFieldAndName(factories: => ContextualMixed[TextContext],
+	private def createFieldAndName(factories: => ContextualMixed[ColorContext],
 								   blueprint: InputRowBlueprint[Focusable, TextContext],
 								   fieldsBuilder: VectorBuilder[(String, ManagedField[Focusable])],
 								   fieldNameIsFirst: Boolean, expandLabel: Boolean)
-								  (implicit fieldContext: TextContext) =
+								  (implicit context: FieldRowContext) =
 	{
 		// TODO: Possibly add a way for the blueprint to edit a) label creation context and b) label during or after
 		//  creation (E.g. by adding mouse listeners)
 		val labelFactory =
 		{
+			val base = factories.withContext(context.nameContext)(TextLabel)
 			if (expandLabel)
-				factories(TextLabel).mapContext { _.expandingHorizontally }
+				base.mapContext { _.expandingHorizontally }
 			else
-				factories(TextLabel)
+				base
 		}
 		val fieldNameLabel = labelFactory(blueprint.displayName)
-		val field = blueprint(factories.parentHierarchy, fieldContext)
+		val field = blueprint(factories.parentHierarchy, context.fieldContext)
 		fieldsBuilder += blueprint.key -> field
 		// Field ordering depends on the blueprint alignment
 		val components = if (fieldNameIsFirst) Vector(fieldNameLabel, field.field) else Vector(field.field, fieldNameLabel)
@@ -356,3 +366,5 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		ComponentCreationResult.many(components, blueprint.visibilityPointer)
 	}
 }
+
+private case class FieldRowContext(nameContext: TextContext, fieldContext: TextContext)
