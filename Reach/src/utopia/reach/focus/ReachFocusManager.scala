@@ -186,7 +186,8 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 					if (forceFocusLeave || testFocusLeave(current))
 					{
 						// Finds the next focus target that allows focus entering
-						focusTargetsIterator(direction).dropWhile { _ != current }.drop(1).find(testFocusEnter) match
+						val currentFocusId = current.focusId
+						focusTargetsIterator(direction).dropWhile { _.focusId != currentFocusId }.drop(1).find(testFocusEnter) match
 						{
 							// Case: Target found => Moves focus
 							case Some(next) =>
