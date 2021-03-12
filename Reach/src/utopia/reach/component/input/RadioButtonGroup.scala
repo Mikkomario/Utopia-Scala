@@ -1,7 +1,7 @@
 package utopia.reach.component.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{Changing, ChangingLike, Fixed}
+import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.shape.Axis.Y
@@ -18,7 +18,7 @@ import utopia.reflection.color.ColorRole.Secondary
 import utopia.reflection.component.context.TextContext
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.template.display.Pool
-import utopia.reflection.component.template.input.InputWithPointer
+import utopia.reflection.component.template.input.InteractionWithPointer
 import utopia.reflection.localization.LocalizedString
 
 object RadioButtonGroup extends ContextInsertableComponentFactoryFactory[TextContext, RadioButtonGroupFactory,
@@ -70,8 +70,30 @@ case class ContextualRadioButtonGroupFactory[+N <: TextContext](parentHierarchy:
 		if (options.isEmpty)
 			throw new IllegalArgumentException("There must be at least one available option")
 		else
-			new RadioButtonGroup[A](parentHierarchy, options, options.head._1, backgroundColorPointer, direction,
-				selectedColorRole, customDrawers)
+			new RadioButtonGroup[A](parentHierarchy, options, new PointerWithEvents(options.head._1),
+				backgroundColorPointer, direction, selectedColorRole, customDrawers)
+	}
+	
+	/**
+	  * Creates a new radio button group
+	  * @param options Selectable options
+	  * @param valuePointer A mutable pointer to the currently selected option / value
+	  * @param direction Group direction (Y = options are stacked vertically, X = options are stacked horizontally)
+	  *                  (default = Y)
+	  * @param selectedColorRole Color role that represents the selected state in these buttons (default = Secondary)
+	  * @param backgroundColorPointer A pointer to the surrounding container background color
+	  *                               (default = determined by context)
+	  * @param customDrawers Custom drawers assigned to this group (default = empty)
+	  * @tparam A Type of selected value
+	  * @return A new radio button group
+	  */
+	def withPointer[A](options: Vector[(A, LocalizedString)], valuePointer: PointerWithEvents[A], direction: Axis2D = Y,
+					   selectedColorRole: ColorRole = Secondary,
+					   backgroundColorPointer: ChangingLike[ComponentColor] = Fixed(context.containerBackground),
+					   customDrawers: Vector[CustomDrawer] = Vector()) =
+	{
+		new RadioButtonGroup[A](parentHierarchy, options, valuePointer, backgroundColorPointer, direction,
+			selectedColorRole, customDrawers)
 	}
 }
 
@@ -81,21 +103,21 @@ case class ContextualRadioButtonGroupFactory[+N <: TextContext](parentHierarchy:
   * @since 9.3.2021, v10.7
   */
 class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, options: Vector[(A, LocalizedString)],
-						  initialValue: A, backgroundColorPointer: ChangingLike[ComponentColor], direction: Axis2D = Y,
+						  override val valuePointer: PointerWithEvents[A],
+						  backgroundColorPointer: ChangingLike[ComponentColor], direction: Axis2D = Y,
 						  selectedColorRole: ColorRole = Secondary, customDrawers: Vector[CustomDrawer] = Vector())
 						 (implicit context: TextContext)
-	extends ReachComponentWrapper with Pool[Vector[A]] with InputWithPointer[A, Changing[A]] with ManyFocusableWrapper
+	extends ReachComponentWrapper with Pool[Vector[A]] with InteractionWithPointer[A] with ManyFocusableWrapper
 {
 	// ATTRIBUTES	------------------------
 	
 	override val content = options.map { _._1 }
-	private val _valuePointer = new PointerWithEvents(initialValue)
 	
 	private val (_wrapped, buttons) = Stack(parentHierarchy)
 		.withContext(if (direction == Y) context else context.expandingToRight)
 		.build(RadioButtonLine)(direction, customDrawers = customDrawers) { lineF =>
 			// Creates a line for each option
-			val lines = options.map { case (item, text) => lineF(_valuePointer, item, text, selectedColorRole,
+			val lines = options.map { case (item, text) => lineF(valuePointer, item, text, selectedColorRole,
 				backgroundColorPointer = backgroundColorPointer) }
 			// Collects the radio buttons as additional results
 			lines.map { _.parent } -> lines.map { _.result }
@@ -121,8 +143,6 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, options: Vector[(
 	override protected def wrapped = _wrapped
 	
 	override protected def focusTargets = buttons
-	
-	override def valuePointer = _valuePointer.view
 	
 	
 	// NESTED	----------------------------
