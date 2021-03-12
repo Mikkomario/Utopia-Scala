@@ -2,8 +2,10 @@ package utopia.reach.component.input
 
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.flow.util.TimeExtensions._
-import utopia.reach.component.factory.Mixed
+import utopia.flow.util.WaitUtils
+import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.input.DurationField.focusTransferDelay
 import utopia.reach.component.label.TextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.container.Stack
@@ -17,7 +19,64 @@ import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.{LocalizedString, Localizer}
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
+
+object DurationField extends ContextInsertableComponentFactoryFactory[TextContextLike, DurationFieldFactory,
+	ContextualDurationFieldFactory]
+{
+	private val focusTransferDelay = 0.05.seconds
+	
+	override def apply(hierarchy: ComponentHierarchy) = new DurationFieldFactory(hierarchy)
+}
+
+class DurationFieldFactory(parentHierarchy: ComponentHierarchy)
+	extends ContextInsertableComponentFactory[TextContextLike, ContextualDurationFieldFactory]
+{
+	override def withContext[N <: TextContextLike](context: N) =
+		ContextualDurationFieldFactory(parentHierarchy, context)
+}
+
+case class ContextualDurationFieldFactory[+N <: TextContextLike](parentHierarchy: ComponentHierarchy, context: N)
+	extends ContextualComponentFactory[N, TextContextLike, ContextualDurationFieldFactory]
+{
+	private implicit def c: TextContextLike = context
+	private implicit def localizer: Localizer = context.localizer
+	private implicit val languageCode: String = "en"
+	
+	override def withContext[N2 <: TextContextLike](newContext: N2) =
+		copy(context = newContext)
+	
+	/**
+	  * Creates a new duration input field
+	  * @param initialValue Initially selected value (default = 0s)
+	  * @param maxValue Maximum allowed value (default = 99h 59min 59s)
+	  * @param separatorText Text placed between input fields. May be empty. (default = ":")
+	  * @param enabledPointer A pointer to this input field's enabled state (default = always enabled)
+	  * @param leftIconPointer A pointer to the icon displayed on the leftmost input (default = always none)
+	  * @param rightIconPointer A pointer to the icon displayed on the rightmost input (default = always none)
+	  * @param selectionStylePointer A pointer to the color role used to highlight selected text
+	  *                              (default = always secondary)
+	  * @param focusColorRole Color role used for representing focused state (default = secondary)
+	  * @param customDrawers Custom drawers applied to this field (default = empty)
+	  * @param captureSeconds Whether seconds should be captured (default = false = only capture hours and/or minutes)
+	  * @param showLabels Whether field name labels should be displayed
+	  *                   (default = false = only prompts will be displayed).
+	  * @param exc Implicit execution context for delayed focus transfer events
+	  * @return A new duration input field
+	  */
+	def apply(initialValue: Duration = Duration.Zero,
+			  maxValue: Duration = 99.hours + 59.minutes + 59.seconds,
+			  separatorText: LocalizedString = ":",
+			  enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
+			  leftIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+			  rightIconPointer: ChangingLike[Option[SingleColorIcon]] = Fixed(None),
+			  selectionStylePointer: ChangingLike[ColorRole] = Fixed(Secondary),
+			  focusColorRole: ColorRole = Secondary, customDrawers: Vector[CustomDrawer] = Vector(),
+			  captureSeconds: Boolean = false, showLabels: Boolean = false)(implicit exc: ExecutionContext) =
+		new DurationField(parentHierarchy, initialValue, maxValue, separatorText, enabledPointer, leftIconPointer,
+			rightIconPointer, selectionStylePointer, focusColorRole, customDrawers, captureSeconds, showLabels)
+}
 
 /**
   * A combination of input fields for the purpose of requesting a time duration
@@ -33,7 +92,7 @@ class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration 
 					selectionStylePointer: ChangingLike[ColorRole] = Fixed(Secondary),
 					focusColorRole: ColorRole = Secondary, customDrawers: Vector[CustomDrawer] = Vector(),
 					captureSeconds: Boolean = false, showLabels: Boolean = false)
-				   (implicit context: TextContextLike)
+				   (implicit context: TextContextLike, exc: ExecutionContext)
 	extends ReachComponentWrapper with InputWithPointer[Duration, ChangingLike[Duration]] with ManyFocusableWrapper
 {
 	// ATTRIBUTES	-------------------------------
@@ -126,8 +185,9 @@ class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration 
 						sourceField.maxLength.foreach { maxLength =>
 							val targetField = inputFields(sourceIndex + 1)
 							sourceField.textPointer.addListener { event =>
+								// Focus transfer is slightly delayed to avoid duplicate key event triggering
 								if (event.newValue.length == maxLength && event.oldValue.length != maxLength && sourceField.hasFocus)
-									targetField.requestFocus()
+									WaitUtils.delayed(focusTransferDelay) { targetField.requestFocus() }
 							}
 						}
 					}

@@ -132,7 +132,8 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, options: Vector[(
 		override def keyStateEventFilter = KeyStateEvent.arrowKeysFilter
 		
 		override def onKeyState(event: KeyStateEvent) = event.arrowAlong(direction).foreach { direction =>
-			moveFocusInside(direction.sign, forceFocusLeave = true)
+			if (moveFocusInside(direction.sign, forceFocusLeave = true))
+				buttons.find { _.hasFocus }.foreach { _.select() }
 		}
 		
 		override def allowsHandlingFrom(handlerType: HandlerType) = hasFocus

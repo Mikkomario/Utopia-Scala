@@ -5,12 +5,13 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.flow.util.FileExtensions._
+import utopia.flow.util.TimeExtensions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.image.Image
 import utopia.genesis.util.DistanceExtensions._
 import utopia.reach.component.factory.ContextualMixed
-import utopia.reach.component.input.{CheckBox, ContextualCheckBoxFactory, ContextualTextFieldFactory, TextField}
+import utopia.reach.component.input.{CheckBox, ContextualCheckBoxFactory, ContextualDurationFieldFactory, ContextualRadioButtonGroupFactory, ContextualTextFieldFactory, DurationField, RadioButtonGroup, TextField}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.{Framing, Stack, ViewStack}
@@ -20,7 +21,7 @@ import utopia.reflection.color.ColorRole.Secondary
 import utopia.reflection.component.context.{ColorContext, ColorContextLike, TextContext}
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.template.window.{ManagedField, RowGroups, WindowButtonBlueprint}
+import utopia.reflection.container.template.window.{ManagedField, RowGroup, RowGroups, WindowButtonBlueprint}
 import ManagedField._
 import utopia.reach.focus.FocusRequestable
 import utopia.reflection.image.SingleColorIcon
@@ -87,6 +88,14 @@ object InputWindowTest extends App
 			val lastNameField = InputRowBlueprint.using(TextField, "lastName", fieldAlignment = Alignment.Center) { fieldF: ContextualTextFieldFactory[TextContext] =>
 				fieldF.forString(defaultFieldWidth, Fixed("Last Name"), hintPointer = Fixed("Optional"))
 			}
+			val sexField = InputRowBlueprint.using(RadioButtonGroup, "isMale", "Sex", Alignment.BottomLeft) { fieldF: ContextualRadioButtonGroupFactory[TextContext] =>
+				fieldF.apply(Vector[(Boolean, LocalizedString)](true -> "Male", false -> "Female"))
+			}
+			
+			val durationField = InputRowBlueprint.using(DurationField, "durationSeconds", "Login Duration") { fieldF: ContextualDurationFieldFactory[TextContext] =>
+				val field = fieldF.apply(maxValue = 24.hours)
+				ManagedField.alwaysSucceed(field) { field.value.toSeconds }
+			}
 			
 			val acceptTermsField = InputRowBlueprint.using(CheckBox, "accept",
 				"I accept the terms and conditions of use", fieldAlignment = Alignment.Left,
@@ -101,7 +110,9 @@ object InputWindowTest extends App
 				}
 			}
 			
-			Vector(RowGroups.singleGroup(firstNameField, lastNameField), RowGroups.singleRow(acceptTermsField)) -> ()
+			Vector(RowGroups(RowGroup(firstNameField, lastNameField),
+				RowGroup.singleRow(sexField), RowGroup.singleRow(durationField)),
+				RowGroups.singleRow(acceptTermsField)) -> ()
 		}
 		
 		override protected def makeFieldNameAndFieldContext(base: ColorContext) =
@@ -162,4 +173,6 @@ object InputWindowTest extends App
 	// Displays a dialog
 	val result = TestWindows.displayBlocking(cursors = cursors).get
 	println(s"Dialog completed with result: $result")
+	
+	println(result("durationSeconds").getLong.seconds.description)
 }

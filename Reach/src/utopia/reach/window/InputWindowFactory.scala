@@ -286,7 +286,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		if (blueprint.displaysName)
 		{
 			// Case: The two components are next to each other horizontally
-			if (blueprint.fieldAlignment.isHorizontal)
+			if (blueprint.fieldAlignment.isHorizontal && !blueprint.fieldAlignment.isVertical)
 			{
 				val verticalLayout = blueprint.fieldAlignment.vertical match
 				{
