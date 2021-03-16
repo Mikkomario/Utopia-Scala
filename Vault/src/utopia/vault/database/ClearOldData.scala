@@ -1,10 +1,10 @@
 package utopia.vault.database
 
 import java.time.{Instant, Period}
-
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.vault.sql.Extensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.model.error.NoReferenceFoundException
 import utopia.vault.model.immutable.{DataDeletionRule, Reference, Table}
@@ -46,7 +46,7 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 	  * Performs the deletion operation
 	  * @param connection Database connection used for the deletions
 	  */
-	def apply()(implicit connection: Connection) = deleteIteration(Instant.now(), finalRules, Set())
+	def apply()(implicit connection: Connection) = deleteIteration(Now, finalRules, Set())
 	
 	@scala.annotation.tailrec
 	private def deleteIteration(deletionTime: Instant, remainingRules: Vector[TableDeletionRule],

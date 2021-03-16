@@ -1,7 +1,7 @@
 package utopia.reflection.util
 
 import java.util.concurrent.TimeUnit
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.genesis.util.Fps

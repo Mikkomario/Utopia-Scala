@@ -1,6 +1,6 @@
 package utopia.reflection.test.swing
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.genesis.animation.Animation
 import utopia.genesis.generic.GenesisDataType

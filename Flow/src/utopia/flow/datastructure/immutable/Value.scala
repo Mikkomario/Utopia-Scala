@@ -9,6 +9,7 @@ import utopia.flow.generic.FloatType
 import utopia.flow.generic.IntType
 import utopia.flow.generic.LongType
 import utopia.flow.generic.StringType
+
 import java.time.Instant
 import utopia.flow.generic.InstantType
 import utopia.flow.generic.VectorType
@@ -17,10 +18,14 @@ import utopia.flow.generic.AnyType
 import utopia.flow.parse.JsonValueConverter
 import utopia.flow.parse.JsonConvertible
 import utopia.flow.generic.LocalDateType
+
 import java.time.LocalDate
 import utopia.flow.generic.LocalTimeType
+
 import java.time.LocalTime
 import utopia.flow.generic.LocalDateTimeType
+import utopia.flow.time.Today
+
 import java.time.LocalDateTime
 
 object Value
@@ -234,7 +239,7 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
     /**
      * The current contents of this value as a local date or the default value (current date)
      */
-    def localDateOr(default: => LocalDate = LocalDate.now()) = localDate.getOrElse(default)
+    def localDateOr(default: => LocalDate = Today) = localDate.getOrElse(default)
     
     /**
      * The current contents of this value as a local time or the default value (current time)

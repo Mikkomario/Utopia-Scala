@@ -7,7 +7,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.container.ObjectsFileContainer
 import utopia.flow.container.SaveTiming.Delayed
 import utopia.flow.util.FileExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.journey.util.JourneyContext._
 import utopia.metropolis.model.combined.user.MyOrganization
 

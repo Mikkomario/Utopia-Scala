@@ -1,8 +1,9 @@
 package utopia.flow.caching.single
 
-import java.time.Instant
+import utopia.flow.time.Now
 
-import utopia.flow.util.TimeExtensions._
+import java.time.Instant
+import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -56,7 +57,7 @@ trait ExpiringSingleCache[+A] extends ExpiringSingleCacheLike[A]
 	
 	// IMPLEMENTED	---------------
 	
-	def isDataExpired = dataOriginTime.exists { _ < Instant.now() - cacheDuration }
+	def isDataExpired = dataOriginTime.exists { _ < Now - cacheDuration }
 	
 	override def apply() =
 	{
@@ -64,7 +65,7 @@ trait ExpiringSingleCache[+A] extends ExpiringSingleCacheLike[A]
 		clearIfExpired()
 		
 		if (!cache.isValueCached)
-			dataOriginTime = Some(Instant.now())
+			dataOriginTime = Some(Now.toInstant)
 		
 		cache()
 	}

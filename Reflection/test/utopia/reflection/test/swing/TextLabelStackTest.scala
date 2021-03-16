@@ -1,7 +1,7 @@
 package utopia.reflection.test.swing
 
 import utopia.flow.async.{Loop, ThreadPool}
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.ActorLoop

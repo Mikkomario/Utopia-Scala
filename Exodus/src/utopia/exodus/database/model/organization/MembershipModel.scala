@@ -1,9 +1,9 @@
 package utopia.exodus.database.model.organization
 
 import java.time.Instant
-
 import utopia.exodus.database.factory.organization.MembershipFactory
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.metropolis.model.partial.organization.MembershipData
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
@@ -24,7 +24,7 @@ object MembershipModel
 	/**
 	  * @return A model that has just been marked as an ended membership
 	  */
-	def nowEnded = apply(ended = Some(Instant.now()))
+	def nowEnded = apply(ended = Some(Now))
 	
 	
 	// OTHER	-------------------------------

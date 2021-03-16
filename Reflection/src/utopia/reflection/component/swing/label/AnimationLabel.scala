@@ -1,8 +1,10 @@
 package utopia.reflection.component.swing.label
 
+import utopia.flow.time.Now
+
 import java.time.Instant
 import scala.math.Ordering.Double.TotalOrdering
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.animation.TimedAnimation
 import utopia.genesis.animation.animator.{Animator, SpriteDrawer, TransformingImageAnimator}
 import utopia.genesis.handling.Actor
@@ -168,7 +170,7 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 	object Repainter extends Actor
 	{
 		private val threshold = maxFps.interval
-		private var lastDraw = Instant.now() - threshold
+		private var lastDraw = Now - threshold
 		
 		override def act(duration: FiniteDuration) =
 		{

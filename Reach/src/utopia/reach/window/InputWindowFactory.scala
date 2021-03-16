@@ -1,8 +1,8 @@
 package utopia.reach.window
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.event.{AlwaysTrue, ChangingLike}
-import utopia.flow.util.WaitUtils
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WaitUtils
 import utopia.genesis.shape.shape2D.Direction2D
 import utopia.reach.component.button.ImageButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}

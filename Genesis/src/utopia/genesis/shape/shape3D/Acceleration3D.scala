@@ -1,6 +1,6 @@
 package utopia.genesis.shape.shape3D
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.genesis.shape.shape2D.movement
 import utopia.genesis.shape.shape2D.movement.Acceleration2D

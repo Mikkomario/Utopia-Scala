@@ -10,19 +10,19 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
 import utopia.flow.datastructure.template
-import java.time.format.DateTimeFormatter
+import utopia.flow.time.Now
 
+import java.time.format.DateTimeFormatter
 import scala.util.{Success, Try}
 import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.ZoneOffset
-
 import scala.collection.immutable.HashMap
 import utopia.flow.util.Equatable
+
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.Base64
-
 import scala.io.Codec
 
 object Headers extends FromModelFactory[Headers]
@@ -186,7 +186,7 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     /**
      * Creates a new set of headers with the updated message date / time
      */
-    def withCurrentDate = withDate(Instant.now())
+    def withCurrentDate = withDate(Now)
     
     /**
      * Whether the data is chunked and the content length omitted

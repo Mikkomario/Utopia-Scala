@@ -1,7 +1,7 @@
 package utopia.genesis.test
 
 import java.util.concurrent.TimeUnit
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.Axis.X
 import utopia.genesis.shape.shape3D.{Vector3D, Velocity3D}
 import utopia.genesis.shape.shape1D.{Angle, LinearAcceleration, LinearVelocity}

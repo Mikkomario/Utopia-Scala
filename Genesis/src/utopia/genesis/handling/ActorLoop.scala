@@ -3,8 +3,8 @@ package utopia.genesis.handling
 import java.time.Instant
 
 import utopia.flow.async.Loop
-import utopia.flow.util.TimeExtensions._
-import utopia.flow.util.WaitTarget.Until
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WaitTarget.Until
 import utopia.genesis.util.Fps
 
 class ActorLoop(private val handler: ActorHandler, val apsRange: Range = 15 to 60) extends Loop

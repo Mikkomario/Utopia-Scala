@@ -1,11 +1,11 @@
 package utopia.exodus.database.access.single
 
-import java.time.{Instant, Period}
-
+import java.time.Period
 import utopia.exodus.database.access.many.{DbDescriptions, DbUserRoles, DbUsers, InvitationsAccess, OrganizationDeletionsAccess}
 import utopia.exodus.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory, RoleRightFactory}
 import utopia.exodus.database.model.organization.{DeletionModel, MemberRoleModel, MembershipModel}
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.metropolis.model.combined.organization.DescribedMembership
 import utopia.metropolis.model.partial.organization.{DeletionData, InvitationData, MembershipData}
 import utopia.metropolis.model.stored.organization.Membership
@@ -157,7 +157,7 @@ object DbOrganization
 			def send(recipient: Either[String, Int], roleId: Int, senderId: Int, validDuration: Period = 7.days)
 					(implicit connection: Connection) =
 			{
-				model.insert(InvitationData(organizationId, recipient, roleId, Instant.now() + validDuration, Some(senderId)))
+				model.insert(InvitationData(organizationId, recipient, roleId, Now + validDuration, Some(senderId)))
 			}
 		}
 		
@@ -178,7 +178,7 @@ object DbOrganization
 			  * @return Newly inserted deletion
 			  */
 			def insert(creatorId: Int, actualizationDelay: Period)(implicit connection: Connection) =
-				DeletionModel.insert(DeletionData(organizationId, creatorId, Instant.now() + actualizationDelay))
+				DeletionModel.insert(DeletionData(organizationId, creatorId, Now + actualizationDelay))
 		}
 	}
 }

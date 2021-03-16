@@ -2,7 +2,7 @@ package utopia.disciple.http.request
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import TimeoutType._
 
 object Timeout

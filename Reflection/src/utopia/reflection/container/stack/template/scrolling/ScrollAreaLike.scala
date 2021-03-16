@@ -4,7 +4,7 @@ import java.awt.event.KeyEvent
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._

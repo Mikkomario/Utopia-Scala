@@ -6,7 +6,7 @@ import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.{Size, Transformation, Vector2D}
 import utopia.genesis.util.DefaultSetup
 import utopia.flow.util.FileExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.animation.Animation
 import utopia.genesis.shape.shape1D.Rotation
 import utopia.genesis.shape.shape2D.transform.AffineTransformation

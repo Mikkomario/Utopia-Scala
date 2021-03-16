@@ -1,8 +1,8 @@
 package utopia.flow.test
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.collection.WeakList
-import utopia.flow.util.WaitUtils
+import utopia.flow.time.WaitUtils
 
 /**
   * Tests WeakList use

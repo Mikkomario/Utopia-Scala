@@ -1,7 +1,7 @@
 package utopia.reflection.container.stack.template.scrolling
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event._
 import utopia.genesis.handling._
 import utopia.genesis.handling.mutable.ActorHandler

@@ -1,6 +1,7 @@
 # Utopia Flow - List of Changes
 ## v1.9 (beta)
 ### Breaking Changes
+- Moved time-related classes / objects from utopia.flow.util to utopia.flow.time 
 - Changed setIfEmpty method variations in VolatileOption to accept a call by name parameter instead of a function
 - XmlReader and XmlWriter objects now support Path instead of File
 - Deprecated PointerLike trait and replaced it with Settable trait in all implementations
@@ -23,6 +24,7 @@ in a lazy container is not required or desirable
 - Added WeakCache
 - XmlWriter.writeFile(...) and .writeElementToFile(...) now create the target directory if it didn't exist yet
 - Added date range support (DateRange, YearlyDateRange) which includes a number of new methods in TimeExtensions
+- Added Now and Today objects to be used instead of Instant.now() and LocalDate.now()
 ### New Methods
 - AsyncExtensions
   - Future

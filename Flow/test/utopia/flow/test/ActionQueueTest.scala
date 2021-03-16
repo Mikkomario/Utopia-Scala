@@ -1,9 +1,9 @@
 package utopia.flow.test
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.{ActionQueue, ThreadPool}
-import utopia.flow.util.WaitUtils
+import utopia.flow.time.WaitUtils
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{ExecutionContext, Future}

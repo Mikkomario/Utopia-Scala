@@ -1,7 +1,7 @@
 package utopia.genesis.shape.shape1D
 
 import utopia.flow.util.RichComparable
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape2D.{Vector2D, movement}
 import utopia.genesis.shape.shape2D.movement.Acceleration2D
 import utopia.genesis.shape.shape3D.{Acceleration3D, Vector3D}

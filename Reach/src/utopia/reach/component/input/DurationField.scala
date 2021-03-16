@@ -1,8 +1,8 @@
 package utopia.reach.component.input
 
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
-import utopia.flow.util.TimeExtensions._
-import utopia.flow.util.WaitUtils
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WaitUtils
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.DurationField.focusTransferDelay

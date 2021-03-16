@@ -1,7 +1,7 @@
 package utopia.reflection.test.swing
 
 import utopia.flow.async.Loop
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.color.{Color, Rgb}
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.shape.Axis.X

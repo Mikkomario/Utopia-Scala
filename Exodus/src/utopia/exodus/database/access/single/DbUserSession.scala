@@ -1,14 +1,13 @@
 package utopia.exodus.database.access.single
 
-import java.time.Instant
-
 import utopia.exodus.database.access.many.DbUserSessions
 import utopia.exodus.database.factory.user.SessionFactory
 import utopia.exodus.database.model.user.SessionModel
 import utopia.exodus.model.partial.UserSessionData
 import utopia.exodus.model.stored.UserSession
 import utopia.exodus.util.UuidGenerator
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.{SingleModelAccess, UniqueAccess}
 
@@ -116,7 +115,7 @@ object DbUserSession extends SingleModelAccess[UserSession]
 				case None => end()
 			}
 			// Creates a new session that lasts for 24 hours or until logged out
-			model.insert(UserSessionData(userId, uuidGenerator.next(), Instant.now() + 24.hours, deviceId))
+			model.insert(UserSessionData(userId, uuidGenerator.next(), Now + 24.hours, deviceId))
 		}
 	}
 }

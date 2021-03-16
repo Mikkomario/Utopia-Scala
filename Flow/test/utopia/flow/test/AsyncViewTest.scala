@@ -3,8 +3,8 @@ package utopia.flow.test
 import utopia.flow.async.ThreadPool
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.ChangeListener
-import utopia.flow.util.TimeExtensions._
-import utopia.flow.util.WaitUtils
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WaitUtils
 
 import scala.concurrent.ExecutionContext
 

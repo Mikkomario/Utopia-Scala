@@ -1,15 +1,15 @@
 package utopia.metropolis.model.partial.organization
 
 import java.time.Instant
-
 import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, ModelValidationFailedException}
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, InstantType, IntType, ModelConvertible, ModelType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.time.Now
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 
 import scala.util.{Failure, Success}
 
@@ -59,7 +59,7 @@ case class InvitationData(organizationId: Int, recipient: Either[String, Int], s
 	/**
 	  * @return Whether this invitation has expired already
 	  */
-	def hasExpired = expireTime <= Instant.now()
+	def hasExpired = expireTime <= Now
 	
 	
 	// IMPLEMENTED	------------------------

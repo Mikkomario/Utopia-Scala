@@ -1,7 +1,7 @@
 package utopia.reflection.test.swing
 
-import utopia.flow.util.WaitUtils
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WaitUtils
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.shape.Axis.Y
 import utopia.reflection.component.drawing.immutable.BorderDrawer

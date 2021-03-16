@@ -10,7 +10,7 @@ import utopia.flow.async.Loop
 import utopia.flow.container.FileContainer
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.WaitTarget.WaitDuration
+import utopia.flow.time.WaitTarget.WaitDuration
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration

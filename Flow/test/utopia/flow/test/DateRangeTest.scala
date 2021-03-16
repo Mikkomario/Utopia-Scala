@@ -1,9 +1,9 @@
 package utopia.flow.test
 
-import java.time.Month._
+import utopia.flow.time.DateRange
 
-import utopia.flow.util.DateRange
-import utopia.flow.util.TimeExtensions._
+import java.time.Month._
+import utopia.flow.time.TimeExtensions._
 
 /**
   * Tests date ranges

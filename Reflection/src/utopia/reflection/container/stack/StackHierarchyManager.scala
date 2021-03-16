@@ -4,8 +4,9 @@ import utopia.flow.async.Loop
 import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.immutable.GraphEdge
 import utopia.flow.datastructure.mutable.GraphNode
-import utopia.flow.util.WaitTarget.WaitDuration
-import utopia.flow.util.{Counter, WaitUtils}
+import utopia.flow.time.WaitUtils
+import utopia.flow.time.WaitTarget.WaitDuration
+import utopia.flow.util.Counter
 import utopia.genesis.util.Fps
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.layout.stack.Stackable

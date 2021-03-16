@@ -1,11 +1,11 @@
 package utopia.exodus.database.model.user
 
 import java.time.Instant
-
 import utopia.exodus.database.factory.user.SessionFactory
 import utopia.exodus.model.partial.UserSessionData
 import utopia.exodus.model.stored.UserSession
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
@@ -39,7 +39,7 @@ object SessionModel
 	/**
 	  * @return A new model that has just been marked as logged out
 	  */
-	def nowLoggedOut = apply(logoutTime = Some(Instant.now()))
+	def nowLoggedOut = apply(logoutTime = Some(Now))
 	
 	
 	// OTHER	-----------------------------------

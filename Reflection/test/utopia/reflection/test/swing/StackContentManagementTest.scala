@@ -1,7 +1,7 @@
 package utopia.reflection.test.swing
 
 import utopia.flow.async.Loop
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.reflection.component.swing.label.ItemLabel

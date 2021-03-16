@@ -2,7 +2,7 @@ package utopia.reach.test
 
 import utopia.flow.async.Loop
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.shape.Axis.X
 import utopia.reach.component.label.TextLabel

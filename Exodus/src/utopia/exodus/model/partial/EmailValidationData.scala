@@ -1,5 +1,7 @@
 package utopia.exodus.model.partial
 
+import utopia.flow.time.Now
+
 import java.time.Instant
 
 /**
@@ -8,7 +10,7 @@ import java.time.Instant
   * @since 24.11.2020, v1
   */
 case class EmailValidationData(purposeId: Int, email: String, key: String, resendKey: String, expiration: Instant,
-							   ownerId: Option[Int] = None, created: Instant = Instant.now(),
+							   ownerId: Option[Int] = None, created: Instant = Now,
 							   actualized: Option[Instant] = None)
 {
 	/**

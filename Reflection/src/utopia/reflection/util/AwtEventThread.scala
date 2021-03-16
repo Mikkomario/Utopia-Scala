@@ -1,11 +1,11 @@
 package utopia.reflection.util
 
 import java.time.Instant
-
 import javax.swing.SwingUtilities
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.VolatileList
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration.Duration
@@ -140,7 +140,7 @@ object AwtEventThread
 		
 		override def toString = endTime match
 		{
-			case Some(ended) => s"Task completed in ${runTime.description} ${(Instant.now() - ended).description} ago"
+			case Some(ended) => s"Task completed in ${runTime.description} ${(Now - ended).description} ago"
 			case None =>
 				if (isWaiting)
 					s"Task that has been waiting for ${waitTime.description}"
@@ -150,9 +150,9 @@ object AwtEventThread
 		
 		override def run() =
 		{
-			startTime = Some(Instant.now())
+			startTime = Some(Now)
 			operation
-			_endTime = Some(Instant.now())
+			_endTime = Some(Now)
 		}
 	}
 }

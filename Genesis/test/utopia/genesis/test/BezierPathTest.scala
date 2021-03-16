@@ -1,7 +1,7 @@
 package utopia.genesis.test
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.ThreadPool
 import utopia.genesis.color.Color
 import utopia.genesis.handling.{Actor, Drawable}

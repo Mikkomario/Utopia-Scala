@@ -1,9 +1,9 @@
 package utopia.exodus.database.model.user
 
 import java.time.Instant
-
 import utopia.exodus.database.Tables
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 import utopia.vault.nosql.factory.Deprecatable
@@ -35,7 +35,7 @@ object UserDeviceModel extends Deprecatable
 	/**
 	  * @return A model that has just been marked as deprecated
 	  */
-	def nowDeprecated = withDeprecatedAfter(Instant.now())
+	def nowDeprecated = withDeprecatedAfter(Now)
 	
 	
 	// IMPLEMENTED	----------------------

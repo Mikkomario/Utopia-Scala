@@ -5,7 +5,7 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.flow.util.FileExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.image.Image

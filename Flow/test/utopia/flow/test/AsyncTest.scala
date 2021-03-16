@@ -1,13 +1,12 @@
 package utopia.flow.test
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.AsyncExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
 import utopia.flow.async.ThreadPool
-import utopia.flow.util.WaitUtils
-
 import utopia.flow.collection.VolatileList
+import utopia.flow.time.WaitUtils
 
 /**
  * This app tests some asynchronous functions

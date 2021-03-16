@@ -2,8 +2,7 @@ package utopia.flow.async
 
 import java.time.Instant
 import utopia.flow.event.{ChangeListener, Changing, ChangingLike}
-import utopia.flow.util.TimeExtensions._
-import utopia.flow.util.WaitUtils
+import utopia.flow.time.{Now, WaitUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration
@@ -65,14 +64,14 @@ class DelayedView[A](val source: ChangingLike[A], delay: Duration)(implicit exc:
 	
 	// Whenever source's value changes, delays change activation and updates future value
 	source.addListener { event =>
-		changeReactionThreshold = Instant.now() + delay
+		changeReactionThreshold = Now + delay
 		latestReceivedValue = event.newValue
 		// If no waiting is currently active, starts one
 		isWaitingFlag.runAndSet {
 			Future
 			{
 				// Waits until a pause in changes
-				while (Instant.now() < changeReactionThreshold)
+				while (Now < changeReactionThreshold)
 					WaitUtils.waitUntil(changeReactionThreshold, waitLock)
 				// Allows new wait and updates current value
 				isWaitingFlag.reset()

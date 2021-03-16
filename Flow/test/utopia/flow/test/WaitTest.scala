@@ -2,9 +2,10 @@ package utopia.flow.test
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.ThreadPool
-import utopia.flow.util.TimeExtensions._
-import utopia.flow.util.{SingleWait, WaitUtils}
-import utopia.flow.util.WaitTarget.WaitDuration
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{SingleWait, WaitUtils}
+import utopia.flow.time.SingleWait
+import utopia.flow.time.WaitTarget.WaitDuration
 
 import scala.concurrent.{ExecutionContext, Future}
 

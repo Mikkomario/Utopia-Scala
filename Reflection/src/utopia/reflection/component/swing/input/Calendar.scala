@@ -5,7 +5,7 @@ import java.time._
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.flow.util.RichComparable._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.shape.Axis.Y
 import utopia.genesis.shape.shape2D.Size

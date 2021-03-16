@@ -1,7 +1,5 @@
 package utopia.journey.controller
 
-import java.time.Instant
-
 import utopia.access.http.Status.Unauthorized
 import utopia.access.http.{Headers, Method}
 import utopia.annex.controller.Api
@@ -10,9 +8,10 @@ import utopia.disciple.http.request.StringBody
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.VolatileOption
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.journey.model.UserCredentials
 import utopia.annex.model.error.{RequestFailedException, UnauthorizedRequestException}
+import utopia.flow.time.Now
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration
@@ -29,7 +28,7 @@ class ExodusApi(override val rootPath: String, credentials: Either[UserCredentia
 {
 	// ATTRIBUTES	---------------------------
 	
-	private var resetSessionThreshold = Instant.now() + 18.hours
+	private var resetSessionThreshold = Now + 18.hours
 	private var sessionKey = initialSessionKey
 	private val sessionResetFuture = VolatileOption[Future[Try[String]]]()
 	
@@ -46,7 +45,7 @@ class ExodusApi(override val rootPath: String, credentials: Either[UserCredentia
 									  (implicit context: ExecutionContext): Future[Try[Response]] =
 	{
 		// May acquire a new session key before making further requests
-		if (Instant.now() > resetSessionThreshold)
+		if (Now > resetSessionThreshold)
 		{
 			LocalDevice.id match
 			{
@@ -78,7 +77,7 @@ class ExodusApi(override val rootPath: String, credentials: Either[UserCredentia
 				{
 					case Some(newKey) =>
 						sessionKey = newKey
-						resetSessionThreshold = Instant.now() + 18.hours
+						resetSessionThreshold = Now + 18.hours
 						Success(sessionKey)
 					case None => Failure(new RequestFailedException(
 						s"No new session key received in authorization response body ($status)"))

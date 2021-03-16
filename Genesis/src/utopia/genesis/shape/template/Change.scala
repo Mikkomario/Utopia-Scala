@@ -1,6 +1,6 @@
 package utopia.genesis.shape.template
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.util.Scalable
 
 import scala.concurrent.duration.Duration

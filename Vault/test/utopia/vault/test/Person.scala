@@ -1,10 +1,10 @@
 package utopia.vault.test
 
 import java.time.Instant
-
 import utopia.flow.datastructure.immutable
 import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.factory.FromValidatedRowModelFactory
 
@@ -27,7 +27,7 @@ object Person extends FromValidatedRowModelFactory[Person]
  * @since 18.6.2017
  */
 case class Person(name: String, age: Option[Int] = None, isAdmin: Boolean = false,
-        created: Instant = Instant.now(), rowId: Option[Int] = None) extends StorableWithFactory[Person]
+        created: Instant = Now, rowId: Option[Int] = None) extends StorableWithFactory[Person]
 {
     // COMPUTED PROPERTIES    ------------------
     

@@ -1,8 +1,8 @@
-package utopia.flow.util
+package utopia.flow.time
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
+
 import java.time.Instant
-
 import scala.concurrent.duration.Duration
 import scala.util.Try
 
@@ -92,7 +92,7 @@ sealed trait WaitTarget
     def toDuration: Duration = targetTime match
     {
         case Left(duration) => duration
-        case Right(time) => time - Instant.now()
+        case Right(time) => time - Now
     }
     
     /**
@@ -100,7 +100,7 @@ sealed trait WaitTarget
      */
     def endTime = targetTime match
     {
-        case Left(duration) => duration.finite.map { Instant.now() + _ }
+        case Left(duration) => duration.finite.map { Now + _ }
         case Right(time) => Some(time)
     }
     
@@ -152,7 +152,7 @@ sealed trait WaitTarget
                             waitCompleted = true
                     }
                     
-                    currentTime = Instant.now()
+                    currentTime = Now
                 }
             }
         }

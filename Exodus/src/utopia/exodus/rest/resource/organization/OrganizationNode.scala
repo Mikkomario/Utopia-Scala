@@ -7,7 +7,7 @@ import utopia.exodus.model.enumeration.StandardUserRole.Owner
 import utopia.exodus.rest.resource.ResourceWithChildren
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.nexus.http.Path
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection

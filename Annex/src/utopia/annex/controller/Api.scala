@@ -7,7 +7,7 @@ import utopia.annex.model.response.Response
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration

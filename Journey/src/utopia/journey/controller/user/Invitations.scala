@@ -1,7 +1,6 @@
 package utopia.journey.controller.user
 
 import java.time.Instant
-
 import utopia.access.http.Status.{Forbidden, Unauthorized}
 import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue, QueueSystem}
 import utopia.annex.model.error.{RequestDeniedException, RequestFailedException, UnauthorizedRequestException}
@@ -12,8 +11,9 @@ import utopia.annex.model.response.{RequestNotSent, Response}
 import utopia.annex.model.schrodinger.CachedFindSchrodinger
 import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.time.Now
 import utopia.flow.util.FileExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.journey.model.InvitationResponseSpirit
 import utopia.journey.util.JourneyContext._
 import utopia.metropolis.model.combined.organization.{DescribedInvitation, InvitationWithResponse}
@@ -74,8 +74,8 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 	  */
 	def pending =
 	{
-		val requestDeprecationTime = Instant.now() + maxResponseWait
-		val request = GetRequest("users/me/invitations", Instant.now() < requestDeprecationTime)
+		val requestDeprecationTime = Now + maxResponseWait
+		val request = GetRequest("users/me/invitations", Now < requestDeprecationTime)
 		val schrodinger = new CachedFindSchrodinger(activeCached)
 		
 		// Completes the schrödinger asynchronously

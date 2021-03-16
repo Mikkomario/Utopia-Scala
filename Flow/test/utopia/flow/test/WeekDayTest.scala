@@ -1,11 +1,10 @@
 package utopia.flow.test
 
 import java.time.{DayOfWeek, LocalDate}
-
 import utopia.flow.generic.DataType
-import utopia.flow.util.WeekDay
-import utopia.flow.util.WeekDay.{Monday, Sunday, Thursday, Tuesday, Wednesday}
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.WeekDay.{Monday, Sunday, Thursday, Tuesday, Wednesday}
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WeekDay
 
 /**
   * Tests week days

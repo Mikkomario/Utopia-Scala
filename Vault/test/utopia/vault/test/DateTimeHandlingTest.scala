@@ -5,8 +5,8 @@ import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.DataType
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
-import utopia.flow.util.TimeExtensions._
-import utopia.flow.util.WaitUtils
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WaitUtils
 import utopia.vault.database.{Connection, ConnectionPool}
 import utopia.vault.model.enumeration.ComparisonOperator.{LargerOrEqual, SmallerOrEqual}
 import utopia.vault.model.immutable.StorableWithFactory

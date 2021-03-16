@@ -2,8 +2,8 @@ package utopia.flow.async
 
 import java.time.{LocalDate, LocalDateTime, LocalTime}
 
-import utopia.flow.util.WaitTarget.Until
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.WaitTarget.Until
+import utopia.flow.time.TimeExtensions._
 
 object DailyTask
 {

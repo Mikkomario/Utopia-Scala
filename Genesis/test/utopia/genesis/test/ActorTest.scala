@@ -1,11 +1,10 @@
 package utopia.genesis.test
 
 import java.time.Duration
-
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.ThreadPool
-import utopia.flow.util.TimeExtensions._
-import utopia.flow.util.WaitUtils
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WaitUtils
 import utopia.genesis.handling.immutable.ActorHandler
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable

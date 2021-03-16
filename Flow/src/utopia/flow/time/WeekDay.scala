@@ -1,7 +1,8 @@
-package utopia.flow.util
+package utopia.flow.time
+
+import utopia.flow.util.RichComparable
 
 import java.time.{DayOfWeek, LocalDate, Period}
-
 import scala.language.implicitConversions
 
 /**

@@ -1,9 +1,10 @@
 package utopia.genesis.shape.template
 
-import java.time.Instant
+import utopia.flow.time.Now
 
+import java.time.Instant
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape2D.Vector2DLike
 import utopia.genesis.util.{Combinable, Scalable}
 
@@ -83,7 +84,7 @@ trait MovementHistoryLike[X <: Vector2DLike[X], V <: VelocityLike[X, V], A <: Ac
 	/**
 	  * @return Current status, based on latest known status and its projection
 	  */
-	def projectedStatus = futureStatusAt(Instant.now())
+	def projectedStatus = futureStatusAt(Now)
 	
 	/**
 	  * @return Average position over recorded history
@@ -148,7 +149,7 @@ trait MovementHistoryLike[X <: Vector2DLike[X], V <: VelocityLike[X, V], A <: Ac
 	  * @param duration A time duration
 	  * @return Projected movement status after specified duration has passed
 	  */
-	def futureStatusAfter(duration: => Duration) = futureStatusAt(Instant.now() + duration)
+	def futureStatusAfter(duration: => Duration) = futureStatusAt(Now + duration)
 	
 	/**
 	  * @param threshold Time threshold

@@ -1,6 +1,6 @@
 package utopia.reflection.controller.data
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.{Actor, ActorHandlerType, KeyStateListener}
 import utopia.genesis.shape.Axis.{X, Y}

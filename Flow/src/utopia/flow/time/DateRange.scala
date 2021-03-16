@@ -1,8 +1,8 @@
-package utopia.flow.util
-
-import java.time.LocalDate
+package utopia.flow.time
 
 import TimeExtensions._
+
+import java.time.LocalDate
 
 object DateRange
 {

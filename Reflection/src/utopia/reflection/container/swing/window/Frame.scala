@@ -1,7 +1,8 @@
 package utopia.reflection.container.swing.window
 
+import utopia.flow.time.WaitUtils
+
 import javax.swing.JFrame
-import utopia.flow.util.WaitUtils
 import utopia.genesis.image.Image
 import utopia.reflection.component.template.layout.stack.{StackLeaf, Stackable}
 import utopia.reflection.component.swing.template.{AwtComponentWrapper, AwtComponentWrapperWrapper}

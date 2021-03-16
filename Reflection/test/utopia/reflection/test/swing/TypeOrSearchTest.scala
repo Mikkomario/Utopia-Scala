@@ -3,7 +3,7 @@ package utopia.reflection.test.swing
 import utopia.flow.async.Loop
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.image.Image
 import utopia.reflection.color.ColorRole.Primary
 import utopia.reflection.component.context.TextContext

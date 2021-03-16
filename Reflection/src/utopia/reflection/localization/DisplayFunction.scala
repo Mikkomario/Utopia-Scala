@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
 
 import scala.language.implicitConversions
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 
 object DisplayFunction
 {

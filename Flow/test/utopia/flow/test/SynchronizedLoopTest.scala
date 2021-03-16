@@ -1,12 +1,11 @@
 package utopia.flow.test
 
 import java.time.LocalTime
-
 import utopia.flow.async.{Loop, SynchronizedLoops, ThreadPool}
 import utopia.flow.generic.DataType
-import utopia.flow.util.WaitTarget.WaitDuration
-import utopia.flow.util.TimeExtensions._
-import utopia.flow.util.WaitUtils
+import utopia.flow.time.WaitTarget.WaitDuration
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WaitUtils
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration

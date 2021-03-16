@@ -1,6 +1,6 @@
 package utopia.flow.async
 
-import utopia.flow.util.WaitTarget
+import utopia.flow.time.WaitTarget
 
 import scala.concurrent.{ExecutionContext, Promise}
 import scala.concurrent.duration.Duration

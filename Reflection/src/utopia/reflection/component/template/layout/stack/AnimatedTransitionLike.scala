@@ -3,7 +3,7 @@ package utopia.reflection.component.template.layout.stack
 import java.time.Instant
 
 import utopia.flow.datastructure.mutable.ResettableLazy
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.animation.Animation
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler

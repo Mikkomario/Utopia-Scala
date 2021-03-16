@@ -3,7 +3,7 @@ package utopia.disciple.test
 import scala.concurrent.ExecutionContext.Implicits.global
 import utopia.flow.generic.ValueConversions._
 import utopia.access.http.ContentCategory._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.generic.DataType
 import utopia.access.http.Method._

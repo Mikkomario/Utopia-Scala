@@ -1,8 +1,9 @@
-package utopia.flow.util
+package utopia.flow.time
+
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.RichComparable._
 
 import java.time.{LocalDate, MonthDay, Year}
-import RichComparable._
-import TimeExtensions._
 
 object YearlyDateRange
 {

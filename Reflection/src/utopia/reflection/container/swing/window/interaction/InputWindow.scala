@@ -1,7 +1,7 @@
 package utopia.reflection.container.swing.window.interaction
 
-import utopia.flow.util.TimeExtensions._
-import utopia.flow.util.WaitUtils
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WaitUtils
 import utopia.genesis.shape.shape2D.{Direction2D, Point}
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.swing.button.ImageButton

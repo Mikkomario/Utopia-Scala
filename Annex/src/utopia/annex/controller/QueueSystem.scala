@@ -1,15 +1,14 @@
 package utopia.annex.controller
 
 import java.time.Instant
-
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestNotSent.{RequestFailed, RequestWasDeprecated}
 import utopia.annex.model.response.{RequestNotSent, Response}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.{ActionQueue, VolatileFlag}
 import utopia.flow.event.Changing
-import utopia.flow.util.WaitUtils
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Now, WaitUtils}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -101,14 +100,14 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	private def goOffline() =
 	{
 		isOnlineFlag.reset()
-		nextOfflineMinRequestTime = Instant.now() + nextOfflineDelay
+		nextOfflineMinRequestTime = Now + nextOfflineDelay
 	}
 	
 	private def goOnline() =
 	{
 		isOnlineFlag.runAndSet {
 			nextOfflineDelay = minOfflineDelay
-			nextOfflineMinRequestTime = Instant.now()
+			nextOfflineMinRequestTime = Now
 		}
 	}
 	
@@ -124,7 +123,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 				case None => maxOfflineDelay
 			}
 			val targetTime = nextOfflineMinRequestTime
-			nextOfflineMinRequestTime = Instant.now() + nextOfflineDelay
+			nextOfflineMinRequestTime = Now + nextOfflineDelay
 			WaitUtils.waitUntil(targetTime, new AnyRef)
 		}
 		

@@ -1,5 +1,7 @@
 package utopia.exodus.model.partial
 
+import utopia.flow.time.Now
+
 import java.time.Instant
 
 /**
@@ -10,4 +12,4 @@ import java.time.Instant
   * @param name A descriptive name of the ownership or role of this api key
   * @param creationTime The time when this key was created / generated / first allowed
   */
-case class ApiKeyData(key: String, name: String, creationTime: Instant = Instant.now())
+case class ApiKeyData(key: String, name: String, creationTime: Instant = Now)

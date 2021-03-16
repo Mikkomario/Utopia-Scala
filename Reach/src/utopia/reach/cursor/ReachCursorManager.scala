@@ -2,7 +2,7 @@ package utopia.reach.cursor
 
 import utopia.flow.caching.multi.TryCache
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.reflection.color.ColorShadeVariant

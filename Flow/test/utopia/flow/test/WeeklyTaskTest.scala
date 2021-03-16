@@ -1,11 +1,10 @@
 package utopia.flow.test
 
 import java.time.{Instant, LocalTime}
-
 import utopia.flow.async.WeeklyTask
 import utopia.flow.generic.DataType
-import utopia.flow.util.WeekDay
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WeekDay
 
 /**
   * Tests weekly task scheduling

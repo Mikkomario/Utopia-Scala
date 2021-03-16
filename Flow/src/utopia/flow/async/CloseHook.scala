@@ -1,11 +1,9 @@
 package utopia.flow.async
 
-import java.time.Instant
-
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.WeakList
-import utopia.flow.util.WaitUtils
+import utopia.flow.time.{Now, WaitUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -73,8 +71,8 @@ object CloseHook
         if (completions.nonEmpty)
         {
             // Waits until all of the completions are done
-            val shutdownDeadline = Instant.now() + maxShutdownTime
-            completions.foreach { _.waitFor(shutdownDeadline - Instant.now()) }
+            val shutdownDeadline = Now + maxShutdownTime
+            completions.foreach { _.waitFor(shutdownDeadline - Now) }
             
             // Waits additional shutdown time
             WaitUtils.wait(additionalShutdownTime, new AnyRef())

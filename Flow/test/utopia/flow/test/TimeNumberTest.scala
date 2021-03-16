@@ -4,7 +4,7 @@ import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDate, LocalDateTime, Month, Year}
 import java.util.concurrent.TimeUnit
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.duration.FiniteDuration
 

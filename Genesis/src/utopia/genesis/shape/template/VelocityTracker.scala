@@ -1,9 +1,9 @@
 package utopia.genesis.shape.template
 
 import java.time.Instant
-
 import utopia.flow.event.{ChangeListener, Changing}
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape2D.Vector2DLike
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -68,7 +68,7 @@ abstract class VelocityTracker[X <: Vector2DLike[X], V <: VelocityLike[X, V], A 
 	  * @param newPosition New recorded position
 	  * @param eventTime Timestamp of the new position (default = current time)
 	  */
-	def recordPosition(newPosition: X, eventTime: Instant = Instant.now()) =
+	def recordPosition(newPosition: X, eventTime: Instant = Now) =
 	{
 		// May ignore some updates if they are too frequent
 		if (minCacheInterval <= Duration.Zero || _positionHistory.lastOption.forall { _._2 <= eventTime - minCacheInterval })

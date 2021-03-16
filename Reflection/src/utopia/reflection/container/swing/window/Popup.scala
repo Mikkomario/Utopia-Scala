@@ -1,9 +1,9 @@
 package utopia.reflection.container.swing.window
 
-import java.awt.event.{WindowEvent, WindowFocusListener}
-import java.time.Instant
+import utopia.flow.time.Now
 
-import utopia.flow.util.TimeExtensions._
+import java.awt.event.{WindowEvent, WindowFocusListener}
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
 import utopia.reflection.localization.LocalString._
@@ -153,14 +153,14 @@ object Popup
 	{
 		// ATTRIBUTES	----------------------
 		
-		private val actionThreshold = Instant.now() + 0.1.seconds
+		private val actionThreshold = Now + 0.1.seconds
 		
 		
 		// IMPLEMENTED	----------------------
 		
 		override def onMouseButtonState(event: MouseButtonStateEvent) =
 		{
-			if (popup.visible && Instant.now() > actionThreshold && !popup.bounds.contains(event.absoluteMousePosition))
+			if (popup.visible && Now > actionThreshold && !popup.bounds.contains(event.absoluteMousePosition))
 				popup.close()
 			None
 		}

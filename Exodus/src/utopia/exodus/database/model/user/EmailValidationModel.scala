@@ -1,11 +1,11 @@
 package utopia.exodus.database.model.user
 
 import java.time.Instant
-
 import utopia.exodus.database.factory.user.EmailValidationFactory
 import utopia.exodus.model.partial.EmailValidationData
 import utopia.exodus.model.stored.EmailValidation
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
@@ -73,7 +73,7 @@ case class EmailValidationModel(id: Option[Int] = None, purposeId: Option[Int] =
 	/**
 	  * @return A copy of this model that has just been marked as actualized / answered
 	  */
-	def nowActualized = copy(actualization = Some(Instant.now()))
+	def nowActualized = copy(actualization = Some(Now))
 	
 	
 	// IMPLEMENTED	--------------------------

@@ -20,7 +20,7 @@ import java.io.InputStream
 
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.Consts

@@ -1,6 +1,6 @@
 package utopia.genesis.event
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape1D.LinearVelocity
 import utopia.inception.util.Filter
 import utopia.genesis.shape.shape2D.Point
