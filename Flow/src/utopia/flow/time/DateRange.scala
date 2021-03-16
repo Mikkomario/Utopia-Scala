@@ -87,8 +87,15 @@ case class DateRange(start: LocalDate, end: LocalDate) extends Iterable[LocalDat
 	  */
 	def inverseChronological = if (isChronological) reverse else this
 	
+	/**
+	  * @return Whether this date range represents a single date
+	  */
+	def isSingleDate = nonEmpty && head == last
+	
 	
 	// IMPLEMENTED ------------------------
+	
+	override def toString() = s"$start until $end"
 	
 	override def isEmpty = start == end
 	
