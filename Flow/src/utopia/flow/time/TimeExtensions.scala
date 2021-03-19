@@ -1,5 +1,7 @@
 package utopia.flow.time
 
+import scala.language.implicitConversions
+
 import utopia.flow.util.RichComparable
 import RichComparable._
 import utopia.flow.time.WeekDay.Monday
