@@ -3,6 +3,7 @@ package utopia.reach.component.input
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.WaitUtils
+import utopia.genesis.shape.Axis.X
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.DurationField.focusTransferDelay
@@ -18,6 +19,7 @@ import utopia.reflection.component.template.input.InputWithPointer
 import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.{LocalizedString, Localizer}
+import utopia.reflection.shape.stack.StackLength
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
@@ -106,7 +108,8 @@ class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration 
 	
 	// The input fields are placed in a horizontal stack and separated with ":"
 	private val (_wrapped, (fields, _valuePointer)) = Stack(parentHierarchy).contextual.build(Mixed)
-		.row(Center, customDrawers = customDrawers, areRelated = true) { factories =>
+		.withMargin(if (separatorText.isEmpty) context.relatedItemsStackMargin else StackLength.fixedZero, X,
+			Center, customDrawers = customDrawers) { factories =>
 			// Creates the input fields
 			val maxHours = maxValue.toHours
 			val hoursFieldLength = maxHours.toString.length

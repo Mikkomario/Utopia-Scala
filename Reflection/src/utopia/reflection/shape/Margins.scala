@@ -11,13 +11,13 @@ case class Margins(medium: Double)
 	/**
 	  * @return A smaller version of margin
 	  */
-	val small = (medium / 2.0).round.toDouble
+	val small = (medium * 0.382).round.toDouble
 	/**
 	  * @return A very small version of margin
 	  */
-	val verySmall = (medium / 4.0).round.toDouble
+	val verySmall = (medium * 0.382 * 0.382).round.toDouble
 	/**
 	  * @return A large version of margin
 	  */
-	val large = (medium * 2.0).round.toDouble
+	val large = (medium / 0.382).round.toDouble
 }

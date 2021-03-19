@@ -52,7 +52,7 @@ object CursorDefining
 		
 		override def cursorBounds = wrapped.boundsInsideTop
 		
-		override def cursorToImage(cursor: Cursor, position: Point) = cursor(shadePointer.value)
+		override def cursorToImage(cursor: Cursor, position: Point) = cursor.over(shadePointer.value)
 	}
 	
 	

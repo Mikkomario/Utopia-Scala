@@ -115,7 +115,7 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, options: Vector[(
 	
 	private val (_wrapped, buttons) = Stack(parentHierarchy)
 		.withContext(if (direction == Y) context else context.expandingToRight)
-		.build(RadioButtonLine)(direction, customDrawers = customDrawers) { lineF =>
+		.build(RadioButtonLine)(direction, customDrawers = customDrawers, areRelated = true) { lineF =>
 			// Creates a line for each option
 			val lines = options.map { case (item, text) => lineF(valuePointer, item, text, selectedColorRole,
 				backgroundColorPointer = backgroundColorPointer) }
@@ -149,7 +149,7 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, options: Vector[(
 	
 	private object ArrowKeyListener extends KeyStateListener
 	{
-		override def keyStateEventFilter = KeyStateEvent.arrowKeysFilter
+		override val keyStateEventFilter = KeyStateEvent.wasPressedFilter && KeyStateEvent.arrowKeysFilter
 		
 		override def onKeyState(event: KeyStateEvent) = event.arrowAlong(direction).foreach { direction =>
 			if (moveFocusInside(direction.sign, forceFocusLeave = true))

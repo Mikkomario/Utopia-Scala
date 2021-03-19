@@ -116,7 +116,7 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
 			Vector(context.containerBackground, selectionBackground))
 		factory(context.actorHandler, Fixed(TextDrawContext.contextual(context)),
 			Fixed(selectionBackground.defaultTextColor), Fixed(Some(selectionBackground)),
-			Fixed(caretColor), (context.margins.verySmall / 2) max 1.0, caretBlinkFrequency, textPointer,
+			Fixed(caretColor), (context.margins.verySmall * 0.66) max 1.0, caretBlinkFrequency, textPointer,
 			inputFilter, maxLength, enabledPointer, allowSelectionWhileDisabled, context.allowLineBreaks,
 			context.allowTextShrink)
 	}

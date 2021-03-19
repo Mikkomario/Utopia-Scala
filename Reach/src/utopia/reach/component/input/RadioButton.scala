@@ -18,6 +18,7 @@ import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.event.ButtonState
 import utopia.reflection.shape.stack.StackLength
+import utopia.reflection.util.ComponentCreationDefaults
 
 object RadioButton
 	extends ContextInsertableComponentFactoryFactory[ColorContextLike, RadioButtonFactory, ContextualRadioButtonFactory]
@@ -86,6 +87,7 @@ case class ContextualRadioButtonFactory[+N <: ColorContextLike](factory: RadioBu
 	 * @param selectedColorRole Color role that represents the selected state (default = Secondary)
 	 * @param enabledPointer A pointer that contains the enabled status of this button (default = always enabled)
 	 * @param backgroundColorPointer A pointer to the current background color (default = determined by context (fixed))
+	  * @param sizeModifier A modifier applied to this button's size (default = global default)
 	 * @param customDrawers Custom drawers to assign to this button (default = empty)
 	 * @param focusListeners Focus listeners to assign to this button (default = empty)
 	 * @tparam A Type of selected value
@@ -95,12 +97,15 @@ case class ContextualRadioButtonFactory[+N <: ColorContextLike](factory: RadioBu
 	             selectedColorRole: ColorRole = ColorRole.Secondary,
 	             enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
 	             backgroundColorPointer: ChangingLike[ComponentColor] = Fixed(context.containerBackground),
+	             sizeModifier: Double = ComponentCreationDefaults.radioButtonScalingFactor,
 	             customDrawers: Vector[CustomDrawer] = Vector(),
 	             focusListeners: Seq[FocusListener] = Vector()) =
 	{
-		
-		factory(selectedValuePointer, value, backgroundColorPointer, (context.margins.medium * 2).round.toDouble,
-			(context.margins.medium * 0.8).round.toDouble, ((context.margins.medium * 0.25) max 1.0).round.toDouble,
+		val sizeMod = ComponentCreationDefaults.radioButtonScalingFactor
+		factory(selectedValuePointer, value, backgroundColorPointer,
+			(context.margins.medium * 1.6 * sizeMod).round.toDouble,
+			(context.margins.medium * 0.4 * sizeMod).round.toDouble,
+			((context.margins.medium * 0.22 * sizeMod) max 1.0).round.toDouble,
 			selectedColorRole, enabledPointer, customDrawers, focusListeners)
 	}
 }

@@ -246,7 +246,7 @@ trait InteractionWindowFactory[A]
 		{
 			case Some(icon) =>
 				factories(ImageAndTextButton).withContext(context).withIcon(icon, blueprint.text,
-					hotKeys = blueprint.hotkey.toSet, useLowPriorityImageSize = true) {
+					hotKeys = blueprint.hotkey.toSet) {
 					blueprint.pressAction(resultPromise)
 				}
 			case None =>

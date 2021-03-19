@@ -156,8 +156,16 @@ object InputWindowTest extends App
 		override protected def executionContext = exc
 		
 		override protected def buttonContext(buttonColor: ColorRole, hasIcon: Boolean) =
-			standardContext.forTextComponents.withTextAlignment(if (hasIcon) Alignment.Left else Alignment.Center)
-				.forButtons(buttonColor)
+		{
+			if (hasIcon)
+				standardContext.forTextComponents.withTextAlignment(Alignment.Left)
+					.mapInsets { _.mapLeft { _ * 0.5 }.mapRight { _ * 1.5 }.expandingToRight }
+					.forButtons(buttonColor)
+			else
+				standardContext.forTextComponents.withTextAlignment(Alignment.Center)
+					.mapInsets { _.mapHorizontal { _ * 1.5 } }
+					.forButtons(buttonColor)
+		}
 		
 		override protected def defaultResult = Model.empty
 		

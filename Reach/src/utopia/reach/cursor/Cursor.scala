@@ -101,4 +101,13 @@ trait Cursor
 	  * @return A darker version of this cursor suitable against light backgrounds
 	  */
 	def dark = apply(Dark)
+	
+	
+	// OTHER    --------------------------------
+	
+	/**
+	  * @param shade Shade of the underlying surface / component
+	  * @return A cursor image that looks best against the specified shade
+	  */
+	def over(shade: => ColorShadeVariant) = apply(shade.opposite)
 }

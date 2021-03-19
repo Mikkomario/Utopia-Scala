@@ -29,7 +29,8 @@ case class BaseContext(actorHandler: ActorHandler, defaultFont: Font, defaultCol
 	
 	override def defaultStackMargin = stackMarginOverride.getOrElse(margins.medium.any)
 	
-	override def relatedItemsStackMargin = stackMarginOverride.map { _ / 2 }.getOrElse(margins.small.downscaling)
+	override def relatedItemsStackMargin = stackMarginOverride.map { _ * 0.382 }
+		.getOrElse(margins.small.downscaling)
 	
 	
 	// OTHER	----------------------------------

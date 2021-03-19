@@ -190,7 +190,7 @@ class CheckBox(parentHierarchy: ComponentHierarchy, onImage: Image, offImage: Im
 	override protected def trigger() = valuePointer.update { !_ }
 	
 	override def cursorToImage(cursor: Cursor, position: Point) =
-		cursor(ColorShadeVariant.forLuminosity(baseImagePointer.value.pixels.averageLuminosity))
+		cursor(ColorShadeVariant.forLuminosity(baseImagePointer.value.pixels.averageLuminosity).opposite)
 	
 	
 	// NESTED	------------------------------

@@ -4,6 +4,7 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.genesis.event.ConsumeEvent
 import utopia.genesis.handling.MouseButtonStateListener
+import utopia.genesis.shape.Axis.X
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.ViewTextLabel
@@ -68,7 +69,7 @@ case class ContextualRadioButtonLineFactory[+N <: TextContextLike](parentHierarc
 				 customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector()) =
 	{
 		Stack(parentHierarchy).withContext(context).build(Mixed)
-			.row(Center, customDrawers = customDrawers, areRelated = true) { factories =>
+			.withoutMargin(X, Center, customDrawers = customDrawers) { factories =>
 				val radioButton = factories(RadioButton).apply(selectedValuePointer, value, selectedColorRole,
 					enabledPointer, backgroundColorPointer, focusListeners = focusListeners)
 				// Text color may vary

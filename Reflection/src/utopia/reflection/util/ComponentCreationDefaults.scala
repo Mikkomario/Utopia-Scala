@@ -56,6 +56,11 @@ object ComponentCreationDefaults
 	var caretBlinkFrequency = 0.5.seconds
 	
 	/**
+	  * A scaling modifier applied to radio button sizes when they're created
+	  */
+	var radioButtonScalingFactor = 1.0
+	
+	/**
 	  * Whether a filled style should be used in input fields (true) or an outline style should be used (false)
 	  */
 	var useFillStyleFields = true
