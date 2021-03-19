@@ -6,6 +6,7 @@ import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
+import utopia.genesis.color.ColorContrastStandard.Minimum
 import utopia.genesis.shape.Axis.X
 import utopia.reflection.color.ColorRole.Secondary
 import utopia.reflection.color.ColorRole
@@ -410,8 +411,17 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 		val selectedBackgroundPointer = fc.backgroundPointer.mergeWith(selectionStylePointer) { (bg, c) =>
 			tc.colorScheme(c).forBackgroundPreferringLight(bg) }
 		val selectedTextColorPointer = selectedBackgroundPointer.map { _.defaultTextColor }
-		val caretColorPointer = fc.backgroundPointer.mergeWith(selectedBackgroundPointer) { Vector[Color](_, _) }
-			.mergeWith(selectionStylePointer) { (bgs, c) => tc.colorScheme(c).bestAgainst(bgs): Color }
+		val caretColorPointer = fc.backgroundPointer.mergeWith(selectedBackgroundPointer, selectionStylePointer) { (mainBg, selectedBg, selectionStyle) =>
+			val palet = tc.colorScheme(selectionStyle)
+			val minimumContrast = Minimum.defaultMinimumContrast
+			// Attempts to find a color that works against both backgrounds (standard & selected)
+			val defaultOption = palet.bestAgainst(Vector(mainBg, selectedBg), minimumContrast)
+			// However, if the default doesn't have enough contrast against the main background, finds an alternative
+			if (defaultOption.contrastAgainst(mainBg) < minimumContrast)
+				palet.forBackground(mainBg, minimumContrast): Color
+			else
+				defaultOption: Color
+		}
 		val caretWidth = (context.margins.verySmall / 2) max 1
 		
 		val label = EditableTextLabel(fc.parentHierarchy).apply(tc.actorHandler, stylePointer,
