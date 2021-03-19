@@ -127,8 +127,13 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 	// ATTRIBUTES   ---------------------------------
 	
 	private val baseStatePointer = new PointerWithEvents(ButtonState.default)
-	override val statePointer = baseStatePointer.mergeWith(enabledPointer) { (base, enabled) =>
-		base.copy(isEnabled = enabled) }
+	override val statePointer =
+	{
+		if (enabledPointer.isAlwaysTrue)
+			baseStatePointer.view
+		else
+			baseStatePointer.mergeWith(enabledPointer) { (base, enabled) => base.copy(isEnabled = enabled) }
+	}
 	
 	/**
 	 * A pointer that contains whether this button is currently selected

@@ -130,7 +130,7 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 		addMouseMoveListener(mouseListener)
 		
 		// Repaints this button whenever it changes
-		this.statePointer.addListener { _ => repaint(High) }
+		this.statePointer.addAnyChangeListener { repaint(High) }
 	}
 	
 	
