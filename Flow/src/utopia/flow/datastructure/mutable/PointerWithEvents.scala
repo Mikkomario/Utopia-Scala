@@ -1,6 +1,6 @@
 package utopia.flow.datastructure.mutable
 
-import utopia.flow.event.{ChangeListener, Changing}
+import utopia.flow.event.{ChangeDependency, ChangeListener, Changing}
 
 /**
   * Classes with this trait generate change events when they mutate
@@ -14,6 +14,7 @@ class PointerWithEvents[A](initialValue: A) extends Settable[A] with Changing[A]
 	private var _value = initialValue
 	
 	override var listeners = Vector[ChangeListener[A]]()
+	override var dependencies = Vector[ChangeDependency[A]]()
 	
 	/**
 	 * A read-only view into this pointer
@@ -64,5 +65,10 @@ class PointerWithEvents[A](initialValue: A) extends Settable[A] with Changing[A]
 		
 		override def listeners_=(newListeners: Vector[ChangeListener[A]]) =
 			PointerWithEvents.this.listeners = newListeners
+		
+		override def dependencies = PointerWithEvents.this.dependencies
+		
+		override def dependencies_=(newDependencies: Vector[ChangeDependency[A]]) =
+			PointerWithEvents.this.dependencies = newDependencies
 	}
 }

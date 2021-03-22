@@ -35,20 +35,13 @@ class Mirror[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => Refl
 	private var _value = f(source.value)
 	
 	var listeners = Vector[ChangeListener[Reflection]]()
+	override var dependencies = Vector[ChangeDependency[Reflection]]()
 	
 	
 	// INITIAL CODE ------------------------------
 	
-	// Updates value whenever original value changes. Also generates change events for the listeners
-	source.addListener { e =>
-		val newValue = f(e.newValue)
-		if (newValue != _value)
-		{
-			val oldValue = _value
-			_value = newValue
-			fireChangeEvent(oldValue)
-		}
-	}
+	// Mirrors the source pointer
+	startMirroring(source)(f) { _value = _ }
 	
 	
 	// IMPLEMENTED  ------------------------------

@@ -43,7 +43,7 @@ class LazyMirror[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => 
 	// INITIAL CODE	--------------------------
 	
 	// Resets cache whenever original pointer changes
-	source.addAnyChangeListener { cache.reset() }
+	source.addDependency(ChangeDependency.beforeAnyChange { cache.reset() })
 	
 	
 	// IMPLEMENTED	--------------------------

@@ -118,6 +118,13 @@ trait ChangingLike[+A] extends Viewable[A]
 	def removeListener(changeListener: Any): Unit
 	
 	/**
+	  * Registers a new high-priority listener to be informed whenever this item's value changes.
+	  * These dependencies must be informed first before triggering any normal listeners.
+	  * @param dependency A dependency to add (call by name)
+	  */
+	def addDependency(dependency: => ChangeDependency[A]): Unit
+	
+	/**
 	  * @param valueCondition A condition for finding a suitable future
 	  * @param exc Implicit execution context
 	  * @return A future where this changing instance's value triggers the specified condition the first time
@@ -218,6 +225,14 @@ trait ChangingLike[+A] extends Viewable[A]
 	  *                 change event itself
 	  */
 	def addAnyChangeListener(onChange: => Unit) = addListener(ChangeListener.onAnyChange(onChange))
+	
+	/**
+	  * Adds a new dependency to this changing item
+	  * @param beforeChange A function called before each change event (accepts change event that will be fired)
+	  * @param afterChange A function called after each change event (accepts change event that was fired)
+	  */
+	def addDependency[B](beforeChange: ChangeEvent[A] => B)(afterChange: B => Unit): Unit =
+		addDependency(ChangeDependency.beforeAndAfter(beforeChange)(afterChange))
 	
 	/**
 	  * Creates an asynchronously mapping view of this changing item

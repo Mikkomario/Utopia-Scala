@@ -2,7 +2,7 @@ package utopia.flow.async
 
 import AsyncExtensions._
 import utopia.flow.datastructure.immutable.Lazy
-import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike, Fixed, LazyMergeMirror, LazyMirror, MergeMirror, TripleMergeMirror}
+import utopia.flow.event.{ChangeDependency, ChangeEvent, ChangeListener, ChangingLike, Fixed, LazyMergeMirror, LazyMirror, MergeMirror, TripleMergeMirror}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,17 +44,32 @@ class ChangeFuture[A](placeHolder: A, val future: Future[A])(implicit exc: Execu
 {
 	// ATTRIBUTES	------------------------------
 	
+	private var dependencies = Vector[ChangeDependency[A]]()
 	private var listeners = Vector[ChangeListener[A]]()
 	private var _value = placeHolder
 	
 	
 	// INITIAL CODE	------------------------------
 	
+	// Changes value when future completes
 	future.foreach { v =>
-		val event = ChangeEvent(_value, v)
-		_value = v
-		listeners.foreach { _.onChangeEvent(event) }
-		listeners = Vector()
+		if (v != _value)
+		{
+			val event = ChangeEvent(_value, v)
+			// Updates local value
+			_value = v
+			
+			// Informs the dependencies first
+			val afterEffects = dependencies.flatMap { _.beforeChangeEvent(event) }
+			// Then the listeners
+			listeners.foreach { _.onChangeEvent(event) }
+			// Finally performs dependency after-effects
+			afterEffects.foreach { _() }
+			
+			// Forgets about the listeners and dependencies afterwards
+			listeners = Vector()
+			dependencies = Vector()
+		}
 	}
 	
 	
@@ -81,6 +96,8 @@ class ChangeFuture[A](placeHolder: A, val future: Future[A])(implicit exc: Execu
 	}
 	
 	override def removeListener(changeListener: Any) = listeners = listeners.filterNot { _ == changeListener }
+	
+	override def addDependency(dependency: => ChangeDependency[A]) = if (isChanging) dependencies :+= dependency
 	
 	override def futureWhere(valueCondition: A => Boolean)(implicit exc: ExecutionContext) =
 		future.flatMap { v => if (valueCondition(v)) Future.successful(v) else Future.never }

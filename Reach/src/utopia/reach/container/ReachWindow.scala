@@ -2,7 +2,7 @@ package utopia.reach.container
 
 import utopia.flow.async.ChangeFuture
 import utopia.flow.datastructure.mutable.ResettableLazy
-import utopia.flow.event.{AlwaysFalse, ChangeListener, Changing, ChangingLike}
+import utopia.flow.event.{AlwaysFalse, ChangeDependency, ChangeListener, Changing, ChangingLike}
 import utopia.flow.util.CollectionExtensions._
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.OpenComponent
@@ -63,6 +63,9 @@ class ReachWindow(content: OpenComponent[ReachComponentLike, _], visibilityPoint
 				Left(ResettableLazy { !closeFuture.isCompleted && visibilityPointer.value })
 		}
 		
+		override var listeners = Vector[ChangeListener[Boolean]]()
+		override var dependencies = Vector[ChangeDependency[Boolean]]()
+		
 		
 		// INITIAL CODE	---------------------------
 		
@@ -78,8 +81,6 @@ class ReachWindow(content: OpenComponent[ReachComponentLike, _], visibilityPoint
 		
 		
 		// IMPLEMENTED	---------------------------
-		
-		override var listeners = Vector[ChangeListener[Boolean]]()
 		
 		override def isChanging = source match
 		{

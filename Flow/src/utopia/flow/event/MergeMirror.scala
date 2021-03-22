@@ -35,27 +35,28 @@ object MergeMirror
  * @since 9.5.2020, v1.8
  * @param firstSource The first original item that is being merged
  * @param secondSource The second original item that is being merged
- * @param f A mapping function for the mirrored value
+ * @param merge A mapping function for the mirrored value
  * @tparam O1 Type of the mirror origin (value from source item)
  * @tparam O2 Type of the second mirror origin (value from second source item)
  * @tparam Reflection Type of mirror reflection (value from this item)
  */
 class MergeMirror[+O1, +O2, Reflection](firstSource: ChangingLike[O1], secondSource: ChangingLike[O2])
-										  (f: (O1, O2) => Reflection)
+                                       (merge: (O1, O2) => Reflection)
 	extends Changing[Reflection]
 {
 	// ATTRIBUTES   ------------------------------
 	
-	private var _value = f(firstSource.value, secondSource.value)
+	private var _value = merge(firstSource.value, secondSource.value)
 	
-	var listeners = Vector[ChangeListener[Reflection]]()
+	override var listeners = Vector[ChangeListener[Reflection]]()
+	override var dependencies = Vector[ChangeDependency[Reflection]]()
 	
 	
 	// INITIAL CODE ------------------------------
 	
 	// Updates value whenever original value changes. Also generates change events for the listeners
-	firstSource.addListener { e => updateValue(f(e.newValue, secondSource.value)) }
-	secondSource.addListener { e => updateValue(f(firstSource.value, e.newValue)) }
+	startMirroring(firstSource) { merge(_, secondSource.value) } { _value = _ }
+	startMirroring(secondSource) { merge(firstSource.value, _) } { _value = _ }
 	
 	
 	// IMPLEMENTED  ------------------------------
@@ -63,17 +64,4 @@ class MergeMirror[+O1, +O2, Reflection](firstSource: ChangingLike[O1], secondSou
 	override def value = _value
 	
 	override def isChanging = firstSource.isChanging || secondSource.isChanging
-	
-	
-	// OTHER	---------------------------------
-	
-	private def updateValue(newValue: Reflection) =
-	{
-		if (newValue != _value)
-		{
-			val oldValue = _value
-			_value = newValue
-			fireChangeEvent(oldValue)
-		}
-	}
 }

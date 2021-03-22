@@ -1,6 +1,6 @@
 package utopia.flow.async
 
-import utopia.flow.event.{ChangeListener, Changing, ChangingLike}
+import utopia.flow.event.{ChangeDependency, ChangeListener, Changing, ChangingLike}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -107,6 +107,7 @@ class AsyncMirror[Origin, Result, Reflection](val source: ChangingLike[Origin], 
 	// ATTRIBUTES   ------------------------
 	
 	override var listeners = Vector[ChangeListener[Reflection]]()
+	override var dependencies = Vector[ChangeDependency[Reflection]]()
 	
 	// Initial value may be calculated synchronously in order to always have some value available
 	// (asynchronous calculation is used if placeholder value is provided)

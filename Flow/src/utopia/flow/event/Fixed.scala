@@ -28,6 +28,8 @@ case class Fixed[+A](override val value: A) extends ChangingLike[A]
 	override def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B)(changeListener: => ChangeListener[B]) =
 		simulateChangeEventFor(changeListener, simulatedOldValue)
 	
+	override def addDependency(dependency: => ChangeDependency[A]) = ()
+	
 	override def futureWhere(valueCondition: A => Boolean)(implicit exc: ExecutionContext) =
 	{
 		// Will return either a completed future or a future that never completes

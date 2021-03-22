@@ -1,7 +1,7 @@
 package utopia.reach.component.hierarchy
 
 import utopia.flow.async.DelayedView
-import utopia.flow.event.{AlwaysTrue, ChangeEvent, ChangeListener, ChangingLike, Fixed, LazyMergeMirror, LazyMirror, MergeMirror, Mirror, TripleMergeMirror}
+import utopia.flow.event.{AlwaysTrue, ChangeDependency, ChangeEvent, ChangeListener, ChangingLike, LazyMergeMirror, LazyMirror, MergeMirror, Mirror, TripleMergeMirror}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
 
@@ -96,6 +96,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		
 		// Holds listeners temporarily while there is no pointer to receive them yet
 		private var queuedListeners = Vector[ChangeListener[Boolean]]()
+		private var queuedDependencies = Vector[ChangeDependency[Boolean]]()
 		
 		
 		// COMPUTED	--------------------------
@@ -132,6 +133,12 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 			finalManagedPointer.foreach { _.removeListener(changeListener) }
 		}
 		
+		override def addDependency(dependency: => ChangeDependency[Boolean]) = finalManagedPointer match
+		{
+			case Some(pointer) => pointer.addDependency(dependency)
+			case None => queuedDependencies :+= dependency
+		}
+		
 		override def futureWhere(valueCondition: Boolean => Boolean)(implicit exc: ExecutionContext) =
 			defaultFutureWhere(valueCondition)
 		
@@ -165,6 +172,30 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		{
 			// Updates the pointer(s)
 			finalManagedPointer = Some(pointer)
+			
+			// Transfers dependencies, if any were queued
+			val afterEffects =
+			{
+				if (queuedDependencies.nonEmpty)
+				{
+					queuedDependencies.foreach { pointer.addDependency(_) }
+					// Informs the dependencies of this new change
+					val afterEffects =
+					{
+						if (pointer.value)
+						{
+							val event = ChangeEvent(false, true)
+							queuedDependencies.flatMap { _.beforeChangeEvent(event) }
+						}
+						else
+							Vector()
+					}
+					afterEffects
+				}
+				else
+					Vector()
+			}
+			
 			// Transfers listeners, if any were queued
 			if (queuedListeners.nonEmpty)
 			{
@@ -177,6 +208,9 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 				}
 				queuedListeners = Vector()
 			}
+			
+			// Performs the dependency after effects
+			afterEffects.foreach { _() }
 		}
 	}
 }

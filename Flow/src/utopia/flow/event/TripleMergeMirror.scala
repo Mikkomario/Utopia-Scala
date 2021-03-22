@@ -56,16 +56,18 @@ class TripleMergeMirror[+O1, +O2, +O3, Reflection](firstSource: ChangingLike[O1]
 {
 	// ATTRIBUTES   -----------------------------
 	
-	var listeners = Vector[ChangeListener[Reflection]]()
+	override var listeners = Vector[ChangeListener[Reflection]]()
+	override var dependencies = Vector[ChangeDependency[Reflection]]()
 	
 	private var _value = merge(firstSource.value, secondSource.value, thirdSource.value)
 	
 	
 	// INITIAL CODE -----------------------------
 	
-	firstSource.addListener { e => updateValue(merge(e.newValue, secondSource.value, thirdSource.value)) }
-	secondSource.addListener { e => updateValue(merge(firstSource.value, e.newValue, thirdSource.value)) }
-	thirdSource.addListener { e => updateValue(merge(firstSource.value, secondSource.value, e.newValue)) }
+	// Mirrors all source pointers
+	startMirroring(firstSource) { merge(_, secondSource.value, thirdSource.value) } { _value = _ }
+	startMirroring(secondSource) { merge(firstSource.value, _, thirdSource.value) } { _value = _ }
+	startMirroring(thirdSource) { merge(firstSource.value, secondSource.value, _) } { _value = _ }
 	
 	
 	// IMPLEMENTED  -----------------------------
@@ -73,17 +75,4 @@ class TripleMergeMirror[+O1, +O2, +O3, Reflection](firstSource: ChangingLike[O1]
 	override def isChanging = firstSource.isChanging || secondSource.isChanging || thirdSource.isChanging
 	
 	override def value = _value
-	
-	
-	// OTHER    ---------------------------------
-	
-	private def updateValue(newValue: Reflection) =
-	{
-		if (_value != newValue)
-		{
-			val old = _value
-			_value = newValue
-			fireChangeEvent(old)
-		}
-	}
 }

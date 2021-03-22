@@ -1,7 +1,7 @@
 package utopia.flow.async
 
 import utopia.flow.datastructure.mutable.Settable
-import utopia.flow.event.{ChangeListener, Changing}
+import utopia.flow.event.{ChangeDependency, ChangeListener, Changing}
 
 object Volatile
 {
@@ -22,6 +22,7 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
     // ATTRIBUTES   ----------------
     
     override var listeners = Vector[ChangeListener[A]]()
+    override var dependencies = Vector[ChangeDependency[A]]()
     
     /**
       * An immutable view of this volatile instance
@@ -165,6 +166,11 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
         override def listeners = Volatile.this.listeners
     
         override def listeners_=(newListeners: Vector[ChangeListener[A]]) = Volatile.this.listeners = newListeners
+        
+        override def dependencies = Volatile.this.dependencies
+    
+        override def dependencies_=(newDependencies: Vector[ChangeDependency[A]]) =
+            Volatile.this.dependencies = newDependencies
     
         override def isChanging = Volatile.this.isChanging
     

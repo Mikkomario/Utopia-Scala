@@ -32,12 +32,21 @@ trait Changing[A] extends ChangingLike[A]
 	 * @return Listeners linked to this changing instance
 	 */
 	def listeners: Vector[ChangeListener[A]]
-	
 	/**
-	 * Updates this instances listeners
+	 * Updates this instance's listeners
 	 * @param newListeners New listeners to associate with this changing instance
 	 */
 	def listeners_=(newListeners: Vector[ChangeListener[A]]): Unit
+	
+	/**
+	  * @return Dependencies linked to this changing instance
+	  */
+	def dependencies: Vector[ChangeDependency[A]]
+	/**
+	  * Updates this instance's dependencies
+	  * @param newDependencies Dependencies to apply to this instance
+	  */
+	def dependencies_=(newDependencies: Vector[ChangeDependency[A]]): Unit
 	
 	
 	// IMPLEMENTED	----------------
@@ -52,6 +61,8 @@ trait Changing[A] extends ChangingLike[A]
 	}
 	
 	override def removeListener(listener: Any) = listeners = listeners.filterNot { _ == listener }
+	
+	override def addDependency(dependency: => ChangeDependency[A]) = dependencies :+= dependency
 	
 	override def futureWhere(valueCondition: A => Boolean)(implicit exc: ExecutionContext) =
 		defaultFutureWhere(valueCondition)
@@ -97,12 +108,49 @@ trait Changing[A] extends ChangingLike[A]
 	// OTHER	--------------------
 	
 	/**
-	  * Fires a change event for all the listeners
+	  * Fires a change event for all the listeners. Informs possible dependencies before informing any listeners.
 	  * @param oldValue The old value of this changing element (call-by-name)
 	  */
 	protected def fireChangeEvent(oldValue: => A) =
 	{
 		lazy val event = ChangeEvent(oldValue, value)
+		// Informs the dependencies first
+		val afterEffects = dependencies.flatMap { _.beforeChangeEvent(event) }
+		// Then the listeners
 		listeners.foreach { _.onChangeEvent(event) }
+		// Finally performs the after-effects defined by the dependencies
+		afterEffects.foreach { _() }
+	}
+	
+	/**
+	  * Starts mirroring another pointer
+	  * @param origin Origin value pointer
+	  * @param map A value transformation function that accepts the new origin pointer value
+	  * @param set A function for updating this pointer's value
+	  * @tparam O Type of origin pointer's value
+	  */
+	protected def startMirroring[O](origin: ChangingLike[O])(map: O => A)(set: A => Unit) =
+	{
+		// Registers as a dependency for the origin pointer
+		origin.addDependency(ChangeDependency { e1: ChangeEvent[O] =>
+			// Whenever the origin's value changes, calculates a new value
+			val newValue = map(e1.newValue)
+			val oldValue = value
+			// If the new value is different from the previous state, updates the value and generates a new change event
+			if (newValue != oldValue)
+			{
+				set(newValue)
+				val event2 = ChangeEvent(oldValue, newValue)
+				// The dependencies are informed immediately, other listeners only afterwards
+				val afterEffects = dependencies.flatMap { _.beforeChangeEvent(event2) }
+				Some(event2 -> afterEffects)
+			}
+			else
+				None
+		} { case (event, actions) =>
+			// After the origin has finished its update, informs the listeners and triggers the dependency after-effects
+			listeners.foreach { _.onChangeEvent(event) }
+			actions.foreach { _() }
+		})
 	}
 }

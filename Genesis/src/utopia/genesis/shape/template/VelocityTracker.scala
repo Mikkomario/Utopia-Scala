@@ -1,7 +1,7 @@
 package utopia.genesis.shape.template
 
 import java.time.Instant
-import utopia.flow.event.{ChangeListener, Changing}
+import utopia.flow.event.{ChangeDependency, ChangeListener, Changing}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape2D.Vector2DLike
@@ -22,6 +22,7 @@ abstract class VelocityTracker[X <: Vector2DLike[X], V <: VelocityLike[X, V], A 
 	// ATTRIBUTES	-----------------------
 	
 	override var listeners = Vector[ChangeListener[H]]()
+	override var dependencies = Vector[ChangeDependency[H]]()
 	
 	private var _positionHistory = Vector[(X, Instant)]()
 	private var _velocityHistory = Vector[(V, Instant)]()

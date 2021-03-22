@@ -39,19 +39,19 @@ object LazyMergeMirror
   * @since 24.10.2020, v1.9
   */
 class LazyMergeMirror[O1, O2, Reflection](source1: ChangingLike[O1], source2: ChangingLike[O2])
-											  (merge: (O1, O2) => Reflection)
+                                         (merge: (O1, O2) => Reflection)
 	extends LazyLike[Reflection]
 {
 	// ATTRIBUTES	-------------------------------
 	
 	private val cache = ResettableLazy { merge(source1.value, source2.value) }
-	private lazy val listener = ChangeListener.onAnyChange { cache.reset() }
+	private lazy val listener = ChangeDependency.beforeAnyChange { cache.reset() }
 	
 	
 	// INITIAL CODE	-------------------------------
 	
-	source1.addListener(listener)
-	source2.addListener(listener)
+	source1.addDependency(listener)
+	source2.addDependency(listener)
 	
 	
 	// IMPLEMENTED	-------------------------------

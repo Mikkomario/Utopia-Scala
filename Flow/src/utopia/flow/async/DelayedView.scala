@@ -1,7 +1,7 @@
 package utopia.flow.async
 
 import java.time.Instant
-import utopia.flow.event.{ChangeListener, Changing, ChangingLike}
+import utopia.flow.event.{ChangeDependency, ChangeListener, Changing, ChangingLike}
 import utopia.flow.time.{Now, WaitUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -87,5 +87,8 @@ class DelayedView[A](val source: ChangingLike[A], delay: Duration)(implicit exc:
 	override def value = valuePointer.value
 	override def listeners = valuePointer.listeners
 	override def listeners_=(newListeners: Vector[ChangeListener[A]]) = valuePointer.listeners = newListeners
+	override def dependencies = valuePointer.dependencies
+	override def dependencies_=(newDependencies: Vector[ChangeDependency[A]]) =
+		valuePointer.dependencies = newDependencies
 	override def isChanging = source.isChanging || isWaitingFlag.isSet
 }
