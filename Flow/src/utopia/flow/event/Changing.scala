@@ -143,7 +143,10 @@ trait Changing[A] extends ChangingLike[A]
 				val event2 = ChangeEvent(oldValue, newValue)
 				// The dependencies are informed immediately, other listeners only afterwards
 				val afterEffects = dependencies.flatMap { _.beforeChangeEvent(event2) }
-				Some(event2 -> afterEffects)
+				if (afterEffects.nonEmpty || listeners.nonEmpty)
+					Some(event2 -> afterEffects)
+				else
+					None
 			}
 			else
 				None
