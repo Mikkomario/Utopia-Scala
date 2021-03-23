@@ -33,6 +33,9 @@ in a lazy container is not required or desirable
     - .notCompletedBefore(Future)
     - .currentSuccess
 - CollectionExtensions
+  - Iterator
+    - .last & .lastOption
+    - .nextWhere(...)
   - Range.Inclusive
     - .subRangeIterator(Int)
   - Seq

@@ -670,6 +670,33 @@ object CollectionExtensions
     implicit class RichIterator[A](val i: Iterator[A]) extends AnyVal
     {
         /**
+          * Finds the last item accessible from this iterator. Consumes all items in this iterator.
+          * @throws NoSuchElementException If this iterator is empty
+          * @return The last item in this iterator
+          */
+        @throws[NoSuchElementException]("If this iterator is empty")
+        def last =
+        {
+            var current = i.next()
+            while (i.hasNext)
+            {
+                current = i.next()
+            }
+            current
+        }
+    
+        /**
+          * @return The last item accessible in this iterator. None if this iterator didn't have any items remaining.
+          */
+        def lastOption =
+        {
+            if (i.hasNext)
+                Some(last)
+            else
+                None
+        }
+        
+        /**
           * Performs the specified operation for the next 'n' items. This will advance the iterator n-steps
           * (although limited by number of available items)
           * @param n The maximum number of iterations / items handled
@@ -706,6 +733,42 @@ object CollectionExtensions
             }
             
             builder.result()
+        }
+    
+        /**
+          * Consumes items until a specific condition is met
+          * @param condition A search condition
+          * @return The first item in this iterator that fulfills the condition.
+          *         None if none of the items in this iterator fulfilled the condition.
+          */
+        def nextWhere(condition: A => Boolean) =
+        {
+            if (i.hasNext)
+            {
+                var current = i.next()
+                var foundResult = condition(current)
+                while (!foundResult && i.hasNext)
+                {
+                    current = i.next()
+                    foundResult = condition(current)
+                }
+                if (foundResult)
+                    Some(current)
+                else
+                    None
+            }
+            else
+                None
+        }
+        
+        def findMapNext[B](map: A => Option[B]) =
+        {
+            var current: Option[B] = None
+            while (current.isEmpty && i.hasNext)
+            {
+                current = map(i.next())
+            }
+            current
         }
     
         /**
