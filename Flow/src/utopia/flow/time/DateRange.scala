@@ -3,6 +3,7 @@ package utopia.flow.time
 import TimeExtensions._
 
 import java.time.LocalDate
+import scala.math.Ordering.Implicits.infixOrderingOps
 
 object DateRange
 {
@@ -127,6 +128,12 @@ case class DateRange(start: LocalDate, end: LocalDate) extends Iterable[LocalDat
 		if (isChronological) date >= start && date < end else date > end && date <= start
 	
 	/**
+	  * @param other Another date range
+	  * @return Whether this date range contains the other range completely
+	  */
+	def contains(other: DateRange): Boolean = other.nonEmpty && contains(other.head) && contains(other.last)
+	
+	/**
 	  * Advances this range like a seq. Please notice that this method doesn't check whether the specified advance
 	  * exceeds the length of this range. It will continue to return values as if the end of this range wasn't yet
 	  * reached.
@@ -141,4 +148,38 @@ case class DateRange(start: LocalDate, end: LocalDate) extends Iterable[LocalDat
 		else
 			start - daysAdvance
 	}
+	
+	/**
+	  * @param other Another date range
+	  * @return Whether these two ranges overlap at some point
+	  */
+	def overlapsWith(other: DateRange) = other.headOption.exists(contains) ||
+		other.lastOption.exists(contains) || headOption.exists(other.contains)
+	
+	/**
+	  * @param other Another date range
+	  * @return The overlapping portion between these two ranges. None if there is no overlap. The resulting range is
+	  *         always chronological (start < end)
+	  */
+	def overlapWith(other: DateRange) =
+	{
+		val r1 = chronological
+		val r2 = other.chronological
+		
+		val start = r1.start max r2.start
+		val end = r1.end min r2.end
+		
+		if (end > start)
+			Some(DateRange(start, end))
+		else
+			None
+	}
+	
+	/**
+	  * An operator matching the function 'overlapWith(DateRange)'
+	  * @param other Another date range
+	  * @return The overlapping portion between these two ranges. None if there is no overlap. The resulting range is
+	  *         always chronological (start < end)
+	  */
+	def &(other: DateRange) = overlapWith(other)
 }

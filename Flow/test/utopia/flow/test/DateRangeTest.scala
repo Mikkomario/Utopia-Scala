@@ -51,5 +51,17 @@ object DateRangeTest extends App
 	assert(!winter.contains(1.of(JULY)))
 	assert(!winter.contains(testYear / 21.of(MARCH)))
 	
+	val february = FEBRUARY(1) until MARCH(1)
+	val february2020 = testYear(february).head
+	val febToMarchInclusive = DateRange.inclusive(testYear.february.firstDay, testYear.march.lastDay)
+	
+	assert(janToFebInclusive contains february2020)
+	assert(febToMarchInclusive contains february2020)
+	assert(janToFebInclusive.overlapWith(february2020).contains(february2020))
+	assert(febToMarchInclusive.overlapWith(february2020).contains(february2020))
+	assert(febToMarchInclusive.overlapWith(janToFebInclusive).contains(february2020))
+	assert(!testYear(summer).head.overlapsWith(february2020))
+	assert(testYear(summer).head.overlapWith(february2020).isEmpty)
+	
 	println("Success!")
 }
