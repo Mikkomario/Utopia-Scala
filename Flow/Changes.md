@@ -28,6 +28,7 @@ in a lazy container is not required or desirable
 - Added date range support (DateRange, YearlyDateRange) which includes a number of new methods in TimeExtensions
 - Added Now and Today objects to be used instead of Instant.now() and LocalDate.now()
 - Added Regex class (from Utopia Reflection module)
+- Added UncertainBoolean, which is a utility class representing a boolean option (true, false or unknown)
 ### New Methods
 - AsyncExtensions
   - Future

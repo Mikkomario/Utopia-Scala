@@ -50,6 +50,11 @@ trait FromResultFactory[+A]
 	  */
 	def tables = table +: joinedTables
 	
+	/**
+	 * @return Whether this factory targets a single table only
+	 */
+	def targetsSingleTable = joinedTables.isEmpty
+	
 	
 	// OTHER	---------------
 	

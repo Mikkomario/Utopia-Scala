@@ -2,10 +2,9 @@ package utopia.vault.sql
 
 import utopia.flow.datastructure.template.Model
 import utopia.flow.datastructure.template.Property
-
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.immutable
-import utopia.vault.model.immutable.Table
+import utopia.vault.model.immutable.{Column, Table}
 
 import scala.collection.immutable.HashMap
 
@@ -20,6 +19,26 @@ object Update
     
     /**
      * Creates an sql segment that updates one or multiple tables
+     * @param target The target portion for the update segment. This may consist of a single or
+     * multiple tables, but must contain all tables that are affected by the 'set'
+     * @param set Column value pairs that will be updated
+     * @return an update segment (select nothing segment if there's nothing to update)
+     */
+    def columns(target: SqlTarget, set: Map[Column, Value]) =
+    {
+        if (set.isEmpty)
+            target.toSqlSegment.prepend("SELECT NULL FROM")
+        else
+        {
+            val orderedSet = set.toVector
+            target.toSqlSegment.prepend("UPDATE") + SqlSegment("SET " +
+                orderedSet.view.map { case (column, _) => column.columnNameWithTable + " = ?" }.mkString(", "),
+                orderedSet.map { _._2 })
+        }
+    }
+    
+    /**
+     * Creates an sql segment that updates one or multiple tables
      * @param target The target portion for the update segment. This may consist of a single or 
      * multiple tables, but must contain all tables that are introduced in the 'set'
      * @param set New value assignments for each of the modified tables. Property names are used 
@@ -30,13 +49,7 @@ object Update
     {
         val valueSet = set.flatMap { case (table, model) => model.attributes.flatMap { 
                 property => table.find(property.name).map { (_, property.value) } } }
-        
-        if (valueSet.isEmpty)
-            target.toSqlSegment.prepend("SELECT NULL FROM")
-        else 
-            target.toSqlSegment.prepend("UPDATE") + SqlSegment("SET " +
-                valueSet.view.map { case (column, _) => column.columnNameWithTable + " = ?" }.mkString(", "),
-                valueSet.values.toVector)
+        columns(target, valueSet)
     }
     
     /**
@@ -50,6 +63,15 @@ object Update
      * @return an update segment (select nothing segment if there's nothing to update)
      */
     def apply(table: Table, key: String, value: Value): SqlSegment = apply(table, immutable.Model(Vector(key -> value)))
+    
+    /**
+     * Creates an update segment that updates the value of an individual column
+     * @param target Targeted table / tables
+     * @param column Column to update (should be part of the target)
+     * @param value Value to assign for the column
+     * @return A new update segment
+     */
+    def apply(target: SqlTarget, column: Column, value: Value) = columns(target, Map(column -> value))
     
     /**
      * Creates an update segment that changes multiple values in a table

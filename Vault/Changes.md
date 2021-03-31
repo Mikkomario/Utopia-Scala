@@ -1,10 +1,20 @@
 # Utopia Vault - List of Changes
 
 ## v1.6.1 (beta)
+### New Features
+- Added UniqueModelAccess utility trait, which combines ModelAccess with UniqueAccess
 ### New Methods
-- Added .delete() to ModelAccessor - This method deletes all accessible rows in the primary table
-- Added .min and .max to SingleIdAccessor
-- Added .createDatabase(...) to Connection
+- Connection
+  - .createDatabase(...)
+- ModelAccess
+  - .delete(), which deletes all accessible rows in the primary table
+- SingleIdAccess
+  - .min and .max
+- SingleModelAccess
+  - findColumn(...) & findAttribute(...)
+- Update
+  - .columns(...)
+  - .apply(SqlTarget, Column, Value) which updates the value of an individual column
 ### Other Changes
 - Connection.dropDatabase(...) now accepts a boolean parameter checkIfExists (true by default)
 - .apply(...) in Insert, which accepted multiple models, now accepts Seq instead of just Vector
