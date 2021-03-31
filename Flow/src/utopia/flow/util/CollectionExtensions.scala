@@ -1,5 +1,7 @@
 package utopia.flow.util
 
+import utopia.flow.collection.GroupIterator
+
 import scala.language.implicitConversions
 import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
 import scala.collection.generic.{IsIterableOnce, IsSeq}
@@ -760,7 +762,14 @@ object CollectionExtensions
             else
                 None
         }
-        
+    
+        /**
+         * Returns the next result that can be mapped to a specific value.
+         * After method call, this iterator will be placed at the item following the successfully mapped item.
+         * @param map A mapping function
+         * @tparam B Type of map result when one is found
+         * @return The first map result found. None if no map result could be acquired.
+         */
         def findMapNext[B](map: A => Option[B]) =
         {
             var current: Option[B] = None
@@ -786,6 +795,35 @@ object CollectionExtensions
                 resultBuilder += map(takeNext(groupSize))
             }
             resultBuilder.result()
+        }
+    
+        /**
+         * Groups the <b>consecutive</b> items in this iterator using the specified grouping function.
+         * The resulting iterator returns items as groups based on the group function result.
+         * @param f A grouping function
+         * @tparam G Type of group identifier
+         * @return An iterator that returns groups of consecutive items, including the group identifiers
+         */
+        def groupBy[G](f: A => G) = GroupIterator(i)(f)
+    
+        /**
+         * Maps this iterator with a function that can fail. Handles failures by catching them.
+         * @param f A mapping function
+         * @param handleError Function called for each encountered error
+         * @tparam B Type of successful map result
+         * @return Iterator of the mapped items
+         */
+        def mapCatching[B](f: A => Try[B])(handleError: Throwable => Unit) =
+        {
+            i.flatMap { original =>
+                f(original) match
+                {
+                    case Success(item) => Some(item)
+                    case Failure(error) =>
+                        handleError(error)
+                        None
+                }
+            }
         }
     }
     

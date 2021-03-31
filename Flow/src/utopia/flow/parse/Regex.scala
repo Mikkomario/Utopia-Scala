@@ -1,7 +1,6 @@
-package utopia.reflection.text
+package utopia.flow.parse
 
 import java.util.regex.Pattern
-
 import scala.collection.immutable.VectorBuilder
 import scala.language.implicitConversions
 
@@ -40,6 +39,13 @@ object Regex
 	  * @return A new regex
 	  */
 	def anyOf(chars: String) = Regex(s"[\\Q$chars\\E]")
+	
+	/**
+	  * @param char Character in regular expression
+	  * @return A regular expression where that character has been "escaped" to make sure it is
+	  *         treated as a character and not an expression
+	  */
+	def escape(char: Char) = Regex(s"\\$char")
 }
 
 /**

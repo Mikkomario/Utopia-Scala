@@ -14,6 +14,7 @@
 - Moved SelectionCircleDrawer from immutable package to view package and refactored and named it accordingly
 - Moved ButtonState from utopia.reflection.component.swing.button -package to utopia.reflection.event -package
 - Rearranged packages related to Interaction Windows
+- Moved Regex from utopia.reflection.text to Utopia Flow module (utopia.flow.parse)
 - ColorContext.forTextComponents doesn't accept parameters anymore (except for the implicit localizer)
 - Changed AnimatedLabel creation parameters due to changes in Image and animation classes
 - Renamed multiple stack length and stack size modifiers. The new naming convention is:

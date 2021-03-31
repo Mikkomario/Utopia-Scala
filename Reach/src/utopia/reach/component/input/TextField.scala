@@ -4,6 +4,7 @@ import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.parse.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.color.ColorContrastStandard.Minimum
@@ -24,7 +25,7 @@ import utopia.reflection.localization.{DisplayFunction, LocalizedString, Localiz
 import utopia.reflection.shape.stack.modifier.MaxBetweenLengthModifier
 import utopia.reflection.shape.stack.StackLength
 import utopia.reflection.shape.Alignment
-import utopia.reflection.text.{FontMetricsContext, Regex}
+import utopia.reflection.text.FontMetricsContext
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.Duration

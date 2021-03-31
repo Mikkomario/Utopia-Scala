@@ -27,6 +27,7 @@ in a lazy container is not required or desirable
 - XmlWriter.writeFile(...) and .writeElementToFile(...) now create the target directory if it didn't exist yet
 - Added date range support (DateRange, YearlyDateRange) which includes a number of new methods in TimeExtensions
 - Added Now and Today objects to be used instead of Instant.now() and LocalDate.now()
+- Added Regex class (from Utopia Reflection module)
 ### New Methods
 - AsyncExtensions
   - Future
@@ -36,6 +37,7 @@ in a lazy container is not required or desirable
   - Iterator
     - .last & .lastOption
     - .nextWhere(...)
+    - .groupBy(...)
   - Range.Inclusive
     - .subRangeIterator(Int)
   - Seq

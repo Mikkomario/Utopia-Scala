@@ -5,6 +5,7 @@ import java.awt.datatransfer.{Clipboard, ClipboardOwner, DataFlavor, StringSelec
 import java.awt.event.KeyEvent
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{AlwaysTrue, ChangeListener, ChangingLike, Fixed}
+import utopia.flow.parse.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, KeyStatus, KeyTypedEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
@@ -28,7 +29,7 @@ import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Text}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener, FocusListener}
 import utopia.reach.util.Priority.VeryHigh
-import utopia.reflection.text.{FontMetricsContext, MeasuredText, Regex}
+import utopia.reflection.text.{FontMetricsContext, MeasuredText}
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.util.ComponentCreationDefaults

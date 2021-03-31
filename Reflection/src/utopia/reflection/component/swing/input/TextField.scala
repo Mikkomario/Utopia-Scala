@@ -8,6 +8,7 @@ import javax.swing.text.{Document, PlainDocument}
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.ChangingLike
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.parse.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.shape.Axis.X
@@ -28,7 +29,7 @@ import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.{stack, _}
 import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
-import utopia.reflection.text.{Font, Prompt, Regex}
+import utopia.reflection.text.{Font, Prompt}
 import utopia.reflection.util.AwtEventThread
 
 object TextField
