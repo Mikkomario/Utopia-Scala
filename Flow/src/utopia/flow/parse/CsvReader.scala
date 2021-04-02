@@ -25,7 +25,8 @@ object CsvReader
 	  * @tparam A Type of function result
 	  * @return Failure if file handling failed. Function result otherwise.
 	  */
-	def iterateRawRowsIn[A](path: Path, separator: String = ";")(f: Iterator[Vector[String]] => A)(implicit codec: Codec) =
+	def iterateRawRowsIn[A](path: Path, separator: String = ";")(f: Iterator[Vector[String]] => A)
+	                       (implicit codec: Codec) =
 	{
 		IterateLines.fromPath(path) { linesIter => f(linesIter.filterNot { _.isEmpty }
 			.map { _.splitIgnoringQuotations(separator).toVector.map(processValue) }) }
