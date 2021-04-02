@@ -22,9 +22,7 @@ object SqlSegment
     def combine(segments: Seq[SqlSegment], sqlReduce: (String, String) => String = { _ + " " + _ }) = 
     {
         if (segments.isEmpty)
-        {
             SqlSegment.empty
-        }
         else
         {
             val sql = segments.view.map { _.sql }.reduceLeft(sqlReduce)

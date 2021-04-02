@@ -66,12 +66,20 @@ trait ConditionElement
      * Creates an in condition that returns true if one of the provided element values matches 
      * this element's value
      */
-    def in(elements: IterableOnce[ConditionElement]) =
+    def in(elements: Iterable[ConditionElement]) =
     {
-        val rangeSegment = SqlSegment.combine(elements.iterator.map { _.toSqlSegment }.toSeq, { _ + ", " + _ })
-        val inSegment = rangeSegment.copy(sql = "(" + rangeSegment.sql + ")")
-        
-        Condition(toSqlSegment + "IN" + inSegment)
+        // Uses simpler conditions if they are more suitable
+        if (elements.isEmpty)
+            Condition.alwaysFalse
+        else if (elements.size == 1)
+            this <=> elements.head
+        else
+        {
+            val rangeSegment = SqlSegment.combine(elements.map { _.toSqlSegment }.toSeq, { _ + ", " + _ })
+            val inSegment = rangeSegment.copy(sql = "(" + rangeSegment.sql + ")")
+    
+            Condition(toSqlSegment + "IN" + inSegment)
+        }
     }
     
     /**
@@ -80,14 +88,7 @@ trait ConditionElement
       * @tparam V Type of value
       * @return A condition that accepts any of the provided value in this condition element
       */
-    def in[V](elements: IterableOnce[V])(implicit transform: V => ConditionElement): Condition =
-    {
-        val iterator = elements.iterator
-        if (iterator.hasNext)
-            in(iterator.map(transform))
-        else
-            Condition.alwaysFalse
-    }
+    def in[V](elements: Iterable[V])(implicit transform: V => ConditionElement): Condition = in(elements.map(transform))
     
     /**
       * @param matchString A string match where % is a placeholder for any string.

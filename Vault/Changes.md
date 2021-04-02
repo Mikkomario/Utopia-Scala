@@ -20,6 +20,9 @@
 ### Other Changes
 - Connection.dropDatabase(...) now accepts a boolean parameter checkIfExists (true by default)
 - .apply(...) in Insert, which accepted multiple models, now accepts Seq instead of just Vector
+- .in(...) in ConditionElement now transforms the condition into FALSE or equals condition when 
+  there are 0 or 1 items in the set.
+  - However, the method now requires Iterable instead of IterableOnce
 
 ## v1.6
 ### Scala
