@@ -781,6 +781,21 @@ object CollectionExtensions
         }
     
         /**
+         * Groups this iterator and performs the specified operation for each of the collected groups.
+         * Differs from .group(...).foreach(...) in that this method acts on all of the items in this iterator
+         * without discarding the possible smaller group at the end
+         * @param maxGroupSize Maximum number of items for a function call
+         * @param f A function that is called for each group of items
+         */
+        def foreachGroup(maxGroupSize: Int)(f: Vector[A] => Unit) =
+        {
+            while (i.hasNext)
+            {
+                f(takeNext(maxGroupSize))
+            }
+        }
+        
+        /**
           * Maps the items in this iterator, one group at a time
           * @param groupSize The maximum size of an individual group of items to map
           * @param map a mapping function applied to groups of items
@@ -790,10 +805,7 @@ object CollectionExtensions
         def groupMap[B](groupSize: Int)(map: Vector[A] => B) =
         {
             val resultBuilder = new VectorBuilder[B]()
-            while (i.hasNext)
-            {
-                resultBuilder += map(takeNext(groupSize))
-            }
+            foreachGroup(groupSize) { resultBuilder += map(_) }
             resultBuilder.result()
         }
     

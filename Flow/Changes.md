@@ -38,6 +38,7 @@ in a lazy container is not required or desirable
   - Iterator
     - .last & .lastOption
     - .nextWhere(...)
+    - .foreachGroup(Int)(...)
     - .groupBy(...)
   - Range.Inclusive
     - .subRangeIterator(Int)
