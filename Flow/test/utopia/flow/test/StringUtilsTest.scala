@@ -37,5 +37,8 @@ object StringUtilsTest extends App
 	assert(s.untilFirst("is") == "Th")
 	assert(s.untilLast("is") == "This ")
 	
+	assert("a,b,\"c,d,e\",f,,h".splitIgnoringQuotations(",").toVector ==
+		Vector("a", "b", "\"c,d,e\"", "f", "", "h"))
+	
 	println("Success!")
 }

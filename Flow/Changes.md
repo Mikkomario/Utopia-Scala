@@ -82,6 +82,8 @@ includeSelf-parameter was set to false)
 ### Other Changes
 - Exceptions thrown by Loop.runOnce() implementations are now caught and printed, not propagated further.
 - CsvReader now removes '-characters from the beginnings of columns, if present
+    - Also, quotation marks are removed from around the values
+- Added ignoreEmptyStringValues: Boolean -parameter to CsvReader.iterateLinesIn(...) and .foreachLine(...) 
 - Changed Duration.description behavior when dealing with over 72 hour durations
 - Added implicit conversion from Period to Duration (activated by importing TimeExtensions._)
 

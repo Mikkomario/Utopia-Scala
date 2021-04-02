@@ -249,6 +249,15 @@ object StringExtensions
 		}
 		
 		/**
+		 * Splits this string based on the specified regular expression, but ignores expressions which are surrounded
+		 * by quotes
+		 * @param regex A regular expression
+		 * @return Each part of this string which was separated with such an expression
+		 */
+		def splitIgnoringQuotations(regex: String) =
+			s.split(regex + "(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
+		
+		/**
 		 * A comparison of two strings in a case-insensitive manner
 		 * @param another Another string
 		 * @return Whether this string equals the other string when case is ignored

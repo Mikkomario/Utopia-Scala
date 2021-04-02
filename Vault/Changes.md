@@ -15,6 +15,8 @@
 - Update
   - .columns(...)
   - .apply(SqlTarget, Column, Value) which updates the value of an individual column
+### Fixes
+- Zero row inserts are ignored and now return an empty result without interacting with the database
 ### Other Changes
 - Connection.dropDatabase(...) now accepts a boolean parameter checkIfExists (true by default)
 - .apply(...) in Insert, which accepted multiple models, now accepts Seq instead of just Vector

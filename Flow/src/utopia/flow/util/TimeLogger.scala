@@ -26,6 +26,6 @@ class TimeLogger
 	def checkPoint(description: String) =
 	{
 		println(description + s" (${(Instant.now() - startTime).description})")
-		startTime = Now.toInstant
+		startTime = Now
 	}
 }
