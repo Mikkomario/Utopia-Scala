@@ -175,6 +175,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                         statement.getResultSet.consume { results =>
                             // Parses data out of the result
                             // May skip some data in case it is not requested
+                            // TODO: Doesn't properly return the updated row count
                             Result(if (returnRows) rowsFromResult(results, selectedTables) else Vector(),
                                 generatedKeys, statement.getUpdateCount)
                         }
