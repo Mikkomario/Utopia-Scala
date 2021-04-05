@@ -1,6 +1,6 @@
 package utopia.flow.util
 
-import utopia.flow.collection.GroupIterator
+import utopia.flow.collection.{GroupIterator, PollingIterator}
 
 import scala.language.implicitConversions
 import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
@@ -671,6 +671,14 @@ object CollectionExtensions
     
     implicit class RichIterator[A](val i: Iterator[A]) extends AnyVal
     {
+        /**
+         * Enables polling on this iterator. This method yields a new iterator.
+         * This iterator shouldn't be used after the copy has been acquired. Only the pollable copy of this
+         * iterator should be used afterwards.
+         * @return A copy of this iterator that allows polling (checking of the next item without advancing)
+         */
+        def pollable = new PollingIterator[A](i)
+        
         /**
           * Finds the last item accessible from this iterator. Consumes all items in this iterator.
           * @throws NoSuchElementException If this iterator is empty

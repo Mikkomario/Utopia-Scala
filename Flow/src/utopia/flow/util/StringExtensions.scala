@@ -1,6 +1,7 @@
 package utopia.flow.util
 
 import utopia.flow.datastructure.mutable.ResettableLazy
+import CollectionExtensions._
 
 /**
  * Contains some utility extensions that extend the capabilities of standard strings
@@ -256,6 +257,38 @@ object StringExtensions
 		 */
 		def splitIgnoringQuotations(regex: String) =
 			s.split(regex + "(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
+		
+		/**
+		 * Divides this string based on the specified divider / separator string. Works much like split,
+		 * except that the divider / separator is included in the resulting strings. Also, this method
+		 * doesn't support regular expressions like split does.
+		 * @param divider A divider that separates different parts
+		 * @return Divided parts of this string with the dividers included
+		 */
+		def divideWith(divider: String) =
+		{
+			val dividerIndices = indexOfIterator(divider).toVector
+			// Case: No dividers => returns the string as is
+			if (dividerIndices.isEmpty)
+				Vector(s)
+			else
+			{
+				val divLength = divider.length
+				// Collects the strings between dividers. Includes the dividers themselves.
+				val (finalStart, firstParts) = dividerIndices
+					.foldLeft((0, Vector[String]())) { case ((start, collected), next) =>
+						val nextStart = next + divLength
+						val part = s.substring(start, nextStart)
+						nextStart -> (collected :+ part)
+					}
+				// Case: String continues after the last divider
+				if (finalStart < s.length)
+					firstParts :+ s.substring(finalStart)
+				// Case: String ends with a divider
+				else
+					firstParts
+			}
+		}
 		
 		/**
 		 * A comparison of two strings in a case-insensitive manner

@@ -29,6 +29,7 @@ in a lazy container is not required or desirable
 - Added Now and Today objects to be used instead of Instant.now() and LocalDate.now()
 - Added Regex class (from Utopia Reflection module)
 - Added UncertainBoolean, which is a utility class representing a boolean option (true, false or unknown)
+- Added polling support for Iterator (use CollectionExtensions and .pollable)
 ### New Methods
 - AsyncExtensions
   - Future
@@ -36,6 +37,7 @@ in a lazy container is not required or desirable
     - .currentSuccess
 - CollectionExtensions
   - Iterator
+    - .pollable
     - .last & .lastOption
     - .nextWhere(...)
     - .foreachGroup(Int)(...)

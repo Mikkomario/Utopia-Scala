@@ -40,5 +40,9 @@ object StringUtilsTest extends App
 	assert("a,b,\"c,d,e\",f,,h".splitIgnoringQuotations(",").toVector ==
 		Vector("a", "b", "\"c,d,e\"", "f", "", "h"))
 	
+	assert("Almost.There.No.More.".divideWith(".") == Vector("Almost.", "There.", "No.", "More."))
+	assert("Test".divideWith(".") == Vector("Test"))
+	assert("Foo---bar".divideWith("---") == Vector("Foo---", "bar"))
+	
 	println("Success!")
 }
