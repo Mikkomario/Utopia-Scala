@@ -30,6 +30,7 @@ in a lazy container is not required or desirable
 - Added Regex class (from Utopia Reflection module)
 - Added UncertainBoolean, which is a utility class representing a boolean option (true, false or unknown)
 - Added polling support for Iterator (use CollectionExtensions and .pollable)
+- Added ActionBuffer class which performs a group action whenever a buffer is filled
 ### New Methods
 - AsyncExtensions
   - Future

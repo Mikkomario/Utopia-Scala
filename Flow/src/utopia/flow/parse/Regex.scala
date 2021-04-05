@@ -64,6 +64,28 @@ case class Regex(string: String)
 	// COMPUTED	--------------------
 	
 	/**
+	 * @return Inverted version of this regex
+	 */
+	def unary_! =
+	{
+		if (string.startsWith("(?!") && string.endsWith(")"))
+			Regex(string.substring(3, string.length - 1))
+		else if (string.startsWith("(?!") && string.endsWith("$).*"))
+			Regex(string.substring(3, string.length - 4))
+		else if (hasBrackets)
+		{
+			if (string.startsWith(Pattern.quote("[^")))
+				Regex("[" + string.substring(2))
+			else
+				Regex("[^" + string.substring(1))
+		}
+		else if (string.endsWith("}") || string.endsWith("*") || string.endsWith("?") || string.endsWith("+"))
+			Regex("(?!" + string + "$).*")
+		else
+			Regex("[^" + string + "]")
+	}
+	
+	/**
 	  * @return Whether this regex is empty
 	  */
 	def isEmpty = string.isEmpty
@@ -128,29 +150,7 @@ case class Regex(string: String)
 	override def toString = string
 	
 	
-	// OPERATORS	----------------
-	
-	/**
-	  * @return Inverted version of this regex
-	  */
-	def unary_! =
-	{
-		if (string.startsWith("(?!") && string.endsWith(")"))
-			Regex(string.substring(3, string.length - 1))
-		else if (string.startsWith("(?!") && string.endsWith("$).*"))
-			Regex(string.substring(3, string.length - 4))
-		else if (hasBrackets)
-		{
-			if (string.startsWith(Pattern.quote("[^")))
-				Regex("[" + string.substring(2))
-			else
-				Regex("[^" + string.substring(1))
-		}
-		else if (string.endsWith("}") || string.endsWith("*") || string.endsWith("?") || string.endsWith("+"))
-			Regex("(?!" + string + "$).*")
-		else
-			Regex("[^" + string + "]")
-	}
+	// OTHER	----------------
 	
 	/**
 	  * @param another Another regex
@@ -173,6 +173,24 @@ case class Regex(string: String)
 		else
 			Regex(string + "|" + more.string)
 	}
+	
+	/**
+	 * @param another Another regex
+	 * @return This regex followed by another regex
+	 */
+	def followedBy(another: Regex) = this + another
+	
+	/**
+	 * @param n A number
+	 * @return This regex 'n' times in sequence
+	 */
+	def times(n: Int) = Regex(string + s"{$n}")
+	
+	/**
+	 * @param range A range
+	 * @return This regex 'range' times in sequence
+	 */
+	def times(range: Range) = Regex(string + s"{${range.start},${range.end}")
 	
 	/**
 	  * @param str A string
@@ -222,24 +240,10 @@ case class Regex(string: String)
 		builder.result()
 	}
 	
-	
-	// OTHER	--------------------
-	
 	/**
-	  * @param another Another regex
-	  * @return This regex followed by another regex
-	  */
-	def followedBy(another: Regex) = this + another
-	
-	/**
-	  * @param n A number
-	  * @return This regex 'n' times in sequence
-	  */
-	def times(n: Int) = Regex(string + s"{$n}")
-	
-	/**
-	  * @param range A range
-	  * @return This regex 'range' times in sequence
-	  */
-	def times(range: Range) = Regex(string + s"{${range.start},${range.end}")
+	 * Splits the specified string using this regex
+	 * @param str String to split
+	 * @return Target string splitted by this regex
+	 */
+	def split(str: String) = str.split(string)
 }
