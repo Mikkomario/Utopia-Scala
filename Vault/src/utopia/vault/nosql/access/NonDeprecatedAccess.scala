@@ -7,7 +7,7 @@ import utopia.vault.nosql.factory.{Deprecatable, FromResultFactory}
  * @author Mikko Hilpinen
  * @since 30.1.2020, v1.4
  */
-trait NonDeprecatedAccess[+M, +A] extends ModelAccess[M, A]
+trait NonDeprecatedAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 {
 	// ABSTRACT	------------------------
 	

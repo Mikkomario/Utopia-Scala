@@ -10,6 +10,7 @@ import utopia.vault.sql.{Condition, Limit, Select, SqlTarget, Where}
  * @author Mikko Hilpinen
  * @since 30.1.2020, v1.4
  */
+@deprecated("Replaced with DistinctModelAccess", "v1.7")
 trait UniqueAccess[+A] extends Access[Option[A]]
 {
 	// ABSTRACT	---------------------
@@ -49,7 +50,8 @@ trait UniqueAccess[+A] extends Access[Option[A]]
 	 * @param connection DB Connection (implicit)
 	 * @return Whether there exists an item accessible from this access point
 	 */
-	def isDefined(implicit connection: Connection) = connection(Select.nothing(target) + Where(condition) + Limit(1)).nonEmpty
+	def isDefined(implicit connection: Connection) =
+		connection(Select.nothing(target) + Where(condition) + Limit(1)).nonEmpty
 	
 	/**
 	  * @param connection DB Connection (implicit)
@@ -58,6 +60,7 @@ trait UniqueAccess[+A] extends Access[Option[A]]
 	def isEmpty(implicit connection: Connection) = !isDefined
 }
 
+@deprecated("Replaced with DistinctModelAccess", "v1.7")
 object UniqueAccess
 {
 	// IMPLICITS	---------------------------

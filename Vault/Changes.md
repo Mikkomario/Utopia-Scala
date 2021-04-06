@@ -1,8 +1,16 @@
 # Utopia Vault - List of Changes
 
-## v1.6.1 (beta)
+## v1.7 (beta)
+### Breaking Changes
+- ModelAccess now requires three type parameters instead of two, to support value accessing
+- ManyIdAccess no longer provides implicit access to .all - this may be readded later, however
+### Deprecations
+- UniqueAccess was deprecated. UniqueModelAccess is now favored. 
+  Unique id access may be created separately if need arises.
 ### New Features
-- Added UniqueModelAccess utility trait, which combines ModelAccess with UniqueAccess
+- Added easier value access methods to Model
+- Added DistinctModelAccess and UniqueModelAccess utility traits, 
+  which allow read and write access to a distinct set of models / values
 ### New Methods
 - Connection
   - .createDatabase(...)

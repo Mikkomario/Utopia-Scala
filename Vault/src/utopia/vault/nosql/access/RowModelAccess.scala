@@ -11,7 +11,7 @@ import utopia.vault.sql.Condition
   * @tparam M Type of model returned
   * @tparam A Format in which the model/models are returned (Eg. option or vector)
   */
-trait RowModelAccess[+M, +A] extends ModelAccess[M, A]
+trait RowModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 {
 	// ABSTRACT	-------------------------
 	
