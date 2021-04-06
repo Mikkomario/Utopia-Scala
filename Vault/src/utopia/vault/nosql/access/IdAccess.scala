@@ -8,7 +8,7 @@ import utopia.vault.sql.SqlTarget
  * @author Mikko Hilpinen
  * @since 30.1.2020, v1.4
  */
-trait IdAccess[+ID, +A] extends IndexedAccess[A]
+trait IdAccess[+ID, +A] extends Access[A] with Indexed
 {
 	// ABSTRACT	-----------------------
 	

@@ -1,13 +1,22 @@
 package utopia.vault.nosql.access
 
+import utopia.vault.model.immutable.Table
+
 /**
  * A common trait for access points that use indexed tables
  * @author Mikko Hilpinen
  * @since 30.1.2020, v1.4
- * @tparam A Type of item retrieved through this access point
  */
-trait IndexedAccess[+A] extends Access[A]
+trait Indexed
 {
+	// ABSTRACT -----------------------
+	
+	/**
+	 * @return Table used by this class
+	 */
+	def table: Table
+	
+	
 	// COMPUTED	-----------------------
 	
 	/**

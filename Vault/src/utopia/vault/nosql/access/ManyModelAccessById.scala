@@ -8,8 +8,7 @@ import utopia.flow.datastructure.immutable.Value
  * @author Mikko Hilpinen
  * @since 3.4.2021, v1.6.1
  */
-trait ManyModelAccessById[+A, -ID] extends ManyModelAccess[A] with UnconditionalAccess[Vector[A]]
-	with IndexedAccess[Vector[A]]
+trait ManyModelAccessById[+A, -ID] extends ManyModelAccess[A] with UnconditionalAccess[Vector[A]] with Indexed
 {
 	// ABSTRACT	-----------------------
 	
@@ -27,5 +26,5 @@ trait ManyModelAccessById[+A, -ID] extends ManyModelAccess[A] with Unconditional
 	 * @param ids Ids to target
 	 * @return An access point to models with those ids
 	 */
-	def apply(ids: IterableOnce[ID]) = new ManyIdModelAccess[A](ids.iterator.map(idToValue).toSet, factory)
+	def apply(ids: Iterable[ID]) = new ManyIdModelAccess[A](ids.map(idToValue), factory)
 }

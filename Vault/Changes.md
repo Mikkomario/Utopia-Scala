@@ -4,6 +4,7 @@
 ### Breaking Changes
 - ModelAccess now requires three type parameters instead of two, to support value accessing
 - ManyIdAccess no longer provides implicit access to .all - this may be readded later, however
+- Changed IndexedAccess to Indexed since the generic type parameter made it cumbersome to use this trait
 ### Deprecations
 - UniqueAccess was deprecated. UniqueModelAccess is now favored. 
   Unique id access may be created separately if need arises.
