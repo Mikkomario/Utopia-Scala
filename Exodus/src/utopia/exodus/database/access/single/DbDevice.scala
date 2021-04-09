@@ -1,7 +1,6 @@
 package utopia.exodus.database.access.single
 
 import java.time.Instant
-
 import utopia.exodus.database.access.many.DbDescriptions
 import utopia.exodus.database.factory.device.DeviceKeyFactory
 import utopia.exodus.database.model.device.{ClientDeviceModel, DeviceKeyModel}
@@ -13,7 +12,7 @@ import utopia.exodus.util.UuidGenerator
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
-import utopia.vault.nosql.access.{SingleModelAccess, UniqueAccess}
+import utopia.vault.nosql.access.UniqueModelAccess
 import utopia.vault.sql.{Select, Where}
 
 /**
@@ -119,7 +118,7 @@ object DbDevice
 		
 		// NESTED	-----------------------------
 		
-		object DeviceAuthKey extends UniqueAccess[DeviceKey] with SingleModelAccess[DeviceKey]
+		object DeviceAuthKey extends UniqueModelAccess[DeviceKey]
 		{
 			// IMPLEMENTED	-----------------------
 			

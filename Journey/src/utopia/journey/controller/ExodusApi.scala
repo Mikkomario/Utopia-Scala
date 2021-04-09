@@ -11,6 +11,7 @@ import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.time.TimeExtensions._
 import utopia.journey.model.UserCredentials
 import utopia.annex.model.error.{RequestFailedException, UnauthorizedRequestException}
+import utopia.disciple.apache.Gateway
 import utopia.flow.time.Now
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -23,7 +24,8 @@ import scala.util.{Failure, Success, Try}
   * @since 20.6.2020, v1
   */
 // Credentials is either basic credentials (left) or a device key (right)
-class ExodusApi(override val rootPath: String, credentials: Either[UserCredentials, String], initialSessionKey: String)
+class ExodusApi(override protected val gateway: Gateway = new Gateway(), override val rootPath: String,
+                credentials: Either[UserCredentials, String], initialSessionKey: String)
 	extends Api
 {
 	// ATTRIBUTES	---------------------------

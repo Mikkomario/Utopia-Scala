@@ -3,7 +3,7 @@ package utopia.exodus.database.access.id
 import utopia.exodus.database.factory.language.LanguageFactory
 import utopia.exodus.database.model.language.LanguageModel
 import utopia.flow.datastructure.immutable.Value
-import utopia.vault.nosql.access.{SingleIdAccess, UniqueAccess}
+import utopia.vault.nosql.access.{SingleIdAccess, UniqueIdAccess}
 
 /**
   * Used for accessing individual language ids
@@ -41,7 +41,7 @@ object DbLanguageId extends SingleIdAccess[Int]
 	
 	// NESTED	-------------------------------
 	
-	case class IdForCode(languageCode: String) extends SingleIdAccess[Int] with UniqueAccess[Int]
+	case class IdForCode(languageCode: String) extends UniqueIdAccess[Int]
 	{
 		// IMPLEMENTED	-----------------------
 		

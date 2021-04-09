@@ -1,4 +1,20 @@
 # Utopia Disciple - List of Changes
+## v1.4 (beta)
+### Breaking Changes
+- Gateway is now multi-instance (class) instead of single instance (object).
+  - Gateway settings (number of connections, time out, json parsing etc.) are now specified at instance 
+    creation and can't be changed after that
+  - This allows you to use different interfaces (E.g. those requiring parameter encoding and those forbidding it) 
+    without undesired side effects
+- Parameter encoding and whether request body parameters are supported -flag are now defined in Gateway 
+  and no longer in Request
+  - This way you will need to define these settings only once
+- Removed Gateway methods that were deprecated in v1.3 and v1.3.1
+### New Features
+- You can now specify in Gateway, whether json format should be allowed to be used in query (uri) parameters
+  - The default option is true, I.e. to convert the values to json before adding them to the uri
+  - By setting this option to false, you can remove quotation marks from around the string values
+
 ## v1.3.1
 ### Deprecations
 - Gateway.introduceStatus and .introduceStatuses are now deprecated. Status.introduce should be used instead.

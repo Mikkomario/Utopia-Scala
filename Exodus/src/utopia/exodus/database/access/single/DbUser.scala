@@ -17,7 +17,7 @@ import utopia.metropolis.model.stored.organization.Membership
 import utopia.metropolis.model.stored.user.{User, UserLanguage, UserSettings}
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.BasicCombineOperator.Or
-import utopia.vault.nosql.access.{ManyModelAccess, SingleIdAccess, SingleIdModelAccess, SingleModelAccess, UniqueAccess}
+import utopia.vault.nosql.access.{ManyModelAccess, SingleIdModelAccess, SingleModelAccess, UniqueIdAccess, UniqueModelAccess}
 import utopia.vault.sql.{Delete, Select, Where}
 import utopia.vault.sql.Extensions._
 
@@ -187,7 +187,7 @@ object DbUser extends SingleModelAccess[User]
 		
 		// NESTED	-----------------------
 		
-		object Settings extends SingleModelAccess[UserSettings] with UniqueAccess[UserSettings]
+		object Settings extends UniqueModelAccess[UserSettings]
 		{
 			// IMPLEMENTED	---------------
 			
@@ -306,11 +306,14 @@ object DbUser extends SingleModelAccess[User]
 			}
 		}
 		
-		case class MembershipId(organizationId: Int) extends SingleIdAccess[Int] with UniqueAccess[Int]
+		case class MembershipId(organizationId: Int) extends UniqueIdAccess[Int]
 		{
 			// ATTRIBUTES	------------------------
 			
 			private val factory = MembershipFactory
+			
+			override val condition = model.withUserId(userId).withOrganizationId(organizationId).toCondition &&
+				factory.nonDeprecatedCondition
 			
 			
 			// COMPUTED	----------------------------
@@ -319,9 +322,6 @@ object DbUser extends SingleModelAccess[User]
 			
 			
 			// IMPLEMENTED	------------------------
-			
-			override val condition = model.withUserId(userId).withOrganizationId(organizationId).toCondition &&
-				factory.nonDeprecatedCondition
 			
 			override def target = factory.target
 			

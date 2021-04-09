@@ -12,6 +12,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.journey.model.UserCredentials
 import utopia.annex.model.error.{EmptyResponseException, RequestFailedException, UnauthorizedRequestException}
+import utopia.disciple.apache.Gateway
 import utopia.journey.model.error.NoUserDataError
 import utopia.metropolis.model.combined.device.FullDevice
 import utopia.metropolis.model.combined.user.UserCreationResult
@@ -26,7 +27,8 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 21.6.2020, v1
   */
-class UnauthorizedExodusApi(override val rootPath: String) extends Api
+class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gateway(), override val rootPath: String)
+	extends Api
 {
 	// IMPLEMENTED	-----------------------------
 	
@@ -80,7 +82,7 @@ class UnauthorizedExodusApi(override val rootPath: String) extends Api
 										case Some(deviceKey) => Right(deviceKey)
 										case None => Left(credentials)
 									}
-									new ExodusApi(rootPath, apiCredentials, user.sessionKey)
+									new ExodusApi(gateway, rootPath, apiCredentials, user.sessionKey)
 								}
 						}
 					case Empty => Failure(new EmptyResponseException(
@@ -183,7 +185,7 @@ class UnauthorizedExodusApi(override val rootPath: String) extends Api
 			case Response.Success(status, body) =>
 				body.value.string match
 				{
-					case Some(key) => Success(new ExodusApi(rootPath, credentials, key))
+					case Some(key) => Success(new ExodusApi(gateway, rootPath, credentials, key))
 					case None => Failure(new EmptyResponseException(
 						s"Expected a session key but received an empty response with status $status"))
 				}

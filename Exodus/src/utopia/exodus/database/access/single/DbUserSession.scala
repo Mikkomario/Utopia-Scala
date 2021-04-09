@@ -9,7 +9,7 @@ import utopia.exodus.util.UuidGenerator
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.{SingleModelAccess, UniqueAccess}
+import utopia.vault.nosql.access.{SingleModelAccess, UniqueModelAccess}
 
 /**
   * Used for accessing individual user sessions in DB
@@ -63,8 +63,7 @@ object DbUserSession extends SingleModelAccess[UserSession]
 	
 	// NESTED	----------------------------------
 	
-	class SingleDeviceSession(userId: Int, deviceId: Option[Int]) extends UniqueAccess[UserSession]
-		with SingleModelAccess[UserSession]
+	class SingleDeviceSession(userId: Int, deviceId: Option[Int]) extends UniqueModelAccess[UserSession]
 	{
 		// ATTRIBUTES	---------------------------
 		

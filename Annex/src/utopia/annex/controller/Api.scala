@@ -23,6 +23,11 @@ trait Api
 	// ABSTRACT	-------------------------
 	
 	/**
+	  * @return Gateway to use when making http requests (See Utopia Disciple: utopia.disciple.apache.Gateway)
+	  */
+	protected def gateway: Gateway
+	
+	/**
 	  * @return Domain address + the initial path common to all requests
 	  */
 	protected def rootPath: String
@@ -85,7 +90,7 @@ trait Api
 	  * @return Response from server (asynchronous)
 	  */
 	def sendRequest(request: Request)(implicit exc: ExecutionContext) =
-		Gateway.valueResponseFor(request).map { _.map(Response.from) }
+		gateway.valueResponseFor(request).map { _.map(Response.from) }
 	
 	/**
 	  * Sends a request to the server and wraps the response

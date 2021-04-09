@@ -6,7 +6,6 @@ import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.datastructure.template
 
 import scala.collection.immutable.VectorBuilder
-import scala.io.Codec
 
 // See https://hc.apache.org/httpcomponents-client-ga/
 
@@ -20,15 +19,11 @@ import scala.io.Codec
   * @param params Parameters included in request (model format, default = empty)
   * @param headers Headers sent with the request (default = current date headers)
   * @param body Body included in request (default = None)
-  * @param timeout Request timeout (default = no timeout specified)
-  * @param parameterEncoding Encoding option used for query (uri) parameters. None if no encoding should be used (default)
-  * @param supportsBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
-  *                               Use false if you wish to force parameters to uri parameters)
+  * @param timeout Request timeout (default = no timeout specified = using Gateway timeout)
  */
 case class Request(requestUri: String, method: Method = Get, params: Model[Constant] = Model.empty,
                    headers: Headers = Headers.currentDateHeaders, body: Option[Body] = None,
-                   timeout: Timeout = Timeout.empty, parameterEncoding: Option[Codec] = None,
-                   supportsBodyParameters: Boolean = true)
+                   timeout: Timeout = Timeout.empty)
 {
     // IMPLEMENTED  --------------------
     

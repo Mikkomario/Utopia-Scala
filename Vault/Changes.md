@@ -6,8 +6,7 @@
 - ManyIdAccess no longer provides implicit access to .all - this may be readded later, however
 - Changed IndexedAccess to Indexed since the generic type parameter made it cumbersome to use this trait
 ### Deprecations
-- UniqueAccess was deprecated. UniqueModelAccess is now favored. 
-  Unique id access may be created separately if need arises.
+- UniqueAccess was deprecated. UniqueModelAccess and UniqueIdAccess are now favored.
 ### New Features
 - Added easier value access methods to Model
 - Added DistinctModelAccess and UniqueModelAccess utility traits, 
