@@ -51,6 +51,11 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
     def propertyNames = declarations.map { _.name }
     
     
+    // IMPLEMENTED  -----------
+    
+    override def toString = declarations.toVector.sortBy { _.name }.mkString(", ")
+    
+    
     // OPERATORS    -----------
     
     /**
@@ -132,9 +137,20 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
       */
     def validate(model: template.Model[Property]) =
     {
+        // TODO: Remove test prints
+        // println(s"Validating $model against $this")
+        
         // First checks for missing attributes
         val missing = declarations.filterNot { d => model.containsNonEmpty(d.name) }
         val (missingNonDefaults, missingDefaults) = missing.divideBy { _.defaultValue.isDefined }
+        
+        /*
+        if (missing.nonEmpty)
+        {
+            println(s"Missing: ${missing.mkString(", ")}")
+            println(model.attributeMap.keySet.map { k => s"'$k'" }.mkString(", "))
+            missing.foreach { m => println(s"${m.name.toLowerCase}: ${model.attributeMap.get(m.name.toLowerCase)}") }
+        }*/
         
         // Declarations with default values are replaced with their defaults
         if (missingNonDefaults.nonEmpty)

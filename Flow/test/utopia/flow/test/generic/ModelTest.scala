@@ -4,6 +4,8 @@ import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.datastructure.{immutable, mutable}
 import utopia.flow.generic.{DataType, SimpleConstantGenerator, SimpleVariableGenerator}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.parse.JSONReader
+import utopia.flow.util.StringExtensions._
 
 /**
  *
@@ -94,5 +96,18 @@ object ModelTest extends App
 	assert(model3Filtered2("Test2").isEmpty)
 	assert(model3Filtered2("Test1").intOr() == 1)
 	
+	val parsedModel = JSONReader.apply(
+		"{\"CODE\": \"05601JZ\", \"MFR\": \"LANNING CHARLES A\", \"MODEL\": \"ROTORWAY EXEC\", \"TYPE-ACFT\": \"6\", \"TYPE-ENG\": \"1\", \"AC-CAT\": \"3\", \"BUILD-CERT-IND\": \"1\", \"NO-ENG\": \"1\", \"NO-SEATS\": \"2\", \"AC-WEIGHT\": \"CLASS 1\", \"SPEED\": \"0\"}")
+		.get.getModel
+	println(parsedModel)
+	println(parsedModel("MFR").getString)
+	parsedModel.attributeMap.keySet.toVector.sorted.foreach { k => println(s"'$k': [${k.getBytes.mkString("")}]") }
+	println(s"Comparing to 'mfr': [${"mfr".getBytes.mkString("")}]")
+	
+	val attMap = parsedModel.attributeMap
+	assert(attMap.keySet.forall(attMap.contains))
+	assert(attMap.keySet.map { _.stripControlCharacters }.forall(attMap.contains))
+	
+	assert(parsedModel("MFR").getString == "LANNING CHARLES A")
 	println("Success")
 }
