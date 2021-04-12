@@ -1,6 +1,6 @@
 package utopia.genesis.color
 
-import utopia.flow.util.RichComparable
+import utopia.flow.util.SelfComparable
 import utopia.genesis.color.ColorContrastStandard.{largeTextThreshold, largeTextThresholdBold}
 import utopia.genesis.util.Distance
 
@@ -10,7 +10,7 @@ import utopia.genesis.util.Distance
   * @since 28.1.2021, v2.4
   * @see https://webaim.org/articles/contrast/
   */
-sealed trait ColorContrastStandard extends RichComparable[ColorContrastStandard]
+sealed trait ColorContrastStandard extends SelfComparable[ColorContrastStandard]
 {
 	// ABSTRACT	---------------------------
 	
@@ -117,6 +117,8 @@ object ColorContrastStandard
 		
 		override def largeTextMinimumContrast = 3.0
 		
+		override def repr = this
+		
 		override def compareTo(o: ColorContrastStandard) = o match
 		{
 			case Minimum => 0
@@ -132,6 +134,8 @@ object ColorContrastStandard
 		override def defaultMinimumContrast = 7.0
 		
 		override def largeTextMinimumContrast = 4.5
+		
+		override def repr = this
 		
 		override def compareTo(o: ColorContrastStandard) = o match
 		{

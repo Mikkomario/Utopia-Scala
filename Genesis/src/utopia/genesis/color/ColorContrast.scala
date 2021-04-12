@@ -1,8 +1,9 @@
 package utopia.genesis.color
 
-import utopia.flow.util.RichComparable
+import utopia.flow.util.SelfComparable
 import utopia.genesis.color.ColorContrastStandard.{Enhanced, Minimum}
 import utopia.genesis.util.{Arithmetic, Distance}
+
 import scala.language.implicitConversions
 
 object ColorContrast
@@ -20,7 +21,7 @@ object ColorContrast
   * @param ratio Contrast ratio between the two colors (E.g. 7:1 (= 7.0))
   */
 case class ColorContrast(ratio: Double)
-	extends RichComparable[ColorContrast] with Arithmetic[ColorContrast, ColorContrast]
+	extends SelfComparable[ColorContrast] with Arithmetic[ColorContrast, ColorContrast]
 {
 	// ATTRIBUTES	----------------------
 	

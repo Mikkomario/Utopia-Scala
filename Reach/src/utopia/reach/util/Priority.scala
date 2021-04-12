@@ -1,13 +1,13 @@
 package utopia.reach.util
 
-import utopia.flow.util.RichComparable
+import utopia.flow.util.SelfComparable
 
 /**
   * An enumeration for different levels of priority used in various contexts
   * @author Mikko Hilpinen
   * @since 25.11.2020, v2
   */
-sealed trait Priority extends RichComparable[Priority]
+sealed trait Priority extends SelfComparable[Priority]
 {
 	// ABSTRACT	-----------------------------
 	
@@ -40,6 +40,7 @@ object Priority
 	case object VeryHigh extends Priority
 	{
 		override val index = 2
+		override def repr = this
 	}
 	
 	/**
@@ -48,6 +49,7 @@ object Priority
 	case object High extends Priority
 	{
 		override val index = 1
+		override def repr = this
 	}
 	
 	/**
@@ -56,6 +58,7 @@ object Priority
 	case object Normal extends Priority
 	{
 		override val index = 0
+		override def repr = this
 	}
 	
 	/**
@@ -64,6 +67,7 @@ object Priority
 	case object Low extends Priority
 	{
 		override val index = -1
+		override def repr = this
 	}
 	
 	/**
@@ -72,5 +76,6 @@ object Priority
 	case object VeryLow extends Priority
 	{
 		override val index = -2
+		override def repr = this
 	}
 }

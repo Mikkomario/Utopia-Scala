@@ -1,6 +1,6 @@
 package utopia.genesis.util
 
-import utopia.flow.util.RichComparable
+import utopia.flow.util.SelfComparable
 import utopia.genesis.util.DistanceUnit.{CentiMeter, Inch}
 
 object Ppi
@@ -34,7 +34,7 @@ object Ppi
  * @author Mikko Hilpinen
  * @since 24.6.2020, v2.3
  */
-case class Ppi(value: Double) extends RichComparable[Ppi] with Scalable[Ppi]
+case class Ppi(value: Double) extends SelfComparable[Ppi] with Scalable[Ppi]
 {
 	// COMPUTED ---------------------------------
 	
@@ -62,19 +62,4 @@ case class Ppi(value: Double) extends RichComparable[Ppi] with Scalable[Ppi]
 	override def repr = this
 	
 	override def *(mod: Double) = Ppi(value * mod)
-	
-	
-	// OTHER    ---------------------------------
-	
-	/**
-	 * @param other Another Ppi
-	 * @return Minimum between these amounts
-	 */
-	def min(other: Ppi) = RichComparable.min(this, other)
-	
-	/**
-	 * @param other Another Ppi
-	 * @return Maximum between these amounts
-	 */
-	def max(other: Ppi) = RichComparable.max(this, other)
 }

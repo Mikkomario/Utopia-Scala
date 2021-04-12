@@ -1,6 +1,6 @@
 package utopia.trove.model
 
-import utopia.flow.util.RichComparable
+import utopia.flow.util.SelfComparable
 import utopia.flow.util.StringExtensions._
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
@@ -32,7 +32,7 @@ object VersionNumber
   * @param numbers Numbers that form this version number
   * @param suffix Suffix added to the end of this version number (Eg. "beta") (Optional)
   */
-case class VersionNumber(numbers: Vector[Int], suffix: String = "") extends RichComparable[VersionNumber]
+case class VersionNumber(numbers: Vector[Int], suffix: String = "") extends SelfComparable[VersionNumber]
 {
 	// COMPUTED	------------------------
 	
@@ -48,6 +48,8 @@ case class VersionNumber(numbers: Vector[Int], suffix: String = "") extends Rich
 	
 	
 	// IMPLEMENTED	--------------------
+	
+	override def repr = this
 	
 	override def compareTo(o: VersionNumber) = numbers.zip(o.numbers).find { case (a, b) => a != b } match
 	{

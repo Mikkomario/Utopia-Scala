@@ -1,6 +1,6 @@
 package utopia.genesis.util
 
-import utopia.flow.util.RichComparable
+import utopia.flow.util.SelfComparable
 import utopia.genesis.util.DistanceUnit.{CentiMeter, Feet, Inch, Meter, MilliMeter}
 
 object Distance
@@ -51,7 +51,7 @@ object Distance
  * @author Mikko Hilpinen
  * @since 24.6.2020, v2.3
  */
-case class Distance(amount: Double, unit: DistanceUnit) extends RichComparable[Distance]
+case class Distance(amount: Double, unit: DistanceUnit) extends SelfComparable[Distance]
 {
 	// COMPUTED ---------------------
 	
@@ -93,6 +93,8 @@ case class Distance(amount: Double, unit: DistanceUnit) extends RichComparable[D
 	
 	
 	// IMPLEMENTED  -----------------
+	
+	override def repr = this
 	
 	override def compareTo(o: Distance) =
 	{
@@ -147,16 +149,4 @@ case class Distance(amount: Double, unit: DistanceUnit) extends RichComparable[D
 	 * @return Ratio between these two distances
 	 */
 	def /(other: Distance) = amount / other.toUnit(unit)
-	
-	/**
-	 * @param other Another distance
-	 * @return The shorter copy of these distances
-	 */
-	def min(other: Distance) = RichComparable.min(this, other)
-	
-	/**
-	 * @param other Another instance
-	 * @return A longer copy of these distances
-	 */
-	def max(other: Distance) = RichComparable.max(this, other)
 }

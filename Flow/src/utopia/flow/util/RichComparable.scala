@@ -7,7 +7,7 @@ object RichComparable
 	// IMPLICIT	--------------------------
 	
     // Extension for existing comparables
-    implicit class ExtendedComparable[T](val c: Comparable[T]) extends RichComparable[T]
+    implicit class ExtendedComparable[T](val c: Comparable[T]) extends AnyVal with RichComparable[T]
     {
         def compareTo(other: T) = c.compareTo(other)
     }
@@ -18,12 +18,12 @@ object RichComparable
 		override def compareTo(o: B) = f(c).compareTo(o)
 	}*/
 	
-	implicit class ComparableInt(val i: Int) extends RichComparable[Int]
+	implicit class ComparableInt(val i: Int) extends AnyVal with RichComparable[Int]
 	{
 		override def compareTo(o: Int) = i - o
 	}
 	
-	implicit class ComparableDouble(val d: Double) extends RichComparable[Double]
+	implicit class ComparableDouble(val d: Double) extends AnyVal with RichComparable[Double]
 	{
 		override def compareTo(o: Double) = if (d < o) -1 else if (d > o) 1 else 0
 	}
