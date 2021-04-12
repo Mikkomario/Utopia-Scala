@@ -65,6 +65,15 @@ trait ModelAccess[+M, +A, +V] extends Access[A]
 		connection(Delete(target, table) + globalCondition.map { Where(_) })
 	
 	/**
+	  * Deletes items which are accessible from this access point and fulfill the specified condition
+	  * (only primary table is targeted)
+	  * @param condition Deletion condition (applied in addition to the global condition)
+	  * @param connection DB Connection (implicit)
+	  */
+	def deleteWhere(condition: Condition)(implicit connection: Connection): Unit =
+		connection(Delete(target, table) + Where(mergeCondition(condition)))
+	
+	/**
 	 * Reads the value of an individual column
 	 * @param column Column to read
 	 * @param condition Search condition to apply (will be added to the global condition)
