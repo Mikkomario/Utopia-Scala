@@ -9,7 +9,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.time.Now
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.RichComparable._
 
 import scala.util.{Failure, Success}
 

@@ -14,6 +14,7 @@ import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.time.Now
 import utopia.flow.util.FileExtensions._
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.RichComparable._
 import utopia.journey.model.InvitationResponseSpirit
 import utopia.journey.util.JourneyContext._
 import utopia.metropolis.model.combined.organization.{DescribedInvitation, InvitationWithResponse}

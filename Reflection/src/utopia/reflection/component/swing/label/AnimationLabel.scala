@@ -5,6 +5,7 @@ import utopia.flow.time.Now
 import java.time.Instant
 import scala.math.Ordering.Double.TotalOrdering
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.RichComparable._
 import utopia.genesis.animation.TimedAnimation
 import utopia.genesis.animation.animator.{Animator, SpriteDrawer, TransformingImageAnimator}
 import utopia.genesis.handling.Actor

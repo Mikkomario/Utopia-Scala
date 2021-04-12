@@ -1,7 +1,9 @@
 package utopia.reflection.container.stack.template.scrolling
 
+import utopia.flow.time.Now
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.RichComparable._
 import utopia.genesis.event._
 import utopia.genesis.handling._
 import utopia.genesis.handling.mutable.ActorHandler
@@ -195,9 +197,9 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 					// If this area's maximum size is tied to that of the content, will not allow the content to
 					// be smaller than this area
 					if (limitsToContentSize)
-						axis -> (contentSize.along(axis).optimal.toDouble max contentAreaSize.along(axis))
+						axis -> (contentSize.along(axis).optimal max contentAreaSize.along(axis))
 					else
-						axis -> contentSize.along(axis).optimal.toDouble
+						axis -> contentSize.along(axis).optimal
 				}
 				else
 					axis -> contentAreaSize.along(axis)
@@ -605,7 +607,7 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 				else
 					axes.foreach { axis => scroll(event.transition.projectedOver(axis), animated = false) }
 				
-				val now = Instant.now
+				val now = Now.toInstant
 				velocities = velocities.dropWhile { _._1 < now - dragDuration } :+ (now, event.velocity, event.duration)
 			}
 		}

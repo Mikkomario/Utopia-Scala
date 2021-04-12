@@ -3,10 +3,8 @@ package utopia.flow.time
 import scala.language.implicitConversions
 
 import utopia.flow.util.RichComparable
-import RichComparable._
 import utopia.flow.time.WeekDay.Monday
 
-import java.time.chrono.ChronoLocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAmount
 import java.time._
@@ -23,6 +21,53 @@ import scala.util.Try
   * */
 object TimeExtensions
 {
+	/*
+	private trait TimeComparable[-A <: Repr, +Repr] extends Any
+	{
+		// ABSTRACT --------------------------
+		
+		/**
+		  * @return This instance
+		  */
+		def repr: Repr
+		
+		/**
+		  * @param other Another time
+		  * @return Whether this time comes before that time
+		  */
+		def <(other: A): Boolean
+		/**
+		  * @param other Another time
+		  * @return Whether this time comes after that time
+		  */
+		def >(other: A): Boolean
+		
+		
+		// OTHER    --------------------------
+		
+		/**
+		  * @param other Another time
+		  * @return Whether this time is equal to or comes before that time
+		  */
+		def <=(other: A) = !(this > other)
+		/**
+		  * @param other Another time
+		  * @return Whether this time is equal to or comes after that time
+		  */
+		def >=(other: A) = !(this < other)
+		
+		/**
+		  * @param other Another time
+		  * @return The smaller of these two times
+		  */
+		def min(other: A) = if (this <= other) repr else other
+		/**
+		  * @param other Another time
+		  * @return The larger of these two times
+		  */
+		def max(other: A) = if (this >= other) repr else other
+	}*/
+	
 	implicit class ExtendedInstant(val i: Instant) extends AnyVal
 	{
 		// OTHER	--------------------------
@@ -100,28 +145,6 @@ object TimeExtensions
 		def -(time: Instant) = Duration.between(time, i)
 		
 		/**
-		  * Checks whether this instant comes before the specified instant
-		  */
-		def <(other: Instant) = i.isBefore(other)
-		
-		/**
-		  * Checks whether this instant comes after the specified instant
-		  */
-		def >(other: Instant) = i.isAfter(other)
-		
-		/**
-		  * @param other Another instant
-		  * @return Whether this instant is before or equal to the other instant
-		  */
-		def <=(other: Instant) = !(this > other)
-		
-		/**
-		  * @param other Another instant
-		  * @return Whether this instant is equal or larger to the other instant
-		  */
-		def >=(other: Instant) = !(this < other)
-		
-		/**
 		  * @param other Another instant
 		  * @return Whether these two instants are the same, milliseconds-wise
 		  */
@@ -134,13 +157,8 @@ object TimeExtensions
 		def until(other: Instant) = other - i
 	}
 	
-	implicit class ExtendedLocalDateTime(val d: LocalDateTime) extends RichComparable[LocalDateTime]
+	implicit class ExtendedLocalDateTime(val d: LocalDateTime) extends AnyVal
 	{
-		// IMPLEMENTED	--------------------------
-		
-		override def compareTo(o: LocalDateTime) = d.toLocalDate.compareOr(o.toLocalDate) { d.toLocalTime.compareTo(o.toLocalTime) }
-		
-		
 		// COMPUTED	------------------------------
 		
 		/**
@@ -403,30 +421,6 @@ object TimeExtensions
 		def -(days: Int) = d.minusDays(days)
 		
 		/**
-		  * @param other Another date
-		  * @return Whether this date comes before specified date
-		  */
-		def <(other: ChronoLocalDate) = d.isBefore(other)
-		
-		/**
-		  * @param other Another date
-		  * @return Whether this date comes after specified date
-		  */
-		def >(other: ChronoLocalDate) = d.isAfter(other)
-		
-		/**
-		  * @param other Another date
-		  * @return Whether this date comes before or is equal to specified date
-		  */
-		def <=(other: ChronoLocalDate) = !d.isAfter(other)
-		
-		/**
-		  * @param other Another date
-		  * @return Whether this date comes after or is equal to specified date
-		  */
-		def >=(other: ChronoLocalDate) = !d.isBefore(other)
-		
-		/**
 		  * @param weekDay     A week day
 		  * @param includeSelf Whether this date should be returned in case it has that week day (default = false,
 		  *                    which would return a day exactly one week from this day in case this day's week day
@@ -508,30 +502,6 @@ object TimeExtensions
 		  * @return A copy of this time shifted by 'duration' to future
 		  */
 		def +(duration: Duration) = t.plus(duration)
-		
-		/**
-		  * @param other Another time
-		  * @return Whether this time comes before the other time
-		  */
-		def <(other: LocalTime) = t.isBefore(other)
-		
-		/**
-		  * @param other Another time
-		  * @return Whether this time comes after the other time
-		  */
-		def >(other: LocalTime) = t.isAfter(other)
-		
-		/**
-		  * @param other Another time
-		  * @return Whether this time comes before or at the same time as the other time
-		  */
-		def <=(other: LocalTime) = !t.isAfter(other)
-		
-		/**
-		  * @param other Another time
-		  * @return Whether this time comes before or at the same time as the other time
-		  */
-		def >=(other: LocalTime) = !t.isBefore(other)
 	}
 	
 	implicit class ExtendedMonth(val m: Month) extends AnyVal

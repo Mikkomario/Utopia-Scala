@@ -3,7 +3,7 @@ package utopia.flow.caching.single
 import utopia.flow.time.Now
 
 import java.time.Instant
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.RichComparable._
 
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}

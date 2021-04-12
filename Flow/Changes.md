@@ -12,6 +12,8 @@
 - Added dependency support to ChangingLike, which requires some code changes in 
   implementations but allows more reliable value mirroring
 - GraphNode.cheapestRouteTo(...) now accepts the cost function in a separate parameter list
+- Removed <, >, <= and >= methods from TimeExtensions. You can add this methods by inserting 
+  utopia.flow.RichComparable._, which adds these methods to all Comparable items
 ### Deprecations
 - Deprecated LazyLike.get. Lazy instances now behave more like pointers, extending the new Viewable trait.
 - Deprecated Volatile.get in favor of .value

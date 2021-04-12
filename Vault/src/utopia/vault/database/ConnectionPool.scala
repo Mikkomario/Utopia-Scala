@@ -7,6 +7,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.{Breakable, NewThreadExecutionContext, Volatile, VolatileFlag}
 import utopia.flow.collection.VolatileList
 import utopia.flow.time.{Now, WaitUtils}
+import utopia.flow.util.RichComparable._
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.duration.Duration

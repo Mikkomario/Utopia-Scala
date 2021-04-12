@@ -4,6 +4,7 @@ import java.time.Instant
 import utopia.flow.event.{ChangeDependency, ChangeListener, Changing}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.RichComparable._
 import utopia.genesis.shape.shape2D.Vector2DLike
 
 import scala.concurrent.duration.{Duration, FiniteDuration}

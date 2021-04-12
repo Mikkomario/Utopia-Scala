@@ -5,6 +5,7 @@ import utopia.flow.time.Now
 import java.time.Instant
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.RichComparable._
 import utopia.genesis.shape.shape2D.Vector2DLike
 import utopia.genesis.util.{Combinable, Scalable}
 
