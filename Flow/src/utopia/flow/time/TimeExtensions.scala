@@ -1,8 +1,7 @@
 package utopia.flow.time
 
 import scala.language.implicitConversions
-
-import utopia.flow.util.RichComparable
+import utopia.flow.util.{RichComparable, SelfComparable}
 import utopia.flow.time.WeekDay.Monday
 
 import java.time.format.DateTimeFormatter
@@ -68,8 +67,13 @@ object TimeExtensions
 		def max(other: A) = if (this >= other) repr else other
 	}*/
 	
-	implicit class ExtendedInstant(val i: Instant) extends AnyVal
+	implicit class ExtendedInstant(val i: Instant) extends AnyVal with RichComparable[Instant]
 	{
+		// IMPLEMENTED  ----------------------
+		
+		override def compareTo(o: Instant) = i.compareTo(o)
+		
+		
 		// OTHER	--------------------------
 		
 		/**
@@ -157,7 +161,7 @@ object TimeExtensions
 		def until(other: Instant) = other - i
 	}
 	
-	implicit class ExtendedLocalDateTime(val d: LocalDateTime) extends AnyVal
+	implicit class ExtendedLocalDateTime(val d: LocalDateTime) extends AnyVal with SelfComparable[LocalDateTime]
 	{
 		// COMPUTED	------------------------------
 		
@@ -165,6 +169,13 @@ object TimeExtensions
 		  * @return Converts this date time to an instant. Expects this date time to be in system default zone
 		  */
 		def toInstantInDefaultZone = d.toInstant(ZoneId.systemDefault().getRules.getOffset(d))
+		
+		
+		// IMPLEMENTED  --------------------------
+		
+		override def repr = d
+		
+		override def compareTo(o: LocalDateTime) = d.compareTo(o)
 		
 		
 		// OTHER	------------------------------
@@ -182,7 +193,7 @@ object TimeExtensions
 		def -(period: Period) = d.minus(period)
 	}
 	
-	implicit class ExtendedDuration(val d: Duration) extends AnyVal
+	implicit class ExtendedDuration(val d: Duration) extends AnyVal with SelfComparable[Duration]
 	{
 		/**
 		  * This duration as milliseconds, but with double precision
@@ -198,6 +209,10 @@ object TimeExtensions
 		  * @return Describes this duration in a suitable unit and precision
 		  */
 		def description = javaDurationToScalaDuration(d).description
+		
+		override def repr = d
+		
+		override def compareTo(o: Duration) = d.compareTo(o)
 	}
 	
 	implicit class ExtendedScalaDuration(val d: duration.Duration) extends AnyVal
@@ -285,7 +300,7 @@ object TimeExtensions
 		}
 	}
 	
-	implicit class ExtendedLocalDate(val d: LocalDate) extends AnyVal
+	implicit class ExtendedLocalDate(val d: LocalDate) extends AnyVal with SelfComparable[LocalDate]
 	{
 		// COMPUTED	-------------------------
 		
@@ -344,6 +359,13 @@ object TimeExtensions
 		  *         to be in system default zone
 		  */
 		def toInstantInDefaultZone = d.atStartOfDay(ZoneId.systemDefault()).toInstant
+		
+		
+		// IMPLEMENTED  --------------------
+		
+		override def repr = d
+		
+		override def compareTo(o: LocalDate) = d.compareTo(o)
 		
 		
 		// OTHER	------------------------
@@ -473,7 +495,7 @@ object TimeExtensions
 		def datesUntil(other: LocalDate) = DateRange.exclusive(d, other)
 	}
 	
-	implicit class ExtendedLocalTime(val t: LocalTime) extends AnyVal
+	implicit class ExtendedLocalTime(val t: LocalTime) extends AnyVal with SelfComparable[LocalTime]
 	{
 		// COMPUTED	----------------------
 		
@@ -481,6 +503,13 @@ object TimeExtensions
 		  * @return A duration based on this time element (from the beginning of day)
 		  */
 		def toDuration = t.toNanoOfDay.nanos
+		
+		
+		// IMPLEMENTED  ------------------
+		
+		override def repr = t
+		
+		override def compareTo(o: LocalTime) = t.compareTo(o)
 		
 		
 		// OTHER	----------------------
@@ -504,7 +533,7 @@ object TimeExtensions
 		def +(duration: Duration) = t.plus(duration)
 	}
 	
-	implicit class ExtendedMonth(val m: Month) extends AnyVal
+	implicit class ExtendedMonth(val m: Month) extends AnyVal with SelfComparable[Month]
 	{
 		// COMPUTED ----------------------
 		
@@ -517,6 +546,13 @@ object TimeExtensions
 		  * @return The month previous to this one
 		  */
 		def previous = this - 1
+		
+		
+		// IMPLEMENTED  ------------------
+		
+		override def repr = m
+		
+		override def compareTo(o: Month) = m.compareTo(o)
 		
 		
 		// OTHER    ----------------------
@@ -566,7 +602,7 @@ object TimeExtensions
 		def +(year: Year) = at(year)
 	}
 	
-	implicit class ExtendedYear(val y: Year) extends AnyVal
+	implicit class ExtendedYear(val y: Year) extends AnyVal with SelfComparable[Year]
 	{
 		// COMPUTED -------------------------
 		
@@ -651,6 +687,13 @@ object TimeExtensions
 		def december = apply(Month.DECEMBER)
 		
 		
+		// IMPLEMENTED  ---------------------
+		
+		override def repr = y
+		
+		override def compareTo(o: Year) = y.compareTo(o)
+		
+		
 		// OTHER    -------------------------
 		
 		/**
@@ -724,7 +767,7 @@ object TimeExtensions
 		def apply(range: YearlyDateRange): Vector[DateRange] = range.at(y)
 	}
 	
-	implicit class ExtendedMonthDay(val md: MonthDay) extends AnyVal
+	implicit class ExtendedMonthDay(val md: MonthDay) extends AnyVal with SelfComparable[MonthDay]
 	{
 		// COMPUTED ----------------------
 		
@@ -737,6 +780,13 @@ object TimeExtensions
 		  * @return Day portion of this month day
 		  */
 		def day = md.getDayOfMonth
+		
+		
+		// IMPLEMENTED-------------------
+		
+		override def repr = md
+		
+		override def compareTo(o: MonthDay) = md.compareTo(o)
 		
 		
 		// OTHER    ---------------------
@@ -766,7 +816,7 @@ object TimeExtensions
 		def until(another: MonthDay) = YearlyDateRange.exclusive(md, another)
 	}
 	
-	implicit class ExtendedYearMonth(val ym: YearMonth) extends AnyVal
+	implicit class ExtendedYearMonth(val ym: YearMonth) extends AnyVal with SelfComparable[YearMonth]
 	{
 		// COMPUTED	----------------------
 		
@@ -809,6 +859,13 @@ object TimeExtensions
 		  * @return The year month following this one
 		  */
 		def next = this + 1
+		
+		
+		// IMPLEMENTED--------------------
+		
+		override def repr = ym
+		
+		override def compareTo(o: YearMonth) = ym.compareTo(o)
 		
 		
 		// OTHER	----------------------
@@ -869,9 +926,11 @@ object TimeExtensions
 		}
 	}
 	
-	implicit class ExtendedPeriod(val p: Period) extends RichComparable[Period]
+	implicit class ExtendedPeriod(val p: Period) extends AnyVal with SelfComparable[Period]
 	{
 		// IMPLEMENTED	-----------------------
+		
+		override def repr = p
 		
 		// Uses some rounding in comparing (not exact with months vs days). 1 month is considered to be 30.44 days
 		override def compareTo(o: Period) = ((p.getYears * 12 + p.getMonths) * 30.44 + p.getDays -

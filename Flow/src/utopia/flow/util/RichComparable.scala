@@ -12,10 +12,11 @@ object RichComparable
         def compareTo(other: T) = c.compareTo(other)
     }
 	
+	/*
 	implicit class IndirectComparable[A, B](val c: A)(implicit f: A => Comparable[B]) extends RichComparable[B]
 	{
 		override def compareTo(o: B) = f(c).compareTo(o)
-	}
+	}*/
 	
 	implicit class ComparableInt(val i: Int) extends RichComparable[Int]
 	{
@@ -62,7 +63,7 @@ object RichComparable
 * @since 17.11.2018
 **/
 //noinspection ScalaUnnecessaryParentheses
-trait RichComparable[-A] extends Comparable[A @uncheckedVariance]
+trait RichComparable[-A] extends Any with Comparable[A @uncheckedVariance]
 {
 	// OTHER	-----------------------
 	
@@ -105,4 +106,28 @@ trait RichComparable[-A] extends Comparable[A @uncheckedVariance]
 	    else
 	        primary
 	}
+}
+
+trait SelfComparable[Repr] extends Any with RichComparable[Repr]
+{
+	// ABSTRACT ---------------------------
+	
+	/**
+	  * @return This instance
+	  */
+	def repr: Repr
+	
+	
+	// OTHER    ---------------------------
+	
+	/**
+	  * @param other Another instance
+	  * @return Smaller of these two instances
+	  */
+	def min(other: Repr): Repr = if (this > other) other else repr
+	/**
+	  * @param other Another instance
+	  * @return Larger of these two instances
+	  */
+	def max(other: Repr): Repr = if (this < other) other else repr
 }
