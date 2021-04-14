@@ -113,8 +113,8 @@ consider either using another library or helping me overcome the issue.
 - At the time of writing, *Utopia* has very few resources in form of tutorials and instructions. I intend 
 to remedy this in the near future and I would appreciate it if you would contact me for more information.
 
-One thing you should also consider is that **I've prioritized readability and ease-of-use over speed and memory 
-optimization**. I believe that, in general, our hardware will continue to advance at a much faster rate than our 
+One thing you should also consider is that **I've prioritized readability and ease-of-use over speed and memory **
+**optimization**. I believe that, in general, our hardware will continue to advance at a much faster rate than our 
 programming capacity and skill. If you specifically need high-level performance and optimization to meet a specific 
 business need (Eg. big data analytics), I recommend you to rely less on *Utopia* tools in that area. In less 
 critical areas (performance-wise), I would recommend you to use these tools, however.
@@ -131,6 +131,13 @@ and data-related features. **Utopia Flow** is the building block and **foundatio
 development in almost any kind of project. **Flow** is a **standard inclusion for all of my projects** these days, 
 whether they be servers, desktop clients or real-time games.
 
+### Utopia BunnyMunch
+*Speed and easy-of-use combined when it comes to json parsing*
+
+**Utopia BunnyMunch** is a very simple model, meant to replace the inefficient JSONReader implementation. 
+*BunnyMunch* uses a very fast *Jawn* json parsing library internally, but offers the same Value-based 
+interface as the JSONReader.
+
 ### Utopia Vault
 *All the benefits of SQL - with no SQL required*
 
@@ -138,6 +145,14 @@ whether they be servers, desktop clients or real-time games.
 levels to operate on when it comes to database interactions. I especially enjoy the model based approach where 
 you don't need to write a single string of SQL. But unlike other noSQL-frameworks, this one actually still lets 
 you operate directly on SQL when or if you need it.
+
+### Utopia Trove
+*Embedded databases made easy*
+
+**Utopia Trove** is a rather simple library that offers an easy-to-use interface to Vorburger's MariaDB4j library 
+(see ch.vorburger.mariaDB4j:mariaDB4j:2.4.0 in Maven) that is used for setting up a local embedded database directly from Java 
+(in this case Scala) code. Most of the heavy lifting is done by the Vorburger's library, but **Trove** adds its own flavor: 
+Database structure setup, version control and updates, as well as an easy one-line database setup and shutdown functions.
 
 ### Utopia Access
 *Single solution for both server and client*
@@ -154,8 +169,8 @@ to create your own, you can.
 
 Ever wished you had a nice, up-to-standard **REST-server** but you find the ordeal too intimidating? **Nexus** makes 
 creating servers so easy you'll be surprised. I surprise myself with it all the time. What you get is a good 
-set of **quality data models** to work with, along with a way to create restful interfaces that let's you **focus 
-on you business logic** instead of focusing how to get the technology to work. Don't want to use REST-architecture? 
+set of **quality data models** to work with, along with a way to create restful interfaces that let's you **focus **
+**on you business logic** instead of focusing how to get the technology to work. Don't want to use REST-architecture? 
 You don't have to! You can still create the interface with the same foundation and building blocks any way you 
 want to.
 
@@ -174,6 +189,18 @@ with just basic understanding about http methods, statuses and some common heade
 In case you wish to use **Disciple** interface with some other http client library, contact me and I will separate 
 the dependency - it's only a single file anyway.
 
+### Utopia Annex
+*A superpower for client-side request and resource management*
+
+**Utopia Annex** goes two steps further than **Disciple** by offering you advanced request and response models, as well as 
+connection management. By utilizing **Annex**, your application won't suffer even when the server-connection breaks for a moment. 
+**Annex** is your go-to client-side server interface solution when you need your application to work in environments where 
+network connection is not 100% reliable. The module is actually in use at Helsinki-Vantaa airport in Finland where time-critical 
+operations must be performed 24/7 and all data needs to be reliably captured and delivered.
+
+I would recommend you to use **Annex** in cases where you have considerable data-interaction with your server. 
+For individual requests, I would recommend you to stick with **Disciple** since it's more light-weight.
+
 ### Utopia Inception & Utopia Genesis
 *A foundation for anything real-time and/or visual*
 
@@ -189,22 +216,36 @@ real-time action events - everything you need when doing anything visual. Withou
 have to rely on awt-tools, which are less flexible, less scalable, less functional and less easy to use.
 
 The only problem with **Genesis** and **Inception** is that the standard Swing framework isn't build upon them, 
-but that's why we have **Utopia Reflection**.
+but that's why we have **Utopia Reflection** and **Utopia Reach**.
 
 ### Utopia Reflection
 *A GUI framework that actually works and does what you want it to do*
 
-I personally have a love-hate relationship with the Swing framework. On the other hand, it's one of the few 
+I personally have a love-hate (mostly hate) relationship with the Swing framework. On the other hand, it's one of the few 
 GUI frameworks for Java/Scala. On the other hand, it consistently keeps frustrating me with its limitations, 
 difficulty of use and by simply not working.
 
-**Reflection** is a swing-like GUI framework that relies on Swing as little as possible. First of all **Reflection** 
+**Reflection** is a swing-like GUI framework that provides a foundation for both Swing-reliant and **non-Swing** GUIs (see **Utopia Reach**). 
+Swing dependencies are clearly separated from the generic models and traits. First of all **Reflection** 
 let's you use the models from **Genesis**, also providing it's own addition. Second, **Reflection** handles layout 
 like it should be handled (much like Swift handles layout with StackPanels and constraints). Third, **Reflection** 
 has a built-in support for **your** own localization feature, if you wish to implement one.
 
-There are a number of pre-existing component implementations.You also have access to all the higher abstraction 
+There are a number of pre-existing component implementations (swing-based). You also have access to all the higher abstraction 
 level interfaces, which let's you create your own components with relative ease, in case you want to.
+
+### Utopia Reach
+*A GUI framework for those who REALLY hate Swing*
+
+Turns out even **Reflection** was subject to limitations caused by Swing-dependency, preventing full scalability. Therefore we have **Utopia Reach**, 
+a framework that uses only a single Swing component. **Reach** has the same core principles as **Reflection**, but takes things even further 
+by having it's own, non Swing-dependent component, focus, paint and other systems. **Reach** even supports multithreading, which was *apparently* 
+supposed to be impossible.
+
+**Reach** obviously doesn't have the same look and feel as Swing does. The existing component designs are somewhat inspired by Material Design. 
+However, as with all the other *Utopia* modules, **Reach** allows you to design and implement your own style on top of the existing capabilities. 
+The only requirement when using **Reach** is that you can't really rely on Swing or Awt components. If you would rather still use mostly Swing, 
+consider using **Reflection** instead.
 
 ### Utopia Conflict
 *Advanced collision detection, yet simple interface*
@@ -216,29 +257,53 @@ vector mathematics for you here and wrapped the logic in a familiar **Inception*
 You probably don't need to use **Conflict** in your normal business software, but if you happen to be creating a 2D 
 game or a physics-based software, this will most likely help you a lot in getting started.
 
-### Utopia BunnyMunch
-*Speed and easy-of-use combined when it comes to json parsing*
+### Utopia Metropolis
+*Client-Server user management and authorization made simple*
 
-**Utopia BunnyMunch** is a very simple model, meant to replace the inefficient JSONReader implementation. 
-*BunnyMunch* uses a very fast *Jawn* json parsing library internally, but offers the same Value-based 
-interface as the JSONReader.
+**Utopia Metropolis** is the base module for both **Utopia Exodus** (server-side) and **Utopia Journey** (client-side) modules. 
+**Metropolis** provides the common features required in both of these modules. The purpose of these modules is to give you a 
+pre-built user management and user session system for your server and optionally client also. I've noticed that these features 
+need to exist in so many server applications that I decided to make this the one-time solution to this problem.
+
+## Utopia Exodus
+*Server-base that lets you skip right to your business logic*
+
+The main point of **Utopia Exodus** is to handle the cumbersome user management and user authentication parts of your server-side 
+application. By using **Utopia Exodus**, you can setup the required structures very quickly and get to what only you can do: 
+Your application business logic.
+
+## Utopia Journey
+*Leverage your Exodus server with a pre-built client interface*
+
+**Utopia Journey** is the client-side interface to **Utopia Exodus** server, handling request authorization and local session management. 
+Having a pre-built and easy-to-use interface for server interactions in your client takes you many steps ahead and saves you 
+the trouble of worrying about a secure interface.
 
 ## Module Hierarchy
 *Utopia* modules have following dependency-hierarchy. Modules lower at the list depend from those higher in the list.
 - Utopia Flow
+	- Utopia BunnyMunch
     - Utopia Vault
+		- Utopia Trove
+	- Utopia Metropolis
     - Utopia Access
         - Utopia Nexus
             - Utopia Nexus for Tomcat
+			- Utopia Exodus (also requires Metropolis)
         - Utopia Disciple
+			- Utopia Annex
+				- Utopia Journey (also requires Metropolis)
     - Utopia Inception
         - Utopia Genesis
             - Utopia Reflection
+				- Utopia Reach
             - Utopia Conflict
-    - Utopia BunnyMunch
            
 Basically every other *Utopia* module is dependent from **Flow**. All http-related modules are dependent from 
-**Access** and all 2D visual modules are dependent from **Inception** and **Genesis**.
+**Access** and all 2D visual modules are dependent from **Inception** and **Genesis**. **Nexus** is the base 
+module for server-side operations while **Disciple** is the foundation of client-side server interactions.
+
+Additional details about each module are listed in their own readmes.
 
 ## Main Features per Module
 Below I've listed some individual features you may be interested in using, in case you decide to use these modules.
