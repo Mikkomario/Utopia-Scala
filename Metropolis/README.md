@@ -1,6 +1,9 @@
 # Utopia Metropolis
 *Foundation for easy user management*
 
+## Parent Modules
+- Utopia Flow
+
 ## Main Features
 Models for user management in both client and server side
 - Users, organizations, invitations, devices and organization membership models

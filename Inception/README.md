@@ -1,13 +1,16 @@
 # Utopia Inception
 
+## Parent Modules
+- Utopia Flow
+
 ## Main Features
 
-Handler & Handleable traits for receiving and distributing events between multiple instances
+**Handler** & **Handleable** traits for receiving and distributing events between multiple instances
 - Supports both mutable and immutable implementations
 - Mutable implementations allow temporary deactivation & reactivation of instances
-- Permanent deactivation of instances is available through Mortal and Killable traits
+- Permanent deactivation of instances is available through **Mortal** and **Killable** traits
 
-HandlerRelay for handling multiple mutable Handlers
+**HandlerRelay** for handling multiple mutable **Handler**s
 
 Filter classes for filtering incoming events
 

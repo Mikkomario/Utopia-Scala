@@ -1,5 +1,10 @@
 # Utopia Reflection
 
+## Parent Modules
+- Utopia Flow
+- Utopia Inception
+- Utopia Genesis
+
 ## Main Features
 
 New UI component style
@@ -13,27 +18,29 @@ Stacking layout framework
 - Allows both top to bottom and bottom to top layout changes - your layout will dynamically adjust to 
   changes in component contents and components will automatically place themselves within their 
   parent component's bounds
-- Dynamic size specifications are easy to make by utilizing simple classes like StackLength, StackSize and
-StackInsets
+- Dynamic size specifications are easy to make by utilizing simple classes like **StackLength**, 
+  **StackSize** and **StackInsets**
 
 Localization support
 - All components that display text are built around localization
-- LocalString, LocalizedString, Localizer and DisplayFunction make handling localization easy
+- **LocalString**, **LocalizedString**, **Localizer** and **DisplayFunction** make handling localization easy
 - Localization is done mostly implicitly behind the scenes
-- You can skip all localization simply by defining an implicit NoLocalization localizer
+- You can skip all localization simply by defining an implicit **NoLocalization** localizer
 
 Custom drawing
 - Many of the components support custom drawing over their boundaries, which allows for animation,
 advanced borders, image overlays etc.
-- Custom drawers utilize easy to use Drawer class from Genesis
+- Custom drawers utilize easy to use **Drawer** class from **Genesis**
 
 Custom components
 - Buttons and Labels are provided from the get-go
-- Various easy to use containers like the Stack, Framing and SwitchPanel are also available for component layout
-- Pre-built Frame, Dialog and Pop-Up classes for various types of Windows
-- Advanced selection components like TabSelection, DropDown, SearchFrom and TextField make requesting user
-input simple
-- ScrollView and ScrollArea allow for 1D and 2D scrolling without a lot of know-how or code from your side
+- Various easy to use containers like the **Stack**, **Framing** and **SwitchPanel** are also 
+  available for component layout
+- Pre-built **Frame**, **Dialog** and **PopUp** classes for various types of **Window**s
+- Advanced selection components like **TabSelection**, **DropDown**, **SearchFrom** and **TextField** 
+  make requesting user input simple
+- **ScrollView** and **ScrollArea** allow for 1D and 2D scrolling without a lot of know-how or 
+  code from your side
 
 Implicit component build context
 - Contextual constructor options in existing components allow you to skip repetitious style definitions by
@@ -41,7 +48,7 @@ passing an implicit context instances instead
 - This makes standardized layout styles easy to implement and use
 
 Automatic container content management
-- ContentDisplayer and it's subclasses handle displaying of item lists for you
+- **ContentDisplayer** and it's subclasses handle displaying of item lists for you
 
 ## Implementation Hints
 

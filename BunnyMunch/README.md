@@ -1,8 +1,11 @@
 # Utopia BunnyMunch
 
+## Parent Modules
+- Utopia Flow
+
 ## Main Features
 Efficient json parsing with support for typeless values
-- JsonBunny object offers a very simple interface for converting json into values, which can then be 
+- **JsonBunny** object offers a very simple interface for converting json into values, which can then be 
   read in various other types.
   
 ## Implementation Hints

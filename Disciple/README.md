@@ -1,12 +1,17 @@
 # Utopia Disciple
 
+## Parent Modules
+- Utopia Flow
+- Utopia Access
+
 ## Main Features
 Simple Request and Response models
 - Immutable Requests make request creation very streamlined
 - Support for both streamed and buffered responses
 
 Singular interface class for all request sending and response receiving
-- Gateway class wraps the most useful Apache HttpClient features and offers them via a couple of simple methods
+- **Gateway** class wraps the most useful *Apache HttpClient* features and offers them via a couple of simple 
+  methods
 - Supports both callback -style and Future style response handling
 - Supports parameter encoding
 - Supports various response styles, including JSON and XML, as well as custom response styles or raw data

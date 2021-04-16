@@ -1,6 +1,10 @@
 # Utopia Nexus
 *Rest API -creation made easy*
 
+## Parent Modules
+- Utopia Flow
+- Utopia Access
+
 ## Main Features
 Server side models for http requests and responses
 - Supports both streamed and buffered responses
@@ -8,11 +12,11 @@ Server side models for http requests and responses
     are better suited for responding with raw file data.
 
 Support for restful server architecture
-- RequestHandler (utopia.nexus.http), along with custom Resources (utopia.nexus.http) handle traversal
+- **RequestHandler** (utopia.nexus.http), along with custom **Resource**s (utopia.nexus.http) handle traversal
 in hierarchical resource structures.
     - NotFound (404) and MethodNotAllowed (405) are also handled automatically
     - You can add individual feature implementations as resources either directly under the
-    RequestHandler or under another resource.
+    **RequestHandler** or under another resource.
 
 Envelopes inside the restful architecture
 - The resource-generated results are automatically wrapped in envelopes using the method you prefer (optional feature).

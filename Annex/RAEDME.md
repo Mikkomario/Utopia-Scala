@@ -1,5 +1,10 @@
 # Utopia Annex
 
+## Parent Modules
+- Utopia Flow
+- Utopia Access
+- Utopia Disciple
+
 ## Main Features
 
 Advanced request interface with Api, QueueSystem and RequestQueue classes
@@ -12,7 +17,7 @@ Models that support offline use and slower server responses
 - Shcrödinger traits for handling states where server results may or may not be available
 - Spirit trait for replicating data before it has been sent to the server
 
-## Implementation Hings
+## Implementation Hints
 
 ### Classes you should be aware of
 - **QueueSystem** and **Api** - You need instances of both of these traits to make requests effectively
