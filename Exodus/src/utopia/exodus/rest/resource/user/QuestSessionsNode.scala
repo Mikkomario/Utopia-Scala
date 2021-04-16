@@ -2,11 +2,12 @@ package utopia.exodus.rest.resource.user
 
 import utopia.access.http.Method.{Delete, Get}
 import utopia.exodus.database.access.single.DbUserSession
-import utopia.exodus.rest.resource.{NotImplementedResource, ResourceWithChildren, ResourceWithoutChildren}
+import utopia.exodus.rest.resource.NotImplementedResource
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext._
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path
+import utopia.nexus.rest.{LeafResource, ResourceWithChildren}
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -44,7 +45,7 @@ object QuestSessionsNode extends ResourceWithChildren[AuthorizedContext] with No
 		
 		// NESTED   ---------------------
 		
-		object MyQuestSessionKeyNode extends ResourceWithoutChildren[AuthorizedContext]
+		object MyQuestSessionKeyNode extends LeafResource[AuthorizedContext]
 		{
 			// ATTRIBUTES   -------------
 			

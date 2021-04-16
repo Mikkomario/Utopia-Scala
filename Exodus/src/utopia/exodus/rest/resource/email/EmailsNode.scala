@@ -6,12 +6,12 @@ import utopia.access.http.Status.{BadRequest, Forbidden, NotFound, NotImplemente
 import utopia.exodus.database.access.id.DbUserId
 import utopia.exodus.database.access.many.{DbEmailValidations, DbUsers}
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.{EmailChange, PasswordReset, UserCreation}
-import utopia.exodus.rest.resource.{CustomAuthorizationResourceFactory, ResourceWithChildren}
+import utopia.exodus.rest.resource.CustomAuthorizationResourceFactory
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.{EmailValidator, ExodusContext}
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.{Path, Response}
-import utopia.nexus.rest.Resource
+import utopia.nexus.rest.{Resource, ResourceWithChildren}
 import utopia.nexus.rest.ResourceSearchResult.Error
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection

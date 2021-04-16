@@ -3,7 +3,7 @@ package utopia.metropolis.model.combined.description
 import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.Extender
+import utopia.flow.util.Extender
 import utopia.metropolis.model.stored.description.DescriptionLink
 
 /**

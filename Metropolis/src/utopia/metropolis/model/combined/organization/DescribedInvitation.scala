@@ -5,7 +5,7 @@ import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.Extender
+import utopia.flow.util.Extender
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.metropolis.model.stored.organization.Invitation
 import utopia.metropolis.model.stored.user.UserSettings

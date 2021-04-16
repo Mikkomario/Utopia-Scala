@@ -2,10 +2,10 @@ package utopia.exodus.rest.resource.user
 
 import utopia.access.http.Method.Get
 import utopia.exodus.database.access.single.DbUser
-import utopia.exodus.rest.resource.ResourceWithChildren
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path
+import utopia.nexus.rest.ResourceWithChildren
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 

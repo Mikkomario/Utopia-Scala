@@ -1,6 +1,6 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.metropolis.model.Extender
+import utopia.flow.util.Extender
 import utopia.metropolis.model.stored.organization.Membership
 
 /**

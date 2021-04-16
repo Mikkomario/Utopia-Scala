@@ -4,7 +4,7 @@ import utopia.flow.datastructure.immutable.{Constant, ModelDeclaration, Property
 import utopia.flow.datastructure.template.{Model, Property}
 import utopia.flow.generic.{FromModelFactory, ModelConvertible, ModelType}
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.Extender
+import utopia.flow.util.Extender
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.metropolis.model.stored.user.UserSettings
 

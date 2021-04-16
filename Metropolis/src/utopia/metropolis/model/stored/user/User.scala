@@ -2,7 +2,7 @@ package utopia.metropolis.model.stored.user
 
 import utopia.flow.datastructure.template.{Model, Property}
 import utopia.flow.generic.{FromModelFactory, ModelConvertible}
-import utopia.metropolis.model.Extender
+import utopia.flow.util.Extender
 
 object User extends FromModelFactory[User]
 {
