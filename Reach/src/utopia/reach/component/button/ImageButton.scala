@@ -118,7 +118,7 @@ case class ContextualImageButtonFactory[+N <: ColorContextLike](factory: ImageBu
 /**
   * A button that only draws an image
   * @author Mikko Hilpinen
-  * @since 29.10.2020, v2
+  * @since 29.10.2020, v0.1
   */
 class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, insets: StackInsets = StackInsets.zero,
 				  alignment: Alignment = Alignment.Center, hotKeys: Set[HotKey] = Set(),

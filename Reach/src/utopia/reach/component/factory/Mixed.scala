@@ -7,7 +7,7 @@ object Mixed extends ContextInsertableComponentFactoryFactory[Any, Mixed, Contex
 /**
   * A factory for creating all kinds of component factories
   * @author Mikko Hilpinen
-  * @since 11.10.2020, v2
+  * @since 11.10.2020, v0.1
   */
 case class Mixed(parentHierarchy: ComponentHierarchy)
 	extends ContextInsertableComponentFactory[Any, ContextualMixed]

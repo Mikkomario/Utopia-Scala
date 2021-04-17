@@ -55,7 +55,7 @@ object SegmentGroup
 /**
   * Used for managing grid-like layouts that consist of rows or columns of segments
   * @author Mikko Hilpinen
-  * @since 10.6.2020, v1.2
+  * @since 10.6.2020, v0.1
   * @param rowDirection Direction of the component rows in this group. Eg. X when used with horizontal stacks.
   *                     Default = X.
   * @param layouts Layouts to be used with different segments, ordered. Default = all use Fit.

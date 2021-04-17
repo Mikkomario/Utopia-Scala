@@ -9,7 +9,7 @@ import utopia.reflection.shape.stack.{StackInsets, StackSize}
 /**
   * A common trait for image label implementations
   * @author Mikko Hilpinen
-  * @since 27.10.2020, v2
+  * @since 27.10.2020, v0.1
   */
 trait ImageLabelLike extends ReachComponentLike with CustomDrawable2 with CachingStackable2
 {

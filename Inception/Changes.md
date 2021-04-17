@@ -1,9 +1,9 @@
 # Utopia Inception - List of Changes
-## v2.3 (beta)
+## v2.3 - 17.4.2021
 ### Breaking Changes
-- The Killable trait no longer contains any attributes in itself, only the definition of method kill()
+- The **Killable** trait no longer contains any attributes in itself, only the definition of method `.kill()`
 ### New Methods
-- Added .debugString to Handler and HandlerRelay
+- Added `.debugString` to **Handler** and **HandlerRelay**
 
 ## v2.2
 ### Scala

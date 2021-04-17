@@ -50,7 +50,7 @@ object FocusChangeListener
 /**
   * Common trait for classes interested in focus change events
   * @author Mikko Hilpinen
-  * @since 21.10.2020, v2
+  * @since 21.10.2020, v0.1
   */
 trait FocusChangeListener extends FocusListener
 {

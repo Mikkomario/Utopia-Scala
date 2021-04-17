@@ -303,7 +303,7 @@ object OpenComponent
   * A wrapper that contains a component with an incomplete stack hierarchy. Open components are then completed and
   * closed by placing them inside wrappers or containers
   * @author Mikko Hilpinen
-  * @since 11.10.2020, v2
+  * @since 11.10.2020, v0.1
   */
 class OpenComponent[+C, +R](val creation: ComponentCreationResult[C, R], val hierarchy: SeedHierarchyBlock)
 {

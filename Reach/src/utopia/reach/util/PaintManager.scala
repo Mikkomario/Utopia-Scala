@@ -8,7 +8,7 @@ import utopia.reflection.color.ColorShadeVariant
 /**
   * A common trait for classes which manage and optimize component painting
   * @author Mikko Hilpinen
-  * @since 25.11.2020, v2
+  * @since 25.11.2020, v0.1
   */
 trait PaintManager
 {

@@ -221,7 +221,7 @@ case class ContextualViewImageAndTextLabelFactory[+N <: TextContextLike](factory
 /**
   * A pointer-based label that displays an image and a piece of text
   * @author Mikko Hilpinen
-  * @since 9.11.2020, v2
+  * @since 9.11.2020, v0.1
   */
 class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, val itemPointer: ChangingLike[A],
 							   val imagePointer: ChangingLike[Image], fontPointer: ChangingLike[Font],

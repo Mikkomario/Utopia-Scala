@@ -21,7 +21,7 @@ object ReachCursorManager
 /**
   * Used for determining, which cursor image should be drawn
   * @author Mikko Hilpinen
-  * @since 11.11.2020, v2
+  * @since 11.11.2020, v0.1
   */
 class ReachCursorManager(val cursors: CursorSet)
 {

@@ -95,7 +95,7 @@ case class ContextualTextButtonFactory[+N <: ButtonContextLike](buttonFactory: T
 /**
   * An immutable button that only draws text
   * @author Mikko Hilpinen
-  * @since 24.10.2020, v2
+  * @since 24.10.2020, v0.1
   */
 class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, textDrawContext: TextDrawContext,
 				 color: Color, borderWidth: Double = 0.0, hotKeys: Set[HotKey] = Set(),

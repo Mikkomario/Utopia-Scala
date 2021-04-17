@@ -28,7 +28,7 @@ import utopia.reflection.shape.LengthExtensions._
 /**
   * A field used for selecting a value from a predefined list of options
   * @author Mikko Hilpinen
-  * @since 23.12.2020, v1
+  * @since 23.12.2020, v0.1
   */
 object DropDown extends ContextInsertableComponentFactoryFactory[TextContextLike, DropDownFactory,
 	ContextualDropDownFactory]

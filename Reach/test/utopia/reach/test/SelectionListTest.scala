@@ -17,7 +17,7 @@ import utopia.reflection.util.SingleFrameSetup
 /**
   * Tests selection list class
   * @author Mikko Hilpinen
-  * @since 6.2.2021, v1
+  * @since 6.2.2021, v0.1
   */
 object SelectionListTest extends App
 {

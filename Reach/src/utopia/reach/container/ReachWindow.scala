@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Promise}
 /**
   * A simulated window within a reach canvas
   * @author Mikko Hilpinen
-  * @since 6.2.2021, v1
+  * @since 6.2.2021, v0.1
   */
 class ReachWindow(content: OpenComponent[ReachComponentLike, _], visibilityPointer: ChangingLike[Boolean])
 				 (implicit exc: ExecutionContext)

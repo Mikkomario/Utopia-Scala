@@ -28,7 +28,7 @@ import java.awt.event.KeyEvent
 /**
   * A simple test for the reach component implementation
   * @author Mikko Hilpinen
-  * @since 7.10.2020, v2
+  * @since 7.10.2020, v0.1
   */
 object ReachComponentTest extends App
 {

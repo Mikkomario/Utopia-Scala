@@ -10,7 +10,7 @@ import scala.collection.immutable.VectorBuilder
 /**
   * A common trait for canvas elements where components are drawn
   * @author Mikko Hilpinen
-  * @since 4.10.2020, v1
+  * @since 4.10.2020, v0.1
   */
 trait ReachCanvasLike
 {

@@ -186,7 +186,7 @@ case class ContextualMutableViewTextLabelFactory[+N <: TextContextLike](labelFac
 /**
   * A mutable implementation of a label that displays items as text
   * @author Mikko Hilpinen
-  * @since 21.10.2020, v2
+  * @since 21.10.2020, v0.1
   */
 class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 							  override val contentPointer: PointerWithEvents[A],

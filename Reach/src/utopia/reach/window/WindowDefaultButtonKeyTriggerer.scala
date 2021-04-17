@@ -43,7 +43,7 @@ object WindowDefaultButtonKeyTriggerer
 /**
   * A keyboard listener used for triggering one of a window's buttons
   * @author Mikko Hilpinen
-  * @since 4.3.2021, v1
+  * @since 4.3.2021, v0.1
   */
 class WindowDefaultButtonKeyTriggerer(window: Window[_], buttons: Iterable[FocusableWithState],
 									  additionalCondition: Viewable[Boolean] = AlwaysTrue,

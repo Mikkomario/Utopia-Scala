@@ -69,7 +69,7 @@ class MutableImageButtonFactory(parentHierarchy: ComponentHierarchy)
 /**
   * A mutable implementation of a button that only contains an image
   * @author Mikko Hilpinen
-  * @since 29.10.2020, v2
+  * @since 29.10.2020, v0.1
   */
 class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: ButtonImageSet,
 						 initialInsets: StackInsets = StackInsets.zero, initialAlignment: Alignment = Alignment.Center,

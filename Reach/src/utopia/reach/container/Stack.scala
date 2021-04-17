@@ -568,7 +568,7 @@ class ContextualStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualCompo
 /**
   * A static Reach implementation of the stack concept
   * @author Mikko Hilpinen
-  * @since 11.10.2020, v2
+  * @since 11.10.2020, v0.1
   */
 class Stack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
 									 override val components: Vector[C], override val direction: Axis2D,

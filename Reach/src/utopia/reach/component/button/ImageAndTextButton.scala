@@ -128,7 +128,7 @@ case class ContextualImageAndTextButtonFactory[+N <: ButtonContextLike](factory:
 /**
   * A button which displays both an image and some text
   * @author Mikko Hilpinen
-  * @since 10.11.2020, v2
+  * @since 10.11.2020, v0.1
   */
 class ImageAndTextButton(parentHierarchy: ComponentHierarchy, image: Image, text: LocalizedString, color: Color,
 						 font: Font, textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,

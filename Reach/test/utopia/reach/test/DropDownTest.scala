@@ -22,7 +22,7 @@ import utopia.reflection.util.SingleFrameSetup
 /**
   * A test application with drop down fields
   * @author Mikko Hilpinen
-  * @since 23.12.2020, v1
+  * @since 23.12.2020, v0.1
   */
 object DropDownTest extends App
 {

@@ -14,7 +14,7 @@ import utopia.reflection.util.SingleFrameSetup
 /**
   * A test app for scroll areas
   * @author Mikko Hilpinen
-  * @since 9.12.2020, v2
+  * @since 9.12.2020, v0.1
   */
 object ReachScrollAreaTest extends App
 {

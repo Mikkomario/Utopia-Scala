@@ -44,7 +44,7 @@ object MutableCustomDrawReachComponent
 /**
   * A common trait for reach component <b>implementations</b> (not wrappers) which implement mutable custom drawing
   * @author Mikko Hilpinen
-  * @since 4.10.2020, v2
+  * @since 4.10.2020, v0.1
   */
 trait MutableCustomDrawReachComponent extends CustomDrawReachComponent with MutableCustomDrawable
 {

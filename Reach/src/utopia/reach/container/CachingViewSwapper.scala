@@ -161,7 +161,7 @@ class ContextualViewSwapperBuilder[N, +F[X] <: ContextualComponentFactory[X, _ >
   * type of component only creates each option once, then caching and reusing it in order to avoid unnecessary
   * component creations
   * @author Mikko Hilpinen
-  * @since 16.12.2020, v2
+  * @since 16.12.2020, v0.1
   * @param parentHierarchy Component hierarchy this container is attached to
   * @param valuePointer Pointer to the currently selected value
   * @param customDrawers Custom drawers used in this container (default = empty)

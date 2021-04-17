@@ -13,7 +13,7 @@ import scala.concurrent.duration.Duration
   * after a while. This is useful when components are created in bottom to top order, where the parent component
   * is created only after the child component, which is often the case in wrappers.
   * @author Mikko Hilpinen
-  * @since 7.10.2020, v2
+  * @since 7.10.2020, v0.1
   */
 class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableComponentHierarchy
 {

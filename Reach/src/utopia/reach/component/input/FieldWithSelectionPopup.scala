@@ -107,7 +107,7 @@ case class ContextualFieldWithSelectionPopupFactory[+N <: TextContextLike](paren
 /**
   * A field wrapper class that displays a selection pop-up when it receives focus
   * @author Mikko Hilpinen
-  * @since 22.12.2020, v1
+  * @since 22.12.2020, v0.1
   * @param parentHierarchy Component hierarchy this component will be attached to
   * @param context field creation context
   * @param isEmptyPointer A pointer that contains true when the wrapped field is empty (of text)

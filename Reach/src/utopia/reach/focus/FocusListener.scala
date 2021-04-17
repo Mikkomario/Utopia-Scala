@@ -31,7 +31,7 @@ object FocusListener
 /**
   * A common trait for classes interested in all kinds of focus events
   * @author Mikko Hilpinen
-  * @since 21.10.2020, v2
+  * @since 21.10.2020, v0.1
   * @see FocusChangeListener
   */
 trait FocusListener

@@ -126,7 +126,7 @@ case class ContextualImageAndTextLabelFactory[+N <: TextContextLike](factory: Im
 /**
   * A label that displays both image and text
   * @author Mikko Hilpinen
-  * @since 29.10.2020, v2
+  * @since 29.10.2020, v0.1
   */
 class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, image: Image, text: LocalizedString, font: Font,
 						textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,

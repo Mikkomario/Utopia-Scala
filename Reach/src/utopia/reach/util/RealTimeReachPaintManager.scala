@@ -38,7 +38,7 @@ object RealTimeReachPaintManager
   * This paint manager implementation attempts to serve component paint requests as soon as possible, without using
   * buffering
   * @author Mikko Hilpinen
-  * @since 25.11.2020, v2
+  * @since 25.11.2020, v0.1
   */
 // TODO: Add a position modifier (call by name) that affects all draw operations
 //  (used for moving window contents while still keeping component position as (0,0))

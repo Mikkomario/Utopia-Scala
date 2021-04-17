@@ -59,7 +59,7 @@ object Cursor
 /**
   * Cursors specify the image that should be drawn at the mouse cursor location
   * @author Mikko Hilpinen
-  * @since 11.11.2020, v2
+  * @since 11.11.2020, v0.1
   */
 trait Cursor
 {

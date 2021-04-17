@@ -100,7 +100,7 @@ case class ContextualRadioButtonGroupFactory[+N <: TextContext](parentHierarchy:
 /**
   * A user input based on a multitude of radio buttons
   * @author Mikko Hilpinen
-  * @since 9.3.2021, v10.7
+  * @since 9.3.2021, v0.1
   */
 class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, options: Vector[(A, LocalizedString)],
 						  override val valuePointer: PointerWithEvents[A],

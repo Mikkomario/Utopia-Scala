@@ -34,7 +34,7 @@ class MutableImageLabelFactory(parentHierarchy: ComponentHierarchy)
 /**
   * A mutable implementation of a label that draws an image
   * @author Mikko Hilpinen
-  * @since 28.10.2020, v2
+  * @since 28.10.2020, v0.1
   */
 class MutableImageLabel(override val parentHierarchy: ComponentHierarchy, initialImage: Image,
 						initialInsets: StackInsets = StackInsets.zero, initialAlignment: Alignment = Alignment.Center,

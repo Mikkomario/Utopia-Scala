@@ -5,7 +5,7 @@ import utopia.reach.component.template.ReachComponentLike
 /**
   * Common trait for component hierarchies that can be completed (connected to a parent) after they have been created
   * @author Mikko Hilpinen
-  * @since 7.10.2020, v2
+  * @since 7.10.2020, v0.1
   */
 trait CompletableComponentHierarchy extends ComponentHierarchy
 {

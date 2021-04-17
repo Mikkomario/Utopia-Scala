@@ -5,7 +5,7 @@ import utopia.genesis.shape.shape2D.Bounds
 /**
   * A set of cursors to use in an application
   * @author Mikko Hilpinen
-  * @since 11.11.2020, v2
+  * @since 11.11.2020, v0.1
   */
 case class CursorSet(cursors: Map[CursorType, Cursor], default: Cursor)
 {

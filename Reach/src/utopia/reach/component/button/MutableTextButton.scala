@@ -130,7 +130,7 @@ case class ContextualMutableTextButtonFactory[+N <: ButtonContextLike](buttonFac
 /**
   * A mutable Reach implementation of button
   * @author Mikko Hilpinen
-  * @since 25.10.2020, v2
+  * @since 25.10.2020, v0.1
   */
 class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: LocalizedString, initialFont: Font,
 						initialColor: Color, initialTextColor: Color = Color.textBlack,

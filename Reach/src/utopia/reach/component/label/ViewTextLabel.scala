@@ -219,7 +219,7 @@ case class ContextualViewTextLabelFactory[+N <: TextContextLike]
 /**
   * A text label that displays contents of a changing item
   * @author Mikko Hilpinen
-  * @since 17.10.2020, v2
+  * @since 17.10.2020, v0.1
   */
 class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, override val contentPointer: ChangingLike[A],
 					   stylePointer: ChangingLike[TextDrawContext], displayFunction: DisplayFunction[A] = DisplayFunction.raw,

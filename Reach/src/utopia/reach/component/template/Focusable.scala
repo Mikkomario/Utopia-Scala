@@ -53,7 +53,7 @@ object Focusable
 /**
   * A common trait for focusable (reach) components
   * @author Mikko Hilpinen
-  * @since 21.10.2020, v2
+  * @since 21.10.2020, v0.1
   */
 trait Focusable extends ReachComponentLike with FocusRequestable
 {

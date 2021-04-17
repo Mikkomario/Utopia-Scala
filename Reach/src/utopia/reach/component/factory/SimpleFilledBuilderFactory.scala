@@ -9,7 +9,7 @@ import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.C
   * A common trait for factory classes which produce container builders that produce containers with a specific
   * background color / fill. The containers are not expected to require any contextual information on their own.
   * @author Mikko Hilpinen
-  * @since 9.12.2020, v2
+  * @since 9.12.2020, v0.1
   */
 trait SimpleFilledBuilderFactory[+Builder[NC, +F[X <: NC] <: ContextualComponentFactory[X, _ >: NC, F]]]
 {

@@ -18,7 +18,7 @@ import utopia.reflection.shape.stack.StackLength
   * Segments are used for aligning multiple components from different stacks / containers so that their lengths
   * along a specific axis match
   * @author Mikko Hilpinen
-  * @since 10.6.2020, v1.2
+  * @since 10.6.2020, v0.1
   * @param direction The direction of this segment (whether components are stacked on top of each other (Y)
   *                  or next to each other (X)). The items are aligned along the <b>perpendicular</b> axis
   *                  (Eg. vertical segment components each have same width). Default = Y

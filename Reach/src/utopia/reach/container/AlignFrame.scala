@@ -151,7 +151,7 @@ class ContextualFilledAlignFrameBuilder[NC, +F[X <: NC] <: ContextualComponentFa
 /**
  * A container which contains a single item, aligned to some side
  * @author Mikko Hilpinen
- * @since 30.1.2021, v1
+ * @since 30.1.2021, v0.1
  */
 class AlignFrame(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
                  override val alignment: Alignment, override val customDrawers: Vector[CustomDrawer] = Vector())

@@ -126,7 +126,7 @@ case class ContextualEditableTextLabelFactory[+N <: TextContextLike](factory: Ed
 /**
   * Used for requesting user input in text format
   * @author Mikko Hilpinen
-  * @since 30.10.2020, v2
+  * @since 30.10.2020, v0.1
   */
 // TODO: Create a password mode where text is not displayed nor copyable
 class EditableTextLabel(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,

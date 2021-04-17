@@ -113,7 +113,7 @@ case class ContextualSwitchFactory[N <: ColorContextLike](factory: SwitchFactory
 /**
   * Used for toggling a setting on or off
   * @author Mikko Hilpinen
-  * @since 19.11.2020, v2
+  * @since 19.11.2020, v0.1
   */
 class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, color: Color,
 			 knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),

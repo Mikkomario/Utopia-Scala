@@ -22,7 +22,7 @@ object ButtonLike
 /**
   * A common trait for Reach button implementations (and wrappers)
   * @author Mikko Hilpinen
-  * @since 24.10.2020, v2
+  * @since 24.10.2020, v0.1
   */
 trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorDefining
 {

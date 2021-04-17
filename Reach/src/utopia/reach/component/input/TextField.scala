@@ -347,7 +347,7 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 /**
   * Used for requesting text input from the user
   * @author Mikko Hilpinen
-  * @since 14.11.2020, v2
+  * @since 14.11.2020, v0.1
   */
 class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLength,
 				   fieldNamePointer: ChangingLike[LocalizedString] = Fixed(LocalizedString.empty),

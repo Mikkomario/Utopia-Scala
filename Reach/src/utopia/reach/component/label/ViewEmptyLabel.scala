@@ -105,7 +105,7 @@ case class ContextualViewEmptyLabelFactory[+N <: ColorContextLike](factory: View
 /**
  * A pointer-based empty label
  * @author Mikko Hilpinen
- * @since 29.1.2021, v1
+ * @since 29.1.2021, v0.1
  */
 class ViewEmptyLabel(override val parentHierarchy: ComponentHierarchy, val stackSizePointer: ChangingLike[StackSize],
                      val customDrawersPointer: ChangingLike[Vector[CustomDrawer]]) extends CustomDrawReachComponent

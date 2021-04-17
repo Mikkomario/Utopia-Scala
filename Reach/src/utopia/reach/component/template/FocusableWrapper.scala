@@ -3,7 +3,7 @@ package utopia.reach.component.template
 /**
   * A common trait for components which wrap a focusable component
   * @author Mikko Hilpinen
-  * @since 23.12.2020, v1
+  * @since 23.12.2020, v0.1
   */
 trait FocusableWrapper extends Focusable
 {

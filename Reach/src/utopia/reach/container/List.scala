@@ -36,7 +36,7 @@ case class ListRowContent(components: IterableOnce[ReachComponentLike], context:
 /**
   * Used for creating actionable lists
   * @author Mikko Hilpinen
-  * @since 12.12.2020, v2
+  * @since 12.12.2020, v0.1
   */
 object List extends ContextInsertableComponentFactoryFactory[ColorContextLike, ListFactory, ContextualListFactory]
 {

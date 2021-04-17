@@ -4,7 +4,7 @@ package utopia.reach.component.factory
   * A common trait for instances that produce new container builders. Container builders are used for creating
   * containers and their content in a close sequence
   * @author Mikko Hilpinen
-  * @since 11.10.2020, v2
+  * @since 11.10.2020, v0.1
   */
 trait BuilderFactory[+Builder[+FF]]
 {

@@ -36,7 +36,7 @@ class ImageLabelFactory(parentHierarchy: ComponentHierarchy)
 /**
   * A label that draws an image
   * @author Mikko Hilpinen
-  * @since 27.10.2020, v2
+  * @since 27.10.2020, v0.1
   */
 class ImageLabel(override val parentHierarchy: ComponentHierarchy, override val image: Image,
 				 override val insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,

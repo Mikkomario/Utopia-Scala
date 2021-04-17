@@ -90,7 +90,7 @@ case class ContextualMutableTextLabelFactory[+N <: TextContextLike](parentHierar
 /**
   * A fully mutable label that displays text
   * @author Mikko Hilpinen
-  * @since 4.10.2020, v2
+  * @since 4.10.2020, v0.1
   */
 class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initialText: LocalizedString,
 					   initialFont: Font, initialTextColor: Color = Color.textBlack,

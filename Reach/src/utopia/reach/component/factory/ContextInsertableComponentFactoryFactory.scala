@@ -14,7 +14,7 @@ object ContextInsertableComponentFactoryFactory
 /**
   * A factory that creates factories that can be enriched with component creation contexts
   * @author Mikko Hilpinen
-  * @since 14.10.2020, v2
+  * @since 14.10.2020, v0.1
   */
 trait ContextInsertableComponentFactoryFactory[Top, +F <: ContextInsertableComponentFactory[Top, CF],
 	+CF[X <: Top] <: ContextualComponentFactory[X, Top, CF]] extends ComponentFactoryFactory[F]

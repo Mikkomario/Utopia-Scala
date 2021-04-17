@@ -83,7 +83,7 @@ case class ContextualDurationFieldFactory[+N <: TextContextLike](parentHierarchy
 /**
   * A combination of input fields for the purpose of requesting a time duration
   * @author Mikko Hilpinen
-  * @since 9.3.2021, v1
+  * @since 9.3.2021, v0.1
   */
 class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration = Duration.Zero,
 					maxValue: Duration = 99.hours + 59.minutes + 59.seconds,

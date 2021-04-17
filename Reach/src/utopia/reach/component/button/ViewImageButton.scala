@@ -130,7 +130,7 @@ case class ContextualViewImageButtonFactory[+N <: ColorContextLike](factory: Vie
 /**
   * A button that only draws images and whose state is dependent from a number of pointers
   * @author Mikko Hilpinen
-  * @since 29.10.2020, v2
+  * @since 29.10.2020, v0.1
   */
 class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: ChangingLike[ButtonImageSet],
 					  enabledPointer: ChangingLike[Boolean] = AlwaysTrue,

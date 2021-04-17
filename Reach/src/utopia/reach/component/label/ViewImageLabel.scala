@@ -56,7 +56,7 @@ class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy)
 /**
   * A pointer-based label that draws an image
   * @author Mikko Hilpinen
-  * @since 28.10.2020, v2
+  * @since 28.10.2020, v0.1
   */
 class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePointer: ChangingLike[Image],
 					 insetsPointer: ChangingLike[StackInsets], alignmentPointer: ChangingLike[Alignment],

@@ -20,7 +20,7 @@ import utopia.reflection.text.Font
 /**
   * A common trait for "Reach" (no-swing) style components
   * @author Mikko Hilpinen
-  * @since 3.10.2020, v2
+  * @since 3.10.2020, v0.1
   */
 trait ReachComponentLike extends Stackable2
 {

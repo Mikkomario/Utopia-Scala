@@ -24,7 +24,7 @@ import scala.concurrent.duration.Duration
   * An access point used for retrieving description-related data that is shared between all user accounts
   * (languages, user role descriptions, etc.)
   * @author Mikko Hilpinen
-  * @since 19.7.2020, v1
+  * @since 19.7.2020, v0.1
   */
 class DescriptionData(currentQueueSystem: => QueueSystem, defaultUpdatePeriod: Period = 3.days,
 					  requestTimeout: Duration = 10.seconds)

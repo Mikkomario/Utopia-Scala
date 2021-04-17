@@ -13,7 +13,7 @@ import scala.annotation.tailrec
 /**
   * Represents a sequence of components that forms a linear hierarchy
   * @author Mikko Hilpinen
-  * @since 3.10.2020, v2
+  * @since 3.10.2020, v0.1
   */
 trait ComponentHierarchy
 {

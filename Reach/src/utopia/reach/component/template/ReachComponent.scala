@@ -8,7 +8,7 @@ import utopia.reflection.component.template.layout.stack.CachingStackable2
 /**
   * A common trait for <b>non-wrapping</b> reach components that handle the actual component implementation
   * @author Mikko Hilpinen
-  * @since 4.10.2020, v2
+  * @since 4.10.2020, v0.1
   */
 trait ReachComponent extends ReachComponentLike with CachingStackable2
 {

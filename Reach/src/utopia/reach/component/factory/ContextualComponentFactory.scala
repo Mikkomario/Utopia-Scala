@@ -34,7 +34,7 @@ object ContextualComponentFactory
 /**
   * A common trait for component factories that use a component creation context
   * @author Mikko Hilpinen
-  * @since 12.10.2020, v2
+  * @since 12.10.2020, v0.1
   * @tparam N Type of context used by this factory
   * @tparam Top The type limit of accepted context parameters
   * @tparam Repr Implementation type of this factory (generic)

@@ -25,7 +25,7 @@ import scala.util.{Failure, Success, Try}
 /**
   * This API is used before authorization (session key) is acquired
   * @author Mikko Hilpinen
-  * @since 21.6.2020, v1
+  * @since 21.6.2020, v0.1
   */
 class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gateway(), override val rootPath: String)
 	extends Api

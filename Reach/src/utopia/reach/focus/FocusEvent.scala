@@ -7,7 +7,7 @@ package utopia.reach.focus
   * - Component A: FocusLost<br>
   * - Component B: FocusGained
   * @author Mikko Hilpinen
-  * @since 21.10.2020, v2
+  * @since 21.10.2020, v0.1
   */
 sealed trait FocusEvent
 

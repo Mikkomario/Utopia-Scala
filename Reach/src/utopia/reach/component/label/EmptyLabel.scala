@@ -83,7 +83,7 @@ case class ContextualEmptyLabelFactory[+N <: ColorContextLike](factory: EmptyLab
 /**
  * A simple immutable empty label
  * @author Mikko Hilpinen
- * @since 29.1.2021, v1
+ * @since 29.1.2021, v0.1
  */
 class EmptyLabel(override val parentHierarchy: ComponentHierarchy, override val calculatedStackSize: StackSize,
                  override val customDrawers: Vector[CustomDrawer])

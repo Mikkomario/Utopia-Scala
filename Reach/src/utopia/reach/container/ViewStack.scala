@@ -543,7 +543,7 @@ class ContextualViewStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualC
 /**
   * A pointer-based stack that adds and removes items based on activation pointer events
   * @author Mikko Hilpinen
-  * @since 14.11.2020, v2
+  * @since 14.11.2020, v0.1
   */
 class ViewStack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
 										 componentData: Vector[(C, ChangingLike[Boolean])],

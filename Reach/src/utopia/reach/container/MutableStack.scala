@@ -144,7 +144,7 @@ case class ContextualMutableStackFactory[+N <: BaseContextLike](hierarchy: Compo
 /**
   * A mutable container which "stacks" / places components back to back either horizontally or vertically
   * @author Mikko Hilpinen
-  * @since 17.10.2020, v2
+  * @since 17.10.2020, v0.1
   */
 class MutableStack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
 											initialDirection: Axis2D, initialLayout: StackLayout,

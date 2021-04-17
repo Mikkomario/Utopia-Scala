@@ -26,7 +26,7 @@ import java.awt.event.KeyEvent
 /**
   * Tests combination of image labels and view stack
   * @author Mikko Hilpinen
-  * @since 26.1.2021, v1
+  * @since 26.1.2021, v0.1
   */
 object ImageViewStackTest extends App
 {

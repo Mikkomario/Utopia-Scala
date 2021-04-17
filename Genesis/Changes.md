@@ -1,62 +1,84 @@
 # Utopia Reflection - List of Changes
-## v2.4 (beta)
+## v2.4 - 17.4.2021
 ### Breaking Changes
-- MouseEventGenerator and CanvasMouseEventGenerator no longer accept listeners as parameters. Instead, they now create 
-new mutable mouse event handlers.
-    - Also, MouseEventGenerators now take an implicit execution context as a parameter
-- Added absoluteMousePosition to all MouseEvents
-- Path no longer extends DistanceLike
-- Renamed RGB, RGBLike, RGBChannel and RGBTransform to Rgb... (camel case)
-- Renamed HSL and HSLLike to Hsl and HslLike
-- KeyTypedEvents now contain the associated key index
-- Added origin to Image, therefore removing separate origin features from any animation and image drawing classes
-- Changed Bounds.translate -methods since there was an ambiguous overlap when Vector2D was used 
-- Setup.start() no longer accepts an implicit execution context. 
-Usually such context is now requested as a constructor parameter instead.
-- Altered the return value type of TwoDimensional.toMap2D 
+- **MouseEventGenerator** and **CanvasMouseEventGenerator** no longer accept listeners as parameters. 
+  Instead, they now create new mutable mouse event handlers.
+    - Also, **MouseEventGenerator**s now take an implicit execution context as a parameter
+- Added absoluteMousePosition -parameter to all **MouseEvent**s
+- **Path** no longer extends **DistanceLike**
+- Renamed **RGB**, **RGBLike**, **RGBChannel** and **RGBTransform** to **Rgb**... (camel case)
+- Renamed HSL and HSLLike to **Hsl** and **HslLike**
+- **KeyTypedEvent**s now contain the associated key index
+- Added origin to **Image**, therefore removing separate origin features from animation and image drawing classes
+- Changed `Bounds.translate` -methods since there was an ambiguous overlap when **Vector2D** was used 
+- `Setup.start()` no longer accepts an implicit execution context. Usually such context is now requested 
+  as a constructor parameter instead.
 - Moved velocity and acceleration -related classes to package utopia.genesis.shape.shape2D.movement
-- Replaced Transformation and AnimatedTransformation classes with Matrix2D, Matrix3D, LinearTransformation, 
-  AffineTransformation, AnimatedLinearTransformation and AnimatedAffineTransformation
-  - Renamed Transformable to MutableTransformable and deprecated it
-  - Deprecated TransformProjectable in favor of LinearTransformable, AffineTransformable and Transformable
+- Replaced **Transformation** and **AnimatedTransformation** classes with **Matrix2D**, **Matrix3D**, 
+  **LinearTransformation**,**AffineTransformation**, **AnimatedLinearTransformation** and 
+  **AnimatedAffineTransformation**
+  - Renamed **Transformable** to **MutableTransformable** and deprecated it
+  - Deprecated **TransformProjectable** in favor of **LinearTransformable**, **AffineTransformable** 
+    and **Transformable**
 ### New Features
-- Added global mouse and keyboard event handling with GlobalMouseEventHandler and GlobalKeyboardEventHandler objects
+- Added global mouse and keyboard event handling with **GlobalMouseEventHandler** and 
+  **GlobalKeyboardEventHandler** objects
     - Asynchronous keyboard event handling is possible after calling 
-    GlobalKeyboardEventHandler.specifyExecutionContext(ExecutionContext)
-- Added SegmentedPath for path / animation based on a set of values
-- Drawer now supports splitting drawn text into multiple lines
+    `GlobalKeyboardEventHandler.specifyExecutionContext(ExecutionContext)`
+- Added **SegmentedPath** for path / animation based on a set of values
+- **Drawer** now supports splitting drawn text into multiple lines
     - Also, added a couple new string drawing methods
 - Added transformation support to image drawing
+- Added color contrast calculation and related classes (See `.contrastAgainst(RgbLike)` in **RgbLike** / **Color**)
 ### Deprecations
-- ConvertingKeyListener was deprecated in favor of GlobalKeyboardEventHandler
+- **ConvertingKeyListener** was deprecated in favor of **GlobalKeyboardEventHandler**
 ### New Methods
-- Added .toRoundedRectangleWithRadius(Double) and .ceil to Bounds
-- Added .oneTimeListener(Filter)(...) to KeyStateListener
-- Added .withOverlay(Image, Point) to Image (can also be called with +)
-- Added new variations of .average(...) to RGB and added copies of those methods to Color
-- Added a new variation of .symmetric(...) to InsetsFactory
-- Added .toMap2D to TwoDimensional
-- Added .build(...) to XmlElement
-- Added .minAlong(Axis2D), .maxAlong(Axis2D) and overlapsWith(Bounds) to Bounds
-- Added .translated(Vector2DLike), .copyArea(...) and .clipBounds to Drawer
-- Added Image.draw(...) method which can be used for drawing custom images
-- Added .arrow to KeyStateEvent
-- Added a couple new utility methods to MovementHistoryLike and VelocityTracker
-- Added a couple new utility methods to PixelTable
-- Added .averageLuminosityOf(...) to Color
-- Added .opposite to Direction1D
-- Added a number of utility methods to Direction2D
+- **Bounds**
+  - `.ceil`
+  - `.minAlong(Axis2D)` and `.maxAlong(Axis2D)`
+  - `.overlapsWith(Bounds)`
+  - `.toRoundedRectangleWithRadius(Double)`
+- **Color**.type
+  - `.averageLuminosityOf(...)`
+- **Direction1D**
+  - `.opposite`
+- **Direction2D**
+  - A number of new utility methods
+- **Drawer**
+  - `.clipBounds`
+  - `.copyArea(...)`
+  - `.translated(Vector2DLike)`
+- **Image**
+  - Object
+    - `.draw(...)`, which can be used for drawing custom images
+  - Class
+    - `.withOverlay(Image, Point)` (can also be called with +)
+- **InsetsFactory**
+  - new variation of `.symmetric(...)`
+- **KeyStateEvent**
+  - `.arrow`
+- **KeyStateListener**.type
+  - `.oneTimeListener(Filter)(...)`
+- **MovementHistoryLike** and **VelocityTracker**
+  - A couple new utility methods
+- **PixelTable**
+  - A couple new utility methods
+- **Rgb**
+  - new variations of `.average(...)`
+    - Also added copies of those methods to **Color**
+- **TwoDimensional**
+  - `.toMap2D`
 ### Fixes
-- Dimensional.toMap now properly returns a Map
+- `Dimensional.toMap` now properly returns a **Map**
 ### Other Changes
-- Bounds and Point .toAwt conversion now rounds the double values to the closest integers
-- Direction1D now extends RichComparable
-- Bounds + -method now accepts VectorLike instead of only Point 
-- Added implicit conversion from a function to a KeyTypedListener
-- Parallelogramic now produces Parallelogramic instead of Parallelogram when transformed
-- PixelTable now extends IterableOnce(Color)
-- Added implicit conversion from awt Rectangle to Bounds
-- Direction2D now contains HorizontalDirection and VerticalDirection subtraits
+- **Bounds** and **Point** `.toAwt` conversion now rounds the double values to the closest integers
+- **Direction1D** now extends **SelfComparable**
+- **Bounds** + -method now accepts **VectorLike** instead of only **Point** 
+- Added implicit conversion from a function to a **KeyTypedListener**
+- **Parallelogramic** now produces **Parallelogramic** instead of **Parallelogram** when transformed
+- **PixelTable** now extends **Iterable(Color)**
+- Added implicit conversion from awt **Rectangle** to **Bounds**
+- **Direction2D** now contains **HorizontalDirection** and **VerticalDirection** sub-traits
 
 ## v2.3
 ### Scala

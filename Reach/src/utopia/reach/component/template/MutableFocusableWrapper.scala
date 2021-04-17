@@ -4,7 +4,7 @@ import utopia.reach.focus.FocusListener
 /**
   * A wrapper class for another mutable focusable component
   * @author Mikko Hilpinen
-  * @since 18.11.2020, v2
+  * @since 18.11.2020, v0.1
   */
 trait MutableFocusableWrapper extends FocusableWrapper with MutableFocusable
 {

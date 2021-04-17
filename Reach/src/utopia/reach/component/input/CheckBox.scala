@@ -151,7 +151,7 @@ case class FullContextualCheckBoxFactory[+N <: ColorContextLike](factory: Contex
 /**
   * Used for toggling a boolean value. Changes drawn image based on the selected value.
   * @author Mikko Hilpinen
-  * @since 25.2.2021, v1
+  * @since 25.2.2021, v0.1
   */
 class CheckBox(parentHierarchy: ComponentHierarchy, onImage: Image, offImage: Image, onHoverColor: Color,
 			   offHoverColor: Color, hoverRadius: Double = 0.0,

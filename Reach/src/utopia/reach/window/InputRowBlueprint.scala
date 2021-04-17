@@ -39,7 +39,7 @@ object InputRowBlueprint
 /**
   * Used in creating input rows for input windows
   * @author Mikko Hilpinen
-  * @since 26.2.2021, v1
+  * @since 26.2.2021, v0.1
   * @param key Unique key used for this row
   * @param displayName Field name displayed on this row (default = empty = no name displayed)
   * @param fieldAlignment Alignment used when placing the field component (relative to the field name) (default = right)

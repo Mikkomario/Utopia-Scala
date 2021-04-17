@@ -32,7 +32,7 @@ import utopia.reflection.shape.LengthExtensions._
 /**
   * Tests input window creation
   * @author Mikko Hilpinen
-  * @since 6.3.2021, v1
+  * @since 6.3.2021, v0.1
   */
 object InputWindowTest extends App
 {

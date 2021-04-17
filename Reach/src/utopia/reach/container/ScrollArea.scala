@@ -187,7 +187,7 @@ class ContextualFilledScrollAreaBuilder[NC, +F[X <: NC] <: ContextualComponentFa
 /**
   * A component wrapper which allows content scrolling
   * @author Mikko Hilpinen
-  * @since 7.12.2020, v2
+  * @since 7.12.2020, v0.1
   */
 class ScrollArea(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
 				 actorHandler: ActorHandler, barDrawer: ScrollBarDrawerLike,

@@ -38,7 +38,7 @@ object ComponentWrapResult
   * A result returned by functions that create a component and then wrap it. These results contain and provide easy
   * access to both the wrapping container and the wrapped component
   * @author Mikko Hilpinen
-  * @since 7.10.2020, v2
+  * @since 7.10.2020, v0.1
   */
 class ComponentWrapResult[+P, +C, +R](val parent: P, val child: C, val result: R)
 {

@@ -8,7 +8,7 @@ import utopia.reflection.component.template.layout.stack.StackableWrapper2
 /**
   * A common trait for Reach component wrapper classes
   * @author Mikko Hilpinen
-  * @since 24.10.2020, v2
+  * @since 24.10.2020, v0.1
   */
 trait ReachComponentWrapper extends ReachComponentLike with StackableWrapper2
 {

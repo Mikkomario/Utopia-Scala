@@ -3,7 +3,7 @@ package utopia.reach.focus
 /**
   * A common trait for components or component managers which track their focus state
   * @author Mikko Hilpinen
-  * @since 9.3.2021, v1
+  * @since 9.3.2021, v0.1
   */
 trait FocusTracking
 {

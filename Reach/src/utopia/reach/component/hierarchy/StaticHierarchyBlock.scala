@@ -5,7 +5,7 @@ import utopia.reach.component.template.ReachComponentLike
 /**
   * A component hierarchy block that doesn't mutate its state. Used with static parent-child component connections
   * @author Mikko Hilpinen
-  * @since 7.10.2020, v2
+  * @since 7.10.2020, v0.1
   */
 class StaticHierarchyBlock(parentComponent: ReachComponentLike) extends ComponentHierarchy
 {

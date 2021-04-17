@@ -21,7 +21,7 @@ import scala.util.{Failure, Success, Try}
 /**
   * An interface used for accessing the Exodus API
   * @author Mikko Hilpinen
-  * @since 20.6.2020, v1
+  * @since 20.6.2020, v0.1
   */
 // Credentials is either basic credentials (left) or a device key (right)
 class ExodusApi(override protected val gateway: Gateway = new Gateway(), override val rootPath: String,

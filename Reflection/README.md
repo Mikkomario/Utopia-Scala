@@ -53,6 +53,8 @@ Automatic container content management
 ## Implementation Hints
 
 ### Extensions you should be aware of
+- utopia.reflection.util.**AwtComponentExtensions**
+  - Adds new utility methods to awt component classes
 - utopia.reflection.shape.**LengthExtensions**
     - Allows you to generate **StackLength** instances simply by writing 4.upscaling, 
       2.downscaling, 8.upTo(10) etc.

@@ -20,7 +20,7 @@ import utopia.reflection.shape.LengthExtensions._
 /**
   * A test case for switches
   * @author Mikko Hilpinen
-  * @since 25.11.2020, v2
+  * @since 25.11.2020, v0.1
   */
 object ReachSwitchTest extends App
 {

@@ -19,7 +19,7 @@ import utopia.reflection.localization.LocalString._
 /**
   * A simple test for text fields
   * @author Mikko Hilpinen
-  * @since 18.11.2020, v2
+  * @since 18.11.2020, v0.1
   */
 object ReachTextFieldTest extends App
 {

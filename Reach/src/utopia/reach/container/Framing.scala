@@ -218,7 +218,7 @@ class ContextualFilledFramingBuilder[N, +F[X <: N] <: ContextualComponentFactory
 /**
   * A reach implementation of the framing trait which places insets or margins around a wrapped component
   * @author Mikko Hilpinen
-  * @since 7.10.2020, v2
+  * @since 7.10.2020, v0.1
   */
 class Framing(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
 			  override val insets: StackInsets, override val customDrawers: Vector[CustomDrawer] = Vector())

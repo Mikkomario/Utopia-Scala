@@ -14,7 +14,7 @@ import utopia.reflection.util.SingleFrameSetup
 /**
   * Tests use of Reach components inside a Reflection component context
   * @author Mikko Hilpinen
-  * @since 29.1.2021, v1
+  * @since 29.1.2021, v0.1
   */
 object ReachWithinReflectionTest extends App
 {

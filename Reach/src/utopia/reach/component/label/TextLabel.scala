@@ -122,7 +122,7 @@ case class ContextualTextLabelFactory[+N <: TextContextLike]
 /**
   * This text label doesn't allow content or styling modifications from outside but presents static text
   * @author Mikko Hilpinen
-  * @since 4.10.2020, v2
+  * @since 4.10.2020, v0.1
   * @param parentHierarchy This component's parent hierarchy
   * @param text Text displayed on this label
   * @param drawContext Styling settings for text drawing and layout

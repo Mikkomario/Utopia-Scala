@@ -16,7 +16,7 @@ import utopia.reflection.util.SingleFrameSetup
 /**
   * Tests view stack component
   * @author Mikko Hilpinen
-  * @since 6.1.2021, v1
+  * @since 6.1.2021, v0.1
   */
 object ViewStackTest extends App
 {

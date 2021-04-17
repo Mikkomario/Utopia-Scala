@@ -38,7 +38,7 @@ object CustomDrawReachComponent
 /**
   * A reach component implementation that applies custom drawers
   * @author Mikko Hilpinen
-  * @since 4.10.2020, v2
+  * @since 4.10.2020, v0.1
   */
 trait CustomDrawReachComponent extends ReachComponent with CustomDrawable2
 {

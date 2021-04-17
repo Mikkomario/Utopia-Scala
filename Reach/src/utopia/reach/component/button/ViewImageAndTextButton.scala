@@ -270,7 +270,7 @@ case class ContextualViewImageAndTextButtonFactory[+N <: ButtonContextLike](fact
 /**
   * A pointer-based button that displays both an image and text
   * @author Mikko Hilpinen
-  * @since 10.11.2020, v2
+  * @since 10.11.2020, v0.1
   */
 class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: ChangingLike[A],
 								imagesPointer: ChangingLike[ButtonImageSet], colorPointer: ChangingLike[ComponentColor],

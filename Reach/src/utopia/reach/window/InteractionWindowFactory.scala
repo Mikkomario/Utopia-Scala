@@ -27,7 +27,7 @@ import scala.util.Try
 /**
   * A common trait for creating dialogs that are used for user-interactions, usually for requesting some sort of input
   * @author Mikko Hilpinen
-  * @since 1.3.2021, v1
+  * @since 1.3.2021, v0.1
   */
 trait InteractionWindowFactory[A]
 {

@@ -265,7 +265,7 @@ case class ContextualFieldFactory[+N <: TextContextLike](factory: FieldFactory, 
 /**
   * Wraps another component in an interactive container that indicates an input field
   * @author Mikko Hilpinen
-  * @since 14.11.2020, v2
+  * @since 14.11.2020, v0.1
   * @tparam C Type of wrapped field
   */
 class Field[C <: ReachComponentLike with Focusable]

@@ -5,7 +5,7 @@ import utopia.flow.util.SelfComparable
 /**
   * An enumeration for different levels of priority used in various contexts
   * @author Mikko Hilpinen
-  * @since 25.11.2020, v2
+  * @since 25.11.2020, v0.1
   */
 sealed trait Priority extends SelfComparable[Priority]
 {

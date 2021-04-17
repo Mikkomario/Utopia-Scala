@@ -6,7 +6,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
   * A common trait for classes that produce component factories. Component factories then wrap a component hierarchy
   * and offer utility constructors for component creation
   * @author Mikko Hilpinen
-  * @since 11.10.2020, v2
+  * @since 11.10.2020, v0.1
   */
 trait ComponentFactoryFactory[+F]
 {

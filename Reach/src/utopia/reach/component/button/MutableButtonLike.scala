@@ -5,7 +5,7 @@ import utopia.reach.component.template.{ButtonLike, MutableFocusable}
 /**
   * A common trait for mutable button implementations
   * @author Mikko Hilpinen
-  * @since 29.10.2020, v2
+  * @since 29.10.2020, v0.1
   */
 trait MutableButtonLike extends ButtonLike with MutableFocusable
 {

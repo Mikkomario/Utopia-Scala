@@ -16,7 +16,7 @@ import scala.collection.immutable.HashMap
 /**
   * This object manages focus traversal inside a reach canvas
   * @author Mikko Hilpinen
-  * @since 21.10.2020, v2
+  * @since 21.10.2020, v0.1
   */
 class ReachFocusManager(canvasComponent: java.awt.Component)
 {

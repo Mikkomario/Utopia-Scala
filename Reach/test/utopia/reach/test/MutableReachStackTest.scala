@@ -16,7 +16,7 @@ import utopia.reflection.shape.LengthExtensions._
 /**
   * Tests mutable Reach stack implementation and the new version of container content displayer
   * @author Mikko Hilpinen
-  * @since 21.10.2020, v2
+  * @since 21.10.2020, v0.1
   */
 object MutableReachStackTest extends App
 {

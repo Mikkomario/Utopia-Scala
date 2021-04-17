@@ -1,36 +1,36 @@
 # Utopia Vault - List of Changes
 
-## v1.7 (beta)
+## v1.7 - 17.4.2021
 ### Breaking Changes
-- ModelAccess now requires three type parameters instead of two, to support value accessing
-- ManyIdAccess no longer provides implicit access to .all - this may be readded later, however
-- Changed IndexedAccess to Indexed since the generic type parameter made it cumbersome to use this trait
+- **ModelAccess** now requires three type parameters instead of two, to support value accessing
+- **ManyIdAccess** no longer provides implicit access to `.all` - this may be re-added later, however
+- Changed **IndexedAccess** to **Indexed** since the generic type parameter made it cumbersome to use this trait
 ### Deprecations
-- UniqueAccess was deprecated. UniqueModelAccess and UniqueIdAccess are now favored.
+- Deprecated **UniqueAccess**. **UniqueModelAccess** and **UniqueIdAccess** are now favored.
 ### New Features
-- Added easier value access methods to Model
-- Added DistinctModelAccess and UniqueModelAccess utility traits, 
+- Added easier value access methods to **ModelAccess**
+- Added **DistinctModelAccess** and **UniqueModelAccess** utility traits, 
   which allow read and write access to a distinct set of models / values
 ### New Methods
-- Connection
-  - .createDatabase(...)
-- ModelAccess
-  - .delete(), which deletes all accessible rows in the primary table
-- SingleIdAccess
-  - .min and .max
-- SingleModelAccess
-  - findColumn(...) & findAttribute(...)
-- Update
-  - .columns(...)
-  - .apply(SqlTarget, Column, Value) which updates the value of an individual column
+- **Connection**
+  - `.createDatabase(...)`
+- **ModelAccess**
+  - `.delete()`, which deletes all accessible rows in the primary table
+- **SingleIdAccess**
+  - `.min` and `.max`
+- **SingleModelAccess**
+  - `.findColumn(...)` and `.findAttribute(...)`
+- **Update**.type
+  - `.columns(...)`
+  - `.apply(SqlTarget, Column, Value)` which updates the value of an individual column
 ### Fixes
 - Zero row inserts are ignored and now return an empty result without interacting with the database
 ### Other Changes
-- Connection.dropDatabase(...) now accepts a boolean parameter checkIfExists (true by default)
-- .apply(...) in Insert, which accepted multiple models, now accepts Seq instead of just Vector
-- .in(...) in ConditionElement now transforms the condition into FALSE or equals condition when 
+- `Connection.dropDatabase(...)` now accepts a parameter `checkIfExists: Boolean` (true by default)
+- `.apply(...)` in **Insert**, which accepted multiple models, now accepts **Seq** instead of just **Vector**
+- `.in(...)` in **ConditionElement** now transforms the condition into *FALSE* or equals condition when 
   there are 0 or 1 items in the set.
-  - However, the method now requires Iterable instead of IterableOnce
+  - However, the method now requires **Iterable** instead of **IterableOnce**
 
 ## v1.6
 ### Scala

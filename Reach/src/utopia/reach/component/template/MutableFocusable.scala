@@ -5,7 +5,7 @@ import utopia.reach.focus.{FocusChangeListener, FocusListener}
 /**
   * A mutable variation of the focusable trait
   * @author Mikko Hilpinen
-  * @since 25.10.2020, v2
+  * @since 25.10.2020, v0.1
   */
 trait MutableFocusable extends Focusable
 {

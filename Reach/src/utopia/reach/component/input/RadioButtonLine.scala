@@ -22,7 +22,7 @@ import utopia.reflection.localization.LocalizedString
 /**
  * Used for constructing radio buttons with labels
  * @author Mikko Hilpinen
- * @since 30.1.2021, v1
+ * @since 30.1.2021, v0.1
  */
 object RadioButtonLine extends ContextInsertableComponentFactoryFactory[TextContextLike, RadioButtonLineFactory,
 	ContextualRadioButtonLineFactory]

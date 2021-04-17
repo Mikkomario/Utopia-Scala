@@ -1,5 +1,5 @@
 # Utopia Nexus - List of Changes
-## v1.5.1 (beta)
+## v1.5.1 - 17.4.2021
 ### New Features
 - Added **ResourceWithChildren** and **LeafResource** traits to make Rest resource 
   implementation easier

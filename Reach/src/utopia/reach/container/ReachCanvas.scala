@@ -70,7 +70,7 @@ object ReachCanvas
 /**
   * The component that connects a reach component hierarchy to the swing component hierarchy
   * @author Mikko Hilpinen
-  * @since 4.10.2020, v1
+  * @since 4.10.2020, v0.1
   */
 // TODO: Stack hierarchy attachment link should be considered broken while this component is invisible or otherwise not shown
 class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Option[CursorSet],

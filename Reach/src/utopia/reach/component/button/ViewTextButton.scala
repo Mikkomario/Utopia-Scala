@@ -227,7 +227,7 @@ case class ContextualViewTextButtonFactory[+N <: TextContextLike](factory: ViewT
 /**
   * A button that matches the states of various pointers (not offering any mutable interface itself)
   * @author Mikko Hilpinen
-  * @since 26.10.2020, v2
+  * @since 26.10.2020, v0.1
   */
 class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: ChangingLike[A], font: Font,
 						colorPointer: ChangingLike[ComponentColor],

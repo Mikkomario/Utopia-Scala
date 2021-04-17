@@ -5,7 +5,7 @@ import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.C
 /**
   * A contextual container factory which in practice is only used for contextual builder creation
   * @author Mikko Hilpinen
-  * @since 16.12.2020, v2
+  * @since 16.12.2020, v0.1
   * @tparam N Type of context being used
   * @tparam CF Type of container factory being wrapped
   * @tparam B Type of builder produced

@@ -7,7 +7,7 @@ import utopia.genesis.shape.shape1D.Direction1D.Positive
 /**
   * A component manager which tracks multiple focusable components
   * @author Mikko Hilpinen
-  * @since 9.3.2021, v1
+  * @since 9.3.2021, v0.1
   */
 trait ManyFocusableWrapper extends FocusRequestable with FocusTracking
 {

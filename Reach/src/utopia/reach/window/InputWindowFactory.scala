@@ -30,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Promise}
 /**
   * Used for creating new windows which contain input fields
   * @author Mikko Hilpinen
-  * @since 1.3.2021, v1
+  * @since 1.3.2021, v0.1
   * @tparam A Type of result returned by the generated windows
   * @tparam N Type of additional context used by this factory
   */

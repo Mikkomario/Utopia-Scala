@@ -108,7 +108,7 @@ case class ContextualSelectionListFactory[+N <: ColorContextLike](factory: Selec
 /**
   * A stack-based list which displays a set of selectable items and manages selection
   * @author Mikko Hilpinen
-  * @since 19.12.2020, v2
+  * @since 19.12.2020, v0.1
   */
 class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: ChangingLike[Vector[A]]]
 (parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: Viewable[ComponentColor],

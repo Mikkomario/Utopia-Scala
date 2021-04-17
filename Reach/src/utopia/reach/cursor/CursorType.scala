@@ -3,7 +3,7 @@ package utopia.reach.cursor
 /**
   * A common trait for various cursor roles
   * @author Mikko Hilpinen
-  * @since 11.11.2020, v2
+  * @since 11.11.2020, v0.1
   */
 trait CursorType
 {

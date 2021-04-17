@@ -25,7 +25,7 @@ import scala.util.{Failure, Success}
 /**
   * Used for accessing currently pending invitations
   * @author Mikko Hilpinen
-  * @since 12.7.2020, v1
+  * @since 12.7.2020, v0.1
   * @param queueSystem An authorized queue system used when making queries to server
   * @param maxResponseWait Maximum time to wait for pending requests before discarding the request (default = 10 seconds)
   * @param isSameUser Whether the current user is the same as the previously logged user (default = true)

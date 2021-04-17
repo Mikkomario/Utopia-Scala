@@ -90,7 +90,7 @@ object ComponentCreationResult
 /**
   * An object for wrapping a created component and an optional result
   * @author Mikko Hilpinen
-  * @since 7.10.2020, v2
+  * @since 7.10.2020, v0.1
   */
 class ComponentCreationResult[+C, +R](val component: C, val result: R)
 {

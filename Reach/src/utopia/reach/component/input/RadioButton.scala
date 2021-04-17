@@ -113,7 +113,7 @@ case class ContextualRadioButtonFactory[+N <: ColorContextLike](factory: RadioBu
 /**
  * Used for selecting a single item from a list of items
  * @author Mikko Hilpinen
- * @since 30.1.2021, v1
+ * @since 30.1.2021, v0.1
  */
 class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedValuePointer: PointerWithEvents[A],
 					 representing: A, backgroundColorPointer: ChangingLike[ComponentColor],

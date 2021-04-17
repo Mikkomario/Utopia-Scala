@@ -10,7 +10,7 @@ import utopia.reach.focus.FocusTracking
 /**
  * A common trait for focusable items which keep track of their focus state
  * @author Mikko Hilpinen
- * @since 31.1.2021, v1
+ * @since 31.1.2021, v0.1
  */
 trait FocusableWithState extends Focusable with FocusTracking
 {
