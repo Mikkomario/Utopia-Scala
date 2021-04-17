@@ -1,6 +1,9 @@
 # Utopia Reflection - List of Changes
 ## v2.0-alpha (incomplete update) - 17.4.2021
-v2.0 update is still in development, but the module is completely usable.
+v2.0 update is still in development, but the module is completely usable.  
+
+This release prepares for the introduction of the new **Reach** module which takes elements of 
+**Reflection** even further.
 ### Breaking Changes
 - **Area** now leaves `.bounds` implementation up to subclasses
 - **CustomDrawer** class naming updated

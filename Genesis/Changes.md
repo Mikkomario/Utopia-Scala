@@ -1,5 +1,8 @@
 # Utopia Reflection - List of Changes
 ## v2.4 - 17.4.2021
+With the introduction of the new **Reach** module, multiple additions and changes were necessary in 
+**Genesis** as well. These include a wide range of practical and useful updates, 
+although many of them also require you to update your code.
 ### Breaking Changes
 - **MouseEventGenerator** and **CanvasMouseEventGenerator** no longer accept listeners as parameters. 
   Instead, they now create new mutable mouse event handlers.

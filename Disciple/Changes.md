@@ -1,6 +1,8 @@
 # Utopia Disciple - List of Changes
 
 ## v1.4 - 17.4.2021
+This update makes the **Gateway** interface more reliable and easier to use when you're dealing with 
+multiple different interfaces. It will, however, require you to make small changes to your code.
 ### Breaking Changes
 - **Gateway** is now multi-instance (class) instead of single instance (object).
     - **Gateway** settings (number of connections, time out, json parsing etc.) are now specified at instance 

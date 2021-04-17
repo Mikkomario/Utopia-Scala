@@ -1,6 +1,7 @@
 # Utopia Vault - List of Changes
 
 ## v1.7 - 17.4.2021
+This update focuses on the **Access** classes as well as database creation / management.
 ### Breaking Changes
 - **ModelAccess** now requires three type parameters instead of two, to support value accessing
 - **ManyIdAccess** no longer provides implicit access to `.all` - this may be re-added later, however

@@ -1,6 +1,8 @@
 # Utopia Access - List of Changes
 
 ## v1.3 - 17.4.2021
+This relatively small update changes how the **Status** enumeration works. 
+This fixes a run-time issue but requires changes in the implementing code, also.
 ### Breaking Changes
 - `Status.setup()` must be called before using `Status.values`
 ### New Features

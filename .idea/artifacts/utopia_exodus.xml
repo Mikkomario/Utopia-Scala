@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="utopia-exodus">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_exodus</output-path>
+    <root id="archive" name="utopia-exodus.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/Exodus/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="Exodus" />
+      <element id="module-source" name="Exodus" />
+    </root>
+  </artifact>
+</component>

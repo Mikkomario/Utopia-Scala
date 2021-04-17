@@ -1,6 +1,8 @@
 # Utopia Flow - List of Changes
 
 ## v1.9 - 17.4.2021
+In this update Flow got a number of new utility updates, including a range of new classes. 
+Various extensions also were expanded to contain a wider range of utility methods.
 ### Breaking Changes
 - Moved time-related classes / objects from utopia.flow.util to utopia.flow.time 
 - Changed `.setIfEmpty` method variations in **VolatileOption** to accept a *call by name* parameter 
