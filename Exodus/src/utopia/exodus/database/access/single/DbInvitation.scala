@@ -8,7 +8,7 @@ import utopia.metropolis.model.partial.organization.InvitationResponseData
 import utopia.metropolis.model.post.NewInvitationResponse
 import utopia.metropolis.model.stored.organization.{Invitation, InvitationResponse}
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.{SingleIdModelAccess, SingleModelAccess, UniqueAccess}
+import utopia.vault.nosql.access.{SingleIdModelAccess, SingleModelAccess, UniqueModelAccess}
 
 /**
   * Used for accessing individual invitations
@@ -54,8 +54,7 @@ object DbInvitation extends SingleModelAccess[Invitation]
 		
 		// NESTED	---------------------------
 		
-		object ResponseAccess extends SingleModelAccess[InvitationResponse]
-			with UniqueAccess[InvitationResponse]
+		object ResponseAccess extends UniqueModelAccess[InvitationResponse]
 		{
 			// IMPLEMENTED	-------------------
 			

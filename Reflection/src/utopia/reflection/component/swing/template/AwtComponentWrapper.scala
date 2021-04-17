@@ -3,9 +3,7 @@ package utopia.reflection.component.swing.template
 import java.awt.Component
 import java.awt.event.MouseEvent
 
-import javax.swing.SwingUtilities
-import utopia.flow.async.VolatileFlag
-import utopia.flow.datastructure.mutable.Lazy
+import utopia.flow.datastructure.mutable.MutableLazy
 import utopia.flow.util.NullSafe._
 import utopia.genesis.color.Color
 import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus}
@@ -14,8 +12,8 @@ import utopia.genesis.shape.shape2D.{Point, Size}
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf, Stackable}
 import utopia.reflection.event.{ResizeEvent, ResizeListener}
-import utopia.reflection.shape.StackSize
-import utopia.reflection.util.ComponentToImage
+import utopia.reflection.shape.stack.StackSize
+import utopia.reflection.util.{AwtEventThread, ComponentToImage}
 
 object AwtComponentWrapper
 {
@@ -36,10 +34,8 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     // ATTRIBUTES    ----------------------
     
     // Temporarily cached position and size
-    private val cachedPosition = new Lazy(() => Point(component.getX, component.getY))
-    private val cachedSize = new Lazy(() => Size(component.getWidth, component.getHeight))
-    
-    private val updateDisabled = new VolatileFlag()
+    private val cachedPosition = MutableLazy { Point(component.getX, component.getY) }
+    private val cachedSize = MutableLazy { Size(component.getWidth, component.getHeight) }
     
     // Handlers for distributing events
     override val mouseButtonHandler = MouseButtonStateHandler()
@@ -77,26 +73,26 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     /**
       * @return This component's current position
       */
-    override def position = cachedPosition.get
+    override def position = cachedPosition.value
     override def position_=(p: Point) =
     {
-        cachedPosition.set(p)
+        cachedPosition.value = p
         updateBounds()
     }
     
     /**
       * @return This component's current size
       */
-    override def size = cachedSize.get
+    override def size = cachedSize.value
     override def size_=(s: Size) =
     {
         // Informs resize listeners, if there are any
         if (resizeListeners.isEmpty)
-            cachedSize.set(s)
+            cachedSize.value = s
         else
         {
             val oldSize = size
-            cachedSize.set(s)
+            cachedSize.value = s
             
             if (oldSize !~== s)
             {
@@ -117,15 +113,14 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     /**
       * @return Whether this component is currently visible
       */
-    override def isVisible = component.isVisible
-    override def isVisible_=(isVisible: Boolean) = component.setVisible(isVisible)
+    override def visible = component.isVisible
+    override def visible_=(isVisible: Boolean) = AwtEventThread.async { component.setVisible(isVisible) }
     
     /**
       * @return The background color of this component
       */
     override def background: Color = component.getBackground
-    override def background_=(color: Color) =
-    {
+    override def background_=(color: Color) = AwtEventThread.async {
         // Since swing components don't handle transparency very well, mixes a transparent color with background instead
         if (color.isTransparent)
         {
@@ -173,26 +168,8 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
       * naturally consumes awt mouse button events and when you wish to share those events with the mouse event
       * handling system in Reflection.
       */
-    def enableAwtMouseButtonEventConversion() = component.addMouseListener(new AwtMouseEventImporter)
-    
-    /**
-      * Performs a (longer) operation on the GUI thread and updates the component size & position only after the update
-      * has been done
-      * @param operation The operation that will be run
-      * @tparam U Arbitary result type
-      */
-    def doThenUpdate[U](operation: => U) =
-    {
-        SwingUtilities.invokeLater(() =>
-        {
-            // Disables update during operation
-            updateDisabled.set()
-            operation
-            
-            // Enables updates and performs them
-            updateDisabled.reset()
-            updateBounds()
-        })
+    def enableAwtMouseButtonEventConversion() = AwtEventThread.async {
+        component.addMouseListener(new AwtMouseEventImporter)
     }
     
     /**
@@ -206,16 +183,10 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
      */
     def withStackSize(size: StackSize): AwtComponentWrapperWrapper with Stackable = withStackSize(() => size)
     
-    private def updateBounds(): Unit =
-    {
-        updateDisabled.doIfNotSet
-        {
-            // Updates own position and size
-            cachedPosition.current.foreach
-            { p => component.setLocation(p.toAwtPoint) }
-            cachedSize.current.foreach
-            { s => component.setSize(s.toDimension) }
-        }
+    private def updateBounds(): Unit = AwtEventThread.async {
+        // Updates own position and size
+        cachedPosition.current.foreach { p => component.setLocation(p.toAwtPoint) }
+        cachedSize.current.foreach { s => component.setSize(s.toDimension) }
     }
     
     
@@ -258,7 +229,8 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
         {
             currentButtonStatus += (e.getButton, newStatus)
             val eventPosition = positionOfEvent(e)
-            val event = MouseButtonStateEvent(e.getButton, isDown = newStatus, eventPosition, currentButtonStatus)
+            val event = MouseButtonStateEvent(e.getButton, isDown = newStatus, eventPosition,
+                absolutePosition + eventPosition, currentButtonStatus)
             distributeMouseButtonEvent(event)
         }
         
@@ -275,9 +247,9 @@ private class AwtComponentWrapperWrapperWithStackable(override val wrapped: AwtC
     
     override def calculatedStackSize = getSize()
     
-    override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].isVisible_=(visible)
+    override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].visible_=(visible)
     
-    override def isVisible_=(isVisible: Boolean) = super[CachingStackable].isVisible_=(isVisible)
+    override def visible_=(isVisible: Boolean) = super[CachingStackable].visible_=(isVisible)
     
     override def updateLayout() = update()
 }

@@ -1,7 +1,6 @@
 package utopia.flow.datastructure.immutable
 
 import utopia.flow.datastructure.template.Property
-import utopia.flow.util.Equatable
 import utopia.flow.datastructure.mutable.Variable
 
 /**
@@ -13,7 +12,7 @@ case class Constant(name: String, value: Value) extends Property
 {
     // COMP. PROPERTIES    ---------
     
-    override def dataType = value.dataType
+    override val dataType = value.dataType
     
     
     // COMPUTED    -----------------
@@ -37,4 +36,10 @@ case class Constant(name: String, value: Value) extends Property
       * @return A copy of this constant with provided name
       */
     def withName(name: String) = copy(name = name)
+    
+    /**
+      * @param f A mapping function for this constant's name
+      * @return A copy of this constant with a mapped name
+      */
+    def mapName(f: String => String) = copy(name = f(name))
 }

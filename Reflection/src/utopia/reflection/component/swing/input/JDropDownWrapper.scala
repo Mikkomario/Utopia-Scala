@@ -17,8 +17,10 @@ import utopia.reflection.component.template.Focusable
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape.{Border, StackInsets, StackLength, StackSize}
+import utopia.reflection.shape.Border
+import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.Font
+import utopia.reflection.util.AwtEventThread
 
 object JDropDownWrapper
 {
@@ -70,7 +72,7 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 {
 	// ATTRIBUTES	-------------------
 	
-	private val field = new JComboBox[String]()
+	private val field = AwtEventThread.blocking { new JComboBox[String]() }
 	private var _displayValues = Vector[LocalizedString]()
 	private var isShowingSelectOption = true
 	private var isUpdatingSelection = false // Consider using a thread-safe solution
@@ -139,7 +141,7 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 	
 	// IMPLEMENTED	-------------------
 	
-	override protected def updateVisibility(visible: Boolean) = super[JWrapper].isVisible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[JWrapper].visible_=(visible)
 	
 	override def component = field
 	

@@ -1,6 +1,6 @@
 package utopia.genesis.animation.animator
 
-import utopia.flow.async.VolatileLazy
+import utopia.flow.async.ResettableVolatileLazy
 import utopia.genesis.handling.mutable.{Actor, Drawable}
 import utopia.genesis.util.Drawer
 
@@ -26,7 +26,7 @@ trait Animator[A] extends Actor with Drawable
 	  */
 	var allowsRepeat = true
 	private var _progress: Duration = Duration.Zero
-	private lazy val cached = VolatileLazy { apply(_progress / animationDuration) }
+	private lazy val cached = ResettableVolatileLazy { apply(_progress / animationDuration) }
 	
 	
 	// ABSTRACT	-----------------------
@@ -69,7 +69,7 @@ trait Animator[A] extends Actor with Drawable
 	/**
 	  * @return Currently displayed item
 	  */
-	def current = cached.get
+	def current = cached.value
 	
 	
 	// IMPLEMENTED	--------------------
@@ -100,7 +100,7 @@ trait Animator[A] extends Actor with Drawable
 		}
 	}
 	
-	override def draw(drawer: Drawer): Unit = draw(drawer, cached.get)
+	override def draw(drawer: Drawer): Unit = draw(drawer, cached.value)
 	
 	
 	// OTHER	----------------------

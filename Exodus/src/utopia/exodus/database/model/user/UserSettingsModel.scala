@@ -1,10 +1,10 @@
 package utopia.exodus.database.model.user
 
 import java.time.Instant
-
 import utopia.exodus.database.Tables
 import utopia.exodus.database.factory.user.UserSettingsFactory
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.stored.user.UserSettings
 import utopia.vault.database.Connection
@@ -28,9 +28,14 @@ object UserSettingsModel
 	def table = Tables.userSettings
 	
 	/**
+	  * @return Column that contains user id information
+	  */
+	def userIdColumn = table(userIdAttName)
+	
+	/**
 	  * @return A model that has just been marked as deprecated
 	  */
-	def nowDeprecated = apply(deprecatedAfter = Some(Instant.now()))
+	def nowDeprecated = apply(deprecatedAfter = Some(Now))
 	
 	
 	// OTHER	--------------------------------------

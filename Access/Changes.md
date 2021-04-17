@@ -1,5 +1,13 @@
 # Utopia Access - List of Changes
 
+## v1.3 - 17.4.2021
+### Breaking Changes
+- `Status.setup()` must be called before using `Status.values`
+### New Features
+- `Status.values` can now be expanded by calling `Status.introduce(...)` first
+### Other Changes
+- **ContentTypeException** class added
+
 ## v1.2.1
 ### Scala
 - Module is now based on Scala v2.13.3

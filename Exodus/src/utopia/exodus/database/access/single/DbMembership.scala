@@ -1,11 +1,10 @@
 package utopia.exodus.database.access.single
 
 import utopia.exodus.database.Tables
-import utopia.exodus.database.access.id.TaskIds
+import utopia.exodus.database.access.id.DbTaskIds
 import utopia.exodus.database.factory.organization.{MembershipFactory, RoleRightFactory}
 import utopia.exodus.database.model.organization.{MemberRoleModel, MembershipModel, RoleRightModel}
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.enumeration.{TaskType, UserRole}
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.{SingleIdModelAccess, SingleModelAccess}
@@ -61,33 +60,10 @@ object DbMembership extends SingleModelAccess[Membership]
 		
 		/**
 		  * @param connection DB Connection (implicit)
-		  * @return Roles assigned to this user in this membership
-		  */
-		@deprecated("Please use .roleIds instead", "v1")
-		def roles(implicit connection: Connection) =
-		{
-			connection(Select.index(memberRoleFactory.table) + Where(rolesCondition)).rowIntValues.flatMap { roleId =>
-				UserRole.forId(roleId).toOption }
-		}
-		
-		/**
-		  * @param connection DB Connection (implicit)
 		  * @return Ids of the roles assigned to this user in this membership
 		  */
 		def roleIds(implicit connection: Connection) =
 			connection(Select.index(memberRoleFactory.table) + Where(rolesCondition)).rowIntValues
-		
-		/**
-		  * @param connection DB Connection (implicit)
-		  * @return All tasks that are allowed through this membership
-		  */
-		@deprecated("Please use .allowedTaskIds instead", "v1")
-		def allowedActions(implicit connection: Connection) =
-		{
-			// Joins in the tasks link table and selects unique task ids
-			connection(SelectDistinct(rightsTarget, rightsModel.taskIdColumn) + Where(rolesCondition)).rowIntValues
-				.flatMap { taskId => TaskType.forId(taskId).toOption }
-		}
 		
 		/**
 		  * @param connection DB Connection (implicit)
@@ -104,16 +80,6 @@ object DbMembership extends SingleModelAccess[Membership]
 		
 		
 		// OTHER	---------------------------
-		
-		/**
-		  * Checks whether this user has the specified role as a part of this membership
-		  * @param role Checked role
-		  * @param connection DB Connection (implicit)
-		  * @return Whether this membership is associated with specified role
-		  */
-		@deprecated("Please use .hasRoleWithId(Int) instead", "v1")
-		def hasRole(role: UserRole)(implicit connection: Connection) =
-			Exists(memberRoleFactory.table, rolesCondition && memberRoleFactory.withRole(role).toCondition)
 		
 		/**
 		  * Checks whether this user has the specified role as a part of this membership
@@ -135,18 +101,6 @@ object DbMembership extends SingleModelAccess[Membership]
 			newRoleIds.foreach { roleId => memberRoleFactory.insert(membershipId, roleId, creatorId) }
 		
 		/**
-		  * @param rolesToRemove Roles that should be removed from this membership
-		  * @param connection DB Connection (implicit)
-		  * @return Number of roles that were removed
-		  */
-		@deprecated("Please use .removeRolesWithIds(...) instead", "v1")
-		def removeRoles(rolesToRemove: Set[UserRole])(implicit connection: Connection) =
-		{
-			memberRoleFactory.nowDeprecated.updateWhere(rolesCondition &&
-				memberRoleFactory.roleIdColumn.in(rolesToRemove.map { _.id }))
-		}
-		
-		/**
 		  * @param roleIdsToRemove Ids of the roles that should be removed from this membership
 		  * @param connection DB Connection (implicit)
 		  * @return Number of roles that were removed
@@ -155,18 +109,6 @@ object DbMembership extends SingleModelAccess[Membership]
 		{
 			memberRoleFactory.nowDeprecated.updateWhere(rolesCondition &&
 				memberRoleFactory.roleIdColumn.in(roleIdsToRemove))
-		}
-		
-		/**
-		  * Checks whether this membership allows the specified action
-		  * @param action Action the user would like to perform
-		  * @param connection DB Connection (implicit)
-		  * @return Whether the user/member is allowed to perform the specified task in this organization/membership
-		  */
-		@deprecated("Please use .allowsTaskWithId(Int) instead", "v1")
-		def allows(action: TaskType)(implicit connection: Connection) =
-		{
-			Exists(rightsTarget, rolesCondition && rightsModel.withTask(action).toCondition)
 		}
 		
 		/**
@@ -181,17 +123,6 @@ object DbMembership extends SingleModelAccess[Membership]
 		/**
 		  * Checks whether this organization member can promote another user to specified role. This member needs to
 		  * have all the rights the targeted role would have
-		  * @param targetRole A role a user is being promoted to
-		  * @param connection DB Connection (implicit)
-		  * @return Whether this member has the authorization to promote a user to that role
-		  */
-		@deprecated("Please use .canPromoteToRoleWithId(Int) instead")
-		def canPromoteTo(targetRole: UserRole)(implicit connection: Connection) =
-			canPromoteToRoleWithId(targetRole.id)
-		
-		/**
-		  * Checks whether this organization member can promote another user to specified role. This member needs to
-		  * have all the rights the targeted role would have
 		  * @param targetRoleId Id of the role a user is being promoted to
 		  * @param connection DB Connection (implicit)
 		  * @return Whether this member has the authorization to promote a user to that role
@@ -200,7 +131,7 @@ object DbMembership extends SingleModelAccess[Membership]
 		{
 			// Uses multiple requests since the join logic is rather complex
 			val myTasks = allowedTaskIds.toSet
-			val requiredTasks = TaskIds.forRoleWithId(targetRoleId).toSet
+			val requiredTasks = DbTaskIds.forRoleWithId(targetRoleId).toSet
 			requiredTasks.forall(myTasks.contains)
 		}
 		

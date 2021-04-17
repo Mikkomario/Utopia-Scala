@@ -1,16 +1,35 @@
 package utopia.genesis.handling
 
+import scala.language.implicitConversions
+
 import utopia.genesis.event.KeyTypedEvent
 import utopia.inception.handling.Handleable
 
 object KeyTypedListener
 {
+    // IMPLICIT -----------------------------
+    
+    // Automatically converts a function to a listener
+    implicit def functionToListener(function: KeyTypedEvent => Unit): KeyTypedListener = apply(function)
+    
+    
+    // OTHER    -----------------------------
+    
     /**
       * Creates a simple key typed listener that calls specified function each time an event is received
       * @param f a function that will be called
       * @return A new key typed listener
       */
     def apply(f: KeyTypedEvent => Unit): KeyTypedListener = new FunctionalKeyTypedListener(f)
+    
+    
+    // NESTED   -----------------------------
+    
+    private class FunctionalKeyTypedListener(f: KeyTypedEvent => Unit) extends KeyTypedListener
+        with utopia.inception.handling.immutable.Handleable
+    {
+        override def onKeyTyped(event: KeyTypedEvent) = f(event)
+    }
 }
 
 /**
@@ -30,10 +49,4 @@ trait KeyTypedListener extends Handleable
       * @return Whether this instance is receiving key typed events
       */
     def isReceivingKeyTypedEvents = allowsHandlingFrom(KeyTypedHandlerType)
-}
-
-private class FunctionalKeyTypedListener(f: KeyTypedEvent => Unit) extends KeyTypedListener
-    with utopia.inception.handling.immutable.Handleable
-{
-    override def onKeyTyped(event: KeyTypedEvent) = f(event)
 }

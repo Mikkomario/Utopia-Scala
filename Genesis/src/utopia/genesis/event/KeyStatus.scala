@@ -63,6 +63,16 @@ case class KeyStatus private(private val status: Map[Int, Set[KeyLocation]])
      */
     def space = apply(KeyEvent.VK_SPACE)
     
+    /**
+      * @return Whether a control key is down
+      */
+    def control = apply(KeyEvent.VK_CONTROL)
+    
+    /**
+      * @return Whether a shift key is down
+      */
+    def shift = apply(KeyEvent.VK_SHIFT)
+    
     
     // OPERATORS    -----------------
     

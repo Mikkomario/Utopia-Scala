@@ -1,13 +1,13 @@
 package utopia.vault.database
 
 import java.time.Instant
-
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.{Breakable, NewThreadExecutionContext, Volatile, VolatileFlag}
 import utopia.flow.collection.VolatileList
-import utopia.flow.util.WaitUtils
+import utopia.flow.time.{Now, WaitUtils}
+import utopia.flow.util.RichComparable._
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.duration.Duration
@@ -131,7 +131,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 				{
 					Future
 					{
-						var nextWait: Option[Instant] = Some(Instant.now() + connectionKeepAlive)
+						var nextWait: Option[Instant] = Some(Now + connectionKeepAlive)
 						
 						// Closes connections as long as they are queued to be closed
 						while (nextWait.isDefined)
@@ -179,7 +179,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 		
 		def lastLeaveTime = _lastLeaveTime
 		
-		def currentClientCount = clientCount.get
+		def currentClientCount = clientCount.value
 		
 		def isInUse = currentClientCount > 0
 		
@@ -218,7 +218,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 		
 		def leave()(implicit context: ExecutionContext) =
 		{
-			_lastLeaveTime = Instant.now()
+			_lastLeaveTime = Now
 			clientCount.update
 			{
 				currentCount =>

@@ -1,7 +1,7 @@
 package utopia.reflection.component.template.text
 
 import utopia.reflection.component.template.layout.stack.StackSizeCalculating
-import utopia.reflection.shape.{StackLength, StackSize}
+import utopia.reflection.shape.stack.{StackLength, StackSize}
 
 /**
   * This is a commom trait for components that present text on a single line

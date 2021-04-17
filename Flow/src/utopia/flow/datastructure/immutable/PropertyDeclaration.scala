@@ -64,6 +64,12 @@ trait PropertyDeclaration extends Equals
     def defaultValue: Option[Value]
     
     
+    // IMPLEMENTED  ------------------
+    
+    override def toString = s"$name ($dataType)${
+        defaultValue.map { v => s" (default: ${v.description})" }.getOrElse("")}"
+    
+    
     // COMPUTED ----------------------
     
     /**

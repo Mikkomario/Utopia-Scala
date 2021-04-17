@@ -26,8 +26,8 @@ trait ComponentWrapper extends ComponentLike
 	
 	override def parent = wrapped.parent
 	
-	override def isVisible = wrapped.isVisible
-	override def isVisible_=(isVisible: Boolean) = wrapped.isVisible = isVisible
+	override def visible = wrapped.visible
+	override def visible_=(isVisible: Boolean) = wrapped.visible = isVisible
 	
 	override def background = wrapped.background
 	override def background_=(color: Color) = wrapped.background = color

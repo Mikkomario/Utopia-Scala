@@ -8,7 +8,8 @@ import utopia.reflection.component.template.layout.stack.{CachingStackable, Stac
 import utopia.reflection.container.stack.template.SingleStackContainer
 import utopia.reflection.container.template.Container
 import utopia.reflection.shape.Alignment.Center
-import utopia.reflection.shape.{Alignment, StackSize}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.StackSize
 
 /**
   * Contains a single item, which is aligned to a single side or corner, or the center
@@ -36,7 +37,7 @@ trait AlignFrameLike[C <: Stackable] extends SingleStackContainer[C] with Compon
 	
 	override protected def wrapped = container
 	
-	override protected def updateVisibility(visible: Boolean) = super[CachingStackable].isVisible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[CachingStackable].visible_=(visible)
 	
 	override def components = container.components
 	
@@ -57,7 +58,7 @@ trait AlignFrameLike[C <: Stackable] extends SingleStackContainer[C] with Compon
 				axis -> (align.directionAlong(axis) match
 				{
 					case Some(dir) =>
-						dir.sign match
+						dir match
 						{
 							case Positive => myLength - targetLength
 							case Negative => 0

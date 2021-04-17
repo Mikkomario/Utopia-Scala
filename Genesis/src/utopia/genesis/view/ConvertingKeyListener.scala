@@ -12,11 +12,14 @@ import utopia.genesis.handling.{KeyStateListener, KeyTypedListener}
   * @author Mikko Hilpinen
   * @since 6.4.2019
   */
-class ConvertingKeyListener(val keyStateHandler: KeyStateListener, val keyTypedHandler: KeyTypedListener) extends KeyListener
+@deprecated("Replaced with GlobalKeyboardEventHandler", "v2.4")
+class ConvertingKeyListener(val keyStateHandler: KeyStateListener, val keyTypedHandler: KeyTypedListener)
+	extends KeyListener
 {
 	// ATTRIBUTES	------------------
 	
 	private var _keyStatus = KeyStatus.empty
+	private var lastPressedKeyIndex = 0
 	
 	/**
 	  * @return The current key status in this listener
@@ -41,11 +44,16 @@ class ConvertingKeyListener(val keyStateHandler: KeyStateListener, val keyTypedH
 	
 	// IMPLEMENTED METHODS    --------
 	
-	override def keyPressed(e: KeyEvent) = keyStateChanged(e, newState = true)
+	override def keyPressed(e: KeyEvent) =
+	{
+		lastPressedKeyIndex = e.getExtendedKeyCode
+		keyStateChanged(e, newState = true)
+	}
 	
 	override def keyReleased(e: KeyEvent) = keyStateChanged(e, newState = false)
 	
-	override def keyTyped(e: KeyEvent) = keyTypedHandler.onKeyTyped(KeyTypedEvent(e.getKeyChar, _keyStatus))
+	override def keyTyped(e: KeyEvent) =
+		keyTypedHandler.onKeyTyped(KeyTypedEvent(e.getKeyChar, lastPressedKeyIndex, _keyStatus))
 	
 	
 	// OTHER METHODS    --------------

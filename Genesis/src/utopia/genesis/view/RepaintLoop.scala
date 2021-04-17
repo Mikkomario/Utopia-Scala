@@ -1,13 +1,13 @@
 package utopia.genesis.view
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
+
 import java.awt.Component
 import java.time.Instant
-
 import javax.swing.SwingUtilities
 import utopia.flow.async.Loop
-import utopia.flow.util.WaitTarget.Until
-import utopia.flow.util.WaitUtils
+import utopia.flow.time.{Now, WaitUtils}
+import utopia.flow.time.WaitTarget.Until
 import utopia.genesis.util.Fps
 
 import scala.ref.WeakReference
@@ -45,7 +45,7 @@ class RepaintLoop(comp: Component, val maxFPS: Fps = Fps.default) extends Loop
 			WaitUtils.wait(maxFPS.interval * 3, waitLock)
 		}
 		
-		lastDrawTime = Instant.now()
+		lastDrawTime = Now
 		
 		if (component.get.exists { _.isDisplayable })
 		{

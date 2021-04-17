@@ -7,12 +7,12 @@ import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.reflection.component.context.ScrollingContextLike
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
-import utopia.reflection.component.drawing.template.ScrollBarDrawer
+import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.container.stack.template.scrolling.ScrollViewLike
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.shape.StackLengthLimit
+import utopia.reflection.shape.stack.StackLengthLimit
 import utopia.reflection.util.ComponentCreationDefaults
 
 object ScrollView
@@ -44,7 +44,7 @@ object ScrollView
   * @since 30.4.2019, v1+
   */
 class ScrollView[C <: Stackable with AwtComponentRelated](override val content: C, override val axis: Axis2D,
-														  actorHandler: ActorHandler, scrollBarDrawer: ScrollBarDrawer,
+														  actorHandler: ActorHandler, scrollBarDrawer: ScrollBarDrawerLike,
 														  override val scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,
 														  scrollPerWheelClick: Double =  ComponentCreationDefaults.scrollAmountPerWheelClick,
 														  override val friction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,
@@ -78,5 +78,5 @@ class ScrollView[C <: Stackable with AwtComponentRelated](override val content: 
 	
 	override def drawable = panel
 	
-	override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].isVisible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].visible_=(visible)
 }

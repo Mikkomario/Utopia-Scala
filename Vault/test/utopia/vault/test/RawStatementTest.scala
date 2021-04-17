@@ -4,12 +4,12 @@ import utopia.flow.generic.IntType
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.DataType
 import utopia.vault.database.Connection
-import java.time.Instant
 
 import utopia.flow.generic.VectorType
 
 import scala.collection.immutable.HashSet
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 
 /**
  * This test runs some raw statements using the sql client and checks the results
@@ -51,7 +51,7 @@ object RawStatementTest extends App
         connection(s"INSERT INTO ${table.name} (name, age) VALUES (?, ?)", Vector("Test", Value.emptyWithType(IntType)))
         
         // Also tries inserting a time value
-        val creationTime = Instant.now().toValue
+        val creationTime = Now.toValue
         val latestIndex = connection(s"INSERT INTO ${table.name} (name, created) VALUES (?, ?)", 
                 Vector("Test2", creationTime), HashSet(), returnGeneratedKeys = true).generatedKeys.head
         

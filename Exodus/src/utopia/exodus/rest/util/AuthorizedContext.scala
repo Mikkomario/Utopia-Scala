@@ -1,11 +1,14 @@
 package utopia.exodus.rest.util
 
+import utopia.access.http.ContentCategory.{Application, Text}
 import utopia.access.http.Status.{BadRequest, Forbidden, InternalServerError, Unauthorized}
+import utopia.access.http.error.ContentTypeException
 import utopia.exodus.database.access.many.DbLanguages
-import utopia.exodus.database.access.single.{DbDeviceKey, DbMembership, DbUser, DbUserSession}
-import utopia.exodus.model.stored.{DeviceKey, UserSession}
+import utopia.exodus.database.access.single.{DbApiKey, DbDeviceKey, DbEmailValidation, DbMembership, DbUser, DbUserSession}
+import utopia.exodus.model.stored.{ApiKey, DeviceKey, EmailValidation, UserSession}
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.FromModelFactory
+import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
@@ -16,6 +19,24 @@ import utopia.vault.database.Connection
 
 import scala.math.Ordering.Double.TotalOrdering
 import scala.util.{Failure, Success, Try}
+
+object AuthorizedContext
+{
+	/**
+	  * Creates a new authorized request context
+	  * @param request Request wrapped by this context
+	  * @param resultParser Parser that determines what server responses should look like. Default =
+	  *                     use simple json bodies and http statuses.
+	  * @param errorHandler A function for handling possible errors thrown during request handling and database
+	  *                     interactions.
+	  * @param serverSettings Applied server settings (implicit)
+	  * @param jsonParser Json parser used for interpreting request json content (implicit)
+	  * @return A new request context
+	  */
+	def apply(request: Request, resultParser: ResultParser = UseRawJSON)(errorHandler: Throwable => Unit)
+			 (implicit serverSettings: ServerSettings, jsonParser: JsonParser) =
+		new AuthorizedContext(request, resultParser)(errorHandler)
+}
 
 /**
   * This context variation checks user authorization (when required)
@@ -35,6 +56,11 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	import utopia.exodus.util.ExodusContext._
 	
 	// COMPUTED	----------------------------
+	
+	/**
+	  * @return Whether the request in this context contains a bearer token authorization
+	  */
+	def isTokenAuthorized = request.headers.containsBearerAuthorization
 	
 	/**
 	  * @param connection DB Connection (implicit)
@@ -112,9 +138,9 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  */
 	def deviceKeyAuthorized(f: (DeviceKey, Connection) => Result) =
 	{
-		tokenAuthorized("device authentication key", f) { (token, connection) =>
+		tokenAuthorized("device authentication key") { (token, connection) =>
 			DbDeviceKey.matching(token)(connection)
-		}
+		}(f)
 	}
 	
 	/**
@@ -124,7 +150,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  */
 	def sessionKeyAuthorized(f: (UserSession, Connection) => Result) =
 	{
-		tokenAuthorized("session key", f) { (token, connection) => DbUserSession.matching(token)(connection) }
+		tokenAuthorized("session key") { (token, connection) => DbUserSession.matching(token)(connection) }(f)
 	}
 	
 	/**
@@ -164,6 +190,36 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 			case None => Result.Failure(Unauthorized, "Authorization header is required").toResponse(this)
 		}
 	}
+	
+	/**
+	  * Authorizes the request using an api key in the bearer auth header. Uses existing database connection.
+	  * @param f A function called if the request is authorized (accepts valid api key)
+	  * @param connection Implicit database connection
+	  * @return Function result if the request was authorized, otherwise an authorization failure
+	  */
+	def apiKeyAuthorizedWithConnection(f: ApiKey => Result)(implicit connection: Connection) =
+	{
+		// Checks the bearer auth token
+		request.headers.bearerAuthorization match
+		{
+			case Some(token) =>
+				// Makes sure the token is registered in the database
+				DbApiKey(token) match
+				{
+					case Some(key) => f(key)
+					case None => Result.Failure(Unauthorized, "Invalid api key")
+				}
+			case None => Result.Failure(Unauthorized, "Please provide a api key in the auth bearer header")
+		}
+	}
+	
+	/**
+	  * Authorizes the request using an api key in the bearer auth header
+	  * @param f A function called if the request is authorized (accepts valid api key and database connection)
+	  * @return Function result if the request was authorized, otherwise an authorization failure
+	  */
+	def apiKeyAuthorized(f: (ApiKey, Connection) => Result) =
+		tokenAuthorized("api key") { (key, connection) => DbApiKey(key)(connection) }(f)
 	
 	/**
 	  * Performs the specified function if the user is authorized (using session key) and they are a member of the
@@ -213,22 +269,105 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	}
 	
 	/**
+	  * Authorizes a request using bearer token authorization
+	  * @param keyTypeName Name used for the key (Eg. 'api key')
+	  * @param testKey A function for testing key validity. Accepts the provided token and a database connection.
+	  *                Returns a valid item associated with the key (if present)
+	  * @param f A function that performs the operation when authentication succeeds. Accepts 1) the item associated
+	  *          with the provided token and 2) a database connection and produces a response for the client.
+	  * @tparam K Type of item associated with the token
+	  * @return Response containing either function <i>f</i> result or an authentication failure
+	  *         (if <i>testKey</i> returned None or the token was missing)
+	  */
+	def tokenAuthorized[K](keyTypeName: => String)(testKey: (String, Connection) => Option[K])
+						  (f: (K, Connection) => Result) =
+	{
+		// Checks the key from token
+		val result = request.headers.bearerAuthorization match
+		{
+			case Some(key) =>
+				// Validates the device key against database
+				connectionPool.tryWith { connection =>
+					testKey(key, connection) match
+					{
+						case Some(authorizedKey) => f(authorizedKey, connection)
+						case None => Result.Failure(Unauthorized, s"Invalid or expired $keyTypeName")
+					}
+				}.getOrMap { e =>
+					errorHandler(e)
+					Result.Failure(InternalServerError, e.getMessage)
+				}
+			case None => Result.Failure(Unauthorized, s"Please provided a bearer auth hearer with a $keyTypeName")
+		}
+		result.toResponse(this)
+	}
+	
+	/**
+	  * Authorizes this request using an email activation token from the bearer token authorization header
+	  * @param emailPurposeId Id of the purpose the email is used for (must match the purpose id the validation was
+	  *                       first registered with)
+	  * @param f A function that is performed if the specified token was valid.
+	  *          Accepts an open email validation attempt and a database connection.
+	  *          Returns 1) a boolean indicating whether the validation should be closed and
+	  *          2) result to send back to the client.
+	  * @return A response based on the function result if authorization was successful. A failure response otherwise.
+	  */
+	def emailAuthorized(emailPurposeId: Int)(f: (EmailValidation, Connection) => (Boolean, Result)) =
+	{
+		request.headers.bearerAuthorization match
+		{
+			case Some(key) =>
+				connectionPool.tryWith { implicit connection =>
+					DbEmailValidation.activateWithKey(key, emailPurposeId) { f(_, connection) }
+				} match
+				{
+					case Success(result) =>
+						result match
+						{
+							case Success(result) => result.toResponse(this)
+							case Failure(error) => Result.Failure(Unauthorized, error.getMessage).toResponse(this)
+						}
+					case Failure(error) =>
+						errorHandler(error)
+						Result.Failure(InternalServerError, error.getMessage).toResponse(this)
+				}
+			case None =>
+				Result.Failure(Unauthorized,
+					"Please provide a bearer authorization header containing an email validation token")
+					.toResponse(this)
+		}
+	}
+	
+	/**
 	  * Parses a value from the request body and uses it to produce a response
 	  * @param f Function that will be called if the value was successfully read. Returns an http result.
 	  * @return Function result or a failure result if no value could be read.
 	  */
-	def handlePost(f: Value => Result) =
+	def handleValuePost(f: Value => Result) =
 	{
 		// Parses the post body first
 		request.body.headOption match
 		{
 			case Some(body) =>
-				body.bufferedJson.contents match
+				// Accepts json, xml and text content types
+				val value = body.contentType.subType.toLowerCase match
+				{
+					case "json" => body.bufferedJson.contents
+					case "xml" => body.bufferedXml.contents.map { _.toSimpleModel: Value }
+					case _ =>
+						body.contentType.category match
+						{
+							case Text => body.bufferedToString.contents.map { s => s: Value }
+							case _ => Failure(ContentTypeException.notAccepted(body.contentType,
+								Vector(Application.json, Application.xml, Text.plain)))
+						}
+				}
+				value match
 				{
 					case Success(value) => f(value)
 					case Failure(error) => Result.Failure(BadRequest, error.getMessage)
 				}
-			case None => Result.Failure(BadRequest, "Please provide a json-body with the response")
+			case None => Result.Failure(BadRequest, "Please specify a body in the request")
 		}
 	}
 	
@@ -241,7 +380,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  */
 	def handlePost[A](parser: FromModelFactory[A])(f: A => Result): Result =
 	{
-		handlePost { value =>
+		handleValuePost { value =>
 			value.model match
 			{
 				case Some(model) =>
@@ -262,7 +401,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  * @param f Function that will be called if a json body was present. Accepts a vector of values. Returns result.
 	  * @return Function result or a failure if no value could be read
 	  */
-	def handleArrayPost(f: Vector[Value] => Result) = handlePost { v: Value =>
+	def handleArrayPost(f: Vector[Value] => Result) = handleValuePost { v: Value =>
 		if (v.isEmpty)
 			f(Vector())
 		else
@@ -300,27 +439,4 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  */
 	def handleModelArrayPost[A](parser: FromModelFactory[A])(f: Vector[A] => Result): Result =
 		handleModelArrayPost[A] { m: Model[Constant] => parser(m) }(f)
-	
-	private def tokenAuthorized[K](keyTypeName: => String, f: (K, Connection) => Result)(
-		testKey: (String, Connection) => Option[K]) =
-	{
-		// Checks the key from token
-		val result = request.headers.bearerAuthorization match
-		{
-			case Some(key) =>
-				// Validates the device key against database
-				connectionPool.tryWith { connection =>
-					testKey(key, connection) match
-					{
-						case Some(authorizedKey) => f(authorizedKey, connection)
-						case None => Result.Failure(Unauthorized, s"Invalid or expired $keyTypeName")
-					}
-				}.getOrMap { e =>
-					errorHandler(e)
-					Result.Failure(InternalServerError, e.getMessage)
-				}
-			case None => Result.Failure(Unauthorized, s"Please provided a bearer auth hearer with a $keyTypeName")
-		}
-		result.toResponse(this)
-	}
 }

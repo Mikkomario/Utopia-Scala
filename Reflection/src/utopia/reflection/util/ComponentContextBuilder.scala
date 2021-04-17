@@ -1,15 +1,16 @@
 package utopia.reflection.util
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.genesis.util.Drawer
 import utopia.reflection.color.ComponentColor
-import utopia.reflection.component.drawing.template.ScrollBarDrawer
+import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
 import utopia.reflection.container.stack.template.scrolling.ScrollAreaLike
-import utopia.reflection.shape.{Alignment, Border, ScrollBarBounds, StackInsets, StackLength}
+import utopia.reflection.shape.stack.{StackInsets, StackLength}
+import utopia.reflection.shape.{Alignment, Border, ScrollBarBounds}
 import utopia.reflection.text.Font
 
 import scala.concurrent.duration.FiniteDuration
@@ -60,7 +61,7 @@ case class ComponentContextBuilder(actorHandler: ActorHandler, font: Font, highl
 								   stackCap: StackLength = StackLength.fixed(0), dropDownWidthLimit: Option[Int] = None,
 								   switchWidth: Option[StackLength] = None, textFieldWidth: Option[StackLength] = None,
 								   scrollPerWheelClick: Double = 32, scrollBarWidth: Int = 24,
-								   scrollBarDrawer: Option[ScrollBarDrawer] = None, scrollBarIsInsideContent: Boolean = false,
+								   scrollBarDrawer: Option[ScrollBarDrawerLike] = None, scrollBarIsInsideContent: Boolean = false,
 								   scrollFriction: LinearAcceleration = ScrollAreaLike.defaultFriction,
 								   allowImageUpscaling: Boolean = false, animationDuration: FiniteDuration = 0.25.seconds,
 								   fadingIsEnabledInAnimations: Boolean = true)
@@ -145,7 +146,7 @@ case class ComponentContextBuilder(actorHandler: ActorHandler, font: Font, highl
 	
 	def withScrollBarWidth(barWidth: Int) = copy(scrollBarWidth = barWidth)
 	
-	def withScrollBarDrawer(drawer: ScrollBarDrawer) = copy(scrollBarDrawer = Some(drawer))
+	def withScrollBarDrawer(drawer: ScrollBarDrawerLike) = copy(scrollBarDrawer = Some(drawer))
 	
 	def withScrollFriction(friction: LinearAcceleration) = copy(scrollFriction = friction)
 	
@@ -158,7 +159,7 @@ case class ComponentContextBuilder(actorHandler: ActorHandler, font: Font, highl
 	
 	// NESTED	-----------------------------
 	
-	private class DefaultScrollBarDrawer extends ScrollBarDrawer
+	private class DefaultScrollBarDrawer extends ScrollBarDrawerLike
 	{
 		override def draw(drawer: Drawer, barBounds: ScrollBarBounds, barDirection: Axis2D) =
 		{

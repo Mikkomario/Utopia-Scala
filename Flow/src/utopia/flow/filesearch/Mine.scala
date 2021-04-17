@@ -59,14 +59,14 @@ class Mine[R](val directory: Path)
 	/**
 	 * @return Current status of this mine
 	 */
-	def status = _status.get
+	def status = _status.value
 	// TODO: Possibly add events
-	def status_=(newStatus: ExcavationStatus) = _status.set(newStatus)
+	def status_=(newStatus: ExcavationStatus) = _status.value = newStatus
 	
 	/**
 	 * @return Pathways under this mine
 	 */
-	def pathWays = _pathWays.get
+	def pathWays = _pathWays.value
 	
 	/**
 	 * @return Whether this mineshaft diverges into multiple paths
@@ -126,6 +126,6 @@ class Mine[R](val directory: Path)
 	def declareCompleted(results: R) =
 	{
 		foundResults = Some(results)
-		_status.set(Finished)
+		_status.value = Finished
 	}
 }

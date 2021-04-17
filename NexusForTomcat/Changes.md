@@ -1,5 +1,5 @@
 # Utopia Nexus for Tomcat - List of changes
-## v1.2
+## v1.2 - 30.8.2020
 ### Scala
 - Module is now based on Scala v2.13.3
 ### Breaking Changes

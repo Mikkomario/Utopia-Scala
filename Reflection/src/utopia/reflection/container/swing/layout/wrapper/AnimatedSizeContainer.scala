@@ -11,7 +11,7 @@ import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.container.stack.template.SingleStackContainer
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -78,7 +78,7 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler,
 	
 	// COMPUTED	------------------------
 	
-	private def transitioning = transitioningFlag.get
+	private def transitioning = transitioningFlag.value
 	
 	private def transitioning_=(newState: Boolean) = transitioningFlag.update { oldState =>
 		// May register or unregister the actor component from the actor handler

@@ -1,6 +1,6 @@
 package utopia.genesis.view
 
-import utopia.genesis.handling.{MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
+import scala.concurrent.ExecutionContext
 
 /**
  * This class listens to mouse status inside a canvas and generates new mouse events. This 
@@ -9,6 +9,5 @@ import utopia.genesis.handling.{MouseButtonStateListener, MouseMoveListener, Mou
  * @author Mikko Hilpinen
  * @since 22.1.2017
  */
-class CanvasMouseEventGenerator(val canvas: Canvas, moveHandler: MouseMoveListener,
-                                buttonHandler: MouseButtonStateListener, wheelHandler: MouseWheelListener)
-    extends MouseEventGenerator(canvas, moveHandler, buttonHandler, wheelHandler, () => canvas.scaling)
+class CanvasMouseEventGenerator(canvas: Canvas)(implicit exc: ExecutionContext)
+	extends MouseEventGenerator(canvas, canvas.scaling)

@@ -1,9 +1,9 @@
 package utopia.flow.caching.single
 
 import java.time.Instant
-
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
@@ -92,14 +92,14 @@ trait SingleAsyncCache[A] extends ClearableSingleCacheLike[Future[A]]
 	
 	// Cached request doesn't count if it has already failed and failure duration has passed since the request was made
 	override def cached = lastRequest.filter { r => !r.isCompleted ||
-		r.waitFor().toOption.exists(isSuccess) || lastRequestTime.exists { Instant.now() < _ + failCacheDuration } }
+		r.waitFor().toOption.exists(isSuccess) || lastRequestTime.exists { Now < _ + failCacheDuration } }
 	
 	override def apply() =
 	{
 		cached.getOrElse
 		{
 			val result = request()
-			lastRequestTime = Some(Instant.now())
+			lastRequestTime = Some(Now.toInstant)
 			lastRequest = Some(result)
 			
 			result

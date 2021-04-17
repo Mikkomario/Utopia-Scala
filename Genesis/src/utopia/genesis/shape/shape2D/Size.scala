@@ -2,8 +2,8 @@ package utopia.genesis.shape.shape2D
 
 import utopia.genesis.util.Extensions._
 import utopia.flow.generic.ValueConversions._
-import java.awt.Dimension
 
+import java.awt.Dimension
 import utopia.flow.generic.ValueConvertible
 import utopia.flow.datastructure.immutable.Value
 import utopia.genesis.generic.SizeType
@@ -16,8 +16,9 @@ import utopia.flow.datastructure.template.Property
 import utopia.genesis.util.ApproximatelyEquatable
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.Axis._
-import java.awt.Insets
+import utopia.genesis.shape.shape3D.Vector3D
 
+import java.awt.Insets
 import scala.util.Success
 
 object Size extends FromModelFactory[Size]
@@ -87,11 +88,6 @@ case class Size(width: Double, height: Double) extends Vector2DLike[Size] with A
     override def isZero = width == 0 || height == 0
     
     /**
-     * @return Whether this size has a non-zero area (positive or negative)
-     */
-    def nonZero = !isZero
-    
-    /**
      * The area of this size (width * height)
      */
     def area = width * height
@@ -122,6 +118,10 @@ case class Size(width: Double, height: Double) extends Vector2DLike[Size] with A
     
     
     // IMPLEMENTED    -----------------------
+    
+    override def buildCopy(vector: Vector2D) = Size(vector.x, vector.y)
+    
+    override def buildCopy(vector: Vector3D) = Size(vector.x, vector.y)
     
     override def repr = this
     
@@ -178,6 +178,12 @@ case class Size(width: Double, height: Double) extends Vector2DLike[Size] with A
       * @return A set of bounds with this size and specified position
       */
     def toBounds(position: Point = Point.origin) = Bounds(position, this)
+    
+    /**
+      * @param centerPosition Position for the resulting bounds center point
+      * @return A new set of bounds which are centered on the specified point and have this size
+      */
+    def centeredAt(centerPosition: Point) = Bounds(centerPosition - this / 2, this)
     
     /**
       * Checks whether this size would fit into the other size

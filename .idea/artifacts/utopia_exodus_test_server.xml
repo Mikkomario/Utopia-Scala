@@ -1,0 +1,25 @@
+<component name="ArtifactManager">
+  <artifact name="utopia-exodus-test-server">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_exodus_test_server</output-path>
+    <root id="root">
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="classes">
+          <element id="module-output" name="Access" />
+          <element id="module-output" name="BunnyMunch" />
+          <element id="module-output" name="Exodus" />
+          <element id="module-output" name="Exodus-Test-Server" />
+          <element id="module-output" name="Flow" />
+          <element id="module-output" name="Metropolis" />
+          <element id="module-output" name="Nexus" />
+          <element id="module-output" name="NexusForTomcat" />
+          <element id="module-output" name="Vault" />
+        </element>
+        <element id="directory" name="lib">
+          <element id="library" level="application" name="scala-sdk-2.13.3" />
+          <element id="library" level="project" name="mariadb-java-client-1.5.9" />
+        </element>
+        <element id="file-copy" path="$PROJECT_DIR$/Exodus-Test-Server/web.xml" />
+      </element>
+    </root>
+  </artifact>
+</component>

@@ -9,6 +9,8 @@ import utopia.genesis.shape.shape2D.{Bounds, Point}
   */
 trait AreaOfItems[C]
 {
+	// ABSTRACT	---------------------------
+	
 	/**
 	  * Finds the area of a single element in this container, including the area around the object
 	  * @param item An item in this stack
@@ -22,4 +24,13 @@ trait AreaOfItems[C]
 	  * @return The component that's nearest to the provided point. None if this container is empty
 	  */
 	def itemNearestTo(relativePoint: Point): Option[C]
+	
+	
+	// OTHER	---------------------------
+	
+	/**
+	  * @param relativePoint A point relative to this component's position
+	  * @return A component area that is closest to the specified position. None if this container is empty.
+	  */
+	def areaNearestTo(relativePoint: Point) = itemNearestTo(relativePoint).flatMap(areaOf)
 }

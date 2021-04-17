@@ -7,7 +7,7 @@ import utopia.reflection.component.template.ComponentWrapper
 import utopia.reflection.component.template.layout.stack.{CachingStackable, Stackable}
 import utopia.reflection.container.stack.template.SingleStackContainer
 import utopia.reflection.container.template.Container
-import utopia.reflection.shape.{StackInsets, StackLength, StackSize}
+import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 
 /**
   * Framings are containers that present a component with scaling 'frames', like a painting
@@ -35,9 +35,9 @@ trait FramingLike[C <: Stackable] extends SingleStackContainer[C] with Component
 	
 	override protected def wrapped = container
 	
-	override def isVisible_=(isVisible: Boolean) = super[CachingStackable].isVisible_=(isVisible)
+	override def visible_=(isVisible: Boolean) = super[CachingStackable].visible_=(isVisible)
 	
-	override protected def updateVisibility(visible: Boolean) = super[ComponentWrapper].isVisible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[ComponentWrapper].visible_=(visible)
 	
 	override def components = container.components
 	

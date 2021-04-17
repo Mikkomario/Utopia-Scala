@@ -3,8 +3,6 @@ package utopia.genesis.util
 import utopia.inception.handling.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 
-import scala.concurrent.ExecutionContext
-
 /**
   * Setups are used for quickly setting up a program
   * @author Mikko Hilpinen
@@ -21,10 +19,8 @@ trait Setup
 	
 	/**
 	  * Starts the program based on this setup
-	  * @param context The execution context for asynchronous operations. You can use utopia.flow.async.ThreadPool
-	  *                for creating the context, for example.
 	  */
-	def start()(implicit context: ExecutionContext): Unit
+	def start(): Unit
 	
 	
 	// OTHER	--------------------
@@ -49,4 +45,19 @@ trait Setup
 	  * @param obj An object
 	  */
 	def registerObject(obj: Handleable) = handlers += obj
+	
+	/**
+	 * Removes specified objects from the handlers in this setup
+	 * @param objects Objects to remove
+	 */
+	def removeObjects(objects: Iterable[Handleable]): Unit = handlers --= objects
+	
+	/**
+	 * Removes specified objects from the handlers in this setup
+	 * @param first First object to remove
+	 * @param second Second object to remove
+	 * @param more More objects to remove
+	 */
+	def removeObjects(first: Handleable, second: Handleable, more: Handleable*): Unit =
+		removeObjects(Vector(first, second) ++ more)
 }

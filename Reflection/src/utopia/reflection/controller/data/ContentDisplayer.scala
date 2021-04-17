@@ -1,6 +1,6 @@
 package utopia.reflection.controller.data
 
-import utopia.flow.event.{ChangeEvent, ChangeListener, Changing}
+import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
 import utopia.flow.util.CollectionExtensions._
 import utopia.reflection.component.template.display.{PoolWithPointer, Refreshable}
 
@@ -13,7 +13,7 @@ import utopia.reflection.component.template.display.{PoolWithPointer, Refreshabl
  *  @tparam C Type of display component
  *  @tparam P Type of reflected content source
   */
-trait ContentDisplayer[A, C <: Refreshable[A], +P <: Changing[Vector[A]]] extends PoolWithPointer[Vector[A], P]
+trait ContentDisplayer[A, +C <: Refreshable[A], +P <: ChangingLike[Vector[A]]] extends PoolWithPointer[Vector[A], P]
 {
 	// ABSTRACT	----------------------
 	
@@ -72,7 +72,7 @@ trait ContentDisplayer[A, C <: Refreshable[A], +P <: Changing[Vector[A]]] extend
 	/**
 	  * Sets up this manager once other attributes have been initialized. Enables content change listening.
 	  */
-	protected def setup() = contentPointer.addListener(ContentUpdateListener, Some(Vector()))
+	protected def setup() = contentPointer.addListenerAndSimulateEvent(Vector())(ContentUpdateListener)
 	
 	/**
 	  * Finds a display currently showing provided element
@@ -114,8 +114,6 @@ trait ContentDisplayer[A, C <: Refreshable[A], +P <: Changing[Vector[A]]] extend
 			val d = displays
 			val oldContentSize = d.size
 			val newContentSize = newValues.size
-			//println()
-			//println(s"Updating content from $oldContentSize to $newContentSize items\nOld: ${d.map { _.content }}\nNew: $newValues")
 			
 			val sizeDifference = newContentSize - oldContentSize
 			
@@ -144,29 +142,18 @@ trait ContentDisplayer[A, C <: Refreshable[A], +P <: Changing[Vector[A]]] extend
 			val skipFirst = identicalStart.size
 			val skipLast = identicalEnd.size
 			
-			//println(s"$skipFirst identical items in the beginning, $skipLast at the end.")
-			
 			// Size difference is positive => new items added somewhere
 			if (sizeDifference > 0)
 			{
 				// Case: New items are added to the end
 				if (skipFirst == oldContentSize)
-				{
-					//println(s"Adding $sizeDifference items (right side of $newContentSize) to index $oldContentSize")
 					addDisplaysFor(newValues.takeRight(sizeDifference), oldContentSize)
-				}
 				// Case: New items are added to the beginning
 				else if (skipLast == oldContentSize)
-				{
-					//println(s"Adding $sizeDifference items (left of $newContentSize) to start")
 					addDisplaysFor(newValues.take(sizeDifference), 0)
-				}
 				// Case: New items are added to the middle
 				else if (skipFirst + skipLast == oldContentSize)
-				{
-					//println(s"Adding indices $skipFirst-${skipFirst + sizeDifference} from $newContentSize to index $skipFirst")
 					addDisplaysFor(newValues.slice(skipFirst, skipFirst + sizeDifference), skipFirst)
-				}
 				// Case: New items added in multiple locations
 				else
 				{
@@ -180,7 +167,6 @@ trait ContentDisplayer[A, C <: Refreshable[A], +P <: Changing[Vector[A]]] extend
 					
 					// Updates first, then adds new displays
 					update(updateRange, updatedValues)
-					//println(s"Inserts $insertedValues to index $insertIndex")
 					addDisplaysFor(insertedValues, insertIndex)
 				}
 			}
@@ -191,22 +177,13 @@ trait ContentDisplayer[A, C <: Refreshable[A], +P <: Changing[Vector[A]]] extend
 				
 				// Case: Items removed from the end
 				if (skipFirst == newContentSize)
-				{
-					//println(s"Dropping items $newContentSize-${oldContentSize - 1}")
 					dropDisplaysAt(newContentSize until oldContentSize)
-				}
 				// Case: Items removed from the beginning
 				else if (skipLast == newContentSize)
-				{
-					//println(s"Dropping $removeCount items from the beginning")
 					dropDisplaysAt(0 until removeCount)
-				}
 				// Case: Items removed from the middle
 				else if (skipFirst + skipLast == newContentSize)
-				{
-					//println(s"Dropping $removeCount items from index $skipFirst")
 					dropDisplaysAt(skipFirst until (skipFirst + removeCount))
-				}
 				// Case: Items removed from multiple places
 				else
 				{
@@ -216,15 +193,9 @@ trait ContentDisplayer[A, C <: Refreshable[A], +P <: Changing[Vector[A]]] extend
 					
 					// Drops first, then updates
 					if (dropFromEnd)
-					{
-						//println(s"Dropping items at ${oldContentSize - skipLast - removeCount}-${oldContentSize - skipLast - 1}")
 						dropDisplaysAt((oldContentSize - skipLast - removeCount) until (oldContentSize - skipLast))
-					}
 					else
-					{
-						//println(s"Dropping $removeCount items from the beginning")
 						dropDisplaysAt(0 until removeCount)
-					}
 					
 					update(updatedRange, newValues.slice(updatedRange))
 				}
@@ -247,9 +218,6 @@ trait ContentDisplayer[A, C <: Refreshable[A], +P <: Changing[Vector[A]]] extend
 		}
 		
 		private def update(targetRange: Range, items: Vector[A]) =
-		{
-			//println(s"Updating range: $targetRange")
 			displays.slice(targetRange).foreachWith(items) { (d, i) => d.content = i }
-		}
 	}
 }

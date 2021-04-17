@@ -1,12 +1,12 @@
 package utopia.metropolis.model.partial.description
 
 import java.time.Instant
-
 import utopia.flow.datastructure.immutable.{Constant, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.datastructure.template.{Model, Property}
 import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.time.Now
 import utopia.metropolis.model.stored.description.Description
 
 object DescriptionLinkData
@@ -61,7 +61,7 @@ object DescriptionLinkData
   * @param description Description of the device
   * @tparam D Type of description contained within this data
   */
-case class DescriptionLinkData[+D <: ModelConvertible](targetId: Int, description: D, created: Instant = Instant.now())
+case class DescriptionLinkData[+D <: ModelConvertible](targetId: Int, description: D, created: Instant = Now)
 	extends ModelConvertible
 {
 	override def toModel = description.toModel + Constant("target_id", targetId) +

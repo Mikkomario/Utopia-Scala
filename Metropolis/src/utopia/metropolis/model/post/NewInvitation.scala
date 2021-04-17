@@ -4,7 +4,7 @@ import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
 import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, ModelConvertible, StringType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.metropolis.model.error.IllegalPostModelException
 
 import scala.util.{Failure, Success}

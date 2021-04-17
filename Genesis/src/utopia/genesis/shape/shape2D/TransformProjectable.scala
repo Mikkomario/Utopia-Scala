@@ -8,6 +8,7 @@ import utopia.genesis.shape.shape1D.Rotation
  * @author Mikko Hilpinen
  * @since 9.7.2017
  */
+@deprecated("Replaced with Transformable (or Linear-/AffineTransformable)", "v2.4")
 trait TransformProjectable[+T]
 {
     // ABSTRACT --------------------------
@@ -24,7 +25,7 @@ trait TransformProjectable[+T]
       * @param translation Amount of translation applied
       * @return A translated copy of this item
       */
-    def translated(translation: Vector2D) = transformedWith(Transformation.translation(translation))
+    def translated(translation: Vector2DLike[_]) = transformedWith(Transformation.translation(translation))
     
     /**
       * @param rotation Amount of rotation applied

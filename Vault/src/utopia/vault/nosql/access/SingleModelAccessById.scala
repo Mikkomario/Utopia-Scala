@@ -8,8 +8,7 @@ import utopia.vault.nosql.factory.FromResultFactory
  * @author Mikko Hilpinen
  * @since 30.1.2020, v1.4
  */
-trait SingleModelAccessById[+A, -ID] extends SingleModelAccess[A] with UnconditionalAccess[Option[A]]
-	with IndexedAccess[Option[A]]
+trait SingleModelAccessById[+A, -ID] extends SingleModelAccess[A] with UnconditionalAccess[Option[A]] with Indexed
 {
 	// ABSTRACT	-----------------------
 	

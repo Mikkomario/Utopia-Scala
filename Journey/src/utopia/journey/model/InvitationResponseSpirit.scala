@@ -61,7 +61,7 @@ object InvitationResponseSpirit extends FromModelFactory[InvitationResponseSpiri
 /**
   * Represents an invitation response before it has been posted to server
   * @author Mikko Hilpinen
-  * @since 12.7.2020, v1
+  * @since 12.7.2020, v0.1
   */
 case class InvitationResponseSpirit private(invitationId: Int, private val response: NewInvitationResponse)
 	extends Spirit with ModelConvertible

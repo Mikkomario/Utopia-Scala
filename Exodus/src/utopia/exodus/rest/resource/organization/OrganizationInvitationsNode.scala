@@ -2,14 +2,14 @@ package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{BadRequest, Forbidden, NotImplemented}
-import utopia.exodus.database.access.id.UserId
+import utopia.exodus.database.access.id.DbUserId
 import utopia.exodus.database.access.single.{DbMembership, DbOrganization, DbUser}
 import utopia.exodus.model.enumeration.StandardTask.InviteMembers
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.metropolis.model.post.NewInvitation
 import utopia.metropolis.model.stored.organization.Invitation
 import utopia.nexus.http.Path
@@ -46,7 +46,7 @@ case class OrganizationInvitationsNode(organizationId: Int) extends Resource[Aut
 						{
 							// Finds the user that is being invited (if registered)
 							val recipientEmail = validInvitation.recipientEmail
-							val recipientUserId = UserId.forEmail(recipientEmail)
+							val recipientUserId = DbUserId.forEmail(recipientEmail)
 							
 							// Checks whether the user already is a member of this organization
 							if (recipientUserId.exists { userId =>

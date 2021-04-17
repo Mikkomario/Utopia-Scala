@@ -1,9 +1,10 @@
 package utopia.genesis.shape.template
 
 import java.time.Instant
-
-import utopia.flow.event.{ChangeListener, Changing}
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.event.{ChangeDependency, ChangeListener, Changing}
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.RichComparable._
 import utopia.genesis.shape.shape2D.Vector2DLike
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -22,6 +23,7 @@ abstract class VelocityTracker[X <: Vector2DLike[X], V <: VelocityLike[X, V], A 
 	// ATTRIBUTES	-----------------------
 	
 	override var listeners = Vector[ChangeListener[H]]()
+	override var dependencies = Vector[ChangeDependency[H]]()
 	
 	private var _positionHistory = Vector[(X, Instant)]()
 	private var _velocityHistory = Vector[(V, Instant)]()
@@ -50,6 +52,8 @@ abstract class VelocityTracker[X <: Vector2DLike[X], V <: VelocityLike[X, V], A 
 	
 	// IMPLEMENTED	------------------------
 	
+	override def isChanging = true
+	
 	override def value = cachedValue.getOrElse(combineHistory(_positionHistory, _velocityHistory, _accelerationHistory))
 	
 	override def positionHistory = _positionHistory
@@ -61,9 +65,13 @@ abstract class VelocityTracker[X <: Vector2DLike[X], V <: VelocityLike[X, V], A 
 	
 	// OTHER	---------------------------
 	
-	def recordPosition(newPosition: X) =
+	/**
+	  * Records a position at a specific time point
+	  * @param newPosition New recorded position
+	  * @param eventTime Timestamp of the new position (default = current time)
+	  */
+	def recordPosition(newPosition: X, eventTime: Instant = Now) =
 	{
-		val eventTime = Instant.now()
 		// May ignore some updates if they are too frequent
 		if (minCacheInterval <= Duration.Zero || _positionHistory.lastOption.forall { _._2 <= eventTime - minCacheInterval })
 		{

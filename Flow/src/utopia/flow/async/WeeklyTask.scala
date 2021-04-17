@@ -1,10 +1,10 @@
 package utopia.flow.async
 
 import java.time.{LocalDateTime, LocalTime}
-
-import utopia.flow.util.WeekDay
-import utopia.flow.util.TimeExtensions._
-import utopia.flow.util.WaitTarget.Until
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WeekDay
+import utopia.flow.time.WaitTarget.Until
+import utopia.flow.util.RichComparable._
 
 object WeeklyTask
 {

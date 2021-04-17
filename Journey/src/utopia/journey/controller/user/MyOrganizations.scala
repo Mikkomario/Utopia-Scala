@@ -7,14 +7,14 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.container.ObjectsFileContainer
 import utopia.flow.container.SaveTiming.Delayed
 import utopia.flow.util.FileExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.journey.util.JourneyContext._
 import utopia.metropolis.model.combined.user.MyOrganization
 
 /**
   * An access point used for accessing the current user's organizations
   * @author Mikko Hilpinen
-  * @since 12.7.2020, v1
+  * @since 12.7.2020, v0.1
   * @param queueSystem An authorized queue system used when requesting organization data
   * @param isSameUser Whether the current active user is the same as previously logged user (default = true)
   */

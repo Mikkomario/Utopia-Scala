@@ -26,7 +26,7 @@ import java.sql.Time
  * @author Mikko Hilpinen
  * @since 27.4.2017
  */
-object BasicSqlValueConverter extends ValueConverter[Tuple2[Any, Int]]
+object BasicSqlValueConverter extends ValueConverter[(Any, Int)]
 {
     override val supportedTypes: Set[DataType] = HashSet(StringType, InstantType, BooleanType, 
             IntType, LongType, FloatType, DoubleType, LocalDateType, LocalTimeType)
@@ -36,15 +36,15 @@ object BasicSqlValueConverter extends ValueConverter[Tuple2[Any, Int]]
         // NB: Instant into timestamp slot only works with JDBC 4.2 driver or later
         dataType match 
         {
-            case DoubleType => (value.doubleOr(), Types.DOUBLE)
-            case FloatType => (value.floatOr(), Types.FLOAT)
-            case LongType => (value.longOr(), Types.BIGINT)
-            case IntType => (value.intOr(), Types.INTEGER)
-            case BooleanType => (value.booleanOr(), Types.BOOLEAN)
-            case InstantType => (Timestamp.from(value.instantOr()), Types.TIMESTAMP)
-            case LocalDateType => (Date.valueOf(value.localDateOr()), Types.DATE)
-            case LocalTimeType => (Time.valueOf(value.localTimeOr()), Types.TIME)
-            case _ => (value.stringOr(), Types.VARCHAR)
+            case DoubleType => (value.getDouble, Types.DOUBLE)
+            case FloatType => (value.getFloat, Types.FLOAT)
+            case LongType => (value.getLong, Types.BIGINT)
+            case IntType => (value.getInt, Types.INTEGER)
+            case BooleanType => (value.getBoolean, Types.BOOLEAN)
+            case InstantType => (Timestamp.from(value.getInstant), Types.TIMESTAMP)
+            case LocalDateType => (Date.valueOf(value.getLocalDate), Types.DATE)
+            case LocalTimeType => (Time.valueOf(value.getLocalTime), Types.TIME)
+            case _ => (value.getString, Types.VARCHAR)
         }
     }
 }

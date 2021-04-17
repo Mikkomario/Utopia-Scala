@@ -2,7 +2,7 @@ package utopia.genesis.image.transform
 
 import java.awt.image.{ConvolveOp, Kernel}
 
-import utopia.genesis.image.Image
+import utopia.genesis.image.{Image, MutableImage}
 import utopia.genesis.shape.shape2D.Size
 
 /**
@@ -21,4 +21,6 @@ class ConvolveTransform(kernel: Array[Float], kernelSize: Size) extends ImageTra
 	// IMPLEMENTED	-----------------
 	
 	override def apply(source: Image) = source.filterWith(op)
+	
+	override def apply(target: MutableImage) = target.filterWith(op)
 }

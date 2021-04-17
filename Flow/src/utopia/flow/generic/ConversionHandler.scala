@@ -70,9 +70,8 @@ object ConversionHandler
             Some(value)
         else
         {
-            // The targeted data types include the provided types, plus each of their sub types
+            // The targeted data types include the provided types, plus each of their sub-types
             val allTargetTypes = targetTypes.flatMap { datatype => datatype.subTypes :+ datatype }
-            
             if (allTargetTypes.isEmpty) None else _cast(value, allTargetTypes)
         }
     }
@@ -116,7 +115,7 @@ object ConversionHandler
     private def optimalRouteTo(sourceType: DataType, targetType: DataType) = 
         optimalRoutes.getOrElseUpdate(sourceType -> targetType,
             {
-                val route = nodeForType(sourceType).cheapestRouteTo(nodeForType(targetType), { _.content.cost } )
+                val route = nodeForType(sourceType).cheapestRouteTo(nodeForType(targetType)) { _.content.cost }
                 route.map { r => ConversionRoute(r.map { _.content }) }
             })
     
@@ -167,7 +166,7 @@ object ConversionHandler
         def apply(value: Value) =
         {
             if (!(value isOfType conversion.source))
-                throw DataTypeException(s"Input of $value in conversion $conversion")
+                throw DataTypeException(s"Input of ${value.description} in conversion $conversion")
             caster.cast(value, conversion.target)
         }
     }

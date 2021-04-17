@@ -1,10 +1,9 @@
 package utopia.exodus.database.access.many
 
-import utopia.exodus.database.access.id.DescriptionRoleIds
+import utopia.exodus.database.access.id.DbDescriptionRoleIds
 import utopia.exodus.database.factory.description.DescriptionLinkFactory
 import utopia.exodus.database.model.description.{DescriptionLinkModel, DescriptionLinkModelFactory}
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.enumeration.{TaskType, UserRole}
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.post.NewDescription
 import utopia.metropolis.model.stored.description.DescriptionLink
@@ -43,7 +42,7 @@ object DbDescriptions
 	/**
 	  * An access point to all role descriptions
 	  */
-	val ofAllRoles = DescriptionsOfAll(DescriptionLinkFactory.role, DescriptionLinkModel.role)
+	val ofAllUserRoles = DescriptionsOfAll(DescriptionLinkFactory.userRole, DescriptionLinkModel.userRole)
 	
 	/**
 	  * An access point to all task descriptions
@@ -82,38 +81,6 @@ object DbDescriptions
 		DescriptionLinkFactory.device, DescriptionLinkModel.device)
 	
 	/**
-	  * @param task Task type
-	  * @return An access point to descriptions of that task type
-	  */
-	@deprecated("Use .ofTaskWithId(Int) instead", "v1")
-	def ofTask(task: TaskType) =
-		DescriptionsOfSingle(task.id, DescriptionLinkFactory.task, DescriptionLinkModel.task)
-	
-	/**
-	  * @param tasks Task types
-	  * @return An access point to descriptions of those task types
-	  */
-	@deprecated("Use .ofTasksWithIds(...) instead", "v1")
-	def ofTasks(tasks: Set[TaskType]) = DescriptionsOfMany(tasks.map { _.id },
-		DescriptionLinkFactory.task, DescriptionLinkModel.task)
-	
-	/**
-	  * @param role User role
-	  * @return An access point to descriptions of that user role
-	  */
-	@deprecated("Use .ofRoleWithId(Int) instead", "v1")
-	def ofRole(role: UserRole) =
-		DescriptionsOfSingle(role.id, DescriptionLinkFactory.role, DescriptionLinkModel.role)
-	
-	/**
-	  * @param roles Roles
-	  * @return An access point to descriptions of those roles
-	  */
-	@deprecated("Use .ofRolesWithIds(...) instead", "v1")
-	def ofRoles(roles: Set[UserRole]) = DescriptionsOfMany(roles.map { _.id },
-		DescriptionLinkFactory.role, DescriptionLinkModel.role)
-	
-	/**
 	  * @param taskId Task id
 	  * @return An access point to descriptions of that task type
 	  */
@@ -131,15 +98,15 @@ object DbDescriptions
 	  * @param roleId User role id
 	  * @return An access point to descriptions of that user role
 	  */
-	def ofRoleWithId(roleId: Int) =
-		DescriptionsOfSingle(roleId, DescriptionLinkFactory.role, DescriptionLinkModel.role)
+	def ofUserRoleWithId(roleId: Int) =
+		DescriptionsOfSingle(roleId, DescriptionLinkFactory.userRole, DescriptionLinkModel.userRole)
 	
 	/**
 	  * @param roleIds Ids of targeted user roles
 	  * @return An access point to descriptions of those roles
 	  */
-	def ofRolesWithIds(roleIds: Set[Int]) = DescriptionsOfMany(roleIds,
-		DescriptionLinkFactory.role, DescriptionLinkModel.role)
+	def ofUserRolesWithIds(roleIds: Set[Int]) = DescriptionsOfMany(roleIds,
+		DescriptionLinkFactory.userRole, DescriptionLinkModel.userRole)
 	
 	/**
 	  * @param languageId Language id
@@ -318,7 +285,7 @@ object DbDescriptions
 			languageIds.headOption match
 			{
 				case Some(languageId) =>
-					val allRoleIds = DescriptionRoleIds.all.toSet
+					val allRoleIds = DbDescriptionRoleIds.all.toSet
 					val readDescriptions = inLanguageWithId(languageId).all
 					val missingRoleIds = allRoleIds -- readDescriptions.map { _.description.roleId }.toSet
 					if (missingRoleIds.nonEmpty)

@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing.display
 
 import utopia.flow.async.VolatileFlag
-import utopia.flow.event.{ChangeEvent, ChangeListener, Changing}
+import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
 import utopia.genesis.animation.Animation
 import utopia.genesis.color.Color
 import utopia.genesis.handling.Actor
@@ -17,7 +17,7 @@ import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.layout.stack.StackableWrapper
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext
@@ -33,8 +33,8 @@ object ProgressBar
 	  * @param animationContext Component creation context for animations (implicit)
 	  * @return A new progress bar
 	  */
-	def contextual(stackSize: StackSize, progressPointer: Changing[Double])(implicit context: ColorContextLike,
-																			animationContext: AnimationContextLike) =
+	def contextual(stackSize: StackSize, progressPointer: ChangingLike[Double])(implicit context: ColorContextLike,
+																				animationContext: AnimationContextLike) =
 		new ProgressBar(animationContext.actorHandler, stackSize,
 			context.colorScheme.gray.forBackground(context.containerBackground),
 			context.colorScheme.secondary.forBackground(context.containerBackground), progressPointer,
@@ -47,7 +47,7 @@ object ProgressBar
   * @since 1.8.2019, v1+
   */
 class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgroundColor: Color, val barColor: Color,
-				  progressPointer: Changing[Double],
+				  progressPointer: ChangingLike[Double],
 				  animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
 	extends StackableWrapper with CustomDrawableWrapper with SwingComponentRelated
 {
@@ -61,7 +61,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 	
 	// INITIAL CODE ----------------------
 	
-	progressPointer.addListener(InvisibleProgressListener, Some(0.0))
+	progressPointer.addListenerAndSimulateEvent(0.0)(InvisibleProgressListener)
 	
 	// Enables or disables animations based on whether this component is added to the main stack hierarchy
 	addStackHierarchyChangeListener { isAttached =>
@@ -80,7 +80,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 			if (progressPointer.value >= 1)
 				isCompletedFlag.set()
 			else
-				progressPointer.addListener(InvisibleProgressListener, Some(0.0))
+				progressPointer.addListenerAndSimulateEvent(0.0)(InvisibleProgressListener)
 		}
 	}
 	
@@ -98,6 +98,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 	 *         completes while this component is not shown)
 	 */
 	def completionFuture(implicit exc: ExecutionContext) = isCompletedFlag.futureWhere { c => c }
+		.map { _ => () }
 	
 	
 	// IMPLEMENTED	----------------------

@@ -1,19 +1,20 @@
 package utopia.flow.datastructure.mutable
 
-import utopia.flow.event.{ChangeListener, Changing}
+import utopia.flow.event.{ChangeDependency, ChangeListener, Changing}
 
 /**
   * Classes with this trait generate change events when they mutate
   * @author Mikko Hilpinen
-  * @since 25.5.2019, v1.4.1+
+  * @since 25.5.2019, v1.4.1
   */
-class PointerWithEvents[A](initialValue: A) extends PointerLike[A] with Changing[A]
+class PointerWithEvents[A](initialValue: A) extends Settable[A] with Changing[A]
 {
 	// ATTRIBUTES	----------------
 	
 	private var _value = initialValue
 	
-	var listeners = Vector[ChangeListener[A]]()
+	override var listeners = Vector[ChangeListener[A]]()
+	override var dependencies = Vector[ChangeDependency[A]]()
 	
 	/**
 	 * A read-only view into this pointer
@@ -22,6 +23,8 @@ class PointerWithEvents[A](initialValue: A) extends PointerLike[A] with Changing
 	
 	
 	// IMPLEMENTED	----------------
+	
+	override def isChanging = true
 	
 	/**
 	  * @return The current value in this mutable
@@ -40,9 +43,14 @@ class PointerWithEvents[A](initialValue: A) extends PointerLike[A] with Changing
 		}
 	}
 	
-	override def get = value
 	
-	override def set(newVal: A) = value = newVal
+	// OTHER	--------------------
+	
+	@deprecated("Please use .value instead", "v1.9")
+	def get = value
+	
+	@deprecated("Please assign directly to .value instead", "v1.9")
+	def set(newVal: A) = value = newVal
 	
 	
 	// NESTED   --------------------
@@ -51,9 +59,16 @@ class PointerWithEvents[A](initialValue: A) extends PointerLike[A] with Changing
 	{
 		override def value = PointerWithEvents.this.value
 		
+		override def isChanging = PointerWithEvents.this.isChanging
+		
 		override def listeners = PointerWithEvents.this.listeners
 		
 		override def listeners_=(newListeners: Vector[ChangeListener[A]]) =
 			PointerWithEvents.this.listeners = newListeners
+		
+		override def dependencies = PointerWithEvents.this.dependencies
+		
+		override def dependencies_=(newDependencies: Vector[ChangeDependency[A]]) =
+			PointerWithEvents.this.dependencies = newDependencies
 	}
 }

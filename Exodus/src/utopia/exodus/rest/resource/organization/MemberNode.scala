@@ -2,7 +2,7 @@ package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.Delete
 import utopia.access.http.Status.Forbidden
-import utopia.exodus.database.access.id.UserRoleIds
+import utopia.exodus.database.access.id.DbUserRoleIds
 import utopia.exodus.database.access.single.{DbMembership, DbOrganization, DbUser}
 import utopia.exodus.model.enumeration.StandardTask.RemoveMember
 import utopia.exodus.model.enumeration.StandardUserRole.Owner
@@ -52,7 +52,7 @@ case class MemberNode(organizationId: Int, userId: Option[Int]) extends Resource
 								Result.Failure(Forbidden, s"User $targetUserId has same or higher role as you do")
 							else
 							{
-								val managedRoleIds = UserRoleIds.belowOrEqualTo(activeUserRoleIds)
+								val managedRoleIds = DbUserRoleIds.belowOrEqualTo(activeUserRoleIds)
 								targetUserRoleIds.find { !managedRoleIds.contains(_) } match
 								{
 									case Some(conflictingRoleId) => Result.Failure(Forbidden,

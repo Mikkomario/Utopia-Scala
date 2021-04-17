@@ -1,8 +1,6 @@
 package utopia.exodus.database.access.single
 
 import java.time.Instant
-import java.util.UUID.randomUUID
-
 import utopia.exodus.database.access.many.DbDescriptions
 import utopia.exodus.database.factory.device.DeviceKeyFactory
 import utopia.exodus.database.model.device.{ClientDeviceModel, DeviceKeyModel}
@@ -10,10 +8,11 @@ import utopia.exodus.database.model.user.UserDeviceModel
 import utopia.exodus.model.enumeration.StandardDescriptionRoleId
 import utopia.exodus.model.partial.DeviceKeyData
 import utopia.exodus.model.stored.DeviceKey
+import utopia.exodus.util.UuidGenerator
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
-import utopia.vault.nosql.access.{SingleModelAccess, UniqueAccess}
+import utopia.vault.nosql.access.UniqueModelAccess
 import utopia.vault.sql.{Select, Where}
 
 /**
@@ -119,7 +118,7 @@ object DbDevice
 		
 		// NESTED	-----------------------------
 		
-		object DeviceAuthKey extends UniqueAccess[DeviceKey] with SingleModelAccess[DeviceKey]
+		object DeviceAuthKey extends UniqueModelAccess[DeviceKey]
 		{
 			// IMPLEMENTED	-----------------------
 			
@@ -156,8 +155,8 @@ object DbDevice
 			  * @param connection DB Connection (implicit)
 			  * @return This device key, now belonging to the specified user
 			  */
-			def assignToUserWithId(userId: Int)(implicit connection: Connection) = update(userId,
-				randomUUID().toString)
+			def assignToUserWithId(userId: Int)(implicit connection: Connection, uuidGenerator: UuidGenerator) =
+				update(userId, uuidGenerator.next())
 			
 			/**
 			  * Releases this device authentication key from the specified user, if that user is currently holding this key

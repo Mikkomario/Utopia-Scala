@@ -13,7 +13,7 @@ import utopia.reflection.event.TransitionState.{Finished, NotStarted, Ongoing}
 import utopia.reflection.event.Visibility.{Invisible, Visible}
 import utopia.reflection.event.VisibilityChange
 import utopia.reflection.event.VisibilityChange.{Appearing, Disappearing}
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.{ComponentCreationDefaults, ComponentToImage}
 
 import scala.concurrent.duration.FiniteDuration
@@ -36,10 +36,8 @@ object AnimatedVisibilityChange
 				   transition: VisibilityChange = Appearing, finalSize: Option[Size] = None)
 				  (implicit context: AnimationContextLike) =
 	{
-		val c = new AnimatedVisibilityChange(original, transitionAxis, transition, context.animationDuration,
+		new AnimatedVisibilityChange(original, transitionAxis, transition, context.animationDuration,
 			finalSize, context.maxAnimationRefreshRate, context.useFadingInAnimations)
-		context.actorHandler += c
-		c
 	}
 }
 

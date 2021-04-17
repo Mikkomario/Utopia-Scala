@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
-import utopia.exodus.database.access.id.TaskIds
+import utopia.exodus.database.access.id.DbTaskIds
 import utopia.exodus.database.access.many.DbDescriptions
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
@@ -31,7 +31,7 @@ object TasksNode extends Resource[AuthorizedContext]
 			// Reads task descriptions
 			val descriptions = DbDescriptions.ofAllTasks.inLanguages(languageIds)
 			// Combines the descriptions with the tasks and returns them
-			val describedTasks = TaskIds.all.map { taskId => DescribedTask(taskId,
+			val describedTasks = DbTaskIds.all.map { taskId => DescribedTask(taskId,
 				descriptions.getOrElse(taskId, Set()).toSet) }
 			Result.Success(describedTasks.map { _.toModel })
 		}

@@ -3,10 +3,10 @@ package utopia.exodus.rest.resource.user
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.Unauthorized
 import utopia.exodus.database.access.single.DbUser
-import utopia.exodus.rest.resource.ResourceWithChildren
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path
+import utopia.nexus.rest.ResourceWithChildren
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -19,7 +19,8 @@ object MeNode extends ResourceWithChildren[AuthorizedContext]
 {
 	override val name = "me"
 	
-	override val children = Vector(MyInvitationsNode, MyOrganizationsNode, MyLanguagesNode, MySettingsNode)
+	override val children = Vector(MyInvitationsNode, MyOrganizationsNode, MyLanguagesNode, MySettingsNode,
+		MyPasswordNode)
 	
 	override val allowedMethods = Vector(Get)
 	

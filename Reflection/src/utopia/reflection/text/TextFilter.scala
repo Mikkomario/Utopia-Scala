@@ -1,5 +1,7 @@
 package utopia.reflection.text
 
+import utopia.flow.parse.Regex
+
 import scala.language.implicitConversions
 
 object TextFilter

@@ -2,7 +2,7 @@ package utopia.reflection.container.stack.template.scrolling
 
 import utopia.genesis.shape.Axis2D
 import utopia.reflection.component.template.layout.stack.Stackable
-import utopia.reflection.shape.StackLengthLimit
+import utopia.reflection.shape.stack.StackLengthLimit
 
 import scala.collection.immutable.HashMap
 

@@ -21,7 +21,7 @@ class Label extends JWrapper with CustomDrawableWrapper
 {
 	// ATTRIBUTES	-----------------
 	
-	private val _label = new EmptyJComponent
+	private val _label = EmptyJComponent()
 	
 	
 	// IMPLEMENTED	-----------------

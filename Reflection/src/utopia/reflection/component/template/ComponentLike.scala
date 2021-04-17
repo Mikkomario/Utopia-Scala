@@ -6,7 +6,7 @@ import utopia.genesis.color.Color
 import utopia.genesis.event._
 import utopia.genesis.handling.mutable._
 import utopia.genesis.handling.{KeyStateListener, KeyTypedListener, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
-import utopia.genesis.shape.shape2D.Point
+import utopia.genesis.shape.shape2D.{Bounds, Point}
 import utopia.inception.handling.Handleable
 import utopia.reflection.component.template.layout.Area
 import utopia.reflection.event.ResizeListener
@@ -31,12 +31,12 @@ trait ComponentLike extends Area
     /**
       * @return Whether this component is currently visible
       */
-    def isVisible: Boolean
+    def visible: Boolean
     /**
       * Updates this component's visibility
       * @param isVisible Whether this component is currently visible
       */
-    def isVisible_=(isVisible: Boolean): Unit
+    def visible_=(isVisible: Boolean): Unit
     
     /**
       * @return The background color of this component
@@ -68,6 +68,12 @@ trait ComponentLike extends Area
     
     
     // COMPUTED    ---------------------------
+    
+    /**
+      * @return Whether this component is currently hidden / invisible
+      */
+    def invisible = !visible
+    def invisible_=(notVisible: Boolean) = visible = !notVisible
     
     /**
       * @return An iterator of this components parents
@@ -103,6 +109,17 @@ trait ComponentLike extends Area
       *         is returned.
       */
     def absolutePosition: Point = parent.map { _.absolutePosition + position }.getOrElse(position)
+    
+    
+    // IMPLEMENTED  ---------------------
+    
+    override def bounds = Bounds(position, size)
+    
+    override def bounds_=(b: Bounds) =
+    {
+        position = b.position
+        size = b.size
+    }
     
     
     // OTHER    -------------------------
@@ -251,7 +268,7 @@ trait ComponentLike extends Area
         {
             val translated = translateEvent(event, myBounds.position)
             // Only visible children are informed of events
-            children.foreach { c => if (c.isVisible) childAccept(c, translated) }
+            children.foreach { c => if (c.visible) childAccept(c, translated) }
         }
     }
     
@@ -261,7 +278,7 @@ trait ComponentLike extends Area
         if (myBounds.contains(event.mousePosition))
         {
             val translatedEvent = event.relativeTo(myBounds.position)
-            val visibleChildren = children.filter { _.isVisible }
+            val visibleChildren = children.filter { _.visible }
             
             translatedEvent.distributeAmong(visibleChildren)(childAccept)
         }

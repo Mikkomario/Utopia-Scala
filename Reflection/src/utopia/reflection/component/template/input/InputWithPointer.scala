@@ -1,13 +1,13 @@
 package utopia.reflection.component.template.input
 
-import utopia.flow.event.{ChangeListener, Changing}
+import utopia.flow.event.{ChangeListener, ChangingLike}
 
 /**
   * This input provides access to a changing element
   * @author Mikko Hilpinen
   * @since 29.6.2019, v1+
   */
-trait InputWithPointer[A, +P <: Changing[A]] extends Input[A]
+trait InputWithPointer[+A, +P <: ChangingLike[A]] extends Input[A]
 {
 	// ABSTRACT	-----------------
 	
@@ -27,16 +27,20 @@ trait InputWithPointer[A, +P <: Changing[A]] extends Input[A]
 	/**
 	  * Registers a new listener to be informed each time this input's value changes
 	  * @param listener                        The new listener
-	  * @param generateChangeEventFromOldValue None if no change event should be generated for the new listener.
-	  *                                        Some with "old" value if a change event should be triggered
-	  *                                        <b>for this new listener</b>. Default = None
 	  */
-	def addValueListener(listener: ChangeListener[A], generateChangeEventFromOldValue: Option[A] = None) =
-		valuePointer.addListener(listener, generateChangeEventFromOldValue)
+	def addValueListener(listener: ChangeListener[A]) = valuePointer.addListener(listener)
 	
 	/**
-	  * Removes a listener from the informed listeners for value
-	  * @param listener A listener
+	  * Registers a new listener to be informed each time this input's value changes
+	  * @param simulatedValue simulated old value
+	  * @param listener                        The new listener
+	  */
+	def addValueListenerAndSimulateEvent[B >: A](simulatedValue: B)(listener: => ChangeListener[B]) =
+		valuePointer.addListenerAndSimulateEvent(simulatedValue)(listener)
+	
+	/**
+	  * Makes sure the specified listener won't be informed anymore
+	  * @param listener A listener to no longer inform about value changes
 	  */
 	def removeValueListener(listener: Any) = valuePointer.removeListener(listener)
 }

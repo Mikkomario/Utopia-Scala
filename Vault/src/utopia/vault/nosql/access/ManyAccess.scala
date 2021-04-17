@@ -4,20 +4,6 @@ import scala.language.implicitConversions
 import utopia.vault.database.Connection
 import utopia.vault.sql.{Condition, OrderBy}
 
-object ManyAccess
-{
-	// IMPLICIT	--------------------------
-	
-	/**
-	  * Auto-accesses the contents of an access point
-	  * @param accessor Accessor being accessed
-	  * @param connection DB Connection (implicit)
-	  * @tparam A Type of accessed model
-	  * @return All items that can be accessed through the specified access point
-	  */
-	implicit def autoAccess[A](accessor: ManyAccess[A, _])(implicit connection: Connection): Vector[A] = accessor.all
-}
-
 /**
  * A common trait for access points that return multiple items
  * @author Mikko Hilpinen

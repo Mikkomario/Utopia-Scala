@@ -1,7 +1,6 @@
 package utopia.journey.controller.user
 
 import java.time.Instant
-
 import utopia.access.http.Status.{Forbidden, Unauthorized}
 import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue, QueueSystem}
 import utopia.annex.model.error.{RequestDeniedException, RequestFailedException, UnauthorizedRequestException}
@@ -12,8 +11,10 @@ import utopia.annex.model.response.{RequestNotSent, Response}
 import utopia.annex.model.schrodinger.CachedFindSchrodinger
 import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.time.Now
 import utopia.flow.util.FileExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.RichComparable._
 import utopia.journey.model.InvitationResponseSpirit
 import utopia.journey.util.JourneyContext._
 import utopia.metropolis.model.combined.organization.{DescribedInvitation, InvitationWithResponse}
@@ -24,7 +25,7 @@ import scala.util.{Failure, Success}
 /**
   * Used for accessing currently pending invitations
   * @author Mikko Hilpinen
-  * @since 12.7.2020, v1
+  * @since 12.7.2020, v0.1
   * @param queueSystem An authorized queue system used when making queries to server
   * @param maxResponseWait Maximum time to wait for pending requests before discarding the request (default = 10 seconds)
   * @param isSameUser Whether the current user is the same as the previously logged user (default = true)
@@ -58,7 +59,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 	{
 		// Checks which invitations are still active
 		val now = Instant.now()
-		val result = cached.get.filterNot { _.wrapped.expireTime > now }
+		val result = cached.value.filterNot { _.wrapped.expireTime > now }
 		// Updates cached data if necessary
 		cached.setIf { _.size != result.size }(result)
 		// Applies id filtering if necessary
@@ -74,8 +75,8 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 	  */
 	def pending =
 	{
-		val requestDeprecationTime = Instant.now() + maxResponseWait
-		val request = GetRequest("users/me/invitations", Instant.now() < requestDeprecationTime)
+		val requestDeprecationTime = Now + maxResponseWait
+		val request = GetRequest("users/me/invitations", Now < requestDeprecationTime)
 		val schrodinger = new CachedFindSchrodinger(activeCached)
 		
 		// Completes the schrödinger asynchronously

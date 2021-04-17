@@ -1,11 +1,11 @@
 package utopia.reflection.component.drawing.immutable
 
 import utopia.genesis.color.Color
-import utopia.reflection.component.drawing.template
-import utopia.reflection.component.drawing.template.DrawLevel
+import utopia.reflection.component.drawing.template.{DrawLevel, TextDrawerLike}
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, StackInsets}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
 object TextDrawer
@@ -18,11 +18,13 @@ object TextDrawer
 	  * @param alignment Alignment used when drawing the text (default = left)
 	  * @param insets Insets placed around the text when possible (default = 0 on each side)
 	  * @param drawLevel Draw level used (default = Normal)
+	  * @param allowMultipleLines Whether line splitting should be allowed when drawing (based on line breaks)
+	  *                           (default = true)
 	  * @return A new text drawer
 	  */
 	def apply(text: LocalizedString, font: Font, color: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-			  insets: StackInsets = StackInsets.any, drawLevel: DrawLevel = Normal) =
-		new TextDrawer(text, TextDrawContext(font, color, alignment, insets), drawLevel)
+			  insets: StackInsets = StackInsets.any, drawLevel: DrawLevel = Normal, allowMultipleLines: Boolean = true) =
+		new TextDrawer(text, TextDrawContext(font, color, alignment, insets), drawLevel, allowMultipleLines)
 }
 
 /**
@@ -30,5 +32,10 @@ object TextDrawer
   * @author Mikko Hilpinen
   * @since 14.3.2020, v1
   */
-class TextDrawer(override val text: LocalizedString, override val drawContext: TextDrawContext,
-				 override val drawLevel: DrawLevel = Normal) extends template.TextDrawer
+case class TextDrawer(text: LocalizedString, override val drawContext: TextDrawContext,
+					  override val drawLevel: DrawLevel, allowMultipleLines: Boolean)
+	extends TextDrawerLike
+{
+	override def drawnText =
+		if (allowMultipleLines) Right(text.lines) else Left(text)
+}

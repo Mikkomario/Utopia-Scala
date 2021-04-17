@@ -1,13 +1,13 @@
 package utopia.reflection.event
 
-import utopia.flow.util.RichComparable
+import utopia.flow.util.SelfComparable
 
 /**
   * An enumeration for different general states of a transition
   * @author Mikko Hilpinen
   * @since 19.8.2020, v1.2
   */
-sealed trait TransitionState extends RichComparable[TransitionState]
+sealed trait TransitionState extends SelfComparable[TransitionState]
 
 object TransitionState
 {
@@ -16,6 +16,8 @@ object TransitionState
 	  */
 	case object NotStarted extends TransitionState
 	{
+		override def repr = this
+		
 		override def compareTo(o: TransitionState) = o match
 		{
 			case NotStarted => 0
@@ -28,6 +30,8 @@ object TransitionState
 	  */
 	case object Ongoing extends TransitionState
 	{
+		override def repr = this
+		
 		override def compareTo(o: TransitionState) = o match
 		{
 			case NotStarted => 1
@@ -41,6 +45,8 @@ object TransitionState
 	  */
 	case object Finished extends TransitionState
 	{
+		override def repr = this
+		
 		override def compareTo(o: TransitionState) = o match
 		{
 			case Finished => 0

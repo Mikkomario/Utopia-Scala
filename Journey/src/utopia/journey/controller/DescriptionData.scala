@@ -1,7 +1,6 @@
 package utopia.journey.controller
 
 import java.time.{Instant, Period}
-
 import utopia.annex.controller.QueueSystem
 import utopia.annex.model.request.GetRequest
 import utopia.annex.model.schrodinger.{CachedFindSchrodinger, CompletedSchrodinger}
@@ -11,8 +10,10 @@ import utopia.flow.container.{ModelFileContainer, ObjectsFileContainer}
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.util.FileExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
+import utopia.flow.util.RichComparable._
 import utopia.journey.util.JourneyContext._
 import utopia.metropolis.model.combined.description.DescribedDescriptionRole
 import utopia.metropolis.model.combined.language.DescribedLanguage
@@ -23,7 +24,7 @@ import scala.concurrent.duration.Duration
   * An access point used for retrieving description-related data that is shared between all user accounts
   * (languages, user role descriptions, etc.)
   * @author Mikko Hilpinen
-  * @since 19.7.2020, v1
+  * @since 19.7.2020, v0.1
   */
 class DescriptionData(currentQueueSystem: => QueueSystem, defaultUpdatePeriod: Period = 3.days,
 					  requestTimeout: Duration = 10.seconds)
@@ -75,7 +76,7 @@ class DescriptionData(currentQueueSystem: => QueueSystem, defaultUpdatePeriod: P
 	private def getOrUpdate[A <: ModelConvertible](container: ObjectsFileContainer[A], typeName: String,
 												   requestPath: String) =
 	{
-		if (lastUpdateFor(typeName) < Instant.now() - defaultUpdatePeriod)
+		if (lastUpdateFor(typeName) < Now - defaultUpdatePeriod)
 			update(container, typeName, requestPath)
 		else
 			CompletedSchrodinger.success(container.current)
@@ -92,13 +93,13 @@ class DescriptionData(currentQueueSystem: => QueueSystem, defaultUpdatePeriod: P
 		val schrodinger = new CachedFindSchrodinger(localData)
 		// Deprecates request after a timeout if there is local data to use
 		schrodinger.completeWith(currentQueueSystem.push(GetRequest(requestPath,
-			localData.nonEmpty && Instant.now() > requestTime + requestTimeout))) {
+			localData.nonEmpty && Now > requestTime + requestTimeout))) {
 			_.vector(container.factory).parsed } { log(_) }
 		
 		// Updates container & update time status once server results arrive
 		schrodinger.serverResultFuture.foreachSuccess { descriptionRoles =>
 			container.current = descriptionRoles
-			updateTimesContainer(typeName) = Instant.now()
+			updateTimesContainer(typeName) = Now
 		}
 		
 		schrodinger

@@ -1,7 +1,7 @@
 package utopia.reflection.color
 
-import utopia.genesis.color.RGB
-import utopia.reflection.color.ColorRole.{Error, Gray, Primary, Secondary, Success, Tertiary, Warning}
+import utopia.genesis.color.Rgb
+import utopia.reflection.color.ColorRole.{Error, Gray, Info, Primary, Secondary, Success, Tertiary, Warning}
 import utopia.reflection.color.ColorScheme.{defaultError, defaultSuccess, defaultWarning}
 
 object ColorScheme
@@ -11,23 +11,23 @@ object ColorScheme
 	/**
 	  * Default shade of gray to use in light themed uis
 	  */
-	val defaultLightGray = ColorSet(RGB.grayWithValue(225), RGB.grayWithValue(245), RGB.grayWithValue(225))
+	val defaultLightGray = ColorSet(Rgb.grayWithValue(225), Rgb.grayWithValue(245), Rgb.grayWithValue(225))
 	/**
 	  * Default shade of gray to use in dark themed uis
 	  */
-	val defaultDarkGray = ColorSet(RGB.grayWithValue(66), RGB.grayWithValue(109), RGB.grayWithValue(27))
+	val defaultDarkGray = ColorSet(Rgb.grayWithValue(66), Rgb.grayWithValue(109), Rgb.grayWithValue(27))
 	/**
 	  * Default error color to use
 	  */
-	val defaultError = ColorSet(RGB.withValues(176, 0, 32), RGB.withValues(233, 73, 72), RGB.withValues(121, 0, 0))
+	val defaultError = ColorSet(Rgb.withValues(176, 0, 32), Rgb.withValues(233, 73, 72), Rgb.withValues(121, 0, 0))
 	/**
 	  * Default warning color to use
 	  */
-	val defaultWarning = ColorSet(RGB.withValues(239, 159, 0), RGB.withValues(255, 208, 72), RGB.withValues(183, 113, 0))
+	val defaultWarning = ColorSet(Rgb.withValues(239, 159, 0), Rgb.withValues(255, 208, 72), Rgb.withValues(183, 113, 0))
 	/**
 	  * Default success color to use
 	  */
-	val defaultSuccess = ColorSet(RGB.withValues(44, 181, 17), RGB.withValues(107, 232, 77), RGB.withValues(0, 132, 0))
+	val defaultSuccess = ColorSet(Rgb.withValues(44, 181, 17), Rgb.withValues(107, 232, 77), Rgb.withValues(0, 132, 0))
 	
 	
 	// OTHER	--------------------------------
@@ -105,6 +105,16 @@ case class ColorScheme(primary: ColorSet, gray: ColorSet = ColorScheme.defaultLi
 	  * @return Color to use when displaying warnings
 	  */
 	def warning = apply(Warning)
+	
+	/**
+	 * @return Color to use when displaying a success state
+	 */
+	def success = apply(Success)
+	
+	/**
+	 * @return Color to use when displaying an info state
+	 */
+	def info = apply(Info)
 	
 	/**
 	  * @return Number of different standard colors (primary, secondary, tertiary) defined in this color scheme (1-3)

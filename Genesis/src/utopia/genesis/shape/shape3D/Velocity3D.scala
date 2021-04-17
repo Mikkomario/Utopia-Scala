@@ -1,8 +1,9 @@
 package utopia.genesis.shape.shape3D
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape1D.LinearVelocity
-import utopia.genesis.shape.shape2D.Velocity2D
+import utopia.genesis.shape.shape2D.movement
+import utopia.genesis.shape.shape2D.movement.Velocity2D
 import utopia.genesis.shape.template.{Dimensional, VectorLike, VelocityLike}
 
 import scala.concurrent.duration.{Duration, TimeUnit}
@@ -45,7 +46,7 @@ case class Velocity3D(transition: Vector3D, override val duration: Duration) ext
 	/**
 	  * @return A copy of this velocity without z-axis movement
 	  */
-	def in2D = Velocity2D(transition.in2D, duration)
+	def in2D = movement.Velocity2D(transition.in2D, duration)
 	
 	
 	// IMPLEMENTED	-------------

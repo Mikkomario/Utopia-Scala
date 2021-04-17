@@ -7,7 +7,7 @@ object IncreaseContrast extends IncreaseContrast(1)
   * @author Mikko Hilpinen
   * @since 16.6.2019, v2.1+
   */
-sealed class IncreaseContrast private(val iterations: Double) extends RGBTransform
+sealed class IncreaseContrast private(val iterations: Double) extends RgbTransform
 {
 	// IMPLEMENTED	------------------
 	

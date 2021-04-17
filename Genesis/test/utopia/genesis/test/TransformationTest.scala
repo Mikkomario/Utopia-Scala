@@ -1,8 +1,9 @@
 package utopia.genesis.test
 
 import utopia.genesis.shape.shape1D.Rotation
-import utopia.genesis.shape.shape2D.{Line, Point, Transformation}
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.shape2D.transform.{AffineTransformation, LinearTransformation}
+import utopia.genesis.shape.shape2D.{Matrix2D, Vector2D}
+import utopia.genesis.shape.shape3D.Matrix3D
 import utopia.genesis.util.Extensions._
 
 /**
@@ -10,6 +11,48 @@ import utopia.genesis.util.Extensions._
  */
 object TransformationTest extends App
 {
+	println(Matrix2D.quarterRotationCounterClockwise)
+	println(Matrix2D.quarterRotationClockwise)
+	
+	val translation = AffineTransformation.translation(Vector2D(10))
+	val scaling = LinearTransformation.scaling(Vector2D(2, 1))
+	val rotation = LinearTransformation.rotation(Rotation.ofDegrees(90))
+    
+	assert((-translation).position.x == -10)
+	assert((-scaling).scaling.x == 0.5)
+	assert((-rotation).rotation.clockwiseDegrees ~== -90)
+	
+	assert(translation.toMatrix.inverse.get(translation.toMatrix) == Matrix3D.identity)
+	assert(scaling.toMatrix.inverse.get(scaling.toMatrix) == Matrix2D.identity)
+	assert(rotation.toMatrix.inverse.get(rotation.toMatrix) == Matrix2D.identity)
+	
+	val position = Vector2D(10, 10)
+	
+	assert(translation(position) == Vector2D(20, 10))
+	assert(scaling(position) == Vector2D(20, 10))
+	assert(rotation(position) == Vector2D(-10, 10))
+	
+	assert(translation.invert(position).get == Vector2D(0, 10))
+	assert(scaling.invert(position).get == Vector2D(5, 10))
+	assert(rotation.invert(position).get == Vector2D(10, -10))
+	
+	assert(position * translation * scaling == Vector2D(40, 10))
+	assert(position * scaling * translation == Vector2D(30, 10))
+	assert(position * rotation * scaling == Vector2D(-20, 10))
+	assert(position * scaling * rotation ~== Vector2D(-10, 20))
+	
+	/*
+	val combo = rotation.toMatrix.to3D
+	
+	println(s"${Matrix2D.quarterRotationClockwise} * ${Matrix2D.quarterRotationClockwise.inverse.get} = ${Matrix2D.quarterRotationClockwise.to3D * Matrix2D.quarterRotationClockwise.inverse.get.to3D}")
+	println(s"$combo * ${combo.inverse.get} = ${combo * combo.inverse.get}")
+	assert(combo * combo.inverse.get ~== Matrix3D.identity)
+	assert(position * combo * combo.inverse.get ~== position)
+	*/
+	
+	println("Success!")
+	
+    /*
     val translation = Transformation.translation(Vector3D(10))
     val scaling = Transformation.scaling(2)
     val rotation = Transformation.rotationDegs(90)
@@ -54,4 +97,6 @@ object TransformationTest extends App
     assert(combo.invert(transformedLine) == line)
     
     println("Success")
+    
+     */
 }

@@ -9,11 +9,9 @@ import utopia.flow.parse.JsonConvertible
  * @author Mikko Hilpinen
  * @since 26.11.2016
  */
-trait Property extends JsonConvertible
+trait Property extends JsonConvertible with Viewable[Value]
 {
-    // PROPERTIES    -----------
-    
-    def value: Value
+    // ABSTRACT    ---------------
     
     /**
      * The name of the property

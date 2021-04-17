@@ -70,7 +70,7 @@ object DescriptionLinkModel
 	/**
 	  * Role description links model factory
 	  */
-	lazy val role = DescriptionLinkModelFactory(Tables.roleDescription, "roleId")
+	lazy val userRole = DescriptionLinkModelFactory(Tables.roleDescription, "roleId")
 	
 	/**
 	  * Task description links model factory

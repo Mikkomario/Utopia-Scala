@@ -21,7 +21,7 @@ object ResponseParser
 	  * @return A response parser that produces string content (empty string on read failures and empty responses)
 	  */
 	def string(implicit defaultEncoding: Codec) = parseOrDefault("") { (stream, headers, _) =>
-		Try { Source.fromInputStream(stream)(headers.codec.getOrElse(defaultEncoding)).consume { _.getLines.mkString } }
+		Try { Source.fromInputStream(stream)(headers.codec.getOrElse(defaultEncoding)).consume { _.getLines().mkString } }
 	}
 	
 	/**
@@ -29,7 +29,7 @@ object ResponseParser
 	  * @return A response parser that produces string content (empty string on empty responses, Try[string] otherwise)
 	  */
 	def tryString(implicit defaultEncoding: Codec) = defaultOnEmpty("") { (stream, headers, _) =>
-		Try { Source.fromInputStream(stream)(headers.codec.getOrElse(defaultEncoding)).consume { _.getLines.mkString } }
+		Try { Source.fromInputStream(stream)(headers.codec.getOrElse(defaultEncoding)).consume { _.getLines().mkString } }
 	}
 	
 	/**

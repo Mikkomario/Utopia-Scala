@@ -92,7 +92,6 @@ sealed trait Axis2D extends Axis
     
     // COMPUTED ----------------------------
     
-    
     /**
      * The axis perpendicular to this one
      */

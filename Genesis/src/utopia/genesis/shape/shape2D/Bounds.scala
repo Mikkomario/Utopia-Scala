@@ -1,5 +1,7 @@
 package utopia.genesis.shape.shape2D
 
+import scala.language.implicitConversions
+
 import java.awt.geom.RoundRectangle2D
 
 import utopia.flow.generic.ValueConvertible
@@ -13,6 +15,7 @@ import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
 import utopia.genesis.generic.GenesisValue._
 import utopia.genesis.shape.Axis._
+import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape3D.Vector3D
 import utopia.genesis.shape.template.VectorLike
 
@@ -28,9 +31,16 @@ object Bounds extends FromModelFactory[Bounds]
     val zero = Bounds(Point.origin, Size.zero)
     
     
+    // IMPLICIT ---------------------------
+    
+    implicit def fromAwt(awtBounds: java.awt.Rectangle): Bounds = Bounds(Point(awtBounds.x, awtBounds.y),
+        Size(awtBounds.width, awtBounds.height))
+    
+    
     // OPERATORS    -----------------------
     
-    override def apply(model: template.Model[Property]) = Success(Bounds(model("position").getPoint, model("size").getSize))
+    override def apply(model: template.Model[Property]) =
+        Success(Bounds(model("position").getPoint, model("size").getSize))
     
     
     // OTHER METHODS    -------------------
@@ -107,7 +117,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     /**
      * An awt counterpart of these bounds
      */
-    def toAwt = new java.awt.Rectangle(position.x.ceil.toInt, position.y.ceil.toInt, width.ceil.toInt, height.ceil.toInt)
+    def toAwt = new java.awt.Rectangle(position.x.round.toInt, position.y.round.toInt, width.round.toInt, height.round.toInt)
     
     /**
      * The diagonal line for this rectangle. Starts at the position coordinates and goes all the 
@@ -131,6 +141,42 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @return The bottom side y-coordinate
       */
     def bottomY = y + height
+    
+    /**
+      * @return A rounded version of these bounds
+      */
+    def round =
+    {
+        val newPosition = position.round
+        if (newPosition == position)
+            Bounds(newPosition, size.round)
+        else
+            Bounds(newPosition, Size((rightX - newPosition.x).round.toDouble, (bottomY - newPosition.y).round.toDouble))
+    }
+    
+    /**
+      * @return A copy of these bounds that rounds values for increased size and decreased position
+      */
+    def ceil =
+    {
+        val newPosition = position.floor
+        if (newPosition == position)
+            Bounds(newPosition, size.ceil)
+        else
+            Bounds(newPosition, Size((rightX - newPosition.x).ceil, (bottomY - newPosition.y).ceil))
+    }
+    
+    /**
+      * @return A copy of these bounds for decreased size and increased position
+      */
+    def floor =
+    {
+        val newPosition = position.ceil
+        if (newPosition == position)
+            Bounds(newPosition, size.floor)
+        else
+            Bounds(newPosition, Size((rightX - newPosition.x).floor, (bottomY - newPosition.y).floor))
+    }
     
     
     // IMPLEMENTED METHODS    ----------
@@ -156,6 +202,8 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     override def contains[V <: Vector2DLike[V]](point: V) = point.x >= topLeft.x && point.y >= topLeft.y &&
             point.x <= bottomRight.x && point.y <= bottomRight.y
     
+    override def translated(translation: Vector2DLike[_]) = withPosition(position + translation)
+    
     
     // OPERATORS    --------------------
     
@@ -163,7 +211,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @param translation Translation applied to these bounds
       * @return A translated set of bounds
       */
-    def +(translation: Point) = translated(translation)
+    def +(translation: Vector2DLike[_]) = translated(translation)
     
     /**
       * @param insets Insets to add to these bounds
@@ -175,7 +223,7 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @param translation Translation applied to these bounds
       * @return A translated set of bounds
       */
-    def -(translation: Point) = translated(-translation)
+    def -[V <: Vector2DLike[V]](translation: V) = translated(-translation)
     
     /**
       * @param insets Insets to subtract from these bounds
@@ -215,6 +263,20 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     // OTHER METHODS    ----------------
     
     /**
+      * Finds the minimum coordinate along specified axis (assuming positive size of these bounds)
+      * @param axis Targeted axis
+      * @return The coordinate of the top-left corner of these bounds along the specified axis
+      */
+    def minAlong(axis: Axis2D) = position.along(axis)
+    
+    /**
+      * Finds the maximum coordinate along specified axis (assuming positive size of these bounds)
+      * @param axis Targeted axis
+      * @return The coordinate of the bottom-right corner of these bounds along the specified axis
+      */
+    def maxAlong(axis: Axis2D) = position.along(axis) + size.along(axis)
+    
+    /**
      * Creates a rounded rectangle based on this rectangle shape.
      * @param roundingFactor How much the corners are rounded. 0 Means that the corners are not
      * rounded at all, 1 means that the corners are rounded as much as possible, so that the ends of
@@ -224,6 +286,16 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     {
         val rounding = math.min(width, height) * roundingFactor
         new RoundRectangle2D.Double(position.x, position.y, width, height, rounding, rounding)
+    }
+    
+    /**
+      * Creates a rounded rectangle based on this rectangle shape
+      * @param radius The radius to use when drawing the corners
+      * @return A new rounded rectangle
+      */
+    def toRoundedRectangleWithRadius(radius: Double) =
+    {
+        new RoundRectangle2D.Double(position.x, position.y, width, height, radius * 2, radius * 2)
     }
     
     /**
@@ -241,6 +313,13 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
      * ignored
      */
     def contains(circle: Circle): Boolean = contains(circle.origin) && circleIntersection(circle).isEmpty
+    
+    /**
+      * @param bounds Another set of bounds
+      * @return Whether these bounds overlap with the other set of bounds
+      */
+    def overlapsWith(bounds: Bounds) = Axis2D.values.forall { axis =>
+        maxAlong(axis) > bounds.minAlong(axis) && bounds.maxAlong(axis) > minAlong(axis) }
     
     /**
      * Finds the intersection points between the edges of this rectangle and the provided circle
@@ -320,17 +399,11 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     def mapSize(map: Size => Size) = withSize(map(size))
     
     /**
-      * @param translation Translation applied to position
-      * @return A copy of these bounds with translated position
-      */
-    def translated(translation: VectorLike[_]) = withPosition(position + translation)
-    
-    /**
       * @param x X-translation applied
       * @param y Y-translation applied
       * @return A copy of these bounds with translated position
       */
-    def translated(x: Double, y: Double) = withPosition(position + Vector2D(x, y))
+    def translatedBy(x: Double, y: Double) = withPosition(position + Vector2D(x, y))
     
     /**
       * @param area Another area

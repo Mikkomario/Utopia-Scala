@@ -5,8 +5,9 @@ import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
-import utopia.genesis.shape.shape2D.{Bounds, Direction2D, Point, Size}
+import utopia.genesis.shape.shape2D.{Bounds, Direction2D, HorizontalDirection, Point, Size, VerticalDirection}
 import utopia.reflection.container.stack.Stacker
+import utopia.reflection.shape.stack.{StackInsets, StackLength}
 
 import scala.collection.immutable.HashMap
 
@@ -15,19 +16,14 @@ object Alignment
 	/**
 	  * Common trait for alignments that only represent a single direction
 	  */
-	sealed trait SingleDirectionAlignment extends Alignment
+	sealed trait SingleDirectionAlignment[+Direction <: Direction2D] extends Alignment
 	{
 		// ABSTRACT	---------------------
 		
 		/**
-		  * @return Axis used by this alignment
+		  * @return The direction matching this alignment
 		  */
-		def axis: Axis2D
-		
-		/**
-		  * @return The directional sign of this alignment
-		  */
-		def sign: Direction1D
+		def direction: Direction
 		
 		
 		// COMPUTED	---------------------
@@ -39,9 +35,14 @@ object Alignment
 		def isPositiveDirection = sign.isPositive
 		
 		/**
-		  * @return The direction matching this alignment
+		  * @return Axis used by this alignment
 		  */
-		def direction = Direction2D(axis, sign)
+		def axis = direction.axis
+		
+		/**
+		  * @return The directional sign of this alignment
+		  */
+		def sign = direction.sign
 		
 		
 		// IMPLEMENTED	-----------------
@@ -54,25 +55,29 @@ object Alignment
 	/**
 	  * Common trait for alignments that only represent a horizontal direction
 	  */
-	sealed trait HorizontalAlignment extends SingleDirectionAlignment
+	sealed trait HorizontalAlignment extends SingleDirectionAlignment[HorizontalDirection]
 	{
 		// IMPLEMENTED	-------------------
 		
-		override def axis = X
-		
 		override def vertical = Center
+		
+		override def horizontalDirection = Some(direction)
+		
+		override def verticalDirection = None
 	}
 	
 	/**
 	  * Common trait for alignments that only represent a vertical direction
 	  */
-	sealed trait VerticalAlignment extends SingleDirectionAlignment
+	sealed trait VerticalAlignment extends SingleDirectionAlignment[VerticalDirection]
 	{
 		// IMPLEMENTED	-------------------
 		
-		override def axis = Y
-		
 		override def horizontal = Center
+		
+		override def horizontalDirection = None
+		
+		override def verticalDirection = Some(direction)
 	}
 	
 	/**
@@ -80,7 +85,7 @@ object Alignment
 	  */
 	case object Left extends HorizontalAlignment
 	{
-		override def sign = Negative
+		override def direction = Direction2D.Left
 		
 		override def opposite = Right
 		
@@ -94,7 +99,7 @@ object Alignment
 	  */
 	case object Right extends HorizontalAlignment
 	{
-		override def sign = Positive
+		override def direction = Direction2D.Right
 		
 		override def opposite = Left
 		
@@ -108,7 +113,7 @@ object Alignment
 	  */
 	case object Top extends VerticalAlignment
 	{
-		override def sign = Negative
+		override def direction = Direction2D.Up
 		
 		override def opposite = Bottom
 		
@@ -122,7 +127,7 @@ object Alignment
 	  */
 	case object Bottom extends VerticalAlignment
 	{
-		override def sign = Positive
+		override def direction = Direction2D.Down
 		
 		override def opposite = Top
 		
@@ -147,6 +152,10 @@ object Alignment
 		override def vertical = this
 		
 		override def directions = Vector[Direction2D]()
+		
+		override def horizontalDirection = None
+		
+		override def verticalDirection = None
 	}
 	
 	case object TopLeft extends Alignment
@@ -162,6 +171,10 @@ object Alignment
 		override def vertical = Top
 		
 		override def directions = Vector(Direction2D.Up, Direction2D.Left)
+		
+		override def horizontalDirection = Some(Direction2D.Left)
+		
+		override def verticalDirection = Some(Direction2D.Up)
 	}
 	
 	case object TopRight extends Alignment
@@ -177,6 +190,10 @@ object Alignment
 		override def vertical = Top
 		
 		override def directions = Vector(Direction2D.Up, Direction2D.Right)
+		
+		override def horizontalDirection = Some(Direction2D.Right)
+		
+		override def verticalDirection = Some(Direction2D.Up)
 	}
 	
 	case object BottomLeft extends Alignment
@@ -192,6 +209,10 @@ object Alignment
 		override def vertical = Bottom
 		
 		override def directions = Vector(Direction2D.Down, Direction2D.Left)
+		
+		override def horizontalDirection = Some(Direction2D.Left)
+		
+		override def verticalDirection = Some(Direction2D.Down)
 	}
 	
 	case object BottomRight extends Alignment
@@ -207,6 +228,10 @@ object Alignment
 		override def vertical = Bottom
 		
 		override def directions = Vector(Direction2D.Down, Direction2D.Right)
+		
+		override def horizontalDirection = Some(Direction2D.Right)
+		
+		override def verticalDirection = Some(Direction2D.Down)
 	}
 	
 	
@@ -334,6 +359,18 @@ sealed trait Alignment
 	  */
 	def directions: Vector[Direction2D]
 	
+	/**
+	  * @return The direction this alignment will move the items horizontally. None if this alignment doesn't
+	  *         specify a direction (centered)
+	  */
+	def horizontalDirection: Option[HorizontalDirection]
+	
+	/**
+	  * @return The direction this alignment will move the items vertically. None if this alignment doesn't
+	  *         specify a direction (centered)
+	  */
+	def verticalDirection: Option[VerticalDirection]
+	
 	
 	// COMPUTED	----------------
 	
@@ -346,6 +383,18 @@ sealed trait Alignment
 	  * @return Whether this alignment can be used for vertical axis (Y)
 	  */
 	def isVertical = supportedAxes.contains(Y)
+	
+	/**
+	  * @return Either positive, negative or None, based on whether this alignment will move items right, left
+	  *         or to neither direction
+	  */
+	def horizontalDirectionSign = horizontalDirection.map { _.sign }
+	
+	/**
+	  * @return Either positive, negative or None, based on whether this alignment will move items down, up
+	  *         or to neither direction
+	  */
+	def verticalDirectionSign = verticalDirection.map { _.sign }
 	
 	
 	// OTHER	----------------
@@ -361,7 +410,45 @@ sealed trait Alignment
 	  * @return Direction determined by this alignment on specified axis. None if this alignment doesn't specify a
 	  *         direction along specified axis (centered)
 	  */
-	def directionAlong(axis: Axis2D) = directions.find { _.axis == axis }
+	def directionAlong(axis: Axis2D) = directions.find { _.axis == axis }.map { _.sign }
+	
+	/**
+	  * Calculates the desired coordinate for an element along the specified axis
+	  * @param axis Targeted axis
+	  * @param elementLength The length of the targeted element along that axis
+	  * @param areaLength The total length of the available area along that axis
+	  * @return The proposed (top or left) coordinate for the element along that axis
+	  */
+	def positionAlong(axis: Axis2D, elementLength: Double, areaLength: Double) = directionAlong(axis) match
+	{
+		// Case: Specifies the preferred edge
+		case Some(direction) =>
+			direction match
+			{
+				// Case: Move as far as possible
+				case Positive => areaLength - elementLength
+				// Case: Move as little as possible
+				case Negative => 0.0
+			}
+		// Case: Doesn't specify an edge => places the element at the center
+		case None => (areaLength - elementLength) / 2.0
+	}
+	
+	/**
+	  * Calculates the desired x-coordinate for an element
+	  * @param elementWidth The width of the targeted element
+	  * @param areaWidth The total width of the available area
+	  * @return The proposed (left) x-coordinate for the element
+	  */
+	def x(elementWidth: Double, areaWidth: Double) = positionAlong(X, elementWidth, areaWidth)
+	
+	/**
+	  * Calculates the desired y-coordinate for an element
+	  * @param elementHeight The height of the targeted element
+	  * @param areaHeight The total height of the available area
+	  * @return The proposed (top) y-coordinate for the element
+	  */
+	def y(elementHeight: Double, areaHeight: Double) = positionAlong(Y, elementHeight, areaHeight)
 	
 	/**
 	  * Positions the specified area within a set of bounds so that it follows this alignment
@@ -403,15 +490,16 @@ sealed trait Alignment
 		// Calculates the new position for the area
 		val topLeft = Point.calculateWith { axis =>
 			val (startMargin, endMargin) = margins.sidesAlong(axis)
-			positionWithDirection(fittedArea.along(axis), within.size.along(axis), startMargin, endMargin,
-				directionAlong(axis), !fitWithinBounds)
+			within.position.along(axis) + positionWithDirection(fittedArea.along(axis), within.size.along(axis),
+				startMargin, endMargin, directionAlong(axis), !fitWithinBounds)
 		}
 		
 		Bounds(topLeft, fittedArea)
 	}
 	
 	private def positionWithDirection(length: Double, withinLength: Double, targetStartMargin: StackLength,
-									  targetEndMargin: StackLength, direction: Option[Direction2D], allowStartBelowZero: Boolean) =
+									  targetEndMargin: StackLength, direction: Option[Direction1D],
+									  allowStartBelowZero: Boolean) =
 	{
 		val emptyLength = withinLength - length
 		if (emptyLength < 0 && !allowStartBelowZero)
@@ -423,7 +511,7 @@ sealed trait Alignment
 				case Some(definedDirection) =>
 					// Checks how much margin can be used
 					val totalTargetMargin = targetStartMargin.optimal + targetEndMargin.optimal
-					if (definedDirection.sign.isPositive)
+					if (definedDirection.isPositive)
 					{
 						// Case: Enough space available
 						if (totalTargetMargin <= emptyLength)

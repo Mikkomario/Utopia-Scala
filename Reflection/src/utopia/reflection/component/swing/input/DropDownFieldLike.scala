@@ -21,9 +21,11 @@ import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.multi.AnimatedStack
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
+import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenFocusLost
 import utopia.reflection.container.swing.window.{Popup, Window}
 import utopia.reflection.controller.data.ContainerSelectionManager
-import utopia.reflection.shape.{StackLength, StackSize, StackSizeModifier}
+import utopia.reflection.shape.stack.modifier.StackSizeModifier
+import utopia.reflection.shape.stack.{StackLength, StackSize}
 
 import scala.concurrent.ExecutionContext
 
@@ -40,7 +42,8 @@ import scala.concurrent.ExecutionContext
   * @param exc Implicit execution context (used in pop-up)
   */
 abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
-(actorHandler: ActorHandler, selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any, displayStackLayout: StackLayout = Fit,
+(actorHandler: ActorHandler, selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any,
+ displayStackLayout: StackLayout = Fit,
  protected val currentSelectionOptionsPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
  override val valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
  contentIsStateless: Boolean = false)
@@ -96,7 +99,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	/**
 	  * @return Whether this field is currently displaying a pop-up view
 	  */
-	def isDisplayingPopUp = visiblePopup.exists { _.isVisible }
+	def isDisplayingPopUp = visiblePopup.exists { _.visible }
 	
 	/**
 	  * @return Current stack size of the search options -view
@@ -141,7 +144,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 			}
 		}
 		
-		currentSelectionOptionsPointer.addListener({ e =>
+		currentSelectionOptionsPointer.addListenerAndSimulateEvent(Vector()) { e =>
 			// Displays either "no content" view or the selection stack view
 			if (e.newValue.isEmpty)
 				popupContentView.set(noResultsView)
@@ -157,12 +160,12 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 				}
 				popupContentView.set(searchStack)
 			}
-		}, Some(Vector()))
+		}
 		if (currentSelectionOptionsPointer.value.isEmpty)
 			popupContentView.set(noResultsView)
 		
 		// When value is updated from an external source, it also affects selection stack
-		addValueListener({ e => displaysManager.value = e.newValue }, Some(None))
+		addValueListenerAndSimulateEvent(None) { e => displaysManager.value = e.newValue }
 		
 		// When display manager updates its value (for example due to content change), updates current value
 		// (if not displaying a pop-up at the time)
@@ -173,7 +176,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 		
 		displaysManager.enableMouseHandling()
 		displaysManager.enableKeyHandling(actorHandler, listenEnabledCondition = Some(() => mainDisplay.isInFocus ||
-			visiblePopup.exists { _.isVisible }))
+			visiblePopup.exists { _.visible }))
 		
 		addKeyStateListener(ShowPopupKeyListener)
 		addMouseButtonListener(ShowPopupKeyListener)
@@ -184,7 +187,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 		if (visiblePopup.isEmpty)
 		{
 			// Creates and displays the popup
-			val popup = Popup(mainDisplay, popupContentView, actorHandler) {
+			val popup = Popup(mainDisplay, popupContentView, actorHandler, WhenFocusLost) {
 				(fieldSize, _) => Point(0, fieldSize.height) }
 			visiblePopup = Some(popup)
 			// Relays key events to the search field
@@ -223,7 +226,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 		}
 		
 		override val keyStateEventFilter = KeyStateEvent.wasPressedFilter &&
-			KeyStateEvent.notKeysFilter(Vector(KeyEvent.VK_ESCAPE, KeyEvent.VK_TAB))
+			KeyStateEvent.notKeysFilter(Set(KeyEvent.VK_ESCAPE, KeyEvent.VK_TAB))
 		
 		override def onKeyState(event: KeyStateEvent) = displayPopup()
 		

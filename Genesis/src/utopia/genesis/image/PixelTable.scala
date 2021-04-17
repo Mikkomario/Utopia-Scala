@@ -1,7 +1,7 @@
 package utopia.genesis.image
 
 import java.awt.image.BufferedImage
-
+import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.{Area2D, Bounds, Point, Size}
 
@@ -38,7 +38,7 @@ object PixelTable
   * @since 15.6.2019, v2.1+
   */
 // First y-coordinate, then x-coordinate
-case class PixelTable private(_pixels: Vector[Vector[Color]])
+case class PixelTable private(_pixels: Vector[Vector[Color]]) extends Iterable[Color]
 {
 	// COMPUTED	-----------------------
 	
@@ -55,17 +55,22 @@ case class PixelTable private(_pixels: Vector[Vector[Color]])
 	/**
 	  * @return The size of this table in pixels
 	  */
-	def size = Size(width, height)
+	def area = Size(width, height)
 	
 	/**
-	  * @return A vector containing each pixel color value
+	  * @return The average luminosity of the pixels in this table
 	  */
-	private def toVector = _pixels.flatten
+	def averageLuminosity = Color.averageLuminosityOf(this)
+	
+	/**
+	  * @return The average relative luminance (perceived lightness) of the pixels in this table
+	  */
+	def averageRelativeLuminance = Color.averageRelativeLuminanceOf(this)
 	
 	/**
 	  * @return A vector containing each pixel color rgb value
 	  */
-	private def toRGBVector = toVector.map { _.toInt }
+	private def rgbIterator = iterator.map { _.toInt }
 	
 	/**
 	  * @return A buffered image based on this pixel data
@@ -108,8 +113,73 @@ case class PixelTable private(_pixels: Vector[Vector[Color]])
 	  */
 	def apply(point: Point): Color = apply(point.x.toInt, point.y.toInt)
 	
+	/**
+	  * @param bounds Target area within this pixel table (doesn't have to be contained within this table's area)
+	  * @return An iterator of the pixels which overlap with the specified area
+	  */
+	def apply(bounds: Bounds): Iterator[Color] =
+	{
+		if (isEmpty)
+			Iterator.empty
+		else
+			bounds.within(Bounds(Point.origin, area)) match
+			{
+				case Some(area) => new PixelIterator(area.y.toInt, area.bottomY.toInt, area.x.toInt, area.rightX.toInt)
+				case None => Iterator.empty
+			}
+	}
+	
+	
+	// IMPLEMENTED	-------------------
+	
+	/**
+	  * @return Whether this pixel table is completely empty
+	  */
+	override def isEmpty = _pixels.headOption.forall { _.isEmpty }
+	
+	override def iterator = _pixels.iterator.flatten
+	
 	
 	// OTHER	-----------------------
+	
+	/**
+	  * Finds the color value of a single pixel in this table
+	  * @param point Targeted point in this table
+	  * @return The color of the pixel at that location. None if this table doesn't contain such a location.
+	  */
+	def lookup(point: Point) =
+	{
+		val y = point.y.toInt
+		if (y >= 0 && y < _pixels.size)
+		{
+			val row = _pixels(y)
+			val x = point.x.toInt
+			if (x >= 0 && x < row.size)
+				Some(row(x))
+			else
+				None
+		}
+		else
+			None
+	}
+	
+	/**
+	  * @param area Targeted area in this table
+	  * @return The average color value inside the area
+	  */
+	def averageOf(area: Bounds) = Color.average(apply(area).groupMap(200)(Color.average))
+	
+	/**
+	  * @param area Targeted area in this table
+	  * @return The average color luminosity inside the area
+	  */
+	def averageLuminosityOf(area: Bounds) = Color.averageLuminosityOf(apply(area))
+	
+	/**
+	  * @param area Targeted area in this table
+	  * @return The average relative luminance (perceived lightness) inside the area
+	  */
+	def averageRelativeLuminanceOf(area: Bounds) = Color.averageRelativeLuminanceOf(apply(area))
 	
 	/**
 	  * Takes a portion of this table that is contained within the target area
@@ -157,7 +227,7 @@ case class PixelTable private(_pixels: Vector[Vector[Color]])
 	def writeToImage(image: BufferedImage, topLeft: Point = Point.origin) =
 	{
 		val imageBounds = Bounds(Point.origin, Size(image.getWidth, image.getHeight))
-		val writeBounds = Bounds(topLeft, size)
+		val writeBounds = Bounds(topLeft, area)
 		
 		// Default case: Written area is within image area
 		if (imageBounds.contains(writeBounds))
@@ -168,5 +238,35 @@ case class PixelTable private(_pixels: Vector[Vector[Color]])
 	}
 	
 	private def writeToImageNoCheck(image: BufferedImage, topLeft: Point) = image.setRGB(topLeft.x.toInt, topLeft.y.toInt,
-		width, height, toRGBVector.toArray, 0, width)
+		width, height, rgbIterator.toArray, 0, width)
+	
+	
+	// NESTED	-------------------------------
+	
+	private class PixelIterator(yStart: Int, yEnd: Int, xStart: Int, xEnd: Int) extends Iterator[Color]
+	{
+		// ATTRIBUTES	-----------------------
+		
+		private var currentY = yStart
+		private var rowIterator = _pixels(currentY).slice(xStart, xEnd).iterator
+		
+		
+		// IMPLEMENTED	-----------------------
+		
+		override def hasNext = rowIterator.hasNext && currentY < yEnd
+		
+		override def next() =
+		{
+			rowIterator.nextOption() match
+			{
+				// Case: Still row left to scan
+				case Some(rowItem) => rowItem
+				// Case: New row needs to be started
+				case None =>
+					currentY += 1
+					rowIterator = _pixels(currentY).slice(xStart, xEnd).iterator
+					rowIterator.next()
+			}
+		}
+	}
 }

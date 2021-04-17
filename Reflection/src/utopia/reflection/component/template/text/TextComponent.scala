@@ -5,7 +5,8 @@ import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.template.layout.Alignable
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, StackInsets}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 
 /**

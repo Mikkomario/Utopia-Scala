@@ -1,8 +1,9 @@
 package utopia.reflection.image
 
+import utopia.flow.caching.multi.WeakCache
 import utopia.genesis.color.Color
 import utopia.genesis.image.Image
-import utopia.reflection.color.{ColorSet, ComponentColor}
+import utopia.reflection.color.{ColorSet, ColorShade, ColorShadeVariant, ComponentColor}
 import utopia.reflection.color.TextColorStandard.{Dark, Light}
 import utopia.reflection.component.context.{ButtonContextLike, ColorContextLike}
 import utopia.reflection.component.swing.button.ButtonImageSet
@@ -20,9 +21,11 @@ object SingleColorIcon
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1.2
   */
-class SingleColorIcon(original: Image)
+class SingleColorIcon(val original: Image)
 {
 	// ATTRIBUTES	------------------------
+	
+	private val paintedImageCache = WeakCache[Color, Image] { c => original.withColorOverlay(c) }
 	
 	/**
 	  * A black version of this icon
@@ -39,10 +42,23 @@ class SingleColorIcon(original: Image)
 	/**
 	  * A version of this icon for dark image + text buttons
 	  */
-	lazy val whiteForButtons = ButtonImageSet.lowAlphaOnDisabled(white, 0.65)
+	lazy val whiteForButtons = ButtonImageSet.lowAlphaOnDisabled(white)
+	/**
+	  * A version of this icon for black individual buttons
+	  */
+	lazy val blackIndividualButton = ButtonImageSet.brightening(black)
+	/**
+	  * A version of this icon for white individual buttons
+	  */
+	lazy val whiteIndividualButton = ButtonImageSet.darkening(white)
 	
 	
 	// COMPUTED	---------------------------
+	
+	/**
+	  * @return Size of this icon
+	  */
+	def size = original.size
 	
 	/**
 	  * @return A full size version of this icon where icon size matches the source resolution
@@ -90,8 +106,8 @@ class SingleColorIcon(original: Image)
 	  */
 	def asIndividualButton(implicit context: ColorContextLike) = context.containerBackground.textColorStandard match
 	{
-		case Dark => blackForButtons
-		case Light => whiteForButtons
+		case Dark => blackIndividualButton
+		case Light => whiteIndividualButton
 	}
 	
 	
@@ -103,7 +119,7 @@ class SingleColorIcon(original: Image)
 	  */
 	def asIndividualButtonWithColor(color: Color) =
 	{
-		val colored = original.withColorOverlay(color)
+		val colored = asImageWithColor(color)
 		if (color.luminosity < 0.6)
 			ButtonImageSet.brightening(colored)
 		else
@@ -115,8 +131,18 @@ class SingleColorIcon(original: Image)
 	 * @param context Button creation context
 	 * @return A button image set to be used in buttons without text
 	 */
-	def asIndividualButtonWithColor(colors: ColorSet)(implicit context: ColorContextLike) =
-		colors.forBackground(context.containerBackground)
+	def asIndividualButtonWithColor(colors: ColorSet)(implicit context: ColorContextLike): ButtonImageSet =
+		asIndividualButtonWithColor(colors.forBackground(context.containerBackground))
+	
+	/**
+	  * @param shade a color shade
+	  * @return A version of this icon that matches that shade
+	  */
+	def withShade(shade: ColorShadeVariant) = shade match
+	{
+		case ColorShade.Light => white
+		case ColorShade.Dark => black
+	}
 	
 	/**
 	  * @param f A mapping function
@@ -138,5 +164,15 @@ class SingleColorIcon(original: Image)
 	  * @param iconColor New color of the icon
 	  * @return An icon image with specified color overlay
 	  */
-	def asImageWithColor(iconColor: Color) = original.withColorOverlay(iconColor)
+	def asImageWithColor(iconColor: Color) = paintedImageCache(iconColor)
+	
+	/**
+	  * @param background Background color
+	  * @return A version of this icon (black or white) that is better against that background
+	  */
+	def singleColorImageAgainst(background: ComponentColor) = background.textColorStandard match
+	{
+		case Dark => black
+		case Light => white
+	}
 }

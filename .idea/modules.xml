@@ -8,6 +8,7 @@
       <module fileurl="file://$PROJECT_DIR$/Conflict/Conflict.iml" filepath="$PROJECT_DIR$/Conflict/Conflict.iml" />
       <module fileurl="file://$PROJECT_DIR$/Disciple/Disciple.iml" filepath="$PROJECT_DIR$/Disciple/Disciple.iml" />
       <module fileurl="file://$PROJECT_DIR$/Exodus/Exodus.iml" filepath="$PROJECT_DIR$/Exodus/Exodus.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Exodus-Test-Server/Exodus-Test-Server.iml" filepath="$PROJECT_DIR$/Exodus-Test-Server/Exodus-Test-Server.iml" />
       <module fileurl="file://$PROJECT_DIR$/Flow/Flow.iml" filepath="$PROJECT_DIR$/Flow/Flow.iml" />
       <module fileurl="file://$PROJECT_DIR$/Genesis/Genesis.iml" filepath="$PROJECT_DIR$/Genesis/Genesis.iml" />
       <module fileurl="file://$PROJECT_DIR$/Inception/Inception.iml" filepath="$PROJECT_DIR$/Inception/Inception.iml" />
@@ -15,7 +16,9 @@
       <module fileurl="file://$PROJECT_DIR$/Metropolis/Metropolis.iml" filepath="$PROJECT_DIR$/Metropolis/Metropolis.iml" />
       <module fileurl="file://$PROJECT_DIR$/Nexus/Nexus.iml" filepath="$PROJECT_DIR$/Nexus/Nexus.iml" />
       <module fileurl="file://$PROJECT_DIR$/NexusForTomcat/NexusForTomcat.iml" filepath="$PROJECT_DIR$/NexusForTomcat/NexusForTomcat.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Reach/Reach.iml" filepath="$PROJECT_DIR$/Reach/Reach.iml" />
       <module fileurl="file://$PROJECT_DIR$/Reflection/Reflection.iml" filepath="$PROJECT_DIR$/Reflection/Reflection.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Trove/Trove.iml" filepath="$PROJECT_DIR$/Trove/Trove.iml" />
       <module fileurl="file://$PROJECT_DIR$/Vault/Vault.iml" filepath="$PROJECT_DIR$/Vault/Vault.iml" />
     </modules>
   </component>

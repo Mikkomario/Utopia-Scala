@@ -20,7 +20,7 @@ import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.event.StackHierarchyListener
-import utopia.reflection.shape.{StackLength, StackSize}
+import utopia.reflection.shape.stack.{StackLength, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.FiniteDuration
@@ -197,7 +197,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 			val height = (bounds.size.width * Switch.maxHeightRatio) min bounds.size.height
 			val r = height / 2 * 0.9
 			
-			val areaBounds = bounds.translated(0, (bounds.height - height) / 2).withHeight(height)
+			val areaBounds = bounds.translatedBy(0, (bounds.height - height) / 2).withHeight(height)
 			val minX = areaBounds.position.x + height / 2
 			val maxX = areaBounds.bottomRight.x - height / 2
 			

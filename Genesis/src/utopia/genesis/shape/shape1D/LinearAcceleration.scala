@@ -1,8 +1,9 @@
 package utopia.genesis.shape.shape1D
 
 import utopia.flow.util.RichComparable
-import utopia.flow.util.TimeExtensions._
-import utopia.genesis.shape.shape2D.{Acceleration2D, Vector2D}
+import utopia.flow.time.TimeExtensions._
+import utopia.genesis.shape.shape2D.{Vector2D, movement}
+import utopia.genesis.shape.shape2D.movement.Acceleration2D
 import utopia.genesis.shape.shape3D.{Acceleration3D, Vector3D}
 import utopia.genesis.shape.template.Change
 import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic, Signed}
@@ -83,5 +84,5 @@ case class LinearAcceleration(override val amount: LinearVelocity, override val 
 	  * @param direction Target direction
 	  * @return A directed version of this acceleration
 	  */
-	def withDirection(direction: Angle) = Acceleration2D(amount.withDirection(direction), duration)
+	def withDirection(direction: Angle) = movement.Acceleration2D(amount.withDirection(direction), duration)
 }

@@ -1,13 +1,13 @@
 package utopia.reflection.text
 
 import utopia.flow.util.FileExtensions._
+import utopia.genesis.util.Distance
 
 import scala.language.implicitConversions
 import java.awt
 import java.awt.GraphicsEnvironment
 import java.io.FileNotFoundException
 import java.nio.file.Path
-
 import utopia.reflection.text.FontStyle.{Bold, Italic, Plain}
 
 import scala.util.{Failure, Try}
@@ -76,6 +76,16 @@ case class Font(name: String, baseSize: Int, style: FontStyle = FontStyle.Plain,
 	 * @return An italic copy of this font
 	 */
 	def italic = withFontStyle(Italic)
+	
+	/**
+	  * @return The size of this font, with scaling applied
+	  */
+	def size = Distance.ofScreenPixels(baseSize * scaling)
+	
+	/**
+	  * @return Whether this font is with bold style
+	  */
+	def isBold = style == Bold
 	
 	
 	// OPERATORS	-------------------

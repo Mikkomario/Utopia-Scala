@@ -1,9 +1,19 @@
 package utopia.reflection.component.context
 
-import utopia.reflection.color.ComponentColor
+import utopia.reflection.color.ColorShade.Standard
+import utopia.reflection.color.{ColorRole, ColorShade, ComponentColor}
 
 object ButtonContext
 {
+	/**
+	  * @param textContext Context used for handling text
+	  * @param role Role for the buttons in this context
+	  * @param preferredShade Preferred button shade (default = standard shade)
+	  * @return A new button context
+	  */
+	def forRole(textContext: TextContext, role: ColorRole, preferredShade: ColorShade = Standard): ButtonContext =
+		apply(textContext, Some(textContext.color(role, preferredShade)))
+	
 	/**
 	  * @param textContext Context used for handling text
 	  * @return A new button context that uses primary color scheme color

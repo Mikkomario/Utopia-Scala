@@ -1,7 +1,7 @@
 package utopia.reflection.container.swing.layout
 
 import utopia.flow.async.VolatileFlag
-import utopia.flow.datastructure.mutable.Lazy
+import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.genesis.shape.Axis.Y
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
@@ -12,7 +12,7 @@ import utopia.reflection.container.stack.{StackHierarchyManager, StackLayout}
 import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.event.StackHierarchyListener
-import utopia.reflection.shape.StackLength
+import utopia.reflection.shape.stack.StackLength
 
 /**
   * Segments are used for aligning multiple components from different stacks / containers so that their lengths
@@ -33,7 +33,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 	val alignAxis = direction.perpendicular
 	
 	private var containers = Vector[SegmentContainer]()
-	private val lengthCache = Lazy(calculatedLength)
+	private val lengthCache = ResettableLazy(calculatedLength)
 	
 	
 	// COMPUTED	--------------------------------
@@ -121,7 +121,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 				updateContainers()
 		}
 		
-		override def stackSize = wrappedComponent.stackSize.withSide(lengthCache.get, alignAxis)
+		override def stackSize = wrappedComponent.stackSize.withSide(lengthCache.value, alignAxis)
 		
 		override protected def wrapped = panel
 		

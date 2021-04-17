@@ -3,7 +3,7 @@ package utopia.reflection.component.drawing.immutable
 import utopia.genesis.color.Color
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.util.Drawer
-import utopia.reflection.component.drawing.template.ScrollBarDrawer
+import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
 import utopia.reflection.shape.ScrollBarBounds
 
 object BoxScrollBarDrawer
@@ -38,17 +38,22 @@ object BoxScrollBarDrawer
   * @since 30.4.2019, v1+
   */
 case class BoxScrollBarDrawer(barColor: Color, backgroundColor: Option[Color] = None, rounded: Boolean = false)
-	extends ScrollBarDrawer
+	extends ScrollBarDrawerLike
 {
 	override def draw(drawer: Drawer, bounds: ScrollBarBounds, barDirection: Axis2D) =
 	{
-		// Fills background and bar
-		drawer.noEdges.disposeAfter
+		val clipArea = drawer.clipBounds
+		if (clipArea.forall { _.overlapsWith(bounds.area) })
 		{
-			d =>
+			// Fills background and bar
+			drawer.noEdges.disposeAfter { d =>
 				backgroundColor.foreach { d.withFillColor(_).draw(bounds.area) }
-				val bar = if (rounded) bounds.bar.toRoundedRectangle(1) else bounds.bar.toShape
-				d.withFillColor(barColor).draw(bar)
+				if (clipArea.forall { _.overlapsWith(bounds.bar) })
+				{
+					val bar = if (rounded) bounds.bar.toRoundedRectangle(1) else bounds.bar.toShape
+					d.withFillColor(barColor).draw(bar)
+				}
+			}
 		}
 	}
 }

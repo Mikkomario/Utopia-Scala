@@ -1,34 +1,41 @@
 package utopia.flow.async
 
-import utopia.flow.datastructure.mutable.MutableLazyLike
+import utopia.flow.datastructure.template.LazyLike
 
 object VolatileLazy
 {
 	/**
-	 * @param makeNew A function for producing a new value for this lazy (call by name)
-	 * @tparam A Type of contained value
-	 * @return A new lazily initialized container
-	 */
-	def apply[A](makeNew: => A) = new VolatileLazy[A](() => makeNew)
+	  * @param make A function for creating the value when it is first requested (only called once)
+	  * @tparam A Type of wrapped value
+	  * @return A new lazily initialized, thread-safe value wrapper
+	  */
+	def apply[A](make: => A) = new VolatileLazy[A](make)
 }
 
 /**
- * Used when you need a thread-safe lazily initialized value
- * @author Mikko Hilpinen
- * @since 17.12.2019, v1.6.1+
- */
-class VolatileLazy[A](private val generator: () => A) extends MutableLazyLike[A]
+  * Used when you need a thread-safe lazily initialized value
+  * @author Mikko Hilpinen
+  * @since 4.11.2020, v1.9
+  */
+class VolatileLazy[A](generator: => A) extends LazyLike[A]
 {
-	// ATTRIBUTES	---------------------
+	// ATTRIBUTES	--------------------------------
 	
-	private val value: VolatileOption[A] = VolatileOption()
+	@volatile private var _value: Option[A] = None
 	
 	
-	// IMPLEMENTED	--------------------
+	// IMPLEMENTED	--------------------------------
 	
-	override def current = value.get
+	override def current = this.synchronized { _value }
 	
-	override protected def updateValue(newValue: Option[A]) = value.set(newValue)
-	
-	def get = value.setOneIfEmptyAndGet(generator)
+	override def value = this.synchronized {
+		_value match
+		{
+			case Some(value) => value
+			case None =>
+				val newValue = generator
+				_value = Some(newValue)
+				newValue
+		}
+	}
 }

@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext
   * @tparam R Type of received response
   * @tparam I Type of instance within response
   */
-trait Schrodinger[R, I] extends ShcrodingerLike[R, I]
+trait Schrodinger[R, +I] extends ShcrodingerLike[R, I]
 {
 	// ABSTRACT ---------------------------
 	
@@ -34,8 +34,8 @@ trait Schrodinger[R, I] extends ShcrodingerLike[R, I]
 	  */
 	lazy val instancePointer = serverResultPointer.map(instanceFrom)
 	
-	private val _serverResultFuture = new LazyFuture({ implicit exc =>
-		serverResultPointer.futureWhere { _.isDefined }.map { _.get } })
+	private val _serverResultFuture = LazyFuture.flatten { implicit exc =>
+		serverResultPointer.futureWhere { _.isDefined }.map { _.get } }
 	
 	
 	// COMPUTED ---------------------------

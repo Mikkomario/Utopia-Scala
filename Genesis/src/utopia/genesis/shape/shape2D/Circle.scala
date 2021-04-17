@@ -14,12 +14,15 @@ import utopia.genesis.generic.GenesisValue._
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.genesis.shape.shape1D.Angle
+import utopia.genesis.shape.template.Dimensional
+import utopia.genesis.util.Arithmetic
 
 import scala.util.Success
 
 object Circle extends FromModelFactory[Circle]
 {
-    override def apply(model: template.Model[Property]) = Success(Circle(model("origin").getPoint, model("radius").getDouble))
+    override def apply(model: template.Model[Property]) =
+        Success(Circle(model("origin").getPoint, model("radius").getDouble))
 }
 
 /**
@@ -28,15 +31,9 @@ object Circle extends FromModelFactory[Circle]
  * @since 1.1.2017
  */
 case class Circle(origin: Point, radius: Double) extends ShapeConvertible with Area2D with
-        ValueConvertible with ModelConvertible with Projectable
+        ValueConvertible with ModelConvertible with Projectable with Arithmetic[Dimensional[Double], Circle]
 {
     // COMPUTED PROPERTIES    ---------
-    
-    override def toShape = new Ellipse2D.Double(origin.x - radius, origin.y - radius, radius * 2, radius * 2)
-    
-    override def toValue = new Value(Some(this), CircleType)
-    
-    override def toModel = Model(Vector("origin" -> origin, "radius" -> radius))
     
     /**
      * The diameter of this circle, from one side to another
@@ -62,11 +59,6 @@ case class Circle(origin: Point, radius: Double) extends ShapeConvertible with A
     // OPERATORS    -------------------
     
     /**
-     * Scales the circle's radius by the provided amount
-     */
-    def *(d: Double) = copy(radius = radius * d)
-    
-    /**
       * @param angle Target angle
       * @return A point on this circle's edge at the specified angle
       */
@@ -75,6 +67,12 @@ case class Circle(origin: Point, radius: Double) extends ShapeConvertible with A
     
     // IMPLEMENTED METHODS    ---------
     
+    override def toShape = new Ellipse2D.Double(origin.x - radius, origin.y - radius, radius * 2, radius * 2)
+    
+    override def toValue = new Value(Some(this), CircleType)
+    
+    override def toModel = Model(Vector("origin" -> origin, "radius" -> radius))
+    
     override def contains[V <: Vector2DLike[V]](point: V) = point.distanceFrom(origin) <= radius
     
     override def projectedOver(axis: Vector2D) =
@@ -82,6 +80,21 @@ case class Circle(origin: Point, radius: Double) extends ShapeConvertible with A
         val projectedOrigin = origin.toVector.projectedOver(axis).toPoint
         Line(projectedOrigin - axis.withLength(radius), projectedOrigin + axis.withLength(radius))
     }
+    
+    override def -(another: Dimensional[Double]) = copy(origin = origin - another)
+    
+    override def repr = this
+    
+    /**
+      * Scales the circle's radius by the provided amount
+      */
+    override def *(d: Double) = copy(radius = radius * d)
+    
+    /**
+      * @param translation A translation amount
+      * @return A copy of this circle where the origin has been translated by specified amount
+      */
+    override def +(translation: Dimensional[Double]) = copy(origin = origin + translation)
     
     
     // OTHER METHODS    ---------------

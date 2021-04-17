@@ -1,5 +1,6 @@
 package utopia.genesis.shape.shape1D
 
+import utopia.flow.util.SelfComparable
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.Direction2D
 import utopia.genesis.util.{Scalable, Signed}
@@ -9,7 +10,7 @@ import utopia.genesis.util.{Scalable, Signed}
   * @author Mikko Hilpinen
   * @since 17.4.2020, v2.3
   */
-sealed trait Direction1D
+sealed trait Direction1D extends SelfComparable[Direction1D]
 {
 	// ABSTRACT	-----------------------------
 	
@@ -22,6 +23,11 @@ sealed trait Direction1D
 	  * @return A modified applied to double numbers that have this direction (-1 | 1)
 	  */
 	def modifier: Short
+	
+	/**
+	  * @return Direction opposite to this one
+	  */
+	def opposite: Direction1D
 	
 	
 	// COMPUTED	----------------------------
@@ -90,8 +96,17 @@ object Direction1D
 	case object Positive extends Direction1D
 	{
 		override val isPositive = true
-		
 		override val modifier = 1
+		
+		override def opposite = Negative
+		
+		override def repr = this
+		
+		override def compareTo(o: Direction1D) = o match
+		{
+			case Positive => 0
+			case Negative => 1
+		}
 	}
 	
 	/**
@@ -100,8 +115,17 @@ object Direction1D
 	case object Negative extends Direction1D
 	{
 		override val isPositive = false
-		
 		override val modifier = -1
+		
+		override def opposite = Positive
+		
+		override def repr = this
+		
+		override def compareTo(o: Direction1D) = o match
+		{
+			case Positive => -1
+			case Negative => 0
+		}
 	}
 	
 	/**

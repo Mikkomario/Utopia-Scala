@@ -1,5 +1,12 @@
 package utopia.flow.test
 
+import utopia.flow.test.async.{AsyncTest, AsyncViewTest, FutureRaceTest, LoopTest, VolatileTest}
+import utopia.flow.test.collection.CollectionTest
+import utopia.flow.test.datastructure.{CacheTest, GraphTest, TreeNodeTest, WeakListTest}
+import utopia.flow.test.generic.{DataTypeTest, ModelConvertibleTest, ModelDeclarationTest, ModelTest, ValueAccessorTest}
+import utopia.flow.test.parse.{JSONTest, XmlTest}
+import utopia.flow.test.time.TimeNumberTest
+
 /**
   * This test runs all of the other tests
   * @author Mikko Hilpinen
@@ -32,6 +39,7 @@ object AllTests extends App
 	run(VolatileTest)
 	run(WeakListTest)
 	run(AsyncTest)
+	run(AsyncViewTest)
 	run(FutureRaceTest)
 	run(LoopTest)
 	

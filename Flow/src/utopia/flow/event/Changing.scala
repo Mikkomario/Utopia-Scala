@@ -1,6 +1,9 @@
 package utopia.flow.event
 
-import scala.concurrent.{ExecutionContext, Promise}
+import utopia.flow.async.DelayedView
+
+import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext
 
 object Changing
 {
@@ -10,146 +13,147 @@ object Changing
 	  * Wraps an immutable value as a "changing" instance that won't actually change
 	  * @param value A value being wrapped
 	  * @tparam A Type of wrapped value
-	  * @return A "changing" instance that will always have the specified value
+	  * @return An unchanging instance that will always have the specified value
 	  */
-	def wrap[A](value: A): Changing[A] = new Unchanging(value)
-	
-	
-	// NESTED	---------------------
-	
-	private class Unchanging[A](override val value: A) extends Changing[A]
-	{
-		var listeners = Vector[ChangeListener[A]]()
-	}
+	@deprecated("Please use Fixed.apply(...) instead", "v1.9")
+	def wrap[A](value: A): ChangingLike[A] = Fixed(value)
 }
 
 /**
   * Changing instances generate change events
   * @author Mikko Hilpinen
-  * @since 26.5.2019, v1.4.1+
+  * @since 26.5.2019, v1.4.1
   */
-trait Changing[A]
+trait Changing[A] extends ChangingLike[A]
 {
 	// ABSTRACT	---------------------
-	
-	/**
-	  * @return The current value of this changing element
-	  */
-	def value: A
 	
 	/**
 	 * @return Listeners linked to this changing instance
 	 */
 	def listeners: Vector[ChangeListener[A]]
-	
 	/**
-	 * Updates this instances listeners
+	 * Updates this instance's listeners
 	 * @param newListeners New listeners to associate with this changing instance
 	 */
 	def listeners_=(newListeners: Vector[ChangeListener[A]]): Unit
+	
+	/**
+	  * @return Dependencies linked to this changing instance
+	  */
+	def dependencies: Vector[ChangeDependency[A]]
+	/**
+	  * Updates this instance's dependencies
+	  * @param newDependencies Dependencies to apply to this instance
+	  */
+	def dependencies_=(newDependencies: Vector[ChangeDependency[A]]): Unit
+	
+	
+	// IMPLEMENTED	----------------
+	
+	override def addListener(changeListener: => ChangeListener[A]) = listeners :+= changeListener
+	
+	override def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B)(changeListener: => ChangeListener[B]) =
+	{
+		val newListener = changeListener
+		listeners :+= newListener
+		simulateChangeEventFor[B](newListener, simulatedOldValue)
+	}
+	
+	override def removeListener(listener: Any) = listeners = listeners.filterNot { _ == listener }
+	
+	override def addDependency(dependency: => ChangeDependency[A]) = dependencies :+= dependency
+	
+	override def futureWhere(valueCondition: A => Boolean)(implicit exc: ExecutionContext) =
+		defaultFutureWhere(valueCondition)
+	
+	override def map[B](f: A => B) = Mirror.of(this)(f)
+	
+	override def lazyMap[B](f: A => B) = LazyMirror.of(this)(f)
+	
+	override def mergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R) =
+	{
+		if (other.isChanging)
+		{
+			if (isChanging)
+				new MergeMirror(this, other)(f)
+			else
+				other.map { f(value, _) }
+		}
+		else
+			map { f(_, other.value) }
+	}
+	
+	override def mergeWith[B, C, R](first: ChangingLike[B], second: ChangingLike[C])
+	                               (merge: (A, B, C) => R): ChangingLike[R] =
+		TripleMergeMirror.of(this, first, second)(merge)
+	
+	override def lazyMergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R) =
+	{
+		if (other.isChanging)
+		{
+			if (isChanging)
+				new LazyMergeMirror(this, other)(f)
+			else
+				other.lazyMap { f(value, _) }
+		}
+		else
+			lazyMap { f(_, other.value) }
+	}
+	
+	override def delayedBy(threshold: Duration)(implicit exc: ExecutionContext) =
+		DelayedView.of(this, threshold)
 	
 	
 	// OTHER	--------------------
 	
 	/**
-	  * Adds a new listener to this mutable
-	  * @param changeListener A change listener that will be informed when the value of this mutable changes
-	  * @param generateChangeEventFromOldValue None if no change event should be generated for the new listener.
-	  *                                        Some with "old" value if a change event should be triggered
-	  *                                        <b>for this new listener</b>. Default = None
-	  */
-	def addListener(changeListener: ChangeListener[A], generateChangeEventFromOldValue: Option[A] = None) =
-	{
-		listeners :+= changeListener
-		generateChangeEventFromOldValue.foreach { old =>
-			val newValue = value
-			if (old != newValue)
-				changeListener.onChangeEvent(ChangeEvent(old, newValue))
-		}
-	}
-	
-	/**
-	  * Removes a listener from the informed change listeners
-	  * @param listener A listener that will be removed
-	  */
-	def removeListener(listener: Any) = listeners = listeners.filterNot { _ == listener }
-	
-	/**
-	 * @param valueCondition A condition for finding a suitable future
-	 * @param exc Implicit execution context
-	 * @return A future where this changing instance's value triggers the specified condition the first time
-	 *         (immediately completed if current value already triggers the condition). Please note that the future
-	 *         might never complete.
-	 */
-	def futureWhere(valueCondition: A => Boolean)(implicit exc: ExecutionContext) =
-	{
-		val listener = new FutureValueListener(value, valueCondition)
-		addListener(listener)
-		// Will not need to listen anymore once the future has been completed
-		listener.future.foreach { _ => removeListener(listener) }
-		listener.future
-	}
-	
-	/**
-	 * @param f A mapping function
-	 * @tparam B Mapping result type
-	 * @return A mirrored version of this item, using specified mapping function
-	 */
-	def map[B](f: A => B) = Mirror.of(this)(f)
-	
-	/**
-	  * @param f A mapping function
-	  * @tparam B Mapping result type
-	  * @return A lazily mirrored version of this item that uses the specified mapping function
-	  */
-	def lazyMap[B](f: A => B) = LazyMirror.of(this)(f)
-	
-	/**
-	 * @param other Another changing item
-	 * @param f A merge function
-	 * @tparam B Type of the other changing item
-	 * @tparam R Type of merge result
-	 * @return A mirror that merges the values from both of these items
-	 */
-	def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) = MergeMirror.of(this, other)(f)
-	
-	/**
-	  * Fires a change event for all the listeners
+	  * Fires a change event for all the listeners. Informs possible dependencies before informing any listeners.
 	  * @param oldValue The old value of this changing element (call-by-name)
 	  */
 	protected def fireChangeEvent(oldValue: => A) =
 	{
 		lazy val event = ChangeEvent(oldValue, value)
+		// Informs the dependencies first
+		val afterEffects = dependencies.flatMap { _.beforeChangeEvent(event) }
+		// Then the listeners
 		listeners.foreach { _.onChangeEvent(event) }
+		// Finally performs the after-effects defined by the dependencies
+		afterEffects.foreach { _() }
 	}
-}
-
-private class FutureValueListener[A](initialValue: A, trigger: A => Boolean) extends ChangeListener[A]
-{
-	// ATTRIBUTES	-------------------
-	
-	private val promise = Promise[A]()
-	
-	
-	// INITIAL CODE	-------------------
-	
-	if (trigger(initialValue))
-		promise.success(initialValue)
-	
-	
-	// COMPUTED	-----------------------
 	
 	/**
-	 * @return Future for the first value that triggers the specified condition
-	 */
-	def future = promise.future
-	
-	
-	// IMPLEMENTED	-------------------
-	
-	override def onChangeEvent(event: ChangeEvent[A]) =
+	  * Starts mirroring another pointer
+	  * @param origin Origin value pointer
+	  * @param map A value transformation function that accepts the new origin pointer value
+	  * @param set A function for updating this pointer's value
+	  * @tparam O Type of origin pointer's value
+	  */
+	protected def startMirroring[O](origin: ChangingLike[O])(map: O => A)(set: A => Unit) =
 	{
-		if (!promise.isCompleted && trigger(event.newValue))
-			promise.trySuccess(event.newValue)
+		// Registers as a dependency for the origin pointer
+		origin.addDependency(ChangeDependency { e1: ChangeEvent[O] =>
+			// Whenever the origin's value changes, calculates a new value
+			val newValue = map(e1.newValue)
+			val oldValue = value
+			// If the new value is different from the previous state, updates the value and generates a new change event
+			if (newValue != oldValue)
+			{
+				set(newValue)
+				val event2 = ChangeEvent(oldValue, newValue)
+				// The dependencies are informed immediately, other listeners only afterwards
+				val afterEffects = dependencies.flatMap { _.beforeChangeEvent(event2) }
+				if (afterEffects.nonEmpty || listeners.nonEmpty)
+					Some(event2 -> afterEffects)
+				else
+					None
+			}
+			else
+				None
+		} { case (event, actions) =>
+			// After the origin has finished its update, informs the listeners and triggers the dependency after-effects
+			listeners.foreach { _.onChangeEvent(event) }
+			actions.foreach { _() }
+		})
 	}
 }

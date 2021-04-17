@@ -1,6 +1,8 @@
 package utopia.genesis.shape.path
 
 import utopia.flow.util.CollectionExtensions._
+import utopia.genesis.shape.path.Path.PathWithDistance
+import utopia.genesis.util.DistanceLike
 
 object CompoundPath
 {
@@ -12,7 +14,8 @@ object CompoundPath
 	  * @tparam P The type of paths
 	  * @return A new compound path
 	  */
-	def apply[P](first: Path[P], second: Path[P], more: Path[P]*): CompoundPath[P] = CompoundPath(Vector(first, second) ++ more)
+	def apply[P](first: PathWithDistance[P], second: PathWithDistance[P], more: PathWithDistance[P]*): CompoundPath[P] =
+		CompoundPath(Vector(first, second) ++ more)
 }
 
 /**
@@ -20,8 +23,13 @@ object CompoundPath
   * @author Mikko Hilpinen
   * @since 20.6.2019, v2.1+
   */
-case class CompoundPath[+P](parts: Vector[Path[P]]) extends Path[P]
+case class CompoundPath[+P](parts: Vector[PathWithDistance[P]]) extends Path[P] with DistanceLike
 {
+	// ATTRIBUTES   -------------------
+	
+	override lazy val length = parts.foldLeft(0.0) { _ + _.length }
+	
+	
 	// INITIAL CODE	-------------------
 	
 	if (parts.isEmpty)
@@ -29,8 +37,6 @@ case class CompoundPath[+P](parts: Vector[Path[P]]) extends Path[P]
 	
 	
 	// IMPLEMENTED	-------------------
-	
-	lazy val length = parts.foldLeft(0.0) { _ + _.length }
 	
 	override def start = parts.head.start
 	

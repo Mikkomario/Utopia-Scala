@@ -1,6 +1,6 @@
 package utopia.genesis.event
 
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape1D.LinearVelocity
 import utopia.inception.util.Filter
 import utopia.genesis.shape.shape2D.Point
@@ -35,14 +35,17 @@ object MouseMoveEvent
 
 /**
  * These events are generated when the mouse cursor moves
-  * @param mousePosition The current mouse position
-  * @param previousMousePosition The previous mouse position
+  * @param mousePosition The current (relative) mouse position
+  * @param previousMousePosition The previous (relative) mouse position
+  * @param absoluteMousePosition current mouse position in screen coordinate system (in pixels)
   * @param buttonStatus Current mouse button status
   * @param duration The duration of the event (similar to act(...))
  * @author Mikko Hilpinen
  * @since 10.1.2017
  */
-case class MouseMoveEvent(mousePosition: Point, previousMousePosition: Point, buttonStatus: MouseButtonStatus,
+case class MouseMoveEvent(override val mousePosition: Point, previousMousePosition: Point,
+                          override val absoluteMousePosition: Point,
+                          override val buttonStatus: MouseButtonStatus,
                           duration: FiniteDuration) extends MouseEvent[MouseMoveEvent]
 {
     // COMPUTED PROPERTIES    -----------
@@ -61,6 +64,11 @@ case class MouseMoveEvent(mousePosition: Point, previousMousePosition: Point, bu
      * The duration of this event in duration format
      */
     def durationMillis = duration.toPreciseMillis
+    
+    /**
+      * @return Previously recorded absolute mouse position (meaning a position in the screen pixel coordinate system)
+      */
+    def previousAbsoluteMousePosition = absoluteMousePosition - transition
     
     
     // IMPLEMENTED  ---------------------

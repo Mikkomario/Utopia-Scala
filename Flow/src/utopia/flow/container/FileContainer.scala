@@ -1,14 +1,13 @@
 package utopia.flow.container
 
 import java.nio.file.Path
-
 import utopia.flow.async.{Breakable, CloseHook, Volatile, VolatileFlag}
 import utopia.flow.container.SaveTiming.{Delayed, Immediate, OnJvmClose, OnlyOnTrigger}
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.flow.parse.JsonParser
+import utopia.flow.time.WaitUtils
 import utopia.flow.util.FileExtensions._
-import utopia.flow.util.WaitUtils
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -58,8 +57,8 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 	/**
 	  * @return The currently stored data
 	  */
-	def current = _current.get
-	def current_=(newContent: A) = _current.set(newContent)
+	def current = _current.value
+	def current_=(newContent: A) = _current.value = newContent
 	
 	/**
 	  * @return A pointer that holds the current value in this container
@@ -86,10 +85,10 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 		val newSavePromise = Promise[Try[Unit]]()
 		saveCompletion.getAndSet(newSavePromise.future).onComplete { _ =>
 			// Saves current status to file as json
-			val dataToSave = toValue(_current.get)
+			val dataToSave = toValue(_current.value)
 			fileLocation.createParentDirectories()
 			// Completes the promise so that the next save process can start
-			newSavePromise.success(fileLocation.writeJSON(dataToSave).map { _ => () })
+			newSavePromise.success(fileLocation.writeJson(dataToSave).map { _ => () })
 		}
 		newSavePromise.future
 	}

@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
 
 import scala.language.implicitConversions
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 
 object DisplayFunction
 {
@@ -26,6 +26,11 @@ object DisplayFunction
 	  * A displayFunction that displays option's value as is and an empty string for empty values
 	  */
 	val rawOption = noLocalization[Option[Any]] { _.map { a => LocalString(a.toString) }.getOrElse(LocalString.empty) }
+	
+	/**
+	  * A display function that preserves strings which are already localized
+	  */
+	val identity = new DisplayFunction[LocalizedString](s => s)
 	
 	/**
 	  * A display function that shows hours and minutes, like '13:26'
@@ -60,6 +65,14 @@ object DisplayFunction
 	
 	
 	// OTHER	----------------------
+	
+	/**
+	  * Wraps a function as a display function
+	  * @param handle A function for handling conversion and localization
+	  * @tparam A Type of converted item
+	  * @return A new display function
+	  */
+	def wrap[A](handle: A => LocalizedString) = new DisplayFunction[A](handle)
 	
 	/**
 	  * Creates a new display function from two separate functions

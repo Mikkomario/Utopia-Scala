@@ -1,8 +1,8 @@
 package utopia.exodus.database.model.description
 
 import java.time.Instant
-
 import utopia.exodus.database.factory.description.DescriptionLinkFactory
+import utopia.flow.time.Now
 import utopia.metropolis.model.partial.description.{DescriptionData, DescriptionLinkData}
 import utopia.metropolis.model.partial.description.DescriptionLinkData.PartialDescriptionLinkData
 import utopia.metropolis.model.stored.description.DescriptionLink
@@ -51,7 +51,7 @@ trait DescriptionLinkModelFactory[+M <: Storable]
 	/**
 	  * @return A model that has just been marked as deprecated
 	  */
-	def nowDeprecated = withDeprecatedAfter(Instant.now())
+	def nowDeprecated = withDeprecatedAfter(Now)
 	
 	
 	// OTHER	-----------------------------------
@@ -91,7 +91,7 @@ trait DescriptionLinkModelFactory[+M <: Storable]
 	  * @param connection DB Connection (implicit)
 	  * @return Newly inserted description link
 	  */
-	def insert(targetId: Int, data: DescriptionData, created: Instant = Instant.now())
+	def insert(targetId: Int, data: DescriptionData, created: Instant = Now)
 			  (implicit connection: Connection) =
 	{
 		// Inserts the description

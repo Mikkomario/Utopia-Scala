@@ -1,15 +1,19 @@
 package utopia.flow.async
 
+import utopia.flow.time.{WaitTarget, WaitUtils}
+
 import scala.concurrent.Promise
-import utopia.flow.util.WaitTarget
-import utopia.flow.util.WaitUtils
-import utopia.flow.util.WaitTarget.WaitDuration
+import utopia.flow.time.WaitTarget.WaitDuration
+import utopia.flow.util.CollectionExtensions._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
+import scala.util.Try
 
 object Loop
 {
+    // OTHER    -----------------------------
+    
     /**
      * Creates a new looping operation
      * @param wait the wait time between iterations
@@ -84,8 +88,8 @@ trait Loop extends Runnable with Breakable
         
         while (!isBroken)
         {
-            // Performs the operation
-            runOnce()
+            // Performs the operation. Exceptions are only printed and not thrown forward.
+            Try { runOnce() }.failure.foreach { _.printStackTrace() }
             
             // Waits between runs
             if (!isBroken)

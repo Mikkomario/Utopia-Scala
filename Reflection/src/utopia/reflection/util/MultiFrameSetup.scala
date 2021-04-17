@@ -50,6 +50,6 @@ class MultiFrameSetup(actorHandler: ActorHandler)
 	{
 		start()
 		frame.startEventGenerators(actorHandler)
-		frame.isVisible = true
+		frame.visible = true
 	}
 }

@@ -1,26 +1,11 @@
 package utopia.vault.nosql.access
 
+import utopia.flow.datastructure.immutable.Value
 import utopia.vault.database.Connection
+import utopia.vault.model.immutable.Column
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.nosql.access.ManyModelAccess.FactoryWrapper
-import utopia.vault.sql.{Condition, OrderBy}
-
-/**
- * Used for accessing multiple models at a time from DB
- * @author Mikko Hilpinen
- * @since 30.1.2020, v1.4
- */
-trait ManyModelAccess[+A] extends ManyAccess[A, ManyModelAccess[A]] with ModelAccess[A, Vector[A]]
-{
-	override protected def read(condition: Option[Condition], order: Option[OrderBy])(implicit connection: Connection) = condition match
-	{
-		case Some(condition) => factory.getMany(condition, order)
-		case None => factory.getAll(order)
-	}
-	
-	override def filter(additionalCondition: Condition): ManyModelAccess[A] = new FactoryWrapper(factory,
-		Some(mergeCondition(additionalCondition)))
-}
+import utopia.vault.sql.{Condition, OrderBy, Select, Where}
 
 object ManyModelAccess
 {
@@ -50,5 +35,52 @@ object ManyModelAccess
 	private class FactoryWrapper[A](val factory: FromResultFactory[A], condition: Option[Condition]) extends ManyModelAccess[A]
 	{
 		override def globalCondition = condition
+	}
+}
+
+/**
+ * Used for accessing multiple models at a time from DB
+ * @author Mikko Hilpinen
+ * @since 30.1.2020, v1.4
+ */
+trait ManyModelAccess[+A] extends ManyAccess[A, ManyModelAccess[A]]
+	with DistinctModelAccess[A, Vector[A], Vector[Value]]
+{
+	// IMPLEMENTED  ----------------------------
+	
+	override protected def read(condition: Option[Condition], order: Option[OrderBy])(implicit connection: Connection) = condition match
+	{
+		case Some(condition) => factory.getMany(condition, order)
+		case None => factory.getAll(order)
+	}
+	
+	override def filter(additionalCondition: Condition): ManyModelAccess[A] = new FactoryWrapper(factory,
+		Some(mergeCondition(additionalCondition)))
+	
+	/**
+	 * Reads the values of an individual column
+	 * @param column Column to read
+	 * @param additionalCondition Additional search condition to apply (optional)
+	 * @param order Ordering to use (optional)
+	 * @param connection DB Connection (implicit)
+	 * @return Values of that column (may be empty and may contain empty values)
+	 */
+	override protected def readColumn(column: Column, additionalCondition: Option[Condition] = None,
+	                                  order: Option[OrderBy] = None)(implicit connection: Connection) =
+	{
+		// Forms the query first
+		val baseQuery = Select(factory.target, column)
+		val conditionedQuery = mergeCondition(additionalCondition) match
+		{
+			case Some(condition) => baseQuery + Where(condition)
+			case None => baseQuery
+		}
+		val query = order match
+		{
+			case Some(order) => conditionedQuery + order
+			case None => conditionedQuery
+		}
+		// Applies the query and parses results
+		connection(query).rowValues
 	}
 }

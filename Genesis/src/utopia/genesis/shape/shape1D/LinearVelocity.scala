@@ -1,8 +1,9 @@
 package utopia.genesis.shape.shape1D
 
 import utopia.flow.util.RichComparable
-import utopia.flow.util.TimeExtensions._
-import utopia.genesis.shape.shape2D.{Vector2D, Velocity2D}
+import utopia.flow.time.TimeExtensions._
+import utopia.genesis.shape.shape2D.{Vector2D, movement}
+import utopia.genesis.shape.shape2D.movement.Velocity2D
 import utopia.genesis.shape.shape3D.{Vector3D, Velocity3D}
 import utopia.genesis.shape.template.Change
 import utopia.genesis.util.Extensions._
@@ -105,7 +106,7 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	  * @param direction Direction of this velocity
 	  * @return A directional velocity
 	  */
-	def withDirection(direction: Angle) = Velocity2D(Vector2D.lenDir(amount, direction), duration)
+	def withDirection(direction: Angle) = movement.Velocity2D(Vector2D.lenDir(amount, direction), duration)
 	
 	/**
 	  * @param acceleration Acceleration applied

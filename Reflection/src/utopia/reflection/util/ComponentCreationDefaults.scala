@@ -1,8 +1,7 @@
 package utopia.reflection.util
 
 import java.util.concurrent.TimeUnit
-
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.genesis.util.Fps
@@ -50,4 +49,19 @@ object ComponentCreationDefaults
 	  * Icon used in frames by default. Default = standard java icon.
 	  */
 	var windowIcon = Image.empty
+	
+	/**
+	  * How often should a text field caret change its visibility when idle
+	  */
+	var caretBlinkFrequency = 0.5.seconds
+	
+	/**
+	  * A scaling modifier applied to radio button sizes when they're created
+	  */
+	var radioButtonScalingFactor = 1.0
+	
+	/**
+	  * Whether a filled style should be used in input fields (true) or an outline style should be used (false)
+	  */
+	var useFillStyleFields = true
 }

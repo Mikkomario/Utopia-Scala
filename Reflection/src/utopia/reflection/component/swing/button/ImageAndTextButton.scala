@@ -1,16 +1,17 @@
 package utopia.reflection.component.swing.button
 
-import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.drawing.mutable.BorderDrawer
+import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.container.swing.AwtContainerRelated
+import utopia.reflection.event.ButtonState
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, Border, StackInsets, StackLength}
+import utopia.reflection.shape.Alignment
 import utopia.reflection.text.Font
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.stack.{StackInsets, StackLength}
 
 object ImageAndTextButton
 {
@@ -24,15 +25,18 @@ object ImageAndTextButton
 	  * @param borderWidth Width of border around this button's contents (in pixels)
 	  * @param textAlignment Alignment used with this button's text (default = left)
 	 *  @param textColor Color used for the text (default = black)
-	  * @param action Action that is performed when this button is triggered
+	  * @param hotKeys Hotkey indices that can be used for triggering this button (default = empty)
+	  * @param hotKeyChars Characters on keyboard that can be used for triggering this button (default = empty)
+	  * @param action Action that is performed when this button is triggered (call by name)
 	  * @return A new button
 	  */
 	def apply(images: ButtonImageSet, text: LocalizedString, font: Font, color: Color, insets: StackInsets,
-			  borderWidth: Double, textAlignment: Alignment = Alignment.Left, textColor: Color = Color.textBlack)(
-		action: () => Unit) =
+			  borderWidth: Double, textAlignment: Alignment = Alignment.Left, textColor: Color = Color.textBlack,
+			  hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())(action: => Unit) =
 	{
-		val button = new ImageAndTextButton(images, text, font, color, insets, borderWidth, textAlignment, textColor)
-		button.registerAction(action)
+		val button = new ImageAndTextButton(images, text, font, color, insets, borderWidth, textAlignment, textColor,
+			hotKeys, hotKeyChars)
+		button.registerAction { () => action }
 		button
 	}
 	
@@ -40,25 +44,31 @@ object ImageAndTextButton
 	  * Creates a new button using contextual information. An action for the button needs to be registered separately.
 	  * @param images Images used in this button
 	  * @param text Text displayed in this button
+	  * @param hotKeys Hotkey indices that can be used for triggering this button (default = empty)
+	  * @param hotKeyChars Characters on keyboard that can be used for triggering this button (default = empty)
 	  * @param context Component creation context
 	  * @return A new button
 	  */
-	def contextualWithoutAction(images: ButtonImageSet, text: LocalizedString)(implicit context: ButtonContextLike) =
+	def contextualWithoutAction(images: ButtonImageSet, text: LocalizedString, hotKeys: Set[Int] = Set(),
+	                            hotKeyChars: Iterable[Char] = Set())(implicit context: ButtonContextLike) =
 		new ImageAndTextButton(images, text, context.font, context.buttonColor, context.textInsets,
-			context.borderWidth, context.textAlignment, context.textColor)
+			context.borderWidth, context.textAlignment, context.textColor, hotKeys, hotKeyChars)
 	
 	/**
 	  * Creates a new button using contextual information
 	  * @param images Images used in this button
 	  * @param text Text displayed in this button
+	  * @param hotKeys Hotkey indices that can be used for triggering this button (default = empty)
+	  * @param hotKeyChars Characters on keyboard that can be used for triggering this button (default = empty)
 	  * @param action Action performed when this button is pressed
 	  * @param context Component creation context
 	  * @return A new button
 	  */
-	def contextual(images: ButtonImageSet, text: LocalizedString)(action: => Unit)(implicit context: ButtonContextLike) =
+	def contextual(images: ButtonImageSet, text: LocalizedString, hotKeys: Set[Int] = Set(),
+	               hotKeyChars: Iterable[Char] = Set())(action: => Unit)(implicit context: ButtonContextLike) =
 	{
-		val button = contextualWithoutAction(images, text)
-		button.registerAction(() => action)
+		val button = contextualWithoutAction(images, text, hotKeys, hotKeyChars)
+		button.registerAction { () => action }
 		button
 	}
 }
@@ -75,11 +85,15 @@ object ImageAndTextButton
   * @param borderWidth Width of border around this button's contents (in pixels)
   * @param textAlignment Alignment used with this button's text
  *  @param textColor Color for this button's text (default = black)
+  * @param hotKeys Hotkey indices that can be used for triggering this button (default = empty)
+  * @param hotKeyChars Characters on keyboard that can be used for triggering this button (default = empty)
   */
 class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedString, font: Font, val color: Color,
 						 insets: StackInsets, borderWidth: Double,
-						 textAlignment: Alignment = Alignment.Left, textColor: Color = Color.textBlack)
-	extends StackableAwtComponentWrapperWrapper with ButtonLike with AwtContainerRelated
+						 textAlignment: Alignment = Alignment.Left, textColor: Color = Color.textBlack,
+						 hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())
+	extends ButtonWithBackground(color, borderWidth) with StackableAwtComponentWrapperWrapper with AwtContainerRelated
+		with CustomDrawableWrapper
 {
 	// ATTRIBUTES	------------------------
 	
@@ -97,22 +111,10 @@ class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedSt
 			inside
 	}
 	
-	private val borderPointer = new PointerWithEvents(makeBorder(color))
-	
 	
 	// INITIAL CODE	------------------------
 	
-	content.background = color
-	setHandCursor()
-	content.component.setFocusable(true)
-	initializeListeners()
-	
-	// Adds border drawing
-	if (borderWidth > 0)
-	{
-		content.addCustomDrawer(new BorderDrawer(borderPointer))
-		borderPointer.addListener { _ => content.repaint() }
-	}
+	setup(hotKeys, hotKeyChars)
 	
 	
 	// COMPUTED	----------------------------
@@ -136,20 +138,15 @@ class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedSt
 	
 	// IMPLEMENTED	------------------------
 	
+	override def drawable = content
+	
 	override def component = content.component
 	
 	override protected def wrapped = content
 	
 	override protected def updateStyleForState(newState: ButtonState) =
 	{
-		val newColor = newState.modify(color)
-		background = newColor
+		super.updateStyleForState(newState)
 		imageLabel.image = _images(newState)
-		borderPointer.value = makeBorder(newColor)
 	}
-	
-	
-	// OTHER	----------------------------
-	
-	private def makeBorder(baseColor: Color) = Border.raised(borderWidth, baseColor, 0.5)
 }

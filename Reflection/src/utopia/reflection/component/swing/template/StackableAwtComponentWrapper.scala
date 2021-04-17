@@ -3,7 +3,7 @@ package utopia.reflection.component.swing.template
 import java.awt.Component
 
 import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 
 object StackableAwtComponentWrapper
 {
@@ -32,9 +32,9 @@ trait StackableAwtComponentWrapper extends AwtComponentWrapper with CachingStack
 {
 	// IMPLEMENTED	-----------------
 	
-	override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapper].isVisible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapper].visible_=(visible)
 	
-	override def isVisible_=(isVisible: Boolean) = super[CachingStackable].isVisible_=(isVisible)
+	override def visible_=(isVisible: Boolean) = super[CachingStackable].visible_=(isVisible)
 	
 	
 	// OTHER	---------------------

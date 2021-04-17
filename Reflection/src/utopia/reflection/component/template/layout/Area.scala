@@ -26,6 +26,12 @@ trait Area
     def size: Size
     def size_=(s: Size): Unit
     
+    /**
+      * @return The current bounds (position and size) of this component
+      */
+    def bounds: Bounds
+    def bounds_=(b: Bounds): Unit
+    
     
     // COMPUTED    -----------------------
     
@@ -54,13 +60,6 @@ trait Area
     def height_=(h: Double) = size = size.withHeight(h)
     def height_+=(adjustment: Double) = size = size + Y(adjustment)
     def height_-=(adjustment: Double) = height += (-adjustment)
-    
-    def bounds = Bounds(position, size)
-    def bounds_=(b: Bounds) =
-    {
-        position = b.position
-        size = b.size
-    }
     
     def rightX = x + width
     def rightX_=(newX: Double) = x = newX - width

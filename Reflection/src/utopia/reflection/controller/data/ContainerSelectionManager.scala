@@ -3,7 +3,7 @@ package utopia.reflection.controller.data
 import java.awt.event.KeyEvent
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.genesis.handling.mutable.ActorHandler
@@ -56,7 +56,8 @@ object ContainerSelectionManager
 	def forStatelessItems[A, Display <: Stackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector(),
 	 equalsCheck: (A, A) => Boolean = { (a: A, b: A) => a == b })(makeDisplay: A => Display) =
-		forStatelessItemsPointer[A, Display](container, selectionAreaDrawer, new PointerWithEvents(initialItems), equalsCheck)(makeDisplay)
+		forStatelessItemsPointer[A, Display](container, selectionAreaDrawer,
+			new PointerWithEvents(initialItems), equalsCheck)(makeDisplay)
 	
 	/**
 	  * Creates a content manager for immutable items that represent a state of some other object

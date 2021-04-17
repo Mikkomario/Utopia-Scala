@@ -7,3 +7,6 @@ package utopia.genesis.shape.shape2D
   * @param left Vector from the top left point to tbe bottom left point
   */
 case class Parallelogram(topLeft: Point, top: Vector2D, left: Vector2D) extends Parallelogramic
+{
+	override def toString = s"Origin: $topLeft, Top Side: $top, Left Side: $left"
+}

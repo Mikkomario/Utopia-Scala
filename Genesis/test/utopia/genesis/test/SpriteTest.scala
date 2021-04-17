@@ -6,10 +6,10 @@ import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.{Size, Transformation, Vector2D}
 import utopia.genesis.util.DefaultSetup
 import utopia.flow.util.FileExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.animation.Animation
 import utopia.genesis.shape.shape1D.Rotation
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.shape2D.transform.AffineTransformation
 
 import scala.concurrent.ExecutionContext
 
@@ -20,27 +20,23 @@ import scala.concurrent.ExecutionContext
   */
 object SpriteTest extends App
 {
+	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
+	
 	// Sets up the program
 	val gameWorldSize = Size(800, 600)
 	val setup = new DefaultSetup(gameWorldSize, "Sprite Test")
 	
 	// Creates sprite drawers
-	val strip = Image.readFrom("test-images/more-dot-strip-4.png").get.split(4)
-	val drawer1 = SpriteDrawer(strip, strip.imageSize.toPoint / 2, 4.seconds,
+	val strip = Image.readFrom("Genesis/test-images/more-dot-strip-4.png").get.split(4).withCenterOrigin
+	val drawer1 = SpriteDrawer(strip over 4.seconds,
 		Transformation(translation = gameWorldSize.toVector / 2, scaling = Vector2D(2, 2)))
 	
-	val image2 = Image.readFrom("test-images/mushrooms.png").get.fitting(Size.square(200))
-	val drawer2 = TransformingImageAnimator(image2, image2.size.toPoint / 2,
-		new RotationAnimation(Transformation.translation(200, 200)).over(3.seconds))
+	val image2 = Image.readFrom("Genesis/test-images/mushrooms.png").get.fitting(Size.square(200)).withCenterOrigin
+	val drawer2 = TransformingImageAnimator(image2,
+		AffineTransformation.translation(Vector2D(200, 200)).rotated360ClockwiseOverTime.over(3.seconds))
 	
 	setup.registerObjects(drawer1, drawer2)
 	
 	// Starts the program
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
 	setup.start()
-}
-
-private class RotationAnimation(base: Transformation) extends Animation[Transformation]
-{
-	override def apply(progress: Double) = base.rotated(Rotation.ofCircles(progress))
 }

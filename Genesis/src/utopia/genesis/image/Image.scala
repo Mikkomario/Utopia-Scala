@@ -4,19 +4,19 @@ import scala.math.Ordering.Double.TotalOrdering
 import java.awt.image.{BufferedImage, BufferedImageOp}
 import java.io.FileNotFoundException
 import java.nio.file.{Files, Path}
-
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.NullSafe._
+
 import javax.imageio.ImageIO
-import utopia.flow.datastructure.mutable.Lazy
+import utopia.flow.datastructure.immutable.{Lazy, LazyWrapper}
+import utopia.flow.datastructure.template.LazyLike
 import utopia.genesis.color.Color
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.{Angle, Rotation}
-import utopia.genesis.shape.shape2D.{Area2D, Bounds, Direction2D, Insets, Point, Size, Transformation, Vector2D}
-import utopia.genesis.shape.shape3D.Vector3D
-import utopia.genesis.shape.template.VectorLike
+import utopia.genesis.shape.shape2D.{Area2D, Bounds, Direction2D, Insets, Matrix2D, Point, Size, Vector2D}
+import utopia.genesis.shape.template.{Dimensional, VectorLike}
 import utopia.genesis.util.{Drawer, Scalable}
 
 import scala.util.{Failure, Success, Try}
@@ -26,17 +26,23 @@ object Image
 	/**
 	 * A zero sized image with no pixel data
 	 */
-	val empty = new Image(None, Vector2D.identity, 1.0, new Lazy(() => PixelTable.empty))
+	val empty = new Image(None, Vector2D.identity, 1.0, None, LazyWrapper(PixelTable.empty))
 	
 	/**
 	  * Creates a new image
 	  * @param image The original buffered image source
 	  * @param scaling The scaling applied to the image
 	  * @param alpha The maximum alpha value used when drawing this image [0, 1] (default = 1 = fully visible)
+	  * @param origin The relative coordinate inside this image which is considered the drawing origin
+	  *               (the (0,0) coordinate of this image). None if the origin should be left unspecified (default).
+	  *               When unspecified, the (0,0) coordinate is placed at the top left corner.
+	  *               Please notice that this origin is applied before scaling is applied, meaning that the specified
+	  *               origin should always be in relation to the source resolution and not necessarily image size.
 	  * @return A new image
 	  */
-	def apply(image: BufferedImage, scaling: Vector2D = Vector2D.identity, alpha: Double = 1.0): Image = Image(Some(image),
-		scaling, alpha, Lazy(PixelTable.fromBufferedImage(image)))
+	def apply(image: BufferedImage, scaling: Vector2D = Vector2D.identity, alpha: Double = 1.0,
+			  origin: Option[Point] = None): Image =
+		new Image(Some(image), scaling, alpha, origin, Lazy { PixelTable.fromBufferedImage(image) })
 	
 	/**
 	  * Reads an image from a file
@@ -50,7 +56,7 @@ object Image
 		// Checks that file exists (not available with class read method)
 		if (readClass.isDefined || Files.exists(path))
 		{
-			// ImageIO and class may return null. Image is read through class, if one  is provided
+			// ImageIO and class may return null. Image is read through class, if one is provided
 			val readResult = Try { readClass.map { c => c.getResourceAsStream("/" + path.toString).toOption
 				.flatMap { _.consume { stream => ImageIO.read(stream).toOption } } }
 				.getOrElse { ImageIO.read(path.toFile).toOption } }
@@ -80,7 +86,7 @@ object Image
 	
 	/**
 	  * Converts an awt image to Genesis image class
-	  * @param awtImage An awt image (buffered images are prefferred because they can be simply wrapped)
+	  * @param awtImage An awt image (buffered images are preferred because they can be simply wrapped)
 	  * @return A genesis image
 	  */
 	def from(awtImage: java.awt.Image) =
@@ -99,45 +105,76 @@ object Image
 				apply(buffer)
 		}
 	}
+	
+	/**
+	  * Creates a new image by drawing
+	  * @param size Size of the image
+	  * @param draw A function that will draw the image contents. The drawer is clipped to image bounds and
+	  *             (0,0) is at the image top left corner.
+	  * @tparam U Arbitrary result type
+	  * @return Drawn image
+	  */
+	def paint[U](size: Size)(draw: Drawer => U) =
+	{
+		// If some of the dimensions were 0, simply creates an empty image
+		if (size.isPositive)
+		{
+			// Creates the new buffer image
+			val buffer = new BufferedImage(size.width.round.toInt, size.height.round.toInt, BufferedImage.TYPE_INT_ARGB)
+			// Draws on the image
+			Drawer.use(buffer.createGraphics()) { draw(_) }
+			// Wraps the buffer image
+			Image(buffer)
+		}
+		else
+			empty
+	}
+	
+	
+	// NESTED	------------------------
+	
+	private class NoImageReaderAvailableException(message: String) extends RuntimeException(message)
 }
 
 /**
   * This is a wrapper for the buffered image class
   * @author Mikko Hilpinen
-  * @since 15.6.2019, v2.1+
+  * @since 15.6.2019, v2.1
   */
-case class Image private(private val source: Option[BufferedImage], scaling: Vector2D, alpha: Double,
-						 private val _pixels: Lazy[PixelTable]) extends Scalable[Image]
+case class Image private(override protected val source: Option[BufferedImage], override val scaling: Vector2D,
+						 override val alpha: Double, override val specifiedOrigin: Option[Point],
+						 private val _pixels: LazyLike[PixelTable])
+	extends ImageLike with Scalable[Image]
 {
 	// ATTRIBUTES	----------------
 	
 	/**
 	  * The size of the original image
 	  */
-	val sourceResolution = source.map { s => Size(s.getWidth, s.getHeight) }.getOrElse(Size.zero)
+	override val sourceResolution = source.map { s => Size(s.getWidth, s.getHeight) }.getOrElse(Size.zero)
 	
 	/**
 	  * @return The size of this image in pixels
 	  */
-	val size = sourceResolution * scaling
+	override val size = sourceResolution * scaling
+	
+	/**
+	  * The bounds of this image when origin and size are both counted
+	  */
+	override lazy val bounds = Bounds(-origin, size)
 	
 	
 	// COMPUTED	--------------------
 	
 	/**
-	  * @return The pixels in this image
+	  * @return A copy of this image without a specified origin location
 	  */
-	def pixels = _pixels.get
+	def withoutSpecifiedOrigin = if (specifiesOrigin) copy(specifiedOrigin = None) else this
 	
 	/**
-	  * @return The width of this image in pixels
+	  * @return A copy of this image where the origin is placed at the center of the image
 	  */
-	def width = size.width
-	
-	/**
-	  * @return The height of this image in pixels
-	  */
-	def height = size.height
+	def withCenterOrigin = withSourceResolutionOrigin((sourceResolution / 2).toPoint)
 	
 	/**
 	  * @return A copy of this image that isn't scaled above 100%
@@ -157,12 +194,34 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	/**
 	  * @return A copy of this image where x-axis is reversed
 	  */
-	def flippedHorizontally = mapPixelTable { _.flippedHorizontally }
+	def flippedHorizontally =
+	{
+		val flipped = mapPixelTable { _.flippedHorizontally }
+		specifiedOrigin match
+		{
+			// If an origin has been specified, flips it as well
+			case Some(oldOrigin) =>
+				val newOrigin = Point(sourceResolution.width - oldOrigin.x, oldOrigin.y)
+				flipped.withSourceResolutionOrigin(newOrigin)
+			case None => flipped
+		}
+	}
 	
 	/**
 	  * @return A copy of this image where y-axis is reversed
 	  */
-	def flippedVertically = mapPixelTable { _.flippedVertically }
+	def flippedVertically =
+	{
+		val flipped = mapPixelTable { _.flippedVertically }
+		specifiedOrigin match
+		{
+			// If an origin has been specified, flips it as well
+			case Some(oldOrigin) =>
+				val newOrigin = Point(oldOrigin.x, sourceResolution.height - oldOrigin.y)
+				flipped.withSourceResolutionOrigin(newOrigin)
+			case None => flipped
+		}
+	}
 	
 	/**
 	  * @return A copy of this image with increased contrast
@@ -199,9 +258,21 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	
 	// IMPLEMENTED	----------------
 	
+	override def preCalculatedPixels = _pixels.current
+	
+	/**
+	  * @return Whether this image is actually completely empty
+	  */
+	override def isEmpty = source.isEmpty
+	
+	/**
+	  * @return The pixels in this image
+	  */
+	override def pixels = _pixels.value
+	
 	override def repr = this
 	
-	override def toString = s"Image ($size ${(alpha * 100).toInt}% Alpha)"
+	override def *(scaling: Double): Image = this * Vector2D(scaling, scaling)
 	
 	
 	// OPERATORS	----------------
@@ -214,18 +285,18 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	def *(scaling: VectorLike[_]): Image = withScaling(this.scaling * scaling)
 	
 	/**
-	  * Scales this image
-	  * @param scaling The scaling factor
-	  * @return A scaled version of this image
-	  */
-	override def *(scaling: Double): Image = this * Vector3D(scaling, scaling)
-	
-	/**
 	  * Downscales this image
 	  * @param divider The dividing factor
 	  * @return A downscaled version of this image
 	  */
 	def /(divider: VectorLike[_]): Image = withScaling(scaling / divider)
+	
+	/**
+	 * @param other Another image
+	 * @return A copy of this image with the other image drawn on top of this one with its origin at the point
+	  *         of this image's origin (if specified)
+	 */
+	def +(other: Image) = withOverlay(other)
 	
 	
 	// OTHER	--------------------
@@ -252,20 +323,67 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	def timesAlpha(alphaMod: Double) = withAlpha(alpha * alphaMod)
 	
 	/**
+	  * @param newOrigin A new image origin relative to the top left coordinate in the source resolution image
+	  * @return A copy of this image with the specified origin
+	  */
+	def withSourceResolutionOrigin(newOrigin: Point) = copy(specifiedOrigin = Some(newOrigin))
+	
+	/**
+	  * @param f A mapping function for source resolution origin
+	  * @return A copy of this image with mapped origin
+	  */
+	def mapSourceResolutionOrigin(f: Point => Point) = withSourceResolutionOrigin(f(sourceResolutionOrigin))
+	
+	/**
+	  * @param translation A translation applied to source resolution image origin
+	  * @return A copy of this image with translated origin
+	  */
+	def withTranslatedSourceResolutionOrigin(translation: Dimensional[Double]) =
+		mapSourceResolutionOrigin { _+ translation }
+	
+	/**
+	  * @param newOrigin A new image origin <b>relative to the current image size</b>, which is scaling-dependent
+	  * @return A copy of this image with the specified origin
+	  */
+	def withOrigin(newOrigin: Point) = withSourceResolutionOrigin(newOrigin / scaling)
+	
+	/**
+	  * @param f A mapping function for applied image origin
+	  * @return A copy of this image with mapped origin
+	  */
+	def mapOrigin(f: Point => Point) = withOrigin(f(origin))
+	
+	/**
+	  * @param translation Translation applied to current (scaled) image origin
+	  * @return A copy of this image with translated origin
+	  */
+	def withTranslatedOrigin(translation: Dimensional[Double]) = mapOrigin { _ + translation }
+	
+	/**
 	  * Takes a sub-image from this image (meaning only a portion of this image)
-	  * @param area The relative area that is cut from this image
+	  * @param area The relative area that is cut from this image. The (0,0) is considered to be at the top left
+	  *             corner of this image.
 	  * @return The portion of this image within the relative area
 	  */
-	def subImage(area: Bounds) =
+	def subImage(area: Bounds) = source match
 	{
-		source.map { s => area.within(Bounds(Point.origin, size)).map { _ / scaling }.map {
-			a => _subImage(s, a) }.getOrElse(Image(new BufferedImage(0, 0, s.getType))) }.getOrElse(this)
+		case Some(source) =>
+			area.within(Bounds(Point.origin, size)) match
+			{
+				case Some(overlap) => _subImage(source, overlap / scaling)
+				case None => Image(new BufferedImage(0, 0, source.getType), scaling, alpha,
+					specifiedOrigin.map { _ - area.position / scaling })
+			}
+		case None => this
 	}
 	
 	// Only works when specified area is inside the original image's bounds
-	private def _subImage(img: BufferedImage, relativeArea: Bounds) = Image(
-		img.getSubimage(relativeArea.x.toInt, relativeArea.y.toInt, relativeArea.width.toInt, relativeArea.height.toInt),
-		scaling)
+	private def _subImage(img: BufferedImage, relativeArea: Bounds) =
+	{
+		val newSource = img.getSubimage(relativeArea.x.toInt, relativeArea.y.toInt, relativeArea.width.toInt,
+			relativeArea.height.toInt)
+		Image(newSource, scaling, alpha, specifiedOrigin.map { _ - relativeArea.position })
+	}
 	
 	/**
 	  * Crops this image from the sides
@@ -297,7 +415,7 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	  * Converts this one image into a strip containing multiple parts. The splitting is done horizontally.
 	  * @param numberOfParts The number of separate parts within this image
 	  * @param marginBetweenParts The horizontal margin between the parts within this image in pixels (default = 0)
-	  * @return A stip containing numberOfParts images, which all are sub-images of this image
+	  * @return A strip containing numberOfParts images, which all are sub-images of this image
 	  */
 	def split(numberOfParts: Int, marginBetweenParts: Int = 0) =
 	{
@@ -305,24 +423,6 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 		val subImageSize = Size(subImageWidth, height)
 		Strip((0 until numberOfParts).map {
 			index => subImage(Bounds(Point(index * (subImageWidth + marginBetweenParts), 0), subImageSize)) }.toVector)
-	}
-	
-	/**
-	  * Draws this image using a specific drawer
-	  * @param drawer A drawer
-	  * @param position The position where this image's origin is drawn (default = (0, 0))
-	  * @param origin The relative origin of this image (default = (0, 0) = top left corner)
-	  * @return Whether this image was fully drawn
-	  */
-	def drawWith(drawer: Drawer, position: Point = Point.origin, origin: Point = Point.origin) =
-	{
-		source.forall { s =>
-			val transformed = drawer.transformed(Transformation.translation(position.toVector - origin).scaled(scaling))
-			if (alpha == 1.0)
-				transformed.drawImage(s)
-			else
-				transformed.withAlpha(alpha).drawImage(s)
-		}
 	}
 	
 	/**
@@ -407,7 +507,7 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 		if (source.isDefined)
 		{
 			val newPixels = f(pixels)
-			Image(Some(newPixels.toBufferedImage), scaling, alpha, Lazy(newPixels))
+			Image(Some(newPixels.toBufferedImage), scaling, alpha, specifiedOrigin, LazyWrapper(newPixels))
 		}
 		else
 			this
@@ -438,7 +538,7 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	  * @param intensity The blurring intensity [0, 1], defaults to 1
 	  * @return A blurred version of this image
 	  */
-	def blurred(intensity: Int = 1) = Blur(intensity)(this)
+	def blurred(intensity: Double = 1) = Blur(intensity)(this)
 	
 	/**
 	  * Creates a sharpened copy of this image
@@ -476,14 +576,13 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	  * @param op The operation that is applied
 	  * @return A new image with operation applied
 	  */
-	def filterWith(op: BufferedImageOp) =
+	def filterWith(op: BufferedImageOp) = source match
 	{
-		source.map { s =>
-			val destination = new BufferedImage(s.getWidth, s.getHeight, s.getType)
-			op.filter(s, destination)
-			Image(destination, scaling)
-			
-		}.getOrElse(this)
+		case Some(source) =>
+			val destination = new BufferedImage(source.getWidth, source.getHeight, source.getType)
+			op.filter(source, destination)
+			Image(destination, scaling, alpha, specifiedOrigin)
+		case None => this
 	}
 	
 	/**
@@ -494,7 +593,7 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	
 	/**
 	  * Creates a new image with altered source resolution. This method can be used when you wish to lower the original
-	  * image's resolution to speed up pixelwise operations. If you simply wish to change how this image looks in the
+	  * image's resolution to speed up pixel-wise operations. If you simply wish to change how this image looks in the
 	  * program, please use withSize instead
 	  * @param newSize The new source size
 	  * @param preserveUseSize Whether the resulting image should be scaled to match this image (default = false)
@@ -502,39 +601,44 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 	  */
 	def withSourceResolution(newSize: Size, preserveUseSize: Boolean = false) =
 	{
-		source.map { s =>
-			// Won't copy into 0 or negative size
-			if (newSize.isNegative)
-				Image.empty
-			else if (s.getWidth == newSize.width.toInt && s.getHeight == newSize.height.toInt)
-				this
-			else
-			{
-				val scaledImage = s.getScaledInstance(newSize.width.toInt, newSize.height.toInt, java.awt.Image.SCALE_SMOOTH)
-				val scaledAsBuffered = scaledImage match
-				{
-					case b: BufferedImage => b
-					case i =>
-						val buffered = new BufferedImage(i.getWidth(null), i.getHeight(null),
-							BufferedImage.TYPE_INT_ARGB)
-						val writeGraphics = buffered.createGraphics()
-						writeGraphics.drawImage(i, 0, 0, null)
-						writeGraphics.dispose()
-						
-						buffered
-				}
-				
-				if (preserveUseSize)
-					Image(scaledAsBuffered, size.toVector / newSize)
+		source match
+		{
+			case Some(source) =>
+				// Won't copy into 0 or negative size
+				if (newSize.isNegative)
+					Image.empty
+				else if (source.getWidth == newSize.width.toInt && source.getHeight == newSize.height.toInt)
+					this
 				else
-					Image(scaledAsBuffered)
-			}
-		}.getOrElse(this)
+				{
+					val scaledImage = source.getScaledInstance(newSize.width.toInt, newSize.height.toInt,
+						java.awt.Image.SCALE_SMOOTH)
+					val scaledAsBuffered = scaledImage match
+					{
+						case b: BufferedImage => b
+						case i =>
+							val buffered = new BufferedImage(i.getWidth(null), i.getHeight(null),
+								BufferedImage.TYPE_INT_ARGB)
+							val writeGraphics = buffered.createGraphics()
+							writeGraphics.drawImage(i, 0, 0, null)
+							writeGraphics.dispose()
+							
+							buffered
+					}
+					val newOrigin = specifiedOrigin.map { _ * (newSize / sourceResolution) }
+					
+					if (preserveUseSize)
+						Image(scaledAsBuffered, size.toVector / newSize, alpha, newOrigin)
+					else
+						Image(scaledAsBuffered, Vector2D.identity, alpha, newOrigin)
+				}
+			case None => this
+		}
 	}
 	
 	/**
 	  * Creates a copy of this image where the source data is limited to a certain resolution. The use size and the
-	  * aspect ratio of this image is preserved, however.
+	  * aspect ratio of this image are preserved, however.
 	  * @param maxResolution The maximum resolution allowed for this image
 	  * @return A copy of this image with equal or smaller resolution than that specified
 	  */
@@ -553,6 +657,104 @@ case class Image private(private val source: Option[BufferedImage], scaling: Vec
 		else
 			this
 	}
+	
+	/**
+	 * @param overlayImage An image that will be drawn on top of this image
+	  * @param overlayPosition A position <b>relative to this image's origin<b> that determines where the origin of
+	  *                        the other image will be placed
+	 * @return A new image where the specified image is drawn on top of this one
+	 */
+	def withOverlay(overlayImage: Image, overlayPosition: Point = Point.origin) =
+	{
+		// If one of the images is empty, uses the other image
+		if (overlayImage.isEmpty)
+			this
+		else
+			toAwt match
+			{
+				case Some(buffer) =>
+					// Draws the other image on the buffer
+					// Determines the scaling to apply, if necessary
+					Drawer.use(buffer.createGraphics()) { d =>
+						(overlayImage / scaling).drawWith(d.clippedTo(Bounds(Point.origin, sourceResolution)),
+							sourceResolutionOrigin + overlayPosition)
+					}
+					// Wraps the result
+					Image(buffer, scaling, alpha, specifiedOrigin)
+					
+				case None => overlayImage
+			}
+	}
+	
+	/**
+	  * @param paint A function for painting over this image. Accepts a drawer that is clipped to this image's area
+	  *              ((0,0) is at the top left corner if this image).
+	  * @return A copy of this image with the paint operation applied
+	  */
+	def paintedOver(paint: Drawer => Unit) =
+	{
+		toAwt match
+		{
+			case Some(buffer) =>
+				// Paints into created buffer
+				Drawer.use(buffer.createGraphics()) { d => paint(d.clippedTo(Bounds(Point.origin, sourceResolution))) }
+				Image(buffer, scaling, alpha, specifiedOrigin)
+			case None => this
+		}
+	}
+	
+	/**
+	  * Draws this image on an empty image with predefined size. Places this image at the center of the other image.
+	  * If the new image size is smaller than the (scaled) size of this image, crops some parts of this image out.
+	  * Also, if this image contains an alpha modifier, that modifier is applied directly into the specified image's
+	  * source pixels.
+	  * @param targetSize The source resolution size of the resulting image
+	  * @return A new image with this image drawn at the center. The image origin is preserved, if it was defined
+	  *         in this image.
+	  */
+	def paintedToCanvas(targetSize: Size) =
+	{
+		if (size == targetSize)
+			this
+		else
+		{
+			// Creates the new buffer image
+			val buffer = new BufferedImage(targetSize.width.round.toInt, targetSize.height.round.toInt,
+				BufferedImage.TYPE_INT_ARGB)
+			// Draws this image to the center of the image
+			val topLeftPosition = (targetSize - size).toPoint / 2
+			val originDrawPosition = topLeftPosition + origin
+			Drawer.use(buffer.createGraphics()) { drawer => drawWith(drawer, originDrawPosition) }
+			// Wraps the image
+			Image(buffer, origin = if (specifiesOrigin) Some(originDrawPosition) else None)
+		}
+	}
+	
+	/**
+	  * Transforms this image using specified transformation. The resulting image is based on a drawn copy of this image.
+	  * @param transformation Transformation to apply to this image
+	  * @return Transformed copy of this image
+	  */
+	def transformedWith(transformation: Matrix2D) =
+	{
+		if (isEmpty)
+			this
+		else
+		{
+			// Calculates new bounds
+			val transformedBounds = (bounds * transformation).bounds
+			val transformedOrigin = Point.origin * transformation
+			
+			// Creates the buffer image
+			val buffer = new BufferedImage(transformedBounds.width.round.toInt, transformedBounds.height.round.toInt,
+				BufferedImage.TYPE_INT_ARGB)
+			
+			// Draws on the buffer
+			Drawer.use(buffer.createGraphics()) { d =>
+				drawWith(d, transformedOrigin - transformedBounds.topLeft, Some(transformation))
+			}
+			// Wraps the image
+			Image(buffer, origin = if (specifiesOrigin) Some(transformedOrigin - transformedBounds.topLeft) else None)
+		}
+	}
 }
-
-private class NoImageReaderAvailableException(message: String) extends RuntimeException(message)

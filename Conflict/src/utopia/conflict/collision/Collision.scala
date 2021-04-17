@@ -1,7 +1,9 @@
 package utopia.conflict.collision
 
 import utopia.flow.util.Equatable
-import utopia.genesis.shape.shape2D.{Point, TransformProjectable, Transformation, Vector2D}
+import utopia.genesis.shape.shape2D.transform.{AffineTransformable, LinearTransformable}
+import utopia.genesis.shape.shape2D.{Matrix2D, Point, Vector2D}
+import utopia.genesis.shape.shape3D.Matrix3D
 
 /**
  * Collision instances contain information about a collision event
@@ -14,8 +16,9 @@ import utopia.genesis.shape.shape2D.{Point, TransformProjectable, Transformation
  * involved in the collision event. The function is called when the points are requested for the 
  * first time
  */
-class Collision(val mtv: Vector2D, calculateCollisionPoints: => Vector[Point]) extends TransformProjectable[Collision]
-    with Equatable
+// TODO: Should accept a lazy set of collision points instead of a call-by-name function
+class Collision(val mtv: Vector2D, calculateCollisionPoints: => Vector[Point]) extends LinearTransformable[Collision]
+    with AffineTransformable[Collision] with Equatable
 {
     // ATTRIBUTES    ---------------------
     
@@ -45,6 +48,9 @@ class Collision(val mtv: Vector2D, calculateCollisionPoints: => Vector[Point]) e
     
     // IMPLEMENTED METHODS    ------------
     
-    override def transformedWith(transformation: Transformation) = new Collision(
-            transformation(mtv), collisionPoints.map { transformation(_) })
+    override def transformedWith(transformation: Matrix2D) = new Collision(transformation(mtv),
+        collisionPoints.map { transformation(_).toPoint })
+    
+    override def transformedWith(transformation: Matrix3D) = new Collision(transformation(mtv).in2D,
+        collisionPoints.map { transformation(_).toPoint })
 }

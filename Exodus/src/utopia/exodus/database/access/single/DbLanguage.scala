@@ -1,6 +1,6 @@
 package utopia.exodus.database.access.single
 
-import utopia.exodus.database.access.id.LanguageId
+import utopia.exodus.database.access.id.DbLanguageId
 import utopia.exodus.database.factory.language.LanguageFactory
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
@@ -46,7 +46,7 @@ object DbLanguage extends SingleModelAccessById[Language, Int]
 					else
 						Failure(new NoDataFoundException(s"$languageId is not a valid language id"))
 				case Left(languageCode) =>
-					LanguageId.forIsoCode(languageCode).pull.toTry {
+					DbLanguageId.forIsoCode(languageCode).pull.toTry {
 						new NoDataFoundException(s"$languageCode is not a valid language code") }
 			}
 			languageId.flatMap { languageId =>

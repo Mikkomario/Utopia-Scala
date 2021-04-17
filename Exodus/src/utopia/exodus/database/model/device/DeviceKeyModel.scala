@@ -1,11 +1,11 @@
 package utopia.exodus.database.model.device
 
 import java.time.Instant
-
 import utopia.exodus.database.factory.device.DeviceKeyFactory
 import utopia.exodus.model.partial.DeviceKeyData
 import utopia.exodus.model.stored.DeviceKey
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
@@ -16,7 +16,7 @@ object DeviceKeyModel
 	/**
 	  * @return A model that has just been marked as deprecated
 	  */
-	def nowDeprecated = apply(deprecatedAfter = Some(Instant.now()))
+	def nowDeprecated = apply(deprecatedAfter = Some(Now))
 	
 	
 	// OTHER	----------------------------------

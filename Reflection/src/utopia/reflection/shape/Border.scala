@@ -3,7 +3,8 @@ package utopia.reflection.shape
 import javax.swing.BorderFactory
 import javax.swing.border.{EmptyBorder, MatteBorder}
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Insets, Size}
+import utopia.genesis.shape.shape2D.Direction2D.{Down, Up}
+import utopia.genesis.shape.shape2D.{Direction2D, Insets, Size}
 
 object Border
 {
@@ -44,6 +45,42 @@ object Border
 	  * @return A new border with another border inside
 	  */
 	def apply(sizes: Insets, color: Color, inner: Border): Border = Border(sizes, Some(color), Some(inner))
+	
+	/**
+	  * @param direction Targeted direction
+	  * @param width Width of the border on that direction
+	  * @param color Border color
+	  * @return A new border that only affects the targeted direction
+	  */
+	def towards(direction: Direction2D, width: Double, color: Color) = Border(Insets.towards(direction, width), color)
+	
+	/**
+	  * @param height Height of this border
+	  * @param color Border color
+	  * @return A border that only affects the top of a component
+	  */
+	def top(height: Double, color: Color) = towards(Up, height, color)
+	
+	/**
+	  * @param height Height of this border
+	  * @param color Border color
+	  * @return A border that only affects the bottom of a component
+	  */
+	def bottom(height: Double, color: Color) = towards(Down, height, color)
+	
+	/**
+	  * @param width Width of this border
+	  * @param color Border color
+	  * @return A border that only affects the left side of a component
+	  */
+	def left(width: Double, color: Color) = towards(Direction2D.Left, width, color)
+	
+	/**
+	  * @param width Width of this border
+	  * @param color Border color
+	  * @return A border that only affects the right side of a component
+	  */
+	def right(width: Double, color: Color) = towards(Direction2D.Right, width, color)
 	
 	/**
 	  * Creates a new border where each side is equal

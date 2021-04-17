@@ -1,8 +1,9 @@
 package utopia.flow.util
 
-import java.time.Instant
+import utopia.flow.time.Now
 
-import TimeExtensions._
+import java.time.Instant
+import utopia.flow.time.TimeExtensions._
 
 /**
   * Used for tracking actions and logging tasks with durations
@@ -25,6 +26,6 @@ class TimeLogger
 	def checkPoint(description: String) =
 	{
 		println(description + s" (${(Instant.now() - startTime).description})")
-		startTime = Instant.now()
+		startTime = Now
 	}
 }

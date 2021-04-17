@@ -12,7 +12,7 @@ import utopia.reflection.component.swing.template.{AwtComponentRelated, Stackabl
 import utopia.reflection.component.template.layout.stack.AnimatedTransitionLike
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.util.{ComponentCreationDefaults, ComponentToImage}
 
 import scala.concurrent.duration.FiniteDuration
@@ -111,10 +111,9 @@ class AnimatedSwitchPanel[C <: AwtStackable](initialContent: C, actorHandler: Ac
 	{
 		val transition = new Transition(ComponentToImage(from, size),
 			ComponentToImage(to, to.stackSize.optimal))
-		actorHandler += transition
 		panel.set(transition)
 		
-		transition.start().map { _ =>
+		transition.start(actorHandler).map { _ =>
 			currentContent = to
 			panel.set(to)
 			to

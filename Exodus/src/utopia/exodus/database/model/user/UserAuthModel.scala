@@ -50,7 +50,18 @@ object UserAuthModel
   */
 case class UserAuthModel(id: Option[Int] = None, userId: Option[Int] = None, hash: Option[String] = None) extends Storable
 {
+	// IMPLEMENTED	--------------------------
+	
 	override def table = UserAuthModel.table
 	
 	override def valueProperties = Vector("id" -> id, "userId" -> userId, UserAuthModel.hashAttName -> hash)
+	
+	
+	// OTHER	------------------------------
+	
+	/**
+	  * @param hash A new password hash
+	  * @return A copy of this model with specified hash
+	  */
+	def withHash(hash: String) = copy(hash = Some(hash))
 }

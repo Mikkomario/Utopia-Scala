@@ -42,11 +42,11 @@ class VolatileList[T] private(list: Vector[T]) extends Volatile(list)
 {
     // IMPLEMENTED    ---------------
 	
-	def iterator = get.iterator
+	def iterator = value.iterator
 	
-	def apply(idx: Int) = get(idx)
+	def apply(idx: Int) = value(idx)
 	
-	def length: Int = get.length
+	def length: Int = value.length
 	
 	override def update(idx: Int, elem: T): Unit = update { _.updated(idx, elem) }
 	
@@ -99,7 +99,7 @@ class VolatileList[T] private(list: Vector[T]) extends Volatile(list)
 	/**
 	 * Clears all items from this list
 	 */
-	def clear() = set(Vector())
+	def clear() = value = Vector()
 	
 	/**
 	 * Removes and returns the first item in this list
@@ -117,6 +117,12 @@ class VolatileList[T] private(list: Vector[T]) extends Volatile(list)
 	    
 	    }.getOrElse(None -> items)
 	}
+	
+	/**
+	  * Clears this list of all items
+	  * @return All items that were removed from this list
+	  */
+	def popAll() = getAndSet(Vector())
 }
 
 class VolatileListBuilder[A] extends mutable.Builder[A, VolatileList[A]]

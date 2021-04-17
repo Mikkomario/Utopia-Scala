@@ -2,7 +2,7 @@ package utopia.vault.test
 
 import utopia.flow.async.ThreadPool
 import utopia.flow.generic.DataType
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.vault.database.ConnectionPool
 import utopia.vault.sql.SelectAll
 

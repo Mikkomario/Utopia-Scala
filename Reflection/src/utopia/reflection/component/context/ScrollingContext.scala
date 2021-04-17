@@ -4,7 +4,7 @@ import utopia.genesis.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
-import utopia.reflection.component.drawing.template.ScrollBarDrawer
+import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
 import utopia.reflection.util.ComponentCreationDefaults
 
 object ScrollingContext
@@ -57,7 +57,7 @@ object ScrollingContext
   * @author Mikko Hilpinen
   * @since 28.4.2020, v1.2
   */
-case class ScrollingContext(actorHandler: ActorHandler, scrollBarDrawer: ScrollBarDrawer,
+case class ScrollingContext(actorHandler: ActorHandler, scrollBarDrawer: ScrollBarDrawerLike,
 							scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,
 							scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
 							scrollFriction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,

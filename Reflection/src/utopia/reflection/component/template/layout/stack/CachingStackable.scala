@@ -1,7 +1,8 @@
 package utopia.reflection.component.template.layout.stack
 
-import utopia.flow.datastructure.mutable.Lazy
-import utopia.reflection.shape.{StackSize, StackSizeModifier}
+import utopia.flow.datastructure.mutable.ResettableLazy
+import utopia.reflection.shape.stack.StackSize
+import utopia.reflection.shape.stack.modifier.StackSizeModifier
 
 /**
   * This stackable caches the calculated stack size
@@ -13,7 +14,7 @@ trait CachingStackable extends Stackable with Constrainable
 	// ATTRIBUTES	-----------------
 	
 	private var _constraints = Vector[StackSizeModifier]()
-	private val cachedStackSize = Lazy[StackSize] { calculatedStackSizeWithConstraints }
+	private val cachedStackSize = ResettableLazy[StackSize] { calculatedStackSizeWithConstraints }
 	
 	
 	// ABSTRACT	---------------------
@@ -36,14 +37,14 @@ trait CachingStackable extends Stackable with Constrainable
 		revalidate()
 	}
 	
-	override def isVisible_=(isVisible: Boolean) =
+	override def visible_=(isVisible: Boolean) =
 	{
 		// Revalidates this item each time visibility changes
 		updateVisibility(isVisible)
 		revalidate()
 	}
 	
-	override def stackSize = if (isVisible) cachedStackSize.get else StackSize.any
+	override def stackSize = if (visible) cachedStackSize.value else StackSize.any
 	
 	override def resetCachedSize() = cachedStackSize.reset()
 	

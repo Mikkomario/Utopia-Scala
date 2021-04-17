@@ -2,6 +2,7 @@ package utopia.reflection.shape
 
 import utopia.genesis.shape.shape2D.Insets
 import utopia.genesis.util.{Distance, Ppi}
+import utopia.reflection.shape.stack.{StackInsets, StackLength}
 
 /**
   * These extensions allow easier creation of stack lengths & stack sizes
@@ -140,7 +141,7 @@ object LengthExtensions
 		 * @param f Function for producing stack lengths
 		 * @return A new set of stack insets
 		 */
-		def toStackInsetsWith(other: Insets)(f: (Double, Double) => StackLength) = StackInsets(
+		def toStackInsetsWith(other: Insets)(f: (Double, Double) => StackLength) = stack.StackInsets(
 			(i.amounts.keySet ++ other.amounts.keySet).map { d => d -> f(i(d), other(d)) }.toMap)
 	}
 }

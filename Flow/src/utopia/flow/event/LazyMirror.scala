@@ -1,5 +1,7 @@
 package utopia.flow.event
 
+import utopia.flow.datastructure.immutable.Lazy
+import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.datastructure.template.LazyLike
 
 object LazyMirror
@@ -11,7 +13,13 @@ object LazyMirror
 	  * @tparam R Type of item after mapping
 	  * @return A lazily mirrored view to specified pointer
 	  */
-	def of[O, R](pointer: Changing[O])(f: O => R) = new LazyMirror(pointer)(f)
+	def of[O, R](pointer: ChangingLike[O])(f: O => R) =
+	{
+		if (pointer.isChanging)
+			new LazyMirror(pointer)(f)
+		else
+			Lazy { f(pointer.value) }
+	}
 }
 
 /**
@@ -24,29 +32,23 @@ object LazyMirror
   * @tparam Origin Type of item before mirroring
   * @tparam Reflection Type of item after mirroring
   */
-class LazyMirror[Origin, Reflection](source: Changing[Origin])(f: Origin => Reflection) extends LazyLike[Reflection]
+class LazyMirror[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => Reflection)
+	extends LazyLike[Reflection]
 {
 	// ATTRIBUTES	--------------------------
 	
-	private var cached: Option[Reflection] = None
+	private val cache = ResettableLazy { f(source.value) }
 	
 	
 	// INITIAL CODE	--------------------------
 	
 	// Resets cache whenever original pointer changes
-	source.addListener { _ => cached = None }
+	source.addDependency(ChangeDependency.beforeAnyChange { cache.reset() })
 	
 	
 	// IMPLEMENTED	--------------------------
 	
-	override def current = cached
+	override def value = cache.value
 	
-	override def get = cached match
-	{
-		case Some(v) => v
-		case None =>
-			val newValue = f(source.value)
-			cached = Some(newValue)
-			newValue
-	}
+	override def current = cache.current
 }

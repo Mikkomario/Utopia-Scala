@@ -1,6 +1,6 @@
 package utopia.genesis.util
 
-import utopia.flow.util.RichComparable
+import utopia.flow.util.SelfComparable
 import utopia.genesis.util.DistanceUnit.{CentiMeter, Feet, Inch, Meter, MilliMeter}
 
 object Distance
@@ -10,13 +10,11 @@ object Distance
 	 * @return A distance
 	 */
 	def ofMillis(millis: Double) = Distance(millis, MilliMeter)
-	
 	/**
 	 * @param centiMeters Amount of centimeters
 	 * @return A distance
 	 */
 	def ofCm(centiMeters: Double) = Distance(centiMeters, CentiMeter)
-	
 	/**
 	 * @param meters Amount of meters
 	 * @return A distance
@@ -28,7 +26,6 @@ object Distance
 	 * @return A distance
 	 */
 	def ofInches(inches: Double) = Distance(inches, Inch)
-	
 	/**
 	 * @param feet Amount of feet
 	 * @return a distance
@@ -42,7 +39,6 @@ object Distance
 	 */
 	def ofPixels(pixels: Double)(implicit ppi: Ppi) =
 		if (ppi.value == 0) ofInches(0) else ofInches(pixels / ppi.value)
-	
 	/**
 	 * @param pixels Amount of pixels
 	 * @return A distance based on current screen ppi
@@ -55,7 +51,7 @@ object Distance
  * @author Mikko Hilpinen
  * @since 24.6.2020, v2.3
  */
-case class Distance(amount: Double, unit: DistanceUnit) extends RichComparable[Distance]
+case class Distance(amount: Double, unit: DistanceUnit) extends SelfComparable[Distance]
 {
 	// COMPUTED ---------------------
 	
@@ -97,6 +93,8 @@ case class Distance(amount: Double, unit: DistanceUnit) extends RichComparable[D
 	
 	
 	// IMPLEMENTED  -----------------
+	
+	override def repr = this
 	
 	override def compareTo(o: Distance) =
 	{
@@ -146,16 +144,9 @@ case class Distance(amount: Double, unit: DistanceUnit) extends RichComparable[D
 	 * @return A divided copy of this instance
 	 */
 	def /(div: Double) = copy(amount = amount / div)
-	
 	/**
 	 * @param other Another distance
-	 * @return The shorter copy of these distances
+	 * @return Ratio between these two distances
 	 */
-	def min(other: Distance) = RichComparable.min(this, other)
-	
-	/**
-	 * @param other Another instance
-	 * @return A longer copy of these distances
-	 */
-	def max(other: Distance) = RichComparable.max(this, other)
+	def /(other: Distance) = amount / other.toUnit(unit)
 }

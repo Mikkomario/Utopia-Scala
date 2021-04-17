@@ -3,13 +3,15 @@ package utopia.exodus.database.access.many
 import utopia.exodus.database.access.single.{DbDevice, DbLanguage}
 import utopia.exodus.database.factory.user.{UserFactory, UserSettingsFactory}
 import utopia.exodus.database.model.user.{UserDeviceModel, UserLanguageModel, UserModel, UserSettingsModel}
+import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.user.UserWithLinks
 import utopia.metropolis.model.error.{AlreadyUsedException, IllegalPostModelException}
-import utopia.metropolis.model.partial.user.UserLanguageData
+import utopia.metropolis.model.partial.user.{UserLanguageData, UserSettingsData}
 import utopia.metropolis.model.post.NewUser
 import utopia.metropolis.model.stored.user.User
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.sql.Extensions._
 
 import scala.util.{Failure, Success, Try}
 
@@ -35,6 +37,12 @@ object DbUsers extends ManyModelAccess[User]
 	
 	
 	// OTHER	-------------------------------
+	
+	/**
+	  * @param userIds Targeted user ids
+	  * @return An access point to those users' data
+	  */
+	def apply(userIds: Set[Int]) = new DbUsersSubgroup(userIds)
 	
 	/**
 	  * Checks whether a user name is currently in use
@@ -65,11 +73,10 @@ object DbUsers extends ManyModelAccess[User]
 	  * @return Newly inserted data. Failure with IllegalPostModelException if posted data was invalid. Failure with
 	  *         AlreadyUsedException if user name or email was already in use.
 	  */
-	def tryInsert(newUser: NewUser)(implicit connection: Connection): Try[UserWithLinks] =
+	def tryInsert(newUser: NewUser, email: String)(implicit connection: Connection): Try[UserWithLinks] =
 	{
 		// Checks whether the proposed email already exist
-		val email = newUser.settings.email.trim
-		val userName = newUser.settings.name.trim
+		val userName = newUser.userName.trim
 		
 		if (!email.contains('@'))
 			Failure(new IllegalPostModelException("Email must be a valid email address"))
@@ -80,7 +87,7 @@ object DbUsers extends ManyModelAccess[User]
 		else
 		{
 			// Makes sure provided device id or language id matches data in the DB
-			val idsAreValid = newUser.device match
+			val idsAreValid = newUser.device.forall
 			{
 				case Right(deviceId) => DbDevice(deviceId).isDefined
 				case Left(newDevice) => DbLanguage(newDevice.languageId).isDefined
@@ -91,23 +98,45 @@ object DbUsers extends ManyModelAccess[User]
 				// Makes sure all the specified languages are also valid
 				DbLanguage.validateProposedProficiencies(newUser.languages).flatMap { languages =>
 					// Inserts new user data
-					val user = UserModel.insert(newUser.settings, newUser.password)
+					val user = UserModel.insert(UserSettingsData(userName, email), newUser.password)
 					val insertedLanguages = languages.map { case (languageId, familiarity) =>
 						UserLanguageModel.insert(UserLanguageData(user.id, languageId, familiarity)) }
-					// Links user with device (uses existing or a new device)
-					val deviceId = newUser.device match
+					// Links user with device (if device has been specified) (uses existing or a new device)
+					val deviceId = newUser.device.map
 					{
 						case Right(deviceId) => deviceId
-						case Left(newDevice) =>
-							DbDevices.insert(newDevice.name, newDevice.languageId, user.id).targetId
+						case Left(newDevice) => DbDevices.insert(newDevice.name, newDevice.languageId, user.id).targetId
 					}
-					UserDeviceModel.insert(user.id, deviceId)
+					deviceId.foreach { UserDeviceModel.insert(user.id, _) }
 					// Returns inserted user
-					Success(UserWithLinks(user, insertedLanguages, Vector(deviceId)))
+					Success(UserWithLinks(user, insertedLanguages, deviceId.toVector))
 				}
 			}
 			else
 				Failure(new IllegalPostModelException("device_id and language_id must point to existing data"))
 		}
+	}
+	
+	
+	// NESTED	--------------------------------
+	
+	class DbUsersSubgroup(userIds: Set[Int]) extends ManyModelAccess[User]
+	{
+		// IMPLEMENTED	------------------------
+		
+		override def factory = DbUsers.factory
+		
+		override def globalCondition =
+			Some(DbUsers.mergeCondition(factory.table.primaryColumn.get.in(userIds)))
+		
+		
+		// COMPUTED	----------------------------
+		
+		/**
+		  * @param connection Database connection (implicit)
+		  * @return Current settings for users with these ids
+		  */
+		def settings(implicit connection: Connection) = settingsFactory.getMany(
+			settingsFactory.nonDeprecatedCondition && settingsModel.userIdColumn.in(userIds))
 	}
 }

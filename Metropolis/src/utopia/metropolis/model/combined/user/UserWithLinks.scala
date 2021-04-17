@@ -5,7 +5,7 @@ import utopia.flow.datastructure.template.{Model, Property}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.{FromModelFactory, ModelConvertible, VectorType}
 import utopia.flow.util.CollectionExtensions._
-import utopia.metropolis.model.Extender
+import utopia.flow.util.Extender
 import utopia.metropolis.model.stored.user.{User, UserLanguage}
 
 object UserWithLinks extends FromModelFactory[UserWithLinks]

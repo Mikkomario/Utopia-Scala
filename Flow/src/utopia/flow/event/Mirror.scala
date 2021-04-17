@@ -10,7 +10,13 @@ object Mirror
 	 * @tparam R Reflected / mapped item type
 	 * @return A new mirror
 	 */
-	def of[O, R](source: Changing[O])(f: O => R) = new Mirror(source)(f)
+	def of[O, R](source: ChangingLike[O])(f: O => R) =
+	{
+		if (source.isChanging)
+			new Mirror(source)(f)
+		else
+			Fixed(f(source.value))
+	}
 }
 
 /**
@@ -22,30 +28,25 @@ object Mirror
  * @tparam Origin Type of the mirror origin (value from source item)
  * @tparam Reflection Type of mirror reflection (value from this item)
  */
-class Mirror[Origin, Reflection](val source: Changing[Origin])(f: Origin => Reflection) extends Changing[Reflection]
+class Mirror[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => Reflection) extends Changing[Reflection]
 {
 	// ATTRIBUTES   ------------------------------
 	
 	private var _value = f(source.value)
 	
 	var listeners = Vector[ChangeListener[Reflection]]()
+	override var dependencies = Vector[ChangeDependency[Reflection]]()
 	
 	
 	// INITIAL CODE ------------------------------
 	
-	// Updates value whenever original value changes. Also generates change events for the listeners
-	source.addListener { e =>
-		val newValue = f(e.newValue)
-		if (newValue != _value)
-		{
-			val oldValue = _value
-			_value = newValue
-			fireChangeEvent(oldValue)
-		}
-	}
+	// Mirrors the source pointer
+	startMirroring(source)(f) { _value = _ }
 	
 	
 	// IMPLEMENTED  ------------------------------
 	
 	override def value = _value
+	
+	override def isChanging = source.isChanging
 }

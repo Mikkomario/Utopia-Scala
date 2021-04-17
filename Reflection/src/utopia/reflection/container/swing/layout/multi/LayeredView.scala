@@ -47,7 +47,7 @@ class LayeredView[Background <: AwtStackable with CustomDrawable, Foreground <: 
 	
 	override protected def wrapped = panel
 	
-	override protected def updateVisibility(visible: Boolean) = super.isVisible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super.visible_=(visible)
 	
 	override def drawable = panel
 	

@@ -2,9 +2,10 @@ package utopia.reflection.component.context
 
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.reflection.color.{ColorScheme, ComponentColor}
-import utopia.reflection.shape.{Margins, StackLength}
+import utopia.reflection.shape.Margins
 import utopia.reflection.text.Font
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.stack.StackLength
 
 /**
   * This component context specifies information that is shared within the whole program (not component specific)
@@ -20,11 +21,23 @@ case class BaseContext(actorHandler: ActorHandler, defaultFont: Font, defaultCol
 					   allowImageUpscaling: Boolean = false, stackMarginOverride: Option[StackLength] = None)
 	extends BaseContextLike with BackgroundSensitive[ColorContext] with ScopeUsable[BaseContext]
 {
+	// IMPLEMENTED	------------------------------
+	
 	override def repr = this
 	
 	override def inContextWithBackground(color: ComponentColor) = ColorContext(this, color)
 	
 	override def defaultStackMargin = stackMarginOverride.getOrElse(margins.medium.any)
 	
-	override def relatedItemsStackMargin = stackMarginOverride.map { _ / 2 }.getOrElse(margins.small.downscaling)
+	override def relatedItemsStackMargin = stackMarginOverride.map { _ * 0.382 }
+		.getOrElse(margins.small.downscaling)
+	
+	
+	// OTHER	----------------------------------
+	
+	/**
+	  * @param stackMargin Stack margin to use
+	  * @return A copy of this context with specified stack margin
+	  */
+	def withStackMargin(stackMargin: StackLength) = copy(stackMarginOverride = Some(stackMargin))
 }

@@ -27,12 +27,13 @@ object CubicBezier
   * @param controlEnd The second control point
   * @param end The curve end point
   */
-case class CubicBezier[P <: Arithmetic[P, P] with DistanceLike](override val start: P, controlStart: P, controlEnd: P, override val end: P)
-	extends Path[P]
+case class CubicBezier[P <: Arithmetic[P, P] with DistanceLike](override val start: P, controlStart: P, controlEnd: P,
+                                                                override val end: P)
+	extends Path[P] with DistanceLike
 {
 	// IMPLEMENTED	----------------------
 	
-	lazy val length =
+	override lazy val length =
 	{
 		// Approximates length using average of chord and container net lengths
 		// Source: https://stackoverflow.com/questions/29438398/cheap-way-of-calculating-cubic-bezier-length

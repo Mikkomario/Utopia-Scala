@@ -11,7 +11,7 @@ import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.stack.segmented.{Segmented, SegmentedGroup, SegmentedRowLike}
 import utopia.reflection.container.swing.layout.multi.SegmentedRow.RowSegment
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.reflection.shape.StackLength
+import utopia.reflection.shape.stack.StackLength
 
 @deprecated("Segment system updated to Segment and SegmentGroup", "v1.2")
 object SegmentedRow

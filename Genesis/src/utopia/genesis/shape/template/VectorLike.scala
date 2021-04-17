@@ -91,6 +91,11 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	def isZero = dimensions.forall { _ == 0 }
 	
 	/**
+	  * @return Whether one or more of this instance's dimensions are not zero
+	  */
+	def nonZero = !isZero
+	
+	/**
 	  * This vector with length of 1
 	  */
 	def toUnit = this / length
@@ -111,6 +116,13 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * a copy of this element where the coordinates have been rounded to nearest integer / long
 	  * numbers.
 	  */
+	def round = map { math.round(_).toDouble }
+	
+	/**
+	  * a copy of this element where the coordinates have been rounded to nearest integer / long
+	  * numbers.
+	  */
+	@deprecated("Please use .round instead", "v2.4")
 	def rounded = map { math.round(_).toDouble }
 	
 	/**

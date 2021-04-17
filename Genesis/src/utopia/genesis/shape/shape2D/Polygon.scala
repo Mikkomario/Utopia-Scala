@@ -41,5 +41,6 @@ case class Polygon(corners: Vector[Point]) extends Polygonic
 	/**
 	  * Returns a copy of this polygon with the specified rotation direction
 	  */
-	def withRotationDirection(direction: RotationDirection) = if (rotationDirection == direction) this else Polygon(corners.reverse)
+	def withRotationDirection(direction: RotationDirection) =
+		if (rotationDirection == direction) this else Polygon(corners.reverse)
 }

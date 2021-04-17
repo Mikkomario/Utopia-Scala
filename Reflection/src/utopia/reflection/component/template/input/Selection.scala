@@ -4,7 +4,7 @@ import utopia.reflection.component.template.display.Pool
 
 object Selection
 {
-	implicit class OptionalSelect(val s: Selection[_ <: Option[_], _]) extends AnyVal
+	implicit class OptionalSelect(val s: Selection[Option[_], _]) extends AnyVal
 	{
 		/**
 		  * @return Whether there is currently an item selected
@@ -12,7 +12,7 @@ object Selection
 		def isDefined = s.selected.isDefined
 	}
 	
-	implicit class MultiSelect(val s: Selection[_ <: Iterable[_], _]) extends AnyVal
+	implicit class MultiSelect(val s: Selection[Iterable[_], _]) extends AnyVal
 	{
 		/**
 		  * @return Whether there is currently an item selected
@@ -28,7 +28,7 @@ object Selection
   * @tparam S the type of selection
   * @tparam C The type of selection pool
   */
-trait Selection[S, +C] extends Input[S] with Pool[C]
+trait Selection[+S, +C] extends Input[S] with Pool[C]
 {
 	// COMPUTED	-----------------
 	

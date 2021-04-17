@@ -6,7 +6,7 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 18.7.2020, v1
   */
-class SchrodingerView[R, I](wrapped: ShcrodingerLike[R, I]) extends ShcrodingerLike[R, I]
+class SchrodingerView[+R, +I](wrapped: ShcrodingerLike[R, I]) extends ShcrodingerLike[R, I]
 {
 	override def instancePointer = wrapped.instancePointer
 	

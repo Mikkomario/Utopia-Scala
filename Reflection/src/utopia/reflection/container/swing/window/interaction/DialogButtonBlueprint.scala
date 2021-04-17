@@ -39,6 +39,7 @@ object DialogButtonBlueprint
   * @param generateResultOnPress A function for generating dialog close result when this button is pressed. Also
   *                              returns whether the dialog should be closed.
   */
+// TODO: Replace this with WindowButtonBluePrint
 class DialogButtonBlueprint[+A](val text: LocalizedString, val icon: Option[SingleColorIcon] = None,
 								val color: ButtonColor = ButtonColor.primary, val location: Alignment = BottomRight)
                                (val generateResultOnPress: () => (Option[A], Boolean))

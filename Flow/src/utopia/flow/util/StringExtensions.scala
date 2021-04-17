@@ -1,8 +1,7 @@
 package utopia.flow.util
 
-import utopia.flow.datastructure.mutable.Lazy
-
-import scala.util.Try
+import utopia.flow.datastructure.mutable.ResettableLazy
+import CollectionExtensions._
 
 /**
  * Contains some utility extensions that extend the capabilities of standard strings
@@ -11,12 +10,19 @@ import scala.util.Try
  */
 object StringExtensions
 {
+	private val space = ' '
+	
 	/**
 	 * Extends standard scala string
 	 * @param s String to extend
 	 */
 	implicit class ExtendedString(val s: String) extends AnyVal
 	{
+		/**
+		  * @return A copy of this string with all control characters (\t, \n, \r and so forth) removed
+		  */
+		def stripControlCharacters = s.filter { _ >= space }
+		
 		/**
 		 * @return Words that belong to this string. <b>This includes all non-whitespace characters but not newline characters</b>
 		 */
@@ -46,6 +52,41 @@ object StringExtensions
 		 * @return A copy of this string without any non-digit characters
 		 */
 		def digits = s.filter { _.isDigit }
+		
+		/**
+		  * @param range A range
+		  * @return The portion of this string which falls into the specified range
+		  */
+		def slice(range: Range) =
+		{
+			if (range.isEmpty)
+				""
+			else
+			{
+				val first = (range.start min range.last) max 0
+				val last = (range.start max range.last) min (s.length - 1)
+				s.substring(first, last + 1)
+			}
+		}
+		
+		/**
+		  * Cuts a range out of this string
+		  * @param range Range of characters to cut
+		  * @return The cut away part of this string, then the remaining part of this string
+		  */
+		def cut(range: Range) =
+		{
+			if (range.isEmpty)
+				"" -> s
+			else
+			{
+				val first = (range.start min range.last) max 0
+				val last = (range.start max range.last) min (s.length - 1)
+				val cutText = s.substring(first, last + 1)
+				val remaining = s.take(first) ++ s.drop(last + 1)
+				cutText -> remaining
+			}
+		}
 		
 		/**
 		 * @param other Another string
@@ -209,6 +250,47 @@ object StringExtensions
 		}
 		
 		/**
+		 * Splits this string based on the specified regular expression, but ignores expressions which are surrounded
+		 * by quotes
+		 * @param regex A regular expression
+		 * @return Each part of this string which was separated with such an expression
+		 */
+		def splitIgnoringQuotations(regex: String) =
+			s.split(regex + "(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
+		
+		/**
+		 * Divides this string based on the specified divider / separator string. Works much like split,
+		 * except that the divider / separator is included in the resulting strings. Also, this method
+		 * doesn't support regular expressions like split does.
+		 * @param divider A divider that separates different parts
+		 * @return Divided parts of this string with the dividers included
+		 */
+		def divideWith(divider: String) =
+		{
+			val dividerIndices = indexOfIterator(divider).toVector
+			// Case: No dividers => returns the string as is
+			if (dividerIndices.isEmpty)
+				Vector(s)
+			else
+			{
+				val divLength = divider.length
+				// Collects the strings between dividers. Includes the dividers themselves.
+				val (finalStart, firstParts) = dividerIndices
+					.foldLeft((0, Vector[String]())) { case ((start, collected), next) =>
+						val nextStart = next + divLength
+						val part = s.substring(start, nextStart)
+						nextStart -> (collected :+ part)
+					}
+				// Case: String continues after the last divider
+				if (finalStart < s.length)
+					firstParts :+ s.substring(finalStart)
+				// Case: String ends with a divider
+				else
+					firstParts
+			}
+		}
+		
+		/**
 		 * A comparison of two strings in a case-insensitive manner
 		 * @param another Another string
 		 * @return Whether this string equals the other string when case is ignored
@@ -221,7 +303,7 @@ object StringExtensions
 		// ATTRIBUTES	------------------
 		
 		private var lastIndex: Option[Int] = None
-		private val nextIndex: Lazy[Option[Int]] = Lazy {
+		private val nextIndex = ResettableLazy[Option[Int]] {
 			val next = lastIndex match
 			{
 				case Some(last) =>
@@ -236,17 +318,12 @@ object StringExtensions
 		
 		// IMPLEMENTED	------------------
 		
-		override def hasNext = nextIndex.get.isDefined
+		override def hasNext = nextIndex.value.isDefined
 		
-		override def next() =
+		override def next() = nextIndex.pop() match
 		{
-			val result = nextIndex.get
-			nextIndex.reset()
-			result match
-			{
-				case Some(index) => index
-				case None => throw new NoSuchElementException("Iterator.next() called after running out of items")
-			}
+			case Some(index) => index
+			case None => throw new NoSuchElementException("Iterator.next() called after running out of items")
 		}
 	}
 }

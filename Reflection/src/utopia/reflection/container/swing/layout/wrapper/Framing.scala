@@ -1,14 +1,17 @@
 package utopia.reflection.container.swing.layout.wrapper
 
+import utopia.genesis.color.Color
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.BackgroundSensitive
+import utopia.reflection.component.drawing.immutable.RoundedBackgroundDrawer
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.template.{AwtComponentRelated, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.container.stack.template.layout.FramingLike
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.shape.{StackInsets, StackSize}
+import utopia.reflection.shape.stack.{StackInsets, StackSize}
 
 object Framing
 {
@@ -76,4 +79,20 @@ class Framing[C <: Stackable with AwtComponentRelated](initialComponent: C, val 
 	override protected def add(component: C, index: Int) = panel.insert(component, index)
 	
 	override protected def remove(component: C) = panel -= component
+	
+	
+	// OTHER	------------------------
+	
+	/**
+	  * Adds rounded background drawing to this framing
+	  * @param color Color to use when drawing the background
+	  */
+	def addRoundedBackgroundDrawing(color: Color) =
+	{
+		insets.sides.map { _.optimal }.filter { _ > 0.0 }.minOption match
+		{
+			case Some(minSide) => addCustomDrawer(RoundedBackgroundDrawer.withRadius(color, minSide, Normal))
+			case None => addCustomDrawer(RoundedBackgroundDrawer.withFactor(color, 0.25, Normal))
+		}
+	}
 }

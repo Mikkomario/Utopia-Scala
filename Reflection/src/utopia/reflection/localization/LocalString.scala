@@ -71,7 +71,8 @@ object LocalString
   * @param string A source string
   * @param languageCode The 2-character ISO code for the language of the string
   */
-case class LocalString(override val string: String, override val languageCode: Option[String] = None) extends LocalStringLike[LocalString]
+case class LocalString(override val string: String, override val languageCode: Option[String] = None)
+	extends LocalStringLike[LocalString]
 {
 	// COMPUTED	--------------------------
 	
@@ -88,6 +89,10 @@ case class LocalString(override val string: String, override val languageCode: O
 	
 	
 	// IMPLEMENTED	----------------------
+	
+	override def repr = this
+	
+	override def modify(f: String => String) = copy(string = f(string))
 	
 	override def +(other: LocalString) =
 	{
@@ -126,6 +131,15 @@ case class LocalString(override val string: String, override val languageCode: O
 	
 	
 	// OTHER	--------------------------
+	
+	/**
+	  * @param start String start index (inclusive)
+	  * @param end String end index (exclusive, default = end of string)
+	  * @return A sub-section of this string
+	  * @throws IndexOutOfBoundsException If start < 0 or end > length of this string
+	  */
+	@throws[IndexOutOfBoundsException]("If start < 0 or end > length of this string")
+	def subString(start: Int, end: Int = string.length) = copy(string = string.substring(start, end))
 	
 	private def parseArguments(field: String, args: Seq[Any]) =
 	{

@@ -11,5 +11,5 @@ trait RefreshableWithPointer[A] extends PoolWithPointer[A, PointerWithEvents[A]]
 {
 	// IMPLEMENTED	--------------
 	
-	override def content_=(newContent: A) = contentPointer.set(newContent)
+	override def content_=(newContent: A) = contentPointer.value = newContent
 }

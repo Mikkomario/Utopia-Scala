@@ -1,11 +1,13 @@
 package utopia.genesis.shape.path
 
+import utopia.genesis.util.DistanceLike
+
 /**
   * This path doesn't move anywhere from a single point
   * @author Mikko Hilpinen
   * @since 20.6.2019, v2.1+
   */
-case class EmptyPath[P](point: P) extends Path[P]
+case class EmptyPath[P](point: P) extends Path[P] with DistanceLike
 {
 	override def start = point
 	

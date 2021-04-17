@@ -1,5 +1,7 @@
 package utopia.reflection.localization
 
+import utopia.flow.util.StringExtensions._
+
 /**
   * This trait handles commonalities between different localization strings
   * @author Mikko Hilpinen
@@ -8,6 +10,11 @@ package utopia.reflection.localization
 trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 {
 	// ABSTRACT	--------------
+	
+	/**
+	  * @return This item
+	  */
+	def repr: Repr
 	
 	/**
 	  * @return A string representation of this string-like instance
@@ -21,6 +28,12 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	def languageCode: Option[String]
 	
 	/**
+	  * @param f A string modification function
+	  * @return A modified copy of this string
+	  */
+	def modify(f: String => String): Repr
+	
+	/**
 	  * Adds another string to this string
 	  * @param other Another string
 	  * @return A combination of these two strings
@@ -30,7 +43,7 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	/**
 	  * Splits this string based on provided regex
 	  * @param regex The part which splits this string
-	  * @return Splitted parts
+	  * @return Split parts
 	  */
 	def split(regex: String): Vector[Repr]
 	
@@ -55,9 +68,29 @@ trait LocalStringLike[Repr <: LocalStringLike[Repr]]
 	// COMPUTED	--------------
 	
 	/**
+	  * @return Whether this string is empty
+	  */
+	def isEmpty = string.isEmpty
+	
+	/**
+	  * @return Whether this string contains characters
+	  */
+	def nonEmpty = string.nonEmpty
+	
+	/**
+	  * @return None if this string is empty. This string otherwise.
+	  */
+	def notEmpty = if (isEmpty) None else Some(repr)
+	
+	/**
 	  * @return This string split on newline characters
 	  */
 	def lines = split("\r?\n|\r")
+	
+	/**
+	  * @return A copy of this string without any control characters in it
+	  */
+	def stripControlCharacters = modify { _.stripControlCharacters }
 	
 	
 	// IMPLEMENTED	----------

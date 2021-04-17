@@ -11,6 +11,9 @@ import scala.collection.immutable.HashMap
 import java.io.File
 import java.io.FileOutputStream
 import utopia.flow.util.AutoClose._
+import utopia.flow.util.FileExtensions._
+
+import java.nio.file.Path
 
 object XmlWriter
 {
@@ -27,17 +30,14 @@ object XmlWriter
     // OTHER METHODS    ----------------
     
     /**
-     * Writes an xml document to the target stream
-     * @param stream the targeted stream
-     * @param charset the used charset (default = UTF-8)
-     * @param contentWriter the function that writes the document contents
-     * @return The results of the operation
-     */
-    def writeToStream(stream: OutputStream, charset: Charset = StandardCharsets.UTF_8, 
-            contentWriter: XmlWriter => Unit) = 
-    {
+      * Writes an xml document to the target stream
+      * @param stream the targeted stream
+      * @param charset the used charset (default = UTF-8)
+      * @param contentWriter the function that writes the document contents
+      * @return The results of the operation
+      */
+    def writeToStream[U](stream: OutputStream, charset: Charset = StandardCharsets.UTF_8)(contentWriter: XmlWriter => U) =
         new XmlWriter(stream, charset).tryConsume { writer => writer.writeDocument { contentWriter(writer) } }
-    }
     
     /**
      * Writes an xml document to the target stream
@@ -46,9 +46,8 @@ object XmlWriter
      * @param charset the charset to use (default = UTF-8)
      * @return The results of the operation
      */
-    def writeElementToStream(stream: OutputStream, element: XmlElement, 
-            charset: Charset = StandardCharsets.UTF_8) = writeToStream(stream, charset, 
-            w => w.write(element))
+    def writeElementToStream(stream: OutputStream, element: XmlElement, charset: Charset = StandardCharsets.UTF_8) =
+        writeToStream(stream, charset) { _.write(element) }
     
     /**
      * Writes an xml document to the target file
@@ -57,10 +56,9 @@ object XmlWriter
      * @param contentWriter the function that writes the document contents
      * @return The results of the operation
      */
-    def writeFile(file: File, charset: Charset = StandardCharsets.UTF_8, contentWriter: XmlWriter => Unit) = 
-    {
-        Try { new FileOutputStream(file, false).consume { writeToStream(_, charset, contentWriter) } }.flatten
-    }
+    @deprecated("Please provide parameter in Path and not File format", "v1.9")
+    def writeFile(file: File, charset: Charset, contentWriter: XmlWriter => Unit) =
+        Try { new FileOutputStream(file, false).consume { writeToStream(_, charset)(contentWriter) } }.flatten
     
     /**
      * Writes an xml document to the target file
@@ -69,8 +67,36 @@ object XmlWriter
      * @param charset the used charset (default = UTF-8)
      * @return The results of the operation
      */
-    def writeElementToFile(file: File, element: XmlElement, 
-            charset: Charset = StandardCharsets.UTF_8) = writeFile(file, charset, w => w.write(element))
+    @deprecated("Please provide parameter in Path and not File format", "v1.9")
+    def writeElementToFile(file: File, element: XmlElement, charset: Charset) =
+        writeFile(file, charset, w => w.write(element))
+    
+    /**
+      * Writes an xml document to the target file
+      * @param file the targeted file
+      * @param charset the used charset (default = UTF-8)
+      * @param contentWriter the function that writes the document contents
+      * @return The results of the operation
+      */
+    def writeFile(file: Path, charset: Charset = StandardCharsets.UTF_8)(contentWriter: XmlWriter => Unit) =
+    {
+        // Makes sure the target directory exists
+        file.createParentDirectories().flatMap { file =>
+            Try {
+                new FileOutputStream(file.toFile, false).consume { writeToStream(_, charset)(contentWriter) }
+            }.flatten
+        }
+    }
+    
+    /**
+      * Writes an xml document to the target file
+      * @param file the targeted file
+      * @param element The root element that is written to the document
+      * @param charset the used charset (default = UTF-8)
+      * @return The results of the operation
+      */
+    def writeElementToFile(file: Path, element: XmlElement, charset: Charset = StandardCharsets.UTF_8) =
+        writeFile(file, charset) { _.write(element) }
 }
 
 /**
@@ -103,7 +129,7 @@ class XmlWriter(stream: OutputStream, val charset: Charset = StandardCharsets.UT
      * Writes a complete xml document
      * @param contentWriter a function that is used for writing the contents of the document
      */
-    def writeDocument(contentWriter: => Unit) =
+    def writeDocument[U](contentWriter: => U) =
     {
         writer.writeStartDocument(charset.name(), "1.0")
         contentWriter
@@ -159,7 +185,8 @@ class XmlWriter(stream: OutputStream, val charset: Charset = StandardCharsets.UT
      * @param element the element tree that is written
      */
     def write(element: XmlElement): Unit = writeElement(element.name, 
-            element.attributes.attributeMap.view.mapValues(a => a.value.stringOr()), element.text) { element.children.foreach(write) }
+            element.attributes.attributes.map { a => a.name -> a.value.getString }, element.text) {
+        element.children.foreach(write) }
     
     private def writeCharacters(text: String) = 
     {
@@ -174,7 +201,7 @@ class XmlWriter(stream: OutputStream, val charset: Charset = StandardCharsets.UT
     {
         val i = c.toInt
         // Character is not allowed if it lies in an invalid char range or is specifically invalid
-        XmlWriter.invalidCharRanges.find(_.end >= i).exists(_.start <= i) || 
+        XmlWriter.invalidCharRanges.find { _.end >= i }.exists { _.start <= i } ||
                 XmlWriter.invalidExtraChars.contains(i)
     }
 }

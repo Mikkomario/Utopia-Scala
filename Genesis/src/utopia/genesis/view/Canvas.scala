@@ -8,7 +8,6 @@ import java.awt.event.{ComponentAdapter, ComponentEvent}
 
 import utopia.genesis.view.ScalingPolicy.Crop
 import utopia.genesis.util.{Drawer, Fps}
-import utopia.genesis.shape.shape2D.Transformation
 import utopia.genesis.shape.shape2D.Size
 import utopia.genesis.handling.DrawableHandler
 import utopia.genesis.shape.shape3D.Vector3D
@@ -95,7 +94,7 @@ class Canvas(val drawHandler: DrawableHandler, originalGameWorldSize: Size, val 
                 }
     
                 // Game world drawings are scaled, then drawn
-                drawHandler.draw(drawer.transformed(Transformation.scaling(scaling)))
+                drawHandler.draw(drawer.scaled(scaling))
         }
     }
     

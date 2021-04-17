@@ -1,9 +1,9 @@
 package utopia.exodus.database.model.organization
 
 import java.time.Instant
-
 import utopia.exodus.database.Tables
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.metropolis.model.enumeration.UserRole
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
@@ -31,7 +31,7 @@ object MemberRoleModel extends Deprecatable
 	/**
 	  * @return A model that has just been marked as deprecated
 	  */
-	def nowDeprecated = apply(deprecatedAfter = Some(Instant.now()))
+	def nowDeprecated = apply(deprecatedAfter = Some(Now))
 	
 	
 	// IMPLEMENTED	------------------------

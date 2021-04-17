@@ -12,7 +12,7 @@ import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.reflection.event.{Visibility, VisibilityChange, VisibilityState}
 import utopia.reflection.event.Visibility.{Invisible, Visible}
-import utopia.reflection.util.ComponentCreationDefaults
+import utopia.reflection.util.{AwtEventThread, ComponentCreationDefaults}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -80,7 +80,7 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 	/**
 	  * @return Current visibility state of this component
 	  */
-	def visibility = lastTransition.get.current.flatMap { _.toOption } match
+	def visibility = lastTransition.value.current.flatMap { _.toOption } match
 	{
 		case Some(staticState) => staticState
 		case None => targetState.transitionIn
@@ -102,7 +102,7 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 			// Otherwise starts a new transition
 			targetState = newState
 			lastTransition.setIf { _.isCompleted } { startTransition(newState) }
-			lastTransition.get
+			lastTransition.value
 		}
 		else
 			Future.successful(newState)
@@ -133,6 +133,18 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 	// OTHER	-------------------------
 	
 	/**
+	  * Sets this content visible with animation
+	  * @return A completion of the state change, with final state included
+	  */
+	def show() = visibility = Visible
+	
+	/**
+	  * Sets this content invisible with animation
+	  * @return A completion of the state change, with final state included
+	  */
+	def hide() = visibility = Invisible
+	
+	/**
 	  * Specifies component visibility without triggering transition animations
 	  * @param newState New visibility state
 	  */
@@ -154,29 +166,30 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 		// Creates the transition
 		val transition = new AnimatedVisibilityChange(display, transitionAxis, target.transitionIn, duration,
 			None, maxRefreshRate, useFading)
-		actorHandler += transition
 		panel.set(transition)
 		
 		// Starts the transition in background
-		transition.start().flatMap { _ =>
-			// At transition end, may start a new transition if the target state was changed during
-			// the first transition
-			if (targetState == target)
-			{
-				// Case: Target state reached
-				// Switches to original component or clears this panel
-				if (target.isVisible)
-					panel.set(display)
+		transition.start(actorHandler).flatMap { _ =>
+			AwtEventThread.blocking {
+				// At transition end, may start a new transition if the target state was changed during
+				// the first transition
+				if (targetState == target)
+				{
+					// Case: Target state reached
+					// Switches to original component or clears this panel
+					if (target.isVisible)
+						panel.set(display)
+					else
+						panel.clear()
+					
+					Future.successful(target)
+				}
 				else
-					panel.clear()
-				
-				Future.successful(target)
-			}
-			else
-			{
-				// Case: Target state was switched
-				// Starts a new transition
-				startTransition(targetState)
+				{
+					// Case: Target state was switched
+					// Starts a new transition
+					startTransition(targetState)
+				}
 			}
 		}
 	}

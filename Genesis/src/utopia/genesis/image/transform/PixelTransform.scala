@@ -1,7 +1,7 @@
 package utopia.genesis.image.transform
 
 import utopia.genesis.color.Color
-import utopia.genesis.image.Image
+import utopia.genesis.image.{Image, MutableImage}
 
 /**
   * This filter transforms images by transforming each pixel color values
@@ -23,6 +23,8 @@ trait PixelTransform extends ImageTransform
 	// IMPLEMENTED	----------------
 	
 	override def apply(source: Image) = source.mapPixels(apply)
+	
+	override def apply(target: MutableImage) = target.updatePixels(apply)
 	
 	
 	// OPERATORS	----------------

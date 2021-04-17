@@ -57,7 +57,7 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with Scalable
 	override def toString =
 	{
 		val content = toMap.map { case (axis, vector) =>
-			s"$axis: [${vector.dimensions.mkString(",")}]" }.mkString(", ")
+			s"$axis: [${vector.dimensions.mkString(", ")}]" }.mkString(", ")
 		s"{$content}"
 	}
 	
@@ -73,31 +73,49 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with Scalable
 	@throws[IndexOutOfBoundsException]("This matrix doesn't contain specified index")
 	def apply(columnIndex: Int, rowIndex: Int) = column(columnIndex).dimensions(rowIndex)
 	
+	/**
+	  * @param index Index of the targeted column
+	  * @return A column vector at that index
+	  * @throws IndexOutOfBoundsException If this matrix doesn't contain a column with that index
+	  */
+	@throws[IndexOutOfBoundsException]("This matrix doesn't contain a column with that index")
 	def column(index: Int) = columns(index)
 	
+	/**
+	  * @param index Index of the targeted row
+	  * @return A row vector at that index
+	  * @throws IndexOutOfBoundsException If this matrix doesn't contain a row with that index
+	  */
+	@throws[IndexOutOfBoundsException]("This matrix doesn't contain a column with that index")
 	def row(index: Int) = rows(index)
 	
-	// Vector multiplication: x*x-transformation + y*y-transformation
-	// TODO: Handle the case of 0-dimension vectors
-	def *(vector: V): V = vector.dimensions.zip(columns)
-		.map { case (c, transformation) => transformation * c }
-		.reduce { _ + _ }
-	
-	def *(matrix: MatrixLike[V, _]): Repr = buildCopy(matrix.columns.map { this * _ })
-	
 	/**
-	  * Transforms the specified vector. Same as using vector multiplication (*)
+	  * Transforms the specified vector
 	  * @param vector Vector to transform
 	  * @return A transformed vector
 	  */
-	def apply(vector: V) = this * vector
+	// Vector multiplication: x*x-transformation + y*y-transformation
+	// TODO: Handle the case of 0-dimension vectors
+	def apply(vector: Dimensional[Double]): V = vector.dimensions.zip(columns)
+		.map { case (c, transformation) => transformation * c }
+		.reduce { _ + _ }
 	
 	/**
-	  * Transforms the specified matrix. Same as using matrix multiplication (*)
+	  * Transforms the specified matrix
 	  * @param matrix Matrix to transform
 	  * @return A transformed matrix
 	  */
-	def apply(matrix: MatrixLike[V, _]) = this * matrix
+	def apply(matrix: MatrixLike[_ <: Dimensional[Double], _]): Repr = buildCopy(matrix.columns.map(apply))
+	
+	/**
+	  * Performs matrix multiplication. This is same as transforming this matrix with the specified matrix.
+	  * Please note that this function uses left-to-right notation instead of the mathematical right-to-left notation.
+	  * If you wish to use right-to-left notation, please use apply instead
+	  * @param matrix Matrix to multiply
+	  * @tparam M Multiplication result type
+	  * @return This matrix transformed with the other matrix
+	  */
+	def *[M](matrix: MatrixLike[_ <: Dimensional[Double], M]): M = matrix(this)
 	
 	// Determinant = how much the area is scaled, proportionally (Eg. 2x scaling both x and y yields determinant 4 =(2^2))
 	// NB: When determinant is 0, there is only a single line or a single point, no 2d space

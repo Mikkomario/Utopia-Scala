@@ -1,14 +1,36 @@
 package utopia.reflection.container.swing.layout.multi
 
 import utopia.genesis.shape.Axis2D
+import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
 import utopia.reflection.container.stack.template.layout.CollectionViewLike
 import utopia.reflection.container.swing.AwtContainerRelated
-import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.reflection.shape.StackLength
+import utopia.reflection.container.swing.layout.multi.Stack.{AwtStackable, row}
+import utopia.reflection.shape.stack.StackLength
+
+object CollectionView
+{
+	/**
+	  * Creates a new collection view using contextual information
+	  * @param rowAxis Axis of the rows (main increase direction) within this view
+	  * @param rowSplitThreshold Pixel threshold after which a new row is started
+	  * @param insideRowLayout Layout inside a row (default = Fit)
+	  * @param forceEqualRowLength Whether all rows should have equal length (default = false)
+	  * @param isRelated Whether items should be considered related (default = false)
+	  * @param context Component creation context (implicit)
+	  * @tparam C Type of components inside this view
+	  * @return A new collection view
+	  */
+	def contextual[C <: AwtStackable](rowAxis: Axis2D, rowSplitThreshold: Double,
+									  insideRowLayout: StackLayout = Fit, forceEqualRowLength: Boolean = false,
+									  isRelated: Boolean = false)(implicit context: BaseContextLike) =
+		new CollectionView[C](rowAxis, rowSplitThreshold,
+			if (isRelated) context.defaultStackMargin else context.relatedItemsStackMargin, insideRowLayout,
+			forceEqualRowLength)
+}
 
 /**
  * This container places items in rows and columns, filling a 2D space

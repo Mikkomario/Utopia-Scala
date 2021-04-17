@@ -19,6 +19,8 @@ import scala.concurrent.ExecutionContext
  */
 object ClippingTest extends App
 {
+	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
+	
     class HiddenShapeDrawer(val shapes: Iterable[ShapeConvertible]) extends Drawable with MouseMoveListener with Handleable
     {
         override val drawDepth = DepthRange.foreground
@@ -48,6 +50,5 @@ object ClippingTest extends App
             Circle((worldSize.xProjection + Vector3D(- 64, 64)).toPoint, 32))))
     
 	// Starts the program
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
 	setup.start()
 }

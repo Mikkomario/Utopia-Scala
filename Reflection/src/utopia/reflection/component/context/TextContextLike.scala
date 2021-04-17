@@ -1,8 +1,10 @@
 package utopia.reflection.component.context
 
 import utopia.genesis.color.Color
+import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.localization.Localizer
-import utopia.reflection.shape.{Alignment, StackInsets}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font
 
 /**
@@ -40,14 +42,40 @@ trait TextContextLike extends ColorContextLike
 	def textInsets: StackInsets
 	
 	/**
+	  * @return Margin placed between lines of text
+	  */
+	def betweenLinesMargin: StackLength
+	
+	/**
 	  * @return Color used in the text
 	  */
 	def textColor: Color
 	
 	/**
+	  * @return Whether text display components should by default respect line breaks inside the displayed text,
+	  *         drawing possibly multiple separate lines of text. If false, components should, by default, ignore
+	  *         line breaks.
+	  */
+	def allowLineBreaks: Boolean
+	
+	/**
+	  * @return Whether displayed text should be shrank to conserve space when that seems necessary
+	  */
+	def allowTextShrink: Boolean
+	
+	
+	// COMPUTED	---------------------------
+	
+	/**
 	  * @return Whether displayed text components should always have a minimum width so that the text is not cut off
 	  */
-	def textHasMinWidth: Boolean
+	@deprecated("Replaced with allowTextShrink", "v2")
+	def textHasMinWidth = !allowTextShrink
+	
+	/**
+	 * @return The text draw context defined by this context
+	 */
+	def textDrawContext = TextDrawContext(font, textColor, textAlignment, textInsets, betweenLinesMargin.optimal)
 	
 	
 	// OTHER	--------------------------

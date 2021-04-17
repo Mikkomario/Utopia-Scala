@@ -44,6 +44,21 @@ trait Handler[A <: Handleable] extends Iterable[A]
 	def aliveElements: Seq[A]
 	
 	
+	// COMPUTED	--------------------
+	
+	/**
+	  * @return A string representation of the contents of this handler
+	  */
+	def debugString: String =
+	{
+		val elements = aliveElements
+		s"$handlerType with ${elements.size} items: [${elements.map {
+			case handler: Handler[_] => handler.debugString
+			case other => other.toString
+		}.mkString(", ")}]"
+	}
+	
+	
 	// IMPLEMENTED	----------------
 	
 	override def foreach[U](f: A => U) = aliveElements.foreach(f)

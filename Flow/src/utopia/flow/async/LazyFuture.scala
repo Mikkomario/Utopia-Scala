@@ -12,6 +12,13 @@ object LazyFuture
 	  * @return An access point to a lazily initialized future that uses the specified function
 	  */
 	def apply[A](f: => A) = new LazyFuture[A](e => Future(f)(e))
+	
+	/**
+	  * @param f A function that will produce a future. Will be called when the result is first requested.
+	  * @tparam A Type of eventual future result
+	  * @return A new lazily started future
+	  */
+	def flatten[A](f: ExecutionContext => Future[A]) = new LazyFuture[A](f)
 }
 
 /**
@@ -46,12 +53,4 @@ class LazyFuture[A](generator: ExecutionContext => Future[A])
 	  * @return Currently cached results. None if the item hasn't been requested or received yet.
 	  */
 	def current = cached.flatMap { _.current.flatMap { _.toOption } }
-	
-	
-	// OTHER	----------------------------
-	
-	/**
-	  * Resets this container so that a new request will be made at the next call of .get
-	  */
-	def reset() = cached = None
 }

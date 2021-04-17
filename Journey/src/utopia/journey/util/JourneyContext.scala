@@ -13,7 +13,7 @@ import scala.util.{Failure, Success, Try}
 /**
   * Settings used globally within the Journey project, and possibly in its sub-projects as well
   * @author Mikko Hilpinen
-  * @since 11.7.2020, v1
+  * @since 11.7.2020, v0.1
   */
 object JourneyContext
 {

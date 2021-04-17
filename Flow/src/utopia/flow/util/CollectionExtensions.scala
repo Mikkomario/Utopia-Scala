@@ -1,5 +1,7 @@
 package utopia.flow.util
 
+import utopia.flow.collection.{GroupIterator, PollingIterator}
+
 import scala.language.implicitConversions
 import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
 import scala.collection.generic.{IsIterableOnce, IsSeq}
@@ -122,6 +124,23 @@ object CollectionExtensions
             val seqOps = seq(coll)
             seqOps.zipWithIndex.foreach { case(item, index) => f(item, index) }
         }
+    
+        /**
+          * Takes items from right to left as long as the specified condition holds
+          * @param f A function that determines whether an item is accepted to the final collection
+          * @param buildFrom A build from (implicit)
+          * @tparam That Resulting collection type
+          * @return A collection that contains the collected items in the same order as they appear in this
+          *         collection (left to right)
+          */
+        def takeRightWhile[That](f: seq.A => Boolean)(implicit buildFrom: BuildFrom[Repr, seq.A, That]): That =
+        {
+            val seqOps = seq(coll)
+            // Collects the items to a buffer first in order to reverse the order afterwards
+            val bufferBuilder = new VectorBuilder[seq.A]()
+            seqOps.reverseIterator.takeWhile(f).foreach { bufferBuilder += _ }
+            buildFrom.fromSpecific(coll)(bufferBuilder.result().reverse)
+        }
     }
     
     implicit def seqOperations[Repr](coll: Repr)(implicit seq: IsSeq[Repr]): SeqOperations[Repr, seq.type] =
@@ -183,6 +202,57 @@ object CollectionExtensions
             else
                 None
         }
+    
+        /**
+          * @param f A mapping function
+          * @param order Ordering for mapped values
+          * @tparam B Type of map result
+          * @return The index in this sequence that contains the largest value when mapped
+          * @throws NoSuchElementException If this sequence is empty
+          */
+        @throws[NoSuchElementException]("Throws when called for an empty sequence")
+        def maxIndexBy[B](f: A => B)(implicit order: Ordering[B]) =
+        {
+            var maxIndex = 0
+            var maxResult = f(seq.head)
+            seq.indices.drop(1).foreach { index =>
+                val result = f(seq(index))
+                if (order.compare(result, maxResult) > 0)
+                {
+                    maxIndex = index
+                    maxResult = result
+                }
+            }
+            maxIndex
+        }
+    
+        /**
+          * @param f A mapping function
+          * @param order Ordering for mapped values
+          * @tparam B Type of map result
+          * @return The index in this sequence that contains the smallest value when mapped
+          * @throws NoSuchElementException If this sequence is empty
+          */
+        @throws[NoSuchElementException]("Throws when called for an empty sequence")
+        def minIndexBy[B](f: A => B)(implicit order: Ordering[B]) = maxIndexBy(f)(order.reverse)
+    
+        /**
+          * @param f A mapping function
+          * @param order Ordering for mapped values
+          * @tparam B Type of map result
+          * @return The index in this sequence that contains the largest value when mapped.
+          *         None if this sequence is empty.
+          */
+        def maxOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) = if (seq.isEmpty) None else Some(maxIndexBy(f))
+    
+        /**
+          * @param f A mapping function
+          * @param order Ordering for mapped values
+          * @tparam B Type of map result
+          * @return The index in this sequence that contains the smallest value when mapped.
+          *         None if this sequence is empty.
+          */
+        def minOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) = maxOptionIndexBy(f)(order.reverse)
         
         /**
           * @return A version of this seq with consecutive items paired. Each item will be present twice in the returned
@@ -451,16 +521,15 @@ object CollectionExtensions
          * Finds the item(s) that best match the specified conditions
          * @param matchers Search conditions used. The conditions that are introduced first are considered more
          *                 important than those which are introduced the last.
-         * @param factory A factory for the final result (implicit)
          * @tparam That Target collection type
          * @return The items in this collection that best match the specified conditions
          */
-        def bestMatch[That](matchers: Seq[A => Boolean])(implicit factory: Factory[A, That]): That =
+        def bestMatch[That](matchers: Seq[A => Boolean]): Vector[A] =
         {
             // If there is only a single option, that is the best match. If there are 0 options, there's no best match
             // If there are no matchers left, cannot make a distinction between items
             if (t.size < 2 || matchers.isEmpty)
-                factory.fromSpecific(t)
+                t.toVector
             else
             {
                 val nextMatcher = matchers.head
@@ -531,7 +600,7 @@ object CollectionExtensions
           * @tparam O Type of items collection
           * @return Whether this collection of items contains all of the specified items
           */
-        def containsAll[O](items: Iterable[O]) = items.forall { item => t.exists { _ == item } }
+        def containsAll[O >: A](items: Iterable[O]) = items.forall { item => t.exists { _ == item } }
     }
     
     implicit class RichIterableLike[A, CC[X], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
@@ -603,6 +672,41 @@ object CollectionExtensions
     implicit class RichIterator[A](val i: Iterator[A]) extends AnyVal
     {
         /**
+         * Enables polling on this iterator. This method yields a new iterator.
+         * This iterator shouldn't be used after the copy has been acquired. Only the pollable copy of this
+         * iterator should be used afterwards.
+         * @return A copy of this iterator that allows polling (checking of the next item without advancing)
+         */
+        def pollable = new PollingIterator[A](i)
+        
+        /**
+          * Finds the last item accessible from this iterator. Consumes all items in this iterator.
+          * @throws NoSuchElementException If this iterator is empty
+          * @return The last item in this iterator
+          */
+        @throws[NoSuchElementException]("If this iterator is empty")
+        def last =
+        {
+            var current = i.next()
+            while (i.hasNext)
+            {
+                current = i.next()
+            }
+            current
+        }
+    
+        /**
+          * @return The last item accessible in this iterator. None if this iterator didn't have any items remaining.
+          */
+        def lastOption =
+        {
+            if (i.hasNext)
+                Some(last)
+            else
+                None
+        }
+        
+        /**
           * Performs the specified operation for the next 'n' items. This will advance the iterator n-steps
           * (although limited by number of available items)
           * @param n The maximum number of iterations / items handled
@@ -639,6 +743,107 @@ object CollectionExtensions
             }
             
             builder.result()
+        }
+    
+        /**
+          * Consumes items until a specific condition is met
+          * @param condition A search condition
+          * @return The first item in this iterator that fulfills the condition.
+          *         None if none of the items in this iterator fulfilled the condition.
+          */
+        def nextWhere(condition: A => Boolean) =
+        {
+            if (i.hasNext)
+            {
+                var current = i.next()
+                var foundResult = condition(current)
+                while (!foundResult && i.hasNext)
+                {
+                    current = i.next()
+                    foundResult = condition(current)
+                }
+                if (foundResult)
+                    Some(current)
+                else
+                    None
+            }
+            else
+                None
+        }
+    
+        /**
+         * Returns the next result that can be mapped to a specific value.
+         * After method call, this iterator will be placed at the item following the successfully mapped item.
+         * @param map A mapping function
+         * @tparam B Type of map result when one is found
+         * @return The first map result found. None if no map result could be acquired.
+         */
+        def findMapNext[B](map: A => Option[B]) =
+        {
+            var current: Option[B] = None
+            while (current.isEmpty && i.hasNext)
+            {
+                current = map(i.next())
+            }
+            current
+        }
+    
+        /**
+         * Groups this iterator and performs the specified operation for each of the collected groups.
+         * Differs from .group(...).foreach(...) in that this method acts on all of the items in this iterator
+         * without discarding the possible smaller group at the end
+         * @param maxGroupSize Maximum number of items for a function call
+         * @param f A function that is called for each group of items
+         */
+        def foreachGroup(maxGroupSize: Int)(f: Vector[A] => Unit) =
+        {
+            while (i.hasNext)
+            {
+                f(takeNext(maxGroupSize))
+            }
+        }
+        
+        /**
+          * Maps the items in this iterator, one group at a time
+          * @param groupSize The maximum size of an individual group of items to map
+          * @param map a mapping function applied to groups of items
+          * @tparam B Type of map result
+          * @return All map results in order
+          */
+        def groupMap[B](groupSize: Int)(map: Vector[A] => B) =
+        {
+            val resultBuilder = new VectorBuilder[B]()
+            foreachGroup(groupSize) { resultBuilder += map(_) }
+            resultBuilder.result()
+        }
+    
+        /**
+         * Groups the <b>consecutive</b> items in this iterator using the specified grouping function.
+         * The resulting iterator returns items as groups based on the group function result.
+         * @param f A grouping function
+         * @tparam G Type of group identifier
+         * @return An iterator that returns groups of consecutive items, including the group identifiers
+         */
+        def groupBy[G](f: A => G) = GroupIterator(i)(f)
+    
+        /**
+         * Maps this iterator with a function that can fail. Handles failures by catching them.
+         * @param f A mapping function
+         * @param handleError Function called for each encountered error
+         * @tparam B Type of successful map result
+         * @return Iterator of the mapped items
+         */
+        def mapCatching[B](f: A => Try[B])(handleError: Throwable => Unit) =
+        {
+            i.flatMap { original =>
+                f(original) match
+                {
+                    case Success(item) => Some(item)
+                    case Failure(error) =>
+                        handleError(error)
+                        None
+                }
+            }
         }
     }
     
@@ -870,6 +1075,20 @@ object CollectionExtensions
         }
     }
     
+    implicit class RichInclusiveRange(val range: Range.Inclusive) extends AnyVal
+    {
+        /**
+          * @param stepSize How much this range is advanced on each step (sign doesn't matter)
+          * @return An iterator that contains all smaller ranges within this range. The length of these ranges is
+          *         determined by the 'step' of this range, although the last returned range may be shorter.
+          */
+        def subRangeIterator(stepSize: Int): Iterator[Range.Inclusive] =
+        {
+            val step = if (range.start < range.end) stepSize.abs else -stepSize.abs
+            new RangeIterator(range.start, range.end, step)
+        }
+    }
+    
     private class RepeatingIterator[A, CC[X]](val c: IterableOps[A, CC, _]) extends Iterator[A]
     {
         // ATTRIBUTES   -----------------
@@ -892,6 +1111,35 @@ object CollectionExtensions
                 currentIterator = Some(c.iterator)
     
             currentIterator.get
+        }
+    }
+    
+    private class RangeIterator(start: Int, end: Int, by: Int) extends Iterator[Range.Inclusive]
+    {
+        // ATTRIBUTES   ----------------------
+        
+        private val minStep = if (by < 0) -1 else if (by > 0) 1 else 0
+        
+        private var lastEnd = start - minStep
+        
+        
+        // IMPLEMENTED  ----------------------
+        
+        override def hasNext = lastEnd != end
+        
+        override def next() =
+        {
+            val start = lastEnd + minStep
+            val defaultEnd = start + by
+            val actualEnd =
+            {
+                if ((by < 0 && defaultEnd < end) || (by > 0 && defaultEnd > end))
+                    end
+                else
+                    defaultEnd
+            }
+            lastEnd = actualEnd
+            start to actualEnd
         }
     }
 }

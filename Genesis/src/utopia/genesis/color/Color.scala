@@ -1,5 +1,6 @@
 package utopia.genesis.color
 
+import utopia.flow.datastructure.mutable.Pointer
 import utopia.genesis.shape.shape1D.Angle
 import utopia.genesis.util.ApproximatelyEquatable
 
@@ -63,6 +64,11 @@ object Color
 	 */
 	val textWhiteDisabled = white.withAlpha(0.6)
 	
+	/**
+	  * A black color which is drawn completely transparent
+	  */
+	val transparentBlack = black.withAlpha(0.0)
+	
 	
 	// IMPLICITS	---------------------
 	
@@ -71,7 +77,7 @@ object Color
 	  * @param awtColor An awt color
 	  * @return A color
 	  */
-	implicit def fromAwt(awtColor: java.awt.Color): Color = Color(Right(RGB.withValues(awtColor.getRed,
+	implicit def fromAwt(awtColor: java.awt.Color): Color = Color(Right(Rgb.withValues(awtColor.getRed,
 		awtColor.getGreen, awtColor.getBlue)), awtColor.getAlpha / 255.0)
 	
 	
@@ -85,7 +91,22 @@ object Color
 	  * @param alpha Alpha ratio [0, 1]
 	  * @return A new color
 	  */
-	def apply(r: Double, g: Double, b: Double, alpha: Double = 1.0): Color = Color(Right(RGB(r, g, b)), 0.0 max alpha min 1.0)
+	def apply(r: Double, g: Double, b: Double, alpha: Double = 1.0): Color =
+		Color(Right(Rgb(r, g, b)), 0.0 max alpha min 1.0)
+	
+	/**
+	  * @param rgb An rgb color
+	  * @param alpha Alpha value assigned to this color [0, 1]
+	  * @return A new color based on the rgb values
+	  */
+	def apply(rgb: Rgb, alpha: Double): Color = Color(Right(rgb), 0.0 max alpha min 1.0)
+	
+	/**
+	  * @param hsl An hsl color
+	  * @param alpha Alpha value assigned to this color [0, 1]
+	  * @return A new color based on the hsl values
+	  */
+	def apply(hsl: Hsl, alpha: Double): Color = Color(Left(hsl), 0.0 max alpha min 1.0)
 	
 	
 	// OTHER	-----------------------
@@ -109,6 +130,55 @@ object Color
 	 * @return A color value for the hex. Failure if value couldn't be decoded.
 	 */
 	def fromHex(hex: String) = Try[Color](java.awt.Color.decode(hex))
+	
+	/**
+	  * @param colors A set of colors
+	  * @return The average color
+	  */
+	def average(colors: Iterable[Color]) =
+	{
+		if (colors.isEmpty)
+			transparentBlack
+		else
+		{
+			// Combines the total rgb and alpha values of the colors (weights by color alpha)
+			val totals = RgbChannel.values.map { _ -> new Pointer(0.0) }.toMap
+			var totalAlpha = 0.0
+			colors.foreach { color =>
+				color.ratios.foreach { case (channel, ratio) => totals(channel).update { _ + ratio * color.alpha } }
+				totalAlpha += color.alpha
+			}
+			// Calculates the average value
+			if (totalAlpha == 0.0)
+				transparentBlack
+			else
+				apply(Rgb.withRatios(totals.view.mapValues { _.value / totalAlpha }.toMap), totalAlpha / colors.size)
+		}
+	}
+	
+	/**
+	  * @param colors A collection of colors
+	  * @return The average luminosity of those colors
+	  */
+	def averageLuminosityOf(colors: IterableOnce[Color]) = colors.iterator
+		.map { c => (c.luminosity * c.alpha) -> c.alpha }
+		.reduceOption { (a, b) => (a._1 + b._1) -> (a._2 + b._2) } match
+		{
+			case Some((totalLuminosity, totalAlpha)) => totalLuminosity / totalAlpha
+			case None => 0.0
+		}
+	
+	/**
+	  * @param colors A collection of colors
+	  * @return The average relative luminance of those colors
+	  */
+	def averageRelativeLuminanceOf(colors: IterableOnce[Color]) = colors.iterator
+		.map { c => (c.relativeLuminance * c.alpha) -> c.alpha }
+		.reduceOption { (a, b) => (a._1 + b._1) -> (a._2 + b._2) } match
+		{
+			case Some((totalLuminance, totalAlpha)) => totalLuminance / totalAlpha
+			case None => 0.0
+		}
 }
 
 /**
@@ -116,7 +186,7 @@ object Color
   * @author Mikko Hilpinen
   * @since 24.4.2019, v1+
   */
-case class Color private(private val data: Either[HSL, RGB], alpha: Double) extends RGBLike[Color] with HSLLike[Color]
+case class Color private(private val data: Either[Hsl, Rgb], alpha: Double) extends RgbLike[Color] with HslLike[Color]
 	with ApproximatelyEquatable[Color]
 {
 	// ATTRIBUTES	----------------------
@@ -124,11 +194,14 @@ case class Color private(private val data: Either[HSL, RGB], alpha: Double) exte
 	/**
 	  * A HSL representation of this color
 	  */
-	lazy val hsl: HSL = data.fold(c => c, _.toHSL)
+	lazy val hsl: Hsl = data.fold(c => c, _.toHSL)
 	/**
 	  * An RGB representation of this color
 	  */
-	lazy val rgb: RGB = data.fold(_.toRGB, c => c)
+	lazy val rgb: Rgb = data.fold(_.toRGB, c => c)
+	
+	// Relative luminance is lazily cached
+	override lazy val relativeLuminance = super.relativeLuminance
 	
 	
 	// COMPUTED	--------------------------
@@ -173,7 +246,7 @@ case class Color private(private val data: Either[HSL, RGB], alpha: Double) exte
 	
 	override def ratios = rgb.ratios
 	
-	override def withRatios(newRatios: Map[RGBChannel, Double]) = withRGB(RGB.withRatios(newRatios))
+	override def withRatios(newRatios: Map[RgbChannel, Double]) = withRGB(Rgb.withRatios(newRatios))
 	
 	override def hue = hsl.hue
 	
@@ -186,6 +259,19 @@ case class Color private(private val data: Either[HSL, RGB], alpha: Double) exte
 	def withSaturation(saturation: Double) = withHSL(hsl.withSaturation(saturation))
 	
 	def withLuminosity(luminosity: Double) = withHSL(hsl.withLuminosity(luminosity))
+	
+	override def contrastAgainst(other: RgbLike[_]) =
+	{
+		// Takes alpha value into account
+		if (isTransparent)
+		{
+			val rawContrast = super.contrastAgainst(other)
+			// Multiplies the contrast above the 1.0 (same color) level by alpha
+			(rawContrast - 1.0) * alpha + 1.0
+		}
+		else
+			super.contrastAgainst(other)
+	}
 	
 	override def toString =
 	{
@@ -221,23 +307,71 @@ case class Color private(private val data: Either[HSL, RGB], alpha: Double) exte
 	  * @param hsl A new HSL value
 	  * @return A copy of this color with provided HSL value
 	  */
-	def withHSL(hsl: HSL) = copy(data = Left(hsl))
+	def withHSL(hsl: Hsl) = copy(data = Left(hsl))
 	
 	/**
 	  * @param rgb A new RGB value
 	  * @return A copy of this color with provided RGB value
 	  */
-	def withRGB(rgb: RGB) = copy(data = Right(rgb))
+	def withRGB(rgb: Rgb) = copy(data = Right(rgb))
 	
 	/**
 	  * @param f A mapping function
 	  * @return A copy of this color with mapped HSL
 	  */
-	def mapHSL(f: HSL => HSL) = withHSL(f(hsl))
+	def mapHSL(f: Hsl => Hsl) = withHSL(f(hsl))
 	
 	/**
 	  * @param f a mapping function
 	  * @return A copy of this color with mapped RGB
 	  */
-	def mapRGB(f: RGB => RGB) = withRGB(f(rgb))
+	def mapRGB(f: Rgb => Rgb) = withRGB(f(rgb))
+	
+	/**
+	  * @param other Another color
+	  * @return An average between these colors (rgb-wise)
+	  */
+	def average(other: Color) =
+	{
+		if (other.alpha == 0.0)
+		{
+			if (alpha == 0.0)
+				Color(Right(rgb.average(other.rgb)), 0.0)
+			else
+				timesAlpha(0.5)
+		}
+		else if (alpha == 0.0)
+			other.timesAlpha(0.5)
+		else
+			Color(Right(rgb.average(other.rgb, alpha / other.alpha)), (alpha + other.alpha) / 2)
+	}
+	
+	/**
+	  * @param other Another color
+	  * @param weight A weight modifier for <b>this</b> color
+	  * @return A weighted average between these colors (rgb-wise)
+	  */
+	def average(other: Color, weight: Double) =
+	{
+		def newAlpha = (alpha * weight + other.alpha) / (1 + weight)
+		if (other.alpha == 0.0)
+		{
+			if (alpha == 0.0)
+				Color(Right(rgb.average(other.rgb, weight)), 0.0)
+			else
+				withAlpha(newAlpha)
+		}
+		else if (alpha == 0.0)
+			other.withAlpha(newAlpha)
+		else
+			Color(Right(rgb.average(other.rgb, weight * alpha / other.alpha)), newAlpha)
+	}
+	
+	/**
+	  * @param other Another color
+	  * @param myWeight A weight modifier for THIS color
+	  * @param theirWeight A weight modifier for the other color
+	  * @return A weighted average between these colors (rgb-wise)
+	  */
+	def average(other: Color, myWeight: Double, theirWeight: Double): Color = average(other, myWeight / theirWeight)
 }

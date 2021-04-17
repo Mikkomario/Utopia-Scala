@@ -5,7 +5,7 @@ import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.Axis2D
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.stack.{StackHierarchyManager, StackLayout}
-import utopia.reflection.shape.{Alignment, StackInsets, StackLength, StackSize}
+import utopia.reflection.shape.Alignment
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.shape2D.Direction2D
 import utopia.genesis.util.Fps
@@ -16,6 +16,7 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, AnimatedSizeContainer, Framing}
 import utopia.reflection.event.StackHierarchyListener
 import utopia.reflection.shape.Alignment.Center
+import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.{Future, Promise}
@@ -119,6 +120,37 @@ object Stackable
 		  * @return A new framing with this item inside it
 		  */
 		def framed(sideLength: StackLength, color: Color): Framing[S] = framed(StackInsets.symmetric(sideLength), color)
+		
+		/**
+		  * Frames this item, using a rounded background shape
+		  * @param insets Insets placed round this item
+		  * @param color Background color to use
+		  * @return A framing that contains this item and draws a rounded background shape
+		  */
+		def inRoundedFraming(insets: StackInsets, color: Color) =
+		{
+			val framing = new Framing(s, insets)
+			framing.addRoundedBackgroundDrawing(color)
+			framing
+		}
+		
+		/**
+		  * Frames this item, using a rounded background shape
+		  * @param sideLength The length of each side margin
+		  * @param color Background color to use
+		  * @return A framing that contains this item and draws a rounded background shape
+		  */
+		def inRoundedFraming(sideLength: StackLength, color: Color): Framing[S] =
+			inRoundedFraming(StackInsets.symmetric(sideLength), color)
+		
+		/**
+		  * Frames this item, using a rounded background shape
+		  * @param sides The length of each side margin
+		  * @param color Background color to use
+		  * @return A framing that contains this item and draws a rounded background shape
+		  */
+		def inRoundedFraming(sides: StackSize, color: Color): Framing[S] =
+			inRoundedFraming(StackInsets.symmetric(sides), color)
 		
 		/**
 		  * @param alignment Target alignment
@@ -333,12 +365,20 @@ trait Stackable extends ComponentLike
 	  * Registers a stack hierarchy change listener to be informed about stack hierarchy changes concerning this
 	  * component
 	  * @param listener A stack hierarchy change listener
+	  * @param callIfAttached Whether the specified listener should be called immediately in case this component
+	  *                       is already attached to the main stack hierarchy. Default = false.
 	  */
-	def addStackHierarchyChangeListener(listener: StackHierarchyListener) =
+	def addStackHierarchyChangeListener(listener: StackHierarchyListener, callIfAttached: Boolean = false) =
 	{
 		val currentListeners = stackHierarchyListeners
 		if (!currentListeners.contains(listener))
+		{
 			stackHierarchyListeners = currentListeners :+ listener
+			// May trigger the listener if this component is already attached to the stack hierarchy
+			// (callIfAttached must be enabled, though)
+			if (callIfAttached && isAttachedToMainHierarchy)
+				listener.onComponentAttachmentChanged(newAttachmentStatus = true)
+		}
 	}
 	
 	/**
@@ -350,11 +390,13 @@ trait Stackable extends ComponentLike
 	
 	/**
 	  * Registers the specified function to be called whenever this component is attached to the main stack hierarchy
-	  * @param listener A function to be called whenever this component is attached to the main stack hierarchy
+	  * @param listener A function to be called whenever this component is attached to the main stack hierarchy.
+	  *                 The function will be called immediately in case this component is already attached to the
+	  *                 main stack hierarchy.
 	  * @tparam U Arbitrary result type
 	  */
 	def addStackHierarchyAttachmentListener[U](listener: => U) =
-		addStackHierarchyChangeListener(StackHierarchyListener.attachmentListener(listener))
+		addStackHierarchyChangeListener(StackHierarchyListener.attachmentListener(listener), callIfAttached = true)
 	
 	/**
 	  * Registers the specified function to be called whenever this component is detached from the main stack hierarchy
@@ -420,8 +462,6 @@ trait Stackable extends ComponentLike
 		else
 			onNextStackHierarchyChange(targetState)(f)
 	}
-	
-	
 	
 	
 	// NESTED	------------------------------------

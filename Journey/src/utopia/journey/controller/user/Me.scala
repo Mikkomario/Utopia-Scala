@@ -17,7 +17,7 @@ import scala.util.{Failure, Success}
 /**
   * Used for accessing the current user's data
   * @author Mikko Hilpinen
-  * @since 12.7.2020, v1
+  * @since 12.7.2020, v0.1
   * @param queueSystem An authorized interface for making requests to server
   * @param loginEmail The email address the user used for logging in this time.
   *                   None if device key was used instead.

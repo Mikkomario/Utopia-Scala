@@ -50,27 +50,15 @@ class ValueConverterManager[Result](initialConverters: Iterable[ValueConverter[R
         if (casted.exists { _.isDefined })
         {
             // Searches for a direct converter first, then an indirect converter
-            val directConverter = converters.get(casted.get.dataType)
-            if (directConverter.isDefined)
+            converters.get(casted.get.dataType) match
             {
-                Some(directConverter.get(casted.get, casted.get.dataType))
-            }
-            else
-            {
-                val wrappedType = converters.keys.find { casted.get.dataType isOfType _ }
-                if (wrappedType.isDefined)
-                {
-                    Some(converters(wrappedType.get)(casted.get, wrappedType.get))
-                }
-                else
-                {
-                    None
-                }
+                case Some(directConverter) => Some(directConverter(casted.get, casted.get.dataType))
+                case None =>
+                    converters.keys.find { casted.get.dataType isOfType _ }
+                        .map { wrappedType => converters(wrappedType)(casted.get, wrappedType) }
             }
         }
         else
-        {
             None
-        }
     }
 }

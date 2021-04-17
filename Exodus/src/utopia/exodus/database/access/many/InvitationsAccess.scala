@@ -1,9 +1,8 @@
 package utopia.exodus.database.access.many
 
-import java.time.Instant
-
 import utopia.exodus.database.factory.organization.{InvitationFactory, InvitationResponseFactory, InvitationWithResponseFactory}
 import utopia.exodus.database.model.organization.{InvitationModel, InvitationResponseModel}
+import utopia.flow.time.Now
 import utopia.metropolis.model.stored.organization.Invitation
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.Larger
@@ -47,7 +46,7 @@ trait InvitationsAccess extends ManyModelAccess[Invitation]
 	{
 		// Pending invitations must not be joined to a response and not be expired
 		val noResponseCondition = InvitationResponseFactory.table.primaryColumn.get.isNull
-		val pendingCondition = InvitationModel.withExpireTime(Instant.now()).toConditionWithOperator(Larger)
+		val pendingCondition = InvitationModel.withExpireTime(Now).toConditionWithOperator(Larger)
 		// Has to join invitation response table for the condition to work
 		connection(Select(InvitationFactory.target.join(InvitationResponseFactory.table, JoinType.Left), InvitationModel.table) +
 			Where(mergeCondition(noResponseCondition && pendingCondition))).parse(factory)

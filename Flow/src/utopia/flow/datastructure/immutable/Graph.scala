@@ -149,14 +149,16 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	 * @tparam E2 New edge content
 	 * @return A mapped copy of this graph
 	 */
-	def mapEdges[E2](f: E => E2) = copy(connections = connections.map { case (start, edge, end) => (start, f(edge), end) })
+	def mapEdges[E2](f: E => E2) = copy(connections = connections.map { case (start, edge, end) =>
+		(start, f(edge), end) })
 	
 	/**
 	 * Filters the connections in this graph, only considering connection contents
 	 * @param f A filtering function for connections based on connection contents
 	 * @return A filtered copy of this graph
 	 */
-	def filterByContent(f: (N, E, N) => Boolean) = copy(connections = connections.filter { case (start, edge, end) => f(start, edge, end) })
+	def filterByContent(f: (N, E, N) => Boolean) = copy(connections =
+		connections.filter { case (start, edge, end) => f(start, edge, end) })
 	
 	/**
 	 * Filters the nodes in this graph by testing their content. Function will be applied only once for each unique
@@ -202,14 +204,16 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	 * @param f A filter function for nodes
 	 * @return A filtered copy of this graph
 	 */
-	def filterByNode(f: GraphViewNode[N, E] => Boolean) = filterByNodeContent { nodeContent => f(node(nodeContent)) }
+	def filterByNode(f: GraphViewNode[N, E] => Boolean) = filterByNodeContent { nodeContent =>
+		f(node(nodeContent)) }
 	
 	/**
 	 * Filters this graph by testing individual edges.
 	 * @param f A filter function for edges
 	 * @return A filtered copy of this graph
 	 */
-	def filterByEdge(f: GraphViewEdge[N, E] => Boolean) = filterByContent { (_, edge, end) => f(GEdge(edge, end)) }
+	def filterByEdge(f: GraphViewEdge[N, E] => Boolean) = filterByContent { (_, edge, end) =>
+		f(GEdge(edge, end)) }
 	
 	/**
 	 * Creates a copy of this graph with an edge added
@@ -246,7 +250,8 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	 * @param node Node to exclude from this graph
 	 * @return A copy of this graph with specified node excluded
 	 */
-	def withoutNode(node: N) = copy(connections = connections.filter { case (start, _, end) => start != node && end != node })
+	def withoutNode(node: N) = copy(connections =
+		connections.filter { case (start, _, end) => start != node && end != node })
 	
 	/**
 	 * @param node Node to exclude from this graph

@@ -6,6 +6,7 @@ package utopia.flow.datastructure.mutable
   * @since 25.5.2019, v1.4.1+
   * @tparam A The type of item pointed to
   */
+@deprecated("Please use the Settable -trait instead", "v1.9")
 trait PointerLike[A]
 {
 	// ABSTRACT    -------------------------

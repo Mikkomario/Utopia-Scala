@@ -1,11 +1,10 @@
 package utopia.reflection.container.swing.window
 
 import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter, WindowEvent}
-
-import javax.swing.SwingUtilities
 import utopia.flow.async.{VolatileFlag, VolatileOption}
-import utopia.flow.datastructure.mutable.Lazy
+import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.genesis.color.Color
+import utopia.genesis.event.{KeyStateEvent, KeyStatus, KeyTypedEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
 import utopia.genesis.image.Image
@@ -13,35 +12,42 @@ import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.{Insets, Point, Size, Vector2D}
 import utopia.genesis.util.Screen
-import utopia.genesis.view.{ConvertingKeyListener, MouseEventGenerator}
+import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler, MouseEventGenerator}
+import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.template.layout.stack.{Constrainable, Stackable}
 import utopia.reflection.component.swing.button.ButtonLike
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.event.{ResizeListener, StackHierarchyListener}
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, StackSizeModifier}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.modifier.StackSizeModifier
+import utopia.reflection.util.AwtEventThread
 
-import scala.concurrent.Promise
+import scala.concurrent.{ExecutionContext, Promise}
 import scala.jdk.CollectionConverters.SeqHasAsJava
+import scala.util.Try
 
 /**
 * This is a common wrapper for all window implementations
 * @author Mikko Hilpinen
 * @since 25.3.2019
 **/
-trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable with AwtContainerRelated with Constrainable
+// TODO: Component revalidation should be delayed while this window is invisible
+trait Window[+Content <: Stackable with AwtComponentRelated] extends Stackable with AwtContainerRelated with Constrainable
 {
     // ATTRIBUTES   ----------------
     
     private var _isAttachedToMainHierarchy = false
     private var _constraints = Vector[StackSizeModifier]()
     
-    private val cachedStackSize = Lazy { calculatedStackSizeWithConstraints }
+    private val cachedStackSize = ResettableLazy { calculatedStackSizeWithConstraints }
     private val generatorActivated = new VolatileFlag()
     private val closePromise = Promise[Unit]()
     
     private val uponCloseAction = VolatileOption[() => Unit]()
+    
+    private var closed = false
     
     override var stackHierarchyListeners = Vector[StackHierarchyListener]()
     
@@ -98,6 +104,11 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
       */
     def isFocusedWindow = component.isFocused
     
+    /**
+      * @return Whether this window has already been closed
+      */
+    def isClosed = closed
+    
     
     // IMPLEMENTED    --------------
     
@@ -129,11 +140,11 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
     
     override def children = Vector(content)
     
-    override def stackSize = cachedStackSize.get
+    override def stackSize = cachedStackSize.value
     
     override def resetCachedSize() = cachedStackSize.reset()
     
-    override def isVisible_=(isVisible: Boolean) = component.setVisible(isVisible)
+    override def visible_=(isVisible: Boolean) = component.setVisible(isVisible)
     
     // Size and position are not cached since the user may resize and move this Window at will, breaking the cached size / position logic
     override def size = Size(component.getWidth, component.getHeight)
@@ -169,7 +180,7 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
     // Windows have no parents
     override def parent = None
     
-    override def isVisible = component.isVisible
+    override def visible = component.isVisible
     
     override def background = content.background
     override def background_=(color: Color) = content.background = color
@@ -193,11 +204,11 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
     def display(gainFocus: Boolean = true) =
     {
         if (gainFocus)
-            isVisible = true
+            visible = true
         else
         {
             component.setFocusableWindowState(false)
-            isVisible = true
+            visible = true
             component.setFocusableWindowState(true)
         }
     }
@@ -207,9 +218,14 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
       */
     protected def setup() =
     {
+        // Sets transparent background if content doesn't have a background itself
+        // (only works in certain conditions. Doesn't work if this window is decorated)
+        if (content.isTransparent)
+            Try { component.setBackground(Color.black.withAlpha(0.0).toAwt) }
+        
         // Sets position and size
         updateWindowBounds(true)
-    
+        
         if (!fullScreen)
             position = ((Screen.size - size) / 2).toVector.toPoint
     
@@ -227,33 +243,33 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
     
 	/**
       * Starts mouse event generation for this window
-      * @param actorHandler An actorhandler that generates the necessary action events
+      * @param actorHandler An ActorHandler that generates the necessary action events
       */
-    def startEventGenerators(actorHandler: ActorHandler) =
+    def startEventGenerators(actorHandler: ActorHandler)(implicit exc: ExecutionContext) =
     {
         generatorActivated.runAndSet
         {
 			// Starts mouse listening
-            val mouseButtonListener = MouseButtonStateListener() { e => content.distributeMouseButtonEvent(e); None }
-            val mouseMovelistener = MouseMoveListener() { content.distributeMouseMoveEvent(_) }
-            val mouseWheelListener = MouseWheelListener() { content.distributeMouseWheelEvent(_) }
-            
-            val mouseEventGenerator = new MouseEventGenerator(content.component, mouseMovelistener, mouseButtonListener,
-                mouseWheelListener, () => 1.0)
+            val mouseEventGenerator = new MouseEventGenerator(content.component)
             actorHandler += mouseEventGenerator
+            mouseEventGenerator.buttonHandler += MouseButtonStateListener() { e =>
+                content.distributeMouseButtonEvent(e); None }
+            mouseEventGenerator.moveHandler += MouseMoveListener() { content.distributeMouseMoveEvent(_) }
+            mouseEventGenerator.wheelHandler += MouseWheelListener() { content.distributeMouseWheelEvent(_) }
 			
+            GlobalMouseEventHandler.registerGenerator(mouseEventGenerator)
+            
 			// Starts key listening
-			val keyStateListener = KeyStateListener() { content.distributeKeyStateEvent(_) }
-			val keyTypedListener = KeyTypedListener { content.distributeKeyTypedEvent(_) }
-    
-            val keyEventGenerator = new ConvertingKeyListener(keyStateListener, keyTypedListener)
-            keyEventGenerator.register()
+            val keyStatusListener = new KeyStatusListener()
+            GlobalKeyboardEventHandler += keyStatusListener
             
             // Quits event listening once this window finally closes
             uponCloseAction.setOne(() =>
             {
                 actorHandler -= mouseEventGenerator
-                keyEventGenerator.unregister()
+                mouseEventGenerator.kill()
+                GlobalKeyboardEventHandler -= keyStatusListener
+                GlobalMouseEventHandler.unregisterGenerator(mouseEventGenerator)
             })
         }
     }
@@ -300,8 +316,12 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
     /**
      * Makes it so that this window will close one escape is pressed
      */
-    def setToCloseOnEsc() = addKeyStateListener(KeyStateListener.onKeyPressed(KeyEvent.VK_ESCAPE) { _ =>
-        if (isFocusedWindow) close() })
+    def setToCloseOnEsc() = addKeyStateListener(KeyStateListener.onKeyPressed(KeyEvent.VK_ESCAPE) { _ => close() })
+    
+    /**
+      * Makes this window become invisible whenever it loses focus
+      */
+    def setToHideWhenNotInFocus() = component.addWindowFocusListener(new HideWindowOnFocusLostListener)
     
     /**
       * Updates the bounds of this window's contents to match those of this window
@@ -317,7 +337,11 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
         {
             // Resizes content each time this window is resized
             // TODO: This will not limit user's ability to resize window beyond minimum and maximum
-            override def componentResized(e: ComponentEvent) = updateContentBounds()
+            override def componentResized(e: ComponentEvent) =
+            {
+                updateContentBounds()
+                content.updateLayout()
+            }
         })
     }
     
@@ -336,6 +360,7 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
                 position = Point.origin
             
             size = stackSize.optimal
+            updateContentBounds()
         }
         else
         {
@@ -344,6 +369,7 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
             {
                 val oldSize = size
                 size = stackSize.optimal
+                updateContentBounds()
                 
                 val increase = size - oldSize
                 // Window movement is determined by resize alignment
@@ -351,7 +377,7 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
                     val move = resizeAlignment.directionAlong(axis) match
                     {
                         case Some(moveDirection) =>
-                            moveDirection.sign match
+                            moveDirection match
                             {
                                 case Positive => increase.along(axis)
                                 case Negative => 0.0
@@ -377,7 +403,10 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
         stackSize.maxHeight.filter { _ < height }.foreach { height = _ }
         
         if (isUnderSized)
+        {
             size = size max stackSize.min
+            updateContentBounds()
+        }
     }
     
     /**
@@ -414,11 +443,10 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
     def requestFocus() =
     {
         if (!isFocusedWindow)
-            SwingUtilities.invokeLater(() =>
-            {
+            AwtEventThread.async {
                 component.toFront()
                 component.repaint()
-            })
+            }
     }
     
     
@@ -434,10 +462,50 @@ trait Window[Content <: Stackable with AwtComponentRelated] extends Stackable wi
         {
             // Performs a closing action, if one is queued
             uponCloseAction.pop().foreach { _() }
+            closed = true
             closePromise.trySuccess(())
             
             // Removes this window from the stack hierarchy (may preserve a portion of the content by detaching it first)
             detachFromMainStackHierarchy()
+        }
+    }
+    
+    private class KeyStatusListener extends KeyStateListener with KeyTypedListener with Handleable
+    {
+        // ATTRIBUTES   ------------------------
+        
+        private var keyStatus = KeyStatus.empty
+        
+        
+        // IMPLEMENTED  ------------------------
+        
+        // Listens to key state events primarily when this window has focus but will deliver key released events
+        // even when this window is not in focus, provided that these events would alter the simulated key state
+        // inside this window
+        override def onKeyState(event: KeyStateEvent) =
+        {
+            if (isFocusedWindow)
+            {
+                keyStatus = event.keyStatus
+                content.distributeKeyStateEvent(event)
+            }
+            else
+            {
+                val newStatus = event.keyStatus && keyStatus
+                if (newStatus != keyStatus)
+                {
+                    keyStatus = newStatus
+                    if (event.isReleased)
+                        content.distributeKeyStateEvent(event.copy(keyStatus = newStatus))
+                }
+            }
+        }
+        
+        // Only distributes key typed events when this window has focus
+        override def onKeyTyped(event: KeyTypedEvent) =
+        {
+            if (isFocusedWindow)
+                content.distributeKeyTypedEvent(event)
         }
     }
 }

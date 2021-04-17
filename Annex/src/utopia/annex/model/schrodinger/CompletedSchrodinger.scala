@@ -1,5 +1,5 @@
 package utopia.annex.model.schrodinger
-import utopia.flow.event.Changing
+import utopia.flow.event.Fixed
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
@@ -27,15 +27,15 @@ object CompletedSchrodinger
   * @since 19.7.2020, v1
   * @tparam R Type of result this schrödinger was completed with
   */
-case class CompletedSchrodinger[R, I](result: R, override val instance: I) extends ShcrodingerLike[R, I]
+case class CompletedSchrodinger[+R, +I](result: R, override val instance: I) extends ShcrodingerLike[R, I]
 {
 	// IMPLEMENTED	--------------------------
 	
-	override val instancePointer = Changing.wrap(instance)
+	override val instancePointer = Fixed(instance)
 	
 	override def serverResultFuture(implicit exc: ExecutionContext) = Future.successful(result)
 	
 	override def finalInstanceFuture(implicit exc: ExecutionContext) = Future.successful(instance)
 	
-	override lazy val serverResultPointer = Changing.wrap(Some(result))
+	override lazy val serverResultPointer = Fixed(Some(result))
 }

@@ -1,8 +1,7 @@
 package utopia.reflection.container.swing.window.interaction
 
-import utopia.flow.util.TimeExtensions._
-import utopia.flow.util.WaitUtils
-import utopia.genesis.handling.KeyStateListener
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.WaitUtils
 import utopia.genesis.shape.shape2D.{Direction2D, Point}
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.swing.button.ImageButton
@@ -14,6 +13,8 @@ import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Popup
+import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenAnyKeyPressed
+import utopia.reflection.container.template.window.RowGroups
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
@@ -97,13 +98,18 @@ trait InputWindow[+A] extends InteractionWindow[A]
 	
 	override protected def buttonBlueprints =
 	{
+		implicit val exc: ExecutionContext = executionContext
+		
 		val okButton = new DialogButtonBlueprint[A](okButtonText, okButtonIcon, ButtonColor.secondary)(() =>
 		{
 			// Checks the results. If failed, returns focus to an item and displays a message
 			produceResult match
 			{
 				case Right(result) => Some(result) -> true
-				case Left(redirect) =>
+				case Left((component, message)) =>
+					// Moves the focus
+					component.requestFocusInWindow()
+					
 					// Creates the notification pop-up
 					val popup =
 					{
@@ -111,10 +117,10 @@ trait InputWindow[+A] extends InteractionWindow[A]
 						val dismissButton = ImageButton.contextualWithoutAction(closeIcon.asIndividualButton)
 						val popupContent = Stack.buildRowWithContext(layout = Center) { row =>
 							row += dismissButton
-							row += TextLabel.contextual(redirect._2)
+							row += TextLabel.contextual(message)
 						}.framed(popupContext.margins.medium.any, popupContext.containerBackground)
-						val popup = Popup(redirect._1, popupContent, popupContext.actorHandler,
-							hideWhenFocusLost = false, Alignment.Left) { (cSize, pSize) =>
+						val popup = Popup(component, popupContent, popupContext.actorHandler,
+							WhenAnyKeyPressed, Alignment.Left) { (cSize, pSize) =>
 							Point(cSize.width + popupContext.margins.medium, -(pSize.height - cSize.height) / 2) }
 						dismissButton.registerAction { () => popup.close() }
 						
@@ -122,8 +128,7 @@ trait InputWindow[+A] extends InteractionWindow[A]
 					}
 					
 					// Closes the pop-up if any key is pressed or after a delay
-					popup.addKeyStateListener(KeyStateListener.onAnyKeyPressed { _ => popup.close() })
-					WaitUtils.delayed(5.seconds) { popup.close() }(executionContext)
+					WaitUtils.delayed(5.seconds) { popup.close() }
 					popup.display(false)
 					None -> false
 			}
@@ -152,8 +157,8 @@ trait InputWindow[+A] extends InteractionWindow[A]
 				}
 				// Some rows have dependent visibility state
 				row.rowVisibilityPointer.foreach { pointer =>
-					rowComponent.isVisible = pointer.value
-					pointer.addListener { e => rowComponent.isVisible = e.newValue }
+					rowComponent.visible = pointer.value
+					pointer.addListener { e => rowComponent.visible = e.newValue }
 				}
 				rowComponent
 			}

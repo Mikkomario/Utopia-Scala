@@ -5,6 +5,7 @@ import java.nio.file.Path
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.util.IterateLines
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.util.StringExtensions._
 
 import scala.io.Codec
 
@@ -24,33 +25,47 @@ object CsvReader
 	  * @tparam A Type of function result
 	  * @return Failure if file handling failed. Function result otherwise.
 	  */
-	def iterateRawRowsIn[A](path: Path, separator: String = ";")(f: Iterator[Vector[String]] => A)(implicit codec: Codec) =
+	def iterateRawRowsIn[A](path: Path, separator: String = ";")(f: Iterator[Vector[String]] => A)
+	                       (implicit codec: Codec) =
 	{
 		IterateLines.fromPath(path) { linesIter => f(linesIter.filterNot { _.isEmpty }
-			.map { _.split(separator).toVector.map { _.trim } }) }
+			.map { _.splitIgnoringQuotations(separator).toVector.map(processValue) }) }
 	}
 	
 	/**
 	  * Iterates over the lines in a csv document
 	  * @param path Path to the target document
 	  * @param separator Separator between columns (default = ";")
+	 *  @param ignoreEmptyStringValues Whether empty string values should not be applied to the resulting models
+	 *                                 (default = false = apply all values)
 	  * @param f Function that consumes the parsed lines iterator. Each line is a model that combines headers with line
 	  *          values. The passed iterator must not be used outside this function.
 	  * @param codec Implicit encoding context
 	  * @return Failure if file handling failed. function result otherwise.
 	  */
-	def iterateLinesIn[A](path: Path, separator: String = ";")(f: Iterator[Model[Constant]] => A)(implicit codec: Codec) =
+	def iterateLinesIn[A](path: Path, separator: String = ";", ignoreEmptyStringValues: Boolean = false)
+	                     (f: Iterator[Model[Constant]] => A)(implicit codec: Codec) =
 	{
 		// Iterates all lines from the target path
 		IterateLines.fromPath(path) { linesIter =>
 			// The first line is interpreted as the headers list
-			val iter = linesIter.filterNot { _.isEmpty }.map { _.split(separator).toVector.map { _.trim } }
+			val iter = linesIter.filterNot { _.isEmpty }
+				.map { _.splitIgnoringQuotations(separator).toVector.map(processValue) }
 			if (iter.hasNext)
 			{
 				val headers = iter.next()
 				// Parses each line to models (on call) and passes this mapped iterator to the specified function
 				f(iter.map { line =>
-					Model.withConstants(headers.zip(line).map { case (header, value) => Constant(header, value) }) })
+					val constants =
+					{
+						if (ignoreEmptyStringValues)
+							headers.zip(line).filter { _._2.nonEmpty }
+								.map { case (header, value) => Constant(header, value) }
+						else
+							headers.zip(line).map { case (header, value) => Constant(header, value) }
+					}
+					Model.withConstants(constants)
+				})
 			}
 			else
 				f(Iterator.empty)
@@ -66,6 +81,18 @@ object CsvReader
 	  * @param codec Implicit encoding context
 	  * @return Failure if file handling failed. Success otherwise.
 	  */
-	def foreachLine(path: Path, separator: String = ";")(f: Model[Constant] => Unit)(implicit codec: Codec) =
-		iterateLinesIn(path, separator) { _.foreach(f) }
+	def foreachLine(path: Path, separator: String = ";", ignoreEmptyStringValues: Boolean = false)
+	               (f: Model[Constant] => Unit)(implicit codec: Codec) =
+		iterateLinesIn(path, separator, ignoreEmptyStringValues) { _.foreach(f) }
+	
+	private def processValue(original: String) =
+	{
+		val trimmed = original.trim
+		if (trimmed.startsWith("'"))
+			trimmed.drop(1)
+		else if (trimmed.startsWith("\"") && trimmed.endsWith("\""))
+			trimmed.drop(1).dropRight(1)
+		else
+			trimmed
+	}
 }

@@ -4,7 +4,7 @@ import scala.language.implicitConversions
 import java.awt.event.KeyEvent
 
 import utopia.genesis.event.KeyStateEvent
-import utopia.inception.handling.Handleable
+import utopia.inception.handling.{Handleable, Mortal}
 import utopia.inception.util.{AnyFilter, Filter}
 
 object KeyStateListener
@@ -56,6 +56,42 @@ object KeyStateListener
       * @return A new key state listener
       */
     def onEnterPressed(f: KeyStateEvent => Unit) = onKeyPressed(KeyEvent.VK_ENTER)(f)
+    
+    /**
+      * Creates a new key state listener that will only be triggered once
+      * @param filter A filter applied to incoming events (default = accept all events)
+      * @param f A function that will be called for the first event accepted by the specified filter
+      * @return A new listener
+      */
+    def oneTimeListener(filter: Filter[KeyStateEvent] = AnyFilter)(f: KeyStateEvent => Unit): KeyStateListener with Mortal =
+        new OneTimeFunctionalStateListener(f, filter)
+    
+    
+    // NESTED   -----------------------------
+    
+    private class FunctionalKeyStateListener(f: KeyStateEvent => Unit, filter: Filter[KeyStateEvent])
+        extends KeyStateListener with utopia.inception.handling.immutable.Handleable
+    {
+        override def onKeyState(event: KeyStateEvent) = f(event)
+        
+        override def keyStateEventFilter = filter
+    }
+    
+    private class OneTimeFunctionalStateListener(f: KeyStateEvent => Unit, filter: Filter[KeyStateEvent])
+        extends KeyStateListener with Mortal with utopia.inception.handling.immutable.Handleable
+    {
+        private var dead = false
+        
+        override def onKeyState(event: KeyStateEvent) =
+        {
+            dead = true
+            f(event)
+        }
+    
+        override def isDead = dead
+    
+        override def keyStateEventFilter = filter
+    }
 }
 
 /**
@@ -80,12 +116,4 @@ trait KeyStateListener extends Handleable
       * @return Whether this instance is currently willing to receive key state events
       */
     def isReceivingKeyStateEvents = allowsHandlingFrom(KeyStateHandlerType)
-}
-
-private class FunctionalKeyStateListener(val f: KeyStateEvent => Unit, val filter: Filter[KeyStateEvent])
-    extends KeyStateListener with utopia.inception.handling.immutable.Handleable
-{
-    override def onKeyState(event: KeyStateEvent) = f(event)
-    
-    override def keyStateEventFilter = filter
 }

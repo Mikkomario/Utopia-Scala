@@ -7,7 +7,7 @@ import utopia.reflection.component.template.ComponentLike
   * @author Mikko Hilpinen
   * @since 13.3.2020, v1
   */
-trait ContainerLike[C <: ComponentLike] extends ComponentLike
+trait ContainerLike[+C <: ComponentLike] extends ComponentLike
 {
 	// ABSTRACT    ----------------
 	

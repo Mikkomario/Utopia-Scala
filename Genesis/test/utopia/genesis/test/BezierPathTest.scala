@@ -1,7 +1,7 @@
 package utopia.genesis.test
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.ThreadPool
 import utopia.genesis.color.Color
 import utopia.genesis.handling.{Actor, Drawable}
@@ -20,6 +20,8 @@ import scala.concurrent.duration.FiniteDuration
   */
 object BezierPathTest extends App
 {
+	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
+	
 	// Sets up the program
 	val gameWorldSize = Size(800, 600)
 	val setup = new DefaultSetup(gameWorldSize, "Key Test")
@@ -60,7 +62,6 @@ object BezierPathTest extends App
 	setup.registerObject(new MovingObject(path4, orange))
 	
 	// Starts the program
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
 	setup.start()
 }
 

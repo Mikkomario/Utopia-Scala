@@ -50,6 +50,11 @@ trait FromResultFactory[+A]
 	  */
 	def tables = table +: joinedTables
 	
+	/**
+	 * @return Whether this factory targets a single table only
+	 */
+	def targetsSingleTable = joinedTables.isEmpty
+	
 	
 	// OTHER	---------------
 	
@@ -73,7 +78,7 @@ trait FromResultFactory[+A]
 	  * @param connection DB Connection (implicit)
 	  * @return All items with specified row ids
 	  */
-	def withIds(ids: IterableOnce[Value], order: Option[OrderBy] = None)(implicit connection: Connection) =
+	def withIds(ids: Iterable[Value], order: Option[OrderBy] = None)(implicit connection: Connection) =
 	{
 		table.primaryColumn match
 		{

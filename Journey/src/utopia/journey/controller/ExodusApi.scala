@@ -1,7 +1,5 @@
 package utopia.journey.controller
 
-import java.time.Instant
-
 import utopia.access.http.Status.Unauthorized
 import utopia.access.http.{Headers, Method}
 import utopia.annex.controller.Api
@@ -10,9 +8,11 @@ import utopia.disciple.http.request.StringBody
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.VolatileOption
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.journey.model.UserCredentials
 import utopia.annex.model.error.{RequestFailedException, UnauthorizedRequestException}
+import utopia.disciple.apache.Gateway
+import utopia.flow.time.Now
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration
@@ -21,14 +21,16 @@ import scala.util.{Failure, Success, Try}
 /**
   * An interface used for accessing the Exodus API
   * @author Mikko Hilpinen
-  * @since 20.6.2020, v1
+  * @since 20.6.2020, v0.1
   */
-class ExodusApi(override val rootPath: String, credentials: Either[UserCredentials, String], initialSessionKey: String)
+// Credentials is either basic credentials (left) or a device key (right)
+class ExodusApi(override protected val gateway: Gateway = new Gateway(), override val rootPath: String,
+                credentials: Either[UserCredentials, String], initialSessionKey: String)
 	extends Api
 {
 	// ATTRIBUTES	---------------------------
 	
-	private var resetSessionThreshold = Instant.now() + 18.hours
+	private var resetSessionThreshold = Now + 18.hours
 	private var sessionKey = initialSessionKey
 	private val sessionResetFuture = VolatileOption[Future[Try[String]]]()
 	
@@ -45,12 +47,12 @@ class ExodusApi(override val rootPath: String, credentials: Either[UserCredentia
 									  (implicit context: ExecutionContext): Future[Try[Response]] =
 	{
 		// May acquire a new session key before making further requests
-		if (Instant.now() > resetSessionThreshold)
+		if (Now > resetSessionThreshold)
 		{
 			LocalDevice.id match
 			{
 				case Some(deviceId) =>
-					sessionResetFuture.setOneIfEmptyAndGet { () =>
+					sessionResetFuture.setOneIfEmptyAndGet {
 						val result = resetSession(deviceId)
 						result.onComplete { _ => sessionResetFuture.clear() }
 						result
@@ -77,7 +79,7 @@ class ExodusApi(override val rootPath: String, credentials: Either[UserCredentia
 				{
 					case Some(newKey) =>
 						sessionKey = newKey
-						resetSessionThreshold = Instant.now() + 18.hours
+						resetSessionThreshold = Now + 18.hours
 						Success(sessionKey)
 					case None => Failure(new RequestFailedException(
 						s"No new session key received in authorization response body ($status)"))

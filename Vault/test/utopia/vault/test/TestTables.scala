@@ -19,4 +19,6 @@ object TestTables extends Tables(TestConnectionPool)(TestThreadPool.executionCon
     def strength = apply(dbName, "strength")
     
     def indexTest = apply(dbName, "index_test")
+    
+    def dateTimeTest = apply(dbName, "datetime_test")
 }

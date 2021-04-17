@@ -1,13 +1,13 @@
 package utopia.reflection.component.template.display
 
-import utopia.flow.event.{ChangeListener, Changing}
+import utopia.flow.event.{ChangeListener, ChangingLike}
 
 /**
   * This pool provides access to a changing element
   * @author Mikko Hilpinen
   * @since 29.6.2019, v1+
   */
-trait PoolWithPointer[A, +P <: Changing[A]] extends Pool[A]
+trait PoolWithPointer[+A, +P <: ChangingLike[A]] extends Pool[A]
 {
 	// ABSTRACT	----------------
 	
@@ -27,12 +27,16 @@ trait PoolWithPointer[A, +P <: Changing[A]] extends Pool[A]
 	/**
 	  * Adds a new listener to be informed about content changes
 	  * @param listener                        The new listener to be added
-	  * @param generateChangeEventFromOldValue None if no change event should be generated for the new listener.
-	  *                                        Some with "old" value if a change event should be triggered
-	  *                                        <b>for this new listener</b>. Default = None
 	  */
-	def addContentListener(listener: ChangeListener[A], generateChangeEventFromOldValue: Option[A] = None) =
-		contentPointer.addListener(listener, generateChangeEventFromOldValue)
+	def addContentListener(listener: ChangeListener[A]) = contentPointer.addListener(listener)
+	
+	/**
+	  * Adds a new listener to be informed about content changes
+	  * @param simulatedOldValue A simulated old value which is used for generating an initial event for this listener
+	  * @param listener                        The new listener to be added
+	  */
+	def addContentListenerAndSimulateEvent[B >: A](simulatedOldValue: B)(listener: => ChangeListener[B]) =
+		contentPointer.addListenerAndSimulateEvent(simulatedOldValue)(listener)
 	
 	/**
 	  * Removes a listener from informed listeners

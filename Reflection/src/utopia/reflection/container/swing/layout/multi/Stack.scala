@@ -15,7 +15,7 @@ import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.stack.template.layout.StackLike
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.shape.StackLength
+import utopia.reflection.shape.stack.StackLength
 
 import scala.collection.immutable.VectorBuilder
 
@@ -217,9 +217,9 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
     
     override protected def wrapped = panel
     
-    override protected def updateVisibility(visible: Boolean) = panel.isVisible = visible
+    override protected def updateVisibility(visible: Boolean) = panel.visible = visible
     
-    override def isVisible_=(isVisible: Boolean) = super[CachingStackable].isVisible_=(isVisible)
+    override def visible_=(isVisible: Boolean) = super[CachingStackable].visible_=(isVisible)
     
     protected def add(component: C, index: Int) = panel.insert(component, index)
     

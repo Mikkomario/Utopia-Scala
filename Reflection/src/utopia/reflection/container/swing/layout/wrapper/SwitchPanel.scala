@@ -7,7 +7,7 @@ import utopia.reflection.component.template.layout.stack.{CachingStackable, Stac
 import utopia.reflection.container.stack.template.SingleStackContainer
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 
 object SwitchPanel
 {
@@ -52,7 +52,7 @@ class SwitchPanel[C <: Stackable with AwtComponentRelated] extends SingleStackCo
 	
 	override protected def wrapped = panel
 	
-	override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].isVisible_=(visible)
+	override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].visible_=(visible)
 	
 	override def component = panel.component
 	

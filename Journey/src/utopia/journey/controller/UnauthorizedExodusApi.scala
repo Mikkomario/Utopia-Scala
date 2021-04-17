@@ -9,10 +9,13 @@ import utopia.disciple.http.request.StringBody
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.util.CollectionExtensions._
 import utopia.journey.model.UserCredentials
 import utopia.annex.model.error.{EmptyResponseException, RequestFailedException, UnauthorizedRequestException}
+import utopia.disciple.apache.Gateway
+import utopia.journey.model.error.NoUserDataError
 import utopia.metropolis.model.combined.device.FullDevice
-import utopia.metropolis.model.combined.user.UserWithLinks
+import utopia.metropolis.model.combined.user.UserCreationResult
 import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.post.{NewDevice, NewLanguageProficiency, NewUser}
 
@@ -22,9 +25,10 @@ import scala.util.{Failure, Success, Try}
 /**
   * This API is used before authorization (session key) is acquired
   * @author Mikko Hilpinen
-  * @since 21.6.2020, v1
+  * @since 21.6.2020, v0.1
   */
-class UnauthorizedExodusApi(override val rootPath: String) extends Api
+class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gateway(), override val rootPath: String)
+	extends Api
 {
 	// IMPLEMENTED	-----------------------------
 	
@@ -48,43 +52,44 @@ class UnauthorizedExodusApi(override val rootPath: String) extends Api
 							   languages: Vector[NewLanguageProficiency], device: NewDevice)
 							  (implicit exc: ExecutionContext) =
 	{
-		implicit val userParser: UserWithLinks.type = UserWithLinks
+		implicit val userParser: UserCreationResult.type = UserCreationResult
 		
-		val newUser = NewUser(UserSettingsData(userName, credentials.email), credentials.password, languages, Left(device))
+		// TODO: Add support for email validation (current implementation expects email validation to not be used)
+		val newUser = NewUser(Right(UserSettingsData(userName, credentials.email)), credentials.password, languages,
+			Some(Left(device)), credentials.allowDeviceKeyUse)
 		
 		// Posts new user data to the server
-		post("users", newUser.toModel).tryFlatMapIfSuccess {
+		post("users", newUser.toModel).tryMapIfSuccess
+		{
 			// Checks response status and parses user data from the body
 			case Response.Success(status, body) =>
 				body match
 				{
 					case c: Content =>
-						c.single.parsed.map { user =>
-							// TODO: Cache user information
-							user.deviceIds.headOption match
-							{
-								case Some(deviceId) =>
-									// Stores received device id
-									LocalDevice.preInitialize(deviceId, device.name, user.id)
-									// Log in with the device, possibly creating a device key
-									if (credentials.allowDeviceKeyUse)
-										retrieveAndUseDeviceKey(deviceId, credentials)
-									else
-										login(Left(credentials), deviceId)
-								case None => asyncFailure(
-									new RequestFailedException(
-										s"Expected to receive device id in new user response. Received ${body.value}"))
-							}
-						} match
-						{
-							case Success(future) => future
-							case Failure(e) => asyncFailure(e)
+						c.single.parsed.flatMap { user =>
+							// Expects device id to always be returned in the response body
+							// (since request passes device data)
+							user.deviceId
+								.toTry { new NoUserDataError("Device id was not provided on user creation response") }
+								.map { deviceId =>
+									// TODO: Cache user information
+									// TODO: Handle better cases where device id is not returned
+									// Stores received device id, possible device key and session key
+									LocalDevice.preInitialize(deviceId, device.name, user.userId)
+									user.deviceKey.foreach { LocalDevice.key = _ }
+									val apiCredentials = user.deviceKey match
+									{
+										case Some(deviceKey) => Right(deviceKey)
+										case None => Left(credentials)
+									}
+									new ExodusApi(gateway, rootPath, apiCredentials, user.sessionKey)
+								}
 						}
-					case Empty => asyncFailure(new EmptyResponseException(
+					case Empty => Failure(new EmptyResponseException(
 						s"Expected to receive new user data. Instead received an empty response with status $status"))
 				}
 			case Response.Failure(status, message) =>
-				asyncFailure(new RequestFailedException(message.getOrElse(s"Received $status when posting new user")))
+				Failure(new RequestFailedException(message.getOrElse(s"Received $status when posting new user")))
 		}
 	}
 	
@@ -180,7 +185,7 @@ class UnauthorizedExodusApi(override val rootPath: String) extends Api
 			case Response.Success(status, body) =>
 				body.value.string match
 				{
-					case Some(key) => Success(new ExodusApi(rootPath, credentials, key))
+					case Some(key) => Success(new ExodusApi(gateway, rootPath, credentials, key))
 					case None => Failure(new EmptyResponseException(
 						s"Expected a session key but received an empty response with status $status"))
 				}

@@ -11,9 +11,10 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.{Dialog, Frame, Window}
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.localization.LocalizedString
-import utopia.reflection.shape.{Alignment, StackLength}
+import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.Alignment.Top
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.stack.StackLength
 
 import scala.concurrent.ExecutionContext
 
@@ -70,7 +71,7 @@ trait InteractionWindow[+A]
 	/**
 	 * @return Currently displayed dialogs from this instance. Empty if no dialogs are being displayed at this time.
 	 */
-	def visibleDialogs = _visibleDialogs.get
+	def visibleDialogs = _visibleDialogs.value
 	
 	/**
 	 * @return Whether a dialog from this instance is currently being displayed (may be hidden, see .isVisible)
@@ -80,7 +81,7 @@ trait InteractionWindow[+A]
 	/**
 	 * @return Whether a dialog from this instance is currently visible
 	 */
-	def isVisible = _visibleDialogs.exists { _.isVisible }
+	def isVisible = _visibleDialogs.exists { _.visible }
 	
 	
 	// OTHER	-----------------------

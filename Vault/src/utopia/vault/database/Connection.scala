@@ -175,6 +175,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                         statement.getResultSet.consume { results =>
                             // Parses data out of the result
                             // May skip some data in case it is not requested
+                            // TODO: Doesn't properly return the updated row count
                             Result(if (returnRows) rowsFromResult(results, selectedTables) else Vector(),
                                 generatedKeys, statement.getUpdateCount)
                         }
@@ -388,10 +389,25 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         Vector(databaseName, tableName)).nonEmpty
     
     /**
+      * Creates a new database
+      * @param databaseName Name of the new database
+      * @param checkIfExists Whether database should only be created if one doesn't exist yet (default = true)
+      * @param useNewDb Whether connection should switch to target the new database afterwards (default = true)
+      */
+    def createDatabase(databaseName: String, checkIfExists: Boolean = true, useNewDb: Boolean = true) =
+    {
+        execute(s"CREATE DATABASE${if (checkIfExists) " IF NOT EXISTS " else " "}$databaseName")
+        if (useNewDb)
+            dbName = databaseName
+    }
+    
+    /**
       * Drops / removes a database
       * @param databaseName Database name
+      * @param checkIfExists Whether database should be dropped only if it exists (default = true)
       */
-    def dropDatabase(databaseName: String) = execute(s"DROP DATABASE $databaseName")
+    def dropDatabase(databaseName: String, checkIfExists: Boolean = true) =
+        execute(s"DROP DATABASE${if (checkIfExists) " IF EXISTS " else " "}$databaseName")
     
     /**
       * Executes all statements read from the specified input file
@@ -466,11 +482,11 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     private def setValues(statement: PreparedStatement, values: Seq[Value]) = 
     {
         values.indices.foreach { i =>
-            val conversionResult = Connection.sqlValueConverter(values(i))
-            if (conversionResult.isDefined)
-                statement.setObject(i + 1, conversionResult.get._1, conversionResult.get._2)
-            else
-                statement.setNull(i + 1, Types.NULL)
+            Connection.sqlValueConverter(values(i)) match
+            {
+                case Some((objectValue, jdbcType)) => statement.setObject(i + 1, objectValue, jdbcType)
+                case None => statement.setNull(i + 1, Types.NULL)
+            }
         }
     }
     

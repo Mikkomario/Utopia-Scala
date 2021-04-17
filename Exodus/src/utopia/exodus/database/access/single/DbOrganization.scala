@@ -1,11 +1,12 @@
 package utopia.exodus.database.access.single
 
-import java.time.{Instant, Period}
-
-import utopia.exodus.database.access.many.{DbDescriptions, InvitationsAccess, OrganizationDeletionsAccess}
-import utopia.exodus.database.factory.organization.MembershipFactory
+import java.time.Period
+import utopia.exodus.database.access.many.{DbDescriptions, DbUserRoles, DbUsers, InvitationsAccess, OrganizationDeletionsAccess}
+import utopia.exodus.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory, RoleRightFactory}
 import utopia.exodus.database.model.organization.{DeletionModel, MemberRoleModel, MembershipModel}
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
+import utopia.metropolis.model.combined.organization.DescribedMembership
 import utopia.metropolis.model.partial.organization.{DeletionData, InvitationData, MembershipData}
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
@@ -63,15 +64,43 @@ object DbOrganization
 			
 			private def memberRolesFactory = MemberRoleModel
 			
+			private def withRolesFactory = MembershipWithRolesFactory
+			
+			private def roleRightsFactory = RoleRightFactory
+			
 			private def model = MembershipModel
+			
+			private def condition = model.withOrganizationId(organizationId).toCondition &&
+				factory.nonDeprecatedCondition
+			
+			/**
+			  * @param connection Implicit DB connection
+			  * @return All memberships in this organization, including the roles, allowed tasks and user settings
+			  */
+			def described(implicit connection: Connection) =
+			{
+				// Reads membership data
+				val membershipData = withRolesFactory.getMany(condition)
+				// Reads role and task data
+				val roleIds = membershipData.flatMap { _.roleIds }.toSet
+				val rolesWithRights = DbUserRoles(roleIds).withRights
+				// Reads user settings
+				val settings = DbUsers(membershipData.map { _.wrapped.userId }.toSet).settings
+				// Combines the data
+				membershipData.flatMap { membership =>
+					settings.find { _.userId == membership.wrapped.userId }.map { settings =>
+						val roles = membership.roleIds.flatMap { roleId => rolesWithRights.find { _.roleId == roleId } }
+						DescribedMembership(membership, roles, settings)
+					}
+				}
+			}
 			
 			
 			// IMPLEMENTED	-----------------------
 			
 			override def factory = MembershipFactory
 			
-			override def globalCondition = Some(model.withOrganizationId(organizationId).toCondition &&
-				factory.nonDeprecatedCondition)
+			override def globalCondition = Some(condition)
 			
 			
 			// OTHER	---------------------------
@@ -128,7 +157,7 @@ object DbOrganization
 			def send(recipient: Either[String, Int], roleId: Int, senderId: Int, validDuration: Period = 7.days)
 					(implicit connection: Connection) =
 			{
-				model.insert(InvitationData(organizationId, recipient, roleId, Instant.now() + validDuration, Some(senderId)))
+				model.insert(InvitationData(organizationId, recipient, roleId, Now + validDuration, Some(senderId)))
 			}
 		}
 		
@@ -149,7 +178,7 @@ object DbOrganization
 			  * @return Newly inserted deletion
 			  */
 			def insert(creatorId: Int, actualizationDelay: Period)(implicit connection: Connection) =
-				DeletionModel.insert(DeletionData(organizationId, creatorId, Instant.now() + actualizationDelay))
+				DeletionModel.insert(DeletionData(organizationId, creatorId, Now + actualizationDelay))
 		}
 	}
 }

@@ -2,11 +2,12 @@ package utopia.genesis.util
 
 import java.awt.{AlphaComposite, BasicStroke, Font, Graphics, Graphics2D, Image, Paint, RenderingHints, Shape, Stroke, Toolkit}
 import java.awt.geom.AffineTransform
-
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Bounds, Point, ShapeConvertible, Size, Transformation}
+import utopia.genesis.shape.shape2D.{Bounds, JavaAffineTransformConvertible, Matrix2D, Point, ShapeConvertible, Size, TwoDimensional}
 import utopia.flow.util.NullSafe._
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.flow.util.CollectionExtensions._
+import utopia.genesis.shape.shape2D.transform.{AffineTransformable, AffineTransformation, LinearTransformable}
+import utopia.genesis.shape.shape3D.{Matrix3D, Vector3D}
 
 import scala.util.Try
 
@@ -43,10 +44,16 @@ object Drawer
  */
 class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.awt.Color.WHITE),
              val edgePaint: Option[Paint] = Some(java.awt.Color.BLACK))
+    extends LinearTransformable[Drawer] with AffineTransformable[Drawer]
 {
     // TODO: Add rendering hints
     
     // ATTRIBUTES    ----------------------
+    
+    /**
+      * The current clipping bounds assigned to this drawer (None if no clipping bounds have been assigned)
+      */
+    lazy val clipBounds = Option(graphics.getClipBounds).map { r => r: Bounds }
     
     private var children = Vector[Drawer]()
     
@@ -72,6 +79,13 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
       * @return A version of this drawer that only fills shapes. May return this drawer.
       */
     def noEdges = onlyFill
+    
+    
+    // IMPLEMENTED  -----------------------
+    
+    override def transformedWith(transformation: Matrix2D) = transformed(transformation)
+    
+    override def transformedWith(transformation: Matrix3D) = transformed(transformation)
     
     
     // OTHER METHODS    -------------------
@@ -118,14 +132,12 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
      */
     def draw(shape: Shape) =
     {
-        if (fillPaint.isDefined)
-        {
-            graphics.setPaint(fillPaint.get)
+        fillPaint.foreach { fill =>
+            graphics.setPaint(fill)
             graphics.fill(shape)
         }
-        if (edgePaint.isDefined)
-        {
-            graphics.setPaint(edgePaint.get)
+        edgePaint.foreach { edge =>
+            graphics.setPaint(edge)
             graphics.draw(shape)
         }
     }
@@ -136,11 +148,17 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
     def draw(shape: ShapeConvertible): Unit = draw(shape.toShape)
     
     /**
-     * Draws a piece of text so that it is centered in a set of bounds
-     */
-    def drawTextCentered(text: String, font: Font, bounds: Bounds) =
+      * Draws a piece of text so that it is centered in a set of bounds
+      * @param text The text being drawn
+      * @param font Font used when drawing the text
+      * @param bounds Bounds within which the text must fit
+      * @param betweenLinesMargin Margin between lines of text (used if there are multiple lines, default = 0)
+      * @param allowMultipleLines Whether use of multiple text lines should be allowed (default = true)
+      */
+    def drawTextCentered(text: String, font: Font, bounds: Bounds, betweenLinesMargin: Double = 0.0,
+                         allowMultipleLines: Boolean = true) =
     {
-        drawTextPositioned(text, font) { textSize =>
+        drawTextPositioned(text, font, betweenLinesMargin, (lw, tw) => (tw - lw) / 2.0, allowMultipleLines) { textSize =>
             // May downscale the text to fit the bounds
             val scaling = (bounds.size / textSize).minDimension min 1
             val scaledSize = textSize * scaling
@@ -160,17 +178,44 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
         // Sets the color, preferring edge color
         prepareForTextDraw(font)
         val metrics = graphics.getFontMetrics
-        graphics.drawString(text, topLeft.x.toInt, topLeft.y.toInt + metrics.getAscent)
+        graphics.drawString(text, topLeft.x.round.toInt, topLeft.y.round.toInt + metrics.getAscent)
     }
     
     /**
-      * Draws a piece of text. Text display size affects the positioning
+      * Draws a piece of text, expecting font to be already set
+      * @param text Text to draw
+      * @param topLeft The top left position of the text
+      */
+    def drawTextRaw(text: String, topLeft: Point) = graphics.drawString(text, topLeft.x.round.toInt,
+        topLeft.y.round.toInt + graphics.getFontMetrics.getAscent)
+    
+    /**
+      * Draws a piece of text. Specified bounds affect the positioning and possibly scaling.
       * @param text Text to draw
       * @param font Font to use
-      * @param getTextArea A function for determining the bounds of the drawn text when text size is known.
+      * @param betweenLinesMargin Margin placed between lines of text if multiple lines are used (default = 0.0)
+      * @param lineX A function for calculating the left x-coordinate of a text line based on the line width and the
+      *              maximum line width. Default = all lines start at the same position (0)
+      * @param allowMultipleLines Whether use of multiple text lines should be allowed (default = true)
+      * @param getTextArea A function for determining the bounds of the drawn text when text size is known
       */
-    // TODO: Handle multiline text
-    def drawTextPositioned(text: String, font: Font)(getTextArea: Size => Bounds) =
+    def drawTextPositioned(text: String, font: Font, betweenLinesMargin: Double = 0.0,
+                           lineX: (Double, Double) => Double = (_, _) => 0.0, allowMultipleLines: Boolean = true)
+                          (getTextArea: Size => Bounds) =
+    {
+        if (allowMultipleLines)
+            drawMultilineTextPositioned(text, font, betweenLinesMargin)(getTextArea)(lineX)
+        else
+            drawSingleLineTextPositioned(text, font)(getTextArea)
+    }
+    
+    /**
+      * Draws a piece of text as a single horizontal line. Specified bounds affect the positioning and possibly scaling.
+      * @param text Text to draw
+      * @param font Font to use
+      * @param getTextArea A function for determining text draw bounds when text size is known
+      */
+    def drawSingleLineTextPositioned(text: String, font: Font)(getTextArea: Size => Bounds) =
     {
         // Sets up the graphics context
         prepareForTextDraw(font)
@@ -184,19 +229,87 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
         val scaling = (textArea.size / textSize).toVector
         
         if (scaling ~== Vector3D.identity)
-            graphics.drawString(text, topLeft.x.toInt, topLeft.y.toInt + metrics.getAscent)
+            graphics.drawString(text, topLeft.x.round.toInt, topLeft.y.round.toInt + metrics.getAscent)
         else
-            transformed(Transformation.position(topLeft).scaled(scaling)).graphics.drawString(text, 0, metrics.getAscent)
+            transformed(AffineTransformation(topLeft.toVector, scaling = scaling))
+                .graphics.drawString(text, 0, metrics.getAscent)
+    }
+    
+    /**
+      * Draws a piece of text. Specified bounds affect the positioning and possibly scaling.
+      * @param text Text to draw
+      * @param font Font to use
+      * @param betweenLinesMargin Margin placed between lines of text if multiple lines are used (default = 0.0)
+      * @param getTextArea A function for determining the bounds of the drawn text when text size is known
+      * @param getLineX A function for calculating the left x-coordinate of a text line based on the line width and the
+      *                 maximum line width.
+      */
+    def drawMultilineTextPositioned(text: String, font: Font, betweenLinesMargin: Double = 0.0)
+                                   (getTextArea: Size => Bounds)(getLineX: (Double, Double) => Double) =
+    {
+        val lines = text.linesIterator.toVector
+        if (lines.size > 1)
+            drawTextLinesPositioned(lines, font, betweenLinesMargin)(getTextArea)(getLineX)
+        else
+            drawSingleLineTextPositioned(text, font)(getTextArea)
+    }
+    
+    /**
+      * Draws multiple lines of text. Specified bounds affect the positioning and possibly scaling.
+      * @param lines Lines of text to draw
+      * @param font Font to use
+      * @param betweenLinesMargin Margin placed between lines of text if multiple lines are used (default = 0.0)
+      * @param getTextArea A function for determining the bounds of the drawn text when text size is known
+      * @param getLineX A function for calculating the left x-coordinate of a text line based on the line width and the
+      *                 maximum line width.
+      */
+    def drawTextLinesPositioned(lines: Seq[String], font: Font, betweenLinesMargin: Double = 0.0)
+                               (getTextArea: Size => Bounds)(getLineX: (Double, Double) => Double) =
+    {
+        // TODO: WET WET
+        if (lines.nonEmpty)
+        {
+            // Sets up the graphics context
+            prepareForTextDraw(font)
+            val metrics = graphics.getFontMetrics
+    
+            val lineHeight = metrics.getAscent
+            val lineWidths = lines.map(metrics.stringWidth)
+            val textWidth = lineWidths.max
+            val textHeight = lines.size * lineHeight + ((lines.size - 1) max 0) * betweenLinesMargin
+            
+            val textSize = Size(textWidth, textHeight)
+            val textArea = getTextArea(textSize)
+    
+            // Checks whether the text needs to be scaled
+            val topLeft = textArea.position
+            val scaling = (textArea.size / textSize).toVector
+            
+            // Draws the lines
+            // TODO: WET WET
+            if (scaling ~== Vector3D.identity)
+                lines.foreachWithIndex { (line, index) =>
+                    graphics.drawString(line, (topLeft.x + getLineX(lineWidths(index), textWidth)).round.toInt,
+                        (topLeft.y + index * (lineHeight + betweenLinesMargin)).round.toInt + lineHeight)
+                }
+            else
+            {
+                val drawer = transformed(AffineTransformation(topLeft.toVector, scaling = scaling)).graphics
+                lines.foreachWithIndex { (line, index) =>
+                    drawer.drawString(line, getLineX(lineWidths(index), textWidth).round.toInt,
+                        (index * (lineHeight + betweenLinesMargin)).round.toInt + lineHeight)
+                }
+            }
+        }
     }
     
     /**
       * Draws an image
       * @param image The image to be drawn
-      * @param position The position where the origin is drawn
-      * @param origin The relative position of the image's origin, the point which is placed at (0, 0) coordinates (default = (0, 0))
+      * @param position The position where the image origin is drawn
       * @return Whether the image was fully loaded and drawn
       */
-    def drawImage(image: utopia.genesis.image.Image, position: Point, origin: Point): Boolean = image.drawWith(this, position, origin)
+    def drawImage(image: utopia.genesis.image.Image, position: Point): Boolean = image.drawWith(this, position)
     
     /**
       * Draws an image
@@ -214,6 +327,19 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
     }
     
     /**
+      * Copies a region of the drawn area to another location
+      * @param area Area that is copied
+      * @param translation The amount of translation applied to the area
+      */
+    def copyArea(area: Bounds, translation: TwoDimensional[Double]) =
+    {
+        if (translation.dimensions2D.exists { _ != 0 })
+            graphics.copyArea(
+                area.x.round.toInt, area.y.round.toInt, area.width.round.toInt, area.height.round.toInt,
+                translation.x.round.toInt, translation.y.round.toInt)
+    }
+    
+    /**
      * Creates a transformed copy of this
      * drawer so that it will use the provided transformation to draw relative
      * elements into absolute space
@@ -226,21 +352,11 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
     }
     
     /**
-     * Creates a transformed copy of this
-     * drawer so that it will use the provided transformation to draw relative
-     * elements into absolute space
-     */
-    def transformed(transform: Transformation): Drawer = transformed(transform.toAffineTransform)
-    
-    /*
-     * Creates a transformed copy of this drawer so that it reads from absolute world space and
-     * projects them differently on another absolute world space
-     * @param from The transformation with which the data is read
-     * @param to The transformation with which the data is projected (like in other transform
-     * methods)
-     */
-    //def transformed(from: Transformation, to: Transformation): Drawer =
-    //        transformed(from.toInvertedAffineTransform).transformed(to);
+      * Creates a transformed copy of this drawer, affecting all future paint operations
+      * @param transform A transformation to apply
+      * @return A transformed copy of this drawer
+      */
+    def transformed(transform: JavaAffineTransformConvertible): Drawer = transformed(transform.toJavaAffineTransform)
     
     /**
      * Creates a new instance of this drawer with altered colours
@@ -386,6 +502,19 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
      * be reversed but the original instance can still be used for drawing without clipping.
      */
     def clippedTo(shape: ShapeConvertible): Drawer = clippedTo(shape.toShape)
+    
+    /**
+      * Prepares this drawer for drawing text. This is only necessary with the "raw" text draw option.
+      * @param font Font used when drawing text
+      * @param textColor Color to use when drawing text
+      * @return A copy of this drawer, prepared to draw text
+      */
+    def forTextDrawing(font: Font, textColor: Color) =
+    {
+        val drawer = withEdgeColor(textColor)
+        drawer.prepareForTextDraw(font)
+        drawer
+    }
     
     private def prepareForTextDraw(font: Font) =
     {

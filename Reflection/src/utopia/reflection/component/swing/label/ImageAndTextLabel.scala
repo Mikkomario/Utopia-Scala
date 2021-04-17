@@ -14,7 +14,8 @@ import utopia.reflection.container.stack.StackLayout.{Leading, Trailing}
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.Alignment.{Bottom, Top}
-import utopia.reflection.shape.{Alignment, StackInsets, StackLength}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font
 
 object ImageAndTextLabel
@@ -34,7 +35,7 @@ object ImageAndTextLabel
 								(itemToImage: A => Image)(implicit context: TextContextLike) =
 	{
 		new ImageAndTextLabel[A](pointer, context.font, displayFunction, context.textInsets,
-			imageInsets.getOrElse(context.textInsets), context.textAlignment, context.textColor, context.textHasMinWidth,
+			imageInsets.getOrElse(context.textInsets), context.textAlignment, context.textColor, !context.allowTextShrink,
 			context.allowImageUpscaling)(itemToImage)
 	}
 	

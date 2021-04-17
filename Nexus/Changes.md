@@ -1,4 +1,9 @@
 # Utopia Nexus - List of Changes
+## v1.5.1 - 17.4.2021
+### New Features
+- Added **ResourceWithChildren** and **LeafResource** traits to make Rest resource 
+  implementation easier
+
 ## v1.5
 ### Scala
 - Module is now based on Scala v2.13.3

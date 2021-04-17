@@ -10,6 +10,7 @@ import utopia.genesis.shape.shape3D.Vector3D
   * @author Mikko Hilpinen
   * @since 15.6.2020, v2.3
   */
+@deprecated("Replaced with AnimatedLinearTransformation and AnimatedAffineTransformation", "v2.4")
 object AnimatedTransformation
 {
 	// COMPUTED	------------------------
@@ -68,6 +69,7 @@ object AnimatedTransformation
 	def moving(path: Animation[Point]) = apply { p => Transformation.position(path(p)) }
 }
 
+@deprecated("Replaced with AnimatedLinearTransformation and AnimatedAffineTransformation", "v2.4")
 case class AnimatedTransformation(f: Double => Transformation) extends Animation[Transformation]
 {
 	// IMPLEMENTED	-------------------------

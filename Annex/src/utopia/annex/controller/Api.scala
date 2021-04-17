@@ -7,7 +7,7 @@ import utopia.annex.model.response.Response
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration
@@ -21,6 +21,11 @@ import scala.util.Try
 trait Api
 {
 	// ABSTRACT	-------------------------
+	
+	/**
+	  * @return Gateway to use when making http requests (See Utopia Disciple: utopia.disciple.apache.Gateway)
+	  */
+	protected def gateway: Gateway
 	
 	/**
 	  * @return Domain address + the initial path common to all requests
@@ -85,7 +90,7 @@ trait Api
 	  * @return Response from server (asynchronous)
 	  */
 	def sendRequest(request: Request)(implicit exc: ExecutionContext) =
-		Gateway.valueResponseFor(request).map { _.map(Response.from) }
+		gateway.valueResponseFor(request).map { _.map(Response.from) }
 	
 	/**
 	  * Sends a request to the server and wraps the response

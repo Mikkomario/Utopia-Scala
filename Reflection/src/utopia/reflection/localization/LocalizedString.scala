@@ -73,10 +73,19 @@ case class LocalizedString(original: LocalString, localized: Option[LocalString]
 	  */
 	def isLocalized = localized.isDefined
 	
+	/**
+	  * @return A local string based on this localized string (same as original string if no localization was used)
+	  */
+	def local = localized.getOrElse(original)
+	
 	
 	// IMPLEMENTED	------------------------
 	
+	override def repr = this
+	
 	override def languageCode = targetLanguageCode orElse sourceLanguageCode
+	
+	override def modify(f: String => String) = LocalizedString(original.modify(f), localized.map { _.modify(f) })
 	
 	override def +(other: LocalizedString) = LocalizedString(original + other.original, displayed + other.displayed)
 	

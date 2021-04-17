@@ -1,7 +1,8 @@
 package utopia.flow.async
 
+import utopia.flow.time.WaitTarget
+import utopia.flow.time.SingleWait
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.{SingleWait, WaitTarget}
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -66,6 +67,11 @@ object AsyncExtensions
 		def current = if (f.isCompleted) Some(waitFor()) else None
 		
 		/**
+		  * @return Current result of this future, if completed and successful. None otherwise.
+		  */
+		def currentSuccess = current.flatMap { _.toOption }
+		
+		/**
 		 * Makes this future "race" with another future so that only the earliest result is returned
 		 * @param other Another future
 		 * @param exc Execution context (implicit)
@@ -86,19 +92,34 @@ object AsyncExtensions
 					
 					// Both futures try to set the pointer and end the wait
 					f.foreach { r =>
-						resultPointer.setOneIfEmpty(() => r)
+						resultPointer.setOneIfEmpty(r)
 						wait.stop()
 					}
 					other.foreach { r =>
-						resultPointer.setOneIfEmpty(() => r)
+						resultPointer.setOneIfEmpty(r)
 						wait.stop()
 					}
 					
 					// Waits until either future completes
 					wait.run()
-					resultPointer.get.get // Can call get because pointer is always set before wait is stopped
+					resultPointer.value.get // Can call get because pointer is always set before wait is stopped
 				}
 			}
+		}
+		
+		/**
+		  * @param another Another future
+		  * @param exc Implicit execution context
+		  * @tparam U Type of the other future
+		  * @return This future, but delayed until the other future has completed
+		  */
+		def notCompletingBefore[U](another: Future[U])(implicit exc: ExecutionContext) =
+		{
+			// If the other future is already completed, doesn't need to wait for it
+			if (another.isCompleted)
+				f
+			else
+				f.zipWith(another) { (result, _) => result }
 		}
 	}
 	

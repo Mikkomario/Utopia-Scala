@@ -14,6 +14,12 @@ trait TextContextWrapper extends TextContextLike with ColorContextWrapper
 	
 	// IMPLEMENTED	------------------------
 	
+	override def betweenLinesMargin = base.betweenLinesMargin
+	
+	override def allowLineBreaks = base.allowLineBreaks
+	
+	override def allowTextShrink = base.allowTextShrink
+	
 	override def font = base.font
 	
 	override def promptFont = base.promptFont
@@ -23,8 +29,6 @@ trait TextContextWrapper extends TextContextLike with ColorContextWrapper
 	override def textInsets = base.textInsets
 	
 	override def textColor = base.textColor
-	
-	override def textHasMinWidth = base.textHasMinWidth
 	
 	override def localizer = base.localizer
 }

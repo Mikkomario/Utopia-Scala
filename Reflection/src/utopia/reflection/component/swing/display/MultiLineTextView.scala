@@ -11,10 +11,13 @@ import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.text.TextComponent
 import utopia.reflection.container.stack.StackLayout.{Center, Leading, Trailing}
+import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, SwitchPanel}
 import utopia.reflection.localization.{LocalString, LocalizedString}
 import utopia.reflection.shape._
+import utopia.reflection.shape.stack.modifier.StackSizeModifier
+import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.Font
 
 object MultiLineTextView
@@ -30,7 +33,7 @@ object MultiLineTextView
 	def contextual(text: LocalizedString, lineSplitThreshold: Double, useLowPriorityForScalingSides: Boolean = false,
 	               isHint: Boolean = false)(implicit context: TextContextLike) =
 		new MultiLineTextView(text, if (isHint) context.promptFont else context.font, lineSplitThreshold,
-		context.textInsets, StackLength(0, context.margins.verySmall, context.margins.small), useLowPriorityForScalingSides,
+		context.textInsets, context.betweenLinesMargin, useLowPriorityForScalingSides,
 		context.textAlignment, if (isHint) context.hintTextColor else context.textColor)
 }
 
@@ -54,7 +57,7 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 						val betweenLinesMargin: StackLength = StackLength.fixed(0),
 						useLowPriorityForScalingSides: Boolean = false, initialAlignment: Alignment = Alignment.Left,
 						initialTextColor: Color = Color.textBlack)
-	extends StackableAwtComponentWrapperWrapper with TextComponent with CustomDrawableWrapper
+	extends StackableAwtComponentWrapperWrapper with TextComponent with CustomDrawableWrapper with AwtContainerRelated
 {
 	// ATTRIBUTES	------------------------
 	
@@ -90,6 +93,8 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 	
 	
 	// IMPLEMENTED	------------------------
+	
+	override def component = wrapped.component
 	
 	override def drawContext = _drawContext
 	

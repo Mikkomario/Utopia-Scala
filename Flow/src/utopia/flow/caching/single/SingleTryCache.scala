@@ -1,8 +1,9 @@
 package utopia.flow.caching.single
 
-import java.time.Instant
+import utopia.flow.time.Now
 
-import utopia.flow.util.TimeExtensions._
+import java.time.Instant
+import utopia.flow.util.RichComparable._
 
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}
@@ -63,14 +64,14 @@ trait SingleTryCache[A] extends ClearableSingleCacheLike[Try[A]]
 	/**
 	  * @return Whether a failure is currently cached
 	  */
-	def isFailureCached = lastFailure.exists { _._2 > Instant.now() - failCacheDuration }
+	def isFailureCached = lastFailure.exists { _._2 > Now - failCacheDuration }
 	
 	/**
 	  * @return Whether a success is currently cached
 	  */
 	def isSuccessCached = success.isDefined
 	
-	private def cachedFailure = lastFailure.filter { _._2 > Instant.now() - failCacheDuration }.map { _._1 }
+	private def cachedFailure = lastFailure.filter { _._2 > Now - failCacheDuration }.map { _._1 }
 	
 	
 	// IMPLEMENTED	----------------
@@ -96,7 +97,7 @@ trait SingleTryCache[A] extends ClearableSingleCacheLike[Try[A]]
 						success = Some(s)
 						s
 					case f: Failure[A] =>
-						lastFailure = Some(f -> Instant.now())
+						lastFailure = Some(f -> Now)
 						f
 				}
 			}

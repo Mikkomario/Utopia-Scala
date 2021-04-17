@@ -3,6 +3,7 @@ package utopia.genesis.shape.path
 import utopia.genesis.shape.shape1D.RotationDirection.Clockwise
 import utopia.genesis.shape.shape1D.{Angle, Rotation, RotationDirection}
 import utopia.genesis.shape.shape2D.{Circle, Point}
+import utopia.genesis.util.DistanceLike
 
 /**
   * This path traverses along circle edge
@@ -15,7 +16,7 @@ import utopia.genesis.shape.shape2D.{Circle, Point}
   * @param direction The traversing direction along the circle
   */
 case class CircularPath(circle: Circle, startAngle: Angle = Angle.up, endAngle: Angle = Angle.up,
-						direction: RotationDirection = Clockwise) extends Path[Point]
+						direction: RotationDirection = Clockwise) extends Path[Point] with DistanceLike
 {
 	// ATTRIBUTES	--------------------
 	

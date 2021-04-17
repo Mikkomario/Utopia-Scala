@@ -6,7 +6,7 @@ import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.Bounds
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.container.stack.StackLayout.{Fit, Leading, Trailing}
-import utopia.reflection.shape.{StackLength, StackSize}
+import utopia.reflection.shape.stack.{StackLength, StackSize}
 
 import scala.collection.immutable.VectorBuilder
 
@@ -80,7 +80,7 @@ object Stacker
 	def apply(components: Vector[Stackable], area: Bounds, optimalLength: Double, stackAxis: Axis2D,
 			  margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixed(0), layout: StackLayout = Fit) =
 	{
-		val visibleComponents = components.filter { _.isVisible }
+		val visibleComponents = components.filter { _.visible }
 		
 		if (visibleComponents.nonEmpty)
 		{
@@ -132,12 +132,12 @@ object Stacker
 			targets.foreach { _() }
 			
 			// Positions the components length-wise (first components with margin and then the final component)
-			var cursor = area.position.along(stackAxis) + caps.head.get
+			var cursor = area.position.along(stackAxis) + caps.head.value
 			visibleComponents.zip(margins).foreach
 			{
 				case (component, marginPointer) =>
 					component.setCoordinate(cursor, stackAxis)
-					cursor += component.lengthAlong(stackAxis) + marginPointer.get
+					cursor += component.lengthAlong(stackAxis) + marginPointer.value
 			}
 			visibleComponents.last.setCoordinate(cursor, stackAxis)
 			
@@ -203,7 +203,7 @@ object Stacker
 		targets.foreach { _() }
 		
 		// Returns the final lengths
-		targets.map { _.target.get }
+		targets.map { _.target.value }
 	}
 	
 	@scala.annotation.tailrec
@@ -306,6 +306,6 @@ object Stacker
 	
 	private class GapLengthAdjust(val target: Pointer[Double], val length: StackLength) extends LengthAdjust
 	{
-		def setLength(length: Double) = target.set(length)
+		def setLength(length: Double) = target.value = length
 	}
 }

@@ -1,9 +1,9 @@
 package utopia.conflict.collision
 
 import utopia.genesis.shape.shape2D._
-import utopia.genesis.util.Extensions._
 import utopia.conflict.collision.Extensions._
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.genesis.shape.shape2D.transform.Transformable
+import utopia.genesis.shape.shape3D.Matrix3D
 
 object CollisionShape
 {
@@ -34,7 +34,7 @@ object CollisionShape
  * with a polygon
  */
 case class CollisionShape(convexPolygons: Vector[Polygonic], circles: Vector[Circle],
-                          circleToPolygonEdges: Int) extends TransformProjectable[CollisionShape]
+                          circleToPolygonEdges: Int) extends Transformable[CollisionShape]
 {
     // ATTRIBUTES    -------------------------
     
@@ -62,18 +62,40 @@ case class CollisionShape(convexPolygons: Vector[Polygonic], circles: Vector[Cir
     
     // IMPLEMENTED METHODS    ----------------
     
-    override def transformedWith(transformation: Transformation) =
+    override def transformedWith(transformation: Matrix3D) =
     {
-        val transformedPolygons = convexPolygons.map { transformation(_) }
-        
+        val transformedPolygons = convexPolygons.map { _ * transformation }
+    
         // Some transformations allow the circles to retain their shape while others will not
-        if ((transformation.shear ~== Vector3D.zero) && (transformation.scaling.x ~== transformation.scaling.y))
+        if (circles.isEmpty)
+            copy(convexPolygons = transformedPolygons)
+        else if (transformation.in2D.isEqualScaling)
         {
-            val transformedCircles = circles.map { original => 
-                    Circle(transformation(original.origin), original.radius * transformation.scaling.x) }
+            val transformedCircles = circles.map { original =>
+                Circle(transformation(original.origin).toPoint, original.radius * transformation.apply(0, 0)) }
             new CollisionShape(transformedPolygons, transformedCircles, circleToPolygonEdges)
         }
-        else 
+        else
+        {
+            val transformedCirclePolygons = circlesAsPolygons.map { _.transformedWith(transformation) }
+            new CollisionShape(transformedPolygons ++ transformedCirclePolygons, Vector(), circleToPolygonEdges)
+        }
+    }
+    
+    override def transformedWith(transformation: Matrix2D) =
+    {
+        val transformedPolygons = convexPolygons.map { _ * transformation }
+        
+        // Some transformations allow the circles to retain their shape while others will not
+        if (circles.isEmpty)
+            copy(convexPolygons = transformedPolygons)
+        else if (transformation.isEqualScaling)
+        {
+            val transformedCircles = circles.map { original =>
+                Circle(transformation(original.origin).toPoint, original.radius * transformation.apply(0, 0)) }
+            new CollisionShape(transformedPolygons, transformedCircles, circleToPolygonEdges)
+        }
+        else
         {
             val transformedCirclePolygons = circlesAsPolygons.map { _.transformedWith(transformation) }
             new CollisionShape(transformedPolygons ++ transformedCirclePolygons, Vector(), circleToPolygonEdges)

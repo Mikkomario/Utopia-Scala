@@ -23,28 +23,33 @@ object Insert
      * match those of the table are used
      * @return Results of the insert operation, which contain generated auto-increment keys where applicable
      */
-    def apply(table: Table, rows: Vector[Model[Property]])(implicit connection: Connection) =
+    def apply(table: Table, rows: Seq[Model[Property]])(implicit connection: Connection) =
     {
-        // Finds the inserted properties that are applicable to this table
-        // Only properties matching columns (that are not auto-increment) are included
-        val insertedPropertyNames = rows.flatMap { _.attributesWithValue.map { _.name } }.toSet.filter {
-            table.find(_).exists { !_.usesAutoIncrement } }.toVector
-        
-        val columnNames = insertedPropertyNames.map { table(_).sqlColumnName }.mkString(", ")
-        val singleRowValuesSql =
+        if (rows.isEmpty)
+            Result.empty
+        else
         {
-            if (insertedPropertyNames.nonEmpty)
-                "(?" + ", ?" * (insertedPropertyNames.size - 1) + ")"
-            else
-                "()"
+            // Finds the inserted properties that are applicable to this table
+            // Only properties matching columns (that are not auto-increment) are included
+            val insertedPropertyNames = rows.flatMap { _.attributesWithValue.map { _.name } }.toSet.filter {
+                table.find(_).exists { !_.usesAutoIncrement } }.toVector
+    
+            val columnNames = insertedPropertyNames.map { table(_).sqlColumnName }.mkString(", ")
+            val singleRowValuesSql =
+            {
+                if (insertedPropertyNames.nonEmpty)
+                    "(?" + ", ?" * (insertedPropertyNames.size - 1) + ")"
+                else
+                    "()"
+            }
+            val valuesSql = singleRowValuesSql + (", " + singleRowValuesSql) * (rows.size - 1)
+            val values = rows.flatMap { model => insertedPropertyNames.map { model(_) } }
+    
+            val segment = SqlSegment(s"INSERT INTO ${table.sqlName} ($columnNames) VALUES $valuesSql", values,
+                Some(table.databaseName), HashSet(table), generatesKeys = table.usesAutoIncrement)
+    
+            connection(segment)
         }
-        val valuesSql = singleRowValuesSql + (", " + singleRowValuesSql) * (rows.size - 1)
-        val values = rows.flatMap { model => insertedPropertyNames.map { model(_) } }
-        
-        val segment = SqlSegment(s"INSERT INTO ${table.sqlName} ($columnNames) VALUES $valuesSql", values,
-            Some(table.databaseName), HashSet(table), generatesKeys = table.usesAutoIncrement)
-        
-        connection(segment)
     }
     
     /**

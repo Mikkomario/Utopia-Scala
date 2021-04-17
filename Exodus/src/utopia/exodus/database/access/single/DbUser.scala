@@ -1,16 +1,15 @@
 package utopia.exodus.database.access.single
 
-import utopia.exodus.database.access.id.UserId
-import utopia.exodus.database.access.many.{DbDescriptions, DbLanguageFamiliarities, InvitationsAccess}
-import utopia.exodus.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory, RoleRightFactory}
+import utopia.exodus.database.access.id.DbUserId
+import utopia.exodus.database.access.many.{DbDescriptions, DbLanguageFamiliarities, DbUserRoles, InvitationsAccess}
+import utopia.exodus.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory}
 import utopia.exodus.database.factory.user.{FullUserLanguageFactory, UserFactory, UserLanguageFactory, UserSettingsFactory}
-import utopia.exodus.database.model.organization.{MembershipModel, RoleRightModel}
+import utopia.exodus.database.model.organization.MembershipModel
 import utopia.exodus.database.model.user.{UserAuthModel, UserDeviceModel, UserLanguageModel, UserSettingsModel}
 import utopia.exodus.util.PasswordHash
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.language.{DescribedLanguage, DescribedLanguageFamiliarity}
-import utopia.metropolis.model.combined.organization.RoleWithRights
 import utopia.metropolis.model.combined.user.{DescribedUserLanguage, MyOrganization}
 import utopia.metropolis.model.error.AlreadyUsedException
 import utopia.metropolis.model.partial.user.{UserLanguageData, UserSettingsData}
@@ -18,7 +17,7 @@ import utopia.metropolis.model.stored.organization.Membership
 import utopia.metropolis.model.stored.user.{User, UserLanguage, UserSettings}
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.BasicCombineOperator.Or
-import utopia.vault.nosql.access.{ManyModelAccess, SingleIdAccess, SingleIdModelAccess, SingleModelAccess, UniqueAccess}
+import utopia.vault.nosql.access.{ManyModelAccess, SingleIdModelAccess, SingleModelAccess, UniqueIdAccess, UniqueModelAccess}
 import utopia.vault.sql.{Delete, Select, Where}
 import utopia.vault.sql.Extensions._
 
@@ -56,7 +55,7 @@ object DbUser extends SingleModelAccess[User]
 	def tryAuthenticate(email: String, password: String)(implicit connection: Connection) =
 	{
 		// Finds user id and checks the password
-		UserId.forEmail(email).filter { id =>
+		DbUserId.forEmail(email).filter { id =>
 			apply(id).passwordHash.exists { correctHash => PasswordHash.validatePassword(password, correctHash) }
 		}
 	}
@@ -105,8 +104,8 @@ object DbUser extends SingleModelAccess[User]
 		  */
 		def passwordHash(implicit connection: Connection) =
 		{
-			connection(Select(UserAuthModel.table, UserAuthModel.hashAttName) + Where(UserAuthModel.withUserId(userId).toCondition))
-				.firstValue.string
+			connection(Select(UserAuthModel.table, UserAuthModel.hashAttName) +
+				Where(UserAuthModel.withUserId(userId).toCondition)).firstValue.string
 		}
 		
 		/**
@@ -162,10 +161,33 @@ object DbUser extends SingleModelAccess[User]
 			}
 		}
 		
+		/**
+		  * Checks whether the specified password matches this user's current password
+		  * @param password Password to test
+		  * @param connection DB Connection (implicit)
+		  * @return Whether the specified password is this user's current password
+		  */
+		def checkPassword(password: String)(implicit connection: Connection) =
+			passwordHash.exists { PasswordHash.validatePassword(password, _) }
+		
+		/**
+		  * Updates this user's password
+		  * @param newPassword New password for this user
+		  * @param connection DB Connection (implicit)
+		  * @return Whether any user's password was actually affected
+		  */
+		def changePassword(newPassword: String)(implicit connection: Connection) =
+		{
+			// Hashes the password
+			val newHash = PasswordHash.createHash(newPassword)
+			// Updates the password hash in the DB
+			UserAuthModel.withUserId(userId).withHash(newHash).update()
+		}
+		
 		
 		// NESTED	-----------------------
 		
-		object Settings extends SingleModelAccess[UserSettings] with UniqueAccess[UserSettings]
+		object Settings extends UniqueModelAccess[UserSettings]
 		{
 			// IMPLEMENTED	---------------
 			
@@ -190,7 +212,7 @@ object DbUser extends SingleModelAccess[User]
 			def update(newSettings: UserSettingsData)(implicit connection: Connection) =
 			{
 				// Makes sure the email address is still available (or belongs to this user)
-				if (UserId.forEmail(newSettings.email).forall { _ == userId })
+				if (DbUserId.forEmail(newSettings.email).forall { _ == userId })
 				{
 					// Deprecates the old settings
 					model.nowDeprecated.updateWhere(condition)
@@ -284,11 +306,14 @@ object DbUser extends SingleModelAccess[User]
 			}
 		}
 		
-		case class MembershipId(organizationId: Int) extends SingleIdAccess[Int] with UniqueAccess[Int]
+		case class MembershipId(organizationId: Int) extends UniqueIdAccess[Int]
 		{
 			// ATTRIBUTES	------------------------
 			
 			private val factory = MembershipFactory
+			
+			override val condition = model.withUserId(userId).withOrganizationId(organizationId).toCondition &&
+				factory.nonDeprecatedCondition
 			
 			
 			// COMPUTED	----------------------------
@@ -297,9 +322,6 @@ object DbUser extends SingleModelAccess[User]
 			
 			
 			// IMPLEMENTED	------------------------
-			
-			override val condition = model.withUserId(userId).withOrganizationId(organizationId).toCondition &&
-				factory.nonDeprecatedCondition
 			
 			override def target = factory.target
 			
@@ -362,12 +384,8 @@ object DbUser extends SingleModelAccess[User]
 				{
 					// TODO: Add proper language filtering
 					val organizationDescriptions = DbDescriptions.ofOrganizationsWithIds(organizationIds).all
-					// Reads all task links
-					val roleIds = memberships.flatMap { _.roleIds }.toSet
-					val roleRights = RoleRightFactory.getMany(RoleRightModel.roleIdColumn.in(roleIds))
-					// Groups the information
-					val rolesWithRights = roleRights.groupBy { _.roleId }.map { case (roleId, links) =>
-						RoleWithRights(roleId, links.map { _.taskId }.toSet) }
+					// Reads all role right information concerning the targeted roles
+					val rolesWithRights = DbUserRoles(memberships.flatMap { _.roleIds }.toSet).withRights
 					
 					memberships.map { membership =>
 						val organizationId = membership.wrapped.organizationId

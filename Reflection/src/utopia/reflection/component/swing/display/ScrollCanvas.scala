@@ -6,20 +6,20 @@ import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent, MouseWheelEv
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
 import utopia.genesis.shape.shape1D.LinearAcceleration
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Transformation}
+import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
 import utopia.genesis.util.{Drawer, Fps}
 import utopia.genesis.view.RepaintLoop
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.context.ScrollingContextLike
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawer}
+import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.reflection.component.swing.template._
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf, Stackable}
 import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
-import utopia.reflection.shape.{StackLengthLimit, StackSize}
+import utopia.reflection.shape.stack.{StackLengthLimit, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.ExecutionContext
@@ -70,7 +70,7 @@ object ScrollCanvas
 class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, actorHandler: ActorHandler,
 				   val contentMouseButtonHandler: MouseButtonStateHandler, val contentMouseMoveHandler: MouseMoveHandler,
 				   val contentMouseWheelHandler: MouseWheelHandler, maxOptimalSize: Option[Size],
-				   scrollBarDrawer: ScrollBarDrawer, scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,
+				   scrollBarDrawer: ScrollBarDrawerLike, scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,
 				   scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
 				   scrollFriction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,
 				   scrollBarIsInsideContent: Boolean = false) extends StackableAwtComponentWrapperWrapper
@@ -180,7 +180,7 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 		// Draws the game world items with scaling
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
-			val scaledDrawer = if (_scaling == 1.0) drawer else drawer.transformed(Transformation.scaling(_scaling))
+			val scaledDrawer = if (_scaling == 1.0) drawer else drawer.scaled(_scaling)
 			drawHandler.draw(scaledDrawer)
 		}
 	}
@@ -206,7 +206,7 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 		
 		override protected def wrapped: JWrapper = panel
 		
-		override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].isVisible_=(visible)
+		override protected def updateVisibility(visible: Boolean) = super[AwtComponentWrapperWrapper].visible_=(visible)
 		
 		override def calculatedStackSize = StackSize.fixed(_worldSize * scaling)
 		

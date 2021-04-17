@@ -1,6 +1,6 @@
 package utopia.metropolis.model.stored
 
-import utopia.metropolis.model.Extender
+import utopia.flow.util.Extender
 
 /**
   * A common trait for data that has been stored to database

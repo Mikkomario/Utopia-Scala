@@ -2,7 +2,7 @@ package utopia.reflection.component.context
 
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.shape1D.LinearAcceleration
-import utopia.reflection.component.drawing.template.ScrollBarDrawer
+import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
 
 /**
   * A common trait for contexts that define scrolling-related settings
@@ -39,5 +39,5 @@ trait ScrollingContextLike
 	/**
 	  * @return Drawer that is used for drawing the scroll bar
 	  */
-	def scrollBarDrawer: ScrollBarDrawer
+	def scrollBarDrawer: ScrollBarDrawerLike
 }

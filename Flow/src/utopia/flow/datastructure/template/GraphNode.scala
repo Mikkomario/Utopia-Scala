@@ -3,7 +3,6 @@ package utopia.flow.datastructure.template
 import utopia.flow.datastructure.immutable.{Graph, Tree}
 import utopia.flow.util.CollectionExtensions._
 
-import scala.math.Ordering.Double.TotalOrdering
 import scala.collection.immutable.VectorBuilder
 
 /**
@@ -152,7 +151,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
      * @param node the node traversed to
      * @return The shortest route from this node to the provided node, if any exist
      */
-    def shortestRouteTo(node: AnyNode) = cheapestRouteTo(node, { _ => 1 })
+    def shortestRouteTo(node: AnyNode) = cheapestRouteTo(node) { _ => 1 }
     
     /**
      * Finds the 'cheapest' route from this node to the provided node, if there is one. A special
@@ -162,14 +161,43 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
      * contents, for example)
      * @return The cheapest route found, if any exist
      */
-    def cheapestRouteTo(node: AnyNode, costOf: Edge => Double) =
-    {
-        val routes = routesTo(node)
-        if (routes.isEmpty)
-            None
-        else
-            Some(routes.minBy { _.foldLeft(0.0) { (currentCost, edge) => currentCost + costOf(edge) } })
-    }
+    def cheapestRouteTo(node: AnyNode)(costOf: Edge => Double): Option[Route] =
+	    cheapestRouteTo(node, 0.0, None, Set())(costOf).map { _._1 }
+	
+	private def cheapestRouteTo(node: AnyNode, currentCost: Double, currentMinCost: Option[Double],
+	                            visitedNodes: Set[AnyNode])(costOf: Edge => Double): Option[(Route, Double)] =
+	{
+		// Checks available route options
+		val newVisitedNodes = visitedNodes + this
+		val availableEdges = leavingEdges.filterNot { e => newVisitedNodes.contains(e.end) }
+		
+		// Traverses each route fully before moving to the next one
+		val (newMinCost, newBestRoute) = availableEdges.foldLeft[(Option[Double], Option[Route])](
+			(currentMinCost, None)) { case ((minCost, bestRoute), edge) =>
+			// Calculates next step cost
+			val stepCost = currentCost + costOf(edge)
+			// Will not continue to search the route if the minimum cost is exceeded
+			if (minCost.exists { stepCost >= _ })
+				minCost -> bestRoute
+			else
+			{
+				// Checks whether already arrived to the destination
+				if (edge.end == node)
+					Some(stepCost) -> Some(Vector(edge))
+				else
+					// Checks whether that route turns out to be better than the current best route
+					edge.end.cheapestRouteTo(node, stepCost, minCost, newVisitedNodes)(costOf) match
+					{
+						case Some((newBestRoute, newMinCost)) => Some(newMinCost) -> Some(edge +: newBestRoute)
+						case None => minCost -> bestRoute
+					}
+			}
+		}
+		
+		newBestRoute.flatMap { route =>
+			newMinCost.map { cost => route -> cost }
+		}
+	}
     
     /**
      * Finds all routes (edge combinations) that connect this node to the provided node. Routes

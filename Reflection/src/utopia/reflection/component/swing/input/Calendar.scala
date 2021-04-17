@@ -5,12 +5,12 @@ import java.time._
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.flow.util.RichComparable._
-import utopia.flow.util.TimeExtensions._
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.shape.Axis.Y
 import utopia.genesis.shape.shape2D.Size
-import utopia.reflection.component.drawing.immutable.SelectionCircleDrawer
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
+import utopia.reflection.component.drawing.view.SelectionCircleViewDrawer
 import utopia.reflection.component.template.input.{InteractionWithPointer, SelectionGroup}
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.component.swing.button.{ButtonImageSet, CustomDrawableButtonLike, ImageButton}
@@ -22,7 +22,8 @@ import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.reflection.localization.DisplayFunction
-import utopia.reflection.shape.{Alignment, StackInsets, StackLength, StackSize}
+import utopia.reflection.shape.Alignment
+import utopia.reflection.shape.stack.{StackInsets, StackLength, StackSize}
 import utopia.reflection.text.Font
 
 import scala.collection.immutable.HashMap
@@ -86,7 +87,7 @@ object Calendar
 		// INITIAL CODE	-----------------
 		
 		label.component.setFocusable(true)
-		addCustomDrawer(new SelectionCircleDrawer(hoverColor, selectedColor, () => value, () => state))
+		addCustomDrawer(SelectionCircleViewDrawer(hoverColor, selectedColor, valuePointer, statePointer))
 		
 		valuePointer.addListener { _ => repaint() }
 		registerAction { () => value = !value }
@@ -152,8 +153,8 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 	
 	private var currentSelection = selectionFor(selectedMonth)
 	
-	private val previousButton = ImageButton(backwardIcon) { () => lastMonth() }
-	private val nextButton = ImageButton(forwardIcon) { () => nextMonth() }
+	private val previousButton = ImageButton(backwardIcon) { lastMonth() }
+	private val nextButton = ImageButton(forwardIcon) { nextMonth() }
 	
 	// Day selections are swapped each time month changes, hence the switch panel
 	private val selectionSwitch = SwitchPanel(currentSelection)
@@ -315,7 +316,8 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 		}
 	}
 	
-	private class DaySelection(yearMonth: YearMonth) extends StackableAwtComponentWrapperWrapper with InteractionWithPointer[Option[LocalDate]]
+	private class DaySelection(yearMonth: YearMonth) extends StackableAwtComponentWrapperWrapper
+		with InteractionWithPointer[Option[LocalDate]]
 	{
 		// ATTRIBUTES	-------------------
 		
@@ -340,7 +342,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 			// Adds button listening
 			SelectionGroup(buttons.flatten.map { _._2 }.toSet)
 			buttons.view.flatten.foreach { case (date, button) => button.addValueListener { e =>
-				if (e.newValue) valuePointer.set(Some(date)) else if (value.contains(date)) valuePointer.set(None) } }
+				if (e.newValue) valuePointer.value = Some(date) else if (value.contains(date)) valuePointer.value = None } }
 			
 			// Creates date rows
 			rowElements.map { items => Stack.rowWithItems(segmentGroup.wrap(items), insideCalendarMargin.width) }
