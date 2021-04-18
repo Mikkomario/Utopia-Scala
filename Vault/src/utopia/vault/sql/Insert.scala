@@ -2,8 +2,11 @@ package utopia.vault.sql
 
 import utopia.flow.datastructure.template.Model
 import utopia.flow.datastructure.template.Property
+import utopia.flow.util.CollectionExtensions._
 import utopia.vault.database.Connection
+import utopia.vault.model.error.ColumnNotFoundException
 import utopia.vault.model.immutable.{Result, Table}
+import utopia.vault.util.ErrorHandling
 
 import scala.collection.immutable.HashSet
 
@@ -31,19 +34,35 @@ object Insert
         {
             // Finds the inserted properties that are applicable to this table
             // Only properties matching columns (that are not auto-increment) are included
-            val insertedPropertyNames = rows.flatMap { _.attributesWithValue.map { _.name } }.toSet.filter {
-                table.find(_).exists { !_.usesAutoIncrement } }.toVector
+            // Generates an error based on attributes that don't fit into the table, but leaves the error
+            // handling to the ErrorHandling object
+            val usedPropertyNames = rows.flatMap { _.attributesWithValue.map { _.name } }.toSet
+            val (nonMatchingProperties, matchingProperties) = usedPropertyNames.dividedWith { propertyName =>
+                table.find(propertyName) match
+                {
+                    case Some(column) => Right(propertyName -> column)
+                    case None => Left(propertyName)
+                }
+            }
+            if (nonMatchingProperties.nonEmpty)
+                ErrorHandling.insertClipPrinciple.handle(new ColumnNotFoundException(
+                    s"No matching column in table ${table.name} for properties: [${
+                        nonMatchingProperties.sorted.mkString(", ")}]. Correct property names are: [${
+                        table.columns.map { _.propertyName }.sorted.mkString(", ")}]"))
+            val propertiesToInsert = matchingProperties.filterNot { _._2.usesAutoIncrement }
     
-            val columnNames = insertedPropertyNames.map { table(_).sqlColumnName }.mkString(", ")
+            val columnNames = propertiesToInsert.map { _._2.sqlColumnName }.mkString(", ")
             val singleRowValuesSql =
             {
-                if (insertedPropertyNames.nonEmpty)
-                    "(?" + ", ?" * (insertedPropertyNames.size - 1) + ")"
+                if (propertiesToInsert.nonEmpty)
+                    "(?" + ", ?" * (propertiesToInsert.size - 1) + ")"
                 else
                     "()"
             }
             val valuesSql = singleRowValuesSql + (", " + singleRowValuesSql) * (rows.size - 1)
-            val values = rows.flatMap { model => insertedPropertyNames.map { model(_) } }
+            val values = rows.flatMap { model =>
+                propertiesToInsert.map { case (propertyName, _) => model(propertyName) }
+            }
     
             val segment = SqlSegment(s"INSERT INTO ${table.sqlName} ($columnNames) VALUES $valuesSql", values,
                 Some(table.databaseName), HashSet(table), generatesKeys = table.usesAutoIncrement)

@@ -1,5 +1,10 @@
 # Utopia Vault - List of Changes
 
+## v1.7.1 (in development)
+### New Features
+- Inserts can now generate warnings or errors when attempting to insert values that don't belong to a table
+  - Specify `ErrorHandling.insertClipPrinciple` in order to utilize this feature
+
 ## v1.7 - 17.4.2021
 This update focuses on the **Access** classes as well as database creation / management.
 ### Breaking Changes
