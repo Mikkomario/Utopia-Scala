@@ -1,6 +1,9 @@
 # Utopia Reflection - List of Changes
 
-## v2.4.1 (in development)
+## v2.5 (in development)
+### Breaking Changes
+- **TimedAnimation** and **Path** no longer extend **Animation** but instead extend new trait **AnimationLike**
+- There are other animation -related breaking changes also
 ### Deprecations
 - Deprecated `Color.isTransparent` in favor of `Color.transparent`
 ### New Methods

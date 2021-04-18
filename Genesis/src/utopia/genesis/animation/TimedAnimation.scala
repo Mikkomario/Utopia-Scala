@@ -1,6 +1,6 @@
 package utopia.genesis.animation
 
-import utopia.genesis.animation.TimedAnimation.{MapAnimation, RepeatingAnimation, ReverseAnimation}
+import utopia.genesis.animation.TimedAnimation.{CurvedAnimation, MapAnimation, RepeatingAnimation, ReverseAnimation}
 import utopia.genesis.animation.transform.{AnimatedTransform, TimedAnimationWithTranform}
 
 import scala.concurrent.duration.Duration
@@ -10,7 +10,7 @@ import scala.concurrent.duration.Duration
   * @author Mikko Hilpinen
   * @since 28.3.2020, v2.1
   */
-trait TimedAnimation[+A] extends Animation[A]
+trait TimedAnimation[+A] extends AnimationLike[A, TimedAnimation]
 {
 	// ABSTRACT	----------------------------
 	
@@ -20,18 +20,24 @@ trait TimedAnimation[+A] extends Animation[A]
 	def duration: Duration
 	
 	
+	// COMPUTED ----------------------------
+	
+	def withReverseAppended: TimedAnimation[A] = appendedWith(reversed)
+	
+	
 	// IMPLEMENTED	------------------------
-	
-	override def map[B](f: A => B): TimedAnimation[B] = new MapAnimation(this)(f)
-	
-	override def repeated(times: Int): TimedAnimation[A] = new RepeatingAnimation[A](this, times)
-	
-	override def transformedWith[O >: A, R](transform: AnimatedTransform[O, R]) =
-		TimedAnimationWithTranform.wrapTimedAnimation(this, transform)
 	
 	override def reversed: TimedAnimation[A] = new ReverseAnimation[A](this)
 	
-	override def withReverseAppended: TimedAnimation[A] = this + reversed
+	override def map[B](f: A => B): TimedAnimation[B] = new MapAnimation(this)(f)
+	
+	override def curved(curvature: AnimationLike[Double, Any]): TimedAnimation[A] =
+		new CurvedAnimation[A](this, curvature)
+	
+	override def repeated(times: Int): TimedAnimation[A] = new RepeatingAnimation[A](this, times)
+	
+	def transformedWith[O >: A, R](transform: AnimatedTransform[O, R]) =
+		TimedAnimationWithTranform.wrapTimedAnimation[O, R](this, transform)
 	
 	
 	// OTHER	----------------------------
@@ -58,7 +64,7 @@ trait TimedAnimation[+A] extends Animation[A]
 	  * @tparam B Type of the resulting animation result
 	  * @return An animation that first plays this one and then the other
 	  */
-	def +[B >: A](another: TimedAnimation[B]) = TimedCombinedAnimation(this, another)
+	def appendedWith[B >: A](another: TimedAnimation[B]) = TimedCombinedAnimation(this, another)
 }
 
 object TimedAnimation
@@ -77,6 +83,14 @@ object TimedAnimation
 	
 	
 	// NESTED	-----------------------
+	
+	private class CurvedAnimation[+A](wrapped: TimedAnimation[A], curve: AnimationLike[Double, Any])
+		extends TimedAnimation[A]
+	{
+		override def duration = wrapped.duration
+		
+		override def apply(progress: Double) = wrapped(curve(progress))
+	}
 	
 	private class TimedAnimationWrapper[+A](wrapped: Animation[A], override val duration: Duration) extends TimedAnimation[A]
 	{

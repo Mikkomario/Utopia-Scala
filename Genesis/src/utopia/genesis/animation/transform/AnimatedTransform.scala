@@ -51,7 +51,8 @@ object AnimatedTransform
 {
 	// NESTED	----------------------
 	
-	private class StaticTransform[-Origin, +Reflection](getOrigin: => Origin, transform: AnimatedTransform[Origin, Reflection])
+	private class StaticTransform[-Origin, +Reflection](getOrigin: => Origin,
+	                                                    transform: AnimatedTransform[Origin, Reflection])
 		extends Animation[Reflection]
 	{
 		override def apply(progress: Double) = transform(getOrigin, progress)

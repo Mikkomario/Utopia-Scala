@@ -1,6 +1,7 @@
 package utopia.genesis.shape.path
 
-import utopia.genesis.animation.Animation
+import utopia.genesis.animation.AnimationLike
+import utopia.genesis.shape.path.Path.{CurvedPath, RepeatingPath, ReversePath}
 import utopia.genesis.util.DistanceLike
 
 object Path
@@ -25,6 +26,38 @@ object Path
 		  */
 		def +[B >: A](another: PathWithDistance[B]) = CompoundPath(Vector(p, another))
 	}
+	
+	
+	// NESTED   -------------------
+	
+	private class ReversePath[+P](original: Path[P]) extends Path[P]
+	{
+		override def start = original.end
+		
+		override def end = original.start
+		
+		override def apply(progress: Double) = original(1 - progress)
+		
+		override def reversed = original
+	}
+	
+	private class CurvedPath[+P](original: Path[P], curve: AnimationLike[Double, Any]) extends Path[P]
+	{
+		override def start = original.start
+		
+		override def end = original.end
+		
+		override def apply(progress: Double) = original(curve(progress))
+	}
+	
+	private class RepeatingPath[+P](original: Path[P], times: Int) extends Path[P]
+	{
+		override def start = original.start
+		
+		override def end = original.end
+		
+		override def apply(progress: Double) = original(progress * times)
+	}
 }
 
 /**
@@ -32,7 +65,7 @@ object Path
   * @author Mikko Hilpinen
   * @since 19.6.2019, v2.1+
   */
-trait Path[+P] extends Animation[P]
+trait Path[+P] extends AnimationLike[P, Path]
 {
 	// ABSTRACT	----------------
 	
@@ -46,14 +79,13 @@ trait Path[+P] extends Animation[P]
 	def end: P
 	
 	
-	// OTHER	-----------------
+	// IMPLEMENTED	-----------------
 	
-	/**
-	  * Maps the values of this path
-	  * @param f A mapping function
-	  * @tparam A Type of map function input
-	  * @tparam B Type of map function output
-	  * @return A mapped version of this path
-	  */
-	def map[A >: P, B](f: A => B) = MappedPath[A, B](this, f)
+	override def reversed: Path[P] = new ReversePath[P](this)
+	
+	override def curved(curvature: AnimationLike[Double, Any]): Path[P] = new CurvedPath[P](this, curvature)
+	
+	override def map[B](f: P => B): Path[B] = MappedPath[P, B](this)(f)
+	
+	override def repeated(times: Int): Path[P] = new RepeatingPath[P](this, times)
 }

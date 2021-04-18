@@ -3,6 +3,7 @@ package utopia.reflection.component.swing.input
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.genesis.animation.Animation
+import utopia.genesis.animation.AnimationLike.AnyAnimation
 import utopia.genesis.color.Color
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.mutable.ActorHandler
@@ -173,7 +174,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	{
 		// ATTRIBUTES	-------------
 		
-		private var currentAnimation: Animation[Double] = Animation.fixed(if (isOn) 1.0 else 0.0)
+		private var currentAnimation: AnyAnimation[Double] = Animation.fixed(if (isOn) 1.0 else 0.0)
 		private var currentProgress: Double = 1.0
 		
 		

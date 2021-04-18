@@ -5,7 +5,7 @@ package utopia.genesis.shape.path
   * @author Mikko Hilpinen
   * @since 12.8.2019, v2.1+
   */
-case class MappedPath[A, +B](original: Path[A], map: A => B) extends Path[B]
+case class MappedPath[+A, +B](original: Path[A])(map: A => B) extends Path[B]
 {
 	override def start = map(original.start)
 	
