@@ -24,6 +24,8 @@ trait BorderDrawerLike extends CustomDrawer
 	
 	// IMPLEMENTED	------------------
 	
+	override def opaque = false
+	
 	override def draw(drawer: Drawer, bounds: Bounds) =
 	{
 		// Draws the border (recursively)

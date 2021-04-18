@@ -232,6 +232,8 @@ private class Selector(stackPointer: Viewable[Option[Stack[ReachComponentLike]]]
 	
 	// IMPLEMENTED	----------------------------------
 	
+	override def opaque = false
+	
 	override def drawLevel = Normal
 	
 	override def draw(drawer: Drawer, bounds: Bounds) =

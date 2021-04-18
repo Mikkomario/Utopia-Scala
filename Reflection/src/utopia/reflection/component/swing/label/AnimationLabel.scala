@@ -5,7 +5,6 @@ import utopia.flow.time.Now
 import java.time.Instant
 import scala.math.Ordering.Double.TotalOrdering
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.RichComparable._
 import utopia.genesis.animation.TimedAnimation
 import utopia.genesis.animation.animator.{Animator, SpriteDrawer, TransformingImageAnimator}
 import utopia.genesis.handling.Actor
@@ -156,6 +155,8 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 	{
 		override def drawLevel = Normal
 		
+		override def opaque = false
+		
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			// Determines the draw location and scaling
@@ -163,8 +164,8 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 			val drawBounds = alignment.position(originalSize, bounds)
 			val scaling = (drawBounds.size / originalSize).toVector
 			// Performs the actual drawing
-			drawer.transformed(AffineTransformation(drawBounds.position.toVector + drawOrigin * scaling, scaling = scaling))
-				.disposeAfter(animator.draw)
+			drawer.transformed(AffineTransformation(drawBounds.position.toVector + drawOrigin * scaling,
+				scaling = scaling)).disposeAfter(animator.draw)
 		}
 	}
 	

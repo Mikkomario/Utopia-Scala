@@ -514,6 +514,8 @@ class Slider[+A](range: Animation[A], targetKnobDiameter: Double, targetWidth: S
 	
 	private object Visualizer extends CustomDrawer
 	{
+		override def opaque = false
+		
 		override def drawLevel = Normal
 		
 		override def draw(drawer: Drawer, bounds: Bounds) =

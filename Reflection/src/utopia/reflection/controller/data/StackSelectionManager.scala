@@ -18,6 +18,7 @@ import utopia.reflection.container.stack.template.layout.StackLike
 
 import scala.concurrent.duration.Duration
 
+@deprecated("Replaced with ContainerSelectionManager, which supports also non-stack containers", "v1.2")
 object StackSelectionManager
 {
 	/**
@@ -192,6 +193,8 @@ class StackSelectionManager[A, C <: Stackable with Refreshable[A]]
 	
 	private object SelectionDrawer extends CustomDrawer
 	{
+		override def opaque = false
+		
 		override def drawLevel = selectionAreaDrawer.drawLevel
 		
 		override def draw(drawer: Drawer, bounds: Bounds) =

@@ -209,7 +209,17 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double) exte
 	/**
 	  * @return Whether this color has transparency
 	  */
+	@deprecated("Please use .transparent instead", "v2.4.1")
 	def isTransparent = alpha < 1
+	
+	/**
+	  * @return Whether this color has transparency (can be seen through partially or fully)
+	  */
+	def transparent = alpha < 1
+	/**
+	  * @return Whether this color is fully opaque (100% alpha - I.e. can't be seen through)
+	  */
+	def opaque = !transparent
 	
 	/**
 	  * @return The alpha percentage of this color [0, 100]
@@ -263,7 +273,7 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double) exte
 	override def contrastAgainst(other: RgbLike[_]) =
 	{
 		// Takes alpha value into account
-		if (isTransparent)
+		if (transparent)
 		{
 			val rawContrast = super.contrastAgainst(other)
 			// Multiplies the contrast above the 1.0 (same color) level by alpha
@@ -276,7 +286,7 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double) exte
 	override def toString =
 	{
 		val base = data.fold(_.toString, _.toString)
-		if (isTransparent)
+		if (transparent)
 			s"$base, $alphaPercentage% Alpha"
 		else
 			base

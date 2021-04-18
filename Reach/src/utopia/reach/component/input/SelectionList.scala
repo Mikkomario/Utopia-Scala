@@ -315,6 +315,8 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		
 		// IMPLEMENTED	---------------------------
 		
+		override def opaque = false
+		
 		override def drawLevel = Normal
 		
 		override def draw(drawer: Drawer, bounds: Bounds) =

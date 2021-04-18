@@ -31,6 +31,8 @@ trait CustomDrawableButtonLike extends ButtonLike with CustomDrawable
 	
 	private class StatefulDrawer(val stateDrawer: ButtonStateDrawer) extends CustomDrawer
 	{
+		override def opaque = stateDrawer.opaque
+		
 		override def drawLevel = stateDrawer.drawLevel
 		
 		override def draw(drawer: Drawer, bounds: Bounds) = stateDrawer.draw(state, drawer, bounds)

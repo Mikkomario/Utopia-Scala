@@ -1,4 +1,12 @@
 # Utopia Reflection - List of Changes
+
+## v2.4.1 (in development)
+### Deprecations
+- Deprecated `Color.isTransparent` in favor of `Color.transparent`
+### New Methods
+- **Color**
+  - `.transparent` and `.opaque`
+
 ## v2.4 - 17.4.2021
 With the introduction of the new **Reach** module, multiple additions and changes were necessary in 
 **Genesis** as well. These include a wide range of practical and useful updates, 

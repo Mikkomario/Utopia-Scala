@@ -18,6 +18,8 @@ case class SelectionCircleViewDrawer(hoverColor: Color, selectedColor: Color, se
 {
 	// IMPLEMENTED	--------------------------
 	
+	override def opaque = false
+	
 	override def drawLevel = Background
 	
 	override def draw(drawer: Drawer, bounds: Bounds) =

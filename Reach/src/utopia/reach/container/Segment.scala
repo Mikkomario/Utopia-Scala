@@ -114,6 +114,8 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		
 		// IMPLEMENTED	-------------------------
 		
+		override def transparent = true
+		
 		override def toString = s"Segment($index)"
 		
 		override def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds]) = ()

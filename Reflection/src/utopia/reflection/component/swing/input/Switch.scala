@@ -184,6 +184,8 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 		
 		// IMPLEMENTED	-------------
 		
+		override def opaque = false
+		
 		override def allowsHandlingFrom(handlerType: HandlerType) =
 			if (handlerType == ActorHandlerType) currentProgress < 1.0 else true
 		

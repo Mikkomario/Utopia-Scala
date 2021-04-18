@@ -138,6 +138,8 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 	{
 		override def drawLevel = Normal
 		
+		override def opaque = false
+		
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			cachedImages.value

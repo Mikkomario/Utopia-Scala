@@ -200,6 +200,8 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		
 		// IMPLEMENTED	-------------
 		
+		override def opaque = false
+		
 		override def allowsHandlingFrom(handlerType: HandlerType) = currentProgress < 1.0
 		
 		override def drawLevel = Normal

@@ -144,6 +144,8 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 		
 		// IMPLEMENTED	------------------
 		
+		override def opaque = false
+		
 		override def act(duration: FiniteDuration) =
 		{
 			// Progresses the progress animation

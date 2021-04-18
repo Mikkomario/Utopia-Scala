@@ -19,6 +19,8 @@ trait ReachComponentWrapper extends ReachComponentLike with StackableWrapper2
 	
 	// IMPLEMENTED	----------------------------
 	
+	override def transparent = wrapped.transparent
+	
 	override def children = wrapped.children
 	
 	override def positionPointer = wrapped.positionPointer

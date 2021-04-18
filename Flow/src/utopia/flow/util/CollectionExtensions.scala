@@ -15,6 +15,392 @@ import scala.util.{Failure, Success, Try}
 **/
 object CollectionExtensions
 {
+    // ITERABLE ONCE    ---------------------------------------
+    
+    class IterableOnceOperations[Repr, I <: IsIterableOnce[Repr]](coll: Repr, iter: I)
+    {
+        /**
+          * Filters this collection so that only distinct values remain. Uses a special function to determine equality
+          * @param equals A function that determines whether two values are equal
+          * @param buildFrom Builder for the new collection
+          * @return A collection with only distinct values (when considering the provided 'equals' function)
+          */
+        def distinctWith(equals: (iter.A, iter.A) => Boolean)(implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
+        {
+            val iterOps = iter(coll)
+            val builder = buildFrom.newBuilder(coll)
+            val collected = mutable.HashSet[iter.A]()
+            
+            iterOps.iterator.foreach { item =>
+                if (!collected.exists { e => equals(e, item) })
+                {
+                    builder += item
+                    collected += item
+                }
+            }
+            
+            builder.result()
+        }
+        
+        /**
+          * Filters this collection so that only distinct values remain. Compares the values by mapping them.
+          * @param f A mapping function to produce comparable values
+          * @param buildFrom A builder (implicit) to build the final collection
+          * @tparam B Map target type
+          * @return A collection with only distinct values (based on mapping)
+          */
+        def distinctBy[B](f: iter.A => B)(implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
+            distinctWith { (a, b) => f(a) == f(b) }
+        
+        /**
+          * This function works like foldLeft, except that it stores each step (including the start) into a seq
+          * @param start The starting step
+          * @param map A function for calculating the next step, takes the previous result + the next item in this seq
+          * @param buildFrom A buildfrom for final collection (implicit)
+          * @tparam B The type of steps
+          * @tparam That The type of final collection
+          * @return All of the steps mapped into a collection
+          */
+        def foldMapLeft[B, That](start: B)(map: (B, iter.A) => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
+        {
+            val builder = buildFrom.newBuilder(coll)
+            var last = start
+            builder += last
+            
+            val iterOps = iter(coll)
+            iterOps.iterator.foreach { item =>
+                last = map(last, item)
+                builder += last
+            }
+            
+            builder.result()
+        }
+        
+        // Referenced from: https://stackoverflow.com/questions/22090371/scala-grouping-list-of-tuples [10.10.2018]
+        /**
+          * Converts this iterable item to a map with possibly multiple values per key
+          * @param toKey A function for mapping items to keys
+          * @param toValue A function for mapping items to values
+          * @param bf Implicit build from for the final values collections
+          * @tparam Key Type of key in the final map
+          * @tparam Value Type of individual values in the final map
+          * @tparam Values Type of values collections in the final map
+          * @return A multi map based on this iteration mapping
+          */
+        def toMultiMap[Key, Value, Values](toKey: iter.A => Key)(toValue: iter.A => Value)(
+            implicit bf: BuildFrom[Repr, Value, Values]): Map[Key, Values] = toMultiMap { a => toKey(a) -> toValue(a) }
+        
+        /**
+          * Converts this iterable item to a map with possibly multiple values per key
+          * @param f A function for mapping items to key value pairs
+          * @param bf Implicit build from for the final values collections
+          * @tparam Key Type of key in the final map
+          * @tparam Value Type of individual values in the final map
+          * @tparam Values Type of values collections in the final map
+          * @return A multi map based on this iteration mapping
+          */
+        def toMultiMap[Key, Value, Values](f: iter.A => (Key, Value))(implicit bf: BuildFrom[Repr, Value, Values]): Map[Key, Values] =
+        {
+            val buffer = mutable.Map.empty[Key, mutable.Builder[Value, Values]]
+            val iterOps = iter(coll)
+            iterOps.iterator.foreach { item =>
+                val (key, value) = f(item)
+                buffer.getOrElseUpdate(key, bf.newBuilder(coll)) += value
+            }
+            buffer.view.mapValues { _.result() }.toMap
+        }
+        
+        /**
+          * Maps the contents of this Iterable. Mapping may fail, interrupting all remaining mappings
+          * @param f A mapping function. May fail.
+          * @param bf A build from for the final collection (implicit)
+          * @tparam B Type of map result
+          * @tparam To Type of final collection
+          * @return Mapped collection if all mappings succeeded. Failure otherwise.
+          */
+        def tryMap[B, To](f: iter.A => Try[B])(implicit bf: BuildFrom[Repr, B, To]): Try[To] =
+        {
+            val buffer = bf.newBuilder(coll)
+            // Maps items until the mapping function fails
+            val iterOps = iter(coll)
+            val finalResult = iterOps.iterator.map(f).find { result =>
+                result.toOption.foreach { buffer += _ }
+                result.isFailure
+            }.getOrElse(Success(()))
+            
+            finalResult.map { _ => buffer.result() }
+        }
+        
+        /**
+          * Takes elements from this collection until the specified condition is met. If found, includes the item
+          * on which that condition was met.
+          * @param endCondition A condition for ending this take operation (returns true on the last item to collect)
+          * @param buildFrom Implicit build from
+          * @tparam That Target collection type
+          * @return All elements of this collection until the first item that matches the specified condition +
+          *         the matching item itself. Contains all items of this collection if the condition was never met.
+          */
+        def takeTo[That](endCondition: iter.A => Boolean)(implicit buildFrom: BuildFrom[Repr, iter.A, That]): That =
+        {
+            val iterOps = iter(coll)
+            buildFrom.fromSpecific(coll)(new TakeToIterator(iterOps.iterator)(endCondition))
+        }
+    }
+    
+    implicit def iterableOnceOperations[Repr](coll: Repr)(implicit iter: IsIterableOnce[Repr]): IterableOnceOperations[Repr, iter.type] =
+        new IterableOnceOperations(coll, iter)
+    
+    implicit class RichIterableOnce[A](val i: IterableOnce[A]) extends AnyVal
+    {
+        /**
+          * Maps items until a concrete result is found, then returns that result
+          * @param map A mapping function that maps to either Some or None
+          * @tparam B The map target type
+          * @return The first item that was mapped to Some. None if all items were mapped to None.
+          */
+        def findMap[B](map: A => Option[B]) = i.iterator.map(map).find { _.isDefined }.flatten
+        
+        /**
+          * Divides / maps the items in this collection to two groups
+          * @param f A function for separating / mapping the items
+          * @tparam L Type of left group items
+          * @tparam R Type of right group items
+          * @return Left group and right group
+          */
+        def dividedWith[L, R](f: A => Either[L, R]) =
+        {
+            val lBuilder = new VectorBuilder[L]
+            val rBuilder = new VectorBuilder[R]
+            i.iterator.map(f).foreach {
+                case Left(l) => lBuilder += l
+                case Right(r) => rBuilder += r
+            }
+            lBuilder.result() -> rBuilder.result()
+        }
+        
+        /**
+          * Maps the items in this collection into two different collections
+          * @param f A mapping function that produces two results (left -> right) for each item
+          * @tparam L Type of left result item
+          * @tparam R Type of right result item
+          * @return Left results -> right results
+          */
+        def splitMap[L, R](f: A => (L, R)) =
+        {
+            val lBuilder = new VectorBuilder[L]
+            val rBuilder = new VectorBuilder[R]
+            i.iterator.map(f).foreach { case (l, r) =>
+                lBuilder += l
+                rBuilder += r
+            }
+            lBuilder.result() -> rBuilder.result()
+        }
+    }
+    
+    
+    // ITERABLE ----------------------------------------
+    
+    implicit class RichIterableLike[A, CC[X], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
+    {
+        /**
+          * Divides the items in this Iterable into two groups, based on boolean result
+          * @param f A function that separates the items
+          * @param factory An implicit factory
+          * @return The 'false' group, followed by the 'true' group
+          */
+        def divideBy(f: A => Boolean)(implicit factory: Factory[A, Repr]) =
+        {
+            val groups = t.groupBy(f)
+            groups.getOrElse(false, factory.newBuilder.result()) -> groups.getOrElse(true, factory.newBuilder.result())
+        }
+        
+        /**
+          * Performs an operation for each item in this collection. Stops if an operation fails.
+          * @param f A function that takes an item and performs an operation that may fail
+          * @return Failure if any of the operations failed, success otherwise.
+          */
+        def tryForEach(f: A => Try[Any]): Try[Any] = t.view.map(f).find { _.isFailure }.getOrElse(Success[Unit](()))
+        
+        /**
+          * @return An iterator that keeps repeating over and over (iterator continues infinitely or until this
+          *         collection is empty)
+          */
+        def repeatingIterator(): Iterator[A] = new RepeatingIterator[A, CC](t)
+    }
+    
+    implicit class RichIterableLike2[A, CC[X] <: IterableOps[X, CC, CC[X]], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
+    {
+        /**
+          * Iterates through the items in this iterable along with another iterable's items. Will stop when either
+          * iterable runs out of items
+          * @param another Another iterable
+          * @param f A function that handles the items
+          * @tparam B The type of another iterable's items
+          * @tparam U Arbitrary result type
+          */
+        def foreachWith[B, U](another: Iterable[B])(f: (A, B) => U) = t.zip(another).foreach { p => f(p._1, p._2) }
+    }
+    
+    implicit class RichIterable[A](val t: Iterable[A]) extends AnyVal
+    {
+        /**
+          * @return Duplicate items within this Iterable
+          */
+        def duplicates: Set[A] =
+        {
+            var foundResults = HashSet[A]()
+            var checked = HashSet[A]()
+            t.foreach { item => if (checked.contains(item)) foundResults += item else checked += item }
+            foundResults
+        }
+        
+        /**
+          * Finds the maximum value in this Iterable
+          * @param cmp Ordering (implicit)
+          * @tparam B Ordering type
+          * @return Maximum item or None if this Iterable was empty
+          */
+        def maxOption[B >: A](implicit cmp: Ordering[B]): Option[A] =
+        {
+            if (t.isEmpty)
+                None
+            else
+                Some(t.max(cmp))
+        }
+        
+        /**
+          * Finds the minimum value in this Iterable
+          * @param cmp Ordering (implicit)
+          * @tparam B Ordering type
+          * @return Minimum item or None if this Iterable was empty
+          */
+        def minOption[B >: A](implicit cmp: Ordering[B]): Option[A] =
+        {
+            if (t.isEmpty)
+                None
+            else
+                Some(t.min(cmp))
+        }
+        
+        /**
+          * Finds the maximum value based on map result
+          * @param map A mapping function
+          * @param cmp Implicit ordering
+          * @tparam B Type of map result
+          * @return Maximum item based on map result. None if this Iterable was empty
+          */
+        def maxByOption[B](map: A => B)(implicit cmp: Ordering[B]): Option[A] =
+        {
+            if (t.isEmpty)
+                None
+            else
+                Some(t.maxBy(map))
+        }
+        
+        /**
+          * Finds the minimum value based on map result
+          * @param map A mapping function
+          * @param cmp Implicit ordering
+          * @tparam B Type of map result
+          * @return Minimum item based on map result. None if this Iterable was empty
+          */
+        def minByOption[B](map: A => B)(implicit cmp: Ordering[B]): Option[A] =
+        {
+            if (t.isEmpty)
+                None
+            else
+                Some(t.minBy(map))
+        }
+        
+        /**
+          * Finds the item(s) that best match the specified conditions
+          * @param matchers Search conditions used. The conditions that are introduced first are considered more
+          *                 important than those which are introduced the last.
+          * @tparam That Target collection type
+          * @return The items in this collection that best match the specified conditions
+          */
+        def bestMatch[That](matchers: Seq[A => Boolean]): Vector[A] =
+        {
+            // If there is only a single option, that is the best match. If there are 0 options, there's no best match
+            // If there are no matchers left, cannot make a distinction between items
+            if (t.size < 2 || matchers.isEmpty)
+                t.toVector
+            else
+            {
+                val nextMatcher = matchers.head
+                val matched = t.filter(nextMatcher.apply)
+                
+                // If matcher found some results, limits to those. if not, cannot use that group
+                if (matched.nonEmpty)
+                    matched.bestMatch(matchers.drop(1))
+                else
+                    bestMatch(matchers.drop(1))
+            }
+        }
+        
+        /**
+          * Compares this set of items with another set. Lists items that have been added and removed, plus the changes
+          * between items that have stayed
+          * @param another Another Iterable
+          * @param connectBy A function for providing the unique key based on which items are connected
+          *                  (should be unique within each collection). Items sharing this key are connected.
+          * @param merge A function for merging two connected items. Takes connection key, item in this collection and
+          *              item in the other collection
+          * @tparam B Type of items in the other collection
+          * @tparam K Type of match key used
+          * @tparam Merge Merge function for merging connected items
+          * @return 1) Items only present in this collection, 2) Merged items shared between these two collections,
+          *         3) Items only present in the other collection
+          */
+        def listChanges[B >: A, K, Merge](another: Iterable[B])(connectBy: B => K)(merge: (K, A, B) => Merge) =
+        {
+            val meByKey = t.map { a => connectBy(a) -> a }.toMap
+            val theyByKey = another.map { a => connectBy(a) -> a }.toMap
+            
+            val myKeys = meByKey.keySet
+            val theirKeys = theyByKey.keySet
+            
+            val onlyInMe = (myKeys -- theirKeys).toVector.map { meByKey(_) }
+            val onlyInThem = (theirKeys -- myKeys).toVector.map { theyByKey(_) }
+            val merged = (myKeys & theirKeys).toVector.map { key => merge(key, meByKey(key), theyByKey(key)) }
+            
+            (onlyInMe, merged, onlyInThem)
+        }
+        
+        /**
+          * Performs the specified mapping function until it succeeds or until all items in this collection have been
+          * tested
+          * @param f A mapping function which may fail
+          * @tparam B Type of map function result
+          * @return The first successful map result or failure if none of the items in this collection could be mapped
+          */
+        def tryFindMap[B](f: A => Try[B]) =
+        {
+            val iter = t.iterator.map(f)
+            if (iter.hasNext)
+            {
+                // Returns the first result if its a success or if no successes were found
+                val firstResult = iter.next()
+                if (firstResult.isSuccess)
+                    firstResult
+                else
+                    iter.find { _.isSuccess }.getOrElse(firstResult)
+            }
+            else
+                Failure(new NoSuchElementException("Called tryFindMap on an empty collection"))
+        }
+        
+        /**
+          * @param items Items to test
+          * @tparam O Type of items collection
+          * @return Whether this collection of items contains all of the specified items
+          */
+        def containsAll[O >: A](items: Iterable[O]) = items.forall { item => t.exists { _ == item } }
+    }
+    
+    
+    // SEQ  --------------------------------------------
+    
     class SeqOperations[Repr, S <: IsSeq[Repr]](coll: Repr, seq: S)
     {
         /**
@@ -341,6 +727,189 @@ object CollectionExtensions
         }
     }
     
+    // ITERATOR ------------------------------------------
+    
+    implicit class RichIterator[A](val i: Iterator[A]) extends AnyVal
+    {
+        /**
+          * Enables polling on this iterator. This method yields a new iterator.
+          * This iterator shouldn't be used after the copy has been acquired. Only the pollable copy of this
+          * iterator should be used afterwards.
+          * @return A copy of this iterator that allows polling (checking of the next item without advancing)
+          */
+        def pollable = new PollingIterator[A](i)
+        
+        /**
+          * Finds the last item accessible from this iterator. Consumes all items in this iterator.
+          * @throws NoSuchElementException If this iterator is empty
+          * @return The last item in this iterator
+          */
+        @throws[NoSuchElementException]("If this iterator is empty")
+        def last =
+        {
+            var current = i.next()
+            while (i.hasNext)
+            {
+                current = i.next()
+            }
+            current
+        }
+        
+        /**
+          * @return The last item accessible in this iterator. None if this iterator didn't have any items remaining.
+          */
+        def lastOption =
+        {
+            if (i.hasNext)
+                Some(last)
+            else
+                None
+        }
+        
+        /**
+          * Performs the specified operation for the next 'n' items. This will advance the iterator n-steps
+          * (although limited by number of available items)
+          * @param n The maximum number of iterations / items handled
+          * @param operation Operation called for each handled item
+          * @tparam U Arbitrary operation result type (not used)
+          * @return Whether the full 'n' items were handled. If false, the end of this iterator was reached.
+          */
+        def forNext[U](n: Int)(operation: A => U) =
+        {
+            var consumed = 0
+            while (i.hasNext && consumed < n)
+            {
+                operation(i.next())
+                consumed += 1
+            }
+            
+            consumed == n
+        }
+        
+        /**
+          * Collects the next 'n' items from this iterator, advancing it up to 'n' elements. The number of available
+          * items may be smaller, in case all remaining items are returned.
+          * @param n Number of items to collect
+          * @return Collected items
+          */
+        def takeNext(n: Int) =
+        {
+            var consumed = 0
+            val builder = new VectorBuilder[A]()
+            while (i.hasNext && consumed < n)
+            {
+                builder += i.next()
+                consumed += 1
+            }
+            
+            builder.result()
+        }
+        
+        /**
+          * Consumes items until a specific condition is met
+          * @param condition A search condition
+          * @return The first item in this iterator that fulfills the condition.
+          *         None if none of the items in this iterator fulfilled the condition.
+          */
+        def nextWhere(condition: A => Boolean) =
+        {
+            if (i.hasNext)
+            {
+                var current = i.next()
+                var foundResult = condition(current)
+                while (!foundResult && i.hasNext)
+                {
+                    current = i.next()
+                    foundResult = condition(current)
+                }
+                if (foundResult)
+                    Some(current)
+                else
+                    None
+            }
+            else
+                None
+        }
+        
+        /**
+          * Returns the next result that can be mapped to a specific value.
+          * After method call, this iterator will be placed at the item following the successfully mapped item.
+          * @param map A mapping function
+          * @tparam B Type of map result when one is found
+          * @return The first map result found. None if no map result could be acquired.
+          */
+        def findMapNext[B](map: A => Option[B]) =
+        {
+            var current: Option[B] = None
+            while (current.isEmpty && i.hasNext)
+            {
+                current = map(i.next())
+            }
+            current
+        }
+        
+        /**
+          * Groups this iterator and performs the specified operation for each of the collected groups.
+          * Differs from .group(...).foreach(...) in that this method acts on all of the items in this iterator
+          * without discarding the possible smaller group at the end
+          * @param maxGroupSize Maximum number of items for a function call
+          * @param f A function that is called for each group of items
+          */
+        def foreachGroup(maxGroupSize: Int)(f: Vector[A] => Unit) =
+        {
+            while (i.hasNext)
+            {
+                f(takeNext(maxGroupSize))
+            }
+        }
+        
+        /**
+          * Maps the items in this iterator, one group at a time
+          * @param groupSize The maximum size of an individual group of items to map
+          * @param map a mapping function applied to groups of items
+          * @tparam B Type of map result
+          * @return All map results in order
+          */
+        def groupMap[B](groupSize: Int)(map: Vector[A] => B) =
+        {
+            val resultBuilder = new VectorBuilder[B]()
+            foreachGroup(groupSize) { resultBuilder += map(_) }
+            resultBuilder.result()
+        }
+        
+        /**
+          * Groups the <b>consecutive</b> items in this iterator using the specified grouping function.
+          * The resulting iterator returns items as groups based on the group function result.
+          * @param f A grouping function
+          * @tparam G Type of group identifier
+          * @return An iterator that returns groups of consecutive items, including the group identifiers
+          */
+        def groupBy[G](f: A => G) = GroupIterator(i)(f)
+        
+        /**
+          * Maps this iterator with a function that can fail. Handles failures by catching them.
+          * @param f A mapping function
+          * @param handleError Function called for each encountered error
+          * @tparam B Type of successful map result
+          * @return Iterator of the mapped items
+          */
+        def mapCatching[B](f: A => Try[B])(handleError: Throwable => Unit) =
+        {
+            i.flatMap { original =>
+                f(original) match
+                {
+                    case Success(item) => Some(item)
+                    case Failure(error) =>
+                        handleError(error)
+                        None
+                }
+            }
+        }
+    }
+    
+    
+    // OTHER    ------------------------------------------
+    
     implicit class RichOption[A](val o: Option[A]) extends AnyVal
     {
         /**
@@ -446,204 +1015,6 @@ object CollectionExtensions
         }
     }
     
-    implicit class RichIterable[A](val t: Iterable[A]) extends AnyVal
-    {
-        /**
-         * @return Duplicate items within this Iterable
-         */
-        def duplicates: Set[A] =
-        {
-            var foundResults = HashSet[A]()
-            var checked = HashSet[A]()
-            t.foreach { item => if (checked.contains(item)) foundResults += item else checked += item }
-            foundResults
-        }
-    
-        /**
-          * Finds the maximum value in this Iterable
-          * @param cmp Ordering (implicit)
-          * @tparam B Ordering type
-          * @return Maximum item or None if this Iterable was empty
-          */
-        def maxOption[B >: A](implicit cmp: Ordering[B]): Option[A] =
-        {
-            if (t.isEmpty)
-                None
-            else
-                Some(t.max(cmp))
-        }
-        
-        /**
-          * Finds the minimum value in this Iterable
-          * @param cmp Ordering (implicit)
-          * @tparam B Ordering type
-          * @return Minimum item or None if this Iterable was empty
-          */
-        def minOption[B >: A](implicit cmp: Ordering[B]): Option[A] =
-        {
-            if (t.isEmpty)
-                None
-            else
-                Some(t.min(cmp))
-        }
-    
-        /**
-         * Finds the maximum value based on map result
-         * @param map A mapping function
-         * @param cmp Implicit ordering
-         * @tparam B Type of map result
-         * @return Maximum item based on map result. None if this Iterable was empty
-         */
-        def maxByOption[B](map: A => B)(implicit cmp: Ordering[B]): Option[A] =
-        {
-            if (t.isEmpty)
-                None
-            else
-                Some(t.maxBy(map))
-        }
-    
-        /**
-         * Finds the minimum value based on map result
-         * @param map A mapping function
-         * @param cmp Implicit ordering
-         * @tparam B Type of map result
-         * @return Minimum item based on map result. None if this Iterable was empty
-         */
-        def minByOption[B](map: A => B)(implicit cmp: Ordering[B]): Option[A] =
-        {
-            if (t.isEmpty)
-                None
-            else
-                Some(t.minBy(map))
-        }
-    
-        /**
-         * Finds the item(s) that best match the specified conditions
-         * @param matchers Search conditions used. The conditions that are introduced first are considered more
-         *                 important than those which are introduced the last.
-         * @tparam That Target collection type
-         * @return The items in this collection that best match the specified conditions
-         */
-        def bestMatch[That](matchers: Seq[A => Boolean]): Vector[A] =
-        {
-            // If there is only a single option, that is the best match. If there are 0 options, there's no best match
-            // If there are no matchers left, cannot make a distinction between items
-            if (t.size < 2 || matchers.isEmpty)
-                t.toVector
-            else
-            {
-                val nextMatcher = matchers.head
-                val matched = t.filter(nextMatcher.apply)
-            
-                // If matcher found some results, limits to those. if not, cannot use that group
-                if (matched.nonEmpty)
-                    matched.bestMatch(matchers.drop(1))
-                else
-                    bestMatch(matchers.drop(1))
-            }
-        }
-    
-        /**
-          * Compares this set of items with another set. Lists items that have been added and removed, plus the changes
-          * between items that have stayed
-          * @param another Another Iterable
-          * @param connectBy A function for providing the unique key based on which items are connected
-          *                  (should be unique within each collection). Items sharing this key are connected.
-          * @param merge A function for merging two connected items. Takes connection key, item in this collection and
-          *              item in the other collection
-          * @tparam B Type of items in the other collection
-          * @tparam K Type of match key used
-          * @tparam Merge Merge function for merging connected items
-          * @return 1) Items only present in this collection, 2) Merged items shared between these two collections,
-          *         3) Items only present in the other collection
-          */
-        def listChanges[B >: A, K, Merge](another: Iterable[B])(connectBy: B => K)(merge: (K, A, B) => Merge) =
-        {
-            val meByKey = t.map { a => connectBy(a) -> a }.toMap
-            val theyByKey = another.map { a => connectBy(a) -> a }.toMap
-            
-            val myKeys = meByKey.keySet
-            val theirKeys = theyByKey.keySet
-            
-            val onlyInMe = (myKeys -- theirKeys).toVector.map { meByKey(_) }
-            val onlyInThem = (theirKeys -- myKeys).toVector.map { theyByKey(_) }
-            val merged = (myKeys & theirKeys).toVector.map { key => merge(key, meByKey(key), theyByKey(key)) }
-            
-            (onlyInMe, merged, onlyInThem)
-        }
-    
-        /**
-          * Performs the specified mapping function until it succeeds or until all items in this collection have been
-          * tested
-          * @param f A mapping function which may fail
-          * @tparam B Type of map function result
-          * @return The first successful map result or failure if none of the items in this collection could be mapped
-          */
-        def tryFindMap[B](f: A => Try[B]) =
-        {
-            val iter = t.iterator.map(f)
-            if (iter.hasNext)
-            {
-                // Returns the first result if its a success or if no successes were found
-                val firstResult = iter.next()
-                if (firstResult.isSuccess)
-                    firstResult
-                else
-                    iter.find { _.isSuccess }.getOrElse(firstResult)
-            }
-            else
-                Failure(new NoSuchElementException("Called tryFindMap on an empty collection"))
-        }
-    
-        /**
-          * @param items Items to test
-          * @tparam O Type of items collection
-          * @return Whether this collection of items contains all of the specified items
-          */
-        def containsAll[O >: A](items: Iterable[O]) = items.forall { item => t.exists { _ == item } }
-    }
-    
-    implicit class RichIterableLike[A, CC[X], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
-    {
-        /**
-          * Divides the items in this Iterable into two groups, based on boolean result
-          * @param f A function that separates the items
-          * @param factory An implicit factory
-          * @return The 'false' group, followed by the 'true' group
-          */
-        def divideBy(f: A => Boolean)(implicit factory: Factory[A, Repr]) =
-        {
-            val groups = t.groupBy(f)
-            groups.getOrElse(false, factory.newBuilder.result()) -> groups.getOrElse(true, factory.newBuilder.result())
-        }
-        
-        /**
-         * Performs an operation for each item in this collection. Stops if an operation fails.
-         * @param f A function that takes an item and performs an operation that may fail
-         * @return Failure if any of the operations failed, success otherwise.
-         */
-        def tryForEach(f: A => Try[Any]): Try[Any] = t.view.map(f).find { _.isFailure }.getOrElse(Success[Unit](()))
-        
-        /**
-         * @return An iterator that keeps repeating over and over (iterator continues infinitely or until this
-         *         collection is empty)
-         */
-        def repeatingIterator(): Iterator[A] = new RepeatingIterator[A, CC](t)
-    }
-    
-    implicit class RichIterableLike2[A, CC[X] <: IterableOps[X, CC, CC[X]], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
-    {
-        /**
-         * Iterates through the items in this iterable along with another iterable's items. Will stop when either
-         * iterable runs out of items
-         * @param another Another iterable
-         * @param f A function that handles the items
-         * @tparam B The type of another iterable's items
-         * @tparam U Arbitrary result type
-         */
-        def foreachWith[B, U](another: Iterable[B])(f: (A, B) => U) = t.zip(another).foreach { p => f(p._1, p._2) }
-    }
-    
     implicit class RichMap[K, V](val m: Map[K, V]) extends AnyVal
     {
         /**
@@ -666,349 +1037,6 @@ object CollectionExtensions
             val ourPart = inBoth.map { k => k -> merge(m(k), another(k)) }.toMap
             
             myPart ++ theirPart ++ ourPart
-        }
-    }
-    
-    implicit class RichIterator[A](val i: Iterator[A]) extends AnyVal
-    {
-        /**
-         * Enables polling on this iterator. This method yields a new iterator.
-         * This iterator shouldn't be used after the copy has been acquired. Only the pollable copy of this
-         * iterator should be used afterwards.
-         * @return A copy of this iterator that allows polling (checking of the next item without advancing)
-         */
-        def pollable = new PollingIterator[A](i)
-        
-        /**
-          * Finds the last item accessible from this iterator. Consumes all items in this iterator.
-          * @throws NoSuchElementException If this iterator is empty
-          * @return The last item in this iterator
-          */
-        @throws[NoSuchElementException]("If this iterator is empty")
-        def last =
-        {
-            var current = i.next()
-            while (i.hasNext)
-            {
-                current = i.next()
-            }
-            current
-        }
-    
-        /**
-          * @return The last item accessible in this iterator. None if this iterator didn't have any items remaining.
-          */
-        def lastOption =
-        {
-            if (i.hasNext)
-                Some(last)
-            else
-                None
-        }
-        
-        /**
-          * Performs the specified operation for the next 'n' items. This will advance the iterator n-steps
-          * (although limited by number of available items)
-          * @param n The maximum number of iterations / items handled
-          * @param operation Operation called for each handled item
-          * @tparam U Arbitrary operation result type (not used)
-          * @return Whether the full 'n' items were handled. If false, the end of this iterator was reached.
-          */
-        def forNext[U](n: Int)(operation: A => U) =
-        {
-            var consumed = 0
-            while (i.hasNext && consumed < n)
-            {
-                operation(i.next())
-                consumed += 1
-            }
-            
-            consumed == n
-        }
-    
-        /**
-          * Collects the next 'n' items from this iterator, advancing it up to 'n' elements. The number of available
-          * items may be smaller, in case all remaining items are returned.
-          * @param n Number of items to collect
-          * @return Collected items
-          */
-        def takeNext(n: Int) =
-        {
-            var consumed = 0
-            val builder = new VectorBuilder[A]()
-            while (i.hasNext && consumed < n)
-            {
-                builder += i.next()
-                consumed += 1
-            }
-            
-            builder.result()
-        }
-    
-        /**
-          * Consumes items until a specific condition is met
-          * @param condition A search condition
-          * @return The first item in this iterator that fulfills the condition.
-          *         None if none of the items in this iterator fulfilled the condition.
-          */
-        def nextWhere(condition: A => Boolean) =
-        {
-            if (i.hasNext)
-            {
-                var current = i.next()
-                var foundResult = condition(current)
-                while (!foundResult && i.hasNext)
-                {
-                    current = i.next()
-                    foundResult = condition(current)
-                }
-                if (foundResult)
-                    Some(current)
-                else
-                    None
-            }
-            else
-                None
-        }
-    
-        /**
-         * Returns the next result that can be mapped to a specific value.
-         * After method call, this iterator will be placed at the item following the successfully mapped item.
-         * @param map A mapping function
-         * @tparam B Type of map result when one is found
-         * @return The first map result found. None if no map result could be acquired.
-         */
-        def findMapNext[B](map: A => Option[B]) =
-        {
-            var current: Option[B] = None
-            while (current.isEmpty && i.hasNext)
-            {
-                current = map(i.next())
-            }
-            current
-        }
-    
-        /**
-         * Groups this iterator and performs the specified operation for each of the collected groups.
-         * Differs from .group(...).foreach(...) in that this method acts on all of the items in this iterator
-         * without discarding the possible smaller group at the end
-         * @param maxGroupSize Maximum number of items for a function call
-         * @param f A function that is called for each group of items
-         */
-        def foreachGroup(maxGroupSize: Int)(f: Vector[A] => Unit) =
-        {
-            while (i.hasNext)
-            {
-                f(takeNext(maxGroupSize))
-            }
-        }
-        
-        /**
-          * Maps the items in this iterator, one group at a time
-          * @param groupSize The maximum size of an individual group of items to map
-          * @param map a mapping function applied to groups of items
-          * @tparam B Type of map result
-          * @return All map results in order
-          */
-        def groupMap[B](groupSize: Int)(map: Vector[A] => B) =
-        {
-            val resultBuilder = new VectorBuilder[B]()
-            foreachGroup(groupSize) { resultBuilder += map(_) }
-            resultBuilder.result()
-        }
-    
-        /**
-         * Groups the <b>consecutive</b> items in this iterator using the specified grouping function.
-         * The resulting iterator returns items as groups based on the group function result.
-         * @param f A grouping function
-         * @tparam G Type of group identifier
-         * @return An iterator that returns groups of consecutive items, including the group identifiers
-         */
-        def groupBy[G](f: A => G) = GroupIterator(i)(f)
-    
-        /**
-         * Maps this iterator with a function that can fail. Handles failures by catching them.
-         * @param f A mapping function
-         * @param handleError Function called for each encountered error
-         * @tparam B Type of successful map result
-         * @return Iterator of the mapped items
-         */
-        def mapCatching[B](f: A => Try[B])(handleError: Throwable => Unit) =
-        {
-            i.flatMap { original =>
-                f(original) match
-                {
-                    case Success(item) => Some(item)
-                    case Failure(error) =>
-                        handleError(error)
-                        None
-                }
-            }
-        }
-    }
-    
-    class IterableOnceOperations[Repr, I <: IsIterableOnce[Repr]](coll: Repr, iter: I)
-    {
-        /**
-          * Filters this collection so that only distinct values remain. Uses a special function to determine equality
-          * @param equals A function that determines whether two values are equal
-          * @param buildFrom Builder for the new collection
-          * @return A collection with only distinct values (when considering the provided 'equals' function)
-          */
-        def distinctWith(equals: (iter.A, iter.A) => Boolean)(implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
-        {
-            val iterOps = iter(coll)
-            val builder = buildFrom.newBuilder(coll)
-            val collected = mutable.HashSet[iter.A]()
-        
-            iterOps.iterator.foreach { item =>
-                if (!collected.exists { e => equals(e, item) })
-                {
-                    builder += item
-                    collected += item
-                }
-            }
-        
-            builder.result()
-        }
-    
-        /**
-          * Filters this collection so that only distinct values remain. Compares the values by mapping them.
-          * @param f A mapping function to produce comparable values
-          * @param buildFrom A builder (implicit) to build the final collection
-          * @tparam B Map target type
-          * @return A collection with only distinct values (based on mapping)
-          */
-        def distinctBy[B](f: iter.A => B)(implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
-            distinctWith { (a, b) => f(a) == f(b) }
-    
-        /**
-          * This function works like foldLeft, except that it stores each step (including the start) into a seq
-          * @param start The starting step
-          * @param map A function for calculating the next step, takes the previous result + the next item in this seq
-          * @param buildFrom A buildfrom for final collection (implicit)
-          * @tparam B The type of steps
-          * @tparam That The type of final collection
-          * @return All of the steps mapped into a collection
-          */
-        def foldMapLeft[B, That](start: B)(map: (B, iter.A) => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
-        {
-            val builder = buildFrom.newBuilder(coll)
-            var last = start
-            builder += last
-        
-            val iterOps = iter(coll)
-            iterOps.iterator.foreach { item =>
-                last = map(last, item)
-                builder += last
-            }
-        
-            builder.result()
-        }
-        
-        // Referenced from: https://stackoverflow.com/questions/22090371/scala-grouping-list-of-tuples [10.10.2018]
-        /**
-          * Converts this iterable item to a map with possibly multiple values per key
-          * @param toKey A function for mapping items to keys
-          * @param toValue A function for mapping items to values
-          * @param bf Implicit build from for the final values collections
-          * @tparam Key Type of key in the final map
-          * @tparam Value Type of individual values in the final map
-          * @tparam Values Type of values collections in the final map
-          * @return A multi map based on this iteration mapping
-          */
-        def toMultiMap[Key, Value, Values](toKey: iter.A => Key)(toValue: iter.A => Value)(
-            implicit bf: BuildFrom[Repr, Value, Values]): Map[Key, Values] = toMultiMap { a => toKey(a) -> toValue(a) }
-    
-        /**
-          * Converts this iterable item to a map with possibly multiple values per key
-          * @param f A function for mapping items to key value pairs
-          * @param bf Implicit build from for the final values collections
-          * @tparam Key Type of key in the final map
-          * @tparam Value Type of individual values in the final map
-          * @tparam Values Type of values collections in the final map
-          * @return A multi map based on this iteration mapping
-          */
-        def toMultiMap[Key, Value, Values](f: iter.A => (Key, Value))(implicit bf: BuildFrom[Repr, Value, Values]): Map[Key, Values] =
-        {
-            val buffer = mutable.Map.empty[Key, mutable.Builder[Value, Values]]
-            val iterOps = iter(coll)
-            iterOps.iterator.foreach { item =>
-                val (key, value) = f(item)
-                buffer.getOrElseUpdate(key, bf.newBuilder(coll)) += value
-            }
-            buffer.view.mapValues { _.result() }.toMap
-        }
-    
-        /**
-          * Maps the contents of this Iterable. Mapping may fail, interrupting all remaining mappings
-          * @param f A mapping function. May fail.
-          * @param bf A build from for the final collection (implicit)
-          * @tparam B Type of map result
-          * @tparam To Type of final collection
-          * @return Mapped collection if all mappings succeeded. Failure otherwise.
-          */
-        def tryMap[B, To](f: iter.A => Try[B])(implicit bf: BuildFrom[Repr, B, To]): Try[To] =
-        {
-            val buffer = bf.newBuilder(coll)
-            // Maps items until the mapping function fails
-            val iterOps = iter(coll)
-            val finalResult = iterOps.iterator.map(f).find { result =>
-                result.toOption.foreach { buffer += _ }
-                result.isFailure
-            }.getOrElse(Success(()))
-            
-            finalResult.map { _ => buffer.result() }
-        }
-    }
-    
-    implicit def iterableOnceOperations[Repr](coll: Repr)(implicit iter: IsIterableOnce[Repr]): IterableOnceOperations[Repr, iter.type] =
-        new IterableOnceOperations(coll, iter)
-    
-    implicit class RichIterableOnce[A](val i: IterableOnce[A]) extends AnyVal
-    {
-        /**
-          * Maps items until a concrete result is found, then returns that result
-          * @param map A mapping function that maps to either Some or None
-          * @tparam B The map target type
-          * @return The first item that was mapped to Some. None if all items were mapped to None.
-          */
-        def findMap[B](map: A => Option[B]) = i.iterator.map(map).find { _.isDefined }.flatten
-        
-        /**
-         * Divides / maps the items in this collection to two groups
-         * @param f A function for separating / mapping the items
-         * @tparam L Type of left group items
-         * @tparam R Type of right group items
-         * @return Left group and right group
-         */
-        def dividedWith[L, R](f: A => Either[L, R]) =
-        {
-            val lBuilder = new VectorBuilder[L]
-            val rBuilder = new VectorBuilder[R]
-            i.iterator.map(f).foreach {
-                case Left(l) => lBuilder += l
-                case Right(r) => rBuilder += r
-            }
-            lBuilder.result() -> rBuilder.result()
-        }
-    
-        /**
-         * Maps the items in this collection into two different collections
-         * @param f A mapping function that produces two results (left -> right) for each item
-         * @tparam L Type of left result item
-         * @tparam R Type of right result item
-         * @return Left results -> right results
-         */
-        def splitMap[L, R](f: A => (L, R)) =
-        {
-            val lBuilder = new VectorBuilder[L]
-            val rBuilder = new VectorBuilder[R]
-            i.iterator.map(f).foreach { case (l, r) =>
-                lBuilder += l
-                rBuilder += r
-            }
-            lBuilder.result() -> rBuilder.result()
         }
     }
     
@@ -1140,6 +1168,27 @@ object CollectionExtensions
             }
             lastEnd = actualEnd
             start to actualEnd
+        }
+    }
+    
+    private class TakeToIterator[+A](source: Iterator[A])(condition: A => Boolean) extends Iterator[A]
+    {
+        // ATTRIBUTES   ---------------------------
+        
+        private var closed = false
+        
+        
+        // IMPLEMENTED  ---------------------------
+        
+        override def hasNext = !closed && source.hasNext
+    
+        override def next() =
+        {
+            val item = source.next()
+            // Closes this iterator once the condition is fulfilled once
+            if (condition(item))
+                closed = true
+            item
         }
     }
 }

@@ -202,6 +202,8 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 	
 	private object RadioButtonDrawer extends CustomDrawer
 	{
+		override def opaque = false
+		
 		override def drawLevel = Normal
 		
 		override def draw(drawer: Drawer, bounds: Bounds) =

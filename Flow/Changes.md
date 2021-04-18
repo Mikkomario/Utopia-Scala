@@ -1,5 +1,10 @@
 # Utopia Flow - List of Changes
 
+## v1.9.1 (in development)
+### New Methods
+- **IterableOnce** (**CollectionExtensions**)
+  - `.takeTo(...)` - Works somewhat like `.takeWhile(...)`, but will include the terminating item
+
 ## v1.9 - 17.4.2021
 In this update Flow got a number of new utility updates, including a range of new classes. 
 Various extensions also were expanded to contain a wider range of utility methods.

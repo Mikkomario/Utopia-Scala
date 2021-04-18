@@ -1,4 +1,10 @@
 # Utopia Reflection - List of Changes
+
+## v2.0 (in development)
+### Breaking Changes
+- **CustomDrawer** implementations must now specify `.opaque: Boolean`. 
+  This is used in component transparency calculations
+
 ## v2.0-alpha (incomplete update) - 17.4.2021
 v2.0 update is still in development, but the module is completely usable.  
 

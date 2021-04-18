@@ -177,6 +177,8 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 	{
 		override def drawLevel = Normal
 		
+		override def opaque = false
+		
 		// Draws the game world items with scaling
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{

@@ -199,6 +199,8 @@ class ContainerSelectionManager[A, C <: Stackable with Refreshable[A]]
 	{
 		override def drawLevel = selectionAreaDrawer.drawLevel
 		
+		override def opaque = false
+		
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			// Draws the selected area using another custom drawer

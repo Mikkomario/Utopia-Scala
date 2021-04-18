@@ -200,6 +200,8 @@ class CheckBox(parentHierarchy: ComponentHierarchy, onImage: Image, offImage: Im
 	{
 		override def drawLevel = Background
 		
+		override def opaque = false
+		
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{
 			// Calculates draw alpha (if any)

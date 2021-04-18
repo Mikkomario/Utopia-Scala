@@ -20,6 +20,8 @@ trait BackgroundDrawerLike extends CustomDrawer
 	
 	// IMPLEMENTED	-------------------------
 	
+	override def opaque = color.opaque
+	
 	override def draw(drawer: Drawer, bounds: Bounds) =
 	{
 		val targetBounds = drawer.clipBounds match

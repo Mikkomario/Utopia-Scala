@@ -55,6 +55,8 @@ trait TextDrawerLike extends CustomDrawer
 	
 	// IMPLEMENTED	-----------------------------
 	
+	override def opaque = false
+	
 	override def draw(drawer: Drawer, bounds: Bounds) =
 	{
 		drawnText match

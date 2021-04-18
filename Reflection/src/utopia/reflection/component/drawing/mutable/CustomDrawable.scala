@@ -52,9 +52,12 @@ trait CustomDrawable
 	/**
 	  * Wraps a function into a custom drawer and adds it to this component
 	  * @param drawLevel Target draw level (default = normal)
+	  * @param opaque Whether this drawer fills the whole target bounds with 100% alpha paint
+	  *               (can't be seen through). Default = false.
 	  * @param f A drawing function
 	  */
-	def addCustomDrawer(drawLevel: DrawLevel = Normal)(f: (Drawer, Bounds) => Unit): Unit = addCustomDrawer(CustomDrawer(drawLevel)(f))
+	def addCustomDrawer(drawLevel: DrawLevel = Normal, opaque: Boolean = false)(f: (Drawer, Bounds) => Unit): Unit =
+		addCustomDrawer(CustomDrawer(drawLevel, opaque)(f))
 	
 	/**
 	  * Performs the custom draw

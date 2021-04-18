@@ -108,6 +108,8 @@ class ImageLabel(initialImage: Image, alwaysFillArea: Boolean = true, allowUpsca
 	
 	private class ImageDrawer extends CustomDrawer
 	{
+		override def opaque = false
+		
 		override def drawLevel = Normal
 		
 		override def draw(drawer: Drawer, bounds: Bounds) =
