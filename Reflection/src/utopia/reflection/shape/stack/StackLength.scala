@@ -1,6 +1,7 @@
 package utopia.reflection.shape.stack
 
 import utopia.flow.util.Equatable
+import utopia.flow.util.CollectionExtensions._
 import utopia.reflection.shape.stack.LengthPriority.{Expanding, Low, Normal, Shrinking}
 
 object StackLength
@@ -11,7 +12,6 @@ object StackLength
 	  * A stack length that allows any value (from 0 and up, preferring 0)
 	  */
 	val any = new StackLength(0, 0, None)
-	
 	/**
 	  * A stack length that allows only 0
 	  */
@@ -29,7 +29,6 @@ object StackLength
 	  */
     def apply(min: Double, optimal: Double, max: Option[Double] = None,
 			  priority: LengthPriority = Normal) = new StackLength(min, optimal, max, priority)
-	
 	/**
 	  * @param min Minimum length
 	  * @param optimal Optimal length
@@ -43,33 +42,28 @@ object StackLength
 	  * @return A new stack length with min, optimal and max set to specified single value (no variance)
 	  */
     def fixed(l: Double) = apply(l, l, l)
-	
 	/**
 	  * @param optimal Optimal length
 	  * @return A stack length with no minimum or maximum, preferring specified value
 	  */
     def any(optimal: Double) = apply(0, optimal)
-	
 	/**
 	  * @param min Minimum length
 	  * @param optimal Optimal length
 	  * @return A stack length with no maximum
 	  */
     def upscaling(min: Double, optimal: Double) = apply(min, optimal)
-	
 	/**
 	  * @param optimal Minimum & Optimal length
 	  * @return A stack length with no maximum, preferring the minimum value
 	  */
     def upscaling(optimal: Double): StackLength = upscaling(optimal, optimal)
-	
 	/**
 	  * @param optimal Optimal length
 	  * @param max Maximum length
 	  * @return A stack length with no minimum
 	  */
     def downscaling(optimal: Double, max: Double) = apply(0, optimal, max)
-	
 	/**
 	  * @param max Maximum length
 	  * @return A stack length with no miminum, preferring the maximum length
@@ -78,6 +72,37 @@ object StackLength
 	
 	
 	// OTHER	--------------------------
+	
+	/**
+	  * Combines the specified lengths into a value that best suits all of them
+	  * @param lengths Lengths to combine
+	  * @return A combination of these lengths
+	  */
+	def combine(lengths: Seq[StackLength]) =
+	{
+		if (lengths.isEmpty)
+			any
+		else if (lengths.size == 1)
+			lengths.head
+		else if (lengths.size == 2)
+			lengths.head combineWith lengths(1)
+		else
+		{
+			val newMin = lengths.map { _.min }.max
+			val newMax = lengths.flatMap { _.max }.minOption
+			
+			// May pick the smaller optimal length in case the larger optimal is easily shrank
+			val newOptimal = lengths.bestMatch(Vector(l => !l.priority.shrinksFirst)).map { _.optimal }.max
+			// Uses the strictest available priority
+			val newPriority = lengths.map { _.priority }.reduce { _ max _ }
+			
+			// Optimal is limited by maximum length
+			if (newMax.exists { _ < newOptimal })
+				StackLength(newMin, newMax.get, newMax, newPriority)
+			else
+				StackLength(newMin, newOptimal, newMax, newPriority)
+		}
+	}
 	
 	// Attempts to intelligently combine the two length priorities. Prefers to minimize priority where reasonable
 	private def combinedPriority(newMin: Double, newOptimal: Double, newMax: Option[Double], firstOptimal: Double,
@@ -242,7 +267,6 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * @return An increased version of this stack length (min, optimal and max adjusted, if present)
 	  */
 	def +(length: Double) = map { _ + length }
-	
 	/**
 	  * @param other Another stack length
 	  * @return A combination of these stack sizes where minimum, optimal and maximum (if present) values are increased
@@ -263,7 +287,6 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 		val newMax = if (max.isDefined && other.max.isDefined) Some(max.get - other.max.get) else None
 		StackLength(min - other.min, optimal - other.optimal, newMax, priority)
 	}
-	
 	/**
 	  * @param length A decrease in length
 	  * @return A decreased version of this stack length (min, optimal and max adjusted, if present). Minimum won't go below 0
@@ -314,7 +337,6 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  */
 	def withPriority(newPriority: LengthPriority) =
 		if (priority == newPriority) this else copy(newPriority = newPriority)
-	
 	/**
 	  * @param f A function for mapping priority
 	  * @return A copy of this length with mapped priority
@@ -326,19 +348,16 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * @return An updated version of this length with specified minimum value (optimal and max may also be adjusted if necessary)
 	  */
 	def withMin(newMin: Double) = copy(newMin = newMin)
-	
 	/**
 	  * @param newOptimal A new optimal value
 	  * @return An updated version of this length with specified optimum value (maximum may also be adjusted if necessary)
 	  */
 	def withOptimal(newOptimal: Double) = copy(newOptimal = newOptimal)
-	
 	/**
 	  * @param newMax A new maximum value (None if no maximum)
 	  * @return An updated version of this length with specified maximum length
 	  */
 	def withMax(newMax: Option[Double]) = copy(newMax = newMax)
-	
 	/**
 	  * @param newMax A new maximum value
 	  * @return An updated version of this length with specified maximum length
@@ -379,7 +398,6 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 		
 		StackLength(newMin, newOptimal, newMax, newPriority)
 	}
-	
 	/**
 	  * @param other Another stack length
 	  * @return A maximum between this length and the other (min, optimal and max will be picked from the maximum value)
@@ -403,7 +421,6 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 		
 		StackLength(newMin, newOptimal, newMax, newPriority)
 	}
-	
 	/**
 	 * Combines two stack sizes to one which supports both limits
 	 */
@@ -426,11 +443,23 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 			optimal, priority, other.optimal, other.priority)
 		
 		// Optimal is limited by maximum length
-	    if (newMax exists { _ < newOptimal })
+	    if (newMax.exists { _ < newOptimal })
 	        StackLength(newMin, newMax.get, newMax, newPriority)
 	    else
 	        StackLength(newMin, newOptimal, newMax, newPriority)
 	}
+	
+	/**
+	  * @param minimum Minimum length
+	  * @param maximum Maximum length
+	  * @return Whether this length supports a value within that range
+	  */
+	def fitsWithin(minimum: Double, maximum: Double) = max.forall { _ <= minimum } && min <= maximum
+	/**
+	  * @param other Another stack length
+	  * @return Whether there exists a value that fulfils the requirements of both of these lengths
+	  */
+	def fitsWithin(other: StackLength) = other.max.forall { min <= _ } && max.forall { other.min <= _ }
 	
 	/**
 	  * @param maximum New maximum length
@@ -452,7 +481,6 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 		
 		StackLength(newMin, newOptimal, Some(newMax), newPriority)
 	}
-	
 	/**
 	  * Creates a new stack length that is within the specified limits
 	  * @param minimum Minimum limit
@@ -473,7 +501,6 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 				StackLength(newMin, newOptimal, newMax, newPriority)
 		}
 	}
-	
 	/**
 	  * Creates a new stack length that is within the specified limits
 	  * @param minimum Minimum limit
@@ -491,7 +518,6 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 		
 		StackLength(newMin, newOptimal, Some(newMax), newPriority)
 	}
-	
 	/**
 	  * Creates a new stack length that is within the specified limits
 	  * @param limits The limits applied to this length
@@ -526,13 +552,11 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * @return A new length with mapped min
 	  */
 	def mapMin(map: Double => Double) = withMin(map(min))
-	
 	/**
 	  * @param map A mapping function
 	  * @return A new length with mapped optimal
 	  */
 	def mapOptimal(map: Double => Double) = withOptimal(map(optimal))
-	
 	/**
 	  * @param map A mapping function
 	  * @return A new length with mapped maximum value

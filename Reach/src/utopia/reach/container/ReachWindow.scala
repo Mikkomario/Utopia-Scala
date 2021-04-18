@@ -4,23 +4,27 @@ import utopia.flow.async.ChangeFuture
 import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.event.{AlwaysFalse, ChangeDependency, ChangeListener, Changing, ChangingLike}
 import utopia.flow.util.CollectionExtensions._
-import utopia.reach.component.template.ReachComponentLike
-import utopia.reach.component.wrapper.OpenComponent
 
 import scala.concurrent.{ExecutionContext, Promise}
+
+// TODO: Create constructor
 
 /**
   * A simulated window within a reach canvas
   * @author Mikko Hilpinen
   * @since 6.2.2021, v0.1
   */
-class ReachWindow(content: OpenComponent[ReachComponentLike, _], visibilityPointer: ChangingLike[Boolean])
-				 (implicit exc: ExecutionContext)
+// TODO: Likely remove this class entirely
+class ReachWindow private(visibilityPointer: ChangingLike[Boolean])
+                         (makeContent: ChangingLike[Boolean] => ReachCanvas2)
+                         (implicit exc: ExecutionContext)
 {
 	// ATTRIBUTES	-------------------------------
 	
 	private var open = false
 	private val closePromise = Promise[Unit]()
+	
+	val canvas = makeContent(WindowConnectionState)
 	
 	
 	// INITIAL CODE	-------------------------------
@@ -35,17 +39,13 @@ class ReachWindow(content: OpenComponent[ReachComponentLike, _], visibilityPoint
 	
 	def display() =
 	{
-		if (!open)
-		{
-			open = true
-			content.hierarchy.lockToTop(WindowConnectionState)
-			// TODO: Handle focus acquisition
-		}
+		// TODO: implement
 	}
 	
 	
 	// NESTED	-----------------------------------
 	
+	// TODO: Change state to false until displayed
 	private object WindowConnectionState extends Changing[Boolean]
 	{
 		// ATTRIBUTES	---------------------------

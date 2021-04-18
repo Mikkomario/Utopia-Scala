@@ -144,6 +144,14 @@ trait ReachComponentLike extends Stackable2
 	def isChildOf(hierarchy: ComponentHierarchy) = parentHierarchy.isChildOf(hierarchy)
 	
 	/**
+	  * @param parent A component higher up in this component's hierarchy
+	  * @return This component's position within that component's coordinate system. None if this component is
+	  *         not a child of that component.
+	  */
+	def positionRelativeTo(parent: ReachComponentLike) =
+		parentHierarchy.positionInComponentModifier(parent).map { position + _ }
+	
+	/**
 	  * Indicates that this component's and its hierarchy's layout should be updated
 	  */
 	def revalidate() =

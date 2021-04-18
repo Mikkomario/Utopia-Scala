@@ -268,7 +268,6 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @return The coordinate of the top-left corner of these bounds along the specified axis
       */
     def minAlong(axis: Axis2D) = position.along(axis)
-    
     /**
       * Finds the maximum coordinate along specified axis (assuming positive size of these bounds)
       * @param axis Targeted axis
@@ -287,7 +286,6 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
         val rounding = math.min(width, height) * roundingFactor
         new RoundRectangle2D.Double(position.x, position.y, width, height, rounding, rounding)
     }
-    
     /**
       * Creates a rounded rectangle based on this rectangle shape
       * @param radius The radius to use when drawing the corners
@@ -302,12 +300,10 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
      * Checks whether the line completely lies within the rectangle bounds
      */
     def contains(line: Line): Boolean = contains(line.start) && contains(line.end)
-    
     /**
      * Checks whether a set of bounds is contained within this bounds' area
      */
     def contains(bounds: Bounds): Boolean = contains(bounds.topLeft) && contains(bounds.bottomRight)
-    
     /**
      * Checks whether a circle completely lies within the rectangle's bounds when the z-axis is 
      * ignored
@@ -325,7 +321,6 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
      * Finds the intersection points between the edges of this rectangle and the provided circle
      */
     def circleIntersection(circle: Circle) = sides.flatMap { _.circleIntersection(circle) }
-    
     /**
      * Finds the intersection points between the edges of this rectangle and the provided line. 
      * Both shapes are projected to the x-y plane before the check.
@@ -338,7 +333,6 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @return A copy of these bounds with same center but increased size
       */
     def enlarged(enlargement: Size) = Bounds(position - enlargement / 2, size + enlargement)
-    
     /**
       * Enlarges these bounds from the center
       * @param widthIncrease The increase in width
@@ -353,7 +347,6 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @return A copy of these bounds with same center but decreased size
       */
     def shrinked(shrinking: Size) = enlarged(-shrinking)
-    
     /**
       * Shrinks these bounds from the center
       * @param widthDecrease The decrease in width
@@ -367,25 +360,21 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
       * @return A copy of these bounds with specified position
       */
     def withPosition(p: Point) = Bounds(p, size)
-    
     /**
       * @param s New size
       * @return A copy of these bounds with specified size
       */
     def withSize(s: Size) = Bounds(position, s)
-    
     /**
       * @param w New width
       * @return A copy of these bounds with specified width
       */
     def withWidth(w: Double) = withSize(Size(w, height))
-    
     /**
       * @param h New height
       * @return A copy of these bounds with specified height
       */
     def withHeight(h: Double) = withSize(Size(width, h))
-    
     /**
       * @param map A mapping function for position
       * @return A copy of these bounds with mapped position
@@ -421,31 +410,68 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     }
     
     /**
+      * Fits these bounds to the specified area. Alters the size and position as little as possible.
+      * Prefers to move position instead of changing size.
+      * @param area Target area
+      * @return These bounds fitted to the specified area.
+      */
+    def fittedInto(area: Bounds) =
+    {
+        // Case: Already fits
+        if (area.contains(this))
+            this
+        // Case: Only position needs to be adjusted
+        else if (size.fitsInto(area.size))
+        {
+            val newPosition = Point.calculateWith { axis =>
+                if (maxAlong(axis) > area.maxAlong(axis))
+                    area.maxAlong(axis) - size.along(axis)
+                else if (minAlong(axis) < area.minAlong(axis))
+                    area.position.along(axis)
+                else
+                    position.along(axis)
+            }
+            withPosition(newPosition)
+        }
+        // Case: Only height (and possibly x) needs to be adjusted
+        else if (width <= area.width)
+        {
+            val newX = if (rightX >= area.rightX) area.rightX - width else if (x <= area.x) area.x else x
+            Bounds(Point(newX, area.y), Size(width, area.height))
+        }
+        // Case: Only width (and possibly y) needs to be adjusted
+        else if (height <= area.height)
+        {
+            val newY = if (bottomY >= area.bottomY) area.bottomY - height else if (y <= area.y) area.y else y
+            Bounds(Point(area.x, newY), Size(area.width, height))
+        }
+        // Case: Both height and width need to be shrunk
+        else
+            area
+    }
+    
+    /**
       * @param maxHeight Maximum height of resulting bounds
       * @return A top part of these bounds with up to a specific height
       */
     def topSlice(maxHeight: Double) = if (height <= maxHeight) this else withHeight(maxHeight)
-    
     /**
       * @param maxHeight Maximum height of resulting bounds
       * @return A bottom part of these bounds with up to a specific height
       */
     def bottomSlice(maxHeight: Double) = if (height <= maxHeight) this else
         Bounds(position.plusY(height - maxHeight), Size(width, maxHeight))
-    
     /**
       * @param maxWidth Maximum width of resulting bounds
       * @return A leftmost part of these bounds with up to a specific width
       */
     def leftSlice(maxWidth: Double) = if (width <= maxWidth) this else withWidth(maxWidth)
-    
     /**
       * @param maxWidth Maximum width of resulting bounds
       * @return A rightmost part of these bounds with up to a specific width
       */
     def rightSlice(maxWidth: Double) = if (width <= maxWidth) this else
         Bounds(position.plusX(width - maxWidth), Size(maxWidth, height))
-    
     /**
       * Slices these bounds from a specific direction
       * @param direction The direction from which these bounds are sliced

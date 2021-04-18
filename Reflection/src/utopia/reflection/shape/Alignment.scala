@@ -348,7 +348,6 @@ sealed trait Alignment
 	  * @return A version of this alignment that only affects the horizontal axis
 	  */
 	def horizontal: Alignment
-	
 	/**
 	  * @return A version of this alignment that only affects the vertical axis
 	  */
@@ -364,7 +363,6 @@ sealed trait Alignment
 	  *         specify a direction (centered)
 	  */
 	def horizontalDirection: Option[HorizontalDirection]
-	
 	/**
 	  * @return The direction this alignment will move the items vertically. None if this alignment doesn't
 	  *         specify a direction (centered)
@@ -378,7 +376,6 @@ sealed trait Alignment
 	  * @return Whether this alignment can be used for horizontal axis (X)
 	  */
 	def isHorizontal = supportedAxes.contains(X)
-	
 	/**
 	  * @return Whether this alignment can be used for vertical axis (Y)
 	  */
@@ -389,7 +386,6 @@ sealed trait Alignment
 	  *         or to neither direction
 	  */
 	def horizontalDirectionSign = horizontalDirection.map { _.sign }
-	
 	/**
 	  * @return Either positive, negative or None, based on whether this alignment will move items down, up
 	  *         or to neither direction

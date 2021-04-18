@@ -13,7 +13,6 @@ object StackSize
      * A stacksize that allows any value while preferring a zero size
      */
     val any: StackSize = any(Size.zero)
-    
     /**
      * A stack size that is always 0x0
      */
@@ -32,7 +31,6 @@ object StackSize
     def apply(min: Size, optimal: Size, maxWidth: Option[Double], maxHeight: Option[Double]) =
             new StackSize(StackLength(min.width, optimal.width, maxWidth),
             StackLength(min.height, optimal.height, maxHeight))
-    
     /**
       * @param min Minimum size
       * @param optimal Optimal size
@@ -41,7 +39,6 @@ object StackSize
       */
     def apply(min: Size, optimal: Size, max: Option[Size]): StackSize = apply(min, optimal, 
             max.map{ _.width }, max.map{ _.height })
-    
     /**
       * @param min Minimum size
       * @param optimal Optimal size
@@ -49,7 +46,6 @@ object StackSize
       * @return A new stack size
       */
     def apply(min: Size, optimal: Size, max: Size): StackSize = apply(min, optimal, Some(max))
-    
     /**
       * @param length Parallel stack length
       * @param breadth Perpendicular stack length
@@ -67,26 +63,22 @@ object StackSize
       * @return A new stack size with no mimimum or maximum
       */
     def any(optimal: Size) = StackSize(Size.zero, optimal, None)
-    
     /**
       * @param size Fixed size
       * @return A Stack size that is fixed to specified size
       */
     def fixed(size: Size) = StackSize(size, size, size)
-    
     /**
       * @param min Minimum size
       * @param optimal Optimal size
       * @return A stack size that has no maximum
       */
     def upscaling(min: Size, optimal: Size) = StackSize(min, optimal, None)
-    
     /**
       * @param optimal Optimal size
       * @return A stack size that has no maximum. Optimal is used as minimum.
       */
     def upscaling(optimal: Size): StackSize = upscaling(optimal, optimal)
-    
     /**
       * @param optimal Optimal size
       * @param maxWidth Maximum width
@@ -95,19 +87,29 @@ object StackSize
       */
     def downscaling(optimal: Size, maxWidth: Double, maxHeight: Double) = StackSize(Size.zero, optimal,
             Some(maxWidth), Some(maxHeight))
-    
     /**
       * @param optimal Optimal size
       * @param max Maximum size
       * @return A stack size with no minimum
       */
     def downscaling(optimal: Size, max: Size): StackSize = StackSize(Size.zero, optimal, max)
-    
     /**
       * @param max Maximum and optimal size
       * @return A stack size with no minimum. Max is used as optimal.
       */
     def downscaling(max: Size): StackSize = downscaling(max, max)
+    
+    /**
+      * @param side A function for building a stack length
+      * @return A stack size with builder function results
+      */
+    def build(side: Axis2D => StackLength) = apply(side(X), side(Y))
+    
+    /**
+      * @param sizes Sizes to combine
+      * @return A size that best suits all of the requirements
+      */
+    def combine(sizes: Seq[StackSize]) = build { axis => StackLength.combine(sizes.map { _.along(axis) }) }
 }
 
 /**
@@ -124,12 +126,10 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return Minimum size
       */
     def min = Size(width.min, height.min)
-    
     /**
       * @return Optimum size
       */
     def optimal = Size(width.optimal, height.optimal)
-    
     /**
       * @return Maximum size. None if not specified
       */
@@ -145,7 +145,6 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return The minimum width of this stack size
       */
     def minWidth = width.min
-    
     /**
       * @return The minimum height of this stack size
       */
@@ -155,7 +154,6 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return The optimal width of this stack size
       */
     def optimalWidth = width.optimal
-    
     /**
       * @return The optimal height of this stack size
       */
@@ -165,7 +163,6 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return The maximum width of this size. None if not specified.
       */
     def maxWidth = width.max
-    
     /**
       * @return The maximum heigth of this size. None if not specified.
       */
@@ -175,7 +172,6 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return A copy of this size with no width limits
       */
     def withAnyWidth = mapWidth { _.noLimits }
-    
     /**
       * @return A copy of this size with no height limits
       */
@@ -185,12 +181,10 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
      * @return A copy of this size with no maximum width
      */
     def withNoMaxWidth = if (width.hasMax) mapWidth { _.noMax } else this
-    
     /**
      * @return A copy of this size with no maximum height
      */
     def withNoMaxHeight = if (height.hasMax) mapHeight { _.noMax } else this
-    
     /**
      * @return A copy of this size with no maximum width or height
      */
@@ -200,12 +194,10 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return A copy of this size with low priority for both width and height
       */
     def withLowPriority = mapSides { _.withLowPriority }
-    
     /**
       * @return A copy of this size that is more easily shrinked
       */
     def shrinking = mapSides { _.shrinking }
-    
     /**
       * @return A copy of this size that is more easily expanded
       */
@@ -236,19 +228,16 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return An increased version of this size
       */
     def +(size: Size) = StackSize(width + size.width, height + size.height)
-    
     /**
       * @param other Another stack size
       * @return A sum of these two sizes (with combined min, optimal and max (if defined))
       */
     def +(other: StackSize) = StackSize(width + other.width, height + other.height)
-    
     /**
       * @param insets A set of insets
       * @return This size extended with the specified insets
       */
     def +(insets: StackInsets) = StackSize(width + insets.horizontal, height + insets.vertical)
-    
     /**
       * @param insets A set of insets
       * @return This size extended with the specified insets
@@ -291,7 +280,6 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return Length priority of this size for the specified axis
       */
     def priorityFor(axis: Axis2D) = along(axis).priority
-    
     /**
       * @param axis Target axis
       * @param adjustment Proposed adjustment
@@ -304,13 +292,11 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return A copy of this size with specified width
       */
     def withWidth(w: StackLength) = StackSize(w, height)
-    
     /**
       * @param h New height
       * @return A copy of this size with specified height
       */
     def withHeight(h: StackLength) = StackSize(width, h)
-    
     /**
       * @param side New length
       * @param axis Axis that specifies whether lenght is width or height
@@ -327,13 +313,11 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return A copy of this size with mapped width
       */
     def mapWidth(map: StackLength => StackLength) = withWidth(map(width))
-    
     /**
       * @param map A mapping function
       * @return A copy of this size with mapped height
       */
     def mapHeight(map: StackLength => StackLength) = withHeight(map(height))
-    
     /**
       * @param axis Target axis that determines mapped side
       * @param map A mapping function
@@ -344,7 +328,6 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
         case X => mapWidth(map)
         case Y => mapHeight(map)
     }
-    
     /**
       * Maps both sides of this stack size
       * @param map A mapping function
@@ -365,7 +348,6 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return A copy of this stack size with specified length priority on targeted axis
       */
     def withPriorityFor(priority: LengthPriority, axis: Axis2D) = mapSide(axis) { _.withPriority(priority) }
-    
     /**
       * @param axis Target axis
       * @return A copy of this size with low priority for specified axis
@@ -378,13 +360,11 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return A copy of this size with fixed length for specified side
       */
     def withFixedSide(length: Double, axis: Axis2D) = withSide(StackLength.fixed(length), axis)
-    
     /**
       * @param w New fixed width
       * @return A copy of this size with fixed width
       */
     def withFixedWidth(w: Double) = withFixedSide(w, X)
-    
     /**
       * @param h new fixed height
       * @return A copy of this size with fixed height
@@ -397,19 +377,16 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return A copy of this size with new maximum length for specified side
       */
     def withMaxSide(maxLength: Double, axis: Axis2D) = mapSide(axis) { _.withMax(maxLength) }
-    
     /**
       * @param maxW New maximum width
       * @return A copy of this size with specified maximum width
       */
     def withMaxWidth(maxW: Double) = withMaxSide(maxW, X)
-    
     /**
       * @param maxH New maximum height
       * @return A copy of this size with specified maximum height
       */
     def withMaxHeight(maxH: Double) = withMaxSide(maxH, Y)
-    
     /**
       * @param max New max size
       * @return A copy of this size with specified maximum
@@ -422,19 +399,16 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return A copy of this size with specified optimal length for the specified axis
       */
     def withOptimalSide(optimalLength: Double, axis: Axis2D) = mapSide(axis) { _.withOptimal(optimalLength) }
-    
     /**
       * @param optimalW New optimal width
       * @return A copy of this size with specified optimal width
       */
     def withOptimalWidth(optimalW: Double) = withOptimalSide(optimalW, X)
-    
     /**
       * @param optimalH New optimal height
       * @return A copy of this size with specified optimal height
       */
     def withOptimalHeight(optimalH: Double) = withOptimalSide(optimalH, Y)
-    
     /**
       * @param optimal New optimal size
       * @return A copy of this size with specified optimal size
@@ -447,19 +421,16 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return A copy of this size with specified minimum length for the specified axis
       */
     def withMinSide(minLength: Double, axis: Axis2D) = mapSide(axis) { _.withMin(minLength) }
-    
     /**
       * @param minW A new minimum width
       * @return A copy of this size with specified minimum width
       */
     def withMinWidth(minW: Double) = withMinSide(minW, X)
-    
     /**
       * @param minH A new minimum height
       * @return A copy of this size with specified minimum height
       */
     def withMinHeight(minH: Double) = withMinSide(minH, Y)
-    
     /**
       * @param min A new minimum size
       * @return A copy of this size with specified minimum size
@@ -477,16 +448,34 @@ case class StackSize(width: StackLength, height: StackLength) extends TwoDimensi
       * @return A minimum between these two sizes
       */
     def min(other: StackSize) = StackSize(width min other.width, height min other.height)
-    
     /**
       * @param other Another size
       * @return A maximum between these two sizes
       */
     def max(other: StackSize) = StackSize(width max other.width, height max other.height)
-    
     /**
       * @param other Another size
       * @return A combination of these sizes that fulfills constraints of both sizes
       */
     def combine(other: StackSize) = StackSize(width combineWith other.width, height combineWith other.height)
+    
+    /**
+      * @param minimum Minimum allowed size
+      * @param maximum Maximum allowed size
+      * @return Whether this stack size contains a value that fits within those limits
+      */
+    def fitsWithin(minimum: Size, maximum: Size) = Axis2D.values.forall { axis =>
+        along(axis).fitsWithin(minimum.along(axis), maximum.along(axis))
+    }
+    /**
+      * @param maximum Maximum allowed size
+      * @return Whether this stack size contains a value that fits under that maximum size
+      */
+    def fitsWithin(maximum: Size) = min.fitsInto(maximum)
+    /**
+      * @param limits Another stack size
+      * @return Whether there exists a value that fulfils both of these size requirements
+      */
+    def fitsWithin(limits: StackSize) = Axis2D.values
+        .forall { axis => along(axis).fitsWithin(limits.along(axis)) }
 }

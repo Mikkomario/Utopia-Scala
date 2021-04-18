@@ -85,8 +85,8 @@ class ReachCanvas private(contentFuture: Future[ReachComponentLike], cursors: Op
 	override var customDrawers = Vector[CustomDrawer]()
 	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
 	
-	private var layoutUpdateQueue = VolatileList[Seq[ReachComponentLike]]()
-	private var updateFinishedQueue = VolatileList[() => Unit]()
+	private val layoutUpdateQueue = VolatileList[Seq[ReachComponentLike]]()
+	private val updateFinishedQueue = VolatileList[() => Unit]()
 	
 	private val panel = new CustomDrawPanel()
 	

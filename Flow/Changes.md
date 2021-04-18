@@ -4,6 +4,8 @@
 ### New Methods
 - **IterableOnce** (**CollectionExtensions**)
   - `.takeTo(...)` - Works somewhat like `.takeWhile(...)`, but will include the terminating item
+- **TreeNode**
+  - Multiple new iterator methods
 
 ## v1.9 - 17.4.2021
 In this update Flow got a number of new utility updates, including a range of new classes. 

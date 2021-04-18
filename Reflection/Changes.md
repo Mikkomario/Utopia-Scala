@@ -4,6 +4,9 @@
 ### Breaking Changes
 - **CustomDrawer** implementations must now specify `.opaque: Boolean`. 
   This is used in component transparency calculations
+### New Methods
+- **StackLength**.type and **StackSize**.type
+  - `.combine(...)` for combining multiple stack lengths / sizes
 
 ## v2.0-alpha (incomplete update) - 17.4.2021
 v2.0 update is still in development, but the module is completely usable.  

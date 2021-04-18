@@ -6,6 +6,8 @@
 - There are other animation -related breaking changes also
 ### Deprecations
 - Deprecated `Color.isTransparent` in favor of `Color.transparent`
+### New Features
+- **SinePath** added
 ### New Methods
 - **Angle**.type
   - `.average(Iterable[Angle])`
