@@ -126,13 +126,11 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * Minimum length
 	  */
 	val min: Double = rawMin max 0
-	
 	/**
 	  * Optimal / preferred length
 	  */
 	// Optimal must be >= min
 	val optimal: Double = rawOptimal max min
-	
 	/**
 	  * Maximum length. None if not limited.
 	  */
@@ -151,12 +149,10 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * @return A version of this stack length that has low priority
 	  */
 	def withLowPriority = withPriority(Low)
-	
 	/**
 	  * @return A copy of this length with a priority that allows easier shrinking
 	  */
 	def shrinking = if (priority.shrinksFirst) this else withPriority(Shrinking)
-	
 	/**
 	  * @return A copy of this length with a priority that allows easier expanding
 	  */
@@ -166,12 +162,10 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * @return A version of this stack length that has no mimimum (set to 0)
 	  */
 	def noMin = withMin(0)
-	
 	/**
 	  * @return A version of this stack length that has no maximum
 	  */
 	def noMax = withMax(None)
-	
 	/**
 	  * @return A version of this stack length with no minimum or maximum
 	  */
@@ -181,7 +175,6 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * @return A version of this stack length with no maximum value (same as noMax)
 	  */
 	def upscaling = noMax
-	
 	/**
 	  * @return A version of this stack length with no mimimum value (same as noMin)
 	  */
@@ -196,21 +189,27 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * @return This stack length as an inset placed on the top of the area
 	  */
 	def top = StackInsets.top(this)
-	
 	/**
 	  * @return This stack length as an inset placed at the bottom of the area
 	  */
 	def bottom = StackInsets.bottom(this)
-	
 	/**
 	  * @return This stack length as an inset placed at the left side of the area
 	  */
 	def left = StackInsets.left(this)
-	
 	/**
 	  * @return This stack length as an inset placed at the right side of the area
 	  */
 	def right = StackInsets.right(this)
+	
+	/**
+	  * @return A copy of this length where all the values are rounded to the next full integer
+	  */
+	def ceil = copy(min.ceil, optimal.ceil, max.map { _.ceil })
+	/**
+	  * @return A copy of this length where all the values are rounded down to the full integer
+	  */
+	def floor = copy(min.floor, optimal.floor, max.map { _.floor })
 	
 	
 	// IMPLEMENTED    -----------------------

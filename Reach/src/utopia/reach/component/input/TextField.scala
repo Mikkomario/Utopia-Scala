@@ -93,6 +93,8 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 	  * @param inputValidation A function to possibly generate an error message based on the input (optional)
 	  * @param fillBackground Whether filled style should be used (default = global default)
 	  * @param showCharacterCount Whether character count should be displayed (default = false)
+	  * @param allowLineBreaks Whether line breaks (multi-line text) should be completely enabled in this field
+	  *                        (default = determined by component creation context)
 	  * @param parseResult A function for parsing the field value
 	  * @tparam A Type of field value
 	  * @return A new text field
@@ -113,12 +115,12 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 				 inputFilter: Option[Regex] = None,
 				 resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
 				 inputValidation: Option[A => LocalizedString] = None, fillBackground: Boolean = true,
-				 showCharacterCount: Boolean = false)
+				 showCharacterCount: Boolean = false, allowLineBreaks: Boolean = context.allowLineBreaks)
 				(parseResult: Option[String] => A) =
 		new TextField[A](parentHierarchy, defaultWidth, fieldNamePointer, promptPointer, hintPointer,
 			errorMessagePointer, textPointer, leftIconPointer, rightIconPointer, enabledPointer, selectionStylePointer,
 			highlightStylePointer, focusColorRole, hintScaleFactor, caretBlinkFrequency, inputFilter, resultFilter,
-			maxLength, inputValidation, fillBackground, showCharacterCount)(parseResult)
+			maxLength, inputValidation, fillBackground, showCharacterCount, allowLineBreaks)(parseResult)
 	
 	/**
 	  * Creates a new text field
@@ -145,6 +147,8 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 	  * @param inputValidation A function to possibly generate an error message based on the input (optional)
 	  * @param fillBackground Whether filled style should be used (default = global default)
 	  * @param showCharacterCount Whether character count should be displayed (default = false)
+	  * @param allowLineBreaks Whether line breaks (multi-line text) should be completely enabled in this field
+	  *                        (default = determined by component creation context)
 	  * @return A new text field
 	  */
 	def forString(defaultWidth: StackLength,
@@ -163,11 +167,11 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 				  inputFilter: Option[Regex] = None,
 				  resultFilter: Option[Regex] = None, maxLength: Option[Int] = None,
 				  inputValidation: Option[String => LocalizedString] = None, fillBackground: Boolean = true,
-				  showCharacterCount: Boolean = false) =
+				  showCharacterCount: Boolean = false, allowLineBreaks: Boolean = context.allowLineBreaks) =
 		apply[String](defaultWidth, fieldNamePointer, promptPointer, hintPointer, errorMessagePointer, textPointer,
 			leftIconPointer, rightIconPointer, enabledPointer, selectionStylePointer, highlightStylePointer,
 			focusColorRole, hintScaleFactor, caretBlinkFrequency, inputFilter, resultFilter, maxLength,
-			inputValidation, fillBackground, showCharacterCount) { _ getOrElse "" }
+			inputValidation, fillBackground, showCharacterCount, allowLineBreaks) { _ getOrElse "" }
 	
 	/**
 	  * Creates a new field that accepts integer numbers
@@ -338,7 +342,7 @@ case class ContextualTextFieldFactory[+N <: TextContextLike](parentHierarchy: Co
 			textPointer, leftIconPointer, rightIconPointer, enabledPointer, selectionStylePointer,
 			highlightStylePointer, focusColorRole, hintScaleFactor, caretBlinkFrequency,
 			Some(inputRegex), Some(resultRegex), Some(maxLength), Some(validateInput),
-			fillBackground) { parse(_) }
+			fillBackground, allowLineBreaks = false) { parse(_) }
 	}
 	
 	private def widthOf(text: String) = textMeasureContext.lineWidthOf(text)
@@ -365,7 +369,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 				   inputFilter: Option[Regex] = None,
 				   resultFilter: Option[Regex] = None, val maxLength: Option[Int] = None,
 				   inputValidation: Option[A => LocalizedString] = None, fillBackground: Boolean = true,
-				   showCharacterCount: Boolean = false)
+				   showCharacterCount: Boolean = false, lineBreaksEnabled: Boolean = false)
 				  (parseResult: Option[String] => A)(implicit context: TextContextLike)
 	extends ReachComponentWrapper with InputWithPointer[A, ChangingLike[A]] with MutableFocusableWrapper
 		with FocusableWithState
@@ -397,7 +401,8 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 		case Some(promptPointer) =>
 			// Displays the prompt while text starts with the same characters or is empty
 			promptPointer.mergeWith(textContentPointer) { (prompt, text) =>
-				if (text.isEmpty || text.startsWith(prompt.string)) prompt else LocalizedString.empty }
+				if (text.isEmpty || prompt.string.startsWith(text)) prompt else LocalizedString.empty
+			}
 		case None => promptPointer
 	}
 	
@@ -428,7 +433,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, defaultWidth: StackLengt
 		val label = EditableTextLabel(fc.parentHierarchy).apply(tc.actorHandler, stylePointer,
 			selectedTextColorPointer, selectedBackgroundPointer.map { Some(_) }, caretColorPointer, caretWidth,
 			caretBlinkFrequency, textContentPointer, inputFilter, maxLength,
-			enabledPointer, allowSelectionWhileDisabled = false, tc.allowLineBreaks, tc.allowTextShrink)
+			enabledPointer, allowSelectionWhileDisabled = false, lineBreaksEnabled, tc.allowTextShrink)
 		label.addFocusListener(fc.focusListener)
 		fc.promptDrawers.foreach(label.addCustomDrawer)
 		
