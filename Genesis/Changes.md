@@ -4,8 +4,12 @@
 ### Deprecations
 - Deprecated `Color.isTransparent` in favor of `Color.transparent`
 ### New Methods
+- **Angle**.type
+  - `.average(Iterable[Angle])`
 - **Color**
   - `.transparent` and `.opaque`
+- **Rotation**.type
+  - `.average(Iterable[Rotation])`
 
 ## v2.4 - 17.4.2021
 With the introduction of the new **Reach** module, multiple additions and changes were necessary in 

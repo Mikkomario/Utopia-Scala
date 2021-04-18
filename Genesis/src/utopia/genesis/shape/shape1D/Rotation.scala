@@ -1,6 +1,6 @@
 package utopia.genesis.shape.shape1D
 
-import utopia.flow.util.RichComparable
+import utopia.flow.util.SelfComparable
 import utopia.genesis.shape.shape1D.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.genesis.util.Extensions._
 import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic}
@@ -18,17 +18,14 @@ object Rotation
 	  * A full 360 degrees rotation clockwise
 	  */
 	val clockwiseCircle = ofCircles(1)
-	
 	/**
 	  * A full 360 degrees rotation counter-clockwise
 	  */
 	val counterclockwiseCircle = ofCircles(1, Counterclockwise)
-	
 	/**
 	  * A 90 degrees rotation clockwise
 	  */
 	val quarterClockwise = ofCircles(0.25)
-	
 	/**
 	  * A 90 degrees rotation counter-clockwise
 	  */
@@ -47,13 +44,11 @@ object Rotation
 		else
 			Rotation(-rads, direction.opposite)
 	}
-    
     /**
      * Converts a degree amount to a rotation
      */
     def ofDegrees(degrees: Double, direction: RotationDirection = Clockwise) =
 		ofRadians(degrees.toRadians, direction)
-	
 	/**
 	  * @param circles The number of full circles (360 degrees or 2Pi radians) rotated
 	  * @param direction Rotation direction (default = Clockwise)
@@ -86,6 +81,18 @@ object Rotation
 			ofRadians(rotationAmount, direction)
 		}
 	}
+	
+	/**
+	  * @param rotations A number of rotations
+	  * @return An average between the rotations
+	  */
+	def average(rotations: Iterable[Rotation]) =
+	{
+		if (rotations.isEmpty)
+			zero
+		else
+			ofRadians(rotations.map { _.clockwiseRadians }.sum / rotations.size)
+	}
 }
 
 /**
@@ -96,7 +103,7 @@ object Rotation
   * @param direction The rotation direction (default = clockwise)
 **/
 case class Rotation private(radians: Double, direction: RotationDirection = Clockwise)
-	extends ApproximatelyEquatable[Rotation] with Arithmetic[Rotation, Rotation] with RichComparable[Rotation]
+	extends ApproximatelyEquatable[Rotation] with Arithmetic[Rotation, Rotation] with SelfComparable[Rotation]
 {
 	// PROPS    --------------------------
 	
