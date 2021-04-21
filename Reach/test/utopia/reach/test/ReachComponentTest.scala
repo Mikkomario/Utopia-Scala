@@ -8,7 +8,9 @@ import utopia.reach.component.button.TextButton
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.EditableTextLabel
 import utopia.reach.component.label.{ContextualMutableTextLabelFactory, MutableTextLabel, TextLabel}
-import utopia.reach.container.{ContextualStackFactory, Framing, ReachCanvas, Stack}
+import utopia.reach.container.multi.stack.{ContextualStackFactory, Stack}
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusListener
 import utopia.reflection.color.ColorRole.Primary
 import utopia.reflection.component.context.{ColorContext, TextContext}

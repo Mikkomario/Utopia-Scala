@@ -17,7 +17,9 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.{ImageLabel, ViewImageLabel, ViewTextLabel, ViewTextLabelFactory}
 import utopia.reach.component.template.{Focusable, FocusableWithPointer, FocusableWrapper, ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.container.{Framing, FramingFactory, ReachCanvas, Stack, ViewStack}
+import utopia.reach.container.multi.stack.{Stack, ViewStack}
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.wrapper.{Framing, FramingFactory}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 import utopia.reach.util.Priority.High
 import utopia.reflection.container.stack.StackLayout.Center

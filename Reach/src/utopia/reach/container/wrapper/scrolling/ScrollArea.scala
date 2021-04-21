@@ -1,4 +1,4 @@
-package utopia.reach.container
+package utopia.reach.container.wrapper.scrolling
 
 import utopia.flow.event.ChangeListener
 import utopia.genesis.handling.mutable.ActorHandler
@@ -11,6 +11,7 @@ import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, 
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
+import utopia.reach.container.ReachCanvas
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.ScrollingContextLike
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer

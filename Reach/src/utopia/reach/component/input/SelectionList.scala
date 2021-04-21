@@ -22,7 +22,8 @@ import utopia.reach.component.factory.{ContextInsertableComponentFactory, Contex
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CursorDefining, MutableFocusable, ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.Open
-import utopia.reach.container.{MutableStack, ReachCanvas}
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.multi.stack.MutableStack
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.{FocusListener, FocusStateTracker}

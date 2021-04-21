@@ -14,7 +14,6 @@ import utopia.reach.component.factory.ContextualMixed
 import utopia.reach.component.input.{CheckBox, ContextualCheckBoxFactory, ContextualDurationFieldFactory, ContextualRadioButtonGroupFactory, ContextualTextFieldFactory, DurationField, RadioButtonGroup, TextField}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.OpenComponent
-import utopia.reach.container.{Framing, Stack, ViewStack}
 import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
 import utopia.reflection.color.ColorRole
 import utopia.reflection.color.ColorRole.Secondary
@@ -23,6 +22,8 @@ import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.template.window.{ManagedField, RowGroup, RowGroups, WindowButtonBlueprint}
 import ManagedField._
+import utopia.reach.container.multi.stack.{Stack, ViewStack}
+import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusRequestable
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString

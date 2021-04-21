@@ -10,7 +10,9 @@ import utopia.genesis.shape.shape2D.Matrix2D
 import utopia.reach.component.input.DropDown
 import utopia.reach.component.label.TextLabel
 import utopia.reach.component.wrapper.Open
-import utopia.reach.container.{Framing, ReachCanvas, Stack}
+import utopia.reach.container.multi.stack.Stack
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.image

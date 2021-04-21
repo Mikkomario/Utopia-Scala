@@ -1,4 +1,4 @@
-package utopia.reach.container
+package utopia.reach.container.multi.stack
 
 import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.event.{AlwaysFalse, AlwaysTrue, ChangeListener, ChangingLike, Fixed}
@@ -9,6 +9,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.ComponentCreationResult.SwitchableCreations
 import utopia.reach.component.wrapper.{ComponentWrapResult, Open, OpenComponent}
+import utopia.reach.container.ReachCanvas
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.container.stack.StackLayout

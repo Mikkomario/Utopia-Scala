@@ -2,6 +2,7 @@
 
 ## v1.0 (in development)
 ### Breaking Changes
+- Updated package structuring in utopia.reach.container
 - Components must now specify `.transparent: Boolean`, which is used in drawing optimizations
 ### Other Changes
 - Optimized component painting to ignore background elements under opaque components

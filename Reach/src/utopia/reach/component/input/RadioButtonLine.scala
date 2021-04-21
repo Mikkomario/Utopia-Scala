@@ -9,7 +9,7 @@ import utopia.reach.component.factory.{ContextInsertableComponentFactory, Contex
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.ViewTextLabel
 import utopia.reach.component.template.CursorDefining
-import utopia.reach.container.Stack
+import utopia.reach.container.multi.stack.Stack
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.FocusListener
 import utopia.reflection.color.{ColorRole, ComponentColor}

@@ -1,4 +1,4 @@
-package utopia.reach.container
+package utopia.reach.container.multi.stack
 
 import utopia.flow.datastructure.immutable.Lazy
 import utopia.flow.datastructure.mutable.{Pointer, PointerWithEvents, Settable}
@@ -17,6 +17,7 @@ import utopia.reach.component.factory.{ContextInsertableComponentFactory, Contex
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.{Focusable, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
+import utopia.reach.container.ReachCanvas
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.ColorContextLike

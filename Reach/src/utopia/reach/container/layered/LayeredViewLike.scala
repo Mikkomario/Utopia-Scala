@@ -1,10 +1,10 @@
-package utopia.reach.container
+package utopia.reach.container.layered
 
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.shape2D.{Bounds, Point}
 import utopia.genesis.util.Drawer
 import utopia.reach.component.template.ReachComponentLike
-import utopia.reach.container.LayerPositioning.{AlignedToSide, AnchoredTo, Free}
+import utopia.reach.container.layered.LayerPositioning.{AlignedToSide, AnchoredTo, Free}
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
 import utopia.reflection.component.template.layout.stack.StackSizeCalculating
 import utopia.reflection.container.template.MultiContainer2
@@ -22,6 +22,7 @@ trait LayeredViewLike[+C <: ReachComponentLike] extends ReachComponentLike with 
 	// ABSTRACT -----------------------------
 	
 	protected def mainLayer: C
+	
 	// TODO: Add support for visual effects
 	protected def overlays: Seq[(C, LayerPositioning)]
 	
@@ -36,8 +37,7 @@ trait LayeredViewLike[+C <: ReachComponentLike] extends ReachComponentLike with 
 	{
 		if (overlays.isEmpty)
 			mainLayer.stackSize
-		else
-		{
+		else {
 			// Combines the layer sizes
 			val combinedLayerSize = StackSize.combine(overlays.map { _._1.stackSize })
 			// Prefers the main layer size, but may be limited by other layers' min sizes
@@ -61,13 +61,11 @@ trait LayeredViewLike[+C <: ReachComponentLike] extends ReachComponentLike with 
 		mainLayer.size = size
 		overlays.foreach { case (layer, positioning) =>
 			val targetArea = Bounds(Point.origin, size)
-			layer.bounds = positioning match
-			{
+			layer.bounds = positioning match {
 				// Case: Custom positioning function
 				case Free(calculate) => calculate(targetArea, layer.bounds, layer.stackSize)
 				case AnchoredTo(component, alignment, margin, primaryAxis) =>
-					component.positionRelativeTo(this) match
-					{
+					component.positionRelativeTo(this) match {
 						// Case: Anchoring to component
 						case Some(anchorPosition) =>
 							alignment.positionNextToWithin(layer.stackSize, Bounds(anchorPosition, component.size),
@@ -92,15 +90,15 @@ trait LayeredViewLike[+C <: ReachComponentLike] extends ReachComponentLike with 
 		
 		// Paints the layers from the bottom to the top. Won't paint areas behind opaque layers.
 		val childDrawer = drawer.translated(position)
-		clipZone match
-		{
+		clipZone match {
 			case Some(clipZone) =>
 				val layerClipZone = clipZone - position
 				// Skips layers that don't overlap with the clip zone
-				val layers = overlays.map { _._1 }.filter {  _.bounds.overlapsWith(layerClipZone) }
-				val layersToDraw = layers.lastIndexWhereOption { layer => layer.opaque &&
-					layer.bounds.contains(layerClipZone) } match
-				{
+				val layers = overlays.map { _._1 }.filter { _.bounds.overlapsWith(layerClipZone) }
+				val layersToDraw = layers.lastIndexWhereOption { layer =>
+					layer.opaque &&
+						layer.bounds.contains(layerClipZone)
+				} match {
 					// Case: Some layers are hidden
 					case Some(opaqueLayerIndex) => layers.drop(opaqueLayerIndex)
 					// Case: No opaque layers

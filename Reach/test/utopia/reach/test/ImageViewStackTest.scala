@@ -12,7 +12,8 @@ import utopia.genesis.shape.shape2D.Size
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.label.{ImageLabel, ViewImageLabel}
-import utopia.reach.container.{ReachCanvas, ViewStack}
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.multi.stack.ViewStack
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.window.Frame

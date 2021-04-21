@@ -1,4 +1,4 @@
-package utopia.reach.container
+package utopia.reach.container.wrapper
 
 import utopia.flow.caching.multi.{Cache, CacheLike}
 import utopia.flow.datastructure.mutable.PointerWithEvents
@@ -8,6 +8,7 @@ import utopia.reach.component.factory.{AnyContextContainerBuilderFactory, Compon
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{Open, OpenComponent}
+import utopia.reach.container.ReachCanvas
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.template.input.{InputWithPointer, InteractionWithPointer}
 
@@ -91,7 +92,7 @@ case class ContextualCachingViewSwapperFactory[N](factory: CachingViewSwapperFac
 
 class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentFactory: ComponentFactoryFactory[F])
 {
-	import factory.canvas
+	private implicit val canvas: ReachCanvas = factory.canvas
 	
 	/**
 	  * Creates a new swapper
@@ -124,7 +125,7 @@ class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentF
 class ContextualViewSwapperBuilder[N, +F[X] <: ContextualComponentFactory[X, _ >: N, F]]
 (factory: CachingViewSwapperFactory, context: N, contentFactory: ContextualBuilderContentFactory[N, F])
 {
-	import factory.canvas
+	private implicit val canvas: ReachCanvas = factory.canvas
 	
 	/**
 	  * Creates a new swapper
