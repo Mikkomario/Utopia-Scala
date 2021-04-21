@@ -212,6 +212,8 @@ trait ReachComponentLike extends Stackable2
 	  * @param drawer   Drawer to use for drawing this component. Origin coordinates (0,0) should be located at the
 	  *                 top-left corner of the parent component.
 	  * @param clipZone Bounds where the drawing is limited. None if whole component area should be drawn.
+	  *                 The clip zone coordinate system matches that of the drawer (0,0) is at the top-left corner of
+	  *                 this component's parent.
 	  */
 	def paintWith(drawer: Drawer, clipZone: Option[Bounds] = None): Unit =
 	{

@@ -44,7 +44,6 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	  * The optimal insets within these insets
 	  */
 	lazy val optimal = mapToInsets { _.optimal }
-	
 	/**
 	  * The minimum insets within these insets
 	  */
@@ -86,6 +85,19 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	  * @return A copy of these insets where the bottom has no maximum limit and expands easily
 	  */
 	def expandingToBottom = expandingTowards(Direction2D.Down)
+	
+	/**
+	  * @return A copy of these insets with no minimum value (all minimum values at 0)
+	  */
+	def noMin = map { _.noMin }
+	/**
+	  * @return A copy of these insets with no maximum value
+	  */
+	def noMax = map { _.noMax }
+	/**
+	  * @return A copy of these insets with no minimum or maximum value
+	  */
+	def noLimits = map { _.noLimits }
 	
 	
 	// IMPLEMENTED	-----------------------

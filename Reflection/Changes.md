@@ -5,6 +5,10 @@
 - **CustomDrawer** implementations must now specify `.opaque: Boolean`. 
   This is used in component transparency calculations
 ### New Methods
+- **Alignment**
+  - `.positionStreching(...)` as well as `.positionNextToWithin(...)` as new component positioning methods
+- **StackInsets**
+  - `.noMin`, `.noMax` and `.noLimits`
 - **StackLength**.type and **StackSize**.type
   - `.combine(...)` for combining multiple stack lengths / sizes
 

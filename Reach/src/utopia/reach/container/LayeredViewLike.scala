@@ -1,14 +1,15 @@
 package utopia.reach.container
 
+import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.shape2D.{Bounds, Point}
 import utopia.genesis.util.Drawer
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.LayerPositioning.{AlignedToSide, AnchoredTo, Free}
-import utopia.reflection.component.drawing.template.DrawLevel
-import utopia.reflection.component.template.layout.stack.{StackSizeCalculating, Stackable2}
+import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}
+import utopia.reflection.component.template.layout.stack.StackSizeCalculating
 import utopia.reflection.container.template.MultiContainer2
-import utopia.reflection.shape.Alignment.Center
-import utopia.reflection.shape.stack.{StackLength, StackSize}
+import utopia.reflection.shape.stack.StackSize
+import utopia.reflection.shape.LengthExtensions._
 
 /**
   * A template trait for containers which hold multiple overlaid layers of components
@@ -54,38 +55,62 @@ trait LayeredViewLike[+C <: ReachComponentLike] extends ReachComponentLike with 
 	override def transparent = mainLayer.transparent &&
 		overlays.forall { case (l, _) => l.transparent || !size.fitsInto(l.size) }
 	
-	// TODO: Continue programming
 	override def updateLayout() =
 	{
 		// The main layer is always set to fill the whole area
 		mainLayer.size = size
 		overlays.foreach { case (layer, positioning) =>
+			val targetArea = Bounds(Point.origin, size)
 			layer.bounds = positioning match
 			{
 				// Case: Custom positioning function
-				case Free(calculate) => calculate(size, layer.bounds, layer.stackSize)
-				case AnchoredTo(component, alignment, margin) =>
-					val targetArea = Bounds(Point.origin, size)
+				case Free(calculate) => calculate(targetArea, layer.bounds, layer.stackSize)
+				case AnchoredTo(component, alignment, margin, primaryAxis) =>
 					component.positionRelativeTo(this) match
 					{
 						// Case: Anchoring to component
 						case Some(anchorPosition) =>
-							// Case: Displaying directly over the component
-							if (alignment == Center)
-								Bounds.centered(anchorPosition + component.size / 2, layer.stackSize.optimal)
-									.fittedInto(targetArea)
-							// Case: Displaying at one side of the component
-							else
-							{
-								???
-							}
+							alignment.positionNextToWithin(layer.stackSize, Bounds(anchorPosition, component.size),
+								targetArea, margin, primaryAxis)
 						// Case: Anchoring fails
-						case None => ???
+						case None => Bounds(layer.position, layer.stackSize.optimal).fittedInto(targetArea)
 					}
-				case AlignedToSide(alignment, optimalMargin, expandIfPossible) => ???
+				case AlignedToSide(alignment, optimalMargin, expandIfPossible) =>
+					if (expandIfPossible)
+						alignment.positionStretching(layer.stackSize, targetArea, optimalMargin.downscaling)
+					else
+						alignment.position(layer.stackSize.optimal, targetArea, optimalMargin.any)
 			}
 		}
 	}
 	
-	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) = super.paintWith(drawer, clipZone)
+	// TODO: Add support for visual effects (with buffering)
+	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) =
+	{
+		paintContent(drawer, Background, clipZone)
+		paintContent(drawer, Normal, clipZone)
+		
+		// Paints the layers from the bottom to the top. Won't paint areas behind opaque layers.
+		val childDrawer = drawer.translated(position)
+		clipZone match
+		{
+			case Some(clipZone) =>
+				val layerClipZone = clipZone - position
+				// Skips layers that don't overlap with the clip zone
+				val layers = overlays.map { _._1 }.filter {  _.bounds.overlapsWith(layerClipZone) }
+				val layersToDraw = layers.lastIndexWhereOption { layer => layer.opaque &&
+					layer.bounds.contains(layerClipZone) } match
+				{
+					// Case: Some layers are hidden
+					case Some(opaqueLayerIndex) => layers.drop(opaqueLayerIndex)
+					// Case: No opaque layers
+					case None => mainLayer +: layers
+				}
+				// Draws the layers in order
+				layersToDraw.foreach { _.paintWith(childDrawer, Some(layerClipZone)) }
+			case None => (mainLayer +: overlays.map { _._1 }).foreach { _.paintWith(childDrawer) }
+		}
+		
+		paintContent(drawer, Foreground, clipZone)
+	}
 }

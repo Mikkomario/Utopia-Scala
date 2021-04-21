@@ -1,6 +1,8 @@
 package utopia.reach.container
 
-import utopia.genesis.shape.shape2D.{Bounds, Size}
+import utopia.genesis.shape.Axis.Y
+import utopia.genesis.shape.Axis2D
+import utopia.genesis.shape.shape2D.Bounds
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.Alignment.Center
@@ -17,10 +19,10 @@ object LayerPositioning
 {
 	/**
 	  * A layer is free to move by itself, but will be kept within the view bounds, if possible
-	  * @param calculateBounds A function for calculating new layer bounds. Accepts container size,
+	  * @param calculateBounds A function for calculating new layer bounds. Accepts container bounds,
 	  *                        current layer bounds and layer stack size. Returns new layer bounds.
 	  */
-	case class Free(calculateBounds: (Size, Bounds, StackSize) => Bounds) extends LayerPositioning
+	case class Free(calculateBounds: (Bounds, Bounds, StackSize) => Bounds) extends LayerPositioning
 	
 	/**
 	  * A layer is anchored to a component position
@@ -28,8 +30,11 @@ object LayerPositioning
 	  * @param alignment Alignment / direction towards which the layer will be placed of the component,
 	  *                  if possible (default = Center)
 	  * @param optimalMargin Margin placed between the component and the layer when possible (default = 0.0)
+	  * @param primaryAxis Axis to consider first when the alignment affects both of the axes.
+	  *                    Default = Y = Vertical position will be assigned first for BottomX and TopX alignments.
 	  */
-	case class AnchoredTo(component: ReachComponentLike, alignment: Alignment = Center, optimalMargin: Double = 0.0)
+	case class AnchoredTo(component: ReachComponentLike, alignment: Alignment = Center, optimalMargin: Double = 0.0,
+	                      primaryAxis: Axis2D = Y)
 		extends LayerPositioning
 	
 	/**
