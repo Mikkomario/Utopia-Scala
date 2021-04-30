@@ -44,7 +44,6 @@ trait FromResultFactory[+A]
 	  * @return This factory's target that includes the primary table and possible joined tables
 	  */
 	def target = joinedTables.foldLeft(table: SqlTarget) { (r, t) => r.join(t, joinType) }
-	
 	/**
 	  * @return The table(s) used by this factory (never empty)
 	  */
@@ -57,6 +56,19 @@ trait FromResultFactory[+A]
 	
 	
 	// OTHER	---------------
+	
+	/**
+	 * An iterator to the items accessible through this factory. This method uses limit and offset in queries
+	 * so that tables with a large number of rows can be iterated while avoiding memory overload.
+	 * @param condition Condition to apply to queries (optional)
+	 * @param order Order to use in queries (optional)
+	 * @param rowsPerQuery Number of rows to return on each query (default = use value defined in connection settings)
+	 * @param connection DB Connection (implicit)
+	 * @return An iterator to parsed items. The iterator must be used while the connection is still open.
+	 */
+	def iterator(condition: Option[Condition] = None, order: Option[OrderBy] = None,
+	             rowsPerQuery: Int = Connection.settings.maximumAmountOfRowsCached)(implicit connection: Connection) =
+		connection.iterator(SelectAll(target) + condition.map { Where(_) } + order, rowsPerQuery).flatMap(apply)
 	
 	/**
 	  * Finds possibly multiple instances from the database

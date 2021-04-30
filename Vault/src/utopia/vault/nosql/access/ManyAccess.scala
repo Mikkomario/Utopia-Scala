@@ -19,6 +19,9 @@ trait ManyAccess[+A, +Repr] extends FilterableAccess[Vector[A], Repr]
 	 */
 	def all(implicit connection: Connection) = read(globalCondition)
 	
+	
+	// OTHER    -------------------
+	
 	/**
 	 * Finds all items that satisfy the specified search condition
 	 * @param condition A search condition

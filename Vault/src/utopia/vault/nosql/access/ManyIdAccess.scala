@@ -12,6 +12,18 @@ import utopia.vault.sql.{Condition, OrderBy, Select, Where}
  */
 trait ManyIdAccess[+ID] extends IdAccess[ID, Vector[ID]] with ManyAccess[ID, ManyIdAccess[ID]]
 {
+	// COMPUTED ---------------------------
+	
+	/**
+	 * @param connection Implicit database connection
+	 * @return An iterator that returns all ids accessible from this access point. The iterator is usable
+	 *         only while the connection is kept open.
+	 */
+	def iterator(implicit connection: Connection) =
+		connection.iterator(Select.index(target, table) + globalCondition.map { Where(_) })
+			.flatMap { _.rowValues.flatMap(valueToId) }
+	
+	
 	// IMPLEMENTED	-----------------------
 	
 	override protected def read(condition: Option[Condition], order: Option[OrderBy])(implicit connection: Connection) =

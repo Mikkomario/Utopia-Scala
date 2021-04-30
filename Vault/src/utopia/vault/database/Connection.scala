@@ -25,7 +25,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.IterateLines
 import utopia.vault.model.immutable.{Result, Row, Table}
-import utopia.vault.sql.{Limit, Offset, SqlSegment}
+import utopia.vault.sql.SqlSegment
 
 object Connection
 {
@@ -196,12 +196,37 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     // OTHER METHODS    -------------
     
     /**
+     * Creates an iterator that splits the request to smaller queries.
+     * This is useful when dealing with very large tables where memory usage becomes an issue.
+     * Please note that the resulting iterator must be used only while this connection remains open and
+     * must be discarded afterwards.
+     * @param query The query performed on each iteration
+     *                  (limit and offset will be applied in addition to this statement)
+     * @param rowsPerIteration Number of rows returned on each iteration (default = defined by connection settings)
+     * @return An iterator that returns a new result each time .next() is called.
+     */
+    def iterator(query: SqlSegment, rowsPerIteration: Int = Connection.settings.maximumAmountOfRowsCached) =
+        new QueryIterator(query, rowsPerIteration)(this).filterNot { _.isEmpty }
+    
+    /**
+     * Creates a row iterator that splits the request to smaller queries.
+     * This is useful when dealing with very large tables where memory usage becomes an issue.
+     * Please note that the resulting iterator must be used only while this connection remains open and
+     * must be discarded afterwards.
+     * @param query The query performed on each iteration
+     *                  (limit and offset will be applied in addition to this statement)
+     * @param rowsPerIteration Number of rows returned on each iteration (default = defined by connection settings)
+     * @return A row iterator that performs the request(s) using limit and offset
+     */
+    def rowIterator(query: SqlSegment, rowsPerIteration: Int = Connection.settings.maximumAmountOfRowsCached) =
+        new QueryIterator(query, rowsPerIteration)(this).flatMap { _.rows }
+    
+    /**
      * Performs an operation on each row targeted by specified statement
      * @param statement a (select) statement. <b>Must not include limit or offset</b>
      * @param operation Operation performed for each row
      */
-    def foreach(statement: SqlSegment)(operation: Row => Unit) = readInParts(statement){
-        _.foreach(operation) }
+    def foreach(statement: SqlSegment)(operation: Row => Unit) = rowIterator(statement).foreach(operation)
     
     /**
      * Maps read rows and reduces them into a single value. This should be used when handling queries which may
@@ -214,15 +239,11 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      */
     def mapReduce[A](statement: SqlSegment)(map: Row => A)(reduce: (A, A) => A) =
     {
-        var currentResult: Option[A] = None
-        readInParts(statement) { rows =>
-            if (rows.nonEmpty)
-            {
-                val result = rows.map(map).reduce(reduce)
-                currentResult = Some(currentResult.map { reduce(_, result) }.getOrElse(result))
-            }
-        }
-        currentResult
+        val resultIterator = iterator(statement)
+        if (resultIterator.hasNext)
+            Some(resultIterator.map { _.rows.map(map).reduce(reduce) }.reduce(reduce))
+        else
+            None
     }
     
     /**
@@ -236,16 +257,21 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      */
     def flatMapReduce[A](statement: SqlSegment)(map: Row => IterableOnce[A])(reduce: (A, A) => A) =
     {
-        var currentResult: Option[A] = None
-        readInParts(statement) { rows =>
-            val mapped = rows.flatMap(map)
-            if (mapped.nonEmpty)
-            {
-                val result = mapped.reduce(reduce)
-                currentResult = Some(currentResult.map { reduce(_, result) }.getOrElse(result))
-            }
-        }
-        currentResult
+        // Reduces the results as they arrive
+        iterator(statement).map { _.rows.flatMap(map).reduceOption(reduce) }
+            // Finally combines the reduce results
+            .reduceOption { (a, b) =>
+                a match
+                {
+                    case Some(definedA) =>
+                        Some(b match
+                        {
+                            case Some(definedB) => reduce(definedA, definedB)
+                            case None => definedA
+                        })
+                    case None => b
+                }
+            }.flatten
     }
     
     /**
@@ -256,12 +282,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      * @tparam A Result type
      * @return Fold result
      */
-    def fold[A](statement: SqlSegment)(start: A)(f: (A, Row) => A) =
-    {
-        var currentResult = start
-        readInParts(statement) { rows => currentResult = rows.foldLeft(currentResult)(f) }
-        currentResult
-    }
+    def fold[A](statement: SqlSegment)(start: A)(f: (A, Row) => A) = rowIterator(statement).foldLeft(start)(f)
     
     /**
      * Tries to execute a statement. Wraps the results in a try
@@ -463,21 +484,6 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     }
     
     private def printIfDebugging(message: => String) = if (Connection.settings.debugPrintsEnabled) println(message)
-    
-    private def readInParts(statement: SqlSegment)(operation: Vector[Row] => Unit) =
-    {
-        val rowsPerIteration = Connection.settings.maximumAmountOfRowsCached
-        var rowsRead = 0
-        var rowsRemain = true
-        // Operates on rows until a non-full set is returned
-        while (rowsRemain)
-        {
-            val rows = apply(statement + Limit(rowsPerIteration) + Offset(rowsRead)).rows
-            operation(rows)
-            rowsRead += rows.size
-            rowsRemain = rows.size >= rowsPerIteration
-        }
-    }
     
     private def setValues(statement: PreparedStatement, values: Seq[Value]) = 
     {

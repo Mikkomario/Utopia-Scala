@@ -4,6 +4,8 @@
 ### New Methods
 - **IterableOnce** (**CollectionExtensions**)
   - `.takeTo(...)` - Works somewhat like `.takeWhile(...)`, but will include the terminating item
+  - `.takeNextTo(...)` which works much like the previously mentioned method, except that this one 
+    advances the iterator instead of forming a new iterator
 - **TreeNode**
   - Multiple new iterator methods
 

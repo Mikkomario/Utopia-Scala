@@ -2,8 +2,16 @@
 
 ## v1.7.1 (in development)
 ### New Features
+- Added **DataInserted** trait to skip the repetitions coding of `.insert(...)` methods
+- Added **QueryIterator** class for easy **Limit** + **Offset** queries
+  - Added `.iterator(SqlSegment, Int)` and `.rowIterator(SqlSegment, Int)` to **Connection**
+  - Added `.iterator` and `.orderedIterator(OrderBy)` to **ManyModelAccess**
+  - Added `.iterator` to **ManyIdAccess**
 - Inserts can now generate warnings or errors when attempting to insert values that don't belong to a table
   - Specify `ErrorHandling.insertClipPrinciple` in order to utilize this feature
+### New Methods
+- **Condition**.type
+  - `.and(Seq[Condition])` and `.or(Seq[Condition])` that combine multiple conditions together
 
 ## v1.7 - 17.4.2021
 This update focuses on the **Access** classes as well as database creation / management.

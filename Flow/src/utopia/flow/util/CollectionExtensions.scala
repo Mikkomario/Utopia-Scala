@@ -804,6 +804,28 @@ object CollectionExtensions
             
             builder.result()
         }
+    
+        /**
+         * Takes the next n items from this iterator until a specified condition is met or until the end of this
+         * iterator is reached. The item which fulfills the specified condition is included in the result as the
+         * last item. Advances this iterator but doesn't invalidate it.
+         * @param stopCondition A condition that marks the last included item
+         * @return Items to and including the one accepted by the specified condition. All remaining items of this
+         *         iterator if the specified condition was never met.
+         */
+        def takeNextTo(stopCondition: A => Boolean) =
+        {
+            val builder = new VectorBuilder[A]()
+            var found = false
+            while (i.hasNext && !found)
+            {
+                val nextItem = i.next()
+                builder += nextItem
+                if (stopCondition(nextItem))
+                    found = true
+            }
+            builder.result()
+        }
         
         /**
           * Consumes items until a specific condition is met
