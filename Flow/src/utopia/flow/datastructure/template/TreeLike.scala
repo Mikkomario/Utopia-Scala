@@ -157,7 +157,6 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
      * @return Whether the provided node exists below this node
      */
     def contains(node: TreeLike[_, _]): Boolean = { children.contains(node) || children.exists { _.contains(node) } }
-    
     /**
       * Checks whether this node or any of this node's children contains the specified content
       * @param content The searched content
@@ -193,6 +192,23 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
         // beginning of the resulting path(s)
         accepted.map { c => Vector(c.content) } ++
             notAccepted.flatMap { c => c.filterWithPaths(filter).map { c.content +: _ } }.filterNot { _.isEmpty }
+    }
+    
+    /**
+     * Finds the highest level branches from this tree which satisfy the specified condition. Will not test the
+     * child nodes of the accepted branches. Therefore there is no overlap in the results
+     * (no node will be listed twice). Won't test or include this root node; Only targets children, grandchildren etc.
+     * @param filter A function that tests a branch to see whether it should be accepted in the result
+     * @return All the branches which were accepted by the specified filter.
+     */
+    def findBranches(filter: NodeType => Boolean): Vector[NodeType] =
+    {
+        children.flatMap { child =>
+            if (filter(child))
+                Vector(child)
+            else
+                child.findBranches(filter)
+        }
     }
     
     

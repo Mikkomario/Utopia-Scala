@@ -3,11 +3,16 @@
 ## v1.9.1 (in development)
 ### New Methods
 - **IterableOnce** (**CollectionExtensions**)
+  - `.existsCount(Int)(...)` which is a type of combination of `.exists(...)` and `.count(...)`
   - `.takeTo(...)` - Works somewhat like `.takeWhile(...)`, but will include the terminating item
   - `.takeNextTo(...)` which works much like the previously mentioned method, except that this one 
     advances the iterator instead of forming a new iterator
-- **TreeNode**
-  - Multiple new iterator methods
+- **TreeLike**
+  - Template (all)
+    - Multiple new iterator methods
+    - `.findBranches(...)`
+  - Immutable
+    - `.withoutChildren`
 
 ## v1.9 - 17.4.2021
 In this update Flow got a number of new utility updates, including a range of new classes. 

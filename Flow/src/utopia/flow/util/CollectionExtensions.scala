@@ -153,6 +153,26 @@ object CollectionExtensions
     implicit class RichIterableOnce[A](val i: IterableOnce[A]) extends AnyVal
     {
         /**
+         * Checks whether there exists at least 'requiredCount' items in this collection where the specified
+         * condition 'f' returns true. Compared to .count -function, this function is more optimized since it stops
+         * counting once the required amount has been reached.
+         * @param requiredCount The required amount of matches before returning true
+         * @param f A test function
+         * @return Whether 'requiredCount' number of items were found where the specified function 'f' returned true
+         */
+        def existsCount(requiredCount: Int)(f: A => Boolean) =
+        {
+            val iter = i.iterator
+            var currentCount = 0
+            while (iter.hasNext && currentCount < requiredCount)
+            {
+                if (f(iter.next()))
+                    currentCount += 1
+            }
+            currentCount == requiredCount
+        }
+        
+        /**
           * Maps items until a concrete result is found, then returns that result
           * @param map A mapping function that maps to either Some or None
           * @tparam B The map target type

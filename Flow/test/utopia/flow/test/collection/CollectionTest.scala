@@ -40,6 +40,8 @@ object CollectionTest extends App
 	
 	val numbers = Vector(1, 2, 3, 4, 5)
 	assert(numbers.takeRightWhile { _ > 3 } == Vector(4, 5))
+	assert(numbers.existsCount(3) { _ < 4 })
+	assert(!numbers.existsCount(2) { _ > 4 })
 	
 	println("Success!")
 }
