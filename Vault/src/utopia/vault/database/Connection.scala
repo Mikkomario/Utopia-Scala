@@ -169,19 +169,40 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         
                     // Executes the statement and retrieves the result (if available)
                     val foundResult = statement.execute()
-                    val generatedKeys = if (returnGeneratedKeys) generatedKeysFromResult(statement, selectedTables) else Vector()
-                    if (foundResult)
-                    {
-                        statement.getResultSet.consume { results =>
-                            // Parses data out of the result
-                            // May skip some data in case it is not requested
-                            // TODO: Doesn't properly return the updated row count
-                            Result(if (returnRows) rowsFromResult(results, selectedTables) else Vector(),
-                                generatedKeys, statement.getUpdateCount)
-                        }
-                    }
+                    // Case: Expecting generated keys
+                    if (returnGeneratedKeys)
+                        Result(Vector(), generatedKeysFromResult(statement, selectedTables))
                     else
-                        Result(Vector(), generatedKeys) // Even when no results are found, an empty result is returned
+                    {
+                        // Collects the result rows or update count from the first result
+                        var rows =
+                        {
+                            if (foundResult)
+                                statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
+                            else
+                                Vector()
+                        }
+                        var updateCount = if (foundResult) 0 else statement.getUpdateCount
+                        // Handles possible additional results
+                        var expectsMore = foundResult || updateCount >= 0
+                        while (expectsMore)
+                        {
+                            // Case: Additional result with more rows
+                            if (statement.getMoreResults)
+                                rows ++= statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
+                            else
+                            {
+                                val newUpdateCount = statement.getUpdateCount
+                                // Case: No more results
+                                if (newUpdateCount < 0)
+                                    expectsMore = false
+                                // Case: Update count
+                                else
+                                    updateCount += newUpdateCount
+                            }
+                        }
+                        Result(rows, updatedRowCount = updateCount max 0)
+                    }
                 }
             } match
             {

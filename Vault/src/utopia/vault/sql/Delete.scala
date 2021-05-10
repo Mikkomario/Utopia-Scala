@@ -1,5 +1,7 @@
 package utopia.vault.sql
 
+import utopia.flow.util.CollectionExtensions._
+import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Table
 
 /**
@@ -18,10 +20,7 @@ object Delete
      * @param deletedTables The tables from which rows are deleted (shouldn't be empty)
      */
     def apply(target: SqlTarget, deletedTables: Seq[Table]) =
-    {
         SqlSegment(s"DELETE ${ deletedTables.map { _.sqlName }.mkString(", ") } FROM") + target.toSqlSegment
-    }
-    
     /**
       * Creates an sql segment that deletes rows from a single table. The deleted
       * table must be included in the provided target.
@@ -30,10 +29,32 @@ object Delete
       * @param table The table from which rows are deleted
       */
     def apply(target: SqlTarget, table: Table): SqlSegment = apply(target, Vector(table))
-    
     /**
      * Creates an sql segment that deletes rows from a single table. This segment is often followed 
      * by a where clause and possibly a limit as well.
      */
     def apply(target: SqlTarget): SqlSegment = apply(target, target.toSqlSegment.targetTables.toSeq)
+    /**
+     * @param table Table being targeted by this delete statement
+     * @return A delete statement targeting that table
+     */
+    def apply(table: Table) = SqlSegment("DELETE FROM") + table.toSqlSegment
+    
+    /**
+     * Performs one or more delete queries on a table in a way that deletes only a certain number of items per query.
+     * This is in order to avoid extremely large deletions.
+     * @param table Table being targeted
+     * @param deletionsPerQuery Maximum number of deletions on a single query
+     * @param where A condition to apply to the queries
+     * @param connection Database connection (implicit)
+     * @return Total number of deleted rows
+     */
+    def inParts(table: Table, deletionsPerQuery: Int, where: Option[Condition] = None)
+               (implicit connection: Connection) =
+    {
+        val statement = apply(table) + where.map { Where(_) } + Limit(deletionsPerQuery)
+        Iterator.continually { connection(statement) }
+            .takeTo { _.updatedRowCount < deletionsPerQuery }
+            .map { _.updatedRowCount }.sum
+    }
 }

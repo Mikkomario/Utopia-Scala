@@ -12,6 +12,13 @@
 ### New Methods
 - **Condition**.type
   - `.and(Seq[Condition])` and `.or(Seq[Condition])` that combine multiple conditions together
+- **Delete**.type
+  - `.apply(Table)` (new variation to support combination with **Limit**)
+  - `.inParts(Table, Int, Option[Condition])` for deleting very large amounts of rows
+### Fixes
+- `.updatedRowCount` in **Result** is now set correctly within `connection.apply(...)` (was broken previously)
+- If a database query returns multiple result sets, they are now correctly combined 
+  (previously only the first result was read)
 
 ## v1.7 - 17.4.2021
 This update focuses on the **Access** classes as well as database creation / management.
