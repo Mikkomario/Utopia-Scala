@@ -15,6 +15,11 @@ object ShapeTest extends App
     
     assert(line1(0) ~== line1.start)
     assert(line1(1) ~== line1.end)
+    assert(line2.yForX(0.0) == 1)
+    assert(line2.yForX(2.0) == -1)
+    assert(line2.yForX(1.0) == 0)
+    assert(line2.xForY(0.0) == 1.0)
+    assert(line2.xForY(1.0) == 0.0)
     
     val intersection12 = line1 intersection line2
     

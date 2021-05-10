@@ -13,6 +13,10 @@
   - `.average(Iterable[Angle])`
 - **Color**
   - `.transparent` and `.opaque`
+- **Image**
+  - `.writeToFile(Path)` which saves the image as a file to the disk
+- **Line**
+  - `.xForY` and `.yForX` function attributes for using lines as linear functions
 - **Rotation**.type
   - `.average(Iterable[Rotation])`
 

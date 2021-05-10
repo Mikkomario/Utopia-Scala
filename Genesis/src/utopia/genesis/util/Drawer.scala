@@ -91,6 +91,12 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
     // OTHER METHODS    -------------------
     
     /**
+     * @param font A font
+     * @return Font metrics to use with that font
+     */
+    def fontMetricsWith(font: Font) = graphics.getFontMetrics(font)
+    
+    /**
       * Performs an operation, then disposes this drawer
       * @param operation An operation
       * @tparam U Arbitary result type

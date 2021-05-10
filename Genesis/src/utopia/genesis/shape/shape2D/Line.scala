@@ -93,6 +93,28 @@ case class Line(override val start: Point, override val end: Point)
      */
     lazy val vector = (end - start).toVector
     
+    /**
+     * A function for calculating the y-coordinate on this line when the x-coordinate is known
+     */
+    lazy val yForX =
+    {
+        // y = kx + a
+        // Where k = Vy / Vx where V is the vector format of this line
+        // a is the y of this function at 0 x
+        val k = vector.y / vector.x
+        val a = start.y - k * start.x
+        x: Double => k * x + a
+    }
+    /**
+     * A function for calculating the x-coordinate on this line when the y-coordinate is known
+     */
+    lazy val xForY =
+    {
+        val k = vector.x / vector.y
+        val a = start.x - k * start.y
+        y: Double => k * y + a
+    }
+    
     
     // COMPUTED PROPERTIES    ----------
     
