@@ -1,6 +1,9 @@
 # Utopia Reach - List of Changes
 
-## v1.0 (in development)
+## v0.2 (an alpha release) - 12.5.2021
+An update in the middle of developing layered view implementations. 
+Improves paint efficiency but breaks existing package structure 
+(which is normal at this stage of development).
 ### Breaking Changes
 - Updated package structuring in utopia.reach.container
 - Components must now specify `.transparent: Boolean`, which is used in drawing optimizations

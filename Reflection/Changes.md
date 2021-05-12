@@ -1,6 +1,8 @@
 # Utopia Reflection - List of Changes
 
-## v2.0 (in development)
+## v2.0-alpha-2 (incomplete update) - 12.5.2021
+While still working towards the v2.0 milestone, this update adds some new tools for component positioning. 
+**CustomDrawer** implementations need to be altered slightly to support the changes in the **Reach** module.
 ### Breaking Changes
 - **CustomDrawer** implementations must now specify `.opaque: Boolean`. 
   This is used in component transparency calculations

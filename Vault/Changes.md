@@ -1,6 +1,9 @@
 # Utopia Vault - List of Changes
 
-## v1.7.1 (in development)
+## v1.7.1 - 12.5.2021
+This update focuses on utility features around SQL queries, especially on iterative, 
+sequential queries that target very large data sets. 
+This update also contains an important bugfix concerning `Result.updatedRowCount`.
 ### New Features
 - Added **DataInserted** trait to skip the repetitions coding of `.insert(...)` methods
 - Added **QueryIterator** class for easy **Limit** + **Offset** queries

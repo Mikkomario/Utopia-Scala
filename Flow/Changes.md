@@ -1,6 +1,7 @@
 # Utopia Flow - List of Changes
 
-## v1.9.1 (in development)
+## v1.9.1 - 12.5.2021
+This adds new collection utility methods, especially on **IterableOnce** and **TreeLike** traits.
 ### New Methods
 - **IterableOnce** (**CollectionExtensions**)
   - `.existsCount(Int)(...)` which is a type of combination of `.exists(...)` and `.count(...)`
