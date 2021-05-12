@@ -6,7 +6,9 @@ import utopia.flow.time.TimeExtensions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.shape.Axis.X
 import utopia.reach.component.label.TextLabel
-import utopia.reach.container.{Framing, ReachCanvas, ViewStack}
+import utopia.reach.container.multi.stack.ViewStack
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.shape.LengthExtensions._

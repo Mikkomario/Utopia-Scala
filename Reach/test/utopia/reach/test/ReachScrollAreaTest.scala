@@ -5,7 +5,9 @@ import utopia.genesis.shape.shape1D.Angle
 import utopia.genesis.shape.shape2D.Size
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.reach.component.wrapper.Open
-import utopia.reach.container.{ReachCanvas, ScrollArea, Stack}
+import utopia.reach.container.multi.stack.Stack
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.wrapper.scrolling.ScrollArea
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.shape.stack.StackSize

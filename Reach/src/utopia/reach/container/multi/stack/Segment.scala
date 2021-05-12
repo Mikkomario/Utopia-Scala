@@ -1,4 +1,4 @@
-package utopia.reach.container
+package utopia.reach.container.multi.stack
 
 import utopia.flow.async.VolatileFlag
 import utopia.flow.datastructure.mutable.ResettableLazy
@@ -113,6 +113,8 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		
 		
 		// IMPLEMENTED	-------------------------
+		
+		override def transparent = true
 		
 		override def toString = s"Segment($index)"
 		

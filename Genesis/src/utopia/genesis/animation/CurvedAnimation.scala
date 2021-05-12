@@ -39,7 +39,7 @@ object CurvedAnimation
   * @param curve The curve that is applied to animation progress. Most of the time you want the curve to start from
   *              0 and to end at 1
   */
-case class CurvedAnimation[+A](original: Animation[A], curve: Animation[Double]) extends Animation[A]
+case class CurvedAnimation[+A](original: AnimationLike[A, Any], curve: AnimationLike[Double, Any]) extends Animation[A]
 {
 	override def apply(progress: Double) = original(curve(progress))
 }

@@ -38,8 +38,8 @@ object Stacker2
 			val lengths = componentSizes map { _ along stackAxis }
 			val breadths = componentSizes map { _ perpendicularTo stackAxis }
 			
-			// Determines total length & breadth
-			val componentsLength = lengths reduce { _ + _ }
+			// Determines total length & breadth (rounding)
+			val componentsLength = lengths.tail.foldLeft(lengths.head.ceil) { _ + _.ceil }
 			// Length has low priority if any of the items has one
 			val numberOfMargins = (componentSizes.size - 1) max 0
 			val length = componentsLength + margin * numberOfMargins + (cap * 2)
@@ -97,11 +97,9 @@ object Stacker2
 				builder += new GapLengthAdjust(caps.head, cap)
 				
 				// Next adds items with margins
-				components.zip(margins).foreach
-				{
-					case (component, marginPointer) =>
-						builder += new StackableLengthAdjust(component, stackAxis)
-						builder += new GapLengthAdjust(marginPointer, margin)
+				components.zip(margins).foreach { case (component, marginPointer) =>
+					builder += new StackableLengthAdjust(component, stackAxis)
+					builder += new GapLengthAdjust(marginPointer, margin)
 				}
 				
 				// Adds final component and final cap
@@ -192,7 +190,7 @@ object Stacker2
 	def adjustLengths(lengths: Seq[StackLength], availableSpace: Double) =
 	{
 		// Calculates the required adjustment
-		val optimalLength = lengths.foldLeft(0.0) { (total, length) => total + length.optimal }
+		val optimalLength = lengths.foldLeft(0.0) { (total, length) => total + length.optimal.ceil }
 		val requiredAdjustment = availableSpace - optimalLength
 		
 		// Performs the adjustment
@@ -292,7 +290,7 @@ object Stacker2
 		
 		// OTHER    ---------------------
 		
-		def apply() = setLength(length.optimal + currentAdjust)
+		def apply() = setLength(length.optimal.ceil + currentAdjust)
 	}
 	
 	private class StackableLengthAdjust(private val target: Stackable2, private val direction: Axis2D) extends LengthAdjust

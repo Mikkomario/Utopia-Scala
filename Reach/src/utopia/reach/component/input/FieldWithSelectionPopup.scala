@@ -15,7 +15,9 @@ import utopia.reach.component.factory.{ContextInsertableComponentFactory, Contex
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{Focusable, FocusableWithPointerWrapper, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{Open, OpenComponent}
-import utopia.reach.container.{CachingViewSwapper, ReachCanvas, ScrollView}
+import utopia.reach.container.wrapper.scrolling.ScrollView
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.wrapper.CachingViewSwapper
 import utopia.reflection.color.ColorRole
 import utopia.reflection.color.ColorRole.Secondary
 import utopia.reflection.component.context.{ScrollingContextLike, TextContextLike}

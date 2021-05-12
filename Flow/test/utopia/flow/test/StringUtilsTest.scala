@@ -1,5 +1,6 @@
 package utopia.flow.test
 
+import utopia.flow.parse.Regex
 import utopia.flow.util.StringExtensions._
 
 /**
@@ -43,6 +44,10 @@ object StringUtilsTest extends App
 	assert("Almost.There.No.More.".divideWith(".") == Vector("Almost.", "There.", "No.", "More."))
 	assert("Test".divideWith(".") == Vector("Test"))
 	assert("Foo---bar".divideWith("---") == Vector("Foo---", "bar"))
+	
+	assert(Regex.digit.divide("A1BAA3D") == Vector("A1", "BAA3", "D"))
+	assert(Regex.digit.extract("A1BAA3D") == (Vector("A", "BAA", "D"), Vector("1", "3")))
+	assert(Regex.parenthesis.extract("Some(more)text") == (Vector("Some", "text"), Vector("(more)")))
 	
 	println("Success!")
 }

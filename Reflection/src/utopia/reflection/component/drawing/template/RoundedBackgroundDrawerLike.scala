@@ -26,6 +26,8 @@ trait RoundedBackgroundDrawerLike extends CustomDrawer
 	
 	// IMPLEMENTED  -----------------------
 	
+	override def opaque = false
+	
 	override def draw(drawer: Drawer, bounds: Bounds) =
 	{
 		if (bounds.size.isPositive)

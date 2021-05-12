@@ -5,7 +5,9 @@ import utopia.flow.generic.DataType
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.{ContextualTextFieldFactory, TextField}
 import utopia.reach.component.label.ViewTextLabel
-import utopia.reach.container.{Framing, ReachCanvas, Stack}
+import utopia.reach.container.multi.stack.Stack
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.wrapper.Framing
 import utopia.reflection.component.context.TextContext
 import utopia.reflection.container.stack.StackLayout.Trailing
 import utopia.reflection.container.swing.window.Frame

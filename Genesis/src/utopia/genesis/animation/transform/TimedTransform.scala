@@ -20,9 +20,13 @@ trait TimedTransform[-Origin, +Reflection] extends AnimatedTransform[Origin, Ref
 	def duration: Duration
 	
 	
-	// IMPLEMENTED	---------------------
+	// COMPUTED -------------------------
 	
-	override def toAnimation(origin: Origin): TimedAnimation[Reflection] = new StaticTimedTransform(origin, this)
+	/**
+	  * @param origin Fixed origin
+	  * @return A timed animation based on this transform and a fixed origin
+	  */
+	def toTimedAnimation(origin: Origin): TimedAnimation[Reflection] = new StaticTimedTransform(origin, this)
 	
 	
 	// OTHER	-------------------------

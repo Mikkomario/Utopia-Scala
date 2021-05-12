@@ -67,7 +67,7 @@ trait ReachCanvasLike
 	  * if updates were previously ignored and can't be tracked anymore
 	  * @param targetContentSize Size to assign for the managed component
 	  */
-	protected def updateWholeLayout(targetContentSize: Size) = currentContent.foreach { content =>
+	def updateWholeLayout(targetContentSize: Size) = currentContent.foreach { content =>
 		val branches = content.toTree.allBranches
 		val updateQueues: Set[Seq[ReachComponentLike]] =
 		{

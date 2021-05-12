@@ -5,6 +5,7 @@ import java.awt.image.{BufferedImage, BufferedImageOp}
 import java.io.FileNotFoundException
 import java.nio.file.{Files, Path}
 import utopia.flow.util.AutoClose._
+import utopia.flow.util.FileExtensions._
 import utopia.flow.util.NullSafe._
 
 import javax.imageio.ImageIO
@@ -152,12 +153,10 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * The size of the original image
 	  */
 	override val sourceResolution = source.map { s => Size(s.getWidth, s.getHeight) }.getOrElse(Size.zero)
-	
 	/**
 	  * @return The size of this image in pixels
 	  */
 	override val size = sourceResolution * scaling
-	
 	/**
 	  * The bounds of this image when origin and size are both counted
 	  */
@@ -170,7 +169,6 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A copy of this image without a specified origin location
 	  */
 	def withoutSpecifiedOrigin = if (specifiesOrigin) copy(specifiedOrigin = None) else this
-	
 	/**
 	  * @return A copy of this image where the origin is placed at the center of the image
 	  */
@@ -180,12 +178,10 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A copy of this image that isn't scaled above 100%
 	  */
 	def downscaled = if (scaling.dimensions.exists { _ > 1 }) withScaling(scaling.map { _ min 1 }) else this
-	
 	/**
 	  * @return A copy of this image that isn't scaled below 100%
 	  */
 	def upscaled = if (scaling.dimensions.exists { _ < 1 }) withScaling(scaling.map { _ max 1 }) else this
-	
 	/**
 	  * @return A copy of this image with original (100%) scaling
 	  */
@@ -206,7 +202,6 @@ case class Image private(override protected val source: Option[BufferedImage], o
 			case None => flipped
 		}
 	}
-	
 	/**
 	  * @return A copy of this image where y-axis is reversed
 	  */
@@ -307,14 +302,12 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A new image
 	  */
 	def withAlpha(newAlpha: Double) = copy(alpha = newAlpha max 0 min 1)
-	
 	/**
 	  * Creates a copy of this image with mapped alpha value
 	  * @param f A funtion for mapping image max alpha
 	  * @return A copy of this image with mapped alpha
 	  */
 	def mapAlpha(f: Double => Double) = withAlpha(f(alpha))
-	
 	/**
 	  * Creates a copy of this image with mapped alpha value
 	  * @param alphaMod An alpha modifier
@@ -327,32 +320,27 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A copy of this image with the specified origin
 	  */
 	def withSourceResolutionOrigin(newOrigin: Point) = copy(specifiedOrigin = Some(newOrigin))
-	
 	/**
 	  * @param f A mapping function for source resolution origin
 	  * @return A copy of this image with mapped origin
 	  */
 	def mapSourceResolutionOrigin(f: Point => Point) = withSourceResolutionOrigin(f(sourceResolutionOrigin))
-	
 	/**
 	  * @param translation A translation applied to source resolution image origin
 	  * @return A copy of this image with translated origin
 	  */
 	def withTranslatedSourceResolutionOrigin(translation: Dimensional[Double]) =
 		mapSourceResolutionOrigin { _+ translation }
-	
 	/**
 	  * @param newOrigin A new image origin <b>relative to the current image size</b>, which is scaling-dependent
 	  * @return A copy of this image with the specified origin
 	  */
 	def withOrigin(newOrigin: Point) = withSourceResolutionOrigin(newOrigin / scaling)
-	
 	/**
 	  * @param f A mapping function for applied image origin
 	  * @return A copy of this image with mapped origin
 	  */
 	def mapOrigin(f: Point => Point) = withOrigin(f(origin))
-	
 	/**
 	  * @param translation Translation applied to current (scaled) image origin
 	  * @return A copy of this image with translated origin
@@ -376,7 +364,6 @@ case class Image private(override protected val source: Option[BufferedImage], o
 			}
 		case None => this
 	}
-	
 	// Only works when specified area is inside the original image's bounds
 	private def _subImage(img: BufferedImage, relativeArea: Bounds) =
 	{
@@ -403,7 +390,6 @@ case class Image private(override protected val source: Option[BufferedImage], o
 			case None => this
 		}
 	}
-	
 	/**
 	  * @param side Side from which to crop from this image
 	  * @param amount Amount of pixels to crop from this image
@@ -430,7 +416,6 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A scaled version of this image
 	  */
 	def withScaling(scaling: Vector2D) = copy(scaling = scaling)
-	
 	/**
 	  * @param scaling A scaling modifier applied to the original image
 	  * @return A scaled version of this image
@@ -457,7 +442,6 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A copy of this image that matches the specified area, but may be larger if shape preservation demands it.
 	  */
 	def filling(area: Size) = if (size.nonZero) this * (area / size).dimensions2D.max else this
-	
 	/**
 	  * Scales this image, preserving shape.
 	  * @param area An area
@@ -470,7 +454,6 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A copy of this image that is smaller or equal to the target area. Shape is preserved.
 	  */
 	def smallerThan(area: Size) = if (size.fitsInto(area)) this else fitting(area)
-	
 	/**
 	  * @param area Target area (minimum)
 	  * @return A copy of this image that is larger or equal to the target area. Shape is preserved.
@@ -485,13 +468,11 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  */
 	def limitedAlong(side: Axis2D, maxLength: Double) = if (size.along(side) <= maxLength) this else
 		smallerThan(size.withDimension(maxLength, side))
-	
 	/**
 	  * @param maxWidth Maximum allowed width
 	  * @return A copy of this image with equal or lower width than the specified maximum
 	  */
 	def withLimitedWidth(maxWidth: Double) = limitedAlong(X, maxWidth)
-	
 	/**
 	  * @param maxHeight Maximum allowed height
 	  * @return A copy of this image with equal or lower height than the specified maximum
@@ -553,7 +534,6 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return A new image with adjusted hue
 	  */
 	def withAdjustedHue(hueAdjust: Rotation) = mapPixels { _ + hueAdjust }
-	
 	/**
 	  * Creates a version of this image with a certain hue range adjusted
 	  * @param sourceHue The hue that is targeted
@@ -755,6 +735,21 @@ case class Image private(override protected val source: Option[BufferedImage], o
 			}
 			// Wraps the image
 			Image(buffer, origin = if (specifiesOrigin) Some(transformedOrigin - transformedBounds.topLeft) else None)
+		}
+	}
+	
+	/**
+	 * Writes this image to a file
+	 * @param filePath Path where the file is written
+	 * @return Success or failure
+	 */
+	def writeToFile(filePath: Path) = filePath.createParentDirectories().flatMap { _ =>
+		Try[Unit] {
+			source match
+			{
+				case Some(source) => ImageIO.write(source, filePath.fileType, filePath.toFile)
+				case None => if (!filePath.exists) Files.createFile(filePath)
+			}
 		}
 	}
 }

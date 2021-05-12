@@ -11,10 +11,19 @@ object CustomDrawer
 	/**
 	  * Wraps a function into custom drawer
 	  * @param level The target draw level (default = Normal = Above component contents but below child contents)
+	  * @param opaque Whether this drawer fills the whole target bounds with 100% alpha paint
+	  *               (can't be seen through). Default = false.
 	  * @param f A function
 	  * @return A new custom drawer that calls that function
 	  */
-	def apply(level: DrawLevel = Normal)(f: (Drawer, Bounds) => Unit): CustomDrawer = new FunctionalCustomDrawer(level, f)
+	def apply(level: DrawLevel = Normal, opaque: Boolean = false)(f: (Drawer, Bounds) => Unit): CustomDrawer =
+		new FunctionalCustomDrawer(level, opaque)(f)
+	
+	private class FunctionalCustomDrawer(override val drawLevel: DrawLevel, override val opaque: Boolean)
+	                                    (f: (Drawer, Bounds) => Unit) extends CustomDrawer
+	{
+		override def draw(drawer: Drawer, bounds: Bounds) = f(drawer, bounds)
+	}
 }
 
 /**
@@ -24,6 +33,14 @@ object CustomDrawer
   */
 trait CustomDrawer
 {
+	// ABSTRACT ------------------------------
+	
+	/**
+	  * @return Whether this drawer fills the whole bounds with 100% alpha paint
+	  *         (blocks line of sight to background elements)
+	  */
+	def opaque: Boolean
+	
 	/**
 	  * @return The level where this drawer will be drawn
 	  */
@@ -35,9 +52,13 @@ trait CustomDrawer
 	  * @param bounds Draw area bounds
 	  */
 	def draw(drawer: Drawer, bounds: Bounds): Unit
-}
-
-private class FunctionalCustomDrawer(override val drawLevel: DrawLevel, val f: (Drawer, Bounds) => Unit) extends CustomDrawer
-{
-	override def draw(drawer: Drawer, bounds: Bounds) = f(drawer, bounds)
+	
+	
+	// COMPUTED ------------------------
+	
+	/**
+	  * @return Whether this drawer leaves the target bounds partially or fully transparent
+	  *         (I.e. some of the background elements can still be seen afterwards)
+	  */
+	def transparent = !opaque
 }

@@ -1,10 +1,9 @@
 package utopia.reflection.component.template.layout.stack
 
 import java.time.Instant
-
 import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.animation.Animation
+import utopia.genesis.animation.{Animation, AnimationLike}
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
@@ -43,7 +42,7 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 	  * @return Animation that is used for calculating the drawn images. The images are drawn in the order they
 	  *         are listed, meaning that the last image will appear on top.
 	  */
-	protected def imageAnimation: Animation[Seq[Image]]
+	protected def imageAnimation: AnimationLike[Seq[Image], Any]
 	
 	/**
 	  * @return Animation that is used for calculating component size
@@ -137,6 +136,8 @@ trait AnimatedTransitionLike extends Stackable with ComponentWrapper with Custom
 	private object Drawer extends CustomDrawer
 	{
 		override def drawLevel = Normal
+		
+		override def opaque = false
 		
 		override def draw(drawer: Drawer, bounds: Bounds) =
 		{

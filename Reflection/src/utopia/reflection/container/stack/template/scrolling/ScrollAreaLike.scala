@@ -7,7 +7,6 @@ import java.time.Instant
 import java.util.concurrent.TimeUnit
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.RichComparable._
 import utopia.genesis.event._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
@@ -340,8 +339,8 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 	  * @param barDrawer A scroll bar drawer
 	  * @return A custom drawer based on the scroll bar drawer
 	  */
-	protected def scrollBarDrawerToCustomDrawer(barDrawer: ScrollBarDrawerLike) = CustomDrawer(Foreground) {
-		(d, _) => drawWith(barDrawer, d) }
+	protected def scrollBarDrawerToCustomDrawer(barDrawer: ScrollBarDrawerLike) =
+		CustomDrawer(Foreground) { (d, _) => drawWith(barDrawer, d) }
 	
 	/**
 	  * Sets up animated scrolling for this scroll area. This method doesn't need to be called if

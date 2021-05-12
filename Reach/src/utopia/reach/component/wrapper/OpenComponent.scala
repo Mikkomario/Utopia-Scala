@@ -12,7 +12,9 @@ import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertabl
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.ComponentCreationResult.CreationsResult
-import utopia.reach.container.{Framing, ReachCanvas, Stack}
+import utopia.reach.container.multi.stack.Stack
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.wrapper.Framing
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.shape.stack.{StackInsetsConvertible, StackLength}

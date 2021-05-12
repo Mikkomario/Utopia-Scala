@@ -2,6 +2,8 @@ package utopia.flow.datastructure.template
 
 import utopia.flow.util.CollectionExtensions._
 
+import scala.collection.immutable.VectorBuilder
+
 /**
  * Tree nodes form individual trees. They can also be used as subtrees in other tree nodes. Like 
  * other nodes, treeNodes contain / wrap certain type of content. A tree node can never contain 
@@ -28,9 +30,38 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
     // COMPUTED PROPERTIES    --------
     
     /**
+      * @return An iterator that goes over all the nodes below this node. Will not include this node.
+      */
+    def nodesBelowIterator: Iterator[NodeType] = new TreeIterator
+    
+    /**
+      * @return An iterator that goes over all content within this tree, including this node's contents.
+      */
+    def allContentIterator = Iterator.single(content) ++ contentBelowIterator
+    /**
+      * @return An iterator that goes over all content within the children of this node.
+      *         Will not include this node's content.
+      */
+    def contentBelowIterator: Iterator[A] = nodesBelowIterator.map { _.content }
+    
+    /**
      * All nodes below this node, in no specific order
      */
-    def nodesBelow: Vector[NodeType] = children ++ children.flatMap { child => child.nodesBelow }
+    def nodesBelow: Vector[NodeType] = nodesBelowIterator.toVector
+    /**
+      * @return All nodes below this node, ordered based on depth (primary) and horizontal index (secondary)
+      */
+    def nodesBelowOrdered: Vector[NodeType] =
+    {
+        val resultBuilder = new VectorBuilder[NodeType]()
+        var nextNodes = children
+        while (nextNodes.nonEmpty)
+        {
+            resultBuilder ++= nextNodes
+            nextNodes = nextNodes.flatMap { _.children }
+        }
+        resultBuilder.result()
+    }
     
     /**
      * The size of this tree. In other words, the number of nodes below this node
@@ -41,7 +72,6 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
      * Whether this tree is empty and doesn't contain a single node below it
      */
     def isEmpty = children.isEmpty
-    
     /**
      * @return Whether this tree has child nodes registered under it
      */
@@ -61,7 +91,7 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
     /**
       * @return All content within this node and the nodes under
       */
-    def allContent = content +: nodesBelow.map { _.content }
+    def allContent = allContentIterator.toVector
     
     /**
      * @return List of all "branches" <b>under</b> this node. Eg. If this node contains two children each of which
@@ -127,7 +157,6 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
      * @return Whether the provided node exists below this node
      */
     def contains(node: TreeLike[_, _]): Boolean = { children.contains(node) || children.exists { _.contains(node) } }
-    
     /**
       * Checks whether this node or any of this node's children contains the specified content
       * @param content The searched content
@@ -163,5 +192,43 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
         // beginning of the resulting path(s)
         accepted.map { c => Vector(c.content) } ++
             notAccepted.flatMap { c => c.filterWithPaths(filter).map { c.content +: _ } }.filterNot { _.isEmpty }
+    }
+    
+    /**
+     * Finds the highest level branches from this tree which satisfy the specified condition. Will not test the
+     * child nodes of the accepted branches. Therefore there is no overlap in the results
+     * (no node will be listed twice). Won't test or include this root node; Only targets children, grandchildren etc.
+     * @param filter A function that tests a branch to see whether it should be accepted in the result
+     * @return All the branches which were accepted by the specified filter.
+     */
+    def findBranches(filter: NodeType => Boolean): Vector[NodeType] =
+    {
+        children.flatMap { child =>
+            if (filter(child))
+                Vector(child)
+            else
+                child.findBranches(filter)
+        }
+    }
+    
+    
+    // NESTED   -----------------------------
+    
+    private class TreeIterator extends Iterator[NodeType]
+    {
+        // ATTRIBUTES   --------------------
+        
+        private val targets = children
+        private var currentIteratorIndex = -1
+        private var currentIterator: Iterator[NodeType] = Iterator.empty
+        
+        override def hasNext = currentIterator.hasNext || currentIteratorIndex < targets.size - 1
+    
+        override def next() = currentIterator.nextOption().getOrElse {
+            currentIteratorIndex += 1
+            val nextChild = targets(currentIteratorIndex)
+            currentIterator = nextChild.nodesBelowIterator
+            nextChild
+        }
     }
 }

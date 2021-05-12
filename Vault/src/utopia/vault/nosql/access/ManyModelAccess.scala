@@ -46,6 +46,16 @@ object ManyModelAccess
 trait ManyModelAccess[+A] extends ManyAccess[A, ManyModelAccess[A]]
 	with DistinctModelAccess[A, Vector[A], Vector[Value]]
 {
+	// COMPUTED --------------------------------
+	
+	/**
+	 * @param connection DB Connection (implicit)
+	 * @return An iterator to all models accessible through this access point. The iterator is valid
+	 *         only while the connection is kept open.
+	 */
+	def iterator(implicit connection: Connection) = factory.iterator(globalCondition)
+	
+	
 	// IMPLEMENTED  ----------------------------
 	
 	override protected def read(condition: Option[Condition], order: Option[OrderBy])(implicit connection: Connection) = condition match
@@ -83,4 +93,16 @@ trait ManyModelAccess[+A] extends ManyAccess[A, ManyModelAccess[A]]
 		// Applies the query and parses results
 		connection(query).rowValues
 	}
+	
+	
+	// OTHER    -------------------------------
+	
+	/**
+	 * @param order Order to use in the results
+	 * @param connection DB Connection (implicit)
+	 * @return An iterator to all models accessible from this access point. The iterator is usable
+	 *         only while the connection is kept open.
+	 */
+	def orderedIterator(order: OrderBy)(implicit connection: Connection) =
+		factory.iterator(globalCondition, Some(order))
 }

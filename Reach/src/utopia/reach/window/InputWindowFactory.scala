@@ -9,7 +9,9 @@ import utopia.reach.component.factory.{ContextualMixed, Mixed}
 import utopia.reach.component.label.TextLabel
 import utopia.reach.component.template.{Focusable, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.container.{AlignFrame, ContextualStackFactory, Framing, ReachCanvas, SegmentGroup, Stack, ViewStack}
+import utopia.reach.container.multi.stack.{ContextualStackFactory, SegmentGroup, Stack, ViewStack}
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.focus.FocusRequestable
 import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.container.stack.StackLayout.{Center, Fit, Leading, Trailing}

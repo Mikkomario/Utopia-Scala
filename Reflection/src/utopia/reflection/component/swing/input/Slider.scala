@@ -4,6 +4,7 @@ import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
 import utopia.genesis.animation.Animation
+import utopia.genesis.animation.AnimationLike.AnyAnimation
 import utopia.genesis.color.Color
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
 import utopia.genesis.handling.{Actor, KeyStateListener, MouseButtonStateListener, MouseMoveListener}
@@ -50,8 +51,8 @@ object Slider
 	  * @tparam A Type of selected value
 	  * @return A new slider
 	  */
-	def contextual[A](range: Animation[A], targetWidth: StackLength, leftColor: Color, rightColor: Color,
-	                  knobColor: Animation[Color], colorVariationIntensity: Double = 1.0,
+	def contextual[A](range: AnyAnimation[A], targetWidth: StackLength, leftColor: Color, rightColor: Color,
+	                  knobColor: AnyAnimation[Color], colorVariationIntensity: Double = 1.0,
 	                  stickyPoints: Seq[Double] = Vector(), arrowMovement: Double = 0.1,
 	                  leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0, initialValue: Double = 0.0)
 	                 (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
@@ -78,7 +79,7 @@ object Slider
 	  * @tparam A Type of selected value
 	  * @return A new slider
 	  */
-	def contextualSingleColor[A](range: Animation[A], targetWidth: StackLength, color: Color,
+	def contextualSingleColor[A](range: AnyAnimation[A], targetWidth: StackLength, color: Color,
 	                             colorVariationIntensity: Double = 1.0, stickyPoints: Seq[Double] = Vector(),
 	                             arrowMovement: Double = 0.1, initialValue: Double = 0.0)
 	                            (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
@@ -100,7 +101,7 @@ object Slider
 	  * @tparam A Type of selected value
 	  * @return A new slider
 	  */
-	def contextualDualColor[A](range: Animation[A], targetWidth: StackLength, lessColor: Color, moreColor: Color,
+	def contextualDualColor[A](range: AnyAnimation[A], targetWidth: StackLength, lessColor: Color, moreColor: Color,
 	                           colorVariationIntensity: Double = 1.0, stickyPoints: Seq[Double] = Vector(),
 	                           arrowMovement: Double = 0.1, initialValue: Double = 0.0)
 	                          (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
@@ -122,7 +123,7 @@ object Slider
 	  * @tparam A Type of selected value
 	  * @return A new slider
 	  */
-	def contextualSingleColorKnot[A](range: Animation[A], targetWidth: StackLength, color: Color,
+	def contextualSingleColorKnot[A](range: AnyAnimation[A], targetWidth: StackLength, color: Color,
 	                                 colorVariationIntensity: Double = 1.0, stickyPoints: Seq[Double] = Vector(),
 	                                 arrowMovement: Double = 0.1, initialValue: Double = 0.0)
 	                                (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
@@ -150,7 +151,7 @@ object Slider
 	  */
 	@throws[IllegalArgumentException]
 	def contextualSelection[A](options: Seq[A], targetWidth: StackLength, leftColor: Color,
-	                           rightColor: Color, knobColor: Animation[Color], colorVariationIntensity: Double = 1.0,
+	                           rightColor: Color, knobColor: AnyAnimation[Color], colorVariationIntensity: Double = 1.0,
 	                           leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0)
 	                          (implicit context: BaseContextLike, animationContext: AnimationContextLike) =
 	{
@@ -245,8 +246,8 @@ object Slider
   * @param rightHeightModifier A modifier applied to right bar height (default = 1.0)
   * @param initialValue Value assigned to this slider initially [0, 1] (default = 0.0)
   */
-class Slider[+A](range: Animation[A], targetKnobDiameter: Double, targetWidth: StackLength,
-                leftColor: Color, rightColor: Color, knobColor: Animation[Color], colorVariationIntensity: Double = 1.0,
+class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth: StackLength,
+                leftColor: Color, rightColor: Color, knobColor: AnyAnimation[Color], colorVariationIntensity: Double = 1.0,
                 stickyPoints: Seq[Double] = Vector(), arrowMovement: Double = 0.1,
                 leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0, initialValue: Double = 0.0)
 	extends AwtComponentWrapperWrapper with StackLeaf with Focusable with CustomDrawableWrapper
@@ -383,7 +384,7 @@ class Slider[+A](range: Animation[A], targetKnobDiameter: Double, targetWidth: S
 	  *                  (default = smooth animation finish)
 	  * @param animationDuration Duration of the complete knob transition (default = global default value)
 	  */
-	def enableAnimations(actorHandler: ActorHandler, curvature: Animation[Double] = ProjectilePath(),
+	def enableAnimations(actorHandler: ActorHandler, curvature: AnyAnimation[Double] = ProjectilePath(),
 	                     animationDuration: Duration = ComponentCreationDefaults.transitionDuration) =
 	{
 		if (animator.isEmpty)
@@ -466,7 +467,8 @@ class Slider[+A](range: Animation[A], targetKnobDiameter: Double, targetWidth: S
 	
 	// NESTED   -----------------------------
 	
-	private class Animator(curve: Animation[Double], animationDuration: Duration) extends Actor with ChangeListener[Double]
+	private class Animator(curve: AnyAnimation[Double], animationDuration: Duration)
+		extends Actor with ChangeListener[Double]
 	{
 		// ATTRIBUTES   ---------------------
 		
@@ -514,6 +516,8 @@ class Slider[+A](range: Animation[A], targetKnobDiameter: Double, targetWidth: S
 	
 	private object Visualizer extends CustomDrawer
 	{
+		override def opaque = false
+		
 		override def drawLevel = Normal
 		
 		override def draw(drawer: Drawer, bounds: Bounds) =

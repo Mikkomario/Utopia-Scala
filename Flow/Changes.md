@@ -1,6 +1,23 @@
 # Utopia Flow - List of Changes
 
+## v1.9.1 - 12.5.2021
+This adds new collection utility methods, especially on **IterableOnce** and **TreeLike** traits.
+### New Methods
+- **IterableOnce** (**CollectionExtensions**)
+  - `.existsCount(Int)(...)` which is a type of combination of `.exists(...)` and `.count(...)`
+  - `.takeTo(...)` - Works somewhat like `.takeWhile(...)`, but will include the terminating item
+  - `.takeNextTo(...)` which works much like the previously mentioned method, except that this one 
+    advances the iterator instead of forming a new iterator
+- **TreeLike**
+  - Template (all)
+    - Multiple new iterator methods
+    - `.findBranches(...)`
+  - Immutable
+    - `.withoutChildren`
+
 ## v1.9 - 17.4.2021
+In this update Flow got a number of new utility updates, including a range of new classes. 
+Various extensions also were expanded to contain a wider range of utility methods.
 ### Breaking Changes
 - Moved time-related classes / objects from utopia.flow.util to utopia.flow.time 
 - Changed `.setIfEmpty` method variations in **VolatileOption** to accept a *call by name* parameter 

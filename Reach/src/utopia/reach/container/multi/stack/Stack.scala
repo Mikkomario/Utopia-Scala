@@ -1,4 +1,4 @@
-package utopia.reach.container
+package utopia.reach.container.multi.stack
 
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
@@ -8,6 +8,7 @@ import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertabl
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
+import utopia.reach.container.ReachCanvas
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.container.stack.StackLayout

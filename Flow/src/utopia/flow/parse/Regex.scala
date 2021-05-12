@@ -33,6 +33,11 @@ object Regex
 	val numericParts = Regex("[-\\d]")
 	
 	/**
+	 * A regular expression that finds parenthesis ( ) content
+	 */
+	val parenthesis = escape('(').followedBy(any).followedBy(escape(')'))
+	
+	/**
 	  * Creates a regex that accepts any of the specified characters. You don't need to worry about regular expressions
 	  * inside the string, since they are all escaped
 	  * @param chars A group of escaped characters
@@ -58,7 +63,10 @@ case class Regex(string: String)
 {
 	// ATTRIBUTES	----------------
 	
-	private lazy val pattern = Pattern.compile(string)
+	/**
+	 * A matching pattern based on this regular expression
+	 */
+	lazy val pattern = Pattern.compile(string)
 	
 	
 	// COMPUTED	--------------------
@@ -185,7 +193,6 @@ case class Regex(string: String)
 	 * @return This regex 'n' times in sequence
 	 */
 	def times(n: Int) = Regex(string + s"{$n}")
-	
 	/**
 	 * @param range A range
 	 * @return This regex 'range' times in sequence
@@ -203,12 +210,47 @@ case class Regex(string: String)
 	  * @return A version of the string that only contains items NOT accepted by this regex
 	  */
 	def filterNot(str: String) = str.replaceAll(string, "")
-	
 	/**
 	  * @param str A string
 	  * @return A version of the string that only contains items accepted by this regex
 	  */
 	def filter(str: String) = findAllFrom(str).reduceOption { _ + _ } getOrElse ""
+	
+	/**
+	 * Extracts the matches of this regex from the specified string, returning both the extracted results and the
+	 * remaining string
+	 * @param str A string from which to extract this regex's matches
+	 * @return Remaining parts of the string that didn't match this regex
+	 *         (each separated part is returned as a separate string) + matches of this regex that were found from
+	 *         the string.
+	 */
+	def extract(str: String) =
+	{
+		val matcher = pattern.matcher(str)
+		val matchesBuilder = new VectorBuilder[String]()
+		val remainingBuilder = new VectorBuilder[String]()
+		
+		var lastEndIndex = 0
+		while (matcher.find())
+		{
+			val startIndex = matcher.start()
+			val endIndex = matcher.end()
+			if (startIndex > lastEndIndex)
+				remainingBuilder += str.substring(lastEndIndex, startIndex)
+			matchesBuilder += str.substring(startIndex, endIndex)
+			lastEndIndex = endIndex
+		}
+		if (str.length > lastEndIndex)
+			remainingBuilder += str.substring(lastEndIndex)
+		
+		remainingBuilder.result() -> matchesBuilder.result()
+	}
+	
+	/**
+	 * @param str A target string
+	 * @return Whether this regex / pattern can be found from that string
+	 */
+	def existsIn(str: String) = pattern.matcher(str).find()
 	
 	/**
 	  * Finds the first match for this regex from the specified string
@@ -223,7 +265,6 @@ case class Regex(string: String)
 		else
 			None
 	}
-	
 	/**
 	  * Finds all matches of this regex from a string
 	  * @param str A string
@@ -246,4 +287,28 @@ case class Regex(string: String)
 	 * @return Target string splitted by this regex
 	 */
 	def split(str: String) = str.split(string)
+	
+	/**
+	 * Splits the specified string using this regex. Works much like the standard split operation, except that
+	 * this variation doesn't remove the splitting string from the results but instead keeps them at the ends of the
+	 * resulting strings where applicable. E.g. splitting "AxBxC" by "x" would yield ["Ax", "Bx", "C"]
+	 * @param str A string to split
+	 * @return Divided parts of the string
+	 */
+	def divide(str: String) =
+	{
+		val matcher = pattern.matcher(str)
+		val builder = new VectorBuilder[String]()
+		var lastEndIndex = 0
+		while (matcher.find())
+		{
+			val endIndex = matcher.end()
+			builder += str.substring(lastEndIndex, endIndex)
+			lastEndIndex = endIndex
+		}
+		if (str.length > lastEndIndex)
+			builder.result() :+ str.substring(lastEndIndex)
+		else
+			builder.result()
+	}
 }

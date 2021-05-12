@@ -1,6 +1,30 @@
 # Utopia Vault - List of Changes
 
+## v1.7.1 - 12.5.2021
+This update focuses on utility features around SQL queries, especially on iterative, 
+sequential queries that target very large data sets. 
+This update also contains an important bugfix concerning `Result.updatedRowCount`.
+### New Features
+- Added **DataInserted** trait to skip the repetitions coding of `.insert(...)` methods
+- Added **QueryIterator** class for easy **Limit** + **Offset** queries
+  - Added `.iterator(SqlSegment, Int)` and `.rowIterator(SqlSegment, Int)` to **Connection**
+  - Added `.iterator` and `.orderedIterator(OrderBy)` to **ManyModelAccess**
+  - Added `.iterator` to **ManyIdAccess**
+- Inserts can now generate warnings or errors when attempting to insert values that don't belong to a table
+  - Specify `ErrorHandling.insertClipPrinciple` in order to utilize this feature
+### New Methods
+- **Condition**.type
+  - `.and(Seq[Condition])` and `.or(Seq[Condition])` that combine multiple conditions together
+- **Delete**.type
+  - `.apply(Table)` (new variation to support combination with **Limit**)
+  - `.inParts(Table, Int, Option[Condition])` for deleting very large amounts of rows
+### Fixes
+- `.updatedRowCount` in **Result** is now set correctly within `connection.apply(...)` (was broken previously)
+- If a database query returns multiple result sets, they are now correctly combined 
+  (previously only the first result was read)
+
 ## v1.7 - 17.4.2021
+This update focuses on the **Access** classes as well as database creation / management.
 ### Breaking Changes
 - **ModelAccess** now requires three type parameters instead of two, to support value accessing
 - **ManyIdAccess** no longer provides implicit access to `.all` - this may be re-added later, however

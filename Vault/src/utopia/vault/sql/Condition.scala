@@ -28,15 +28,48 @@ object Where
 
 object Condition
 {
+    // ATTRIBUTES   -------------------------
+    
     /**
       * A condition that always returns true
       */
     val alwaysTrue = Condition(SqlSegment("TRUE"))
-    
     /**
       * A condition that always returns false
       */
     val alwaysFalse = Condition(SqlSegment("FALSE"))
+    
+    
+    // OTHER    -----------------------------
+    
+    /**
+     * @param conditions A set of conditions
+     * @param resultOnEmpty Whether any (all) rows should be returned if this list is empty (default = false)
+     * @return A combination of those conditions using OR
+     */
+    def or(conditions: Seq[Condition], resultOnEmpty: Boolean = false) =
+    {
+        if (conditions.isEmpty)
+        {
+            if (resultOnEmpty) alwaysTrue else alwaysFalse
+        }
+        else
+            conditions.head || conditions.tail
+    }
+    /**
+     * @param conditions A set of conditions
+     * @param resultOnEmpty Whether any (all) rows should be returned if this list is empty (default = true)
+     * @return A combination of those conditions using AND
+     */
+    def and(conditions: Seq[Condition], resultOnEmpty: Boolean = true) =
+    {
+        if (conditions.isEmpty)
+        {
+            if (resultOnEmpty) alwaysTrue else alwaysFalse
+        }
+        else
+            conditions.head && conditions.tail
+    }
 }
 
 /**

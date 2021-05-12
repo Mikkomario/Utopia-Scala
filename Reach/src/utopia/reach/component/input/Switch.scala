@@ -2,8 +2,9 @@ package utopia.reach.component.input
 
 import java.awt.event.KeyEvent
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
+import utopia.flow.event.{AlwaysTrue, ChangingLike}
 import utopia.genesis.animation.Animation
+import utopia.genesis.animation.AnimationLike.AnyAnimation
 import utopia.genesis.color.Color
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.mutable.ActorHandler
@@ -189,7 +190,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 	{
 		// ATTRIBUTES	-------------
 		
-		private var currentAnimation: Animation[Double] = Animation.fixed(if (value) 1.0 else 0.0)
+		private var currentAnimation: AnyAnimation[Double] = Animation.fixed(if (value) 1.0 else 0.0)
 		private var currentProgress: Double = 1.0
 		
 		
@@ -199,6 +200,8 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		
 		
 		// IMPLEMENTED	-------------
+		
+		override def opaque = false
 		
 		override def allowsHandlingFrom(handlerType: HandlerType) = currentProgress < 1.0
 		

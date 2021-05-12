@@ -1,4 +1,4 @@
-package utopia.reach.container
+package utopia.reach.container.wrapper
 
 import utopia.genesis.color.Color
 import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.ContextualBuilderContentFactory
@@ -6,6 +6,7 @@ import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, 
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
+import utopia.reach.container.ReachCanvas
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer

@@ -238,6 +238,7 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 	// Draws the line under the selected item
 	private object SelectionDrawer extends CustomDrawer
 	{
+		override def opaque = false
 		override def drawLevel = Background
 		override def draw(drawer: Drawer, bounds: Bounds) =
 			drawer.onlyFill(highlightColor).draw(bounds.bottomSlice(selectionLineHeight))

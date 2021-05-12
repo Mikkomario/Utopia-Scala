@@ -241,6 +241,8 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
     
     private class AlternatingRowBackgroundDrawer(val colors: Seq[Color]) extends CustomDrawer
     {
+        override def opaque = true
+    
         override def drawLevel = DrawLevel.Background
     
         override def draw(drawer: Drawer, bounds: Bounds) =

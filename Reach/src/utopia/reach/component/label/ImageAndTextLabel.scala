@@ -10,7 +10,7 @@ import utopia.reach.component.factory.{ContextInsertableComponentFactory, Contex
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open}
-import utopia.reach.container.Stack
+import utopia.reach.container.multi.stack.Stack
 import utopia.reflection.image.SingleColorIcon
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment

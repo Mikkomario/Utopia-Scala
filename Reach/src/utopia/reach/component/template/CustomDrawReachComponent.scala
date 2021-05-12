@@ -1,5 +1,6 @@
 package utopia.reach.component.template
 
+import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.shape2D.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.{CustomDrawable2, CustomDrawer, DrawLevel}
@@ -46,6 +47,8 @@ trait CustomDrawReachComponent extends ReachComponent with CustomDrawable2
 	
 	override def drawBounds = bounds
 	
+	override def transparent = customDrawers.forall { _.transparent }
+	
 	override def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds]) =
 	{
 		val drawers = customDrawers.filter { _.drawLevel == drawLevel }
@@ -54,7 +57,7 @@ trait CustomDrawReachComponent extends ReachComponent with CustomDrawable2
 		{
 			val targetBounds = drawBounds
 			val d = clipZone.map(drawer.clippedTo).getOrElse(drawer)
-			drawers.foreach {_.draw(d, targetBounds)}
+			drawers.view.takeTo { _.opaque }.foreach { _.draw(d, targetBounds) }
 		}
 	}
 }

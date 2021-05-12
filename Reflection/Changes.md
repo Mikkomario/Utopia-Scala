@@ -1,6 +1,24 @@
 # Utopia Reflection - List of Changes
+
+## v2.0-alpha-2 (incomplete update) - 12.5.2021
+While still working towards the v2.0 milestone, this update adds some new tools for component positioning. 
+**CustomDrawer** implementations need to be altered slightly to support the changes in the **Reach** module.
+### Breaking Changes
+- **CustomDrawer** implementations must now specify `.opaque: Boolean`. 
+  This is used in component transparency calculations
+### New Methods
+- **Alignment**
+  - `.positionStreching(...)` as well as `.positionNextToWithin(...)` as new component positioning methods
+- **StackInsets**
+  - `.noMin`, `.noMax` and `.noLimits`
+- **StackLength**.type and **StackSize**.type
+  - `.combine(...)` for combining multiple stack lengths / sizes
+
 ## v2.0-alpha (incomplete update) - 17.4.2021
-v2.0 update is still in development, but the module is completely usable.
+v2.0 update is still in development, but the module is completely usable.  
+
+This release prepares for the introduction of the new **Reach** module which takes elements of 
+**Reflection** even further.
 ### Breaking Changes
 - **Area** now leaves `.bounds` implementation up to subclasses
 - **CustomDrawer** class naming updated

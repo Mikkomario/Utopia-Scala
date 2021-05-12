@@ -122,7 +122,7 @@ trait AwtComponentWrapper extends ComponentLike with AwtComponentRelated
     override def background: Color = component.getBackground
     override def background_=(color: Color) = AwtEventThread.async {
         // Since swing components don't handle transparency very well, mixes a transparent color with background instead
-        if (color.isTransparent)
+        if (color.transparent)
         {
             val myRGB = color.rgb
             val parentRGB = parentBackground.map { _.rgb }

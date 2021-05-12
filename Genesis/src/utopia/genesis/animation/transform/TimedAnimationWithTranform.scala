@@ -1,6 +1,6 @@
 package utopia.genesis.animation.transform
 
-import utopia.genesis.animation.{Animation, TimedAnimation}
+import utopia.genesis.animation.{Animation, AnimationLike, TimedAnimation}
 
 import scala.concurrent.duration.Duration
 
@@ -9,8 +9,26 @@ import scala.concurrent.duration.Duration
   * @author Mikko Hilpinen
   * @since 28.3.2020, v2.1
   */
-trait TimedAnimationWithTranform[Origin, +Reflection] extends AnimationWithTransform[Origin, Reflection]
-	with TimedAnimation[Reflection]
+trait TimedAnimationWithTranform[Origin, +Reflection] extends TimedAnimation[Reflection]
+{
+	// ABSTRACT	-------------------------------
+	
+	/**
+	  * @param progress Animation progress
+	  * @return The raw state of this animation (state before applying transformation) at specified animation progress
+	  */
+	def raw(progress: Double): Origin
+	
+	/**
+	  * @return Transform applied over the raw animation
+	  */
+	def transform: AnimatedTransform[Origin, Reflection]
+	
+	
+	// IMPLEMENTED	---------------------------
+	
+	override def apply(progress: Double) = transform(raw(progress), progress)
+}
 
 object TimedAnimationWithTranform
 {
@@ -41,8 +59,10 @@ object TimedAnimationWithTranform
 	
 	// NESTED	--------------------------
 	
-	private class TimedAnimationWithTransformWrapper[O, +R](animation: Animation[O], override val transform: AnimatedTransform[O, R],
-															getDuration: => Duration) extends TimedAnimationWithTranform[O, R]
+	private class TimedAnimationWithTransformWrapper[O, +R](animation: AnimationLike[O, Any],
+	                                                        override val transform: AnimatedTransform[O, R],
+	                                                        getDuration: => Duration)
+		extends TimedAnimationWithTranform[O, R]
 	{
 		override def raw(progress: Double) = animation(progress)
 		

@@ -11,7 +11,7 @@ import utopia.inception.handling.HandlerType
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentWrapper
-import utopia.reach.container.Stack
+import utopia.reach.container.multi.stack.Stack
 import utopia.reach.focus.ManyFocusableWrapper
 import utopia.reflection.color.{ColorRole, ComponentColor}
 import utopia.reflection.color.ColorRole.Secondary

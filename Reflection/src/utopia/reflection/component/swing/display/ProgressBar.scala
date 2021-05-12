@@ -2,6 +2,7 @@ package utopia.reflection.component.swing.display
 
 import utopia.flow.async.VolatileFlag
 import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
+import utopia.genesis.animation.AnimationLike.AnyAnimation
 import utopia.genesis.animation.Animation
 import utopia.genesis.color.Color
 import utopia.genesis.handling.Actor
@@ -133,7 +134,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 	{
 		// ATTRIBUTES	------------------
 		
-		private var currentProgressAnimation: Animation[Double] = Animation.fixed(progress)
+		private var currentProgressAnimation: AnyAnimation[Double] = Animation.fixed(progress)
 		private var currentAnimationProgress: Double = 1.0
 		
 		
@@ -143,6 +144,8 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 		
 		
 		// IMPLEMENTED	------------------
+		
+		override def opaque = false
 		
 		override def act(duration: FiniteDuration) =
 		{

@@ -7,7 +7,9 @@ import utopia.genesis.shape.Axis.X
 import utopia.reach.component.button.{ImageAndTextButton, TextButton}
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
 import utopia.reach.component.template.{ButtonLike, ReachComponentLike}
-import utopia.reach.container.{AlignFrame, ContextualStackFactory, Framing, ReachCanvas, Stack, StackFactory}
+import utopia.reach.container.multi.stack.{ContextualStackFactory, Stack, StackFactory}
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.cursor.CursorSet
 import utopia.reflection.color.ColorRole
 import utopia.reflection.component.context.{ButtonContextLike, ColorContext}

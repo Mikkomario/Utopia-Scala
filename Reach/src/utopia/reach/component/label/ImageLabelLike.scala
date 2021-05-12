@@ -44,9 +44,9 @@ trait ImageLabelLike extends ReachComponentLike with CustomDrawable2 with Cachin
 		val raw =
 		{
 			if (allowUpscaling)
-				StackSize.downscaling(image.size, image.sourceResolution)
+				StackSize.downscaling(image.size.ceil, image.sourceResolution)
 			else
-				StackSize.downscaling(image.size)
+				StackSize.downscaling(image.size.ceil)
 		}
 		if (useLowPrioritySize) raw.shrinking else raw
 	}

@@ -97,7 +97,6 @@ trait ComponentHierarchy
 		case Right((parentHierarchy, _)) => parentHierarchy == hierarchy || parentHierarchy.isChildOf(hierarchy)
 		case Left(_) => false
 	}
-	
 	/**
 	  * @param component A component
 	  * @return Whether this component hierarchy block is under specified component
@@ -116,6 +115,21 @@ trait ComponentHierarchy
 	  */
 	def contains(component: ReachComponentLike) =
 		component.parentHierarchy == this || component.isChildOf(this) || isChildOf(component)
+	
+	/**
+	  * @param component A component
+	  * @return A modifier to apply to this hierarchy's child's position in order to get the position in the specified
+	  *         component. None if this hierarchy is not a child of the specified component.
+	  */
+	def positionInComponentModifier(component: ReachComponentLike): Option[Vector2D] = parent match
+	{
+		case Right((parentHierarchy, parentComponent)) =>
+			if (parentComponent == component)
+				Some(Vector2D.zero)
+			else
+				parentHierarchy.positionInComponentModifier(component).map { _ + parentComponent.position }
+		case Left(_) => None
+	}
 	
 	/**
 	  * Revalidates this component hierarchy (provided this part of the hierarchy is currently linked to the main

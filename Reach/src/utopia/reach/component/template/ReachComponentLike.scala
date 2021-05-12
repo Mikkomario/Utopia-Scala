@@ -30,12 +30,10 @@ trait ReachComponentLike extends Stackable2
 	  * @return A pointer to the current position of this component
 	  */
 	def positionPointer: ChangingLike[Point]
-	
 	/**
 	  * @return A pointer to the current size of this component
 	  */
 	def sizePointer: ChangingLike[Size]
-	
 	/**
 	  * @return A pointer to the current bounds (position + size) of this component
 	  */
@@ -49,6 +47,11 @@ trait ReachComponentLike extends Stackable2
 	
 	override def children: Seq[ReachComponentLike] = Vector()
 	
+	/**
+	  * @return Whether this component is partially or fully transparent
+	  *         (I.e. will not paint over all of its bounds with 100% alpha)
+	  */
+	def transparent: Boolean
 	/**
 	  * Paints the contents of this component on some level. This method is called three times in normal component
 	  * painting process (once for each draw level)
@@ -64,10 +67,15 @@ trait ReachComponentLike extends Stackable2
 	// COMPUTED	------------------------
 	
 	/**
+	  * @return Whether this component paints all of its bounds with 100% alpha
+	  *         (I.e. can't be seen through at any point)
+	  */
+	def opaque = !transparent
+	
+	/**
 	  * @return The canvas element that contains this component
 	  */
 	def parentCanvas = parentHierarchy.top
-	
 	/**
 	  * @return Window that contains this component
 	  */
@@ -77,7 +85,6 @@ trait ReachComponentLike extends Stackable2
 	  * @return The absolute (on-screen) position of this component
 	  */
 	def absolutePosition = position + parentHierarchy.absolutePositionModifier
-	
 	/**
 	  * @return The bounds of this component on the screen (provided this component is connected to a hierarchy
 	  *         reaching a window)
@@ -88,7 +95,6 @@ trait ReachComponentLike extends Stackable2
 	  * @return The position of this component inside the so called top component (the canvas element)
 	  */
 	def positionInTop = position + parentHierarchy.positionToTopModifier
-	
 	/**
 	  * @return The bounds of this component inside the top component (canvas element)
 	  */
@@ -131,12 +137,19 @@ trait ReachComponentLike extends Stackable2
 	  * @return Whether this component is a child (below in hierarchy) of the specified component
 	  */
 	def isChildOf(another: ReachComponentLike) = parentHierarchy.isChildOf(another)
-	
 	/**
 	  * @param hierarchy A component hierarchy
 	  * @return Whether this component is a child (below) of the specified component hierarchy
 	  */
 	def isChildOf(hierarchy: ComponentHierarchy) = parentHierarchy.isChildOf(hierarchy)
+	
+	/**
+	  * @param parent A component higher up in this component's hierarchy
+	  * @return This component's position within that component's coordinate system. None if this component is
+	  *         not a child of that component.
+	  */
+	def positionRelativeTo(parent: ReachComponentLike) =
+		parentHierarchy.positionInComponentModifier(parent).map { position + _ }
 	
 	/**
 	  * Indicates that this component's and its hierarchy's layout should be updated
@@ -147,7 +160,6 @@ trait ReachComponentLike extends Stackable2
 		resetCachedSize()
 		parentHierarchy.revalidate(Vector(this))
 	}
-	
 	/**
 	  * Indicates that this component's and its hierarchy's layout should be updated. Calls the specified function
 	  * once layout update has completed (if it has completed)
@@ -164,19 +176,16 @@ trait ReachComponentLike extends Stackable2
 	  * Paints this component again
 	  */
 	def repaint() = parentHierarchy.repaint(bounds)
-	
 	/**
 	  * Paints this component again
 	  */
 	def repaint(priority: Priority) = parentHierarchy.repaint(bounds, priority)
-	
 	/**
 	  * Paints this component's parent again
 	  * @param priority Priority to use for the repaint operation. Higher priority components are drawn first.
 	  *                 (Default = Normal).
 	  */
 	def repaintParent(priority: Priority = Priority.Normal) = parentHierarchy.repaintBottom(priority)
-	
 	/**
 	  * Repaints a sub-section of this component's area
 	  * @param relativeArea An area to repaint (where (0,0) is located at the top left corner of this component)
@@ -184,7 +193,6 @@ trait ReachComponentLike extends Stackable2
 	  */
 	def repaintArea(relativeArea: Bounds, priority: Priority = Priority.Normal) =
 		parentHierarchy.repaint(relativeArea + position, priority)
-	
 	/**
 	  * Indicates that this component's and its hierarchy's layout should be updated. Once that has been done,
 	  * repaints this component
@@ -199,36 +207,43 @@ trait ReachComponentLike extends Stackable2
 	  *                 <b>Will only affect visual results and not touch the position information of this component</b>
 	  */
 	def paintMovement(movement: => Vector2D) = parentHierarchy.shiftArea(bounds, movement)
-	
 	/**
 	  * Paints this component and its children
 	  * @param drawer   Drawer to use for drawing this component. Origin coordinates (0,0) should be located at the
 	  *                 top-left corner of the parent component.
 	  * @param clipZone Bounds where the drawing is limited. None if whole component area should be drawn.
+	  *                 The clip zone coordinate system matches that of the drawer (0,0) is at the top-left corner of
+	  *                 this component's parent.
 	  */
 	def paintWith(drawer: Drawer, clipZone: Option[Bounds] = None): Unit =
 	{
-		// Paints background and normal levels
-		paintContent(drawer, Background, clipZone)
-		paintContent(drawer, Normal, clipZone)
-		// Paints child components (only those that overlap with the clipping bounds)
+		// Calculates new clipping zone and drawer origin
+		val childClipZone = clipZone.map { _ - position }
 		val components = children
+		
+		// If one of the child components blocks the specified clip zone,
+		// won't draw the underlying contents of this component
+		val clipZoneIsCovered = childClipZone.exists { clipZone =>
+			components.view.filter { _.bounds.contains(clipZone) }.exists { _.coversAllOf(clipZone) }
+		}
+		// Paints background and normal levels (if necessary)
+		if (!clipZoneIsCovered)
+		{
+			paintContent(drawer, Background, clipZone)
+			paintContent(drawer, Normal, clipZone)
+		}
+		
+		// Paints child components (only those that overlap with the clipping bounds)
 		if (components.nonEmpty)
 		{
-			// Calculates new clipping zone and drawer origin
-			val newClipZone = clipZone.map { _ - position }
-			val remainingComponents = newClipZone match
+			val remainingComponents = childClipZone match
 			{
 				case Some(zone) => components.filter { _.bounds.overlapsWith(zone) }
 				case None => components
 			}
 			if (remainingComponents.nonEmpty)
-				/*
 				drawer.translated(position).disposeAfter { d =>
-					remainingComponents.foreach { c => c.paintWith(d.clippedTo(c.bounds), newClipZone) }
-				}*/
-				drawer.translated(position).disposeAfter { d =>
-					remainingComponents.foreach { c => c.paintWith(d, newClipZone) }
+					remainingComponents.foreach { c => c.paintWith(d, childClipZone) }
 				}
 		}
 		// Paints foreground
@@ -282,4 +297,16 @@ trait ReachComponentLike extends Stackable2
 											  margin: Double = 0.0, autoCloseLogic: PopupAutoCloseLogic = Never)
 											 (makeContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
 		parentCanvas.createPopup(actorHandler, boundsInsideTop, alignment, margin, autoCloseLogic)(makeContent)
+	
+	// Expects the clip zone to be completely inside this component's bounds
+	private def coversAllOf(clipZone: Bounds): Boolean =
+	{
+		if (opaque)
+			true
+		else
+		{
+			val newClipZone = clipZone - position
+			children.view.filter { _.bounds.contains(newClipZone) }.exists { _.coversAllOf(newClipZone) }
+		}
+	}
 }

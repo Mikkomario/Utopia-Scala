@@ -13,7 +13,7 @@ import utopia.reach.component.factory.{ContextInsertableComponentFactory, Contex
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open}
-import utopia.reach.container.Stack
+import utopia.reach.container.multi.stack.Stack
 import utopia.reach.util.Priority.Low
 import utopia.reflection.component.drawing.view.BackgroundViewDrawer
 import utopia.reflection.component.template.layout.stack.ConstrainableWrapper

@@ -6,7 +6,9 @@ import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.{ContextualSwitchFactory, Switch}
 import utopia.reach.component.label.{ContextualTextLabelFactory, TextLabel, ViewTextLabel}
 import utopia.reach.component.wrapper.ComponentCreationResult
-import utopia.reach.container.{Framing, ReachCanvas, SegmentGroup, Stack}
+import utopia.reach.container.multi.stack.{SegmentGroup, Stack}
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.wrapper.Framing
 import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.container.stack.StackLayout.{Center, Leading, Trailing}
 import utopia.reflection.container.swing.window.Frame

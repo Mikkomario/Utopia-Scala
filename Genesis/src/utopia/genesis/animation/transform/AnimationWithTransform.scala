@@ -2,6 +2,33 @@ package utopia.genesis.animation.transform
 
 import utopia.genesis.animation.Animation
 
+object AnimationWithTransform
+{
+	// OTHER	-------------------------------
+	
+	/**
+	  * Combines an animation with an animated transformation
+	  * @param animation An animation
+	  * @param transform An animated transformation
+	  * @tparam Origin Type of original animation
+	  * @tparam Reflection Type of transformation result
+	  * @return A new animation that also applies the animated transformation
+	  */
+	def wrap[Origin, Reflection](animation: Animation[Origin],
+	                             transform: AnimatedTransform[Origin, Reflection]): AnimationWithTransform[Origin, Reflection] =
+		new AnimationWithTransformWrapper(animation, transform)
+	
+	
+	// NESTED	-------------------------------
+	
+	private class AnimationWithTransformWrapper[Origin, +Reflection]
+	(animation: Animation[Origin], override val transform: AnimatedTransform[Origin, Reflection])
+		extends AnimationWithTransform[Origin, Reflection]
+	{
+		override def raw(progress: Double) = animation(progress)
+	}
+}
+
 /**
   * This animation uses an animated transform in addition to standard animation
   * @author Mikko Hilpinen
@@ -26,31 +53,4 @@ trait AnimationWithTransform[Origin, +Reflection] extends Animation[Reflection]
 	// IMPLEMENTED	---------------------------
 	
 	override def apply(progress: Double) = transform(raw(progress), progress)
-}
-
-object AnimationWithTransform
-{
-	// OTHER	-------------------------------
-	
-	/**
-	  * Combines an animation with an animated transformation
-	  * @param animation An animation
-	  * @param transform An animated transformation
-	  * @tparam Origin Type of original animation
-	  * @tparam Reflection Type of transformation result
-	  * @return A new animation that also applies the animated transformation
-	  */
-	def wrap[Origin, Reflection](animation: Animation[Origin],
-								 transform: AnimatedTransform[Origin, Reflection]): AnimationWithTransform[Origin, Reflection] =
-		new AnimationWithTransformWrapper(animation, transform)
-	
-	
-	// NESTED	-------------------------------
-	
-	private class AnimationWithTransformWrapper[Origin, +Reflection](
-		animation: Animation[Origin], override val transform: AnimatedTransform[Origin, Reflection])
-		extends AnimationWithTransform[Origin, Reflection]
-	{
-		override def raw(progress: Double) = animation(progress)
-	}
 }

@@ -17,6 +17,14 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends template.TreeLike[A
     override protected def makeNode(content: A): NodeType = makeNode(content, Vector())
     
     
+    // COMPUTED --------------------
+    
+    /**
+     * @return A copy of this tree without any child nodes included
+     */
+    def withoutChildren = makeNode(content)
+    
+    
     // OPERATORS    ----------------
     
     /**

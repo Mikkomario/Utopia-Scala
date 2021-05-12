@@ -1,6 +1,6 @@
 package utopia.genesis.shape.shape1D
 
-import utopia.flow.util.RichComparable
+import utopia.flow.util.SelfComparable
 import utopia.genesis.shape.shape1D.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.genesis.shape.shape2D.Direction2D
 import utopia.genesis.util.Extensions._
@@ -14,17 +14,14 @@ object Angle
      * Angle that points to the left (180 degrees)
      */
     val left = ofRadians(math.Pi)
-    
     /**
      * Angle that points to the right (0 degrees)
      */
     val right = ofRadians(0)
-    
     /**
      * Angle that points up (270 degrees)
      */
     val up = ofRadians(3 * math.Pi / 2)
-    
     /**
      * Angle that points down (90 degrees)
      */
@@ -34,12 +31,10 @@ object Angle
       * The red color angle when using HSL
       */
     val red = ofRadians(0)
-    
     /**
       * The green color angle when using HSL
       */
     val green = ofRadians(2 * math.Pi / 3)
-    
     /**
       * The blue color angle when using HSL
       */
@@ -57,12 +52,10 @@ object Angle
       * @return 1/4 of a circle
       */
     def quarter = down
-    
     /**
       * @return 1/2 of a circle
       */
     def half = left
-    
     /**
       * @return 3/4 of a circle
       */
@@ -82,7 +75,6 @@ object Angle
         else
             Angle(raw)
     }
-    
     /**
      * Converts a degrees angle to an angle instance (some inaccuracy may occur since the value 
      * is converted to radians internally)
@@ -103,6 +95,22 @@ object Angle
         case Direction2D.Left => left
         case Direction2D.Up => up
     }
+    
+    /**
+      * @param angles A number of angles
+      * @return An average between the angles
+      */
+    def average(angles: Iterable[Angle]) =
+    {
+        if (angles.isEmpty)
+            zero
+        else
+        {
+            val start = angles.head
+            val averageRotation = Rotation.average(angles.map { _ - start })
+            start + averageRotation
+        }
+    }
 }
 
 /**
@@ -112,7 +120,7 @@ object Angle
  * @author Mikko Hilpinen
  * @since 30.6.2017
  */
-case class Angle private(radians: Double) extends ApproximatelyEquatable[Angle] with RichComparable[Angle]
+case class Angle private(radians: Double) extends ApproximatelyEquatable[Angle] with SelfComparable[Angle]
     with Arithmetic[Rotation, Angle]
 {
     // ATTRIBUTES    ------------------

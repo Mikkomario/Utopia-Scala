@@ -9,7 +9,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.DurationField.focusTransferDelay
 import utopia.reach.component.label.TextLabel
 import utopia.reach.component.template.ReachComponentWrapper
-import utopia.reach.container.Stack
+import utopia.reach.container.multi.stack.Stack
 import utopia.reach.focus.ManyFocusableWrapper
 import utopia.reflection.color.ColorRole
 import utopia.reflection.color.ColorRole.Secondary

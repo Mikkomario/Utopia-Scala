@@ -4,7 +4,8 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.event.KeyTypedEvent
 import utopia.reach.component.label.MutableViewTextLabel
 import utopia.reach.component.wrapper.Open
-import utopia.reach.container.{MutableStack, ReachCanvas}
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.multi.stack.MutableStack
 import utopia.reflection.color.ColorRole.Secondary
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program

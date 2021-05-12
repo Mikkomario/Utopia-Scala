@@ -9,7 +9,8 @@ package utopia.genesis.animation
   * @param switchPoint The progress point at which the switch between the animations is made ]0, 1[
   * @tparam A Type of animation result
   */
-case class CombinedAnimation[+A](first: Animation[A], second: Animation[A], switchPoint: Double = 0.5) extends Animation[A]
+case class CombinedAnimation[+A](first: AnimationLike[A, Any], second: AnimationLike[A, Any], switchPoint: Double = 0.5)
+	extends Animation[A]
 {
 	override def apply(progress: Double) =
 	{

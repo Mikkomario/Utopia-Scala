@@ -1,5 +1,30 @@
 # Utopia Reflection - List of Changes
+
+## v2.5 12.5.2021
+This update adds a relatively major refactoring on **Animation** trait class structure, 
+and also adds a number of new utility methods and features.
+### Breaking Changes
+- **TimedAnimation** and **Path** no longer extend **Animation** but instead extend new trait **AnimationLike**
+- There are other animation -related breaking changes also
+### Deprecations
+- Deprecated `Color.isTransparent` in favor of `Color.transparent`
+### New Features
+- **Images** can now be saved to files with `.writeToFile(Path)`
+- **SinePath** added
+### New Methods
+- **Angle**.type
+  - `.average(Iterable[Angle])`
+- **Color**
+  - `.transparent` and `.opaque`
+- **Line**
+  - `.xForY` and `.yForX` function attributes for using lines as linear functions
+- **Rotation**.type
+  - `.average(Iterable[Rotation])`
+
 ## v2.4 - 17.4.2021
+With the introduction of the new **Reach** module, multiple additions and changes were necessary in 
+**Genesis** as well. These include a wide range of practical and useful updates, 
+although many of them also require you to update your code.
 ### Breaking Changes
 - **MouseEventGenerator** and **CanvasMouseEventGenerator** no longer accept listeners as parameters. 
   Instead, they now create new mutable mouse event handlers.
