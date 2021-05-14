@@ -38,9 +38,9 @@ import scala.util.Try
   * @since 30.10.2020, v0.3
   */
 // TODO: Create a password mode where text is not displayed nor copyable
-abstract class AbstractSelectableTextLabel[+P <: ChangingLike[LocalizedString]]
+abstract class AbstractSelectableTextLabel
 (override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
- val textPointer: P, stylePointer: ChangingLike[TextDrawContext],
+ textPointer: ChangingLike[LocalizedString], stylePointer: ChangingLike[TextDrawContext],
  selectedTextColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),
  selectionBackgroundColorPointer: ChangingLike[Option[Color]] = Fixed(None),
  caretColorPointer: ChangingLike[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,

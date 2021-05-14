@@ -162,14 +162,14 @@ case class ContextualSelectableTextLabelFactory[+N <: TextContextLike](factory: 
   * @since 14.5.2021, v0.3
   */
 class SelectableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
-                          textPointer: ChangingLike[LocalizedString], stylePointer: ChangingLike[TextDrawContext],
+                          val textPointer: ChangingLike[LocalizedString], stylePointer: ChangingLike[TextDrawContext],
                           selectedTextColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),
                           selectionBackgroundColorPointer: ChangingLike[Option[Color]] = Fixed(None),
                           caretColorPointer: ChangingLike[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
                           caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
                           additionalCustomDrawers: Vector[CustomDrawer], additionalFocusListeners: Seq[FocusListener],
                           allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false)
-	extends AbstractSelectableTextLabel[ChangingLike[LocalizedString]](parentHierarchy, actorHandler, textPointer,
+	extends AbstractSelectableTextLabel(parentHierarchy, actorHandler, textPointer,
 		stylePointer, selectedTextColorPointer, selectionBackgroundColorPointer, caretColorPointer, caretWidth,
 		caretBlinkFrequency, allowLineBreaks, allowTextShrink)
 {
@@ -177,6 +177,11 @@ class SelectableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Act
 	
 	override val customDrawers = mainDrawer +: additionalCustomDrawers
 	override val focusListeners = FocusHandler +: additionalFocusListeners
+	
+	
+	// INITIAL CODE --------------------------------
+	
+	setup()
 	
 	
 	// IMPLEMENTED  --------------------------------

@@ -127,7 +127,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
                         selectionBackgroundColorPointer: ChangingLike[Option[Color]] = Fixed(None),
                         caretColorPointer: ChangingLike[Color] = Fixed(Color.textBlack), caretWidth: Double = 1.0,
                         caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
-                        textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
+                        val textPointer: PointerWithEvents[String] = new PointerWithEvents(""),
                         inputFilter: Option[Regex] = None, maxLength: Option[Int] = None,
                         enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
                         allowSelectionWhileDisabled: Boolean = true, allowLineBreaks: Boolean = true,
