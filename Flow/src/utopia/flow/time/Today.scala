@@ -1,10 +1,10 @@
 package utopia.flow.time
 
 import scala.language.implicitConversions
-
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConvertible
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.TimeExtensions.ExtendedLocalDate
 import utopia.flow.util.RichComparable
 
 import java.time.LocalDate
@@ -19,6 +19,8 @@ object Today extends ValueConvertible with RichComparable[LocalDate]
 	// IMPLICIT ----------------------------
 	
 	implicit def currentDate(today: Today.type): LocalDate = today.toLocalDate
+	
+	implicit def extendedDate(today: Today.type): ExtendedLocalDate = today.toLocalDate
 	
 	
 	// COMPUTED  ---------------------------

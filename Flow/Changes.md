@@ -1,5 +1,10 @@
 # Utopia Flow - List of Changes
 
+## v1.9.2 (in development)
+### Other Changes
+- Added direct implicit conversion from **Today** to **ExtendedLocalDate**, allowing access to **TimeExtensions** 
+  methods directly from **Today** without going through **LocalDate** first
+
 ## v1.9.1 - 12.5.2021
 This adds new collection utility methods, especially on **IterableOnce** and **TreeLike** traits.
 ### New Methods
