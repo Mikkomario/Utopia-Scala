@@ -1,12 +1,12 @@
-package utopia.reach.component.input
+package utopia.reach.component.label
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeListener, ChangingLike, Fixed}
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.event._
-import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
+import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Direction2D, Point}
@@ -21,7 +21,6 @@ import utopia.reach.util.Priority.VeryHigh
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.view.SelectableTextViewDrawer
 import utopia.reflection.component.template.text.TextComponent2
-import utopia.reflection.localization.LocalString._
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.text.{FontMetricsContext, MeasuredText}
 import utopia.reflection.util.ComponentCreationDefaults
@@ -39,7 +38,7 @@ import scala.util.Try
   * @since 30.10.2020, v0.3
   */
 // TODO: Create a password mode where text is not displayed nor copyable
-abstract class AbstractSelectableTextLabel[+P <: ChangingLike[String]]
+abstract class AbstractSelectableTextLabel[+P <: ChangingLike[LocalizedString]]
 (override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
  val textPointer: P, stylePointer: ChangingLike[TextDrawContext],
  selectedTextColorPointer: ChangingLike[Color] = Fixed(Color.textBlack),
@@ -62,7 +61,7 @@ abstract class AbstractSelectableTextLabel[+P <: ChangingLike[String]]
 	  * A pointer to this label's measured text information
 	  */
 	val measuredTextPointer = textPointer.mergeWith(measurerPointer) { (text, measures) =>
-		MeasuredText(text.noLanguageLocalizationSkipped, measures._1, measures._2, allowLineBreaks)
+		MeasuredText(text, measures._1, measures._2, allowLineBreaks)
 	}
 	/**
 	  * Pointer that contains the current caret index within text
@@ -128,7 +127,7 @@ abstract class AbstractSelectableTextLabel[+P <: ChangingLike[String]]
 		.map { r => measuredText.caretIndexToCharacterIndex(r.start) until r.end }
 		.map { _text.slice(_) }.filterNot { _.isEmpty }
 	
-	private def _text = textPointer.value
+	private def _text = textPointer.value.string
 	
 	
 	// IMPLEMENTED	-------------------------------
@@ -223,7 +222,7 @@ abstract class AbstractSelectableTextLabel[+P <: ChangingLike[String]]
 		// Clears or limits selected range whenever the text is updated
 		textPointer.addListener { event =>
 			selectedRangePointer.value.foreach { case (start, end) =>
-				val maxIndex = event.newValue.length
+				val maxIndex = event.newValue.string.length
 				if (start >= maxIndex)
 					clearSelection()
 				else if (end > maxIndex)

@@ -18,10 +18,12 @@ import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.label.AbstractSelectableTextLabel
 import utopia.reach.component.template.MutableFocusable
 import utopia.reach.focus.FocusListener
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer
+import utopia.reflection.localization.LocalString._
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.concurrent.duration.Duration
@@ -130,7 +132,8 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, actorHandler: Actor
                         enabledPointer: ChangingLike[Boolean] = AlwaysTrue,
                         allowSelectionWhileDisabled: Boolean = true, allowLineBreaks: Boolean = true,
                         allowTextShrink: Boolean = false)
-	extends AbstractSelectableTextLabel(parentHierarchy, actorHandler, textPointer,
+	extends AbstractSelectableTextLabel(parentHierarchy, actorHandler,
+		textPointer.map { _.noLanguageLocalizationSkipped },
 		baseStylePointer.mergeWith(enabledPointer) { (style, enabled) =>
 			if (enabled) style else style.mapColor { _.timesAlpha(0.66) } }, selectedTextColorPointer,
 		selectionBackgroundColorPointer, caretColorPointer, caretWidth, caretBlinkFrequency,
