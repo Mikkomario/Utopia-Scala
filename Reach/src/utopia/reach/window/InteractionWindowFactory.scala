@@ -4,7 +4,8 @@ import utopia.flow.async.AsyncExtensions.RichFuture
 import utopia.flow.event.ChangingLike
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis.X
-import utopia.reach.component.button.{ImageAndTextButton, TextButton}
+import utopia.reach.component.button.image.ImageAndTextButton
+import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
 import utopia.reach.component.template.{ButtonLike, ReachComponentLike}
 import utopia.reach.container.multi.stack.{ContextualStackFactory, Stack, StackFactory}

@@ -14,8 +14,10 @@ import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, TextViewDrawer2}
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.label.{ImageLabel, ViewImageLabel, ViewTextLabel, ViewTextLabelFactory}
-import utopia.reach.component.template.{Focusable, FocusableWithPointer, FocusableWrapper, ReachComponent, ReachComponentLike, ReachComponentWrapper}
+import utopia.reach.component.label.text.{ViewTextLabel, ViewTextLabelFactory}
+import utopia.reach.component.label.image.{ImageLabel, ViewImageLabel}
+import utopia.reach.component.template.focus.{Focusable, FocusableWithPointer, FocusableWrapper}
+import utopia.reach.component.template.{ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.multi.stack.{Stack, ViewStack}
 import utopia.reach.container.ReachCanvas

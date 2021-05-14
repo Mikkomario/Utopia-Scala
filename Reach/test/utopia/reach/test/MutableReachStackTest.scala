@@ -2,7 +2,7 @@ package utopia.reach.test
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.event.KeyTypedEvent
-import utopia.reach.component.label.MutableViewTextLabel
+import utopia.reach.component.label.text.MutableViewTextLabel
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.stack.MutableStack

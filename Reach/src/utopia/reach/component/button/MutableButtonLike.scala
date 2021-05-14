@@ -1,6 +1,7 @@
 package utopia.reach.component.button
 
-import utopia.reach.component.template.{ButtonLike, MutableFocusable}
+import utopia.reach.component.template.ButtonLike
+import utopia.reach.component.template.focus.MutableFocusable
 
 /**
   * A common trait for mutable button implementations

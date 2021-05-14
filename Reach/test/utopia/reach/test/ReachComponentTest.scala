@@ -4,10 +4,10 @@ import utopia.flow.datastructure.mutable.{Pointer, PointerWithEvents}
 import utopia.genesis.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.KeyStateListener
-import utopia.reach.component.button.TextButton
+import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.Mixed
-import utopia.reach.component.input.EditableTextLabel
-import utopia.reach.component.label.{ContextualMutableTextLabelFactory, MutableTextLabel, TextLabel}
+import utopia.reach.component.input.text.EditableTextLabel
+import utopia.reach.component.label.text.{ContextualMutableTextLabelFactory, MutableTextLabel, TextLabel}
 import utopia.reach.container.multi.stack.{ContextualStackFactory, Stack}
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.wrapper.Framing

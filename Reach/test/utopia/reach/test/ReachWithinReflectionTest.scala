@@ -2,7 +2,7 @@ package utopia.reach.test
 
 import utopia.flow.event.Fixed
 import utopia.genesis.generic.GenesisDataType
-import utopia.reach.component.input.TextField
+import utopia.reach.component.input.text.TextField
 import utopia.reach.container.ReachCanvas
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.container.swing.layout.multi.Stack

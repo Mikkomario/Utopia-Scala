@@ -11,7 +11,6 @@ import utopia.genesis.handling.ActorLoop
 import utopia.genesis.image.Image
 import utopia.genesis.util.DistanceExtensions._
 import utopia.reach.component.factory.ContextualMixed
-import utopia.reach.component.input.{CheckBox, ContextualCheckBoxFactory, ContextualDurationFieldFactory, ContextualRadioButtonGroupFactory, ContextualTextFieldFactory, DurationField, RadioButtonGroup, TextField}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
@@ -22,6 +21,9 @@ import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.template.window.{ManagedField, RowGroup, RowGroups, WindowButtonBlueprint}
 import ManagedField._
+import utopia.reach.component.input.check.{CheckBox, ContextualCheckBoxFactory}
+import utopia.reach.component.input.selection.{ContextualRadioButtonGroupFactory, RadioButtonGroup}
+import utopia.reach.component.input.text.{ContextualDurationFieldFactory, ContextualTextFieldFactory, DurationField, TextField}
 import utopia.reach.container.multi.stack.{Stack, ViewStack}
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusRequestable
