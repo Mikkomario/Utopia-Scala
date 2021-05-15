@@ -1,5 +1,10 @@
 # Utopia Reflection - List of Changes
 
+## v2.5.1 (in development)
+### Other Changes
+- Added **Bounded** trait that defines function `.bounds`. Both **Polygonic** and **Circle** extend this trait.
+- `Bounds.bounds` now returns the bounds itself, which is more efficient than recalculating the same bounds.
+
 ## v2.5 12.5.2021
 This update adds a relatively major refactoring on **Animation** trait class structure, 
 and also adds a number of new utility methods and features.
