@@ -19,7 +19,7 @@ object ExpiringLazy
 	  * @tparam A Type of cached value
 	  * @return A new lazy container
 	  */
-	def apply[A](expirationThreshold: FiniteDuration)(make: => A)(implicit exc: ExecutionContext) =
+	def after[A](expirationThreshold: FiniteDuration)(make: => A)(implicit exc: ExecutionContext) =
 		new ExpiringLazy[A](make)(_ => expirationThreshold)
 	
 	/**

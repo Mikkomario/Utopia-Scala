@@ -9,6 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 
+@deprecated("Please use Lazy instead", "v1.10")
 object SingleAsyncCache
 {
 	/**
@@ -60,6 +61,7 @@ object SingleAsyncCache
   * @author Mikko Hilpinen
   * @since 12.6.2019, v1.5+
   */
+@deprecated("Please use Lazy instead", "v1.10")
 trait SingleAsyncCache[A] extends ClearableSingleCacheLike[Future[A]]
 {
 	// ATTRIBUTES	--------------
@@ -114,6 +116,7 @@ trait SingleAsyncCache[A] extends ClearableSingleCacheLike[Future[A]]
 	}
 }
 
+@deprecated("Please use Lazy instead", "v1.10")
 private class SingleAsyncCacheImpl[A](protected val failCacheDuration: FiniteDuration,
 									  private val makeRequest: () => Future[A], private val checkSuccess: A => Boolean)
 	extends SingleAsyncCache[A]

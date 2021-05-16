@@ -1,5 +1,6 @@
 package utopia.flow.caching.single
 
+@deprecated("Please use ResettableLazy instead", "v1.10")
 object ClearableSingleCache
 {
 	/**
@@ -16,6 +17,7 @@ object ClearableSingleCache
   * @author Mikko Hilpinen
   * @since 10.6.2019, v1.5+
   */
+@deprecated("Please use ResettableLazy instead", "v1.10")
 class ClearableSingleCache[A](private val request: () => A) extends ClearableSingleCacheLike[A]
 {
 	// ATTRIBUTES	---------------

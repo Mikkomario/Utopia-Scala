@@ -63,8 +63,8 @@ class DatabaseCache[A, Key](connectionPool: ConnectionPool, accessor: SingleMode
 			case Some(maxTime) =>
 				maxFailureCacheDuration.finite match
 				{
-					case Some(maxFailTime) => TryCache.expiring(maxFailTime, maxTime)(request)
-					case None => ExpiringCache(maxTime)(request)
+					case Some(maxFailTime) => TryCache(maxFailTime, maxTime)(request)
+					case None => ExpiringCache.after(maxTime)(request)
 				}
 			case None =>
 				maxFailureCacheDuration.finite match

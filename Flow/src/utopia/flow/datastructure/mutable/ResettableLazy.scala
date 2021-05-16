@@ -33,7 +33,7 @@ object ResettableLazy
 	def expiringAfter[A](threshold: Duration)(make: => A)(implicit exc: ExecutionContext) =
 		threshold.finite match
 		{
-			case Some(finite) => ExpiringLazy(finite)(make)
+			case Some(finite) => ExpiringLazy.after(finite)(make)
 			case None => apply(make)
 		}
 }

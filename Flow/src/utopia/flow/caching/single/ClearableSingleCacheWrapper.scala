@@ -5,6 +5,7 @@ package utopia.flow.caching.single
   * @author Mikko Hilpinen
   * @since 12.6.2019, v1.5+
   */
+@deprecated("Please use ResettableLazy instead", "v1.10")
 class ClearableSingleCacheWrapper[A](newCache: () => SingleCacheLike[A]) extends ClearableSingleCacheLike[A]
 {
 	// ATTRIBUTES	----------------------

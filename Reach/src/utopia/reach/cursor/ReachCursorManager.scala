@@ -10,6 +10,7 @@ import utopia.reach.component.template.CursorDefining
 
 import java.awt.Toolkit
 import java.awt.image.BufferedImage
+import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 /*
 object ReachCursorManager
@@ -23,7 +24,7 @@ object ReachCursorManager
   * @author Mikko Hilpinen
   * @since 11.11.2020, v0.1
   */
-class ReachCursorManager(val cursors: CursorSet)
+class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 {
 	// ATTRIBUTES	-----------------------------
 	

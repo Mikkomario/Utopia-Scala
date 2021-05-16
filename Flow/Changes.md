@@ -2,14 +2,27 @@
 
 ## v1.10 (in development)
 ### Breaking Changes
+- Major refactoring in **Cache** classes
+  - Rewrote **ExpiringCache** and **ReleasingCache**
+  - Modified `TryCache.apply(...)` and `TryCache.releasing(...)` and removed `TryCache.expiring(...)`
+  - Removed multiple methods from **AsyncCache**.type
 - `ChangingLike.lazyMap(...)` and `ChangingLike.lazyMergeWith(...)`
   now return **ListenableLazyLike** instead of just **LazyLike**
   - This allows one to continue chaining map functions after these method calls also
+### Deprecations
+- Deprecated **SingleCacheLike** trait and implementations in favor of various **LazyLike** implementations
+  - **ClearableSingleCacheLike** is replaced with **ResettableLazyLike**
+  - **ExpiringSingleCacheLike** is replaced with **ExpiringLazy**
+- Deprecated **MultiCacheLike** trait and its sub-traits and implementations in favor of new 
+  **MultiLazyLike** trait and its subclasses 
 ### New Features
 - Added new **LazyLike** implementations, **ListenableLazy** and **ListenableResettableLazy** 
   which provide access to value generation and value change events
 - Added **ExpiringLazy** class that automatically resets its contents after a specific time period
+  - This class replaces **ExpiringSingleCache** class, which is now deprecated
 - Added **WeakLazy** class that only holds a weak reference to the generated items
+- Added **MultiLazyLike** and **ExpiringMultiLazyLike** traits and implementations that allow one to create 
+  custom caches using various instances of **LazyLike**
 ### New Methods
 - **Settable**
   - Multiple new utility methods

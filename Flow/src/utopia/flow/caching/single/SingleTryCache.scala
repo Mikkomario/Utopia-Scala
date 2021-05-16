@@ -8,6 +8,7 @@ import utopia.flow.util.RichComparable._
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}
 
+@deprecated("Please use ExpiringLazy instead", "v1.10")
 object SingleTryCache
 {
 	/**
@@ -38,6 +39,7 @@ object SingleTryCache
   * @author Mikko Hilpinen
   * @since 10.6.2019, v1.5+
   */
+@deprecated("Please use ExpiringLazy instead", "v1.10")
 trait SingleTryCache[A] extends ClearableSingleCacheLike[Try[A]]
 {
 	// ATTRIBUTES	----------------
@@ -105,6 +107,7 @@ trait SingleTryCache[A] extends ClearableSingleCacheLike[Try[A]]
 	}
 }
 
+@deprecated("Please use ExpiringLazy instead", "v1.10")
 private class SingleTryCacheImpl[A](override protected val failCacheDuration: FiniteDuration,
 									private val makeRequest: () => Try[A]) extends SingleTryCache[A]
 {

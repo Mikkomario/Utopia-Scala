@@ -7,6 +7,7 @@ import utopia.flow.caching.single.SingleCacheLike
   * @author Mikko Hilpinen
   * @since 12.6.2019, v1.5+
   */
+@deprecated("Please use MultiLazyLike instead", "v1.10")
 trait MultiCacheLike[-Key, +Value, +Part <: SingleCacheLike[Value]] extends CacheLike[Key, Value]
 {
 	// ABSTRACT	-----------------

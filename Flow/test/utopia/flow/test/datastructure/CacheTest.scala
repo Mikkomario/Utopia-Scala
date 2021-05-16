@@ -138,24 +138,6 @@ object CacheTest extends App
 	assert(cache(0) == result4)
 	assert(cacheRequests == 2)
 	
-	// Expiring cache
-	cacheRequests = 0
-	val expiring = ExpiringCache[Int, Int](expireTime) { i => cacheRequests += 1; i + cacheRequests }
-	
-	assert(!expiring.isValueCached(0))
-	
-	val result5 = expiring(0)
-	
-	assert(expiring.isValueCached(0))
-	assert(!expiring.isValueCached(1))
-	
-	WaitUtils.wait(0.5.seconds, waitLock)
-	
-	assert(!expiring.isValueCached(0))
-	assert(expiring(0) != result5)
-	assert(expiring.isValueCached(0))
-	assert(cacheRequests == 2)
-	
 	// TryCache
 	cacheRequests = 0
 	val tryCache = TryCache[Int, Int](failureTime) { i =>
@@ -210,26 +192,6 @@ object CacheTest extends App
 	assert(asyncCache.isValueCached(-3))
 	assert(asyncCache(-3).isCompleted)
 	assert(cacheRequests == 3)
-	
-	// Releasing cache
-	cacheRequests = 0
-	val releasing = ReleasingCache[Int, Pointer[Int]](failureTime) { i => cacheRequests += 1; Pointer(i + cacheRequests) }
-	
-	val result8 = releasing(1)
-	releasing(2)
-	
-	assert(!releasing.isValueCached(0))
-	assert(releasing.isValueCached(1))
-	assert(releasing.isValueCached(2))
-	assert(releasing.isStronglyReferenced(1))
-	assert(releasing.isStronglyReferenced(2))
-	
-	WaitUtils.wait(failureTime * 1.1, waitLock)
-	releasing.releaseExpiredData()
-	
-	assert(!releasing.isStronglyReferenced(1))
-	assert(!releasing.isStronglyReferenced(2))
-	assert(releasing.isValueCached(1))
 	
 	println("Success!")
 }
