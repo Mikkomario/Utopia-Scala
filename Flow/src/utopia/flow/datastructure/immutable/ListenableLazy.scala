@@ -126,7 +126,6 @@ class ListenableLazy[A](generator: => A) extends ListenableLazyLike[A]
 						}
 			}
 		
-		// TODO: Refactor these once there are map and lazyMap methods in the parent instance?
 		override def map[B](f: Option[A] => B) = Mirror.of(this)(f)
 		
 		override def lazyMap[B](f: Option[A] => B) = LazyMirror.of(this)(f)

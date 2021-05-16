@@ -18,6 +18,14 @@ object Lazy
 	  * @return A new lazy container that supports events
 	  */
 	def listenable[A](make: => A) = ListenableLazy(make)
+	
+	/**
+	  * @param make A function for creating an item when it is requested
+	  * @tparam A Type of the item in this wrapper
+	  * @return A lazily initialized wrapper that only holds a weak reference to the
+	  *         generated item. A new item may be generated if the previous one is collected.
+	  */
+	def weak[A <: AnyRef](make: => A) = WeakLazy(make)
 }
 
 /**

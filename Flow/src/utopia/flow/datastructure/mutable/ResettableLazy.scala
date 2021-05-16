@@ -1,5 +1,10 @@
 package utopia.flow.datastructure.mutable
 
+import scala.concurrent.duration.Duration
+import utopia.flow.time.TimeExtensions._
+
+import scala.concurrent.ExecutionContext
+
 object ResettableLazy
 {
 	/**
@@ -17,6 +22,20 @@ object ResettableLazy
 	  * @return A new lazy container with events
 	  */
 	def listenable[A](make: => A) = ListenableResettableLazy(make)
+	
+	/**
+	  * @param threshold Time threshold after which this lazy is automatically reset
+	  * @param make A function for generating a new value when one is requested
+	  * @param exc Implicit execution context for scheduling resets
+	  * @tparam A Type of wrapped item
+	  * @return A new lazy container with automated reset
+	  */
+	def expiringAfter[A](threshold: Duration)(make: => A)(implicit exc: ExecutionContext) =
+		threshold.finite match
+		{
+			case Some(finite) => ExpiringLazy(finite)(make)
+			case None => apply(make)
+		}
 }
 
 /**

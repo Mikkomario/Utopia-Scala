@@ -8,6 +8,8 @@
 ### New Features
 - Added new **LazyLike** implementations, **ListenableLazy** and **ListenableResettableLazy** 
   which provide access to value generation and value change events
+- Added **ExpiringLazy** class that automatically resets its contents after a specific time period
+- Added **WeakLazy** class that only holds a weak reference to the generated items
 ### New Methods
 - **Settable**
   - Multiple new utility methods
