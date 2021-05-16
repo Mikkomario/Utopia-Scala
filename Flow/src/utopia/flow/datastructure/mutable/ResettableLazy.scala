@@ -9,6 +9,14 @@ object ResettableLazy
 	  * @return A new lazy wrapper
 	  */
 	def apply[A](make: => A) = new ResettableLazy[A](make)
+	
+	/**
+	  * Creates a listenable lazily initialized wrapper
+	  * @param make A function for generating the wrapped item on request
+	  * @tparam A Type of the wrapped item
+	  * @return A new lazy container with events
+	  */
+	def listenable[A](make: => A) = ListenableResettableLazy(make)
 }
 
 /**

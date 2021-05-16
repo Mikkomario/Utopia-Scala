@@ -1,6 +1,10 @@
 # Utopia Flow - List of Changes
 
-## v1.9.2 (in development)
+## v1.10 (in development)
+### Breaking Changes
+- `ChangingLike.lazyMap(...)` and `ChangingLike.lazyMergeWith(...)`
+  now return **ListenableLazyLike** instead of just **LazyLike**
+  - This allows one to continue chaining map functions after these method calls also
 ### New Features
 - Added new **LazyLike** implementations, **ListenableLazy** and **ListenableResettableLazy** 
   which provide access to value generation and value change events

@@ -2,7 +2,7 @@ package utopia.flow.event
 
 import utopia.flow.datastructure.immutable.Lazy
 import utopia.flow.datastructure.mutable.ResettableLazy
-import utopia.flow.datastructure.template.LazyLike
+import utopia.flow.datastructure.template.ListenableLazyWrapper
 
 object LazyMergeMirror
 {
@@ -29,7 +29,7 @@ object LazyMergeMirror
 		else if (source2.isChanging)
 			source2.lazyMap { merge(source1.value, _) }
 		else
-			Lazy { merge(source1.value, source2.value) }
+			Lazy.listenable { merge(source1.value, source2.value) }
 	}
 }
 
@@ -40,11 +40,11 @@ object LazyMergeMirror
   */
 class LazyMergeMirror[O1, O2, Reflection](source1: ChangingLike[O1], source2: ChangingLike[O2])
                                          (merge: (O1, O2) => Reflection)
-	extends LazyLike[Reflection]
+	extends ListenableLazyWrapper[Reflection]
 {
 	// ATTRIBUTES	-------------------------------
 	
-	private val cache = ResettableLazy { merge(source1.value, source2.value) }
+	private val cache = ResettableLazy.listenable { merge(source1.value, source2.value) }
 	private lazy val listener = ChangeDependency.beforeAnyChange { cache.reset() }
 	
 	
@@ -56,7 +56,5 @@ class LazyMergeMirror[O1, O2, Reflection](source1: ChangingLike[O1], source2: Ch
 	
 	// IMPLEMENTED	-------------------------------
 	
-	override def value = cache.value
-	
-	override def current = cache.current
+	override protected def wrapped = cache
 }

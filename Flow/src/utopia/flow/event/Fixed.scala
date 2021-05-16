@@ -41,7 +41,7 @@ case class Fixed[+A](override val value: A) extends ChangingLike[A]
 	
 	override def map[B](f: A => B) = Fixed(f(value))
 	
-	override def lazyMap[B](f: A => B) = Lazy { f(value) }
+	override def lazyMap[B](f: A => B) = Lazy.listenable { f(value) }
 	
 	override def delayedBy(threshold: Duration)(implicit exc: ExecutionContext) = this
 }

@@ -1,6 +1,7 @@
 package utopia.flow.event
 
 import utopia.flow.async.DelayedView
+import utopia.flow.datastructure.template.ListenableLazyLike
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext
@@ -69,7 +70,7 @@ trait Changing[A] extends ChangingLike[A]
 	
 	override def map[B](f: A => B) = Mirror.of(this)(f)
 	
-	override def lazyMap[B](f: A => B) = LazyMirror.of(this)(f)
+	override def lazyMap[B](f: A => B): ListenableLazyLike[B] = LazyMirror.of(this)(f)
 	
 	override def mergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R) =
 	{
@@ -88,7 +89,7 @@ trait Changing[A] extends ChangingLike[A]
 	                               (merge: (A, B, C) => R): ChangingLike[R] =
 		TripleMergeMirror.of(this, first, second)(merge)
 	
-	override def lazyMergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R) =
+	override def lazyMergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R): ListenableLazyLike[R] =
 	{
 		if (other.isChanging)
 		{

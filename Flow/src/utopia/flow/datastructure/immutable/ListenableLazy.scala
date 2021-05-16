@@ -10,11 +10,11 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 object ListenableLazy
 {
 	/**
-	  * @param generator A function for generating a new value when it is first requested
+	  * @param make A function for generating a new value when it is first requested
 	  * @tparam A Type of value being stored
 	  * @return A new lazy container
 	  */
-	def apply[A](generator: => A) = new ListenableLazy[A](generator)
+	def apply[A](make: => A) = new ListenableLazy[A](make)
 }
 
 /**
@@ -61,8 +61,10 @@ class ListenableLazy[A](generator: => A) extends ListenableLazyLike[A]
 	
 	override def addListener(listener: => LazyListener[A]) = if (nonInitialized) queuedListeners :+= listener
 	
-	override def removeListener(listener: LazyListener[A]) =
+	override def removeListener(listener: Any) =
 		queuedListeners = queuedListeners.filterNot { _ == listener }
+	
+	override def map[B](f: A => B) = ListenableLazy { f(value) }
 	
 	
 	// NESTED   --------------------------------

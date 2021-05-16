@@ -33,7 +33,15 @@ trait ListenableLazyLike[+A] extends LazyLike[A]
 	  * Removes a listener from this lazy container
 	  * @param listener A listener to no longer be informed about value generations
 	  */
-	def removeListener(listener: LazyListener[A]): Unit
+	def removeListener(listener: Any): Unit
+	
+	/**
+	  * Creates a new container that lazily maps the value of this lazy
+	  * @param f A mapping function
+	  * @tparam B Mapping function result type
+	  * @return A lazily initialized container based on lazily mapped contents of this lazy
+	  */
+	def map[B](f: A => B): ListenableLazyLike[B]
 	
 	
 	// OTHER    -------------------------------

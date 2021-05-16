@@ -2,9 +2,19 @@ package utopia.flow.datastructure.mutable
 
 import utopia.flow.datastructure.mutable.Settable.OptionPointer
 import utopia.flow.datastructure.template.ListenableLazyLike
-import utopia.flow.event.{ChangeDependency, ChangeListener, Changing, LazyListener, ResettableLazyListener}
+import utopia.flow.event.{ChangeDependency, ChangeListener, Changing, LazyListener, LazyResetListener, ResettableLazyListener}
 
 import scala.concurrent.{Future, Promise}
+
+object ListenableResettableLazy
+{
+	/**
+	  * @param make A function for generating a new value when one is requested
+	  * @tparam A Type of stored value
+	  * @return A new resettable lazy container
+	  */
+	def apply[A](make: => A) = new ListenableResettableLazy[A](make)
+}
 
 /**
   * A lazy container that allows one to reset the value so that it is generated again.
@@ -20,7 +30,7 @@ class ListenableResettableLazy[A](generator: => A) extends ResettableLazyLike[A]
 	
 	private val nextValuePromisePointer = Pointer.option[Promise[A]]()
 	private var generationListeners = Vector[LazyListener[A]]()
-	private var resetListeners = Vector[ResettableLazyListener[A]]()
+	private var resetListeners = Vector[LazyResetListener[A]]()
 	
 	
 	// COMPUTED ----------------------------------
@@ -46,7 +56,6 @@ class ListenableResettableLazy[A](generator: => A) extends ResettableLazyLike[A]
 		// Informs the listeners
 		nextValuePromisePointer.pop().foreach { _.success(newValue) }
 		generationListeners.foreach { _.onValueGenerated(newValue) }
-		resetListeners.foreach { _.onValueGenerated(newValue) }
 		StateView.onValueGenerated()
 		// Returns the new value
 		newValue
@@ -67,15 +76,33 @@ class ListenableResettableLazy[A](generator: => A) extends ResettableLazyLike[A]
 	
 	override def addListener(listener: => LazyListener[A]) = listener match
 	{
-		case resetListener: ResettableLazyListener[A] => resetListeners :+= resetListener
+		case resetListener: ResettableLazyListener[A] =>
+			generationListeners :+= resetListener
+			resetListeners :+= resetListener
 		case valueListener: LazyListener[A] => generationListeners :+= valueListener
 	}
 	
-	override def removeListener(listener: LazyListener[A]) =
+	override def removeListener(listener: Any) =
 	{
 		generationListeners = generationListeners.filterNot { _ == listener }
 		resetListeners = resetListeners.filterNot { _ == listener }
 	}
+	
+	override def map[B](f: A => B) =
+	{
+		val newLazy = ListenableResettableLazy { f(value) }
+		addResetListener(LazyResetListener.onAnyReset { newLazy.reset() })
+		newLazy
+	}
+	
+	
+	// OTHER    -------------------------------
+	
+	/**
+	  * Adds a new listener to be informed about reset events in this lazy
+	  * @param listener Listener to be informed
+	  */
+	def addResetListener(listener: LazyResetListener[A]) = resetListeners :+= listener
 	
 	
 	// NESTED   -------------------------------

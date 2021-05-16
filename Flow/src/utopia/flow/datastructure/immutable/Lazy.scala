@@ -10,6 +10,14 @@ object Lazy
 	  * @return A new lazy container
 	  */
 	def apply[A](make: => A) = new Lazy[A](make)
+	
+	/**
+	  * Creates a new lazy container that supports events
+	  * @param make A function for generating the stored value when it is first requested
+	  * @tparam A Type of wrapped value
+	  * @return A new lazy container that supports events
+	  */
+	def listenable[A](make: => A) = ListenableLazy(make)
 }
 
 /**

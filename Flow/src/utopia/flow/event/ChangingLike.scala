@@ -1,7 +1,7 @@
 package utopia.flow.event
 
 import utopia.flow.async.AsyncMirror
-import utopia.flow.datastructure.template.{LazyLike, Viewable}
+import utopia.flow.datastructure.template.{ListenableLazyLike, Viewable}
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.concurrent.duration.Duration
@@ -145,7 +145,7 @@ trait ChangingLike[+A] extends Viewable[A]
 	  * @tparam B Mapping result type
 	  * @return A lazily mirrored version of this item that uses the specified mapping function
 	  */
-	def lazyMap[B](f: A => B): LazyLike[B]
+	def lazyMap[B](f: A => B): ListenableLazyLike[B]
 	
 	/**
 	  * @param other Another changing item
@@ -174,7 +174,7 @@ trait ChangingLike[+A] extends Viewable[A]
 	  * @tparam R Type of merge result
 	  * @return A mirror that lazily merges the values from both of these items
 	  */
-	def lazyMergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R): LazyLike[R]
+	def lazyMergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R): ListenableLazyLike[R]
 	
 	/**
 	  * @param threshold A required pause between changes in this pointer before the view fires a change event
