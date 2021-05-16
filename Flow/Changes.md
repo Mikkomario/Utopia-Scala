@@ -1,6 +1,13 @@
 # Utopia Flow - List of Changes
 
 ## v1.9.2 (in development)
+### New Features
+- Added new **LazyLike** implementations, **ListenableLazy** and **ListenableResettableLazy** 
+  which provide access to value generation and value change events
+### New Methods
+- **Settable**
+  - Multiple new utility methods
+  - New utility methods for **Settable**s containing **Option**s and **Vector**s
 ### Other Changes
 - Added direct implicit conversion from **Today** to **ExtendedLocalDate**, allowing access to **TimeExtensions** 
   methods directly from **Today** without going through **LocalDate** first

@@ -47,6 +47,47 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
     
     override def isChanging = true
     
+    /**
+      * Safely updates the value in this container
+      */
+    override def update(mutate: A => A) = this.synchronized { setValue(mutate(_value)) }
+    
+    /**
+      * Safely updates the value in this container, then returns it
+      */
+    override def updateAndGet(mutate: A => A) = this.synchronized {
+        setValue(mutate(_value))
+        _value
+    }
+    
+    /**
+      * Updates a value in this container. Also returns a result value.
+      */
+    def pop[B](mutate: A => (B, A)) = this.synchronized
+    {
+        val (result, next) = mutate(_value)
+        setValue(next)
+        result
+    }
+    
+    /**
+      * Reads the current value of this volatile container and then changes it
+      * @param newValue the new value for this volatile container
+      * @return the value before the assignment
+      */
+    override def getAndSet(newValue: A) = pop { v => v -> newValue }
+    
+    /**
+      * @param mutate An updating function for the current value of this volatile container
+      * @return The value previous to the update
+      */
+    override def getAndUpdate(mutate: A => A) = this.synchronized
+    {
+        val result = _value
+        setValue(mutate(_value))
+        result
+    }
+    
     
     // OTHER    --------------------
     
@@ -66,19 +107,6 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
     {
         if (condition(_value))
             setValue(newValue)
-    }
-    
-    /**
-     * Safely updates the value in this container
-     */
-    override def update(mutate: A => A) = this.synchronized { setValue(mutate(_value)) }
-    
-    /**
-     * Safely updates the value in this container, then returns it
-     */
-    def updateAndGet(mutate: A => A) = this.synchronized {
-        setValue(mutate(_value))
-        _value
     }
     
     /**
@@ -116,39 +144,11 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
     }
     
     /**
-     * Updates a value in this container. Also returns a result value.
-     */
-    def pop[B](mutate: A => (B, A)) = this.synchronized
-    {
-        val (result, next) = mutate(_value)
-        setValue(next)
-        result
-    }
-    
-    /**
      * Locks the value in this container from outside sources during the operation. Use with caution.
       * @tparam U The result type of the operation
       * @return the result of the operation
      */
     def lock[U](operation: A => U) = this.synchronized { operation(_value) }
-    
-    /**
-     * Reads the current value of this volatile container and then changes it
-     * @param newValue the new value for this volatile container
-     * @return the value before the assignment
-     */
-    def getAndSet(newValue: A) = pop { v => v -> newValue }
-    
-    /**
-      * @param mutate An updating function for the current value of this volatile container
-      * @return The value previous to the update
-      */
-    def getAndUpdate(mutate: A => A) = this.synchronized
-    {
-        val result = _value
-        setValue(mutate(_value))
-        result
-    }
     
     // Call this only in a synchronized block
     private def setValue(newValue: A) =
