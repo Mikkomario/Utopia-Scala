@@ -19,7 +19,8 @@ object SingleAsyncCache
 	  * @tparam A The type of returned item
 	  * @return A new cache that requests items asynchronously
 	  */
-	def withCheck[A](failCacheDuration: FiniteDuration)(makeRequest: => Future[A])(checkResult: A => Boolean): SingleAsyncCache[A] =
+	def withCheck[A](failCacheDuration: FiniteDuration)(makeRequest: => Future[A])
+	                (checkResult: A => Boolean): SingleAsyncCache[A] =
 		new SingleAsyncCacheImpl(failCacheDuration, () => makeRequest, checkResult)
 	
 	/**

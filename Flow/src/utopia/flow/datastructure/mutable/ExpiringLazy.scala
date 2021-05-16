@@ -1,10 +1,12 @@
 package utopia.flow.datastructure.mutable
 
+import utopia.flow.async.ResettableVolatileLazy
 import utopia.flow.time.{Now, WaitUtils}
+import utopia.flow.time.TimeExtensions._
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object ExpiringLazy
 {
@@ -18,7 +20,19 @@ object ExpiringLazy
 	  * @return A new lazy container
 	  */
 	def apply[A](expirationThreshold: FiniteDuration)(make: => A)(implicit exc: ExecutionContext) =
-		new ExpiringLazy[A](expirationThreshold)(make)
+		new ExpiringLazy[A](make)(_ => expirationThreshold)
+	
+	/**
+	  * Creates a new lazy container that automatically resets its contents after
+	  * a specified duration has passed from value generation
+	  * @param make Function for generating a new value when one is requested
+	  * @param calculateDuration Function for calculating a store duration for each item
+	  * @param exc Implicit execution context (used for scheduling the reset)
+	  * @tparam A Type of cached value
+	  * @return A new lazy container
+	  */
+	def apply[A](make: => A)(calculateDuration: A => Duration)(implicit exc: ExecutionContext) =
+		new ExpiringLazy[A](make)(calculateDuration)
 }
 
 /**
@@ -26,13 +40,13 @@ object ExpiringLazy
   * @author Mikko Hilpinen
   * @since 16.5.2021, v1.10
   */
-class ExpiringLazy[+A](expirationThreshold: FiniteDuration)(generator: => A)
+class ExpiringLazy[+A](generator: => A)(expirationPerItem: A => Duration)
                       (implicit exc: ExecutionContext) extends ResettableLazyLike[A]
 {
 	// ATTRIBUTES   --------------------------
 	
 	private val waitLock = new AnyRef
-	private val cache: ResettableLazyLike[A] = ResettableLazy(generator)
+	private val cache: ResettableLazyLike[A] = ResettableVolatileLazy(generator)
 	
 	private var nextWaitThreshold: Option[Instant] = None
 	
@@ -56,8 +70,24 @@ class ExpiringLazy[+A](expirationThreshold: FiniteDuration)(generator: => A)
 	{
 		case Some(value) => value
 		case None =>
-			scheduleReset()
-			cache.value
+			// Acquires the new value
+			val newValue = cache.value
+			// Schedules a reset event if one is not scheduled already (otherwise extends the wait)
+			expirationPerItem(newValue).finite.foreach { waitDuration =>
+				val wasWaiting = nextWaitThreshold.isDefined
+				nextWaitThreshold = Some(Now + waitDuration)
+				if (!wasWaiting)
+				{
+					Future {
+						while (nextWaitThreshold.exists { Now < _ })
+						{
+							nextWaitThreshold.foreach { WaitUtils.waitUntil(_, waitLock) }
+						}
+						_reset()
+					}
+				}
+			}
+			newValue
 	}
 	
 	
@@ -67,21 +97,5 @@ class ExpiringLazy[+A](expirationThreshold: FiniteDuration)(generator: => A)
 	{
 		nextWaitThreshold = None
 		cache.reset()
-	}
-	
-	private def scheduleReset() =
-	{
-		if (!isResetting)
-		{
-			val newThreshold = Now + expirationThreshold
-			nextWaitThreshold = Some(newThreshold)
-			Future {
-				while (nextWaitThreshold.exists { Now < _ })
-				{
-					nextWaitThreshold.foreach { WaitUtils.waitUntil(_, waitLock) }
-				}
-				_reset()
-			}
-		}
 	}
 }
