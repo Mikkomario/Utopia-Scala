@@ -1,31 +1,25 @@
 package utopia.genesis.graphics
 
-import utopia.flow.async.AsyncExtensions._
+import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.event.ChangingLike
 import utopia.flow.util.Extender
 import utopia.genesis.shape.shape2D.JavaAffineTransformConvertible
 
 import java.awt.Graphics2D
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.ExecutionContext
 
 /**
   * Wraps a graphics instance and contains a future of the eventual closing event, also
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
   */
-class ClosingGraphics(override val wrapped: Graphics2D, parentCloseFuture: => Future[Unit])
-                     (implicit exc: ExecutionContext)
+class ClosingGraphics(override val wrapped: Graphics2D, parentClosedPointer: => ChangingLike[Boolean])
 	extends AutoCloseable with Extender[Graphics2D]
 {
 	// ATTRIBUTES   --------------------------------
 	
-	private lazy val closePromise = Promise[Unit]()
-	private lazy val _closeFuture =
-	{
-		if (closePromise.isCompleted)
-			Future.successful(())
-		else
-			parentCloseFuture.raceWith(closePromise.future)
-	}
+	private lazy val closedPointer = new PointerWithEvents(false)
+	private lazy val statePointer = closedPointer || parentClosedPointer
 	
 	
 	// COMPUTED ------------------------------------
@@ -33,12 +27,12 @@ class ClosingGraphics(override val wrapped: Graphics2D, parentCloseFuture: => Fu
 	/**
 	  * @return Future of the closing event of this graphics instance
 	  */
-	def closeFuture = _closeFuture
+	def closeFuture(implicit exc: ExecutionContext) = statePointer.futureWhere { c => c }
 	
 	/**
 	  * @return Whether this graphics instance has been closed already
 	  */
-	def isClosed = closePromise.isCompleted || parentCloseFuture.isCompleted
+	def isClosed = statePointer.value
 	/**
 	  * @return Whether this graphics instance is still open
 	  */
@@ -51,7 +45,7 @@ class ClosingGraphics(override val wrapped: Graphics2D, parentCloseFuture: => Fu
 	{
 		if (isOpen)
 		{
-			closePromise.success(())
+			closedPointer.value = true
 			wrapped.dispose()
 		}
 	}
@@ -62,7 +56,7 @@ class ClosingGraphics(override val wrapped: Graphics2D, parentCloseFuture: => Fu
 	/**
 	  * @return Creates a child graphics instance that is dependent from this one
 	  */
-	def createChild() = new ClosingGraphics(wrapped.create().asInstanceOf[Graphics2D], closeFuture)
+	def createChild() = new ClosingGraphics(wrapped.create().asInstanceOf[Graphics2D], statePointer)
 	
 	/**
 	  * Transforms this graphics instance using the specified affine transformation

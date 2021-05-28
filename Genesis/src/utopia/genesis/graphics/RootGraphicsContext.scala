@@ -22,26 +22,19 @@ object RootGraphicsContext
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
   */
-class RootGraphicsContext(newGraphics: => ClosingGraphics)(implicit exc: ExecutionContext)
-	extends WriteableGraphicsContext
+class RootGraphicsContext(newGraphics: => ClosingGraphics) extends GraphicsContext
 {
 	// ATTRIBUTES   -----------------------------
 	
-	private val graphicsPointer = ResettableLazy {
-		val graphics = newGraphics
-		graphics.closeFuture.foreach { _ => invalidateGraphics() }
-		graphics
-	}
+	private val graphicsPointer = ResettableLazy(newGraphics)
 	
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override def openGraphics = graphicsPointer.value
-	
 	override def transformation = Matrix3D.identity
 	
 	override def transformedWith(transformation: Matrix3D) =
-		new DerivedGraphicsContext(transformation, this.transformation, graphicsPointer.value -> None)
+		new DerivedGraphicsContext(transformation, this.transformation, _openGraphics -> None)
 	
 	override def transformedWith(transformation: Matrix2D): DerivedGraphicsContext =
 		transformedWith(transformation.to3D)
@@ -51,5 +44,15 @@ class RootGraphicsContext(newGraphics: => ClosingGraphics)(implicit exc: Executi
 	
 	// OTHER    ---------------------------------
 	
-	private def invalidateGraphics(): Unit = graphicsPointer.reset()
+	private def _openGraphics =
+	{
+		val default = graphicsPointer.value
+		if (default.isOpen)
+			default
+		else
+		{
+			graphicsPointer.reset()
+			graphicsPointer.value
+		}
+	}
 }

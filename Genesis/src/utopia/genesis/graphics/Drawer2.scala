@@ -13,32 +13,22 @@ trait Drawer2 extends LinearTransformable[Drawer2] with AffineTransformable[Draw
 	// ABSTRACT -------------------------------
 	
 	/**
+	  * @return The graphics instance used by this drawer
+	  */
+	protected def graphics: ClosingGraphics
+	
+	/**
 	  * @return Clipping bounds used in this drawer
 	  */
 	def clipBounds: Bounds
 	
-	/**
-	  * @return Graphics context used in this drawer
-	  */
-	protected def writeContext: WriteableGraphicsContext
+	// def clippedTo
+	
 	
 	// TODO: Add draw functions
 	
 	
-	// COMPUTED ------------------------------
-	
-	/**
-	  * @return Graphics context used by this drawer
-	  */
-	def context: GraphicsContext = writeContext
-	
-	/**
-	  * @return The graphics instance used in this drawer
-	  */
-	protected def graphics = writeContext.openGraphics
-	
-	
 	// IMPLEMENTED  --------------------------
 	
-	override def close() = writeContext.closeCurrent()
+	override def close() = graphics.close()
 }

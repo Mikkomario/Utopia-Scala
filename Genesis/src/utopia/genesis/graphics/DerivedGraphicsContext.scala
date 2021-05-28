@@ -1,9 +1,8 @@
 package utopia.genesis.graphics
+
 import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.genesis.shape.shape2D.Matrix2D
 import utopia.genesis.shape.shape3D.Matrix3D
-
-import scala.concurrent.ExecutionContext
 
 /**
   * A graphics context instance that relies on a parent instance and applies a transformation over it
@@ -13,8 +12,7 @@ import scala.concurrent.ExecutionContext
 // ParentState contains a graphics instance + possible transformation
 class DerivedGraphicsContext(lastTransformation: Matrix3D, parentTransformation: Matrix3D,
                              parentState: => (ClosingGraphics, Option[Matrix3D]))
-                            (implicit exc: ExecutionContext)
-	extends WriteableGraphicsContext
+	extends GraphicsContext
 {
 	// ATTRIBUTES   ----------------------------------
 	
@@ -31,20 +29,16 @@ class DerivedGraphicsContext(lastTransformation: Matrix3D, parentTransformation:
 		}
 		val newGraphics = parentGraphics.createChild()
 		newGraphics.transform(transformation)
-		// Makes sure this graphics pointer is invalidated once this new graphics instance closes
-		newGraphics.closeFuture.foreach { _ => invalidateGraphics() }
 		newGraphics
 	}
 	
 	
 	// IMPLEMENTED  ----------------------------------
 	
-	override def openGraphics = graphicsPointer.value
-	
 	override def transformation = _transformation
 	
 	override def transformedWith(transformation: Matrix3D) =
-		new DerivedGraphicsContext(transformation, _transformation, graphicsPointer.current match
+		new DerivedGraphicsContext(transformation, _transformation, graphicsPointer.current.filter { _.isOpen } match
 		{
 			case Some(graphics) => graphics -> None
 			case None =>
@@ -65,5 +59,15 @@ class DerivedGraphicsContext(lastTransformation: Matrix3D, parentTransformation:
 	
 	// OTHER    -------------------------------------
 	
-	private def invalidateGraphics(): Unit = graphicsPointer.reset()
+	private def _openGraphics =
+	{
+		val default = graphicsPointer.value
+		if (default.isOpen)
+			default
+		else
+		{
+			graphicsPointer.reset()
+			graphicsPointer.value
+		}
+	}
 }
