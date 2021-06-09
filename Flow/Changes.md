@@ -27,6 +27,8 @@
 - **Settable**
   - Multiple new utility methods
   - New utility methods for **Settable**s containing **Option**s and **Vector**s
+- **Throwable** (**ErrorExtensions**)
+  - `.stackTraceString`
 ### Other Changes
 - Added direct implicit conversion from **Today** to **ExtendedLocalDate**, allowing access to **TimeExtensions** 
   methods directly from **Today** without going through **LocalDate** first

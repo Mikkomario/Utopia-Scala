@@ -1,5 +1,6 @@
 package utopia.exodus.util
 
+import utopia.access.http.Status
 import utopia.flow.generic.{DataType, EnvironmentNotSetupException}
 import utopia.vault.database.ConnectionPool
 
@@ -82,6 +83,7 @@ object ExodusContext
 			 (handleErrors: (Throwable, String) => Unit) =
 	{
 		DataType.setup()
+		Status.setup()
 		data = Some(Data(executionContext, connectionPool, databaseName, uuidGenerator, emailValidator, handleErrors))
 	}
 	
