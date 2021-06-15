@@ -2,23 +2,22 @@ package utopia.nexus.test
 
 import utopia.flow.generic.ValueConversions._
 import utopia.access.http.Method._
-
 import utopia.flow.generic.DataType
-import utopia.nexus.rest.RequestHandler
+import utopia.nexus.rest.{BaseContext, FilesResource, RequestHandler}
 import utopia.nexus.http.Path
 import utopia.nexus.http.ServerSettings
+
 import java.nio.file.Paths
 import utopia.nexus.http.Request
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.datastructure.immutable.Constant
 import utopia.nexus.http.Response
+
 import java.io.ByteArrayOutputStream
 import utopia.flow.parse.JSONReader
 import utopia.flow.datastructure.immutable.Value
-import utopia.nexus.rest.FilesResource
 import utopia.access.http.Method
 import utopia.access.http.Status._
-import utopia.nexus.rest.BaseContext
 
 /**
  * This test makes sure the rest test resource and the request handler are working
@@ -32,7 +31,9 @@ object RestResourceTest extends App
     
     val rootResource = new TestRestResource("root")
     val filesResource = new FilesResource("files", Paths.get("D:/Uploads"))
-    val handler = new RequestHandler(Vector(rootResource, filesResource), Some(Path("rest")), req => new BaseContext(req))
+    // FIXME: Changed to updated RequestHandler class without updating this test => will fail
+    val handler = RequestHandler(Map("v1" -> Vector(rootResource, filesResource)),
+        Some(Path("rest"))) { new BaseContext(_) }
     
     def responseToString(response: Response) = 
     {

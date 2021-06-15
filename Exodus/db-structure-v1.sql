@@ -132,7 +132,7 @@ CREATE TABLE user_settings
 )Engine=InnoDB DEFAULT CHARSET=latin1;
 
 -- Contains hashed user passwords
--- TODO: Set correct hash length
+-- TODO: Set correct hash length (102 characters)
 CREATE TABLE user_authentication
 (
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,

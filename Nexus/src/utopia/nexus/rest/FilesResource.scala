@@ -40,7 +40,7 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
     
     override def allowedMethods = Vector(Get, Post, Delete)
     
-    override def follow(path: Path)(implicit context: Context) = Ready(Some(path))
+    override def follow(path: Path)(implicit context: Context) = Ready(this, Some(path))
          
     override def toResponse(remainingPath: Option[Path])(implicit context: Context) = 
     {

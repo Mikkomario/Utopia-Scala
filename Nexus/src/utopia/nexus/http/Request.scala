@@ -3,32 +3,12 @@ package utopia.nexus.http
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.datastructure.immutable.Value
-
 import utopia.access.http.Method
 import utopia.access.http.Cookie
 import utopia.access.http.Headers
+import utopia.flow.time.Now
 
-/*
-object Request extends FromModelFactory[Request]
-{
-    def apply(model: template.Model[Property]) = 
-    {
-        val method = model("method").string.flatMap { Method.parse }
-        val path = model("path").string.map { Path.parse }
-        
-        if (method.isDefined && path.isDefined)
-        {
-            Some(new Request(method.get, path.get, model("parameters").modelOr(), 
-                    model("headers").model.flatMap(Headers.apply).getOrElse(Headers()), 
-                    model("cookies").vectorOr().flatMap { _.model }.flatMap { Cookie(_) }))
-        }
-        else 
-        {
-            None
-        }
-    }
-}
-*/
+import java.time.Instant
 
 /**
  * A request represents an http request made from client side to server side. A request targets 
@@ -37,15 +17,17 @@ object Request extends FromModelFactory[Request]
  * @since 3.9.2017
   * @param method http method used in request
   * @param targetUrl Uri targeted through this request
-  * @param path Path parsed from the targeted uri
+  * @param path Path parsed from the targeted uri, if available (default = None)
   * @param parameters The parameters provided with the request (query or post)
-  * @param headers Headers provided with this request
+  * @param headers Headers provided with this request (default = empty)
   * @param body The body elements provided with this request (streamed)
-  * @param rawCookies Cookies provided with this request
+  * @param rawCookies Cookies provided with this request (default = empty)
+ * @param created Creation time of this request (default = Now)
  */
-class Request(val method: Method, val targetUrl: String, val path: Option[Path] = None, 
-        val parameters: Model[Constant] = Model(Vector()), val headers: Headers = Headers(), 
-        val body: Seq[StreamedBody] = Vector(), rawCookies: Iterable[Cookie] = Vector())
+class Request(val method: Method, val targetUrl: String, val path: Option[Path] = None,
+              val parameters: Model[Constant] = Model(Vector()), val headers: Headers = Headers.empty,
+              val body: Seq[StreamedBody] = Vector(), rawCookies: Iterable[Cookie] = Vector(),
+              val created: Instant = Now)
 {
     // ATTRIBUTES    ---------------------------
     
@@ -94,7 +76,12 @@ class Request(val method: Method, val targetUrl: String, val path: Option[Path] 
     
     // OTHER METHODS    ------------------------
     
-    def cookieValue(cookieName: String) = cookies.get(cookieName.toLowerCase()).map(_.value).getOrElse(Value.empty)
+    /**
+     * @param cookieName Name of the targeted cookie
+     * @return Value of that cookie. Empty value if no such cookie existed.
+     */
+    def cookieValue(cookieName: String) =
+        cookies.get(cookieName.toLowerCase).map { _.value }.getOrElse(Value.empty)
     
     /**
      * Creates a new request with some parameters added
