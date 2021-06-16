@@ -6,6 +6,7 @@
 ### Bugfixes
 - Separated `ExodusResources.public` to `.publicDescriptions` and `.customAuthorized`. The previous implementation 
   was a programming / refactoring mistake and returned a **Vector** of **Object**s, not **Resource**s.
+  - Also, **QuestSessionsNode** is now properly returned in the `.authorized` resource set
 ### New Methods
 - **ExodusResources**
   - `.apply(Boolean)` which creates a set of resources using a single parameter

@@ -52,6 +52,23 @@ object Result
      */
     case class Success(data: Value, status: Status = OK,
             description: Option[String] = None, headers: Headers = Headers.empty) extends Result
+	
+	/**
+	 * A result used for redirecting the client to another resource
+	 * @param url Url to which the client is redirected to
+	 * @param permanently Whether this redirect should be used in the future without accessing this resource
+	 *                    first (default = false)
+	 */
+	case class Redirect(url: String, permanently: Boolean = false) extends Result
+	{
+		override def status = if (permanently) MovedPermanently else Found
+		
+		override def description = None
+		
+		override def data = Value.empty
+		
+		override def headers = Headers.empty.withLocation(url)
+	}
 }
 
 /**

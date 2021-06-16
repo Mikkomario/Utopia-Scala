@@ -1,4 +1,5 @@
 # Utopia Nexus - List of Changes
+
 ## v1.6 (in development)
 ### Breaking Changes
 - **RequestHandler** was rewritten to support versioning
@@ -6,6 +7,7 @@
   - Also, all **ResourceSearchResult** types now use type parameter C for context.
 ### New Features
 - **RequestHandler** now supports versioning (using different resources on different API versions)
+- Added new **Result** type: **Redirect**
 ### Other Changes
 - **Request** now contains public constructor parameter `.created` 
   which holds the creation time of that **Request**

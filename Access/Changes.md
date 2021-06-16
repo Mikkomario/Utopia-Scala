@@ -1,5 +1,9 @@
 # Utopia Access - List of Changes
 
+## v1.3.1 (in development)
+### New Features
+- Added **MovedPermanently** (301) and **Found** (302) status codes to the **Status** enumeration.
+
 ## v1.3 - 17.4.2021
 This relatively small update changes how the **Status** enumeration works. 
 This fixes a run-time issue but requires changes in the implementing code, also.

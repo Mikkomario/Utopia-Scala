@@ -87,7 +87,7 @@ class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resourc
     
     // OTHER METHODS    -------------------
     
-    private def handleBasePath(basePath: Option[Path]) = handleRemainingBasePath(path, basePath)
+    private def handleBasePath(basePath: Option[Path]) = handleRemainingBasePath(basePath, path)
     @tailrec
     private def handleRemainingBasePath(remainingPath: Option[Path],
                                         pathToSkip: Option[Path]): Either[Error, (String, Option[Path])] =
