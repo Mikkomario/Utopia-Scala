@@ -3,6 +3,8 @@
 ## v1.0.1 (in development)
 ### Deprecations
 - Deprecated `ExodusResources.all` in favor of `.default`
+### New Features
+- **MySettingsNode** can now be extended with `.extendWith(...)` method
 ### Bugfixes
 - Separated `ExodusResources.public` to `.publicDescriptions` and `.customAuthorized`. The previous implementation 
   was a programming / refactoring mistake and returned a **Vector** of **Object**s, not **Resource**s.
