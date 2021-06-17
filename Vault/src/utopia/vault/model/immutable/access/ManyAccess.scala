@@ -1,6 +1,6 @@
 package utopia.vault.model.immutable.access
 
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.sql.{Condition, ConditionElement}
 

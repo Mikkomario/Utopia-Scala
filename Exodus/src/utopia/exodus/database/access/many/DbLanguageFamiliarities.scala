@@ -20,6 +20,8 @@ object DbLanguageFamiliarities extends ManyRowModelAccess[LanguageFamiliarity]
 	
 	override def globalCondition = None
 	
+	override protected def defaultOrdering = None
+	
 	
 	// OTHER	----------------------------
 	

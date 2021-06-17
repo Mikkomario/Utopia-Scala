@@ -10,7 +10,7 @@ import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 import utopia.vault.sql.Condition
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 
 /**
   * Used for accessing various types of descriptions
@@ -147,6 +147,8 @@ object DbDescriptions
 	{
 		override def globalCondition = None
 		
+		override protected def defaultOrdering = None
+		
 		override protected def subGroup(remainingTargetIds: Set[Int]) =
 			DescriptionsOfMany(remainingTargetIds, factory, linkModelFactory)
 	}
@@ -174,6 +176,8 @@ object DbDescriptions
 				Some(baseCondition && factory.nonDeprecatedCondition)
 			}
 		}
+		
+		override protected def defaultOrdering = None
 		
 		override protected def subGroup(remainingTargetIds: Set[Int]) =
 		{
@@ -213,6 +217,8 @@ object DbDescriptions
 		
 		override val globalCondition = Some(linkModelFactory.withTargetId(targetId).toCondition &&
 			factory.nonDeprecatedCondition)
+		
+		override protected def defaultOrdering = None
 		
 		
 		// OTHER	-------------------------

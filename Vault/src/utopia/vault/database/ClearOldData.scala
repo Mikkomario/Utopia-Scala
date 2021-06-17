@@ -3,7 +3,7 @@ package utopia.vault.database
 import java.time.{Instant, Period}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.model.error.NoReferenceFoundException

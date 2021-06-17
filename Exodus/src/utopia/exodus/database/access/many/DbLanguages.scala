@@ -6,7 +6,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.language.Language
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyModelAccess
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 
 /**
   * Used for accessing multiple languages at a time
@@ -20,6 +20,8 @@ object DbLanguages extends ManyModelAccess[Language]
 	override def factory = LanguageFactory
 	
 	override def globalCondition = None
+	
+	override protected def defaultOrdering = None
 	
 	
 	// COMPUTED	--------------------------------

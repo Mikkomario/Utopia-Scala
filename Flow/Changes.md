@@ -24,6 +24,8 @@
 - Added **MultiLazyLike** and **ExpiringMultiLazyLike** traits and implementations that allow one to create 
   custom caches using various instances of **LazyLike**
 ### New Methods
+- **Future** (**AsyncExtensions**)
+  - Added `.foreachResult(...)` to **Future**s that contain a **Try**
 - **Settable**
   - Multiple new utility methods
   - New utility methods for **Settable**s containing **Option**s and **Vector**s

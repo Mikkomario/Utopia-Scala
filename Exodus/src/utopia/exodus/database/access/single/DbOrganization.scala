@@ -102,6 +102,8 @@ object DbOrganization
 			
 			override def globalCondition = Some(condition)
 			
+			override protected def defaultOrdering = None
+			
 			
 			// OTHER	---------------------------
 			
@@ -141,6 +143,8 @@ object DbOrganization
 			
 			override def globalCondition = Some(model.withOrganizationId(organizationId).toCondition)
 			
+			override protected def defaultOrdering = None
+			
 			
 			// OTHER	---------------------------
 			
@@ -166,6 +170,8 @@ object DbOrganization
 			// IMPLEMENTED	----------------------
 			
 			override def globalCondition = Some(DeletionModel.withOrganizationId(organizationId).toCondition)
+			
+			override protected def defaultOrdering = None
 			
 			
 			// OTHER	--------------------------

@@ -14,25 +14,31 @@ object ManyModelAccess
 	/**
 	 * Wraps a model factory
 	 * @param factory A model factory
+	 * @param order Order by used in the queries by default (optional)
 	 * @tparam A Type of model read from DB
 	 * @return An access point
 	 */
-	def apply[A](factory: FromResultFactory[A]): ManyModelAccess[A] = new FactoryWrapper(factory, None)
+	def apply[A](factory: FromResultFactory[A], order: Option[OrderBy] = None): ManyModelAccess[A] =
+		new FactoryWrapper(factory, None, order)
 	
 	/**
 	 * Wraps a model factory
 	 * @param factory A model factory
 	 * @param condition A search condition used
+	 * @param order Order by used in the queries by default (optional)
 	 * @tparam A Type of model read from DB
 	 * @return An access point
 	 */
-	def conditional[A](factory: FromResultFactory[A], condition: Condition): ManyModelAccess[A] =
-		new FactoryWrapper(factory, Some(condition))
+	def conditional[A](factory: FromResultFactory[A], condition: Condition,
+	                   order: Option[OrderBy] = None): ManyModelAccess[A] =
+		new FactoryWrapper(factory, Some(condition), order)
 	
 	
 	// NESTED	--------------------------
 	
-	private class FactoryWrapper[A](val factory: FromResultFactory[A], condition: Option[Condition]) extends ManyModelAccess[A]
+	private class FactoryWrapper[A](override val factory: FromResultFactory[A], condition: Option[Condition],
+	                                override val defaultOrdering: Option[OrderBy])
+		extends ManyModelAccess[A]
 	{
 		override def globalCondition = condition
 	}
@@ -65,7 +71,7 @@ trait ManyModelAccess[+A] extends ManyAccess[A, ManyModelAccess[A]]
 	}
 	
 	override def filter(additionalCondition: Condition): ManyModelAccess[A] = new FactoryWrapper(factory,
-		Some(mergeCondition(additionalCondition)))
+		Some(mergeCondition(additionalCondition)), defaultOrdering)
 	
 	/**
 	 * Reads the values of an individual column

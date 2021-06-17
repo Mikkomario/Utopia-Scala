@@ -7,7 +7,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.TimeExtensions.ExtendedLocalDate
 import utopia.flow.util.RichComparable
 
-import java.time.LocalDate
+import java.time.{LocalDate, Period}
 
 /**
   * An object that always resolves to the current date
@@ -36,4 +36,18 @@ object Today extends ValueConvertible with RichComparable[LocalDate]
 	override implicit def toValue: Value = toLocalDate
 	
 	override def compareTo(o: LocalDate) = toLocalDate.compareTo(o)
+	
+	
+	// OTHER    ----------------------------
+	
+	/**
+	 * @param period A time period (days)
+	 * @return This date advanced by that time period
+	 */
+	def +(period: Period) = toLocalDate + period
+	/**
+	 * @param period A time period (days)
+	 * @return A date 'period' before this date
+	 */
+	def -(period: Period) = toLocalDate - period
 }

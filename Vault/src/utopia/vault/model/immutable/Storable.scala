@@ -1,6 +1,6 @@
 package utopia.vault.model.immutable
 
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property

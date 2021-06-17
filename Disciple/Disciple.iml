@@ -10,10 +10,10 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Access" />
     <orderEntry type="module" module-name="Flow" />
-    <orderEntry type="library" name="commons-codec-1.10" level="project" />
-    <orderEntry type="library" name="commons-logging-1.2" level="project" />
-    <orderEntry type="library" name="httpcore-4.4" level="project" />
-    <orderEntry type="library" name="httpclient-4.5.5" level="project" />
     <orderEntry type="library" name="scala-sdk-2.13.3" level="application" />
+    <orderEntry type="library" name="commons-codec-1" level="project" />
+    <orderEntry type="library" name="commons-logging-1" level="project" />
+    <orderEntry type="library" name="httpclient-4" level="project" />
+    <orderEntry type="library" name="httpcore-4" level="project" />
   </component>
 </module>

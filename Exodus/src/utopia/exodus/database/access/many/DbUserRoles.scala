@@ -6,7 +6,7 @@ import utopia.exodus.database.model.organization.RoleRightModel
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.organization.RoleWithRights
 import utopia.vault.database.Connection
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 
 /**
   * Used for accessing multiple user roles at once

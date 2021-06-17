@@ -9,7 +9,7 @@ import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.{SingleIdModelAccess, SingleModelAccess}
 import utopia.vault.sql.{Exists, Select, SelectDistinct, Where}
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 
 /**
   * An access point to individual memberships and their data

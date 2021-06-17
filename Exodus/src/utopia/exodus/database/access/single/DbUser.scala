@@ -19,7 +19,7 @@ import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.BasicCombineOperator.Or
 import utopia.vault.nosql.access.{ManyModelAccess, SingleIdModelAccess, SingleModelAccess, UniqueIdAccess, UniqueModelAccess}
 import utopia.vault.sql.{Delete, Select, Where}
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 
 import scala.util.{Failure, Success}
 
@@ -232,6 +232,8 @@ object DbUser extends SingleModelAccess[User]
 			
 			override def globalCondition = Some(condition)
 			
+			override protected def defaultOrdering = None
+			
 			
 			// COMPUTED	-------------------
 			
@@ -342,6 +344,8 @@ object DbUser extends SingleModelAccess[User]
 					case None => Some(model.withRecipientId(userId).toCondition)
 				}
 			}
+			
+			override protected def defaultOrdering = None
 		}
 		
 		object Memberships extends ManyModelAccess[Membership]
@@ -351,6 +355,8 @@ object DbUser extends SingleModelAccess[User]
 			override def factory = MembershipFactory
 			
 			override def globalCondition = Some(condition)
+			
+			override protected def defaultOrdering = None
 			
 			
 			// COMPUTED	--------------------------------

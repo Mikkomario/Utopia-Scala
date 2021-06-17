@@ -3,7 +3,7 @@ package utopia.vault.nosql.factory
 import java.time.Instant
 
 import utopia.flow.generic.ValueConversions._
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator
 import utopia.vault.model.enumeration.ComparisonOperator.{Larger, LargerOrEqual, Smaller, SmallerOrEqual}

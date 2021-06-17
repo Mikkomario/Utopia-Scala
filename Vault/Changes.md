@@ -1,5 +1,20 @@
 # Utopia Vault - List of Changes
 
+## v1.8 (in development)
+### Breaking Changes
+- **DistinctModelAccess** now requires computed property: `defaultOrdering: Option[OrderBy]`
+### Deprecations
+- Deprecated **Extensions** object in utopia.vault.sql package. 
+  Identical **SqlExtensions** object should be used instead.
+### New Features
+- Added **DistincReadModelAccess** trait that provides access to .pull -methods without requiring 
+  .put method support
+- Added **LatestModelAccess** trait that works like **UniqueModelAccess**, except that it targets 
+  the latest row and doesn't support .put methods
+### Other Changes
+- Added **SqlExtensions** object, which is a copy of the **Extensions** object and will replace 
+  the latter in a future release
+
 ## v1.7.1 - 12.5.2021
 This update focuses on utility features around SQL queries, especially on iterative, 
 sequential queries that target very large data sets. 

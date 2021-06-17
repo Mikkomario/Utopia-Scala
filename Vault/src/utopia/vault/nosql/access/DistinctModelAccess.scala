@@ -4,14 +4,7 @@ import scala.language.implicitConversions
 import utopia.flow.datastructure.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
-import utopia.vault.sql.{Condition, Exists, Update, Where}
-
-object DistinctModelAccess
-{
-	// Automatically accesses results of .pull
-	implicit def autoAccess[A](accessor: DistinctModelAccess[_, A, _])
-	                          (implicit connection: Connection): A = accessor.pull
-}
+import utopia.vault.sql.{Condition, Update, Where}
 
 /**
  * A common trait for model accessors which are able to target a distinct value / values with pull and put
@@ -19,47 +12,8 @@ object DistinctModelAccess
  * @author Mikko Hilpinen
  * @since 6.4.2021, v1.7
  */
-trait DistinctModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
+trait DistinctModelAccess[+M, +A, +V] extends DistinctReadModelAccess[M, A, V]
 {
-	/**
-	 * @param connection Implicit database connection
-	 * @return The unique item accessed through this access point. None if no item was found.
-	 */
-	def pull(implicit connection: Connection) = read(globalCondition)
-	
-	/**
-	 * @param connection DB Connection (implicit)
-	 * @return Whether there exists an item accessible from this access point
-	 */
-	def nonEmpty(implicit connection: Connection) = globalCondition match
-	{
-		case Some(condition) => Exists(target, condition)
-		case None => Exists.any(target)
-	}
-	
-	/**
-	 * @param connection DB Connection (implicit)
-	 * @return Whether there doesn't exist a single row accessible from this access point
-	 */
-	def isEmpty(implicit connection: Connection) = !nonEmpty
-	
-	/**
-	 * Reads all accessible values of a column
-	 * @param column Targeted column
-	 * @param connection DB Connection (implicit)
-	 * @return All accessible values of that column. May contain empty values.
-	 */
-	def pullColumn(column: Column)(implicit connection: Connection) = readColumn(column)
-	
-	/**
-	 * Reads all accessible values of a column / attribute
-	 * @param attributeName Name of the targeted attribute
-	 * @param connection DB Connection (implicit)
-	 * @return All accessible values of that column / attribute. May contain empty values.
-	 */
-	def pullAttribute(attributeName: String)(implicit connection: Connection) =
-		pullColumn(table(attributeName))
-	
 	/**
 	 * Updates value / values of an individual column accessible through this accessor
 	 * @param column Column to update

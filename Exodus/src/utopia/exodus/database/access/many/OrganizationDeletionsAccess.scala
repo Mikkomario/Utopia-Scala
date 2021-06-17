@@ -38,6 +38,8 @@ trait OrganizationDeletionsAccess extends ManyModelAccess[DeletionWithCancellati
 		override def globalCondition = Some(OrganizationDeletionsAccess.this.mergeCondition(
 			DeletionCancelModel.table.primaryColumn.get.isNull))
 		
+		override protected def defaultOrdering = None
+		
 		
 		// OTHER	----------------------
 		

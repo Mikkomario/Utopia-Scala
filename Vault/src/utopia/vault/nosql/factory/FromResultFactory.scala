@@ -1,6 +1,6 @@
 package utopia.vault.nosql.factory
 
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 import utopia.flow.datastructure.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.{Result, Table}

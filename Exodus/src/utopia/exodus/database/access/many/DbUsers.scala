@@ -11,7 +11,7 @@ import utopia.metropolis.model.post.NewUser
 import utopia.metropolis.model.stored.user.User
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyModelAccess
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 
 import scala.util.{Failure, Success, Try}
 
@@ -27,6 +27,8 @@ object DbUsers extends ManyModelAccess[User]
 	override def factory = UserFactory
 	
 	override def globalCondition = Some(factory.nonDeprecatedCondition)
+	
+	override protected def defaultOrdering = None
 	
 	
 	// COMPUTED	------------------------------
@@ -128,6 +130,8 @@ object DbUsers extends ManyModelAccess[User]
 		
 		override def globalCondition =
 			Some(DbUsers.mergeCondition(factory.table.primaryColumn.get.in(userIds)))
+		
+		override protected def defaultOrdering = None
 		
 		
 		// COMPUTED	----------------------------

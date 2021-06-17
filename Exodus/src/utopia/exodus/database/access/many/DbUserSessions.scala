@@ -19,6 +19,8 @@ object DbUserSessions extends ManyModelAccess[UserSession]
 	
 	override def globalCondition = Some(factory.nonDeprecatedCondition)
 	
+	override protected def defaultOrdering = None
+	
 	
 	// COMPUTED	--------------------------------
 	
@@ -48,6 +50,8 @@ object DbUserSessions extends ManyModelAccess[UserSession]
 		override def factory = DbUserSessions.factory
 		
 		override def globalCondition = Some(condition)
+		
+		override protected def defaultOrdering = None
 		
 		
 		// OTHER	-----------------------------

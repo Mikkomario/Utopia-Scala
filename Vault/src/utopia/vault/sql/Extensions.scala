@@ -8,6 +8,7 @@ import scala.language.implicitConversions
  * @author Mikko Hilpinen
  * @since 25.5.2017
  */
+@deprecated("Please use SqlExtensions instead (renamed version of this object)", "v1.8")
 object Extensions
 {
     /**

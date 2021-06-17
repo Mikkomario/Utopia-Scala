@@ -11,7 +11,7 @@ import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
 import utopia.vault.model.immutable.Storable
 import utopia.vault.nosql.access.ManyModelAccess
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 
 /**
   * A common trait for description link access points
@@ -74,6 +74,8 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 		
 		override val globalCondition = Some(DescriptionLinksAccess.this.mergeCondition(
 			descriptionModel.withLanguageId(languageId).toCondition))
+		
+		override protected def defaultOrdering = None
 		
 		
 		// OTHER	---------------------

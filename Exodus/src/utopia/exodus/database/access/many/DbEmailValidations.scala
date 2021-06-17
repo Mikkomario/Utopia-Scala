@@ -23,6 +23,8 @@ object DbEmailValidations extends ManyModelAccess[EmailValidation]
 	
 	override def globalCondition = Some(factory.nonDeprecatedCondition)
 	
+	override protected def defaultOrdering = None
+	
 	
 	// COMPUTED	---------------------------------
 	

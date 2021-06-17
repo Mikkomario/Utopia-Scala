@@ -2,7 +2,8 @@ package utopia.vault.nosql.access
 
 import utopia.flow.datastructure.immutable.Value
 import utopia.vault.nosql.factory.FromResultFactory
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.OrderBy
+import utopia.vault.sql.SqlExtensions._
 
 /**
  * Used for accessing multiple models based on their ids
@@ -11,7 +12,9 @@ import utopia.vault.sql.Extensions._
  * @param ids Row ids to target
  * @param factory Factory used when reading model data
  */
-class ManyIdModelAccess[+A](ids: Iterable[Value], override val factory: FromResultFactory[A]) extends ManyModelAccess[A]
+class ManyIdModelAccess[+A](ids: Iterable[Value], override val factory: FromResultFactory[A],
+                            override val defaultOrdering: Option[OrderBy] = None)
+	extends ManyModelAccess[A]
 {
 	// COMPUTED --------------------------
 	
