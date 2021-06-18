@@ -1,10 +1,17 @@
 # Utopia Exodus - List of Changes
 
-## v1.0.1 (in development)
+## v1.1 (in development)
+### Breaking Changes
+- Renamed nested classes and objects in **DbSingleUser**
 ### Deprecations
 - Deprecated `ExodusResources.all` in favor of `.default`
 ### New Features
-- **MySettingsNode** can now be extended with `.extendWith(...)` method
+- **MeNode** and **MySettingsNode** now extend the new **ExtendableResource** class 
+  and can therefore be extended from outside this project
+- Added **SessionUseCaseImplementation** object that makes it easier to create session authorized 
+  use case implementations for modular resources
+- Added **ExtendableSessionResource** class that makes it easier to create extendable 
+  session authorized **Resource** *objects*
 ### Bugfixes
 - Separated `ExodusResources.public` to `.publicDescriptions` and `.customAuthorized`. The previous implementation 
   was a programming / refactoring mistake and returned a **Vector** of **Object**s, not **Resource**s.

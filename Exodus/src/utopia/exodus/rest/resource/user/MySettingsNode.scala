@@ -5,14 +5,12 @@ import utopia.access.http.Status.{BadRequest, Forbidden, NotFound, Unauthorized}
 import utopia.exodus.database.access.single.{DbEmailValidation, DbUser}
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.EmailChange
 import utopia.exodus.model.error.InvalidKeyException
-import utopia.exodus.model.stored.UserSession
+import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, SessionUseCaseImplementation}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.post.UserSettingsUpdate
-import utopia.nexus.rest.Context
-import utopia.nexus.rest.scalable.{ExtendableResource, FollowImplementation, UseCaseImplementation}
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -23,67 +21,40 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 20.5.2020, v1
   */
-object MySettingsNode extends ExtendableResource[AuthorizedContext, (UserSession, Connection)]
+object MySettingsNode extends ExtendableSessionResource
 {
-	// TYPES    ---------------------------
-	
-	/**
-	 * The resource-specific context used in this node (based on session authorization)
-	 */
-	type MySettingsContext = (UserSession, Connection)
-	
-	
 	// ATTRIBUTES   -----------------------
 	
-	private val defaultGet = UseCaseImplementation
-		.defaultUsingContext(Get) { (_: Context, param: MySettingsContext, _) =>
-			implicit val connection: Connection = param._2
-			DbUser(param._1.userId).settings.pull match
-			{
-				case Some(readSettings) => Result.Success(readSettings.toModel)
-				case None => Result.Failure(NotFound, "No current settings found")
-			}
+	private val defaultGet = SessionUseCaseImplementation.default(Get) { (session, connection, _, _) =>
+		implicit val c: Connection = connection
+		DbUser(session.userId).settings.pull match
+		{
+			case Some(readSettings) => Result.Success(readSettings.toModel)
+			case None => Result.Failure(NotFound, "No current settings found")
 		}
-	private val defaultPut = UseCaseImplementation
-		.defaultUsingContext(Put) { (context: AuthorizedContext, param: MySettingsContext, _) =>
-			update(param._1.userId, requireAll = true)(context, param._2)
-		}
-	private val defaultPatch = UseCaseImplementation
-		.defaultUsingContext(Patch) { (context: AuthorizedContext, param: MySettingsContext, _) =>
-			update(param._1.userId)(context, param._2)
-		}
+	}
+	private val defaultPut = SessionUseCaseImplementation.default(Put) { (session, connection, context, _) =>
+		implicit val c: Connection = connection
+		implicit val cnx: AuthorizedContext = context
+		update(session.userId, requireAll = true)
+	}
+	private val defaultPatch = SessionUseCaseImplementation.default(Patch) { (session, connection, context, _) =>
+		implicit val c: Connection = connection
+		implicit val cnx: AuthorizedContext = context
+		update(session.userId)
+	}
 	
 	override val name = "settings"
 	
-	private var customImplementations = Vector[UseCaseImplementation[AuthorizedContext, MySettingsContext]]()
-	private var customFollows = Vector[FollowImplementation[AuthorizedContext]]()
+	override protected val defaultUseCaseImplementations = Vector(defaultGet, defaultPatch, defaultPut)
 	
 	
 	// IMPLEMENTED  ----------------------------
 	
-	override protected def wrap(implementation: ((UserSession, Connection)) => Result)
-	                           (implicit context: AuthorizedContext) =
-		context.sessionKeyAuthorized { (session, connection) => implementation(session -> connection) }
-	
-	override def useCaseImplementations =
-		customImplementations ++ Vector(defaultGet, defaultPatch, defaultPut)
-	override def followImplementations = customFollows
+	override protected def defaultFollowImplementations = Vector.empty
 	
 	
 	// OTHER    ---------------------------------------
-	
-	/**
-	 * Extends the capabilities of this node by adding a new use case implementation
-	 * @param useCaseImplementation A new use case implementation
-	 */
-	def extendWith(useCaseImplementation: UseCaseImplementation[AuthorizedContext, MySettingsContext]) =
-		customImplementations = useCaseImplementation +: customImplementations
-	/**
-	 * Extends the capabilities of this node by adding a new follow implementation
-	 * @param followImplementation A new follow implementation
-	 */
-	def extendWith(followImplementation: FollowImplementation[AuthorizedContext]) =
-		customFollows = followImplementation +: customFollows
 	
 	private def update(userId: Int, requireAll: Boolean = false)
 	                  (implicit context: AuthorizedContext, connection: Connection) =

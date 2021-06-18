@@ -7,8 +7,8 @@
   - Also, all **ResourceSearchResult** types now use type parameter C for context.
 ### New Features
 - **RequestHandler** now supports versioning (using different resources on different API versions)
-- Added **ExtendableResource** trait that supports custom implementations with 
-  **UseCaseImplementation** and **FollowImplementation**
+- Added **ModularResource** trait and abstract **ExtendableResource** class that support 
+  custom implementations with **UseCaseImplementation** and **FollowImplementation**
 - Added new **Result** type: **Redirect**
 ### Other Changes
 - **Request** now contains public constructor parameter `.created` 

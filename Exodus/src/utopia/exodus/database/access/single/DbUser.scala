@@ -43,7 +43,7 @@ object DbUser extends SingleModelAccess[User]
 	  * @param userId Id of targeted user
 	  * @return An access point to that user's data
 	  */
-	def apply(userId: Int) = new SingleUser(userId)
+	def apply(userId: Int) = DbSingleUser(userId)
 	
 	/**
 	  * Tries to authenticate a user with user name (or email) + password
@@ -63,7 +63,7 @@ object DbUser extends SingleModelAccess[User]
 	
 	// NESTED	-------------------------
 	
-	class SingleUser(userId: Int) extends SingleIdModelAccess(userId, DbUser.factory)
+	case class DbSingleUser(userId: Int) extends SingleIdModelAccess(userId, DbUser.factory)
 	{
 		// IMPLEMENTED	-----------------
 		
@@ -75,7 +75,7 @@ object DbUser extends SingleModelAccess[User]
 		/**
 		  * @return An access point to this user's known languages
 		  */
-		def languages = Languages
+		def languages = DbUserLanguages
 		
 		/**
 		  * @param connection DB Connection
@@ -96,7 +96,8 @@ object DbUser extends SingleModelAccess[User]
 		  * @param connection DB Connection
 		  * @return This user's data, along with linked data
 		  */
-		def withLinks(implicit connection: Connection) = pull.map { base => factory.complete(base) }
+		def withLinks(implicit connection: Connection) =
+			pull.map { base => factory.complete(base) }
 		
 		/**
 		  * @param connection DB Connection (implicit)
@@ -111,19 +112,19 @@ object DbUser extends SingleModelAccess[User]
 		/**
 		  * @return An access point to this user's current settings
 		  */
-		def settings = Settings
+		def settings = DbUserSettings
 		
 		/**
 		  * @param connection DB Connection (implicit), used for reading user email address
 		  * @return An access point to invitations for this user
 		  */
 		// Will need to read settings for accessing since joining logic would get rather complex otherwise
-		def receivedInvitations(implicit connection: Connection) = new InvitationsForUser(settings.map { _.email })
+		def receivedInvitations(implicit connection: Connection) = new DbUserInvitations(settings.map { _.email })
 		
 		/**
 		  * @return An access point to this user's memberships
 		  */
-		def memberships = Memberships
+		def memberships = DbUserMemberships
 		
 		
 		// OTHER	----------------------
@@ -140,7 +141,7 @@ object DbUser extends SingleModelAccess[User]
 		  * @param organizationId Id of targeted organization
 		  * @return An access point to this user's membership id in that organization
 		  */
-		def membershipIdInOrganizationWithId(organizationId: Int) = MembershipId(organizationId)
+		def membershipIdInOrganizationWithId(organizationId: Int) = DbUserMembershipId(organizationId)
 		
 		/**
 		  * Links this user with the specified device
@@ -187,7 +188,7 @@ object DbUser extends SingleModelAccess[User]
 		
 		// NESTED	-----------------------
 		
-		object Settings extends UniqueModelAccess[UserSettings]
+		object DbUserSettings extends UniqueModelAccess[UserSettings]
 		{
 			// IMPLEMENTED	---------------
 			
@@ -224,7 +225,7 @@ object DbUser extends SingleModelAccess[User]
 			}
 		}
 		
-		object Languages extends ManyModelAccess[UserLanguage]
+		object DbUserLanguages extends ManyModelAccess[UserLanguage]
 		{
 			// IMPLEMENTED	---------------
 			
@@ -308,7 +309,7 @@ object DbUser extends SingleModelAccess[User]
 			}
 		}
 		
-		case class MembershipId(organizationId: Int) extends UniqueIdAccess[Int]
+		case class DbUserMembershipId(organizationId: Int) extends UniqueIdAccess[Int]
 		{
 			// ATTRIBUTES	------------------------
 			
@@ -333,7 +334,7 @@ object DbUser extends SingleModelAccess[User]
 		}
 		
 		// If email is empty, it is not searched
-		class InvitationsForUser(email: Option[String]) extends InvitationsAccess
+		class DbUserInvitations(email: Option[String]) extends InvitationsAccess
 		{
 			override val globalCondition =
 			{
@@ -348,7 +349,7 @@ object DbUser extends SingleModelAccess[User]
 			override protected def defaultOrdering = None
 		}
 		
-		object Memberships extends ManyModelAccess[Membership]
+		object DbUserMemberships extends ManyModelAccess[Membership]
 		{
 			// IMPLEMENTED	---------------------------
 			

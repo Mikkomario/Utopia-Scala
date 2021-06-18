@@ -22,6 +22,16 @@ import scala.util.{Failure, Success, Try}
 
 object AuthorizedContext
 {
+	// TYPES    ---------------------------------
+	
+	/**
+	 * Parameters provided by session authorization
+	 */
+	type SessionParams = (UserSession, Connection)
+	
+	
+	// OTHER    ---------------------------------
+	
 	/**
 	  * Creates a new authorized request context
 	  * @param request Request wrapped by this context

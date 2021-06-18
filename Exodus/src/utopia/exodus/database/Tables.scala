@@ -188,6 +188,13 @@ object Tables
 	// OTHER	-------------------------------
 	
 	/**
+	 * @param databaseName Name of the used database
+	 * @param tableName Name of the targeted table
+	 * @return A cached table
+	 */
+	def apply(databaseName: String, tableName: String): Table = access(databaseName, tableName)
+	
+	/**
 	  * @param tableName Name of targeted table
 	  * @return a cached table
 	  */

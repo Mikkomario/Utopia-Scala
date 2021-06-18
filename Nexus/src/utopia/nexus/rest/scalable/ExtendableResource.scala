@@ -1,58 +1,54 @@
 package utopia.nexus.rest.scalable
 
-import utopia.access.http.Status.NotImplemented
-import utopia.flow.util.CollectionExtensions._
-import utopia.nexus.http.{Path, Response}
-import utopia.nexus.rest.ResourceSearchResult.Error
-import utopia.nexus.rest.{Context, Resource}
-import utopia.nexus.result.Result
+import utopia.nexus.rest.Context
 
 /**
- * A resource which supports extensions that provide custom functionality over the default implementation.
- * Use this trait if you can't / don't want to specify all resource functionality within a single module
- * (E.g. when creating an extendable framework)
+ * An abstract implementation of the ModularResource trait that allows outside extensions
  * @author Mikko Hilpinen
- * @since 17.6.2021, v1.6
+ * @since 18.6.2021, v1.6
  */
-trait ExtendableResource[-C <: Context, P] extends Resource[C]
+abstract class ExtendableResource[C <: Context, P] extends ModularResource[C, P]
 {
-	// ABSTRACT ---------------------------
+	// ATTRIBUTES   ------------------------------
+	
+	private var customUseCaseImplementations = Vector[UseCaseImplementation[C, P]]()
+	private var customFollowImplementations = Vector[FollowImplementation[C]]()
+	
+	
+	// ABSTRACT ----------------------------------
 	
 	/**
-	 * Wraps the custom implementation into a response, performing the necessary pre- and post processing
-	 * @param implementation Function that handles the request
-	 * @param context Implicit request context
-	 * @return Response based on the context and/or implementation
+	 * @return The use case implementations provided by this resource by default (called in order)
 	 */
-	protected def wrap(implementation: P => Result)(implicit context: C): Response
+	protected def defaultUseCaseImplementations: Seq[UseCaseImplementation[C, P]]
+	/**
+	 * @return The follow implementations provided by this resource by default (called in order)
+	 */
+	protected def defaultFollowImplementations: Seq[FollowImplementation[C]]
+	
+	
+	// IMPLEMENTED  ------------------------------
+	
+	override def useCaseImplementations =
+		customUseCaseImplementations.view ++ defaultUseCaseImplementations
+	override def followImplementations =
+		customFollowImplementations.view ++ defaultFollowImplementations
+	
+	
+	// OTHER    ----------------------------------
 	
 	/**
-	 * @return The use case implementations used in this resource
+	 * Extends the capabilities of this node by adding a new use case implementation.
+	 * The new implementation will be the first one to use for the supported method.
+	 * @param useCaseImplementation A new use case implementation
 	 */
-	def useCaseImplementations: Iterable[UseCaseImplementation[C, P]]
+	def extendWith(useCaseImplementation: UseCaseImplementation[C, P]) =
+		customUseCaseImplementations = useCaseImplementation +: customUseCaseImplementations
 	/**
-	 * @return The follow implementations used in this resource
+	 * Extends the capabilities of this node by adding a new follow implementation.
+	 * The new implementation will be the first one called.
+	 * @param followImplementation A new follow implementation
 	 */
-	def followImplementations: Iterable[FollowImplementation[C]]
-	
-	
-	// IMPLEMENTED  -----------------------
-	
-	override def allowedMethods = useCaseImplementations.map { _.method }.toSet
-	
-	override def toResponse(remainingPath: Option[Path])(implicit context: C) =
-	{
-		wrap { param =>
-			val useCaseIterator = useCaseImplementations.iterator
-			def nextResult(): Result = useCaseIterator.nextOption() match
-			{
-				case Some(implementation) => implementation(remainingPath, param) { nextResult() }
-				case None => Result.Failure(NotImplemented)
-			}
-			nextResult()
-		}
-	}
-	
-	override def follow(path: Path)(implicit context: C) =
-		followImplementations.findMap { _(path) }.getOrElse { Error() }
+	def extendWith(followImplementation: FollowImplementation[C]) =
+		customFollowImplementations = followImplementation +: customFollowImplementations
 }
