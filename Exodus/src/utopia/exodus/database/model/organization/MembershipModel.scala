@@ -22,6 +22,15 @@ object MembershipModel
 	// COMPUTED	-------------------------------
 	
 	/**
+	 * @return The factory used by this model
+	 */
+	def factory = MembershipFactory
+	/**
+	 * @return The table used by this model
+	 */
+	def table = factory.table
+	
+	/**
 	  * @return A model that has just been marked as an ended membership
 	  */
 	def nowEnded = apply(ended = Some(Now))
@@ -68,7 +77,7 @@ case class MembershipModel(id: Option[Int] = None, organizationId: Option[Int] =
 	
 	// IMPLEMENTED	---------------------------
 	
-	override def factory = MembershipFactory
+	override def factory = MembershipModel.factory
 	
 	override def valueProperties = Vector("id" -> id, organizationIdAttName -> organizationId, "userId" -> userId,
 		"creatorId" -> creatorId, "started" -> started, "ended" -> ended)
