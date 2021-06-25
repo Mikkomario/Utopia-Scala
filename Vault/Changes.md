@@ -11,9 +11,15 @@
   .put method support
 - Added **LatestModelAccess** trait that works like **UniqueModelAccess**, except that it targets 
   the latest row and doesn't support .put methods
+### New Methods
+- **FromResultFactory**
+  - `.getManyWithJoin(...)`
+- **FromRowFactory**
+  - `.getWithJoin(...)`
 ### Other Changes
 - Added **SqlExtensions** object, which is a copy of the **Extensions** object and will replace 
   the latter in a future release
+- **StoredModelConvertible** now adds the id constant to the beginning of the resulting model
 
 ## v1.7.1 - 12.5.2021
 This update focuses on utility features around SQL queries, especially on iterative, 

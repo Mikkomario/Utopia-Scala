@@ -3,8 +3,9 @@ package utopia.vault.nosql.factory
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.datastructure.immutable.Value
 import utopia.vault.database.Connection
-import utopia.vault.model.immutable.{Column, Result, Row}
-import utopia.vault.sql.{Condition, Limit, OrderBy, SelectAll, Where}
+import utopia.vault.model.immutable.{Column, Result, Row, Table}
+import utopia.vault.sql.JoinType.Inner
+import utopia.vault.sql.{Condition, JoinType, Limit, OrderBy, Select, SelectAll, Where}
 import utopia.vault.util.ErrorHandling
 
 import scala.util.{Failure, Success, Try}
@@ -180,6 +181,19 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	 */
 	def getAny()(implicit connection: Connection) = connection(SelectAll(target) + Limit(1))
 		.rows.headOption.flatMap(parseIfPresent)
+	
+	/**
+	 * Finds an individual item from the database. Includes a single join for filtering.
+	 * @param joinedTable Table being joined
+	 * @param where Condition to apply for filtering
+	 * @param joinType Type of join used (default = inner)
+	 * @param connection Implicit database connection
+	 * @return An item matching the specified condition
+	 */
+	def getWithJoin(joinedTable: Table, where: Condition, joinType: JoinType = Inner)
+	               (implicit connection: Connection) =
+		connection(Select(target.join(joinedTable, joinType), tables.flatMap { _.columns }) +
+			Where(where) + Limit(1)).rows.headOption.flatMap(parseIfPresent)
 	
 	/**
 	  * Performs an operation on each of the targeted entities

@@ -128,6 +128,12 @@ class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeG
      * Creates a new model with the provided attribute added
      */
     def +[B >: Attribute <: Constant](attribute: B) = withAttributes(attributes :+ attribute)
+    /**
+     * @param attribute An attribute
+     * @tparam B Type of the new attribute
+     * @return A copy of this model with that attribute added (prepended)
+     */
+    def +:[B >: Attribute <: Constant](attribute: B) = withAttributes(attribute +: attributes)
     
     /**
      * Creates a new model with the provided attributes added

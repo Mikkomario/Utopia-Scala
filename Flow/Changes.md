@@ -26,11 +26,15 @@
 ### New Methods
 - **Future** (**AsyncExtensions**)
   - Added `.foreachResult(...)` to **Future**s that contain a **Try**
+- immutable.**Model**
+  - `+:(Constant)` that adds a new property to the beginning of this model
 - **Settable**
   - Multiple new utility methods
   - New utility methods for **Settable**s containing **Option**s and **Vector**s
 - **Throwable** (**ErrorExtensions**)
   - `.stackTraceString`
+- **Try[Future[Try[...]]]** (**AsyncExtensions**)
+  - Added .flattenToFuture that converts this **Try** to a **Future[Try[A]]**
 ### Other Changes
 - Added direct implicit conversion from **Today** to **ExtendedLocalDate**, allowing access to **TimeExtensions** 
   methods directly from **Today** without going through **LocalDate** first

@@ -223,6 +223,14 @@ object AsyncExtensions
 			this.f.onComplete { r => f(r.flatten) }
 	}
 	
+	implicit class FutureTry[A](val t: Try[Future[Try[A]]]) extends AnyVal
+	{
+		/**
+		 * @return This try as a future
+		 */
+		def flattenToFuture = t.getOrMap { error => Future.successful(Failure(error)) }
+	}
+	
 	implicit class ManyFutures[A](val futures: IterableOnce[Future[A]]) extends AnyVal
 	{
 		/**

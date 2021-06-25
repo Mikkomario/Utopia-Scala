@@ -262,7 +262,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  * @param taskId Id of the task the user is trying to perform
 	  * @param f Function called when the user is fully authorized. Takes user session, membership id and database
 	  *          connection as parameters. Returns operation result.
-	  * @return An http response based either on the function result or authorization failure.
+	  * @return An http response based either on the function result or authorization failure (401 or 403).
 	  */
 	def authorizedForTask(organizationId: Int, taskId: Int)(f: (UserSession, Int, Connection) => Result) =
 	{

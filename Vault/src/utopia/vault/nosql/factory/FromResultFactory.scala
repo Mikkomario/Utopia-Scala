@@ -4,7 +4,8 @@ import utopia.vault.sql.SqlExtensions._
 import utopia.flow.datastructure.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.{Result, Table}
-import utopia.vault.sql.{Condition, Exists, JoinType, OrderBy, SelectAll, SqlTarget, Where}
+import utopia.vault.sql.JoinType.Inner
+import utopia.vault.sql.{Condition, Exists, JoinType, OrderBy, Select, SelectAll, SqlTarget, Where}
 
 /**
   * These factories are used for constructing object data from database results
@@ -24,7 +25,6 @@ trait FromResultFactory[+A]
 	  * @return The tables that are joined for complete results
 	  */
 	def joinedTables: Seq[Table]
-	
 	/**
 	  * @return Joining style used
 	  */
@@ -77,11 +77,22 @@ trait FromResultFactory[+A]
 	  * @return Parsed instance data
 	  */
 	def getMany(where: Condition, order: Option[OrderBy] = None)(implicit connection: Connection) =
-	{
-		val baseStatement = SelectAll(target) + Where(where)
-		val finalStatement = order.map { baseStatement + _ }.getOrElse(baseStatement)
-		apply(connection(finalStatement))
-	}
+		apply(connection(SelectAll(target) + Where(where) + order))
+	
+	/**
+	 * Finds possibly multiple instances from the database. Performs a single join, but doesn't select the columns
+	 * from the joined table.
+	 * @param joinedTable Table to join (for filtering)
+	 * @param where Condition to apply to filter results
+	 * @param order Ordering to apply (optional)
+	 * @param joinType Type of joining used (default = inner)
+	 * @param connection Implicit database connection
+	 * @return Parsed instances
+	 */
+	def getManyWithJoin(joinedTable: Table, where: Condition, order: Option[OrderBy] = None,
+	                    joinType: JoinType = Inner)(implicit connection: Connection) =
+		apply(connection(Select(target.join(joinedTable, joinType), tables.flatMap { _.columns }) +
+			Where(where) + order))
 	
 	/**
 	  * Finds the instances with the specified ids
@@ -115,7 +126,6 @@ trait FromResultFactory[+A]
 	  * @return Whether there exists data in the DB for specified condition
 	  */
 	def exists(where: Condition)(implicit connection: Connection) = Exists(target, where)
-	
 	/**
 	  * Checks whether there exists data for the specified index
 	  * @param index An index in this factory's primary table
@@ -131,7 +141,6 @@ trait FromResultFactory[+A]
 	 */
 	def get(index: Value)(implicit connection: Connection): Option[A] =
 		table.primaryColumn.flatMap { column => get(column <=> index) }
-	
 	/**
 	 * Retrieves an object's data from the database and parses it to a proper instance
 	 * @param where The condition with which the row is found from the database (will be limited to
