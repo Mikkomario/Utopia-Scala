@@ -9,6 +9,7 @@
 - **RequestHandler** now supports versioning (using different resources on different API versions)
 - Added **ModularResource** trait and abstract **ExtendableResource** class that support 
   custom implementations with **UseCaseImplementation** and **FollowImplementation**
+  - Also added **ExtendableResourceFactory** class that allows extensions on resource classes that take parameters
 - Added new **Result** type: **Redirect**
 ### Other Changes
 - **Request** now contains public constructor parameter `.created` 

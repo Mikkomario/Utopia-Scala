@@ -25,7 +25,13 @@ object AuthorizedContext
 	// TYPES    ---------------------------------
 	
 	/**
-	 * Parameters provided by session authorization
+	 * Parameter provided in organization session authorization
+	 * (session + membership id + DB connection)
+	 */
+	type OrganizationParams = (UserSession, Int, Connection)
+	
+	/**
+	 * Parameters provided in session authorization (session + DB connection)
 	 */
 	type SessionParams = (UserSession, Connection)
 	

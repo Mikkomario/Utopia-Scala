@@ -8,10 +8,16 @@
 ### New Features
 - **MeNode** and **MySettingsNode** now extend the new **ExtendableResource** class 
   and can therefore be extended from outside this project
+- **OrganizationNode**.type now extends the new **ExtendableResourceFactory** class and can therefore 
+  be extended from outside this project
 - Added **SessionUseCaseImplementation** object that makes it easier to create session authorized 
   use case implementations for modular resources
 - Added **ExtendableSessionResource** class that makes it easier to create extendable 
   session authorized **Resource** *objects*
+- Added **OrganizationUseCaseImplementation** object that makes it easier to create organization-specific 
+  session authorized use case implementations for modular resources
+- Added **ExtendableOrganizationResourceFactory** class that makes it easier to create extendable 
+  organization-specific session authorized resource factory objects
 ### Bugfixes
 - Separated `ExodusResources.public` to `.publicDescriptions` and `.customAuthorized`. The previous implementation 
   was a programming / refactoring mistake and returned a **Vector** of **Object**s, not **Resource**s.
