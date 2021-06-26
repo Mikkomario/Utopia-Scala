@@ -1,0 +1,43 @@
+[
+{
+	"target": "description_role", 
+	"en": {
+		"1": "name"
+	}
+}, 
+{
+	"target": "language", 
+	"en": {
+		"1": "English"
+	}
+}, 
+{
+	"target": "language_familiarity", 
+	"en": {
+		"1": "primary language", 
+		"2": "fluent and preferred", 
+		"3": "fluent", 
+		"4": "OK", 
+		"5": "OK, less preferred", 
+		"6": "better than nothing"
+	}
+}, 
+{
+	"target": "task", 
+	"en": {
+		"1": "delete organization", 
+		"2": "change user roles", 
+		"3": "invite users", 
+		"4": "edit organization description", 
+		"5": "remove users", 
+		"6": "cancel organization deletion"
+	}
+}, 
+{
+	"target": "user_role", 
+	"en": {
+		"1": "owner", 
+		"2": "admin"
+	}
+}
+]
