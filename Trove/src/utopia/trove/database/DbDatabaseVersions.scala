@@ -25,6 +25,8 @@ case class DbDatabaseVersions(versionTable: Table) extends ManyRowModelAccess[Da
 	
 	override def globalCondition = None
 	
+	override protected def defaultOrdering = Some(factory.defaultOrdering)
+	
 	
 	// OTHER	---------------------------
 	

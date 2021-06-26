@@ -71,13 +71,12 @@ class ApiServlet extends HttpServlet
 	private implicit val serverSettings: ServerSettings = ServerSettings("http://localhost:9999")
 	private implicit val jsonParser: JsonParser = JsonBunny
 	
-	private val handler = new RequestHandler(
-		Vector(
+	private val handler = new RequestHandler(Map("v1" -> Vector(
 			DescriptionRolesNode.public, LanguagesNode.public, LanguageFamiliaritiesNode.public, RolesNode, TasksNode,
 			UsersNode.forApiKey, DevicesNode, OrganizationsNode, QuestSessionsNode,
 			EmailsNode.forApiKey
-		),
-		Some(Path("exodus", "api", "v1")), r => AuthorizedContext(r) { _.printStackTrace() })
+		)),
+		Some(Path("exodus", "api")), r => AuthorizedContext(r) { _.printStackTrace() })
 	
 	
 	// IMPLEMENTED	----------------------------
