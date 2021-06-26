@@ -9,6 +9,7 @@ import utopia.vault.nosql.access.ManyIdAccess
   * @author Mikko Hilpinen
   * @since 10.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbLanguageIds extends ManyIdAccess[Int]
 {
 	// IMPLEMENTED	--------------------------

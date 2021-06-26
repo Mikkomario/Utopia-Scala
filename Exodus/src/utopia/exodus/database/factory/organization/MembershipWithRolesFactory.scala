@@ -14,6 +14,7 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 6.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object MembershipWithRolesFactory extends FromResultFactory[MembershipWithRoles] with Deprecatable
 {
 	// IMPLEMENTED	----------------------------

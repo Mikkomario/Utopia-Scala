@@ -16,6 +16,7 @@ import scala.util.{Success, Try}
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 trait DescriptionLinkFactory[+E] extends LinkedFactory[E, Description] with Deprecatable
 {
 	// ABSTRACT	----------------------------------

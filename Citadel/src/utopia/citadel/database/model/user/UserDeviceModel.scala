@@ -91,7 +91,7 @@ object UserDeviceModel extends Deprecatable
 /**
   * Registers links between users and devices
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v1
+  * @since 2.5.2020, v1.0
   */
 case class UserDeviceModel(id: Option[Int] = None, userId: Option[Int] = None, deviceId: Option[Int] = None,
 						   created: Option[Instant] = None, deprecatedAfter: Option[Instant] = None) extends Storable

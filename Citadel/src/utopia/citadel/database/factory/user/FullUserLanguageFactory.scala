@@ -9,7 +9,7 @@ import utopia.vault.sql.JoinType.Inner
 /**
   * Used for reading user languages with language data included
   * @author Mikko Hilpinen
-  * @since 17.5.2020, v1
+  * @since 17.5.2020, v1.0
   */
 object FullUserLanguageFactory extends FromRowFactory[FullUserLanguage]
 {

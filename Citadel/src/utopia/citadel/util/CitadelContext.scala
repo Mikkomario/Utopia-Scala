@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext
   * This context object holds certain global values required by many features in this project. It is recommended to
   * set up this object at the very beginning of the application's startup.
   * @author Mikko Hilpinen
-  * @since 26.6.2021, v1
+  * @since 26.6.2021, v1.0
   */
 object CitadelContext
 {

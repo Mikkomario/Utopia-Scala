@@ -10,7 +10,7 @@ import utopia.vault.nosql.factory.FromValidatedRowModelFactory
 /**
   * Used for reading description roles from the database
   * @author Mikko Hilpinen
-  * @since 25.7.2020, v1
+  * @since 25.7.2020, v1.0
   */
 object DescriptionRoleFactory extends FromValidatedRowModelFactory[DescriptionRole]
 {

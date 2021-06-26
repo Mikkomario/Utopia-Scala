@@ -2,9 +2,9 @@ package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.Delete
 import utopia.access.http.Status.Forbidden
-import utopia.exodus.database.access.single.{DbMembership, DbOrganization}
+import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
+import utopia.citadel.model.enumeration.StandardUserRole.Owner
 import utopia.exodus.model.enumeration.StandardTask.DeleteOrganization
-import utopia.exodus.model.enumeration.StandardUserRole.Owner
 import utopia.exodus.rest.resource.scalable.{ExtendableOrganizationResource, ExtendableOrganizationResourceFactory, OrganizationUseCaseImplementation}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.TimeExtensions._

@@ -8,6 +8,7 @@ import utopia.metropolis.model.stored.user.{User, UserSettings}
 import utopia.vault.database.Connection
 import utopia.vault.nosql.factory.{Deprecatable, LinkedFactory}
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object UserFactory extends LinkedFactory[User, UserSettings] with Deprecatable
 {
 	// IMPLEMENTED	-----------------------------------

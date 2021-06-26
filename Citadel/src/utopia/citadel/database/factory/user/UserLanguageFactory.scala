@@ -10,7 +10,7 @@ import utopia.vault.nosql.factory.FromRowModelFactory
 /**
   * Used for reading user language links from the DB
   * @author Mikko Hilpinen
-  * @since 17.5.2020, v1
+  * @since 17.5.2020, v1.0
   */
 object UserLanguageFactory extends FromRowModelFactory[UserLanguage]
 {

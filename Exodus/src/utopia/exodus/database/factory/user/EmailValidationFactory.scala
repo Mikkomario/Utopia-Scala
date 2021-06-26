@@ -1,6 +1,6 @@
 package utopia.exodus.database.factory.user
 
-import utopia.exodus.database.Tables
+import utopia.exodus.database.ExodusTables
 import utopia.exodus.database.model.user.EmailValidationModel
 import utopia.exodus.model.partial.EmailValidationData
 import utopia.exodus.model.stored.EmailValidation
@@ -39,7 +39,7 @@ object EmailValidationFactory extends FromValidatedRowModelFactory[EmailValidati
 		EmailValidationData(model("purposeId"), model("email"), model("key"), model("resendKey"),
 			model("expiresIn"), model("ownerId"), model("created"), model("actualizedIn")))
 	
-	override def table = Tables.emailValidation
+	override def table = ExodusTables.emailValidation
 	
 	override def nonDeprecatedCondition = model.withExpiration(Now).toConditionWithOperator(Larger) &&
 		notActualizedCondition

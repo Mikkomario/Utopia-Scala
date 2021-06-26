@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.Get
-import utopia.exodus.database.access.single.DbOrganization
+import utopia.citadel.database.access.single.organization.DbOrganization
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._

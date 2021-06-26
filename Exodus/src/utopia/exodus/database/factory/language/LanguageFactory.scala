@@ -10,6 +10,7 @@ import utopia.vault.nosql.factory.FromValidatedRowModelFactory
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object LanguageFactory extends FromValidatedRowModelFactory[Language]
 {
 	// IMPLEMENTED	-------------------------------

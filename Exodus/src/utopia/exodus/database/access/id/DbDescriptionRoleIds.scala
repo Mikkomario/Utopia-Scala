@@ -8,6 +8,7 @@ import utopia.vault.nosql.access.ManyIntIdAccess
   * @author Mikko Hilpinen
   * @since 25.7.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbDescriptionRoleIds extends ManyIntIdAccess
 {
 	// COMPUTED	------------------------------

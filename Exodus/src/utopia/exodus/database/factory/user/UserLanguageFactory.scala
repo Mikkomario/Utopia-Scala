@@ -12,6 +12,7 @@ import utopia.vault.nosql.factory.FromRowModelFactory
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object UserLanguageFactory extends FromRowModelFactory[UserLanguage]
 {
 	override def apply(model: Model[Property]) = table.requirementDeclaration.validate(model).toTry.map { valid =>

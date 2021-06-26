@@ -1,6 +1,7 @@
 package utopia.exodus.rest.resource.description
 
-import utopia.exodus.database.access.many.{DbDescriptions, DbLanguageFamiliarities}
+import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.language.DbLanguageFamiliarities
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.metropolis.model.combined.language.DescribedLanguageFamiliarity
 import utopia.metropolis.model.stored.description.DescriptionLink

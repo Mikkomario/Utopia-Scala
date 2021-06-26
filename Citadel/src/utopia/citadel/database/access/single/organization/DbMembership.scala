@@ -14,7 +14,7 @@ import utopia.vault.sql.SqlExtensions._
 /**
   * An access point to individual memberships and their data
   * @author Mikko Hilpinen
-  * @since 5.5.2020, v1
+  * @since 5.5.2020, v1.0
   */
 object DbMembership extends SingleModelAccess[Membership]
 {

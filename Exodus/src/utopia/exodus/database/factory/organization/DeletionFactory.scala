@@ -13,6 +13,7 @@ import utopia.vault.nosql.factory.PossiblyMultiLinkedFactory
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DeletionFactory extends PossiblyMultiLinkedFactory[DeletionWithCancellations, DeletionCancel]
 {
 	override def childFactory = DeletionCancelFactory

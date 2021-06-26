@@ -2,7 +2,8 @@ package utopia.exodus.rest.resource.user
 
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{Forbidden, NotFound, Unauthorized}
-import utopia.exodus.database.access.single.{DbInvitation, DbOrganization, DbUser}
+import utopia.citadel.database.access.single.DbUser
+import utopia.citadel.database.access.single.organization.{DbInvitation, DbOrganization}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.organization.InvitationWithResponse

@@ -11,7 +11,7 @@ import utopia.vault.sql.SqlExtensions._
 /**
   * Used for accessing multiple user roles at once
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1
+  * @since 4.5.2020, v1.0
   */
 object DbUserRoleIds extends ManyIntIdAccess
 {

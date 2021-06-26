@@ -11,6 +11,7 @@ import utopia.vault.sql.JoinType.Inner
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object FullUserLanguageFactory extends FromRowFactory[FullUserLanguage]
 {
 	// IMPLEMENTED	--------------------------

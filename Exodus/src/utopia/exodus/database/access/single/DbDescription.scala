@@ -10,6 +10,7 @@ import utopia.vault.model.immutable.Storable
   * @author Mikko Hilpinen
   * @since 10.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbDescription
 {
 	// OTHER	----------------------------

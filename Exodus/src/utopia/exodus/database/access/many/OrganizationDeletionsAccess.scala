@@ -12,6 +12,7 @@ import utopia.vault.nosql.access.ManyModelAccess
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 trait OrganizationDeletionsAccess extends ManyModelAccess[DeletionWithCancellations]
 {
 	// IMPLEMENTED	----------------------

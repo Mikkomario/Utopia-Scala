@@ -75,7 +75,7 @@ object MemberRoleModel extends Deprecatable
 /**
   * Links organization memberships with their roles
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1
+  * @since 4.5.2020, v1.0
   */
 case class MemberRoleModel(id: Option[Int] = None, membershipId: Option[Int] = None,
 						   roleId: Option[Int] = None, creatorId: Option[Int] = None,

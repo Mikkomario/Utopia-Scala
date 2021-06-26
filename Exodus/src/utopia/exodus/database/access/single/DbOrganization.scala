@@ -18,6 +18,7 @@ import utopia.vault.sql.{Select, Where}
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbOrganization
 {
 	// OTHER	----------------------------

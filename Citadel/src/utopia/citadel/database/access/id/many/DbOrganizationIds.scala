@@ -7,7 +7,7 @@ import utopia.vault.nosql.access.ManyIdAccess
 /**
   * Used for accessing multiple organization ids at a time
   * @author Mikko Hilpinen
-  * @since 13.5.2020, v1
+  * @since 13.5.2020, v1.0
   */
 object DbOrganizationIds extends ManyIdAccess[Int]
 {

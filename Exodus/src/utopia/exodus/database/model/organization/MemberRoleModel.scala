@@ -9,6 +9,7 @@ import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 import utopia.vault.nosql.factory.Deprecatable
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object MemberRoleModel extends Deprecatable
 {
 	// ATTRIBUTES	------------------------
@@ -77,6 +78,7 @@ object MemberRoleModel extends Deprecatable
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 case class MemberRoleModel(id: Option[Int] = None, membershipId: Option[Int] = None,
 						   roleId: Option[Int] = None, creatorId: Option[Int] = None,
 						   deprecatedAfter: Option[Instant] = None) extends Storable

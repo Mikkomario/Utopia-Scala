@@ -6,7 +6,7 @@ import utopia.vault.nosql.access.ManyIntIdAccess
 /**
   * Used for accessing description role ids
   * @author Mikko Hilpinen
-  * @since 25.7.2020, v1
+  * @since 25.7.2020, v1.0
   */
 object DbDescriptionRoleIds extends ManyIntIdAccess
 {

@@ -9,6 +9,7 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 20.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 {
 	// ABSTRACT	------------------------------------

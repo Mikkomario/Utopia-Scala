@@ -2,7 +2,7 @@ package utopia.exodus.rest.resource.device
 
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.Unauthorized
-import utopia.exodus.database.access.single.DbDevice
+import utopia.citadel.database.access.single.DbDevice
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._

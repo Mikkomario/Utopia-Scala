@@ -2,8 +2,8 @@ package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{Created, NotFound}
-import utopia.exodus.database.access.many.DbOrganizations
-import utopia.exodus.database.access.single.DbLanguage
+import utopia.citadel.database.access.many.organization.DbOrganizations
+import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.post.NewOrganization

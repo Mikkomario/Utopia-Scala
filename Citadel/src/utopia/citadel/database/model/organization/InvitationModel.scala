@@ -58,7 +58,7 @@ object InvitationModel
 /**
   * Used for interacting with organization invitations in DB
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1
+  * @since 4.5.2020, v1.0
   */
 case class InvitationModel(id: Option[Int] = None, organizationId: Option[Int] = None, recipientId: Option[Int] = None,
 						   recipientEmail: Option[String] = None, startingRoleId: Option[Int] = None,

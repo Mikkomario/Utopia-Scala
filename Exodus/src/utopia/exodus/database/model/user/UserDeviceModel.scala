@@ -10,6 +10,7 @@ import utopia.vault.nosql.factory.Deprecatable
 import utopia.vault.sql.{Condition, Exists}
 
 // TODO: Once there exists a factory object for this class, move deprecatable there
+@deprecated("Please use the Citadel version instead", "v2.0")
 object UserDeviceModel extends Deprecatable
 {
 	// ATTRIBUTES	----------------------
@@ -93,6 +94,7 @@ object UserDeviceModel extends Deprecatable
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 case class UserDeviceModel(id: Option[Int] = None, userId: Option[Int] = None, deviceId: Option[Int] = None,
 						   created: Option[Instant] = None, deprecatedAfter: Option[Instant] = None) extends Storable
 {

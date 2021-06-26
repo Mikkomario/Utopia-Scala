@@ -20,6 +20,7 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbUsers extends ManyModelAccess[User]
 {
 	// IMPLEMENTED	--------------------------

@@ -1,10 +1,15 @@
 # Utopia Exodus - List of Changes
 
-## v1.1 (in development)
+## v2.0 (in development)
 ### Breaking Changes
 - Renamed nested classes and objects in **DbSingleUser**
+- Most of the database classes were copied to **Utopia Citadel** module while some 
+  authentication-related features were kept in this module. This may cause problems in the 
+  dependent projects. Most of these problems can be resolved by switching to the appropriate 
+  **Citadel** class, however.
 ### Deprecations
 - Deprecated `ExodusResources.all` in favor of `.default`
+- All classes and features which were copied to **Citadel** are now deprecated in **Exodus**
 ### New Features
 - **MeNode** and **MySettingsNode** now extend the new **ExtendableResource** class 
   and can therefore be extended from outside this project

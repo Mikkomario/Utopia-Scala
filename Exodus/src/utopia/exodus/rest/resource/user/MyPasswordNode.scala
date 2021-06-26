@@ -3,11 +3,15 @@ package utopia.exodus.rest.resource.user
 import utopia.access.http.Method
 import utopia.access.http.Method.Put
 import utopia.access.http.Status.{BadRequest, InternalServerError, NotFound, Unauthorized}
-import utopia.exodus.database.access.id.DbUserId
-import utopia.exodus.database.access.single.{DbDevice, DbEmailValidation, DbUser, DbUserSession}
+import utopia.citadel.database.access.id.single.DbUserId
+import utopia.citadel.database.access.single.{DbDevice, DbUser}
+import utopia.citadel.util.CitadelContext._
+import utopia.exodus.database.access.single.{DbEmailValidation, DbUserSession}
+import utopia.exodus.database.UserDbExtensions._
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.PasswordReset
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.exodus.util.ExodusContext._
+import utopia.exodus.util.ExodusContext.uuidGenerator
+import utopia.exodus.util.ExodusContext.handleError
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.post.PasswordChange
 import utopia.nexus.http.Path

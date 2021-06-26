@@ -16,6 +16,7 @@ import utopia.vault.sql.SqlExtensions._
   * @author Mikko Hilpinen
   * @since 5.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbMembership extends SingleModelAccess[Membership]
 {
 	// IMPLEMENTED	--------------------------

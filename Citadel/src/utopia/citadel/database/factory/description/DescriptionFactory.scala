@@ -11,7 +11,7 @@ import utopia.vault.nosql.factory.FromValidatedRowModelFactory
 /**
   * Used for reading description data from the DB
   * @author Mikko Hilpinen
-  * @since 17.6.2020, v1
+  * @since 17.6.2020, v1.0
   */
 object DescriptionFactory extends FromValidatedRowModelFactory[Description]
 {

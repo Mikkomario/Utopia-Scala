@@ -12,7 +12,7 @@ import scala.util.{Failure, Success}
 /**
   * Used for reading rich membership data from DB
   * @author Mikko Hilpinen
-  * @since 6.5.2020, v1
+  * @since 6.5.2020, v1.0
   */
 object MembershipWithRolesFactory extends FromResultFactory[MembershipWithRoles] with Deprecatable
 {

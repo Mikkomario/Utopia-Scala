@@ -1,8 +1,8 @@
 package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
-import utopia.exodus.database.access.id.DbTaskIds
-import utopia.exodus.database.access.many.DbDescriptions
+import utopia.citadel.database.access.id.many.DbTaskIds
+import utopia.citadel.database.access.many.description.DbDescriptions
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.organization.DescribedTask

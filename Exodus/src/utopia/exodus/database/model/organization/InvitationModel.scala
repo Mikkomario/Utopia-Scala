@@ -11,6 +11,7 @@ import utopia.metropolis.model.stored.organization.Invitation
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object InvitationModel
 {
 	// COMPUTED	-------------------------------
@@ -60,6 +61,7 @@ object InvitationModel
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 case class InvitationModel(id: Option[Int] = None, organizationId: Option[Int] = None, recipientId: Option[Int] = None,
 						   recipientEmail: Option[String] = None, startingRoleId: Option[Int] = None,
 						   expireTime: Option[Instant] = None, creatorId: Option[Int] = None)

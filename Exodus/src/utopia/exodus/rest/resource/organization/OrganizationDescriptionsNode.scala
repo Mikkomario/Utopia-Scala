@@ -2,9 +2,9 @@ package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.{Get, Put}
 import utopia.access.http.Status.NotFound
-import utopia.exodus.database.access.id.DbDescriptionRoleIds
-import utopia.exodus.database.access.many.DbDescriptions
-import utopia.exodus.database.access.single.DbLanguage
+import utopia.citadel.database.access.id.many.DbDescriptionRoleIds
+import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.exodus.model.enumeration.StandardTask.DocumentOrganization
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._

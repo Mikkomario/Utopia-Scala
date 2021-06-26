@@ -8,7 +8,7 @@ import utopia.vault.nosql.access.{SingleIdAccess, UniqueIdAccess}
 /**
   * Used for accessing individual language ids
   * @author Mikko Hilpinen
-  * @since 17.5.2020, v1
+  * @since 17.5.2020, v1.0
   */
 object DbLanguageId extends SingleIdAccess[Int]
 {

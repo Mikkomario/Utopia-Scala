@@ -1,5 +1,7 @@
 --
--- DB Structure for Exodus features
+-- DB Structure for Utopia Exodus features
+-- Intended to be inserted after database creation
+-- Supports versions before v2.0
 --
 
 -- Various languages

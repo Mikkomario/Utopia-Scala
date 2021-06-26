@@ -1,6 +1,6 @@
 package utopia.exodus.database.model.user
 
-import utopia.exodus.database.Tables
+import utopia.exodus.database.{ExodusTables, Tables}
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
@@ -12,7 +12,7 @@ object EmailValidationResendModel
 	/**
 	  * @return The table used by this model
 	  */
-	def table = Tables.emailValidationResend
+	def table = ExodusTables.emailValidationResend
 	
 	
 	// OTHER	-----------------------------

@@ -8,7 +8,7 @@ import utopia.vault.nosql.access.SingleModelAccessById
 /**
   * Used for accessing individual familiarity levels
   * @author Mikko Hilpinen
-  * @since 25.7.2020, v1
+  * @since 25.7.2020, v1.0
   */
 object DbLanguageFamiliarity extends SingleModelAccessById[LanguageFamiliarity, Int]
 {

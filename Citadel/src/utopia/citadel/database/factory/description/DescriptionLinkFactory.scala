@@ -14,7 +14,7 @@ import scala.util.{Success, Try}
 /**
   * A common trait for factories of description links
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1
+  * @since 4.5.2020, v1.0
   */
 trait DescriptionLinkFactory[+E] extends LinkedFactory[E, Description] with Deprecatable
 {

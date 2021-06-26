@@ -11,7 +11,7 @@ import utopia.vault.nosql.factory.PossiblyMultiLinkedFactory
 /**
   * Used for reading organization deletion attempts from DB
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v1
+  * @since 16.5.2020, v1.0
   */
 object DeletionFactory extends PossiblyMultiLinkedFactory[DeletionWithCancellations, DeletionCancel]
 {

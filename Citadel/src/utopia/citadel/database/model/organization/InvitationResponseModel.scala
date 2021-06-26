@@ -42,7 +42,7 @@ object InvitationResponseModel
 /**
   * Used for interacting with invitation responses in DB
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1
+  * @since 4.5.2020, v1.0
   */
 case class InvitationResponseModel(id: Option[Int] = None, invitationId: Option[Int] = None,
 								   wasAccepted: Option[Boolean] = None, wasBlocked: Option[Boolean] = None,

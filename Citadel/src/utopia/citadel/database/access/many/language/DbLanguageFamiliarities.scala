@@ -10,7 +10,7 @@ import utopia.vault.sql.{SelectAll, Where}
 /**
   * Used for accessing multiple language familiarity levels at once
   * @author Mikko Hilpinen
-  * @since 25.7.2020, v1
+  * @since 25.7.2020, v1.0
   */
 object DbLanguageFamiliarities extends ManyRowModelAccess[LanguageFamiliarity]
 {

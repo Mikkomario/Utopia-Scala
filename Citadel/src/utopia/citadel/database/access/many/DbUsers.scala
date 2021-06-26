@@ -11,7 +11,7 @@ import utopia.vault.sql.SqlExtensions._
 /**
   * Used for accessing multiple user's data at once
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v1
+  * @since 2.5.2020, v1.0
   */
 object DbUsers extends ManyModelAccess[User]
 {

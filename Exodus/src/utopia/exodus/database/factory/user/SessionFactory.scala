@@ -1,6 +1,6 @@
 package utopia.exodus.database.factory.user
 
-import utopia.exodus.database.Tables
+import utopia.exodus.database.ExodusTables
 import utopia.exodus.database.model.user.SessionModel
 import utopia.exodus.model.partial.UserSessionData
 import utopia.exodus.model.stored.UserSession
@@ -26,7 +26,7 @@ object SessionFactory extends FromValidatedRowModelFactory[UserSession] with Dep
 		UserSessionData(model("userId").getInt, model("key").getString, model("expiresIn").getInstant,
 			model("deviceId").int))
 	
-	override def table = Tables.userSession
+	override def table = ExodusTables.userSession
 	
 	
 	// COMPUTED	-----------------------------------

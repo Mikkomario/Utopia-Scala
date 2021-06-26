@@ -8,7 +8,7 @@ import utopia.vault.nosql.factory.FromValidatedRowModelFactory
 /**
   * A factory used for reading language data from the database
   * @author Mikko Hilpinen
-  * @since 17.6.2020, v1
+  * @since 17.6.2020, v1.0
   */
 object LanguageFactory extends FromValidatedRowModelFactory[Language]
 {

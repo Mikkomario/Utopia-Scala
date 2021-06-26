@@ -3,9 +3,14 @@ package utopia.exodus.rest.util
 import utopia.access.http.ContentCategory.{Application, Text}
 import utopia.access.http.Status.{BadRequest, Forbidden, InternalServerError, Unauthorized}
 import utopia.access.http.error.ContentTypeException
-import utopia.exodus.database.access.many.DbLanguages
-import utopia.exodus.database.access.single.{DbApiKey, DbDeviceKey, DbEmailValidation, DbMembership, DbUser, DbUserSession}
+import utopia.citadel.database.access.id.single.DbUserId
+import utopia.citadel.database.access.many.language.DbLanguages
+import utopia.citadel.database.access.single.DbUser
+import utopia.citadel.database.access.single.organization.DbMembership
+import utopia.exodus.database.access.single.{DbApiKey, DbDeviceKey, DbEmailValidation, DbUserSession}
+import utopia.exodus.database.UserDbExtensions._
 import utopia.exodus.model.stored.{ApiKey, DeviceKey, EmailValidation, UserSession}
+import utopia.exodus.util.PasswordHash
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.generic.ValueConversions._
@@ -69,7 +74,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 					   (implicit serverSettings: ServerSettings, jsonParser: JsonParser)
 	extends BaseContext(request, resultParser)
 {
-	import utopia.exodus.util.ExodusContext._
+	import utopia.citadel.util.CitadelContext._
 	
 	// COMPUTED	----------------------------
 	
@@ -132,7 +137,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 				val (email, password) = basicAuth
 				
 				connectionPool.tryWith { implicit connection =>
-					DbUser.tryAuthenticate(email, password) match
+					tryAuthenticate(email, password) match
 					{
 						// Performs the operation on authorized user id
 						case Some(userId) => f(userId, connection)
@@ -369,11 +374,11 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 				val value = body.contentType.subType.toLowerCase match
 				{
 					case "json" => body.bufferedJson.contents
-					case "xml" => body.bufferedXml.contents.map { _.toSimpleModel: Value }
+					case "xml" => body.bufferedXml.contents.map[Value] { _.toSimpleModel }
 					case _ =>
 						body.contentType.category match
 						{
-							case Text => body.bufferedToString.contents.map { s => s: Value }
+							case Text => body.bufferedToString.contents.map[Value] { s => s }
 							case _ => Failure(ContentTypeException.notAccepted(body.contentType,
 								Vector(Application.json, Application.xml, Text.plain)))
 						}
@@ -455,4 +460,12 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  */
 	def handleModelArrayPost[A](parser: FromModelFactory[A])(f: Vector[A] => Result): Result =
 		handleModelArrayPost[A] { m: Model[Constant] => parser(m) }(f)
+	
+	private def tryAuthenticate(email: String, password: String)(implicit connection: Connection) =
+	{
+		// Finds user id and checks the password
+		DbUserId.forEmail(email).filter { id =>
+			DbUser(id).passwordHash.exists { correctHash => PasswordHash.validatePassword(password, correctHash) }
+		}
+	}
 }

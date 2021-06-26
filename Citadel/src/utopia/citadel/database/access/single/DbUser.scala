@@ -27,7 +27,7 @@ import scala.util.{Failure, Success}
 /**
   * Used for accessing individual user's data
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v1
+  * @since 2.5.2020, v1.0
   */
 object DbUser extends SingleModelAccess[User]
 {

@@ -16,7 +16,7 @@ import java.time.Instant
 /**
   * A common trait for description link access points
   * @author Mikko Hilpinen
-  * @since 17.5.2020, v1
+  * @since 17.5.2020, v1.0
   */
 trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 {
@@ -114,7 +114,7 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 		  * @param connection Db Connection
 		  * @return Description for that role for this item in targeted language
 		  */
-		@deprecated("A singular access point should be used for retrieving singular descriptions", "v1")
+		@deprecated("A singular access point should be used for retrieving singular descriptions", "v1.0")
 		def forRoleWithId(roleId: Int)(implicit connection: Connection): Option[DescriptionLink] =
 			read(Some(descriptionModel.withRoleId(roleId).toCondition)).headOption
 		
@@ -123,7 +123,7 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 		  * @param connection Db Connection
 		  * @return Description for that role for this item in targeted language
 		  */
-		@deprecated("Replaced with .forRoleWithId(Int)", "v1")
+		@deprecated("Replaced with .forRoleWithId(Int)", "v1.0")
 		def apply(role: DescriptionRole)(implicit connection: Connection): Option[DescriptionLink] =
 			apply(Set(role)).headOption
 		
@@ -132,7 +132,7 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 		  * @param connection DB Connection (implicit)
 		  * @return Recorded descriptions for those roles (in this language & target)
 		  */
-		@deprecated("Replaced with .forRolesWithIds(...)", "v1")
+		@deprecated("Replaced with .forRolesWithIds(...)", "v1.0")
 		def apply(roles: Set[DescriptionRole])(implicit connection: Connection) =
 		{
 			if (roles.nonEmpty)
@@ -147,7 +147,7 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 		  * @param connection    DB Connection (implicit)
 		  * @return Read description links
 		  */
-		@deprecated("Replaced with .forRolesOutsideIds(...)", "v1")
+		@deprecated("Replaced with .forRolesOutsideIds(...)", "v1.0")
 		def forRolesOutside(excludedRoles: Set[DescriptionRole])(implicit connection: Connection) =
 			apply(DescriptionRole.values.toSet -- excludedRoles)
 	}

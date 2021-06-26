@@ -9,7 +9,7 @@ import utopia.vault.nosql.factory.FromValidatedRowModelFactory
 /**
   * Used for reading invitation responses from the database
   * @author Mikko Hilpinen
-  * @since 17.6.2020, v1
+  * @since 17.6.2020, v1.0
   */
 object InvitationResponseFactory extends FromValidatedRowModelFactory[InvitationResponse]
 {

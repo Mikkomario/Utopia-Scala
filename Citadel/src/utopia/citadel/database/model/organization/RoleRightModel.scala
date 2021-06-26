@@ -46,7 +46,7 @@ object RoleRightModel
 	  * @param role A user role
 	  * @return A model with only that role set
 	  */
-	@deprecated("Please use .withRoleId(Int) instead", "v1")
+	@deprecated("Please use .withRoleId(Int) instead", "v1.0")
 	def withRole(role: UserRole) = withRoleId(role.id)
 	
 	/**
@@ -59,7 +59,7 @@ object RoleRightModel
 	  * @param task A task type
 	  * @return A model with only task type set
 	  */
-	@deprecated("Please use .withTaskId(Int) instead", "v1")
+	@deprecated("Please use .withTaskId(Int) instead", "v1.0")
 	def withTask(task: TaskType) = withTaskId(task.id)
 	
 	/**
@@ -72,7 +72,7 @@ object RoleRightModel
 /**
   * Used for interacting with role-task -links in DB
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1
+  * @since 4.5.2020, v1.0
   */
 case class RoleRightModel(id: Option[Int] = None, roleId: Option[Int] = None, taskId: Option[Int] = None)
 	extends StorableWithFactory[RoleRight]

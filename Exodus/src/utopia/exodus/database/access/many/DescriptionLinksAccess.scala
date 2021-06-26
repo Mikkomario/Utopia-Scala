@@ -18,6 +18,7 @@ import utopia.vault.sql.SqlExtensions._
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 {
 	// ABSTRACT	-------------------------

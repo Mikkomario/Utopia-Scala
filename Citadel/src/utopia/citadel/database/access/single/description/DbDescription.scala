@@ -8,7 +8,7 @@ import utopia.vault.model.immutable.Storable
 /**
   * Used for accessing various types of individual descriptions
   * @author Mikko Hilpinen
-  * @since 10.5.2020, v1
+  * @since 10.5.2020, v1.0
   */
 object DbDescription
 {

@@ -13,6 +13,7 @@ import utopia.vault.sql.SqlExtensions._
   * @author Mikko Hilpinen
   * @since 10.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbLanguages extends ManyModelAccess[Language]
 {
 	// IMPLEMENTED	----------------------------

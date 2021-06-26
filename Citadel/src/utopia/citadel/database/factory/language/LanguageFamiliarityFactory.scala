@@ -9,7 +9,7 @@ import utopia.vault.nosql.factory.FromValidatedRowModelFactory
 /**
   * Used for reading language familiarity data from the DB
   * @author Mikko Hilpinen
-  * @since 25.7.2020, v1
+  * @since 25.7.2020, v1.0
   */
 object LanguageFamiliarityFactory extends FromValidatedRowModelFactory[LanguageFamiliarity]
 {

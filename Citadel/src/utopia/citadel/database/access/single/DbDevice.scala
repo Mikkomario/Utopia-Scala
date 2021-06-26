@@ -15,7 +15,7 @@ import utopia.vault.sql.{Select, Where}
 /**
   * Used for accessing and modifying individual devices
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v1
+  * @since 2.5.2020, v1.0
   */
 object DbDevice
 {

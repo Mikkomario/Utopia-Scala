@@ -19,7 +19,7 @@ import java.time.Period
 /**
   * Used for accessing individual organizations
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1
+  * @since 4.5.2020, v1.0
   */
 object DbOrganization
 {

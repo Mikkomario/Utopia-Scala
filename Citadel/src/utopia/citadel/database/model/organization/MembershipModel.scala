@@ -67,7 +67,7 @@ object MembershipModel
 /**
   * Used for interacting with organization memberships in DB
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1
+  * @since 4.5.2020, v1.0
   */
 case class MembershipModel(id: Option[Int] = None, organizationId: Option[Int] = None,
 						   userId: Option[Int] = None, creatorId: Option[Int] = None, started: Option[Instant] = None,

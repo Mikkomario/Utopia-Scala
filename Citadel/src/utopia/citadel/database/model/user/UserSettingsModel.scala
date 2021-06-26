@@ -75,7 +75,7 @@ object UserSettingsModel
 /**
   * Used for interacting with user settings in DB
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v1
+  * @since 2.5.2020, v1.0
   */
 case class UserSettingsModel(id: Option[Int] = None, userId: Option[Int] = None, name: Option[String] = None,
 							 email: Option[String] = None, deprecatedAfter: Option[Instant] = None)

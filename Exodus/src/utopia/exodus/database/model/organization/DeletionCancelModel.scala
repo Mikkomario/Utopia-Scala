@@ -8,6 +8,7 @@ import utopia.metropolis.model.stored.organization.DeletionCancel
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DeletionCancelModel
 {
 	// COMPUTED	-----------------------------
@@ -38,6 +39,7 @@ object DeletionCancelModel
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 case class DeletionCancelModel(id: Option[Int] = None, deletionId: Option[Int] = None, creatorId: Option[Int] = None)
 	extends StorableWithFactory[DeletionCancel]
 {

@@ -2,7 +2,8 @@ package utopia.exodus.rest.resource.user
 
 import utopia.access.http.Method.{Delete, Get, Post, Put}
 import utopia.access.http.Status.{BadRequest, Forbidden}
-import utopia.exodus.database.access.single.{DbLanguage, DbUser}
+import utopia.citadel.database.access.single.DbUser
+import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._

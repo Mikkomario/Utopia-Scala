@@ -5,7 +5,7 @@ import utopia.vault.model.immutable.Table
 /**
   * Used for accessing various tables in the Utopia Citadel project and all dependent projects
   * @author Mikko Hilpinen
-  * @since 26.6.2021 v1
+  * @since 26.6.2021 v1.0
   */
 object Tables
 {

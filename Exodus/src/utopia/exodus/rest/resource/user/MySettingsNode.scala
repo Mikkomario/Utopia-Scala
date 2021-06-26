@@ -2,7 +2,8 @@ package utopia.exodus.rest.resource.user
 
 import utopia.access.http.Method.{Get, Patch, Put}
 import utopia.access.http.Status.{BadRequest, Forbidden, NotFound, Unauthorized}
-import utopia.exodus.database.access.single.{DbEmailValidation, DbUser}
+import utopia.citadel.database.access.single.DbUser
+import utopia.exodus.database.access.single.DbEmailValidation
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.EmailChange
 import utopia.exodus.model.error.InvalidKeyException
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, SessionUseCaseImplementation}

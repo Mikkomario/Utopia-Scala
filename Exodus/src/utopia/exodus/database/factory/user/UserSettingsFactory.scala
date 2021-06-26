@@ -7,6 +7,7 @@ import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.stored.user.UserSettings
 import utopia.vault.nosql.factory.{Deprecatable, FromValidatedRowModelFactory}
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object UserSettingsFactory extends FromValidatedRowModelFactory[UserSettings] with Deprecatable
 {
 	// IMPLEMENTED	----------------------------------

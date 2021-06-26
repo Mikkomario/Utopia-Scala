@@ -14,6 +14,7 @@ import utopia.vault.sql.{JoinType, Select, Where}
   * @author Mikko Hilpinen
   * @since 6.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 trait InvitationsAccess extends ManyModelAccess[Invitation]
 {
 	// IMPLEMENTED	------------------------

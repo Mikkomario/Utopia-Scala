@@ -3,8 +3,9 @@ package utopia.exodus.rest.resource.email
 import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{BadRequest, Forbidden, NotFound, NotImplemented}
-import utopia.exodus.database.access.id.DbUserId
-import utopia.exodus.database.access.many.{DbEmailValidations, DbUsers}
+import utopia.citadel.database.access.id.single.DbUserId
+import utopia.citadel.database.access.many.DbUsers
+import utopia.exodus.database.access.many.DbEmailValidations
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.{EmailChange, PasswordReset, UserCreation}
 import utopia.exodus.rest.resource.CustomAuthorizationResourceFactory
 import utopia.exodus.rest.util.AuthorizedContext

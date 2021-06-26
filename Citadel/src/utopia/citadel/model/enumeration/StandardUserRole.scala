@@ -3,7 +3,7 @@ package utopia.citadel.model.enumeration
 /**
   * An enumeration for some standard (but not all) user roles. Used in the Exodus request handling.
   * @author Mikko Hilpinen
-  * @since 25.7.2020, v1
+  * @since 25.7.2020, v1.0
   */
 sealed trait StandardUserRole
 {

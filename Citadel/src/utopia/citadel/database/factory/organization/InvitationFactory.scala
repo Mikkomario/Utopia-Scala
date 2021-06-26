@@ -12,7 +12,7 @@ import scala.util.{Failure, Success}
 /**
   * Used for reading organization invitations from the DB
   * @author Mikko Hilpinen
-  * @since 17.6.2020, v1
+  * @since 17.6.2020, v1.0
   */
 object InvitationFactory extends FromRowModelFactory[Invitation]
 {

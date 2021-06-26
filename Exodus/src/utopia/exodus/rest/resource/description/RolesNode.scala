@@ -1,7 +1,8 @@
 package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
-import utopia.exodus.database.access.many.{DbDescriptions, DbUserRoles}
+import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.organization.DbUserRoles
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.organization.DescribedRole

@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.user
 
 import utopia.access.http.Method.Get
-import utopia.exodus.database.access.single.DbUser
+import utopia.citadel.database.access.single.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path

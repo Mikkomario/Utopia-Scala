@@ -2,8 +2,12 @@ package utopia.exodus.rest.resource.user
 
 import utopia.access.http.Method.Post
 import utopia.access.http.Status._
-import utopia.exodus.database.access.many.DbUsers
-import utopia.exodus.database.access.single.{DbDevice, DbUserSession}
+import utopia.citadel.database.access.many.{DbDevices, DbUsers}
+import utopia.citadel.database.access.single.DbDevice
+import utopia.citadel.database.access.single.language.DbLanguage
+import utopia.citadel.database.model.user.{UserDeviceModel, UserLanguageModel, UserModel}
+import utopia.exodus.database.access.single.{DbDeviceKey, DbUserSession}
+import utopia.exodus.database.model.user.UserAuthModel
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.UserCreation
 import utopia.exodus.rest.resource.CustomAuthorizationResourceFactory
 import utopia.exodus.rest.util.AuthorizedContext
@@ -11,8 +15,9 @@ import utopia.exodus.util.ExodusContext
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.CollectionExtensions._
-import utopia.metropolis.model.combined.user.UserCreationResult
+import utopia.metropolis.model.combined.user.{UserCreationResult, UserWithLinks}
 import utopia.metropolis.model.error.{AlreadyUsedException, IllegalPostModelException}
+import utopia.metropolis.model.partial.user.{UserLanguageData, UserSettingsData}
 import utopia.metropolis.model.post.NewUser
 import utopia.nexus.http.{Path, Response}
 import utopia.nexus.rest.Resource
@@ -66,7 +71,7 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 			{
 				case Success(email) =>
 					// Saves the new user data to DB
-					DbUsers.tryInsert(newUser, email) match
+					tryInsert(newUser, email) match
 					{
 						case Success(userData) =>
 							// Returns a summary of the new data, along with a session key and a possible device key
@@ -94,10 +99,52 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 	}
 	
 	private def acquireDeviceKey(userId: Int, deviceId: Int)(implicit connection: Connection) =
-		DbDevice(deviceId).authenticationKey.assignToUserWithId(userId).key
+		DbDeviceKey.forDeviceWithId(deviceId).assignToUserWithId(userId).key
 	
 	private def acquireSessionKey(userId: Int, deviceId: Option[Int])(implicit connection: Connection) =
 		DbUserSession(userId, deviceId).start().key
+	
+	private def tryInsert(newUser: NewUser, email: String)(implicit connection: Connection): Try[UserWithLinks] =
+	{
+		// Checks whether the proposed email already exist
+		val userName = newUser.userName.trim
+		
+		if (!email.contains('@'))
+			Failure(new IllegalPostModelException("Email must be a valid email address"))
+		else if (userName.isEmpty)
+			Failure(new IllegalPostModelException("User name must not be empty"))
+		else if (DbUsers.existsUserWithEmail(email))
+			Failure(new AlreadyUsedException("Email is already in use"))
+		else {
+			// Makes sure provided device id or language id matches data in the DB
+			val idsAreValid = newUser.device.forall {
+				case Right(deviceId) => DbDevice(deviceId).isDefined
+				case Left(newDevice) => DbLanguage(newDevice.languageId).isDefined
+			}
+			
+			if (idsAreValid) {
+				// Makes sure all the specified languages are also valid
+				DbLanguage.validateProposedProficiencies(newUser.languages).flatMap { languages =>
+					// Inserts new user data
+					val user = UserModel.insert(UserSettingsData(userName, email))
+					UserAuthModel.insert(user.id, newUser.password)
+					val insertedLanguages = languages.map { case (languageId, familiarity) =>
+						UserLanguageModel.insert(UserLanguageData(user.id, languageId, familiarity))
+					}
+					// Links user with device (if device has been specified) (uses existing or a new device)
+					val deviceId = newUser.device.map {
+						case Right(deviceId) => deviceId
+						case Left(newDevice) => DbDevices.insert(newDevice.name, newDevice.languageId, user.id).targetId
+					}
+					deviceId.foreach { UserDeviceModel.insert(user.id, _) }
+					// Returns inserted user
+					Success(UserWithLinks(user, insertedLanguages, deviceId.toVector))
+				}
+			}
+			else
+				Failure(new IllegalPostModelException("device_id and language_id must point to existing data"))
+		}
+	}
 }
 
 /**

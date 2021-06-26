@@ -8,6 +8,7 @@ import utopia.metropolis.model.stored.user.UserLanguage
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object UserLanguageModel
 {
 	// ATTRIBUTES	-------------------------
@@ -56,6 +57,7 @@ object UserLanguageModel
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 case class UserLanguageModel(id: Option[Int] = None, userId: Option[Int] = None, languageId: Option[Int] = None,
 							 familiarityId: Option[Int] = None)
 	extends StorableWithFactory[UserLanguage]

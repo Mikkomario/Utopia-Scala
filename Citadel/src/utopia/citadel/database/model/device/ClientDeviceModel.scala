@@ -26,7 +26,7 @@ object ClientDeviceModel
 /**
   * Used for interacting with user devices in DB
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v1
+  * @since 2.5.2020, v1.0
   */
 case class ClientDeviceModel(id: Option[Int] = None, creatorId: Option[Int] = None) extends Storable
 {

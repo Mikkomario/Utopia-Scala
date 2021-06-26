@@ -1,5 +1,6 @@
 package utopia.exodus.database
 
+import utopia.citadel.database
 import utopia.vault.model.immutable.Table
 
 /**
@@ -7,15 +8,9 @@ import utopia.vault.model.immutable.Table
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
+@deprecated("Please use the Citadel version or ExodusTables instead", "v2.0")
 object Tables
 {
-	import utopia.exodus.util.ExodusContext._
-	
-	// ATTRIBUTES	----------------------
-	
-	private lazy val access = new utopia.vault.database.Tables(connectionPool)
-	
-	
 	// COMPUTED	--------------------------------
 	
 	/**
@@ -192,11 +187,11 @@ object Tables
 	 * @param tableName Name of the targeted table
 	 * @return A cached table
 	 */
-	def apply(databaseName: String, tableName: String): Table = access(databaseName, tableName)
+	def apply(databaseName: String, tableName: String): Table = database.Tables(databaseName, tableName)
 	
 	/**
 	  * @param tableName Name of targeted table
 	  * @return a cached table
 	  */
-	def apply(tableName: String): Table = access(databaseName, tableName)
+	def apply(tableName: String): Table = database.Tables(tableName)
 }

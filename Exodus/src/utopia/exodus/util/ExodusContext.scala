@@ -1,7 +1,8 @@
 package utopia.exodus.util
 
 import utopia.access.http.Status
-import utopia.flow.generic.{DataType, EnvironmentNotSetupException}
+import utopia.citadel.util.CitadelContext
+import utopia.flow.generic.EnvironmentNotSetupException
 import utopia.vault.database.ConnectionPool
 
 import scala.concurrent.ExecutionContext
@@ -26,14 +27,16 @@ object ExodusContext
 	  * @throws EnvironmentNotSetupException If setup(...) hasn't been called yet
 	  */
 	@throws[EnvironmentNotSetupException](".setup(...) hasn't been called yet")
-	implicit def executionContext: ExecutionContext = get.exc
+	@deprecated("Please use CitadelContext to access this property", "v2.0")
+	implicit def executionContext: ExecutionContext = CitadelContext.executionContext
 	
 	/**
 	  * @return Database connection pool to use in this project (implicit)
 	  * @throws EnvironmentNotSetupException If setup(...) hasn't been called yet
 	  */
 	@throws[EnvironmentNotSetupException](".setup(...) hasn't been called yet")
-	implicit def connectionPool: ConnectionPool = get.connectionPool
+	@deprecated("Please use CitadelContext to access this property", "v2.0")
+	implicit def connectionPool: ConnectionPool = CitadelContext.connectionPool
 	
 	/**
 	  * @return Unique user id generator to use in this project (implicit)
@@ -47,7 +50,8 @@ object ExodusContext
 	  * @throws EnvironmentNotSetupException If .setup(...) hasn't been called yet
 	  */
 	@throws[EnvironmentNotSetupException](".setup(...) hasn't been called yet")
-	def databaseName = get.databaseName
+	@deprecated("Please use CitadelContext to access this property", "v2.0")
+	def databaseName = CitadelContext.databaseName
 	
 	/**
 	  * @return Email validation implementation to use. None if no implementation has been provided.
@@ -82,9 +86,9 @@ object ExodusContext
 			  uuidGenerator: UuidGenerator = UuidGenerator.default, emailValidator: Option[EmailValidator] = None)
 			 (handleErrors: (Throwable, String) => Unit) =
 	{
-		DataType.setup()
+		CitadelContext.setup(executionContext, connectionPool, databaseName)
 		Status.setup()
-		data = Some(Data(executionContext, connectionPool, databaseName, uuidGenerator, emailValidator, handleErrors))
+		data = Some(Data(uuidGenerator, emailValidator, handleErrors))
 	}
 	
 	/**
@@ -97,7 +101,6 @@ object ExodusContext
 	
 	// NESTED	--------------------------------------
 	
-	private case class Data(exc: ExecutionContext, connectionPool: ConnectionPool, databaseName: String,
-							uuidGenerator: UuidGenerator, emailValidator: Option[EmailValidator],
+	private case class Data(uuidGenerator: UuidGenerator, emailValidator: Option[EmailValidator],
 							errorHandler: (Throwable, String) => Unit)
 }

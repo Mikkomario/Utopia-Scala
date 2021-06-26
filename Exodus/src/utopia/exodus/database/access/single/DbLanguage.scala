@@ -17,6 +17,7 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbLanguage extends SingleModelAccessById[Language, Int]
 {
 	// IMPLEMENTED	--------------------------------

@@ -2,8 +2,8 @@ package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.InternalServerError
-import utopia.exodus.database.access.many.DescriptionLinksForManyAccess
-import utopia.exodus.database.access.single.DbUser
+import utopia.citadel.database.access.many.description.DescriptionLinksForManyAccess
+import utopia.citadel.database.access.single.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
@@ -23,7 +23,8 @@ import scala.util.{Failure, Success}
   */
 trait PublicDescriptionsNode[Item, Combined <: ModelConvertible] extends Resource[AuthorizedContext]
 {
-	import utopia.exodus.util.ExodusContext._
+	import utopia.citadel.util.CitadelContext._
+	import utopia.exodus.util.ExodusContext.handleError
 	
 	// ABSTRACT	------------------------------------
 	
@@ -77,8 +78,8 @@ trait PublicDescriptionsNode[Item, Combined <: ModelConvertible] extends Resourc
 			else if (context.request.headers.containsAuthorization)
 			{
 				context.sessionKeyAuthorized { (session, _) =>
-					val userLanguages = DbUser(session.userId).languages.withFamiliarityLevels.sortBy { _._2.orderIndex }
-						.map { _._1 }
+					val userLanguages = DbUser(session.userId).languages.withFamiliarityLevels
+						.sortBy { _._2.orderIndex }.map { _._1 }
 					get(userLanguages)
 				}
 			}

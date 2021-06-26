@@ -10,7 +10,7 @@ import utopia.vault.nosql.factory.{Deprecatable, FromValidatedRowModelFactory}
 /**
   * Used for reading organization memberships from the database
   * @author Mikko Hilpinen
-  * @since 17.6.2020, v1
+  * @since 17.6.2020, v1.0
   */
 object MembershipFactory extends FromValidatedRowModelFactory[Membership] with Deprecatable
 {

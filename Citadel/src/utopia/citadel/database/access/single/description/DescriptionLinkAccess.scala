@@ -10,7 +10,7 @@ import utopia.vault.nosql.access.SingleModelAccess
 /**
   * A common trait for individual description link access points
   * @author Mikko Hilpinen
-  * @since 17.5.2020, v1
+  * @since 17.5.2020, v1.0
   */
 trait DescriptionLinkAccess extends SingleModelAccess[DescriptionLink]
 {

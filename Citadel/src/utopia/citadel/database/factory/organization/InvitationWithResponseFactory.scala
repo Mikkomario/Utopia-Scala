@@ -9,7 +9,7 @@ import utopia.vault.sql.JoinType
 /**
   * Used for reading invitation data, including response data
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1
+  * @since 4.5.2020, v1.0
   */
 object InvitationWithResponseFactory extends FromRowFactory[InvitationWithResponse]
 {

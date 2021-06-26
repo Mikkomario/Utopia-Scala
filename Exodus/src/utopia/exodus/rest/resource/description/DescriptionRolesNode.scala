@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.description
 
-import utopia.exodus.database.access.many.DbDescriptions
-import utopia.exodus.database.factory.description.DescriptionRoleFactory
+import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.factory.description.DescriptionRoleFactory
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.metropolis.model.combined.description.DescribedDescriptionRole
 import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
