@@ -1,7 +1,7 @@
-package utopia.exodus.database.factory.organization
+package utopia.citadel.database.factory.organization
 
-import utopia.exodus.database.Tables
-import utopia.exodus.database.model.organization.RoleRightModel
+import utopia.citadel.database.Tables
+import utopia.citadel.database.model.organization.RoleRightModel
 import utopia.flow.datastructure.immutable
 import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.generic.ValueUnwraps._

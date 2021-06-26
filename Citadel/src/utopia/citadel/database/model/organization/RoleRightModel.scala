@@ -1,7 +1,7 @@
-package utopia.exodus.database.model.organization
+package utopia.citadel.database.model.organization
 
-import utopia.exodus.database.Tables
-import utopia.exodus.database.factory.organization.RoleRightFactory
+import utopia.citadel.database.Tables
+import utopia.citadel.database.factory.organization.RoleRightFactory
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.enumeration.{TaskType, UserRole}
 import utopia.metropolis.model.stored.RoleRight
