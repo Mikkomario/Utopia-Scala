@@ -12,6 +12,8 @@
 - Added **LatestModelAccess** trait that works like **UniqueModelAccess**, except that it targets 
   the latest row and doesn't support .put methods
 ### New Methods
+- **ClearOldData**.type
+  - Added `.once(...)` and `.dailyLoop(...)` functions to make the use of this class easier
 - **FromResultFactory**
   - `.getManyWithJoin(...)`
 - **FromRowFactory**
