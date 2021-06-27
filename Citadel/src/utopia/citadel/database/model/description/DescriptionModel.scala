@@ -1,13 +1,14 @@
 package utopia.citadel.database.model.description
 
 import utopia.citadel.database.factory.description.DescriptionFactory
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.stored.description.Description
-import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
+import utopia.vault.model.template.DataInserter
 
-object DescriptionModel
+object DescriptionModel extends DataInserter[DescriptionModel, Description, DescriptionData]
 {
 	// ATTRIBUTES	--------------------------------
 	
@@ -25,14 +26,22 @@ object DescriptionModel
 	def factory = DescriptionFactory
 	
 	/**
-	  * @return Table used by this model
-	  */
-	def table = factory.table
-	
-	/**
 	  * @return Column that contains description role id
 	  */
 	def descriptionRoleIdColumn = table(descriptionRoleIdAttName)
+	
+	
+	// IMPLEMENTED  ---------------------------------
+	
+	/**
+	  * @return Table used by this model
+	  */
+	override def table = factory.table
+	
+	override def apply(data: DescriptionData) =
+		apply(None, Some(data.roleId), Some(data.languageId), Some(data.text), data.authorId)
+	
+	override protected def complete(id: Value, data: DescriptionData) = Description(id.getInt, data)
 	
 	
 	// OTHER	-------------------------------------
@@ -42,24 +51,11 @@ object DescriptionModel
 	  * @return A model with only description role set
 	  */
 	def withRoleId(roleId: Int) = apply(roleId = Some(roleId))
-	
 	/**
 	  * @param languageId Description language id
 	  * @return A model with only language id set
 	  */
 	def withLanguageId(languageId: Int) = apply(languageId = Some(languageId))
-	
-	/**
-	  * Inserts a new description to the DB
-	  * @param data Data to insert
-	  * @param connection DB Connection (implicit)
-	  * @return Newly inserted description
-	  */
-	def insert(data: DescriptionData)(implicit connection: Connection) =
-	{
-		val newId = apply(None, Some(data.roleId), Some(data.languageId), Some(data.text), data.authorId).insert().getInt
-		Description(newId, data)
-	}
 }
 
 /**

@@ -139,11 +139,6 @@ CREATE TABLE description_role_description
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
--- Description #1 = Name description role name
-INSERT INTO description (id, role_id, language_id, `text`) VALUES
-    (1, 1, 1, 'Name');
-INSERT INTO description_role_description (role_id, description_id) VALUES (1, 1);
-
 -- Links descriptions with languages
 CREATE TABLE language_description
 (
@@ -163,11 +158,6 @@ CREATE TABLE language_description
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
--- Description #2 = English language name
-INSERT INTO description (id, role_id, language_id, `text`) VALUES
-    (2, 1, 1, 'English');
-INSERT INTO language_description (language_id, description_id) VALUES (1, 2);
-
 -- Links descriptions with language familiarity levels
 CREATE TABLE language_familiarity_description
 (
@@ -186,17 +176,6 @@ CREATE TABLE language_familiarity_description
         REFERENCES description(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-
--- Descriptions #3-8 = Language familiarity level names
-INSERT INTO description (id, role_id, language_id, `text`) VALUES
-    (3, 1, 1, 'Primary Language'),
-    (4, 1, 1, 'Fluent and Preferred'),
-    (5, 1, 1, 'Fluent'),
-    (6, 1, 1, 'OK'),
-    (7, 1, 1, 'OK, less preferred'),
-    (8, 1, 1, 'Better than Nothing');
-INSERT INTO language_familiarity_description (familiarity_id, description_id) VALUES
-    (1, 3), (2, 4), (3, 5), (4, 6), (5, 7), (6, 8);
 
 -- Organizations represent user groups (Eg. company)
 CREATE TABLE organization
@@ -264,17 +243,6 @@ CREATE TABLE task_description
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
--- Descriptions #9-14 = Task description names
-INSERT INTO description (id, role_id, language_id, `text`) VALUES
-    (9, 1, 1, 'Delete Organization'),
-    (10, 1, 1, 'Change User Roles'),
-    (11, 1, 1, 'Invite Users'),
-    (12, 1, 1, 'Edit Organization Description'),
-    (13, 1, 1, 'Remove Users'),
-    (14, 1, 1, 'Cancel Organization Deletion');
-INSERT INTO task_description (task_id, description_id) VALUES
-    (1, 9), (2, 10), (3, 11), (4, 12), (5, 13), (6, 14);
-
 -- An enumeration for various roles within an organization. One user may have multiple roles within an organization.
 CREATE TABLE organization_user_role
 (
@@ -309,13 +277,6 @@ CREATE TABLE user_role_description
         REFERENCES description(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-
--- Descriptions #15-16 = User role names
-INSERT INTO description (id, role_id, language_id, `text`) VALUES
-    (15, 1, 1, 'Owner'),
-    (16, 1, 1, 'Admin');
-INSERT INTO user_role_description (role_id, description_id) VALUES
-    (1, 15), (2, 16);
 
 -- Links user roles to one or more tasks the users in that role are allowed to perform
 CREATE TABLE user_role_right

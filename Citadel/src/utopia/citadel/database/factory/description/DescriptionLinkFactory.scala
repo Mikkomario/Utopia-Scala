@@ -11,45 +11,6 @@ import utopia.vault.nosql.factory.{Deprecatable, LinkedFactory}
 
 import scala.util.{Success, Try}
 
-/**
-  * A common trait for factories of description links
-  * @author Mikko Hilpinen
-  * @since 4.5.2020, v1.0
-  */
-trait DescriptionLinkFactory[+E] extends LinkedFactory[E, Description] with Deprecatable
-{
-	// ABSTRACT	----------------------------------
-	
-	/**
-	  * @return Factory used in database model construction
-	  */
-	def modelFactory: DescriptionLinkModelFactory[_]
-	
-	/**
-	  * Creates a new existing model based on specified data
-	  * @param id Link id
-	  * @param targetId Description target id
-	  * @param description Description from DB
-	  * @param created Creation time of the link
-	  * @return A new existing desription link model
-	  */
-	protected def apply(id: Int, targetId: Int, description: Description, created: Instant): Try[E]
-	
-	
-	// IMPLEMENTED	------------------------------
-	
-	override def table = modelFactory.table
-	
-	override def nonDeprecatedCondition = table("deprecatedAfter").isNull
-	
-	override def childFactory = DescriptionFactory
-	
-	override def apply(model: Model[Constant], child: Description) =
-		table.requirementDeclaration.validate(model).toTry.flatMap { valid =>
-			apply(valid("id").getInt, valid(modelFactory.targetIdAttName).getInt, child, valid("created").getInstant)
-		}
-}
-
 object DescriptionLinkFactory
 {
 	// ATTRIBUTES	------------------------------
@@ -111,4 +72,43 @@ object DescriptionLinkFactory
 		override protected def apply(id: Int, targetId: Int, description: Description, created: Instant) =
 			Success(DescriptionLink(id, DescriptionLinkData(targetId, description, created)))
 	}
+}
+
+/**
+  * A common trait for factories of description links
+  * @author Mikko Hilpinen
+  * @since 4.5.2020, v1.0
+  */
+trait DescriptionLinkFactory[+E] extends LinkedFactory[E, Description] with Deprecatable
+{
+	// ABSTRACT	----------------------------------
+	
+	/**
+	  * @return Factory used in database model construction
+	  */
+	def modelFactory: DescriptionLinkModelFactory[Storable]
+	
+	/**
+	  * Creates a new existing model based on specified data
+	  * @param id Link id
+	  * @param targetId Description target id
+	  * @param description Description from DB
+	  * @param created Creation time of the link
+	  * @return A new existing desription link model
+	  */
+	protected def apply(id: Int, targetId: Int, description: Description, created: Instant): Try[E]
+	
+	
+	// IMPLEMENTED	------------------------------
+	
+	override def table = modelFactory.table
+	
+	override def nonDeprecatedCondition = table("deprecatedAfter").isNull
+	
+	override def childFactory = DescriptionFactory
+	
+	override def apply(model: Model[Constant], child: Description) =
+		table.requirementDeclaration.validate(model).toTry.flatMap { valid =>
+			apply(valid("id").getInt, valid(modelFactory.targetIdAttName).getInt, child, valid("created").getInstant)
+		}
 }

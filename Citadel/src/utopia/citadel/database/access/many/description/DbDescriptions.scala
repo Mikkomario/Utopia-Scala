@@ -8,7 +8,7 @@ import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.post.NewDescription
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
-import utopia.vault.model.immutable.Storable
+import utopia.vault.model.immutable.{Storable, Table}
 import utopia.vault.sql.Condition
 import utopia.vault.sql.SqlExtensions._
 
@@ -26,28 +26,32 @@ object DbDescriptions
 	  */
 	val ofAllDescriptionRoles = DescriptionsOfAll(DescriptionLinkFactory.descriptionRole,
 		DescriptionLinkModel.descriptionRole)
-	
 	/**
 	  * An access point to all language descriptions
 	  */
 	val ofAllLanguages = DescriptionsOfAll(DescriptionLinkFactory.language,
 		DescriptionLinkModel.language)
-	
 	/**
 	  * An access point to all language familiarity description
 	  */
 	val ofAllLanguageFamiliarities = DescriptionsOfAll(DescriptionLinkFactory.languageFamiliarity,
 		DescriptionLinkModel.languageFamiliarity)
-	
 	/**
 	  * An access point to all role descriptions
 	  */
 	val ofAllUserRoles = DescriptionsOfAll(DescriptionLinkFactory.userRole, DescriptionLinkModel.userRole)
-	
 	/**
 	  * An access point to all task descriptions
 	  */
 	val ofAllTasks = DescriptionsOfAll(DescriptionLinkFactory.task, DescriptionLinkModel.task)
+	/**
+	  * An access point to all organization descriptions
+	  */
+	val ofAllOrganizations = DescriptionsOfAll(DescriptionLinkFactory.organization, DescriptionLinkModel.organization)
+	/**
+	  * An access point to all device descriptions
+	  */
+	val ofAllDevices = DescriptionsOfAll(DescriptionLinkFactory.device, DescriptionLinkModel.device)
 	
 	
 	// OTHER	----------------------------
@@ -58,7 +62,6 @@ object DbDescriptions
 	  */
 	def ofOrganizationWithId(organizationId: Int) =
 		DescriptionsOfSingle(organizationId, DescriptionLinkFactory.organization, DescriptionLinkModel.organization)
-	
 	/**
 	  * @param organizationIds Organization ids
 	  * @return An access point to descriptions of those organizations
@@ -72,7 +75,6 @@ object DbDescriptions
 	  */
 	def ofDeviceWithId(deviceId: Int) =
 		DescriptionsOfSingle(deviceId, DescriptionLinkFactory.device, DescriptionLinkModel.device)
-	
 	/**
 	  * @param deviceIds Device ids
 	  * @return An access point to descriptions of those devices
@@ -86,7 +88,6 @@ object DbDescriptions
 	  */
 	def ofTaskWithId(taskId: Int) = DescriptionsOfSingle(taskId, DescriptionLinkFactory.task,
 		DescriptionLinkModel.task)
-	
 	/**
 	  * @param taskIds Ids of targeted tasks
 	  * @return An access point to descriptions of those task types
@@ -100,7 +101,6 @@ object DbDescriptions
 	  */
 	def ofUserRoleWithId(roleId: Int) =
 		DescriptionsOfSingle(roleId, DescriptionLinkFactory.userRole, DescriptionLinkModel.userRole)
-	
 	/**
 	  * @param roleIds Ids of targeted user roles
 	  * @return An access point to descriptions of those roles
@@ -114,7 +114,6 @@ object DbDescriptions
 	  */
 	def ofLanguageWithId(languageId: Int) =
 		DescriptionsOfSingle(languageId, DescriptionLinkFactory.language, DescriptionLinkModel.language)
-	
 	/**
 	  * @param languageIds Language ids
 	  * @return An access point to descriptions of languages with those ids
@@ -130,13 +129,24 @@ object DbDescriptions
 	  */
 	def ofLanguageFamiliarityWithId(familiarityId: Int) = DescriptionsOfSingle(familiarityId,
 		DescriptionLinkFactory.languageFamiliarity, DescriptionLinkModel.languageFamiliarity)
-	
 	/**
 	  * @param familiarityIds A set of language familiarity ids
 	  * @return An access point to those familiarities descriptions
 	  */
 	def ofLanguageFamiliaritiesWithIds(familiarityIds: Set[Int]) = DescriptionsOfMany(familiarityIds,
 		DescriptionLinkFactory.languageFamiliarity, DescriptionLinkModel.languageFamiliarity)
+	
+	/**
+	  * Creates a new access point to a custom description table + link column combination
+	  * @param linkTable Table that contains targeted description links
+	  * @param linkAttName Name of the property that contains links to the described items
+	  * @return A new descriptions access point
+	  */
+	def access(linkTable: Table, linkAttName: String) =
+	{
+		val factory = DescriptionLinkFactory(linkTable, linkAttName)
+		DescriptionsOfAll(factory, factory.modelFactory)
+	}
 	
 	
 	// NESTED	----------------------------
@@ -145,12 +155,29 @@ object DbDescriptions
 	                             linkModelFactory: DescriptionLinkModelFactory[Storable])
 		extends DescriptionLinksForManyAccess
 	{
+		// IMPLEMENTED  --------------------
+		
 		override def globalCondition = None
 		
 		override protected def defaultOrdering = None
 		
 		override protected def subGroup(remainingTargetIds: Set[Int]) =
 			DescriptionsOfMany(remainingTargetIds, factory, linkModelFactory)
+		
+		
+		// OTHER    ------------------------
+		
+		/**
+		  * @param targetId Id of the targeted / described item
+		  * @return An access point to that item's descriptions
+		  */
+		def apply(targetId: Int) = DescriptionsOfSingle(targetId, factory, linkModelFactory)
+		
+		/**
+		  * @param ids A set of description target item ids
+		  * @return An access point to descriptions of those items
+		  */
+		def apply(ids: Set[Int]) = DescriptionsOfMany(ids, factory, linkModelFactory)
 	}
 	
 	case class DescriptionsOfMany(targetIds: Set[Int], factory: DescriptionLinkFactory[DescriptionLink],

@@ -23,6 +23,8 @@
 - Added **WeakLazy** class that only holds a weak reference to the generated items
 - Added **MultiLazyLike** and **ExpiringMultiLazyLike** traits and implementations that allow one to create 
   custom caches using various instances of **LazyLike**
+- Added utility classes (**CommandArgumentSchema**, **CommandArgumentsSchema** and **CommandArguments**) 
+  for application and console command argument processing.
 ### New Methods
 - **Future** (**AsyncExtensions**)
   - Added `.foreachResult(...)` to **Future**s that contain a **Try**
@@ -35,6 +37,8 @@
   - `.stackTraceString`
 - **Try[Future[Try[...]]]** (**AsyncExtensions**)
   - Added .flattenToFuture that converts this **Try** to a **Future[Try[A]]**
+- **Value**
+  - Added `.tryString`, `tryInt`, `tryDouble` etc. methods that return a **Try**
 ### Other Changes
 - Added direct implicit conversion from **Today** to **ExtendedLocalDate**, allowing access to **TimeExtensions** 
   methods directly from **Today** without going through **LocalDate** first

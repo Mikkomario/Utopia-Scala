@@ -1,14 +1,16 @@
 package utopia.citadel.database.access.many.description
 
 import utopia.citadel.database.factory.description.DescriptionLinkFactory
-import utopia.citadel.database.model.description.{DescriptionLinkModelFactory, DescriptionModel}
+import utopia.citadel.database.model.description.{DescriptionLinkModel, DescriptionLinkModelFactory, DescriptionModel}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.metropolis.model.enumeration.DescriptionRole
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
 import utopia.vault.model.immutable.Storable
-import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.nosql.access.{ManyModelAccess, ManyRowModelAccess}
+import utopia.vault.sql.Condition
 import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant
@@ -83,40 +85,27 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 		/**
 		  * @param roleIds    Targeted description role ids
 		  * @param connection DB Connection (implicit)
-		  * @return Recorded descriptions for those roles (in this language & target)
+		  * @return An access point to Recorded descriptions for those roles (in this language & target)
 		  */
 		def forRolesWithIds(roleIds: Set[Int])(implicit connection: Connection) =
-		{
-			if (roleIds.nonEmpty)
-				read(Some(descriptionModel.descriptionRoleIdColumn.in(roleIds)))
-			else
-				Vector()
-		}
+			new DbDescriptionsOfRole(descriptionModel.descriptionRoleIdColumn.in(roleIds))
 		
 		/**
-		  * Reads descriptions of this item, except those in excluded description roles
+		  * Accesses descriptions of this item / items, except those in excluded description roles
 		  * @param excludedRoleIds Ids of the excluded description roles
 		  * @param connection      DB Connection (implicit)
-		  * @return Read description links
+		  * @return An access point to the targeted descriptions
 		  */
 		def forRolesOutsideIds(excludedRoleIds: Set[Int])(implicit connection: Connection) =
-		{
-			// apply(DescriptionRole.values.toSet -- excludedRoles)
-			if (excludedRoleIds.nonEmpty)
-				read(Some(!descriptionModel.descriptionRoleIdColumn.in(excludedRoleIds)))
-			else
-				all
-		}
-		
+			new DbDescriptionsOfRole(!descriptionModel.descriptionRoleIdColumn.in(excludedRoleIds))
 		
 		/**
 		  * @param roleId     Targeted description role's id
 		  * @param connection Db Connection
 		  * @return Description for that role for this item in targeted language
 		  */
-		@deprecated("A singular access point should be used for retrieving singular descriptions", "v1.0")
-		def forRoleWithId(roleId: Int)(implicit connection: Connection): Option[DescriptionLink] =
-			read(Some(descriptionModel.withRoleId(roleId).toCondition)).headOption
+		def forRoleWithId(roleId: Int)(implicit connection: Connection) =
+			new DbDescriptionsOfRole(descriptionModel.withRoleId(roleId).toCondition)
 		
 		/**
 		  * @param role       Targeted description role
@@ -150,5 +139,32 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 		@deprecated("Replaced with .forRolesOutsideIds(...)", "v1.0")
 		def forRolesOutside(excludedRoles: Set[DescriptionRole])(implicit connection: Connection) =
 			apply(DescriptionRole.values.toSet -- excludedRoles)
+		
+		// NESTED   -----------------------------------
+		
+		class DbDescriptionsOfRole(roleCondition: Condition) extends ManyRowModelAccess[DescriptionLink]
+		{
+			// ATTRIBUTES   ----------------------------
+			
+			override val globalCondition = Some(DescriptionsInLanguage.this.mergeCondition(roleCondition))
+			
+			
+			// IMPLEMENTED  ----------------------------
+			
+			override def factory = DescriptionsInLanguage.this.factory
+			
+			override protected def defaultOrdering = None
+			
+			
+			// OTHER    --------------------------------
+			
+			/**
+			  * Deprecates all description links accessible from this access point
+			  * @param connection Implicit DB Connection
+			  * @return Whether any row was updated
+			  */
+			def deprecate()(implicit connection: Connection) =
+				putAttribute(DescriptionLinkModel.deprecationAttName, Now)
+		}
 	}
 }

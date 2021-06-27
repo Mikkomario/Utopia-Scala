@@ -5,9 +5,12 @@ import utopia.flow.datastructure.template.{Model, Property}
 import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.time.Now
 import utopia.metropolis.model.partial.description.DescriptionLinkData
 import utopia.metropolis.model.partial.description.DescriptionLinkData.FullDescriptionLinkData
 import utopia.metropolis.model.stored.Stored
+
+import java.time.Instant
 
 object DescriptionLink extends FromModelFactory[DescriptionLink]
 {
@@ -23,6 +26,20 @@ object DescriptionLink extends FromModelFactory[DescriptionLink]
 			DescriptionLink(valid("link_id"), data)
 		}
 	}
+	
+	
+	// OTHER    ---------------------------------
+	
+	/**
+	  * Creates a new description link
+	  * @param id Description link id
+	  * @param targetId Description target id
+	  * @param description Description
+	  * @param created Link creation time
+	  * @return A new description link
+	  */
+	def apply(id: Int, targetId: Int, description: Description, created: Instant = Now): DescriptionLink =
+		apply(id, DescriptionLinkData(targetId, description, created))
 }
 
 /**
