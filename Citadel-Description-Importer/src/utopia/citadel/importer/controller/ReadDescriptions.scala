@@ -86,7 +86,7 @@ object ReadDescriptions
 					val changingUpdates = updates
 						.filter { case (existing, newDescription) => existing.description.text != newDescription }
 					if (changingUpdates.nonEmpty)
-						access.linkModelFactory.deprecateMany(changingUpdates.map { _._1.id })
+						access.linkModelFactory.deprecateIds(changingUpdates.map { _._1.id })
 					
 					// Inserts new / updated descriptions
 					if (newDescriptions.nonEmpty || changingUpdates.nonEmpty)

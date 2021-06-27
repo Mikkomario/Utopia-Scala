@@ -2,14 +2,13 @@ package utopia.citadel.database.model.organization
 
 import java.time.Instant
 import utopia.citadel.database.Tables
+import utopia.citadel.database.model.DeprecatableAfter
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.time.Now
 import utopia.metropolis.model.enumeration.UserRole
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
-import utopia.vault.nosql.factory.Deprecatable
 
-object MemberRoleModel extends Deprecatable
+object MemberRoleModel extends DeprecatableAfter[MemberRoleModel]
 {
 	// ATTRIBUTES	------------------------
 	
@@ -21,22 +20,18 @@ object MemberRoleModel extends Deprecatable
 	
 	// COMPUTED	----------------------------
 	
-	def table = Tables.organizationMemberRole
-	
 	/**
 	  * @return Column that contains the associated role id
 	  */
 	def roleIdColumn = table(roleIdAttName)
 	
-	/**
-	  * @return A model that has just been marked as deprecated
-	  */
-	def nowDeprecated = apply(deprecatedAfter = Some(Now))
-	
 	
 	// IMPLEMENTED	------------------------
 	
-	override val nonDeprecatedCondition = table("deprecatedAfter").isNull
+	override def table = Tables.organizationMemberRole
+	
+	override def withDeprecatedAfter(deprecation: Instant) =
+		apply(deprecatedAfter = Some(deprecation))
 	
 	
 	// OTHER	----------------------------

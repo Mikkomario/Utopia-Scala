@@ -2,15 +2,13 @@ package utopia.citadel.database.model.user
 
 import java.time.Instant
 import utopia.citadel.database.Tables
+import utopia.citadel.database.model.DeprecatableAfter
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
-import utopia.vault.nosql.factory.Deprecatable
 import utopia.vault.sql.{Condition, Exists}
 
-// TODO: Once there exists a factory object for this class, move deprecatable there
-object UserDeviceModel extends Deprecatable
+object UserDeviceModel extends DeprecatableAfter[UserDeviceModel]
 {
 	// ATTRIBUTES	----------------------
 	
@@ -18,29 +16,18 @@ object UserDeviceModel extends Deprecatable
 	  * Name of the attribute containing the device id
 	  */
 	val deviceIdAttName = "deviceId"
-	
 	/**
 	  * Name of the attribute that contians the user id
 	  */
 	val userIdAttName = "userId"
 	
 	
-	// COMPUTED	--------------------------
-	
-	/**
-	  * @return Table used by this model
-	  */
-	def table = Tables.userDevice
-	
-	/**
-	  * @return A model that has just been marked as deprecated
-	  */
-	def nowDeprecated = withDeprecatedAfter(Now)
-	
-	
 	// IMPLEMENTED	----------------------
 	
-	override def nonDeprecatedCondition = table("deprecatedAfter").isNull
+	override def table = Tables.userDevice
+	
+	def withDeprecatedAfter(deprecationTime: Instant) =
+		apply(deprecatedAfter = Some(deprecationTime))
 	
 	
 	// OTHER	--------------------------
@@ -62,12 +49,6 @@ object UserDeviceModel extends Deprecatable
 	  * @return A model with only creation time set
 	  */
 	def withCreationTime(created: Instant) = apply(created = Some(created))
-	
-	/**
-	  * @param deprecationTime Link deprecation time
-	  * @return A model with only deprecation time set
-	  */
-	def withDeprecatedAfter(deprecationTime: Instant) = apply(deprecatedAfter = Some(deprecationTime))
 	
 	/**
 	  * Inserts a new connection between a user and a client device
@@ -96,12 +77,14 @@ object UserDeviceModel extends Deprecatable
 case class UserDeviceModel(id: Option[Int] = None, userId: Option[Int] = None, deviceId: Option[Int] = None,
 						   created: Option[Instant] = None, deprecatedAfter: Option[Instant] = None) extends Storable
 {
+	import UserDeviceModel._
+	
 	// IMPLEMENTED	---------------------------------
 	
 	override def table = UserDeviceModel.table
 	
-	override def valueProperties = Vector("id" -> id, "userId" -> userId, "deviceId" -> deviceId, "created" -> created,
-		"deprecatedAfter" -> deprecatedAfter)
+	override def valueProperties = Vector("id" -> id, userIdAttName -> userId, deviceIdAttName -> deviceId,
+		"created" -> created, deprecationAttName -> deprecatedAfter)
 	
 	
 	// OTHER	-------------------------------------

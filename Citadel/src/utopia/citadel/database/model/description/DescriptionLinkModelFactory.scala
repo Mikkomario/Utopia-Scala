@@ -2,30 +2,67 @@ package utopia.citadel.database.model.description
 
 import java.time.Instant
 import utopia.citadel.database.factory.description.DescriptionLinkFactory
-import utopia.flow.generic.ValueConversions._
+import utopia.citadel.database.model.DeprecatableAfter
 import utopia.flow.time.Now
 import utopia.metropolis.model.partial.description.{DescriptionData, DescriptionLinkData}
 import utopia.metropolis.model.partial.description.DescriptionLinkData.PartialDescriptionLinkData
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.{Storable, Table}
-import utopia.vault.nosql.factory.Deprecatable
 import utopia.vault.sql.Insert
-import utopia.vault.sql.SqlExtensions._
+
+object DescriptionLinkModelFactory
+{
+	// OTHER	------------------------------
+	
+	/**
+	  * @param table Targeted table
+	  * @param targetIdAttName Name of the attribute that contains a link to the targeted item
+	  * @return A new model factory for that type of links
+	  */
+	def apply(table: Table, targetIdAttName: String): DescriptionLinkModelFactory[DescriptionLinkModel[
+		DescriptionLink, DescriptionLinkFactory[DescriptionLink]]] =
+		DescriptionLinkModelFactoryImplementation(table, targetIdAttName)
+	
+	
+	// NESTED	------------------------------
+	
+	private case class DescriptionLinkModelFactoryImplementation(table: Table, targetIdAttName: String)
+		extends DescriptionLinkModelFactory[DescriptionLinkModel[DescriptionLink, DescriptionLinkFactory[DescriptionLink]]]
+	{
+		// ATTRIBUTES	----------------------
+		
+		private lazy val factory = DescriptionLinkFactory(this)
+		
+		def apply(id: Option[Int] = None, targetId: Option[Int] = None, descriptionId: Option[Int] = None,
+		          created: Option[Instant] = None,
+		          deprecatedAfter: Option[Instant] = None): DescriptionLinkModel[DescriptionLink, DescriptionLinkFactory[DescriptionLink]] =
+			DescriptionLinkModelImplementation(id, targetId, descriptionId, created, deprecatedAfter)
+		
+		
+		// NESTED	--------------------------
+		
+		private case class DescriptionLinkModelImplementation(id: Option[Int] = None, targetId: Option[Int] = None,
+		                                                      descriptionId: Option[Int] = None,
+		                                                      created: Option[Instant] = None,
+		                                                      deprecatedAfter: Option[Instant] = None)
+			extends DescriptionLinkModel[DescriptionLink, DescriptionLinkFactory[DescriptionLink]]
+		{
+			override def factory =
+				DescriptionLinkModelFactoryImplementation.this.factory
+		}
+	}
+}
 
 /**
   * A common trait for description link model companion objects
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1.0
   */
-trait DescriptionLinkModelFactory[+M <: Storable] extends Deprecatable
+trait DescriptionLinkModelFactory[+M <: Storable] extends DeprecatableAfter[M]
 {
 	// ABSTRACT	----------------------------------
 	
-	/**
-	  * @return table used by this model type
-	  */
-	def table: Table
 	/**
 	  * @return Name of the attribute which contains the targeted item id
 	  */
@@ -47,11 +84,6 @@ trait DescriptionLinkModelFactory[+M <: Storable] extends Deprecatable
 	// COMPUTED	-----------------------------------
 	
 	/**
-	  * @return Name of the property that contains description deprecation time
-	  */
-	def deprecationAttName = DescriptionLinkModel.deprecationAttName
-	
-	/**
 	  * @return Column that contains description link id
 	  */
 	def linkIdColumn = table.primaryColumn.get
@@ -59,23 +91,15 @@ trait DescriptionLinkModelFactory[+M <: Storable] extends Deprecatable
 	  * @return Column that refers to described items/targets
 	  */
 	def targetIdColumn = table(targetIdAttName)
-	/**
-	  * @return Column that contains description deprecation time
-	  */
-	def deprecationColumn = table(deprecationAttName)
-	
-	/**
-	  * @return A model that has just been marked as deprecated
-	  */
-	def nowDeprecated = withDeprecatedAfter(Now)
 	
 	
 	// IMPLEMENTED  -------------------------------
 	
 	/**
-	  * @return A condition that returns only non-deprecated rows
-	  */
-	override def nonDeprecatedCondition = deprecationColumn.isNull
+	 * @param deprecationTime Deprecation time for this description link
+	 * @return A model with only deprecation time set
+	 */
+	override def withDeprecatedAfter(deprecationTime: Instant) = apply(deprecatedAfter = Some(deprecationTime))
 	
 	
 	// OTHER	-----------------------------------
@@ -95,11 +119,6 @@ trait DescriptionLinkModelFactory[+M <: Storable] extends Deprecatable
 	  * @return A model with only creation time set
 	  */
 	def withCreationTime(creationTime: Instant) = apply(created = Some(creationTime))
-	/**
-	  * @param deprecationTime Deprecation time for this description link
-	  * @return A model with only deprecation time set
-	  */
-	def withDeprecatedAfter(deprecationTime: Instant) = apply(deprecatedAfter = Some(deprecationTime))
 	
 	/**
 	  * Inserts a new description link to DB
@@ -140,65 +159,5 @@ trait DescriptionLinkModelFactory[+M <: Storable] extends Deprecatable
 			.map { case ((targetId, _), description) =>
 				apply(None, Some(targetId), Some(description.id), Some(linkTime)).toModel })
 			.generatedIntKeys.zip(descriptions)
-	}
-	
-	/**
-	  * Deprecates a single description link
-	  * @param linkId Description link id
-	  * @param connection DB Connection (implicit)
-	  * @return Whether a link was affected
-	  */
-	def deprecate(linkId: Int)(implicit connection: Connection) =
-		nowDeprecated.updateWhere(linkIdColumn <=> linkId && nonDeprecatedCondition) > 0
-	/**
-	  * Deprecates multiple description links
-	  * @param linkIds Targeted description link ids
-	  * @param connection DB Connection (implicit)
-	  * @return The number of affected links
-	  */
-	def deprecateMany(linkIds: Iterable[Int])(implicit connection: Connection) =
-		nowDeprecated.updateWhere(linkIdColumn.in(linkIds) && nonDeprecatedCondition)
-}
-
-object DescriptionLinkModelFactory
-{
-	// OTHER	------------------------------
-	
-	/**
-	  * @param table Targeted table
-	  * @param targetIdAttName Name of the attribute that contains a link to the targeted item
-	  * @return A new model factory for that type of links
-	  */
-	def apply(table: Table, targetIdAttName: String): DescriptionLinkModelFactory[DescriptionLinkModel[
-		DescriptionLink, DescriptionLinkFactory[DescriptionLink]]] =
-		DescriptionLinkModelFactoryImplementation(table, targetIdAttName)
-	
-	
-	// NESTED	------------------------------
-	
-	private case class DescriptionLinkModelFactoryImplementation(table: Table, targetIdAttName: String)
-		extends DescriptionLinkModelFactory[DescriptionLinkModel[DescriptionLink, DescriptionLinkFactory[DescriptionLink]]]
-	{
-		// ATTRIBUTES	----------------------
-		
-		private lazy val factory = DescriptionLinkFactory(this)
-		
-		def apply(id: Option[Int] = None, targetId: Option[Int] = None, descriptionId: Option[Int] = None,
-				  created: Option[Instant] = None,
-				  deprecatedAfter: Option[Instant] = None): DescriptionLinkModel[DescriptionLink, DescriptionLinkFactory[DescriptionLink]] =
-			DescriptionLinkModelImplementation(id, targetId, descriptionId, created, deprecatedAfter)
-		
-		
-		// NESTED	--------------------------
-		
-		private case class DescriptionLinkModelImplementation(id: Option[Int] = None, targetId: Option[Int] = None,
-															  descriptionId: Option[Int] = None,
-															  created: Option[Instant] = None,
-															  deprecatedAfter: Option[Instant] = None)
-			extends DescriptionLinkModel[DescriptionLink, DescriptionLinkFactory[DescriptionLink]]
-		{
-			override def factory =
-				DescriptionLinkModelFactoryImplementation.this.factory
-		}
 	}
 }

@@ -1,9 +1,9 @@
 package utopia.citadel.database.model.organization
 
 import java.time.Instant
-
 import utopia.citadel.database.Tables
 import utopia.citadel.database.factory.organization.InvitationFactory
+import utopia.citadel.database.model.Expiring
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.metropolis.model.partial.organization.InvitationData
@@ -11,14 +11,16 @@ import utopia.metropolis.model.stored.organization.Invitation
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
-object InvitationModel
+object InvitationModel extends Expiring
 {
-	// COMPUTED	-------------------------------
+	// ATTRIBUTES   ---------------------------
 	
-	/**
-	  * @return Table this model uses
-	  */
-	def table = Tables.organizationInvitation
+	override val expirationAttName = "expiresIn"
+	
+	
+	// IMPLEMENTED	----------------------------
+	
+	override def table = Tables.organizationInvitation
 	
 	
 	// OTHER	--------------------------------
@@ -65,12 +67,14 @@ case class InvitationModel(id: Option[Int] = None, organizationId: Option[Int] =
 						   expireTime: Option[Instant] = None, creatorId: Option[Int] = None)
 	extends StorableWithFactory[Invitation]
 {
+	import InvitationModel._
+	
 	// IMPLEMENTED	------------------------------
 	
 	override def factory = InvitationFactory
 	
 	override def valueProperties = Vector("id" -> id, "organizationId" -> organizationId, "recipientId" -> recipientId,
-		"recipientEmail" -> recipientEmail, "startingRoleId" -> startingRoleId, "expiresIn" -> expireTime,
+		"recipientEmail" -> recipientEmail, "startingRoleId" -> startingRoleId, expirationAttName -> expireTime,
 		"creatorId" -> creatorId)
 	
 	

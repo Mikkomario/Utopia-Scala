@@ -45,6 +45,16 @@ object DescriptionLinkFactory
 	lazy val languageFamiliarity = apply(DescriptionLinkModel.languageFamiliarity)
 	
 	
+	// COMPUTED ----------------------------------
+	
+	/**
+	  * @return All description link factory implementations in this module
+	  */
+	def defaultImplementations = Vector(
+		descriptionRole, device, organization, userRole, task, language, languageFamiliarity
+	)
+	
+	
 	// OTHER	----------------------------------
 	
 	/**

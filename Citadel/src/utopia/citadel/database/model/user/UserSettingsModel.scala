@@ -3,14 +3,14 @@ package utopia.citadel.database.model.user
 import java.time.Instant
 import utopia.citadel.database.Tables
 import utopia.citadel.database.factory.user.UserSettingsFactory
+import utopia.citadel.database.model.DeprecatableAfter
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.time.Now
 import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.stored.user.UserSettings
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
-object UserSettingsModel
+object UserSettingsModel extends DeprecatableAfter[UserSettingsModel]
 {
 	// ATTRIBUTES	----------------------------------
 	
@@ -23,19 +23,17 @@ object UserSettingsModel
 	// COMPUTED	--------------------------------------
 	
 	/**
-	  * @return Table used by this model
-	  */
-	def table = Tables.userSettings
-	
-	/**
 	  * @return Column that contains user id information
 	  */
 	def userIdColumn = table(userIdAttName)
 	
-	/**
-	  * @return A model that has just been marked as deprecated
-	  */
-	def nowDeprecated = apply(deprecatedAfter = Some(Now))
+	
+	// IMPLEMENTED  ----------------------------------
+	
+	override def table = Tables.userSettings
+	
+	override def withDeprecatedAfter(deprecation: Instant) =
+		apply(deprecatedAfter = Some(deprecation))
 	
 	
 	// OTHER	--------------------------------------
@@ -86,5 +84,5 @@ case class UserSettingsModel(id: Option[Int] = None, userId: Option[Int] = None,
 	override def factory = UserSettingsFactory
 	
 	override def valueProperties = Vector("id" -> id, userIdAttName -> userId, "name" -> name, "email" -> email,
-		"deprecatedAfter" -> deprecatedAfter)
+		deprecationAttName -> deprecatedAfter)
 }

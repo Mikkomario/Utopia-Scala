@@ -26,6 +26,14 @@ object DataDeletionRule
 	def conditional(table: Table, timePropertyName: String, condition: Condition,
 	                liveDurationOnCondition: FiniteDuration) =
 		DataDeletionRule(table, timePropertyName, conditionalLiveDurations = Map(condition -> liveDurationOnCondition))
+	
+	/**
+	 * @param table Target table
+	 * @param expirationPropertyName Name of the expiration property
+	 * @return A deletion rule that deletes items immediately when the value in the targeted time column is reached
+	 */
+	def onArrivalOf(table: Table, expirationPropertyName: String) =
+		apply(table, expirationPropertyName, Duration.Zero)
 }
 
 /**

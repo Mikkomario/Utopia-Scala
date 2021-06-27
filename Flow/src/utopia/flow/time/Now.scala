@@ -8,7 +8,7 @@ import TimeExtensions._
 import utopia.flow.util.RichComparable
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.duration.FiniteDuration
 
 /**
   * An object that always resolves to the current time

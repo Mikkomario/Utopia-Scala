@@ -2,6 +2,7 @@ package utopia.citadel.database.model.organization
 
 import java.time.Instant
 import utopia.citadel.database.factory.organization.MembershipFactory
+import utopia.citadel.database.model.NullDeprecatable
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.metropolis.model.partial.organization.MembershipData
@@ -9,9 +10,11 @@ import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
-object MembershipModel
+object MembershipModel extends NullDeprecatable[MembershipModel]
 {
 	// ATTRIBUTES	--------------------------
+	
+	override val deprecationAttName = "ended"
 	
 	/**
 	  * Name of the attribute that contains the associated organization's id
@@ -25,15 +28,18 @@ object MembershipModel
 	 * @return The factory used by this model
 	 */
 	def factory = MembershipFactory
-	/**
-	 * @return The table used by this model
-	 */
-	def table = factory.table
 	
 	/**
 	  * @return A model that has just been marked as an ended membership
 	  */
 	def nowEnded = apply(ended = Some(Now))
+	
+	
+	// IMPLEMENTED  ---------------------------
+	
+	override def table = factory.table
+	
+	override def withDeprecatedAfter(deprecation: Instant) = apply(ended = Some(deprecation))
 	
 	
 	// OTHER	-------------------------------
@@ -80,7 +86,7 @@ case class MembershipModel(id: Option[Int] = None, organizationId: Option[Int] =
 	override def factory = MembershipModel.factory
 	
 	override def valueProperties = Vector("id" -> id, organizationIdAttName -> organizationId, "userId" -> userId,
-		"creatorId" -> creatorId, "started" -> started, "ended" -> ended)
+		"creatorId" -> creatorId, "started" -> started, deprecationAttName -> ended)
 	
 	
 	// OTHER	-------------------------------

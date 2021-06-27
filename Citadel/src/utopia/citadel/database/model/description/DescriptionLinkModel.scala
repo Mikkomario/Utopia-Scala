@@ -3,6 +3,7 @@ package utopia.citadel.database.model.description
 import java.time.Instant
 import utopia.citadel.database.Tables
 import utopia.citadel.database.factory.description.DescriptionLinkFactory
+import utopia.citadel.database.model.DeprecatableAfter
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.model.immutable.StorableWithFactory
 
@@ -11,7 +12,7 @@ object DescriptionLinkModel
 	/**
 	  * Name of the property that contains description link deprecation timestamp
 	  */
-	val deprecationAttName = "deprecatedAfter"
+	def deprecationAttName = DeprecatableAfter.deprecationAttName
 	
 	/**
 	  * Description role links model factory
