@@ -50,4 +50,7 @@ object Today extends ValueConvertible with RichComparable[LocalDate]
 	 * @return A date 'period' before this date
 	 */
 	def -(period: Period) = toLocalDate - period
+	
+	def +(days: Days) = toLocalDate + days
+	def -(days: Days) = toLocalDate - days
 }

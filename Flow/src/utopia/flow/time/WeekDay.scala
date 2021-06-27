@@ -2,7 +2,7 @@ package utopia.flow.time
 
 import utopia.flow.util.SelfComparable
 
-import java.time.{DayOfWeek, LocalDate, Period}
+import java.time.{DayOfWeek, LocalDate}
 import scala.language.implicitConversions
 
 /**
@@ -79,7 +79,7 @@ sealed trait WeekDay extends SelfComparable[WeekDay]
 			else
 				index + (7 - anotherDay.index)
 		}
-		Period.ofDays(days)
+		Days(days)
 	}
 	
 	/**

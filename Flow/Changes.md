@@ -6,6 +6,11 @@
   - Rewrote **ExpiringCache** and **ReleasingCache**
   - Modified `TryCache.apply(...)` and `TryCache.releasing(...)` and removed `TryCache.expiring(...)`
   - Removed multiple methods from **AsyncCache**.type
+- Multiple functions in **TimeExtensions** now require a **FiniteDuration** instead of just **Duration**, 
+  because they would break with infinite duration values
+- Removed implicit conversion from **Period** to **Duration**, 
+  added a new **Days** class to cover for that use case
+- Multiple **TimeExtensions** methods that would return or accept a **Period** now use **Days**
 - `ChangingLike.lazyMap(...)` and `ChangingLike.lazyMergeWith(...)`
   now return **ListenableLazyLike** instead of just **LazyLike**
   - This allows one to continue chaining map functions after these method calls also
@@ -16,6 +21,9 @@
 - Deprecated **MultiCacheLike** trait and its sub-traits and implementations in favor of new 
   **MultiLazyLike** trait and its subclasses 
 ### New Features
+- Added a new **Days** class to represent time on date level. This works as a smooth bridge between 
+  **FiniteDuration**, which is more precise, and **Period**, which is unreliable in most contexts 
+  because of the months and years -parameters.
 - Added new **LazyLike** implementations, **ListenableLazy** and **ListenableResettableLazy** 
   which provide access to value generation and value change events
 - Added **ExpiringLazy** class that automatically resets its contents after a specific time period

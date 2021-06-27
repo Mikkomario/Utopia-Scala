@@ -5,11 +5,10 @@ import utopia.flow.time.Now
 import java.time.Instant
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.RichComparable._
 import utopia.genesis.shape.shape2D.Vector2DLike
 import utopia.genesis.util.{Combinable, Scalable}
 
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /**
   * A common trait for items that contain an object's movement status over a time period
@@ -150,7 +149,7 @@ trait MovementHistoryLike[X <: Vector2DLike[X], V <: VelocityLike[X, V], A <: Ac
 	  * @param duration A time duration
 	  * @return Projected movement status after specified duration has passed
 	  */
-	def futureStatusAfter(duration: => Duration) = futureStatusAt(Now + duration)
+	def futureStatusAfter(duration: => FiniteDuration) = futureStatusAt(Now + duration)
 	
 	/**
 	  * @param threshold Time threshold

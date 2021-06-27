@@ -3,6 +3,8 @@
 ## v1.8 (in development)
 ### Breaking Changes
 - **DistinctModelAccess** now requires computed property: `defaultOrdering: Option[OrderBy]`
+- **DeletionRule** no longer uses optional duration as standard live duration and only supports 
+  finite durations in conditional live durations
 ### Deprecations
 - Deprecated **Extensions** object in utopia.vault.sql package. 
   Identical **SqlExtensions** object should be used instead.

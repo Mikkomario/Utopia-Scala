@@ -3,7 +3,7 @@ package utopia.citadel.database.access.single.organization
 import utopia.citadel.database.access.many.DbUsers
 import utopia.citadel.database.access.many.description.DbDescriptions
 import utopia.citadel.database.access.many.organization.{DbUserRoles, InvitationsAccess, OrganizationDeletionsAccess}
-import utopia.citadel.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory, RoleRightFactory}
+import utopia.citadel.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory}
 import utopia.citadel.database.model.organization.{DeletionModel, MemberRoleModel, MembershipModel}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -14,7 +14,7 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyRowModelAccess
 import utopia.vault.sql.{Select, Where}
 
-import java.time.Period
+import scala.concurrent.duration.FiniteDuration
 
 /**
   * Used for accessing individual organizations
@@ -159,11 +159,9 @@ object DbOrganization
 			  * @param connection    DB Connection (implicit)
 			  * @return Newly saved invitation
 			  */
-			def send(recipient: Either[String, Int], roleId: Int, senderId: Int, validDuration: Period = 7.days)
-			        (implicit connection: Connection) =
-			{
+			def send(recipient: Either[String, Int], roleId: Int, senderId: Int,
+			         validDuration: FiniteDuration = 7.days)(implicit connection: Connection) =
 				model.insert(InvitationData(organizationId, recipient, roleId, Now + validDuration, Some(senderId)))
-			}
 		}
 		
 		object Deletions extends OrganizationDeletionsAccess
@@ -184,7 +182,7 @@ object DbOrganization
 			  * @param connection         DB Connection (implicit)
 			  * @return Newly inserted deletion
 			  */
-			def insert(creatorId: Int, actualizationDelay: Period)(implicit connection: Connection) =
+			def insert(creatorId: Int, actualizationDelay: FiniteDuration)(implicit connection: Connection) =
 				DeletionModel.insert(DeletionData(organizationId, creatorId, Now + actualizationDelay))
 		}
 	}

@@ -2,7 +2,7 @@ package utopia.vault.database
 
 import utopia.flow.async.DailyTask
 
-import java.time.{Instant, LocalTime, Period}
+import java.time.{Instant, LocalTime}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.vault.sql.SqlExtensions._
@@ -13,6 +13,7 @@ import utopia.vault.model.immutable.{DataDeletionRule, Reference, Table}
 import utopia.vault.sql.{Condition, Delete, Join, SqlTarget, Where}
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object ClearOldData
 {
@@ -109,7 +110,7 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 		
 		thisIterationTargets.foreach { rule =>
 			// Checks the general deletion rule first
-			rule.baseLiveDuration.foreach { baseDuration =>
+			rule.baseLiveDuration.finite.foreach { baseDuration =>
 				val baseDurationCondition = rule.timeColumn < (deletionTime - baseDuration)
 				performDeleteOn(rule, baseDurationCondition)
 			}
@@ -126,7 +127,8 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 			deleteIteration(deletionTime, nextIterationTargets, handledTables ++ thisIterationTargets.map { _.table })
 	}
 	
-	private def performDeleteOn(rule: TableDeletionRule, baseDeletionCondition: Condition)(implicit connection: Connection) =
+	private def performDeleteOn(rule: TableDeletionRule, baseDeletionCondition: Condition)
+	                           (implicit connection: Connection) =
 	{
 		// Checks whether child status should be checked as well
 		val restrictions = rule.restrictiveChildPaths
@@ -169,9 +171,10 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 	
 	// NESTED	-------------------------------
 	
-	private case class TableDeletionRule(table: Table, timePropertyName: String, baseLiveDuration: Option[Period] = None,
-										 conditionalPeriods: Map[Condition, Period] = Map(),
-										 restrictiveChildPaths: Vector[Vector[Reference]] = Vector())
+	private case class TableDeletionRule(table: Table, timePropertyName: String,
+	                                     baseLiveDuration: Duration = Duration.Inf,
+	                                     conditionalPeriods: Map[Condition, FiniteDuration] = Map(),
+	                                     restrictiveChildPaths: Vector[Vector[Reference]] = Vector())
 	{
 		lazy val timeColumn = table(timePropertyName)
 		
