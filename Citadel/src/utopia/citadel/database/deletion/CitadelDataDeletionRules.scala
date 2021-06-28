@@ -1,25 +1,25 @@
-package utopia.citadel.database
+package utopia.citadel.database.deletion
 
 import utopia.citadel.database.factory.description.DescriptionLinkFactory
 import utopia.citadel.database.model.organization.{InvitationModel, MemberRoleModel, MembershipModel}
-import utopia.citadel.database.model.{Expiring, NullDeprecatable}
 import utopia.citadel.database.model.user.{UserDeviceModel, UserSettingsModel}
+import utopia.citadel.database.model.{Expiring, NullDeprecatable}
 import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /**
- * Provides deletion rules for Citadel database data
- * @author Mikko Hilpinen
- * @since 27.6.2021, v1.0
- */
+  * Provides deletion rules for Citadel database data
+  * @author Mikko Hilpinen
+  * @since 27.6.2021, v1.0
+  */
 object CitadelDataDeletionRules
 {
 	// ATTRIBUTES   ------------------------------
 	
 	/**
-	 * The length of time that historical data is kept in the database by default
-	 */
+	  * The length of time that historical data is kept in the database by default
+	  */
 	val defaultHistoryDuration = 30.days
 	
 	// TODO: Following need custom implementations
@@ -48,19 +48,19 @@ object CitadelDataDeletionRules
 	/**
 	  * Creates a set of deletion rules with custom history durations
 	  * @param userSettings Duration to keep old user settings (default = 30 days)
-	  * @param deviceUsers Duration to keep old device users (default = 30 days)
-	  * @param memberships Duration to keep ended memberships (default = 30 days)
-	  * @param memberRole Duration to keep old member roles (default = 30 days)
-	  * @param invitation Duration to keep expired invitations (default = 30 days)
-	  * @param description Duration to keep deprecated descriptions (default = 30 days)
+	  * @param deviceUsers  Duration to keep old device users (default = 30 days)
+	  * @param memberships  Duration to keep ended memberships (default = 30 days)
+	  * @param memberRole   Duration to keep old member roles (default = 30 days)
+	  * @param invitation   Duration to keep expired invitations (default = 30 days)
+	  * @param description  Duration to keep deprecated descriptions (default = 30 days)
 	  * @return A set of deletion rules for applicable tables
 	  */
 	def custom(userSettings: Duration = defaultHistoryDuration,
-	          deviceUsers: Duration = defaultHistoryDuration,
-	          memberships: Duration = defaultHistoryDuration,
-	          memberRole: Duration = defaultHistoryDuration,
-	          invitation: Duration = defaultHistoryDuration,
-	          description: Duration = defaultHistoryDuration) =
+	           deviceUsers: Duration = defaultHistoryDuration,
+	           memberships: Duration = defaultHistoryDuration,
+	           memberRole: Duration = defaultHistoryDuration,
+	           invitation: Duration = defaultHistoryDuration,
+	           description: Duration = defaultHistoryDuration) =
 	{
 		val base = Vector(
 			deprecation(UserSettingsModel, userSettings),
@@ -69,8 +69,7 @@ object CitadelDataDeletionRules
 			deprecation(MemberRoleModel, memberRole),
 			expiration(InvitationModel, invitation),
 		).flatten
-		description.finite match
-		{
+		description.finite match {
 			case Some(descriptionHistoryDuration) =>
 				base ++ DescriptionLinkFactory.defaultImplementations
 					.map { _.modelFactory.deletionAfterDeprecation(descriptionHistoryDuration) }

@@ -9,6 +9,7 @@
 - Deprecated **Extensions** object in utopia.vault.sql package. 
   Identical **SqlExtensions** object should be used instead.
 ### New Features
+- Added **ClearUnreferencedData** class for easier deletion of rows that are not referenced by other tables
 - Added **DistincReadModelAccess** trait that provides access to .pull -methods without requiring 
   .put method support
 - Added **LatestModelAccess** trait that works like **UniqueModelAccess**, except that it targets 
