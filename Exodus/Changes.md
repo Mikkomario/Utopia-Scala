@@ -2,14 +2,14 @@
 
 ## v2.0 (in development)
 ### Breaking Changes
-- Renamed nested classes and objects in **DbSingleUser**
-- Most of the database classes were copied to **Utopia Citadel** module while some 
-  authentication-related features were kept in this module. This may cause problems in the 
+- Copied most of the database classes to **Utopia Citadel** module while kept some 
+  authentication-related features in this module. This may cause problems in the 
   dependent projects. Most of these problems can be resolved by switching to the appropriate 
-  **Citadel** class, however.
+  **Citadel** classes, however.
+- Renamed nested classes and objects in **DbSingleUser**
 ### Deprecations
-- Deprecated `ExodusResources.all` in favor of `.default`
 - All classes and features which were copied to **Citadel** are now deprecated in **Exodus**
+- Deprecated `ExodusResources.all` in favor of `.default`
 ### New Features
 - **MeNode** and **MySettingsNode** now extend the new **ExtendableResource** class 
   and can therefore be extended from outside this project

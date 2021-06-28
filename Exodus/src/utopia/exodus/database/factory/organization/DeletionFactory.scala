@@ -18,7 +18,7 @@ object DeletionFactory extends PossiblyMultiLinkedFactory[DeletionWithCancellati
 {
 	override def childFactory = DeletionCancelFactory
 	
-	override def apply(id: Value, model: Model[Constant], children: Seq[DeletionCancel]) =
+	override def apply(id: Value, model: Model[Constant], children: Vector[DeletionCancel]) =
 	{
 		table.requirementDeclaration.validate(model).toTry.map { valid =>
 			DeletionWithCancellations(Deletion(id, DeletionData(valid("organizationId"), valid("creatorId"),

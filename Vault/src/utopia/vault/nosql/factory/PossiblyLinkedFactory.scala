@@ -10,14 +10,9 @@ import scala.util.Try
   * @author Mikko Hilipnen
   * @since 16.5.2020, v1.6
   */
-trait PossiblyLinkedFactory[+Parent, Child] extends FromRowFactory[Parent]
+trait PossiblyLinkedFactory[+Parent, Child] extends FromRowFactory[Parent] with LinkedFactoryLike[Parent, Child]
 {
 	// ABSTRACT	------------------------------
-	
-	/**
-	  * @return Factory used for reading possible child data
-	  */
-	def childFactory: FromRowFactory[Child]
 	
 	/**
 	  * Parses a model from read data
@@ -30,13 +25,11 @@ trait PossiblyLinkedFactory[+Parent, Child] extends FromRowFactory[Parent]
 	
 	// IMPLEMENTED	--------------------------
 	
+	override def isAlwaysLinked = false
+	
 	override def apply(row: Row): Try[Parent] =
 	{
 		val child = childFactory.parseIfPresent(row)
 		apply(row(table), child)
 	}
-	
-	override def joinedTables = childFactory.tables
-	
-	override def joinType = JoinType.Left
 }

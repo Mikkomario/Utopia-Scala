@@ -1,5 +1,6 @@
 package utopia.citadel.database.deletion
 
+import utopia.citadel.database.Tables
 import utopia.citadel.database.factory.description.DescriptionLinkFactory
 import utopia.citadel.database.model.organization.{InvitationModel, MemberRoleModel, MembershipModel}
 import utopia.citadel.database.model.user.{UserDeviceModel, UserSettingsModel}
@@ -24,13 +25,18 @@ object CitadelDataDeletionRules
 	
 	// TODO: Following need custom implementations
 	/*
-		- description
 		- organization
 		- cancelled organization deletion
 	 */
 	
 	
 	// COMPUTED -----------------------------------
+	
+	/**
+	  * @return Tables that should be targeted with the "clear unreferenced data" -operation,
+	  *         namely: description and client device
+	  */
+	def unreferencedDeletionTables = Vector(Tables.description, Tables.clientDevice)
 	
 	/**
 	  * @return A set of deletion rules where all expired / deprecated items are deleted after 30 days

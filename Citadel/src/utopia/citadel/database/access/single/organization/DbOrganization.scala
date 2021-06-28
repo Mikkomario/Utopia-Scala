@@ -1,10 +1,11 @@
 package utopia.citadel.database.access.single.organization
 
+import utopia.citadel.database.Tables
 import utopia.citadel.database.access.many.DbUsers
 import utopia.citadel.database.access.many.description.DbDescriptions
 import utopia.citadel.database.access.many.organization.{DbUserRoles, InvitationsAccess, OrganizationDeletionsAccess}
 import utopia.citadel.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory}
-import utopia.citadel.database.model.organization.{DeletionModel, MemberRoleModel, MembershipModel}
+import utopia.citadel.database.model.organization.{DeletionModel, MemberRoleModel, MembershipModel, OrganizationModel}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.metropolis.model.combined.organization.DescribedMembership
@@ -12,7 +13,7 @@ import utopia.metropolis.model.partial.organization.{DeletionData, InvitationDat
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyRowModelAccess
-import utopia.vault.sql.{Select, Where}
+import utopia.vault.sql.{Delete, Select, Where}
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -24,6 +25,10 @@ import scala.concurrent.duration.FiniteDuration
 object DbOrganization
 {
 	// OTHER	----------------------------
+	
+	private def table = Tables.organization
+	
+	private def model = OrganizationModel
 	
 	/**
 	  * @param id An organization id
@@ -37,6 +42,8 @@ object DbOrganization
 	class SingleOrganization(organizationId: Int)
 	{
 		// COMPUTED	------------------------------
+		
+		private def condition = model.withId(organizationId).toCondition
 		
 		/**
 		  * @return An access point to this organization's memberships (organization-user-links)
@@ -57,6 +64,17 @@ object DbOrganization
 		  * @return An access point to descriptions of this organization
 		  */
 		def descriptions = DbDescriptions.ofOrganizationWithId(organizationId)
+		
+		
+		// OTHER    -------------------------------
+		
+		/**
+		  * Deletes this organization <b>permanently</b>
+		  * @param connection Implicit DB Connection
+		  * @return Whether an organization was deleted
+		  */
+		def delete()(implicit connection: Connection) =
+			connection(Delete(table) + Where(condition)).updatedRows
 		
 		
 		// NESTED	-------------------------------

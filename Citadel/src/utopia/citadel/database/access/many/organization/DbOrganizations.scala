@@ -7,6 +7,7 @@ import utopia.citadel.model.enumeration.StandardUserRole.Owner
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.partial.organization.MembershipData
 import utopia.vault.database.Connection
+import utopia.vault.sql.{Delete, Where}
 import utopia.vault.sql.SqlExtensions._
 
 /**
@@ -19,6 +20,8 @@ object DbOrganizations
 	// COMPUTED	----------------------
 	
 	private def factory = OrganizationModel
+	
+	private def table = factory.table
 	
 	
 	// OTHER	-----------------------
@@ -56,10 +59,23 @@ object DbOrganizations
 	{
 		// COMPUTED	--------------------
 		
+		private def condition = DeletionModel.organizationIdColumn.in(organizationIds)
+		
 		/**
 		  * @return An access point to deletions concerning these organizations
 		  */
 		def deletions = Deletions
+		
+		
+		// OTHER    --------------------
+		
+		/**
+		  * Deletes all of the organizations accessible from this access point
+		  * @param connection Implicit DB Connection
+		  * @return The number of deleted organizations
+		  */
+		def delete()(implicit connection: Connection) =
+			connection(Delete(table) + Where(condition)).updatedRowCount
 		
 		
 		// NESTED	--------------------
@@ -68,7 +84,7 @@ object DbOrganizations
 		{
 			// IMPLEMENTED	------------
 			
-			override def globalCondition = Some(DeletionModel.organizationIdColumn.in(organizationIds))
+			override def globalCondition = Some(OrganizationsWithIds.this.condition)
 			
 			override protected def defaultOrdering = None
 		}

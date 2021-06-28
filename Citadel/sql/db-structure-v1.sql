@@ -420,6 +420,8 @@ CREATE TABLE organization_deletion_cancellation
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     creator_id INT,
 
+    INDEX odc_cancel_time_idx (created),
+
     FOREIGN KEY odc_od_cancelled_deletion (deletion_id)
         REFERENCES organization_deletion(id) ON DELETE CASCADE,
 

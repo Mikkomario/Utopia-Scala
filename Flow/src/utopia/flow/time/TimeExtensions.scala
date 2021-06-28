@@ -80,6 +80,15 @@ object TimeExtensions
 		  */
 		def toUTCDateTime = i.atZone(ZoneId.of("Z")).toLocalDateTime
 		
+		/**
+		  * @return Whether this instant is in the past
+		  */
+		def isInPast = this < Now
+		/**
+		  * @return Whether this instant is currently in the future
+		  */
+		def isInFuture = this > Now
+		
 		
 		// IMPLEMENTED  ----------------------
 		

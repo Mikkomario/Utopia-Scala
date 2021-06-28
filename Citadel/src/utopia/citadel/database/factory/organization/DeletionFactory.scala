@@ -1,29 +1,21 @@
 package utopia.citadel.database.factory.organization
 
 import utopia.citadel.database.Tables
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueUnwraps._
-import utopia.metropolis.model.combined.organization.DeletionWithCancellations
 import utopia.metropolis.model.partial.organization.DeletionData
-import utopia.metropolis.model.stored.organization.{Deletion, DeletionCancel}
-import utopia.vault.nosql.factory.PossiblyMultiLinkedFactory
+import utopia.metropolis.model.stored.organization.Deletion
+import utopia.vault.nosql.factory.FromValidatedRowModelFactory
 
 /**
-  * Used for reading organization deletion attempts from DB
+  * Used for reading organization deletions (without cancellations) from the DB
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v1.0
+  * @since 28.6.2021, v1.0
   */
-object DeletionFactory extends PossiblyMultiLinkedFactory[DeletionWithCancellations, DeletionCancel]
+object DeletionFactory extends FromValidatedRowModelFactory[Deletion]
 {
-	override def childFactory = DeletionCancelFactory
-	
-	override def apply(id: Value, model: Model[Constant], children: Seq[DeletionCancel]) =
-	{
-		table.requirementDeclaration.validate(model).toTry.map { valid =>
-			DeletionWithCancellations(Deletion(id, DeletionData(valid("organizationId"), valid("creatorId"),
-				valid("actualization"))), children.toVector)
-		}
-	}
-	
 	override def table = Tables.organizationDeletion
+	
+	override protected def fromValidatedModel(model: Model[Constant]) =
+		Deletion(model("id"), DeletionData(model("organizationId"), model("creatorId"), model("actualization")))
 }

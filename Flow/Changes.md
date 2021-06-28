@@ -34,6 +34,7 @@
 - Added utility classes (**CommandArgumentSchema**, **CommandArgumentsSchema** and **CommandArguments**) 
   for application and console command argument processing.
 ### New Methods
+- Added multiple new methods to **Instant** and **Duration**/**FiniteDuration** through **TimeExtensions**
 - **Future** (**AsyncExtensions**)
   - Added `.foreachResult(...)` to **Future**s that contain a **Try**
 - immutable.**Model**
@@ -50,6 +51,7 @@
 ### Other Changes
 - Added direct implicit conversion from **Today** to **ExtendedLocalDate**, allowing access to **TimeExtensions** 
   methods directly from **Today** without going through **LocalDate** first
+- `WaitUtils.waitUntil(Instant, AnyRef)` now has a default value for the second parameter (lock)
 
 ## v1.9.1 - 12.5.2021
 This adds new collection utility methods, especially on **IterableOnce** and **TreeLike** traits.

@@ -3,7 +3,7 @@ package utopia.citadel.database.model.organization
 import java.time.Instant
 
 import utopia.citadel.database.Tables
-import utopia.citadel.database.factory.organization.DeletionFactory
+import utopia.citadel.database.factory.organization.DeletionWithCancellationsFactory
 import utopia.vault.model.immutable.Storable
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.partial.organization.DeletionData
@@ -71,7 +71,7 @@ case class DeletionModel(id: Option[Int] = None, organizationId: Option[Int] = N
 {
 	import DeletionModel._
 	
-	override def table = DeletionFactory.table
+	override def table = DeletionWithCancellationsFactory.table
 	
 	override def valueProperties = Vector("id" -> id, organizationIdAttName -> organizationId, "creatorId" -> creatorId,
 		"actualization" -> actualizationTime)

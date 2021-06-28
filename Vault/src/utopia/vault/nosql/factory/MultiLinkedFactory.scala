@@ -13,14 +13,9 @@ import scala.util.{Failure, Success, Try}
  * @author Mikko Hilpinen
  * @since 21.8.2019, v1.3.1+
  */
-trait MultiLinkedFactory[+Parent, Child] extends FromResultFactory[Parent]
+trait MultiLinkedFactory[+Parent, Child] extends LinkedFactoryLike[Parent, Child]
 {
 	// ABSTRACT	--------------------
-	
-	/**
-	 * @return Factory used for parsing child model data
-	 */
-	def childFactory: FromRowFactory[Child]
 	
 	/**
 	 * Parses a parent
@@ -29,12 +24,10 @@ trait MultiLinkedFactory[+Parent, Child] extends FromResultFactory[Parent]
 	 * @param children Parsed children (contains only successful results)
 	 * @return Model parse results
 	 */
-	def apply(id: Value, model: Model[Constant], children: Seq[Child]): Try[Parent]
+	def apply(id: Value, model: Model[Constant], children: Vector[Child]): Try[Parent]
 	
 	
 	// IMPLEMENTED	----------------
-	
-	override def joinedTables = childFactory.tables
 	
 	override def apply(result: Result): Vector[Parent] =
 	{

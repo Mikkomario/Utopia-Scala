@@ -3,6 +3,9 @@
 ## v1.8 (in development)
 ### Breaking Changes
 - **DistinctModelAccess** now requires computed property: `defaultOrdering: Option[OrderBy]`
+- **MultiLinkedFactory** trait now requires implementation of `.isAlwaysLinked: Boolean` 
+  instead of `.joinType`
+- **MultiLinkedFactory** now expects a **Vector** and not just a **Seq** in `.apply(...)`
 - **DeletionRule** no longer uses optional duration as standard live duration and only supports 
   finite durations in conditional live durations
 ### Deprecations
@@ -10,11 +13,14 @@
   Identical **SqlExtensions** object should be used instead.
 ### New Features
 - Added **ClearUnreferencedData** class for easier deletion of rows that are not referenced by other tables
+- Added combining factory traits (based on linked factories) that make linked factory implementation 
+  even more streamlined in cases where two factory implementations are combined
 - Added **DistincReadModelAccess** trait that provides access to .pull -methods without requiring 
   .put method support
 - Added **LatestModelAccess** trait that works like **UniqueModelAccess**, except that it targets 
   the latest row and doesn't support .put methods
 ### New Methods
+- Linked factory classes got a few new methods since they now extend the new **LinkedFactoryLike** trait
 - **ClearOldData**.type
   - Added `.once(...)` and `.dailyLoop(...)` functions to make the use of this class easier
 - **FromResultFactory**
