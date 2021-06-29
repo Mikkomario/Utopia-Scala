@@ -1,5 +1,7 @@
 package utopia.exodus.database.model.user
 
+import utopia.citadel.database.model.Expiring
+
 import java.time.Instant
 import utopia.exodus.database.factory.user.SessionFactory
 import utopia.exodus.model.partial.UserSessionData
@@ -9,7 +11,7 @@ import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
-object SessionModel
+object SessionModel extends Expiring
 {
 	// ATTRIBUTES   -------------------------------
 	
@@ -17,6 +19,8 @@ object SessionModel
 	  * Name of the attribute which contains the id of the device the user is logged in on
 	  */
 	val deviceIdAttName = "deviceId"
+	
+	override val expirationAttName = "expiresIn"
 	
 	
 	// COMPUTED	-----------------------------------
@@ -27,11 +31,6 @@ object SessionModel
 	def factory = SessionFactory
 	
 	/**
-	  * @return Table used by this model class
-	  */
-	def table = factory.table
-	
-	/**
 	  * @return Column that contains the device id the user is logged in on
 	  */
 	def deviceIdColumn = table(deviceIdAttName)
@@ -40,6 +39,11 @@ object SessionModel
 	  * @return A new model that has just been marked as logged out
 	  */
 	def nowLoggedOut = apply(logoutTime = Some(Now))
+	
+	
+	// IMPLEMENTED  -------------------------------
+	
+	override def table = factory.table
 	
 	
 	// OTHER	-----------------------------------
@@ -97,7 +101,7 @@ case class SessionModel(id: Option[Int] = None, userId: Option[Int] = None, devi
 	override def factory = SessionModel.factory
 	
 	override def valueProperties = Vector("id" -> id, "userId" -> userId, deviceIdAttName -> deviceId, "key" -> key,
-		"expiresIn" -> expires, "logoutTime" -> logoutTime)
+		expirationAttName -> expires, "logoutTime" -> logoutTime)
 	
 	
 	// OTHER	------------------------------------

@@ -23,12 +23,6 @@ object CitadelDataDeletionRules
 	  */
 	val defaultHistoryDuration = 30.days
 	
-	// TODO: Following need custom implementations
-	/*
-		- organization
-		- cancelled organization deletion
-	 */
-	
 	
 	// COMPUTED -----------------------------------
 	
@@ -93,9 +87,20 @@ object CitadelDataDeletionRules
 		custom(historyDuration, historyDuration, historyDuration, historyDuration, historyDuration,
 			historyDuration)
 	
-	private def deprecation(model: NullDeprecatable[_], duration: Duration) =
+	/**
+	  * Creates a rule around (null) deprecation
+	  * @param model Model factory class
+	  * @param duration History duration
+	  * @return A deletion rule. None if history duration is infinite.
+	  */
+	def deprecation(model: NullDeprecatable[_], duration: Duration) =
 		duration.finite.map(model.deletionAfterDeprecation)
-	
-	private def expiration(model: Expiring, duration: Duration) =
+	/**
+	  * Creates a rule around expiration
+	  * @param model Model factory class
+	  * @param duration History duration
+	  * @return A deletion rule. None if history duration is infinite.
+	  */
+	def expiration(model: Expiring, duration: Duration) =
 		duration.finite.map(model.deletionAfterExpiration)
 }
