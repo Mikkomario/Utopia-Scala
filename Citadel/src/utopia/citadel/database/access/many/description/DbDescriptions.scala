@@ -157,7 +157,7 @@ object DbDescriptions
 	{
 		// IMPLEMENTED  --------------------
 		
-		override def globalCondition = None
+		override def globalCondition = Some(factory.nonDeprecatedCondition)
 		
 		override protected def defaultOrdering = None
 		
