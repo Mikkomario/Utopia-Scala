@@ -2,6 +2,7 @@ package utopia.citadel.database.access.many.organization
 
 import utopia.citadel.database.factory.organization.{DeletionCancelFactory, DeletionWithCancellationsFactory}
 import utopia.citadel.database.model.organization.{DeletionCancelModel, DeletionModel}
+import utopia.flow.time.Now
 import utopia.metropolis.model.combined.organization.DeletionWithCancellations
 import utopia.metropolis.model.partial.organization.DeletionCancelData
 import utopia.vault.database.Connection
@@ -73,6 +74,16 @@ trait OrganizationDeletionsAccess extends ManyModelAccess[DeletionWithCancellati
 	
 	object PendingDeletionsAccess extends ManyModelAccess[DeletionWithCancellations]
 	{
+		// COMPUTED ----------------------
+		
+		/**
+		  * @param connection Implicit DB Connection
+		  * @return Pending (non-cancelled) deletions that have been scheduled to actualize
+		  */
+		def readyToActualize(implicit connection: Connection) =
+			actualizingBefore(Now)
+		
+		
 		// IMPLEMENTED	------------------
 		
 		override def factory = OrganizationDeletionsAccess.this.factory
