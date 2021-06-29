@@ -101,8 +101,9 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 	private def acquireDeviceKey(userId: Int, deviceId: Int)(implicit connection: Connection) =
 		DbDeviceKey.forDeviceWithId(deviceId).assignToUserWithId(userId).key
 	
-	private def acquireSessionKey(userId: Int, deviceId: Option[Int])(implicit connection: Connection) =
-		DbUserSession(userId, deviceId).start().key
+	private def acquireSessionKey(userId: Int, deviceId: Option[Int])
+	                             (implicit connection: Connection, context: AuthorizedContext) =
+		DbUserSession(userId, deviceId).start(context.modelStyle).key
 	
 	private def tryInsert(newUser: NewUser, email: String)(implicit connection: Connection): Try[UserWithLinks] =
 	{

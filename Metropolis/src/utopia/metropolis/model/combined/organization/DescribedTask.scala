@@ -3,7 +3,8 @@ package utopia.metropolis.model.combined.organization
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.combined.description.SimplyDescribed
+import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
 
 /**
   * Combines task type with some or all of its descriptions
@@ -12,8 +13,13 @@ import utopia.metropolis.model.stored.description.DescriptionLink
   * @param taskId Wrapped task's id
   * @param descriptions Various descriptions for this task
   */
-case class DescribedTask(taskId: Int, descriptions: Set[DescriptionLink]) extends ModelConvertible
+case class DescribedTask(taskId: Int, override val descriptions: Set[DescriptionLink])
+	extends ModelConvertible with SimplyDescribed
 {
+	// IMPLEMENTED  -----------------------------
+	
 	override def toModel = Model(Vector("id" -> taskId,
 		"descriptions" -> descriptions.map { _.toModel }.toVector))
+	
+	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) = Model("id", taskId)
 }

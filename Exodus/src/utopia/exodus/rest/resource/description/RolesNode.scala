@@ -1,11 +1,12 @@
 package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
-import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbDescriptions}
 import utopia.citadel.database.access.many.organization.DbUserRoles
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.organization.DescribedRole
+import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
 import utopia.nexus.rest.ResourceSearchResult.Error
@@ -34,7 +35,14 @@ object RolesNode extends Resource[AuthorizedContext]
 			val descriptions = DbDescriptions.ofAllUserRoles.inLanguages(languageIds)
 			val rolesWithDescriptions = roles.map { role =>
 				DescribedRole(role, descriptions.getOrElse(role.roleId, Set()).toSet) }
-			Result.Success(rolesWithDescriptions.map { _.toModel })
+			// Supports simple model style if needed
+			session.modelStyle match
+			{
+				case Full => Result.Success(rolesWithDescriptions.map { _.toModel })
+				case Simple =>
+					val roles = DbDescriptionRoles.all
+					Result.Success(rolesWithDescriptions.map { _.toSimpleModelUsing(roles) })
+			}
 		}
 	}
 	

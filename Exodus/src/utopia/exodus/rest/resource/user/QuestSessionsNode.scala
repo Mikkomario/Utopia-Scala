@@ -62,7 +62,7 @@ object QuestSessionsNode extends ResourceWithChildren[AuthorizedContext] with No
 				if (context.request.method == Get)
 					context.basicAuthorized { (userId, connection) =>
 						implicit val c: Connection = connection
-						val newSessionKey = DbUserSession.deviceless(userId).start().key
+						val newSessionKey = DbUserSession.deviceless(userId).start(context.modelStyle).key
 						Result.Success(newSessionKey)
 					}
 				// On DELETE, terminates the current deviceless session key (uses session authorization)

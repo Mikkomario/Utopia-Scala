@@ -1,28 +1,16 @@
 package utopia.metropolis.model.combined.description
 
-import utopia.flow.datastructure.immutable.Constant
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.Extender
 import utopia.metropolis.model.stored.description.DescriptionLink
 
 /**
-  * A common trait for extenders which include descriptions to items
+  * A common trait for items with descriptions
   * @author Mikko Hilpinen
-  * @since 20.5.2020, v1
+  * @since 30.6.2021, v1.1
   */
-trait Described[+A <: ModelConvertible] extends Extender[A] with ModelConvertible
+trait Described
 {
-	// ABSTRACT	---------------------------
-	
 	/**
 	  * @return Descriptions linked with the wrapped item
 	  */
 	def descriptions: Set[DescriptionLink]
-	
-	
-	// IMPLEMENTED	-----------------------
-	
-	override def toModel = wrapped.toModel +
-		Constant("descriptions", descriptions.map { _.toModel }.toVector)
 }

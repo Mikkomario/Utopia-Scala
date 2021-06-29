@@ -1,8 +1,12 @@
 # Utopia Access - List of Changes
 
-## v1.3.1 (in development)
+## v1.4 (in development)
+### Breaking Changes
+- `new Headers(...)` is now private. Please use `Headers.apply(...)` instead
 ### New Features
 - Added **MovedPermanently** (301) and **Found** (302) status codes to the **Status** enumeration.
+### Other Changes
+- The **Headers** object is now implicitly convertible to an empty **Headers** instance
 
 ## v1.3 - 17.4.2021
 This relatively small update changes how the **Status** enumeration works. 

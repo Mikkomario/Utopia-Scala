@@ -24,7 +24,7 @@ case class UseRawXML(rootElementName: String = "Response") extends RawResultPars
 	    val element = parseElement(rootElementName, data)
 	    val charset = request.headers.preferredCharset getOrElse StandardCharsets.UTF_8
 	    
-	    new Response(status, Headers().withContentType(Application.xml, Some(charset)), Vector(),
+	    new Response(status, Headers.withContentType(Application.xml, Some(charset)), Vector(),
 	            Some(stream => XmlWriter.writeElementToStream(stream, element, charset)))
 	}
 	

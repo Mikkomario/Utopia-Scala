@@ -23,6 +23,14 @@
   session authorized use case implementations for modular resources
 - Added **ExtendableOrganizationResourceFactory** class that makes it easier to create extendable 
   organization-specific session authorized resource factory objects
+- Added **ExodusDataDeletionRules** object to simplify deprecated / expired data deletion
+- Sessions and some requests now support preferred model style parameter
+  - Specify *X-Style* -header or *style* query parameter with *full* or *simple* either during login or 
+    on specific requests.
+- The following resources now support *simple* model style:
+  - Tasks
+  - User Roles
+  - My Organizations
 ### Bugfixes
 - Separated `ExodusResources.public` to `.publicDescriptions` and `.customAuthorized`. The previous implementation 
   was a programming / refactoring mistake and returned a **Vector** of **Object**s, not **Resource**s.

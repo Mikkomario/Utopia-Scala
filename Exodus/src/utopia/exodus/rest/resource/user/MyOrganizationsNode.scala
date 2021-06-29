@@ -1,9 +1,11 @@
 package utopia.exodus.rest.resource.user
 
 import utopia.access.http.Method.Get
+import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.single.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
 import utopia.nexus.rest.ResourceWithChildren
 import utopia.nexus.result.Result
@@ -30,7 +32,14 @@ object MyOrganizationsNode extends ResourceWithChildren[AuthorizedContext]
 			implicit val c: Connection = connection
 			// Reads organizations data and returns it as an array
 			val organizations = DbUser(session.userId).memberships.myOrganizations
-			Result.Success(organizations.map { _.toModel })
+			// May use simple model style instead
+			session.modelStyle match
+			{
+				case Full => Result.Success(organizations.map { _.toModel })
+				case Simple =>
+					val descriptionRoles = DbDescriptionRoles.all
+					Result.Success(organizations.map { _.toSimpleModelUsing(descriptionRoles) })
+			}
 		}
 	}
 }

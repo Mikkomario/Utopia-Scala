@@ -8,6 +8,7 @@ import utopia.exodus.model.stored.UserSession
 import utopia.exodus.util.UuidGenerator
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.{SingleModelAccess, UniqueModelAccess}
 
@@ -101,10 +102,12 @@ object DbUserSession extends SingleModelAccess[UserSession]
 		
 		/**
 		  * Starts a new session on this device. Logs out any previous user(s) of this device as well.
+		  * @param preferredModelStyle Model style preferred to be used during this session (optional)
 		  * @param connection DB Connection (implicit)
 		  * @return New user session
 		  */
-		def start()(implicit connection: Connection, uuidGenerator: UuidGenerator) =
+		def start(preferredModelStyle: Option[ModelStyle] = None)
+		         (implicit connection: Connection, uuidGenerator: UuidGenerator) =
 		{
 			// Before starting a new session, makes sure to terminate existing user sessions for this device
 			// On deviceless sessions, terminates the previous deviceless session
@@ -114,7 +117,7 @@ object DbUserSession extends SingleModelAccess[UserSession]
 				case None => end()
 			}
 			// Creates a new session that lasts for 24 hours or until logged out
-			model.insert(UserSessionData(userId, uuidGenerator.next(), Now + 24.hours, deviceId))
+			model.insert(UserSessionData(userId, uuidGenerator.next(), Now + 24.hours, deviceId, preferredModelStyle))
 		}
 	}
 }

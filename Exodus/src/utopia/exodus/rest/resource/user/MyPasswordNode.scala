@@ -84,7 +84,8 @@ object MyPasswordNode extends Resource[AuthorizedContext]
 											deviceId.filter { DbDevice(_).isDefined } match
 											{
 												case Some(deviceId) =>
-													val sessionKey = DbUserSession(userId, deviceId).start().key
+													val sessionKey = DbUserSession(userId, deviceId)
+														.start(context.modelStyle).key
 													true -> Result.Success(sessionKey)
 												case None => true -> Result.Empty
 											}

@@ -2,10 +2,11 @@ package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
 import utopia.citadel.database.access.id.many.DbTaskIds
-import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbDescriptions}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.organization.DescribedTask
+import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
 import utopia.nexus.rest.ResourceSearchResult.Error
@@ -33,7 +34,14 @@ object TasksNode extends Resource[AuthorizedContext]
 			// Combines the descriptions with the tasks and returns them
 			val describedTasks = DbTaskIds.all.map { taskId => DescribedTask(taskId,
 				descriptions.getOrElse(taskId, Set()).toSet) }
-			Result.Success(describedTasks.map { _.toModel })
+			// May use simpler model style
+			session.modelStyle match
+			{
+				case Full => Result.Success(describedTasks.map { _.toModel })
+				case Simple =>
+					val roles = DbDescriptionRoles.all
+					Result.Success(describedTasks.map { _.toSimpleModelUsing(roles) })
+			}
 		}
 	}
 	

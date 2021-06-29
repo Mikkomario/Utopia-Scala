@@ -8,6 +8,7 @@ import utopia.exodus.model.partial.UserSessionData
 import utopia.exodus.model.stored.UserSession
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
+import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
@@ -80,7 +81,8 @@ object SessionModel extends Expiring
 	  */
 	def insert(data: UserSessionData)(implicit connection: Connection) =
 	{
-		val newId = apply(None, Some(data.userId), data.deviceId, Some(data.key), Some(data.expires)).insert().getInt
+		val newId = apply(None, Some(data.userId), data.deviceId, Some(data.key), Some(data.expires),
+			data.preferredModelStyle).insert().getInt
 		UserSession(newId, data)
 	}
 }
@@ -91,7 +93,8 @@ object SessionModel extends Expiring
   * @since 3.5.2020, v1
   */
 case class SessionModel(id: Option[Int] = None, userId: Option[Int] = None, deviceId: Option[Int] = None,
-						key: Option[String] = None, expires: Option[Instant] = None, logoutTime: Option[Instant] = None)
+                        key: Option[String] = None, expires: Option[Instant] = None,
+                        modelStylePreference: Option[ModelStyle] = None, logoutTime: Option[Instant] = None)
 	extends StorableWithFactory[UserSession]
 {
 	import SessionModel._
@@ -101,7 +104,8 @@ case class SessionModel(id: Option[Int] = None, userId: Option[Int] = None, devi
 	override def factory = SessionModel.factory
 	
 	override def valueProperties = Vector("id" -> id, "userId" -> userId, deviceIdAttName -> deviceId, "key" -> key,
-		expirationAttName -> expires, "logoutTime" -> logoutTime)
+		expirationAttName -> expires, "modelStylePreference" -> modelStylePreference.map { _.id },
+		"logoutTime" -> logoutTime)
 	
 	
 	// OTHER	------------------------------------

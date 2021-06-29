@@ -45,7 +45,7 @@ case class SessionKeyNode(deviceId: Int) extends Resource[AuthorizedContext]
 					// If basic auth was used, may register a new user device -connection
 					if (!deviceKeyWasUsed)
 						DbUser(userId).linkWithDeviceWithId(deviceId)
-					val newSession = DbUserSession(userId, deviceId).start()
+					val newSession = DbUserSession(userId, deviceId).start(context.modelStyle)
 					// Returns the session key
 					Result.Success(newSession.key)
 				}

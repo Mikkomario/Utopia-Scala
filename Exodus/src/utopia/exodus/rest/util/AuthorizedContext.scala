@@ -17,6 +17,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.nexus.http.{Request, ServerSettings}
 import utopia.nexus.rest.BaseContext
 import utopia.nexus.result.{Result, ResultParser, UseRawJSON}
@@ -34,7 +35,6 @@ object AuthorizedContext
 	 * (session + membership id + DB connection)
 	 */
 	type OrganizationParams = (UserSession, Int, Connection)
-	
 	/**
 	 * Parameters provided in session authorization (session + DB connection)
 	 */
@@ -102,6 +102,12 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 		else
 			Vector()
 	}
+	
+	/**
+	  * @return The model style specified in this request (if specified)
+	  */
+	def modelStyle = request.headers.apply("X-Style").flatMap(ModelStyle.forKey)
+		.orElse { request.parameters("style").string.flatMap(ModelStyle.forKey) }
 	
 	
 	// OTHER	----------------------------

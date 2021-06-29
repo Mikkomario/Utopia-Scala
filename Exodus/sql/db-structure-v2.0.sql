@@ -107,12 +107,14 @@ CREATE TABLE device_authentication_key
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents a temporary login session
+-- Model style preferences are: 1 = Full, 2 = Simple, NULL = undefined
 CREATE TABLE user_session
 (
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     device_id INT,
     `key` VARCHAR(36) NOT NULL,
+    model_style_preference INT,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_in DATETIME NOT NULL,
     logout_time DATETIME,

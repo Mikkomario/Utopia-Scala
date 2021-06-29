@@ -1,7 +1,5 @@
 package utopia.access.http
 
-import scala.math.Ordering.Double.TotalOrdering
-import scala.collection.immutable.Map
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.util.StringExtensions._
@@ -12,18 +10,19 @@ import utopia.flow.datastructure.template.Property
 import utopia.flow.datastructure.template
 import utopia.flow.time.Now
 
-import java.time.format.DateTimeFormatter
-import scala.util.{Success, Try}
-import java.time.Instant
-import java.time.ZonedDateTime
-import java.time.ZoneOffset
-import scala.collection.immutable.HashMap
-import utopia.flow.util.Equatable
-
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.Base64
+import java.time.format.DateTimeFormatter
+import java.time.Instant
+import java.time.ZonedDateTime
+import java.time.ZoneOffset
+
+import scala.language.implicitConversions
 import scala.io.Codec
+import scala.math.Ordering.Double.TotalOrdering
+import scala.collection.immutable.Map
+import scala.util.{Success, Try}
 
 object Headers extends FromModelFactory[Headers]
 {   
@@ -35,6 +34,12 @@ object Headers extends FromModelFactory[Headers]
     val empty = Headers()
     
     
+    // IMPLICIT --------------------------
+    
+    // Treats the headers object as an empty headers instance
+    implicit def headersAsInstance(headers: Headers.type): Headers = headers.empty
+    
+    
     // COMPUTED PROPERTIES    ------------
     
     /**
@@ -43,15 +48,24 @@ object Headers extends FromModelFactory[Headers]
     def currentDateHeaders = empty.withCurrentDate
     
     
-    // OPERATORS    ----------------------
+    // IMPLEMENTED    ----------------------
     
     override def apply(model: template.Model[Property]) = 
     {
-        val fields = model.attributesWithValue.flatMap { property => property.value.string.map { (property.name, _) } }.toMap
+        val fields = model.attributesWithValue
+            .flatMap { property => property.value.string.map { property.name.toLowerCase -> _ } }.toMap
         Success(new Headers(fields))
     }
     
-    def apply(rawFields: Map[String, String] = HashMap()) = new Headers(rawFields)
+    
+    // OTHER    ----------------------------
+    
+    /**
+      * Creates a new set of headers from the specified fields
+      * @param fields Header fields
+      * @return A new set of headers
+      */
+    def apply(fields: Map[String, String] = Map()) = new Headers(fields.map { case (k, v) => k.toLowerCase -> v })
 }
 
 /**
@@ -59,16 +73,9 @@ object Headers extends FromModelFactory[Headers]
  * @author Mikko Hilpinen
  * @since 22.8.2017
  */
-class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertible with Equatable
+case class Headers private(fields: Map[String, String]) extends ModelConvertible
 {
-    // ATTRIBUTES    --------------
-    
-    val fields = rawFields.map { case (key, value) => key.toLowerCase() -> value }
-    
-    
     // IMPLEMENTED METHODS / PROPERTIES    ---
-    
-    override def properties = Vector(fields)
     
     override def toModel = Model(fields.toVector.map { case (key, value) => key -> value.toValue })
     
@@ -80,8 +87,7 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     /**
      * @return Whether these headers are empty
      */
-    def isEmpty = rawFields.isEmpty
-    
+    def isEmpty = fields.isEmpty
     /**
      * @return Whether these headers are not empty
      */
@@ -96,30 +102,25 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * The content types accepted by the client
      */
     def acceptedTypes = commaSeparatedValues("Accept").flatMap { ContentType.parse }
-    
     /**
      * The charsets accepted by the client. Each charset is matched with a weight modifier. Higher 
      * weight charsets should be preferred by the server.
      */
     def acceptedCharsets = weightedValues("Accept-Charset").flatMap {
         case (charset, weight) => Try(Charset.forName(charset)).toOption.map { _ -> weight } }
-    
     /**
      * The charset preferred by the client. None if no charset is specified.
      */
     def preferredCharset = acceptedCharsets.maxByOption { _._2 }.map { _._1 }
-    
     /**
      * The charset preferred by the client. UTF 8 if the client doesn't specify any other charset
      */
     def preferredCharsetOrUTF8 = preferredCharset getOrElse StandardCharsets.UTF_8
-    
     /**
      * @return Languages that are accepted by the client, with weight modifiers. A larger weight means that the language
      *         is preferred by the client
      */
     def acceptedLanguages = weightedValues("Accept-Language")
-    
     /**
      * @return The language most preferred by the client. None if not specified.
      */
@@ -129,17 +130,14 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * The type of the associated content. None if not defined.
      */
     def contentType = semicolonSeparatedValues("Content-Type").headOption.flatMap { ContentType.parse }
-    
     /**
      * The character set used in the associated content. None if not defined or unrecognised
      */
     def charset = charsetString.flatMap { s => Try { Charset.forName(s) }.toOption }
-    
     /**
      * The name of the character set used in the associated content. None if not defined
      */
     def charsetString = semicolonSeparatedValues("Content-Type").getOption(1)
-    
     /**
      * @return Encoding specified in the content type header (in codec format)
      */
@@ -149,7 +147,6 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * 	The length of the response body in octets (8-bit bytes)
      */
     def contentLength = apply("Content-Length").flatMap(_.int).getOrElse(0)
-    
     /**
       * @return Whether content length information has been provided
       */
@@ -166,6 +163,10 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * @return Whether the date header is defined
      */
     def hasDate = isDefined("Date")
+    /**
+      * Creates a new set of headers with the updated message date / time
+      */
+    def withCurrentDate = withDate(Now)
     
     /**
      * The location of the generated or searched resource. (Usually) contains the whole url.
@@ -184,11 +185,6 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     def ifModifiedSince = timeHeader("If-Modified-Since")
     
     /**
-     * Creates a new set of headers with the updated message date / time
-     */
-    def withCurrentDate = withDate(Now)
-    
-    /**
      * Whether the data is chunked and the content length omitted
      */
     def isChunked = apply("Transfer-Encoding").contains("chunked")
@@ -197,12 +193,10 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
       * @return Whether an authorization header has been specified
       */
     def containsAuthorization = isDefined("Authorization")
-    
     /**
       * @return The provided authorization. Eg. "Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==". None if no auth header is provided.
       */
     def authorization = apply("Authorization")
-    
     /**
      * @return Decrypted Username and password from a basic authorization header. None if the header was missing, not
      *         a basic authorization or not properly encoded
@@ -215,7 +209,6 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
         else
             None
     }
-    
     /**
       * @return Non-decrypted (expected to have no encoding) token registered with the "bearer" authorization header.
       *         None if there was no authorization header or if it was not of type "bearer".
@@ -227,7 +220,6 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
         else
             None
     }
-    
     /**
       * @return Whether a bearer (token) authorization has been specified in this request
       *         (Authorization header starts with 'bearer ')
@@ -246,13 +238,13 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     /**
      * Adds new values to a header. Will not overwrite any existing values.
      */
-    def +(headerName: String, values: Seq[String], regex: String): Headers = withHeaderAdded(headerName, values, regex)
-    
+    def +(headerName: String, values: Seq[String], separator: String): Headers =
+        withHeaderAdded(headerName, values, separator)
     /**
      * Adds a new value to a header. Will not overwrite any existing values.
      */
-    def +(headerName: String, value: String, regex: String = ",") = withHeaderAdded(headerName, value, regex)
-    
+    def +(headerName: String, value: String, separator: String = ",") =
+        withHeaderAdded(headerName, value, separator)
     /**
       * @param header A header key value pair
       * @return A copy of these headers with specified header appended (';' is used to separate multiple header values)
@@ -279,14 +271,12 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * Returns multiple values where the original value is split into multiple parts. Returns an 
      * empty vector if there were no values for the header name
      */
-    def splitValues(headerName: String, regex: String) = apply(headerName).toVector.flatMap { _.split(regex) }
-    
+    def splitValues(headerName: String, separator: String) = apply(headerName).toVector.flatMap { _.split(separator) }
     /**
      * Returns multiple values where the original value is separated with a comma (,). Returns an 
      * empty vector if there were no values for the header name
      */
     def commaSeparatedValues(headerName: String) = splitValues(headerName, ",")
-    
     /**
      * Returns multiple values where the original value is separated with a semicolon (;). Returns an 
      * empty vector if there were no values for the header name
@@ -313,35 +303,32 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * Returns a copy of these headers with a new header. Overwrites any previous values on the 
      * targeted header.
      */
-    def withHeader(headerName: String, values: Seq[String], regex: String = ","): Headers = 
-            withHeader(headerName, values.reduce { _ + regex + _ })
-    
+    def withHeader(headerName: String, values: Seq[String], separator: String = ","): Headers = 
+            withHeader(headerName, values.reduce { _ + separator + _ })
     /**
      * Returns a copy of these headers with a new header. Overwrites any previous values on the 
      * targeted header.
      */
     def withHeader(headerName: String, value: String) = new Headers(fields + (headerName -> value))
-    
     /**
       * Adds new values to a header. Will not overwrite any existing values.
       */
-    def withHeaderAdded(headerName: String, values: Seq[String], regex: String): Headers =
+    def withHeaderAdded(headerName: String, values: Seq[String], separator: String): Headers =
     {
         if (values.nonEmpty)
-            withHeaderAdded(headerName, values.reduce { _ + regex + _ }, regex)
+            withHeaderAdded(headerName, values.reduce { _ + separator + _ }, separator)
         else
             this
     }
-    
     /**
       * Adds a new value to a header. Will not overwrite any existing values.
       */
-    def withHeaderAdded(headerName: String, value: String, regex: String = ",") =
+    def withHeaderAdded(headerName: String, value: String, separator: String = ",") =
     {
         if (fields.contains(headerName.toLowerCase()))
         {
             // Appends to existing value
-            val newValue = apply(headerName).get + regex + value
+            val newValue = apply(headerName).get + separator + value
             Headers(fields + (headerName -> newValue))
         }
         else
@@ -353,7 +340,6 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      */
     def timeHeader(headerName: String) = apply(headerName).flatMap { dateStr => 
             Try(Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(dateStr))).toOption }
-    
     /**
      * Parses an instant into correct format and adds it as a header value. Overwrites a previous 
      * version of that header, if there is one.
@@ -373,12 +359,10 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * Checks whether a method is allowed for the server side resource
      */
     def allows(method: Method) = allowedMethods.contains(method)
-    
     /**
      * Overwrites the list of methods allowed to be used on the targeted resource
      */
     def withAllowedMethods(methods: Seq[Method]) = withHeader("Allow", methods.map { _.toString })
-    
     /**
      * Adds a new method to the methods allowed for the targeted resource
      */
@@ -388,7 +372,6 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * Checks whether the client accepts the provided content type
      */
     def accepts(contentType: ContentType) = acceptedTypes.contains(contentType)
-    
     /**
      * Finds the first accepted type from the provided options
      */
@@ -397,7 +380,6 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
         val accepted = acceptedTypes
         options.find(accepted.contains)
     }
-    
     /**
      * Finds the most preferred accepted charset from the provided options
      */
@@ -409,7 +391,6 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
         else
             Some(accepted.maxBy(_._2)._1)
     }
-    
     /**
      * @param options Available language options
      * @return The most preferred language from the specified options. None if none of them is accepted.
@@ -421,7 +402,6 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * Overwrites the set of accepted content types
      */
     def withAcceptedTypes(types: Seq[ContentType]) = withHeader("Accept", types.map { _.toString })
-    
     /**
      * Adds a new content type to the list of content types accepted by the client
      */
@@ -432,12 +412,10 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      */
     def withAcceptedCharsets(charsets: Map[Charset, Double]) = withWeightedHeader("Accept-Charset",
         charsets.map { case (charset, wt) => charset.name() -> wt })
-    
     /**
      * Overwrites the set of accepted charsets
      */
     def withAcceptedCharsets(charsets: Seq[Charset]) = withHeader("Accept-Charset", charsets.map(_.name()))
-    
     /**
      * Adds a new charset to the list of accepted charsets
      */
@@ -449,13 +427,11 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
      * @return A copy of these headers with specified accepted languages
      */
     def withAcceptedLanguages(languages: Map[String, Double]) = withWeightedHeader("Accept-Language", languages)
-    
     /**
      * @param languages A list of accepted languages
      * @return A copy of these headers with specified accepted languages
      */
     def withAcceptedLanguages(languages: Seq[String]) = withHeader("Accept-Language", languages)
-    
     /**
      * @param language Accepted language
      * @param weight Priority of specified language (default = 1.0)
@@ -500,7 +476,6 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
       * @return A copy of these headers with authorization
       */
     def withAuthorization(authString: String) = withHeader("Authorization", authString)
-    
     /**
       * Creates a copy of these headers that uses basic authentication
       * @param userName Username
@@ -513,7 +488,6 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
         val encoded = Base64.getEncoder.encodeToString((userName + ":" + password).getBytes(Codec.UTF8.charSet))
         withAuthorization("Basic " + encoded)
     }
-    
     /**
       * @param token Authorization/access token
       * @return A copy of these headers with an authorization header containing specified token
@@ -523,10 +497,8 @@ class Headers(rawFields: Map[String, String] = HashMap()) extends ModelConvertib
     // TODO: Implement support for following predefined headers:
     // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
     /*
-     * - Accept-Language (?)
      * - Content-Encoding
      * - Content-Language
      * - Expires (?)
-     * - If-Modified-Since
      */
 }
