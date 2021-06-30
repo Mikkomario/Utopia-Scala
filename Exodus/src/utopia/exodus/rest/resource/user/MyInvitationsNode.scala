@@ -1,11 +1,12 @@
 package utopia.exodus.rest.resource.user
 
 import utopia.access.http.Method.Get
-import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbDescriptions}
 import utopia.citadel.database.access.single.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.organization.DescribedInvitation
+import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
 import utopia.nexus.rest.ResourceSearchResult.{Error, Follow}
@@ -45,8 +46,16 @@ object MyInvitationsNode extends Resource[AuthorizedContext]
 						organizationDescriptions.getOrElse(invitation.organizationId, Set()).toSet, sender)
 				}
 				
-				Result.Success(enrichedInvitations.map { _.toModel })
+				// May use simple model format
+				session.modelStyle match
+				{
+					case Full => Result.Success(enrichedInvitations.map { _.toModel })
+					case Simple =>
+						val roles = DbDescriptionRoles.pull
+						Result.Success(enrichedInvitations.map { _.toSimpleModelUsing(roles) })
+				}
 			}
+			// TODO: Consider returning an empty array and 200 instead
 			else
 				Result.Empty
 		}

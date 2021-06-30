@@ -25,12 +25,14 @@ case class OrganizationMembersNode(organizationId: Int) extends Resource[Authori
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		// User must be a member of the organization to see data from other members
-		context.authorizedInOrganization(organizationId) { (_, _, connection) =>
+		context.authorizedInOrganization(organizationId) { (session, _, connection) =>
 			implicit val c: Connection = connection
 			// Retrieves all memberships, associated task ids and user settings
 			val membershipData = DbOrganization(organizationId).memberships.described
 			// Produces a response based on the read data
-			Result.Success(membershipData.map { _.toModel })
+			// Supports styling options
+			val style = session.modelStyle
+			Result.Success(membershipData.map { _.toModelWith(style) })
 		}
 	}
 	

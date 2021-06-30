@@ -6,7 +6,9 @@
 ### New Features
 - Added simple model support (**ModelStyle** and **StyledModelConvertible**)
     - Also added simple styling support for described items 
-      (using **SimplyDescribed** and **SimplyDescribedWrapper** traits)
+      (using **DescribedSimpleModelConvertible**, **SimplyDescribed** and 
+      **SimplyDescribedWrapper** traits)
+    - Multiple existing classes now support this new simple model format
 ### Other Changes
 - Added a few models from the **Exodus Module**
 - **DeletionCancel** now contains property `.created`

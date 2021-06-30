@@ -4,6 +4,7 @@ import utopia.citadel.database.access.many.description.DbDescriptions
 import utopia.citadel.database.factory.description.DescriptionRoleFactory
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.metropolis.model.combined.description.DescribedDescriptionRole
+import utopia.metropolis.model.enumeration.ModelStyle.Simple
 import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
@@ -27,11 +28,14 @@ class DescriptionRolesNode(authorization: (AuthorizedContext, => Result, Connect
 	
 	override val name = "description-roles"
 	
+	override def defaultModelStyle = Simple
+	
 	override protected def authorize(onAuthorized: => Result)
 									(implicit context: AuthorizedContext, connection: Connection) =
 		authorization(context, onAuthorized, connection)
 	
-	override protected def items(implicit connection: Connection) = DescriptionRoleFactory.getAll()
+	override protected def items(implicit connection: Connection) =
+		DescriptionRoleFactory.getAll()
 	
 	override protected def descriptionsAccess = DbDescriptions.ofAllDescriptionRoles
 	

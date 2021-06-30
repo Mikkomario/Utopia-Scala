@@ -2,11 +2,14 @@ package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.InternalServerError
-import utopia.citadel.database.access.many.description.DescriptionLinksForManyAccess
+import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DescriptionLinksForManyAccess}
 import utopia.citadel.database.access.single.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.combined.description.SimplyDescribed
+import utopia.metropolis.model.enumeration.ModelStyle
+import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
@@ -21,12 +24,23 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 20.5.2020, v1
   */
-trait PublicDescriptionsNode[Item, Combined <: ModelConvertible] extends Resource[AuthorizedContext]
+trait PublicDescriptionsNode[Item, +Combined <: ModelConvertible with SimplyDescribed]
+	extends Resource[AuthorizedContext]
 {
 	import utopia.citadel.util.CitadelContext._
 	import utopia.exodus.util.ExodusContext.handleError
 	
 	// ABSTRACT	------------------------------------
+	
+	/**
+	 * @return The model style to use on this resource when no styling is specified in the context
+	 */
+	def defaultModelStyle: ModelStyle
+	
+	/**
+	 * @return An access point to the descriptions of the returned items
+	 */
+	protected def descriptionsAccess: DescriptionLinksForManyAccess
 	
 	/**
 	  * Authorizes the incoming request
@@ -35,18 +49,14 @@ trait PublicDescriptionsNode[Item, Combined <: ModelConvertible] extends Resourc
 	  * @param connection Database connection (implicit)
 	  * @return Function result if authorized, otherwise a failure indicating a suitable authorization problem.
 	  */
-	protected def authorize(onAuthorized: => Result)(implicit context: AuthorizedContext, connection: Connection): Result
+	protected def authorize(onAuthorized: => Result)
+	                       (implicit context: AuthorizedContext, connection: Connection): Result
 	
 	/**
 	  * @param connection DB Connection (implicit)
 	  * @return All returned items
 	  */
 	protected def items(implicit connection: Connection): Vector[Item]
-	
-	/**
-	  * @return An access point to the descriptions of the returned items
-	  */
-	protected def descriptionsAccess: DescriptionLinksForManyAccess
 	
 	/**
 	  * @param item An item
@@ -74,17 +84,17 @@ trait PublicDescriptionsNode[Item, Combined <: ModelConvertible] extends Resourc
 		connectionPool.tryWith { implicit connection =>
 			val accepted = context.requestedLanguages
 			if (accepted.nonEmpty)
-				get(accepted.map { _.id }).toResponse
+				get(accepted.map { _.id }, context.modelStyle.getOrElse(defaultModelStyle)).toResponse
 			else if (context.request.headers.containsAuthorization)
 			{
 				context.sessionKeyAuthorized { (session, _) =>
 					val userLanguages = DbUser(session.userId).languages.withFamiliarityLevels
 						.sortBy { _._2.orderIndex }.map { _._1 }
-					get(userLanguages)
+					get(userLanguages, session.modelStyle)
 				}
 			}
 			else
-				get(Vector()).toResponse
+				get(Vector(), context.modelStyle.getOrElse(defaultModelStyle)).toResponse
 		} match
 		{
 			case Success(response) => response
@@ -100,7 +110,7 @@ trait PublicDescriptionsNode[Item, Combined <: ModelConvertible] extends Resourc
 	
 	// OTHER	---------------------------------
 	
-	private def get(languageIds: Seq[Int])(implicit connection: Connection) =
+	private def get(languageIds: Seq[Int], resultStyle: ModelStyle)(implicit connection: Connection) =
 	{
 		// Reads all descriptions
 		val descriptions =
@@ -112,6 +122,13 @@ trait PublicDescriptionsNode[Item, Combined <: ModelConvertible] extends Resourc
 		}
 		// Reads all items and combines them with descriptions. Then returns them in response
 		val combined = items.map { item => combine(item, descriptions.getOrElse(idOf(item), Set()).toSet) }
-		Result.Success(combined.map { _.toModel })
+		// Converts the results to correct format
+		resultStyle match
+		{
+			case Full => Result.Success(combined.map { _.toModel })
+			case Simple =>
+				val roles = DbDescriptionRoles.pull
+				Result.Success(combined.map { _.toSimpleModelUsing(roles) })
+		}
 	}
 }

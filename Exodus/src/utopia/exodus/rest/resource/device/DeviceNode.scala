@@ -2,11 +2,13 @@ package utopia.exodus.rest.resource.device
 
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.Unauthorized
+import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.single.DbDevice
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._
 import utopia.metropolis.model.combined.device.FullDevice
+import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
 import utopia.nexus.rest.ResourceSearchResult.{Error, Follow}
@@ -40,7 +42,11 @@ case class DeviceNode(deviceId: Int) extends Resource[AuthorizedContext]
 					val languageIds = context.languageIdListFor(session.userId)
 					val userIds = deviceAccess.userIds
 					val descriptions = deviceAccess.descriptions.inLanguages(languageIds)
-					Result.Success(FullDevice(deviceId, descriptions.toSet, userIds.toSet).toModel)
+					val device = FullDevice(deviceId, descriptions.toSet, userIds.toSet)
+					Result.Success(session.modelStyle match {
+						case Full => device.toModel
+						case Simple => device.toSimpleModelUsing(DbDescriptionRoles.pull)
+					})
 				}
 				else
 					Result.NotModified

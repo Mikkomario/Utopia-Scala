@@ -26,11 +26,13 @@ object MySettingsNode extends ExtendableSessionResource
 {
 	// ATTRIBUTES   -----------------------
 	
-	private val defaultGet = SessionUseCaseImplementation.default(Get) { (session, connection, _, _) =>
+	private val defaultGet = SessionUseCaseImplementation.default(Get) { (session, connection, context, _) =>
 		implicit val c: Connection = connection
+		implicit val ctx: AuthorizedContext = context
 		DbUser(session.userId).settings.pull match
 		{
-			case Some(readSettings) => Result.Success(readSettings.toModel)
+			// Supports simple styling also
+			case Some(readSettings) => Result.Success(readSettings.toModelWith(session.modelStyle))
 			case None => Result.Failure(NotFound, "No current settings found")
 		}
 	}

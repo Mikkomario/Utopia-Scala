@@ -17,9 +17,12 @@ object SimplyDescribed
 	{
 		roles.map { role =>
 			val roleDescriptions = descriptions.filter { _.roleId == role.id }
-			// Case: There are multiple descriptions for a single role
+			// Case: There are multiple descriptions for a single role => Lists values and languages
 			if (roleDescriptions.size > 1)
-				Constant(role.jsonKeyPlural, roleDescriptions.map { _.text }.toVector)
+				Constant(role.jsonKeyPlural, roleDescriptions.map { description =>
+					Model(Vector("text" -> description.text, "language_id" -> description.languageId))
+				}.toVector)
+			// Case: There is only a single description => uses a simple string value
 			else
 				Constant(role.jsonKeySingular, roleDescriptions.headOption match {
 					case Some(description) => description.text
@@ -35,7 +38,7 @@ object SimplyDescribed
   * @author Mikko Hilpinen
   * @since 29.6.2021, v1.0.1
   */
-trait SimplyDescribed extends Described
+trait SimplyDescribed extends Described with DescribedSimpleModelConvertible
 {
 	// ABSTRACT --------------------------
 	
@@ -47,14 +50,14 @@ trait SimplyDescribed extends Described
 	protected def simpleBaseModel(roles: Iterable[DescriptionRole]): Model[Constant]
 	
 	
-	// OTHER    --------------------------
+	// IMPLEMENTED    --------------------
 	
 	/**
 	  * Converts this instance to a simple model
 	  * @param descriptionRoles Roles of the descriptions to include
 	  * @return A model
 	  */
-	def toSimpleModelUsing(descriptionRoles: Iterable[DescriptionRole]) =
+	override def toSimpleModelUsing(descriptionRoles: Iterable[DescriptionRole]) =
 		simpleBaseModel(descriptionRoles) ++
 			SimplyDescribed.descriptionPropertiesFrom(descriptions.map { _.description }, descriptionRoles)
 }

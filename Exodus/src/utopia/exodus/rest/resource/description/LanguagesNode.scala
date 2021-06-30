@@ -4,6 +4,7 @@ import utopia.citadel.database.access.many.description.DbDescriptions
 import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.metropolis.model.combined.language.DescribedLanguage
+import utopia.metropolis.model.enumeration.ModelStyle.Simple
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.metropolis.model.stored.language.Language
 import utopia.nexus.result.Result
@@ -26,6 +27,8 @@ class LanguagesNode(authorization: (AuthorizedContext, => Result, Connection) =>
 	// IMPLEMENTED	--------------------------------
 	
 	override val name = "languages"
+	
+	override def defaultModelStyle = Simple
 	
 	override protected def authorize(onAuthorized: => Result)(implicit context: AuthorizedContext, connection: Connection) =
 		authorization(context, onAuthorized, connection)

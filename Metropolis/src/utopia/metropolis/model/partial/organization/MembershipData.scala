@@ -2,10 +2,11 @@ package utopia.metropolis.model.partial.organization
 
 import java.time.Instant
 import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
-import utopia.flow.generic.{FromModelFactoryWithSchema, InstantType, IntType, ModelConvertible}
+import utopia.flow.generic.{FromModelFactoryWithSchema, InstantType, IntType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.time.Now
+import utopia.metropolis.model.StyledModelConvertible
 
 object MembershipData extends FromModelFactoryWithSchema[MembershipData]
 {
@@ -27,8 +28,13 @@ object MembershipData extends FromModelFactoryWithSchema[MembershipData]
   * @param ended Timestamp when the membership ended. None if not ended (default).
   */
 case class MembershipData(organizationId: Int, userId: Int, creatorId: Option[Int] = None,
-						  started: Instant = Now, ended: Option[Instant] = None) extends ModelConvertible
+						  started: Instant = Now, ended: Option[Instant] = None)
+	extends StyledModelConvertible
 {
 	override def toModel = Model(Vector("organization_id" -> organizationId, "user_id" -> userId,
 		"inviter_id" -> creatorId, "started" -> started, "ended" -> ended))
+	
+	// The simple model version expects organization and user ids to be available elsewhere and the membership
+	// status to be always known also
+	override def toSimpleModel = Model(Vector("inviter_id" -> creatorId, "started" -> started))
 }

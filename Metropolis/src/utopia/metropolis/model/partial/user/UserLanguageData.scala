@@ -6,7 +6,6 @@ import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.IntType
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
-import utopia.metropolis.model.enumeration.LanguageFamiliarity
 
 import scala.util.Try
 

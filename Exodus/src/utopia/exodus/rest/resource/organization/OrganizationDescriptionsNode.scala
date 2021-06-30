@@ -3,11 +3,14 @@ package utopia.exodus.rest.resource.organization
 import utopia.access.http.Method.{Get, Put}
 import utopia.access.http.Status.NotFound
 import utopia.citadel.database.access.id.many.DbDescriptionRoleIds
-import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbDescriptions}
 import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.exodus.model.enumeration.StandardTask.DocumentOrganization
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.combined.description.SimplyDescribed
+import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.metropolis.model.post.NewDescription
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
@@ -38,7 +41,13 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends Resource[Au
 				// Checks the languages the user wants to use and gathers descriptions in those languages
 				val languages = context.languageIdListFor(session.userId)
 				val descriptions = DbDescriptions.ofOrganizationWithId(organizationId).inLanguages(languages)
-				Result.Success(descriptions.map { _.toModel })
+				// Supports simple model style also
+				Result.Success(session.modelStyle match {
+					case Full => descriptions.map { _.toModel }
+					case Simple =>
+						Model.withConstants(SimplyDescribed.descriptionPropertiesFrom(
+							descriptions.map { _.description }, DbDescriptionRoles.pull))
+				})
 			}
 		}
 		// In PUT request, updates descriptions based on posted model

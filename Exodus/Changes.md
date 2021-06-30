@@ -6,6 +6,7 @@
   authentication-related features in this module. This may cause problems in the 
   dependent projects. Most of these problems can be resolved by switching to the appropriate 
   **Citadel** classes, however.
+- **PublicDescriptionsNode** trait now requires some support for **SimplyDescribed** trait
 - Renamed nested classes and objects in **DbSingleUser**
 ### Deprecations
 - All classes and features which were copied to **Citadel** are now deprecated in **Exodus**
@@ -28,9 +29,11 @@
   - Specify *X-Style* -header or *style* query parameter with *full* or *simple* either during login or 
     on specific requests.
 - The following resources now support *simple* model style:
-  - Tasks
-  - User Roles
-  - My Organizations
+  - DescriptionRoles, Languages and LanguageFamiliarities
+  - Tasks and UserRoles
+  - MyLanguages, MyOrganizations, MyInvitations and MySettings
+  - Organization Descriptions and Organization Members
+  - Device
 ### Bugfixes
 - Separated `ExodusResources.public` to `.publicDescriptions` and `.customAuthorized`. The previous implementation 
   was a programming / refactoring mistake and returned a **Vector** of **Object**s, not **Resource**s.
