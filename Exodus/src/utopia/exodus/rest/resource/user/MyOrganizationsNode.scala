@@ -31,14 +31,20 @@ object MyOrganizationsNode extends ResourceWithChildren[AuthorizedContext]
 		context.sessionKeyAuthorized { (session, connection) =>
 			implicit val c: Connection = connection
 			// Reads organizations data and returns it as an array
-			val organizations = DbUser(session.userId).memberships.myOrganizations
-			// May use simple model style instead
-			session.modelStyle match
+			// Also supports the If-Modified-Since / Not Modified use case
+			DbUser(session.userId).memberships.myOrganizations(
+				context.languageIdListFor(session.userId), context.request.headers.ifModifiedSince) match
 			{
-				case Full => Result.Success(organizations.map { _.toModel })
-				case Simple =>
-					val descriptionRoles = DbDescriptionRoles.all
-					Result.Success(organizations.map { _.toSimpleModelUsing(descriptionRoles) })
+				case Some(organizations) =>
+					// May use simple model style
+					Result.Success(session.modelStyle match
+					{
+						case Full => organizations.map { _.toModel }
+						case Simple =>
+							val descriptionRoles = DbDescriptionRoles.all
+							organizations.map { _.toSimpleModelUsing(descriptionRoles) }
+					})
+				case None => Result.NotModified
 			}
 		}
 	}

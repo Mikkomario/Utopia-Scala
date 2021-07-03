@@ -19,9 +19,10 @@ import utopia.metropolis.model.stored.user.{User, UserLanguage, UserSettings}
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.BasicCombineOperator.Or
 import utopia.vault.nosql.access.{ManyModelAccess, SingleIdModelAccess, SingleModelAccess, UniqueIdAccess, UniqueModelAccess}
-import utopia.vault.sql.{Delete, Select, Where}
+import utopia.vault.sql.{Delete, Exists, Select, Where}
 import utopia.vault.sql.SqlExtensions._
 
+import java.time.Instant
 import scala.util.{Failure, Success}
 
 /**
@@ -304,6 +305,21 @@ object DbUser extends SingleModelAccess[User]
 		
 		object DbUserMemberships extends ManyModelAccess[Membership]
 		{
+			// COMPUTED	--------------------------------
+			
+			private def model = MembershipModel
+			
+			private def userCondition = model.withUserId(userId).toCondition
+			private def condition = userCondition && factory.nonDeprecatedCondition
+			
+			/**
+			  * @param connection DB Connection (implicit)
+			  * @return Ids of all the organizations this user is a current member of
+			  */
+			def organizationIds(implicit connection: Connection) =
+				connection(Select(table, model.organizationIdAttName) + Where(condition)).rowIntValues
+			
+			
 			// IMPLEMENTED	---------------------------
 			
 			override def factory = MembershipFactory
@@ -313,50 +329,94 @@ object DbUser extends SingleModelAccess[User]
 			override protected def defaultOrdering = None
 			
 			
-			// COMPUTED	--------------------------------
-			
-			private def model = MembershipModel
-			
-			private def condition = userCondition && factory.nonDeprecatedCondition
-			
-			private def userCondition = model.withUserId(userId).toCondition
+			// OTHER    ------------------------------
 			
 			/**
-			  * @param connection DB Connection (implicit)
-			  * @return Ids of all the organizations this user is a current member of
-			  */
-			def organizationIds(implicit connection: Connection) =
-				connection(Select(table, model.organizationIdAttName) + Where(condition)).rowIntValues
+			 * Reads described organization and role information for this user
+			 * @param languageIds Ids of the languages in which descriptions are retrieved
+			 *                    (from most preferred to least preferred)
+			 * @param connection Implicit DB Connection
+			 * @return This user's organizations and roles within those organizations
+			 */
+			def myOrganizations(languageIds: Seq[Int])(implicit connection: Connection): Vector[MyOrganization] =
+				myOrganizations(languageIds, None).get
 			
 			/**
-			  * All organizations & roles associated with these memberships
-			  * @param connection DB Connection (implicit)
-			  * @return A list of organizations, along with all roles, rights and descriptions that these
-			  *         memberships link to
-			  */
-			def myOrganizations(implicit connection: Connection) =
+			 * Reads described organization and role information for this user
+			 * @param languageIds Ids of the languages in which descriptions are retrieved
+			 *                    (from most preferred to least preferred)
+			 * @param ifModifiedThreshold A time threshold for checking if the results have been modified
+			 *                            since that time
+			 * @param connection Implicit DB Connection
+			 * @return This user's organizations and roles within those organizations.
+			 *         None if the items were not modified since the threshold time.
+			 */
+			def myOrganizations(languageIds: Seq[Int], ifModifiedThreshold: Instant)
+			                    (implicit connection: Connection): Option[Vector[MyOrganization]] =
+				myOrganizations(languageIds, Some(ifModifiedThreshold))
+			
+			/**
+			 * Reads described organization and role information for this user
+			 * @param languageIds Ids of the languages in which descriptions are retrieved
+			 *                    (from most preferred to least preferred)
+			 * @param ifModifiedThreshold An optional time threshold for checking if the results have been modified
+			 *                            since that time (default = None)
+			 * @param connection Implicit DB Connection
+			 * @return This user's organizations and roles within those organizations.
+			 *         None if 'ifModifiedSinceThreshold' -parameter was specified and the items were not modified
+			 *         since that time.
+			 */
+			def myOrganizations(languageIds: Seq[Int], ifModifiedThreshold: Option[Instant])
+			                       (implicit connection: Connection) =
 			{
 				// Reads all memberships & roles first
-				val memberships = MembershipWithRolesFactory.getMany(userCondition && MembershipWithRolesFactory.nonDeprecatedCondition)
+				val memberships = MembershipWithRolesFactory
+					.getMany(userCondition && MembershipWithRolesFactory.nonDeprecatedCondition)
 				// Reads organization descriptions
 				val organizationIds = memberships.map { _.wrapped.organizationId }.toSet
+				// Case: Organizations / memberships found => Reads descriptions (may check for modified state first)
 				if (organizationIds.nonEmpty)
 				{
-					// TODO: Add proper language filtering
-					val organizationDescriptions = DbDescriptions.ofOrganizationsWithIds(organizationIds).all
-					// Reads all role right information concerning the targeted roles
-					val rolesWithRights = DbUserRoles(memberships.flatMap { _.roleIds }.toSet).withRights
-					
-					memberships.map { membership =>
-						val organizationId = membership.wrapped.organizationId
-						MyOrganization(organizationId, userId,
-							organizationDescriptions.filter { _.targetId == organizationId }.toSet,
-							membership.roleIds.flatMap { roleId => rolesWithRights.find { _.roleId == roleId } })
+					// Case: Modified or modification not checked
+					if (ifModifiedThreshold.forall { t => wereModifiedSince(t) ||
+						DbDescriptions.ofOrganizationsWithIds(organizationIds).isModifiedSince(t) })
+					{
+						// Reads organization descriptions
+						val organizationDescriptions = DbDescriptions.ofOrganizationsWithIds(organizationIds)
+							.inLanguages(languageIds)
+						// Reads all role right information concerning the targeted roles
+						val rolesWithRights = DbUserRoles(memberships.flatMap { _.roleIds }.toSet).withRights
+						
+						Some(memberships.map { membership =>
+							val organizationId = membership.wrapped.organizationId
+							MyOrganization(organizationId, userId,
+								organizationDescriptions.getOrElse(organizationId, Vector()).toSet,
+								membership.roleIds.flatMap { roleId => rolesWithRights.find { _.roleId == roleId } })
+						})
 					}
+					// Case: Not modified
+					else
+						None
 				}
+				// Case: No organizations / memberships found => Returns an empty vector (or None if not modified)
 				else
-					Vector()
+				{
+					if (ifModifiedThreshold.forall(wereModifiedSince))
+						Some(Vector())
+					else
+						None
+				}
 			}
+			
+			/**
+			 * Checks whether this user's memberships were modified after the specified time threshold
+			 * @param threshold A time threshold
+			 * @param connection Implicit DB Connection
+			 * @return Whether these memberships were modified after that threshold
+			 */
+			def wereModifiedSince(threshold: Instant)(implicit connection: Connection) =
+				Exists(target, userCondition &&
+					(factory.createdAfterCondition(threshold) || model.deprecatedAfterCondition(threshold)))
 		}
 	}
 }

@@ -34,6 +34,8 @@
   - MyLanguages, MyOrganizations, MyInvitations and MySettings
   - Organization Descriptions and Organization Members
   - Device
+- **MyOrganizationsNode** now checks for the *If-Modified-Since* -header and also respects the 
+  *Accept-Language* header / user account preference when fetching organization descriptions.
 ### Bugfixes
 - Separated `ExodusResources.public` to `.publicDescriptions` and `.customAuthorized`. The previous implementation 
   was a programming / refactoring mistake and returned a **Vector** of **Object**s, not **Resource**s.

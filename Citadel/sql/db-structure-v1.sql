@@ -198,7 +198,8 @@ CREATE TABLE organization_description
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deprecated_after DATETIME,
 
-    INDEX (deprecated_after),
+    INDEX od_creation_idx (created),
+    INDEX od_deprecation_idx (deprecated_after),
 
     FOREIGN KEY od_o_described_organization (organization_id)
         REFERENCES organization(id) ON DELETE CASCADE,
@@ -309,7 +310,8 @@ CREATE TABLE organization_membership
     ended DATETIME,
     creator_id INT,
 
-    INDEX (ended),
+    INDEX om_starting_idx (started),
+    INDEX om_ending_idx (ended),
 
     FOREIGN KEY om_o_parent_organization (organization_id)
         REFERENCES organization(id) ON DELETE CASCADE,

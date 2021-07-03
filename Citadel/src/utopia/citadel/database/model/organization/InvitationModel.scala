@@ -15,7 +15,7 @@ object InvitationModel extends Expiring
 {
 	// ATTRIBUTES   ---------------------------
 	
-	override val expirationAttName = "expiresIn"
+	override val deprecationAttName = "expiresIn"
 	
 	
 	// IMPLEMENTED	----------------------------
@@ -74,7 +74,7 @@ case class InvitationModel(id: Option[Int] = None, organizationId: Option[Int] =
 	override def factory = InvitationFactory
 	
 	override def valueProperties = Vector("id" -> id, "organizationId" -> organizationId, "recipientId" -> recipientId,
-		"recipientEmail" -> recipientEmail, "startingRoleId" -> startingRoleId, expirationAttName -> expireTime,
+		"recipientEmail" -> recipientEmail, "startingRoleId" -> startingRoleId, deprecationAttName -> expireTime,
 		"creatorId" -> creatorId)
 	
 	

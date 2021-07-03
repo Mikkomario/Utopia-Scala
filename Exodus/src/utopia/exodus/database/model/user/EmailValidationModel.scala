@@ -15,7 +15,7 @@ object EmailValidationModel extends Expiring
 {
 	// ATTRIBUTES   ------------------------
 	
-	override val expirationAttName = "expiresIn"
+	override val deprecationAttName = "expiresIn"
 	
 	
 	// COMPUTED ----------------------------
@@ -103,7 +103,7 @@ case class EmailValidationModel(id: Option[Int] = None, purposeId: Option[Int] =
 	override def factory = EmailValidationModel.factory
 	
 	override def valueProperties = Vector("id" -> id, "purposeId" -> purposeId, "email" -> email, "key" -> key,
-		"resendKey" -> resendKey, "ownerId" -> ownerId, "created" -> created, expirationAttName -> expiration,
+		"resendKey" -> resendKey, "ownerId" -> ownerId, "created" -> created, deprecationAttName -> expiration,
 		"actualizedIn" -> actualization)
 	
 	

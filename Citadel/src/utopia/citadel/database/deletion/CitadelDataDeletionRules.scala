@@ -4,7 +4,7 @@ import utopia.citadel.database.Tables
 import utopia.citadel.database.factory.description.DescriptionLinkFactory
 import utopia.citadel.database.model.organization.{InvitationModel, MemberRoleModel, MembershipModel}
 import utopia.citadel.database.model.user.{UserDeviceModel, UserSettingsModel}
-import utopia.citadel.database.model.{Expiring, NullDeprecatable}
+import utopia.citadel.database.model.TimeDeprecatable
 import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -67,7 +67,7 @@ object CitadelDataDeletionRules
 			deprecation(UserDeviceModel, deviceUsers),
 			deprecation(MembershipModel, memberships),
 			deprecation(MemberRoleModel, memberRole),
-			expiration(InvitationModel, invitation),
+			deprecation(InvitationModel, invitation),
 		).flatten
 		description.finite match {
 			case Some(descriptionHistoryDuration) =>
@@ -93,14 +93,6 @@ object CitadelDataDeletionRules
 	  * @param duration History duration
 	  * @return A deletion rule. None if history duration is infinite.
 	  */
-	def deprecation(model: NullDeprecatable[_], duration: Duration) =
+	def deprecation(model: TimeDeprecatable, duration: Duration) =
 		duration.finite.map(model.deletionAfterDeprecation)
-	/**
-	  * Creates a rule around expiration
-	  * @param model Model factory class
-	  * @param duration History duration
-	  * @return A deletion rule. None if history duration is infinite.
-	  */
-	def expiration(model: Expiring, duration: Duration) =
-		duration.finite.map(model.deletionAfterExpiration)
 }

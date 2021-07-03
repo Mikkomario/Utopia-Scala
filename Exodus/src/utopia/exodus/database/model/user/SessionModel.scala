@@ -21,7 +21,7 @@ object SessionModel extends Expiring
 	  */
 	val deviceIdAttName = "deviceId"
 	
-	override val expirationAttName = "expiresIn"
+	override val deprecationAttName = "expiresIn"
 	
 	
 	// COMPUTED	-----------------------------------
@@ -104,7 +104,7 @@ case class SessionModel(id: Option[Int] = None, userId: Option[Int] = None, devi
 	override def factory = SessionModel.factory
 	
 	override def valueProperties = Vector("id" -> id, "userId" -> userId, deviceIdAttName -> deviceId, "key" -> key,
-		expirationAttName -> expires, "modelStylePreference" -> modelStylePreference.map { _.id },
+		deprecationAttName -> expires, "modelStylePreference" -> modelStylePreference.map { _.id },
 		"logoutTime" -> logoutTime)
 	
 	

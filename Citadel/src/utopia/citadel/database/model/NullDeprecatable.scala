@@ -3,13 +3,10 @@ package utopia.citadel.database.model
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.time.Now
 import utopia.vault.database.Connection
-import utopia.vault.model.immutable.{DataDeletionRule, Storable, Table}
-import utopia.vault.nosql.factory.Deprecatable
+import utopia.vault.model.immutable.Storable
 import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant
-import scala.concurrent.duration.FiniteDuration
-
 
 /**
  * A common trait for model factories that support deprecation by utilizing a
@@ -18,19 +15,9 @@ import scala.concurrent.duration.FiniteDuration
  * @author Mikko Hilpinen
  * @since 27.6.2021, v1.0
  */
-trait NullDeprecatable[+M <: Storable] extends Deprecatable
+trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable
 {
 	// ABSTRACT   ----------------------------
-	
-	/**
-	 * @return The table used by this class
-	 */
-	def table: Table
-	
-	/**
-	 * @return Name of the property that contains item deprecation time
-	 */
-	def deprecationAttName: String
 	
 	/**
 	 * @param deprecation A deprecation timestamp
@@ -45,20 +32,11 @@ trait NullDeprecatable[+M <: Storable] extends Deprecatable
 	 * @return Column that contains primary table index
 	 */
 	def idColumn = table.primaryColumn.get
-	/**
-	 * @return Column that contains item deprecation timestamp
-	 */
-	def deprecationColumn = table(deprecationAttName)
 	
 	/**
 	 * @return A model that has just been marked as deprecated
 	 */
 	def nowDeprecated = withDeprecatedAfter(Now)
-	
-	/**
-	 * @return A deletion rule that deletes deprecated items as soon as possible
-	 */
-	def immediateDeletionRule = DataDeletionRule.onArrivalOf(table, deprecationAttName)
 	
 	
 	// IMPLEMENTED  --------------------------
@@ -90,11 +68,4 @@ trait NullDeprecatable[+M <: Storable] extends Deprecatable
 		else
 			nowDeprecated.updateWhere(idColumn.in(ids) && nonDeprecatedCondition)
 	}
-	
-	/**
-	 * @param historyDuration Duration how long the item is kept in the database after deprecation
-	 * @return A new deletion rule that applies to this model type
-	 */
-	def deletionAfterDeprecation(historyDuration: FiniteDuration) =
-		DataDeletionRule(table, deprecationAttName, historyDuration)
 }
