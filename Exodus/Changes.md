@@ -6,8 +6,11 @@
   authentication-related features in this module. This may cause problems in the 
   dependent projects. Most of these problems can be resolved by switching to the appropriate 
   **Citadel** classes, however.
+- Moved most of the rest node classes from rest.resource.user to rest.resource.user.me
 - **PublicDescriptionsNode** trait now requires some support for **SimplyDescribed** trait
 - Renamed nested classes and objects in **DbSingleUser**
+- users/me/invitations now returns status code 200 and an empty array when there are no invitations 
+  (Previously returned 204 No Content)
 ### Deprecations
 - All classes and features which were copied to **Citadel** are now deprecated in **Exodus**
 - Deprecated `ExodusResources.all` in favor of `.default`

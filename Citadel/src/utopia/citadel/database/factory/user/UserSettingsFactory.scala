@@ -14,7 +14,8 @@ object UserSettingsFactory extends FromValidatedRowModelFactory[UserSettings] wi
 	override def table = Tables.userSettings
 	
 	override protected def fromValidatedModel(model: Model[Constant]) = UserSettings(model("id").getInt,
-		model(UserSettingsModel.userIdAttName).getInt, UserSettingsData(model("name").getString, model("email").getString))
+		model(UserSettingsModel.userIdAttName).getInt, UserSettingsData(model("name").getString,
+			model("email").getString, model("created").getInstant))
 	
 	override val nonDeprecatedCondition = table("deprecatedAfter").isNull
 }

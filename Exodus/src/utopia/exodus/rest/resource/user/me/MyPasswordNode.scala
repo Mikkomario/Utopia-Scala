@@ -1,16 +1,14 @@
-package utopia.exodus.rest.resource.user
+package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method
 import utopia.access.http.Method.Put
 import utopia.access.http.Status.{BadRequest, InternalServerError, NotFound, Unauthorized}
 import utopia.citadel.database.access.id.single.DbUserId
 import utopia.citadel.database.access.single.{DbDevice, DbUser}
-import utopia.citadel.util.CitadelContext._
 import utopia.exodus.database.access.single.{DbEmailValidation, DbUserSession}
 import utopia.exodus.database.UserDbExtensions._
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.PasswordReset
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.exodus.util.ExodusContext.handleError
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.post.PasswordChange
@@ -23,12 +21,15 @@ import utopia.vault.database.Connection
 import scala.util.{Failure, Success}
 
 /**
-  * This node allows one to reset their password using email validation
-  * @author Mikko Hilpinen
-  * @since 3.12.2020, v1
-  */
+ * This node allows one to reset their password using email validation
+ * @author Mikko Hilpinen
+ * @since 3.12.2020, v1
+ */
 object MyPasswordNode extends Resource[AuthorizedContext]
 {
+	import utopia.exodus.util.ExodusContext.uuidGenerator
+	import utopia.citadel.util.CitadelContext._
+	
 	// ATTRIBUTES	-----------------------
 	
 	override val name = "password"
@@ -45,14 +46,12 @@ object MyPasswordNode extends Resource[AuthorizedContext]
 		if (context.isTokenAuthorized)
 			context.sessionKeyAuthorized { (session, connection) =>
 				context.handlePost(PasswordChange) { change =>
-					change.oldPassword match
-					{
+					change.oldPassword match {
 						case Some(oldPassword) =>
 							implicit val c: Connection = connection
 							// Checks the old password
 							val userAccess = DbUser(session.userId)
-							if (userAccess.checkPassword(oldPassword))
-							{
+							if (userAccess.checkPassword(oldPassword)) {
 								// Changes the password
 								userAccess.changePassword(change.newPassword)
 								// Returns an empty response on success
@@ -67,22 +66,18 @@ object MyPasswordNode extends Resource[AuthorizedContext]
 		// If not authorized with a session key / token, expects request body to contain an email authentication
 		else
 			context.handlePost(PasswordChange) { change =>
-				change.emailAuthentication match
-				{
+				change.emailAuthentication match {
 					case Some((emailKey, deviceId)) =>
 						connectionPool.tryWith { implicit connection =>
 							// Checks (and possibly closes) the email validation key
 							DbEmailValidation.activateWithKey(emailKey, PasswordReset.id) { validation =>
 								// User id is expected to be provided in the validation. Uses email as a backup.
-								validation.ownerId.orElse(DbUserId.forEmail(validation.email)) match
-								{
+								validation.ownerId.orElse(DbUserId.forEmail(validation.email)) match {
 									case Some(userId) =>
 										// Updates the user's password in the DB
-										if (DbUser(userId).changePassword(change.newPassword))
-										{
+										if (DbUser(userId).changePassword(change.newPassword)) {
 											// If device id was provided correctly, starts a user session on that device
-											deviceId.filter { DbDevice(_).isDefined } match
-											{
+											deviceId.filter { DbDevice(_).isDefined } match {
 												case Some(deviceId) =>
 													val sessionKey = DbUserSession(userId, deviceId)
 														.start(context.modelStyle).key
@@ -95,13 +90,11 @@ object MyPasswordNode extends Resource[AuthorizedContext]
 									case None => true -> Result.Failure(InternalServerError,
 										"Email validation wasn't connected to any user account")
 								}
-							} match
-							{
+							} match {
 								case Success(result) => result
 								case Failure(error) => Result.Failure(Unauthorized, error.getMessage)
 							}
-						} match
-						{
+						} match {
 							case Success(result) => result
 							case Failure(error) =>
 								handleError(error, "Password recovery failed unexpectedly")

@@ -1,9 +1,10 @@
-package utopia.exodus.rest.resource.user
+package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method.Get
 import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbDescriptions}
 import utopia.citadel.database.access.single.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.organization.DescribedInvitation
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
@@ -14,10 +15,10 @@ import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
 /**
-  * A rest resource for accessing invitations that are pending for the logged user
-  * @author Mikko Hilpinen
-  * @since 6.5.2020, v1
-  */
+ * A rest resource for accessing invitations that are pending for the logged user
+ * @author Mikko Hilpinen
+ * @since 6.5.2020, v1
+ */
 object MyInvitationsNode extends Resource[AuthorizedContext]
 {
 	override val name = "invitations"
@@ -31,8 +32,7 @@ object MyInvitationsNode extends Resource[AuthorizedContext]
 			// Reads invitations from DB
 			val pendingInvitations = DbUser(session.userId).receivedInvitations.pending
 			// Attaches metadata to the invitations
-			if (pendingInvitations.nonEmpty)
-			{
+			if (pendingInvitations.nonEmpty) {
 				// Reads organization descriptions
 				val languageIds = context.languageIdListFor(session.userId)
 				val organizationIds = pendingInvitations.map { _.organizationId }.toSet
@@ -47,24 +47,21 @@ object MyInvitationsNode extends Resource[AuthorizedContext]
 				}
 				
 				// May use simple model format
-				session.modelStyle match
-				{
+				session.modelStyle match {
 					case Full => Result.Success(enrichedInvitations.map { _.toModel })
 					case Simple =>
 						val roles = DbDescriptionRoles.pull
 						Result.Success(enrichedInvitations.map { _.toSimpleModelUsing(roles) })
 				}
 			}
-			// TODO: Consider returning an empty array and 200 instead
 			else
-				Result.Empty
+				Result.Success(Vector[Value]())
 		}
 	}
 	
 	override def follow(path: Path)(implicit context: AuthorizedContext) =
 	{
-		path.head.int match
-		{
+		path.head.int match {
 			case Some(id) => Follow(InvitationNode(id), path.tail)
 			case None => Error(message = Some(s"${path.head} is not a valid invitation id"))
 		}

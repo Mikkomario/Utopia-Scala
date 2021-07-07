@@ -30,6 +30,11 @@ object MembershipModel extends NullDeprecatable[MembershipModel]
 	def factory = MembershipFactory
 	
 	/**
+	 * @return Column that contains the id of the organization this membership applies to
+	 */
+	def organizationIdColumn = table(organizationIdAttName)
+	
+	/**
 	  * @return A model that has just been marked as an ended membership
 	  */
 	def nowEnded = apply(ended = Some(Now))

@@ -65,7 +65,7 @@ object UserSettingsModel extends DeprecatableAfter[UserSettingsModel]
 	  */
 	def insert(userId: Int, data: UserSettingsData)(implicit connection: Connection) =
 	{
-		val newId = apply(None, Some(userId), Some(data.name), Some(data.email)).insert().getInt
+		val newId = apply(None, Some(userId), Some(data.name), Some(data.email), Some(data.created)).insert().getInt
 		UserSettings(newId, userId, data)
 	}
 }
@@ -76,7 +76,8 @@ object UserSettingsModel extends DeprecatableAfter[UserSettingsModel]
   * @since 2.5.2020, v1.0
   */
 case class UserSettingsModel(id: Option[Int] = None, userId: Option[Int] = None, name: Option[String] = None,
-							 email: Option[String] = None, deprecatedAfter: Option[Instant] = None)
+							 email: Option[String] = None, created: Option[Instant] = None,
+							 deprecatedAfter: Option[Instant] = None)
 	extends StorableWithFactory[UserSettings]
 {
 	import UserSettingsModel._
@@ -84,5 +85,5 @@ case class UserSettingsModel(id: Option[Int] = None, userId: Option[Int] = None,
 	override def factory = UserSettingsFactory
 	
 	override def valueProperties = Vector("id" -> id, userIdAttName -> userId, "name" -> name, "email" -> email,
-		deprecationAttName -> deprecatedAfter)
+		"created" -> created, deprecationAttName -> deprecatedAfter)
 }

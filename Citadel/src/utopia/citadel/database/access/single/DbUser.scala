@@ -32,6 +32,11 @@ import scala.util.{Failure, Success}
   */
 object DbUser extends SingleModelAccess[User]
 {
+	// COMPUTED -------------------------
+	
+	private def membershipModel = MembershipModel
+	
+	
 	// IMPLEMENTED	---------------------
 	
 	override def factory = UserFactory
@@ -113,12 +118,41 @@ object DbUser extends SingleModelAccess[User]
 		  */
 		def isMemberInOrganizationWithId(organizationId: Int)(implicit connection: Connection) =
 			membershipIdInOrganizationWithId(organizationId).isDefined
-		
+		/**
+		 * @param organizationIds A set of organization ids
+		 * @param connection Implicit DB Connection
+		 * @return Whether this user is a member of any of those organizations
+		 */
+		def isMemberOfAnyOrganizationOfIds(organizationIds: Iterable[Int])(implicit connection: Connection) =
+			memberships.exists(membershipModel.organizationIdColumn.in(organizationIds))
 		/**
 		  * @param organizationId Id of targeted organization
 		  * @return An access point to this user's membership id in that organization
 		  */
-		def membershipIdInOrganizationWithId(organizationId: Int) = DbUserMembershipId(organizationId)
+		def membershipIdInOrganizationWithId(organizationId: Int) =
+			DbUserMembershipId(organizationId)
+		
+		/**
+		 * Checks whether this user is a member of one or more organizations the other user is a member of
+		 * @param otherUserId Another user's id
+		 * @param connection Implicit DB Connection
+		 * @return Whether these two users have at least one common organization
+		 */
+		def sharesOrganizationWithUserWithId(otherUserId: Int)(implicit connection: Connection) =
+		{
+			// Case: Testing against self
+			if (userId == otherUserId)
+				true
+			// Case: Testing against other user
+			else
+			{
+				// First reads the organization ids of this user and then checks whether the other user
+				// is a member in any of them
+				// This is to avoid joining same table (membership) twice
+				val myOrganizationIds = memberships.organizationIds
+				myOrganizationIds.nonEmpty && apply(otherUserId).isMemberOfAnyOrganizationOfIds(myOrganizationIds)
+			}
+		}
 		
 		/**
 		  * Links this user with the specified device
@@ -307,7 +341,7 @@ object DbUser extends SingleModelAccess[User]
 		{
 			// COMPUTED	--------------------------------
 			
-			private def model = MembershipModel
+			private def model = membershipModel
 			
 			private def userCondition = model.withUserId(userId).toCondition
 			private def condition = userCondition && factory.nonDeprecatedCondition
@@ -340,7 +374,6 @@ object DbUser extends SingleModelAccess[User]
 			 */
 			def myOrganizations(languageIds: Seq[Int])(implicit connection: Connection): Vector[MyOrganization] =
 				myOrganizations(languageIds, None).get
-			
 			/**
 			 * Reads described organization and role information for this user
 			 * @param languageIds Ids of the languages in which descriptions are retrieved
@@ -354,7 +387,6 @@ object DbUser extends SingleModelAccess[User]
 			def myOrganizations(languageIds: Seq[Int], ifModifiedThreshold: Instant)
 			                    (implicit connection: Connection): Option[Vector[MyOrganization]] =
 				myOrganizations(languageIds, Some(ifModifiedThreshold))
-			
 			/**
 			 * Reads described organization and role information for this user
 			 * @param languageIds Ids of the languages in which descriptions are retrieved

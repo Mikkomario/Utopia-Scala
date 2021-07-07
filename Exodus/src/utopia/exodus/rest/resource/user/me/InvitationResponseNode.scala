@@ -1,4 +1,4 @@
-package utopia.exodus.rest.resource.user
+package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{Forbidden, NotFound, Unauthorized}
@@ -15,10 +15,10 @@ import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
 /**
-  * A rest resource that allows access to an invitation response
-  * @author Mikko Hilpinen
-  * @since 6.5.2020, v1
-  */
+ * A rest resource that allows access to an invitation response
+ * @author Mikko Hilpinen
+ * @since 6.5.2020, v1
+ */
 case class InvitationResponseNode(invitationId: Int) extends Resource[AuthorizedContext]
 {
 	// IMPLEMENTED	--------------------------
@@ -35,24 +35,19 @@ case class InvitationResponseNode(invitationId: Int) extends Resource[Authorized
 				// Makes sure the invitation exists, hasn't been answered or expired yet and is targeted for this user
 				implicit val c: Connection = connection
 				val accessInvitation = DbInvitation(invitationId)
-				accessInvitation.pull match
-				{
+				accessInvitation.pull match {
 					case Some(invitation) =>
-						val isForThisUser = invitation.recipient match
-						{
+						val isForThisUser = invitation.recipient match {
 							case Right(recipientId) => recipientId == session.userId
 							case Left(recipientEmail) =>
 								val myEmail = DbUser(session.userId).settings.map { _.email }
 								myEmail.contains(recipientEmail)
 						}
-						if (isForThisUser)
-						{
+						if (isForThisUser) {
 							if (invitation.hasExpired)
 								Result.Failure(Forbidden, "This invitation has already expired")
-							else
-							{
-								accessInvitation.response.pull match
-								{
+							else {
+								accessInvitation.response.pull match {
 									case Some(earlierResponse) =>
 										// If there was a response, will not create a new one
 										if (earlierResponse.wasAccepted == newResponse.wasAccepted &&

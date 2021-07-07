@@ -10,6 +10,7 @@ import utopia.exodus.database.access.single.{DbDeviceKey, DbUserSession}
 import utopia.exodus.database.model.user.UserAuthModel
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.UserCreation
 import utopia.exodus.rest.resource.CustomAuthorizationResourceFactory
+import utopia.exodus.rest.resource.user.me.MeNode
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
 import utopia.flow.generic.ValueConversions._
@@ -52,12 +53,17 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 	
 	override val allowedMethods = Vector(Post)
 	
+	// Expects /me or /{userId}
 	override def follow(path: Path)(implicit context: AuthorizedContext) =
 	{
 		if (path.head ~== "me")
 			Follow(MeNode, path.tail)
 		else
-			Error(message = Some(s"Currently only 'me' is available under $name"))
+			path.head.int match
+			{
+				case Some(userId) => Follow(OtherUserNode(userId), path.tail)
+				case None => Error(message = Some(s"Targeted user id (now '${path.head}') must be an integer"))
+			}
 	}
 	
 	

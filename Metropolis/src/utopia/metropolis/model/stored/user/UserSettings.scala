@@ -13,7 +13,8 @@ object UserSettings extends FromModelFactoryWithSchema[UserSettings]
 		"email" -> StringType)
 	
 	override protected def fromValidatedModel(model: Model[Constant]) = UserSettings(model("id").getInt,
-		model("user_id").getInt, UserSettingsData(model("name").getString, model("email").getString))
+		model("user_id").getInt, UserSettingsData(model("name").getString, model("email").getString,
+			model("created").getInstant))
 }
 
 /**
@@ -29,5 +30,6 @@ case class UserSettings(id: Int, userId: Int, data: UserSettingsData)
 	override def toModel = Model(Vector("id" -> id, "user_id" -> userId)) ++ data.toModel
 	
 	// A simple model omits the user settings version id and uses "id" key for the user id
-	override def toSimpleModel = Constant("id", userId) +: data.toModel
+	override def toSimpleModel = Constant("id", userId) +:
+		data.toModel.renamed("created", "last_updated")
 }

@@ -1,4 +1,4 @@
-package utopia.exodus.rest.resource.user
+package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Status.NotImplemented
 import utopia.exodus.rest.util.AuthorizedContext
@@ -9,10 +9,10 @@ import utopia.nexus.rest.ResourceSearchResult.{Error, Follow}
 import utopia.nexus.result.Result
 
 /**
-  * A rest resource for accessing individual invitation's data
-  * @author Mikko Hilpinen
-  * @since 6.5.2020, v1
-  */
+ * A rest resource for accessing individual invitation's data
+ * @author Mikko Hilpinen
+ * @since 6.5.2020, v1
+ */
 case class InvitationNode(invitationId: Int) extends Resource[AuthorizedContext]
 {
 	override def name = invitationId.toString
