@@ -1,7 +1,7 @@
 --
 -- DB Structure for Utopia Exodus features
 -- Intended to be inserted after Utopia Citadel database structure
--- Supports versions 2.0 and above
+-- Supports versions v2.0 and above
 --
 
 -- OPTIONAL table

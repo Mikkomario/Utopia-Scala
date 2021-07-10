@@ -4,6 +4,8 @@
 -- Supports versions v1.0 and above
 --
 
+-- TODO: Name all constraints, foreign keys and indices
+
 -- Various languages
 CREATE TABLE `language`
 (
@@ -129,12 +131,12 @@ CREATE TABLE description_role_description
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deprecated_after DATETIME,
 
-    INDEX (deprecated_after),
+    INDEX drd_deprecation_idx (deprecated_after),
 
-    FOREIGN KEY drd_dr_described_role (role_id)
+    CONSTRAINT drd_dr_described_role_fk FOREIGN KEY drd_dr_described_role_idx (role_id)
         REFERENCES description_role(id) ON DELETE CASCADE,
 
-    FOREIGN KEY drd_d_description_for_role (description_id)
+    CONSTRAINT drd_d_description_for_role_fk FOREIGN KEY drd_d_description_for_role_idx (description_id)
         REFERENCES description(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
