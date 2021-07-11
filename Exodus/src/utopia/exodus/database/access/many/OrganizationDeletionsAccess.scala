@@ -5,7 +5,7 @@ import utopia.exodus.database.model.organization.DeletionCancelModel
 import utopia.metropolis.model.combined.organization.DeletionWithCancellations
 import utopia.metropolis.model.partial.organization.DeletionCancelData
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.nosql.access.many.model.ManyModelAccess
 
 /**
   * Common trait for access points into organization deletions

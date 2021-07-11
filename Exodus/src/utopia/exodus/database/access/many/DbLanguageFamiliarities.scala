@@ -4,7 +4,7 @@ import utopia.exodus.database.factory.language.LanguageFamiliarityFactory
 import utopia.exodus.database.model.user.UserLanguageModel
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyRowModelAccess
+import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.sql.{SelectAll, Where}
 
 /**

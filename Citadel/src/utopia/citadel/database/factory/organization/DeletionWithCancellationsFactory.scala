@@ -2,7 +2,7 @@ package utopia.citadel.database.factory.organization
 
 import utopia.metropolis.model.combined.organization.DeletionWithCancellations
 import utopia.metropolis.model.stored.organization.{Deletion, DeletionCancel}
-import utopia.vault.nosql.factory.MultiCombiningFactory
+import utopia.vault.nosql.factory.multi.MultiCombiningFactory
 
 /**
   * Used for reading organization deletion attempts from DB

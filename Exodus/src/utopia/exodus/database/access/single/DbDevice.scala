@@ -12,7 +12,7 @@ import utopia.exodus.util.UuidGenerator
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
-import utopia.vault.nosql.access.UniqueModelAccess
+import utopia.vault.nosql.access.single.model.distinct.UniqueModelAccess
 import utopia.vault.sql.{Select, Where}
 
 /**

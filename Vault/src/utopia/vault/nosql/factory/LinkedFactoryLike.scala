@@ -1,6 +1,7 @@
 package utopia.vault.nosql.factory
 
 import utopia.vault.database.{Connection, References}
+import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.sql.{Condition, Exists, JoinType}
 import utopia.vault.sql.JoinType.Inner
 

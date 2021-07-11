@@ -6,7 +6,8 @@ import utopia.ambassador.model.partial.scope.TaskScopeLinkData
 import utopia.ambassador.model.stored.scope.TaskScopeLink
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueUnwraps._
-import utopia.vault.nosql.factory.{Deprecatable, FromValidatedRowModelFactory}
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
+import utopia.vault.nosql.template.Deprecatable
 
 /**
   * Used for reading task-scope-links from the DB

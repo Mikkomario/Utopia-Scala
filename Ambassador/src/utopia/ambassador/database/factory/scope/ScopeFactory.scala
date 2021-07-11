@@ -5,8 +5,8 @@ import utopia.ambassador.model.partial.scope.ScopeData
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueUnwraps._
-import utopia.vault.nosql.access.Indexed
-import utopia.vault.nosql.factory.FromValidatedRowModelFactory
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
+import utopia.vault.nosql.template.Indexed
 
 /**
   * Used for reading scope data from the DB

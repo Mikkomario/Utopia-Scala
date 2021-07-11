@@ -2,7 +2,8 @@ package utopia.ambassador.database.factory.scope
 
 import utopia.ambassador.model.combined.scope.TaskScope
 import utopia.ambassador.model.stored.scope.{Scope, TaskScopeLink}
-import utopia.vault.nosql.factory.{CombiningFactory, Deprecatable}
+import utopia.vault.nosql.factory.row.linked.CombiningFactory
+import utopia.vault.nosql.template.Deprecatable
 
 /**
   * Used for accessing a task's scope information

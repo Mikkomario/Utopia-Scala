@@ -6,7 +6,7 @@ import utopia.flow.generic.ValueUnwraps._
 import utopia.metropolis.model.combined.organization.DeletionWithCancellations
 import utopia.metropolis.model.partial.organization.DeletionData
 import utopia.metropolis.model.stored.organization.{Deletion, DeletionCancel}
-import utopia.vault.nosql.factory.PossiblyMultiLinkedFactory
+import utopia.vault.nosql.factory.multi.PossiblyMultiLinkedFactory
 
 /**
   * Used for reading organization deletion attempts from DB

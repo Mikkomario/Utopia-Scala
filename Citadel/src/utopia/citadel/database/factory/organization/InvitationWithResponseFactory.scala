@@ -3,7 +3,7 @@ package utopia.citadel.database.factory.organization
 import utopia.citadel.database.model.organization.InvitationModel
 import utopia.metropolis.model.combined.organization.InvitationWithResponse
 import utopia.vault.model.immutable.Row
-import utopia.vault.nosql.factory.FromRowFactory
+import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.sql.JoinType
 
 /**

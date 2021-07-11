@@ -1,5 +1,7 @@
 package utopia.vault.nosql.factory
 
+import utopia.vault.nosql.factory.row.model.FromRowModelFactory
+
 /**
   * A common trait for factory classes which combine the results of two factories
   * @author Mikko Hilpinen

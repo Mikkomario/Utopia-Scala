@@ -18,7 +18,10 @@ import utopia.metropolis.model.stored.organization.Membership
 import utopia.metropolis.model.stored.user.{User, UserLanguage, UserSettings}
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.BasicCombineOperator.Or
-import utopia.vault.nosql.access.{ManyModelAccess, SingleIdModelAccess, SingleModelAccess, UniqueIdAccess, UniqueModelAccess}
+import utopia.vault.nosql.access.many.model.ManyModelAccess
+import utopia.vault.nosql.access.single.id.UniqueIdAccess
+import utopia.vault.nosql.access.single.model.SingleModelAccess
+import utopia.vault.nosql.access.single.model.distinct.{SingleIdModelAccess, UniqueModelAccess}
 import utopia.vault.sql.{Delete, Exists, Select, Where}
 import utopia.vault.sql.SqlExtensions._
 

@@ -5,7 +5,7 @@ import utopia.exodus.database.model.description.{DescriptionLinkModelFactory, De
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
-import utopia.vault.nosql.access.SingleModelAccess
+import utopia.vault.nosql.access.single.model.SingleModelAccess
 
 /**
   * A common trait for individual description link access points

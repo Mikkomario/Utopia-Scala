@@ -2,6 +2,7 @@
 
 ## v1.8 (in development)
 ### Breaking Changes
+- Refactored package structure in nosql package (access & factory packages)
 - **DistinctModelAccess** now requires computed property: `defaultOrdering: Option[OrderBy]`
 - **MultiLinkedFactory** trait now requires implementation of `.isAlwaysLinked: Boolean` 
   instead of `.joinType`
@@ -19,6 +20,7 @@
   .put method support
 - Added **LatestModelAccess** trait that works like **UniqueModelAccess**, except that it targets 
   the latest row and doesn't support .put methods
+- Added **FilteredAccess** trait to simplify the creation of nested access points
 ### New Methods
 - Linked factory classes got a few new methods since they now extend the new **LinkedFactoryLike** trait
 - **ClearOldData**.type

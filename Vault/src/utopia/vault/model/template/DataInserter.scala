@@ -3,7 +3,7 @@ package utopia.vault.model.template
 import utopia.flow.datastructure.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
-import utopia.vault.nosql.access.Indexed
+import utopia.vault.nosql.template.Indexed
 import utopia.vault.sql.Insert
 
 /**

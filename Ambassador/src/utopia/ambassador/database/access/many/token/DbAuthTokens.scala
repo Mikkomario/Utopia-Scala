@@ -4,7 +4,7 @@ import utopia.ambassador.database.factory.token.AuthTokenFactory
 import utopia.ambassador.database.model.token.{AuthTokenModel, TokenScopeLinkModel}
 import utopia.ambassador.model.stored.token.AuthToken
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyRowModelAccess
+import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.sql.{Select, Where}
 
 /**

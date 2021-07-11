@@ -5,7 +5,7 @@ import utopia.exodus.database.model.user.ApiKeyModel
 import utopia.flow.generic.ValueConversions._
 import utopia.exodus.model.stored.ApiKey
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.SingleModelAccessById
+import utopia.vault.nosql.access.single.model.SingleModelAccessById
 
 /**
   * Used for accessing individual api keys in the DB

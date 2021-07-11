@@ -6,7 +6,8 @@ import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.metropolis.model.combined.user.UserWithLinks
 import utopia.metropolis.model.stored.user.{User, UserSettings}
 import utopia.vault.database.Connection
-import utopia.vault.nosql.factory.{Deprecatable, LinkedFactory}
+import utopia.vault.nosql.factory.row.linked.LinkedFactory
+import utopia.vault.nosql.template.Deprecatable
 
 object UserFactory extends LinkedFactory[User, UserSettings] with Deprecatable
 {

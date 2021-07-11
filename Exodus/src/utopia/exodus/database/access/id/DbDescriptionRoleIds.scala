@@ -1,7 +1,7 @@
 package utopia.exodus.database.access.id
 
 import utopia.exodus.database.factory.description.DescriptionRoleFactory
-import utopia.vault.nosql.access.ManyIntIdAccess
+import utopia.vault.nosql.access.many.id.ManyIntIdAccess
 
 /**
   * Used for accessing description role ids

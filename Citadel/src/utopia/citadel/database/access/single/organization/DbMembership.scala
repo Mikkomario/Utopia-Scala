@@ -7,7 +7,8 @@ import utopia.citadel.database.model.organization.{MemberRoleModel, MembershipMo
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.{SingleIdModelAccess, SingleModelAccess}
+import utopia.vault.nosql.access.single.model.SingleModelAccess
+import utopia.vault.nosql.access.single.model.distinct.SingleIdModelAccess
 import utopia.vault.sql.{Exists, Select, SelectDistinct, Where}
 import utopia.vault.sql.SqlExtensions._
 

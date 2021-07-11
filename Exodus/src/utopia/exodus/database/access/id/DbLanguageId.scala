@@ -3,7 +3,7 @@ package utopia.exodus.database.access.id
 import utopia.exodus.database.factory.language.LanguageFactory
 import utopia.exodus.database.model.language.LanguageModel
 import utopia.flow.datastructure.immutable.Value
-import utopia.vault.nosql.access.{SingleIdAccess, UniqueIdAccess}
+import utopia.vault.nosql.access.single.id.{SingleIdAccess, UniqueIdAccess}
 
 /**
   * Used for accessing individual language ids

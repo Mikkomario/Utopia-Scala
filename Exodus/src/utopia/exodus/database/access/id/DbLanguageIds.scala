@@ -2,7 +2,7 @@ package utopia.exodus.database.access.id
 
 import utopia.exodus.database.factory.language.LanguageFactory
 import utopia.flow.datastructure.immutable.Value
-import utopia.vault.nosql.access.ManyIdAccess
+import utopia.vault.nosql.access.many.id.ManyIdAccess
 
 /**
   * An access point to multiple language ids at once

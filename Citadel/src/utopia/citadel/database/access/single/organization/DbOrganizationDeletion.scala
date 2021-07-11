@@ -4,7 +4,8 @@ import utopia.citadel.database.factory.organization.{DeletionFactory, DeletionWi
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.organization.Deletion
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.{SingleIdModelAccess, SingleRowModelAccess}
+import utopia.vault.nosql.access.single.model.SingleRowModelAccess
+import utopia.vault.nosql.access.single.model.distinct.SingleIdModelAccess
 
 /**
   * An access point to individual organization deletions

@@ -8,7 +8,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.model.template.DataInserter
-import utopia.vault.nosql.factory.Deprecatable
+import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant

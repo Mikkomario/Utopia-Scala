@@ -8,7 +8,8 @@ import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.time.Now
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.model.enumeration.ComparisonOperator.Larger
-import utopia.vault.nosql.factory.{Deprecatable, FromValidatedRowModelFactory}
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
+import utopia.vault.nosql.template.Deprecatable
 
 /**
   * Used for reading user session data from the DB

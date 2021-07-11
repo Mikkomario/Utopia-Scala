@@ -4,7 +4,8 @@ import utopia.exodus.database.{ExodusTables, Tables}
 import utopia.exodus.model.partial.DeviceKeyData
 import utopia.exodus.model.stored.DeviceKey
 import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.vault.nosql.factory.{Deprecatable, FromValidatedRowModelFactory}
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
+import utopia.vault.nosql.template.Deprecatable
 
 /**
   * Used for reading device key data from the database

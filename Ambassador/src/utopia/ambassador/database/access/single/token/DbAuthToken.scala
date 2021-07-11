@@ -2,7 +2,7 @@ package utopia.ambassador.database.access.single.token
 
 import utopia.ambassador.database.factory.token.AuthTokenFactory
 import utopia.ambassador.model.stored.token.AuthToken
-import utopia.vault.nosql.access.SingleRowModelAccess
+import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 
 /**
   * Used for accessing individual authentication tokens

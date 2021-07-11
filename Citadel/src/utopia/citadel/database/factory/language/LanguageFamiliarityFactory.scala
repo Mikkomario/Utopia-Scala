@@ -4,7 +4,7 @@ import utopia.citadel.database.Tables
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueUnwraps._
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
-import utopia.vault.nosql.factory.FromValidatedRowModelFactory
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
   * Used for reading language familiarity data from the DB

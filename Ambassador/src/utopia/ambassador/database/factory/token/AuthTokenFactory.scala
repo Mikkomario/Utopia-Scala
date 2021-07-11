@@ -6,7 +6,9 @@ import utopia.ambassador.model.partial.token.AuthTokenData
 import utopia.ambassador.model.stored.token.AuthToken
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueUnwraps._
-import utopia.vault.nosql.factory.{Deprecatable, FromRowFactoryWithTimestamps, FromValidatedRowModelFactory}
+import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
+import utopia.vault.nosql.template.Deprecatable
 
 /**
   * Used for reading authentication tokens from the DB

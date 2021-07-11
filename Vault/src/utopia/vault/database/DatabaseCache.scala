@@ -4,7 +4,7 @@ import utopia.flow.caching.multi.{Cache, CacheLike, ExpiringCache, TryCache}
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.vault.nosql.access.SingleModelAccess
+import utopia.vault.nosql.access.single.model.SingleModelAccess
 import utopia.vault.sql.Condition
 
 import scala.concurrent.ExecutionContext

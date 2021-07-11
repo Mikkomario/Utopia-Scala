@@ -4,7 +4,7 @@ import utopia.exodus.database.factory.user.SessionFactory
 import utopia.exodus.database.model.user.SessionModel
 import utopia.exodus.model.stored.UserSession
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.nosql.access.many.model.ManyModelAccess
 
 /**
   * Used for accessing multiple user sessions at once

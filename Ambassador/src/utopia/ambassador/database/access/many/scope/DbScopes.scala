@@ -6,7 +6,7 @@ import utopia.ambassador.database.model.token.TokenScopeLinkModel
 import utopia.ambassador.model.combined.scope.TaskScope
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyRowModelAccess
+import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.sql.{Select, Where}
 
 /**

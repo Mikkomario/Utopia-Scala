@@ -7,7 +7,8 @@ import utopia.exodus.model.stored.DeviceKey
 import utopia.exodus.util.UuidGenerator
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.{SingleIdModelAccess, SingleRowModelAccess, UniqueModelAccess}
+import utopia.vault.nosql.access.single.model.SingleRowModelAccess
+import utopia.vault.nosql.access.single.model.distinct.{SingleIdModelAccess, UniqueModelAccess}
 
 /**
   * Used for accessing individual device keys in DB

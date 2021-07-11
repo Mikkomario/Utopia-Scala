@@ -6,7 +6,7 @@ import utopia.flow.datastructure.immutable
 import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.generic.ValueUnwraps._
 import utopia.metropolis.model.stored.RoleRight
-import utopia.vault.nosql.factory.FromValidatedRowModelFactory
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 object RoleRightFactory extends FromValidatedRowModelFactory[RoleRight]
 {

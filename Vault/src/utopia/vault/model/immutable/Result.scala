@@ -2,7 +2,7 @@ package utopia.vault.model.immutable
 
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.datastructure.immutable.Value
-import utopia.vault.nosql.factory.FromRowFactory
+import utopia.vault.nosql.factory.row.FromRowFactory
 
 object Result
 {

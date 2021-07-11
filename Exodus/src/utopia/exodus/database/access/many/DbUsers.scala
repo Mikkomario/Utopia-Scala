@@ -10,7 +10,7 @@ import utopia.metropolis.model.partial.user.{UserLanguageData, UserSettingsData}
 import utopia.metropolis.model.post.NewUser
 import utopia.metropolis.model.stored.user.User
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.sql.SqlExtensions._
 
 import scala.util.{Failure, Success, Try}

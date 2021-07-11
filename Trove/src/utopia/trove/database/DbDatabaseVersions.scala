@@ -5,7 +5,7 @@ import utopia.trove.model.partial.DatabaseVersionData
 import utopia.trove.model.stored.DatabaseVersion
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Table
-import utopia.vault.nosql.access.ManyRowModelAccess
+import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 
 /**
   * Used for accessing multiple database versions at a time

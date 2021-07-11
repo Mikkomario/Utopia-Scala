@@ -9,7 +9,7 @@ import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
 import utopia.vault.model.immutable.Storable
-import utopia.vault.nosql.access.{ManyModelAccess, ManyRowModelAccess}
+import utopia.vault.nosql.access.many.model.{ManyModelAccess, ManyRowModelAccess}
 import utopia.vault.sql.Condition
 import utopia.vault.sql.SqlExtensions._
 

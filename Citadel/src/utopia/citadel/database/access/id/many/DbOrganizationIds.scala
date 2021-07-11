@@ -2,7 +2,7 @@ package utopia.citadel.database.access.id.many
 
 import utopia.citadel.database.model.organization.OrganizationModel
 import utopia.flow.datastructure.immutable.Value
-import utopia.vault.nosql.access.ManyIdAccess
+import utopia.vault.nosql.access.many.id.ManyIdAccess
 
 /**
   * Used for accessing multiple organization ids at a time

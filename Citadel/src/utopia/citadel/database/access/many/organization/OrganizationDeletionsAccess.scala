@@ -7,7 +7,7 @@ import utopia.metropolis.model.combined.organization.DeletionWithCancellations
 import utopia.metropolis.model.partial.organization.DeletionCancelData
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.Smaller
-import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.sql.{Delete, Where}
 
 import java.time.Instant

@@ -3,7 +3,8 @@ package utopia.citadel.database.factory.organization
 import utopia.citadel.database.model.organization.MemberRoleModel
 import utopia.metropolis.model.combined.organization.MembershipWithRoles
 import utopia.vault.model.immutable.Result
-import utopia.vault.nosql.factory.{Deprecatable, FromResultFactory}
+import utopia.vault.nosql.factory.FromResultFactory
+import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.sql.JoinType
 import utopia.vault.util.ErrorHandling
 

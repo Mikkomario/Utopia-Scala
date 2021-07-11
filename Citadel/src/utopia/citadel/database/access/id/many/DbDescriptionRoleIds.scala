@@ -1,7 +1,7 @@
 package utopia.citadel.database.access.id.many
 
 import utopia.citadel.database.factory.description.DescriptionRoleFactory
-import utopia.vault.nosql.access.ManyIntIdAccess
+import utopia.vault.nosql.access.many.id.ManyIntIdAccess
 
 /**
   * Used for accessing description role ids

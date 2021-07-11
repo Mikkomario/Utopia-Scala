@@ -9,7 +9,7 @@ import utopia.vault.sql.{Condition, Delete, Exists, Where}
  * @author Mikko Hilpinen
  * @since 5.10.2019, v1.3.1+
  */
-@deprecated("Replaced with utopia.vault.nosql.access.FilterableAccess", "v1.4")
+@deprecated("Replaced with utopia.vault.nosql.access.template.FilterableAccess", "v1.4")
 trait ConditionalAccess[+A]
 {
 	// ABSTRACT	------------------

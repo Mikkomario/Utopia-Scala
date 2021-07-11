@@ -11,7 +11,7 @@ import utopia.vault.sql.{Condition, ConditionElement}
  * @tparam I Type of used index
  * @tparam A Type of read model
  */
-@deprecated("Replaced with utopia.vault.nosql.access.ManyModelAccess", "v1.4")
+@deprecated("Replaced with utopia.vault.nosql.access.many.model.ManyModelAccess", "v1.4")
 trait ManyAccess[-I, +A] extends Access[I, A]
 {
 	// COMPUTED	-----------------------

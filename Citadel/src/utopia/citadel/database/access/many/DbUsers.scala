@@ -5,7 +5,7 @@ import utopia.citadel.database.model.user.UserSettingsModel
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.user.User
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.sql.SqlExtensions._
 
 /**

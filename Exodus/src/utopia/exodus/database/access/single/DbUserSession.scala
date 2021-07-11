@@ -10,7 +10,8 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.{SingleModelAccess, UniqueModelAccess}
+import utopia.vault.nosql.access.single.model.SingleModelAccess
+import utopia.vault.nosql.access.single.model.distinct.UniqueModelAccess
 
 /**
   * Used for accessing individual user sessions in DB

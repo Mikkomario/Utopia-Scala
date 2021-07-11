@@ -5,7 +5,7 @@ import utopia.flow.datastructure.template.{Model, Property}
 import utopia.metropolis.model.error.NoDataFoundException
 import utopia.metropolis.model.partial.organization.InvitationData
 import utopia.metropolis.model.stored.organization.Invitation
-import utopia.vault.nosql.factory.FromRowModelFactory
+import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 
 import scala.util.{Failure, Success}
 

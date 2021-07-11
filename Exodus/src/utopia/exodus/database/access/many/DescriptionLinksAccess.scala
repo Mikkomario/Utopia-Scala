@@ -1,7 +1,6 @@
 package utopia.exodus.database.access.many
 
 import java.time.Instant
-
 import utopia.exodus.database.factory.description.DescriptionLinkFactory
 import utopia.exodus.database.model.description.{DescriptionLinkModelFactory, DescriptionModel}
 import utopia.flow.generic.ValueConversions._
@@ -10,7 +9,7 @@ import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
 import utopia.vault.model.immutable.Storable
-import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.sql.SqlExtensions._
 
 /**

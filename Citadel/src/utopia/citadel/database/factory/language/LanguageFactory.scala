@@ -3,7 +3,7 @@ package utopia.citadel.database.factory.language
 import utopia.citadel.database.Tables
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.metropolis.model.stored.language.Language
-import utopia.vault.nosql.factory.FromValidatedRowModelFactory
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
   * A factory used for reading language data from the database

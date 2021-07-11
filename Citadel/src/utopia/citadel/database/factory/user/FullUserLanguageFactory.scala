@@ -3,7 +3,7 @@ package utopia.citadel.database.factory.user
 import utopia.citadel.database.factory.language.{LanguageFactory, LanguageFamiliarityFactory}
 import utopia.metropolis.model.combined.user.FullUserLanguage
 import utopia.vault.model.immutable.Row
-import utopia.vault.nosql.factory.FromRowFactory
+import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.sql.JoinType.Inner
 
 /**

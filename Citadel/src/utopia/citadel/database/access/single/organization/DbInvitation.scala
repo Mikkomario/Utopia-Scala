@@ -8,7 +8,8 @@ import utopia.metropolis.model.partial.organization.InvitationResponseData
 import utopia.metropolis.model.post.NewInvitationResponse
 import utopia.metropolis.model.stored.organization.{Invitation, InvitationResponse}
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.{SingleIdModelAccess, SingleModelAccess, UniqueModelAccess}
+import utopia.vault.nosql.access.single.model.SingleModelAccess
+import utopia.vault.nosql.access.single.model.distinct.{SingleIdModelAccess, UniqueModelAccess}
 
 /**
   * Used for accessing individual invitations

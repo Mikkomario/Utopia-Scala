@@ -5,7 +5,8 @@ import utopia.citadel.database.model.user.UserSettingsModel
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.stored.user.UserSettings
-import utopia.vault.nosql.factory.{Deprecatable, FromValidatedRowModelFactory}
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
+import utopia.vault.nosql.template.Deprecatable
 
 object UserSettingsFactory extends FromValidatedRowModelFactory[UserSettings] with Deprecatable
 {

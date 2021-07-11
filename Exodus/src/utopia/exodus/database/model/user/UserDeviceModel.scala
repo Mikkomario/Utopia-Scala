@@ -6,7 +6,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
-import utopia.vault.nosql.factory.Deprecatable
+import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.sql.{Condition, Exists}
 
 // TODO: Once there exists a factory object for this class, move deprecatable there

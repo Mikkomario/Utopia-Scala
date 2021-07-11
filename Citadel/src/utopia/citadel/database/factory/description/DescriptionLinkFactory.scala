@@ -1,13 +1,13 @@
 package utopia.citadel.database.factory.description
 
 import java.time.Instant
-
 import utopia.citadel.database.model.description.{DescriptionLinkModel, DescriptionLinkModelFactory}
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.metropolis.model.partial.description.DescriptionLinkData
 import utopia.metropolis.model.stored.description.{Description, DescriptionLink}
 import utopia.vault.model.immutable.{Storable, Table}
-import utopia.vault.nosql.factory.{Deprecatable, LinkedFactory}
+import utopia.vault.nosql.factory.row.linked.LinkedFactory
+import utopia.vault.nosql.template.Deprecatable
 
 import scala.util.{Success, Try}
 

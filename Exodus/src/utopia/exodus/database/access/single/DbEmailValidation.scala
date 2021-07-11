@@ -10,7 +10,8 @@ import utopia.exodus.model.stored.EmailValidation
 import utopia.exodus.util.EmailValidator
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.{SingleIdModelAccess, SingleModelAccess}
+import utopia.vault.nosql.access.single.model.SingleModelAccess
+import utopia.vault.nosql.access.single.model.distinct.SingleIdModelAccess
 import utopia.vault.sql.{Count, Where}
 
 import scala.util.{Failure, Success}

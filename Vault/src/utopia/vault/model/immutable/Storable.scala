@@ -9,7 +9,8 @@ import utopia.vault.database.{Connection, DBException}
 import utopia.vault.model.enumeration.BasicCombineOperator.And
 import utopia.vault.model.enumeration.ComparisonOperator.Equal
 import utopia.vault.model.enumeration.{BasicCombineOperator, ComparisonOperator}
-import utopia.vault.nosql.factory.{FromRowFactory, FromRowModelFactory}
+import utopia.vault.nosql.factory.row.FromRowFactory
+import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 import utopia.vault.sql.{Condition, Delete, Insert, SqlSegment, SqlTarget, Update, Where}
 
 object Storable

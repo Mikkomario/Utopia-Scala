@@ -6,7 +6,7 @@ import utopia.flow.time.Now
 import utopia.metropolis.model.stored.organization.Invitation
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.Larger
-import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.sql.{JoinType, Select, Where}
 
 /**

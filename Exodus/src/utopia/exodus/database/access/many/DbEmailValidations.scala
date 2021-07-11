@@ -6,7 +6,7 @@ import utopia.exodus.database.factory.user.EmailValidationFactory
 import utopia.exodus.model.stored.EmailValidation
 import utopia.exodus.util.EmailValidator
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.nosql.access.many.model.ManyModelAccess
 
 import scala.util.{Failure, Success}
 

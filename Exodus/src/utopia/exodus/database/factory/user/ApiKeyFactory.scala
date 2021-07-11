@@ -5,7 +5,7 @@ import utopia.exodus.model.partial.ApiKeyData
 import utopia.exodus.model.stored.ApiKey
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.vault.nosql.factory.FromValidatedRowModelFactory
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
   * Used for accessing DB data concerning registered api keys

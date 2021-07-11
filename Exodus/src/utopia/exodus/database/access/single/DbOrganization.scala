@@ -9,7 +9,7 @@ import utopia.metropolis.model.combined.organization.DescribedMembership
 import utopia.metropolis.model.partial.organization.{DeletionData, InvitationData, MembershipData}
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyRowModelAccess
+import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.sql.{Select, Where}
 
 import scala.concurrent.duration.{Duration, FiniteDuration}

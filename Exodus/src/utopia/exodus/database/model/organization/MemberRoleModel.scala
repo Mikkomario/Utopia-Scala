@@ -7,7 +7,7 @@ import utopia.flow.time.Now
 import utopia.metropolis.model.enumeration.UserRole
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
-import utopia.vault.nosql.factory.Deprecatable
+import utopia.vault.nosql.template.Deprecatable
 
 @deprecated("Please use the Citadel version instead", "v2.0")
 object MemberRoleModel extends Deprecatable

@@ -8,7 +8,7 @@ import utopia.vault.model.immutable.Table
  * @author Mikko Hilpinen
  * @since 30.7.2019, v1.3+
  */
-@deprecated("Replaced with utopia.vault.nosql.access.IdAccess", "v1.4")
+@deprecated("Replaced with utopia.vault.nosql.access.template.IdAccess", "v1.4")
 trait IdAccess[+I]
 {
 	// ABSTRACT	------------------

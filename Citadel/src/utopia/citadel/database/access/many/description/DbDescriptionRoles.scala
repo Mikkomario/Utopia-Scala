@@ -2,7 +2,7 @@ package utopia.citadel.database.access.many.description
 
 import utopia.citadel.database.factory.description.DescriptionRoleFactory
 import utopia.metropolis.model.stored.description.DescriptionRole
-import utopia.vault.nosql.access.ManyRowModelAccess
+import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 
 /**
   * Used for accessing multiple description roles at a time

@@ -5,7 +5,7 @@ import utopia.exodus.database.factory.organization.RoleRightFactory
 import utopia.exodus.database.model.organization.RoleRightModel
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyIntIdAccess
+import utopia.vault.nosql.access.many.id.ManyIntIdAccess
 import utopia.vault.sql.SqlExtensions._
 
 /**
