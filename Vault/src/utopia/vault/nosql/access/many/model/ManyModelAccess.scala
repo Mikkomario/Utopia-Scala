@@ -7,6 +7,7 @@ import utopia.vault.nosql.access.many.ManyAccess
 import utopia.vault.nosql.access.many.model.ManyModelAccess.FactoryWrapper
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.nosql.factory.FromResultFactory
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.{Condition, OrderBy, Select, Where}
 
 object ManyModelAccess
@@ -51,8 +52,8 @@ object ManyModelAccess
  * @author Mikko Hilpinen
  * @since 30.1.2020, v1.4
  */
-trait ManyModelAccess[+A] extends ManyAccess[A, ManyModelAccess[A]]
-	with DistinctModelAccess[A, Vector[A], Vector[Value]]
+trait ManyModelAccess[+A] extends ManyAccess[A]
+	with DistinctModelAccess[A, Vector[A], Vector[Value]] with FilterableView[ManyModelAccess[A]]
 {
 	// COMPUTED --------------------------------
 	

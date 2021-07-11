@@ -2,7 +2,7 @@ package utopia.vault.nosql.access.template.model
 
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
-import utopia.vault.sql.{Exists, OrderBy}
+import utopia.vault.sql.OrderBy
 
 import scala.language.implicitConversions
 
@@ -36,21 +36,6 @@ trait DistinctReadModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 	 * @return The unique item accessed through this access point. None if no item was found.
 	 */
 	def pull(implicit connection: Connection) = read(globalCondition, defaultOrdering)
-	
-	/**
-	 * @param connection DB Connection (implicit)
-	 * @return Whether there exists an item accessible from this access point
-	 */
-	def nonEmpty(implicit connection: Connection) = globalCondition match
-	{
-		case Some(condition) => Exists(target, condition)
-		case None => Exists.any(target)
-	}
-	/**
-	 * @param connection DB Connection (implicit)
-	 * @return Whether there doesn't exist a single row accessible from this access point
-	 */
-	def isEmpty(implicit connection: Connection) = !nonEmpty
 	
 	/**
 	 * Reads all accessible values of a column

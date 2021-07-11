@@ -2,16 +2,16 @@ package utopia.vault.nosql.access.single.model
 
 import utopia.flow.datastructure.immutable.Value
 import utopia.vault.nosql.access.single.model.distinct.SingleIdModelAccess
-import utopia.vault.nosql.access.template.UnconditionalAccess
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.nosql.template.Indexed
+import utopia.vault.nosql.view.UnconditionalView
 
 /**
  * Used as a top-level accessor that provides access to individual models by searching with their ids
  * @author Mikko Hilpinen
  * @since 30.1.2020, v1.4
  */
-trait SingleModelAccessById[+A, -ID] extends SingleModelAccess[A] with UnconditionalAccess[Option[A]] with Indexed
+trait SingleModelAccessById[+A, -ID] extends SingleModelAccess[A] with UnconditionalView with Indexed
 {
 	// ABSTRACT	-----------------------
 	

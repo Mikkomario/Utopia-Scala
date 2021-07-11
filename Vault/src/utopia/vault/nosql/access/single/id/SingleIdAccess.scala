@@ -4,6 +4,7 @@ import utopia.flow.datastructure.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.SingleAccess
 import utopia.vault.nosql.access.template.IdAccess
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.{Condition, Limit, OrderBy, Select, Where}
 
 /**
@@ -11,7 +12,8 @@ import utopia.vault.sql.{Condition, Limit, OrderBy, Select, Where}
   * @author Mikko Hilpinen
   * @since 30.1.2020, v1.4
   */
-trait SingleIdAccess[+ID] extends IdAccess[ID, Option[ID]] with SingleAccess[ID, SingleIdAccess[ID]]
+trait SingleIdAccess[+ID]
+	extends IdAccess[ID, Option[ID]] with SingleAccess[ID] with FilterableView[SingleIdAccess[ID]]
 {
 	// COMPUTED	-------------------------------
 	

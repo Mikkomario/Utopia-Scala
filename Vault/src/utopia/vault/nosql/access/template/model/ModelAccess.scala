@@ -3,8 +3,8 @@ package utopia.vault.nosql.access.template.model
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 import utopia.vault.nosql.access.template.Access
-import utopia.vault.nosql.factory.FromResultFactory
-import utopia.vault.sql.{Condition, Delete, OrderBy, Where}
+import utopia.vault.nosql.view.FactoryView
+import utopia.vault.sql.{Condition, OrderBy}
 
 /**
   * Common trait for access points that return parsed model data
@@ -14,14 +14,9 @@ import utopia.vault.sql.{Condition, Delete, OrderBy, Where}
   * @tparam A The format in which model data is returned (E.g. a list of models)
   * @tparam V Format in which column values are returned (E.g. A single value or a vector of values)
   */
-trait ModelAccess[+M, +A, +V] extends Access[A]
+trait ModelAccess[+M, +A, +V] extends Access[A] with FactoryView[M]
 {
 	// ABSTRACT	-------------------------
-	
-	/**
-	  * @return The factory used for parsing accessed data
-	  */
-	def factory: FromResultFactory[M]
 	
 	/**
 	  * Reads the value / values of an individual column
@@ -35,45 +30,7 @@ trait ModelAccess[+M, +A, +V] extends Access[A]
 	                         order: Option[OrderBy] = None)(implicit connection: Connection): V
 	
 	
-	// IMPLEMENTED	---------------------
-	
-	final override def table = factory.table
-	
-	
-	// COMPUTED	-------------------------
-	
-	/**
-	  * @return The selection target used
-	  */
-	def target = factory.target
-	
-	
 	// OTHER	-------------------------
-	
-	/**
-	  * Checks whether there exist any results for a query with the specified condition
-	  * @param condition  A search condition (applied in addition to the global condition)
-	  * @param connection DB Connection (implicit)
-	  * @return Whether there exist any results for that search
-	  */
-	def exists(condition: Condition)(implicit connection: Connection) =
-		factory.exists(mergeCondition(condition))
-	
-	/**
-	  * Deletes all items accessible from this access points (only primary table is targeted)
-	  * @param connection Database connection (implicit)
-	  */
-	def delete()(implicit connection: Connection): Unit =
-		connection(Delete(target, table) + globalCondition.map { Where(_) })
-	
-	/**
-	  * Deletes items which are accessible from this access point and fulfill the specified condition
-	  * (only primary table is targeted)
-	  * @param condition  Deletion condition (applied in addition to the global condition)
-	  * @param connection DB Connection (implicit)
-	  */
-	def deleteWhere(condition: Condition)(implicit connection: Connection): Unit =
-		connection(Delete(target, table) + Where(mergeCondition(condition)))
 	
 	/**
 	  * Reads the value of an individual column

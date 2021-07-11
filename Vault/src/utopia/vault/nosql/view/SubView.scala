@@ -1,4 +1,4 @@
-package utopia.vault.nosql.access.template
+package utopia.vault.nosql.view
 
 import utopia.vault.sql.Condition
 
@@ -7,14 +7,15 @@ import utopia.vault.sql.Condition
   * @author Mikko Hilpinen
   * @since 11.7.2021, v1.8
   */
-trait FilteredAccess[+A] extends Access[A]
+trait SubView extends View
 {
 	// ABSTRACT -------------------------------
 	
 	/**
 	  * @return The access point that provides access to unfiltered content
 	  */
-	protected def parent: Access[_]
+	protected def parent: View
+	
 	/**
 	  * @return A condition to apply over the parent access point's condition
 	  */

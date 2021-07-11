@@ -1,7 +1,7 @@
 package utopia.vault.nosql.access.many
 
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.template.FilterableAccess
+import utopia.vault.nosql.access.template.Access
 import utopia.vault.sql.{Condition, OrderBy}
 
 /**
@@ -9,7 +9,7 @@ import utopia.vault.sql.{Condition, OrderBy}
   * @author Mikko Hilpinen
   * @since 30.1.2020, v1.4
   */
-trait ManyAccess[+A, +Repr] extends FilterableAccess[Vector[A], Repr]
+trait ManyAccess[+A] extends Access[Vector[A]]
 {
 	// COMPUTED	--------------------
 	

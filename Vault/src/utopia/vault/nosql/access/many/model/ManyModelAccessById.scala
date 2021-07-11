@@ -1,8 +1,8 @@
 package utopia.vault.nosql.access.many.model
 
 import utopia.flow.datastructure.immutable.Value
-import utopia.vault.nosql.access.template.UnconditionalAccess
 import utopia.vault.nosql.template.Indexed
+import utopia.vault.nosql.view.UnconditionalView
 
 /**
   * A common trait for access points which return multiple models at a time
@@ -10,7 +10,7 @@ import utopia.vault.nosql.template.Indexed
   * @author Mikko Hilpinen
   * @since 3.4.2021, v1.6.1
   */
-trait ManyModelAccessById[+A, -ID] extends ManyModelAccess[A] with UnconditionalAccess[Vector[A]] with Indexed
+trait ManyModelAccessById[+A, -ID] extends ManyModelAccess[A] with UnconditionalView with Indexed
 {
 	// ABSTRACT	-----------------------
 	

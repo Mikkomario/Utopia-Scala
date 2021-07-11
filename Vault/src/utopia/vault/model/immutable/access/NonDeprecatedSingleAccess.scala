@@ -5,5 +5,5 @@ package utopia.vault.model.immutable.access
  * @author Mikko Hilpinen
  * @since 11.1.2020, v1.4
  */
-@deprecated("Replaced with utopia.vault.nosql.access.template.NonDeprecatedAccess", "v1.4")
+@deprecated("Replaced with utopia.vault.nosql.access.template.model.NonDeprecatedAccess", "v1.4")
 trait NonDeprecatedSingleAccess[+A] extends ConditionalSingleAccess[A] with NonDeprecatedAccess[A]

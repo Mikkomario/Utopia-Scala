@@ -8,6 +8,7 @@ import utopia.vault.nosql.access.single.model.SingleModelAccess.FactoryWrapper
 import utopia.vault.nosql.access.template.model.ModelAccess
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.nosql.factory.row.FromRowFactory
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.{Condition, Limit, OrderBy, Select, Where}
 
 object SingleModelAccess
@@ -46,7 +47,8 @@ object SingleModelAccess
  * @author Mikko Hilpinen
  * @since 30.1.2020, v1.4
  */
-trait SingleModelAccess[+A] extends SingleAccess[A, SingleModelAccess[A]] with ModelAccess[A, Option[A], Value]
+trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A], Value]
+	with FilterableView[SingleModelAccess[A]]
 {
 	// IMPLEMENTED  -------------------------------
 	

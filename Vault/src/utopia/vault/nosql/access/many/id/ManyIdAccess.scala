@@ -5,6 +5,7 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.ManyAccess
 import utopia.vault.nosql.access.template.IdAccess
 import utopia.vault.nosql.factory.FromResultFactory
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.{Condition, OrderBy, Select, Where}
 
 /**
@@ -12,7 +13,7 @@ import utopia.vault.sql.{Condition, OrderBy, Select, Where}
  * @author Mikko Hilpinen
  * @since 30.1.2020, v1.4
  */
-trait ManyIdAccess[+ID] extends IdAccess[ID, Vector[ID]] with ManyAccess[ID, ManyIdAccess[ID]]
+trait ManyIdAccess[+ID] extends IdAccess[ID, Vector[ID]] with ManyAccess[ID] with FilterableView[ManyIdAccess[ID]]
 {
 	// COMPUTED ---------------------------
 	

@@ -1,22 +1,20 @@
-package utopia.vault.nosql.access.template.model
+package utopia.vault.nosql.view
 
 import utopia.vault.database.Connection
 import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.sql.Condition
 
 /**
-  * An access point for models that can be constructed from single row's data
+  * A common trait for views that utilize a FromRowFactory
   * @author Mikko Hilpinen
-  * @since 16.5.2020, v1.6
-  * @tparam M Type of model returned
-  * @tparam A Format in which the model/models are returned (Eg. option or vector)
+  * @since 11.7.2021, v1.8
+  * @tparam A Type of items/models returned by the factory
   */
-@deprecated("Replaced with RowFactoryView", "v1.8")
-trait RowModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
+trait RowFactoryView[+A] extends FactoryView[A]
 {
 	// ABSTRACT	-------------------------
 	
-	override def factory: FromRowFactory[M]
+	override def factory: FromRowFactory[A]
 	
 	
 	// OTHER	-------------------------
@@ -27,7 +25,7 @@ trait RowModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 	  * @param connection DB Connection (implicit)
 	  * @tparam U Arbitrary result type
 	  */
-	def foreach[U](f: M => U)(implicit connection: Connection) = factory.foreachWhere(globalCondition)(f)
+	def foreach[U](f: A => U)(implicit connection: Connection) = factory.foreachWhere(globalCondition)(f)
 	
 	/**
 	  * Performs an operation over a subset of items accessible from this accessor
@@ -36,6 +34,6 @@ trait RowModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 	  * @param connection          DB Connection (implicit)
 	  * @tparam U Arbitrary result type
 	  */
-	def foreachWhere[U](additionalCondition: Condition)(f: M => U)(implicit connection: Connection) =
+	def foreachWhere[U](additionalCondition: Condition)(f: A => U)(implicit connection: Connection) =
 		factory.foreachWhere(mergeCondition(additionalCondition))(f)
 }

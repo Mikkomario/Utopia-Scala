@@ -4,6 +4,7 @@
 ### Breaking Changes
 - Refactored package structure in nosql package (access & factory packages)
 - **DistinctModelAccess** now requires computed property: `defaultOrdering: Option[OrderBy]`
+- **SingleAccess** and **ManyAccess** no longer extends **FilterableAccess**
 - **MultiLinkedFactory** trait now requires implementation of `.isAlwaysLinked: Boolean` 
   instead of `.joinType`
 - **MultiLinkedFactory** now expects a **Vector** and not just a **Seq** in `.apply(...)`
@@ -12,10 +13,15 @@
 ### Deprecations
 - Deprecated **Extensions** object in utopia.vault.sql package. 
   Identical **SqlExtensions** object should be used instead.
+- Deprecated **FilterableAccess**, **UnconditionalAccess**, **NonDeprecatedAccess** and **RowModelAccess** 
+  in favor of new **View**-based traits
 ### New Features
 - Added **ClearUnreferencedData** class for easier deletion of rows that are not referenced by other tables
 - Added combining factory traits (based on linked factories) that make linked factory implementation 
   even more streamlined in cases where two factory implementations are combined
+- Added **View** traits that can be extended by various **Access** classes or classes that function like 
+  **Access** points without providing read access to data. The new **View** classes make it easier to 
+  apply additional traits to **Access** classes because they don't take that many type parameters (1 at most)
 - Added **DistincReadModelAccess** trait that provides access to .pull -methods without requiring 
   .put method support
 - Added **LatestModelAccess** trait that works like **UniqueModelAccess**, except that it targets 

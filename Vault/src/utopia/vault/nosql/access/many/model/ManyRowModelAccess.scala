@@ -1,8 +1,7 @@
 package utopia.vault.nosql.access.many.model
 
-import utopia.flow.datastructure.immutable.Value
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.template.model.RowModelAccess
+import utopia.vault.nosql.view.RowFactoryView
 import utopia.vault.sql.{Count, Where}
 
 /**
@@ -10,7 +9,7 @@ import utopia.vault.sql.{Count, Where}
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1.6
   */
-trait ManyRowModelAccess[+A] extends RowModelAccess[A, Vector[A], Vector[Value]] with ManyModelAccess[A]
+trait ManyRowModelAccess[+A] extends ManyModelAccess[A] with RowFactoryView[A]
 {
 	// COMPUTED -----------------------------
 	
