@@ -7,7 +7,7 @@
 -- Lists services that use OAuth, like Google and Zoom
 CREATE TABLE oauth_service(
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    name_en VARCHAR(64) NOT NULL,
+    name VARCHAR(64) NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;

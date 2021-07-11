@@ -76,7 +76,7 @@ class ApiServlet extends HttpServlet
 			UsersNode.forApiKey, DevicesNode, OrganizationsNode, QuestSessionsNode,
 			EmailsNode.forApiKey
 		)),
-		Some(Path("exodus", "api")), r => AuthorizedContext(r) { _.printStackTrace() })
+		Some(Path("exodus", "api")), r => AuthorizedContext(r))
 	
 	
 	// IMPLEMENTED	----------------------------

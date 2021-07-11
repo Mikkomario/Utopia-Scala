@@ -6,6 +6,8 @@
   authentication-related features in this module. This may cause problems in the 
   dependent projects. Most of these problems can be resolved by switching to the appropriate 
   **Citadel** classes, however.
+- **AuthorizedContext** is now a trait and not a class. Also, removed the `errorHandler` -parameter from the 
+  object constructor (apply); The class now uses `ExodusContext.handleError(...)` instead.
 - Moved most of the rest node classes from rest.resource.user to rest.resource.user.me
 - **PublicDescriptionsNode** trait now requires some support for **SimplyDescribed** trait
 - Renamed nested classes and objects in **DbSingleUser**

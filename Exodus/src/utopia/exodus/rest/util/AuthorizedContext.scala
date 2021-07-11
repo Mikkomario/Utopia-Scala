@@ -7,9 +7,12 @@ import utopia.citadel.database.access.id.single.DbUserId
 import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.citadel.database.access.single.DbUser
 import utopia.citadel.database.access.single.organization.DbMembership
-import utopia.exodus.database.access.single.{DbApiKey, DbDeviceKey, DbEmailValidation, DbUserSession}
+import utopia.citadel.util.CitadelContext.connectionPool
+import utopia.citadel.util.CitadelContext._
 import utopia.exodus.database.UserDbExtensions._
+import utopia.exodus.database.access.single.{DbApiKey, DbDeviceKey, DbEmailValidation, DbUserSession}
 import utopia.exodus.model.stored.{ApiKey, DeviceKey, EmailValidation, UserSession}
+import utopia.exodus.util.ExodusContext.handleError
 import utopia.exodus.util.PasswordHash
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.FromModelFactory
@@ -19,11 +22,10 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.nexus.http.{Request, ServerSettings}
-import utopia.nexus.rest.BaseContext
+import utopia.nexus.rest.Context
 import utopia.nexus.result.{Result, ResultParser, UseRawJSON}
 import utopia.vault.database.Connection
 
-import scala.math.Ordering.Double.TotalOrdering
 import scala.util.{Failure, Success, Try}
 
 object AuthorizedContext
@@ -48,33 +50,41 @@ object AuthorizedContext
 	  * @param request Request wrapped by this context
 	  * @param resultParser Parser that determines what server responses should look like. Default =
 	  *                     use simple json bodies and http statuses.
-	  * @param errorHandler A function for handling possible errors thrown during request handling and database
-	  *                     interactions.
 	  * @param serverSettings Applied server settings (implicit)
 	  * @param jsonParser Json parser used for interpreting request json content (implicit)
 	  * @return A new request context
 	  */
-	def apply(request: Request, resultParser: ResultParser = UseRawJSON)(errorHandler: Throwable => Unit)
-			 (implicit serverSettings: ServerSettings, jsonParser: JsonParser) =
-		new AuthorizedContext(request, resultParser)(errorHandler)
+	def apply(request: Request, resultParser: ResultParser = UseRawJSON)
+			 (implicit serverSettings: ServerSettings, jsonParser: JsonParser): AuthorizedContext =
+		new AuthorizedContextImplementation(request, resultParser)
+	
+	
+	// NESTED   ---------------------------
+	
+	private class AuthorizedContextImplementation(override val request: Request,
+	                                              override val resultParser: ResultParser = UseRawJSON)
+	                                             (implicit override val settings: ServerSettings,
+	                                              override val jsonParser: JsonParser)
+		extends AuthorizedContext
+	{
+		override def close() = ()
+	}
 }
 
 /**
   * This context variation checks user authorization (when required)
   * @author Mikko Hilpinen
-  * @since 3.5.2020, v1
-  * @param request Request wrapped by this context
-  * @param resultParser Parser that determines how server responses should look like.
-  *                     Default = simple json bodies and http statuses are used.
-  * @param errorHandler A function for handling possible errors thrown during request handling and database interactions
-  * @param serverSettings Current server settings (implicit)
-  * @param jsonParser A parser used for interpreting json content (implicit)
+  * @since 3.5.2020, v1.0
   */
-class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSON)(errorHandler: Throwable => Unit)
-					   (implicit serverSettings: ServerSettings, jsonParser: JsonParser)
-	extends BaseContext(request, resultParser)
+trait AuthorizedContext extends Context
 {
-	import utopia.citadel.util.CitadelContext._
+	// ABSTRACT ----------------------------
+	
+	/**
+	  * @return The json parser used by this context
+	  */
+	def jsonParser: JsonParser
+	
 	
 	// COMPUTED	----------------------------
 	
@@ -150,7 +160,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 						case None => Result.Failure(Unauthorized, "Invalid email or password")
 					}
 				}.getOrMap { e =>
-					errorHandler(e)
+					handleError(e, "Unexpected failure during request handling")
 					Result.Failure(InternalServerError, e.getMessage)
 				}
 			case None => Result.Failure(Unauthorized, "Please provide a basic auth header with user email and password")
@@ -297,7 +307,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	
 	/**
 	  * Authorizes a request using bearer token authorization
-	  * @param keyTypeName Name used for the key (Eg. 'api key')
+	  * @param keyTypeName Name used for the key (Eg. 'api key') (Used in failure messages)
 	  * @param testKey A function for testing key validity. Accepts the provided token and a database connection.
 	  *                Returns a valid item associated with the key (if present)
 	  * @param f A function that performs the operation when authentication succeeds. Accepts 1) the item associated
@@ -307,7 +317,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 	  *         (if <i>testKey</i> returned None or the token was missing)
 	  */
 	def tokenAuthorized[K](keyTypeName: => String)(testKey: (String, Connection) => Option[K])
-						  (f: (K, Connection) => Result) =
+	                      (f: (K, Connection) => Result) =
 	{
 		// Checks the key from token
 		val result = request.headers.bearerAuthorization match
@@ -321,7 +331,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 						case None => Result.Failure(Unauthorized, s"Invalid or expired $keyTypeName")
 					}
 				}.getOrMap { e =>
-					errorHandler(e)
+					handleError(e, "Unexpected failure during request handling")
 					Result.Failure(InternalServerError, e.getMessage)
 				}
 			case None => Result.Failure(Unauthorized, s"Please provided a bearer auth hearer with a $keyTypeName")
@@ -355,7 +365,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 							case Failure(error) => Result.Failure(Unauthorized, error.getMessage).toResponse(this)
 						}
 					case Failure(error) =>
-						errorHandler(error)
+						handleError(error, "Unexpected failure during request handling")
 						Result.Failure(InternalServerError, error.getMessage).toResponse(this)
 				}
 			case None =>
@@ -379,7 +389,7 @@ class AuthorizedContext(request: Request, resultParser: ResultParser = UseRawJSO
 				// Accepts json, xml and text content types
 				val value = body.contentType.subType.toLowerCase match
 				{
-					case "json" => body.bufferedJson.contents
+					case "json" => body.bufferedJson(jsonParser).contents
 					case "xml" => body.bufferedXml.contents.map[Value] { _.toSimpleModel }
 					case _ =>
 						body.contentType.category match
