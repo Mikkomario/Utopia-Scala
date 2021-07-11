@@ -180,6 +180,12 @@ object DbDescriptions
 		def apply(ids: Set[Int]) = DescriptionsOfMany(ids, factory, linkModelFactory)
 	}
 	
+	/**
+	  * Provides access to multiple items' descriptions
+	  * @param targetIds Ids of the targeted items
+	  * @param factory A description link factory
+	  * @param linkModelFactory A description link model factory
+	  */
 	case class DescriptionsOfMany(targetIds: Set[Int], factory: DescriptionLinkFactory[DescriptionLink],
 	                              linkModelFactory: DescriptionLinkModelFactory[Storable])
 		extends DescriptionLinksForManyAccess
@@ -233,6 +239,12 @@ object DbDescriptions
 		}
 	}
 	
+	/**
+	  * Provides access to all descriptions of a single item
+	  * @param targetId Id of the target item
+	  * @param factory A link factory instance
+	  * @param linkModelFactory A link model factory instance
+	  */
 	case class DescriptionsOfSingle(targetId: Int, factory: DescriptionLinkFactory[DescriptionLink],
 	                                linkModelFactory: DescriptionLinkModelFactory[Storable])
 		extends DescriptionLinksAccess

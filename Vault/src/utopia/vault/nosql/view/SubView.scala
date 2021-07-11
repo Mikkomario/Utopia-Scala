@@ -22,9 +22,17 @@ trait SubView extends View
 	def filterCondition: Condition
 	
 	
+	// COMPUTED -------------------------------
+	
+	/**
+	  * @return (Global) condition used by this access point (always defined)
+	  */
+	def condition = parent.mergeCondition(filterCondition)
+	
+	
 	// IMPLEMENTED  ---------------------------
 	
 	override def table = parent.table
 	
-	override def globalCondition = Some(parent.mergeCondition(filterCondition))
+	override def globalCondition = Some(condition)
 }

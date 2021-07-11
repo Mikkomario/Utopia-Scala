@@ -22,6 +22,7 @@
 - Added **View** traits that can be extended by various **Access** classes or classes that function like 
   **Access** points without providing read access to data. The new **View** classes make it easier to 
   apply additional traits to **Access** classes because they don't take that many type parameters (1 at most)
+- Added **ColumnAccess** that works like **IdAccess**, except that it allows one to access different columns
 - Added **DistincReadModelAccess** trait that provides access to .pull -methods without requiring 
   .put method support
 - Added **LatestModelAccess** trait that works like **UniqueModelAccess**, except that it targets 

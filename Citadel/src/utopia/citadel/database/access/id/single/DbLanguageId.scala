@@ -3,7 +3,7 @@ package utopia.citadel.database.access.id.single
 import utopia.citadel.database.factory.language.LanguageFactory
 import utopia.citadel.database.model.language.LanguageModel
 import utopia.flow.datastructure.immutable.Value
-import utopia.vault.nosql.access.single.id.{SingleIdAccess, UniqueIdAccess}
+import utopia.vault.nosql.access.single.column.{SingleIdAccess, UniqueIdAccess}
 
 /**
   * Used for accessing individual language ids

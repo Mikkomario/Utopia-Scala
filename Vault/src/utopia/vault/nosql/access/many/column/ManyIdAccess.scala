@@ -1,9 +1,9 @@
-package utopia.vault.nosql.access.many.id
+package utopia.vault.nosql.access.many.column
 
 import utopia.flow.datastructure.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.ManyAccess
-import utopia.vault.nosql.access.template.IdAccess
+import utopia.vault.nosql.access.template.column.IdAccess
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.{Condition, OrderBy, Select, Where}

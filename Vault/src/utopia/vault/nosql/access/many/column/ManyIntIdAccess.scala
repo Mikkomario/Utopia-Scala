@@ -1,4 +1,4 @@
-package utopia.vault.nosql.access.many.id
+package utopia.vault.nosql.access.many.column
 
 import utopia.flow.datastructure.immutable.Value
 

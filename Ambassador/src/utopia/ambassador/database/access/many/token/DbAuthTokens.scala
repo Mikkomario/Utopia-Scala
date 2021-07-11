@@ -5,6 +5,7 @@ import utopia.ambassador.database.model.token.{AuthTokenModel, TokenScopeLinkMod
 import utopia.ambassador.model.stored.token.AuthToken
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.{Select, Where}
 
 /**
@@ -38,11 +39,9 @@ object DbAuthTokens extends ManyRowModelAccess[AuthToken]
 	
 	// NESTED   ------------------------------------
 	
-	class DbUserAuthTokens(val userId: Int) extends ManyRowModelAccess[AuthToken]
+	class DbUserAuthTokens(val userId: Int) extends ManyRowModelAccess[AuthToken] with SubView
 	{
 		// COMPUTED --------------------------------
-		
-		private def condition = DbAuthTokens.mergeCondition(model.withUserId(userId))
 		
 		/**
 		  * @param connection Implicit DB Connection
@@ -56,9 +55,12 @@ object DbAuthTokens extends ManyRowModelAccess[AuthToken]
 		
 		// IMPLEMENTED  ----------------------------
 		
-		override def factory = DbAuthTokens.factory
+		override protected def parent = DbAuthTokens
+		
+		override def factory = parent.factory
+		
+		override def filterCondition = model.withUserId(userId).toCondition
 		
 		override protected def defaultOrdering = DbAuthTokens.defaultOrdering
-		override def globalCondition = Some(DbAuthTokens.mergeCondition(model.withUserId(userId)))
 	}
 }
