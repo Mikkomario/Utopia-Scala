@@ -4,8 +4,6 @@
 -- Supports versions v1.0 and above
 --
 
--- TODO: Name all constraints, foreign keys and indices
-
 -- Various languages
 CREATE TABLE `language`
 (
@@ -13,7 +11,7 @@ CREATE TABLE `language`
     iso_code VARCHAR(2) NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    INDEX (iso_code)
+    INDEX l_iso_code_idx (iso_code)
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
@@ -57,11 +55,10 @@ CREATE TABLE user_settings
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deprecated_after DATETIME,
 
-    INDEX (name),
-    INDEX (email),
-    INDEX (deprecated_after),
+    INDEX us_email_idx (email),
+    INDEX us_deprecation_idx (deprecated_after),
 
-    FOREIGN KEY us_u_described_user (user_id)
+    CONSTRAINT us_u_described_user_fk FOREIGN KEY us_u_described_user_idx (user_id)
         REFERENCES `user`(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -75,13 +72,11 @@ CREATE TABLE user_language
     familiarity_id INT NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY ul_u_described_user (user_id)
+    CONSTRAINT ul_u_described_user_fk FOREIGN KEY ul_u_described_user_idx (user_id)
         REFERENCES `user`(id) ON DELETE CASCADE,
-
-    FOREIGN KEY ul_l_known_language (language_id)
+    CONSTRAINT ul_l_known_language_fk FOREIGN KEY ul_l_known_language_idx (language_id)
         REFERENCES `language`(id) ON DELETE CASCADE,
-
-    FOREIGN KEY ul_lf_language_proficiency (familiarity_id)
+    CONSTRAINT ul_lf_language_proficiency_fk FOREIGN KEY ul_lf_language_proficiency_idx (familiarity_id)
         REFERENCES language_familiarity(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -111,13 +106,11 @@ CREATE TABLE description
     author_id INT,
     created TIMESTAMP NOT NULl DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY d_dr_description_purpose (role_id)
+    CONSTRAINT d_dr_description_purpose_fk FOREIGN KEY d_dr_description_purpose_idx (role_id)
         REFERENCES description_role(id) ON DELETE CASCADE,
-
-    FOREIGN KEY d_l_used_language (language_id)
+    CONSTRAINT d_l_used_language_fk FOREIGN KEY d_l_used_language_idx (language_id)
         REFERENCES `language`(id) ON DELETE CASCADE,
-
-    FOREIGN KEY d_u_description_writer (author_id)
+    CONSTRAINT d_u_description_writer_fk FOREIGN KEY d_u_description_writer_idx (author_id)
         REFERENCES `user`(id) ON DELETE SET NULL
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -135,7 +128,6 @@ CREATE TABLE description_role_description
 
     CONSTRAINT drd_dr_described_role_fk FOREIGN KEY drd_dr_described_role_idx (role_id)
         REFERENCES description_role(id) ON DELETE CASCADE,
-
     CONSTRAINT drd_d_description_for_role_fk FOREIGN KEY drd_d_description_for_role_idx (description_id)
         REFERENCES description(id) ON DELETE CASCADE
 
@@ -150,12 +142,11 @@ CREATE TABLE language_description
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deprecated_after DATETIME,
 
-    INDEX (deprecated_after),
+    INDEX ld_deprecation_idx (deprecated_after),
 
-    FOREIGN KEY ld_l_described_language (language_id)
+    CONSTRAINT ld_l_described_language_fk FOREIGN KEY ld_l_described_language_idx (language_id)
         REFERENCES `language`(id) ON DELETE CASCADE,
-
-    FOREIGN KEY ld_d_description_for_language (description_id)
+    CONSTRAINT ld_d_description_for_language_fk FOREIGN KEY ld_d_description_for_language_idx (description_id)
         REFERENCES description(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -169,12 +160,11 @@ CREATE TABLE language_familiarity_description
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deprecated_after DATETIME,
 
-    INDEX (deprecated_after),
+    INDEX lfd_deprecation_idx (deprecated_after),
 
-    FOREIGN KEY lfd_lf_described_language_familiarity (familiarity_id)
+    CONSTRAINT lfd_lf_described_familiarity_fk FOREIGN KEY lfd_lf_described_familiarity_idx (familiarity_id)
         REFERENCES language_familiarity(id) ON DELETE CASCADE,
-
-    FOREIGN KEY lfd_d_description_for_language_familiarity (description_id)
+    CONSTRAINT lfd_d_familiarity_description_fk FOREIGN KEY lfd_d_familiarity_description_idx (description_id)
         REFERENCES description(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -186,7 +176,7 @@ CREATE TABLE organization
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     creator_id INT,
 
-    FOREIGN KEY o_u_organization_founder (creator_id)
+    CONSTRAINT o_u_organization_founder_fk FOREIGN KEY o_u_organization_founder_idx (creator_id)
         REFERENCES `user`(id) ON DELETE SET NULL
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -203,10 +193,9 @@ CREATE TABLE organization_description
     INDEX od_creation_idx (created),
     INDEX od_deprecation_idx (deprecated_after),
 
-    FOREIGN KEY od_o_described_organization (organization_id)
+    CONSTRAINT od_o_described_organization_fk FOREIGN KEY od_o_described_organization_idx (organization_id)
         REFERENCES organization(id) ON DELETE CASCADE,
-
-    FOREIGN KEY od_d_description_for_organization (description_id)
+    CONSTRAINT od_d_organization_description_fk FOREIGN KEY od_d_organization_description_idx (description_id)
         REFERENCES description(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -236,12 +225,11 @@ CREATE TABLE task_description
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deprecated_after DATETIME,
 
-    INDEX (deprecated_after),
+    INDEX td_deprecation_idx (deprecated_after),
 
-    FOREIGN KEY td_t_described_task (task_id)
+    CONSTRAINT td_t_described_task_fk FOREIGN KEY td_t_described_task_idx (task_id)
         REFERENCES task(id) ON DELETE CASCADE,
-
-    FOREIGN KEY td_d_description_for_task (description_id)
+    CONSTRAINT td_d_task_description_fk FOREIGN KEY td_d_task_description_idx (description_id)
         REFERENCES description(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -271,12 +259,11 @@ CREATE TABLE user_role_description
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deprecated_after DATETIME,
 
-    INDEX (deprecated_after),
+    INDEX urd_deprecation_idx (deprecated_after),
 
-    FOREIGN KEY urd_our_described_role (role_id)
+    CONSTRAINT urd_our_described_role_fk FOREIGN KEY urd_our_described_role_idx (role_id)
         REFERENCES organization_user_role(id) ON DELETE CASCADE,
-
-    FOREIGN KEY urd_d_description_for_role (description_id)
+    CONSTRAINT urd_d_role_description_fk FOREIGN KEY urd_d_role_description_idx (description_id)
         REFERENCES description(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -289,10 +276,9 @@ CREATE TABLE user_role_right
     task_id INT NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY urr_our_owner_role (role_id)
+    CONSTRAINT urr_our_owner_role_fk FOREIGN KEY urr_our_owner_role_idx (role_id)
         REFERENCES organization_user_role(id) ON DELETE CASCADE,
-
-    FOREIGN KEY urr_t_right (task_id)
+    CONSTRAINT urr_t_right_fk FOREIGN KEY urr_t_right_idx (task_id)
         REFERENCES task(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -315,13 +301,11 @@ CREATE TABLE organization_membership
     INDEX om_starting_idx (started),
     INDEX om_ending_idx (ended),
 
-    FOREIGN KEY om_o_parent_organization (organization_id)
+    CONSTRAINT om_o_parent_organization_fk FOREIGN KEY om_o_parent_organization_idx (organization_id)
         REFERENCES organization(id) ON DELETE CASCADE,
-
-    FOREIGN KEY om_u_member (user_id)
+    CONSTRAINT om_u_member_fk FOREIGN KEY om_u_member_idx (user_id)
         REFERENCES `user`(id) ON DELETE CASCADE,
-
-    FOREIGN KEY om_u_membership_adder (creator_id)
+    CONSTRAINT om_u_membership_adder_fk FOREIGN KEY om_u_membership_adder_idx (creator_id)
         REFERENCES `user`(id) ON DELETE SET NULL
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -336,15 +320,13 @@ CREATE TABLE organization_member_role
     deprecated_after DATETIME,
     creator_id INT,
 
-    INDEX (deprecated_after),
+    INDEX omr_ending_idx (deprecated_after),
 
-    FOREIGN KEY omr_described_membership (membership_id)
+    CONSTRAINT omr_described_membership_fk FOREIGN KEY omr_described_membership_idx (membership_id)
         REFERENCES organization_membership(id) ON DELETE CASCADE,
-
-    FOREIGN KEY omr_our_member_role (role_id)
+    CONSTRAINT omr_our_member_role_fk FOREIGN KEY omr_our_member_role_idx (role_id)
         REFERENCES organization_user_role(id) ON DELETE CASCADE,
-
-    FOREIGN KEY omr_u_role_adder (creator_id)
+    CONSTRAINT omr_u_role_adder_fk FOREIGN KEY omr_u_role_adder_idx (creator_id)
         REFERENCES `user`(id) ON DELETE SET NULL
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -364,16 +346,13 @@ CREATE TABLE organization_invitation
 
     INDEX oi_active_invitations_idx (expires_in, recipient_email),
 
-    FOREIGN KEY oi_o_target_organization (organization_id)
+    CONSTRAINT oi_o_target_organization_fk FOREIGN KEY oi_o_target_organization_idx (organization_id)
         REFERENCES organization(id) ON DELETE CASCADE,
-
-    FOREIGN KEY oi_u_invited_user (recipient_id)
+    CONSTRAINT oi_u_invited_user_fk FOREIGN KEY oi_u_invited_user_idx (recipient_id)
         REFERENCES `user`(id) ON DELETE CASCADE,
-
-    FOREIGN KEY oi_our_initial_role (starting_role_id)
+    CONSTRAINT oi_our_initial_role_fk FOREIGN KEY oi_our_initial_role_idx (starting_role_id)
         REFERENCES organization_user_role(id) ON DELETE CASCADE,
-
-    FOREIGN KEY oi_u_inviter (creator_id)
+    CONSTRAINT oi_u_inviter_fk FOREIGN KEY oi_u_inviter_idx (creator_id)
         REFERENCES `user`(id) ON DELETE SET NULL
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -388,10 +367,9 @@ CREATE TABLE invitation_response
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     creator_id INT NOT NULL,
 
-    FOREIGN KEY ir_oi_opened_invitation (invitation_id)
+    CONSTRAINT ir_oi_opened_invitation_fk FOREIGN KEY ir_oi_opened_invitation_idx (invitation_id)
         REFERENCES organization_invitation(id) ON DELETE CASCADE,
-
-    FOREIGN KEY ir_u_recipient (creator_id)
+    CONSTRAINT ir_u_recipient_fk FOREIGN KEY ir_u_recipient_idx (creator_id)
         REFERENCES `user`(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -407,12 +385,11 @@ CREATE TABLE organization_deletion
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actualization DATETIME NOT NULL,
 
-    INDEX (actualization),
+    INDEX od_actualization_idx (actualization),
 
-    FOREIGN KEY od_o_deletion_target (organization_id)
+    CONSTRAINT od_o_deletion_target_fk FOREIGN KEY od_o_deletion_target_idx (organization_id)
         REFERENCES organization(id) ON DELETE CASCADE,
-
-    FOREIGN KEY od_u_deletion_proposer (creator_id)
+    CONSTRAINT od_u_deletion_proposer_fk FOREIGN KEY od_u_deletion_proposer_idx (creator_id)
         REFERENCES `user`(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -426,10 +403,9 @@ CREATE TABLE organization_deletion_cancellation
 
     INDEX odc_cancel_time_idx (created),
 
-    FOREIGN KEY odc_od_cancelled_deletion (deletion_id)
+    CONSTRAINT odc_od_cancelled_deletion_fk FOREIGN KEY odc_od_cancelled_deletion_idx (deletion_id)
         REFERENCES organization_deletion(id) ON DELETE CASCADE,
-
-    FOREIGN KEY odc_u_cancel_author (creator_id)
+    CONSTRAINT odc_u_cancel_author_fk FOREIGN KEY odc_u_cancel_author_idx (creator_id)
         REFERENCES `user`(id) ON DELETE SET NULL
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -442,7 +418,7 @@ CREATE TABLE client_device
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     creator_id INT,
 
-    FOREIGN KEY cd_u_first_device_user (creator_id)
+    CONSTRAINT cd_u_first_device_user_fk FOREIGN KEY cd_u_first_device_user_idx (creator_id)
         REFERENCES `user`(id) ON DELETE SET NULL
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -458,10 +434,9 @@ CREATE TABLE client_device_description
 
     INDEX cdd_timeline_idx (deprecated_after, created),
 
-    FOREIGN KEY cdd_cd_described_device (device_id)
+    CONSTRAINT cdd_cd_described_device_fk FOREIGN KEY cdd_cd_described_device_idx (device_id)
         REFERENCES client_device(id) ON DELETE CASCADE,
-
-    FOREIGN KEY cdd_d_description_for_device (description_id)
+    CONSTRAINT cdd_d_device_description_fk FOREIGN KEY cdd_d_device_description_idx (description_id)
         REFERENCES description(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -477,10 +452,9 @@ CREATE TABLE client_device_user
 
     INDEX cdu_timeline_idx (deprecated_after, created),
 
-    FOREIGN KEY cdu_cd_used_client_device (device_id)
+    CONSTRAINT cdu_cd_used_client_device_fk FOREIGN KEY cdu_cd_used_client_device_idx (device_id)
         REFERENCES client_device(id) ON DELETE CASCADE,
-
-    FOREIGN KEY cdu_u_device_user (user_id)
+    CONSTRAINT cdu_u_device_user_fk FOREIGN KEY cdu_u_device_user_idx (user_id)
         REFERENCES `user`(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;

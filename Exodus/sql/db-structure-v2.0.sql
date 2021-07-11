@@ -81,7 +81,7 @@ CREATE TABLE user_authentication
 
     INDEX ua_user_password_idx (hash, user_id),
 
-    FOREIGN KEY ua_u_link_to_owner (user_id)
+    CONSTRAINT ua_u_link_to_owner_fk FOREIGN KEY ua_u_link_to_owner_idx (user_id)
         REFERENCES `user`(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -98,10 +98,10 @@ CREATE TABLE device_authentication_key
 
     INDEX dak_active_key (`key`, deprecated_after),
 
-    FOREIGN KEY dak_u_key_owner (user_id)
+    CONSTRAINT dak_u_key_owner_fk FOREIGN KEY dak_u_key_owner_idx (user_id)
         REFERENCES `user`(id) ON DELETE CASCADE,
 
-    FOREIGN KEY dak_cd_connected_device (device_id)
+    CONSTRAINT dak_cd_connected_device_fk FOREIGN KEY dak_cd_connected_device_idx (device_id)
         REFERENCES client_device(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -121,10 +121,10 @@ CREATE TABLE user_session
 
     INDEX us_active_key (`key`, expires_in, logout_time),
 
-    FOREIGN KEY us_u_session_owner (user_id)
+    CONSTRAINT us_u_session_owner_fk FOREIGN KEY us_u_session_owner_idx (user_id)
         REFERENCES `user`(id) ON DELETE CASCADE,
 
-    FOREIGN KEY us_cd_session_device (device_id)
+    CONSTRAINT us_cd_session_device_fk FOREIGN KEY us_cd_session_device_idx (device_id)
         REFERENCES client_device(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;

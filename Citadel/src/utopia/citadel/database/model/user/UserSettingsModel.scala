@@ -43,13 +43,12 @@ object UserSettingsModel extends DeprecatableAfter[UserSettingsModel]
 	  * @return A model with only user id set
 	  */
 	def withUserId(userId: Int) = apply(userId = Some(userId))
-	
 	/**
 	  * @param userName User name
 	  * @return a model with only user name set
 	  */
+	@deprecated("Searches based on user name are discouraged and no longer indexed", "v1.0")
 	def withName(userName: String) = apply(name = Some(userName))
-	
 	/**
 	  * @param email Email
 	  * @return A model with only email set

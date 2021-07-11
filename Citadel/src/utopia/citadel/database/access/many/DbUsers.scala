@@ -45,11 +45,11 @@ object DbUsers extends ManyModelAccess[User]
 	  * @param connection DB Connection (implicit)
 	  * @return Whether specified user name is currently in use
 	  */
+	@deprecated("Searches based on user name are discouraged and no longer indexed", "v1.0")
 	def existsUserWithName(userName: String)(implicit connection: Connection) =
 	{
 		settingsFactory.exists(settingsModel.withName(userName).toCondition && settingsFactory.nonDeprecatedCondition)
 	}
-	
 	/**
 	  * Checks whether a user email is currently in use
 	  * @param email Tested user email
