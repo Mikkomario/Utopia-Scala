@@ -31,6 +31,7 @@
 - Added **SqlExtensions** object, which is a copy of the **Extensions** object and will replace 
   the latter in a future release
 - **StoredModelConvertible** now adds the id constant to the beginning of the resulting model
+- **DataInserted** trait now extends **Indexed**, providing the `.index` property
 
 ## v1.7.1 - 12.5.2021
 This update focuses on utility features around SQL queries, especially on iterative, 

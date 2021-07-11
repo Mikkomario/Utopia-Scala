@@ -55,7 +55,8 @@ trait ModelAccess[+M, +A, +V] extends Access[A]
 	  * @param connection DB Connection (implicit)
 	  * @return Whether there exist any results for that search
 	  */
-	def exists(condition: Condition)(implicit connection: Connection) = factory.exists(mergeCondition(condition))
+	def exists(condition: Condition)(implicit connection: Connection) =
+		factory.exists(mergeCondition(condition))
 	
 	/**
 	  * Deletes all items accessible from this access points (only primary table is targeted)

@@ -2,7 +2,8 @@ package utopia.vault.model.template
 
 import utopia.flow.datastructure.immutable.Value
 import utopia.vault.database.Connection
-import utopia.vault.model.immutable.{Storable, Table}
+import utopia.vault.model.immutable.Storable
+import utopia.vault.nosql.access.Indexed
 import utopia.vault.sql.Insert
 
 /**
@@ -13,14 +14,9 @@ import utopia.vault.sql.Insert
  * @tparam Complete Class that represents an instance that hase been stored to DB
  * @tparam Data Class that represents an instance before it has been stored to the DB
  */
-trait DataInserter[+DbModel <: Storable, +Complete, -Data]
+trait DataInserter[+DbModel <: Storable, +Complete, -Data] extends Indexed
 {
 	// ABSTRACT ---------------------------
-	
-	/**
-	 * @return The table to which items are inserted to
-	 */
-	def table: Table
 	
 	/**
 	 * @param data Model data

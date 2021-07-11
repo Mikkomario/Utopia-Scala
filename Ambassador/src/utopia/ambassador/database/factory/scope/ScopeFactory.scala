@@ -5,6 +5,7 @@ import utopia.ambassador.model.partial.scope.ScopeData
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueUnwraps._
+import utopia.vault.nosql.access.Indexed
 import utopia.vault.nosql.factory.FromValidatedRowModelFactory
 
 /**
@@ -12,7 +13,7 @@ import utopia.vault.nosql.factory.FromValidatedRowModelFactory
   * @author Mikko Hilpinen
   * @since 11.7.2021, v1.0
   */
-object ScopeFactory extends FromValidatedRowModelFactory[Scope]
+object ScopeFactory extends FromValidatedRowModelFactory[Scope] with Indexed
 {
 	override def table = AmbassadorTables.scope
 	
