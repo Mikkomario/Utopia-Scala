@@ -4,6 +4,9 @@ import utopia.access.http.Method.Get
 import utopia.ambassador.database.access.single.organization.DbTask
 import utopia.ambassador.database.AuthDbExtensions._
 import utopia.ambassador.database.access.many.scope.DbScopeDescriptions
+import utopia.ambassador.database.access.many.service.DbAuthServices
+import utopia.ambassador.model.combined.scope.DescribedScope
+import utopia.ambassador.model.stored.scope.Scope
 import utopia.citadel.database.access.single.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model
@@ -47,11 +50,25 @@ case class FeatureAccessTestNode(taskId: Int) extends LeafResource[AuthorizedCon
 				else
 				{
 					// Reads the descriptions of the missing scopes
-					val descriptions = DbScopeDescriptions(
-						(remainingRequiredScopes ++ alternative).map { _.id }.toSet)
+					val missingScopes = remainingRequiredScopes ++ alternative
+					val missingScopeIds = missingScopes.map { _.id }.toSet
+					val descriptions = DbScopeDescriptions(missingScopeIds)
 						.inLanguages(context.languageIdListFor(session.userId))
-					// TODO: Read services and form the response
-					???
+					// Reads service names
+					val services = DbAuthServices(missingScopeIds).pull
+					// Combines the data into a single response
+					val style = session.modelStyle
+					def scopeToModel(scope: Scope) =
+						DescribedScope(scope, descriptions.getOrElse(scope.id, Vector()).toSet).toModelWith(style)
+					val serviceModels = services.map { service =>
+						Model(Vector(
+							"id" -> service.id,
+							"name" -> service.name,
+							"required" -> remainingRequiredScopes.map { scopeToModel(_) },
+							"alternative" -> alternative.map { scopeToModel(_) }
+						))
+					}
+					Result.Success(Model(Vector("is_authorized" -> false, "services" -> serviceModels)))
 				}
 			}
 			else
