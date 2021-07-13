@@ -1,6 +1,6 @@
 # Utopia Metropolis - List of Changes
 
-## v1.1 (in development)
+## v1.1 - 13.7.2021
 The most important update in this release is the addition of simple model styling, 
 which is utilized in **Utopia Exodus**, making request responses more user-friendly for 
 non-**Journey** users.

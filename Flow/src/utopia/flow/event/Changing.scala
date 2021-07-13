@@ -102,7 +102,7 @@ trait Changing[A] extends ChangingLike[A]
 			lazyMap { f(_, other.value) }
 	}
 	
-	override def delayedBy(threshold: Duration)(implicit exc: ExecutionContext) =
+	override def delayedBy(threshold: Duration)(implicit exc: ExecutionContext): ChangingLike[A] =
 		DelayedView.of(this, threshold)
 	
 	
