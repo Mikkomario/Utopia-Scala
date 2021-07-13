@@ -1,6 +1,9 @@
 # Utopia Flow - List of Changes
 
-## v1.10 (in development)
+## v1.10 - 13.7.2021
+This release provides you with a completely new set of **Lazy** containers to be used for caching.  
+There's also an update on time related classes, making durations more reliable.  
+This update also includes a number of new collection and **Promise** extensions.
 ### Breaking Changes
 - Major refactoring in **Cache** classes
   - Rewrote **ExpiringCache** and **ReleasingCache**

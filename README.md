@@ -272,6 +272,11 @@ need to exist in so many server applications that I decided to make this the one
 **Utopia Citadel** may be used in both server-side and client-side context. On server-side, please use **Utopia Exodus** 
 that extends this module. On client-side, consider using **Utopia Trove** to set up a local database.
 
+#### Utopia Citadel Description Importer
+The **Citadel** module comes with a utility application for importing item descriptions into your database 
+without difficult SQL operations. If you're utilizing **Utopia Citadel** or any of the dependent modules in 
+your project, please make sure to check out the README file of this application for more details.
+
 ### Utopia Exodus
 *Server-base that lets you skip right to your business logic*
 

@@ -1,6 +1,11 @@
 # Utopia Exodus - List of Changes
 
-## v2.0 (in development)
+## v2.0 - 13.7.2021
+This release separates most of the database interaction into the new **Utopia Citadel** module and also makes 
+many of the existing REST resources customizable from the sub-projects.  
+Another major improvement is the addition of simple model styling with the **X-Style** header 
+(or **style** query parameter) support. This makes request responses potentially much more readable.  
+There are also some pretty important bug-fixes included.
 ### Breaking Changes
 - Copied most of the database classes to **Utopia Citadel** module while kept some 
   authentication-related features in this module. This may cause problems in the 

@@ -1,5 +1,8 @@
 # Utopia Reach - List of Changes
 
+## v0.2.1 (an alpha release) - 13.7.2021
+Not much of an update. Simply added support for the breaking **Cache**-related changes in **Utopia Flow** v1.10.
+
 ## v0.2 (an alpha release) - 12.5.2021
 An update in the middle of developing layered view implementations. 
 Improves paint efficiency but breaks existing package structure 

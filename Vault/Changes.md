@@ -1,6 +1,10 @@
 # Utopia Vault - List of Changes
 
-## v1.8 (in development)
+## v1.8 - 13.7.2021
+This update adds some long-delayed refactorings on project package structure and is therefore 
+quite error-inducing. However, this adds a lot of traits that reduce the need for copying and pasting and 
+simplify your code a lot when utilized. Most important of these updates are the new **LinkedFactory** traits, 
+and the new **View** traits.
 ### Breaking Changes
 - Refactored package structure in nosql package (access & factory packages)
 - **DistinctModelAccess** now requires computed property: `defaultOrdering: Option[OrderBy]`

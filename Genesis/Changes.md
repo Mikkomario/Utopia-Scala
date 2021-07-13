@@ -1,6 +1,11 @@
 # Utopia Reflection - List of Changes
 
-## v2.5.1 (in development)
+## v2.5.1 - 13.7.2021
+This is a relatively small update for the **Genesis** module, since the planned update on drawing 
+didn't make it to this release.
+### Features in development
+- Contents of the `utopia.genesis.graphics` package are **incomplete and not fit for use** at this time. 
+  Please wait for the complete release before utilizing these features.
 ### Other Changes
 - Added **Bounded** trait that defines function `.bounds`. Both **Polygonic** and **Circle** extend this trait.
 - `Bounds.bounds` now returns the bounds itself, which is more efficient than recalculating the same bounds.

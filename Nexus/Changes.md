@@ -1,6 +1,9 @@
 # Utopia Nexus - List of Changes
 
-## v1.6 (in development)
+## v1.6 - 13.7.2021
+This is a major upgrade on the **Nexus** module. Most importantly, the **RequestHandler** now supports 
+versioning. Secondly, this update adds support for extendable resources, which is utilized in the 
+**Utopia Exodus** project, for example.
 ### Breaking Changes
 - **RequestHandler** was rewritten to support versioning
 - **ResourceSearchResult.Ready** now takes the ready resource as the first parameter

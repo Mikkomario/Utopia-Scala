@@ -1,6 +1,7 @@
 # Utopia Access - List of Changes
 
-## v1.4 (in development)
+## v1.4 - 13.7.2021
+This update makes **Headers** instance creation more intuitive and also adds support for redirection status codes. 
 ### Breaking Changes
 - `new Headers(...)` is now private. Please use `Headers.apply(...)` instead
 ### New Features
