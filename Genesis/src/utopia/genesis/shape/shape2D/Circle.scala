@@ -30,8 +30,9 @@ object Circle extends FromModelFactory[Circle]
  * @author Mikko Hilpinen
  * @since 1.1.2017
  */
-case class Circle(origin: Point, radius: Double) extends ShapeConvertible with Area2D with
-        ValueConvertible with ModelConvertible with Projectable with Arithmetic[Dimensional[Double], Circle]
+case class Circle(origin: Point, radius: Double)
+    extends ShapeConvertible with Area2D with ValueConvertible with ModelConvertible with Projectable
+        with Arithmetic[Dimensional[Double], Circle] with Bounded
 {
     // COMPUTED PROPERTIES    ---------
     
@@ -50,11 +51,6 @@ case class Circle(origin: Point, radius: Double) extends ShapeConvertible with A
      */
     def area = math.Pi * radius * radius
     
-    /**
-      * @return The bounds around this circle
-      */
-    def bounds = Bounds.between(origin - Vector(radius, radius), origin + Vector(radius, radius))
-    
     
     // OPERATORS    -------------------
     
@@ -66,6 +62,11 @@ case class Circle(origin: Point, radius: Double) extends ShapeConvertible with A
     
     
     // IMPLEMENTED METHODS    ---------
+    
+    /**
+      * @return The bounds around this circle
+      */
+    override def bounds = Bounds.between(origin - Vector(radius, radius), origin + Vector(radius, radius))
     
     override def toShape = new Ellipse2D.Double(origin.x - radius, origin.y - radius, radius * 2, radius * 2)
     

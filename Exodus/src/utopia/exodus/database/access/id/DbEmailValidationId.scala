@@ -2,7 +2,7 @@ package utopia.exodus.database.access.id
 
 import utopia.exodus.database.factory.user.EmailValidationFactory
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.SingleIntIdAccess
+import utopia.vault.nosql.access.single.column.SingleIntIdAccess
 
 /**
   * Used for accessing individual email validation ids

@@ -6,7 +6,8 @@ import utopia.flow.util.CombinedOrdering
 import utopia.genesis.shape.shape1D.Direction1D
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.Point
-import utopia.reach.component.template.{Focusable, ReachComponentLike}
+import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.focus.Focusable
 import utopia.reach.focus.FocusEvent.{FocusEntering, FocusGained, FocusLeaving, FocusLost}
 import utopia.reflection.util.AwtComponentExtensions._
 

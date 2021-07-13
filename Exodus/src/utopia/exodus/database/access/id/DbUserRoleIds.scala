@@ -4,8 +4,8 @@ import utopia.exodus.database.Tables
 import utopia.exodus.database.model.organization.RoleRightModel
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyIntIdAccess
-import utopia.vault.sql.Extensions._
+import utopia.vault.nosql.access.many.column.ManyIntIdAccess
+import utopia.vault.sql.SqlExtensions._
 import utopia.vault.sql.{SelectDistinct, Where}
 
 /**
@@ -13,6 +13,7 @@ import utopia.vault.sql.{SelectDistinct, Where}
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbUserRoleIds extends ManyIntIdAccess
 {
 	// IMPLEMENTED	------------------------

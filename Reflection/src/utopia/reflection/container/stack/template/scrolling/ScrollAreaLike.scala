@@ -29,7 +29,7 @@ import utopia.reflection.shape.stack.{StackLengthLimit, StackSize}
 import utopia.reflection.util.ComponentCreationDefaults
 
 import scala.collection.immutable.HashMap
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.duration.FiniteDuration
 
 object ScrollAreaLike
 {
@@ -375,7 +375,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 	  * @param velocityMod A modifier applied to velocity (default = 1.0)
 	  */
 	protected def setupMouseHandling(actorHandler: ActorHandler, scrollPerWheelClick: Double,
-									 dragDuration: Duration = 300.millis, friction: Double = 0.1,
+									 dragDuration: FiniteDuration = 300.millis, friction: Double = 0.1,
 									 velocityMod: Double = 1.0) =
 	{
 		setupAnimatedScrolling(actorHandler)
@@ -527,9 +527,10 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 		def accelerate(acceleration: Velocity2D) = velocity += acceleration
 	}
 	
-	private class MouseListener(val scrollPerWheelClick: Double, val dragDuration: Duration, val velocityMod: Double,
-								val scroller: AnimatedScroller) extends MouseButtonStateListener with MouseMoveListener
-		with MouseWheelListener with Handleable with KeyStateListener
+	private class MouseListener(val scrollPerWheelClick: Double, val dragDuration: FiniteDuration,
+	                            val velocityMod: Double, val scroller: AnimatedScroller)
+		extends MouseButtonStateListener with MouseMoveListener with MouseWheelListener
+			with Handleable with KeyStateListener
 	{
 		// ATTRIBUTES	-----------------------
 		
@@ -540,7 +541,7 @@ trait ScrollAreaLike[C <: Stackable] extends CachingStackable with StackContaine
 		private var isDraggingContent = false
 		private var contentDragPosition = Point.origin
 		
-		private var velocities = Vector[(Instant, Velocity2D, Duration)]()
+		private var velocities = Vector[(Instant, Velocity2D, FiniteDuration)]()
 		
 		private var keyState = KeyStatus.empty
 		

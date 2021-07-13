@@ -183,6 +183,8 @@ case class Bounds(position: Point, size: Size) extends Rectangular with ValueCon
     
     def topLeft = position
     
+    override def bounds = this
+    
     override def width = size.width
     
     override def height = size.height

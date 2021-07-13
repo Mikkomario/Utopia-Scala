@@ -7,6 +7,7 @@ import utopia.metropolis.model.stored.organization.InvitationResponse
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object InvitationResponseModel
 {
 	// ATTRIBUTES	--------------------------
@@ -44,6 +45,7 @@ object InvitationResponseModel
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 case class InvitationResponseModel(id: Option[Int] = None, invitationId: Option[Int] = None,
 								   wasAccepted: Option[Boolean] = None, wasBlocked: Option[Boolean] = None,
 								   creatorId: Option[Int] = None) extends StorableWithFactory[InvitationResponse]

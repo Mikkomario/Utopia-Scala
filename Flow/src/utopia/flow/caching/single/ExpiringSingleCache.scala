@@ -7,6 +7,7 @@ import utopia.flow.util.RichComparable._
 
 import scala.concurrent.duration.FiniteDuration
 
+@deprecated("Please use ExpiringLazy instead", "v1.10")
 object ExpiringSingleCache
 {
 	/**
@@ -35,6 +36,7 @@ object ExpiringSingleCache
   * @author Mikko Hilpinen
   * @since 10.6.2019, v1.5+
   */
+@deprecated("Please use ExpiringLazy instead", "v1.10")
 trait ExpiringSingleCache[+A] extends ExpiringSingleCacheLike[A]
 {
 	// ATTRIBUTES	---------------
@@ -77,5 +79,6 @@ trait ExpiringSingleCache[+A] extends ExpiringSingleCacheLike[A]
 	override def clear() = cache.clear()
 }
 
+@deprecated("Please use ExpiringLazy instead", "v1.10")
 private class ExpiringSingleCacheImpl[+A](protected val cacheDuration: FiniteDuration,
 										 protected val cache: ClearableSingleCacheLike[A]) extends ExpiringSingleCache[A]

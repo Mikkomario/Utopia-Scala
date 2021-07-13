@@ -36,7 +36,8 @@ trait CustomAuthorizationResourceFactory[+A]
 	  * @return A node that doesn't use additional authorization
 	  */
 	def public = apply { (context, f) =>
-		import utopia.exodus.util.ExodusContext._
+		import utopia.citadel.util.CitadelContext._
+		import utopia.exodus.util.ExodusContext.handleError
 		implicit val c: AuthorizedContext = context
 		
 		connectionPool.tryWith(f) match

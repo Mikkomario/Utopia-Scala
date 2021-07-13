@@ -1,8 +1,8 @@
 package utopia.vault.model.immutable
 
-import java.time.Period
-
 import utopia.vault.sql.Condition
+
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object DataDeletionRule
 {
@@ -15,16 +15,6 @@ object DataDeletionRule
 	def empty(table: Table, timePropertyName: String) = DataDeletionRule(table, timePropertyName)
 	
 	/**
-	  * Creates a new deletion rule with unconditional live duration
-	  * @param table Target table
-	  * @param timePropertyName Name of the property that contains row creation time
-	  * @param standardLiveDuration How long each row should be stored
-	  * @return A new rule that deletes all table rows once they've existed for specified duration
-	  */
-	def apply(table: Table, timePropertyName: String, standardLiveDuration: Period): DataDeletionRule =
-		DataDeletionRule(table, timePropertyName, Some(standardLiveDuration))
-	
-	/**
 	  * Creates a new conditional deletion rule
 	  * @param table Target table
 	  * @param timePropertyName Name of the property that contains row creation time
@@ -33,31 +23,45 @@ object DataDeletionRule
 	  *                                deletion condition is even applied
 	  * @return A new rule that deletes rows based on the specified condition and minimum live duration
 	  */
-	def conditional(table: Table, timePropertyName: String, condition: Condition, liveDurationOnCondition: Period) =
+	def conditional(table: Table, timePropertyName: String, condition: Condition,
+	                liveDurationOnCondition: FiniteDuration) =
 		DataDeletionRule(table, timePropertyName, conditionalLiveDurations = Map(condition -> liveDurationOnCondition))
+	
+	/**
+	 * @param table Target table
+	 * @param expirationPropertyName Name of the expiration property
+	 * @return A deletion rule that deletes items immediately when the value in the targeted time column is reached
+	 */
+	def onArrivalOf(table: Table, expirationPropertyName: String) =
+		apply(table, expirationPropertyName, Duration.Zero)
 }
 
 /**
   * Used for specifying a condition for automated data deletion
   * @author Mikko Hilpinen
   * @since 30.7.2020, v1.6
+  * @param targetTable Target table
+  * @param timePropertyName Name of the property that contains row creation time
+  * @param standardLiveDuration How long each row should be stored
+  *                             (infinite if should be stored forever on default (default))
+  * @param conditionalLiveDurations Conditional exceptions to apply to the standard live duration (default = empty)
   * @see utopia.vault.database.ClearOldData
   */
-case class DataDeletionRule(targetTable: Table, timePropertyName: String, standardLiveDuration: Option[Period] = None,
-							conditionalLiveDurations: Map[Condition, Period] = Map())
+case class DataDeletionRule(targetTable: Table, timePropertyName: String,
+                            standardLiveDuration: Duration = Duration.Inf,
+                            conditionalLiveDurations: Map[Condition, FiniteDuration] = Map())
 {
 	// COMPUTED	-------------------------
 	
 	/**
+	  * @return Whether this deletion rule has an effect on the targeted table under certain conditions.
+	  */
+	def nonEmpty = standardLiveDuration.isFinite || conditionalLiveDurations.nonEmpty
+	/**
 	  * @return Whether this deletion rule has no effect on the targeted table
 	  *         (no row live durations have been specified)
 	  */
-	def isEmpty = standardLiveDuration.isEmpty && conditionalLiveDurations.isEmpty
-	
-	/**
-	  * @return Whether this deletion rule has an effect on the targeted table under certain conditions.
-	  */
-	def nonEmpty = !isEmpty
+	def isEmpty = !nonEmpty
 	
 	
 	// OTHER	-------------------------
@@ -68,7 +72,7 @@ case class DataDeletionRule(targetTable: Table, timePropertyName: String, standa
 	  * @return A copy of this deletion rule set that deletes target rows id they fulfill the specified condition and
 	  *         have lived at least the specified time period
 	  */
-	def +(conditionalDeletion: (Condition, Period)) =
+	def +(conditionalDeletion: (Condition, FiniteDuration)) =
 		copy(conditionalLiveDurations = conditionalLiveDurations + conditionalDeletion)
 	
 	/**
@@ -77,7 +81,7 @@ case class DataDeletionRule(targetTable: Table, timePropertyName: String, standa
 	  * @return A copy of this deletion rule set that deletes target rows id they fulfill the specified condition and
 	  *         have lived at least the specified time period
 	  */
-	def withConditionalDeletion(condition: Condition, liveDurationOnCondition: Period) =
+	def withConditionalDeletion(condition: Condition, liveDurationOnCondition: FiniteDuration) =
 		this + (condition -> liveDurationOnCondition)
 	
 	/**
@@ -85,5 +89,5 @@ case class DataDeletionRule(targetTable: Table, timePropertyName: String, standa
 	  * @return A copy of this deletion rule where rows are normally deleted after they've existed for the
 	  *         specified duration
 	  */
-	def withStandardLiveDuration(duration: Period) = copy(standardLiveDuration = Some(duration))
+	def withStandardLiveDuration(duration: Duration) = copy(standardLiveDuration = duration)
 }

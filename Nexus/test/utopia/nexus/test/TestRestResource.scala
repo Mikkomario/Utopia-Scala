@@ -73,7 +73,7 @@ class TestRestResource(val name: String, initialValues: template.Model[Constant]
         val remainingPath = path.tail
         if ((method == Delete || method == Post) && remainingPath.isEmpty) 
         {
-            Ready(Some(path))
+            Ready(this, Some(path))
         }
         else
         {

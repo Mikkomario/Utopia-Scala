@@ -1,100 +1,69 @@
 package utopia.flow.caching.multi
 
-import scala.collection.immutable.HashMap
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.ref.WeakReference
 
 object ReleasingCache
 {
 	/**
-	  * Creates a new releasing cache
-	  * @param cache An expiring cache used for requesting and releasing values
-	  * @tparam Key The type of cache key
-	  * @tparam Value The type of cache value
-	  * @return A cache that releases references but keeps weak references
+	  * Creates a new cache that uses weak references after a time threshold
+	  * @param request Function for acquiring new values
+	  * @param calculateReferenceLength Function for calculating the length of time to hold a strong reference.
+	  *                                 Accepts both key and value.
+	  * @param exc Implicit execution context
+	  * @tparam K Type of keys used
+	  * @tparam V Type of values stored
+	  * @return A new cache
 	  */
-	def apply[Key, Value <: AnyRef](cache: ExpiringCacheLike[Key, Value]): ReleasingCache[Key, Value] =
-		new ReleasingCacheImpl[Key, Value](cache)
+	def apply[K, V <: AnyRef](request: K => V)(calculateReferenceLength: (K, V) => Duration)
+	                         (implicit exc: ExecutionContext) =
+		new ReleasingCache[K, V](request)(calculateReferenceLength)
 	
 	/**
-	  * Creates a new releasing cache
-	  * @param releaseAfterDuration The duration after which the resource is released
-	  * @param request A function for requesting resources
-	  * @tparam Key The type of key used in this cache
-	  * @tparam Value The type of cached value
-	  * @return A cache that strongly refers to the item for releaseAfterDuration and then weakly refers to the item
+	  * Creates a new cache that uses weak references after a time threshold
+	  * @param referenceLength Length of time for which strong references are used
+	  * @param request Function for acquiring new values
+	  * @param exc Implicit execution context
+	  * @tparam K Type of keys used
+	  * @tparam V Type of values stored
+	  * @return A new cache
 	  */
-	def apply[Key, Value <: AnyRef](releaseAfterDuration: FiniteDuration)(request: Key => Value): ReleasingCache[Key, Value] =
-		apply(ExpiringCache.apply(releaseAfterDuration)(request))
+	def after[K, V <: AnyRef](referenceLength: FiniteDuration)(request: K => V)(implicit exc: ExecutionContext) =
+		new ReleasingCache[K, V](request)((_, _) => referenceLength)
 }
 
 /**
-  * This cache releases its references after a while
+  * A cache that holds generated items with strong references for a while, after which weak references are
+  * used as long as they are available
   * @author Mikko Hilpinen
-  * @since 10.6.2019, v1.5+
+  * @since 16.5.2021, v1.10
   */
-trait ReleasingCache[Key, Value <: AnyRef] extends CacheLike[Key, Value]
+class ReleasingCache[K, V <: AnyRef](request: K => V)(calculateReferenceLength: (K, V) => Duration)
+                                    (implicit exc: ExecutionContext)
+	extends CacheLike[K, V]
 {
-	// ATTRIBUTES	---------------
+	// ATTRIBUTES   ------------------------------
 	
-	private var weakRefs: Map[Key, WeakReference[Value]] = HashMap()
+	private val cache = ExpiringCache(request)(calculateReferenceLength)
 	
-	
-	// ABSTRACT	-------------------
-	
-	/**
-	  * @return The cache that provides the values for this cache
-	  */
-	protected def source: ExpiringCacheLike[Key, Value]
+	private var weakReferences = Map[K, WeakReference[V]]()
 	
 	
-	// IMPLEMENTED	---------------
+	// IMPLEMENTED  ------------------------------
 	
-	override def cached(key: Key) = source.cached(key) orElse weakRefs.get(key).flatMap { _.get }
-	
-	override def apply(key: Key) =
-	{
-		// Expires old values first
-		releaseExpiredData()
-		
-		// Tries to use a cached or a weakly cached value
-		cached(key).getOrElse
-		{
-			// But may have to request a new value
-			val newValue = source(key)
-			weakRefs += (key -> WeakReference(newValue))
-			newValue
-		}
+	override def apply(key: K) = cached(key).getOrElse {
+		// Acquires a new value and stores a weak reference to it
+		val newValue = cache(key)
+		weakReferences += (key -> WeakReference(newValue))
+		// Returns the newly acquired value
+		newValue
 	}
 	
+	override def cached(key: K) = cache.cached(key).orElse { weak(key) }
 	
-	// OTHER	------------------
 	
-	/**
-	  * Releases expired strong references
-	  */
-	def releaseExpiredData() = source.clearExpiredData()
+	// OTHER    ----------------------------------
 	
-	/**
-	  * Clears all strong references, expired or not
-	  */
-	def clearStrongReferences() = source.clear()
-	
-	/**
-	  * Clears all references, both strong and weak, expired and non-expired
-	  */
-	def clearAllReferences() =
-	{
-		clearStrongReferences()
-		weakRefs = HashMap()
-	}
-	
-	/**
-	  * @param key A key
-	  * @return Whether there is currently a strong reference to the specified key
-	  */
-	def isStronglyReferenced(key: Key) = source.isValueCached(key)
+	private def weak(key: K) = weakReferences.get(key).flatMap { _.get }
 }
-
-private class ReleasingCacheImpl[Key, Value <: AnyRef](protected val source: ExpiringCacheLike[Key, Value])
-	extends ReleasingCache[Key, Value]

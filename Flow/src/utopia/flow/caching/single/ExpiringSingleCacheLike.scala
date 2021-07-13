@@ -5,6 +5,7 @@ package utopia.flow.caching.single
   * @author Mikko Hilpinen
   * @since 10.6.2019, v1.5+
   */
+@deprecated("Please use ExpiringLazy instead", "v1.10")
 trait ExpiringSingleCacheLike[+A] extends ClearableSingleCacheLike[A]
 {
 	/**

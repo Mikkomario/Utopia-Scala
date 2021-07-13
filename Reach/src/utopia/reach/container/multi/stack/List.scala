@@ -15,7 +15,8 @@ import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
-import utopia.reach.component.template.{Focusable, ReachComponentLike}
+import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
 import utopia.reach.focus.{FocusListener, FocusStateTracker}

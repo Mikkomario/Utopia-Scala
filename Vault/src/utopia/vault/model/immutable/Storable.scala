@@ -1,6 +1,6 @@
 package utopia.vault.model.immutable
 
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
@@ -9,7 +9,8 @@ import utopia.vault.database.{Connection, DBException}
 import utopia.vault.model.enumeration.BasicCombineOperator.And
 import utopia.vault.model.enumeration.ComparisonOperator.Equal
 import utopia.vault.model.enumeration.{BasicCombineOperator, ComparisonOperator}
-import utopia.vault.nosql.factory.{FromRowFactory, FromRowModelFactory}
+import utopia.vault.nosql.factory.row.FromRowFactory
+import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 import utopia.vault.sql.{Condition, Delete, Insert, SqlSegment, SqlTarget, Update, Where}
 
 object Storable

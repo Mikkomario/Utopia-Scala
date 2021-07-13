@@ -3,7 +3,7 @@ package utopia.exodus.database.factory.user
 import utopia.exodus.database.factory.language.{LanguageFactory, LanguageFamiliarityFactory}
 import utopia.metropolis.model.combined.user.FullUserLanguage
 import utopia.vault.model.immutable.Row
-import utopia.vault.nosql.factory.FromRowFactory
+import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.sql.JoinType.Inner
 
 /**
@@ -11,6 +11,7 @@ import utopia.vault.sql.JoinType.Inner
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object FullUserLanguageFactory extends FromRowFactory[FullUserLanguage]
 {
 	// IMPLEMENTED	--------------------------

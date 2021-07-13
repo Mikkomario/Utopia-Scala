@@ -10,7 +10,7 @@ import utopia.vault.nosql.factory.FromResultFactory
  * @tparam I Type of used index
  * @tparam A Type of read model
  */
-@deprecated("Replaced with utopia.vault.nosql.access.ModelAccess", "v1.4")
+@deprecated("Replaced with utopia.vault.nosql.access.template.model.ModelAccess", "v1.4")
 trait Access[-I, +A]
 {
 	// ABSTRACT	-----------------------

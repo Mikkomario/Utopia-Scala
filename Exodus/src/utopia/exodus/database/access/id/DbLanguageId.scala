@@ -3,13 +3,14 @@ package utopia.exodus.database.access.id
 import utopia.exodus.database.factory.language.LanguageFactory
 import utopia.exodus.database.model.language.LanguageModel
 import utopia.flow.datastructure.immutable.Value
-import utopia.vault.nosql.access.{SingleIdAccess, UniqueIdAccess}
+import utopia.vault.nosql.access.single.column.{SingleIdAccess, UniqueIdAccess}
 
 /**
   * Used for accessing individual language ids
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbLanguageId extends SingleIdAccess[Int]
 {
 	// IMPLEMENTED	---------------------------

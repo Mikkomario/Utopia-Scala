@@ -8,6 +8,13 @@ object Pointer
     def apply[A](value: A) = new Pointer(value)
 	
 	/**
+	  * Creates a new empty pointer that contains an option
+	  * @tparam A Type of values in this pointer, when specified
+	  * @return A new empty option pointer
+	  */
+	def option[A]() = new Pointer[Option[A]](None)
+	
+	/**
 	  * Creates a new pointer with events
 	  * @param value The initial value for the pointer
 	  * @tparam A The type of the contained item

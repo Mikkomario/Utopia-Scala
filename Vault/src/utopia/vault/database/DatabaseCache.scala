@@ -4,7 +4,7 @@ import utopia.flow.caching.multi.{Cache, CacheLike, ExpiringCache, TryCache}
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.vault.nosql.access.SingleModelAccess
+import utopia.vault.nosql.access.single.model.SingleModelAccess
 import utopia.vault.sql.Condition
 
 import scala.concurrent.ExecutionContext
@@ -63,8 +63,8 @@ class DatabaseCache[A, Key](connectionPool: ConnectionPool, accessor: SingleMode
 			case Some(maxTime) =>
 				maxFailureCacheDuration.finite match
 				{
-					case Some(maxFailTime) => TryCache.expiring(maxFailTime, maxTime)(request)
-					case None => ExpiringCache(maxTime)(request)
+					case Some(maxFailTime) => TryCache(maxFailTime, maxTime)(request)
+					case None => ExpiringCache.after(maxTime)(request)
 				}
 			case None =>
 				maxFailureCacheDuration.finite match

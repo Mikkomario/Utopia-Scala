@@ -32,8 +32,10 @@ object Status
         if (!setupDone)
         {
             setupDone = true
-            _values = Vector(OK, Created, Accepted, NoContent, NotModified, BadRequest, Unauthorized, Forbidden,
-                NotFound, MethodNotAllowed, InternalServerError, NotImplemented, ServiceUnavailable)
+            _values = Vector(OK, Created, Accepted,
+                NoContent, MovedPermanently, Found, NotModified,
+                BadRequest, Unauthorized, Forbidden, NotFound, MethodNotAllowed,
+                InternalServerError, NotImplemented, ServiceUnavailable)
         }
     }
     
@@ -120,6 +122,39 @@ object Status
       * empty line after the header fields.
       */
     case object NoContent extends Status("No Content", 204)
+    
+    /**
+     * The requested resource has been assigned a new permanent URI and any future references to
+     * this resource SHOULD use one of the returned URIs.
+     * Clients with link editing capabilities ought to automatically re-link references to the Request-URI
+     * to one or more of the new references returned by the server, where possible.
+     * This response is cacheable unless indicated otherwise.
+     *
+     * The new permanent URI SHOULD be given by the Location field in the response.
+     * Unless the request method was HEAD, the entity of the response SHOULD contain a short hypertext
+     * note with a hyperlink to the new URI(s).
+     *
+     * If the 301 status code is received in response to a request other than GET or HEAD,
+     * the user agent MUST NOT automatically redirect the request unless it can be confirmed by the user,
+     * since this might change the conditions under which the request was issued.
+     */
+    case object MovedPermanently extends Status("Moved Permanently", 301)
+    
+    /**
+     * The requested resource resides temporarily under a different URI.
+     * Since the redirection might be altered on occasion, the client SHOULD continue to use the Request-URI
+     * for future requests. This response is only cacheable if indicated by a Cache-Control or
+     * Expires header field.
+     *
+     * The temporary URI SHOULD be given by the Location field in the response.
+     * Unless the request method was HEAD, the entity of the response SHOULD contain a short hypertext note
+     * with a hyperlink to the new URI(s).
+     *
+     * If the 302 status code is received in response to a request other than GET or HEAD,
+     * the user agent MUST NOT automatically redirect the request unless it can be confirmed by the user,
+     * since this might change the conditions under which the request was issued.
+     */
+    case object Found extends Status("Found", 302)
     
     /**
       * If the client has performed a conditional GET request and access is allowed, but the document

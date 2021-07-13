@@ -3,7 +3,8 @@ package utopia.exodus.database.factory.organization
 import utopia.exodus.database.model.organization.MemberRoleModel
 import utopia.metropolis.model.combined.organization.MembershipWithRoles
 import utopia.vault.model.immutable.Result
-import utopia.vault.nosql.factory.{Deprecatable, FromResultFactory}
+import utopia.vault.nosql.factory.FromResultFactory
+import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.sql.JoinType
 import utopia.vault.util.ErrorHandling
 
@@ -14,6 +15,7 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 6.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object MembershipWithRolesFactory extends FromResultFactory[MembershipWithRoles] with Deprecatable
 {
 	// IMPLEMENTED	----------------------------

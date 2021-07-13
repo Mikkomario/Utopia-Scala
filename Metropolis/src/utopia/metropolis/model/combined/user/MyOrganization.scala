@@ -6,8 +6,9 @@ import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible, ModelType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
+import utopia.metropolis.model.combined.description.SimplyDescribed
 import utopia.metropolis.model.combined.organization.RoleWithRights
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
 
 object MyOrganization extends FromModelFactory[MyOrganization]
 {
@@ -41,13 +42,20 @@ object MyOrganization extends FromModelFactory[MyOrganization]
   * @param descriptions Various descriptions of this organization
   * @param myRoles Described user's roles in this organization
   */
-case class MyOrganization(id: Int, userId: Int, descriptions: Set[DescriptionLink], myRoles: Set[RoleWithRights])
-	extends ModelConvertible
+case class MyOrganization(id: Int, userId: Int, override val descriptions: Set[DescriptionLink],
+                          myRoles: Set[RoleWithRights])
+	extends ModelConvertible with SimplyDescribed
 {
+	// IMPLEMENTED  -----------------------------
+	
 	override def toModel =
 	{
 		val organizationModel = Model(Vector("id" -> id, "descriptions" -> descriptions.map { _.toModel }.toVector))
 		val userModel = Model(Vector("id" -> userId, "roles" -> myRoles.map { _.toModel }.toVector))
 		Model(Vector("organization" -> organizationModel, "user" -> userModel))
 	}
+	
+	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) =
+		Model(Vector("id" -> id, "my_role_ids" -> myRoles.map { _.roleId }.toVector.sorted,
+			"my_task_ids" -> myRoles.flatMap { _.taskIds }.toVector.sorted))
 }

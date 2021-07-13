@@ -14,13 +14,13 @@ trait ReachComponent extends ReachComponentLike with CachingStackable2
 {
 	// ATTRIBUTES	-----------------------
 	
-	val boundsPointer = new PointerWithEvents(Bounds.zero)
-	val positionPointer = boundsPointer.map {_.position}
-	val sizePointer = boundsPointer.map {_.size}
+	override val boundsPointer = new PointerWithEvents(Bounds.zero)
+	override val positionPointer = boundsPointer.map {_.position}
+	override val sizePointer = boundsPointer.map {_.size}
 	
-	lazy val mouseButtonHandler = MouseButtonStateHandler()
-	lazy val mouseMoveHandler = MouseMoveHandler()
-	lazy val mouseWheelHandler = MouseWheelHandler()
+	override lazy val mouseButtonHandler = MouseButtonStateHandler()
+	override lazy val mouseMoveHandler = MouseMoveHandler()
+	override lazy val mouseWheelHandler = MouseWheelHandler()
 	
 	
 	// IMPLEMENTED	-----------------------

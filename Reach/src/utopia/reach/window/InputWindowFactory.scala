@@ -4,10 +4,11 @@ import utopia.flow.event.{AlwaysTrue, ChangingLike}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.WaitUtils
 import utopia.genesis.shape.shape2D.Direction2D
-import utopia.reach.component.button.ImageButton
+import utopia.reach.component.button.image.ImageButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
-import utopia.reach.component.label.TextLabel
-import utopia.reach.component.template.{Focusable, ReachComponentLike}
+import utopia.reach.component.label.text.TextLabel
+import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.multi.stack.{ContextualStackFactory, SegmentGroup, Stack, ViewStack}
 import utopia.reach.container.ReachCanvas

@@ -4,7 +4,7 @@ import utopia.exodus.database.factory.language.LanguageFamiliarityFactory
 import utopia.exodus.database.model.user.UserLanguageModel
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyRowModelAccess
+import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.sql.{SelectAll, Where}
 
 /**
@@ -12,6 +12,7 @@ import utopia.vault.sql.{SelectAll, Where}
   * @author Mikko Hilpinen
   * @since 25.7.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbLanguageFamiliarities extends ManyRowModelAccess[LanguageFamiliarity]
 {
 	// IMPLEMENTED	------------------------
@@ -19,6 +20,8 @@ object DbLanguageFamiliarities extends ManyRowModelAccess[LanguageFamiliarity]
 	override def factory = LanguageFamiliarityFactory
 	
 	override def globalCondition = None
+	
+	override protected def defaultOrdering = None
 	
 	
 	// OTHER	----------------------------

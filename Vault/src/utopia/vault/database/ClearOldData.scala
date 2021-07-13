@@ -1,14 +1,65 @@
 package utopia.vault.database
 
-import java.time.{Instant, Period}
+import utopia.flow.async.DailyTask
+
+import java.time.{Instant, LocalTime}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.model.error.NoReferenceFoundException
 import utopia.vault.model.immutable.{DataDeletionRule, Reference, Table}
 import utopia.vault.sql.{Condition, Delete, Join, SqlTarget, Where}
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.{Duration, FiniteDuration}
+
+object ClearOldData
+{
+	/**
+	  * Clears old data once (immediately)
+	  * @param rules Data deletion rules
+	  * @param connection Implicit DB Connection
+	  */
+	def once(rules: Iterable[DataDeletionRule])(implicit connection: Connection) =
+		new ClearOldData(rules)()
+	/**
+	  * Clears old data once (immediately)
+	  * @param rule Data deletion rule
+	  * @param connection Implicit DB Connection
+	  */
+	def once(rule: DataDeletionRule)(implicit connection: Connection): Unit = once(Vector(rule))
+	/**
+	  * Clears old data once (immediately)
+	  * @param first The first deletion rule to apply
+	  * @param second The second deletion rule to apply
+	  * @param more More deletion rules to apply
+	  * @param connection Implicit DB Connection
+	  */
+	def once(first: DataDeletionRule, second: DataDeletionRule, more: DataDeletionRule*)
+	        (implicit connection: Connection): Unit = once(Vector(first, second) ++ more)
+	
+	/**
+	  * Constructs a daily task / loop for deleting old data
+	  * @param rules Deletion rules to use
+	  * @param at The time when the data deletion is performed each day (local) (default = at midnight)
+	  * @param onError A function that will handle possible database errors (E.g. no connection)
+	  *                (default = prints stack trace)
+	  * @param exc Implicit execution context (for connection management)
+	  * @param connectionPool Connection pool to use (implicit) for a connection for each daily operation
+	  * @return A new task / loop (not yet active or looping)
+	  */
+	def dailyLoop(rules: Iterable[DataDeletionRule], at: LocalTime = LocalTime.MIDNIGHT,
+	              onError: Throwable => Unit = _.printStackTrace())
+	             (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
+	{
+		val clearer = new ClearOldData(rules)
+		DailyTask(at) {
+			connectionPool.tryWith { implicit connection => clearer() }.failure.foreach(onError)
+		}
+	}
+}
 
 /**
  * Used for clearing deprecated data from the database
@@ -59,7 +110,7 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 		
 		thisIterationTargets.foreach { rule =>
 			// Checks the general deletion rule first
-			rule.baseLiveDuration.foreach { baseDuration =>
+			rule.baseLiveDuration.finite.foreach { baseDuration =>
 				val baseDurationCondition = rule.timeColumn < (deletionTime - baseDuration)
 				performDeleteOn(rule, baseDurationCondition)
 			}
@@ -76,7 +127,8 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 			deleteIteration(deletionTime, nextIterationTargets, handledTables ++ thisIterationTargets.map { _.table })
 	}
 	
-	private def performDeleteOn(rule: TableDeletionRule, baseDeletionCondition: Condition)(implicit connection: Connection) =
+	private def performDeleteOn(rule: TableDeletionRule, baseDeletionCondition: Condition)
+	                           (implicit connection: Connection) =
 	{
 		// Checks whether child status should be checked as well
 		val restrictions = rule.restrictiveChildPaths
@@ -119,9 +171,10 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 	
 	// NESTED	-------------------------------
 	
-	private case class TableDeletionRule(table: Table, timePropertyName: String, baseLiveDuration: Option[Period] = None,
-										 conditionalPeriods: Map[Condition, Period] = Map(),
-										 restrictiveChildPaths: Vector[Vector[Reference]] = Vector())
+	private case class TableDeletionRule(table: Table, timePropertyName: String,
+	                                     baseLiveDuration: Duration = Duration.Inf,
+	                                     conditionalPeriods: Map[Condition, FiniteDuration] = Map(),
+	                                     restrictiveChildPaths: Vector[Vector[Reference]] = Vector())
 	{
 		lazy val timeColumn = table(timePropertyName)
 		

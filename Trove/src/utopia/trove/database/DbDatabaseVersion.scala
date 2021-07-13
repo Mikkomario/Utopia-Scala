@@ -3,7 +3,7 @@ package utopia.trove.database
 import utopia.trove.model.stored.DatabaseVersion
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Table
-import utopia.vault.nosql.access.SingleRowModelAccess
+import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 
 /**
   * Used for accessing individual database versions in the DB

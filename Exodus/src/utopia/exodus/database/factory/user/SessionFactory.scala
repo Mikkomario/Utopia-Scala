@@ -1,13 +1,15 @@
 package utopia.exodus.database.factory.user
 
-import utopia.exodus.database.Tables
+import utopia.exodus.database.ExodusTables
 import utopia.exodus.database.model.user.SessionModel
 import utopia.exodus.model.partial.UserSessionData
 import utopia.exodus.model.stored.UserSession
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.time.Now
+import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.model.enumeration.ComparisonOperator.Larger
-import utopia.vault.nosql.factory.{Deprecatable, FromValidatedRowModelFactory}
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
+import utopia.vault.nosql.template.Deprecatable
 
 /**
   * Used for reading user session data from the DB
@@ -24,9 +26,9 @@ object SessionFactory extends FromValidatedRowModelFactory[UserSession] with Dep
 	
 	override protected def fromValidatedModel(model: Model[Constant]) = UserSession(model("id").getInt,
 		UserSessionData(model("userId").getInt, model("key").getString, model("expiresIn").getInstant,
-			model("deviceId").int))
+			model("deviceId").int, model("modelStylePreference").int.flatMap(ModelStyle.forId)))
 	
-	override def table = Tables.userSession
+	override def table = ExodusTables.userSession
 	
 	
 	// COMPUTED	-----------------------------------

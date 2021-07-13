@@ -2,7 +2,8 @@ package utopia.exodus.rest.resource.device
 
 import utopia.access.http.Method.{Delete, Get}
 import utopia.access.http.Status.NotFound
-import utopia.exodus.database.access.single.{DbDevice, DbUser}
+import utopia.citadel.database.access.single.{DbDevice, DbUser}
+import utopia.exodus.database.access.single.DbDeviceKey
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.flow.generic.ValueConversions._
@@ -40,7 +41,7 @@ case class DeviceKeyNode(deviceId: Int) extends Resource[AuthorizedContext]
 					// Registers a new connection between the user and this device, if there wasn't one already
 					DbUser(userId).linkWithDeviceWithId(deviceId)
 					// Gets and returns the new device authentication key
-					val key = DbDevice(deviceId).authenticationKey.assignToUserWithId(userId).key
+					val key = DbDeviceKey.forDeviceWithId(deviceId).assignToUserWithId(userId).key
 					Result.Success(key)
 				}
 				else
@@ -53,7 +54,7 @@ case class DeviceKeyNode(deviceId: Int) extends Resource[AuthorizedContext]
 			context.sessionKeyAuthorized { (session, connection) =>
 				implicit val c: Connection = connection
 				// Doesn't target the device associated with the session but with this node
-				DbDevice(deviceId).authenticationKey.releaseFromUserWithId(session.userId)
+				DbDeviceKey.forDeviceWithId(deviceId).releaseFromUserWithId(session.userId)
 				Empty
 			}
 		}

@@ -11,7 +11,7 @@ import utopia.vault.sql.SelectAll
 import utopia.vault.sql.Where
 import utopia.flow.generic.ValueConversions._
 
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 
 /**
  * This test makes sure basic column-generated conditions are working properly. RawStatement-, 

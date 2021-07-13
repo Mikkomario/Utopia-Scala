@@ -3,8 +3,8 @@ package utopia.reach.test
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.AlwaysTrue
 import utopia.reach.component.factory.Mixed
-import utopia.reach.component.input.{ContextualSwitchFactory, Switch}
-import utopia.reach.component.label.{ContextualTextLabelFactory, TextLabel, ViewTextLabel}
+import utopia.reach.component.input.check.{ContextualSwitchFactory, Switch}
+import utopia.reach.component.label.text.{ContextualTextLabelFactory, TextLabel, ViewTextLabel}
 import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.container.multi.stack.{SegmentGroup, Stack}
 import utopia.reach.container.ReachCanvas

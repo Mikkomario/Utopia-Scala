@@ -3,13 +3,14 @@ package utopia.exodus.database.factory.language
 import utopia.exodus.database.Tables
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.metropolis.model.stored.language.Language
-import utopia.vault.nosql.factory.FromValidatedRowModelFactory
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
   * A factory used for reading language data from the database
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object LanguageFactory extends FromValidatedRowModelFactory[Language]
 {
 	// IMPLEMENTED	-------------------------------

@@ -4,7 +4,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.StringType
 import utopia.vault.sql.Select
 import utopia.vault.sql.Where
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 import utopia.vault.sql.ConditionElement
 import utopia.flow.datastructure.template.Model
 import utopia.flow.datastructure.template.Property

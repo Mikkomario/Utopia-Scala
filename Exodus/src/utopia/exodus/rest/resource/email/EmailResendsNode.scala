@@ -22,7 +22,10 @@ object EmailResendsNode extends Resource[AuthorizedContext]
 {
 	// ATTRIBUTES	-----------------------
 	
-	import ExodusContext._
+	import utopia.citadel.util.CitadelContext._
+	import ExodusContext.isEmailValidationSupported
+	import ExodusContext.emailValidator
+	import ExodusContext.handleError
 	
 	override val name = "resends"
 	

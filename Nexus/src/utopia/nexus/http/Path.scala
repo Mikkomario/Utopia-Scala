@@ -14,7 +14,7 @@ object Path
     
     // EXTENSIONS    ---------------------
     
-    implicit class PathOption(val p: Option[Path])
+    implicit class PathOption(val p: Option[Path]) extends AnyVal
     {
         /**
          * Appends this path with another path if this path is present. Otherwise simply returns 

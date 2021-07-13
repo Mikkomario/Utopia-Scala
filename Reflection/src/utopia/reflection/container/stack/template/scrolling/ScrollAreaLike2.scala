@@ -26,7 +26,7 @@ import java.awt.event.KeyEvent
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 import scala.collection.immutable.HashMap
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.duration.FiniteDuration
 
 /**
   * Scroll areas are containers that allow horizontal and / or vertical content scrolling
@@ -383,7 +383,7 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 	  * @param velocityMod A modifier applied to velocity (default = 1.0)
 	  */
 	protected def setupMouseHandling(actorHandler: ActorHandler, scrollPerWheelClick: Double,
-									 dragDuration: Duration = 300.millis, velocityMod: Double = 1.0) =
+									 dragDuration: FiniteDuration = 300.millis, velocityMod: Double = 1.0) =
 	{
 		setupAnimatedScrolling(actorHandler)
 		val listener = new MouseListener(scrollPerWheelClick, dragDuration, velocityMod, scroller.get)
@@ -531,9 +531,9 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 		def accelerate(acceleration: Velocity2D) = velocity += acceleration
 	}
 	
-	private class MouseListener(val scrollPerWheelClick: Double, val dragDuration: Duration, val velocityMod: Double,
-								val scroller: AnimatedScroller) extends MouseButtonStateListener with MouseMoveListener
-		with MouseWheelListener with Handleable
+	private class MouseListener(val scrollPerWheelClick: Double, val dragDuration: FiniteDuration,
+	                            val velocityMod: Double, val scroller: AnimatedScroller)
+		extends MouseButtonStateListener with MouseMoveListener with MouseWheelListener with Handleable
 	{
 		// ATTRIBUTES	-----------------------
 		
@@ -544,7 +544,7 @@ trait ScrollAreaLike2[C <: Stackable2] extends CachingStackable2
 		private var isDraggingContent = false
 		private var contentDragPosition = Point.origin
 		
-		private var velocities = Vector[(Instant, Velocity2D, Duration)]()
+		private var velocities = Vector[(Instant, Velocity2D, FiniteDuration)]()
 		
 		// Listens to left mouse presses & releases
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter

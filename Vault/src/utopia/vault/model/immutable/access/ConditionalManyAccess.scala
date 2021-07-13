@@ -9,7 +9,7 @@ import utopia.vault.sql.Condition
  * @author Mikko Hilpinen
  * @since 6.10.2019, v1.3.1+
  */
-@deprecated("Replaced with utopia.vault.nosql.access.ManyModelAccess", "v1.4")
+@deprecated("Replaced with utopia.vault.nosql.access.many.model.ManyModelAccess", "v1.4")
 trait ConditionalManyAccess[+A] extends ConditionalAccess[A]
 {
 	/**

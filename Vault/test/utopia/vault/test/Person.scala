@@ -6,7 +6,7 @@ import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.vault.model.immutable.StorableWithFactory
-import utopia.vault.nosql.factory.FromValidatedRowModelFactory
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 object Person extends FromValidatedRowModelFactory[Person]
 {

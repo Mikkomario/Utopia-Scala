@@ -1,5 +1,61 @@
 # Utopia Flow - List of Changes
 
+## v1.10 - 13.7.2021
+This release provides you with a completely new set of **Lazy** containers to be used for caching.  
+There's also an update on time related classes, making durations more reliable.  
+This update also includes a number of new collection and **Promise** extensions.
+### Breaking Changes
+- Major refactoring in **Cache** classes
+  - Rewrote **ExpiringCache** and **ReleasingCache**
+  - Modified `TryCache.apply(...)` and `TryCache.releasing(...)` and removed `TryCache.expiring(...)`
+  - Removed multiple methods from **AsyncCache**.type
+- Multiple functions in **TimeExtensions** now require a **FiniteDuration** instead of just **Duration**, 
+  because they would break with infinite duration values
+- Removed implicit conversion from **Period** to **Duration**, 
+  added a new **Days** class to cover for that use case
+- Multiple **TimeExtensions** methods that would return or accept a **Period** now use **Days**
+- `ChangingLike.lazyMap(...)` and `ChangingLike.lazyMergeWith(...)`
+  now return **ListenableLazyLike** instead of just **LazyLike**
+  - This allows one to continue chaining map functions after these method calls also
+### Deprecations
+- Deprecated **SingleCacheLike** trait and implementations in favor of various **LazyLike** implementations
+  - **ClearableSingleCacheLike** is replaced with **ResettableLazyLike**
+  - **ExpiringSingleCacheLike** is replaced with **ExpiringLazy**
+- Deprecated **MultiCacheLike** trait and its sub-traits and implementations in favor of new 
+  **MultiLazyLike** trait and its subclasses 
+### New Features
+- Added a new **Days** class to represent time on date level. This works as a smooth bridge between 
+  **FiniteDuration**, which is more precise, and **Period**, which is unreliable in most contexts 
+  because of the months and years -parameters.
+- Added new **LazyLike** implementations, **ListenableLazy** and **ListenableResettableLazy** 
+  which provide access to value generation and value change events
+- Added **ExpiringLazy** class that automatically resets its contents after a specific time period
+  - This class replaces **ExpiringSingleCache** class, which is now deprecated
+- Added **WeakLazy** class that only holds a weak reference to the generated items
+- Added **MultiLazyLike** and **ExpiringMultiLazyLike** traits and implementations that allow one to create 
+  custom caches using various instances of **LazyLike**
+- Added utility classes (**CommandArgumentSchema**, **CommandArgumentsSchema** and **CommandArguments**) 
+  for application and console command argument processing.
+### New Methods
+- Added multiple new methods to **Instant** and **Duration**/**FiniteDuration** through **TimeExtensions**
+- **Future** (**AsyncExtensions**)
+  - Added `.foreachResult(...)` to **Future**s that contain a **Try**
+- immutable.**Model**
+  - `+:(Constant)` that adds a new property to the beginning of this model
+- **Settable**
+  - Multiple new utility methods
+  - New utility methods for **Settable**s containing **Option**s and **Vector**s
+- **Throwable** (**ErrorExtensions**)
+  - `.stackTraceString`
+- **Try[Future[Try[...]]]** (**AsyncExtensions**)
+  - Added .flattenToFuture that converts this **Try** to a **Future[Try[A]]**
+- **Value**
+  - Added `.tryString`, `tryInt`, `tryDouble` etc. methods that return a **Try**
+### Other Changes
+- Added direct implicit conversion from **Today** to **ExtendedLocalDate**, allowing access to **TimeExtensions** 
+  methods directly from **Today** without going through **LocalDate** first
+- `WaitUtils.waitUntil(Instant, AnyRef)` now has a default value for the second parameter (lock)
+
 ## v1.9.1 - 12.5.2021
 This adds new collection utility methods, especially on **IterableOnce** and **TreeLike** traits.
 ### New Methods

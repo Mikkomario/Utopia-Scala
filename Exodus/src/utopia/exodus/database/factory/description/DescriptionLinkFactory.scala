@@ -1,13 +1,13 @@
 package utopia.exodus.database.factory.description
 
 import java.time.Instant
-
 import utopia.exodus.database.model.description.{DescriptionLinkModel, DescriptionLinkModelFactory}
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.metropolis.model.partial.description.DescriptionLinkData
 import utopia.metropolis.model.stored.description.{Description, DescriptionLink}
 import utopia.vault.model.immutable.{Storable, Table}
-import utopia.vault.nosql.factory.{Deprecatable, LinkedFactory}
+import utopia.vault.nosql.factory.row.linked.LinkedFactory
+import utopia.vault.nosql.template.Deprecatable
 
 import scala.util.{Success, Try}
 
@@ -16,6 +16,7 @@ import scala.util.{Success, Try}
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 trait DescriptionLinkFactory[+E] extends LinkedFactory[E, Description] with Deprecatable
 {
 	// ABSTRACT	----------------------------------

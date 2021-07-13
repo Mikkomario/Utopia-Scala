@@ -2,7 +2,7 @@ package utopia.flow.event
 
 import utopia.flow.datastructure.immutable.Lazy
 import utopia.flow.datastructure.mutable.ResettableLazy
-import utopia.flow.datastructure.template.LazyLike
+import utopia.flow.datastructure.template.ListenableLazyWrapper
 
 object LazyMirror
 {
@@ -18,7 +18,7 @@ object LazyMirror
 		if (pointer.isChanging)
 			new LazyMirror(pointer)(f)
 		else
-			Lazy { f(pointer.value) }
+			Lazy.listenable { f(pointer.value) }
 	}
 }
 
@@ -33,11 +33,11 @@ object LazyMirror
   * @tparam Reflection Type of item after mirroring
   */
 class LazyMirror[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => Reflection)
-	extends LazyLike[Reflection]
+	extends ListenableLazyWrapper[Reflection]
 {
 	// ATTRIBUTES	--------------------------
 	
-	private val cache = ResettableLazy { f(source.value) }
+	private val cache = ResettableLazy.listenable { f(source.value) }
 	
 	
 	// INITIAL CODE	--------------------------
@@ -48,7 +48,5 @@ class LazyMirror[Origin, Reflection](source: ChangingLike[Origin])(f: Origin => 
 	
 	// IMPLEMENTED	--------------------------
 	
-	override def value = cache.value
-	
-	override def current = cache.current
+	override protected def wrapped = cache
 }

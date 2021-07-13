@@ -11,5 +11,5 @@ import utopia.flow.generic.ValueConversions._
   */
 trait StoredModelConvertible[+Data <: ModelConvertible] extends Stored[Data] with ModelConvertible
 {
-	override def toModel = data.toModel + Constant("id", id)
+	override def toModel = Constant("id", id) +: data.toModel
 }

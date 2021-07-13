@@ -212,6 +212,23 @@ object AsyncExtensions
 		  */
 		def foreachFailure[U](f: Throwable => U)(implicit exc: ExecutionContext) =
 			this.f.onComplete { _.flatten.failure.foreach(f) }
+		
+		/**
+		 * Calls the specified function when this future completes. Same as calling .onComplete and then .flatten
+		 * @param f A function that handles both success and failure cases
+		 * @param exc Implicit execution context
+		 * @tparam U Arbitrary result type
+		 */
+		def foreachResult[U](f: Try[A] => U)(implicit exc: ExecutionContext) =
+			this.f.onComplete { r => f(r.flatten) }
+	}
+	
+	implicit class FutureTry[A](val t: Try[Future[Try[A]]]) extends AnyVal
+	{
+		/**
+		 * @return This try as a future
+		 */
+		def flattenToFuture = t.getOrMap { error => Future.successful(Failure(error)) }
 	}
 	
 	implicit class ManyFutures[A](val futures: IterableOnce[Future[A]]) extends AnyVal

@@ -7,6 +7,7 @@ import utopia.metropolis.model.stored.user.User
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object UserModel
 {
 	// OTHER	-------------------------------------
@@ -33,6 +34,7 @@ object UserModel
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 case class UserModel(id: Option[Int] = None) extends Storable
 {
 	override def table = UserFactory.table

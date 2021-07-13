@@ -6,7 +6,7 @@ import utopia.flow.time.Now
 import utopia.metropolis.model.stored.organization.Invitation
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.Larger
-import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.sql.{JoinType, Select, Where}
 
 /**
@@ -14,6 +14,7 @@ import utopia.vault.sql.{JoinType, Select, Where}
   * @author Mikko Hilpinen
   * @since 6.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 trait InvitationsAccess extends ManyModelAccess[Invitation]
 {
 	// IMPLEMENTED	------------------------

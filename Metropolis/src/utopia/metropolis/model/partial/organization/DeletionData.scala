@@ -16,6 +16,8 @@ import utopia.flow.generic.ValueConversions._
   */
 case class DeletionData(organizationId: Int, creatorId: Int, actualizationTime: Instant) extends ModelConvertible
 {
+	// IMPLEMENTED  ----------------------------
+	
 	override def toModel = Model(Vector("organization_id" -> organizationId, "creator_id" -> creatorId,
 		"actualization" -> actualizationTime))
 }

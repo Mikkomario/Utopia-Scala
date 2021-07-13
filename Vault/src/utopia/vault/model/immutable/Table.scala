@@ -2,7 +2,7 @@ package utopia.vault.model.immutable
 
 import utopia.flow.datastructure.immutable.{ModelDeclaration, Value}
 import utopia.vault.database.Connection
-import utopia.vault.nosql.factory.FromRowModelFactory
+import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 import utopia.vault.sql.{Condition, Exists, JoinType, Limit, Select, SqlSegment, SqlTarget, Where}
 
 import scala.collection.immutable.HashSet

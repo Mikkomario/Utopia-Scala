@@ -1,6 +1,6 @@
 package utopia.exodus.database.factory.user
 
-import utopia.exodus.database.Tables
+import utopia.exodus.database.ExodusTables
 import utopia.exodus.database.model.user.EmailValidationModel
 import utopia.exodus.model.partial.EmailValidationData
 import utopia.exodus.model.stored.EmailValidation
@@ -8,7 +8,8 @@ import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.time.Now
 import utopia.vault.model.enumeration.ComparisonOperator.Larger
-import utopia.vault.nosql.factory.{Deprecatable, FromValidatedRowModelFactory}
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
+import utopia.vault.nosql.template.Deprecatable
 
 /**
   * Used for reading email validation data from the DB
@@ -39,7 +40,7 @@ object EmailValidationFactory extends FromValidatedRowModelFactory[EmailValidati
 		EmailValidationData(model("purposeId"), model("email"), model("key"), model("resendKey"),
 			model("expiresIn"), model("ownerId"), model("created"), model("actualizedIn")))
 	
-	override def table = Tables.emailValidation
+	override def table = ExodusTables.emailValidation
 	
 	override def nonDeprecatedCondition = model.withExpiration(Now).toConditionWithOperator(Larger) &&
 		notActualizedCondition

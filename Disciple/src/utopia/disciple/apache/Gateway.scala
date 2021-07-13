@@ -271,7 +271,7 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectio
 	private def wrapResponse(response: CloseableHttpResponse) = 
 	{
 	    val status = statusForCode(response.getStatusLine.getStatusCode)
-	    val headers = new Headers(response.getAllHeaders.map(h => (h.getName, h.getValue)).toMap)
+	    val headers = Headers(response.getAllHeaders.map(h => (h.getName, h.getValue)).toMap)
 	    
 	    new StreamedResponse(status, headers)({ Option(response.getEntity).map { _.getContent } })
 	}

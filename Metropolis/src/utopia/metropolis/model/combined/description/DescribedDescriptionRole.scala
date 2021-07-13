@@ -13,4 +13,7 @@ object DescribedDescriptionRole extends DescribedFromModelFactory[DescribedDescr
   * @since 20.5.2020, v1
   */
 case class DescribedDescriptionRole(wrapped: DescriptionRole, descriptions: Set[DescriptionLink])
-	extends Described[DescriptionRole]
+	extends DescribedWrapper[DescriptionRole] with SimplyDescribed
+{
+	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) = wrapped.toModel
+}

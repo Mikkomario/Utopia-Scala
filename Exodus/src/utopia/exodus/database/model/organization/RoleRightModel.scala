@@ -2,11 +2,12 @@ package utopia.exodus.database.model.organization
 
 import utopia.exodus.database.Tables
 import utopia.exodus.database.factory.organization.RoleRightFactory
-import utopia.exodus.model.stored.RoleRight
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.enumeration.{TaskType, UserRole}
+import utopia.metropolis.model.stored.RoleRight
 import utopia.vault.model.immutable.StorableWithFactory
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object RoleRightModel
 {
 	// ATTRIBUTES	--------------------------
@@ -74,6 +75,7 @@ object RoleRightModel
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 case class RoleRightModel(id: Option[Int] = None, roleId: Option[Int] = None, taskId: Option[Int] = None)
 	extends StorableWithFactory[RoleRight]
 {

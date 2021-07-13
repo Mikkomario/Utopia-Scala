@@ -5,8 +5,8 @@ import utopia.flow.datastructure.mutable.{Model, Variable}
 import utopia.flow.datastructure.{immutable, template}
 import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.DeclarationVariableGenerator
-import utopia.vault.nosql.factory.FromRowModelFactory
 import utopia.vault.model.immutable.{Storable, Table}
+import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 
 import scala.util.Success
 

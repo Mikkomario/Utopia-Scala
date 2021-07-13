@@ -5,6 +5,7 @@ import utopia.flow.caching.single.{ClearableSingleCacheLike, ExpiringSingleCache
 import scala.collection.mutable
 import scala.concurrent.duration.FiniteDuration
 
+@deprecated("Please use MultiLazy instead", "v1.10")
 object MultiCache
 {
 	// OTHER	--------------------------
@@ -45,6 +46,7 @@ object MultiCache
   * @author Mikko Hilpinen
   * @since 12.6.2019, v1.5+
   */
+@deprecated("Please use MultiLazy instead", "v1.10")
 class MultiCache[Key, +Value, Part <: SingleCacheLike[Value]](private val makeCache: Key => Part)
 	extends MultiCacheLike[Key, Value, Part]
 {

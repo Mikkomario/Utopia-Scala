@@ -10,6 +10,7 @@ import utopia.metropolis.model.partial.organization.DeletionData
 import utopia.metropolis.model.stored.organization.Deletion
 import utopia.vault.database.Connection
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DeletionModel
 {
 	// ATTRIBUTES	----------------------------
@@ -66,6 +67,7 @@ object DeletionModel
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 case class DeletionModel(id: Option[Int] = None, organizationId: Option[Int] = None, creatorId: Option[Int] = None,
 						 actualizationTime: Option[Instant] = None) extends Storable
 {

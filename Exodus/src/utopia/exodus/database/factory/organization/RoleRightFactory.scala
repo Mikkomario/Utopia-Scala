@@ -2,12 +2,13 @@ package utopia.exodus.database.factory.organization
 
 import utopia.exodus.database.Tables
 import utopia.exodus.database.model.organization.RoleRightModel
-import utopia.exodus.model.stored.RoleRight
 import utopia.flow.datastructure.immutable
 import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.generic.ValueUnwraps._
-import utopia.vault.nosql.factory.FromValidatedRowModelFactory
+import utopia.metropolis.model.stored.RoleRight
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object RoleRightFactory extends FromValidatedRowModelFactory[RoleRight]
 {
 	// COMPUTED	------------------------------

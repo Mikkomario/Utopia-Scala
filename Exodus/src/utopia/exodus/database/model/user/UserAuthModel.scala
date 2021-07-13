@@ -1,6 +1,6 @@
 package utopia.exodus.database.model.user
 
-import utopia.exodus.database.Tables
+import utopia.exodus.database.ExodusTables
 import utopia.exodus.util.PasswordHash
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
@@ -18,7 +18,7 @@ object UserAuthModel
 	
 	// COMPUTED	-------------------------------
 	
-	def table = Tables.userAuth
+	def table = ExodusTables.userAuth
 	
 	
 	// OTHER	-------------------------------

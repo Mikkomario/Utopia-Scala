@@ -5,13 +5,15 @@ import utopia.exodus.database.model.organization.MembershipModel
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.metropolis.model.partial.organization.MembershipData
 import utopia.metropolis.model.stored.organization.Membership
-import utopia.vault.nosql.factory.{Deprecatable, FromValidatedRowModelFactory}
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
+import utopia.vault.nosql.template.Deprecatable
 
 /**
   * Used for reading organization memberships from the database
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object MembershipFactory extends FromValidatedRowModelFactory[Membership] with Deprecatable
 {
 	// IMPLEMENTED	--------------------------

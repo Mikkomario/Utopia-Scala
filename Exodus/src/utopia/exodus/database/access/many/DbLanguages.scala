@@ -5,14 +5,15 @@ import utopia.exodus.database.model.language.LanguageModel
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.language.Language
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyModelAccess
-import utopia.vault.sql.Extensions._
+import utopia.vault.nosql.access.many.model.ManyModelAccess
+import utopia.vault.sql.SqlExtensions._
 
 /**
   * Used for accessing multiple languages at a time
   * @author Mikko Hilpinen
   * @since 10.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbLanguages extends ManyModelAccess[Language]
 {
 	// IMPLEMENTED	----------------------------
@@ -20,6 +21,8 @@ object DbLanguages extends ManyModelAccess[Language]
 	override def factory = LanguageFactory
 	
 	override def globalCondition = None
+	
+	override protected def defaultOrdering = None
 	
 	
 	// COMPUTED	--------------------------------

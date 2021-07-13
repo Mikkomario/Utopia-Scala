@@ -5,6 +5,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object ClientDeviceModel
 {
 	// COMPUTED	-----------------------------
@@ -28,6 +29,7 @@ object ClientDeviceModel
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 case class ClientDeviceModel(id: Option[Int] = None, creatorId: Option[Int] = None) extends Storable
 {
 	override def table = ClientDeviceModel.table

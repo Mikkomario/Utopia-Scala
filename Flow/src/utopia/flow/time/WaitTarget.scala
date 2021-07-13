@@ -1,7 +1,6 @@
 package utopia.flow.time
 
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.RichComparable._
 
 import java.time.Instant
 import scala.concurrent.duration.Duration

@@ -1,5 +1,7 @@
 package utopia.exodus.database.model.user
 
+import utopia.citadel.database.model.Expiring
+
 import java.time.Instant
 import utopia.exodus.database.factory.user.EmailValidationFactory
 import utopia.exodus.model.partial.EmailValidationData
@@ -9,8 +11,26 @@ import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
-object EmailValidationModel
+object EmailValidationModel extends Expiring
 {
+	// ATTRIBUTES   ------------------------
+	
+	override val deprecationAttName = "expiresIn"
+	
+	
+	// COMPUTED ----------------------------
+	
+	/**
+	  * @return The factory class used by this model
+	  */
+	def factory = EmailValidationFactory
+	
+	
+	// IMPLEMENTED  ------------------------
+	
+	override def table = factory.table
+	
+	
 	// OTHER	----------------------------
 	
 	/**
@@ -68,6 +88,8 @@ case class EmailValidationModel(id: Option[Int] = None, purposeId: Option[Int] =
 								expiration: Option[Instant] = None, actualization: Option[Instant] = None)
 	extends StorableWithFactory[EmailValidation]
 {
+	import EmailValidationModel._
+	
 	// COMPUTED	------------------------------
 	
 	/**
@@ -78,10 +100,10 @@ case class EmailValidationModel(id: Option[Int] = None, purposeId: Option[Int] =
 	
 	// IMPLEMENTED	--------------------------
 	
-	override def factory = EmailValidationFactory
+	override def factory = EmailValidationModel.factory
 	
 	override def valueProperties = Vector("id" -> id, "purposeId" -> purposeId, "email" -> email, "key" -> key,
-		"resendKey" -> resendKey, "ownerId" -> ownerId, "created" -> created, "expiresIn" -> expiration,
+		"resendKey" -> resendKey, "ownerId" -> ownerId, "created" -> created, deprecationAttName -> expiration,
 		"actualizedIn" -> actualization)
 	
 	

@@ -2,10 +2,11 @@ package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.Delete
 import utopia.access.http.Status.Forbidden
-import utopia.exodus.database.access.id.DbUserRoleIds
-import utopia.exodus.database.access.single.{DbMembership, DbOrganization, DbUser}
+import utopia.citadel.database.access.id.many.DbUserRoleIds
+import utopia.citadel.database.access.single.DbUser
+import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
+import utopia.citadel.model.enumeration.StandardUserRole.Owner
 import utopia.exodus.model.enumeration.StandardTask.RemoveMember
-import utopia.exodus.model.enumeration.StandardUserRole.Owner
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.util.StringExtensions._
 import utopia.nexus.http.Path

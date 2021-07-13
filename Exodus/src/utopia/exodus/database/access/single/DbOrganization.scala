@@ -1,6 +1,5 @@
 package utopia.exodus.database.access.single
 
-import java.time.Period
 import utopia.exodus.database.access.many.{DbDescriptions, DbUserRoles, DbUsers, InvitationsAccess, OrganizationDeletionsAccess}
 import utopia.exodus.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory, RoleRightFactory}
 import utopia.exodus.database.model.organization.{DeletionModel, MemberRoleModel, MembershipModel}
@@ -10,14 +9,17 @@ import utopia.metropolis.model.combined.organization.DescribedMembership
 import utopia.metropolis.model.partial.organization.{DeletionData, InvitationData, MembershipData}
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyRowModelAccess
+import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.sql.{Select, Where}
+
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /**
   * Used for accessing individual organizations
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbOrganization
 {
 	// OTHER	----------------------------
@@ -102,6 +104,8 @@ object DbOrganization
 			
 			override def globalCondition = Some(condition)
 			
+			override protected def defaultOrdering = None
+			
 			
 			// OTHER	---------------------------
 			
@@ -141,6 +145,8 @@ object DbOrganization
 			
 			override def globalCondition = Some(model.withOrganizationId(organizationId).toCondition)
 			
+			override protected def defaultOrdering = None
+			
 			
 			// OTHER	---------------------------
 			
@@ -154,7 +160,7 @@ object DbOrganization
 			  * @param connection DB Connection (implicit)
 			  * @return Newly saved invitation
 			  */
-			def send(recipient: Either[String, Int], roleId: Int, senderId: Int, validDuration: Period = 7.days)
+			def send(recipient: Either[String, Int], roleId: Int, senderId: Int, validDuration: FiniteDuration = 7.days)
 					(implicit connection: Connection) =
 			{
 				model.insert(InvitationData(organizationId, recipient, roleId, Now + validDuration, Some(senderId)))
@@ -167,6 +173,8 @@ object DbOrganization
 			
 			override def globalCondition = Some(DeletionModel.withOrganizationId(organizationId).toCondition)
 			
+			override protected def defaultOrdering = None
+			
 			
 			// OTHER	--------------------------
 			
@@ -177,7 +185,7 @@ object DbOrganization
 			  * @param connection DB Connection (implicit)
 			  * @return Newly inserted deletion
 			  */
-			def insert(creatorId: Int, actualizationDelay: Period)(implicit connection: Connection) =
+			def insert(creatorId: Int, actualizationDelay: FiniteDuration)(implicit connection: Connection) =
 				DeletionModel.insert(DeletionData(organizationId, creatorId, Now + actualizationDelay))
 		}
 	}

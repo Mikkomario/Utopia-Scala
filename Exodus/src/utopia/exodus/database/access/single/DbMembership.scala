@@ -7,15 +7,17 @@ import utopia.exodus.database.model.organization.{MemberRoleModel, MembershipMod
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.{SingleIdModelAccess, SingleModelAccess}
+import utopia.vault.nosql.access.single.model.SingleModelAccess
+import utopia.vault.nosql.access.single.model.distinct.SingleIdModelAccess
 import utopia.vault.sql.{Exists, Select, SelectDistinct, Where}
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 
 /**
   * An access point to individual memberships and their data
   * @author Mikko Hilpinen
   * @since 5.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbMembership extends SingleModelAccess[Membership]
 {
 	// IMPLEMENTED	--------------------------

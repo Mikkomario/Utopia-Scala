@@ -3,8 +3,8 @@ package utopia.reach.test
 import utopia.flow.event.Fixed
 import utopia.flow.generic.DataType
 import utopia.reach.component.factory.Mixed
-import utopia.reach.component.input.{ContextualTextFieldFactory, TextField}
-import utopia.reach.component.label.ViewTextLabel
+import utopia.reach.component.input.text.{ContextualTextFieldFactory, TextField}
+import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.container.multi.stack.Stack
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.wrapper.Framing

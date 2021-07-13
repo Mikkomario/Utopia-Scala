@@ -8,7 +8,7 @@ import utopia.vault.sql.Condition
  * @author Mikko Hilpinen
  * @since 30.7.2019, v1.3+
  */
-@deprecated("Replaced with utopia.vault.nosql.access.ManyIdAccess", "v1.4")
+@deprecated("Replaced with utopia.vault.nosql.access.many.id.ManyIdAccess", "v1.4")
 trait ManyIdAccess[+I] extends IdAccess[I]
 {
 	// COMPUTED	-------------------

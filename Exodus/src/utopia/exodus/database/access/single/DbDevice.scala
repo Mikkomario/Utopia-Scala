@@ -12,7 +12,7 @@ import utopia.exodus.util.UuidGenerator
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
-import utopia.vault.nosql.access.UniqueModelAccess
+import utopia.vault.nosql.access.single.model.distinct.UniqueModelAccess
 import utopia.vault.sql.{Select, Where}
 
 /**
@@ -20,6 +20,7 @@ import utopia.vault.sql.{Select, Where}
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbDevice
 {
 	// COMPUTED	---------------------------------

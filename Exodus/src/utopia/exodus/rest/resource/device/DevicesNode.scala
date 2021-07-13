@@ -1,8 +1,8 @@
 package utopia.exodus.rest.resource.device
 
 import utopia.access.http.Method.Post
-import utopia.exodus.database.access.many.DbDevices
-import utopia.exodus.database.access.single.DbUser
+import utopia.citadel.database.access.many.DbDevices
+import utopia.citadel.database.access.single.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.device.FullDevice

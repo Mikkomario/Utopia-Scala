@@ -41,7 +41,7 @@ object Response
      * @param status the status of the response
      */
     def fromValue(body: Value, status: Status = OK, setCookies: Seq[Cookie] = Vector()) =
-        new Response(status, Headers().withCurrentDate.withContentType(Application/"json"), setCookies,
+        new Response(status, Headers.withCurrentDate.withContentType(Application/"json"), setCookies,
             Some(_.write(body.toJson.getBytes(StandardCharsets.UTF_8))))
     
     /**
@@ -57,7 +57,7 @@ object Response
         if (Files.exists(filePath) && !Files.isDirectory(filePath))
         {
             val contentType = ContentType.guessFrom(filePath.getFileName.toString)
-            val headers = if (contentType.isDefined) Headers().withContentType(contentType.get) else Headers()
+            val headers = if (contentType.isDefined) Headers.withContentType(contentType.get) else Headers.empty
             new Response(status, headers.withCurrentDate, setCookies, Some(Files.copy(filePath, _)))
         }
         else
@@ -74,7 +74,7 @@ object Response
      */
     def plainText(message: String, status: Status = OK, charset: Charset = StandardCharsets.UTF_8) = 
     {
-        val headers = Headers().withContentType(Text/"plain", Some(charset)).withCurrentDate
+        val headers = Headers.withContentType(Text/"plain", Some(charset)).withCurrentDate
         new Response(status, headers, Vector(), Some({ _.write(message.getBytes(charset)) }))
     }
     
@@ -82,7 +82,7 @@ object Response
      * Creates an empty response with current date header
      * @param status the status for the response
      */
-    def empty(status: Status = OK) = new Response(status, Headers().withCurrentDate)
+    def empty(status: Status = OK) = new Response(status, Headers.withCurrentDate)
 }
 
 /**
@@ -94,7 +94,7 @@ object Response
   * @param setCookies Cookies to be set for the consequent requests
  * @param writeBody a function that writes the response body into a stream. None by default.
  */
-class Response(val status: Status = OK, val headers: Headers = Headers(), 
+class Response(val status: Status = OK, val headers: Headers = Headers.empty,
         val setCookies: Seq[Cookie] = Vector(), val writeBody: Option[OutputStream => Unit] = None)
 {
     // OPERATORS    --------------------

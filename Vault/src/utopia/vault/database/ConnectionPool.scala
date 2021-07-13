@@ -7,10 +7,9 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.{Breakable, NewThreadExecutionContext, Volatile, VolatileFlag}
 import utopia.flow.collection.VolatileList
 import utopia.flow.time.{Now, WaitUtils}
-import utopia.flow.util.RichComparable._
 
 import scala.collection.immutable.VectorBuilder
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
 
@@ -24,7 +23,7 @@ import scala.util.Try
  *                             reused if another client requests a connection within that time period. (default = 15 seconds)
   */
 class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6,
-					 val connectionKeepAlive: Duration = 15.seconds) extends Breakable
+					 val connectionKeepAlive: FiniteDuration = 15.seconds) extends Breakable
 {
 	// ATTRIBUTES	----------------------
 	

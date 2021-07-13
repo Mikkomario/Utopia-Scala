@@ -10,6 +10,7 @@ import utopia.metropolis.model.stored.user.UserSettings
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object UserSettingsModel
 {
 	// ATTRIBUTES	----------------------------------
@@ -77,6 +78,7 @@ object UserSettingsModel
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 case class UserSettingsModel(id: Option[Int] = None, userId: Option[Int] = None, name: Option[String] = None,
 							 email: Option[String] = None, deprecatedAfter: Option[Instant] = None)
 	extends StorableWithFactory[UserSettings]

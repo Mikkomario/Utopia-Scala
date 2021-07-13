@@ -1,7 +1,6 @@
 package utopia.exodus.database.access.many
 
 import java.time.Instant
-
 import utopia.exodus.database.factory.description.DescriptionLinkFactory
 import utopia.exodus.database.model.description.{DescriptionLinkModelFactory, DescriptionModel}
 import utopia.flow.generic.ValueConversions._
@@ -10,14 +9,15 @@ import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
 import utopia.vault.model.immutable.Storable
-import utopia.vault.nosql.access.ManyModelAccess
-import utopia.vault.sql.Extensions._
+import utopia.vault.nosql.access.many.model.ManyModelAccess
+import utopia.vault.sql.SqlExtensions._
 
 /**
   * A common trait for description link access points
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 {
 	// ABSTRACT	-------------------------
@@ -74,6 +74,8 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 		
 		override val globalCondition = Some(DescriptionLinksAccess.this.mergeCondition(
 			descriptionModel.withLanguageId(languageId).toCondition))
+		
+		override protected def defaultOrdering = None
 		
 		
 		// OTHER	---------------------

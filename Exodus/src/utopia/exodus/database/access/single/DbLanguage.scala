@@ -8,7 +8,7 @@ import utopia.metropolis.model.error.NoDataFoundException
 import utopia.metropolis.model.post.NewLanguageProficiency
 import utopia.metropolis.model.stored.language.Language
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.SingleModelAccessById
+import utopia.vault.nosql.access.single.model.SingleModelAccessById
 
 import scala.util.{Failure, Success}
 
@@ -17,6 +17,7 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbLanguage extends SingleModelAccessById[Language, Int]
 {
 	// IMPLEMENTED	--------------------------------

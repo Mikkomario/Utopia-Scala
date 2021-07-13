@@ -7,6 +7,7 @@ import scala.concurrent.duration.FiniteDuration
   * @author Mikko Hilpinen
   * @since 10.6.2019, v1.5+
   */
+@deprecated("Please use ResettableLazy instead", "v1.10")
 trait ClearableSingleCacheLike[+A] extends SingleCacheLike[A]
 {
 	// ABSTRACT	-----------------

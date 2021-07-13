@@ -5,6 +5,7 @@ package utopia.flow.caching.single
   * @author Mikko Hilpinen
   * @since 10.6.2019, v1.5+
   */
+@deprecated("Please use Lazy instead", "v1.10")
 trait SingleCacheLike[+A]
 {
 	// ABSTRACT	-------------------

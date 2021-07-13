@@ -4,7 +4,6 @@ import java.time.Instant
 import utopia.flow.event.{ChangeDependency, ChangeListener, Changing}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.RichComparable._
 import utopia.genesis.shape.shape2D.Vector2DLike
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -73,14 +72,21 @@ abstract class VelocityTracker[X <: Vector2DLike[X], V <: VelocityLike[X, V], A 
 	def recordPosition(newPosition: X, eventTime: Instant = Now) =
 	{
 		// May ignore some updates if they are too frequent
-		if (minCacheInterval <= Duration.Zero || _positionHistory.lastOption.forall { _._2 <= eventTime - minCacheInterval })
+		if (minCacheInterval <= Duration.Zero ||
+			_positionHistory.lastOption.forall { case (_, time) =>
+				minCacheInterval.finite.exists { time <= eventTime - _ } })
 		{
 			val previousStatus = value
 			
 			// Updates position history
-			val threshold = eventTime - maxHistoryDuration
+			val threshold = maxHistoryDuration.finite.map { eventTime - _ }
 			val oldPositionHistory = _positionHistory
-			_positionHistory = _positionHistory.dropWhile { _._2 < threshold } :+ (newPosition, eventTime)
+			threshold match
+			{
+				case Some(t) =>
+					_positionHistory = _positionHistory.dropWhile { _._2 < t } :+ (newPosition, eventTime)
+				case None => _positionHistory :+= newPosition -> eventTime
+			}
 			
 			// Updates velocity history
 			val newVelocity =
@@ -94,7 +100,12 @@ abstract class VelocityTracker[X <: Vector2DLike[X], V <: VelocityLike[X, V], A 
 					zeroVelocity
 			}
 			val oldVelocityHistory = _velocityHistory
-			_velocityHistory = _velocityHistory.dropWhile { _._2 < threshold } :+ (newVelocity, eventTime)
+			threshold match
+			{
+				case Some(t) =>
+					_velocityHistory = _velocityHistory.dropWhile { _._2 < t } :+ (newVelocity, eventTime)
+				case None => _velocityHistory :+= newVelocity -> eventTime
+			}
 			
 			// Updates acceleration history
 			val newAcceleration =
@@ -107,7 +118,12 @@ abstract class VelocityTracker[X <: Vector2DLike[X], V <: VelocityLike[X, V], A 
 				else
 					zeroAcceleration
 			}
-			_accelerationHistory = _accelerationHistory.dropWhile { _._2 < threshold } :+ (newAcceleration, eventTime)
+			threshold match
+			{
+				case Some(t) =>
+					_accelerationHistory = _accelerationHistory.dropWhile { _._2 < t } :+ (newAcceleration, eventTime)
+				case None => _accelerationHistory :+= newAcceleration -> eventTime
+			}
 			
 			// Fires a change event and updates cached status
 			cachedValue = Some(combineHistory(_positionHistory, _velocityHistory, _accelerationHistory))

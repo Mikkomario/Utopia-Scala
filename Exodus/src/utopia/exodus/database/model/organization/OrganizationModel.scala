@@ -5,6 +5,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object OrganizationModel
 {
 	// COMPUTED	------------------------------
@@ -37,6 +38,7 @@ object OrganizationModel
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 case class OrganizationModel(id: Option[Int] = None, creatorId: Option[Int] = None) extends Storable
 {
 	override def table = OrganizationModel.table

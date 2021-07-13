@@ -6,7 +6,7 @@ import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
-import utopia.reach.component.template.FocusableWithState
+import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reflection.container.swing.window.Window
 
 import java.awt.event.KeyEvent

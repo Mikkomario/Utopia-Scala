@@ -128,12 +128,28 @@ class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeG
      * Creates a new model with the provided attribute added
      */
     def +[B >: Attribute <: Constant](attribute: B) = withAttributes(attributes :+ attribute)
+    /**
+      * @param attribute A new attribute (key + value pair)
+      * @return A copy of this model with that attribute
+      */
+    def +(attribute: (String, Value)): Model[Attribute] = this + attributeGenerator(attribute._1, Some(attribute._2))
+    /**
+     * @param attribute An attribute
+     * @tparam B Type of the new attribute
+     * @return A copy of this model with that attribute added (prepended)
+     */
+    def +:[B >: Attribute <: Constant](attribute: B) = withAttributes(attribute +: attributes)
+    /**
+      * @param attribute An attribute (key + value)
+      * @return A copy of this model with that attribute added (prepended)
+      */
+    def +:(attribute: (String, Value)): Model[Attribute] = attributeGenerator(attribute._1, Some(attribute._2)) +: this
     
     /**
      * Creates a new model with the provided attributes added
      */
-    def ++[B >: Attribute <: Constant](attributes: IterableOnce[B]) = withAttributes(this.attributes ++ attributes)
-    
+    def ++[B >: Attribute <: Constant](attributes: IterableOnce[B]) =
+        withAttributes(this.attributes ++ attributes)
     /**
      * Creates a new model that contains the attributes from both of the models. The new model 
      * will still use this model's attribute generator
@@ -143,8 +159,8 @@ class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeG
     /**
      * Creates a new model without the provided attribute
      */
-    def -[B >: Attribute <: Constant](attribute: B) = new Model(attributes.filterNot { _ == attribute }, attributeGenerator)
-    
+    def -[B >: Attribute <: Constant](attribute: B) =
+        new Model(attributes.filterNot { _ == attribute }, attributeGenerator)
     /**
      * Creates a new model without an attribute with the provided name (case-insensitive)
      */
@@ -156,7 +172,6 @@ class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeG
      */
     def --[B >: Attribute <: Constant](attributes: Seq[B]): Model[Attribute] = new Model(
             this.attributes.filterNot { attributes.contains(_) }, attributeGenerator)
-    
     /**
      * Creates a new model without any attributes within the provided model
      */
@@ -181,7 +196,6 @@ class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeG
      * Creates a copy of this model with filtered attributes
      */
     def filter(f: Attribute => Boolean) = withAttributes(attributes.filter(f))
-    
     /**
      * Creates a copy of this model with filtered attributes. The result model only contains 
      * attributes not included by the filter
@@ -195,7 +209,6 @@ class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeG
       */
     def renamed(renames: Iterable[(String, String)]) = withAttributes(attributes.map {
         a => renames.find { _._1 == a.name }.map { n => a.withName(n._2) } getOrElse a })
-    
     /**
       * @param oldName Old attribute name
       * @param newName New attribute name
@@ -215,7 +228,6 @@ class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeG
         
         copy
     }
-    
     /**
       * @return A mutable copy of this model
       */

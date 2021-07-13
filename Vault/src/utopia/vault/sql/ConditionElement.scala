@@ -2,7 +2,7 @@ package utopia.vault.sql
 
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.model.enumeration.ComparisonOperator
-import Extensions._
+import SqlExtensions._
 
 /**
  * ConditionElements are elements used in logical conditions. Usually two or more elements are 

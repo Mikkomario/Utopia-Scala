@@ -9,6 +9,7 @@ import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
+@deprecated("Please use the Citadel version instead", "v2.0")
 object MembershipModel
 {
 	// ATTRIBUTES	--------------------------
@@ -20,6 +21,15 @@ object MembershipModel
 	
 	
 	// COMPUTED	-------------------------------
+	
+	/**
+	 * @return The factory used by this model
+	 */
+	def factory = MembershipFactory
+	/**
+	 * @return The table used by this model
+	 */
+	def table = factory.table
 	
 	/**
 	  * @return A model that has just been marked as an ended membership
@@ -60,6 +70,7 @@ object MembershipModel
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 case class MembershipModel(id: Option[Int] = None, organizationId: Option[Int] = None,
 						   userId: Option[Int] = None, creatorId: Option[Int] = None, started: Option[Instant] = None,
 						   ended: Option[Instant] = None) extends StorableWithFactory[Membership]
@@ -68,7 +79,7 @@ case class MembershipModel(id: Option[Int] = None, organizationId: Option[Int] =
 	
 	// IMPLEMENTED	---------------------------
 	
-	override def factory = MembershipFactory
+	override def factory = MembershipModel.factory
 	
 	override def valueProperties = Vector("id" -> id, organizationIdAttName -> organizationId, "userId" -> userId,
 		"creatorId" -> creatorId, "started" -> started, "ended" -> ended)

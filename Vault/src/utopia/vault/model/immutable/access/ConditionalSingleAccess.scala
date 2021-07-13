@@ -7,7 +7,7 @@ import utopia.vault.database.Connection
  * @author Mikko Hilpinen
  * @since 6.10.2019, v1.3.1+
  */
-@deprecated("Replaced with utopia.vault.nosql.access.SingleModelAccess", "v1.4")
+@deprecated("Replaced with utopia.vault.nosql.access.single.model.SingleModelAccess", "v1.4")
 trait ConditionalSingleAccess[+A] extends ConditionalAccess[A]
 {
 	/**

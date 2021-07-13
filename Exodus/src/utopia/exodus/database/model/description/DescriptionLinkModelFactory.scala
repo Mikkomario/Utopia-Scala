@@ -14,6 +14,7 @@ import utopia.vault.model.immutable.{Storable, Table}
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 trait DescriptionLinkModelFactory[+M <: Storable]
 {
 	// ABSTRACT	----------------------------------

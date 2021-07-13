@@ -1,22 +1,30 @@
 package utopia.exodus.database.model.device
 
+import utopia.citadel.database.model.DeprecatableAfter
+
 import java.time.Instant
 import utopia.exodus.database.factory.device.DeviceKeyFactory
 import utopia.exodus.model.partial.DeviceKeyData
 import utopia.exodus.model.stored.DeviceKey
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
-object DeviceKeyModel
+object DeviceKeyModel extends DeprecatableAfter[DeviceKeyModel]
 {
-	// COMPUTED	----------------------------------
+	// COMPUTED ----------------------------------
 	
 	/**
-	  * @return A model that has just been marked as deprecated
+	  * @return The factory used by this model
 	  */
-	def nowDeprecated = apply(deprecatedAfter = Some(Now))
+	def factory = DeviceKeyFactory
+	
+	
+	// IMPLEMENTED  ------------------------------
+	
+	override def table = factory.table
+	
+	override def withDeprecatedAfter(deprecation: Instant) = apply(deprecatedAfter = Some(deprecation))
 	
 	
 	// OTHER	----------------------------------
@@ -61,8 +69,10 @@ case class DeviceKeyModel(id: Option[Int] = None, userId: Option[Int] = None, de
 						  key: Option[String] = None, deprecatedAfter: Option[Instant] = None)
 	extends StorableWithFactory[DeviceKey]
 {
-	override def factory = DeviceKeyFactory
+	import DeviceKeyModel._
+	
+	override def factory = DeviceKeyModel.factory
 	
 	override def valueProperties = Vector("id" -> id, "userId" -> userId, "deviceId" -> deviceId, "key" -> key,
-		"deprecatedAfter" -> deprecatedAfter)
+		deprecationAttName -> deprecatedAfter)
 }

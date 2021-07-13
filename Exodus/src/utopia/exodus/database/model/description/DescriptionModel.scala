@@ -67,6 +67,7 @@ object DescriptionModel
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 case class DescriptionModel(id: Option[Int] = None, roleId: Option[Int] = None, languageId: Option[Int] = None,
 							text: Option[String] = None, authorId: Option[Int] = None)
 	extends StorableWithFactory[Description]

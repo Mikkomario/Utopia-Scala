@@ -4,7 +4,7 @@ import utopia.exodus.database.factory.user.SessionFactory
 import utopia.exodus.database.model.user.SessionModel
 import utopia.exodus.model.stored.UserSession
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.nosql.access.many.model.ManyModelAccess
 
 /**
   * Used for accessing multiple user sessions at once
@@ -18,6 +18,8 @@ object DbUserSessions extends ManyModelAccess[UserSession]
 	override def factory = SessionFactory
 	
 	override def globalCondition = Some(factory.nonDeprecatedCondition)
+	
+	override protected def defaultOrdering = None
 	
 	
 	// COMPUTED	--------------------------------
@@ -48,6 +50,8 @@ object DbUserSessions extends ManyModelAccess[UserSession]
 		override def factory = DbUserSessions.factory
 		
 		override def globalCondition = Some(condition)
+		
+		override protected def defaultOrdering = None
 		
 		
 		// OTHER	-----------------------------

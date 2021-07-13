@@ -9,7 +9,7 @@ import utopia.vault.sql.{Condition, MaxBy, MinBy, Select, Where}
  * @author Mikko Hilpinen
  * @since 30.7.2019, v1.3+
  */
-@deprecated("Replaced with utopia.vault.nosql.access.SingleModelAccess", "v1.4")
+@deprecated("Replaced with utopia.vault.nosql.access.single.model.SingleModelAccess", "v1.4")
 trait SingleIdAccess[+I] extends IdAccess[I]
 {
 	// OPERATORS	--------------------

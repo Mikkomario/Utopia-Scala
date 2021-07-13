@@ -6,7 +6,8 @@ import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.combined.description.SimplyDescribed
+import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
 
 object FullDevice extends FromModelFactory[FullDevice]
 {
@@ -30,10 +31,15 @@ object FullDevice extends FromModelFactory[FullDevice]
   * @author Mikko Hilpinen
   * @since 19.6.2020, v1
   */
-case class FullDevice(id: Int, descriptions: Set[DescriptionLink], userIds: Set[Int]) extends ModelConvertible
+case class FullDevice(id: Int, descriptions: Set[DescriptionLink], userIds: Set[Int])
+	extends ModelConvertible with SimplyDescribed
 {
 	// IMPLEMENTED	-------------------------
 	
 	override def toModel = Model(Vector("id" -> id,
 		"descriptions" -> descriptions.map { _.toModel }.toVector, "user_ids" -> userIds.toVector))
+	
+	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) = Model(Vector(
+		"id" -> id, "user_ids" -> userIds.toVector
+	))
 }

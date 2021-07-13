@@ -10,8 +10,8 @@ import utopia.nexus.http.Request
 * @author Mikko Hilpinen
 * @since 22.5.2018
 **/
-class BaseContext(val request: Request, val resultParser: ResultParser = UseRawJSON)
-        (implicit val settings: ServerSettings) extends Context
+class BaseContext(override val request: Request, override val resultParser: ResultParser = UseRawJSON)
+        (implicit override val settings: ServerSettings) extends Context
 {
     // Doesn't need to close anything
     def close() = ()

@@ -1,11 +1,12 @@
 package utopia.flow.async
 
-import java.time.Instant
-import utopia.flow.event.{ChangeDependency, ChangeListener, Changing, ChangingLike}
+import utopia.flow.event.{ChangeDependency, ChangeListener, Changing, ChangingLike, Fixed}
 import utopia.flow.time.{Now, WaitUtils}
+import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration}
+import java.time.Instant
 
 object DelayedView
 {
@@ -26,7 +27,14 @@ object DelayedView
 			val cachedDelay = delay
 			// If there is no delay, there is no need to wrap the source item
 			if (cachedDelay > Duration.Zero)
-				new DelayedView(source, delay)
+				cachedDelay.finite match
+				{
+					case Some(finiteDelay) => new DelayedView(source, finiteDelay)
+					case None =>
+						// On the other hand, if there is infinite delay, can simply simulate the
+						// end result with a fixed value
+						Fixed(source.value)
+				}
 			else
 				source
 		}
@@ -47,7 +55,8 @@ object DelayedView
   * @param exc Implicit execution context
   * @tparam A Type of original pointer value
   */
-class DelayedView[A](val source: ChangingLike[A], delay: Duration)(implicit exc: ExecutionContext) extends Changing[A]
+class DelayedView[A](val source: ChangingLike[A], delay: FiniteDuration)(implicit exc: ExecutionContext)
+	extends Changing[A]
 {
 	// ATTRIBUTES   --------------------------
 	

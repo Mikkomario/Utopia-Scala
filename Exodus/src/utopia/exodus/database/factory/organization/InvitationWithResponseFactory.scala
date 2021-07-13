@@ -3,7 +3,7 @@ package utopia.exodus.database.factory.organization
 import utopia.exodus.database.model.organization.InvitationModel
 import utopia.metropolis.model.combined.organization.InvitationWithResponse
 import utopia.vault.model.immutable.Row
-import utopia.vault.nosql.factory.FromRowFactory
+import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.sql.JoinType
 
 /**
@@ -11,6 +11,7 @@ import utopia.vault.sql.JoinType
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object InvitationWithResponseFactory extends FromRowFactory[InvitationWithResponse]
 {
 	// IMPLEMENTED	------------------------------

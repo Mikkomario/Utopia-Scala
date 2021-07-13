@@ -105,7 +105,8 @@ class ChangeFuture[A](placeHolder: A, val future: Future[A])(implicit exc: Execu
 	override def map[B](f: A => B) =
 		if (isCompleted) Fixed(f(value)) else new ChangeFuture[B](f(placeHolder), future.map(f))
 	
-	override def lazyMap[B](f: A => B) = if (isCompleted) Lazy { f(value) } else new LazyMirror(this)(f)
+	override def lazyMap[B](f: A => B) =
+		if (isCompleted) Lazy.listenable { f(value) } else new LazyMirror(this)(f)
 	
 	override def mergeWith[B, R](other: ChangingLike[B])(f: (A, B) => R) =
 	{

@@ -7,6 +7,7 @@ import utopia.flow.caching.single.ExpiringSingleCacheLike
   * @author Mikko Hilpinen
   * @since 10.6.2019, v1.5+
   */
+@deprecated("Please use ExpiringMultiLazyLike instead", "v1.10")
 trait ExpiringCacheLike[-Key, +Value] extends MultiCacheLike[Key, Value, ExpiringSingleCacheLike[Value]]
 {
 	// ABSTRACT	--------------------

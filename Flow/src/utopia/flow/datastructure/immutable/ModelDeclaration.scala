@@ -10,6 +10,16 @@ import scala.collection.immutable.VectorBuilder
 
 object ModelDeclaration
 {
+    // ATTRIBUTES   ---------------------
+    
+    /**
+     * An empty model declaration
+     */
+    val empty = new ModelDeclaration(Set())
+    
+    
+    // OTHER    -------------------------
+    
     /**
       * Creates a new model declaration
       * @param declarations Property declarations
@@ -34,6 +44,13 @@ object ModelDeclaration
       */
     def apply(first: (String, DataType), second: (String, DataType), more: (String, DataType)*): ModelDeclaration =
         apply((Vector(first, second) ++ more).map { case (name, t) => PropertyDeclaration(name, t) })
+    
+    /**
+     * @param declaration A property declaration (name + data type)
+     * @return A model declaration based on that property declaration
+     */
+    def apply(declaration: (String, DataType)): ModelDeclaration =
+        apply(PropertyDeclaration(declaration._1, declaration._2))
 }
 
 /**
@@ -137,28 +154,17 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
       */
     def validate(model: template.Model[Property]) =
     {
-        // TODO: Remove test prints
-        // println(s"Validating $model against $this")
-        
         // First checks for missing attributes
         val missing = declarations.filterNot { d => model.containsNonEmpty(d.name) }
         val (missingNonDefaults, missingDefaults) = missing.divideBy { _.defaultValue.isDefined }
-        
-        /*
-        if (missing.nonEmpty)
-        {
-            println(s"Missing: ${missing.mkString(", ")}")
-            println(model.attributeMap.keySet.map { k => s"'$k'" }.mkString(", "))
-            missing.foreach { m => println(s"${m.name.toLowerCase}: ${model.attributeMap.get(m.name.toLowerCase)}") }
-        }*/
         
         // Declarations with default values are replaced with their defaults
         if (missingNonDefaults.nonEmpty)
             ModelValidationResult.missing(model, missingNonDefaults)
         else
         {
-            // Tries to convert all declared model properties to required types and checks that each declared (non-default)
-            // property has been defined
+            // Tries to convert all declared model properties to required types
+            // and checks that each declared (non-default) property has been defined
             val keepBuilder = new VectorBuilder[Constant]()
             val castBuilder = new VectorBuilder[Constant]()
             val castFailedBuilder = new VectorBuilder[(Constant, DataType)]()
@@ -167,11 +173,14 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration])
                 find(att.name) match
                 {
                     case Some(declaration) =>
-                        val castValue = att.value.castTo(declaration.dataType)
-                        if (castValue.isDefined)
-                            castBuilder += Constant(att.name, castValue.get)
-                        else
-                            castFailedBuilder += (Constant(att.name, att.value) -> declaration.dataType)
+                        att.value.castTo(declaration.dataType) match
+                        {
+                            // Case: Casting succeeded
+                            case Some(castValue) => castBuilder += Constant(att.name, castValue)
+                            // Case: Casting failed
+                            case None => castFailedBuilder += (Constant(att.name, att.value) -> declaration.dataType)
+                        }
+                    // Case: No declaration for this property
                     case None => keepBuilder += Constant(att.name, att.value)
                 }
             }

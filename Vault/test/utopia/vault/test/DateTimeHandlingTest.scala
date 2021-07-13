@@ -11,7 +11,7 @@ import utopia.vault.database.{Connection, ConnectionPool}
 import utopia.vault.model.enumeration.ComparisonOperator.{LargerOrEqual, SmallerOrEqual}
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.model.template.Stored
-import utopia.vault.nosql.factory.FromValidatedRowModelFactory
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import utopia.vault.sql.Delete
 
 import java.time.Instant

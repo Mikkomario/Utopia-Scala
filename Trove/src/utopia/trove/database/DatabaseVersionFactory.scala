@@ -6,7 +6,8 @@ import utopia.trove.model.VersionNumber
 import utopia.trove.model.partial.DatabaseVersionData
 import utopia.trove.model.stored.DatabaseVersion
 import utopia.vault.model.immutable.Table
-import utopia.vault.nosql.factory.{FromRowFactoryWithTimestamps, FromValidatedRowModelFactory}
+import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
   * Used for reading database version recordings from the database

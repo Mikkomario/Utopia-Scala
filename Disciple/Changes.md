@@ -1,5 +1,8 @@
 # Utopia Disciple - List of Changes
 
+## v1.4.1 - 13.7.2021
+No new features, only supports the latest (breaking) changes in the **Utopia Access** module.
+
 ## v1.4 - 17.4.2021
 This update makes the **Gateway** interface more reliable and easier to use when you're dealing with 
 multiple different interfaces. It will, however, require you to make small changes to your code.

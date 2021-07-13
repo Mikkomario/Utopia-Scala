@@ -11,6 +11,16 @@ object Join
      * Creates a join based on a reference
      */
     def apply(leftColumn: Column, target: ReferencePoint) = new Join(leftColumn, target.table, target.column)
+    
+    /**
+      * Creates a join based on a reference
+      * @param leftColumn Left side joined column
+      * @param target Right side target for that join
+      * @param joinType Type of join used (default = inner)
+      * @return A new join
+      */
+    def apply(leftColumn: Column, target: ReferencePoint, joinType: JoinType): Join =
+        new Join(leftColumn, target.table, target.column, joinType)
 }
 
 /**

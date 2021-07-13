@@ -44,8 +44,10 @@ object WaitUtils
 	
 	/**
 	  * Waits until the specified time has been reached
+	  * @param targetTime The time until which waiting should occur
+	  * @param lock A lock instance that can be used to interrupt the wait by calling .notify(AnyRef)
 	  */
-	def waitUntil(targetTime: Instant, lock: AnyRef) = wait(Until(targetTime), lock)
+	def waitUntil(targetTime: Instant, lock: AnyRef = new AnyRef) = wait(Until(targetTime), lock)
 	
 	/**
 	  * Performs an operation asynchronously after a delay

@@ -1,5 +1,51 @@
 # Utopia Vault - List of Changes
 
+## v1.8 - 13.7.2021
+This update adds some long-delayed refactorings on project package structure and is therefore 
+quite error-inducing. However, this adds a lot of traits that reduce the need for copying and pasting and 
+simplify your code a lot when utilized. Most important of these updates are the new **LinkedFactory** traits, 
+and the new **View** traits.
+### Breaking Changes
+- Refactored package structure in nosql package (access & factory packages)
+- **DistinctModelAccess** now requires computed property: `defaultOrdering: Option[OrderBy]`
+- **SingleAccess** and **ManyAccess** no longer extends **FilterableAccess**
+- **MultiLinkedFactory** trait now requires implementation of `.isAlwaysLinked: Boolean` 
+  instead of `.joinType`
+- **MultiLinkedFactory** now expects a **Vector** and not just a **Seq** in `.apply(...)`
+- **DeletionRule** no longer uses optional duration as standard live duration and only supports 
+  finite durations in conditional live durations
+### Deprecations
+- Deprecated **Extensions** object in utopia.vault.sql package. 
+  Identical **SqlExtensions** object should be used instead.
+- Deprecated **FilterableAccess**, **UnconditionalAccess**, **NonDeprecatedAccess** and **RowModelAccess** 
+  in favor of new **View**-based traits
+### New Features
+- Added **ClearUnreferencedData** class for easier deletion of rows that are not referenced by other tables
+- Added combining factory traits (based on linked factories) that make linked factory implementation 
+  even more streamlined in cases where two factory implementations are combined
+- Added **View** traits that can be extended by various **Access** classes or classes that function like 
+  **Access** points without providing read access to data. The new **View** classes make it easier to 
+  apply additional traits to **Access** classes because they don't take that many type parameters (1 at most)
+- Added **ColumnAccess** that works like **IdAccess**, except that it allows one to access different columns
+- Added **DistincReadModelAccess** trait that provides access to .pull -methods without requiring 
+  .put method support
+- Added **LatestModelAccess** trait that works like **UniqueModelAccess**, except that it targets 
+  the latest row and doesn't support .put methods
+- Added **FilteredAccess** trait to simplify the creation of nested access points
+### New Methods
+- Linked factory classes got a few new methods since they now extend the new **LinkedFactoryLike** trait
+- **ClearOldData**.type
+  - Added `.once(...)` and `.dailyLoop(...)` functions to make the use of this class easier
+- **FromResultFactory**
+  - `.getManyWithJoin(...)`
+- **FromRowFactory**
+  - `.getWithJoin(...)`
+### Other Changes
+- Added **SqlExtensions** object, which is a copy of the **Extensions** object and will replace 
+  the latter in a future release
+- **StoredModelConvertible** now adds the id constant to the beginning of the resulting model
+- **DataInserted** trait now extends **Indexed**, providing the `.index` property
+
 ## v1.7.1 - 12.5.2021
 This update focuses on utility features around SQL queries, especially on iterative, 
 sequential queries that target very large data sets. 

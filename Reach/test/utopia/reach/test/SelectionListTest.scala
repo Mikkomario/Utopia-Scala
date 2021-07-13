@@ -4,8 +4,8 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.KeyTypedListener
 import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.reach.component.input.SelectionList
-import utopia.reach.component.label.MutableViewTextLabel
+import utopia.reach.component.input.selection.SelectionList
+import utopia.reach.component.label.text.MutableViewTextLabel
 import utopia.reach.container.ReachCanvas
 import utopia.reflection.component.context.TextContext
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer

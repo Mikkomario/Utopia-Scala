@@ -15,7 +15,7 @@ import scala.collection.immutable.VectorBuilder
   * @author Mikko Hilpinen
   * @since 14.4.2019, v2+
   */
-trait Polygonic extends ShapeConvertible with Projectable with Area2D with Transformable[Polygonic]
+trait Polygonic extends ShapeConvertible with Projectable with Area2D with Transformable[Polygonic] with Bounded
 {
 	// ABSTRACT	----------------
 	
@@ -102,18 +102,6 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 	  * @return The collision axes that should be considered when testing this instance
 	  */
 	def collisionAxes = edges.distinctWith { _ isParallelWith _ }.map { _.normal2D }
-	
-	/**
-	  * @return The bounds around this polygonic instance
-	  */
-	def bounds =
-	{
-		val c = corners
-		val topLeft = Point.topLeft(c)
-		val bottomRigth = Point.bottomRight(c)
-		
-		Bounds(topLeft, (bottomRigth - topLeft).toSize)
-	}
 	
 	/**
 	  * @return The center point of this shape
@@ -215,6 +203,18 @@ trait Polygonic extends ShapeConvertible with Projectable with Area2D with Trans
 	
 	
 	// IMPLEMENTED	------------
+	
+	/**
+	  * @return The bounds around this polygonic instance
+	  */
+	override def bounds =
+	{
+		val c = corners
+		val topLeft = Point.topLeft(c)
+		val bottomRigth = Point.bottomRight(c)
+		
+		Bounds(topLeft, (bottomRigth - topLeft).toSize)
+	}
 	
 	override def toShape: Shape =
 	{

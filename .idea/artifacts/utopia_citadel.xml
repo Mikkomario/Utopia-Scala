@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="utopia-citadel">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_citadel</output-path>
+    <root id="archive" name="utopia-citadel.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/Citadel/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="Citadel" />
+      <element id="module-source" name="Citadel" />
+    </root>
+  </artifact>
+</component>

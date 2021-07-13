@@ -5,7 +5,7 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.shape.Axis.X
-import utopia.reach.component.label.TextLabel
+import utopia.reach.component.label.text.TextLabel
 import utopia.reach.container.multi.stack.ViewStack
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.wrapper.Framing

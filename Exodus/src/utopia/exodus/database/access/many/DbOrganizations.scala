@@ -6,13 +6,14 @@ import utopia.exodus.model.enumeration.StandardUserRole.Owner
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.partial.organization.MembershipData
 import utopia.vault.database.Connection
-import utopia.vault.sql.Extensions._
+import utopia.vault.sql.SqlExtensions._
 
 /**
   * Used for accessing multiple organizations at a time
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 object DbOrganizations
 {
 	// COMPUTED	----------------------
@@ -68,6 +69,8 @@ object DbOrganizations
 			// IMPLEMENTED	------------
 
 			override def globalCondition = Some(DeletionModel.organizationIdColumn.in(organizationIds))
+			
+			override protected def defaultOrdering = None
 		}
 	}
 }

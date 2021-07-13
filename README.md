@@ -265,14 +265,26 @@ game or a physics-based software, this will most likely help you a lot in gettin
 pre-built user management and user session system for your server and optionally client also. I've noticed that these features 
 need to exist in so many server applications that I decided to make this the one-time solution to this problem.
 
-## Utopia Exodus
+### Utopia Citadel
+*A working user management database in minutes instead of hours*
+
+**Utopia Citadel** module extends the **Utopia Metropolis** module, implementing most of the database interactions. 
+**Utopia Citadel** may be used in both server-side and client-side context. On server-side, please use **Utopia Exodus** 
+that extends this module. On client-side, consider using **Utopia Trove** to set up a local database.
+
+#### Utopia Citadel Description Importer
+The **Citadel** module comes with a utility application for importing item descriptions into your database 
+without difficult SQL operations. If you're utilizing **Utopia Citadel** or any of the dependent modules in 
+your project, please make sure to check out the README file of this application for more details.
+
+### Utopia Exodus
 *Server-base that lets you skip right to your business logic*
 
 The main point of **Utopia Exodus** is to handle the cumbersome user management and user authentication parts of your server-side 
-application. By using **Utopia Exodus**, you can setup the required structures very quickly and get to what only you can do: 
+application. By using **Utopia Exodus**, you can setup the required structures very quickly and get to what only you can implement: 
 Your application business logic.
 
-## Utopia Journey
+### Utopia Journey
 *Leverage your Exodus server with a pre-built client interface*
 
 **Utopia Journey** is the client-side interface to **Utopia Exodus** server, handling request authorization and local session management. 
@@ -285,22 +297,24 @@ the trouble of worrying about a secure interface.
 	- Utopia BunnyMunch
     - Utopia Vault
 		- Utopia Trove
-	- Utopia Metropolis
     - Utopia Access
         - Utopia Nexus
             - Utopia Nexus for Tomcat
-			- Utopia Exodus (also requires Metropolis)
         - Utopia Disciple
 			- Utopia Annex
-				- Utopia Journey (also requires Metropolis)
     - Utopia Inception
         - Utopia Genesis
             - Utopia Reflection
 				- Utopia Reach
             - Utopia Conflict
+	- Utopia Metropolis
+		- Utopia Citadel (also requires Vault)
+			- Utopia Exodus (also requires Nexus)
+		- Utopia Journey (also requires Annex)
            
 Basically every other *Utopia* module is dependent from **Flow**. All http-related modules are dependent from 
 **Access** and all 2D visual modules are dependent from **Inception** and **Genesis**. **Nexus** is the base 
-module for server-side operations while **Disciple** is the foundation of client-side server interactions.
+module for server-side operations while **Disciple** is the foundation of client-side server interactions. 
+All user-management projects extend **Metropolis**.
 
 Additional details about each module are listed in their own readmes.

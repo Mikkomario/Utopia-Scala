@@ -1,36 +1,47 @@
 package utopia.nexus.rest
 
+import utopia.access.http.Status._
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.AutoClose._
-import utopia.nexus.http.Request
-import utopia.nexus.http.Path
-import utopia.nexus.http.Response
-import utopia.flow.datastructure.immutable.Model
-import utopia.access.http.Headers
-import utopia.access.http.Status._
+import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.StringExtensions._
+import utopia.nexus.http.{Path, Request, Response}
+import Path._
 import utopia.nexus.rest.ResourceSearchResult.{Error, Follow, Ready, Redirected}
-import utopia.nexus.result.Result.Failure
-import utopia.nexus.result.Result.Success
+import utopia.nexus.result.Result
+
+import scala.annotation.tailrec
+import scala.util.Try
+
+object RequestHandler
+{
+    /**
+     * Creates a new request handler
+     * @param childResources Resources per api version
+     * @param path Base path of this handler (before the version number) (optional)
+     * @param makeContext A function for creating a new request context
+     * @tparam C Type of request context used
+     * @return A new request handler
+     */
+    def apply[C <: Context](childResources: Map[String, Iterable[Resource[C]]], path: Option[Path] = None)
+                           (makeContext: Request => C) = new RequestHandler[C](childResources, path, makeContext)
+}
 
 /**
- * This class handles a request by searching for the targeted resource and performing the right 
- * operation on the said resource
+ * This class handles a request by searching for the targeted resource and performs the right
+ * operation on that resource
  * @author Mikko Hilpinen
  * @since 9.9.2017
  */
-class RequestHandler[C <: Context](val childResources: Iterable[Resource[C]], val path: Option[Path] = None,
-                                   val makeContext: Request => C)
+class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resource[C]]], path: Option[Path] = None,
+                                    makeContext: Request => C)
 {
     // COMPUTED PROPERTIES    -------------
     
-   //  private def currentDateHeader = Headers().withCurrentDate
-    
-    private def get(implicit context: C) = 
-    {
-        val childLinks = childResources.map { child => (child.name, (context.settings.address + "/" + 
-                path.map { _/child.name.toString }.getOrElse(child.name)).toValue) }
-        Success(Model(childLinks)).toResponse
-    }
+    private def get(version: String)(implicit context: C) =
+        Result.Success(Model(Vector("version" -> version,
+            "children" -> childResources.getOrElse(version.toLowerCase, Vector()).map { _.name }.toVector))).toResponse
     
     
     // OPERATORS    -----------------------
@@ -38,120 +49,110 @@ class RequestHandler[C <: Context](val childResources: Iterable[Resource[C]], va
     /**
      * Forms a response for the specified request
      */
-    def apply(request: Request) = handlePath(request.path)(makeContext(request))
+    def apply(request: Request): Response = handleBasePath(request.path) match
+    {
+        case Right((version, remaining)) =>
+            remaining match
+            {
+                // Targeting a resource under a version
+                case Some(remaining) =>
+                    makeContext(request).consume { implicit c =>
+                        // Catches exceptions and wraps them as internal server errors
+                        Try {
+                            // Finds the final target resource
+                            findTarget(version, remaining) match {
+                                case Right((resource, path)) =>
+                                    // Makes sure the resource supports the method being used
+                                    val allowed = resource.allowedMethods
+                                    if (allowed.isEmpty)
+                                        Result.Failure(NotImplemented).toResponse
+                                    else if (allowed.exists { _ == request.method })
+                                        resource.toResponse(path)
+                                    else
+                                        Result.Failure(MethodNotAllowed,
+                                            s"${request.method} is not allowed on this resource. Allowed methods: [${
+                                                allowed.mkString(", ")}]").toResponse
+                                            .withModifiedHeaders { _.withCurrentDate.withAllowedMethods(allowed.toSeq) }
+                                case Left(error) => error.toResult.toResponse
+                            }
+                        }.getOrMap { error => Result.Failure(InternalServerError, error.getMessage).toResponse }
+                    }
+                // Case: Targeting an API version
+                case None => makeContext(request).consume { implicit c => get(version) }
+            }
+        // Case: initial path handling failed => returns a failure
+        case Left(error) => makeContext(request).consume { implicit c => error.toResult.toResponse }
+    }
     
     
     // OTHER METHODS    -------------------
     
-    private def handlePath(targetPath: Option[Path])(implicit context: C): Response = 
+    private def handleBasePath(basePath: Option[Path]) = handleRemainingBasePath(basePath, path)
+    @tailrec
+    private def handleRemainingBasePath(remainingPath: Option[Path],
+                                        pathToSkip: Option[Path]): Either[Error, (String, Option[Path])] =
     {
-        try
-        {
-            // Parses the target path (= request path - handler path)
-            var remainingPath = targetPath
-            var error: Option[Error] = None
-            var pathToSkip = path
-            
-            // Skips the path that leads to this handler resource
-            while (pathToSkip.isDefined && error.isEmpty)
-            {
-                if (remainingPath.isEmpty)
-                    error = Some(Error(message = Some(s"Expected request path to continue with /${pathToSkip.get}")))
-                else if (!remainingPath.get.head.equalsIgnoreCase(pathToSkip.get.head))
-                    error = Some(Error(message = Some(s"Expected ${pathToSkip.get}, found ${remainingPath.get}")))
-                else
-                {
-                    remainingPath = remainingPath.get.tail
-                    pathToSkip = pathToSkip.get.tail
+        pathToSkip match {
+            // Case: Path remains to be skipped => Expects the provided path to match
+            case Some(pathToSkip) =>
+                remainingPath match {
+                    case Some(remaining) =>
+                        if (remaining.head ~== pathToSkip.head)
+                            handleRemainingBasePath(remaining.tail, pathToSkip.tail)
+                        else
+                            Left(Error(message = Some(s"Expected $pathToSkip, found $remaining")))
+                    // Case: Too short a path
+                    case None => Left(Error(message = Some(s"Expected request path to continue with /$pathToSkip")))
                 }
-            }
-            
-            val firstResource = remainingPath.map{ _.head }.flatMap { resourceName => 
-                        childResources.find { _.name.equalsIgnoreCase(resourceName) } }
-            if (remainingPath.isDefined && firstResource.isEmpty)
-                error = Some(Error(message = Some(s"Couldn't find ${remainingPath.head} under ${
-                    path.map { _.toString }.getOrElse("Request Handler") }. Available resources: [${
-                    childResources.map { _.name }.mkString(", ")}]")))
-            
-            // Case: Error
-            if (error.isDefined)
-                error.get.toResult.toResponse
-            // Case: RequestHandler was targeted
-            else if (remainingPath.isEmpty)
-                get
-            else
-            {
-                // Case: A resource under the handler was targeted
-                // Finds the initial resource for the path
-                var lastResource = firstResource
-                if (lastResource.isDefined)
-                {
-                    // Drops the first resource from the remaining path
-                    remainingPath = remainingPath.flatMap { _.tail }
+            // Case: No more path to skip => Expects the next path piece to show a version
+            case None =>
+                remainingPath match {
+                    case Some(remaining) =>
+                        // Case: Found a valid version => Continues with the resources in that version
+                        if (childResources.contains(remaining.head.toLowerCase))
+                            Right(remaining.head -> remaining.tail)
+                        // Case: Didn't find a valid version
+                        else
+                            Left(Error(message = Some(
+                                s"'${remaining.head}' is not a valid version. Available versions: [${
+                                    childResources.keys.mkString(", ")}]")))
+                    // Case: Too short a path
+                    case None => Left(Error(message = Some(
+                        s"Expected request path to continue with a version. Available versions: [${
+                            childResources.keys.mkString(", ")}]")))
                 }
-                
-                var foundTarget = remainingPath.isEmpty
-                var redirectPath: Option[Path] = None
-                
-                // Searches as long as there is success and more path to discover
-                while (lastResource.isDefined && remainingPath.isDefined && error.isEmpty && 
-                        !foundTarget && redirectPath.isEmpty)
-                {
-                    // Sees what's the resources reaction
-                    lastResource.get.follow(remainingPath.get) match
-                    {
-                        case Ready(remaining) =>
-                            foundTarget = true
-                            remainingPath = remaining
-                        case Follow(next: Resource[C], remaining) =>
-                            lastResource = Some(next)
-                            remainingPath = remaining
-                            
-                            // If there is no path left, assumes that the final resource is ready to 
-                            // receive the request
-                            if (remainingPath.isEmpty)
-                                foundTarget = true
-                            
-                        case Redirected(newPath) => redirectPath = Some(newPath)
-                        case foundError: Error => error = Some(foundError)
-                    }
-                }
-                
-                // Handles search results
-                if (error.isDefined)
-                    error.get.toResult.toResponse
-                else if (redirectPath.isDefined)
-                    handlePath(redirectPath)
-                else if (foundTarget)
-                {
-                    // Makes sure the method can be used on the targeted resource
-                    val allowedMethods = lastResource.get.allowedMethods
-                    
-                    if (allowedMethods.exists { _ == context.request.method })
-                        lastResource.get.toResponse(remainingPath)
-                    else
-                    {
-                        val headers = Headers().withCurrentDate.withAllowedMethods(allowedMethods.toVector)
-                        new Response(MethodNotAllowed, headers)
-                    }
-                }
-                else
-                    Error().toResult.toResponse
-            }
-        }
-        catch 
-        {
-            case e: Exception => Failure(InternalServerError, Some(e.getMessage)).toResponse
-        }
-        finally
-        {
-            context.closeQuietly()
         }
     }
     
-    /*
-    private def makeNotAllowedResponse(allowedMethods: Seq[Method])(implicit context: C) = 
-            Failure(MethodNotAllowed, None, Model(Vector(
-            "allowed_methods" -> allowedMethods.toVector.map(_.name)))
-            ).toResponse.withModifiedHeaders(_.withAllowedMethods(allowedMethods))*/
+    // Expects a valid version
+    private def findTarget(version: String, remainingPath: Path)
+                          (implicit context: C): Either[Error, (Resource[C], Option[Path])] =
+    {
+        val resources = childResources(version)
+        val first = remainingPath.head
+        resources.find { _.name ~== first } match
+        {
+            // Case: Root resource found => follows that one
+            case Some(resource) => follow(version, resource, remainingPath.tail)
+            // Case: Root resource not found
+            case None => Left(Error(message = Some(s"Resource '$first' not found under ${
+                path/version}. Available resources: [${resources.map { _.name }.mkString(", ")}]")))
+        }
+    }
+    
+    @tailrec
+    private def follow[C2 <: C](version: String, resource: Resource[C2], path: Option[Path])
+                      (implicit context: C2): Either[Error, (Resource[C2], Option[Path])] = path match
+    {
+        case Some(remaining) =>
+            // TODO: The match may not be exhaustive (because of the type parameter requirement)
+            resource.follow(remaining) match
+            {
+                case Follow(next, remaining) => follow(version, next, remaining)
+                case Ready(resource, path) => Right(resource -> path)
+                case e: Error => Left(e)
+                case Redirected(path) => findTarget(version, path)
+            }
+        case None => Right(resource -> None)
+    }
 }

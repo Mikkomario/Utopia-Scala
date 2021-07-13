@@ -5,13 +5,14 @@ import utopia.exodus.database.model.organization.DeletionCancelModel
 import utopia.metropolis.model.combined.organization.DeletionWithCancellations
 import utopia.metropolis.model.partial.organization.DeletionCancelData
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.nosql.access.many.model.ManyModelAccess
 
 /**
   * Common trait for access points into organization deletions
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1
   */
+@deprecated("Please use the Citadel version instead", "v2.0")
 trait OrganizationDeletionsAccess extends ManyModelAccess[DeletionWithCancellations]
 {
 	// IMPLEMENTED	----------------------
@@ -37,6 +38,8 @@ trait OrganizationDeletionsAccess extends ManyModelAccess[DeletionWithCancellati
 		
 		override def globalCondition = Some(OrganizationDeletionsAccess.this.mergeCondition(
 			DeletionCancelModel.table.primaryColumn.get.isNull))
+		
+		override protected def defaultOrdering = None
 		
 		
 		// OTHER	----------------------
