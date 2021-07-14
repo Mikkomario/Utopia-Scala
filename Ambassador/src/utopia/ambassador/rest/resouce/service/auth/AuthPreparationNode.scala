@@ -1,6 +1,7 @@
 package utopia.ambassador.rest.resouce.service.auth
 
 import utopia.access.http.Method.Post
+import utopia.ambassador.model.post.NewAuthPreparation
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.nexus.http.Path
 import utopia.nexus.rest.LeafResource
@@ -22,9 +23,14 @@ case class AuthPreparationNode(serviceId: Int, taskId: Int) extends LeafResource
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		context.sessionKeyAuthorized { (session, connection) =>
-			// TODO: Parse model from request and check if redirect target is present
-			// Reads the scopes required by the task and those available to the user
-			???
+			// Parses post model from request and checks if all completion types (Success & Failure)
+			// have been covered by the redirect targets
+			context.handlePossibleValuePost { v =>
+				val preparation = v.model.map(NewAuthPreparation.from).getOrElse { NewAuthPreparation() }
+				
+				// Reads the scopes required by the task and those available to the user
+				???
+			}
 		}
 	}
 }

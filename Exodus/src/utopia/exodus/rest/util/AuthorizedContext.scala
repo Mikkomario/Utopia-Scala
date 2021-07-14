@@ -375,12 +375,7 @@ trait AuthorizedContext extends Context
 		}
 	}
 	
-	/**
-	  * Parses a value from the request body and uses it to produce a response
-	  * @param f Function that will be called if the value was successfully read. Returns an http result.
-	  * @return Function result or a failure result if no value could be read.
-	  */
-	def handleValuePost(f: Value => Result) =
+	def handlePossibleValuePost(f: Value => Result) =
 	{
 		// Parses the post body first
 		request.body.headOption match
@@ -404,7 +399,25 @@ trait AuthorizedContext extends Context
 					case Success(value) => f(value)
 					case Failure(error) => Result.Failure(BadRequest, error.getMessage)
 				}
-			case None => Result.Failure(BadRequest, "Please specify a body in the request")
+			// Case: No request body specified => Uses an empty value
+			case None => f(Value.empty)
+		}
+	}
+	
+	/**
+	  * Parses a value from the request body and uses it to produce a response
+	  * @param f Function that will be called if the value was successfully read and not empty.
+	  *          Returns an http result.
+	  * @return Function result or a failure result if no value could be read.
+	  */
+	def handleValuePost(f: Value => Result) =
+	{
+		handlePossibleValuePost { value =>
+			// Fails on empty value
+			if (value.isEmpty)
+				Result.Failure(BadRequest, "Please specify a body in the request")
+			else
+				f(value)
 		}
 	}
 	

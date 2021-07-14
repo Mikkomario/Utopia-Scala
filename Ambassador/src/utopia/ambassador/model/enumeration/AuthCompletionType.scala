@@ -23,6 +23,16 @@ sealed trait AuthCompletionType
 
 object AuthCompletionType
 {
+	// ATTRIBUTES   -----------------------------
+	
+	/**
+	  * All values of this enumeration
+	  */
+	lazy val values = Vector[AuthCompletionType](Default, Success, Failure, DenialOfAccess)
+	
+	
+	// NESTED   ---------------------------------
+	
 	/**
 	  * The default redirect url type used when other cases haven't been covered
 	  */

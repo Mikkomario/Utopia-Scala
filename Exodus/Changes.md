@@ -1,5 +1,10 @@
 # Utopia Exodus - List of Changes
 
+## v2.0.1 (in development)
+### New Methods
+- **AuthorizedContext**
+  - Added `.handlePossibleValuePost(...)` that allows users to recover from cases where no request body was specified
+
 ## v2.0 - 13.7.2021
 This release separates most of the database interaction into the new **Utopia Citadel** module and also makes 
 many of the existing REST resources customizable from the sub-projects.  
