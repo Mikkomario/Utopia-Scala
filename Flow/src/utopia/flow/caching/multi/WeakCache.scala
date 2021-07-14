@@ -28,6 +28,8 @@ class WeakCache[Key, Value <: AnyRef](request: Key => Value) extends CacheLike[K
 	
 	// IMPLEMENTED	---------------
 	
+	override def cachedValues = weakRefs.values.flatMap { _.get }
+	
 	override def cached(key: Key) = weakRefs.get(key).flatMap { _.get }
 	
 	override def apply(key: Key) =

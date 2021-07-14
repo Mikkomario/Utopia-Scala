@@ -57,6 +57,8 @@ class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Durati
 	
 	// IMPLEMENTED  -----------------------------
 	
+	override def cachedValues = cachePointer.value.values
+	
 	override def apply(key: K) = cached(key).getOrElse {
 		// Generates and stores the new value
 		val newValue = request(key)

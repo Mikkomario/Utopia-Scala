@@ -8,6 +8,11 @@ package utopia.flow.caching.multi
 trait CacheLike[-Key, +Value]
 {
 	/**
+	  * @return All the items currently stored in this cache
+	  */
+	def cachedValues: Iterable[Value]
+	
+	/**
 	  * Finds a value for a key from this cache
 	  * @param key A key
 	  * @return A value for the key, the value will be cached

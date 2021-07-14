@@ -1,5 +1,13 @@
 # Utopia Flow - List of Changes
 
+## v1.11 (in development)
+### Breaking Changes
+- Added an abstract `.cachedValues` property to **CacheLike** trait to support certain use cases 
+  which were available with the previous cache versions but not with v1.10.
+### New Methods
+- **Period** (**TimeExtensions**)
+  - Added `.toApproximateDuration` for converting a **Period** to a **FiniteDuration** (not exact)
+
 ## v1.10 - 13.7.2021
 This release provides you with a completely new set of **Lazy** containers to be used for caching.  
 There's also an update on time related classes, making durations more reliable.  

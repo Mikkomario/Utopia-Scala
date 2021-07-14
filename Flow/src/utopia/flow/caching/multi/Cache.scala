@@ -85,6 +85,8 @@ class Cache[Key, Value](private val request: Key => Value) extends CacheLike[Key
 	
 	// IMPLEMENTED	------------------
 	
+	override def cachedValues = cachedItems.values
+	
 	override def apply(key: Key) =
 	{
 		if (cachedItems.contains(key))

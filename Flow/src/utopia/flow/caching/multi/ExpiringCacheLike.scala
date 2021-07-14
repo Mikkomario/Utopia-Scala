@@ -29,6 +29,8 @@ trait ExpiringCacheLike[-Key, +Value] extends MultiCacheLike[Key, Value, Expirin
 		super.apply(key)
 	}
 	
+	override def cachedValues = currentCaches.flatMap { _.cached }
+	
 	
 	// OTHER	---------------------
 	
