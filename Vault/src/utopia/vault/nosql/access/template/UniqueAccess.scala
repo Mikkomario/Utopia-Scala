@@ -1,7 +1,7 @@
 package utopia.vault.nosql.access.template
 
 import utopia.vault.database.Connection
-import utopia.vault.sql.{Condition, Limit, Select, SqlTarget, Where}
+import utopia.vault.sql.{Condition, SqlTarget}
 
 import scala.language.implicitConversions
 
@@ -51,14 +51,7 @@ trait UniqueAccess[+A] extends Access[Option[A]]
 	 * @param connection DB Connection (implicit)
 	 * @return Whether there exists an item accessible from this access point
 	 */
-	def isDefined(implicit connection: Connection) =
-		connection(Select.nothing(target) + Where(condition) + Limit(1)).nonEmpty
-	
-	/**
-	  * @param connection DB Connection (implicit)
-	  * @return Whether there doesn't exist a single row accessible from this access point
-	  */
-	def isEmpty(implicit connection: Connection) = !isDefined
+	def isDefined(implicit connection: Connection) = nonEmpty
 }
 
 @deprecated("Replaced with UniqueModelAccess and UniqueIdAccess", "v1.7")

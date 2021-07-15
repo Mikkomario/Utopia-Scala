@@ -123,14 +123,4 @@ trait SingleAccess[+A] extends Access[Option[A]]
 	  * @return The largest item based on provided ordering.
 	  */
 	def maxBy(propertyName: String)(implicit connection: Connection): Option[A] = maxBy(propertyName, None)
-	
-	/**
-	  * Finds an individual item with a search condition
-	  * @param condition  A search condition
-	  * @param ordering   Applied ordering (optional, None by default)
-	  * @param connection DB Connection
-	  * @return The item found using specified condition. None if no item was found.
-	  */
-	def find(condition: Condition, ordering: Option[OrderBy] = None)(implicit connection: Connection): Option[A] =
-		read(Some(mergeCondition(condition)), ordering)
 }

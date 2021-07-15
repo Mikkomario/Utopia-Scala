@@ -28,6 +28,15 @@ object ScopeModel extends DataInserter[ScopeModel, Scope, ScopeData]
 		apply(None, Some(data.serviceId), Some(data.officialName), data.clientSideName)
 	
 	override protected def complete(id: Value, data: ScopeData) = Scope(id.getInt, data)
+	
+	
+	// OTHER    ---------------------------------
+	
+	/**
+	  * @param serviceId A 3rd party service id
+	  * @return A model with that service id
+	  */
+	def withServiceId(serviceId: Int) = apply(serviceId = Some(serviceId))
 }
 
 /**

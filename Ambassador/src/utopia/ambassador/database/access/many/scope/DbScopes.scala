@@ -1,7 +1,7 @@
 package utopia.ambassador.database.access.many.scope
 
 import utopia.ambassador.database.factory.scope.{ScopeFactory, TaskScopeFactory}
-import utopia.ambassador.database.model.scope.TaskScopeLinkModel
+import utopia.ambassador.database.model.scope.{ScopeModel, TaskScopeLinkModel}
 import utopia.ambassador.database.model.token.TokenScopeLinkModel
 import utopia.ambassador.model.combined.scope.TaskScope
 import utopia.ambassador.model.stored.scope.Scope
@@ -16,6 +16,11 @@ import utopia.vault.sql.{Select, Where}
   */
 object DbScopes extends ManyRowModelAccess[Scope]
 {
+	// COMPUTED ------------------------------------
+	
+	private def model = ScopeModel
+	
+	
 	// IMPLEMENTED  --------------------------------
 	
 	override def factory = ScopeFactory
@@ -46,6 +51,17 @@ object DbScopes extends ManyRowModelAccess[Scope]
 		// COMPUTED --------------------------------
 		
 		private def linkModel = TaskScopeLinkModel
+		
+		
+		// OTHER    --------------------------------
+		
+		/**
+		  * @param serviceId Id of the targeted service
+		  * @param connection Implicit DB Connection
+		  * @return All scopes linked with this task that belong to the specified service
+		  */
+		def forServiceWithId(serviceId: Int)(implicit connection: Connection) =
+			find(model.withServiceId(serviceId).toCondition)
 		
 		
 		// IMPLEMENTED  ----------------------------

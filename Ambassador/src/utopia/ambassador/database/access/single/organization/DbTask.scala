@@ -18,6 +18,8 @@ object DbTask extends UnconditionalView with Indexed
 	
 	override def table = Tables.task
 	
+	override def target = table
+	
 	
 	// OTHER    ----------------------------
 	

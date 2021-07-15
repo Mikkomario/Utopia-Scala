@@ -1,7 +1,7 @@
 package utopia.vault.nosql.access.single.column
 
 import utopia.vault.database.Connection
-import utopia.vault.sql.{Condition, Exists}
+import utopia.vault.sql.Condition
 
 import scala.language.implicitConversions
 
@@ -44,11 +44,5 @@ trait UniqueIdAccess[+ID] extends SingleIdAccess[ID]
 	  * @param connection DB Connection (implicit)
 	  * @return Whether there exists an id accessible from this access point
 	  */
-	def isDefined(implicit connection: Connection) = Exists(target, condition)
-	
-	/**
-	  * @param connection DB Connection (implicit)
-	  * @return Whether there doesn't exist a single row accessible from this access point
-	  */
-	def isEmpty(implicit connection: Connection) = !isDefined
+	def isDefined(implicit connection: Connection) = nonEmpty
 }

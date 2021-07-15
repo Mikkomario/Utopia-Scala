@@ -34,5 +34,7 @@ trait SubView extends View
 	
 	override def table = parent.table
 	
+	override def target = parent.target
+	
 	override def globalCondition = Some(condition)
 }

@@ -1,7 +1,7 @@
 package utopia.ambassador.model.post
 
 import utopia.ambassador.model.enumeration.AuthCompletionType
-import utopia.flow.datastructure.immutable.Value
+import utopia.ambassador.model.enumeration.AuthCompletionType.Default
 import utopia.flow.datastructure.template.{Model, Property}
 import utopia.flow.generic.FromModelFactory
 
@@ -23,7 +23,7 @@ object NewAuthPreparation extends FromModelFactory[NewAuthPreparation]
 	  */
 	def from(model: Model[Property]) =
 	{
-		val state = model("state")
+		val state = model("state").getString
 		val redirectUrls = AuthCompletionType.values.flatMap { cType =>
 			model(cType.keyName).string.map { cType -> _ }
 		}.toMap
@@ -37,4 +37,11 @@ object NewAuthPreparation extends FromModelFactory[NewAuthPreparation]
   * @author Mikko Hilpinen
   * @since 12.7.2021, v1.0
   */
-case class NewAuthPreparation(state: Value = Value.empty, redirectUrls: Map[AuthCompletionType, String] = Map())
+case class NewAuthPreparation(state: String = "", redirectUrls: Map[AuthCompletionType, String] = Map())
+{
+	/**
+	  * @return Whether this preparation is able to redirect the user regardless of authorization completion result
+	  */
+	def coversAllCompletionCases = redirectUrls.contains(Default) ||
+		(redirectUrls.contains(AuthCompletionType.Success) && redirectUrls.contains(AuthCompletionType.Failure))
+}

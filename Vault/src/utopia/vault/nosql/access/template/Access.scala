@@ -12,6 +12,8 @@ import utopia.vault.sql.{Condition, OrderBy}
   */
 trait Access[+A] extends View
 {
+	// ABSTRACT ---------------------------------
+	
 	/**
 	  * Performs the actual data read + possible wrapping
 	  * @param condition  Final search condition used when reading data (None if no condition should be applied)
@@ -20,4 +22,17 @@ trait Access[+A] extends View
 	  * @return Read data
 	  */
 	protected def read(condition: Option[Condition], order: Option[OrderBy] = None)(implicit connection: Connection): A
+	
+	
+	// OTHER    ----------------------------------
+	
+	/**
+	  * Finds all items accessible through this access point that satisfy the specified (additional) search condition
+	  * @param condition  A search condition
+	  * @param ordering   Ordering applied (optional, None by default)
+	  * @param connection Implicit database connection
+	  * @return Read items
+	  */
+	def find(condition: Condition, ordering: Option[OrderBy] = None)(implicit connection: Connection) =
+		read(Some(mergeCondition(condition)), ordering)
 }

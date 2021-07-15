@@ -13,6 +13,15 @@ import scala.concurrent.duration.FiniteDuration
 
 object ServiceSettingsModel extends DataInserter[ServiceSettingsModel, ServiceSettings, ServiceSettingsData]
 {
+	// ATTRIBUTES   -----------------------
+	
+	/**
+	  * Name of the property that contains client side redirect url used by default when an authentication
+	  * process completes
+	  */
+	val defaultCompletionUrlAttName = "defaultCompletionRedirectUrl"
+	
+	
 	// COMPUTED ---------------------------
 	
 	/**
@@ -33,6 +42,15 @@ object ServiceSettingsModel extends DataInserter[ServiceSettingsModel, ServiceSe
 			Some(data.incompleteAuthTokenDuration), Some(data.defaultSessionDuration), Some(data.created))
 	
 	override protected def complete(id: Value, data: ServiceSettingsData) = ServiceSettings(id.getInt, data)
+	
+	
+	// OTHER    -----------------------------
+	
+	/**
+	  * @param serviceId Id of the descrived service
+	  * @return A model with that service id
+	  */
+	def withServiceId(serviceId: Int) = apply(serviceId = Some(serviceId))
 }
 
 /**
