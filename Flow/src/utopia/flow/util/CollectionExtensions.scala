@@ -733,6 +733,13 @@ object CollectionExtensions
     
     implicit class RichSeqLike2[A, CC[X] <: SeqOps[X, CC, CC[X]], Repr <: SeqOps[A, CC, CC[A]]](val seq: SeqOps[A, CC, Repr]) extends AnyVal
     {
+        /**
+         * Creates a copy of this sequence with the specified item inserted to a certain index
+         * @param item An item to insert
+         * @param index Index where the item is inserted, where 0 is the first position
+         * @tparam B Type of resulting collection's items
+         * @return A copy of this collection with the item inserted
+         */
         def inserted[B >: A](item: B, index: Int): CC[B] =
         {
             if (index <= 0)
@@ -746,6 +753,7 @@ object CollectionExtensions
             }
         }
     }
+    
     
     // ITERATOR ------------------------------------------
     
