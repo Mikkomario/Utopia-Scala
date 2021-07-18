@@ -32,7 +32,7 @@ object AuthPreparationModel extends DataInserter[AuthPreparationModel, AuthPrepa
 	override def table = factory.table
 	
 	override def apply(data: AuthPreparationData) =
-		apply(None, Some(data.userId), Some(data.token), data.clientState, Some(data.created))
+		apply(None, Some(data.userId), Some(data.token), data.clientState, Some(data.created), Some(data.expiration))
 	
 	override protected def complete(id: Value, data: AuthPreparationData) = AuthPreparation(id.getInt, data)
 }
