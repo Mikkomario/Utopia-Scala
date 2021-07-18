@@ -5,16 +5,17 @@ import utopia.access.http.Status.{BadRequest, InternalServerError, NotFound, Una
 import utopia.ambassador.controller.implementation.AcquireToken
 import utopia.ambassador.database.access.single.process.{DbAuthPreparation, DbAuthRedirect}
 import utopia.ambassador.database.access.single.service.DbAuthService
-import utopia.ambassador.database.model.process.AuthRedirectResultModel
+import utopia.ambassador.database.model.process.{AuthRedirectResultModel, IncompleteAuthModel}
 import utopia.ambassador.model.enumeration.GrantLevel
 import utopia.ambassador.model.enumeration.GrantLevel.{AccessDenied, AccessFailed, FullAccess, PartialAccess}
-import utopia.ambassador.model.partial.process.AuthRedirectResultData
+import utopia.ambassador.model.partial.process.{AuthRedirectResultData, IncompleteAuthData}
 import utopia.ambassador.model.stored.process.{AuthPreparation, AuthRedirect}
 import utopia.ambassador.model.stored.service.ServiceSettings
 import utopia.ambassador.rest.util.AuthUtils
 import utopia.citadel.util.CitadelContext._
-import utopia.exodus.util.ExodusContext.handleError
+import utopia.exodus.util.ExodusContext.{handleError, uuidGenerator}
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.time.Now
 import utopia.flow.util.CollectionExtensions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.{Context, LeafResource}
@@ -75,9 +76,7 @@ case class AuthResponseNode(serviceId: Int, tokenAcquirer: AcquireToken) extends
 								case Some(redirectUrl) =>
 									code match
 									{
-										case Some(code) =>
-											// TODO: Open incomplete authentication case
-											???
+										case Some(code) => handleIncompleteAuthCase(settings, code, redirectUrl)
 										case None =>
 											AuthUtils.completionRedirect(settings,
 												errorMessage = "Authentication not initiated by this service",
@@ -139,6 +138,19 @@ case class AuthResponseNode(serviceId: Int, tokenAcquirer: AcquireToken) extends
 			case None =>
 				completeWithRedirectResult(settings, redirect.id, preparation, AccessDenied, errorMessage)
 		}
+	}
+	
+	private def handleIncompleteAuthCase(settings: ServiceSettings, code: String, redirectUrl: String)
+	                                    (implicit connection: Connection) =
+	{
+		// Opens an incomplete authentication case
+		val newCase = IncompleteAuthModel.insert(IncompleteAuthData(serviceId, code, uuidGenerator.next(),
+			Now + settings.incompleteAuthTokenDuration))
+		// Redirects the user to the incomplete authentication endpoint
+		val tokenParamString = s"token=${newCase.token}"
+		val finalUrl = if (redirectUrl.contains('?')) s"$redirectUrl&$tokenParamString" else
+			s"$redirectUrl?$tokenParamString"
+		Result.Redirect(finalUrl)
 	}
 	
 	private def completeWithRedirectResult(settings: ServiceSettings, redirectId: Int,
