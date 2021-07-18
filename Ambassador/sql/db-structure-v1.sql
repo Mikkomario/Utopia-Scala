@@ -59,11 +59,15 @@ CREATE TABLE oauth_service_settings(
 -- while other provide write access.
 -- Authorization is always limited to some scope. If this service requires a feature outside of
 -- the acquired scopes, a new authentication must be performed
+-- The priority parameter is used when multiple scopes can be chosen from. May be undefined.
+--      Priority should be based on level of access where smaller scopes should be prioritized higher than
+--      large (more invasive) scopes
 CREATE TABLE scope(
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     service_id INT NOT NULL,
     service_side_name VARCHAR(255) NOT NULL,
     client_side_name VARCHAR(64),
+    priority INT,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     INDEX s_service_idx (service_side_name),

@@ -19,6 +19,10 @@ sealed trait AuthCompletionType
 	  * @return Whether this redirect is restricted to failures due to user denying access (true)
 	  */
 	def deniedFilter: Boolean
+	/**
+	  * @return A relative priority of this completion type. Types with higher priority are used when possible.
+	  */
+	def priorityIndex: Int
 }
 
 object AuthCompletionType
@@ -39,6 +43,7 @@ object AuthCompletionType
 	case object Default extends AuthCompletionType
 	{
 		override def keyName = "default"
+		override def priorityIndex = 0
 		
 		override def successFilter = None
 		override def deniedFilter = false
@@ -49,6 +54,8 @@ object AuthCompletionType
 	case object Success extends AuthCompletionType
 	{
 		override def keyName = "success"
+		override def priorityIndex = 1
+		
 		override def successFilter = Some(true)
 		override def deniedFilter = false
 	}
@@ -59,6 +66,7 @@ object AuthCompletionType
 	case object Failure extends AuthCompletionType
 	{
 		override def keyName = "failure"
+		override def priorityIndex = 2
 		override def successFilter = Some(false)
 		override def deniedFilter = false
 	}
@@ -69,6 +77,7 @@ object AuthCompletionType
 	case object DenialOfAccess extends AuthCompletionType
 	{
 		override def keyName = "denial_of_access"
+		override def priorityIndex = 3
 		override def successFilter = Some(false)
 		override def deniedFilter = true
 	}

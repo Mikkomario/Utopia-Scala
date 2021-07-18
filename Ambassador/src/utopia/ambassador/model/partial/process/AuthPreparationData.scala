@@ -1,6 +1,9 @@
 package utopia.ambassador.model.partial.process
 
+import utopia.flow.datastructure.immutable.Model
+import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
+import utopia.metropolis.model.StyledModelConvertible
 
 import java.time.Instant
 
@@ -14,3 +17,10 @@ import java.time.Instant
   * @param created Creation time of this preparation
   */
 case class AuthPreparationData(userId: Int, token: String, clientState: Option[String] = None, created: Instant = Now)
+	extends StyledModelConvertible
+{
+	override def toSimpleModel = Model(Vector("token" -> token))
+	
+	override def toModel = Model(Vector("user_id" -> userId, "token" -> token,
+		"state" -> clientState, "created" -> created))
+}

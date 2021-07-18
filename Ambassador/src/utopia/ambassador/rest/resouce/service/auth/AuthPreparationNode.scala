@@ -5,11 +5,19 @@ import utopia.access.http.Status.BadRequest
 import utopia.ambassador.database.access.single.organization.DbTask
 import utopia.ambassador.database.access.single.service.DbAuthService
 import utopia.ambassador.database.AuthDbExtensions._
+import utopia.ambassador.database.model.process.{AuthCompletionRedirectTargetModel, AuthPreparationModel}
+import utopia.ambassador.database.model.scope.AuthPreparationScopeLinkModel
+import utopia.ambassador.model.partial.process.{AuthCompletionRedirectTargetData, AuthPreparationData}
 import utopia.ambassador.model.post.NewAuthPreparation
 import utopia.ambassador.rest.resouce.service.auth.AuthPreparationNode.maxStateLength
 import utopia.citadel.database.access.single.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.exodus.util.ExodusContext.uuidGenerator
+import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.StringExtensions._
+import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
 import utopia.nexus.rest.LeafResource
 import utopia.nexus.result.Result
@@ -65,8 +73,46 @@ case class AuthPreparationNode(serviceId: Int, taskId: Int) extends LeafResource
 						val remainingRequired = required.filterNot { scope => existingScopeIds.contains(scope.id) }
 						val isAlreadyAuthorized = alternativesAreCovered && remainingRequired.isEmpty
 						
-						// TODO: Inserts the preparation to the database
-						???
+						// Inserts the preparation to the database
+						val insertedPreparation = AuthPreparationModel.insert(
+							AuthPreparationData(session.userId, uuidGenerator.next(), preparation.state.notEmpty))
+						// Determines the scopes to request and records those
+						val linkedScopes =
+						{
+							if (isAlreadyAuthorized)
+								Vector()
+							else
+							{
+								// If alternative scopes are required, selects the one with the highest priority
+								val chosenAlternative = if (alternativesAreCovered) None else
+									Some(alternative.maxBy { _.scope.priority.getOrElse(-1) })
+								(remainingRequired ++ chosenAlternative).map { _.scope }
+							}
+						}
+						if (linkedScopes.nonEmpty)
+							AuthPreparationScopeLinkModel.insert(linkedScopes.map { insertedPreparation.id -> _.id })
+						// Inserts the redirect urls (if specified)
+						if (preparation.redirectUrls.nonEmpty)
+							AuthCompletionRedirectTargetModel.insert(
+								preparation.redirectUrls.map { case (filter, url) =>
+									AuthCompletionRedirectTargetData(insertedPreparation.id, url, filter) }
+									.toVector.sortBy { _.resultFilter.priorityIndex })
+						
+						// Returns a summary for the client
+						val style = session.modelStyle
+						val scopesConstant = Constant("scopes", linkedScopes.map { _.toModelWith(style) })
+						val extraConstants = style match
+						{
+							case Simple => Vector(scopesConstant)
+							case Full =>
+								Vector(scopesConstant,
+									Constant("redirect_urls", Model.withConstants(preparation.redirectUrls
+										.map { case (filter, url) => Constant(filter.keyName, url) })))
+						}
+						val resultModel = (Constant("is_already_authorized", isAlreadyAuthorized) +:
+							insertedPreparation.toModelWith(style)) ++ extraConstants
+						
+						Result.Success(resultModel)
 					}
 					else
 						Result.Failure(BadRequest,

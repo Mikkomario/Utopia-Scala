@@ -25,7 +25,7 @@ object ScopeModel extends DataInserter[ScopeModel, Scope, ScopeData]
 	override def table = factory.table
 	
 	override def apply(data: ScopeData) =
-		apply(None, Some(data.serviceId), Some(data.officialName), data.clientSideName)
+		apply(None, Some(data.serviceId), Some(data.officialName), data.clientSideName, data.priority)
 	
 	override protected def complete(id: Value, data: ScopeData) = Scope(id.getInt, data)
 	
@@ -45,7 +45,8 @@ object ScopeModel extends DataInserter[ScopeModel, Scope, ScopeData]
   * @since 11.7.2021, v1.0
   */
 case class ScopeModel(id: Option[Int] = None, serviceId: Option[Int] = None, serviceSideName: Option[String] = None,
-                      clientSideName: Option[String] = None, created: Option[Instant] = None)
+                      clientSideName: Option[String] = None, priority: Option[Int] = None,
+                      created: Option[Instant] = None)
 	extends StorableWithFactory[Scope]
 {
 	override def factory = ScopeModel.factory
