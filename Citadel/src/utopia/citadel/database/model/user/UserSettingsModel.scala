@@ -18,6 +18,14 @@ object UserSettingsModel extends DeprecatableAfter[UserSettingsModel]
 	  * Name of the attribute for user's id
 	  */
 	val userIdAttName = "userId"
+	/**
+	  * Name of the user name property
+	  */
+	val userNameAttName = "name"
+	/**
+	  * Name of the property that contains user's email address
+	  */
+	val emailAttName = "email"
 	
 	
 	// COMPUTED	--------------------------------------
@@ -83,6 +91,6 @@ case class UserSettingsModel(id: Option[Int] = None, userId: Option[Int] = None,
 	
 	override def factory = UserSettingsFactory
 	
-	override def valueProperties = Vector("id" -> id, userIdAttName -> userId, "name" -> name, "email" -> email,
-		"created" -> created, deprecationAttName -> deprecatedAfter)
+	override def valueProperties = Vector("id" -> id, userIdAttName -> userId, userNameAttName -> name,
+		emailAttName -> email, "created" -> created, deprecationAttName -> deprecatedAfter)
 }

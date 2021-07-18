@@ -154,8 +154,8 @@ CREATE TABLE scope_request_preparation(
 -- The most specific target available is used. If filters are left as NULLs,
 --      those are treated as default values. NULL, NULL is the default for any result.
 -- Result state is either success or failure, based on whether full authorization was acquired
--- Is Limited to Denials determines whether the failure was due to user denying access.
---      This filter is only used for the failure state. False indicates a default failure handler.
+-- Is Limited to Denials determines whether this redirect is limited to cases where
+--      the user denied access partially or totally. False indicates the default failure / success handler.
 -- Query parameters may be added to the specified urls
 CREATE TABLE oauth_completion_redirect_target(
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -164,7 +164,7 @@ CREATE TABLE oauth_completion_redirect_target(
     result_state_filter BOOLEAN,
     is_limited_to_denials BOOLEAN NOT NULL DEFAULT FALSE,
 
-    ocrt_filter_idx (result_state_filter, interactive_filter),
+    ocrt_filter_idx (result_state_filter, is_limited_to_denials),
 
     CONSTRAINT ocrt_op_linked_preparation_fk FOREIGN KEY ocrt_op_linked_preparation_idx (preparation_id)
         REFERENCES oauth_preparation(id) ON DELETE CASCADE

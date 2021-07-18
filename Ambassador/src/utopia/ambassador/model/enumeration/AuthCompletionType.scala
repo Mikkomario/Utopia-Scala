@@ -32,7 +32,7 @@ object AuthCompletionType
 	/**
 	  * All values of this enumeration
 	  */
-	lazy val values = Vector[AuthCompletionType](Default, Success, Failure, DenialOfAccess)
+	lazy val values = Vector[AuthCompletionType](Default, Success, PartialSuccess, Failure, DenialOfAccess)
 	
 	
 	// NESTED   ---------------------------------
@@ -49,7 +49,7 @@ object AuthCompletionType
 		override def deniedFilter = false
 	}
 	/**
-	  * Redirect url type that covers successful authentications
+	  * Redirect url type that covers all successful authentications
 	  */
 	case object Success extends AuthCompletionType
 	{
@@ -60,13 +60,24 @@ object AuthCompletionType
 		override def deniedFilter = false
 	}
 	/**
+	  * Redirect url type that is limited to successful cases where the user denied access to some of
+	  * the requested scopes
+	  */
+	case object PartialSuccess extends AuthCompletionType
+	{
+		override def keyName = "partial_success"
+		override def successFilter = Some(true)
+		override def deniedFilter = true
+		override def priorityIndex = 2
+	}
+	/**
 	  * Redirect url type that covers all failures regardless of type, although
 	  * DenialOfAccess may be used instead if specified and applicable
 	  */
 	case object Failure extends AuthCompletionType
 	{
 		override def keyName = "failure"
-		override def priorityIndex = 2
+		override def priorityIndex = 3
 		override def successFilter = Some(false)
 		override def deniedFilter = false
 	}
@@ -77,7 +88,7 @@ object AuthCompletionType
 	case object DenialOfAccess extends AuthCompletionType
 	{
 		override def keyName = "denial_of_access"
-		override def priorityIndex = 3
+		override def priorityIndex = 4
 		override def successFilter = Some(false)
 		override def deniedFilter = true
 	}

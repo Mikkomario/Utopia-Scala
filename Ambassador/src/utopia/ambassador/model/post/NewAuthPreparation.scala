@@ -4,30 +4,28 @@ import utopia.ambassador.model.enumeration.AuthCompletionType
 import utopia.ambassador.model.enumeration.AuthCompletionType.Default
 import utopia.flow.datastructure.template.{Model, Property}
 import utopia.flow.generic.FromModelFactory
+import utopia.metropolis.model.error.IllegalPostModelException
 
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 object NewAuthPreparation extends FromModelFactory[NewAuthPreparation]
 {
 	// IMPLEMENTED  ----------------------
 	
-	override def apply(model: Model[Property]) = Success(from(model))
-	
-	
-	// OTHER    --------------------------
-	
-	/**
-	  * Parses a new authentication preparation from the specified model (won't fail)
-	  * @param model A model to parse
-	  * @return Authentication preparation based on that model
-	  */
-	def from(model: Model[Property]) =
+	override def apply(model: Model[Property]) =
 	{
-		val state = model("state").getString
-		val redirectUrls = AuthCompletionType.values.flatMap { cType =>
-			model(cType.keyName).string.map { cType -> _ }
-		}.toMap
-		NewAuthPreparation(state, redirectUrls)
+		// task_id or non-empty task_ids is required
+		val taskIds = model("task_id").int.map { Vector(_) }.getOrElse { model("task_ids").getVector.flatMap { _.int } }
+		if (taskIds.isEmpty)
+			Failure(new IllegalPostModelException("task_id or a non-empty task_ids array is required"))
+		else
+		{
+			val state = model("state").getString
+			val redirectUrls = AuthCompletionType.values.flatMap { cType =>
+				model(cType.keyName).string.map { cType -> _ }
+			}.toMap
+			Success(NewAuthPreparation(taskIds.toSet, state, redirectUrls))
+		}
 	}
 }
 
@@ -37,7 +35,8 @@ object NewAuthPreparation extends FromModelFactory[NewAuthPreparation]
   * @author Mikko Hilpinen
   * @since 12.7.2021, v1.0
   */
-case class NewAuthPreparation(state: String = "", redirectUrls: Map[AuthCompletionType, String] = Map())
+case class NewAuthPreparation(taskIds: Set[Int], state: String = "",
+                              redirectUrls: Map[AuthCompletionType, String] = Map())
 {
 	/**
 	  * @return Whether this preparation is able to redirect the user regardless of authorization completion result

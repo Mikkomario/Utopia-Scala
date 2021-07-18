@@ -35,6 +35,15 @@ object AuthPreparationModel extends DataInserter[AuthPreparationModel, AuthPrepa
 		apply(None, Some(data.userId), Some(data.token), data.clientState, Some(data.created), Some(data.expiration))
 	
 	override protected def complete(id: Value, data: AuthPreparationData) = AuthPreparation(id.getInt, data)
+	
+	
+	// OTHER    --------------------------------
+	
+	/**
+	  * @param token An authentication token
+	  * @return A model with that token
+	  */
+	def withToken(token: String) = apply(token = Some(token))
 }
 
 /**

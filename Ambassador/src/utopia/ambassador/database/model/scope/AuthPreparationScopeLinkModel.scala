@@ -19,6 +19,13 @@ object AuthPreparationScopeLinkModel
 	// OTHER    -----------------------------
 	
 	/**
+	  * @param preparationId An authentication preparation id
+	  * @return A model with that preparation id
+	  */
+	def withPreparationId(preparationId: Int) =
+		apply(preparationId = Some(preparationId))
+	
+	/**
 	  * Inserts a new link to the DB
 	  * @param preparationId Id of the described authentication preparation
 	  * @param scopeId Id of the scope linked to the preparation
@@ -55,6 +62,8 @@ object AuthPreparationScopeLinkModel
 case class AuthPreparationScopeLinkModel(id: Option[Int] = None, preparationId: Option[Int] = None,
                                          scopeId: Option[Int] = None) extends Storable
 {
+	// IMPLEMENTED  -----------------------
+	
 	override def table = AuthPreparationScopeLinkModel.table
 	
 	override def valueProperties = Vector("id" -> id, "preparationId" -> preparationId, "scopeId" -> scopeId)

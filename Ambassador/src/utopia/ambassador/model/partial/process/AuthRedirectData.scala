@@ -13,4 +13,4 @@ import java.time.Instant
   * @param expiration Expiration time for the authentication token
   * @param created Creation time of this event (default = Now)
   */
-case class AuthUserRedirectData(preparationId: Int, token: String, expiration: Instant, created: Instant = Now)
+case class AuthRedirectData(preparationId: Int, token: String, expiration: Instant, created: Instant = Now)

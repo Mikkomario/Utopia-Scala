@@ -1,9 +1,9 @@
 package utopia.ambassador.database.factory.process
 
 import utopia.ambassador.database.AmbassadorTables
-import utopia.ambassador.database.model.process.AuthUserRedirectModel
-import utopia.ambassador.model.partial.process.AuthUserRedirectData
-import utopia.ambassador.model.stored.process.AuthUserRedirect
+import utopia.ambassador.database.model.process.AuthRedirectModel
+import utopia.ambassador.model.partial.process.AuthRedirectData
+import utopia.ambassador.model.stored.process.AuthRedirect
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueUnwraps._
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
@@ -14,11 +14,11 @@ import utopia.vault.nosql.template.Deprecatable
   * @author Mikko Hilpinen
   * @since 18.7.2021, v1.0
   */
-object AuthUserRedirectFactory extends FromValidatedRowModelFactory[AuthUserRedirect] with Deprecatable
+object AuthRedirectFactory extends FromValidatedRowModelFactory[AuthRedirect] with Deprecatable
 {
 	// COMPUTED --------------------------------
 	
-	private def model = AuthUserRedirectModel
+	private def model = AuthRedirectModel
 	
 	
 	// IMPLEMENTED  ----------------------------
@@ -27,6 +27,6 @@ object AuthUserRedirectFactory extends FromValidatedRowModelFactory[AuthUserRedi
 	
 	override def nonDeprecatedCondition = model.nonDeprecatedCondition
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = AuthUserRedirect(model("id"),
-		AuthUserRedirectData(model("preparationId"), model("token"), model("expiration"), model("created")))
+	override protected def fromValidatedModel(model: Model[Constant]) = AuthRedirect(model("id"),
+		AuthRedirectData(model("preparationId"), model("token"), model("expiration"), model("created")))
 }
