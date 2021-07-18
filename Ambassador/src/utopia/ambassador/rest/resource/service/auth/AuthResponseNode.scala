@@ -13,12 +13,13 @@ import utopia.ambassador.model.stored.process.{AuthPreparation, AuthRedirect}
 import utopia.ambassador.model.stored.service.ServiceSettings
 import utopia.ambassador.rest.util.AuthUtils
 import utopia.citadel.util.CitadelContext._
+import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.{handleError, uuidGenerator}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.time.Now
 import utopia.flow.util.CollectionExtensions._
 import utopia.nexus.http.Path
-import utopia.nexus.rest.{Context, LeafResource}
+import utopia.nexus.rest.ResourceWithChildren
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -29,7 +30,8 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 18.7.2021, v1.0
   */
-case class AuthResponseNode(serviceId: Int, tokenAcquirer: AcquireToken) extends LeafResource[Context]
+case class AuthResponseNode(serviceId: Int, tokenAcquirer: AcquireToken)
+	extends ResourceWithChildren[AuthorizedContext]
 {
 	// IMPLEMENTED  -------------------------
 	
@@ -37,7 +39,9 @@ case class AuthResponseNode(serviceId: Int, tokenAcquirer: AcquireToken) extends
 	
 	override def allowedMethods = Vector(Get)
 	
-	override def toResponse(remainingPath: Option[Path])(implicit context: Context) =
+	override def children = Vector(AuthResponseClosureNode(serviceId, tokenAcquirer))
+	
+	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		// Starts by reading service settings from the database
 		connectionPool.tryWith { implicit connection =>

@@ -21,8 +21,10 @@ object NewAuthPreparation extends FromModelFactory[NewAuthPreparation]
 		else
 		{
 			val state = model("state").getString
+			// Redirect urls are expected to be within redirect_urls model
+			val urlsModel = model("redirect_urls").getModel
 			val redirectUrls = AuthCompletionType.values.flatMap { cType =>
-				model(cType.keyName).string.map { cType -> _ }
+				urlsModel(cType.keyName).string.map { cType -> _ }
 			}.toMap
 			Success(NewAuthPreparation(taskIds.toSet, state, redirectUrls))
 		}

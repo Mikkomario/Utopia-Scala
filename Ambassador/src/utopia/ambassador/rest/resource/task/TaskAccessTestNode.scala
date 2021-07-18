@@ -1,4 +1,4 @@
-package utopia.ambassador.rest.resource.feature
+package utopia.ambassador.rest.resource.task
 
 import utopia.access.http.Method.Get
 import utopia.ambassador.database.access.single.organization.DbTask
@@ -22,9 +22,9 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 11.7.2021, v1.0
   */
-case class FeatureAccessTestNode(taskId: Int) extends LeafResource[AuthorizedContext]
+case class TaskAccessTestNode(taskId: Int) extends LeafResource[AuthorizedContext]
 {
-	override def name = "test"
+	override def name = "access-status"
 	
 	override def allowedMethods = Vector(Get)
 	

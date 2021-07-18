@@ -36,6 +36,15 @@ object IncompleteAuthModel extends DataInserter[IncompleteAuthModel, IncompleteA
 			Some(data.expiration))
 	
 	override protected def complete(id: Value, data: IncompleteAuthData) = IncompleteAuth(id.getInt, data)
+	
+	
+	// OTHER    ----------------------------
+	
+	/**
+	  * @param token Incomplete authentication case token
+	  * @return A model with that token
+	  */
+	def withToken(token: String) = apply(token = Some(token))
 }
 
 /**
