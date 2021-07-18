@@ -128,8 +128,9 @@ CREATE TABLE oauth_preparation(
     token VARCHAR(48) NOT NULL,
     client_state VARCHAR(2000),
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expiration DATETIME NOT NULL,
 
-    INDEX op_validation_idx (created, token),
+    INDEX op_validation_idx (expiration, token),
 
     CONSTRAINT op_u_authorized_user_fk FOREIGN KEY op_u_authorized_user_idx (user_id)
         REFERENCES `user`(id) ON DELETE CASCADE
@@ -179,8 +180,9 @@ CREATE TABLE oauth_user_redirect(
     preparation_id INT NOT NULL,
     token VARCHAR(48) NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expiration DATETIME NOT NULL,
 
-    INDEX our_validation_idx (created, token),
+    INDEX our_validation_idx (expiration, token),
 
     CONSTRAINT our_op_used_preparation_fk FOREIGN KEY our_op_used_preparation_idx (preparation_id)
         REFERENCES oauth_preparation(id) ON DELETE CASCADE
@@ -250,8 +252,9 @@ CREATE TABLE incomplete_authentication(
     oauth_code VARCHAR(255) NOT NULL,
     token VARCHAR(48) NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expiration DATETIME NOT NULL,
 
-    INDEX ia_validation_idx (created, token),
+    INDEX ia_validation_idx (expiration, token),
 
     CONSTRAINT ia_os_origin_service_fk FOREIGN KEY ia_os_origin_service_idx (service_id)
         REFERENCES oauth_service(id) ON DELETE CASCADE
