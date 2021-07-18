@@ -1,5 +1,6 @@
 package utopia.ambassador.database.access.single.service
 
+import utopia.ambassador.database.access.many.scope.DbScopes
 import utopia.ambassador.database.factory.service.{AuthServiceFactory, ServiceSettingsFactory}
 import utopia.ambassador.database.model.service.ServiceSettingsModel
 import utopia.ambassador.model.stored.service.{AuthService, ServiceSettings}
@@ -37,6 +38,10 @@ object DbAuthService extends SingleRowModelAccess[AuthService] with Unconditiona
 		  * @return An access point to this service's settings
 		  */
 		def settings = DbServiceSettings
+		/**
+		  * @return An access point to this service's scopes
+		  */
+		def scopes = DbScopes.forServiceWithId(serviceId)
 		
 		
 		// NESTED   ---------------------------

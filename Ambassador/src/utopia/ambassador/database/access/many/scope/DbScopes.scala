@@ -5,9 +5,12 @@ import utopia.ambassador.database.model.scope.{ScopeModel, TaskScopeLinkModel}
 import utopia.ambassador.database.model.token.TokenScopeLinkModel
 import utopia.ambassador.model.combined.scope.TaskScope
 import utopia.ambassador.model.stored.scope.Scope
+import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.{Select, Where}
+import utopia.vault.sql.SqlExtensions._
 
 /**
   * Used for accessing multiple scopes at a time
@@ -32,11 +35,15 @@ object DbScopes extends ManyRowModelAccess[Scope]
 	// OTHER    ------------------------------------
 	
 	/**
+	  * @param serviceId Id of the targeted service
+	  * @return An access point to that service's specified scopes
+	  */
+	def forServiceWithId(serviceId: Int) = new DbServiceScopes(serviceId)
+	/**
 	  * @param taskId A task id
 	  * @return An access point to that task's scopes
 	  */
 	def forTaskWithId(taskId: Int) = new DbSingleTaskScopes(taskId)
-	
 	/**
 	  * @param tokenId A token id
 	  * @return An access point to that token's scopes
@@ -45,6 +52,28 @@ object DbScopes extends ManyRowModelAccess[Scope]
 	
 	
 	// NESTED   ------------------------------------
+	
+	class DbServiceScopes(val serviceId: Int) extends ManyRowModelAccess[Scope] with SubView
+	{
+		// IMPLEMENTED  ----------------------------
+		
+		override protected def parent = DbScopes
+		override protected def defaultOrdering = parent.defaultOrdering
+		override def factory = parent.factory
+		
+		override def filterCondition = model.withServiceId(serviceId).toCondition
+		
+		
+		// OTHER    ---------------------------------
+		
+		/**
+		  * @param scopeNames A set of service side scope names
+		  * @param connection Implicit DB connection
+		  * @return scopes within this service that match the specified names
+		  */
+		def matchingAnyOf(scopeNames: Iterable[String])(implicit connection: Connection) =
+			find(model.serviceSideNameColumn.in(scopeNames))
+	}
 	
 	class DbSingleTaskScopes(val taskId: Int) extends ManyRowModelAccess[TaskScope]
 	{

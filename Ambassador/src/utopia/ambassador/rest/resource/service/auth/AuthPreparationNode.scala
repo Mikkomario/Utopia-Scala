@@ -1,4 +1,4 @@
-package utopia.ambassador.rest.resouce.service.auth
+package utopia.ambassador.rest.resource.service.auth
 
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{BadRequest, NotFound}
@@ -10,7 +10,7 @@ import utopia.ambassador.database.model.scope.AuthPreparationScopeLinkModel
 import utopia.ambassador.model.enumeration.AuthCompletionType.Default
 import utopia.ambassador.model.partial.process.{AuthCompletionRedirectTargetData, AuthPreparationData}
 import utopia.ambassador.model.post.NewAuthPreparation
-import utopia.ambassador.rest.resouce.service.auth.ServiceAuthPreparationNode.maxStateLength
+import AuthPreparationNode.maxStateLength
 import utopia.citadel.database.access.single.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
@@ -24,7 +24,7 @@ import utopia.nexus.rest.LeafResource
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
-object ServiceAuthPreparationNode
+object AuthPreparationNode
 {
 	// ATTRIBUTES   --------------------------------
 	
@@ -40,7 +40,7 @@ object ServiceAuthPreparationNode
   * @author Mikko Hilpinen
   * @since 12.7.2021, v1.0
   */
-case class ServiceAuthPreparationNode(serviceId: Int) extends LeafResource[AuthorizedContext]
+case class AuthPreparationNode(serviceId: Int) extends LeafResource[AuthorizedContext]
 {
 	// IMPLEMENTED  --------------------------------
 	

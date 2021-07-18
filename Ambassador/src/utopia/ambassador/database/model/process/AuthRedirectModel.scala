@@ -44,6 +44,11 @@ object AuthRedirectModel extends DataInserter[AuthRedirectModel, AuthRedirect, A
 	  * @return A model with that preparation id
 	  */
 	def withPreparationId(preparationId: Int) = apply(preparationId = Some(preparationId))
+	/**
+	  * @param token A redirect authentication token
+	  * @return A model with that redirect token
+	  */
+	def withToken(token: String) = apply(token = Some(token))
 }
 
 /**

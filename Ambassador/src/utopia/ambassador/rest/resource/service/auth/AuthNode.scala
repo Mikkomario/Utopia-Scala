@@ -1,26 +1,23 @@
-package utopia.ambassador.rest.resouce.service.auth
+package utopia.ambassador.rest.resource.service.auth
 
 import utopia.access.http.Method.Get
-import utopia.access.http.Status.{InternalServerError, NotFound, Unauthorized}
+import utopia.access.http.Status.{InternalServerError, NotFound}
 import utopia.ambassador.controller.implementation.DefaultRedirector
 import utopia.ambassador.controller.template.AuthRedirector
 import utopia.ambassador.database.access.single.process.DbAuthPreparation
 import utopia.ambassador.database.access.single.service.DbAuthService
 import utopia.ambassador.database.model.process.{AuthRedirectModel, AuthRedirectResultModel}
-import utopia.ambassador.model.enumeration.AuthCompletionType.Default
 import utopia.ambassador.model.enumeration.GrantLevel.FullAccess
 import utopia.ambassador.model.partial.process.{AuthRedirectData, AuthRedirectResultData}
 import utopia.ambassador.model.stored.process.{AuthPreparation, AuthRedirect}
 import utopia.ambassador.model.stored.service.ServiceSettings
+import utopia.ambassador.rest.util.AuthUtils
 import utopia.citadel.util.CitadelContext._
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.handleError
 import utopia.exodus.util.ExodusContext.uuidGenerator
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
-import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.StringExtensions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.{Context, ResourceWithChildren}
 import utopia.nexus.result.Result
@@ -39,7 +36,7 @@ case class AuthNode(serviceId: Int, redirector: AuthRedirector = DefaultRedirect
 	
 	override val name = "auth"
 	
-	override lazy val children = Vector(ServiceAuthPreparationNode(serviceId))
+	override lazy val children = Vector(AuthPreparationNode(serviceId))
 	
 	
 	// IMPLEMENTED  -----------------------------
@@ -77,7 +74,7 @@ case class AuthNode(serviceId: Int, redirector: AuthRedirector = DefaultRedirect
 				{
 					case Some(preparation) =>
 						if (DbAuthPreparation(preparation.id).isClosed)
-							completionRedirect(settings, Some(preparation),
+							AuthUtils.completionRedirect(settings, Some(preparation),
 								"Authentication token was already used")
 						else
 						{
@@ -89,9 +86,9 @@ case class AuthNode(serviceId: Int, redirector: AuthRedirector = DefaultRedirect
 							redirect(insertedRedirect, settings, preparation)
 						}
 					case None =>
-						completionRedirect(settings, None, "Invalid or expired authentication token")
+						AuthUtils.completionRedirect(settings, None, "Invalid or expired authentication token")
 				}
-			case None => completionRedirect(settings, None, "Authentication token is missing")
+			case None => AuthUtils.completionRedirect(settings, None, "Authentication token is missing")
 		}
 	}
 	
@@ -105,62 +102,10 @@ case class AuthNode(serviceId: Int, redirector: AuthRedirector = DefaultRedirect
 		if (scopes.isEmpty)
 		{
 			AuthRedirectResultModel.insert(AuthRedirectResultData(event.id, FullAccess))
-			completionRedirect(settings, Some(preparation))
+			AuthUtils.completionRedirect(settings, Some(preparation))
 		}
 		// Case: Authentication required => Redirects the user
 		else
 			Result.Redirect(redirector.redirectionFor(event.token, settings, preparation, scopes))
-	}
-	
-	// Handles cases where the user is immediately to be redirected back to the client
-	private def completionRedirect(settings: ServiceSettings, preparation: Option[AuthPreparation] = None,
-	                               errorMessage: String = "", deniedAccess: Boolean = false)
-	                              (implicit connection: Connection) =
-	{
-		// Reads the redirection target from the preparation, if possible
-		preparation
-			.flatMap { preparation =>
-				DbAuthPreparation(preparation.id).redirectTargets.forResult(errorMessage.isEmpty, deniedAccess)
-					.maxByOption { _.resultFilter.priorityIndex }
-					.map { target => target.resultFilter -> target.url }
-			}
-			// Alternatively uses service settings default, if available
-			.orElse { settings.defaultCompletionUrl.map { Default -> _ } } match
-		{
-			// Case: Redirect url found
-			case Some((urlFilter, baseUrl)) =>
-				// May add some parameters to describe result state. Less parameters are included in more
-				// specific redirect urls
-				val stateParams =
-				{
-					if (urlFilter.deniedFilter)
-						Vector()
-					else
-					{
-						val deniedParam = Constant("denied_access", deniedAccess)
-						if (urlFilter.successFilter.isDefined)
-							Vector(deniedParam)
-						else
-							Vector(Constant("was_success", errorMessage.isEmpty), deniedParam)
-					}
-				}
-				// Appends possible error and state parameters
-				val allParams = Model.withConstants(stateParams) ++
-					preparation.flatMap { _.clientState }.map { Constant("state", _) } ++
-					errorMessage.notEmpty.map { Constant("error", _) }
-				// Redirects the user
-				val parametersString = allParams.attributesWithValue
-					.map { att => s"${att.name}=${att.value.toJson}" }.mkString("&")
-				val finalUrl = if (baseUrl.contains('?')) s"$baseUrl&$parametersString" else s"$baseUrl?$parametersString"
-				Result.Redirect(finalUrl)
-			// Case: No redirection url specified anywhere => Returns a success or a failure
-			case None =>
-				// Case: Immediate success
-				if (errorMessage.isEmpty)
-					Result.Success(Value.empty, description = Some("No authentication required"))
-				// Case: Immediate failure
-				else
-					Result.Failure(Unauthorized, errorMessage)
-		}
 	}
 }

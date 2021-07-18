@@ -12,12 +12,25 @@ import java.time.Instant
 
 object ScopeModel extends DataInserter[ScopeModel, Scope, ScopeData]
 {
+	// ATTRIBUTES   ----------------------------
+	
+	/**
+	  * Name of the property that contains scope name in the 3rd party service
+	  */
+	val serviceSideNameAttName = "serviceSideName"
+	
+	
 	// COMPUTED --------------------------------
 	
 	/**
 	  * @return The factory used by this class
 	  */
 	def factory = ScopeFactory
+	
+	/**
+	  * @return Column that contains scope name in the 3rd party service
+	  */
+	def serviceSideNameColumn = table(serviceSideNameAttName)
 	
 	
 	// IMPLEMENTED  ----------------------------
@@ -49,8 +62,10 @@ case class ScopeModel(id: Option[Int] = None, serviceId: Option[Int] = None, ser
                       created: Option[Instant] = None)
 	extends StorableWithFactory[Scope]
 {
+	import ScopeModel._
+	
 	override def factory = ScopeModel.factory
 	
-	override def valueProperties = Vector("id" -> id, "serviceId" -> serviceId, "serviceSideName" -> serviceSideName,
-		"clientSideName" -> clientSideName, "created" -> created)
+	override def valueProperties = Vector("id" -> id, "serviceId" -> serviceId,
+		serviceSideNameAttName -> serviceSideName, "clientSideName" -> clientSideName, "created" -> created)
 }

@@ -1,6 +1,6 @@
 package utopia.annex.model.schrodinger
 
-import utopia.annex.model.error.RequestFailedException
+import utopia.disciple.model.error.RequestFailedException
 import utopia.annex.model.response.RequestNotSent.RequestFailed
 import utopia.annex.model.response.{RequestNotSent, Response, ResponseBody}
 import utopia.flow.util.CollectionExtensions._

@@ -11,8 +11,9 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.journey.model.UserCredentials
-import utopia.annex.model.error.{EmptyResponseException, RequestFailedException, UnauthorizedRequestException}
+import utopia.annex.model.error.{EmptyResponseException, UnauthorizedRequestException}
 import utopia.disciple.apache.Gateway
+import utopia.disciple.model.error.RequestFailedException
 import utopia.journey.model.error.NoUserDataError
 import utopia.metropolis.model.combined.device.FullDevice
 import utopia.metropolis.model.combined.user.UserCreationResult

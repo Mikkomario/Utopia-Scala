@@ -17,7 +17,7 @@ import java.time.Instant
   * @param isRefreshToken Whether this token can be used to request more access tokens (default = false)
   */
 case class AuthTokenData(userId: Int, token: String, created: Instant = Now, expiration: Option[Instant] = None,
-                         deprecatedAfter: Option[Instant] = None, isRefreshToken: Boolean)
+                         deprecatedAfter: Option[Instant] = None, isRefreshToken: Boolean = false)
 {
 	/**
 	  * @return Whether this is a temporary token (will expire)

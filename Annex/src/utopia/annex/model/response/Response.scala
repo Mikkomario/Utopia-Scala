@@ -2,7 +2,7 @@ package utopia.annex.model.response
 
 import utopia.access.http.StatusGroup.ServerError
 import utopia.access.http.{Status, StatusGroup}
-import utopia.annex.model.error.RequestFailedException
+import utopia.disciple.model.error.RequestFailedException
 import utopia.disciple.http.response.BufferedResponse
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.FromModelFactory

@@ -68,7 +68,7 @@ object DbAuthPreparation extends SingleRowModelAccess[AuthPreparation] with NonD
 		  * @return Whether this preparation has already been consumed with a user redirect
 		  */
 		def isClosed(implicit connection: Connection) =
-			DbAuthUserRedirect.forPreparationWithId(preparationId).nonEmpty
+			DbAuthRedirect.forPreparationWithId(preparationId).nonEmpty
 		
 		
 		// OTHER    ------------------------------

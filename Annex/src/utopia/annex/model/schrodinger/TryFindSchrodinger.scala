@@ -1,9 +1,10 @@
 package utopia.annex.model.schrodinger
 
 import utopia.access.http.Status.{Forbidden, Unauthorized}
-import utopia.annex.model.error.{RequestDeniedException, RequestFailedException, UnauthorizedRequestException}
+import utopia.annex.model.error.{RequestDeniedException, UnauthorizedRequestException}
 import utopia.annex.model.response.RequestNotSent.{RequestFailed, RequestWasDeprecated}
 import utopia.annex.model.response.{RequestNotSent, Response, ResponseBody}
+import utopia.disciple.model.error.RequestFailedException
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}

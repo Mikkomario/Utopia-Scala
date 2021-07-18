@@ -275,32 +275,3 @@ CREATE TABLE incomplete_authentication_login(
         REFERENCES `user`(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
--- Lists email validations that were sent based on a new user account creation as part of a
--- 3rd party -initiated OAuth process (only used if email validation is enabled)
-CREATE TABLE incomplete_authentication_email_validation(
-    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    authentication_id INT NOT NULL,
-    validation_id INT NOT NULL,
-    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT iaev_ia_ongoing_auth_fk FOREIGN KEY iaev_ia_ongoing_auth_idx (authentication_id)
-        REFERENCES incomplete_authentication(id) ON DELETE CASCADE,
-    CONSTRAINT iaev_ev_validation_attempt_fk FOREIGN KEY iaev_ev_validation_attempt_idx (validation_id)
-        REFERENCES email_validation(id) ON DELETE CASCADE
-
-)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
--- Lists user accounts that were generated as a result of a 3rd party -initiated OAuth process
--- Was Success indicates whether the 3rd party authorization process was successful
-CREATE TABLE incomplete_authentication_registration(
-    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    authentication_id INT NOT NULL,
-    user_id INT NOT NULL,
-    was_success BOOLEAN NOT NULL DEFAULT FALSE,
-    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT iar_ia_closed_auth_fk FOREIGN KEY iar_ia_closed_auth_idx (authentication_id)
-        REFERENCES incomplete_authentication(id) ON DELETE CASCADE,
-    CONSTRAINT iar_u_registered_user_fk FOREIGN KEY iar_u_registered_user_idx (user_id)
-        REFERENCES `user`(id) ON DELETE CASCADE
-
-)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
