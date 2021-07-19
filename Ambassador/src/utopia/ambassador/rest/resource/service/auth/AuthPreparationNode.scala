@@ -2,7 +2,6 @@ package utopia.ambassador.rest.resource.service.auth
 
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{BadRequest, NotFound}
-import utopia.ambassador.database.access.single.organization.DbTask
 import utopia.ambassador.database.access.single.service.DbAuthService
 import utopia.ambassador.database.AuthDbExtensions._
 import utopia.ambassador.database.model.process.{AuthCompletionRedirectTargetModel, AuthPreparationModel}
@@ -13,6 +12,7 @@ import utopia.ambassador.model.post.NewAuthPreparation
 import AuthPreparationNode.maxStateLength
 import utopia.ambassador.rest.util.ServiceTarget
 import utopia.citadel.database.access.single.DbUser
+import utopia.citadel.database.access.single.organization.DbTask
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.flow.datastructure.immutable.{Constant, Model}

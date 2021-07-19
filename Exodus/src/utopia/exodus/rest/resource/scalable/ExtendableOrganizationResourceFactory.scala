@@ -13,7 +13,7 @@ import utopia.vault.database.Connection
 /**
  * A common class for organization-specific resource factories that support extensions
  * @author Mikko Hilpinen
- * @since 25.6.2021, v1.1
+ * @since 25.6.2021, v2.0
  */
 abstract class ExtendableOrganizationResourceFactory[+R <: ExtendableResource[AuthorizedContext, OrganizationParams]]
 	extends ExtendableResourceFactory[Int, AuthorizedContext, OrganizationParams, R]

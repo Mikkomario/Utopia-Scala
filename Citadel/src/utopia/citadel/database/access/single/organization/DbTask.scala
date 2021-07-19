@@ -1,6 +1,5 @@
-package utopia.ambassador.database.access.single.organization
+package utopia.citadel.database.access.single.organization
 
-import utopia.ambassador.database.access.many.scope.DbScopes
 import utopia.citadel.database.Tables
 import utopia.citadel.database.access.many.description.DbDescriptions
 import utopia.flow.generic.ValueConversions._
@@ -10,7 +9,7 @@ import utopia.vault.nosql.view.{SubView, UnconditionalView}
 /**
   * Used for accessing individual tasks' data in the DB
   * @author Mikko Hilpinen
-  * @since 11.7.2021, v1.0
+  * @since 11.7.2021, v1.0.1
   */
 object DbTask extends UnconditionalView with Indexed
 {
@@ -40,11 +39,6 @@ object DbTask extends UnconditionalView with Indexed
 		  * @return An access point to this task's descriptions
 		  */
 		def descriptions = DbDescriptions.ofTaskWithId(taskId)
-		
-		/**
-		  * @return An access point to this task's scopes
-		  */
-		def scopes = DbScopes.forTaskWithId(taskId)
 		
 		
 		// IMPLEMENTED  --------------------

@@ -1,13 +1,13 @@
 package utopia.ambassador.rest.resource.task
 
 import utopia.access.http.Method.Get
-import utopia.ambassador.database.access.single.organization.DbTask
 import utopia.ambassador.database.AuthDbExtensions._
 import utopia.ambassador.database.access.many.scope.DbScopeDescriptions
 import utopia.ambassador.database.access.many.service.DbAuthServices
 import utopia.ambassador.model.combined.scope.DescribedScope
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.citadel.database.access.single.DbUser
+import utopia.citadel.database.access.single.organization.DbTask
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._

@@ -1,6 +1,8 @@
 # Utopia Disciple - List of changes
 
 ## v1.0.1 (in development)
+### New Features
+- Added **DbTask** access point for accessing / viewing individual tasks' data
 ### New Methods
 - **DbUser**
   - Added `.email` and `.name` accessors to `.settings` -access point

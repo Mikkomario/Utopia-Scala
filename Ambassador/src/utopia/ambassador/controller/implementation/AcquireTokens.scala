@@ -4,8 +4,8 @@ import utopia.access.http.Headers
 import utopia.access.http.Method.Post
 import utopia.ambassador.database.access.many.token.DbAuthTokens
 import utopia.ambassador.database.access.single.service.DbAuthService
-import utopia.ambassador.database.access.single.organization.DbTask
 import utopia.ambassador.database.access.single.token.DbAuthToken
+import utopia.ambassador.database.AuthDbExtensions._
 import utopia.ambassador.database.model.scope.ScopeModel
 import utopia.ambassador.database.model.token.{AuthTokenModel, TokenScopeLinkModel}
 import utopia.ambassador.model.combined.scope.TaskScope
@@ -15,6 +15,7 @@ import utopia.ambassador.model.partial.scope.ScopeData
 import utopia.ambassador.model.partial.token.AuthTokenData
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.ambassador.model.stored.service.ServiceSettings
+import utopia.citadel.database.access.single.organization.DbTask
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Request, StringBody}
 import utopia.disciple.model.error.RequestFailedException
