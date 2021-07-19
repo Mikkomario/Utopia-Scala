@@ -5,6 +5,7 @@ import utopia.access.http.Method.Post
 import utopia.ambassador.database.access.many.token.DbAuthTokens
 import utopia.ambassador.database.access.single.service.DbAuthService
 import utopia.ambassador.database.access.single.organization.DbTask
+import utopia.ambassador.database.access.single.token.DbAuthToken
 import utopia.ambassador.database.model.scope.ScopeModel
 import utopia.ambassador.database.model.token.{AuthTokenModel, TokenScopeLinkModel}
 import utopia.ambassador.model.combined.scope.TaskScope
@@ -142,7 +143,7 @@ class AcquireTokens(gateway: Gateway, refreshTokenDuration: Duration = Duration.
 						.map { settings =>
 							val request = createRequest(settings, "refresh_token",
 								"refresh_token", refreshToken.token.token)
-							requestWith(request, serviceId, userId, settings.defaultSessionDuration)
+							requestWith(request, serviceId, userId, Some(refreshToken), settings.defaultSessionDuration)
 								.tryMapIfSuccess { newTokens =>
 									newTokens.find { _.isSessionToken }
 										.toTry { new NoTokenException(
@@ -151,13 +152,16 @@ class AcquireTokens(gateway: Gateway, refreshTokenDuration: Duration = Duration.
 						}.flattenToFuture
 			}
 			// Combines the futures into one, if there are many
+			// Case: No authentication was necessary => returns an empty map
 			if (tokenFutures.isEmpty)
 				Future.successful(Success(Map[Int, AuthTokenWithScopes]()))
+			// Case: Only one service was used => Wraps the token as a map
 			else if (tokenFutures.size == 1)
 			{
 				val (serviceId, tokenFuture) = tokenFutures.head
 				tokenFuture.mapIfSuccess { token => Map(serviceId -> token) }
 			}
+			// Case: Multiple services were targeted => groups the results to a map in a separate future
 			else
 				Future {
 					tokenFutures
@@ -183,10 +187,9 @@ class AcquireTokens(gateway: Gateway, refreshTokenDuration: Duration = Duration.
 		// Forms the token request first
 		val tokenRequest = createRequest(settings, "authorization_code", "code", code)
 		// Acquires the tokens using that request
-		requestWith(tokenRequest, settings.serviceId, userId, settings.defaultSessionDuration)
+		requestWith(tokenRequest, settings.serviceId, userId, None, settings.defaultSessionDuration)
 	}
 	
-	// "code" "authorization_code"
 	private def createRequest(settings: ServiceSettings, grantType: String,
 	                          authParamName: String, authParamValue: String) =
 	{
@@ -206,6 +209,7 @@ class AcquireTokens(gateway: Gateway, refreshTokenDuration: Duration = Duration.
 	}
 	
 	private def requestWith(request: Request, serviceId: Int, userId: Int,
+	                        existingRefreshToken: Option[AuthTokenWithScopes] = None,
 	                        defaultSessionDuration: => FiniteDuration = 22.hours)
 	           (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
@@ -241,8 +245,32 @@ class AcquireTokens(gateway: Gateway, refreshTokenDuration: Duration = Duration.
 							insertToken(userId, token, scopes, Some(expiration))
 						}
 						val refreshToken = response.body("refresh_token").string.map { token =>
-							insertToken(userId, token, scopes,
+							def insertNew() = insertToken(userId, token, scopes,
 								refreshTokenDuration.finite.map { requestTime + _ }, isRefreshToken = true)
+							// Checks whether the refresh token is a duplicate with the previously used or
+							// whether the previous token should be replaced
+							existingRefreshToken match
+							{
+								case Some(existingToken) =>
+									// Case: The new token is a duplicate of the previous => doesn't insert a new token
+									if (existingToken.token.token == token)
+									{
+										// May extend the scopes of the existing token
+										val newScopes = scopes
+											.filterNot { scope => existingToken.scopes.exists { _.id == scope.id } }
+										if (newScopes.nonEmpty)
+											TokenScopeLinkModel.insert(newScopes.map { existingToken.id -> _.id })
+										existingToken
+									}
+									// Case: New token is different => overwrites the previous token
+									else
+									{
+										DbAuthToken(existingToken.id).deprecate()
+										insertNew()
+									}
+								// Case: There was no previous refresh token => inserts a new token
+								case None => insertNew()
+							}
 						}
 						// Returns the tokens and the scopes
 						Vector(refreshToken, accessToken).flatten

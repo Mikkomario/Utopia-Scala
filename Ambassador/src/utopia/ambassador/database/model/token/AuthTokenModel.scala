@@ -43,6 +43,11 @@ object AuthTokenModel extends DataInserter[AuthTokenModel, AuthToken, AuthTokenD
 	  */
 	def expirationColumn = table(expirationAttName)
 	
+	/**
+	  * @return A model that has just been marked as deprecated
+	  */
+	def nowDeprecated = withDeprecatedAfter(Now)
+	
 	
 	// IMPLEMENTED  -------------------------------
 	
@@ -60,10 +65,20 @@ object AuthTokenModel extends DataInserter[AuthTokenModel, AuthToken, AuthTokenD
 	// OTHER    -----------------------------------
 	
 	/**
+	  * @param id A token id
+	  * @return A model with that id
+	  */
+	def withId(id: Int) = apply(Some(id))
+	/**
 	  * @param userId Id of the token owner
 	  * @return A model with that user id
 	  */
 	def withUserId(userId: Int) = apply(userId = Some(userId))
+	/**
+	  * @param deprecation A deprecation time
+	  * @return A model with that deprecation time
+	  */
+	def withDeprecatedAfter(deprecation: Instant) = apply(deprecatedAfter = Some(deprecation))
 }
 
 /**
@@ -77,6 +92,16 @@ case class AuthTokenModel(id: Option[Int] = None, userId: Option[Int] = None, to
 	extends StorableWithFactory[AuthToken]
 {
 	import AuthTokenModel._
+	
+	// COMPUTED -----------------------------------
+	
+	/**
+	  * @return A copy of this model that has just been marked as deprecated
+	  */
+	def nowDeprecated = copy(deprecatedAfter = Some(Now))
+	
+	
+	// IMPLEMENTED  -------------------------------
 	
 	override def factory = AuthTokenModel.factory
 	
