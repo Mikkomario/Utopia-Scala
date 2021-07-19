@@ -24,6 +24,10 @@ object DbAuthService extends SingleRowModelAccess[AuthService] with Unconditiona
 	
 	// OTHER    -------------------------------
 	
+	/**
+	  * @param serviceId A service id
+	  * @return An access point to that service's data
+	  */
 	def apply(serviceId: Int) = new DbSingleAuthService(serviceId)
 	
 	

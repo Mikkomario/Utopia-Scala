@@ -2,7 +2,7 @@ package utopia.ambassador.rest.resource.service.auth
 
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.{InternalServerError, NotFound}
-import utopia.ambassador.controller.implementation.DefaultRedirector
+import utopia.ambassador.controller.implementation.{AcquireTokens, DefaultRedirector}
 import utopia.ambassador.controller.template.AuthRedirector
 import utopia.ambassador.database.access.single.process.DbAuthPreparation
 import utopia.ambassador.database.access.single.service.DbAuthService
@@ -11,7 +11,7 @@ import utopia.ambassador.model.enumeration.GrantLevel.FullAccess
 import utopia.ambassador.model.partial.process.{AuthRedirectData, AuthRedirectResultData}
 import utopia.ambassador.model.stored.process.{AuthPreparation, AuthRedirect}
 import utopia.ambassador.model.stored.service.ServiceSettings
-import utopia.ambassador.rest.util.AuthUtils
+import utopia.ambassador.rest.util.{AuthUtils, ServiceTarget}
 import utopia.citadel.util.CitadelContext._
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.handleError
@@ -29,14 +29,15 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 18.7.2021, v1.0
   */
-case class AuthNode(serviceId: Int, redirector: AuthRedirector = DefaultRedirector)
+case class AuthNode(target: ServiceTarget, tokenAcquirer: AcquireTokens,
+                    redirector: AuthRedirector = DefaultRedirector)
 	extends ResourceWithChildren[AuthorizedContext]
 {
 	// ATTRIBUTES   -----------------------------
 	
 	override val name = "auth"
 	
-	override lazy val children = Vector(AuthPreparationNode(serviceId))
+	override lazy val children = Vector(AuthPreparationNode(target), AuthResponseNode(target, tokenAcquirer))
 	
 	
 	// IMPLEMENTED  -----------------------------
@@ -47,12 +48,12 @@ case class AuthNode(serviceId: Int, redirector: AuthRedirector = DefaultRedirect
 	{
 		connectionPool.tryWith { implicit connection =>
 			// Reads server settings
-			DbAuthService(serviceId).settings.pull match
+			target.id.flatMap { DbAuthService(_).settings.pull } match
 			{
 				// Case: Settings found => processes the request
 				case Some(settings) => get(settings)
 				// Case: Settings not foun => fails
-				case None => Result.Failure(NotFound, s"Service $serviceId is not valid or not supported at this time")
+				case None => Result.Failure(NotFound, s"$target is not valid or not supported at this time")
 			}
 		}.getOrMap { error =>
 			// Case: Unexpected error => fails
@@ -97,7 +98,7 @@ case class AuthNode(serviceId: Int, redirector: AuthRedirector = DefaultRedirect
 	{
 		// Checks which scopes to request
 		val preparationAccess = DbAuthPreparation(preparation.id)
-		val scopes = preparationAccess.requestedScopesForServiceWithId(serviceId)
+		val scopes = preparationAccess.requestedScopesForServiceWithId(settings.serviceId)
 		// Case: No authentication required, completes the authentication immediately
 		if (scopes.isEmpty)
 		{

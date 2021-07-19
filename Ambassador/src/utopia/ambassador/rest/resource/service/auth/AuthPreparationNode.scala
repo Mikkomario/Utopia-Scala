@@ -11,6 +11,7 @@ import utopia.ambassador.model.enumeration.AuthCompletionType.Default
 import utopia.ambassador.model.partial.process.{AuthCompletionRedirectTargetData, AuthPreparationData}
 import utopia.ambassador.model.post.NewAuthPreparation
 import AuthPreparationNode.maxStateLength
+import utopia.ambassador.rest.util.ServiceTarget
 import utopia.citadel.database.access.single.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
@@ -40,7 +41,7 @@ object AuthPreparationNode
   * @author Mikko Hilpinen
   * @since 12.7.2021, v1.0
   */
-case class AuthPreparationNode(serviceId: Int) extends LeafResource[AuthorizedContext]
+case class AuthPreparationNode(target: ServiceTarget) extends LeafResource[AuthorizedContext]
 {
 	// IMPLEMENTED  --------------------------------
 	
@@ -56,7 +57,7 @@ case class AuthPreparationNode(serviceId: Int) extends LeafResource[AuthorizedCo
 			// Parses the post model
 			context.handlePost(NewAuthPreparation) { preparation =>
 				// Makes sure service settings are available
-				DbAuthService(serviceId).settings.pull match
+				target.id.flatMap { DbAuthService(_).settings.pull } match
 				{
 					case Some(settings) =>
 						// Checks if all completion types (Success & Failure) have been covered by the redirect targets
@@ -68,7 +69,7 @@ case class AuthPreparationNode(serviceId: Int) extends LeafResource[AuthorizedCo
 							{
 								// Reads the scopes required by the task and those available to the user
 								val taskScopes = preparation.taskIds
-									.map { taskId => DbTask(taskId).scopes.forServiceWithId(serviceId).toSet }
+									.map { taskId => DbTask(taskId).scopes.forServiceWithId(settings.serviceId).toSet }
 								// Scopes that must be present
 								val requiredScopes = taskScopes.flatMap { _.filter { _.isRequired } }
 								// Scope groups where it is enough that one of the scopes is present
@@ -165,7 +166,7 @@ case class AuthPreparationNode(serviceId: Int) extends LeafResource[AuthorizedCo
 						else
 							Result.Failure(BadRequest,
 								"You must specify a redirect url or urls that cover both successful and failed authentication cases")
-					case None => Result.Failure(NotFound, s"Service id $serviceId is invalid or not supported at this time")
+					case None => Result.Failure(NotFound, s"$target is invalid or not supported at this time")
 				}
 			}
 		}

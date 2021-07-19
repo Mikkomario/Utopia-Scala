@@ -11,7 +11,7 @@ import utopia.ambassador.model.enumeration.GrantLevel.{AccessDenied, AccessFaile
 import utopia.ambassador.model.partial.process.{AuthRedirectResultData, IncompleteAuthData}
 import utopia.ambassador.model.stored.process.{AuthPreparation, AuthRedirect}
 import utopia.ambassador.model.stored.service.ServiceSettings
-import utopia.ambassador.rest.util.AuthUtils
+import utopia.ambassador.rest.util.{AuthUtils, ServiceTarget}
 import utopia.citadel.util.CitadelContext._
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.{handleError, uuidGenerator}
@@ -30,7 +30,7 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 18.7.2021, v1.0
   */
-case class AuthResponseNode(serviceId: Int, tokenAcquirer: AcquireTokens)
+case class AuthResponseNode(target: ServiceTarget, tokenAcquirer: AcquireTokens)
 	extends ResourceWithChildren[AuthorizedContext]
 {
 	// IMPLEMENTED  -------------------------
@@ -39,13 +39,13 @@ case class AuthResponseNode(serviceId: Int, tokenAcquirer: AcquireTokens)
 	
 	override def allowedMethods = Vector(Get)
 	
-	override def children = Vector(AuthResponseClosureNode(serviceId, tokenAcquirer))
+	override def children = Vector(AuthResponseClosureNode(target, tokenAcquirer))
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		// Starts by reading service settings from the database
 		connectionPool.tryWith { implicit connection =>
-			DbAuthService(serviceId).settings.pull match
+			target.id.flatMap { DbAuthService(_).settings.pull } match
 			{
 				case Some(settings) =>
 					// Acquires authentication code, which is present if the user provided access
@@ -90,10 +90,10 @@ case class AuthResponseNode(serviceId: Int, tokenAcquirer: AcquireTokens)
 								case None => Result.Failure(BadRequest, "Query parameter 'state' is required")
 							}
 					}
-				case None => Result.Failure(NotFound, s"Service $serviceId is not valid or is unavailable")
+				case None => Result.Failure(NotFound, s"$target is not valid or is unavailable")
 			}
 		}.getOrMap { error =>
-			handleError(error, s"Unexpected failure during service $serviceId auth response handling")
+			handleError(error, s"Unexpected failure during $target auth response handling")
 			Result.Failure(InternalServerError, error.getMessage)
 		}.toResponse
 	}
@@ -102,6 +102,7 @@ case class AuthResponseNode(serviceId: Int, tokenAcquirer: AcquireTokens)
 	                              errorMessage: String = "")
 	                             (implicit connection: Connection) =
 	{
+		val serviceId = settings.serviceId
 		// Reads authentication preparation data for future actions
 		val preparation = DbAuthPreparation(redirect.preparationId).pull
 		
@@ -144,7 +145,7 @@ case class AuthResponseNode(serviceId: Int, tokenAcquirer: AcquireTokens)
 	                                    (implicit connection: Connection) =
 	{
 		// Opens an incomplete authentication case
-		val newCase = IncompleteAuthModel.insert(IncompleteAuthData(serviceId, code, uuidGenerator.next(),
+		val newCase = IncompleteAuthModel.insert(IncompleteAuthData(settings.serviceId, code, uuidGenerator.next(),
 			Now + settings.incompleteAuthTokenDuration))
 		// Redirects the user to the incomplete authentication endpoint
 		val tokenParamString = s"token=${newCase.token}"
