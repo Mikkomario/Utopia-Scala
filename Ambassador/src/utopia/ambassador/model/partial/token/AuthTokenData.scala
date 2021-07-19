@@ -20,6 +20,11 @@ case class AuthTokenData(userId: Int, token: String, created: Instant = Now, exp
                          deprecatedAfter: Option[Instant] = None, isRefreshToken: Boolean = false)
 {
 	/**
+	  * @return Whether this is a session / access token and not a refresh token
+	  */
+	def isSessionToken = !isRefreshToken
+	
+	/**
 	  * @return Whether this is a temporary token (will expire)
 	  */
 	def isTemporary = expiration.isDefined

@@ -2,7 +2,7 @@ package utopia.ambassador.rest.resource.service.auth
 
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{BadRequest, ServiceUnavailable, Unauthorized}
-import utopia.ambassador.controller.implementation.AcquireToken
+import utopia.ambassador.controller.implementation.AcquireTokens
 import utopia.ambassador.database.access.single.process.DbIncompleteAuth
 import utopia.ambassador.database.access.single.service.DbAuthService
 import utopia.ambassador.model.stored.process.IncompleteAuth
@@ -24,7 +24,7 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 19.7.2021, v1.0
   */
-case class AuthResponseClosureNode(serviceId: Int, tokenAcquirer: AcquireToken) extends LeafResource[AuthorizedContext]
+case class AuthResponseClosureNode(serviceId: Int, tokenAcquirer: AcquireTokens) extends LeafResource[AuthorizedContext]
 {
 	// IMPLEMENTED  -----------------------------
 	
@@ -73,12 +73,12 @@ case class AuthResponseClosureNode(serviceId: Int, tokenAcquirer: AcquireToken) 
 	                         (implicit context: AuthorizedContext, connection: Connection) =
 	{
 		// Swaps the authentication code for access token(s). Blocks.
-		tokenAcquirer.forCode(settings, authCase.code, session.userId).waitForResult() match
+		tokenAcquirer.forCode(session.userId, authCase.code, settings).waitForResult() match
 		{
 			// Case: Success => Returns list of acquired scopes
-			case Success(scopes) =>
+			case Success(tokens) =>
 				val style = session.modelStyle
-				Result.Success(scopes.map { _.toModelWith(style) })
+				Result.Success(tokens.map { _.scopes }.reduce { _ ++ _ }.toVector.map { _.toModelWith(style) })
 			// Case: Failure => Returns error
 			case Failure(error) => Result.Failure(Unauthorized, error.getMessage)
 		}

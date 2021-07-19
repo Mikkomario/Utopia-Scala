@@ -2,7 +2,7 @@ package utopia.ambassador.rest.resource.service.auth
 
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.{BadRequest, InternalServerError, NotFound, Unauthorized}
-import utopia.ambassador.controller.implementation.AcquireToken
+import utopia.ambassador.controller.implementation.AcquireTokens
 import utopia.ambassador.database.access.single.process.{DbAuthPreparation, DbAuthRedirect}
 import utopia.ambassador.database.access.single.service.DbAuthService
 import utopia.ambassador.database.model.process.{AuthRedirectResultModel, IncompleteAuthModel}
@@ -30,7 +30,7 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 18.7.2021, v1.0
   */
-case class AuthResponseNode(serviceId: Int, tokenAcquirer: AcquireToken)
+case class AuthResponseNode(serviceId: Int, tokenAcquirer: AcquireTokens)
 	extends ResourceWithChildren[AuthorizedContext]
 {
 	// IMPLEMENTED  -------------------------
@@ -114,18 +114,14 @@ case class AuthResponseNode(serviceId: Int, tokenAcquirer: AcquireToken)
 				{
 					case Some(preparation) =>
 						// Swaps the code for access token(s). Blocks.
-						tokenAcquirer.forCode(settings, code, preparation.userId).waitForResult() match
+						tokenAcquirer.forCode(preparation.userId, code, settings).waitForResult() match
 						{
 							// Case: Acquired access tokens => checks if acquired scope matches the request
-							case Success(acquiredScopes) =>
+							case Success(tokens) =>
 								val requestedScopes = DbAuthPreparation(preparation.id)
 									.requestedScopesForServiceWithId(serviceId)
-								val grantLevel = {
-									if (requestedScopes.forall { scope => acquiredScopes.exists { _.id == scope.id } })
-										FullAccess
-									else
-										PartialAccess
-								}
+								val grantLevel = if (tokens.exists { _.containsAll(requestedScopes) }) FullAccess else
+									PartialAccess
 								completeWithRedirectResult(settings, redirect.id, Some(preparation), grantLevel)
 							// Case: Failed to acquire access tokens
 							case Failure(error) =>

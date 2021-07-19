@@ -15,6 +15,10 @@ object ScopeModel extends DataInserter[ScopeModel, Scope, ScopeData]
 	// ATTRIBUTES   ----------------------------
 	
 	/**
+	  * Name of the property that refers to the scope's granting service
+	  */
+	val serviceIdAttName = "serviceId"
+	/**
 	  * Name of the property that contains scope name in the 3rd party service
 	  */
 	val serviceSideNameAttName = "serviceSideName"
@@ -27,6 +31,10 @@ object ScopeModel extends DataInserter[ScopeModel, Scope, ScopeData]
 	  */
 	def factory = ScopeFactory
 	
+	/**
+	  * Column that refers to the scope's granting service
+	  */
+	def serviceIdColumn = table(serviceIdAttName)
 	/**
 	  * @return Column that contains scope name in the 3rd party service
 	  */
@@ -66,6 +74,6 @@ case class ScopeModel(id: Option[Int] = None, serviceId: Option[Int] = None, ser
 	
 	override def factory = ScopeModel.factory
 	
-	override def valueProperties = Vector("id" -> id, "serviceId" -> serviceId,
+	override def valueProperties = Vector("id" -> id, serviceIdAttName -> serviceId,
 		serviceSideNameAttName -> serviceSideName, "clientSideName" -> clientSideName, "created" -> created)
 }

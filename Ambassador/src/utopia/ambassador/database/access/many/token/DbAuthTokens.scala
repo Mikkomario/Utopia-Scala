@@ -44,6 +44,11 @@ object DbAuthTokens extends ManyRowModelAccess[AuthToken]
 		// COMPUTED --------------------------------
 		
 		/**
+		  * @return An access point to these tokens, including the scopes linked with those tokens
+		  */
+		def withScopes = DbAuthTokensWithScopes.forUserWithId(userId)
+		
+		/**
 		  * @param connection Implicit DB Connection
 		  * @return The ids of the scopes available to this user with their current valid
 		  *         access and/or refresh tokens

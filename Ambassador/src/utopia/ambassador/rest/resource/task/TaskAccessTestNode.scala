@@ -64,8 +64,8 @@ case class TaskAccessTestNode(taskId: Int) extends LeafResource[AuthorizedContex
 						Model(Vector(
 							"id" -> service.id,
 							"name" -> service.name,
-							"required" -> remainingRequiredScopes.map { scopeToModel(_) },
-							"alternative" -> alternative.map { scopeToModel(_) }
+							"required" -> remainingRequiredScopes.map { s => scopeToModel(s.scope) },
+							"alternative" -> alternative.map { s => scopeToModel(s.scope) }
 						))
 					}
 					Result.Success(Model(Vector("is_authorized" -> false, "services" -> serviceModels)))
