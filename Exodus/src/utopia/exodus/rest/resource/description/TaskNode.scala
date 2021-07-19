@@ -22,7 +22,7 @@ object TaskNode extends ExtendableSessionResourceFactory[Int, TaskNode]
   * @author Mikko Hilpinen
   * @since 19.7.2021, v2.0.1
   */
-class TaskNode(taskId: Int) extends ExtendableSessionResource
+class TaskNode(val taskId: Int) extends ExtendableSessionResource
 {
 	// ATTRIBUTES   ------------------------------
 	

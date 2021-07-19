@@ -28,6 +28,8 @@ Before using Exodus, you must call `ExodusContext.setup(...)` method.
 
 You will need to add **ExodusResources** values to your **RequestHandler** when setting up the server.
 
+
+
 ### Classes you should be aware of
 - **AuthorizedContext** - You may use this context in your **Resource** implementations to make sure incoming 
   requests are properly authorized.
