@@ -41,7 +41,7 @@ object AuthPreparationNode
   * @author Mikko Hilpinen
   * @since 12.7.2021, v1.0
   */
-case class AuthPreparationNode(target: ServiceTarget) extends LeafResource[AuthorizedContext]
+class AuthPreparationNode(target: ServiceTarget) extends LeafResource[AuthorizedContext]
 {
 	// IMPLEMENTED  --------------------------------
 	

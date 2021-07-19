@@ -12,6 +12,7 @@ import utopia.citadel.util.CitadelContext._
 import utopia.exodus.model.stored.UserSession
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.caching.multi.CacheLike
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.LeafResource
@@ -24,8 +25,10 @@ import scala.util.{Failure, Success}
   * Used for closing incomplete authentication attempts
   * @author Mikko Hilpinen
   * @since 19.7.2021, v1.0
+  * @param target Target that represents the service that is used
+  * @param tokenAcquirers Cache for token acquires per service id
   */
-case class AuthResponseClosureNode(target: ServiceTarget, tokenAcquirer: AcquireTokens)
+class AuthResponseClosureNode(target: ServiceTarget, tokenAcquirers: CacheLike[Int, AcquireTokens])
 	extends LeafResource[AuthorizedContext]
 {
 	// IMPLEMENTED  -----------------------------
@@ -80,7 +83,7 @@ case class AuthResponseClosureNode(target: ServiceTarget, tokenAcquirer: Acquire
 	                         (implicit context: AuthorizedContext, connection: Connection) =
 	{
 		// Swaps the authentication code for access token(s). Blocks.
-		tokenAcquirer.forCode(session.userId, authCase.code, settings).waitForResult() match
+		tokenAcquirers(settings.serviceId).forCode(session.userId, authCase.code, settings).waitForResult() match
 		{
 			// Case: Success => Returns list of acquired scopes
 			case Success(tokens) =>

@@ -2,7 +2,7 @@ package utopia.ambassador.rest.resource.service.auth
 
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.{InternalServerError, NotFound}
-import utopia.ambassador.controller.implementation.{AcquireTokens, DefaultRedirector}
+import utopia.ambassador.controller.implementation.AcquireTokens
 import utopia.ambassador.controller.template.AuthRedirector
 import utopia.ambassador.database.access.single.process.DbAuthPreparation
 import utopia.ambassador.database.access.single.service.DbAuthService
@@ -16,6 +16,7 @@ import utopia.citadel.util.CitadelContext._
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.handleError
 import utopia.exodus.util.ExodusContext.uuidGenerator
+import utopia.flow.caching.multi.CacheLike
 import utopia.flow.time.Now
 import utopia.flow.util.CollectionExtensions._
 import utopia.nexus.http.Path
@@ -29,15 +30,15 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 18.7.2021, v1.0
   */
-case class AuthNode(target: ServiceTarget, tokenAcquirer: AcquireTokens,
-                    redirector: AuthRedirector = DefaultRedirector)
+class AuthNode(target: ServiceTarget, tokenAcquirers: CacheLike[Int, AcquireTokens],
+                    redirectors: CacheLike[Int, AuthRedirector])
 	extends ResourceWithChildren[AuthorizedContext]
 {
 	// ATTRIBUTES   -----------------------------
 	
 	override val name = "auth"
 	
-	override lazy val children = Vector(AuthPreparationNode(target), AuthResponseNode(target, tokenAcquirer))
+	override lazy val children = Vector(new AuthPreparationNode(target), new AuthResponseNode(target, tokenAcquirers))
 	
 	
 	// IMPLEMENTED  -----------------------------
@@ -107,6 +108,7 @@ case class AuthNode(target: ServiceTarget, tokenAcquirer: AcquireTokens,
 		}
 		// Case: Authentication required => Redirects the user
 		else
-			Result.Redirect(redirector.redirectionFor(event.token, settings, preparation, scopes))
+			Result.Redirect(redirectors(settings.serviceId)
+				.redirectionFor(event.token, settings, preparation, scopes))
 	}
 }

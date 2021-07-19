@@ -46,6 +46,11 @@ object DbAuthService extends SingleRowModelAccess[AuthService] with Unconditiona
 		  * @return An access point to this service's scopes
 		  */
 		def scopes = DbScopes.forServiceWithId(serviceId)
+		/**
+		  * @param connection Implicit DB connection
+		  * @return Ids of the tasks that require authentication with this service
+		  */
+		def taskIds(implicit connection: Connection) = scopes.taskIds
 		
 		
 		// NESTED   ---------------------------

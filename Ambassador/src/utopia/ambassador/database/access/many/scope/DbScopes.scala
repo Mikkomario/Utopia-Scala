@@ -22,6 +22,7 @@ object DbScopes extends ManyRowModelAccess[Scope]
 	// COMPUTED ------------------------------------
 	
 	private def model = ScopeModel
+	private def taskLinkModel = TaskScopeLinkModel
 	
 	
 	// IMPLEMENTED  --------------------------------
@@ -55,6 +56,19 @@ object DbScopes extends ManyRowModelAccess[Scope]
 	
 	class DbServiceScopes(val serviceId: Int) extends ManyRowModelAccess[Scope] with SubView
 	{
+		// COMPUTED --------------------------------
+		
+		/**
+		  * @param connection Implicit DB Connection
+		  * @return Task ids associated with these scopes
+		  */
+		def taskIds(implicit connection: Connection) =
+		{
+			val target = table join taskLinkModel.table
+			connection(Select(target, taskLinkModel.taskIdColumn) + Where(condition)).rowIntValues
+		}
+		
+		
 		// IMPLEMENTED  ----------------------------
 		
 		override protected def parent = DbScopes

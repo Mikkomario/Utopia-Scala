@@ -16,6 +16,7 @@ import utopia.citadel.util.CitadelContext._
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.{handleError, uuidGenerator}
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.caching.multi.CacheLike
 import utopia.flow.time.Now
 import utopia.flow.util.CollectionExtensions._
 import utopia.nexus.http.Path
@@ -30,16 +31,19 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 18.7.2021, v1.0
   */
-case class AuthResponseNode(target: ServiceTarget, tokenAcquirer: AcquireTokens)
+class AuthResponseNode(target: ServiceTarget, tokenAcquirers: CacheLike[Int, AcquireTokens])
 	extends ResourceWithChildren[AuthorizedContext]
 {
+	// ATTRIBUTES   -------------------------
+	
+	override lazy val children = Vector(new AuthResponseClosureNode(target, tokenAcquirers))
+	
+	
 	// IMPLEMENTED  -------------------------
 	
 	override def name = "response"
 	
 	override def allowedMethods = Vector(Get)
-	
-	override def children = Vector(AuthResponseClosureNode(target, tokenAcquirer))
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
@@ -115,7 +119,7 @@ case class AuthResponseNode(target: ServiceTarget, tokenAcquirer: AcquireTokens)
 				{
 					case Some(preparation) =>
 						// Swaps the code for access token(s). Blocks.
-						tokenAcquirer.forCode(preparation.userId, code, settings).waitForResult() match
+						tokenAcquirers(serviceId).forCode(preparation.userId, code, settings).waitForResult() match
 						{
 							// Case: Acquired access tokens => checks if acquired scope matches the request
 							case Success(tokens) =>
