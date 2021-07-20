@@ -6,12 +6,14 @@ import utopia.ambassador.database.access.many.scope.DbScopeDescriptions
 import utopia.ambassador.database.access.many.service.DbAuthServices
 import utopia.ambassador.model.combined.scope.DescribedScope
 import utopia.ambassador.model.stored.scope.Scope
+import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.single.DbUser
 import utopia.citadel.database.access.single.organization.DbTask
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
+import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
 import utopia.nexus.rest.LeafResource
 import utopia.nexus.result.Result
@@ -39,6 +41,7 @@ case class TaskAccessTestNode(taskId: Int) extends LeafResource[AuthorizedContex
 				val (alternative, required) = scopes.divideBy { _.isRequired }
 				val alternativeGroups = alternative.groupBy { _.serviceId }
 				// Reads the scopes currently accessible for the user
+				// TODO: Is there a bug here?
 				val readyScopeIds = DbUser(session.userId).accessibleScopeIds
 				
 				// Checks whether there are any required and provides a description of them for the client
@@ -59,10 +62,20 @@ case class TaskAccessTestNode(taskId: Int) extends LeafResource[AuthorizedContex
 						.inLanguages(context.languageIdListFor(session.userId))
 					// Reads service names
 					val services = DbAuthServices(missingScopeIds).pull
+					
 					// Combines the data into a single response
 					val style = session.modelStyle
+					lazy val descriptionRoles = DbDescriptionRoles.pull
 					def scopeToModel(scope: Scope) =
-						DescribedScope(scope, descriptions.getOrElse(scope.id, Vector()).toSet).toModelWith(style)
+					{
+						val described = DescribedScope(scope, descriptions.getOrElse(scope.id, Vector()).toSet)
+						style match
+						{
+							case Simple => described.toSimpleModelUsing(descriptionRoles)
+							case Full => described.toModel
+						}
+					}
+					
 					val serviceModels = services.map { service =>
 						Model(Vector(
 							"id" -> service.id,

@@ -142,7 +142,7 @@ CREATE TABLE oauth_preparation(
 CREATE TABLE scope_request_preparation(
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     preparation_id INT NOT NULL,
-    scope_id INT NO NULL,
+    scope_id INT NOT NULL,
 
     CONSTRAINT srp_open_preparation_fk FOREIGN KEY srp_open_preparation_idx (preparation_id)
         REFERENCES oauth_preparation(id) ON DELETE CASCADE,
@@ -166,7 +166,7 @@ CREATE TABLE oauth_completion_redirect_target(
     result_state_filter BOOLEAN,
     is_limited_to_denials BOOLEAN NOT NULL DEFAULT FALSE,
 
-    ocrt_filter_idx (result_state_filter, is_limited_to_denials),
+    INDEX ocrt_filter_idx (result_state_filter, is_limited_to_denials),
 
     CONSTRAINT ocrt_op_linked_preparation_fk FOREIGN KEY ocrt_op_linked_preparation_idx (preparation_id)
         REFERENCES oauth_preparation(id) ON DELETE CASCADE
@@ -239,7 +239,7 @@ CREATE TABLE oauth_token_scope(
 
     CONSTRAINT ots_ot_described_token_fk FOREIGN KEY ots_ot_described_token_idx (token_id)
         REFERENCES oauth_token(id) ON DELETE CASCADE,
-    CONSTRAINT ots_s_token_scope_fk FOREIGN KEY ots_s_token_scope_idx (scoped_id)
+    CONSTRAINT ots_s_token_scope_fk FOREIGN KEY ots_s_token_scope_idx (scope_id)
         REFERENCES scope(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;

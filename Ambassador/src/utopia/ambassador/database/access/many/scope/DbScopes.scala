@@ -65,7 +65,7 @@ object DbScopes extends ManyRowModelAccess[Scope]
 		def taskIds(implicit connection: Connection) =
 		{
 			val target = table join taskLinkModel.table
-			connection(Select(target, taskLinkModel.taskIdColumn) + Where(condition)).rowIntValues
+			connection(Select(target, taskLinkModel.taskIdColumn) + Where(condition)).rowIntValues.toSet
 		}
 		
 		
