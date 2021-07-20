@@ -19,6 +19,11 @@ case class AuthTokenWithScopes(token: AuthToken, scopes: Set[Scope]) extends Ext
 	  */
 	def id = token.id
 	
+	/**
+	 * @return This token as a string (only containing the auth token string)
+	 */
+	def tokenString = token.token
+	
 	
 	// IMPLEMENTED  -------------------------
 	

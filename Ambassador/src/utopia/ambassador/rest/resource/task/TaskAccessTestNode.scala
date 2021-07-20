@@ -37,20 +37,23 @@ case class TaskAccessTestNode(taskId: Int) extends LeafResource[AuthorizedContex
 			if (scopes.nonEmpty)
 			{
 				val (alternative, required) = scopes.divideBy { _.isRequired }
+				val alternativeGroups = alternative.groupBy { _.serviceId }
 				// Reads the scopes currently accessible for the user
 				val readyScopeIds = DbUser(session.userId).accessibleScopeIds
 				
 				// Checks whether there are any required and provides a description of them for the client
 				val remainingRequiredScopes = required.filterNot { scope => readyScopeIds.contains(scope.id) }
-				val hasAlternativeScopes = alternative.isEmpty ||
-					alternative.exists { scope => readyScopeIds.contains(scope.id) }
+				val remainingAlternativeGroups = alternativeGroups.filterNot { case (_, scopes) =>
+					scopes.exists { scope => readyScopeIds.contains(scope.id) }
+				}
+				val hasAlternativeScopes = remainingAlternativeGroups.isEmpty
 				
 				if (remainingRequiredScopes.isEmpty && hasAlternativeScopes)
 					Result.Success(Model(Vector("is_authorized" -> true)))
 				else
 				{
 					// Reads the descriptions of the missing scopes
-					val missingScopes = remainingRequiredScopes ++ alternative
+					val missingScopes = remainingRequiredScopes ++ remainingAlternativeGroups.values.flatten
 					val missingScopeIds = missingScopes.map { _.id }.toSet
 					val descriptions = DbScopeDescriptions(missingScopeIds)
 						.inLanguages(context.languageIdListFor(session.userId))
@@ -64,8 +67,10 @@ case class TaskAccessTestNode(taskId: Int) extends LeafResource[AuthorizedContex
 						Model(Vector(
 							"id" -> service.id,
 							"name" -> service.name,
-							"required" -> remainingRequiredScopes.map { s => scopeToModel(s.scope) },
-							"alternative" -> alternative.map { s => scopeToModel(s.scope) }
+							"required" -> remainingRequiredScopes.filter { _.serviceId == service.id }
+								.map { s => scopeToModel(s.scope) },
+							"alternative" -> alternativeGroups.getOrElse(service.id, Vector())
+								.map { s => scopeToModel(s.scope) }
 						))
 					}
 					Result.Success(Model(Vector("is_authorized" -> false, "services" -> serviceModels)))

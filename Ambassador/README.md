@@ -38,6 +38,12 @@ with scalability in mind so that other services can be supported when necessary.
 - If you need to use this module with some other OAuth service and need some changes, please contact me. 
   I'll be glad to help you.
   
+## Available Extensions
+- utopia.ambassador.database.**AuthDbExtensions**
+  - Adds authentication-related methods to individual user and task access points
+- utopia.ambassador.rest.resource.extensions.**ExodusTaskExtensions**
+  - Adds authentication checking node under individual task nodes
+  
 ## Implementation Hints
 API documentation is yet to be written...  
 
