@@ -41,7 +41,6 @@ case class TaskAccessTestNode(taskId: Int) extends LeafResource[AuthorizedContex
 				val (alternative, required) = scopes.divideBy { _.isRequired }
 				val alternativeGroups = alternative.groupBy { _.serviceId }
 				// Reads the scopes currently accessible for the user
-				// TODO: Is there a bug here?
 				val readyScopeIds = DbUser(session.userId).accessibleScopeIds
 				
 				// Checks whether there are any required and provides a description of them for the client
@@ -61,7 +60,7 @@ case class TaskAccessTestNode(taskId: Int) extends LeafResource[AuthorizedContex
 					val descriptions = DbScopeDescriptions(missingScopeIds)
 						.inLanguages(context.languageIdListFor(session.userId))
 					// Reads service names
-					val services = DbAuthServices(missingScopeIds).pull
+					val services = DbAuthServices(missingScopes.map { _.serviceId }.toSet).pull
 					
 					// Combines the data into a single response
 					val style = session.modelStyle

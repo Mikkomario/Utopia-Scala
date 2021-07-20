@@ -5,7 +5,7 @@ import utopia.ambassador.database.model.token.{AuthTokenModel, TokenScopeLinkMod
 import utopia.ambassador.model.stored.token.AuthToken
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{NonDeprecatedView, SubView}
 import utopia.vault.sql.{Select, Where}
 
 /**
@@ -13,7 +13,7 @@ import utopia.vault.sql.{Select, Where}
   * @author Mikko Hilpinen
   * @since 11.7.2021, v1.0
   */
-object DbAuthTokens extends ManyRowModelAccess[AuthToken]
+object DbAuthTokens extends ManyRowModelAccess[AuthToken] with NonDeprecatedView[AuthToken]
 {
 	// COMPUTED -----------------------------------
 	
@@ -25,7 +25,6 @@ object DbAuthTokens extends ManyRowModelAccess[AuthToken]
 	
 	override def factory = AuthTokenFactory
 	override protected def defaultOrdering = Some(factory.defaultOrdering)
-	override def globalCondition = Some(factory.nonDeprecatedCondition)
 	
 	
 	// OTHER    ------------------------------------

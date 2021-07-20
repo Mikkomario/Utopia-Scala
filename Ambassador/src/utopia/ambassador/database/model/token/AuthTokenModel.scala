@@ -53,7 +53,8 @@ object AuthTokenModel extends DataInserter[AuthTokenModel, AuthToken, AuthTokenD
 	
 	override def table = factory.table
 	
-	override def nonDeprecatedCondition = deprecationColumn.isNull && expirationColumn > Now.toValue
+	override def nonDeprecatedCondition = deprecationColumn.isNull &&
+		(expirationColumn.isNull || expirationColumn > Now.toValue)
 	
 	override def apply(data: AuthTokenData) =
 		apply(None, Some(data.userId), Some(data.token), Some(data.isRefreshToken), Some(data.created),
