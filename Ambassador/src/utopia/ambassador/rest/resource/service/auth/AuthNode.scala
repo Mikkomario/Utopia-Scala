@@ -16,7 +16,7 @@ import utopia.citadel.util.CitadelContext._
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.handleError
 import utopia.exodus.util.ExodusContext.uuidGenerator
-import utopia.flow.caching.multi.CacheLike
+import utopia.flow.datastructure.template.MapLike
 import utopia.flow.time.Now
 import utopia.flow.util.CollectionExtensions._
 import utopia.nexus.http.Path
@@ -30,15 +30,14 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 18.7.2021, v1.0
   */
-class AuthNode(target: ServiceTarget, tokenAcquirers: CacheLike[Int, AcquireTokens],
-                    redirectors: CacheLike[Int, AuthRedirector])
+class AuthNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirectors: MapLike[Int, AuthRedirector])
 	extends ResourceWithChildren[AuthorizedContext]
 {
 	// ATTRIBUTES   -----------------------------
 	
 	override val name = "auth"
 	
-	override lazy val children = Vector(new AuthPreparationNode(target), new AuthResponseNode(target, tokenAcquirers))
+	override lazy val children = Vector(new AuthPreparationNode(target), new AuthResponseNode(target, tokenAcquirer))
 	
 	
 	// IMPLEMENTED  -----------------------------

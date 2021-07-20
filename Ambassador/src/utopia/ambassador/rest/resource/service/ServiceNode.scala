@@ -10,8 +10,8 @@ import utopia.ambassador.model.combined.scope.DescribedScope
 import utopia.ambassador.rest.resource.service.auth.AuthNode
 import utopia.ambassador.rest.util.ServiceTarget
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.caching.multi.CacheLike
 import utopia.flow.datastructure.immutable.Constant
+import utopia.flow.datastructure.template.MapLike
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.ResourceWithChildren
@@ -23,13 +23,12 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 19.7.2021, v1.0
   */
-class ServiceNode(target: ServiceTarget, tokenAcquirers: CacheLike[Int, AcquireTokens],
-                       redirectors: CacheLike[Int, AuthRedirector])
+class ServiceNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirectors: MapLike[Int, AuthRedirector])
 	extends ResourceWithChildren[AuthorizedContext]
 {
 	// ATTRIBUTES   -------------------------
 	
-	override lazy val children = Vector(new AuthNode(target, tokenAcquirers, redirectors))
+	override lazy val children = Vector(new AuthNode(target, tokenAcquirer, redirectors))
 	
 	
 	// IMPLEMENTED  -------------------------

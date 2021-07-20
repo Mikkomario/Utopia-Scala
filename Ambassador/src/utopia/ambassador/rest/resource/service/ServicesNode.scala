@@ -6,7 +6,7 @@ import utopia.ambassador.controller.template.AuthRedirector
 import utopia.ambassador.database.access.many.service.DbAuthServices
 import utopia.ambassador.rest.util.ServiceTarget
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.caching.multi.CacheLike
+import utopia.flow.datastructure.template.MapLike
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
@@ -18,12 +18,11 @@ import utopia.vault.database.Connection
   * Facilitates access to multiple services
   * @author Mikko Hilpinen
   * @since 19.7.2021, v1.0
-  * @param tokenAcquirers Cache for acquiring tools for accessing new tokens
-  *                       (takes service id and returns an token acquisition implementation)
+  * @param tokenAcquirer An interface for acquiring new access tokens
   * @param redirectors Cache for acquiring redirector implementations. Takes service ids.
   * @param name Name of this node (default = "services")
   */
-class ServicesNode(tokenAcquirers: CacheLike[Int, AcquireTokens], redirectors: CacheLike[Int, AuthRedirector],
+class ServicesNode(tokenAcquirer: AcquireTokens, redirectors: MapLike[Int, AuthRedirector],
                    override val name: String = "services")
 	extends Resource[AuthorizedContext]
 {
@@ -37,7 +36,7 @@ class ServicesNode(tokenAcquirers: CacheLike[Int, AcquireTokens], redirectors: C
 			case Some(serviceId) => ServiceTarget.id(serviceId)
 			case None => ServiceTarget.name(path.head)
 		}
-		Follow(new ServiceNode(target, tokenAcquirers, redirectors), path.tail)
+		Follow(new ServiceNode(target, tokenAcquirer, redirectors), path.tail)
 	}
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =

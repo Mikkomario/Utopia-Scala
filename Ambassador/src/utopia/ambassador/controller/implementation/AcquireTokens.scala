@@ -8,6 +8,7 @@ import utopia.ambassador.database.access.single.token.DbAuthToken
 import utopia.ambassador.database.AuthDbExtensions._
 import utopia.ambassador.database.model.scope.ScopeModel
 import utopia.ambassador.database.model.token.{AuthTokenModel, TokenScopeLinkModel}
+import utopia.ambassador.model.cached.TokenInterfaceConfiguration
 import utopia.ambassador.model.combined.scope.TaskScope
 import utopia.ambassador.model.combined.token.AuthTokenWithScopes
 import utopia.ambassador.model.error.{NoTokenException, SettingsNotFoundException}
@@ -16,12 +17,12 @@ import utopia.ambassador.model.partial.token.AuthTokenData
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.ambassador.model.stored.service.ServiceSettings
 import utopia.citadel.database.access.single.organization.DbTask
-import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Request, StringBody}
 import utopia.disciple.model.error.RequestFailedException
 import utopia.exodus.util.ExodusContext.handleError
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.template.MapLike
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -30,7 +31,7 @@ import utopia.vault.database.{Connection, ConnectionPool}
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -38,12 +39,10 @@ import scala.util.{Failure, Success, Try}
   * refresh and/or session token
   * @author Mikko Hilpinen
   * @since 18.7.2021, v1.0
-  * @param gateway Gateway for making new requests
-  * @param refreshTokenDuration Duration assigned for refresh tokens (default = infinite)
-  * @param useAuthorizationHeader Whether authorization header should be used for sending
-  *                               client id and client secret (false if request body should be used (default))
+  * @param configurations A map-like object for acquiring correct configurations for each targeted service.
+  *                       Accepts a service id and returns the applicable configurations.
   */
-class AcquireTokens(gateway: Gateway, refreshTokenDuration: Duration = Duration.Inf, useAuthorizationHeader: Boolean)
+class AcquireTokens(configurations: MapLike[Int, TokenInterfaceConfiguration])
 {
 	/**
 	  * Acquires session authentications needed to perform the specified task.
@@ -142,9 +141,11 @@ class AcquireTokens(gateway: Gateway, refreshTokenDuration: Duration = Duration.
 					serviceId -> DbAuthService(serviceId).settings.pull
 						.toTry { new SettingsNotFoundException(s"No settings available for service $serviceId") }
 						.map { settings =>
+							val config = configurations(serviceId)
 							val request = createRequest(settings, "refresh_token",
-								"refresh_token", refreshToken.token.token)
-							requestWith(request, serviceId, userId, Some(refreshToken), settings.defaultSessionDuration)
+								"refresh_token", refreshToken.token.token, config.useAuthorizationHeader)
+							requestWith(config, request, serviceId, userId, Some(refreshToken),
+								settings.defaultSessionDuration)
 								.tryMapIfSuccess { newTokens =>
 									newTokens.find { _.isSessionToken }
 										.toTry { new NoTokenException(
@@ -185,14 +186,16 @@ class AcquireTokens(gateway: Gateway, refreshTokenDuration: Duration = Duration.
 	def forCode(userId: Int, code: String, settings: ServiceSettings)
 	           (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
+		val config = configurations(settings.serviceId)
 		// Forms the token request first
-		val tokenRequest = createRequest(settings, "authorization_code", "code", code)
+		val tokenRequest = createRequest(settings, "authorization_code", "code", code,
+			config.useAuthorizationHeader)
 		// Acquires the tokens using that request
-		requestWith(tokenRequest, settings.serviceId, userId, None, settings.defaultSessionDuration)
+		requestWith(config, tokenRequest, settings.serviceId, userId, None, settings.defaultSessionDuration)
 	}
 	
 	private def createRequest(settings: ServiceSettings, grantType: String,
-	                          authParamName: String, authParamValue: String) =
+	                          authParamName: String, authParamValue: String, useAuthorizationHeader: Boolean) =
 	{
 		// Puts the client id and client secret either to the basic auth header or to the body
 		val headers = {
@@ -209,14 +212,14 @@ class AcquireTokens(gateway: Gateway, refreshTokenDuration: Duration = Duration.
 		Request(settings.tokenUrl, Post, headers = headers, body = Some(StringBody.urlEncodedForm(bodyModel)))
 	}
 	
-	private def requestWith(request: Request, serviceId: Int, userId: Int,
+	private def requestWith(config: TokenInterfaceConfiguration, request: Request, serviceId: Int, userId: Int,
 	                        existingRefreshToken: Option[AuthTokenWithScopes] = None,
 	                        defaultSessionDuration: => FiniteDuration = 22.hours)
 	           (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
 		// Sends the request and handles the result once it arrives
 		val requestTime = Now.toInstant
-		gateway.modelResponseFor(request).tryMapIfSuccess { response =>
+		config.gateway.modelResponseFor(request).tryMapIfSuccess { response =>
 			// Case: Success => Parses token(s) and saves them
 			if (response.isSuccess)
 			{
@@ -247,7 +250,7 @@ class AcquireTokens(gateway: Gateway, refreshTokenDuration: Duration = Duration.
 						}
 						val refreshToken = response.body("refresh_token").string.map { token =>
 							def insertNew() = insertToken(userId, token, scopes,
-								refreshTokenDuration.finite.map { requestTime + _ }, isRefreshToken = true)
+								config.refreshTokenDuration.finite.map { requestTime + _ }, isRefreshToken = true)
 							// Checks whether the refresh token is a duplicate with the previously used or
 							// whether the previous token should be replaced
 							existingRefreshToken match

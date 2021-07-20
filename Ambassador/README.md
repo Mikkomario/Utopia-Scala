@@ -52,12 +52,12 @@ add **ExodusResources** to your **RequestHandler**.
 From this module, you should call `ExodusTaskExtensions.apply()` and add a **ServicesNode** instance 
 to your **RequestHandler**.
 - In order to set up **ServicesNode**, you will need to construct at least one **AuthRedirector** 
-  implementation (or Use **DefaultRedirector** (Zoom) or **GoogleRedirector**).
-- You will also need to construct at least one **AcquireTokens** implementation. For example, between 
-  Zoom and Google, there are slight variations that can be handled by passing different constructor parameters.
+  implementation (or Use **DefaultRedirector** (Zoom) and/or **GoogleRedirector**).
+- You will also need to construct an **AcquireTokens** instance, 
+  for which you need to specify service-specific configurations.
   - Please also be aware that in order to construct an **AcquireTokens** instance, 
     you need a **Gateway** instance. See **Utopia Disciple** for more details about that.
-      - You can usually share a single **Gateway** instance between multiple **AcquireTokens** instances. 
+      - You can usually share a single **Gateway** instance between multiple **TokenInterfaceConfiguration** instances. 
         You need to create multiple instances only when the 3rd party services use different query parameter 
         encoding options.
         

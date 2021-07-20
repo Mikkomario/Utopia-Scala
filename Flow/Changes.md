@@ -4,6 +4,11 @@
 ### Breaking Changes
 - Added an abstract `.cachedValues` property to **CacheLike** trait to support certain use cases 
   which were available with the previous cache versions but not with v1.10.
+### New Features
+- Added **MapLike** trait that only specifies an `.apply(K)` method. 
+  This is to support wider range of input options in some functions (currently only used in the **Ambassador** module).
+  - **Model** and all **CacheLike** instances extend this trait.
+  - Instances of **MapLike** can also be created simply by passing a single-input function.
 ### New Methods
 - **Period** (**TimeExtensions**)
   - Added `.toApproximateDuration` for converting a **Period** to a **FiniteDuration** (not exact)
