@@ -56,6 +56,12 @@ object DbAuthTokens extends ManyRowModelAccess[AuthToken] with NonDeprecatedView
 			connection(Select(target join scopeLinkModel.table, scopeLinkModel.scopeIdColumn) + Where(condition))
 				.rowIntValues
 		
+		/**
+		 * @param connection Implicit DB Connection
+		 * @return Ids of the services these tokens are usable in
+		 */
+		def linkedServiceIds(implicit connection: Connection) = withScopes.linkedServiceIds
+		
 		
 		// IMPLEMENTED  ----------------------------
 		
