@@ -44,6 +44,16 @@ object DbAuthTokensWithScopes extends ManyModelAccess[AuthTokenWithScopes]
 	
 	class DbAuthTokensForUser(userId: Int) extends ManyModelAccess[AuthTokenWithScopes] with SubView
 	{
+		// COMPUTED -------------------------------
+		
+		/**
+		 * @param connection Implicit DB Connection
+		 * @return Ids of the services these scopes are associated with
+		 */
+		def linkedServiceIds(implicit connection: Connection) =
+			pullColumn(scopeModel.serviceIdColumn).flatMap { _.int }.toSet
+		
+		
 		// IMPLEMENTED  ---------------------------
 		
 		override protected def parent = DbAuthTokensWithScopes
