@@ -9,14 +9,24 @@ import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 
+import scala.collection.immutable.VectorBuilder
 import scala.io.Codec
+
+object GoogleRedirector
+{
+	/**
+	 * The default redirector implementation for Google cloud services
+	 */
+	val default = apply()
+}
 
 /**
   * A redirector implementation that is compatible with Google cloud services
   * @author Mikko Hilpinen
   * @since 18.7.2021, v1.0
   */
-object GoogleRedirector extends AuthRedirector
+case class GoogleRedirector(shouldUserSelectAccount: Boolean = false, shouldAlwaysAskForConsent: Boolean = false)
+	extends AuthRedirector
 {
 	// Google expects UTF-8 encoded parameter values
 	override def parameterEncoding = Some(Codec.UTF8)
@@ -25,10 +35,23 @@ object GoogleRedirector extends AuthRedirector
 	override def extraParametersFor(settings: ServiceSettings, preparation: AuthPreparation, scopes: Vector[Scope])
 	                               (implicit connection: Connection) =
 	{
-		// By default, includes access_type and include_granted_scopes
+		// By default, includes access_type, include_granted_scopes and prompt
+		val promptValue = {
+			val builder = new VectorBuilder[String]()
+			if (shouldAlwaysAskForConsent)
+				builder += "consent"
+			if (shouldUserSelectAccount)
+				builder += "select_account"
+			val values = builder.result()
+			if (values.isEmpty)
+				"none"
+			else
+				values.mkString(" ")
+		}
 		val base = Model(Vector(
 			"access_type" -> "offline",
-			"include_granted_scopes" -> true
+			"include_granted_scopes" -> true,
+			"prompt" -> promptValue
 		))
 		// Adds scopes if they are not empty
 		val scopesConstant = if (scopes.isEmpty) None else
