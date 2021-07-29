@@ -2,10 +2,10 @@ package utopia.ambassador.database
 
 import utopia.ambassador.database.access.many.scope.DbScopes
 import utopia.ambassador.database.access.many.token.DbAuthTokens
+import utopia.ambassador.rest.util.AuthUtils
 import utopia.citadel.database.access.single.DbUser.DbSingleUser
 import utopia.citadel.database.access.single.organization.DbTask
 import utopia.citadel.database.access.single.organization.DbTask.DbSingleTask
-import utopia.flow.util.CollectionExtensions._
 import utopia.vault.database.Connection
 
 /**
@@ -41,22 +41,17 @@ object AuthDbExtensions
 		 * @return Whether this user is authorized to perform the specified task
 		 */
 		def isAuthorizedForTaskWithId(taskId: Int)(implicit connection: Connection) =
-		{
-			// Checks the scopes used by the specified task
-			val taskScopes = DbTask(taskId).scopes.pull
-			if (taskScopes.isEmpty)
-				true
-			else
-			{
-				// Checks the scopes available for this user at this time
-				val myScopeIds = accessibleScopeIds
-				// Makes sure all the required scopes are covered, and at least one alternative scope per service
-				val (alternativeScopes, requiredScopes) = taskScopes.divideBy { _.isRequired }
-				requiredScopes.forall { scope => myScopeIds.contains(scope.id) } &&
-					(alternativeScopes.isEmpty || alternativeScopes.groupBy { _.serviceId }.values
-						.forall { scopes => scopes.exists { scope => myScopeIds.contains(scope.id) } })
-			}
-		}
+			AuthUtils.testTaskAccess(DbTask(taskId).scopes.pull, accessibleScopeIds)
+		
+		/**
+		 * Checks whether this user is authorized to perform the specified task when only one service is considered
+		 * @param serviceId Id of the targeted service
+		 * @param taskId Id of the targeted task
+		 * @param connection Implicit DB Connection
+		 * @return Whether this user has access to perform that task when that service is considered
+		 */
+		def isAuthorizedForServiceTask(serviceId: Int, taskId: Int)(implicit connection: Connection) =
+			AuthUtils.testTaskAccess(DbTask(taskId).scopes.forServiceWithId(serviceId), accessibleScopeIds)
 	}
 	
 	implicit class DbAuthTask(val a: DbSingleTask) extends AnyVal

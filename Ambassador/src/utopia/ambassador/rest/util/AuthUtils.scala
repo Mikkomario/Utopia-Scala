@@ -2,11 +2,13 @@ package utopia.ambassador.rest.util
 
 import utopia.access.http.Status.Unauthorized
 import utopia.ambassador.database.access.single.process.DbAuthPreparation
+import utopia.ambassador.model.combined.scope.TaskScope
 import utopia.ambassador.model.enumeration.AuthCompletionType.Default
 import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.ambassador.model.stored.service.ServiceSettings
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.util.CollectionExtensions._
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -17,6 +19,27 @@ import utopia.vault.database.Connection
   */
 object AuthUtils
 {
+	/**
+	 * Tests whether required and accessible scopes match, so that access may be granted
+	 * @param taskScopes Task scope requirements (expected to belong to a single task)
+	 * @param availableScopeIds Accessible scope ids (call by name)
+	 * @return Whether the available scope ids fulfill all specified task requirements
+	 */
+	def testTaskAccess(taskScopes: Iterable[TaskScope], availableScopeIds: => Iterable[Int]) =
+	{
+		if (taskScopes.isEmpty)
+			true
+		else
+		{
+			val providedScopeIds = availableScopeIds.toSet
+			// Makes sure all the required scopes are covered, and at least one alternative scope per service
+			val (alternativeScopes, requiredScopes) = taskScopes.divideBy { _.isRequired }
+			requiredScopes.forall { scope => providedScopeIds.contains(scope.id) } &&
+				(alternativeScopes.isEmpty || alternativeScopes.groupBy { _.serviceId }.values
+					.forall { scopes => scopes.exists { scope => providedScopeIds.contains(scope.id) } })
+		}
+	}
+	
 	/**
 	  * Creates a result for completing an authentication process with a redirect (if possible)
 	  * @param settings Service settings to apply

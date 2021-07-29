@@ -9,5 +9,9 @@
   1) Whether user should be prompted to select the applicable account and
   2) Whether user consent should be asked even if provided already
 ### New Methods
+- **AuthUtils**
+  - Added `testTaskAccess(taskScopes: Iterable[TaskScope], availableScopeIds: => Iterable[Int])`
+- **DbUser** (single) (**AuthDbExtensions**)
+  - Added `isAuthorizedForServiceTask(serviceId: Int, taskId: Int)`
 - Added service ids access to user authentication token access point, as well as to 
   **DbUser** via **AuthDbExtensions**
