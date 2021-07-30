@@ -19,13 +19,14 @@ object TokenScopeFactory extends FromRowFactory[TokenScope]
 	private def linkModel = TokenScopeLinkModel
 	
 	private def linkTable = linkModel.table
+	private def scopeTable = scopeFactory.table
 	
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def table = scopeFactory.table
+	override def table = linkTable
 	
-	override def joinedTables = Vector(linkTable)
+	override def joinedTables = Vector(scopeTable)
 	
 	override def joinType = Inner
 	

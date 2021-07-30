@@ -15,3 +15,6 @@
   - Added `isAuthorizedForServiceTask(serviceId: Int, taskId: Int)`
 - Added service ids access to user authentication token access point, as well as to 
   **DbUser** via **AuthDbExtensions**
+### Bugfixes
+- **AuthTokenWithScopesFactory** would previously fail upon target creation because of wrong join order.
+  - Fixed by changing the primary table in **TokenScopeFactory**
