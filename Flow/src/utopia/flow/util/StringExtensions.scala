@@ -199,7 +199,7 @@ object StringExtensions
 		
 		/**
 		 * @param str A string
-		 * @return A portion of this string that comes after the first occurrence of specified string
+		 * @return A portion of this string that comes before the first occurrence of specified string
 		 *         (returns this string if specified string is not a substring of this string), (case-sensitive)
 		 */
 		def untilFirst(str: String) = optionIndexOf(str).map(s.take).getOrElse(s)

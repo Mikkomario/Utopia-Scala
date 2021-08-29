@@ -1,0 +1,42 @@
+{
+	"base_package": "test",
+	"classes": [
+	{
+		"table_name": "client",
+		"properties": [
+		{
+			"name": "phone_hash",
+			"type": "text",
+			"length": 255,
+			"doc": "Hashed phone number of the client",
+			"usage": "Used for recognizing clients without storing full phone number"
+		}
+		]
+	}, 
+	{
+		"table_name": "meeting",
+		"properties": [
+		{
+			"name": "time",
+			"type": "datetime",
+			"doc": "Meeting start time"
+		}, 
+		{
+			"name": "hostId",
+			"references": "user",
+			"doc": "Id of the employee who is organizing / hosting this meeting",
+			"usage": "Meetings are specific for a single employee, using this link"
+		}, 
+		{
+			"name": "participantId",
+			"references": "client",
+			"doc": "Id of the client who is invited to this meeting"
+		}, 
+		{
+			"name": "created",
+			"type": "creation"
+		}
+		]
+	}
+	]
+}
