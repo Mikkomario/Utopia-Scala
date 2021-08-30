@@ -1,5 +1,6 @@
 package utopia.citadel.coder.model.enumeration
 
+import utopia.citadel.coder.model.scala.ScalaConvertible
 import utopia.flow.util.StringExtensions._
 
 /**
@@ -7,16 +8,12 @@ import utopia.flow.util.StringExtensions._
   * @author Mikko Hilpinen
   * @since 29.8.2021, v0.1
   */
-sealed trait PropertyType
+sealed trait PropertyType extends ScalaConvertible
 {
 	/**
 	  * @return Converts this property type into SQL
 	  */
 	def toSql: String
-	/**
-	  * @return Converts this property type into Scala syntax
-	  */
-	def toScala: String
 	/**
 	  * @return Whether this property type allows NULL values
 	  */
