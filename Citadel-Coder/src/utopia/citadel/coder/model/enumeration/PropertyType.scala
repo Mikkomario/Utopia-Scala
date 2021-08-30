@@ -52,6 +52,7 @@ object BasicPropertyType
 		{
 			case "text" => Some(Text(length.getOrElse(255)))
 			case "int" => Some(Integer)
+			case "long" => Some(BigInt)
 			case "datetime" => Some(DateTime)
 			case _ => None
 		}
@@ -66,6 +67,15 @@ object BasicPropertyType
 	{
 		override def toSqlBase = "INT"
 		override def toScala = "Int"
+	}
+	
+	/**
+	  * Long / Bigint property type
+	  */
+	case object BigInt extends BasicPropertyType
+	{
+		override def toSqlBase = "BIGINT"
+		override def toScala = "Long"
 	}
 	
 	/**

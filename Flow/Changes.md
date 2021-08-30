@@ -12,6 +12,11 @@
 ### New Methods
 - **Period** (**TimeExtensions**)
   - Added `.toApproximateDuration` for converting a **Period** to a **FiniteDuration** (not exact)
+- **Regex**
+  - Companion Object
+    - Added `.lowerCaseLetter` and `.upperCaseLetter` properties
+  - Class
+    - Added `.rangesFrom(String)`
 
 ## v1.10 - 13.7.2021
 This release provides you with a completely new set of **Lazy** containers to be used for caching.  
