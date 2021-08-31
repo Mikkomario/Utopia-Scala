@@ -112,6 +112,7 @@ trait InstanceDeclaration extends Declaration with CodeConvertible
 		writeBodySegment(otherMethods.toVector.sorted(fullOrdering), "OTHER")
 		writeBodySegment(nested.toVector.sorted(fullOrdering), "NESTED")
 		
+		builder += "}"
 		builder.result()
 	}
 }

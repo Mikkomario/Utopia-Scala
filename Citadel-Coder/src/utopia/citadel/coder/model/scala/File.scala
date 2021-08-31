@@ -21,19 +21,23 @@ case class File(packagePath: String, classes: Vector[ClassDeclaration] = Vector(
 		val builder = new VectorBuilder[String]()
 		
 		// Writes the package declaration
-		builder += packagePath
+		builder += s"package $packagePath"
 		builder += ""
 		
 		// Writes the imports
 		val imports = declarations.flatMap { _.references }.toSet.groupMap[String, String] { _.parentPath } { _.target }
 		imports.keys.toVector.sorted.foreach { path =>
 			val targets = imports(path)
-			if (targets.contains("_"))
-				builder += s"$path._"
-			else if (targets.size == 1)
-				builder += s"$path.${ targets.head }"
-			else
-				builder += s"$path.{ ${targets.toVector.sorted.mkString(", ") } }"
+			val finalPart =
+			{
+				if (targets.contains("_"))
+					"_"
+				else if (targets.size == 1)
+					targets.head
+				else
+					builder += s"{ ${targets.toVector.sorted.mkString(", ") } }"
+			}
+			builder += s"import $path.$finalPart"
 		}
 		if (imports.nonEmpty)
 			builder += ""

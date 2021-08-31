@@ -37,5 +37,6 @@ trait CodeConvertible
 	  * @param codec Codec used when encoding the file
 	  * @return Success or failure
 	  */
-	def writeTo(path: Path)(implicit codec: Codec) = path.writeLines(toCodeLines)
+	def writeTo(path: Path)(implicit codec: Codec) =
+		path.createParentDirectories().flatMap { _.writeLines(toCodeLines) }
 }

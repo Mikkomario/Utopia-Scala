@@ -8,6 +8,7 @@ import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 
 import java.nio.file.Path
+import scala.io.Codec
 
 /**
   * Used for writing model data from class data
@@ -16,7 +17,15 @@ import java.nio.file.Path
   */
 object ModelWriter
 {
-	def apply(targetDirectory: Path, basePackageName: String, classToWrite: Class) =
+	/**
+	  * Writes stored and partial model classes for a class template
+	  * @param targetDirectory Project source base directory
+	  * @param basePackageName full path of the project base package
+	  * @param classToWrite class being written
+	  * @param codec Implicit codec used when writing files
+	  * @return A success or a failure
+	  */
+	def apply(targetDirectory: Path, basePackageName: String, classToWrite: Class)(implicit codec: Codec) =
 	{
 		val baseDirectory = targetDirectory/"model"
 		val dataClassName = classToWrite.name + "Data"
@@ -33,7 +42,7 @@ object ModelWriter
 						s"Model(Vector(${ classToWrite.properties.map { prop =>
 							s"${ NamingUtils.camelToUnderscore(prop.name).quoted } -> ${prop.name}" } }))")
 				), isCaseClass = true)
-		)).writeTo(baseDirectory/"partial"/classToWrite.packageName).flatMap { _ =>
+		)).writeTo(baseDirectory/"partial"/classToWrite.packageName/s"$dataClassName.scala").flatMap { _ =>
 			// Writes the stored model next
 			val dataClassRef = Reference(dataClassPackage, dataClassName)
 			val storedClass =
@@ -52,7 +61,7 @@ object ModelWriter
 						Vector(Reference.storedModelConvertible(dataClassRef)), isCaseClass = true)
 			}
 			File(s"$basePackageName.model.stored.${classToWrite.packageName}", Vector(storedClass))
-				.writeTo(baseDirectory/"stored"/classToWrite.packageName)
+				.writeTo(baseDirectory/"stored"/classToWrite.packageName/s"${classToWrite.name}.scala")
 		}
 	}
 }

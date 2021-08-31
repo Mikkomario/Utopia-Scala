@@ -285,10 +285,10 @@ case class Regex(string: String)
 	def rangesFrom(str: String) =
 	{
 		val matcher = pattern.matcher(str)
-		val builder = new VectorBuilder[Range.Inclusive]()
+		val builder = new VectorBuilder[Range]()
 		while (matcher.find())
 		{
-			builder += matcher.start() to matcher.end()
+			builder += matcher.start() until matcher.end()
 		}
 		builder.result()
 	}

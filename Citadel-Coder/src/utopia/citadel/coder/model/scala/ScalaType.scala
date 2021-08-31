@@ -75,9 +75,16 @@ case class ScalaType(data: Either[String, Reference], typeParameters: Vector[Sca
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override def toScala = data match
+	override def toScala =
 	{
-		case Left(basic) => basic
-		case Right(reference) => reference.target
+		val base = data match
+		{
+			case Left(basic) => basic
+			case Right(reference) => reference.target
+		}
+		if (typeParameters.isEmpty)
+			base
+		else
+			s"$base[${typeParameters.map { _.toScala }.mkString(", ")}]"
 	}
 }
