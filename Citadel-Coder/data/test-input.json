@@ -2,10 +2,10 @@
 	"base_package": "test",
 	"classes": [
 	{
-		"table_name": "client",
+		"name": "client",
 		"properties": [
 		{
-			"name": "phone_hash",
+			"name": "phoneHash",
 			"type": "text",
 			"length": 255,
 			"doc": "Hashed phone number of the client",
@@ -14,7 +14,7 @@
 		]
 	}, 
 	{
-		"table_name": "meeting",
+		"name": "meeting",
 		"properties": [
 		{
 			"name": "time",

@@ -18,4 +18,6 @@ case class MethodDeclaration(name: String, parameters: Vector[Parameter], code: 
 	override def keyword = "def"
 	
 	override def references = code.references ++ parameters.flatMap { _.references }
+	
+	override def parametersString = "(" + parameters.map { _.toScala }.mkString(", ") + ')'
 }

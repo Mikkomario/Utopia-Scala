@@ -1,11 +1,13 @@
 package utopia.citadel.coder.model.scala
 
+import utopia.flow.util.SelfComparable
+
 /**
   * An enumeration representing different method / property visibility options in Scala
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-sealed trait Visibility extends ScalaConvertible
+sealed trait Visibility extends ScalaConvertible with SelfComparable[Visibility]
 
 object Visibility
 {
@@ -15,6 +17,14 @@ object Visibility
 	case object Public extends Visibility
 	{
 		override def toScala = ""
+		
+		override def repr = this
+		
+		override def compareTo(o: Visibility) = o match
+		{
+			case Public => 0
+			case _ => 1
+		}
 	}
 	
 	/**
@@ -23,6 +33,14 @@ object Visibility
 	case object Private extends Visibility
 	{
 		override def toScala = "private"
+		
+		override def repr = this
+		
+		override def compareTo(o: Visibility) = o match
+		{
+			case Private => 0
+			case _ => -1
+		}
 	}
 	
 	/**
@@ -31,5 +49,14 @@ object Visibility
 	case object Protected extends Visibility
 	{
 		override def toScala = "protected"
+		
+		override def repr = this
+		
+		override def compareTo(o: Visibility) = o match
+		{
+			case Public => -1
+			case Private => 1
+			case _ => 0
+		}
 	}
 }

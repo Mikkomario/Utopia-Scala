@@ -10,12 +10,15 @@ import utopia.citadel.coder.model.scala.Visibility.Public
 case class ClassDeclaration(name: String, constructionParams: Vector[Parameter] = Vector(),
                             extensions: Vector[Extension] = Vector(),
                             creationCode: Option[Code] = None,
-                            properties: Set[PropertyDeclaration] = Set(),
-                            methods: Set[MethodDeclaration] = Set(), visibility: Visibility = Public)
+                            properties: Vector[PropertyDeclaration] = Vector(),
+                            methods: Set[MethodDeclaration] = Set(), nested: Vector[InstanceDeclaration] = Vector(),
+                            visibility: Visibility = Public, isCaseClass: Boolean = false)
 	extends InstanceDeclaration
 {
-	override def keyword = "class"
+	override def keyword = if (isCaseClass) "case class" else "class"
 	
 	override def references = (constructionParams ++ extensions ++ creationCode ++ properties ++ methods)
 		.flatMap { _.references }.toSet
+	
+	override def parametersString = s"(${constructionParams.map { _.toScala }.mkString(", ")})"
 }
