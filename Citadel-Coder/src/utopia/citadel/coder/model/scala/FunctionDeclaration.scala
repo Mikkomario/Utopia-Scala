@@ -32,11 +32,9 @@ trait FunctionDeclaration extends Declaration with CodeConvertible
 	override def toCodeLines =
 	{
 		val builder = new VectorBuilder[String]()
-		// Adds the override annotation if necessary
-		if (isOverridden)
-			builder += "@Override"
+		val overridePart = if (isOverridden) "override " else ""
 		
-		val header = s"$baseString$parametersString = "
+		val header = s"$overridePart$baseString$parametersString = "
 		if (code.isSingleLine)
 		{
 			val line = code.lines.head

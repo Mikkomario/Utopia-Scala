@@ -11,7 +11,7 @@ case class ClassDeclaration(name: String, constructionParams: Vector[Parameter] 
                             extensions: Vector[Extension] = Vector(),
                             creationCode: Option[Code] = None,
                             properties: Vector[PropertyDeclaration] = Vector(),
-                            methods: Set[MethodDeclaration] = Set(), nested: Vector[InstanceDeclaration] = Vector(),
+                            methods: Set[MethodDeclaration] = Set(), nested: Set[InstanceDeclaration] = Set(),
                             visibility: Visibility = Public, isCaseClass: Boolean = false)
 	extends InstanceDeclaration
 {

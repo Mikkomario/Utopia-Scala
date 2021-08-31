@@ -1,5 +1,10 @@
 package utopia.citadel.coder.model.scala
 
+import java.nio.file.Path
+import scala.io.Codec
+
+import utopia.flow.util.FileExtensions._
+
 object CodeConvertible
 {
 	/**
@@ -15,9 +20,22 @@ object CodeConvertible
   */
 trait CodeConvertible
 {
+	// ABSTRACT ------------------------------
+	
 	/**
 	  * @return Code lines based on this item. Expects the topmost line not to be intended but the other
 	  *         lines to be intended correctly relative to the topmost line.
 	  */
 	def toCodeLines: Vector[String]
+	
+	
+	// OTHER    -----------------------------
+	
+	/**
+	  * Writes this code as a file into the specified path
+	  * @param path Path to which this code is written
+	  * @param codec Codec used when encoding the file
+	  * @return Success or failure
+	  */
+	def writeTo(path: Path)(implicit codec: Codec) = path.writeLines(toCodeLines)
 }

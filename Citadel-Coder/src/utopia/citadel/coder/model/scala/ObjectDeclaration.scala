@@ -9,7 +9,7 @@ import utopia.citadel.coder.model.scala.Visibility.Public
   */
 case class ObjectDeclaration(name: String, extensions: Vector[Extension] = Vector(),
                              creationCode: Option[Code] = None, properties: Vector[PropertyDeclaration] = Vector(),
-                             methods: Set[MethodDeclaration] = Set(), nested: Vector[InstanceDeclaration] = Vector(),
+                             methods: Set[MethodDeclaration] = Set(), nested: Set[InstanceDeclaration] = Set(),
                              visibility: Visibility = Public)
 	extends InstanceDeclaration
 {

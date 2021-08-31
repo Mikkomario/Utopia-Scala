@@ -11,10 +11,12 @@ object Property
 	  * @param dataType Type of this property
 	  * @param description Description of this property (Default = empty)
 	  * @param useDescription Description on how this property is used (Default = empty)
+	  * @param customDefault Default value passed for this property (empty if no default (default))
 	  * @return A new property
 	  */
-	def apply(name: String, dataType: PropertyType, description: String = "", useDescription: String = ""): Property =
-		apply(name, NamingUtils.camelToUnderscore(name), dataType, description, useDescription)
+	def apply(name: String, dataType: PropertyType, description: String = "", useDescription: String = "",
+	          customDefault: String = ""): Property =
+		apply(name, NamingUtils.camelToUnderscore(name), dataType, description, useDescription, customDefault)
 }
 
 /**
@@ -26,6 +28,7 @@ object Property
   * @param dataType Type of this property
   * @param description Description of this property (may be empty)
   * @param useDescription Description on how this property is used (may be empty)
+  * @param customDefault Default value passed for this property (empty if no default)
   */
 case class Property(name: String, columnName: String, dataType: PropertyType, description: String,
-                    useDescription: String)
+                    useDescription: String, customDefault: String)

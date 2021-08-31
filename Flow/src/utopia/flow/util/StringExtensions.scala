@@ -1,7 +1,6 @@
 package utopia.flow.util
 
 import utopia.flow.datastructure.mutable.ResettableLazy
-import CollectionExtensions._
 
 /**
  * Contains some utility extensions that extend the capabilities of standard strings
@@ -47,11 +46,15 @@ object StringExtensions
 		 * @return A copy of this string without any non-letter characters
 		 */
 		def letters = s.filter { _.isLetter }
-		
 		/**
 		 * @return A copy of this string without any non-digit characters
 		 */
 		def digits = s.filter { _.isDigit }
+		
+		/**
+		  * @return A copy of this string surrounded with quotation marks (")
+		  */
+		def quoted = "\"" + s + "\""
 		
 		/**
 		  * @param range A range

@@ -1,11 +1,28 @@
 package utopia.citadel.coder.model.scala
 
+import utopia.citadel.coder.model.scala.Visibility.Public
+
 /**
   * An enumeration for different types of property declarations
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
 sealed trait PropertyDeclarationType extends ScalaConvertible
+{
+	/**
+	  * Creates a new property declaration based on this type
+	  * @param name Name of the declared property
+	  * @param references References made within the code (default = empty)
+	  * @param visibility Visibility of this property (default = public)
+	  * @param isOverridden Whether this property overrides a base member (default = false)
+	  * @param line1 First line of code
+	  * @param moreLines More lines of code
+	  * @return A new property declaration
+	  */
+	def apply(name: String, references: Set[Reference] = Set(),
+	          visibility: Visibility = Public, isOverridden: Boolean = false)(line1: String, moreLines: String*) =
+		PropertyDeclaration(this, name, Code(line1 +: moreLines.toVector, references), visibility, isOverridden)
+}
 
 object PropertyDeclarationType
 {

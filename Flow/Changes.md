@@ -17,6 +17,10 @@
     - Added `.lowerCaseLetter` and `.upperCaseLetter` properties
   - Class
     - Added `.rangesFrom(String)`
+- **String** (**StringExtensions**)
+  - `.quoted`, which returns the string within double quotes
+### Other Changes
+- **CombinedOrdering** now accepts more generic **Ordering** parameters
 
 ## v1.10 - 13.7.2021
 This release provides you with a completely new set of **Lazy** containers to be used for caching.  

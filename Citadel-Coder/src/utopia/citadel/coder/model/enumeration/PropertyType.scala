@@ -1,6 +1,6 @@
 package utopia.citadel.coder.model.enumeration
 
-import utopia.citadel.coder.model.scala.ScalaConvertible
+import utopia.citadel.coder.model.scala.{Reference, ScalaType}
 import utopia.flow.util.StringExtensions._
 
 /**
@@ -8,8 +8,12 @@ import utopia.flow.util.StringExtensions._
   * @author Mikko Hilpinen
   * @since 29.8.2021, v0.1
   */
-sealed trait PropertyType extends ScalaConvertible
+sealed trait PropertyType
 {
+	/**
+	  * @return A scala type matching this property type
+	  */
+	def toScala: ScalaType
 	/**
 	  * @return Converts this property type into SQL
 	  */
@@ -18,6 +22,10 @@ sealed trait PropertyType extends ScalaConvertible
 	  * @return Whether this property type allows NULL values
 	  */
 	def isNullable: Boolean
+	/**
+	  * @return Default value assigned for this type by default. Empty string if no specific default is used.
+	  */
+	def baseDefault: String
 }
 
 /**
@@ -63,7 +71,8 @@ object BasicPropertyType
 	case object Integer extends BasicPropertyType
 	{
 		override def toSqlBase = "INT"
-		override def toScala = "Int"
+		override def toScala = ScalaType.int
+		override def baseDefault = ""
 	}
 	
 	/**
@@ -72,7 +81,8 @@ object BasicPropertyType
 	case object BigInt extends BasicPropertyType
 	{
 		override def toSqlBase = "BIGINT"
-		override def toScala = "Long"
+		override def toScala = ScalaType.long
+		override def baseDefault = ""
 	}
 	
 	/**
@@ -81,7 +91,8 @@ object BasicPropertyType
 	case object DateTime extends BasicPropertyType
 	{
 		override def toSqlBase = "DATETIME"
-		override def toScala = "Instant"
+		override def toScala = Reference.instant
+		override def baseDefault = "Instant.now()"
 	}
 	
 	/**
@@ -90,7 +101,8 @@ object BasicPropertyType
 	  */
 	case class Text(length: Int = 255) extends BasicPropertyType {
 		override def toSqlBase = s"VARCHAR($length)"
-		override def toScala = "String"
+		override def toScala = ScalaType.string
+		override def baseDefault = ""
 	}
 }
 
@@ -123,8 +135,9 @@ object PropertyType
 	case object CreationTime extends PropertyType
 	{
 		override def toSql = "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
-		override def toScala = "Instant"
+		override def toScala = Reference.instant
 		override def isNullable = false
+		override def baseDefault = "Instant.now()"
 	}
 	
 	/**
@@ -134,7 +147,8 @@ object PropertyType
 	case class Optional(baseType: BasicPropertyType) extends PropertyType
 	{
 		override def toSql = baseType.toSqlBase
-		override def toScala = s"Option[${baseType.toScala}]"
+		override def toScala = ScalaType.option(baseType.toScala)
 		override def isNullable = true
+		override def baseDefault = "None"
 	}
 }

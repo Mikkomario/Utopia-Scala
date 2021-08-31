@@ -1,5 +1,39 @@
 package utopia.citadel.coder.model.scala
 
+object Reference
+{
+	/**
+	  * Imports java.time.Instant
+	  */
+	val instant = apply("java.time", "Instant")
+	
+	/**
+	  * Imports implicit value conversions (Flow)
+	  */
+	val valueConversions = apply("utopia.flow.generic.ValueConversions", "_")
+	
+	/**
+	  * Imports the constant type from Flow
+	  */
+	val constant = apply("utopia.flow.datastructure.immutable", "Constant")
+	/**
+	  * Imports the immutable model type (Flow)
+	  */
+	val model = apply("utopia.flow.datastructure.immutable", "Model")
+	/**
+	  * Imports the ModelConvertible trait (Flow)
+	  */
+	val modelConvertible = apply("utopia.flow.generic", "ModelConvertible")
+	/**
+	  * Imports the Stored trait (Vault)
+	  */
+	val stored = apply("utopia.vault.model.template", "Stored")
+	/**
+	  * Imports the combination of Stored & ModelConvertible (Metropolis)
+	  */
+	val storedModelConvertible = apply("utopia.metropolis.model.stored", "StoredModelConvertible")
+}
+
 /**
   * Represents an imported external class or object etc.
   * @author Mikko Hilpinen
@@ -8,3 +42,12 @@ package utopia.citadel.coder.model.scala
   * @param target Name of the imported item. E.g. "Reference"
   */
 case class Reference(parentPath: String, target: String)
+{
+	/**
+	  * @param typeParam1 First generic type parameter
+	  * @param moreTypeParams Additional generic type parameters
+	  * @return A generic type based on this reference
+	  */
+	def apply(typeParam1: ScalaType, moreTypeParams: ScalaType*) =
+		ScalaType.generic(this, typeParam1, moreTypeParams: _*)
+}

@@ -1,8 +1,8 @@
 package utopia.citadel.coder.model.scala
 
 import scala.collection.immutable.VectorBuilder
-
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.CombinedOrdering
 
 /**
   * Declares an object or a class
@@ -37,6 +37,11 @@ trait InstanceDeclaration extends Declaration with CodeConvertible
 	  * @return Methods defined for this instance
 	  */
 	def methods: Set[MethodDeclaration]
+	
+	/**
+	  * @return Nested classes & objects
+	  */
+	def nested: Set[InstanceDeclaration]
 	
 	
 	// IMPLEMENTED  --------------------------
@@ -94,11 +99,19 @@ trait InstanceDeclaration extends Declaration with CodeConvertible
 			builder += "\t"
 		}
 		
+		val visibilityOrdering: Ordering[Declaration] = (a, b) => -a.visibility.compareTo(b.visibility)
+		val fullOrdering = new CombinedOrdering[Declaration](Vector(
+			visibilityOrdering, Ordering.by[Declaration, String] { _.name }))
+		
 		val (newComputed, implementedComputed) = computed.divideBy { _.isOverridden }
-		writeBodySegment(newComputed.sortWith { _.visibility > _.visibility }, "COMPUTED")
+		writeBodySegment(newComputed.sorted(visibilityOrdering), "COMPUTED")
 		
-		// TODO: Continue
+		val (otherMethods, implementedMethods) = methods.divideBy { _.isOverridden }
+		writeBodySegment(implementedComputed.sorted(fullOrdering) ++
+			implementedMethods.toVector.sorted(fullOrdering), "IMPLEMENTED")
+		writeBodySegment(otherMethods.toVector.sorted(fullOrdering), "OTHER")
+		writeBodySegment(nested.toVector.sorted(fullOrdering), "NESTED")
 		
-		???
+		builder.result()
 	}
 }
