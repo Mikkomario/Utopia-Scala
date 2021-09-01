@@ -24,14 +24,21 @@ object Reference
 	  * Imports the ModelConvertible trait (Flow)
 	  */
 	val modelConvertible = apply("utopia.flow.generic", "ModelConvertible")
+	
 	/**
 	  * Imports the Stored trait (Vault)
 	  */
 	val stored = apply("utopia.vault.model.template", "Stored")
+	
 	/**
 	  * Imports the combination of Stored & ModelConvertible (Metropolis)
 	  */
 	val storedModelConvertible = apply("utopia.metropolis.model.stored", "StoredModelConvertible")
+	
+	/**
+	  * Imports the main Tables instance from Utopia Citadel
+	  */
+	val citadelTables = apply("utopia.citadel.database", "Tables")
 }
 
 /**

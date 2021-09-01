@@ -19,6 +19,7 @@
     - Added `.rangesFrom(String)`
 - **String** (**StringExtensions**)
   - `.quoted`, which returns the string within double quotes
+  - `.uncapitalize`, which returns the string with the first character in lower case
 ### Other Changes
 - **CombinedOrdering** now accepts more generic **Ordering** parameters
 

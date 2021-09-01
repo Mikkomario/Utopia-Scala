@@ -23,7 +23,7 @@ object ModelWriter
 	  * @param basePackageName full path of the project base package
 	  * @param classToWrite class being written
 	  * @param codec Implicit codec used when writing files
-	  * @return A success or a failure
+	  * @return Reference to the stored version, followed by a reference to the data version. Failure if writing failed.
 	  */
 	def apply(targetDirectory: Path, basePackageName: String, classToWrite: Class)(implicit codec: Codec) =
 	{
@@ -60,8 +60,10 @@ object ModelWriter
 					ClassDeclaration(classToWrite.name, constructionParams,
 						Vector(Reference.storedModelConvertible(dataClassRef)), isCaseClass = true)
 			}
-			File(s"$basePackageName.model.stored.${classToWrite.packageName}", Vector(storedClass))
+			val storePackage = s"$basePackageName.model.stored.${classToWrite.packageName}"
+			File(storePackage, Vector(storedClass))
 				.writeTo(baseDirectory/"stored"/classToWrite.packageName/s"${classToWrite.name}.scala")
+				.map { _ => Reference(storePackage, storedClass.name) -> dataClassRef }
 		}
 	}
 }
