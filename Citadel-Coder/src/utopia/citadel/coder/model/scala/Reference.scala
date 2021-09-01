@@ -17,6 +17,10 @@ object Reference
 	val valueUnwraps = apply("utopia.flow.generic.ValueUnwraps", "_")
 	
 	/**
+	  * Imports the (generic) Value type from Flow
+	  */
+	val value = apply("utopia.flow.datastructure.immutable", "Value")
+	/**
 	  * Imports the constant type from Flow
 	  */
 	val constant = apply("utopia.flow.datastructure.immutable", "Constant")
@@ -37,6 +41,14 @@ object Reference
 	  * Imports the FromValidatedRowModelFactory trait (Vault)
 	  */
 	val fromValidatedRowModelFactory = apply("utopia.vault.nosql.factory.row.model", "FromValidatedRowModelFactory")
+	/**
+	  * Imports the Storable (with factory) trait (Vault)
+	  */
+	val storableWithFactory = apply("utopia.vault.model.immutable", "StorableWithFactory")
+	/**
+	  * Imports the DataInserter trait (Vault)
+	  */
+	val dataInserter = apply("utopia.vault.model.template", "DataInserter")
 	
 	/**
 	  * Imports the combination of Stored & ModelConvertible (Metropolis)

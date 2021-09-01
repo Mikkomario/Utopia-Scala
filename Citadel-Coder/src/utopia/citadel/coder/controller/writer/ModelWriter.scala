@@ -2,7 +2,7 @@ package utopia.citadel.coder.controller.writer
 
 import utopia.citadel.coder.model.data.{Class, ProjectSetup}
 import utopia.citadel.coder.model.scala.PropertyDeclarationType.ComputedProperty
-import utopia.citadel.coder.model.scala.{ClassDeclaration, File, Parameter, Reference, ScalaType}
+import utopia.citadel.coder.model.scala.{ClassDeclaration, File, Parameter, Reference}
 import utopia.citadel.coder.util.NamingUtils
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
@@ -32,21 +32,27 @@ object ModelWriter
 		// Writes the data model
 		File(dataClassPackage, Vector(
 			ClassDeclaration(dataClassName,
+				// Accepts a copy of each property. Uses default values where possible.
 				classToWrite.properties.map { prop => Parameter(prop.name, prop.dataType.toScala,
 					prop.customDefault.notEmpty.getOrElse(prop.dataType.baseDefault)) },
+				// Extends ModelConvertible
 				Vector(Reference.modelConvertible),
+				// Implements the toModel -property
 				properties = Vector(
 					ComputedProperty("toModel", Set(Reference.model, Reference.valueConversions), isOverridden = true)(
 						s"Model(Vector(${ classToWrite.properties.map { prop =>
-							s"${ NamingUtils.camelToUnderscore(prop.name).quoted } -> ${prop.name}" } }))")
+							s"${ NamingUtils.camelToUnderscore(prop.name).quoted } -> ${prop.name}" }
+							.mkString(", ") }))")
 				), isCaseClass = true)
 		)).writeTo(baseDirectory/"partial"/classToWrite.packageName/s"$dataClassName.scala").flatMap { _ =>
 			// Writes the stored model next
 			val dataClassRef = Reference(dataClassPackage, dataClassName)
 			val storedClass =
 			{
-				val idType = if (classToWrite.useLongId) ScalaType.long else ScalaType.int
+				val idType = classToWrite.idType.toScala
+				// Accepts id and data -parameters
 				val constructionParams = Vector(Parameter("id", idType), Parameter("data", dataClassRef))
+				// ModelConvertible extension & implementation differs based on id type
 				if (classToWrite.useLongId)
 					ClassDeclaration(classToWrite.name, constructionParams,
 						Vector(Reference.stored(dataClassRef, idType)),

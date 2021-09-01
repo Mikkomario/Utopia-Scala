@@ -29,9 +29,9 @@ object FactoryWriter
 					s"${tablesRef.target}.${classToWrite.name.uncapitalize}")),
 				// Contains fromValidatedModel implementation
 				methods = Set(MethodDeclaration("fromValidatedModel", Set(modelRef, dataRef, Reference.valueUnwraps),
-					isOverridden = true)(Parameter("model", Reference.model))(
+					isOverridden = true)(Parameter("model", Reference.model(Reference.constant)))(
 					s"${modelRef.target}(model(${"\"id\""}), ${dataRef.target}(${
-						classToWrite.properties.map { prop => s"model(${prop.name.quoted})" }}))")))
+						classToWrite.properties.map { prop => s"model(${prop.name.quoted})" }.mkString(", ")}))")))
 		)).writeTo(setup.sourceRoot/"database/factory"/classToWrite.packageName/s"$objectName.scala")
 			.map { _ => Reference(parentPackage, objectName) }
 	}

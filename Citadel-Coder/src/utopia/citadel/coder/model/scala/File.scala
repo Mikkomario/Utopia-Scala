@@ -35,7 +35,7 @@ case class File(packagePath: String, classes: Vector[ClassDeclaration] = Vector(
 				else if (targets.size == 1)
 					targets.head
 				else
-					builder += s"{ ${targets.toVector.sorted.mkString(", ") } }"
+					s"{ ${targets.toVector.sorted.mkString(", ") } }"
 			}
 			builder += s"import $path.$finalPart"
 		}

@@ -79,6 +79,7 @@ trait InstanceDeclaration extends Declaration with CodeConvertible
 					att.toCodeLines.foreach { builder += "\t" + _ }
 					builder += "\t"
 				}
+				builder += "\t"
 			}
 		}
 		/* Write order is as follows:
@@ -96,6 +97,7 @@ trait InstanceDeclaration extends Declaration with CodeConvertible
 			builder += "\t// INITIAL CODE\t----------"
 			builder += "\t"
 			code.lines.foreach { builder += "\t" + _ }
+			builder += "\t"
 			builder += "\t"
 		}
 		

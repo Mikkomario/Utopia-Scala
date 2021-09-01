@@ -1,5 +1,6 @@
 package utopia.citadel.coder.model.data
 
+import utopia.citadel.coder.model.enumeration.BasicPropertyType.{BigInteger, Integer}
 import utopia.citadel.coder.util.NamingUtils
 
 object Class
@@ -27,3 +28,9 @@ object Class
   * @param useLongId Whether to use long instead of int in the id property
   */
 case class Class(name: String, tableName: String, properties: Vector[Property], packageName: String, useLongId: Boolean)
+{
+	/**
+	  * @return Type of the ids used in this class
+	  */
+	def idType =  if (useLongId) BigInteger else Integer
+}
