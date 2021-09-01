@@ -1,13 +1,12 @@
 package utopia.citadel.coder.controller.writer
 
-import utopia.citadel.coder.model.data.Class
+import utopia.citadel.coder.model.data.{Class, ProjectSetup}
 import utopia.citadel.coder.model.scala.PropertyDeclarationType.ComputedProperty
 import utopia.citadel.coder.model.scala.{ClassDeclaration, File, Parameter, Reference, ScalaType}
 import utopia.citadel.coder.util.NamingUtils
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 
-import java.nio.file.Path
 import scala.io.Codec
 
 /**
@@ -19,17 +18,16 @@ object ModelWriter
 {
 	/**
 	  * Writes stored and partial model classes for a class template
-	  * @param targetDirectory Project source base directory
-	  * @param basePackageName full path of the project base package
 	  * @param classToWrite class being written
-	  * @param codec Implicit codec used when writing files
+	  * @param codec Implicit codec used when writing files (implicit)
+	  * @param setup Target project -specific settings (implicit)
 	  * @return Reference to the stored version, followed by a reference to the data version. Failure if writing failed.
 	  */
-	def apply(targetDirectory: Path, basePackageName: String, classToWrite: Class)(implicit codec: Codec) =
+	def apply(classToWrite: Class)(implicit codec: Codec, setup: ProjectSetup) =
 	{
-		val baseDirectory = targetDirectory/"model"
+		val baseDirectory = setup.sourceRoot/"model"
 		val dataClassName = classToWrite.name + "Data"
-		val dataClassPackage = s"$basePackageName.model.partial.${classToWrite.packageName}"
+		val dataClassPackage = s"${setup.projectPackage}.model.partial.${classToWrite.packageName}"
 		
 		// Writes the data model
 		File(dataClassPackage, Vector(
@@ -60,7 +58,7 @@ object ModelWriter
 					ClassDeclaration(classToWrite.name, constructionParams,
 						Vector(Reference.storedModelConvertible(dataClassRef)), isCaseClass = true)
 			}
-			val storePackage = s"$basePackageName.model.stored.${classToWrite.packageName}"
+			val storePackage = s"${setup.projectPackage}.model.stored.${classToWrite.packageName}"
 			File(storePackage, Vector(storedClass))
 				.writeTo(baseDirectory/"stored"/classToWrite.packageName/s"${classToWrite.name}.scala")
 				.map { _ => Reference(storePackage, storedClass.name) -> dataClassRef }

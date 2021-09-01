@@ -1,13 +1,12 @@
 package utopia.citadel.coder.controller.writer
 
-import utopia.citadel.coder.model.data.Class
+import utopia.citadel.coder.model.data.{Class, ProjectSetup}
 import utopia.citadel.coder.model.scala.PropertyDeclarationType.ComputedProperty
 import utopia.citadel.coder.model.scala.Visibility.Private
 import utopia.citadel.coder.model.scala.{File, MethodDeclaration, ObjectDeclaration, Parameter, Reference, ScalaType}
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 
-import java.nio.file.Path
 import scala.io.Codec
 
 /**
@@ -19,16 +18,15 @@ object TablesWriter
 {
 	/**
 	  * Writes the table reference file
-	  * @param targetDirectory export src root directory
-	  * @param basePackage Package path representing project root
 	  * @param classes Classes introduced in this project
 	  * @param codec Codec to use when writing the file (implicit)
+	  * @param setup Target project -specific settings (implicit)
 	  * @return Reference to the written object. Failure if writing failed.
 	  */
-	def apply(targetDirectory: Path, basePackage: String, classes: Iterable[Class])(implicit codec: Codec) =
+	def apply(classes: Iterable[Class])(implicit codec: Codec, setup: ProjectSetup) =
 	{
-		val parentPath = s"$basePackage.database"
-		val objectName = basePackage.afterLast(".").capitalize + "Tables"
+		val parentPath = s"${setup.projectPackage}.database"
+		val objectName = setup.projectPackage.afterLast(".").capitalize + "Tables"
 		File(s"$parentPath.$objectName", objects = Vector(
 			ObjectDeclaration(objectName,
 				// Contains a computed property for each class / table
@@ -37,7 +35,7 @@ object TablesWriter
 				// Uses a private apply method implementation that refers to the Citadel Tables instance
 				methods = Set(MethodDeclaration("apply", Set(Reference.citadelTables), Private)(
 					Parameter("tableName", ScalaType.string))("Tables(tableName)")))))
-			.writeTo(targetDirectory/"database"/s"$objectName.scala")
+			.writeTo(setup.sourceRoot/"database"/s"$objectName.scala")
 			.map { _ => Reference(parentPath, objectName) }
 	}
 }

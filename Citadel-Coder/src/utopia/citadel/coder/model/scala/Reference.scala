@@ -11,6 +11,10 @@ object Reference
 	  * Imports implicit value conversions (Flow)
 	  */
 	val valueConversions = apply("utopia.flow.generic.ValueConversions", "_")
+	/**
+	  * Imports implicit value unwraps (Flow)
+	  */
+	val valueUnwraps = apply("utopia.flow.generic.ValueUnwraps", "_")
 	
 	/**
 	  * Imports the constant type from Flow
@@ -29,6 +33,10 @@ object Reference
 	  * Imports the Stored trait (Vault)
 	  */
 	val stored = apply("utopia.vault.model.template", "Stored")
+	/**
+	  * Imports the FromValidatedRowModelFactory trait (Vault)
+	  */
+	val fromValidatedRowModelFactory = apply("utopia.vault.nosql.factory.row.model", "FromValidatedRowModelFactory")
 	
 	/**
 	  * Imports the combination of Stored & ModelConvertible (Metropolis)
