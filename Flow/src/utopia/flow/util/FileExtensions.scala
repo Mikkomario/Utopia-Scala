@@ -611,6 +611,18 @@ object FileExtensions
 		 */
 		def writeWith[U](writer: BufferedOutputStream => U) = _writeWith(append = false)(writer)
 		
+		/**
+		  * Writes a file using a function.
+		  * A PrintWriter instance is acquired for the duration of the function execution.
+		  * @param writer A function that uses a PrintWriter and then returns
+		  * @param codec Implicit codec used when writing the file
+		  * @tparam U Arbitrary result type
+		  * @return This path. Failure if the writing process, or the function, threw an exception.
+		  */
+		def writeUsing[U](writer: PrintWriter => U)(implicit codec: Codec) = writeWith { stream =>
+			stream.consume { new OutputStreamWriter(_, codec.charSet).consume { new PrintWriter(_).consume(writer) } }
+		}
+		
 		private def _writeWith[U](append: Boolean)(writer: BufferedOutputStream => U) =
 			Try { new FileOutputStream(p.toFile, append).consume { new BufferedOutputStream(_).consume(writer) } }
 				.map { _ => p }

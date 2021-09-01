@@ -52,13 +52,8 @@ object DbModelWriter
 				),
 				// adds withX(...) -methods for convenience
 				methods = classToWrite.properties.map { prop =>
-					// Always takes in a concrete data type
-					val acceptedDataType = prop.dataType match
-					{
-						case Optional(base) => base
-						case concrete => concrete
-					}
-					MethodDeclaration(s"with${prop.name.capitalize}")(Parameter(prop.name, acceptedDataType.toScala))(
+					MethodDeclaration(s"with${prop.name.capitalize}")(
+						Parameter(prop.name, prop.dataType.notNull.toScala))(
 						s"copy(${prop.name} = Some(${prop.name}))")
 				}.toSet, isCaseClass = true)
 		), Vector(
@@ -85,12 +80,8 @@ object DbModelWriter
 						s"${modelRef.target}(id.get${if (classToWrite.useLongId) "Long" else "Int"}, data)"),
 					MethodDeclaration("withId")(Parameter("id", classToWrite.idType.toScala))("apply(Some(id))")
 				) ++ classToWrite.properties.map { prop =>
-					val acceptedType = prop.dataType match
-					{
-						case Optional(base) => base
-						case concrete => concrete
-					}
-					MethodDeclaration(s"with${prop.name.capitalize}")(Parameter(prop.name, acceptedType.toScala))(
+					MethodDeclaration(s"with${prop.name.capitalize}")(
+						Parameter(prop.name, prop.dataType.notNull.toScala))(
 						s"apply(${prop.name} = Some(${prop.name}))")
 				}
 			)

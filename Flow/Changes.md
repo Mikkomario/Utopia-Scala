@@ -10,6 +10,8 @@
   - **Model** and all **CacheLike** instances extend this trait.
   - Instances of **MapLike** can also be created simply by passing a single-input function.
 ### New Methods
+- **Path** (**FileExtensions**)
+  - Added `.writeUsing(PrintWriter => U)`, a modified version of `.writeWith(BufferedOutputStream => U)`
 - **Period** (**TimeExtensions**)
   - Added `.toApproximateDuration` for converting a **Period** to a **FiniteDuration** (not exact)
 - **Regex**

@@ -26,6 +26,15 @@ sealed trait PropertyType
 	  * @return Default value assigned for this type by default. Empty string if no specific default is used.
 	  */
 	def baseDefault: String
+	/**
+	  * @return Whether a database index should be created based on this property type
+	  */
+	def createsIndex: Boolean
+	
+	/**
+	  * @return A non-nullable copy of this data type
+	  */
+	def notNull: PropertyType
 }
 
 /**
@@ -41,6 +50,10 @@ sealed trait BasicPropertyType extends PropertyType
 	override def toSql = toSqlBase + " NOT NULL"
 	
 	override def isNullable = false
+	
+	override def createsIndex = false
+	
+	override def notNull = this
 }
 
 object BasicPropertyType
@@ -138,6 +151,9 @@ object PropertyType
 		override def toScala = Reference.instant
 		override def isNullable = false
 		override def baseDefault = "Instant.now()"
+		override def createsIndex = true
+		
+		override def notNull = this
 	}
 	
 	/**
@@ -150,5 +166,30 @@ object PropertyType
 		override def toScala = ScalaType.option(baseType.toScala)
 		override def isNullable = true
 		override def baseDefault = "None"
+		override def createsIndex = baseType.createsIndex
+		
+		override def notNull = baseType
+	}
+	
+	/**
+	  * Property that refers another class / table
+	  * @param referencedTableName Name of the referenced table
+	  * @param dataType Data type used in the reference
+	  * @param isNullable Whether property values should be optional
+	  */
+	case class ClassReference(referencedTableName: String, dataType: BasicPropertyType = BasicPropertyType.Integer,
+	                          isNullable: Boolean = false)
+		extends PropertyType
+	{
+		override def toScala = if (isNullable) ScalaType.option(dataType.toScala) else dataType.toScala
+		
+		override def toSql = if (isNullable) dataType.toSqlBase else dataType.toSql
+		
+		override def baseDefault = if (isNullable) "None" else ""
+		
+		// Index is created when foreign key is generated
+		override def createsIndex = false
+		
+		override def notNull = if (isNullable) copy(isNullable = false) else this
 	}
 }
