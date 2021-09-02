@@ -14,9 +14,9 @@ trait InstanceDeclaration extends Declaration with CodeConvertible
 	// ABSTRACT ------------------------------
 	
 	/**
-	  * @return Code portion generated from this instance's constructor, if present
+	  * @return parameters accepted by this instance's constructor, if it has one.
 	  */
-	def parametersString: String
+	protected def constructorParams: Option[Parameters]
 	
 	/**
 	  * @return Classes & traits this instance extends, including possible construction parameters etc.
@@ -46,12 +46,20 @@ trait InstanceDeclaration extends Declaration with CodeConvertible
 	
 	// IMPLEMENTED  --------------------------
 	
+	override def references = (constructorParams ++ extensions ++ creationCode ++ properties ++ methods)
+		.flatMap { _.references }.toSet
+	
 	override def toCodeLines =
 	{
 		val builder = new VectorBuilder[String]
 		
 		// Writes the declaration and the extensions
-		val base = s"$baseString$parametersString"
+		val paramsString = constructorParams match
+		{
+			case Some(params) => params.toScala
+			case None => "()"
+		}
+		val base = s"$baseString$paramsString"
 		val ext = extensions
 		if (ext.isEmpty)
 			builder += base

@@ -17,6 +17,8 @@ object Parameters
 	// Implicitly converts from parameter vectors
 	implicit def parametersFromVector(params: Vector[Parameter]): Parameters = apply(Vector(params))
 	implicit def parametersFromVectors(paramLists: Vector[Vector[Parameter]]): Parameters = apply(paramLists)
+	// Implicitly converts from a single parameter
+	implicit def oneParamToMany(param: Parameter): Parameters = apply(Vector(Vector(param)))
 	
 	/**
 	  * Creates a new parameter list
@@ -26,6 +28,15 @@ object Parameters
 	  */
 	def apply(firstParam: Parameter, moreParams: Parameter*): Parameters =
 		apply(Vector(firstParam +: moreParams.toVector))
+	
+	/**
+	  * Creates a new parameter list consisting of implicit parameters
+	  * @param firstParam First parameter
+	  * @param moreParams More parameters
+	  * @return A parameters list
+	  */
+	def implicits(firstParam: Parameter, moreParams: Parameter*) =
+		apply(Vector(), firstParam +: moreParams.toVector)
 }
 
 /**
@@ -34,9 +45,23 @@ object Parameters
   * @since 2.9.2021, v0.1
   */
 case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Vector[Parameter] = Vector())
-	extends ScalaConvertible
+	extends ScalaConvertible with Referencing
 {
+	// COMPUTED -----------------------------------
+	
+	/**
+	  * @return Whether this parameters list is empty
+	  */
+	def isEmpty = lists.isEmpty && implicits.isEmpty
+	/**
+	  * @return Whether this parameters list is nonempty
+	  */
+	def nonEmpty = !isEmpty
+	
+	
 	// IMPLEMENTED  -------------------------------
+	
+	override def references = (lists.flatten ++ implicits).flatMap { _.references }.toSet
 	
 	override def toScala =
 	{

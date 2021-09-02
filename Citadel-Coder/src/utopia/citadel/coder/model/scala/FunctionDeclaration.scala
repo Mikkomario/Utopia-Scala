@@ -22,17 +22,24 @@ trait FunctionDeclaration extends Declaration with CodeConvertible
 	def isOverridden: Boolean
 	
 	/**
-	  * @return A string representation of the parameters of this function
+	  * @return Parameters accepted by this function. None if this function is parameterless.
 	  */
-	def parametersString: String
+	protected def params: Option[Parameters]
 	
 	
 	// IMPLEMENTED  --------------------------
+	
+	override def references = code.references ++ params.iterator.flatMap { _.references }
 	
 	override def toCodeLines =
 	{
 		val builder = new VectorBuilder[String]()
 		val overridePart = if (isOverridden) "override " else ""
+		val parametersString = params match
+		{
+			case Some(params) => params.toScala
+			case None => ""
+		}
 		
 		val header = s"$overridePart$baseString$parametersString = "
 		if (code.isSingleLine)

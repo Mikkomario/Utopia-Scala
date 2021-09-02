@@ -16,9 +16,9 @@ object MethodDeclaration
 	  * @return A new method
 	  */
 	def apply(name: String, codeReferences: Set[Reference] = Set(), visibility: Visibility = Public,
-	          isOverridden: Boolean = false)(params: Parameter*)
+	          isOverridden: Boolean = false)(params: Parameters = Parameters.empty)
 	         (firstLine: String, moreLines: String*): MethodDeclaration =
-		apply(visibility, name, params.toVector, Code(firstLine +: moreLines.toVector, codeReferences), isOverridden)
+		apply(visibility, name, params, Code(firstLine +: moreLines.toVector, codeReferences), isOverridden)
 }
 
 /**
@@ -31,12 +31,10 @@ object MethodDeclaration
   * @param code Code executed within this method
   * @param isOverridden Whether this method overrides a base version (default = false)
   */
-case class MethodDeclaration(visibility: Visibility, name: String, parameters: Vector[Parameter], code: Code,
+case class MethodDeclaration(visibility: Visibility, name: String, parameters: Parameters, code: Code,
                              isOverridden: Boolean) extends FunctionDeclaration
 {
 	override def keyword = "def"
 	
-	override def references = code.references ++ parameters.flatMap { _.references }
-	
-	override def parametersString = "(" + parameters.map { _.toScala }.mkString(", ") + ')'
+	override protected def params = Some(parameters)
 }

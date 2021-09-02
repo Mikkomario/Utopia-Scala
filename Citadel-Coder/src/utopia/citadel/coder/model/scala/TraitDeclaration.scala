@@ -13,11 +13,9 @@ case class TraitDeclaration(name: String, extensions: Vector[Extension] = Vector
                             visibility: Visibility = Public)
 	extends InstanceDeclaration
 {
-	override def parametersString = ""
+	override protected def constructorParams = None
 	
 	override def creationCode = None
 	
 	override def keyword = "trait"
-	
-	override def references = (extensions ++ properties ++ methods ++ nested).flatMap { _.references }.toSet
 }

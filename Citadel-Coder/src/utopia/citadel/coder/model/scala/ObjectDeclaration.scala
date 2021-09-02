@@ -15,8 +15,5 @@ case class ObjectDeclaration(name: String, extensions: Vector[Extension] = Vecto
 {
 	override def keyword = "object"
 	
-	override def references = (extensions ++ creationCode ++ properties ++ methods)
-		.flatMap { _.references }.toSet
-	
-	override def parametersString = ""
+	override protected def constructorParams = None
 }

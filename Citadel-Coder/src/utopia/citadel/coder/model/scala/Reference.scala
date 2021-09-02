@@ -34,6 +34,10 @@ object Reference
 	val modelConvertible = apply("utopia.flow.generic", "ModelConvertible")
 	
 	/**
+	  * Imports a database connection (Vault)
+	  */
+	val connection = apply("utopia.vault.database", "Connection")
+	/**
 	  * Imports the Stored trait (Vault)
 	  */
 	val stored = apply("utopia.vault.model.template", "Stored")

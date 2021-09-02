@@ -5,6 +5,7 @@ import utopia.citadel.coder.model.scala.PropertyDeclarationType.ComputedProperty
 import utopia.citadel.coder.model.scala.Visibility.Private
 import utopia.citadel.coder.model.scala.{ClassDeclaration, Extension, File, MethodDeclaration, ObjectDeclaration, Parameter, Reference, ScalaType, TraitDeclaration}
 import utopia.flow.util.FileExtensions._
+import utopia.flow.util.StringExtensions._
 
 import scala.io.Codec
 
@@ -20,6 +21,7 @@ object AccessWriter
 	{
 		val accessPackage = setup.projectPackage + ".database.access"
 		val accessDirectory = setup.sourceRoot/"database/access"
+		val connectionParam = Parameter("connection", Reference.connection)
 		// Writes a trait common for unique model access points
 		val singleAccessPackage =  s"$accessPackage.single.${classToWrite.packageName}"
 		val singleAccessDirectory = accessDirectory/"single"/classToWrite.packageName
@@ -38,12 +40,14 @@ object AccessWriter
 					ComputedProperty("defaultOrdering", Set(factoryRef), isOverridden = true)(
 						if (classToWrite.recordsCreationTime) "factory.defaultOrdering" else "None")
 				) ++ classToWrite.properties.map { prop =>
-					ComputedProperty(prop.name)(
-						s"pullColumn(model.${prop.name}Column).${prop.dataType.notNull.toScala}")
-				} :+ ComputedProperty("id")(s"index.${classToWrite.idType.toScala}"),
+					ComputedProperty(prop.name, implicitParams = Vector(connectionParam))(
+						s"pullColumn(model.${prop.name}Column).${prop.dataType.notNull.toScala.toScala.uncapitalize}")
+				} :+ ComputedProperty("id", implicitParams = Vector(connectionParam))(
+					s"index.${classToWrite.idType.toScala}"),
 				// Provides setters to defined properties
 				classToWrite.properties.map { prop => MethodDeclaration(s"${prop.name}_=")(
-					Parameter(s"new${prop.name.capitalize}", prop.dataType.notNull.toScala))(
+					Parameter(s"new${prop.name.capitalize}", prop.dataType.notNull.toScala)
+						.withImplicits(connectionParam))(
 					s"putColumn(model.${prop.name}Column, new${prop.name.capitalize})") }.toSet
 			)
 		).writeTo(singleAccessDirectory/s"$uniqueAccessName.scala")
@@ -55,7 +59,7 @@ object AccessWriter
 		val singleIdAccess = ClassDeclaration(singleIdAccessName,
 			Vector(Parameter("id", classToWrite.idType.toScala)),
 			Vector(
-				Extension(Reference.singleIdModelAccess(modelRef), Vector("id", s"$singleAccessName.factory"),
+				Extension(Reference.singleIdModelAccess(modelRef), Vector(Vector("id", s"$singleAccessName.factory")),
 					Set(Reference.valueConversions)),
 				uniqueAccessRef
 			)
@@ -72,5 +76,12 @@ object AccessWriter
 				nested = Set(singleIdAccess)
 			)
 		).writeTo(singleAccessDirectory/s"$singleAccessName.scala")
+		
+		// Writes the many model access point
+		val manyAccessName = s"Db${classToWrite.name}s"
+		// TODO: Continue
+		File(accessPackage + s".many.${classToWrite.packageName}",
+			ObjectDeclaration(manyAccessName, Vector())
+		)
 	}
 }

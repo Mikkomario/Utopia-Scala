@@ -9,7 +9,8 @@ import utopia.citadel.coder.model.scala.Visibility.Public
   * @since 30.8.2021, v0.1
   */
 case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: String, code: Code,
-                               visibility: Visibility = Public, isOverridden: Boolean = false)
+                               visibility: Visibility = Public, implicitParams: Vector[Parameter] = Vector(),
+                               isOverridden: Boolean = false)
 	extends FunctionDeclaration
 {
 	// COMPUTED -------------------------------------------
@@ -28,7 +29,6 @@ case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: S
 	
 	override def keyword = declarationType.toScala
 	
-	override def references = code.references
-	
-	override def parametersString = ""
+	override protected def params =
+		if (implicitParams.nonEmpty) Some(Parameters(implicits = implicitParams)) else None
 }

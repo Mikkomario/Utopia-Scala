@@ -52,7 +52,7 @@ object DbModelWriter
 							if (prop.dataType.isNullable) s"data.${prop.name}" else s"Some(data.${prop.name})" }
 							.mkString(", ")})"),
 					MethodDeclaration("complete", Set(modelRef), isOverridden = true)(
-						Parameter("id", Reference.value), Parameter("data", dataRef))(
+						Vector(Parameter("id", Reference.value), Parameter("data", dataRef)))(
 						s"${modelRef.target}(id.get${if (classToWrite.useLongId) "Long" else "Int"}, data)"),
 					MethodDeclaration("withId")(Parameter("id", classToWrite.idType.toScala))("apply(Some(id))")
 				) ++ classToWrite.properties.map { prop =>

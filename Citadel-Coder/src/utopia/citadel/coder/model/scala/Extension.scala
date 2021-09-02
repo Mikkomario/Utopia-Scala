@@ -14,7 +14,7 @@ object Extension
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-case class Extension(parentType: ScalaType, constructionAssignments: Vector[String] = Vector(),
+case class Extension(parentType: ScalaType, constructionAssignments: Vector[Vector[String]] = Vector(),
                      constructionReferences: Set[Reference] = Set())
 	extends Referencing with ScalaConvertible
 {
@@ -24,8 +24,8 @@ case class Extension(parentType: ScalaType, constructionAssignments: Vector[Stri
 	
 	override def toScala =
 	{
-		val parametersString =
-			if (constructionAssignments.isEmpty) "" else s"(${constructionAssignments.mkString(", ")})"
+		val parametersString = if (constructionAssignments.isEmpty) "" else
+			s"(${constructionAssignments.map { assignments => s"(${assignments.mkString(", ")})"} })"
 		s"${parentType.toScala}$parametersString"
 	}
 	
@@ -39,5 +39,5 @@ case class Extension(parentType: ScalaType, constructionAssignments: Vector[Stri
 	  * @return A copy of this extension which includes a constructor call
 	  */
 	def withConstructor(references: Set[Reference], paramValues: String*) =
-		copy(constructionAssignments = paramValues.toVector, constructionReferences = references)
+		copy(constructionAssignments = Vector(paramValues.toVector), constructionReferences = references)
 }
