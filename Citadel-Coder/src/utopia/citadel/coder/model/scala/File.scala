@@ -2,20 +2,28 @@ package utopia.citadel.coder.model.scala
 
 import scala.collection.immutable.VectorBuilder
 
+object File
+{
+	/**
+	  * Creates a new file
+	  * @param packagePath Package for the contents of this file
+	  * @param firstDeclaration First instance declaration
+	  * @param moreDeclarations More instance declarations
+	  * @return A new file containing the specified declarations
+	  */
+	def apply(packagePath: String, firstDeclaration: InstanceDeclaration,
+	          moreDeclarations: InstanceDeclaration*): File =
+		apply(packagePath, firstDeclaration +: moreDeclarations.toVector)
+}
+
 /**
   * Represents a scala file
   * @author Mikko Hilpinen
   * @since 31.8.2021, v0.1
   */
-case class File(packagePath: String, classes: Vector[ClassDeclaration] = Vector(),
-                objects: Vector[ObjectDeclaration] = Vector())
+case class File(packagePath: String, declarations: Vector[InstanceDeclaration])
 	extends CodeConvertible
 {
-	/**
-	  * @return All (top level) declarations in this file
-	  */
-	def declarations = objects ++ classes
-	
 	override def toCodeLines =
 	{
 		val builder = new VectorBuilder[String]()

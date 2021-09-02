@@ -27,7 +27,7 @@ object TablesWriter
 	{
 		val parentPath = s"${setup.projectPackage}.database"
 		val objectName = setup.projectPackage.afterLast(".").capitalize + "Tables"
-		File(s"$parentPath.$objectName", objects = Vector(
+		File(s"$parentPath.$objectName", Vector(
 			ObjectDeclaration(objectName,
 				// Contains a computed property for each class / table
 				properties = classes.toVector.sortBy { _.name }

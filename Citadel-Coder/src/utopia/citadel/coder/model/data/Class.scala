@@ -1,6 +1,7 @@
 package utopia.citadel.coder.model.data
 
 import utopia.citadel.coder.model.enumeration.BasicPropertyType.{BigInteger, Integer}
+import utopia.citadel.coder.model.enumeration.PropertyType.CreationTime
 import utopia.citadel.coder.util.NamingUtils
 
 object Class
@@ -33,4 +34,12 @@ case class Class(name: String, tableName: String, properties: Vector[Property], 
 	  * @return Type of the ids used in this class
 	  */
 	def idType =  if (useLongId) BigInteger else Integer
+	
+	/**
+	  * @return Whether this class records a row / instance creation time
+	  */
+	def recordsCreationTime = properties.exists { _.dataType match {
+		case CreationTime => true
+		case _ => false
+	} }
 }

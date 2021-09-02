@@ -38,9 +38,17 @@ object Reference
 	  */
 	val stored = apply("utopia.vault.model.template", "Stored")
 	/**
+	  * Imports the Indexed trait (Vault)
+	  */
+	val indexed = apply("utopia.vault.nosql.template", "Indexed")
+	/**
 	  * Imports the FromValidatedRowModelFactory trait (Vault)
 	  */
 	val fromValidatedRowModelFactory = apply("utopia.vault.nosql.factory.row.model", "FromValidatedRowModelFactory")
+	/**
+	  * Imports the FromRowFactoryWithTimestamps trait (Vault)
+	  */
+	val fromRowFactoryWithTimestamps = apply("utopia.vault.nosql.factory.row", "FromRowFactoryWithTimestamps")
 	/**
 	  * Imports the Storable (with factory) trait (Vault)
 	  */
@@ -49,6 +57,22 @@ object Reference
 	  * Imports the DataInserter trait (Vault)
 	  */
 	val dataInserter = apply("utopia.vault.model.template", "DataInserter")
+	/**
+	  * Imports the SingleRowModelAccess trait (Vault)
+	  */
+	val singleRowModelAccess = apply("utopia.vault.nosql.access.single.model", "SingleRowModelAccess")
+	/**
+	  * Imports the DistinctModelAccess trait (Vault)
+	  */
+	val distinctModelAccess = apply("utopia.vault.nosql.access.template.model", "DistinctModelAccess")
+	/**
+	  * Imports the SingleIdModel class from Vault
+	  */
+	val singleIdModelAccess = apply("utopia.vault.nosql.access.single.model.distinct", "SingleIdModelAccess")
+	/**
+	  * Imports the UnconditionalView trait (Vault)
+	  */
+	val unconditionalView = apply("utopia.vault.nosql.view", "UnconditionalView")
 	
 	/**
 	  * Imports the combination of Stored & ModelConvertible (Metropolis)

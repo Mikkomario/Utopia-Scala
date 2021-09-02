@@ -7,8 +7,15 @@ package utopia.citadel.coder.model.scala
   */
 trait ScalaConvertible
 {
+	// ABSTRACT -------------------------------
+	
 	/**
 	  * @return A scala string based on this item
 	  */
 	def toScala: String
+	
+	
+	// IMPLEMENTED  ---------------------------
+	
+	override def toString = toScala
 }

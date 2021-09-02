@@ -33,30 +33,6 @@ object DbModelWriter
 		val className = classToWrite.name + "Model"
 		// The generated file contains the model class and the associated companion object
 		File(parentPackage, Vector(
-			ClassDeclaration(className,
-				// Accepts a copy of all properties where each is wrapped in option (unless already an option)
-				Parameter("id", Optional(classToWrite.idType).toScala, "None") +:
-					classToWrite.properties.map { prop => Parameter(prop.name,
-						if (prop.dataType.isNullable) prop.dataType.toScala else ScalaType.option(prop.dataType.toScala),
-						"None") },
-				// Extends StorableWithFactory[A]
-				Vector(Reference.storableWithFactory(modelRef)),
-				// Implements the required properties: factory & valueProperties
-				properties = Vector(
-					ComputedProperty("factory", isOverridden = true)(s"$className.factory"),
-					ComputedProperty("valueProperties", Set(Reference.valueConversions), isOverridden = true)(
-						s"import $className._",
-						s"Vector(${"\"id\" -> id"}, ${
-							classToWrite.properties.map { prop => s"${prop.name}AttName -> ${prop.name}" }
-								.mkString(", ")})")
-				),
-				// adds withX(...) -methods for convenience
-				methods = classToWrite.properties.map { prop =>
-					MethodDeclaration(s"with${prop.name.capitalize}")(
-						Parameter(prop.name, prop.dataType.notNull.toScala))(
-						s"copy(${prop.name} = Some(${prop.name}))")
-				}.toSet, isCaseClass = true)
-		), Vector(
 			ObjectDeclaration(className,
 				// Extends the DataInserter trait
 				Vector(Reference.dataInserter(ScalaType.basic(className), modelRef, dataRef)),
@@ -84,7 +60,30 @@ object DbModelWriter
 						Parameter(prop.name, prop.dataType.notNull.toScala))(
 						s"apply(${prop.name} = Some(${prop.name}))")
 				}
-			)
+			),
+			ClassDeclaration(className,
+				// Accepts a copy of all properties where each is wrapped in option (unless already an option)
+				Parameter("id", Optional(classToWrite.idType).toScala, "None") +:
+					classToWrite.properties.map { prop => Parameter(prop.name,
+						if (prop.dataType.isNullable) prop.dataType.toScala else ScalaType.option(prop.dataType.toScala),
+						"None") },
+				// Extends StorableWithFactory[A]
+				Vector(Reference.storableWithFactory(modelRef)),
+				// Implements the required properties: factory & valueProperties
+				properties = Vector(
+					ComputedProperty("factory", isOverridden = true)(s"$className.factory"),
+					ComputedProperty("valueProperties", Set(Reference.valueConversions), isOverridden = true)(
+						s"import $className._",
+						s"Vector(${"\"id\" -> id"}, ${
+							classToWrite.properties.map { prop => s"${prop.name}AttName -> ${prop.name}" }
+								.mkString(", ")})")
+				),
+				// adds withX(...) -methods for convenience
+				methods = classToWrite.properties.map { prop =>
+					MethodDeclaration(s"with${prop.name.capitalize}")(
+						Parameter(prop.name, prop.dataType.notNull.toScala))(
+						s"copy(${prop.name} = Some(${prop.name}))")
+				}.toSet, isCaseClass = true)
 		)).writeTo(setup.sourceRoot/"database/model"/classToWrite.packageName/s"$className.scala")
 			.map { _ => Reference(parentPackage, className) }
 	}
