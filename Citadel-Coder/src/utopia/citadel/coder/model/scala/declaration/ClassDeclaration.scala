@@ -13,7 +13,7 @@ case class ClassDeclaration(name: String, constructionParams: Parameters = Param
                             creationCode: Option[Code] = None,
                             properties: Vector[PropertyDeclaration] = Vector(),
                             methods: Set[MethodDeclaration] = Set(), nested: Set[InstanceDeclaration] = Set(),
-                            visibility: Visibility = Public, isCaseClass: Boolean = false)
+                            visibility: Visibility = Public, description: String = "", isCaseClass: Boolean = false)
 	extends InstanceDeclaration
 {
 	override def keyword = if (isCaseClass) "case class" else "class"

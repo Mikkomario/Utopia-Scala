@@ -53,8 +53,11 @@ object AccessWriter
 				if (classToWrite.recordsCreationTime) "Some(factory.defaultOrdering)" else "None")
 		// Property setters are common for both distinct access points (unique & many)
 		val propertySetters = classToWrite.properties.map { prop =>
-			MethodDeclaration(s"${prop.name}_=")(
-				Parameter(s"new${prop.name.capitalize}", prop.dataType.notNull.toScala).withImplicits(connectionParam))(
+			MethodDeclaration(s"${prop.name}_=",
+				description = s"Updates the ${prop.name} of the targeted ${classToWrite.name} instance(s)",
+				returnDescription = s"Whether any ${classToWrite.name} instance was affected")(
+				Parameter(s"new${prop.name.capitalize}", prop.dataType.notNull.toScala,
+					description = s"A new ${prop.name} to assign").withImplicits(connectionParam))(
 				s"putColumn(model.${prop.name}Column, new${prop.name.capitalize})")
 		}.toSet
 		File(singleAccessPackage,
@@ -65,11 +68,15 @@ object AccessWriter
 					Reference.indexed),
 				// Provides computed accessors for individual properties
 				distinctAccessBaseProperties ++ classToWrite.properties.map { prop =>
-					ComputedProperty(prop.name, implicitParams = Vector(connectionParam))(
+					ComputedProperty(prop.name,
+						description = prop.description.notEmpty.getOrElse(s"The ${prop.name} of this instance") +
+							". None if no instance (or value) was found.", implicitParams = Vector(connectionParam))(
 						s"pullColumn(model.${prop.name}Column).${prop.dataType.notNull.toScala.toScala.uncapitalize}")
 				} :+ ComputedProperty("id", implicitParams = Vector(connectionParam))(
 					s"pullColumn(index).${classToWrite.idType.toScala.toScala.uncapitalize}"),
-				propertySetters
+				propertySetters,
+				description = s"A common trait for access points that return individual and distinct ${
+					classToWrite.name} instances."
 			)
 		).writeTo(singleAccessDirectory/s"$uniqueAccessName.scala").flatMap { _ =>
 			val uniqueAccessRef = Reference(singleAccessPackage, uniqueAccessName)
@@ -92,9 +99,13 @@ object AccessWriter
 					Vector(Reference.singleRowModelAccess(modelRef), Reference.unconditionalView, Reference.indexed),
 					properties = baseProperties,
 					// Defines an .apply(id) method for accessing individual items
-					methods = Set(MethodDeclaration("apply")(Parameter("id", classToWrite.idType.toScala))(
+					methods = Set(MethodDeclaration("apply",
+						returnDescription = s"An access point to that ${classToWrite.name}")(
+						Parameter("id", classToWrite.idType.toScala,
+							description = s"Database id of the targeted ${classToWrite.name} instance"))(
 						s"new $singleIdAccessName(id)")),
-					nested = Set(singleIdAccess)
+					nested = Set(singleIdAccess),
+					description = s"Used for accessing individual ${classToWrite.name} instances at a time"
 				)
 			).writeTo(singleAccessDirectory/s"$singleAccessName.scala").flatMap { _ =>
 				// Writes a trait common for the many model access points
@@ -112,7 +123,9 @@ object AccessWriter
 									prop.dataType.notNull.toScala.toScala.uncapitalize} }")
 						} :+ ComputedProperty("ids", implicitParams = Vector(connectionParam))(
 							s"pullColumn(index).flatMap { _.${classToWrite.idType.toScala.toScala.uncapitalize} }"),
-						propertySetters
+						propertySetters,
+						description = s"A common trait for access points which target multiple ${
+							classToWrite.name} instances at a time"
 					)
 				).writeTo(manyAccessDirectory/s"$manyAccessTraitName.scala").flatMap { _ =>
 					val manyAccessTraitRef = Reference(manyAccessPackage, manyAccessTraitName)
@@ -120,7 +133,9 @@ object AccessWriter
 					// Writes the many model access point
 					val manyAccessName = s"Db${classToWrite.name}s"
 					File(manyAccessPackage,
-						ObjectDeclaration(manyAccessName, Vector(manyAccessTraitRef, Reference.unconditionalView))
+						ObjectDeclaration(manyAccessName, Vector(manyAccessTraitRef, Reference.unconditionalView),
+							description = s"The root access point when targeting multiple ${
+								classToWrite.name} instances at a time")
 					).writeTo(manyAccessDirectory/s"$manyAccessName.scala")
 						.map { _ => (uniqueAccessRef, Reference(singleAccessPackage, singleAccessName),
 							manyAccessTraitRef, Reference(manyAccessPackage, manyAccessName))

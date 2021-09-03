@@ -1,10 +1,12 @@
 package utopia.citadel.coder.model.scala.declaration
 
-import utopia.citadel.coder.model.scala.template.CodeConvertible
-import utopia.citadel.coder.model.scala.{Code, Extension, Parameters}
+import utopia.citadel.coder.model.scala.ScalaDocKeyword.Since
+import utopia.citadel.coder.model.scala.template.{CodeConvertible, ScalaDocConvertible}
+import utopia.citadel.coder.model.scala.{Code, Extension, Parameters, ScalaDocPart}
 import utopia.flow.util.CombinedOrdering
 import utopia.flow.util.CollectionExtensions._
 
+import java.time.LocalDate
 import scala.collection.immutable.VectorBuilder
 
 /**
@@ -12,7 +14,7 @@ import scala.collection.immutable.VectorBuilder
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-trait InstanceDeclaration extends Declaration with CodeConvertible
+trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDocConvertible
 {
 	// ABSTRACT ------------------------------
 	
@@ -46,16 +48,34 @@ trait InstanceDeclaration extends Declaration with CodeConvertible
 	  */
 	def nested: Set[InstanceDeclaration]
 	
+	/**
+	  * @return Description of this instance (may be empty)
+	  */
+	def description: String
+	
 	
 	// IMPLEMENTED  --------------------------
 	
 	override def references = (constructorParams ++ extensions ++ creationCode ++ properties ++ methods ++ nested)
 		.flatMap { _.references }.toSet
 	
+	override def documentation =
+	{
+		val builder = new VectorBuilder[ScalaDocPart]()
+		val desc = description
+		if (desc.nonEmpty)
+			builder += ScalaDocPart.description(desc)
+		constructorParams.foreach { builder ++= _.documentation }
+		if (description.nonEmpty)
+			builder += ScalaDocPart(Since, LocalDate.now().toString)
+		builder.result()
+	}
+	
 	override def toCodeLines =
 	{
 		val builder = new VectorBuilder[String]
 		
+		builder ++= scalaDoc
 		// Writes the declaration and the extensions
 		val paramsString = constructorParams match {
 			case Some(params) => params.toScala

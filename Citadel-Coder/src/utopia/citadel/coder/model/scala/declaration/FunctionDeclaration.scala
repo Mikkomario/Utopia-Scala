@@ -1,7 +1,8 @@
 package utopia.citadel.coder.model.scala.declaration
 
-import utopia.citadel.coder.model.scala.template.CodeConvertible
-import utopia.citadel.coder.model.scala.{Code, Parameters}
+import utopia.citadel.coder.model.scala.ScalaDocKeyword.Return
+import utopia.citadel.coder.model.scala.template.{CodeConvertible, ScalaDocConvertible}
+import utopia.citadel.coder.model.scala.{Code, Parameters, ScalaDocPart}
 
 import scala.collection.immutable.VectorBuilder
 
@@ -10,7 +11,7 @@ import scala.collection.immutable.VectorBuilder
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-trait FunctionDeclaration extends Declaration with CodeConvertible
+trait FunctionDeclaration extends Declaration with CodeConvertible with ScalaDocConvertible
 {
 	// ABSTRACT ------------------------------
 	
@@ -25,6 +26,15 @@ trait FunctionDeclaration extends Declaration with CodeConvertible
 	def isOverridden: Boolean
 	
 	/**
+	  * @return Documentation describing this function (may be empty)
+	  */
+	def description: String
+	/**
+	  * @return Documentation describing the return value of this function (may be empty)
+	  */
+	def returnDescription: String
+	
+	/**
 	  * @return Parameters accepted by this function. None if this function is parameterless.
 	  */
 	protected def params: Option[Parameters]
@@ -34,15 +44,30 @@ trait FunctionDeclaration extends Declaration with CodeConvertible
 	
 	override def references = code.references ++ params.iterator.flatMap { _.references }
 	
+	override def documentation =
+	{
+		val desc = description
+		val returnDesc = returnDescription
+		val resultBuilder = new VectorBuilder[ScalaDocPart]()
+		if (desc.nonEmpty)
+			resultBuilder += ScalaDocPart.description(desc)
+		params.foreach { resultBuilder ++= _.documentation }
+		if (returnDesc.nonEmpty)
+			resultBuilder += ScalaDocPart(Return, returnDesc)
+		resultBuilder.result()
+	}
+	
 	override def toCodeLines =
 	{
 		val builder = new VectorBuilder[String]()
+		// Adds the documentation first
+		builder ++= scalaDoc
+		// Then the header and body
 		val overridePart = if (isOverridden) "override " else ""
 		val parametersString = params match {
 			case Some(params) => params.toScala
 			case None => ""
 		}
-		
 		val header = s"$overridePart$baseString$parametersString = "
 		if (code.isSingleLine) {
 			val line = code.lines.head

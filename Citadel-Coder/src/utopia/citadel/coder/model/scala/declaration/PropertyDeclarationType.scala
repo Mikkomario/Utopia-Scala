@@ -23,10 +23,10 @@ sealed trait PropertyDeclarationType extends ScalaConvertible
 	  * @return A new property declaration
 	  */
 	def apply(name: String, references: Set[Reference] = Set(),
-	          visibility: Visibility = Public, implicitParams: Vector[Parameter] = Vector(),
+	          visibility: Visibility = Public, implicitParams: Vector[Parameter] = Vector(), description: String = "",
 	          isOverridden: Boolean = false)(line1: String, moreLines: String*) =
-		PropertyDeclaration(this, name, Code(line1 +: moreLines.toVector, references), visibility, implicitParams,
-			isOverridden)
+		PropertyDeclaration(this, name, Code(line1 +: moreLines.toVector, references), visibility, description,
+			implicitParams, isOverridden)
 }
 
 object PropertyDeclarationType

@@ -35,7 +35,7 @@ object ModelWriter
 			ClassDeclaration(dataClassName,
 				// Accepts a copy of each property. Uses default values where possible.
 				classToWrite.properties.map { prop => Parameter(prop.name, prop.dataType.toScala,
-					prop.customDefault.notEmpty.getOrElse(prop.dataType.baseDefault)) },
+					prop.customDefault.notEmpty.getOrElse(prop.dataType.baseDefault), description = prop.description) },
 				// Extends ModelConvertible
 				Vector(Reference.modelConvertible),
 				// Implements the toModel -property
@@ -44,7 +44,9 @@ object ModelWriter
 						s"Model(Vector(${ classToWrite.properties.map { prop =>
 							s"${ NamingUtils.camelToUnderscore(prop.name).quoted } -> ${prop.name}" }
 							.mkString(", ") }))")
-				), isCaseClass = true)
+				),
+				description = classToWrite.description,
+				isCaseClass = true)
 		)).writeTo(baseDirectory/"partial"/classToWrite.packageName/s"$dataClassName.scala").flatMap { _ =>
 			// Writes the stored model next
 			val dataClassRef = Reference(dataClassPackage, dataClassName)
@@ -52,7 +54,11 @@ object ModelWriter
 			{
 				val idType = classToWrite.idType.toScala
 				// Accepts id and data -parameters
-				val constructionParams = Vector(Parameter("id", idType), Parameter("data", dataClassRef))
+				val constructionParams = Vector(
+					Parameter("id", idType, description = s"id of this ${classToWrite.name} in the database"),
+					Parameter("data", dataClassRef, description = s"Wrapped ${classToWrite.name} data")
+				)
+				val description = s"Represents a ${classToWrite.name} that has already been stored in the database"
 				// ModelConvertible extension & implementation differs based on id type
 				if (classToWrite.useLongId)
 					declaration.ClassDeclaration(classToWrite.name, constructionParams,
@@ -60,10 +66,11 @@ object ModelWriter
 						properties = Vector(
 							ComputedProperty("toModel", Set(Reference.valueConversions, Reference.constant),
 								isOverridden = true)("Constant(\"id\", id) + data.toModel")
-						), isCaseClass = true)
+						), description = description, isCaseClass = true)
 				else
 					declaration.ClassDeclaration(classToWrite.name, constructionParams,
-						Vector(Reference.storedModelConvertible(dataClassRef)), isCaseClass = true)
+						Vector(Reference.storedModelConvertible(dataClassRef)),
+						description = description, isCaseClass = true)
 			}
 			val storePackage = s"${setup.projectPackage}.model.stored.${classToWrite.packageName}"
 			File(storePackage, Vector(storedClass))

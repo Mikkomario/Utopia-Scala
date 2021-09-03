@@ -11,7 +11,7 @@ import utopia.citadel.coder.model.scala.{Extension, Visibility}
 case class TraitDeclaration(name: String, extensions: Vector[Extension] = Vector(),
                             properties: Vector[PropertyDeclaration] = Vector(),
                             methods: Set[MethodDeclaration] = Set(), nested: Set[InstanceDeclaration] = Set(),
-                            visibility: Visibility = Public)
+                            visibility: Visibility = Public, description: String = "")
 	extends InstanceDeclaration
 {
 	override protected def constructorParams = None

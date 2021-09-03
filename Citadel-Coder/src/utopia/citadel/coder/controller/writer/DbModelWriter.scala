@@ -33,16 +33,21 @@ object DbModelWriter
 		val parentPackage = s"${setup.projectPackage}.database.model.${classToWrite.packageName}"
 		val className = classToWrite.name + "Model"
 		// The generated file contains the model class and the associated companion object
-		File(parentPackage, Vector(
+		File(parentPackage,
 			ObjectDeclaration(className,
 				// Extends the DataInserter trait
 				Vector(Reference.dataInserter(ScalaType.basic(className), modelRef, dataRef)),
 				// Contains xAttName and xColumn for each property, as well as factory and table -properties
 				properties = classToWrite.properties.flatMap { prop => Vector(
-					ImmutableValue(s"${prop.name}AttName")(prop.name.quoted),
-					ComputedProperty(s"${prop.name}Column")(s"table(${prop.name}AttName)")
+					ImmutableValue(s"${prop.name}AttName",
+						description = s"Name of the property that contains ${classToWrite.name} ${prop.name}")(
+						prop.name.quoted),
+					ComputedProperty(s"${prop.name}Column",
+						description = s"Column that contains ${classToWrite.name} ${prop.name}")(
+						s"table(${prop.name}AttName)")
 				) } ++ Vector(
-					ComputedProperty("factory", Set(factoryRef))(factoryRef.target),
+					ComputedProperty("factory", Set(factoryRef),
+						description = "The factory object used by this model type")(factoryRef.target),
 					ComputedProperty("table", isOverridden = true)("factory.table")
 				),
 				// Implements .apply(...) and .complete(id, data)
@@ -55,19 +60,24 @@ object DbModelWriter
 					MethodDeclaration("complete", Set(modelRef), isOverridden = true)(
 						Vector(Parameter("id", Reference.value), Parameter("data", dataRef)))(
 						s"${modelRef.target}(id.get${if (classToWrite.useLongId) "Long" else "Int"}, data)"),
-					MethodDeclaration("withId")(Parameter("id", classToWrite.idType.toScala))("apply(Some(id))")
+					MethodDeclaration("withId", returnDescription = "A model with that id")(
+						Parameter("id", classToWrite.idType.toScala, description = s"A ${classToWrite.name} id"))(
+						"apply(Some(id))")
 				) ++ classToWrite.properties.map { prop =>
-					MethodDeclaration(s"with${prop.name.capitalize}")(
-						Parameter(prop.name, prop.dataType.notNull.toScala))(
+					MethodDeclaration(s"with${prop.name.capitalize}",
+						returnDescription = s"A model containing only the specified ${prop.name}")(
+						Parameter(prop.name, prop.dataType.notNull.toScala, description = prop.description))(
 						s"apply(${prop.name} = Some(${prop.name}))")
-				}
+				},
+				description = s"Used for constructing $className instances and for inserting ${
+					classToWrite.name}s to the database"
 			),
 			ClassDeclaration(className,
 				// Accepts a copy of all properties where each is wrapped in option (unless already an option)
-				Parameter("id", Optional(classToWrite.idType).toScala, "None") +:
+				Parameter("id", Optional(classToWrite.idType).toScala, "None", s"${classToWrite.name} database id") +:
 					classToWrite.properties.map { prop => Parameter(prop.name,
 						if (prop.dataType.isNullable) prop.dataType.toScala else ScalaType.option(prop.dataType.toScala),
-						"None") },
+						"None", description = prop.description) },
 				// Extends StorableWithFactory[A]
 				Vector(Reference.storableWithFactory(modelRef)),
 				// Implements the required properties: factory & valueProperties
@@ -81,11 +91,14 @@ object DbModelWriter
 				),
 				// adds withX(...) -methods for convenience
 				methods = classToWrite.properties.map { prop =>
-					MethodDeclaration(s"with${prop.name.capitalize}")(
-						Parameter(prop.name, prop.dataType.notNull.toScala))(
+					MethodDeclaration(s"with${prop.name.capitalize}",
+						returnDescription = s"A new copy of this model with the specified ${prop.name}")(
+						Parameter(prop.name, prop.dataType.notNull.toScala, description = s"A new ${prop.name}"))(
 						s"copy(${prop.name} = Some(${prop.name}))")
-				}.toSet, isCaseClass = true)
-		)).writeTo(setup.sourceRoot/"database/model"/classToWrite.packageName/s"$className.scala")
+				}.toSet,
+				description = s"Used for interacting with ${classToWrite.name} instances in the database",
+				isCaseClass = true)
+		).writeTo(setup.sourceRoot/"database/model"/classToWrite.packageName/s"$className.scala")
 			.map { _ => Reference(parentPackage, className) }
 	}
 }

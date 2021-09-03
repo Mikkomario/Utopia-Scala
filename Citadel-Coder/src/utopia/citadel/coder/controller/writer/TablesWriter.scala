@@ -28,15 +28,21 @@ object TablesWriter
 	{
 		val parentPath = s"${setup.projectPackage}.database"
 		val objectName = setup.projectPackage.afterLast(".").capitalize + "Tables"
-		File(s"$parentPath.$objectName", Vector(
+		File(s"$parentPath.$objectName",
 			ObjectDeclaration(objectName,
 				// Contains a computed property for each class / table
-				properties = classes.toVector.sortBy { _.name }
-					.map { c => ComputedProperty(c.name.uncapitalize)(s"apply(${c.tableName.quoted})") },
+				properties = classes.toVector.sortBy { _.name }.map { c =>
+					val baseDescription = s"Table that contains instances of ${c.name}"
+					val completeDescription = if (c.description.isEmpty) baseDescription else
+						s"$baseDescription (${c.description})"
+					ComputedProperty(c.name.uncapitalize, description = completeDescription)(
+						s"apply(${c.tableName.quoted})")
+				},
 				// Uses a private apply method implementation that refers to the Citadel Tables instance
 				methods = Set(MethodDeclaration("apply", Set(Reference.citadelTables), Private)(
-					Parameter("tableName", ScalaType.string))("Tables(tableName)")))))
-			.writeTo(setup.sourceRoot/"database"/s"$objectName.scala")
-			.map { _ => Reference(parentPath, objectName) }
+					Parameter("tableName", ScalaType.string))("Tables(tableName)")),
+				description = "Used for accessing the database tables introduced in this project"
+			)
+		).writeTo(setup.sourceRoot/"database"/s"$objectName.scala").map { _ => Reference(parentPath, objectName) }
 	}
 }

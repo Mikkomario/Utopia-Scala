@@ -1,6 +1,6 @@
 package utopia.citadel.coder.model.scala
 
-import utopia.citadel.coder.model.scala.template.{Referencing, ScalaConvertible}
+import utopia.citadel.coder.model.scala.template.{Referencing, ScalaConvertible, ScalaDocConvertible}
 
 import scala.language.implicitConversions
 
@@ -47,7 +47,7 @@ object Parameters
   * @since 2.9.2021, v0.1
   */
 case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Vector[Parameter] = Vector())
-	extends ScalaConvertible with Referencing
+	extends ScalaConvertible with Referencing with ScalaDocConvertible
 {
 	// COMPUTED -----------------------------------
 	
@@ -64,6 +64,8 @@ case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Ve
 	// IMPLEMENTED  -------------------------------
 	
 	override def references = (lists.flatten ++ implicits).flatMap { _.references }.toSet
+	
+	override def documentation = (lists.flatten ++ implicits).flatMap { _.documentation }
 	
 	override def toScala =
 	{

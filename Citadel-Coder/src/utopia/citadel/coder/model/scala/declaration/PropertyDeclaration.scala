@@ -10,7 +10,8 @@ import utopia.citadel.coder.model.scala.{Code, Parameter, Parameters, Visibility
   * @since 30.8.2021, v0.1
   */
 case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: String, code: Code,
-                               visibility: Visibility = Public, implicitParams: Vector[Parameter] = Vector(),
+                               visibility: Visibility = Public, description: String = "",
+                               implicitParams: Vector[Parameter] = Vector(),
                                isOverridden: Boolean = false)
 	extends FunctionDeclaration
 {
@@ -30,6 +31,8 @@ case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: S
 	// IMPLEMENTED  ---------------------------------------
 	
 	override def keyword = declarationType.toScala
+	
+	override def returnDescription = ""
 	
 	override protected def params =
 		if (implicitParams.nonEmpty) Some(Parameters(implicits = implicitParams)) else None

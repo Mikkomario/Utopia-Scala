@@ -3,6 +3,7 @@ package utopia.citadel.coder.controller.writer
 import utopia.citadel.coder.model.data.Class
 import utopia.citadel.coder.model.enumeration.PropertyType.ClassReference
 import utopia.flow.util.FileExtensions._
+import utopia.flow.util.StringExtensions._
 
 import java.nio.file.Path
 import scala.io.Codec
@@ -25,7 +26,7 @@ object SqlWriter
 	{
 		targetPath.writeUsing { writer =>
 			classes.foreach { classToWrite =>
-				// TODO: Write class documentation when it becomes available
+				classToWrite.description.notEmpty.foreach { desc => writer.println(s"-- $desc") }
 				// Writes property documentation
 				classToWrite.properties.foreach { prop =>
 					if (prop.description.nonEmpty || prop.useDescription.nonEmpty)
@@ -53,7 +54,7 @@ object SqlWriter
 					val propertyDeclarations = classToWrite.properties
 						.map { prop => s"`${prop.columnName}` ${prop.dataType.toSql}" }
 					val indexDeclarations = classToWrite.properties.filter { _.dataType.createsIndex }
-						.map { prop => s"INDEX ${classInitials}_${prop.columnName}_idx (${prop.columnName})" }
+						.map { prop => s"INDEX ${classInitials}_${prop.columnName}_idx (`${prop.columnName})`" }
 					val foreignKeyDeclarations = classToWrite.properties.flatMap { prop =>
 						prop.dataType match
 						{

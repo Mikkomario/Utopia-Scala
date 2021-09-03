@@ -11,7 +11,7 @@ import utopia.citadel.coder.model.scala.{Code, Extension, Visibility}
 case class ObjectDeclaration(name: String, extensions: Vector[Extension] = Vector(),
                              creationCode: Option[Code] = None, properties: Vector[PropertyDeclaration] = Vector(),
                              methods: Set[MethodDeclaration] = Set(), nested: Set[InstanceDeclaration] = Set(),
-                             visibility: Visibility = Public)
+                             visibility: Visibility = Public, description: String = "")
 	extends InstanceDeclaration
 {
 	override def keyword = "object"

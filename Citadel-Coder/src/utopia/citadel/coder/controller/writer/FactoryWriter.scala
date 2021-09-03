@@ -16,6 +16,16 @@ import scala.io.Codec
   */
 object FactoryWriter
 {
+	/**
+	  * Writes a factory used for processing database object data
+	  * @param classToWrite Class data based on which the factory is created
+	  * @param tablesRef Reference to the tables object
+	  * @param modelRef Reference to the read model class
+	  * @param dataRef Reference to the partial model data class
+	  * @param codec Implicit codec to use when writing the document
+	  * @param setup Implicit project-specific setup
+	  * @return Reference to the new written factory object. Failure if writing failed.
+	  */
 	def apply(classToWrite: Class, tablesRef: Reference, modelRef: Reference, dataRef: Reference)
 	         (implicit codec: Codec, setup: ProjectSetup) =
 	{
@@ -45,7 +55,9 @@ object FactoryWriter
 				methods = Set(MethodDeclaration("fromValidatedModel", Set(modelRef, dataRef, Reference.valueUnwraps),
 					isOverridden = true)(Parameter("model", Reference.model(Reference.constant)))(
 					s"${modelRef.target}(model(${"\"id\""}), ${dataRef.target}(${
-						classToWrite.properties.map { prop => s"model(${prop.name.quoted})" }.mkString(", ")}))")))
+						classToWrite.properties.map { prop => s"model(${prop.name.quoted})" }.mkString(", ")}))")),
+				description = s"Used for reading ${classToWrite.name} data from the DB"
+			)
 		).writeTo(setup.sourceRoot/"database/factory"/classToWrite.packageName/s"$objectName.scala")
 			.map { _ => Reference(parentPackage, objectName) }
 	}

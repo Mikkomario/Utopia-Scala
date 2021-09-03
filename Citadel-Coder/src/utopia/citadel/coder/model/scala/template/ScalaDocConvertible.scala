@@ -9,8 +9,26 @@ import utopia.citadel.coder.model.scala.ScalaDocPart
   */
 trait ScalaDocConvertible
 {
+	// ABSTRACT --------------------------
+	
 	/**
-	  * @return A scaladoc part based on this item
+	  * @return scaladoc based on this item
 	  */
-	def toScalaDocPart: ScalaDocPart
+	def documentation: Vector[ScalaDocPart]
+	
+	
+	// COMPUTED --------------------------
+	
+	/**
+	  * @return A full scaladoc for this item
+	  */
+	def scalaDoc =
+	{
+		// Adds the documentation first
+		val documentationLines = documentation.flatMap { _.toCodeLines }
+		if (documentationLines.nonEmpty)
+			"/**" +: documentationLines.map { line => "  * " + line} :+  "  */"
+		else
+			Vector()
+	}
 }

@@ -1,14 +1,16 @@
 package utopia.citadel.coder.model.scala
 
-import utopia.citadel.coder.model.scala.template.{Referencing, ScalaConvertible}
+import utopia.citadel.coder.model.scala.ScalaDocKeyword.Param
+import utopia.citadel.coder.model.scala.template.{Referencing, ScalaConvertible, ScalaDocConvertible}
 
 /**
   * Represents a scala method parameter
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-case class Parameter(name: String, dataType: ScalaType, default: String = "", prefix: String = "")
-	extends Referencing with ScalaConvertible
+case class Parameter(name: String, dataType: ScalaType, default: String = "", prefix: String = "",
+                     description: String = "")
+	extends Referencing with ScalaConvertible with ScalaDocConvertible
 {
 	// IMPLEMENTED  ---------------------------
 	
@@ -19,6 +21,9 @@ case class Parameter(name: String, dataType: ScalaType, default: String = "", pr
 		val defaultString = if (default.isEmpty) "" else s" = $default"
 		s"$prefixString$name: ${dataType.toScala}$defaultString"
 	}
+	
+	override def documentation =
+		if (description.nonEmpty) Vector(ScalaDocPart(Param, s"$name $description")) else Vector()
 	
 	
 	// OTHER    ------------------------------
