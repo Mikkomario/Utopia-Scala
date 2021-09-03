@@ -1,4 +1,6 @@
-package utopia.citadel.coder.model.scala
+package utopia.citadel.coder.model.scala.template
+
+import utopia.citadel.coder.model.scala.Reference
 
 /**
   * Common trait for codes / pieces of code that (may) refer to external classes

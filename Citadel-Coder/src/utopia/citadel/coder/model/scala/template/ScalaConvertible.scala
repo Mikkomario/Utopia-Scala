@@ -1,4 +1,4 @@
-package utopia.citadel.coder.model.scala
+package utopia.citadel.coder.model.scala.template
 
 /**
   * Common trait for items which may be converted to scala code

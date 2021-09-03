@@ -1,9 +1,9 @@
-package utopia.citadel.coder.model.scala
+package utopia.citadel.coder.model.scala.template
+
+import utopia.flow.util.FileExtensions._
 
 import java.nio.file.Path
 import scala.io.Codec
-
-import utopia.flow.util.FileExtensions._
 
 object CodeConvertible
 {

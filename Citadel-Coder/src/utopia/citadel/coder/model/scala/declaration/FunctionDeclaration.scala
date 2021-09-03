@@ -1,4 +1,7 @@
-package utopia.citadel.coder.model.scala
+package utopia.citadel.coder.model.scala.declaration
+
+import utopia.citadel.coder.model.scala.template.CodeConvertible
+import utopia.citadel.coder.model.scala.{Code, Parameters}
 
 import scala.collection.immutable.VectorBuilder
 
@@ -35,29 +38,25 @@ trait FunctionDeclaration extends Declaration with CodeConvertible
 	{
 		val builder = new VectorBuilder[String]()
 		val overridePart = if (isOverridden) "override " else ""
-		val parametersString = params match
-		{
+		val parametersString = params match {
 			case Some(params) => params.toScala
 			case None => ""
 		}
 		
 		val header = s"$overridePart$baseString$parametersString = "
-		if (code.isSingleLine)
-		{
+		if (code.isSingleLine) {
 			val line = code.lines.head
 			// Case: Single line function
 			if (line.length + header.length < CodeConvertible.maxLineLength)
 				builder += header + line
 			// Case: Two-line function
-			else
-			{
+			else {
 				builder += header
 				builder += "\t" + line
 			}
 		}
 		// Case: Multi-line function
-		else
-		{
+		else {
 			builder += header + '{'
 			code.lines.foreach { builder += "\t" + _ }
 			builder += "}"

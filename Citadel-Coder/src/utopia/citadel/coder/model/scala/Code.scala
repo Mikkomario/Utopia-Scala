@@ -1,5 +1,7 @@
 package utopia.citadel.coder.model.scala
 
+import utopia.citadel.coder.model.scala.template.Referencing
+
 /**
   * Represents one or more lines of scala code
   * @author Mikko Hilpinen

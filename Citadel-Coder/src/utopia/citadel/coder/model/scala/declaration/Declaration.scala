@@ -1,6 +1,8 @@
-package utopia.citadel.coder.model.scala
+package utopia.citadel.coder.model.scala.declaration
 
 import utopia.citadel.coder.model.scala.Visibility.Public
+import utopia.citadel.coder.model.scala.Visibility
+import utopia.citadel.coder.model.scala.template.Referencing
 
 /**
   * Declares a scala item of some sort
@@ -32,8 +34,9 @@ trait Declaration extends Referencing
 	/**
 	  * @return The base part of this declaration as a string. E.g. "private def test"
 	  */
-	protected def baseString = {
-		val visibilityString = if (visibility == Public) "" else s"${visibility.toScala} "
+	protected def baseString =
+	{
+		val visibilityString = if (visibility == Public) "" else s"${ visibility.toScala } "
 		s"$visibilityString$keyword $name"
 	}
 }

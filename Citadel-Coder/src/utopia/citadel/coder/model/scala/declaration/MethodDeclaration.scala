@@ -1,6 +1,7 @@
-package utopia.citadel.coder.model.scala
+package utopia.citadel.coder.model.scala.declaration
 
 import utopia.citadel.coder.model.scala.Visibility.Public
+import utopia.citadel.coder.model.scala.{Code, Parameters, Reference, Visibility}
 
 object MethodDeclaration
 {

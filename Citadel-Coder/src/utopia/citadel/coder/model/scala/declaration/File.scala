@@ -1,4 +1,6 @@
-package utopia.citadel.coder.model.scala
+package utopia.citadel.coder.model.scala.declaration
+
+import utopia.citadel.coder.model.scala.template.CodeConvertible
 
 import scala.collection.immutable.VectorBuilder
 

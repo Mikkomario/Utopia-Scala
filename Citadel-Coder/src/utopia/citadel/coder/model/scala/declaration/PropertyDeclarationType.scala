@@ -1,6 +1,8 @@
-package utopia.citadel.coder.model.scala
+package utopia.citadel.coder.model.scala.declaration
 
 import utopia.citadel.coder.model.scala.Visibility.Public
+import utopia.citadel.coder.model.scala.template.ScalaConvertible
+import utopia.citadel.coder.model.scala.{Code, Parameter, Reference, Visibility}
 
 /**
   * An enumeration for different types of property declarations

@@ -1,8 +1,9 @@
 package utopia.citadel.coder.controller.writer
 
 import utopia.citadel.coder.model.data.{Class, ProjectSetup}
-import utopia.citadel.coder.model.scala.PropertyDeclarationType.ComputedProperty
-import utopia.citadel.coder.model.scala.{ClassDeclaration, File, Parameter, Reference}
+import utopia.citadel.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+import utopia.citadel.coder.model.scala.declaration.{ClassDeclaration, File}
+import utopia.citadel.coder.model.scala.{Parameter, Reference, declaration}
 import utopia.citadel.coder.util.NamingUtils
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
@@ -54,14 +55,14 @@ object ModelWriter
 				val constructionParams = Vector(Parameter("id", idType), Parameter("data", dataClassRef))
 				// ModelConvertible extension & implementation differs based on id type
 				if (classToWrite.useLongId)
-					ClassDeclaration(classToWrite.name, constructionParams,
+					declaration.ClassDeclaration(classToWrite.name, constructionParams,
 						Vector(Reference.stored(dataClassRef, idType)),
 						properties = Vector(
 							ComputedProperty("toModel", Set(Reference.valueConversions, Reference.constant),
 								isOverridden = true)("Constant(\"id\", id) + data.toModel")
 						), isCaseClass = true)
 				else
-					ClassDeclaration(classToWrite.name, constructionParams,
+					declaration.ClassDeclaration(classToWrite.name, constructionParams,
 						Vector(Reference.storedModelConvertible(dataClassRef)), isCaseClass = true)
 			}
 			val storePackage = s"${setup.projectPackage}.model.stored.${classToWrite.packageName}"

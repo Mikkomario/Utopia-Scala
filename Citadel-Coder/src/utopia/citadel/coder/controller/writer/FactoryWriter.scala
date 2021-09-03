@@ -1,8 +1,9 @@
 package utopia.citadel.coder.controller.writer
 
 import utopia.citadel.coder.model.data.{Class, ProjectSetup}
-import utopia.citadel.coder.model.scala.PropertyDeclarationType.ComputedProperty
-import utopia.citadel.coder.model.scala.{Extension, File, MethodDeclaration, ObjectDeclaration, Parameter, Reference}
+import utopia.citadel.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+import utopia.citadel.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration}
+import utopia.citadel.coder.model.scala.{Extension, Parameter, Reference}
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 

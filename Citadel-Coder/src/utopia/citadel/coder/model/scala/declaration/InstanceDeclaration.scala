@@ -1,8 +1,11 @@
-package utopia.citadel.coder.model.scala
+package utopia.citadel.coder.model.scala.declaration
+
+import utopia.citadel.coder.model.scala.template.CodeConvertible
+import utopia.citadel.coder.model.scala.{Code, Extension, Parameters}
+import utopia.flow.util.CombinedOrdering
+import utopia.flow.util.CollectionExtensions._
 
 import scala.collection.immutable.VectorBuilder
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.CombinedOrdering
 
 /**
   * Declares an object or a class
@@ -54,8 +57,7 @@ trait InstanceDeclaration extends Declaration with CodeConvertible
 		val builder = new VectorBuilder[String]
 		
 		// Writes the declaration and the extensions
-		val paramsString = constructorParams match
-		{
+		val paramsString = constructorParams match {
 			case Some(params) => params.toScala
 			case None => ""
 		}
@@ -63,13 +65,11 @@ trait InstanceDeclaration extends Declaration with CodeConvertible
 		val ext = extensions
 		if (ext.isEmpty)
 			builder += base
-		else
-		{
-			val extensionsString = s"extends ${ext.map { _.toScala }.mkString(" with ")}"
+		else {
+			val extensionsString = s"extends ${ ext.map { _.toScala }.mkString(" with ") }"
 			if (base.length + extensionsString.length < CodeConvertible.maxLineLength)
 				builder += base + ' ' + extensionsString
-			else
-			{
+			else {
 				builder += base
 				builder += "\t" + extensionsString
 			}
@@ -77,10 +77,10 @@ trait InstanceDeclaration extends Declaration with CodeConvertible
 		
 		// Starts writing the instance body
 		builder += "{"
+		
 		def writeBodySegment(parts: Seq[CodeConvertible], header: => String) =
 		{
-			if (parts.nonEmpty)
-			{
+			if (parts.nonEmpty) {
 				builder += s"\t// $header\t----------"
 				builder += "\t"
 				parts.foreach { att =>
@@ -90,6 +90,7 @@ trait InstanceDeclaration extends Declaration with CodeConvertible
 				builder += "\t"
 			}
 		}
+		
 		/* Write order is as follows:
 			1) Attributes
 			2) Creation code

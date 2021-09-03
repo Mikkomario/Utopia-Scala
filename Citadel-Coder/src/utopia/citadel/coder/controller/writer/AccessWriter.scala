@@ -1,9 +1,10 @@
 package utopia.citadel.coder.controller.writer
 
 import utopia.citadel.coder.model.data.{Class, ProjectSetup}
-import utopia.citadel.coder.model.scala.PropertyDeclarationType.ComputedProperty
 import utopia.citadel.coder.model.scala.Visibility.Private
-import utopia.citadel.coder.model.scala.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, Parameter, Reference, ScalaType, TraitDeclaration}
+import utopia.citadel.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+import utopia.citadel.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, TraitDeclaration}
+import utopia.citadel.coder.model.scala.{Parameter, Reference, ScalaType, declaration}
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 
@@ -101,7 +102,7 @@ object AccessWriter
 				val manyAccessDirectory = accessDirectory/"many"/classToWrite.packageName
 				val manyAccessTraitName = s"Many${classToWrite.name}Access"
 				File(manyAccessPackage,
-					TraitDeclaration(manyAccessTraitName,
+					declaration.TraitDeclaration(manyAccessTraitName,
 						Vector(Reference.manyRowModelAccess(modelRef), Reference.indexed),
 						// TODO: It's probably better to add support for plural property names
 						// Contains computed properties to access class properties

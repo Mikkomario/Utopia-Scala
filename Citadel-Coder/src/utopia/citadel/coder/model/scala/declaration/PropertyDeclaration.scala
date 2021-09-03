@@ -1,7 +1,8 @@
-package utopia.citadel.coder.model.scala
+package utopia.citadel.coder.model.scala.declaration
 
-import utopia.citadel.coder.model.scala.PropertyDeclarationType.ComputedProperty
 import utopia.citadel.coder.model.scala.Visibility.Public
+import utopia.citadel.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+import utopia.citadel.coder.model.scala.{Code, Parameter, Parameters, Visibility}
 
 /**
   * Used for declaring properties in scala code files
@@ -19,6 +20,7 @@ case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: S
 	  * @return Whether this is a computed property
 	  */
 	def isComputed = declarationType == ComputedProperty
+	
 	/**
 	  * @return Whether the value of this property is stored (not computed)
 	  */

@@ -1,5 +1,7 @@
 package utopia.citadel.coder.model.scala
 
+import utopia.citadel.coder.model.scala.template.{Referencing, ScalaConvertible}
+
 /**
   * Represents a scala method parameter
   * @author Mikko Hilpinen
