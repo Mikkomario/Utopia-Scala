@@ -46,7 +46,7 @@ trait InstanceDeclaration extends Declaration with CodeConvertible
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def references = (constructorParams ++ extensions ++ creationCode ++ properties ++ methods)
+	override def references = (constructorParams ++ extensions ++ creationCode ++ properties ++ methods ++ nested)
 		.flatMap { _.references }.toSet
 	
 	override def toCodeLines =
@@ -57,7 +57,7 @@ trait InstanceDeclaration extends Declaration with CodeConvertible
 		val paramsString = constructorParams match
 		{
 			case Some(params) => params.toScala
-			case None => "()"
+			case None => ""
 		}
 		val base = s"$baseString$paramsString"
 		val ext = extensions

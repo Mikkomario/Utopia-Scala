@@ -49,7 +49,7 @@ object AccessWriter
 		)
 		val distinctAccessBaseProperties = baseProperties :+
 			ComputedProperty("defaultOrdering", Set(factoryRef), isOverridden = true)(
-				if (classToWrite.recordsCreationTime) "factory.defaultOrdering" else "None")
+				if (classToWrite.recordsCreationTime) "Some(factory.defaultOrdering)" else "None")
 		// Property setters are common for both distinct access points (unique & many)
 		val propertySetters = classToWrite.properties.map { prop =>
 			MethodDeclaration(s"${prop.name}_=")(
@@ -79,7 +79,7 @@ object AccessWriter
 			// This access point is used for accessing individual items based on their id
 			val singleIdAccess = ClassDeclaration(singleIdAccessName,
 				Vector(Parameter("id", classToWrite.idType.toScala, prefix = "override val")),
-				Vector(uniqueAccessRef, Reference.uniqueModelAccess),
+				Vector(uniqueAccessRef, Reference.uniqueModelAccess(modelRef)),
 				// Implements the .condition property
 				properties = Vector(
 					ComputedProperty("condition", Set(Reference.valueConversions, Reference.sqlExtensions),

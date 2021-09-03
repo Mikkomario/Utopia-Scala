@@ -1,6 +1,6 @@
 package utopia.citadel.coder.test
 
-import utopia.citadel.coder.controller.writer.{DbModelWriter, FactoryWriter, ModelWriter, SqlWriter, TablesWriter}
+import utopia.citadel.coder.controller.writer.{AccessWriter, DbModelWriter, FactoryWriter, ModelWriter, SqlWriter, TablesWriter}
 import utopia.citadel.coder.model.data.{Class, ProjectSetup, Property}
 import utopia.citadel.coder.model.enumeration.BasicPropertyType.Text
 import utopia.citadel.coder.model.enumeration.PropertyType.{ClassReference, CreationTime, Optional}
@@ -25,7 +25,9 @@ object WriteTest extends App
 		TablesWriter(Vector(testClass)).flatMap { tablesRef =>
 			ModelWriter(testClass).flatMap { case (modelRef, dataRef) =>
 				FactoryWriter(testClass, tablesRef, modelRef, dataRef).flatMap { factoryRef =>
-					DbModelWriter(testClass, modelRef, dataRef, factoryRef)
+					DbModelWriter(testClass, modelRef, dataRef, factoryRef).flatMap { dbModelRef =>
+						AccessWriter(testClass, modelRef, factoryRef, dbModelRef)
+					}
 				}
 			}
 		}

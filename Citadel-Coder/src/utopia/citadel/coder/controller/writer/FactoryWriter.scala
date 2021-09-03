@@ -35,9 +35,11 @@ object FactoryWriter
 			// Extends FromValidatedRowModelFactory[A]
 			ObjectDeclaration(objectName, extensions,
 				// Contains implemented table reference
-				// TODO: Remove hard-coded "created" reference?
-				properties = if (classToWrite.recordsCreationTime) baseProperties :+
-					ComputedProperty("creationTimePropertyName", isOverridden = true)("\"created\"") else baseProperties,
+				properties = classToWrite.creationTimeProperty match {
+					case Some(createdProp) => baseProperties :+
+						ComputedProperty("creationTimePropertyName", isOverridden = true)(createdProp.name.quoted)
+					case None => baseProperties
+				},
 				// Contains fromValidatedModel implementation
 				methods = Set(MethodDeclaration("fromValidatedModel", Set(modelRef, dataRef, Reference.valueUnwraps),
 					isOverridden = true)(Parameter("model", Reference.model(Reference.constant)))(

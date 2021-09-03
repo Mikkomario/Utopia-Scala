@@ -36,6 +36,14 @@ case class Class(name: String, tableName: String, properties: Vector[Property], 
 	def idType =  if (useLongId) BigInteger else Integer
 	
 	/**
+	  * @return The property in this class which contains instance creation time. None if no such property is present.
+	  */
+	def creationTimeProperty = properties.find { _.dataType match {
+		case CreationTime => true
+		case _ => false
+	} }
+	
+	/**
 	  * @return Whether this class records a row / instance creation time
 	  */
 	def recordsCreationTime = properties.exists { _.dataType match {
