@@ -2,6 +2,8 @@
 
 ## v1.9 (in development)
 ### Breaking Changes
+- **UniqueModelAccess** trait no longer defines the index property. This property had naming conflicts with 
+  the **Indexed** trait.
 - **View** trait now requires `.target: SqlTarget` property. In most cases this shouldn't cause a build 
   error since most of the utilized sub-traits of this trait already required that property.
 ### New Methods

@@ -1,7 +1,6 @@
 package utopia.vault.nosql.access.single.model.distinct
 
 import utopia.flow.datastructure.immutable.Value
-import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleModelAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.sql.Condition
@@ -20,18 +19,6 @@ trait UniqueModelAccess[+A] extends SingleModelAccess[A] with DistinctModelAcces
 	  * @return Condition defined by this access point
 	  */
 	def condition: Condition
-	
-	
-	// COMPUTED -------------------------
-	
-	/**
-	  * @param connection Database connection (implicit)
-	  * @return The index of this model in database (may be empty)
-	  */
-	def index(implicit connection: Connection) = table.primaryColumn match {
-		case Some(primaryColumn) => pullColumn(primaryColumn)
-		case None => Value.empty
-	}
 	
 	
 	// IMPLEMENTED  ---------------------

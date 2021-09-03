@@ -15,6 +15,10 @@ object Reference
 	  * Imports implicit value unwraps (Flow)
 	  */
 	val valueUnwraps = apply("utopia.flow.generic.ValueUnwraps", "_")
+	/**
+	  * Imports implicit sql features (Vault)
+	  */
+	val sqlExtensions = apply("utopia.vault.sql.SqlExtensions", "_")
 	
 	/**
 	  * Imports the (generic) Value type from Flow
@@ -66,9 +70,17 @@ object Reference
 	  */
 	val singleRowModelAccess = apply("utopia.vault.nosql.access.single.model", "SingleRowModelAccess")
 	/**
+	  * Imports the ManyRowModelAccess trait (Vault)
+	  */
+	val manyRowModelAccess = apply("utopia.vault.nosql.access.many.model", "ManyRowModelAccess")
+	/**
 	  * Imports the DistinctModelAccess trait (Vault)
 	  */
 	val distinctModelAccess = apply("utopia.vault.nosql.access.template.model", "DistinctModelAccess")
+	/**
+	  * Imports the UniqueModelAccess trait (Vault)
+	  */
+	val uniqueModelAccess = apply("utopia.vault.nosql.access.single.model.distinct", "UniqueModelAccess")
 	/**
 	  * Imports the SingleIdModel class from Vault
 	  */
