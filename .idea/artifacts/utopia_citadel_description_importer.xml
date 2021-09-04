@@ -15,6 +15,7 @@
       </element>
       <element id="library" level="application" name="scala-sdk-2.13.3" />
       <element id="library" level="project" name="mariadb-java-client-1" />
+      <element id="file-copy" path="$PROJECT_DIR$/Citadel-Description-Importer/README.md" />
     </root>
   </artifact>
 </component>
