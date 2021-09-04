@@ -1,7 +1,7 @@
 package utopia.citadel.coder.controller
 
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.citadel.coder.model.data.{Class, Property}
+import utopia.citadel.coder.model.data.{Class, Name, Property}
 import utopia.citadel.coder.model.enumeration.BasicPropertyType.{Integer, Text}
 import utopia.citadel.coder.model.enumeration.{BasicPropertyType, PropertyType}
 import utopia.citadel.coder.model.enumeration.PropertyType.ClassReference
@@ -19,23 +19,37 @@ import java.nio.file.Path
   */
 object ClassReader
 {
-	val classSchema = ModelDeclaration("name" -> StringType)
-	val propertySchema = ModelDeclaration("name" -> StringType)
+	private val classSchema = ModelDeclaration("name" -> StringType)
+	private val propertySchema = ModelDeclaration("name" -> StringType)
 	
+	/**
+	  * Reads class data from a .json file
+	  * @param path Path to the file to read
+	  * @return Base package name, followed by the classes read. Failure if file reading or class parsing failed.
+	  */
 	def apply(path: Path) = JsonBunny(path).flatMap { v =>
 		val root = v.getModel
 		val basePackage = root("base_package").getString
-		// TODO: Add package reading
-		root("classes").getVector.flatMap { _.model }.tryMap { classSchema.validate(_).toTry.flatMap { classModel =>
-			parseClassFrom(classModel)
-		} }
+		val classes = root("classes").getModel.attributes.tryMap { packageAtt =>
+			packageAtt.value.model match
+			{
+				case Some(classModel) =>
+					classSchema.validate(classModel).toTry
+						.flatMap { parseClassFrom(_, packageAtt.name).map { Vector(_) } }
+				case None =>
+					packageAtt.value.getVector.flatMap { _.model }.tryMap { classSchema.validate(_).toTry }
+						.flatMap { classModels => classModels.tryMap { parseClassFrom(_, packageAtt.name) } }
+			}
+		}.map { _.flatten }
+		
+		classes.map { basePackage -> _ }
 	}
 	
-	private def parseClassFrom(classModel: Model[Constant]) =
+	private def parseClassFrom(classModel: Model[Constant], packageName: String) =
 	{
 		classModel("properties").getVector.flatMap { _.model }.tryMap { propertySchema.validate(_).toTry }
 			.map { propModels =>
-				val className = classModel("name").getString
+				val className = classModel("name").getString.capitalize
 				val tableName = classModel("table_name").stringOr(NamingUtils.camelToUnderscore(className))
 				val properties = propModels.map { propModel =>
 					val name = propModel("name").getString
@@ -59,11 +73,12 @@ object ClassReader
 								}
 							}
 					}
-					Property(name, columnName, actualDataType, propModel("doc").getString,
-						propModel("usage").getString, propModel("default").getString)
+					Property(Name(name, propModel("name_plural").stringOr(name + "s")), columnName, actualDataType,
+						propModel("doc").getString, propModel("usage").getString, propModel("default").getString)
 				}
-				Class(className, tableName, properties, classModel("package").getString,
-					classModel("doc").getString, classModel("use_long_id").getBoolean)
+				Class(Name(className, classModel("name_plural").string.map { _.capitalize }.getOrElse(className + "s")),
+					tableName, properties, packageName, classModel("doc").getString,
+					classModel("use_long_id").getBoolean)
 			}
 	}
 }

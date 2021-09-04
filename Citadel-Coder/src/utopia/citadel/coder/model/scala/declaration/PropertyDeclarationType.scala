@@ -16,6 +16,7 @@ sealed trait PropertyDeclarationType extends ScalaConvertible
 	  * @param name Name of the declared property
 	  * @param references References made within the code (default = empty)
 	  * @param visibility Visibility of this property (default = public)
+	  * @param description Documentation for this property
 	  * @param implicitParams Implicit parameters accepted by this (computed) property
 	  * @param isOverridden Whether this property overrides a base member (default = false)
 	  * @param line1 First line of code
@@ -23,7 +24,7 @@ sealed trait PropertyDeclarationType extends ScalaConvertible
 	  * @return A new property declaration
 	  */
 	def apply(name: String, references: Set[Reference] = Set(),
-	          visibility: Visibility = Public, implicitParams: Vector[Parameter] = Vector(), description: String = "",
+	          visibility: Visibility = Public, description: String = "", implicitParams: Vector[Parameter] = Vector(),
 	          isOverridden: Boolean = false)(line1: String, moreLines: String*) =
 		PropertyDeclaration(this, name, Code(line1 +: moreLines.toVector, references), visibility, description,
 			implicitParams, isOverridden)

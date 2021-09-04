@@ -1,7 +1,7 @@
 package utopia.citadel.coder.controller.writer
 
 import utopia.citadel.coder.model.data.{Class, ProjectSetup}
-import utopia.citadel.coder.model.scala.Visibility.Private
+import utopia.citadel.coder.model.scala.Visibility.Protected
 import utopia.citadel.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.citadel.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, TraitDeclaration}
 import utopia.citadel.coder.model.scala.{Parameter, Reference, ScalaType, declaration}
@@ -46,7 +46,8 @@ object AccessWriter
 		// (except that defaultOrdering is missing from non-distinct access points)
 		val baseProperties = Vector(
 			ComputedProperty("factory", Set(factoryRef), isOverridden = true)(factoryRef.target),
-			ComputedProperty("model", Set(dbModelRef), Private)(dbModelRef.target)
+			ComputedProperty("model", Set(dbModelRef), Protected,
+				"Factory used for constructing database the interaction models")(dbModelRef.target)
 		)
 		val distinctAccessBaseProperties = baseProperties :+
 			ComputedProperty("defaultOrdering", Set(factoryRef), isOverridden = true)(
@@ -56,9 +57,9 @@ object AccessWriter
 			MethodDeclaration(s"${prop.name}_=",
 				description = s"Updates the ${prop.name} of the targeted ${classToWrite.name} instance(s)",
 				returnDescription = s"Whether any ${classToWrite.name} instance was affected")(
-				Parameter(s"new${prop.name.capitalize}", prop.dataType.notNull.toScala,
+				Parameter(s"new${prop.name.singular.capitalize}", prop.dataType.notNull.toScala,
 					description = s"A new ${prop.name} to assign").withImplicits(connectionParam))(
-				s"putColumn(model.${prop.name}Column, new${prop.name.capitalize})")
+				s"putColumn(model.${prop.name}Column, new${prop.name.singular.capitalize})")
 		}.toSet
 		File(singleAccessPackage,
 			TraitDeclaration(uniqueAccessName,
@@ -68,7 +69,7 @@ object AccessWriter
 					Reference.indexed),
 				// Provides computed accessors for individual properties
 				distinctAccessBaseProperties ++ classToWrite.properties.map { prop =>
-					ComputedProperty(prop.name,
+					ComputedProperty(prop.name.singular,
 						description = prop.description.notEmpty.getOrElse(s"The ${prop.name} of this instance") +
 							". None if no instance (or value) was found.", implicitParams = Vector(connectionParam))(
 						s"pullColumn(model.${prop.name}Column).${prop.dataType.notNull.toScala.toScala.uncapitalize}")
@@ -76,7 +77,7 @@ object AccessWriter
 					s"pullColumn(index).${classToWrite.idType.toScala.toScala.uncapitalize}"),
 				propertySetters,
 				description = s"A common trait for access points that return individual and distinct ${
-					classToWrite.name} instances."
+					classToWrite.name.plural}."
 			)
 		).writeTo(singleAccessDirectory/s"$uniqueAccessName.scala").flatMap { _ =>
 			val uniqueAccessRef = Reference(singleAccessPackage, uniqueAccessName)
@@ -105,37 +106,38 @@ object AccessWriter
 							description = s"Database id of the targeted ${classToWrite.name} instance"))(
 						s"new $singleIdAccessName(id)")),
 					nested = Set(singleIdAccess),
-					description = s"Used for accessing individual ${classToWrite.name} instances at a time"
+					description = s"Used for accessing individual ${classToWrite.name.plural}"
 				)
 			).writeTo(singleAccessDirectory/s"$singleAccessName.scala").flatMap { _ =>
 				// Writes a trait common for the many model access points
 				val manyAccessPackage =  s"$accessPackage.many.${classToWrite.packageName}"
 				val manyAccessDirectory = accessDirectory/"many"/classToWrite.packageName
-				val manyAccessTraitName = s"Many${classToWrite.name}Access"
+				val manyAccessTraitName = s"Many${classToWrite.name.plural}Access"
 				File(manyAccessPackage,
 					declaration.TraitDeclaration(manyAccessTraitName,
 						Vector(Reference.manyRowModelAccess(modelRef), Reference.indexed),
-						// TODO: It's probably better to add support for plural property names
 						// Contains computed properties to access class properties
 						distinctAccessBaseProperties ++ classToWrite.properties.map { prop =>
-							ComputedProperty(s"${prop.name}s", implicitParams = Vector(connectionParam))(
+							ComputedProperty(prop.name.plural,
+								description = s"${prop.name.plural} of the accessible ${classToWrite.name.plural}",
+								implicitParams = Vector(connectionParam))(
 								s"pullColumn(model.${prop.name}Column).flatMap { _.${
 									prop.dataType.notNull.toScala.toScala.uncapitalize} }")
 						} :+ ComputedProperty("ids", implicitParams = Vector(connectionParam))(
 							s"pullColumn(index).flatMap { _.${classToWrite.idType.toScala.toScala.uncapitalize} }"),
 						propertySetters,
 						description = s"A common trait for access points which target multiple ${
-							classToWrite.name} instances at a time"
+							classToWrite.name.plural} at a time"
 					)
 				).writeTo(manyAccessDirectory/s"$manyAccessTraitName.scala").flatMap { _ =>
 					val manyAccessTraitRef = Reference(manyAccessPackage, manyAccessTraitName)
 					
 					// Writes the many model access point
-					val manyAccessName = s"Db${classToWrite.name}s"
+					val manyAccessName = s"Db${classToWrite.name.plural}"
 					File(manyAccessPackage,
 						ObjectDeclaration(manyAccessName, Vector(manyAccessTraitRef, Reference.unconditionalView),
 							description = s"The root access point when targeting multiple ${
-								classToWrite.name} instances at a time")
+								classToWrite.name.plural} at a time")
 					).writeTo(manyAccessDirectory/s"$manyAccessName.scala")
 						.map { _ => (uniqueAccessRef, Reference(singleAccessPackage, singleAccessName),
 							manyAccessTraitRef, Reference(manyAccessPackage, manyAccessName))

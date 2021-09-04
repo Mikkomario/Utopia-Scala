@@ -27,14 +27,14 @@ object ModelWriter
 	def apply(classToWrite: Class)(implicit codec: Codec, setup: ProjectSetup) =
 	{
 		val baseDirectory = setup.sourceRoot/"model"
-		val dataClassName = classToWrite.name + "Data"
+		val dataClassName = classToWrite.name.singular + "Data"
 		val dataClassPackage = s"${setup.projectPackage}.model.partial.${classToWrite.packageName}"
 		
 		// Writes the data model
 		File(dataClassPackage, Vector(
 			ClassDeclaration(dataClassName,
 				// Accepts a copy of each property. Uses default values where possible.
-				classToWrite.properties.map { prop => Parameter(prop.name, prop.dataType.toScala,
+				classToWrite.properties.map { prop => Parameter(prop.name.singular, prop.dataType.toScala,
 					prop.customDefault.notEmpty.getOrElse(prop.dataType.baseDefault), description = prop.description) },
 				// Extends ModelConvertible
 				Vector(Reference.modelConvertible),
@@ -42,7 +42,7 @@ object ModelWriter
 				properties = Vector(
 					ComputedProperty("toModel", Set(Reference.model, Reference.valueConversions), isOverridden = true)(
 						s"Model(Vector(${ classToWrite.properties.map { prop =>
-							s"${ NamingUtils.camelToUnderscore(prop.name).quoted } -> ${prop.name}" }
+							s"${ NamingUtils.camelToUnderscore(prop.name.singular).quoted } -> ${prop.name}" }
 							.mkString(", ") }))")
 				),
 				description = classToWrite.description,
@@ -61,14 +61,14 @@ object ModelWriter
 				val description = s"Represents a ${classToWrite.name} that has already been stored in the database"
 				// ModelConvertible extension & implementation differs based on id type
 				if (classToWrite.useLongId)
-					declaration.ClassDeclaration(classToWrite.name, constructionParams,
+					declaration.ClassDeclaration(classToWrite.name.singular, constructionParams,
 						Vector(Reference.stored(dataClassRef, idType)),
 						properties = Vector(
 							ComputedProperty("toModel", Set(Reference.valueConversions, Reference.constant),
 								isOverridden = true)("Constant(\"id\", id) + data.toModel")
 						), description = description, isCaseClass = true)
 				else
-					declaration.ClassDeclaration(classToWrite.name, constructionParams,
+					declaration.ClassDeclaration(classToWrite.name.singular, constructionParams,
 						Vector(Reference.storedModelConvertible(dataClassRef)),
 						description = description, isCaseClass = true)
 			}

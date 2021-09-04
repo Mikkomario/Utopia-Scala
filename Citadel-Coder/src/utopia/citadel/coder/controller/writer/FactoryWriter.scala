@@ -40,7 +40,7 @@ object FactoryWriter
 				Vector(baseTrait)
 		}
 		val baseProperties = Vector(ComputedProperty("table", Set(tablesRef), isOverridden = true)(
-			s"${tablesRef.target}.${classToWrite.name.uncapitalize}"))
+			s"${tablesRef.target}.${classToWrite.name.singular.uncapitalize}"))
 		// TODO: Add deprecation support
 		File(parentPackage,
 			// Extends FromValidatedRowModelFactory[A]
@@ -48,14 +48,16 @@ object FactoryWriter
 				// Contains implemented table reference
 				properties = classToWrite.creationTimeProperty match {
 					case Some(createdProp) => baseProperties :+
-						ComputedProperty("creationTimePropertyName", isOverridden = true)(createdProp.name.quoted)
+						ComputedProperty("creationTimePropertyName", isOverridden = true)(
+							createdProp.name.singular.quoted)
 					case None => baseProperties
 				},
 				// Contains fromValidatedModel implementation
 				methods = Set(MethodDeclaration("fromValidatedModel", Set(modelRef, dataRef, Reference.valueUnwraps),
 					isOverridden = true)(Parameter("model", Reference.model(Reference.constant)))(
 					s"${modelRef.target}(model(${"\"id\""}), ${dataRef.target}(${
-						classToWrite.properties.map { prop => s"model(${prop.name.quoted})" }.mkString(", ")}))")),
+						classToWrite.properties.map { prop =>
+							s"model(${prop.name.singular.quoted})" }.mkString(", ")}))")),
 				description = s"Used for reading ${classToWrite.name} data from the DB"
 			)
 		).writeTo(setup.sourceRoot/"database/factory"/classToWrite.packageName/s"$objectName.scala")

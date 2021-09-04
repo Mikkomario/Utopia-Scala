@@ -96,21 +96,6 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 		}
 		
 		// Starts writing the instance body
-		builder += "{"
-		
-		def writeBodySegment(parts: Seq[CodeConvertible], header: => String) =
-		{
-			if (parts.nonEmpty) {
-				builder += s"\t// $header\t----------"
-				builder += "\t"
-				parts.foreach { att =>
-					att.toCodeLines.foreach { builder += "\t" + _ }
-					builder += "\t"
-				}
-				builder += "\t"
-			}
-		}
-		
 		/* Write order is as follows:
 			1) Attributes
 			2) Creation code
@@ -120,30 +105,53 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 			6) Nested objects, then nested classes (first public)
 		*/
 		val (attributes, computed) = properties.divideBy { _.isComputed }
-		writeBodySegment(attributes, "ATTRIBUTES")
-		
-		creationCode.foreach { code =>
-			builder += "\t// INITIAL CODE\t----------"
-			builder += "\t"
-			code.lines.foreach { builder += "\t" + _ }
-			builder += "\t"
-			builder += "\t"
-		}
 		
 		val visibilityOrdering: Ordering[Declaration] = (a, b) => -a.visibility.compareTo(b.visibility)
 		val fullOrdering = new CombinedOrdering[Declaration](Vector(
 			visibilityOrdering, Ordering.by[Declaration, String] { _.name }))
 		
 		val (newComputed, implementedComputed) = computed.divideBy { _.isOverridden }
-		writeBodySegment(newComputed.sorted(visibilityOrdering), "COMPUTED")
-		
 		val (otherMethods, implementedMethods) = methods.divideBy { _.isOverridden }
-		writeBodySegment(implementedComputed.sorted(fullOrdering) ++
-			implementedMethods.toVector.sorted(fullOrdering), "IMPLEMENTED")
-		writeBodySegment(otherMethods.toVector.sorted(fullOrdering), "OTHER")
-		writeBodySegment(nested.toVector.sorted(fullOrdering), "NESTED")
 		
-		builder += "}"
+		builder ++= bodyLinesFrom(Vector(
+			attributes -> "ATTRIBUTES",
+			creationCode.toVector -> "INITIAL CODE",
+			newComputed.sorted(visibilityOrdering) -> "COMPUTED",
+			(implementedComputed.sorted(fullOrdering) ++
+				implementedMethods.toVector.sorted(fullOrdering)) -> "IMPLEMENTED",
+			otherMethods.toVector.sorted(fullOrdering) -> "OTHER",
+			nested.toVector.sorted(fullOrdering) -> "NESTED"
+		))
+		
 		builder.result()
+	}
+	
+	
+	// OTHER    ---------------------------------
+	
+	private def bodyLinesFrom(segments: Seq[(Iterable[CodeConvertible], String)]) =
+	{
+		val segmentsToWrite = segments
+			.map { case (code, header) => code.flatMap { _.toCodeLines } -> header }
+			.filter { _._1.nonEmpty }
+		if (segmentsToWrite.isEmpty)
+			Vector()
+		else
+		{
+			val builder = new VectorBuilder[String]
+			builder += "{"
+			segmentsToWrite.dropRight(1).foreach { case (lines, header) =>
+				builder += s"\t// $header\t--------------------"
+				builder += "\t"
+				builder ++= lines.map { "\t" + _ }
+				builder ++= Vector.fill(2)("\t")
+			}
+			val (lastLines, lastHeader) = segmentsToWrite.last
+			builder += s"\t// $lastHeader\t--------------------"
+			builder += "\t"
+			builder ++= lastLines.map { "\t" + _ }
+			builder += "}"
+			builder.result()
+		}
 	}
 }

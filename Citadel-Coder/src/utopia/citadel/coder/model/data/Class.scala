@@ -15,9 +15,9 @@ object Class
 	  * @param useLongId Whether to use long instead of int in the id property (default = false)
 	  * @return A new class
 	  */
-	def apply(name: String, properties: Vector[Property], packageName: String = "", description: String = "",
+	def apply(name: Name, properties: Vector[Property], packageName: String = "", description: String = "",
 	          useLongId: Boolean = false): Class =
-		apply(name, NamingUtils.camelToUnderscore(name), properties, packageName, description, useLongId)
+		apply(name, NamingUtils.camelToUnderscore(name.singular), properties, packageName, description, useLongId)
 }
 
 /**
@@ -31,7 +31,7 @@ object Class
   * @param description A description of this class
   * @param useLongId Whether to use long instead of int in the id property
   */
-case class Class(name: String, tableName: String, properties: Vector[Property], packageName: String,
+case class Class(name: Name, tableName: String, properties: Vector[Property], packageName: String,
                  description: String, useLongId: Boolean)
 {
 	/**

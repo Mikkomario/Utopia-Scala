@@ -136,7 +136,7 @@ object PropertyType
 				if (other.contains("option"))
 					BasicPropertyType.interpret(other.afterFirst("[").untilFirst("]"), length)
 				else
-					None
+					BasicPropertyType.interpret(other, length)
 		}
 	
 	

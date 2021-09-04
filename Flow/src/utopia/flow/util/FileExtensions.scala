@@ -90,7 +90,8 @@ object FileExtensions
 		def isRegularFile = Files.isRegularFile(p)
 		
 		/**
-		 * @return This path as an existing directory. Fails if this is a regular file and not a directory.
+		 * @return This path as an existing directory (creating the directory if possible & necessary).
+		  *         Fails if this is a regular file and not a directory.
 		 */
 		def asExistingDirectory =
 		{

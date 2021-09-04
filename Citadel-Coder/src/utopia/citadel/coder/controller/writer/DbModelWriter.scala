@@ -31,7 +31,7 @@ object DbModelWriter
 	         (implicit codec: Codec, setup: ProjectSetup) =
 	{
 		val parentPackage = s"${setup.projectPackage}.database.model.${classToWrite.packageName}"
-		val className = classToWrite.name + "Model"
+		val className = classToWrite.name.singular + "Model"
 		// The generated file contains the model class and the associated companion object
 		File(parentPackage,
 			ObjectDeclaration(className,
@@ -41,7 +41,7 @@ object DbModelWriter
 				properties = classToWrite.properties.flatMap { prop => Vector(
 					ImmutableValue(s"${prop.name}AttName",
 						description = s"Name of the property that contains ${classToWrite.name} ${prop.name}")(
-						prop.name.quoted),
+						prop.name.singular.quoted),
 					ComputedProperty(s"${prop.name}Column",
 						description = s"Column that contains ${classToWrite.name} ${prop.name}")(
 						s"table(${prop.name}AttName)")
@@ -64,9 +64,9 @@ object DbModelWriter
 						Parameter("id", classToWrite.idType.toScala, description = s"A ${classToWrite.name} id"))(
 						"apply(Some(id))")
 				) ++ classToWrite.properties.map { prop =>
-					MethodDeclaration(s"with${prop.name.capitalize}",
+					MethodDeclaration(s"with${prop.name.singular.capitalize}",
 						returnDescription = s"A model containing only the specified ${prop.name}")(
-						Parameter(prop.name, prop.dataType.notNull.toScala, description = prop.description))(
+						Parameter(prop.name.singular, prop.dataType.notNull.toScala, description = prop.description))(
 						s"apply(${prop.name} = Some(${prop.name}))")
 				},
 				description = s"Used for constructing $className instances and for inserting ${
@@ -75,7 +75,7 @@ object DbModelWriter
 			ClassDeclaration(className,
 				// Accepts a copy of all properties where each is wrapped in option (unless already an option)
 				Parameter("id", Optional(classToWrite.idType).toScala, "None", s"${classToWrite.name} database id") +:
-					classToWrite.properties.map { prop => Parameter(prop.name,
+					classToWrite.properties.map { prop => Parameter(prop.name.singular,
 						if (prop.dataType.isNullable) prop.dataType.toScala else ScalaType.option(prop.dataType.toScala),
 						"None", description = prop.description) },
 				// Extends StorableWithFactory[A]
@@ -91,12 +91,13 @@ object DbModelWriter
 				),
 				// adds withX(...) -methods for convenience
 				methods = classToWrite.properties.map { prop =>
-					MethodDeclaration(s"with${prop.name.capitalize}",
+					MethodDeclaration(s"with${prop.name.singular.capitalize}",
 						returnDescription = s"A new copy of this model with the specified ${prop.name}")(
-						Parameter(prop.name, prop.dataType.notNull.toScala, description = s"A new ${prop.name}"))(
+						Parameter(prop.name.singular, prop.dataType.notNull.toScala,
+							description = s"A new ${prop.name}"))(
 						s"copy(${prop.name} = Some(${prop.name}))")
 				}.toSet,
-				description = s"Used for interacting with ${classToWrite.name} instances in the database",
+				description = s"Used for interacting with ${classToWrite.name.plural} in the database",
 				isCaseClass = true)
 		).writeTo(setup.sourceRoot/"database/model"/classToWrite.packageName/s"$className.scala")
 			.map { _ => Reference(parentPackage, className) }
