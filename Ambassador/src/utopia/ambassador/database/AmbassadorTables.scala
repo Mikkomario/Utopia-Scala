@@ -73,16 +73,6 @@ object AmbassadorTables
 	  * @return Table that records cases where incomplete auth cases were resolved by logging in
 	  */
 	def incompleteAuthLogin = apply("incomplete_authentication_login")
-	/**
-	  * @return Table that records email validations sent as a result of an incomplete authentication process
-	  *         (only if email validation is enabled)
-	  */
-	def incompleteAuthEmailValidation = apply("incomplete_authentication_email_validation")
-	/**
-	  * @return Table that records new user accounts that were created based on
-	  *         the incomplete authentication processes
-	  */
-	def incompleteAuthRegistration = apply("incomplete_authentication_registration")
 	
 	
 	// OTHER    ----------------------------------

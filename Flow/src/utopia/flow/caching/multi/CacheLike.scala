@@ -1,18 +1,18 @@
 package utopia.flow.caching.multi
 
+import utopia.flow.datastructure.template.MapLike
+
 /**
   * Caches keep their values after requesting them
   * @author Mikko Hilpinen
   * @since 10.6.2019, v1.5+
   */
-trait CacheLike[-Key, +Value]
+trait CacheLike[-Key, +Value] extends MapLike[Key, Value]
 {
 	/**
-	  * Finds a value for a key from this cache
-	  * @param key A key
-	  * @return A value for the key, the value will be cached
+	  * @return All the items currently stored in this cache
 	  */
-	def apply(key: Key): Value
+	def cachedValues: Iterable[Value]
 	
 	/**
 	  * The currently cached value for specified key

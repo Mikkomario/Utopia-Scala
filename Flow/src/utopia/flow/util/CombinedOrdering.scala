@@ -9,7 +9,7 @@ import utopia.flow.util.CollectionExtensions._
  * @param orderings The orderings this ordering delegates ordering to. The first ordering to return a non-zero result
  *                  will be used.
  */
-class CombinedOrdering[A](orderings: Seq[Ordering[A]]) extends Ordering[A]
+class CombinedOrdering[A](orderings: Seq[Ordering[_ >: A]]) extends Ordering[A]
 {
 	override def compare(x: A, y: A) = orderings.findMap { order =>
 		val result = order.compare(x, y)

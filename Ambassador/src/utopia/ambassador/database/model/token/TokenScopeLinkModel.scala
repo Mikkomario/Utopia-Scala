@@ -11,9 +11,13 @@ object TokenScopeLinkModel
 	// ATTRIBUTES   ----------------------
 	
 	/**
-	  * Name of the property that refers to linked scope
+	  * Name of the property that refers to the linked scope
 	  */
 	val scopeIdAttName = "scopeId"
+	/**
+	  * Name of the property that refers to the linked token
+	  */
+	val tokenIdAttName = "tokenId"
 	
 	
 	// COMPUTED --------------------------
@@ -78,5 +82,5 @@ case class TokenScopeLinkModel(id: Option[Int] = None, tokenId: Option[Int] = No
 	
 	override def table = TokenScopeLinkModel.table
 	
-	override def valueProperties = Vector("id" -> id, "tokenId" -> tokenId, scopeIdAttName -> scopeId)
+	override def valueProperties = Vector("id" -> id, tokenIdAttName -> tokenId, scopeIdAttName -> scopeId)
 }

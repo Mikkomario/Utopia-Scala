@@ -34,12 +34,12 @@ object DbOrganization
 	  * @param id An organization id
 	  * @return An access point to that organization's data
 	  */
-	def apply(id: Int) = new SingleOrganization(id)
+	def apply(id: Int) = new DbSingleOrganization(id)
 	
 	
 	// NESTED	----------------------------
 	
-	class SingleOrganization(organizationId: Int)
+	class DbSingleOrganization(val organizationId: Int)
 	{
 		// COMPUTED	------------------------------
 		
@@ -48,17 +48,17 @@ object DbOrganization
 		/**
 		  * @return An access point to this organization's memberships (organization-user-links)
 		  */
-		def memberships = Memberships
+		def memberships = DbOrganizationMemberships
 		
 		/**
 		  * @return An access point to invitations to join this organization
 		  */
-		def invitations = Invitations
+		def invitations = DbOrganizationInvitations
 		
 		/**
 		  * @return An access point to deletions targeting this organization
 		  */
-		def deletions = Deletions
+		def deletions = DbOrganizationDeletions
 		
 		/**
 		  * @return An access point to descriptions of this organization
@@ -79,7 +79,7 @@ object DbOrganization
 		
 		// NESTED	-------------------------------
 		
-		object Memberships extends ManyRowModelAccess[Membership]
+		object DbOrganizationMemberships extends ManyRowModelAccess[Membership]
 		{
 			// COMPUTED	---------------------------
 			
@@ -156,7 +156,7 @@ object DbOrganization
 			}
 		}
 		
-		object Invitations extends InvitationsAccess
+		object DbOrganizationInvitations extends InvitationsAccess
 		{
 			// IMPLEMENTED	------------------------
 			
@@ -182,7 +182,7 @@ object DbOrganization
 				model.insert(InvitationData(organizationId, recipient, roleId, Now + validDuration, Some(senderId)))
 		}
 		
-		object Deletions extends OrganizationDeletionsAccess
+		object DbOrganizationDeletions extends OrganizationDeletionsAccess
 		{
 			// IMPLEMENTED	----------------------
 			

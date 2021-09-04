@@ -1,5 +1,16 @@
 # Utopia Exodus - List of Changes
 
+## v2.0.1 - 4.9.2021
+This update focuses on extending the custom extension capabilities of the base **Exodus** implementation.
+### New Features
+- **TasksNode** now provides access to individual **TaskNode**s which support custom extensions
+- Added **ExtendableSessionResourceFactory** class for easier session-based extensions
+### New Methods
+- **AuthorizedContext**
+  - Added `.handlePossibleValuePost(...)` that allows users to recover from cases where no request body was specified
+- **SessionUseCaseImplementation**
+  - Added `.factory(...)` -method to support session-based extendable resource factories
+
 ## v2.0 - 13.7.2021
 This release separates most of the database interaction into the new **Utopia Citadel** module and also makes 
 many of the existing REST resources customizable from the sub-projects.  

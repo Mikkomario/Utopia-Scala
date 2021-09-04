@@ -42,7 +42,6 @@ trait ModelAccess[+M, +A, +V] extends Access[A] with FactoryView[M]
 	  */
 	def findColumn(column: Column, condition: Condition, order: Option[OrderBy] = None)
 	              (implicit connection: Connection) = readColumn(column, Some(condition), order)
-	
 	/**
 	  * Reads the value of an individual attribute / column
 	  * @param attributeName Name of the attribute to read

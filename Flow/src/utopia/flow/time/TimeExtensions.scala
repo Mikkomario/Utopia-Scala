@@ -948,6 +948,14 @@ object TimeExtensions
 	
 	implicit class ExtendedPeriod(val p: Period) extends AnyVal with SelfComparable[Period]
 	{
+		// COMPUTED ---------------------------
+		
+		/**
+		  * @return An approximate duration based on this time period
+		  */
+		def toApproximateDuration = (((p.getYears * 12 + p.getMonths) * 30.44 + p.getDays) * 24).hours
+		
+		
 		// IMPLEMENTED	-----------------------
 		
 		override def repr = p

@@ -1,5 +1,25 @@
 # Utopia Vault - List of Changes
 
+## v1.9 - 4.9.2021
+This update mostly contains some non-breaking refactoring and utility updates. However, the bugfix to the `exists` 
+function in **FactoryView** / **View** is of major importance. I do recommend applying this update on a high priority.
+### Breaking Changes
+- **UniqueModelAccess** trait no longer defines the index property. This property had naming conflicts with 
+  the **Indexed** trait.
+- **View** trait now requires `target: SqlTarget` property. In most cases this shouldn't cause a build 
+  error since most of the utilized sub-traits of this trait already required that property.
+### New Methods
+- **View**
+  - `.contains(Column)` and `.containsNull(Column)` for checking if an accessible column is null or not
+    - Variation based on these: `.containsAttribute(String)` and `.containsNullAttribute(String) `
+### Bugfixes
+- `View.exists` now properly takes the `.globalCondition` property into account whereas the previous implementation 
+  (in **FactoryView** didn't)
+  - **This is a very important bugfix** since the previous bug can cause all kinds of logic errors.
+### Other Changes
+- Moved some methods, like `.exists`, `.isEmpty` and `.delete()` from sub-traits of **View** to the **View** trait.
+- Moved the `.find(Condition, Option[OrderBy])` -method from **SingleAccess** and **ManyAccess** to **Access**.
+
 ## v1.8 - 13.7.2021
 This update adds some long-delayed refactorings on project package structure and is therefore 
 quite error-inducing. However, this adds a lot of traits that reduce the need for copying and pasting and 

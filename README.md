@@ -284,6 +284,14 @@ The main point of **Utopia Exodus** is to handle the cumbersome user management 
 application. By using **Utopia Exodus**, you can setup the required structures very quickly and get to what only you can implement: 
 Your application business logic.
 
+### Utopia Ambassador
+*Look! Someone did the whole OAuth process for you*
+
+**Utopia Ambassador** has one main goal: Handle OAuth server-side process properly so that you don't have to. 
+If you already have an **Utopia Exodus** server, this module is very easy to add on top of it, and you 
+will be able to skip tens of hours of work. **Ambassador** comes with all rest nodes towards both 
+the web client and the 3rd party redirection, so you will only need to add your business logic.
+
 ### Utopia Journey
 *Leverage your Exodus server with a pre-built client interface*
 
@@ -297,19 +305,20 @@ the trouble of worrying about a secure interface.
 	- Utopia BunnyMunch
     - Utopia Vault
 		- Utopia Trove
+    - Utopia Inception
+        - Utopia Genesis
+            - Utopia Reflection
+                - Utopia Reach
+            - Utopia Conflict
     - Utopia Access
         - Utopia Nexus
             - Utopia Nexus for Tomcat
         - Utopia Disciple
 			- Utopia Annex
-    - Utopia Inception
-        - Utopia Genesis
-            - Utopia Reflection
-				- Utopia Reach
-            - Utopia Conflict
 	- Utopia Metropolis
 		- Utopia Citadel (also requires Vault)
 			- Utopia Exodus (also requires Nexus)
+                - Utopia Ambassador (also requires Disciple)
 		- Utopia Journey (also requires Annex)
            
 Basically every other *Utopia* module is dependent from **Flow**. All http-related modules are dependent from 

@@ -192,6 +192,17 @@ object DbUser extends SingleModelAccess[User]
 			
 			private def model = UserSettingsModel
 			
+			/**
+			  * @param connection Implicit DB Connection
+			  * @return This user's current user name
+			  */
+			def name(implicit connection: Connection) = pullAttribute(model.userNameAttName).string
+			/**
+			  * @param connection Implicit DB Connection
+			  * @return This user's current email address
+			  */
+			def email(implicit connection: Connection) = pullAttribute(model.emailAttName).string
+			
 			
 			// OTHER	-------------------
 			

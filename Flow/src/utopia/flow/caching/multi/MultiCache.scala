@@ -65,5 +65,7 @@ class MultiCache[Key, +Value, Part <: SingleCacheLike[Value]](private val makeCa
 	
 	// IMPLEMENTED	-------------------
 	
+	override def cachedValues = caches.values.flatMap { _.cached }
+	
 	override protected def cacheForKey(key: Key) = caches.getOrElseUpdate(key, makeCache(key))
 }

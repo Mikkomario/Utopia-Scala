@@ -8,21 +8,29 @@ import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.organization.DescribedTask
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
+import utopia.nexus.rest.ResourceSearchResult.{Error, Follow}
 import utopia.nexus.rest.Resource
-import utopia.nexus.rest.ResourceSearchResult.Error
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
 /**
   * Used for describing all available task types
   * @author Mikko Hilpinen
-  * @since 21.5.2020, v1
+  * @since 21.5.2020, v1.0
   */
 object TasksNode extends Resource[AuthorizedContext]
 {
 	override val name = "tasks"
 	
 	override val allowedMethods = Vector(Get)
+	
+	// Provides access to individual task nodes
+	override def follow(path: Path)(implicit context: AuthorizedContext) =
+		path.head.int match
+		{
+			case Some(taskId) => Follow(TaskNode(taskId), path.tail)
+			case None => Error(message = Some(s"${path.head} is not a valid task id"))
+		}
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
@@ -44,7 +52,4 @@ object TasksNode extends Resource[AuthorizedContext]
 			}
 		}
 	}
-	
-	override def follow(path: Path)(implicit context: AuthorizedContext) = Error(message = Some(
-		"Tasks currently doesn't contain any sub-nodes"))
 }

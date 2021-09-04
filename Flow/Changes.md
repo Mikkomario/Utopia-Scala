@@ -1,5 +1,33 @@
 # Utopia Flow - List of Changes
 
+## v1.11 - 4.9.2021
+This update fixes some issues that you may have faced when dealing with v1.10 changes 
+(cache classes & the **Period** class). 
+This update also contains a range of small utility additions.
+### Breaking Changes
+- Added an abstract `.cachedValues` property to **CacheLike** trait to support certain use cases 
+  which were available with the previous cache versions but not with v1.10.
+### New Features
+- Added **MapLike** trait that only specifies an `.apply(K)` method. 
+  This is to support wider range of input options in some functions (currently only used in the **Ambassador** module).
+  - **Model** and all **CacheLike** instances extend this trait.
+  - Instances of **MapLike** can also be created simply by passing a single-input function.
+### New Methods
+- **Path** (**FileExtensions**)
+  - Added `.writeUsing(PrintWriter => U)`, a modified version of `.writeWith(BufferedOutputStream => U)`
+- **Period** (**TimeExtensions**)
+  - Added `.toApproximateDuration` for converting a **Period** to a **FiniteDuration** (not exact)
+- **Regex**
+  - Companion Object
+    - Added `.lowerCaseLetter` and `.upperCaseLetter` properties
+  - Class
+    - Added `.rangesFrom(String)`
+- **String** (**StringExtensions**)
+  - `.quoted`, which returns the string within double quotes
+  - `.uncapitalize`, which returns the string with the first character in lower case
+### Other Changes
+- **CombinedOrdering** now accepts more generic **Ordering** parameters
+
 ## v1.10 - 13.7.2021
 This release provides you with a completely new set of **Lazy** containers to be used for caching.  
 There's also an update on time related classes, making durations more reliable.  

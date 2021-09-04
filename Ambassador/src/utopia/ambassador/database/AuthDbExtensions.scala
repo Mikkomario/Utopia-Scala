@@ -1,7 +1,11 @@
 package utopia.ambassador.database
 
+import utopia.ambassador.database.access.many.scope.DbScopes
 import utopia.ambassador.database.access.many.token.DbAuthTokens
+import utopia.ambassador.rest.util.AuthUtils
 import utopia.citadel.database.access.single.DbUser.DbSingleUser
+import utopia.citadel.database.access.single.organization.DbTask
+import utopia.citadel.database.access.single.organization.DbTask.DbSingleTask
 import utopia.vault.database.Connection
 
 /**
@@ -25,5 +29,36 @@ object AuthDbExtensions
 		  * @return Ids of the scopes that are currently available for this user without a new OAuth process
 		  */
 		def accessibleScopeIds(implicit connection: Connection) = authTokens.scopeIds
+		
+		
+		// OTHER ----------------------------
+		
+		/**
+		 * Checks whether this user is authorized to perform the specified task.
+		 * Only considers 3rd party service authentication. Doesn't check for organization memberships.
+		 * @param taskId Id of the task being performed
+		 * @param connection Implicit DB Connection
+		 * @return Whether this user is authorized to perform the specified task
+		 */
+		def isAuthorizedForTaskWithId(taskId: Int)(implicit connection: Connection) =
+			AuthUtils.testTaskAccess(DbTask(taskId).scopes.pull, accessibleScopeIds)
+		
+		/**
+		 * Checks whether this user is authorized to perform the specified task when only one service is considered
+		 * @param serviceId Id of the targeted service
+		 * @param taskId Id of the targeted task
+		 * @param connection Implicit DB Connection
+		 * @return Whether this user has access to perform that task when that service is considered
+		 */
+		def isAuthorizedForServiceTask(serviceId: Int, taskId: Int)(implicit connection: Connection) =
+			AuthUtils.testTaskAccess(DbTask(taskId).scopes.forServiceWithId(serviceId), accessibleScopeIds)
+	}
+	
+	implicit class DbAuthTask(val a: DbSingleTask) extends AnyVal
+	{
+		/**
+		  * @return An access point to this task's scopes
+		  */
+		def scopes = DbScopes.forTaskWithId(a.taskId)
 	}
 }

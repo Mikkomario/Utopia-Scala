@@ -20,5 +20,6 @@
     <orderEntry type="library" name="httpcore-4" level="project" />
     <orderEntry type="library" name="mariadb-java-client-1" level="project" />
     <orderEntry type="library" name="commons-logging-1" level="project" />
+    <orderEntry type="module" module-name="Disciple" />
   </component>
 </module>

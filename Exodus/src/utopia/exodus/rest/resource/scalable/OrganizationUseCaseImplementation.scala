@@ -45,7 +45,7 @@ object OrganizationUseCaseImplementation
 		}
 	
 	/**
-	 * Creates a new session authorized use case implementation factory
+	 * Creates a new session authorized use case implementation factory for organization-specific nodes
 	 * @param method Method expected by this implementation
 	 * @param f A function that accepts 1) Target organization id 2) active user session, 3) User membership id
 	 *          4) database connection, 5) request context, 6) remaining request path and

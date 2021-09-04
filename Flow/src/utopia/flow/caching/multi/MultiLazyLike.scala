@@ -39,6 +39,8 @@ object MultiLazy
 	private class MultiLazyWrapper[-K, +V, +P <: LazyLike[V]](caches: CacheLike[K, P])
 		extends MultiLazyLike[K, V, P]
 	{
+		override def cachedValues = caches.cachedValues.flatMap { _.current }
+		
 		override def cacheFor(key: K) = caches(key)
 	}
 }

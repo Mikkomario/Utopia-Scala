@@ -1,7 +1,6 @@
 package utopia.flow.util
 
 import utopia.flow.datastructure.mutable.ResettableLazy
-import CollectionExtensions._
 
 /**
  * Contains some utility extensions that extend the capabilities of standard strings
@@ -26,13 +25,13 @@ object StringExtensions
 		/**
 		 * @return Words that belong to this string. <b>This includes all non-whitespace characters but not newline characters</b>
 		 */
-		def words = s.linesIterator.toVector.flatMap { _.split(" ").toVector.map { _.trim }.filter { _.nonEmpty } }
+		def words = s.linesIterator.toVector.flatMap { _.split(" ").toVector
+			.map { _.trim }.filter { _.nonEmpty } }
 		
 		/**
 		 * @return The first word in this string (may include any characters except whitespace)
 		 */
 		def firstWord = untilFirst(" ")
-		
 		/**
 		 * @return The last word in this string (may include any characters except whitespace)
 		 */
@@ -47,11 +46,19 @@ object StringExtensions
 		 * @return A copy of this string without any non-letter characters
 		 */
 		def letters = s.filter { _.isLetter }
-		
 		/**
 		 * @return A copy of this string without any non-digit characters
 		 */
 		def digits = s.filter { _.isDigit }
+		
+		/**
+		  * @return A copy of this string surrounded with quotation marks (")
+		  */
+		def quoted = "\"" + s + "\""
+		/**
+		  * @return A copy of this string where the first character is in lower case
+		  */
+		def uncapitalize = if (s.isEmpty) s else s"${s.head.toLower}${s.drop(1)}"
 		
 		/**
 		  * @param range A range
@@ -106,7 +113,8 @@ object StringExtensions
 		 * @param more More strings
 		 * @return Whether this string contains all of the provided sub-strings (case-sensitive)
 		 */
-		def containsAll(first: String, second: String, more: String*): Boolean = containsAll(Vector(first, second) ++ more)
+		def containsAll(first: String, second: String, more: String*): Boolean =
+			containsAll(Vector(first, second) ++ more)
 		
 		/**
 		 * @param strings A number of strings
@@ -199,7 +207,7 @@ object StringExtensions
 		
 		/**
 		 * @param str A string
-		 * @return A portion of this string that comes after the first occurrence of specified string
+		 * @return A portion of this string that comes before the first occurrence of specified string
 		 *         (returns this string if specified string is not a substring of this string), (case-sensitive)
 		 */
 		def untilFirst(str: String) = optionIndexOf(str).map(s.take).getOrElse(s)

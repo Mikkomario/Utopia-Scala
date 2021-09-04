@@ -1,6 +1,6 @@
 package utopia.annex.model.response
 
-import utopia.annex.model.error.RequestFailedException
+import utopia.disciple.model.error.RequestFailedException
 
 import scala.util.Failure
 

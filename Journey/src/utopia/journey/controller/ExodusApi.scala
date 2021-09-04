@@ -10,8 +10,9 @@ import utopia.flow.async.VolatileOption
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.time.TimeExtensions._
 import utopia.journey.model.UserCredentials
-import utopia.annex.model.error.{RequestFailedException, UnauthorizedRequestException}
+import utopia.annex.model.error.UnauthorizedRequestException
 import utopia.disciple.apache.Gateway
+import utopia.disciple.model.error.RequestFailedException
 import utopia.flow.time.Now
 
 import scala.concurrent.{ExecutionContext, Future}

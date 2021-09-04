@@ -1,0 +1,16 @@
+<component name="ArtifactManager">
+  <artifact name="citadel-coder">
+    <output-path>$PROJECT_DIR$/out/artifacts/citadel_coder</output-path>
+    <root id="root">
+      <element id="archive" name="Citadel-Coder.jar">
+        <element id="directory" name="META-INF">
+          <element id="file-copy" path="$PROJECT_DIR$/Citadel-Coder/META-INF/MANIFEST.MF" />
+        </element>
+        <element id="module-output" name="Citadel-Coder" />
+        <element id="module-output" name="BunnyMunch" />
+        <element id="module-output" name="Flow" />
+      </element>
+      <element id="library" level="application" name="scala-sdk-2.13.3" />
+    </root>
+  </artifact>
+</component>

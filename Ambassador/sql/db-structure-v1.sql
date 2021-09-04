@@ -8,7 +8,9 @@
 CREATE TABLE oauth_service(
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(64) NOT NULL,
-    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX os_service_name_idx (name)
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
@@ -34,17 +36,17 @@ CREATE TABLE oauth_service(
 CREATE TABLE oauth_service_settings(
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     service_id INT NOT NULL,
+    client_id VARCHAR(128) NOT NULL,
+    client_secret VARCHAR(128) NOT NULL,
     authentication_url VARCHAR(128) NOT NULL,
     token_url VARCHAR(128) NOT NULL,
     redirect_url VARCHAR(128) NOT NULL,
-    client_id VARCHAR(128) NOT NULL,
-    client_secret VARCHAR(128) NOT NULL,
+    incomplete_auth_redirect_url VARCHAR(255),
+    default_completion_redirect_url VARCHAR(255),
     preparation_token_expiration_minutes INT NOT NULL DEFAULT 5,
     redirect_token_expiration_minutes INT NOT NULL DEFAULT 15,
     incomplete_auth_token_expiration_minutes INT NOT NULL DEFAULT 30,
     default_session_expiration_minutes INT NOT NULL DEFAULT 1320,
-    incomplete_auth_redirect_url VARCHAR(255),
-    default_completion_redirect_url VARCHAR(255),
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     INDEX oss_creation_idx (created),
@@ -59,11 +61,15 @@ CREATE TABLE oauth_service_settings(
 -- while other provide write access.
 -- Authorization is always limited to some scope. If this service requires a feature outside of
 -- the acquired scopes, a new authentication must be performed
+-- The priority parameter is used when multiple scopes can be chosen from. May be undefined.
+--      Priority should be based on level of access where smaller scopes should be prioritized higher than
+--      large (more invasive) scopes
 CREATE TABLE scope(
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     service_id INT NOT NULL,
     service_side_name VARCHAR(255) NOT NULL,
     client_side_name VARCHAR(64),
+    priority INT,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     INDEX s_service_idx (service_side_name),
@@ -122,10 +128,11 @@ CREATE TABLE oauth_preparation(
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     token VARCHAR(48) NOT NULL,
-    client_state VARCHAR(255),
+    client_state VARCHAR(2000),
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expiration DATETIME NOT NULL,
 
-    INDEX op_validation_idx (created, token),
+    INDEX op_validation_idx (expiration, token),
 
     CONSTRAINT op_u_authorized_user_fk FOREIGN KEY op_u_authorized_user_idx (user_id)
         REFERENCES `user`(id) ON DELETE CASCADE
@@ -135,7 +142,7 @@ CREATE TABLE oauth_preparation(
 CREATE TABLE scope_request_preparation(
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     preparation_id INT NOT NULL,
-    scope_id INT NO NULL,
+    scope_id INT NOT NULL,
 
     CONSTRAINT srp_open_preparation_fk FOREIGN KEY srp_open_preparation_idx (preparation_id)
         REFERENCES oauth_preparation(id) ON DELETE CASCADE,
@@ -149,8 +156,8 @@ CREATE TABLE scope_request_preparation(
 -- The most specific target available is used. If filters are left as NULLs,
 --      those are treated as default values. NULL, NULL is the default for any result.
 -- Result state is either success or failure, based on whether full authorization was acquired
--- Is Limited to Denials determines whether the failure was due to user denying access.
---      This filter is only used for the failure state. False indicates a default failure handler.
+-- Is Limited to Denials determines whether this redirect is limited to cases where
+--      the user denied access partially or totally. False indicates the default failure / success handler.
 -- Query parameters may be added to the specified urls
 CREATE TABLE oauth_completion_redirect_target(
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -159,7 +166,7 @@ CREATE TABLE oauth_completion_redirect_target(
     result_state_filter BOOLEAN,
     is_limited_to_denials BOOLEAN NOT NULL DEFAULT FALSE,
 
-    ocrt_filter_idx (result_state_filter, interactive_filter),
+    INDEX ocrt_filter_idx (result_state_filter, is_limited_to_denials),
 
     CONSTRAINT ocrt_op_linked_preparation_fk FOREIGN KEY ocrt_op_linked_preparation_idx (preparation_id)
         REFERENCES oauth_preparation(id) ON DELETE CASCADE
@@ -175,8 +182,9 @@ CREATE TABLE oauth_user_redirect(
     preparation_id INT NOT NULL,
     token VARCHAR(48) NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expiration DATETIME NOT NULL,
 
-    INDEX our_validation_idx (created, token),
+    INDEX our_validation_idx (expiration, token),
 
     CONSTRAINT our_op_used_preparation_fk FOREIGN KEY our_op_used_preparation_idx (preparation_id)
         REFERENCES oauth_preparation(id) ON DELETE CASCADE
@@ -231,7 +239,7 @@ CREATE TABLE oauth_token_scope(
 
     CONSTRAINT ots_ot_described_token_fk FOREIGN KEY ots_ot_described_token_idx (token_id)
         REFERENCES oauth_token(id) ON DELETE CASCADE,
-    CONSTRAINT ots_s_token_scope_fk FOREIGN KEY ots_s_token_scope_idx (scoped_id)
+    CONSTRAINT ots_s_token_scope_fk FOREIGN KEY ots_s_token_scope_idx (scope_id)
         REFERENCES scope(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -246,8 +254,9 @@ CREATE TABLE incomplete_authentication(
     oauth_code VARCHAR(255) NOT NULL,
     token VARCHAR(48) NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expiration DATETIME NOT NULL,
 
-    INDEX ia_validation_idx (created, token),
+    INDEX ia_validation_idx (expiration, token),
 
     CONSTRAINT ia_os_origin_service_fk FOREIGN KEY ia_os_origin_service_idx (service_id)
         REFERENCES oauth_service(id) ON DELETE CASCADE
@@ -265,35 +274,6 @@ CREATE TABLE incomplete_authentication_login(
     CONSTRAINT ial_ia_closed_auth_fk FOREIGN KEY ial_ia_closed_auth_idx (authentication_id)
         REFERENCES incomplete_authentication(id) ON DELETE CASCADE,
     CONSTRAINT ia_u_authenticated_user_fk FOREIGN KEY ia_u_authenticated_user_idx (user_id)
-        REFERENCES `user`(id) ON DELETE CASCADE
-
-)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
--- Lists email validations that were sent based on a new user account creation as part of a
--- 3rd party -initiated OAuth process (only used if email validation is enabled)
-CREATE TABLE incomplete_authentication_email_validation(
-    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    authentication_id INT NOT NULL,
-    validation_id INT NOT NULL,
-    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT iaev_ia_ongoing_auth_fk FOREIGN KEY iaev_ia_ongoing_auth_idx (authentication_id)
-        REFERENCES incomplete_authentication(id) ON DELETE CASCADE,
-    CONSTRAINT iaev_ev_validation_attempt_fk FOREIGN KEY iaev_ev_validation_attempt_idx (validation_id)
-        REFERENCES email_validation(id) ON DELETE CASCADE
-
-)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
--- Lists user accounts that were generated as a result of a 3rd party -initiated OAuth process
--- Was Success indicates whether the 3rd party authorization process was successful
-CREATE TABLE incomplete_authentication_registration(
-    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    authentication_id INT NOT NULL,
-    user_id INT NOT NULL,
-    was_success BOOLEAN NOT NULL DEFAULT FALSE,
-    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT iar_ia_closed_auth_fk FOREIGN KEY iar_ia_closed_auth_idx (authentication_id)
-        REFERENCES incomplete_authentication(id) ON DELETE CASCADE,
-    CONSTRAINT iar_u_registered_user_fk FOREIGN KEY iar_u_registered_user_idx (user_id)
         REFERENCES `user`(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;

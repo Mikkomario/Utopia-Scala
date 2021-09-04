@@ -52,6 +52,8 @@ class ReleasingCache[K, V <: AnyRef](request: K => V)(calculateReferenceLength: 
 	
 	// IMPLEMENTED  ------------------------------
 	
+	override def cachedValues = cache.cachedValues ++ weakReferences.values.flatMap { _.get }
+	
 	override def apply(key: K) = cached(key).getOrElse {
 		// Acquires a new value and stores a weak reference to it
 		val newValue = cache(key)

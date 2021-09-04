@@ -68,6 +68,11 @@ trait ResettableMultiLazyLike[-K, +V, +P <: ResettableLazyLike[V]] extends Multi
 	protected def findCache(key: K): Option[P]
 	
 	
+	// IMPLEMENTED  ----------------------
+	
+	override def cachedValues = currentCaches.flatMap { _.current }
+	
+	
 	// OTHER    --------------------------
 	
 	/**

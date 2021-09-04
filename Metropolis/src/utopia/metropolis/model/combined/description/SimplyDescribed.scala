@@ -2,6 +2,7 @@ package utopia.metropolis.model.combined.description
 
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.util.CollectionExtensions._
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.stored.description.DescriptionRole
 
@@ -58,6 +59,13 @@ trait SimplyDescribed extends Described with DescribedSimpleModelConvertible
 	  * @return A model
 	  */
 	override def toSimpleModelUsing(descriptionRoles: Iterable[DescriptionRole]) =
-		simpleBaseModel(descriptionRoles) ++
-			SimplyDescribed.descriptionPropertiesFrom(descriptions.map { _.description }, descriptionRoles)
+	{
+		val base = simpleBaseModel(descriptionRoles)
+		// Appends description properties, but takes care not to overwrite an existing property with an empty property
+		val descriptionProperties = SimplyDescribed.descriptionPropertiesFrom(
+			descriptions.map { _.description }, descriptionRoles).toVector
+		val (newProperties, overlappingProperties) = descriptionProperties.divideBy { att => base.contains(att.name) }
+		
+		base ++ (newProperties ++ overlappingProperties.filter { _.value.isDefined })
+	}
 }

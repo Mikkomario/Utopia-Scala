@@ -1,13 +1,16 @@
 package utopia.ambassador.database.access.many.scope
 
 import utopia.ambassador.database.factory.scope.{ScopeFactory, TaskScopeFactory}
-import utopia.ambassador.database.model.scope.TaskScopeLinkModel
+import utopia.ambassador.database.model.scope.{ScopeModel, TaskScopeLinkModel}
 import utopia.ambassador.database.model.token.TokenScopeLinkModel
 import utopia.ambassador.model.combined.scope.TaskScope
 import utopia.ambassador.model.stored.scope.Scope
+import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.{Select, Where}
+import utopia.vault.sql.SqlExtensions._
 
 /**
   * Used for accessing multiple scopes at a time
@@ -16,6 +19,12 @@ import utopia.vault.sql.{Select, Where}
   */
 object DbScopes extends ManyRowModelAccess[Scope]
 {
+	// COMPUTED ------------------------------------
+	
+	private def model = ScopeModel
+	private def taskLinkModel = TaskScopeLinkModel
+	
+	
 	// IMPLEMENTED  --------------------------------
 	
 	override def factory = ScopeFactory
@@ -27,11 +36,15 @@ object DbScopes extends ManyRowModelAccess[Scope]
 	// OTHER    ------------------------------------
 	
 	/**
+	  * @param serviceId Id of the targeted service
+	  * @return An access point to that service's specified scopes
+	  */
+	def forServiceWithId(serviceId: Int) = new DbServiceScopes(serviceId)
+	/**
 	  * @param taskId A task id
 	  * @return An access point to that task's scopes
 	  */
 	def forTaskWithId(taskId: Int) = new DbSingleTaskScopes(taskId)
-	
 	/**
 	  * @param tokenId A token id
 	  * @return An access point to that token's scopes
@@ -41,11 +54,57 @@ object DbScopes extends ManyRowModelAccess[Scope]
 	
 	// NESTED   ------------------------------------
 	
+	class DbServiceScopes(val serviceId: Int) extends ManyRowModelAccess[Scope] with SubView
+	{
+		// COMPUTED --------------------------------
+		
+		/**
+		  * @param connection Implicit DB Connection
+		  * @return Task ids associated with these scopes
+		  */
+		def taskIds(implicit connection: Connection) =
+		{
+			val target = table join taskLinkModel.table
+			connection(Select(target, taskLinkModel.taskIdColumn) + Where(condition)).rowIntValues.toSet
+		}
+		
+		
+		// IMPLEMENTED  ----------------------------
+		
+		override protected def parent = DbScopes
+		override protected def defaultOrdering = parent.defaultOrdering
+		override def factory = parent.factory
+		
+		override def filterCondition = model.withServiceId(serviceId).toCondition
+		
+		
+		// OTHER    ---------------------------------
+		
+		/**
+		  * @param scopeNames A set of service side scope names
+		  * @param connection Implicit DB connection
+		  * @return scopes within this service that match the specified names
+		  */
+		def matchingAnyOf(scopeNames: Iterable[String])(implicit connection: Connection) =
+			find(model.serviceSideNameColumn.in(scopeNames))
+	}
+	
 	class DbSingleTaskScopes(val taskId: Int) extends ManyRowModelAccess[TaskScope]
 	{
 		// COMPUTED --------------------------------
 		
 		private def linkModel = TaskScopeLinkModel
+		
+		
+		// OTHER    --------------------------------
+		
+		/**
+		  * @param serviceId Id of the targeted service
+		  * @param connection Implicit DB Connection
+		  * @return All scopes linked with this task that belong to the specified service
+		  */
+		def forServiceWithId(serviceId: Int)(implicit connection: Connection) =
+			find(model.withServiceId(serviceId).toCondition)
 		
 		
 		// IMPLEMENTED  ----------------------------

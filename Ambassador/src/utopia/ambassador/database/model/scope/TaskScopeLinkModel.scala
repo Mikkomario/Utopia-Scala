@@ -14,12 +14,25 @@ import java.time.Instant
 object TaskScopeLinkModel extends DataInserter[TaskScopeLinkModel, TaskScopeLink, TaskScopeLinkData]
 	with DeprecatableAfter[TaskScopeLinkModel]
 {
+	// ATTRIBUTES   -------------------------
+	
+	/**
+	  * Name of the property that refers to a task
+	  */
+	val taskIdAttName = "taskId"
+	
+	
 	// COMPUTED -----------------------------
 	
 	/**
 	  * @return The factory used by this model
 	  */
 	def factory = TaskScopeLinkFactory
+	
+	/**
+	  * Column that refers to a task
+	  */
+	def taskIdColumn = table(taskIdAttName)
 	
 	
 	// IMPLEMENTED  -------------------------
@@ -58,6 +71,6 @@ case class TaskScopeLinkModel(id: Option[Int] = None, taskId: Option[Int] = None
 	
 	override def factory = TaskScopeLinkModel.factory
 	
-	override def valueProperties = Vector("id" -> id, "taskId" -> taskId, "scopeId" -> scopeId,
+	override def valueProperties = Vector("id" -> id, taskIdAttName -> taskId, "scopeId" -> scopeId,
 		"isRequired" -> isRequired, "created" -> created, deprecationAttName -> deprecatedAfter)
 }

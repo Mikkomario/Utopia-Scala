@@ -1,5 +1,10 @@
 # Utopia Disciple - List of Changes
 
+## v1.4.2 - 4.9.2021
+This very minor update simply adds a new exception class for utility.
+### New Features
+- Added a **RequestFailedException** class
+
 ## v1.4.1 - 13.7.2021
 No new features, only supports the latest (breaking) changes in the **Utopia Access** module.
 

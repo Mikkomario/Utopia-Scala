@@ -11,8 +11,10 @@ import utopia.metropolis.model.StyledModelConvertible
   * @param serviceId Id of the service that uses this scope
   * @param officialName Name of this scope in the applicable service
   * @param clientSideName Name of this scope for client side context (optional)
+  * @param priority Priority specified for this scope, where higher scopes should be preferred (optional)
   */
-case class ScopeData(serviceId: Int, officialName: String, clientSideName: Option[String] = None)
+case class ScopeData(serviceId: Int, officialName: String, clientSideName: Option[String] = None,
+                     priority: Option[Int] = None)
 	extends StyledModelConvertible
 {
 	// COMPUTED -----------------------------------
@@ -28,5 +30,5 @@ case class ScopeData(serviceId: Int, officialName: String, clientSideName: Optio
 	override def toSimpleModel = Model(Vector("name" -> displayName))
 	
 	override def toModel = Model(Vector("service_id" -> serviceId, "official_name" -> officialName,
-		"display_name" -> clientSideName))
+		"display_name" -> clientSideName, "priority" -> priority))
 }

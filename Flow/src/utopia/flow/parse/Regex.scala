@@ -21,6 +21,8 @@ object Regex
 	val wordBoundary = Regex("\\b")
 	val newLine = Regex("\\n")
 	
+	val lowerCaseLetter = Regex("[a-zåäö]")
+	val upperCaseLetter = Regex("[A-ZÅÄÖ]")
 	val alpha = Regex("[a-zA-ZåäöÅÄÖ]")
 	val numericPositive = digit.oneOrMoreTimes
 	val numeric = Regex("\\-").noneOrOnce + numericPositive
@@ -97,7 +99,6 @@ case class Regex(string: String)
 	  * @return Whether this regex is empty
 	  */
 	def isEmpty = string.isEmpty
-	
 	/**
 	  * @return Whether this regex is defined (non-empty)
 	  */
@@ -126,12 +127,10 @@ case class Regex(string: String)
 	  * @return A copy of this regex without outside braces
 	  */
 	def withoutBrackets = if (hasBrackets) Regex(string.substring(1, string.length - 1)) else this
-	
 	/**
 	  * @return A copy of this regex with outside braces
 	  */
 	def withBraces = if (hasBrackets) this else Regex(s"[$string]")
-	
 	/**
 	  * @return A version of this regex wrapped within parenthesis
 	  */
@@ -141,12 +140,10 @@ case class Regex(string: String)
 	  * @return This regex in sequence 0 or more times
 	  */
 	def zeroOrMoreTimes = if (isEmpty || string.endsWith("*")) this else Regex(string + "*")
-	
 	/**
 	  * @return This regex in sequence one or more times
 	  */
 	def oneOrMoreTimes = if (isEmpty || string.endsWith("+")) this else Regex(string + "+")
-	
 	/**
 	  * @return This regex either 0 or exactly 1 times
 	  */
@@ -282,12 +279,26 @@ case class Regex(string: String)
 	}
 	
 	/**
+	  * @param str A string
+	  * @return All character ranges within that string that match this regular expression
+	  */
+	def rangesFrom(str: String) =
+	{
+		val matcher = pattern.matcher(str)
+		val builder = new VectorBuilder[Range]()
+		while (matcher.find())
+		{
+			builder += matcher.start() until matcher.end()
+		}
+		builder.result()
+	}
+	
+	/**
 	 * Splits the specified string using this regex
 	 * @param str String to split
 	 * @return Target string splitted by this regex
 	 */
 	def split(str: String) = str.split(string)
-	
 	/**
 	 * Splits the specified string using this regex. Works much like the standard split operation, except that
 	 * this variation doesn't remove the splitting string from the results but instead keeps them at the ends of the

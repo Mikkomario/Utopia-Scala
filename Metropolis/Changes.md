@@ -1,5 +1,10 @@
 # Utopia Metropolis - List of Changes
 
+## v1.1.1 - 4.9.2021
+This very small update fixes a problem that occurred in some **SimplyDescribed** implementations.
+### Other Changes
+- **SimplyDescribed** no longer overwrites existing properties with **empty** (null) description properties.
+
 ## v1.1 - 13.7.2021
 The most important update in this release is the addition of simple model styling, 
 which is utilized in **Utopia Exodus**, making request responses more user-friendly for 

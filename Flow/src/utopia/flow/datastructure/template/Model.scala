@@ -9,7 +9,7 @@ import utopia.flow.parse.JsonConvertible
  * @since 26.11.2016
  * @tparam Attribute The type of the properties stored within this model
  */
-trait Model[+Attribute <: Property] extends JsonConvertible
+trait Model[+Attribute <: Property] extends MapLike[String, Value] with JsonConvertible
 {
     // ABSTRACT    --------------
     
@@ -83,14 +83,14 @@ trait Model[+Attribute <: Property] extends JsonConvertible
     def hasOnlyEmptyValues = !hasNonEmptyValues
     
     
-    // OPERATORS    ---------------
+    // IMPLEMENTED    -------------
     
     /**
      * Gets the value of a single attribute in this model
      * @param attName The name of the attribute from which the value is taken
      * @return The value of the attribute with the provided name
      */
-    def apply(attName: String): Value = get(attName).value
+    override def apply(attName: String): Value = get(attName).value
     
     
     // OTHER METHODS    -----------

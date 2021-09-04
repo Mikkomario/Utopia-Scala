@@ -16,6 +16,10 @@ Ready server structure for user management, localization and authorization
 Support for email validation / two-step authentication
 - Foundation for adding your own implementation of email validation 
   (this project doesn't provide a concrete implementation, however)
+  
+## Available Extensions
+- utopia.exodus.database.**UserDbExtensions**
+  - Adds new authentication-related methods to individual user access points
 
 ## Implementation Hints
 For REST API interface details, please refer to [API Documentation]
@@ -27,6 +31,8 @@ Before using Exodus, you must call `ExodusContext.setup(...)` method.
 - This removes the need to call `CitadelContext.setup(...)` separately
 
 You will need to add **ExodusResources** values to your **RequestHandler** when setting up the server.
+
+
 
 ### Classes you should be aware of
 - **AuthorizedContext** - You may use this context in your **Resource** implementations to make sure incoming 

@@ -78,6 +78,8 @@ class DatabaseCache[A, Key](connectionPool: ConnectionPool, accessor: SingleMode
 	
 	// IMPLEMENTED	----------------------
 	
+	override def cachedValues = cache.cachedValues
+	
 	override def apply(key: Key) = cache(key)
 	
 	override def cached(key: Key) = cache.cached(key)
