@@ -1,6 +1,7 @@
 # Utopia Exodus - List of Changes
 
-## v2.0.1 (in development)
+## v2.0.1 - 4.9.2021
+This update focuses on extending the custom extension capabilities of the base **Exodus** implementation.
 ### New Features
 - **TasksNode** now provides access to individual **TaskNode**s which support custom extensions
 - Added **ExtendableSessionResourceFactory** class for easier session-based extensions

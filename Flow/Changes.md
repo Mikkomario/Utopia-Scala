@@ -1,6 +1,9 @@
 # Utopia Flow - List of Changes
 
-## v1.11 (in development)
+## v1.11 - 4.9.2021
+This update fixes some issues that you may have faced when dealing with v1.10 changes 
+(cache classes & the **Period** class). 
+This update also contains a range of small utility additions.
 ### Breaking Changes
 - Added an abstract `.cachedValues` property to **CacheLike** trait to support certain use cases 
   which were available with the previous cache versions but not with v1.10.

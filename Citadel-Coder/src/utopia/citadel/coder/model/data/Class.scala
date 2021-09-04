@@ -1,6 +1,6 @@
 package utopia.citadel.coder.model.data
 
-import utopia.citadel.coder.model.enumeration.BasicPropertyType.{BigInteger, Integer}
+import utopia.citadel.coder.model.enumeration.BasicPropertyType.{LongNumber, IntNumber}
 import utopia.citadel.coder.model.enumeration.PropertyType.CreationTime
 import utopia.citadel.coder.util.NamingUtils
 
@@ -37,7 +37,7 @@ case class Class(name: Name, tableName: String, properties: Vector[Property], pa
 	/**
 	  * @return Type of the ids used in this class
 	  */
-	def idType =  if (useLongId) BigInteger else Integer
+	def idType =  if (useLongId) LongNumber else IntNumber
 	
 	/**
 	  * @return The property in this class which contains instance creation time. None if no such property is present.

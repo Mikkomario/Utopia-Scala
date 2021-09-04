@@ -1,6 +1,8 @@
 # Utopia Disciple - List of changes
 
-## v1.1 (in development)
+## v1.1 - 4.9.2021
+This update introduces a few small utility additions. The "breaking" changes to **DbOrganization** are 
+quite unlikely to affect you.
 ### Breaking Changes
 - Changed sub-class and sub-object names in **DbOrganization**
 ### New Features

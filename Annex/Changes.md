@@ -1,6 +1,8 @@
 # Utopia Annex - List of Changes
 
-## v1.0.2 (in development)
+## v1.0.2 - 4.9.2021
+This update simply supports changes in **Utopia Disciple** v1.4.2 update that added its own 
+**RequestFailedException** class.
 ### Deprecations
 - Deprecated **RequestFailedException** in favor of another exception with the same name in **Utopia Disciple**
 

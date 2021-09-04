@@ -11,6 +11,8 @@ object ScalaType
 	val string = basic("String")
 	val int = basic("Int")
 	val long = basic("Long")
+	val double = basic("Double")
+	val boolean = basic("Boolean")
 	
 	
 	// IMPLICIT  ------------------------------

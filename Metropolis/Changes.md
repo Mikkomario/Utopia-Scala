@@ -1,6 +1,7 @@
 # Utopia Metropolis - List of Changes
 
-## v1.1.1 (in development)
+## v1.1.1 - 4.9.2021
+This very small update fixes a problem that occurred in some **SimplyDescribed** implementations.
 ### Other Changes
 - **SimplyDescribed** no longer overwrites existing properties with **empty** (null) description properties.
 

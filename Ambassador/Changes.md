@@ -1,6 +1,9 @@
 # Utopia Ambassador - List of Changes
 
-## v1.1 (in development)
+## v1.1 - 4.9.2021
+This update contains important practical bugfixes and additions, the kind of things one finds out during early 
+use case testing. **GoogleRedirector** interface was updated to support a wider range of features, 
+making this a breaking update for Google OAuth users.
 ### Breaking Changes
 - **GoogleRedirector** is now a class and not an object, since it takes construction parameters.
   - Use `GoogleRedirector.default` instead of **GoogleRedirector** itself.

@@ -6,6 +6,8 @@ object Reference
 	  * Imports java.time.Instant
 	  */
 	val instant = apply("java.time", "Instant")
+	val localDate = apply("java.time", "LocalDate")
+	val localTime = apply("java.time", "LocalTime")
 	
 	/**
 	  * Imports implicit value conversions (Flow)

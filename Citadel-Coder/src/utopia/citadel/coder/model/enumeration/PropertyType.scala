@@ -58,6 +58,11 @@ sealed trait BasicPropertyType extends PropertyType
 
 object BasicPropertyType
 {
+	// COMPUTED -----------------------
+	
+	private def objectValues = Vector(IntNumber, LongNumber, DoubleNumber, Bool, DateTime, Date, Time)
+	
+	
 	// OTHER    -----------------------
 	
 	/**
@@ -66,14 +71,19 @@ object BasicPropertyType
 	  * @return Basic property type matching that specification. None if no match was found.
 	  */
 	def interpret(typeName: String, length: Option[Int] = None) =
-		typeName.toLowerCase match
-		{
-			case "text" => Some(Text(length.getOrElse(255)))
-			case "int" => Some(Integer)
-			case "long" => Some(BigInteger)
-			case "datetime" => Some(DateTime)
-			case _ => None
+	{
+		val lowerName = typeName
+		objectValues.find { v =>
+			lowerName == v.toScala.toScala.toLowerCase ||
+				lowerName == v.toSql.toLowerCase ||
+				lowerName == v.toString.toLowerCase
+		}.orElse {
+			if (lowerName == "text" || lowerName == "string" || lowerName == "varchar")
+				Some(Text(length.getOrElse(255)))
+			else
+				None
 		}
+	}
 	
 	
 	// NESTED   -----------------------------
@@ -81,7 +91,7 @@ object BasicPropertyType
 	/**
 	  * Standard integer property type
 	  */
-	case object Integer extends BasicPropertyType
+	case object IntNumber extends BasicPropertyType
 	{
 		override def toSqlBase = "INT"
 		override def toScala = ScalaType.int
@@ -91,7 +101,7 @@ object BasicPropertyType
 	/**
 	  * Long / Bigint property type
 	  */
-	case object BigInteger extends BasicPropertyType
+	case object LongNumber extends BasicPropertyType
 	{
 		override def toSqlBase = "BIGINT"
 		override def toScala = ScalaType.long
@@ -99,13 +109,53 @@ object BasicPropertyType
 	}
 	
 	/**
-	  * Date + Time (UTC) property type.
+	  * Double property type
+	  */
+	case object DoubleNumber extends BasicPropertyType
+	{
+		override def toSqlBase = "DOUBLE"
+		override def toScala = ScalaType.double
+		override def baseDefault = ""
+	}
+	
+	/**
+	  * Boolean property type
+	  */
+	case object Bool extends BasicPropertyType
+	{
+		override def toSqlBase = "BOOLEAN"
+		override def toScala = ScalaType.boolean
+		override def baseDefault = "false"
+	}
+	
+	/**
+	  * Date + Time (UTC) / Instant / Datetime property type.
 	  */
 	case object DateTime extends BasicPropertyType
 	{
 		override def toSqlBase = "DATETIME"
 		override def toScala = Reference.instant
 		override def baseDefault = "Instant.now()"
+	}
+	
+	/**
+	  * Date / LocalDate type
+	  */
+	case object Date extends BasicPropertyType
+	{
+		override def toSqlBase = "DATE"
+		override def toScala = Reference.localDate
+		override def baseDefault = "LocalDate.now()"
+	}
+	
+	/**
+	  * Time / LocalTime type
+	  */
+	case object Time extends BasicPropertyType
+	{
+		override def toSqlBase = "TIME"
+		override def toScala = Reference.localTime
+		override def baseDefault = "LocalTime.now()"
 	}
 	
 	/**
@@ -177,7 +227,7 @@ object PropertyType
 	  * @param dataType Data type used in the reference
 	  * @param isNullable Whether property values should be optional
 	  */
-	case class ClassReference(referencedTableName: String, dataType: BasicPropertyType = BasicPropertyType.Integer,
+	case class ClassReference(referencedTableName: String, dataType: BasicPropertyType = BasicPropertyType.IntNumber,
 	                          isNullable: Boolean = false)
 		extends PropertyType
 	{

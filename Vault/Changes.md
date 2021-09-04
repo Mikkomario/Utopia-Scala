@@ -1,10 +1,12 @@
 # Utopia Vault - List of Changes
 
-## v1.9 (in development)
+## v1.9 - 4.9.2021
+This update mostly contains some non-breaking refactoring and utility updates. However, the bugfix to the `exists` 
+function in **FactoryView** / **View** is of major importance. I do recommend applying this update on a high priority.
 ### Breaking Changes
 - **UniqueModelAccess** trait no longer defines the index property. This property had naming conflicts with 
   the **Indexed** trait.
-- **View** trait now requires `.target: SqlTarget` property. In most cases this shouldn't cause a build 
+- **View** trait now requires `target: SqlTarget` property. In most cases this shouldn't cause a build 
   error since most of the utilized sub-traits of this trait already required that property.
 ### New Methods
 - **View**

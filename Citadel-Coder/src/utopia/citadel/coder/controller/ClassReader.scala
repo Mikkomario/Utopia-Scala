@@ -2,7 +2,7 @@ package utopia.citadel.coder.controller
 
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.citadel.coder.model.data.{Class, Name, Property}
-import utopia.citadel.coder.model.enumeration.BasicPropertyType.{Integer, Text}
+import utopia.citadel.coder.model.enumeration.BasicPropertyType.{IntNumber, Text}
 import utopia.citadel.coder.model.enumeration.{BasicPropertyType, PropertyType}
 import utopia.citadel.coder.model.enumeration.PropertyType.ClassReference
 import utopia.citadel.coder.util.NamingUtils
@@ -63,13 +63,13 @@ object ClassReader
 							ClassReference(tableName, baseDataType.findMap {
 								case b: BasicPropertyType => Some(b)
 								case _ => None
-							}.getOrElse(Integer))
+							}.getOrElse(IntNumber))
 						case None =>
 							baseDataType.getOrElse {
 								length match
 								{
 									case Some(length) => Text(length)
-									case None => Integer
+									case None => IntNumber
 								}
 							}
 					}
