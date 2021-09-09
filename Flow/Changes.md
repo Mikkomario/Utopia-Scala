@@ -1,5 +1,13 @@
 # Utopia Flow - List of Changes
 
+## v1.11.1 - 9.9.2021
+This small patch resolves a bug in **TimeExtensions** where two dates couldn't be subtracted from each other 
+(since v1.10).
+### Bugfixes
+- **LocalDate** (**TimeExtensions**)
+  - `-(other: LocalDate)` no longer throws (was dependent on `Duration.between(...)`, 
+  which can't handle LocalDates, apparently)
+
 ## v1.11 - 4.9.2021
 This update fixes some issues that you may have faced when dealing with v1.10 changes 
 (cache classes & the **Period** class). 
