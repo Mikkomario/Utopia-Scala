@@ -146,6 +146,14 @@ levels to operate on when it comes to database interactions. I especially enjoy 
 you don't need to write a single string of SQL. But unlike other noSQL-frameworks, this one actually still lets 
 you operate directly on SQL when or if you need it.
 
+#### Utopia Vault Coder
+*Allows you to skip hours of work at project setup*
+
+This **Vault** add-on helps you by generating much of the model and database interaction code you would
+otherwise have to write manually, saving a lot of your time. If you're using **Utopia Vault** or any of the
+dependent modules (especially if you're using **Citadel**), please check the README file of this application for
+more details.
+
 ### Utopia Trove
 *Embedded databases made easy*
 
@@ -276,12 +284,6 @@ that extends this module. On client-side, consider using **Utopia Trove** to set
 The **Citadel** module comes with this utility application for importing item descriptions into your database 
 without difficult SQL operations. If you're utilizing **Utopia Citadel** or any of the dependent modules in 
 your project, please make sure to check out the README file of this application for more details.
-
-#### Utopia Citadel Coder
-This **Citadel** module add-on helps you by generating much of the model and database interaction code you would 
-otherwise have to write manually, saving a lot of your time. If you're using **Utopia Citadel** or any of the 
-dependent modules (or even if you're only using **Vault**), please check the README file of this application for 
-more details.
 
 ### Utopia Exodus
 *Server-base that lets you skip right to your business logic*

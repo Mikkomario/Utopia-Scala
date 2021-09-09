@@ -4,14 +4,14 @@
     <root id="root">
       <element id="archive" name="Citadel-Coder.jar">
         <element id="directory" name="META-INF">
-          <element id="file-copy" path="$PROJECT_DIR$/Citadel-Coder/META-INF/MANIFEST.MF" />
+          <element id="file-copy" path="$PROJECT_DIR$/Vault-Coder/META-INF/MANIFEST.MF" />
         </element>
-        <element id="module-output" name="Citadel-Coder" />
+        <element id="module-output" name="Vault-Coder" />
         <element id="module-output" name="BunnyMunch" />
         <element id="module-output" name="Flow" />
       </element>
       <element id="library" level="application" name="scala-sdk-2.13.3" />
-      <element id="file-copy" path="$PROJECT_DIR$/Citadel-Coder/README.md" />
+      <element id="file-copy" path="$PROJECT_DIR$/Vault-Coder/README.md" />
     </root>
   </artifact>
 </component>
