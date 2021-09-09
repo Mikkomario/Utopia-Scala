@@ -476,7 +476,7 @@ object TimeExtensions
 		  * @param other Another date
 		  * @return Time period between these two dates (from specified date to this date)
 		  */
-		def -(other: LocalDate) = Days(Duration.between(other, d).toDays.toInt)
+		def -(other: LocalDate) = Days((d.toEpochDay - other.toEpochDay).toInt)
 		/**
 		  * Subtracts a time duration to this date. Eg. 2.1.2001 - 3 hours would be 1.1.2001 21:00.
 		  * @param duration A time duration
