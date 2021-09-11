@@ -1,5 +1,9 @@
 # Utopia Flow - List of Changes
 
+## v1.11.2 (in development)
+### Other Changes
+- `TryLoop.attempt(...)` now has a special handling for cases where the maximum number of allowed attempts is 1 or lower
+
 ## v1.11.1 - 9.9.2021
 This small patch resolves a bug in **TimeExtensions** where two dates couldn't be subtracted from each other 
 (since v1.10).

@@ -2,7 +2,7 @@ package utopia.flow.async
 
 import utopia.flow.time.WaitTarget
 
-import scala.concurrent.{ExecutionContext, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Try}
 
@@ -18,13 +18,26 @@ object TryLoop
 	 * @tparam A Type of operation result
 	 * @return Asynchronous future of the final operation result (contains a failure if max attempts was reached)
 	 */
-	def attempt[A](durationBetweenAttempts: Duration, maxAttempts: Int)(operation: Try[A])(implicit exc: ExecutionContext) =
+	def attempt[A](durationBetweenAttempts: Duration, maxAttempts: Int)(operation: Try[A])
+	              (implicit exc: ExecutionContext) =
 	{
-		val loop = new TryLoop(durationBetweenAttempts, maxAttempts)(operation)
-		loop.registerToStopOnceJVMCloses()
-		loop.startAsync()
-		loop.future
+		// Case: Allows multiple attempts => Loop is used
+		if (maxAttempts > 1)
+		{
+			val loop = new TryLoop(durationBetweenAttempts, maxAttempts)(operation)
+			loop.registerToStopOnceJVMCloses()
+			loop.startAsync()
+			loop.future
+		}
+		// Case: Allows only a single attempt => No loop is necessary
+		else if (maxAttempts == 1)
+			Future { operation }
+		// Case: No attempts allowed => Can't succeed
+		else
+			Future.failed(new NoAttemptsAllowedException())
 	}
+	
+	private class NoAttemptsAllowedException extends Exception("TryLoop attempted with 0 or less allowed attemtps")
 }
 
 /**
