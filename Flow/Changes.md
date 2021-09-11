@@ -5,10 +5,10 @@
 - **Iterator**`.takeNextTo(...)` and `.takeNext(Int)` (**CollectionExtensions**) now return an iterator and not a vector, 
   and don't advance the iterator immediately. The previous implementations are available as `.collectTo(...)` and 
   `.collectNext(Int)`
-- Deprecated **Path**`.forChildren(...)` and `.foldChildren(...)` in favor of the new iteration functions 
-  (**FileExtensions**)
 ### Deprecations
 - Deprecated **Iterable**`.tryForEach(...)` in favor of **IterableOnce**`.tryForeach(...)` (**CollectionExtensions**)
+- Deprecated **Path**`.forChildren(...)` and `.foldChildren(...)` in favor of the new iteration functions 
+  (**FileExtensions**)
 ### New Features
 - Added **PollableOnce**, a container that returns its value once before becoming invalid
 - Added **RecursiveDirectoryIterator**, which is also used by some refactored **FileExtensions** functions
@@ -19,10 +19,13 @@
   - `.tryFlatMap(...)`, which combines the ideas of `.tryMap(...)` and `.flatMap(...)`
 - **Iterator** (**CollectionExtensions**)
   - Added `.existsCount(...)`
+  - Added `.skip(Int)`
 - **Path** (**FileExtensions**)
   - Added `.iterateChildren(...)`, `.tryIterateChildren(...)`, `.allChildrenIterator` and `.iterateSiblings(...)` 
     for easier and more memory-friendly child path iterations
   - Added `.unique`, which makes sure a non-existing path is used
+- **PollingIterator**
+  - Added `.pollToNextWhere(...)`, which enables one to make sure the next item will fulfill a specific requirement
 - **String** (**StringExtensions**)
   - Added `.containsMany(String, Int)`, which checks whether the string contains multiple occurrences of a sub-string
 ### Other Changes

@@ -833,6 +833,20 @@ object CollectionExtensions
         }
     
         /**
+          * Skips the next 'n' items in this iterator
+          * @param n Number of items to skip (default = 1)
+          */
+        def skip(n: Int = 1) =
+        {
+            var skipped = 0
+            while (skipped < n && i.hasNext)
+            {
+                i.next()
+                skipped += 1
+            }
+        }
+        
+        /**
           * Creates a copy of this iterator that terminates after the specified condition is met. This differs from
           * takeWhile in that this function still returns the item which "terminated" this iterator
           * (i.e. the first item for which the specified condition returned true).
