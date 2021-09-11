@@ -13,6 +13,22 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 
+object EmailSender
+{
+	/**
+	  * Creates a new email sender
+	  * @param defaultMaxSendAttemptsPerMessage Maximum amount of attempts to send a single email by default
+	  *                                         (used as defaults in the method .apply(...)) (default = twice)
+	  * @param defaultDurationBetweenAttempts Duration to wait between reattempting message sending by default
+	  *                                       (used as defaults in the method .apply(...)) (default = 30 seconds)
+	  * @param settings Implicit email sending settings to use
+	  * @return A new email sender instance
+	  */
+	def apply(defaultMaxSendAttemptsPerMessage: Int = 2, defaultDurationBetweenAttempts: FiniteDuration = 30.seconds)
+	         (implicit settings: WriteSettings) =
+		new EmailSender(settings, defaultMaxSendAttemptsPerMessage, defaultDurationBetweenAttempts)
+}
+
 /**
   * Used for sending email
   * @author Mikko Hilpinen
