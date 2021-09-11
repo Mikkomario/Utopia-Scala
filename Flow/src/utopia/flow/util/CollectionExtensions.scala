@@ -1,6 +1,6 @@
 package utopia.flow.util
 
-import utopia.flow.collection.{GroupIterator, PollingIterator}
+import utopia.flow.collection.{GroupIterator, LimitedLengthIterator, PollingIterator, TerminatingIterator}
 
 import scala.language.implicitConversions
 import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
@@ -109,9 +109,20 @@ object CollectionExtensions
             }
             buffer.view.mapValues { _.result() }.toMap
         }
+    
+        /**
+          * Performs an operation for each item in this collection. Stops if an operation fails.
+          * @param f A function that takes an item and performs an operation that may fail
+          * @return Failure if any of the operations failed, success otherwise.
+          */
+        def tryForeach[U](f: iter.A => Try[Unit]): Try[Unit] =
+        {
+            val iterOps = iter(coll)
+            iterOps.iterator.map(f).find { _.isFailure }.getOrElse(Success[Unit](()))
+        }
         
         /**
-          * Maps the contents of this Iterable. Mapping may fail, interrupting all remaining mappings
+          * Maps the contents of this collection. Mapping may fail, interrupting all remaining mappings
           * @param f A mapping function. May fail.
           * @param bf A build from for the final collection (implicit)
           * @tparam B Type of map result
@@ -122,13 +133,20 @@ object CollectionExtensions
         {
             val buffer = bf.newBuilder(coll)
             // Maps items until the mapping function fails
-            val iterOps = iter(coll)
-            val finalResult = iterOps.iterator.map(f).find { result =>
-                result.toOption.foreach { buffer += _ }
-                result.isFailure
-            }.getOrElse(Success(()))
-            
-            finalResult.map { _ => buffer.result() }
+            tryForeach { f(_).map { buffer += _ } }.map { _ => buffer.result() }
+        }
+        /**
+          * FlatMaps the contents of this collection. Mapping may fail, however, cancelling all remaining mappings
+          * @param f A mapping function. May fail.
+          * @param bf A build from for the final collection (implicit)
+          * @tparam B Type of individual map result item
+          * @tparam To Type of final collection
+          * @return Flat mapped collection if all mappings succeeded. Failure otherwise.
+          */
+        def tryFlatMap[B, To](f: iter.A => Try[IterableOnce[B]])(implicit bf: BuildFrom[Repr, B, To]): Try[To] =
+        {
+            val buffer = bf.newBuilder(coll)
+            tryForeach { f(_).map { buffer ++= _ } }.map { _ => buffer.result() }
         }
         
         /**
@@ -143,7 +161,7 @@ object CollectionExtensions
         def takeTo[That](endCondition: iter.A => Boolean)(implicit buildFrom: BuildFrom[Repr, iter.A, That]): That =
         {
             val iterOps = iter(coll)
-            buildFrom.fromSpecific(coll)(new TakeToIterator(iterOps.iterator)(endCondition))
+            buildFrom.fromSpecific(coll)(TerminatingIterator(iterOps.iterator)(endCondition))
         }
     }
     
@@ -239,6 +257,7 @@ object CollectionExtensions
           * @param f A function that takes an item and performs an operation that may fail
           * @return Failure if any of the operations failed, success otherwise.
           */
+        @deprecated("Please use .tryForeach(...) instead", "v1.12")
         def tryForEach(f: A => Try[Any]): Try[Any] = t.view.map(f).find { _.isFailure }.getOrElse(Success[Unit](()))
         
         /**
@@ -782,7 +801,6 @@ object CollectionExtensions
             }
             current
         }
-        
         /**
           * @return The last item accessible in this iterator. None if this iterator didn't have any items remaining.
           */
@@ -793,6 +811,36 @@ object CollectionExtensions
             else
                 None
         }
+    
+        /**
+          * Checks whether there exists 'count' instances in this iterator that satisfy the specified predicate.
+          * Consumes items within this iterator until the required amount of matches has been found. If not enough
+          * matches were found, consumes this whole iterator.
+          * @param count Number of required matches (the minimum amount of times 'f' must return true)
+          * @param f A function for testing each item
+          * @return Whether 'f' returned true for 'count' items. Doesn't test whether 'f' would return true for more
+          *         than 'count' items.
+          */
+        def existsCount(count: Int)(f: A => Boolean) =
+        {
+            var found = 0
+            while (found < count && i.hasNext)
+            {
+                if (f(i.next()))
+                    found += 1
+            }
+            found >= count
+        }
+    
+        /**
+          * Creates a copy of this iterator that terminates after the specified condition is met. This differs from
+          * takeWhile in that this function still returns the item which "terminated" this iterator
+          * (i.e. the first item for which the specified condition returned true).
+          * If present, this will be the last item returned by this new iterator.
+          * @param condition A condition that will terminate this new iterator
+          * @return A copy of this iterator that will not return items after the terminating item
+          */
+        def takeTo(condition: A => Boolean) = TerminatingIterator(i)(condition)
         
         /**
           * Performs the specified operation for the next 'n' items. This will advance the iterator n-steps
@@ -813,14 +861,14 @@ object CollectionExtensions
             
             consumed == n
         }
-        
+    
         /**
           * Collects the next 'n' items from this iterator, advancing it up to 'n' elements. The number of available
           * items may be smaller, in case all remaining items are returned.
           * @param n Number of items to collect
-          * @return Collected items
+          * @return Collected items as a vector
           */
-        def takeNext(n: Int) =
+        def collectNext(n: Int) =
         {
             var consumed = 0
             val builder = new VectorBuilder[A]()
@@ -829,10 +877,37 @@ object CollectionExtensions
                 builder += i.next()
                 consumed += 1
             }
-            
+        
             builder.result()
         }
+        /**
+          * Creates a new iterator that provides access only up to the next 'n' elements of this iterator
+          * @param n Number of items to make available
+          * @return An iterator that provides access to the next 'n' items in this iterator. Wraps this iterator.
+          */
+        def takeNext(n: Int) = new LimitedLengthIterator[A](i, n)
     
+        /**
+          * Collects the next n items from this iterator until a specified condition is met or until the end of this
+          * iterator is reached. The item which fulfills the specified condition is included in the result as the
+          * last item. Advances this iterator but doesn't invalidate it.
+          * @param stopCondition A condition that marks the last included item
+          * @return Items to and including the one accepted by the specified condition. All remaining items of this
+          *         iterator if the specified condition was never met.
+          */
+        def collectTo(stopCondition: A => Boolean) =
+        {
+            val builder = new VectorBuilder[A]()
+            var found = false
+            while (i.hasNext && !found)
+            {
+                val nextItem = i.next()
+                builder += nextItem
+                if (stopCondition(nextItem))
+                    found = true
+            }
+            builder.result()
+        }
         /**
          * Takes the next n items from this iterator until a specified condition is met or until the end of this
          * iterator is reached. The item which fulfills the specified condition is included in the result as the
@@ -841,6 +916,7 @@ object CollectionExtensions
          * @return Items to and including the one accepted by the specified condition. All remaining items of this
          *         iterator if the specified condition was never met.
          */
+        @deprecated("Please use collectTo(...) instead. Take implies returning another iterator", "v1.12")
         def takeNextTo(stopCondition: A => Boolean) =
         {
             val builder = new VectorBuilder[A]()
@@ -909,7 +985,7 @@ object CollectionExtensions
         {
             while (i.hasNext)
             {
-                f(takeNext(maxGroupSize))
+                f(collectNext(maxGroupSize))
             }
         }
         
@@ -1218,27 +1294,6 @@ object CollectionExtensions
             }
             lastEnd = actualEnd
             start to actualEnd
-        }
-    }
-    
-    private class TakeToIterator[+A](source: Iterator[A])(condition: A => Boolean) extends Iterator[A]
-    {
-        // ATTRIBUTES   ---------------------------
-        
-        private var closed = false
-        
-        
-        // IMPLEMENTED  ---------------------------
-        
-        override def hasNext = !closed && source.hasNext
-    
-        override def next() =
-        {
-            val item = source.next()
-            // Closes this iterator once the condition is fulfilled once
-            if (condition(item))
-                closed = true
-            item
         }
     }
 }

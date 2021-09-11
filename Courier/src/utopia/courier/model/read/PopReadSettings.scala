@@ -7,7 +7,8 @@ import utopia.courier.model.Authentication
   * @author Mikko Hilpinen
   * @since 11.9.2021, v0.1
   */
-case class PopReadSettings(hostAddress: String, authentication: Authentication) extends ReadSettings
+case class PopReadSettings(hostAddress: String, authentication: Authentication)
+	extends ReadSettings
 {
 	override def storeName = "pop3"
 	

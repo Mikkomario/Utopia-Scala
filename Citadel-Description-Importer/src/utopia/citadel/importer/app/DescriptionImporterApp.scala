@@ -82,7 +82,7 @@ object DescriptionImporterApp extends App
 							{
 								println(s"Reading ${filePaths.size} files in ${inputPath.toAbsolutePath}")
 								connectionPool.tryWith { implicit connection =>
-									filePaths.tryForEach { path =>
+									filePaths.tryForeach { path =>
 										val result = ReadDescriptions(path)
 										if (result.isSuccess)
 											println(s"Successfully read ${inputPath.fileName}")

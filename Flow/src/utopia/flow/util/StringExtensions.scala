@@ -1,6 +1,7 @@
 package utopia.flow.util
 
 import utopia.flow.datastructure.mutable.ResettableLazy
+import CollectionExtensions._
 
 /**
  * Contains some utility extensions that extend the capabilities of standard strings
@@ -106,7 +107,6 @@ object StringExtensions
 		 * @return Whether this string contains all of the provided sub-strings (case-sensitive)
 		 */
 		def containsAll(strings: IterableOnce[String]) = strings.iterator.forall(s.contains)
-		
 		/**
 		 * @param first A string
 		 * @param second Another string
@@ -125,7 +125,6 @@ object StringExtensions
 			val lower = s.toLowerCase
 			strings.iterator.forall { searched => lower.contains(searched.toLowerCase) }
 		}
-		
 		/**
 		 * @param first A string
 		 * @param second Another string
@@ -134,6 +133,15 @@ object StringExtensions
 		 */
 		def containsAllIgnoreCase(first: String, second: String, more: String*): Boolean = containsAllIgnoreCase(
 			Vector(first, second) ++ more)
+		
+		/**
+		  * Checks whether multiple instances of the searched string can be found from this string
+		  * @param searched A searched string
+		  * @param minimumOccurrences Minimum number of required occurrences (default = 2)
+		  * @return Whether this string contains at least 'minimumOccurrences' number of 'searched' sub-strings
+		  */
+		def containsMany(searched: String, minimumOccurrences: Int = 2) =
+			indexOfIterator(searched).existsCount(minimumOccurrences) { _ => true }
 		
 		/**
 		 * @param prefix A prefix

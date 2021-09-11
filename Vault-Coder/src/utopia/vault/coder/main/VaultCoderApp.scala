@@ -34,7 +34,7 @@ object VaultCoderApp extends App
 		
 		outputPath.asExistingDirectory.flatMap { rootDirectory =>
 			// Handles one project at a time
-			data.tryForEach { case (basePackageName, classes) =>
+			data.tryForeach { case (basePackageName, classes) =>
 				println(s"Writing ${classes.size} classes for project $basePackageName")
 				val directory = if (basePackageName.isEmpty) Success(rootDirectory) else
 					(rootDirectory/basePackageName.replace('.', '-')).asExistingDirectory
@@ -45,12 +45,13 @@ object VaultCoderApp extends App
 						.flatMap { _ => TablesWriter(classes) }
 						.flatMap { tablesRef =>
 							// Next writes all required documents for each class
-							classes.tryForEach { classToWrite =>
+							classes.tryForeach { classToWrite =>
 								ModelWriter(classToWrite).flatMap { case (modelRef, dataRef) =>
 									FactoryWriter(classToWrite, tablesRef, modelRef, dataRef).flatMap { factoryRef =>
 										DbModelWriter(classToWrite, modelRef, dataRef, factoryRef)
 											.flatMap { dbModelRef =>
 												AccessWriter(classToWrite, modelRef, factoryRef, dbModelRef)
+													.map { _ => () }
 											}
 									}
 								}

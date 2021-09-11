@@ -9,6 +9,8 @@ import utopia.courier.model.{Authentication, EmailSettings}
   */
 trait ReadSettings extends EmailSettings
 {
+	// ABSTRACT ----------------------------
+	
 	/**
 	  * @return The name of the "store" used with these settings
 	  */
@@ -18,6 +20,9 @@ trait ReadSettings extends EmailSettings
 	  * @return Authentication used for accessing the emailing service
 	  */
 	def authentication: Authentication
+	
+	
+	// IMPLEMENTED  -------------------------
 	
 	override def removedProperties = Set()
 }

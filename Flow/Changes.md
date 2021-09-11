@@ -1,7 +1,33 @@
 # Utopia Flow - List of Changes
 
-## v1.11.2 (in development)
+## v1.12 (in development)
+### Breaking Changes
+- **Iterator**`.takeNextTo(...)` and `.takeNext(Int)` (**CollectionExtensions**) now return an iterator and not a vector, 
+  and don't advance the iterator immediately. The previous implementations are available as `.collectTo(...)` and 
+  `.collectNext(Int)`
+- Deprecated **Path**`.forChildren(...)` and `.foldChildren(...)` in favor of the new iteration functions 
+  (**FileExtensions**)
+### Deprecations
+- Deprecated **Iterable**`.tryForEach(...)` in favor of **IterableOnce**`.tryForeach(...)` (**CollectionExtensions**)
+### New Features
+- Added **PollableOnce**, a container that returns its value once before becoming invalid
+- Added **RecursiveDirectoryIterator**, which is also used by some refactored **FileExtensions** functions
+### New Methods
+- **IterableOnce** (**CollectionExtensions**)
+  - `.takeTo(...)`, which works like `.takeWhile(...)`, except that it includes the terminating item
+  - `.tryForeach(...)`, based on` .TryForEach(...)` in **Iterable**
+  - `.tryFlatMap(...)`, which combines the ideas of `.tryMap(...)` and `.flatMap(...)`
+- **Iterator** (**CollectionExtensions**)
+  - Added `.existsCount(...)`
+- **Path** (**FileExtensions**)
+  - Added `.iterateChildren(...)`, `.tryIterateChildren(...)`, `.allChildrenIterator` and `.iterateSiblings(...)` 
+    for easier and more memory-friendly child path iterations
+  - Added `.unique`, which makes sure a non-existing path is used
+- **String** (**StringExtensions**)
+  - Added `.containsMany(String, Int)`, which checks whether the string contains multiple occurrences of a sub-string
 ### Other Changes
+- **Path**`.withFileName(String)` now applies the existing file extension if no new extension is provided in the 
+  file name parameter (**FileExtensions**)
 - `TryLoop.attempt(...)` now has a special handling for cases where the maximum number of allowed attempts is 1 or lower
 
 ## v1.11.1 - 9.9.2021

@@ -22,7 +22,8 @@ object ImapReadSettings
   * @param hostAddress Address of the email service
   * @param authentication Authentication used when accessing the emailing service
   */
-case class ImapReadSettings(hostAddress: String, authentication: Authentication) extends ReadSettings
+case class ImapReadSettings(hostAddress: String, authentication: Authentication)
+	extends ReadSettings
 {
 	override def storeName = "imap"
 	
