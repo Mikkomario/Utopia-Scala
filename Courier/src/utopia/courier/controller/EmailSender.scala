@@ -1,7 +1,7 @@
 package utopia.courier.controller
 
-import utopia.courier.model.Authentication
-import utopia.courier.model.write.{OutgoingEmail, WriteSettings}
+import utopia.courier.model.{Authentication, Email}
+import utopia.courier.model.write.WriteSettings
 import utopia.flow.async.TryLoop
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
@@ -58,7 +58,7 @@ class EmailSender(settings: WriteSettings, defaultMaxSendAttemptsPerMessage: Int
 	  * @return Future of the send completion, including whether the sending failed or succeeded. Please note that
 	  *         a success doesn't necessarily mean that the message was successfully delivered.
 	  */
-	def apply(email: OutgoingEmail, maxAttempts: Int = defaultMaxSendAttemptsPerMessage,
+	def send(email: Email, maxAttempts: Int = defaultMaxSendAttemptsPerMessage,
 	          durationBetweenAttempts: FiniteDuration = defaultDurationBetweenAttempts)
 	         (implicit exc: ExecutionContext) =
 		TryLoop.attempt(durationBetweenAttempts, maxAttempts) { sendBlocking(email) }
@@ -69,7 +69,7 @@ class EmailSender(settings: WriteSettings, defaultMaxSendAttemptsPerMessage: Int
 	  * @return Success or failure. Please note that receiving a success doesn't necessarily mean that the message
 	  *         was successfully delivered.
 	  */
-	def sendBlocking(email: OutgoingEmail) =
+	def sendBlocking(email: Email) =
 		Try {
 			// Sets class loader to avoid UnsupportedDataTypeException
 			// See: https://stackoverflow.com/questions/21856211/javax-activation-unsupporteddatatypeexception-no-object-dch-for-mime-type-multi
@@ -88,10 +88,8 @@ class EmailSender(settings: WriteSettings, defaultMaxSendAttemptsPerMessage: Int
 				message.addHeader("X-Mailer", "JavaMail API")
 				message.setSentDate(new Date())
 				message.setSubject(email.subject)
-				email.headers.recipients.foreach { case (recipientType, recipients) =>
-					recipients.foreach { recipient =>
+				email.headers.recipients.foreach { case (recipient, recipientType) =>
 						message.addRecipient(recipientType, new InternetAddress(recipient))
-					}
 				}
 				val textPart = email.message.notEmpty.map { text =>
 					val part = new MimeBodyPart()

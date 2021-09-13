@@ -1,7 +1,8 @@
 package utopia.courier.controller
 
+import utopia.courier.model.Email
 import utopia.courier.model.read.DeletionRule.NeverDelete
-import utopia.courier.model.read.{DeletionRule, EmailBuilder, EmailReadHeaders, FromEmailBuilder, IncomingEmail, ReadSettings}
+import utopia.courier.model.read.{DeletionRule, EmailBuilder, FromEmailBuilder, LazyEmailHeadersView, ReadSettings}
 import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.AutoCloseWrapper
@@ -9,6 +10,7 @@ import utopia.flow.util.CollectionExtensions._
 
 import java.io.InputStream
 import java.util.Properties
+import javax.mail.Message.RecipientType
 import javax.mail.{Flags, Folder, Message, Multipart, Part, Session}
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{ExecutionContext, Future}
@@ -23,7 +25,8 @@ object EmailReader
 	  * @param settings Implicit email reading settings to use
 	  * @return A new reader
 	  */
-	def default(implicit settings: ReadSettings) = apply { new EmailBuilder(_, _) }
+	def default(implicit settings: ReadSettings) =
+		apply { headers => new EmailBuilder(headers.toHeaders) }
 	
 	
 	// OTHER    ------------------------------
@@ -35,8 +38,8 @@ object EmailReader
 	  * @tparam A Type of mail processor output
 	  * @return A new mail reader
 	  */
-	def apply[A](makeBuilder: (String, EmailReadHeaders) => FromEmailBuilder[A])(implicit settings: ReadSettings) =
-		filtered { (sub, headers) => Some(makeBuilder(sub, headers)) }
+	def apply[A](makeBuilder: LazyEmailHeadersView => FromEmailBuilder[A])(implicit settings: ReadSettings) =
+		filtered { headers => Some(makeBuilder(headers)) }
 	
 	/**
 	  * Creates a new mail reader that skips some of the incoming messages
@@ -46,20 +49,19 @@ object EmailReader
 	  * @tparam A Type of processing result
 	  * @return A new email reader
 	  */
-	def filtered[A](makeBuilder: (String, EmailReadHeaders) => Option[FromEmailBuilder[A]])
-	               (implicit settings: ReadSettings) =
+	def filtered[A](makeBuilder: LazyEmailHeadersView => Option[FromEmailBuilder[A]])(implicit settings: ReadSettings) =
 		new EmailReader[A](settings, makeBuilder)
 	
 	/**
 	  * Creates a new mail reader that filters based on email subject
-	  * @param subjectFilter A function that accepts email subjects and returns whether they should be processed
+	  * @param filter A function that accepts email headers and returns whether they should be processed
 	  * @param settings Implicit email reading settings to use
 	  * @return A new email reader
 	  */
-	def filteredDefault(subjectFilter: String => Boolean)(implicit settings: ReadSettings): EmailReader[IncomingEmail] =
-		filtered { (sub, headers) =>
-			if (subjectFilter(sub))
-				Some(new EmailBuilder(sub, headers))
+	def filteredDefault(filter: LazyEmailHeadersView => Boolean)(implicit settings: ReadSettings): EmailReader[Email] =
+		filtered { headers =>
+			if (filter(headers))
+				Some(new EmailBuilder(headers.toHeaders))
 			else
 				None
 		}
@@ -70,7 +72,7 @@ object EmailReader
   * @author Mikko Hilpinen
   * @since 11.9.2021, v0.1
   */
-class EmailReader[A](settings: ReadSettings, makeBuilder: (String, EmailReadHeaders) => Option[FromEmailBuilder[A]])
+class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView => Option[FromEmailBuilder[A]])
 {
 	/**
 	  * Asynchronously reads and parses email
@@ -266,7 +268,7 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: (String, EmailReadHead
 	}
 	
 	private class RawMessageIterator(source: Iterator[Try[Message]],
-	                              makeBuilder: (String, EmailReadHeaders) => Option[FromEmailBuilder[A]])
+	                              makeBuilder: LazyEmailHeadersView => Option[FromEmailBuilder[A]])
 		extends Iterator[Try[Option[(Message, FromEmailBuilder[A])]]]
 	{
 		// ATTRIBUTES   -----------------------------
@@ -287,20 +289,25 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: (String, EmailReadHead
 				// Case: Message read => processes it
 				case Success(message) =>
 					Try {
-						val subject = message.getSubject
-						val sentTime = message.getSentDate.toInstant
-						val sender = Option(message.getFrom) match
+						// Reads the header information (lazily)
+						def subject = message.getSubject
+						def sentTime = message.getSentDate.toInstant
+						def sender = Option(message.getFrom) match
 						{
 							case Some(senders) => senders.mkString(", ")
 							case None => ""
 						}
-						/* Kept here as a reference, in case recipients should be added
-						val recipients = Option(message.getAllRecipients) match
-						{
-							case Some(recipients) => recipients.view.map { _.toString }.toVector
-							case None => Vector()
-						}*/
-						makeBuilder(subject, EmailReadHeaders(sender, sentTime))
+						def recipients =
+							Vector(RecipientType.TO, RecipientType.CC, RecipientType.BCC)
+								.flatMap { recipientType =>
+									Option(message.getRecipients(recipientType))
+										.filter { _.length > 0 }
+										.map { recipientType -> _.toVector.map { _.toString } }
+								}.toMap
+						def replyTo = Option(message.getReplyTo).flatMap { _.headOption }.map { _.toString }
+							.getOrElse("")
+						// Creates a builder, if necessary
+						makeBuilder(new LazyEmailHeadersView(sender, subject, sentTime, recipients, replyTo))
 					} match {
 						case Success(builder) =>
 							// Remembers skipped messages

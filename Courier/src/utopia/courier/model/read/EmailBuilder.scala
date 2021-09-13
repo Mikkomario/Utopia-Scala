@@ -1,6 +1,6 @@
 package utopia.courier.model.read
 
-import utopia.courier.model.EmailContent
+import utopia.courier.model.{Email, EmailContent, EmailHeaders}
 import utopia.flow.time.Today
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringFrom
@@ -15,7 +15,6 @@ import scala.util.{Success, Try}
   * Used for parsing emails from incoming data
   * @author Mikko Hilpinen
   * @since 11.9.2021, v0.1
-  * @param subject Message subject
   * @param headers Message headers
   * @param attachmentsStoreDirectory Directory where attachments will be stored.
   *                                  None if attachments won't be stored (default)
@@ -23,9 +22,9 @@ import scala.util.{Success, Try}
   *                         one (default = "txt")
   * @param codec Implicit encoding expected for the incoming attachments
   */
-class EmailBuilder(subject: String, headers: EmailReadHeaders, attachmentsStoreDirectory: Option[Path] = None,
+class EmailBuilder(headers: EmailHeaders, attachmentsStoreDirectory: Option[Path] = None,
                    defaultExtension: String = "txt")(implicit codec: Codec)
-	extends FromEmailBuilder[IncomingEmail]
+	extends FromEmailBuilder[Email]
 {
 	// ATTRIBUTES   -------------------------------
 	
@@ -56,7 +55,7 @@ class EmailBuilder(subject: String, headers: EmailReadHeaders, attachmentsStoreD
 			case Some(builder) => builder.result()
 			case None => Vector()
 		}
-		Success(IncomingEmail(EmailContent(subject, bodyBuilder.result(), attachments), headers))
+		Success(Email(headers, EmailContent(bodyBuilder.result(), attachments)))
 	}
 	
 	
