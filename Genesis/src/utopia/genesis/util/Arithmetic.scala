@@ -4,8 +4,10 @@ import scala.language.implicitConversions
 
 object Arithmetic
 {
+	@deprecated("Please use DoubleWrapper instead", "v2.6")
 	implicit def arithmeticDoubleBack(d: ArithMeticDouble): Double = d.d
 	
+	@deprecated("Please use DoubleWrapper instead", "v2.6")
 	implicit class ArithMeticDouble(val d: Double) extends Arithmetic[ArithMeticDouble, ArithMeticDouble] with DistanceLike
 	{
 		override def repr = this
@@ -25,6 +27,7 @@ object Arithmetic
   * @author Mikko Hilpinen
   * @since 20.6.2019, v2.1+
   */
+@deprecated("Please use DoubleLike instead", "v2.6")
 trait Arithmetic[-N, +Repr <: Arithmetic[N, Repr]] extends Scalable[Repr] with Combinable[N, Repr]
 {
 	// ABSTRACT	-----------------

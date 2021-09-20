@@ -1,10 +1,10 @@
 package utopia.genesis.shape.shape2D
 
+import utopia.flow.operator.LinearScalable
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.Direction2D._
-import utopia.genesis.util.Scalable
 
 import scala.collection.immutable.HashMap
 
@@ -121,7 +121,7 @@ trait InsetsFactory[L, S, +Repr, +I <: InsetsLike[L, S, Repr]]
 * @author Mikko Hilpinen
 * @since 25.3.2019
 **/
-trait InsetsLike[L, +S, +Repr] extends Scalable[Repr]
+trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
 {
     // ABSTRACT ------------------
     

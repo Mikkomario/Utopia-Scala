@@ -170,8 +170,6 @@ case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D =
 	
 	// IMPLEMENTED	----------------------------
 	
-	override def repr = this
-	
 	override val columns = Vector(xTransform, yTransform)
 	
 	override lazy val rows = Vector(Vector2D(xTransform.x, yTransform.x), Vector2D(xTransform.y, yTransform.y))

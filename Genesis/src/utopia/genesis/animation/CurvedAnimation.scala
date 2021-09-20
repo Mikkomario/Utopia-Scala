@@ -1,6 +1,5 @@
 package utopia.genesis.animation
 
-import utopia.genesis.util.Arithmetic._
 import utopia.genesis.shape.path.{BezierFunction, CubicBezier}
 import utopia.genesis.shape.shape2D.Point
 
@@ -16,7 +15,7 @@ object CurvedAnimation
 	  */
 	def apply[A](original: Animation[A], control1: Double, control2: Double) =
 	{
-		val bezier = CubicBezier[ArithMeticDouble](0.0, control1, control2, 1.0)
+		val bezier = CubicBezier(0.0, control1, control2, 1.0)
 		new CurvedAnimation(original, Animation { bezier(_) })
 	}
 	

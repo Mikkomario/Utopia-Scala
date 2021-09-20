@@ -1,9 +1,10 @@
 package utopia.genesis.shape.shape1D
 
+import utopia.flow.operator.{Combinable, LengthLike, LinearScalable}
 import utopia.flow.util.SelfComparable
 import utopia.genesis.shape.shape1D.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.genesis.util.Extensions._
-import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic}
+import utopia.genesis.util.ApproximatelyEquatable
 
 object Rotation
 {
@@ -103,19 +104,10 @@ object Rotation
   * @param direction The rotation direction (default = clockwise)
 **/
 case class Rotation private(radians: Double, direction: RotationDirection = Clockwise)
-	extends ApproximatelyEquatable[Rotation] with Arithmetic[Rotation, Rotation] with SelfComparable[Rotation]
+	extends ApproximatelyEquatable[Rotation] with LinearScalable[Rotation] with Combinable[Rotation, Rotation]
+		with LengthLike[Rotation] with SelfComparable[Rotation]
 {
 	// PROPS    --------------------------
-	
-	/**
-	  * @return Whether this rotation is exactly zero
-	  */
-	def isZero = radians == 0
-	
-	/**
-	  * @return Whether this rotation is not exactly zero
-	  */
-	def nonZero = !isZero
 	
 	/**
 	  * This rotation in degrees (>= 0)
@@ -199,6 +191,11 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	
 	
 	// IMPLEMENTED    --------------------
+	
+	/**
+	  * @return Whether this rotation is exactly zero
+	  */
+	override def isZero = radians == 0
 	
 	override def compareTo(o: Rotation) = clockwiseRadians.compareTo(o.clockwiseRadians)
 	

@@ -12,13 +12,13 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.datastructure.template
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
+import utopia.flow.operator.LinearMeasurable
 import utopia.genesis.generic.GenesisValue._
 import utopia.genesis.generic.LineType
 import utopia.genesis.shape.path.LinearPathLike
 import utopia.genesis.shape.shape2D.transform.Transformable
 import utopia.genesis.shape.shape3D.{Matrix3D, Vector3D}
 import utopia.genesis.shape.template.VectorLike
-import utopia.genesis.util.DistanceLike
 
 import scala.util.Success
 
@@ -84,7 +84,7 @@ object Line extends FromModelFactory[Line]
  */
 case class Line(override val start: Point, override val end: Point)
     extends ShapeConvertible with ValueConvertible with ModelConvertible with Projectable with LinearPathLike[Point]
-        with DistanceLike with Transformable[Line]
+        with LinearMeasurable with Transformable[Line]
 {
     // ATTRIBUTES    -------------------
     

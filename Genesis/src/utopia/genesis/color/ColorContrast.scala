@@ -1,8 +1,8 @@
 package utopia.genesis.color
 
-import utopia.flow.util.SelfComparable
+import utopia.flow.operator.DoubleLike
 import utopia.genesis.color.ColorContrastStandard.{Enhanced, Minimum}
-import utopia.genesis.util.{Arithmetic, Distance}
+import utopia.genesis.util.Distance
 
 import scala.language.implicitConversions
 
@@ -20,8 +20,7 @@ object ColorContrast
   * @since 28.1.2021, v2
   * @param ratio Contrast ratio between the two colors (E.g. 7:1 (= 7.0))
   */
-case class ColorContrast(ratio: Double)
-	extends SelfComparable[ColorContrast] with Arithmetic[ColorContrast, ColorContrast]
+case class ColorContrast(ratio: Double) extends DoubleLike[ColorContrast]
 {
 	// ATTRIBUTES	----------------------
 	
@@ -61,7 +60,15 @@ case class ColorContrast(ratio: Double)
 	
 	// IMPLEMENTED	----------------------
 	
-	override def -(another: ColorContrast) = ColorContrast(ratio - another.ratio)
+	override def isPositive = ratio > 0
+	
+	override def isZero = ratio == 0
+	
+	override def length = ratio
+	
+	override protected def zero = ColorContrast(0)
+	
+	def -(another: ColorContrast) = ColorContrast(ratio - another.ratio)
 	
 	override def +(another: ColorContrast) = ColorContrast(ratio + another.ratio)
 	

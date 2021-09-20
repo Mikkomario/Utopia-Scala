@@ -1,11 +1,14 @@
 package utopia.genesis.util
 
+import utopia.flow.operator.LinearScalable
+
 /**
   * Scalable instances can be scaled linearly
   * @author Mikko Hilpinen
   * @since 20.6.2019, v2.1+
   */
-trait Scalable[+Repr]
+@deprecated("Please use LinearScalable instead", "v2.6")
+trait Scalable[+Repr] extends LinearScalable[Repr]
 {
 	// ABSTRACT	--------------------
 	
@@ -13,24 +16,4 @@ trait Scalable[+Repr]
 	  * @return A representation of 'this'
 	  */
 	def repr: Repr
-	
-	/**
-	  * @param mod A scaling modifier
-	  * @return A scaled version of this instance
-	  */
-	def *(mod: Double): Repr
-	
-	
-	// OPERATORS	----------------
-	
-	/**
-	  * @param div A divider
-	  * @return A divided version of this instance
-	  */
-	def /(div: Double) = *(1/div)
-	
-	/**
-	  * @return A negated / inverted version of this scalable element
-	  */
-	def unary_- = this * -1
 }

@@ -1,13 +1,13 @@
 package utopia.genesis.shape.shape2D
 
+import utopia.flow.operator.LinearScalable
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.{Angle, Direction1D, RotationDirection}
 import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape1D.RotationDirection.{Clockwise, Counterclockwise}
-import utopia.genesis.util.Scalable
 
-sealed trait Direction2DLike[+Parallel, +Perpendicular] extends Scalable[Vector2D]
+sealed trait Direction2DLike[+Parallel, +Perpendicular] extends LinearScalable[Vector2D]
 {
 	// ABSTRACT	--------------------------
 	
@@ -71,8 +71,6 @@ sealed trait Direction2DLike[+Parallel, +Perpendicular] extends Scalable[Vector2
 	
 	
 	// IMPLEMENTED  ----------------------------
-	
-	override def repr = axis(sign.modifier)
 	
 	override def *(mod: Double) = axis(mod * sign.modifier)
 	

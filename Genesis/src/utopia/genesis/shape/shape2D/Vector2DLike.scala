@@ -11,8 +11,8 @@ import utopia.genesis.shape.template.{Dimensional, VectorLike}
   * @author Mikko Hilpinen
   * @since 14.7.2020, v2.3
   */
-trait Vector2DLike[+Repr <: Vector2DLike[Repr]] extends VectorLike[Repr] with TwoDimensional[Double]
-	with Transformable[Repr]
+trait Vector2DLike[+Repr <: Vector2DLike[Repr]]
+	extends VectorLike[Repr] with TwoDimensional[Double] with Transformable[Repr]
 {
 	// ABSTRACT	--------------------------
 	

@@ -3,7 +3,6 @@ package utopia.genesis.shape.shape3D
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.genesis.shape.shape2D.movement
-import utopia.genesis.shape.shape2D.movement.Acceleration2D
 import utopia.genesis.shape.template.{AccelerationLike, VectorLike}
 
 import scala.concurrent.duration.{Duration, TimeUnit}
@@ -41,8 +40,6 @@ case class Acceleration3D(override val amount: Velocity3D, override val duration
 	// IMPLEMENTED	-------------------
 	
 	override protected def buildCopy(amount: Velocity3D, duration: Duration) = copy(amount, duration)
-	
-	override def repr = this
 	
 	override def projectedOver[V <: VectorLike[V]](vector: VectorLike[V]) =
 		Acceleration3D(amount.projectedOver(vector), duration)

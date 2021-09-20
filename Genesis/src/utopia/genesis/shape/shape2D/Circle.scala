@@ -1,8 +1,8 @@
 package utopia.genesis.shape.shape2D
 
 import utopia.genesis.util.Extensions._
-import java.awt.geom.Ellipse2D
 
+import java.awt.geom.Ellipse2D
 import utopia.flow.generic.ValueConvertible
 import utopia.genesis.generic.CircleType
 import utopia.flow.datastructure.immutable.Value
@@ -13,9 +13,9 @@ import utopia.flow.generic.FromModelFactory
 import utopia.genesis.generic.GenesisValue._
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
+import utopia.flow.operator.{Combinable, LinearScalable}
 import utopia.genesis.shape.shape1D.Angle
 import utopia.genesis.shape.template.Dimensional
-import utopia.genesis.util.Arithmetic
 
 import scala.util.Success
 
@@ -32,7 +32,7 @@ object Circle extends FromModelFactory[Circle]
  */
 case class Circle(origin: Point, radius: Double)
     extends ShapeConvertible with Area2D with ValueConvertible with ModelConvertible with Projectable
-        with Arithmetic[Dimensional[Double], Circle] with Bounded
+        with LinearScalable[Circle] with Combinable[Circle, Dimensional[Double]] with Bounded
 {
     // COMPUTED PROPERTIES    ---------
     
@@ -82,9 +82,7 @@ case class Circle(origin: Point, radius: Double)
         Line(projectedOrigin - axis.withLength(radius), projectedOrigin + axis.withLength(radius))
     }
     
-    override def -(another: Dimensional[Double]) = copy(origin = origin - another)
-    
-    override def repr = this
+    def -(another: Dimensional[Double]) = copy(origin = origin - another)
     
     /**
       * Scales the circle's radius by the provided amount

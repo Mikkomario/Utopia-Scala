@@ -12,7 +12,24 @@
 ### New Features
 - Added **PollableOnce**, a container that returns its value once before becoming invalid
 - Added **RecursiveDirectoryIterator**, which is also used by some refactored **FileExtensions** functions
+- Added following new operator -related traits that enable easier creation and handling of scalable and combinable 
+  data types
+  - **LinearMeasurable** - Provides .length -property, which is used in **Utopia Genesis**
+  - **LengthLike** - Recognizes between zero and non-zero instances
+  - **Reversible** - Supports the unary - operator
+  - **Signed** - Recognizes between positive, negative and zero and can swap between them
+  - **Scalable** - Allows multiplication
+  - **LinearScalable** - Allows linear multiplication
+  - **Combinable** - Supports the + operator (and possibly -)
+  - **Multiplicable** - Supports * operator for integers but not doubles
+  - **DoubleLike** - Performs like a double number
+  - **IntLike** - Performs like an integer number (doesn't support /)
 ### New Methods
+- **Graph**
+  - `.edgesTo(N)`
+  - `.withoutEdge(E)`
+- **GraphNode**
+  - `.cheapestRoutesTo(...)(...)` and `.shortestRoutesTo(...)`, which return multiple routes in case of equal costs
 - **IterableOnce** (**CollectionExtensions**)
   - `.takeTo(...)`, which works like `.takeWhile(...)`, except that it includes the terminating item
   - `.tryForeach(...)`, based on` .TryForEach(...)` in **Iterable**

@@ -1,13 +1,14 @@
 package utopia.genesis.shape.template
 
-import utopia.genesis.util.{ApproximatelyEquatable, Scalable}
+import utopia.flow.operator.LinearScalable
+import utopia.genesis.util.ApproximatelyEquatable
 
 /**
   * A common trait for matrix implementations
   * @author Mikko Hilpinen
   * @since 15.7.2020, v2.3
   */
-trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with Scalable[Repr]
+trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with LinearScalable[Repr]
 	with ApproximatelyEquatable[Dimensional[V]]
 {
 	// ABSTRACT	---------------------

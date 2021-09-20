@@ -110,8 +110,6 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	override protected def multiply(a: StackLength, multiplier: Double)  = a * multiplier
 	override protected def make2D(horizontal: StackLength, vertical: StackLength)  = StackSize(horizontal, vertical)
 	
-	override def repr = this
-	
 	
 	// OTHER	---------------------------
 	

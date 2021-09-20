@@ -77,5 +77,24 @@ object GraphTest extends App
 	assert(cNode1.allNodeContent == Set(1, 2, 3, 4))
 	assert(cNode3.allNodeContent == Set(1, 2, 3, 4))
 	
+	// Tests the shortest routes -function
+	val n1 = new IntNode(1)
+	val n2 = new IntNode(2)
+	val n3 = new IntNode(3)
+	val n4 = new IntNode(4)
+	
+	n1.connect(n2, 1)
+	n1.connect(n3, 1)
+	
+	n2.connect(n4, 2)
+	n3.connect(n4, 3)
+	
+	val shorts = n1.shortestRoutesTo(n4)
+	val cheaps = n1.cheapestRoutesTo(n4) { _.content }
+	
+	assert(shorts.size == 2)
+	assert(cheaps.size == 1)
+	assert(cheaps.head.size == 2)
+	
 	print("Success")
 }

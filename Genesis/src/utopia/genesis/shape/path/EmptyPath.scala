@@ -1,13 +1,13 @@
 package utopia.genesis.shape.path
 
-import utopia.genesis.util.DistanceLike
+import utopia.flow.operator.LinearMeasurable
 
 /**
   * This path doesn't move anywhere from a single point
   * @author Mikko Hilpinen
   * @since 20.6.2019, v2.1+
   */
-case class EmptyPath[P](point: P) extends Path[P] with DistanceLike
+case class EmptyPath[P](point: P) extends Path[P] with LinearMeasurable
 {
 	override def start = point
 	

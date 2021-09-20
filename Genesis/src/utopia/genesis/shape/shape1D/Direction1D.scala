@@ -1,9 +1,9 @@
 package utopia.genesis.shape.shape1D
 
+import utopia.flow.operator.{LinearScalable, Signed}
 import utopia.flow.util.SelfComparable
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.Direction2D
-import utopia.genesis.util.{Scalable, Signed}
 
 /**
   * A common trait for one dimensional directions (positive and negative)
@@ -59,7 +59,7 @@ sealed trait Direction1D extends SelfComparable[Direction1D]
 	  * @tparam S Original
 	  * @return 's' length to this direction
 	  */
-	def *[S2, S <: Scalable[S2]](s: S) = if (isPositive) s.repr else s * -1.0
+	def *[S2, S <: LinearScalable[S2]](s: S) = s * modifier
 	
 	/**
 	  * @param i A length
@@ -79,7 +79,8 @@ sealed trait Direction1D extends SelfComparable[Direction1D]
 	  * @tparam S Original
 	  * @return 's' length (absolute) to this direction
 	  */
-	def apply[S2, S <: Scalable[S2] with Signed[S2]](s: S) = if (s.isPositive == isPositive) s.repr else s * -1.0
+	def apply[S2, S <: LinearScalable[S2] with Signed[S2]](s: S) =
+		if (s.isPositive == isPositive) s.repr else s * -1.0
 	
 	/**
 	  * @param axis Targeted axis

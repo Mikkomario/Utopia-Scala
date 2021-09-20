@@ -97,8 +97,8 @@ object Point extends FromModelFactory[Point]
 * @author Mikko Hilpinen
 * @since 20.11.2018
 **/
-case class Point(override val x: Double, override val y: Double) extends Vector2DLike[Point]
-	with ApproximatelyEquatable[Point] with ValueConvertible with ModelConvertible
+case class Point(override val x: Double, override val y: Double)
+	extends Vector2DLike[Point] with ApproximatelyEquatable[Point] with ValueConvertible with ModelConvertible
 {
     // IMPLEMENTED    -----------------
 	

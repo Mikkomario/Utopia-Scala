@@ -180,8 +180,6 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	
 	// IMPLEMENTED	------------------------------
 	
-	override def repr = this
-	
 	override val columns = Vector(xTransform, yTransform, zTransform)
 	
 	override lazy val rows = Vector(

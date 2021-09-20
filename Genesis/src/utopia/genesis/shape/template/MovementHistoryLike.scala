@@ -1,14 +1,14 @@
 package utopia.genesis.shape.template
 
+import utopia.flow.operator.{Combinable, LinearScalable}
 import utopia.flow.time.Now
 
 import java.time.Instant
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape2D.Vector2DLike
-import utopia.genesis.util.{Combinable, Scalable}
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.duration.FiniteDuration
 
 /**
   * A common trait for items that contain an object's movement status over a time period
@@ -169,14 +169,14 @@ trait MovementHistoryLike[X <: Vector2DLike[X], V <: VelocityLike[X, V], A <: Ac
 	  */
 	def averageAccelerationSince(threshold: Instant) = averageSince(accelerationHistory, threshold, latestAcceleration)
 	
-	private def averageSince[Z <: Combinable[Z, Z] with Scalable[Z]](items: Vector[(Z, Instant)], threshold: Instant,
-																	 latest: => Z) =
+	private def averageSince[Z <: Combinable[Z, Z] with LinearScalable[Z]](items: Vector[(Z, Instant)], threshold: Instant,
+	                                                                 latest: => Z) =
 	{
 		val targetGroup = items.reverseIterator.takeWhile { _._2 >= threshold }.toVector
 		average(targetGroup, latest)
 	}
 	
-	private def average[Z <: Combinable[Z, Z] with Scalable[Z]](items: Vector[(Z, Instant)], zero: => Z) =
+	private def average[Z <: Combinable[Z, Z] with LinearScalable[Z]](items: Vector[(Z, Instant)], zero: => Z) =
 	{
 		val targetGroupSize = items.size
 		if (targetGroupSize == 0)

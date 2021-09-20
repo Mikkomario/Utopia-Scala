@@ -1,8 +1,8 @@
 package utopia.genesis.shape.path
 
+import utopia.flow.operator.LinearMeasurable
 import utopia.genesis.animation.AnimationLike
 import utopia.genesis.shape.path.Path.{CurvedPath, RepeatingPath, ReversePath}
-import utopia.genesis.util.DistanceLike
 
 object Path
 {
@@ -11,7 +11,7 @@ object Path
 	/**
 	  * A common type of path that knows its length
 	  */
-	type PathWithDistance[+X] = Path[X] with DistanceLike
+	type PathWithDistance[+X] = Path[X] with LinearMeasurable
 	
 	
 	// EXTENSIONS   -------------

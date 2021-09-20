@@ -1,10 +1,11 @@
 package utopia.genesis.shape.template
 
+import utopia.flow.operator.{Combinable, LinearMeasurable, LinearScalable}
 import utopia.genesis.shape.Axis
 import utopia.genesis.shape.Axis.{X, Y, Z}
 import utopia.genesis.shape.shape1D.Angle
 import utopia.genesis.util.Extensions._
-import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic, DistanceLike}
+import utopia.genesis.util.ApproximatelyEquatable
 
 import scala.collection.immutable.VectorBuilder
 import scala.math.Ordering.Double.TotalOrdering
@@ -29,10 +30,16 @@ object VectorLike
   * matching an axis (X, Y, Z, ...)
   * @tparam Repr the concrete implementing class
   */
-trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Double], Repr] with DistanceLike
-	with Dimensional[Double] with VectorProjectable[Repr] with ApproximatelyEquatable[Dimensional[Double]]
+trait VectorLike[+Repr <: VectorLike[Repr]]
+	extends LinearScalable[Repr] with Combinable[Repr, Dimensional[Double]] with LinearMeasurable
+		with Dimensional[Double] with VectorProjectable[Repr] with ApproximatelyEquatable[Dimensional[Double]]
 {
 	// ABSTRACT	---------------------
+	
+	/**
+	  * @return 'This' vector
+	  */
+	def repr: Repr
 	
 	/**
 	  * @return The X, Y, Z ... dimensions of this vectorlike instance. No specific length required, however.
@@ -55,7 +62,7 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	
 	override def +(other: Dimensional[Double]) = combineWith(other) { _ + _ }
 	
-	override def -(other: Dimensional[Double]) = combineWith(other) { _ - _ }
+	def -(other: Dimensional[Double]) = combineWith(other) { _ - _ }
 	
 	override def *(n: Double) = map { _ * n }
 	

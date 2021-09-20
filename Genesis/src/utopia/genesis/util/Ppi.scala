@@ -1,6 +1,6 @@
 package utopia.genesis.util
 
-import utopia.flow.util.SelfComparable
+import utopia.flow.operator.DoubleLike
 import utopia.genesis.util.DistanceUnit.{CentiMeter, Inch}
 
 object Ppi
@@ -34,7 +34,7 @@ object Ppi
  * @author Mikko Hilpinen
  * @since 24.6.2020, v2.3
  */
-case class Ppi(value: Double) extends SelfComparable[Ppi] with Scalable[Ppi]
+case class Ppi(value: Double) extends DoubleLike[Ppi]
 {
 	// COMPUTED ---------------------------------
 	
@@ -45,6 +45,16 @@ case class Ppi(value: Double) extends SelfComparable[Ppi] with Scalable[Ppi]
 	
 	
 	// IMPLEMENTED  -----------------------------
+	
+	override def isPositive = value > 0
+	
+	override def isZero = value == 0
+	
+	override def length = value
+	
+	override def +(other: Ppi) = Ppi(value + other.value)
+	
+	override protected def zero = Ppi.zero
 	
 	override def compareTo(o: Ppi) =
 	{

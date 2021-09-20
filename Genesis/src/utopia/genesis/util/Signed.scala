@@ -5,6 +5,7 @@ package utopia.genesis.util
   * @author Mikko Hilpinen
   * @since 13.9.2019, v2.1+
   */
+@deprecated("Please use Signed from Flow instead", "v2.6")
 trait Signed[+Repr] extends Scalable[Repr]
 {
 	// ABSTRACT	-------------------

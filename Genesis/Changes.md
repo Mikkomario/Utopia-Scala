@@ -1,5 +1,11 @@
 # Utopia Reflection - List of Changes
 
+## v2.6 (in development)
+### Breaking Changes
+- **Scalable**, **Combinable**, **Arithmetic**, **Signed** and **DistanceLike** were replaced 
+  with **Utopia Flow** counterparts
+  - This has many implications, although for the most part, renaming and replacing extensions should be enough
+
 ## v2.5.1 - 13.7.2021
 This is a relatively small update for the **Genesis** module, since the planned update on drawing 
 didn't make it to this release.

@@ -111,6 +111,12 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	def apply(nodeContent: N) = node(nodeContent)
 	
 	/**
+	 * @param nodeContent Content of the targeted node
+	 * @return Edges pointing to that node
+	 */
+	def edgesTo(nodeContent: N) = edgesByEndNode.getOrElse(nodeContent, Set())
+	
+	/**
 	 * @param nodeContent Tested node content
 	 * @return Whether this graph contains a link for the specified node
 	 */
@@ -252,12 +258,17 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	 */
 	def withoutNode(node: N) = copy(connections =
 		connections.filter { case (start, _, end) => start != node && end != node })
-	
 	/**
 	 * @param node Node to exclude from this graph
 	 * @return A copy of this graph with specified node excluded
 	 */
 	def -(node: N) = withoutNode(node)
+	
+	/**
+	 * @param edge An edge content to exclude from this graph
+	 * @return A copy of this graph with all edges with the specified content removed
+	 */
+	def withoutEdge(edge: E) = copy(connections = connections.filter { case (_, e, _) => e != edge })
 	
 	/**
 	 * @param nodes Nodes to exclude from this graph
