@@ -20,7 +20,7 @@ object Timeout
 	def apply(timeoutType: TimeoutType, threshold: FiniteDuration): Timeout = Timeout(Map(timeoutType -> threshold))
 	
 	/**
-	  * @param first First timout pair
+	  * @param first First timeout pair
 	  * @param second Second timeout pair
 	  * @param more More timeout pairs
 	  * @return A new timeout with specified values

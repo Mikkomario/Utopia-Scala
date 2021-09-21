@@ -1,5 +1,6 @@
 package utopia.flow.operator
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.util.SelfComparable
 
 /**
@@ -60,10 +61,9 @@ object Sign
 	// ATTRIBUTES   ----------------------
 	
 	/**
-	  * All sign values (positive, then negative)
+	  * All 2 sign values (first positive, then negative)
 	  */
-	// TODO: Use pair? (see if works)
-	val values = Vector(Positive, Negative)
+	val values = Pair(Positive, Negative)
 	
 	
 	// OTHER    --------------------------

@@ -1,5 +1,10 @@
 # Utopia Disciple - List of changes
 
+## v1.2 (in development)
+### Breaking Changes
+- `.validateProposedProficiencies(...)` in **DbLanguage** now returns **Pair**s instead of tuples
+  - This should require only minor refactoring
+
 ## v1.1 - 4.9.2021
 This update introduces a few small utility additions. The "breaking" changes to **DbOrganization** are 
 quite unlikely to affect you.

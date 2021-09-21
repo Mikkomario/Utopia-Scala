@@ -31,6 +31,14 @@ object Acceleration3D
 case class Acceleration3D(override val amount: Velocity3D, override val duration: Duration) extends
 	AccelerationLike[Vector3D, Velocity3D, Acceleration3D] with ThreeDimensional[LinearAcceleration]
 {
+	// ATTRIBUTES   -------------------
+	
+	// Caches dimensions
+	override lazy val dimensions = super.dimensions
+	
+	
+	// COMPUTED -----------------------
+	
 	/**
 	  * @return A 2D copy of this acceleration (where z-acceleration is 0)
 	  */

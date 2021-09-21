@@ -41,7 +41,7 @@ object BezierPathTest extends App
 	
 	// Linear compound path
 	val points2 = Vector(Point(100, 100), Point(700, 100), Point(700, 500), Point(100, 500), Point(100, 100))
-	val path3 = CompoundPath(points2.paired.map { p => Line(p._1, p._2) }.toVector)
+	val path3 = CompoundPath(points2.paired.map { p => Line(p.first, p.second) }.toVector)
 	
 	// Circular path
 	val circle = Circle(gameWorldSize.toPoint / 2, 200)
@@ -85,7 +85,7 @@ private class PathDrawer(val points: Seq[Point], val color: Color) extends Drawa
 {
 	// ATTRIBUTES	-------------------
 	
-	private val lines = points.paired.map { p => Line(p._1, p._2) }
+	private val lines = points.paired.map { p => Line(p.first, p.second) }
 	
 	
 	// IMPLEMENTED	-------------------

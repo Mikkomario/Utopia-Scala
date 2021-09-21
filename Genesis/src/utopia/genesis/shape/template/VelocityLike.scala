@@ -30,17 +30,12 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Trans
 	protected def buildCopy(transition: Transition = transition, duration: Duration = duration): Repr
 	
 	
-	// ATTRIBUTES	-------------
+	// COMPUTED	-----------------
 	
 	/**
 	  * @return A linear copy of this velocity, based on transition amount / length
 	  */
-	lazy val linear = LinearVelocity(transition.length, duration)
-	
-	override lazy val dimensions = transition.dimensions.map { LinearVelocity(_, duration) }
-	
-	
-	// COMPUTED	-----------------
+	def linear = LinearVelocity(transition.length, duration)
 	
 	override protected def zeroDimension = LinearVelocity.zero
 	
@@ -51,6 +46,8 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Trans
 	
 	
 	// IMPLEMENTED	-------------
+	
+	override def dimensions = transition.dimensions.map { LinearVelocity(_, duration) }
 	
 	/**
 	  * @return Whether this velocity is actually stationary (zero)

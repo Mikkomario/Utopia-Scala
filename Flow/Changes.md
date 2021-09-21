@@ -5,11 +5,13 @@
 - **Iterator**`.takeNextTo(...)` and `.takeNext(Int)` (**CollectionExtensions**) now return an iterator and not a vector, 
   and don't advance the iterator immediately. The previous implementations are available as `.collectTo(...)` and 
   `.collectNext(Int)`
+- **Seq**`.paired` now returns **Pair**s instead of tuples. This may require refactoring when used with pattern matching.
 ### Deprecations
 - Deprecated **Iterable**`.tryForEach(...)` in favor of **IterableOnce**`.tryForeach(...)` (**CollectionExtensions**)
 - Deprecated **Path**`.forChildren(...)` and `.foldChildren(...)` in favor of the new iteration functions 
   (**FileExtensions**)
 ### New Features
+- Added **Pair**, a data structure that holds exactly two values of the same type
 - Added **PollableOnce**, a container that returns its value once before becoming invalid
 - Added **RecursiveDirectoryIterator**, which is also used by some refactored **FileExtensions** functions
 - Added **Sign** class to represent binary direction (+ or -). This closely resembles 

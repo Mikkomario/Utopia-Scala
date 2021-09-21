@@ -14,9 +14,9 @@ trait Dimensional[+A]
 	// ABSTRACT	--------------------
 	
 	/**
-	  * @return The X, Y, Z ... dimensions of this vectorlike instance. No specific length required, however.
+	  * @return The X, Y, Z ... dimensions of this vector-like instance. No specific length required, however.
 	  */
-	def dimensions: Vector[A]
+	def dimensions: Seq[A]
 	
 	/**
 	  * @return A value with length of zero
@@ -32,6 +32,11 @@ trait Dimensional[+A]
 	  */
 	def toMap = dimensions.take(3).zipWithIndex.map { case (v, i) =>
 		axisForIndex(i) -> v }.toMap
+	
+	
+	// IMPLEMENTED  ----------------
+	
+	override def toString = s"(${dimensions.mkString(", ")})"
 	
 	
 	// OTHER	--------------------
@@ -58,7 +63,6 @@ trait Dimensional[+A]
 		case Y => 1
 		case Z => 2
 	}
-	
 	/**
 	  * @param index An index
 	  * @return An axis that matches that index
@@ -71,5 +75,21 @@ trait Dimensional[+A]
 		case 1 => Y
 		case 2 => Z
 		case _ => throw new IndexOutOfBoundsException(s"No axis for index $index")
+	}
+	
+	/**
+	  * Checks whether these two dimensional items are equal when using the specified equality function
+	  * @param other Another dimensional item
+	  * @param f Equality function
+	  * @tparam B Type of the other dimensions
+	  * @return Whether these two items are equal, according to the equality function
+	  */
+	def compareEqualityWith[B](other: Dimensional[B])(f: (A, B) => Boolean) =
+	{
+		val myDimensions = dimensions
+		val otherDimensions = other.dimensions
+		(0 until (myDimensions.size max otherDimensions.size)).forall { index =>
+			f(myDimensions.getOrElse(index, zeroDimension), otherDimensions.getOrElse(index, other.zeroDimension))
+		}
 	}
 }

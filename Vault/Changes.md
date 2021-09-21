@@ -1,5 +1,15 @@
 # Utopia Vault - List of Changes
 
+## v1.10 (in development)
+### Breaking Changes
+- **References**`.columnsBetween(Table, Table)` and `.connectionBetween(Table, Table)` now return 
+  **Pair**s instead of tuples.
+  - Also includes additional method variants
+  - This change is quite unlikely to require major refactoring
+### Other Changes
+- **Reference** now uses **Pair** internally instead of two separate **ReferencePoint**s. 
+  The interface remains largely the same, however.
+
 ## v1.9 - 4.9.2021
 This update mostly contains some non-breaking refactoring and utility updates. However, the bugfix to the `exists` 
 function in **FactoryView** / **View** is of major importance. I do recommend applying this update on a high priority.

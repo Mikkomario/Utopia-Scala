@@ -17,7 +17,7 @@ case class StandardVelocityPath[P <: Combinable[P, P] with Reversible[P] with Li
 	
 	// TODO: Could optimize this by combining similar values into a single larger range
 	private val sequenceLengths = (0 to sequenceAmount).map { i => original(i.toDouble / sequenceAmount) }.paired.map {
-		p => (p._2 - p._1).length }
+		p => (p.second - p.first).length }
 	
 	// IMPLEMENTED	-------------------
 	

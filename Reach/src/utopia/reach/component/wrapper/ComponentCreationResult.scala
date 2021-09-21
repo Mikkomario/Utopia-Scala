@@ -1,5 +1,6 @@
 package utopia.reach.component.wrapper
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.event.ChangingLike
 import utopia.reach.component.template.ReachComponentLike
 
@@ -13,17 +14,14 @@ object ComponentCreationResult
 	  * Component creation result without additional result value
 	  */
 	type CreationWrapper[C] = ComponentCreationResult[C, Unit]
-	
 	/**
 	  * A wrapper that wraps multiple creation results, containing an additional result of its own
 	  */
 	type CreationsResult[C, CR, R] = ComponentCreationResult[IterableOnce[ComponentCreationResult[C, CR]], R]
-	
 	/**
 	  * A wrapper that wraps multiple creation results with no additional value
 	  */
 	type CreationsWrapper[C, CR] = CreationsResult[C, CR, Unit]
-	
 	/**
 	  * Component creation result wrapping multiple components that have individual visibility states
 	  */
@@ -37,6 +35,9 @@ object ComponentCreationResult
 	
 	implicit def componentToResult[C <: ReachComponentLike](component: C): CreationWrapper[C] =
 		new ComponentCreationResult[C, Unit](component, ())
+	
+	implicit def componentPairToResult[C <: ReachComponentLike](componentPair: Pair[C]): CreationWrapper[Pair[C]] =
+		new ComponentCreationResult[Pair[C], Unit](componentPair, ())
 	
 	/*
 	implicit def vectorToResult[C](components: Vector[C]): ComponentCreationResult[Vector[C], Unit] =
@@ -91,6 +92,8 @@ object ComponentCreationResult
   * An object for wrapping a created component and an optional result
   * @author Mikko Hilpinen
   * @since 7.10.2020, v0.1
+  * @tparam C Type of wrapped component
+  * @tparam R Type of additional result
   */
 class ComponentCreationResult[+C, +R](val component: C, val result: R)
 {

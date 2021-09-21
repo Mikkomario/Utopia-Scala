@@ -1,5 +1,6 @@
 package utopia.vault.sql
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.database.References
 import utopia.vault.model.immutable.{Column, Table}
@@ -38,17 +39,13 @@ trait SqlTarget
         // Finds the first table referencing (or being referenced by) the provided table and uses 
         // that for a join
         val tables = toSqlSegment.targetTables
-        val firstLink = tables.findMap { left => References.connectionBetween(left, table) }
-        if (firstLink.isEmpty)
+        tables.findMap { left => References.connectionBetween(left, table) } match
         {
-            throw new CannotJoinTableException(s"Cannot find a reference between $toSqlSegment and $table. Only found references: [${
-                (tables + table).flatMap(References.from).mkString(", ")
-            }]")
-        }
-        else
-        {
-            val (leftColumn, rightColumn) = firstLink.get
-            this + Join(leftColumn, table, rightColumn, joinType)
+            case Some(Pair(leftColumn, rightColumn)) => this + Join(leftColumn, table, rightColumn, joinType)
+            case None =>
+                throw new CannotJoinTableException(
+                    s"Cannot find a reference between $toSqlSegment and $table. Only found references: [${
+                        (tables + table).flatMap(References.from).mkString(", ")}]")
         }
     }
     
@@ -57,11 +54,11 @@ trait SqlTarget
      * This will only work if the column belongs to one of the already targeted tables and 
      * the column references another column
      */
-    def joinFrom(column: Column, joinType: JoinType = Inner) = 
-    {
-        toSqlSegment.targetTables.find { _.contains(column) }.flatMap { References.from(_, column) }.map {
-                target => this + Join(column, target.table, target.column, joinType) }.getOrElse(this)
-    }
+    def joinFrom(column: Column, joinType: JoinType = Inner) =
+        toSqlSegment.targetTables.find { _.contains(column) }
+            .flatMap { References.from(_, column) }
+            .map { target => this + Join(column, target.table, target.column, joinType) }
+            .getOrElse(this)
 }
 
 private class CannotJoinTableException(message: String) extends RuntimeException(message)

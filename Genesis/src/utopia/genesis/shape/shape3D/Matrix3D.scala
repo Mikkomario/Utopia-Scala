@@ -193,7 +193,7 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	
 	override def repr = this
 	
-	override protected def buildCopy(columns: Vector[Vector3D]) =
+	override protected def buildCopy(columns: Seq[Vector3D]) =
 	{
 		val fullColumns = columns.padTo(3, Vector3D.zero)
 		Matrix3D(fullColumns.head, fullColumns(1), fullColumns(2))

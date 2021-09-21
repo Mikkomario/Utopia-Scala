@@ -13,6 +13,7 @@ import utopia.exodus.rest.resource.CustomAuthorizationResourceFactory
 import utopia.exodus.rest.resource.user.me.MeNode
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.CollectionExtensions._
@@ -135,7 +136,7 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 					// Inserts new user data
 					val user = UserModel.insert(UserSettingsData(userName, email))
 					UserAuthModel.insert(user.id, newUser.password)
-					val insertedLanguages = languages.map { case (languageId, familiarity) =>
+					val insertedLanguages = languages.map { case Pair(languageId, familiarity) =>
 						UserLanguageModel.insert(UserLanguageData(user.id, languageId, familiarity))
 					}
 					// Links user with device (if device has been specified) (uses existing or a new device)

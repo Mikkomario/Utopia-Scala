@@ -120,7 +120,7 @@ trait Projectable
         if (comparePoints(projection.start, projection.end) <= 0) projection else projection.reverse
     }
     
-    protected def comparePoints(v1: TwoDimensional[Double], v2: TwoDimensional[Double]) =
+    protected def comparePoints(v1: MultiDimensional[Double], v2: MultiDimensional[Double]) =
     {
         if (v1.x < v2.x) { -1 }
         else if (v1.x > v2.x) { 1 }

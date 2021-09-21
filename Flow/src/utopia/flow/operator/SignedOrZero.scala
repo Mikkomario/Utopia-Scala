@@ -36,11 +36,11 @@ trait SignedOrZero[+Repr] extends Any with Signed[Repr] with Zeroable[Repr]
 	/**
 	  * @return A positive or zero value copy of this item
 	  */
-	def positive = if (isPositive) repr else zero
+	def positiveOrZero = if (isPositive) repr else zero
 	/**
 	  * @return A negative or zero value of this item
 	  */
-	def negative = if (isPositive) zero else repr
+	def negativeOrZero = if (isPositive) zero else repr
 	
 	
 	// IMPLEMENTED  ----------------------

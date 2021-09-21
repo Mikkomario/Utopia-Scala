@@ -1,6 +1,7 @@
 package utopia.flow.util
 
 import utopia.flow.collection.{GroupIterator, LimitedLengthIterator, PollingIterator, TerminatingIterator}
+import utopia.flow.datastructure.immutable.Pair
 
 import scala.language.implicitConversions
 import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
@@ -233,6 +234,14 @@ object CollectionExtensions
             }
             lBuilder.result() -> rBuilder.result()
         }
+    }
+    
+    implicit class PairsIterableOnce[A](val pairs: IterableOnce[Pair[A]]) extends AnyVal
+    {
+        /**
+          * @return A map based on this collection (first items as keys, second items as values)
+          */
+        def toMap: Map[A, A] = pairs.iterator.map { _.toTuple }.toMap
     }
     
     
@@ -685,7 +694,7 @@ object CollectionExtensions
           *         argument. The last item will be presented once as the second argument. If this sequence
           *         contains less than two items, an empty seq is returned.
           */
-        def paired = (1 until seq.size).map { i => (seq(i - 1), seq(i)) }
+        def paired = (1 until seq.size).map { i => Pair(seq(i - 1), seq(i)) }
     
     
         /**

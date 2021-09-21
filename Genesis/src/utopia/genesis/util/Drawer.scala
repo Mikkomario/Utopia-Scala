@@ -3,7 +3,7 @@ package utopia.genesis.util
 import java.awt.{AlphaComposite, BasicStroke, Font, Graphics, Graphics2D, Image, Paint, RenderingHints, Shape, Stroke, Toolkit}
 import java.awt.geom.AffineTransform
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Bounds, JavaAffineTransformConvertible, Matrix2D, Point, ShapeConvertible, Size, TwoDimensional}
+import utopia.genesis.shape.shape2D.{Bounds, JavaAffineTransformConvertible, Matrix2D, Point, ShapeConvertible, Size, MultiDimensional}
 import utopia.flow.util.NullSafe._
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.shape2D.transform.{AffineTransformable, AffineTransformation, LinearTransformable}
@@ -337,7 +337,7 @@ class Drawer(val graphics: Graphics2D, val fillPaint: Option[Paint] = Some(java.
       * @param area Area that is copied
       * @param translation The amount of translation applied to the area
       */
-    def copyArea(area: Bounds, translation: TwoDimensional[Double]) =
+    def copyArea(area: Bounds, translation: MultiDimensional[Double]) =
     {
         if (translation.dimensions2D.exists { _ != 0 })
             graphics.copyArea(

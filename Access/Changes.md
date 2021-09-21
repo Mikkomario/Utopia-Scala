@@ -1,5 +1,10 @@
 # Utopia Access - List of Changes
 
+## v1.4.1 (in development)
+### New Methods
+- **Headers**
+  - Added a variant of + that accepts a **Pair**
+
 ## v1.4 - 13.7.2021
 This update makes **Headers** instance creation more intuitive and also adds support for redirection status codes. 
 ### Breaking Changes

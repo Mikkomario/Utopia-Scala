@@ -30,9 +30,14 @@ object Velocity2D
   * @param transition The amount of transition over 'duration'
   * @param duration The duration of change
   */
-case class Velocity2D(transition: Vector2D, override val duration: Duration) extends VelocityLike[Vector2D, Velocity2D]
-	with TwoDimensional[LinearVelocity]
+case class Velocity2D(transition: Vector2D, override val duration: Duration)
+	extends VelocityLike[Vector2D, Velocity2D] with TwoDimensional[LinearVelocity]
 {
+	// ATTRIBUTES   -------------
+	
+	override val dimensions2D = transition.dimensions2D.map { LinearVelocity(_, duration) }
+	
+	
 	// COMPUTED	-----------------
 	
 	/**

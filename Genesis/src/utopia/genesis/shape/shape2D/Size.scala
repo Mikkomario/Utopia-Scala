@@ -1,19 +1,17 @@
 package utopia.genesis.shape.shape2D
 
-import utopia.genesis.util.Extensions._
 import utopia.flow.generic.ValueConversions._
 
 import java.awt.Dimension
 import utopia.flow.generic.ValueConvertible
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.datastructure.immutable.{Model, Pair, Value}
 import utopia.genesis.generic.SizeType
 import utopia.flow.generic.ModelConvertible
-import utopia.flow.datastructure.immutable.Model
 
 import scala.collection.immutable.HashMap
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
-import utopia.genesis.util.ApproximatelyEquatable
+import utopia.flow.operator.SignedOrZero
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.shape3D.Vector3D
@@ -23,13 +21,28 @@ import scala.util.Success
 
 object Size extends FromModelFactory[Size]
 {
+    // ATTRIBUTES   --------------------------
+    
     /**
      * A zero size
      */
     val zero = Size(0, 0)
     
+    
+    // IMPLEMENTED  --------------------------
+    
     def apply(model: utopia.flow.datastructure.template.Model[Property]) = Success(
             Size(model("width").getDouble, model("height").getDouble))
+    
+    
+    // OTHER    ------------------------------
+    
+    /**
+      * @param width Width for this pair
+      * @param height Height for this pair
+      * @return A size based on that pair
+      */
+    def apply(width: Double, height: Double): Size = apply(Pair(width, height))
     
     /**
       * Creates a new size
@@ -48,7 +61,6 @@ object Size extends FromModelFactory[Size]
      * Converts an awt dimension into size
      */
     def of(dimension: Dimension) = Size(dimension.width, dimension.height)
-    
     /**
      * Converts awt insets into a size
      */
@@ -67,40 +79,34 @@ object Size extends FromModelFactory[Size]
 * @author Mikko Hilpinen
 * @since 20.11.2018
 **/
-case class Size(width: Double, height: Double) extends Vector2DLike[Size] with ApproximatelyEquatable[Size]
-        with ValueConvertible with ModelConvertible
+case class Size(override val dimensions2D: Pair[Double])
+    extends Vector2DLike[Size] with ValueConvertible with ModelConvertible
+        with TwoDimensional[Double] with SignedOrZero[Size]
 {
     // COMPUTED    --------------------------
     
     /**
-     * @return whether this size is positive (not zero or smaller)
-     */
-    def isPositive = width > 0 && height > 0
-    
+      * @return Width of this size
+      */
+    def width = dimensions2D.first
     /**
-     * @return Whether this size is zero or smaller
-     */
-    def isNegative = !isPositive
-    
-    /**
-     * @return Whether this size has zero area (width and/or height is zero). Zero sizes cannot be divided with
-     */
-    override def isZero = width == 0 || height == 0
+      * @return Height of this size
+      */
+    def height = dimensions2D.second
     
     /**
      * The area of this size (width * height)
      */
-    def area = width * height
+    def area = dimensions2D.product
     
     /**
      * A vector representation of this size
      */
-    def toVector = Vector2D(width, height)
-    
+    def toVector = Vector2D(dimensions2D)
     /**
       * A point representation of this size
       */
-    def toPoint = Point(width, height)
+    def toPoint = Point(dimensions2D)
     
     /**
      * An awt representation of this size
@@ -110,14 +116,14 @@ case class Size(width: Double, height: Double) extends Vector2DLike[Size] with A
     /**
       * @return This size as a square shape where width is equal to height. Lowers one of the sides if necessary.
       */
-    def fitToSquare =
-    {
-        val side = width min height
-        Size(side, side)
-    }
+    def fitToSquare = Size(Pair.twice(minDimension))
     
     
     // IMPLEMENTED    -----------------------
+    
+    override def isPositive = dimensions2D.forall { _ > 0 }
+    
+    override protected def zero = Size.zero
     
     override def buildCopy(vector: Vector2D) = Size(vector.x, vector.y)
     
@@ -125,23 +131,19 @@ case class Size(width: Double, height: Double) extends Vector2DLike[Size] with A
     
     override def repr = this
     
-    lazy val dimensions = Vector(width, height)
-    
-    override def buildCopy(dimensions: Vector[Double]) =
+    override def buildCopy(dimensions: Seq[Double]) =
     {
         if (dimensions.size >= 2)
-            Size(dimensions(0), dimensions(1))
+            Size(dimensions.head, dimensions(1))
         else if (dimensions.isEmpty)
             Size.zero
         else
-            Size(dimensions(0), 0)
+            Size(dimensions.head, 0)
     }
     
     def toValue = new Value(Some(this), SizeType)
     
     def toModel = Model.fromMap(HashMap("width" -> width, "height" -> height))
-    
-    def ~==(other: Size) = (width ~== other.width) && (height ~== other.height)
     
     override def toString = s"$width x $height"
     
@@ -158,12 +160,10 @@ case class Size(width: Double, height: Double) extends Vector2DLike[Size] with A
      * A copy of this size with specified width
      */
     def withWidth(w: Double) = Size(w, height)
-    
     /**
      * A copy of this size with specified height
      */
     def withHeight(h: Double) = Size(width, h)
-    
     /**
      * A copy of this size with specified length along the target axis
      */
@@ -190,7 +190,7 @@ case class Size(width: Double, height: Double) extends Vector2DLike[Size] with A
       * @param another Another size
       * @return Whether this size would fit into the other size
       */
-    def fitsInto(another: Size) = width <= another.width && height <= another.height
+    def fitsInto(another: Size) = compareEqualityWith(another) { _ <= _ }
     
     /**
      * @param another Another size

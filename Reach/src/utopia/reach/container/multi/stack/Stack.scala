@@ -1,13 +1,14 @@
 package utopia.reach.container.multi.stack
 
-import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.operator.Sign.Positive
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.Direction2D.{Down, Up}
 import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
-import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
+import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.CustomDrawer
@@ -127,11 +128,11 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam R Type of additional creation result
 	  * @return A new stack with the two items in it
 	  */
-	def forPair[C <: ReachComponentLike, R](content: OpenComponent[(_ <: C, _ <: C), R], alignment: Alignment,
-											margin: StackLength = StackLength.any,
-											cap: StackLength = StackLength.fixedZero,
-											customDrawers: Vector[CustomDrawer] = Vector(),
-											forceFitLayout: Boolean = false) =
+	def forPair[C <: ReachComponentLike, R](content: OpenComponent[Pair[C], R], alignment: Alignment,
+	                                        margin: StackLength = StackLength.any,
+	                                        cap: StackLength = StackLength.fixedZero,
+	                                        customDrawers: Vector[CustomDrawer] = Vector(),
+	                                        forceFitLayout: Boolean = false): ComponentWrapResult[Stack[C], Vector[C], R] =
 	{
 		// Specifies stack axis, layout and item order based on the alignment
 		// The image label always goes to the direction of the alignment
@@ -152,13 +153,8 @@ case class StackFactory(parentHierarchy: ComponentHierarchy)
 				(X, horizontal.sign, layout)
 			case None => (Y, alignment.verticalDirectionSign.getOrElse(Positive), Center)
 		}
-		val orderedContent = content.mapComponent { case (a, b) =>
-			sign match
-			{
-				case Positive => Vector(b, a)
-				case Negative => Vector(a, b)
-			}
-		}
+		// Negative sign keeps order, positive swaps it
+		val orderedContent = content.mapComponent { pair => (pair * -sign).toVector }
 		// Creates the stack
 		apply(orderedContent, axis, if (forceFitLayout) Fit else layout, margin, cap, customDrawers)
 	}
@@ -315,10 +311,10 @@ case class ContextualStackFactory[N <: BaseContextLike](stackFactory: StackFacto
 	  * @tparam R Type of additional creation result
 	  * @return A new stack with the two items in it
 	  */
-	def forPair[C <: ReachComponentLike, R](content: OpenComponent[(_ <: C, _ <: C), R], alignment: Alignment,
+	def forPair[C <: ReachComponentLike, R](content: OpenComponent[Pair[C], R], alignment: Alignment,
 											cap: StackLength = StackLength.fixedZero,
 											customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false,
-											forceFitLayout: Boolean = false) =
+											forceFitLayout: Boolean = false): ComponentWrapResult[Stack[C], Vector[C], R] =
 		stackFactory.forPair(content, alignment,
 			if (areRelated) context.relatedItemsStackMargin else context.defaultStackMargin, cap, customDrawers,
 			forceFitLayout)
@@ -399,7 +395,7 @@ class StackBuilder[+F](factory: StackFactory, contentFactory: ComponentFactoryFa
 											cap: StackLength = StackLength.fixedZero,
 											customDrawers: Vector[CustomDrawer] = Vector(),
 											forceFitLayout: Boolean = false)
-										   (fill: F => ComponentCreationResult[(C, C), R]) =
+										   (fill: F => ComponentCreationResult[Pair[C], R]) =
 	{
 		val content = Open.using(contentFactory)(fill)
 		factory.forPair(content, alignment, margin, cap, customDrawers, forceFitLayout)
@@ -560,7 +556,7 @@ class ContextualStackBuilder[N <: BaseContextLike, +F[X <: N] <: ContextualCompo
 	def pair[C <: ReachComponentLike, R](alignment: Alignment, cap: StackLength = StackLength.fixedZero,
 										 customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false,
 										 forceFitLayout: Boolean = false)
-										(fill: F[N] => ComponentCreationResult[(_ <: C, _ <: C), R]) =
+										(fill: F[N] => ComponentCreationResult[Pair[C], R]): ComponentWrapResult[Stack[C], Vector[C], R] =
 	{
 		val content = Open.withContext(contentFactory, stackFactory.context)(fill)
 		stackFactory.forPair(content, alignment, cap, customDrawers, areRelated, forceFitLayout)

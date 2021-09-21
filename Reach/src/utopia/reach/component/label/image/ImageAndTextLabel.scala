@@ -1,5 +1,6 @@
 package utopia.reach.component.label.image
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.genesis.color.Color
 import utopia.genesis.image.Image
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
@@ -157,7 +158,7 @@ class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, image: Image, text:
 		{
 			// Creates stack content in open state first
 			val openItems = Open { hierarchy =>
-				ComponentCreationResult(makeImageLabel(hierarchy) -> makeTextLabel(hierarchy))
+				ComponentCreationResult(Pair(makeImageLabel(hierarchy), makeTextLabel(hierarchy)))
 			}(parentHierarchy.top)
 			// Wraps the components in a stack
 			Stack(parentHierarchy).forPair(openItems, alignment, StackLength.fixedZero,

@@ -32,6 +32,11 @@ object Acceleration2D
 case class Acceleration2D(override val amount: Velocity2D, override val duration: Duration) extends
 	AccelerationLike[Vector2D, Velocity2D, Acceleration2D] with TwoDimensional[LinearAcceleration]
 {
+	// ATTRIBUTES   -------------------
+	
+	override val dimensions2D = amount.dimensions2D.map { LinearAcceleration(_, duration) }
+	
+	
 	// COMPUTED	-----------------------
 	
 	/**

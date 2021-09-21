@@ -20,11 +20,6 @@ trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
 	extends Change[V, Repr] with Combinable[Repr, Change[V, _]] with Dimensional[LinearAcceleration]
 		with VectorProjectable[Repr]
 {
-	// ATTRIBUTES	-------------------
-	
-	override lazy val dimensions = amount.dimensions.map { shape1D.LinearAcceleration(_, duration) }
-	
-	
 	// ABSTRACT	-----------------------
 	
 	/**
@@ -36,6 +31,8 @@ trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
 	
 	
 	// COMPUTED	-----------------------
+	
+	override def dimensions = amount.dimensions.map { shape1D.LinearAcceleration(_, duration) }
 	
 	override protected def zeroDimension = LinearAcceleration.zero
 	

@@ -1,5 +1,6 @@
 package utopia.vault.coder.util
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.parse.Regex
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
@@ -50,7 +51,7 @@ object NamingUtils
 				if (appliedRanges.head.size > 1 && appliedRanges.head.last < lastIndex)
 					builder += '_'
 				// Adds the in-between portions and remaining uppercase sequences
-				appliedRanges.paired.foreach { case (prevRange, nextRange) =>
+				appliedRanges.paired.foreach { case Pair(prevRange, nextRange) =>
 					builder ++= camelName.slice(prevRange.last + 1, nextRange.start)
 					builder += '_'
 					builder ++= camelName.slice(nextRange).toLowerCase

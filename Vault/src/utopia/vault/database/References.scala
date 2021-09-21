@@ -1,7 +1,9 @@
 package utopia.vault.database
 
-import utopia.flow.datastructure.immutable.Tree
+import utopia.flow.datastructure.immutable.{Pair, Tree}
 import utopia.flow.generic.EnvironmentNotSetupException
+import utopia.flow.operator.Sign
+import utopia.flow.util.CollectionExtensions._
 import utopia.vault.model.immutable.{Column, Reference, ReferencePoint, Table}
 
 import scala.collection.immutable.{HashMap, HashSet}
@@ -55,7 +57,8 @@ object References
     def setup(sets: IterableOnce[(Table, String, Table, String)]): Unit =
     {
         // Converts the tuple data into a reference set
-        val references = sets.iterator.flatMap { case (table1, name1, table2, name2) => Reference(table1, name1, table2, name2) }.toSet
+        val references = sets.iterator.flatMap { case (table1, name1, table2, name2) =>
+            Reference(table1, name1, table2, name2) }.toSet
         references.groupBy { _.from.table.databaseName }.foreach { case (dbName, refs) => setup(dbName, refs) }
     }
     
@@ -144,48 +147,57 @@ object References
     }
     
     /**
+      * Finds all references between the two tables. The results contain pairings of left side
+      * columns matched with right side columns. The references may go either way
+      */
+    def columnsBetween(tables: Pair[Table]) =
+    {
+        // Makes sure database references have been set up
+        tables.map { _.databaseName }.distinct.foreach(checkIsSetup)
+        // Checks first for same order as in specified parameter, then for reverse order
+        Sign.values.flatMap { orderSign =>
+            val orderedTables = tables * orderSign
+            referenceData(orderedTables.first.databaseName)
+                .filter { _.tables == orderedTables }
+                .map { _.columns * orderSign } // Columns are ordered according to the parameter ordering
+        }.toSet
+    }
+    /**
      * Finds all references between the two tables. The results contain pairings of left side
      * columns matched with right side columns. The references may go either way
      */
-    def columnsBetween(left: Table, right: Table) =
-    {
-        Set(left.databaseName, right.databaseName).foreach(checkIsSetup)
-        
-        val sameOrderMatches = referenceData(left.databaseName).filter {
-            ref => ref.from.table == left && ref.to.table == right }.map { ref => ref.from.column -> ref.to.column }
-        
-        val oppositeOrderMatches = referenceData(right.databaseName).filter {
-            ref => ref.from.table == right && ref.to.table == left }.map { ref => ref.to.column -> ref.from.column }
-            
-       sameOrderMatches ++ oppositeOrderMatches
-    }
+    def columnsBetween(left: Table, right: Table): Set[Pair[Column]] = columnsBetween(Pair(left, right))
     
+    /**
+      * Finds a single connection between the two tables
+      * @param tables Left & right table
+      * @return Left side column -> right side column. None if there wasn't a connection between the two tables
+      */
+    def connectionBetween(tables: Pair[Table]) =
+    {
+        // Makes sure data is set up
+        tables.map { _.databaseName }.distinct.foreach(checkIsSetup)
+        // Checks first for forward references, then for backwards references
+        Sign.values.findMap { orderSign =>
+            val orderedTables = tables * orderSign
+            referenceData(orderedTables.first.databaseName)
+                .find { _.tables == orderedTables }
+                .map { _.columns * orderSign } // Columns are returned in same order as parameter tables
+        }
+    }
     /**
       * Finds a single connection between the two tables
       * @param left Left side table
       * @param right Right side table
       * @return Left side column -> right side column. None if there wasn't a connection between the two tables
       */
-    def connectionBetween(left: Table, right: Table) =
-    {
-        checkIsSetup(left.databaseName)
-        referenceData(left.databaseName).find { ref => ref.from.table == left && ref.to.table == right }.map {
-            ref => ref.from.column -> ref.to.column }.orElse
-            {
-                if (right.databaseName != left.databaseName)
-                    checkIsSetup(right.databaseName)
-                
-                referenceData(right.databaseName).find { ref => ref.from.table == right && ref.to.table == left }.map {
-                    ref => ref.to.column -> ref.from.column }
-            }
-    }
+    def connectionBetween(left: Table, right: Table): Option[Pair[Column]] = connectionBetween(Pair(left, right))
     
     /**
      * Finds all references from the left table to the right table. Only one sided references
      * are included
      */
     def fromTo(left: Table, right: Table) = from(left) intersect to(right)
-    
     /**
      * Finds all references between the two tables. The reference(s) may point to either direction
      */
@@ -194,12 +206,11 @@ object References
     /**
      * Finds all tables referenced from a certain table
      */
-    def tablesReferencedFrom(table: Table) = from(table).map(_.to.table)
-    
+    def tablesReferencedFrom(table: Table) = from(table).map { _.to.table }
     /**
      * Finds all tables that contain references to the specified table
      */
-    def tablesReferencing(table: Table) = to(table).map(_.from.table)
+    def tablesReferencing(table: Table) = to(table).map { _.from.table }
     
     /**
      * Lists all of the tables that either directly or indirectly refer to the specified table. Will not include the
@@ -267,9 +278,7 @@ object References
     private def checkIsSetup(databaseName: String) =
     {
         if (!referenceData.contains(databaseName))
-        {
             throw EnvironmentNotSetupException(
                     s"References for database '$databaseName' haven't been specified")
-        }
     }
 }
