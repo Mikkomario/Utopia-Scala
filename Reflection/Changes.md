@@ -1,7 +1,10 @@
 # Utopia Reflection - List of Changes
 
 ## v2.0-alpha-4 (in development)
-Supports changes in Genesis
+### Breaking Changes
+- Use of **Direction1D** was replaced with **Sign** (reflecting changes in **Genesis**)
+### Other Changes
+- Supports latest **Genesis** changes
 
 ## v2.0-alpha-3 (incomplete update) - 13.7.2021
 This update doesn't add much concerning **Reflection**, it simply adds support for the breaking changes 

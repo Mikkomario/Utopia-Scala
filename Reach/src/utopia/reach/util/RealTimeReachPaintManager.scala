@@ -1,10 +1,10 @@
 package utopia.reach.util
 
 import utopia.flow.async.{Volatile, VolatileOption}
+import utopia.flow.operator.Sign
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.image.Image
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.reach.component.template.ReachComponentLike
@@ -167,7 +167,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, maxQueueSize: Int
 						// Case: Moving right or down => area at the end of the original bounds is repainted
 						// Case: Moving left or up => area at the start of the original bounds is repainted
 						repaintRegion(originalArea.slice(
-							movementAxis.toDirection(if (transitionAmount > 0) Positive else Negative), overlapAmount))
+							movementAxis.toDirection(Sign.of(transitionAmount)), overlapAmount))
 					}
 					else
 						repaintRegion(originalArea)

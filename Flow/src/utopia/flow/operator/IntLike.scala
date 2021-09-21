@@ -34,4 +34,4 @@ object IntLike
   * @since 20.9.2021, v1.12
   */
 trait IntLike[Repr] extends Any with Multiplicable[Repr] with LinearMeasurable with Combinable[Repr, Repr]
-	with SelfComparable[Repr] with Signed[Repr]
+	with SelfComparable[Repr] with SignedOrZero[Repr]

@@ -12,12 +12,16 @@
 ### New Features
 - Added **PollableOnce**, a container that returns its value once before becoming invalid
 - Added **RecursiveDirectoryIterator**, which is also used by some refactored **FileExtensions** functions
+- Added **Sign** class to represent binary direction (+ or -). This closely resembles 
+  **Direction1D** from **Utopia Genesis**
 - Added following new operator -related traits that enable easier creation and handling of scalable and combinable 
   data types
-  - **LinearMeasurable** - Provides .length -property, which is used in **Utopia Genesis**
-  - **LengthLike** - Recognizes between zero and non-zero instances
+  - **LinearMeasurable** - Provides `.length` -property, which is used in **Utopia Genesis**
   - **Reversible** - Supports the unary - operator
-  - **Signed** - Recognizes between positive, negative and zero and can swap between them
+  - **Zeroable** - Recognizes between zero and non-zero instances
+  - **Signed** - Recognizes between positive and negative and can swap between them
+  - **SignedOrZero** - Adds zero handling to Signed
+  - **BinarySigned** - Special case for signed items that can never be zero
   - **Scalable** - Allows multiplication
   - **LinearScalable** - Allows linear multiplication
   - **Combinable** - Supports the + operator (and possibly -)

@@ -1,6 +1,6 @@
 package utopia.genesis.shape.template
 
-import utopia.flow.operator.{Combinable, LengthLike, LinearScalable}
+import utopia.flow.operator.{Combinable, Zeroable, LinearScalable}
 import utopia.genesis.shape.shape1D.{LinearAcceleration, LinearVelocity}
 import utopia.genesis.shape.shape2D.Vector2DLike
 
@@ -13,7 +13,7 @@ import scala.concurrent.duration.Duration
   */
 trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Transition, Repr]]
 	extends Change[Transition, Repr] with LinearScalable[Repr] with Combinable[Repr, Change[Dimensional[Double], _]]
-		with LengthLike[Repr] with Dimensional[LinearVelocity] with VectorProjectable[Repr]
+		with Zeroable[Repr] with Dimensional[LinearVelocity] with VectorProjectable[Repr]
 {
 	// ABSTRACT	-----------------
 	

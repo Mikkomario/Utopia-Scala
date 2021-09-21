@@ -1,10 +1,11 @@
 package utopia.reflection.shape
 
+import utopia.flow.operator.Sign
+import utopia.flow.operator.Sign.{Negative, Positive}
+
 import javax.swing.SwingConstants
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.Direction1D
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Direction2D, HorizontalDirection, Point, Size, VerticalDirection}
 import utopia.reflection.container.stack.Stacker
 import utopia.reflection.shape.stack.{StackInsets, StackInsetsConvertible, StackLength, StackSize}
@@ -664,7 +665,7 @@ sealed trait Alignment
 	}
 	
 	private def positionWithDirection(length: Double, withinLength: Double, targetStartMargin: StackLength,
-									  targetEndMargin: StackLength, direction: Option[Direction1D],
+									  targetEndMargin: StackLength, direction: Option[Sign],
 									  allowStartBelowZero: Boolean) =
 	{
 		val emptyLength = withinLength - length
@@ -724,7 +725,7 @@ sealed trait Alignment
 	
 	// Calculates position and length along the primary axis
 	// Returns position -> length
-	private def positionNextToPrimary(axis: Axis2D, preferredDirection: Direction1D, referenceArea: Bounds,
+	private def positionNextToPrimary(axis: Axis2D, preferredDirection: Sign, referenceArea: Bounds,
 	                                  within: Bounds, optimalLength: Double, minLength: Double, optimalMargin: Double,
 	                                  avoidOverlap: Boolean): (Double, Double) =
 	{

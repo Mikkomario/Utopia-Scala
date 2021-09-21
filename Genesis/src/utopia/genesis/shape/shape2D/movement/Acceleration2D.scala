@@ -42,6 +42,8 @@ case class Acceleration2D(override val amount: Velocity2D, override val duration
 	
 	// IMPLEMENTED	-------------------
 	
+	override def repr = this
+	
 	override protected def buildCopy(amount: Velocity2D, duration: Duration) = copy(amount, duration)
 	
 	override def projectedOver[V <: VectorLike[V]](vector: VectorLike[V]) =

@@ -1,8 +1,8 @@
 package utopia.reach.container.multi.stack
 
+import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.Direction2D.{Down, Up}
 import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -169,7 +169,8 @@ case class ContextualStackFactory[N <: BaseContextLike](stackFactory: StackFacto
 {
 	// IMPLEMENTED	--------------------------------
 	
-	override def withContext[C2 <: BaseContextLike](newContext: C2) = copy(context = newContext)
+	override def withContext[C2 <: BaseContextLike](newContext: C2) =
+		copy(context = newContext)
 	
 	
 	// OTHER	------------------------------------

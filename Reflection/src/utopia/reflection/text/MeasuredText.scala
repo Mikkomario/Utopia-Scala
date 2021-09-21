@@ -1,9 +1,9 @@
 package utopia.reflection.text
 
+import utopia.flow.operator.Sign
+import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.shape1D.Direction1D
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Direction2D, Line, Point}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
@@ -188,7 +188,7 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	  * @param direction Vertical direction sign towards which the caret is moved
 	  * @return The next caret index. None if there are no lines in that direction
 	  */
-	def caretIndexParallelTo(caretIndex: Int, direction: Direction1D): Option[Int] =
+	def caretIndexParallelTo(caretIndex: Int, direction: Sign): Option[Int] =
 	{
 		val (lineIndex, indexOnLine) = mapCaretIndex(caretIndex)
 		caretIndexParallelTo(lineIndex, indexOnLine, direction).map { case (lineIndex, indexOnLine) =>
@@ -203,7 +203,7 @@ case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, 
 	  * @param direction Vertical direction sign towards which the caret is moved
 	  * @return The next line and relative caret index. None if there are no lines in that direction
 	  */
-	def caretIndexParallelTo(lineIndex: Int, indexOnLine: Int, direction: Direction1D) =
+	def caretIndexParallelTo(lineIndex: Int, indexOnLine: Int, direction: Sign) =
 	{
 		val nextLineIndex = lineIndex + 1 * direction.modifier
 		if (nextLineIndex < 0 || nextLineIndex > lines.size - 1)

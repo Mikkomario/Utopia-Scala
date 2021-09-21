@@ -1,13 +1,13 @@
 package utopia.genesis.shape.shape2D
 
-import utopia.flow.operator.LinearScalable
+import utopia.flow.operator.Sign.{Negative, Positive}
+import utopia.flow.operator.{Reversible, Scalable, Sign}
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.{Angle, Direction1D, RotationDirection}
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
+import utopia.genesis.shape.shape1D.{Angle, RotationDirection}
 import utopia.genesis.shape.shape1D.RotationDirection.{Clockwise, Counterclockwise}
 
-sealed trait Direction2DLike[+Parallel, +Perpendicular] extends LinearScalable[Vector2D]
+sealed trait Direction2DLike[+Parallel, +Perpendicular] extends Reversible[Parallel] with Scalable[Vector2D, Double]
 {
 	// ABSTRACT	--------------------------
 	
@@ -18,7 +18,7 @@ sealed trait Direction2DLike[+Parallel, +Perpendicular] extends LinearScalable[V
 	/**
 	  * @return 1D sign of this direction (positive or negative)
 	  */
-	def sign: Direction1D
+	def sign: Sign
 	/**
 	  * @return Direction opposite to this one
 	  */
@@ -72,6 +72,8 @@ sealed trait Direction2DLike[+Parallel, +Perpendicular] extends LinearScalable[V
 	
 	// IMPLEMENTED  ----------------------------
 	
+	override def unary_- = opposite
+	
 	override def *(mod: Double) = axis(mod * sign.modifier)
 	
 	
@@ -115,6 +117,8 @@ sealed trait Direction2D extends Direction2DLike[Direction2D, Direction2D]
   */
 sealed trait HorizontalDirection extends Direction2D with Direction2DLike[HorizontalDirection, VerticalDirection]
 {
+	override def repr = this
+	
 	override def axis = X
 	
 	override def along(axis: Axis2D) = if (axis == X) Some(this) else None
@@ -125,6 +129,8 @@ sealed trait HorizontalDirection extends Direction2D with Direction2DLike[Horizo
   */
 sealed trait VerticalDirection extends Direction2D with Direction2DLike[VerticalDirection, HorizontalDirection]
 {
+	override def repr = this
+	
 	override def axis = Y
 	
 	override def along(axis: Axis2D) = if (axis == Y) Some(this) else None
@@ -170,7 +176,7 @@ object Direction2D
 	  * @param isPositive Whether direction should be positive (true) or negative (false)
 	  * @return A direction
 	  */
-	@deprecated("Please use apply(Axis2D, Direction1D) instead", "v2.3")
+	@deprecated("Please use apply(Axis2D, Sign) instead", "v2.3")
 	def apply(axis: Axis2D, isPositive: Boolean): Direction2D = axis match
 	{
 		case X => if (isPositive) Right else Left
@@ -182,7 +188,7 @@ object Direction2D
 	  * @param sign Direction along that axis (positive or negative)
 	  * @return A 2D direction
 	  */
-	def apply(axis: Axis2D, sign: Direction1D): Direction2D = axis match
+	def apply(axis: Axis2D, sign: Sign): Direction2D = axis match
 	{
 		case X => if (sign.isPositive) Right else Left
 		case Y => if (sign.isPositive) Down else Up
@@ -280,7 +286,7 @@ object HorizontalDirection
 	  * @param sign Direction sign
 	  * @return Horizontal direction with that sign
 	  */
-	def apply(sign: Direction1D) = sign match
+	def apply(sign: Sign) = sign match
 	{
 		case Positive => Direction2D.Right
 		case Negative => Direction2D.Left
@@ -303,7 +309,7 @@ object VerticalDirection
 	  * @param sign Direction sign
 	  * @return Vertical direction with that sign
 	  */
-	def apply(sign: Direction1D) = sign match
+	def apply(sign: Sign) = sign match
 	{
 		case Positive => Direction2D.Down
 		case Negative => Direction2D.Up

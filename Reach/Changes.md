@@ -1,5 +1,9 @@
 # Utopia Reach - List of Changes
 
+## v0.3 (alpha)
+### Breaking Changes
+- Use of **Direction1D** was replaced with **Sign** (according to **Genesis** and **Reflection** changes)
+
 ## v0.2.1 (an alpha release) - 13.7.2021
 Not much of an update. Simply added support for the breaking **Cache**-related changes in **Utopia Flow** v1.10.
 

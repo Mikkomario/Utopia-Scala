@@ -1,8 +1,8 @@
 package utopia.reach.component.template.focus
 
+import utopia.flow.operator.Sign
+import utopia.flow.operator.Sign.Positive
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.shape1D.Direction1D
-import utopia.genesis.shape.shape1D.Direction1D.Positive
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.ComponentCreationResult
@@ -138,7 +138,7 @@ trait Focusable extends ReachComponentLike with FocusRequestable
 	  * @param forceFocusLeave Whether to force the focus to leave this component without testing its consent.
 	  *                        If true, no FocusLeaving events will be generated. Default = false.
 	  */
-	def yieldFocus(direction: Direction1D = Positive, forceFocusLeave: Boolean = false) =
+	def yieldFocus(direction: Sign = Positive, forceFocusLeave: Boolean = false) =
 		focusManager.moveFocusFrom(this, direction, forceFocusLeave)
 	
 	/**

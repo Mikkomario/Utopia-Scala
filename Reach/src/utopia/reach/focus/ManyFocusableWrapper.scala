@@ -1,8 +1,8 @@
 package utopia.reach.focus
 
+import utopia.flow.operator.Sign
+import utopia.flow.operator.Sign.Positive
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.shape.shape1D.Direction1D
-import utopia.genesis.shape.shape1D.Direction1D.Positive
 
 /**
   * A component manager which tracks multiple focusable components
@@ -49,8 +49,8 @@ trait ManyFocusableWrapper extends FocusRequestable with FocusTracking
 	  * @param forceFocusEnter Whether focus entering should be forced (default = false)
 	  * @return Whether focus was changed or is likely to change
 	  */
-	def moveFocusInside(direction: Direction1D = Positive, loop: Boolean = false,
-						forceFocusLeave: Boolean = false, forceFocusEnter: Boolean = false) =
+	def moveFocusInside(direction: Sign = Positive, loop: Boolean = false,
+	                    forceFocusLeave: Boolean = false, forceFocusEnter: Boolean = false) =
 	{
 		val targets = focusTargets
 		// Finds the current focus owner within this group (returns false if didn't have focus)

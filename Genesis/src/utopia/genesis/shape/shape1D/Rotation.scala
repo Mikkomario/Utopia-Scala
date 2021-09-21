@@ -1,6 +1,6 @@
 package utopia.genesis.shape.shape1D
 
-import utopia.flow.operator.{Combinable, LengthLike, LinearScalable}
+import utopia.flow.operator.{Combinable, Zeroable, LinearScalable}
 import utopia.flow.util.SelfComparable
 import utopia.genesis.shape.shape1D.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.genesis.util.Extensions._
@@ -105,7 +105,7 @@ object Rotation
 **/
 case class Rotation private(radians: Double, direction: RotationDirection = Clockwise)
 	extends ApproximatelyEquatable[Rotation] with LinearScalable[Rotation] with Combinable[Rotation, Rotation]
-		with LengthLike[Rotation] with SelfComparable[Rotation]
+		with Zeroable[Rotation] with SelfComparable[Rotation]
 {
 	// PROPS    --------------------------
 	

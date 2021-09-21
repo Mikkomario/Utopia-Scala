@@ -1,10 +1,10 @@
 package utopia.reach.focus
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.operator.Sign
+import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.CombinedOrdering
-import utopia.genesis.shape.shape1D.Direction1D
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.Point
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
@@ -25,7 +25,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	
 	// Orders points from top to bottom, left to right
 	private implicit val focusOrdering: Ordering[Point] =
-		new CombinedOrdering[Point](Vector(Ordering.by { _.y }, Ordering.by { _.x }))
+		new CombinedOrdering[Point](Vector(Ordering.by[Point, Double] { _.y }, Ordering.by[Point, Double] { _.x }))
 	
 	private val targetsPointer = new PointerWithEvents(Set[Focusable]())
 	private val orderedTargetsPointer = targetsPointer.lazyMap { targets =>
@@ -174,7 +174,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	  * @return True if new focus target was found and assigned or when current focus target denies focus movement.
 	  *         False when a new focus target was not found or when this manager doesn't currently have focus to move.
 	  */
-	def moveFocusInside(direction: Direction1D = Positive, allowLooping: Boolean = true,
+	def moveFocusInside(direction: Sign = Positive, allowLooping: Boolean = true,
 						forceFocusLeave: Boolean = false): Boolean =
 	{
 		if (hasFocus)
@@ -234,7 +234,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	  * @param forceFocusLeave Whether to force the focus to leave the current component without testing its consent.
 	  *                        If true, no FocusLeaving events will be generated. Default = false.
 	  */
-	def moveFocus(direction: Direction1D = Positive, forceFocusLeave: Boolean = false) =
+	def moveFocus(direction: Sign = Positive, forceFocusLeave: Boolean = false) =
 	{
 		// Checks whether there are other focusable components to target outside the managed focus system
 		// If not, loops the focus inside the system without yielding it
@@ -256,7 +256,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	  * @param forceFocusLeave Whether to force the focus to leave the current component without testing its consent.
 	  *                        If true, no FocusLeaving events will be generated. Default = false.
 	  */
-	def moveFocusFrom(component: Focusable, direction: Direction1D = Positive, forceFocusLeave: Boolean = false) =
+	def moveFocusFrom(component: Focusable, direction: Sign = Positive, forceFocusLeave: Boolean = false) =
 	{
 		if (isFocusOwner(component))
 			moveFocus(direction, forceFocusLeave)
@@ -324,7 +324,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	  * @return Whether this system is able to yield the focus to that direction (false if the managed canvas is the
 	  *         only focusable component in its cycle)
 	  */
-	def canYieldFocus(direction: Direction1D = Positive) =
+	def canYieldFocus(direction: Sign = Positive) =
 	{
 		val focusCycleRoot = canvasComponent.getFocusCycleRootAncestor
 		val focusPolicy = focusCycleRoot.getFocusTraversalPolicy
@@ -362,7 +362,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 		target.allowsFocusLeave
 	}
 	
-	private def focusTargetsIterator(direction: Direction1D) = direction match
+	private def focusTargetsIterator(direction: Sign) = direction match
 	{
 		case Positive => orderedTargets.iterator
 		case Negative => orderedTargets.reverseIterator

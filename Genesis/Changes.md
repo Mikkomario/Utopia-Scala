@@ -2,6 +2,9 @@
 
 ## v2.6 (in development)
 ### Breaking Changes
+- **Direction1D** was replaced with **Sign** in **Utopia Flow**
+  - The new enumeration works almost identically (with some additions)
+  - Existing classes **won't** accept **Direction1D** anymore, causing build errors before they are refactored
 - **Scalable**, **Combinable**, **Arithmetic**, **Signed** and **DistanceLike** were replaced 
   with **Utopia Flow** counterparts
   - This has many implications, although for the most part, renaming and replacing extensions should be enough

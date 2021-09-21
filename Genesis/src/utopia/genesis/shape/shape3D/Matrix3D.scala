@@ -93,7 +93,7 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	extends MatrixLike[Vector3D, Matrix3D] with ThreeDimensional[Vector3D] with AffineTransformable[Matrix3D]
 		with JavaAffineTransformConvertible with LinearTransformable[Matrix3D]
 {
-	// COMPUTED	----------------------------------
+	// ATTRIBUTES   ------------------------------
 	
 	/**
 	  * The determinant of this matrix. The determinant shows the scaling applied to the volume that is caused by this
@@ -102,7 +102,7 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	  * be mirrored along an axis. If determinant is 0, it means that this transformation reduces the shape to
 	  * a 2D plane, 1D line or 0D point.
 	  */
-	lazy val determinant =
+	override lazy val determinant =
 	{
 		// Starts by finding the row with most zeros
 		val referenceRowIndex = rows.indices.maxBy { i => row(i).toVector.count { _ == 0.0 } }
@@ -134,7 +134,7 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	  * An inverted copy of this matrix. The inverse matrix represents an inverse transformation of this transformation.
 	  * Multiplying this matrix with the inverse matrix yields an identity matrix.
 	  */
-	lazy val inverse =
+	override lazy val inverse =
 	{
 		// Inverse matrix is this matrix's adjugate divided by this matrix's determinant
 		if (determinant == 0.0)
@@ -142,6 +142,17 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 		else
 			Some(adjugate / determinant)
 	}
+	
+	override val columns = Vector(xTransform, yTransform, zTransform)
+	
+	override lazy val rows = Vector(
+		Vector3D(xTransform.x, yTransform.x, zTransform.x),
+		Vector3D(xTransform.y, yTransform.y, zTransform.y),
+		Vector3D(xTransform.z, yTransform.z, zTransform.z)
+	)
+	
+	
+	// COMPUTED	----------------------------------
 	
 	/**
 	  * @return A transposed copy of this matrix (A matrix with rows of this matrix as columns)
@@ -155,7 +166,7 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	def adjugate =
 	{
 		val t = transposed
-		t.mapWithIndices { (v, colId, rowId) =>
+		t.mapWithIndices { (_, colId, rowId) =>
 			val minorDeterminant = t.dropTo2D(colId, rowId).determinant
 			// Also adds a sign based on matrix
 			// + - +
@@ -180,13 +191,7 @@ case class Matrix3D(xTransform: Vector3D = Vector3D.zero, yTransform: Vector3D =
 	
 	// IMPLEMENTED	------------------------------
 	
-	override val columns = Vector(xTransform, yTransform, zTransform)
-	
-	override lazy val rows = Vector(
-		Vector3D(xTransform.x, yTransform.x, zTransform.x),
-		Vector3D(xTransform.y, yTransform.y, zTransform.y),
-		Vector3D(xTransform.z, yTransform.z, zTransform.z)
-	)
+	override def repr = this
 	
 	override protected def buildCopy(columns: Vector[Vector3D]) =
 	{

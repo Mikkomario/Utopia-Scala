@@ -123,7 +123,7 @@ case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D =
 	extends MatrixLike[Vector2D, Matrix2D] with TwoDimensional[Vector2D] with LinearTransformable[Matrix2D]
 		with AffineTransformable[Matrix3D] with JavaAffineTransformConvertible
 {
-	// COMPUTED	--------------------------------
+	// ATTRIBUTES   ----------------------------
 	
 	// [[x1, y1], [x2, y2]] => det = x1*y2 - y1*x2, kind of a cross between this matrix
 	/**
@@ -133,13 +133,13 @@ case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D =
 	  *         yield points on a 1D line or on a 0D point. If determinant is negative, that means that this
 	  *         transformation flips one of the axes (resulting area is mirrored horizontally or vertically).
 	  */
-	lazy val determinant = xTransform.x * yTransform.y - yTransform.x * xTransform.y
+	override lazy val determinant = xTransform.x * yTransform.y - yTransform.x * xTransform.y
 	
 	/**
 	  * @return An inverse of this matrix / transformation. When this matrix is multiplied with its inverse, that
 	  *         yields an identity matrix.
 	  */
-	lazy val inverse =
+	override lazy val inverse =
 	{
 		if (determinant == 0.0)
 			None
@@ -151,6 +151,13 @@ case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D =
 			) / determinant)
 		}
 	}
+	
+	override val columns = Vector(xTransform, yTransform)
+	
+	override lazy val rows = Vector(Vector2D(xTransform.x, yTransform.x), Vector2D(xTransform.y, yTransform.y))
+	
+	
+	// COMPUTED	--------------------------------
 	
 	/**
 	  * @return A 3x3 matrix based on this matrix. The z-transformation matches that of the identity matrix (0, 0, 1)
@@ -170,9 +177,7 @@ case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D =
 	
 	// IMPLEMENTED	----------------------------
 	
-	override val columns = Vector(xTransform, yTransform)
-	
-	override lazy val rows = Vector(Vector2D(xTransform.x, yTransform.x), Vector2D(xTransform.y, yTransform.y))
+	override def repr = this
 	
 	override protected def buildCopy(columns: Vector[Vector2D]) =
 	{

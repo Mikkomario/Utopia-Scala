@@ -1,11 +1,13 @@
 package utopia.flow.operator
 
+import utopia.flow.operator.Sign.{Negative, Positive}
+
 /**
-  * A common trait for items which can be either positive or negative
+  * A common trait for items which can be either positive or negative, but not necessarily zero
   * @author Mikko Hilpinen
-  * @since 20.9.2021, v1.12
+  * @since 21.9.2021, v1.12
   */
-trait Signed[+Repr] extends Any with Reversible[Repr] with LengthLike[Repr]
+trait Signed[+Repr] extends Any with Reversible[Repr]
 {
 	// ABSTRACT -------------------------
 	
@@ -13,40 +15,38 @@ trait Signed[+Repr] extends Any with Reversible[Repr] with LengthLike[Repr]
 	  * @return Whether this item is positive (>0)
 	  */
 	def isPositive: Boolean
-	
 	/**
-	  * @return A zero value copy of this item
+	  * @return Whether this item is negative (<0)
 	  */
-	protected def zero: Repr
+	def isNegative: Boolean
 	
 	
 	// COMPUTED    ----------------------
 	
 	/**
-	  * @return Whether this item is negative (<0)
+	  * @return Sign of this item. Returns Positive for zero items.
 	  */
-	def isNegative = !isPositiveOrZero
-	
-	/**
-	  * @return Whether this item is positive or zero (<=0)
-	  */
-	def isPositiveOrZero = isPositive || isZero
-	/**
-	  * @return Whether this item is negative or zero (<=0)
-	  */
-	def isNegativeOrZero = !isPositive
-	
-	/**
-	  * @return A positive or zero value copy of this item
-	  */
-	def positive = if (isPositive) repr else zero
-	/**
-	  * @return A negative or zero value of this item
-	  */
-	def negative = if (isPositive) zero else repr
+	def sign: Sign = if (isNegative) Negative else Positive
 	
 	/**
 	  * @return Absolute value of this item
 	  */
-	def abs = if (isPositive) repr else -this
+	def abs = if (isNegative) -this else repr
+	/**
+	  * @return Negative absolute value of this item
+	  */
+	def negativeAbs = if (isPositive) -this else repr
+	
+	
+	// OTHER    --------------------------
+	
+	/**
+	  * @param sign A sign
+	  * @return Whether this instance is of that sign. NB: Zero returns false for both signs.
+	  */
+	def is(sign: Sign) = sign match
+	{
+		case Positive => isPositive
+		case Negative => isNegative
+	}
 }

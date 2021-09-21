@@ -254,6 +254,8 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	
 	// IMPLEMENTED	----------------
 	
+	override def repr = this
+	
 	override def preCalculatedPixels = _pixels.current
 	
 	/**

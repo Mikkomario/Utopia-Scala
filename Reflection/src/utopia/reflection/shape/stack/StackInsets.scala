@@ -102,6 +102,8 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	
 	// IMPLEMENTED	-----------------------
 	
+	override def repr = this
+	
 	@deprecated("There's no need to call this method since 'this' already does this", "v2")
 	override def toInsets = this
 	override protected def makeCopy(newAmounts: Map[Direction2D, StackLength]) = StackInsets(newAmounts)
