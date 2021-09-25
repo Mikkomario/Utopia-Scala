@@ -1,0 +1,67 @@
+package utopia.vault.coder.controller.writer
+
+import utopia.flow.util.FileExtensions._
+import utopia.flow.util.StringExtensions._
+import utopia.vault.coder.model.data.{Enum, ProjectSetup}
+import utopia.vault.coder.model.scala.{Extension, Parameter, Reference, ScalaType}
+import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ImmutableValue
+import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
+
+import scala.io.Codec
+
+/**
+  * Used for writing enumeration files
+  * @author Mikko Hilpinen
+  * @since 25.9.2021, v1.1
+  */
+object EnumerationWriter
+{
+	/**
+	  * Writes an enumeration as a scala file
+	  * @param enum Enumeration to write
+	  * @param setup Project setup to use (implicit)
+	  * @param codec Codec to use (implicit)
+	  * @return Success or failure
+	  */
+	def apply(enum: Enum)(implicit setup: ProjectSetup, codec: Codec) =
+	{
+		// Enumeration doesn't need to be imported in its own file
+		val enumDataType = ScalaType.basic(enum.name.singular)
+		
+		File(enum.packagePath,
+			// Writes the enumeration trait first
+			TraitDeclaration(enum.name.singular,
+				// Each value contains an id so that it can be referred from the database
+				properties = Vector(PropertyDeclaration.newAbstract("id", ScalaType.int)),
+				isSealed = true
+			),
+			// Enumeration values are nested within a companion object
+			ObjectDeclaration(enum.name.singular,
+				// Contains the .values -property
+				properties = Vector(
+					ImmutableValue("values", enum.values.map { value =>
+						Reference(s"${enum.packagePath}.${enum.name}", value.singular) }.toSet,
+						explicitOutputType = Some(ScalaType.vector(enumDataType)))(
+						s"Vector(${enum.values.map { _.singular }.mkString(", ")})")
+				),
+				// Contains an id to enum value -function (one with Try, another with Option)
+				methods = Set(
+					MethodDeclaration("findForId")(Parameter("id", ScalaType.int))("values.find { _.id == id }"),
+					MethodDeclaration("forId",
+						codeReferences = Set(Reference.collectionExtensions, Reference.noSuchElementException))(
+						Parameter("id", ScalaType.int))(
+						s"findForId(id).toTry { new NoSuchElementException(${
+							s"No value of ${enum.name} matches id '${"s${id}"}'".quoted}) }")
+				),
+				// Contains an object for each value
+				nested = enum.values.zipWithIndex.map { case (valueName, index) =>
+					ObjectDeclaration(valueName.singular, Vector(Extension(enumDataType)),
+						// The objects don't contain other properties except for 'id'
+						properties = Vector(ImmutableValue("id", isOverridden = true)(s"${index + 1}")),
+						isCaseObject = true
+					)
+				}.toSet
+			)
+		).writeTo(setup.sourceRoot/s"model/enumeration/${enum.name}.scala")
+	}
+}

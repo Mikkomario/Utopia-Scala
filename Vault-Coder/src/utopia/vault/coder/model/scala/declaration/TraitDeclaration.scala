@@ -11,12 +11,12 @@ import utopia.vault.coder.model.scala.{Extension, Visibility}
 case class TraitDeclaration(name: String, extensions: Vector[Extension] = Vector(),
                             properties: Vector[PropertyDeclaration] = Vector(),
                             methods: Set[MethodDeclaration] = Set(), nested: Set[InstanceDeclaration] = Set(),
-                            visibility: Visibility = Public, description: String = "")
+                            visibility: Visibility = Public, description: String = "", isSealed: Boolean = false)
 	extends InstanceDeclaration
 {
 	override protected def constructorParams = None
 	
 	override def creationCode = None
 	
-	override def keyword = "trait"
+	override def keyword = if (isSealed) "sealed trait" else "trait"
 }

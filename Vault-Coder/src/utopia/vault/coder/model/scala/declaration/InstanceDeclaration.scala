@@ -99,23 +99,30 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 		/* Write order is as follows:
 			1) Attributes
 			2) Creation code
-			3) Computed properties (non-implemented, first public, then private)
-			4) Implemented properties, then implemented methods (first public, then protected)
-			5) Other methods (first public)
-			6) Nested objects, then nested classes (first public)
+			3) Abstract properties
+			4) Abstract methods
+			5) Computed properties (non-implemented, first public, then private)
+			6) Implemented properties, then implemented methods (first public, then protected)
+			7) Other methods (first public)
+			8) Nested objects, then nested classes (first public)
 		*/
 		val (attributes, computed) = properties.divideBy { _.isComputed }
+		
+		val (concreteComputed, abstractComputed) = computed.divideBy { _.isAbstract }
+		val (concreteMethods, abstractMethods) = methods.divideBy { _.isAbstract }
+		
+		val (newComputed, implementedComputed) = concreteComputed.divideBy { _.isOverridden }
+		val (otherMethods, implementedMethods) = concreteMethods.divideBy { _.isOverridden }
 		
 		val visibilityOrdering: Ordering[Declaration] = (a, b) => -a.visibility.compareTo(b.visibility)
 		val fullOrdering = new CombinedOrdering[Declaration](Vector(
 			visibilityOrdering, Ordering.by[Declaration, String] { _.name }))
 		
-		val (newComputed, implementedComputed) = computed.divideBy { _.isOverridden }
-		val (otherMethods, implementedMethods) = methods.divideBy { _.isOverridden }
-		
 		builder ++= bodyLinesFrom(Vector(
 			attributes -> "ATTRIBUTES",
 			creationCode.toVector -> "INITIAL CODE",
+			(abstractComputed.sorted(visibilityOrdering) ++
+				abstractMethods.toVector.sorted(fullOrdering)) -> "ABSTRACT",
 			newComputed.sorted(visibilityOrdering) -> "COMPUTED",
 			(implementedComputed.sorted(fullOrdering) ++
 				implementedMethods.toVector.sorted(fullOrdering)) -> "IMPLEMENTED",

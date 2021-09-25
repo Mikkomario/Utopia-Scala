@@ -16,7 +16,15 @@ case class ClassDeclaration(name: String, constructionParams: Parameters = Param
                             visibility: Visibility = Public, description: String = "", isCaseClass: Boolean = false)
 	extends InstanceDeclaration
 {
-	override def keyword = if (isCaseClass) "case class" else "class"
+	override val keyword =
+	{
+		if (isCaseClass)
+			"case class"
+		else if ((properties ++ methods).exists { _.isAbstract })
+			"abstract class"
+		else
+			"class"
+	}
 	
 	override protected def constructorParams = Some(constructionParams)
 }

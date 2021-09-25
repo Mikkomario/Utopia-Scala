@@ -11,10 +11,10 @@ import utopia.vault.coder.model.scala.{Code, Extension, Visibility}
 case class ObjectDeclaration(name: String, extensions: Vector[Extension] = Vector(),
                              creationCode: Option[Code] = None, properties: Vector[PropertyDeclaration] = Vector(),
                              methods: Set[MethodDeclaration] = Set(), nested: Set[InstanceDeclaration] = Set(),
-                             visibility: Visibility = Public, description: String = "")
+                             visibility: Visibility = Public, description: String = "", isCaseObject: Boolean = false)
 	extends InstanceDeclaration
 {
-	override def keyword = "object"
+	override def keyword = if (isCaseObject) "case object" else "object"
 	
 	override protected def constructorParams = None
 }

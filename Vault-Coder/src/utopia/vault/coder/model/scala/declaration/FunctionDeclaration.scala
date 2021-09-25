@@ -44,6 +44,14 @@ trait FunctionDeclaration extends Declaration with CodeConvertible with ScalaDoc
 	protected def params: Option[Parameters]
 	
 	
+	// COMPUTED ------------------------------
+	
+	/**
+	  * @return Whether this function is abstract (doesn't specify a body)
+	  */
+	def isAbstract = code.isEmpty
+	
+	
 	// IMPLEMENTED  --------------------------
 	
 	override def references = code.references ++ params.iterator.flatMap { _.references } ++
@@ -78,23 +86,32 @@ trait FunctionDeclaration extends Declaration with CodeConvertible with ScalaDoc
 			case Some(dataType) => s": ${dataType.toScala}"
 			case None => ""
 		}
-		val header = s"$overridePart$baseString$parametersString$dataTypeString = "
-		if (code.isSingleLine) {
-			val line = code.lines.head
-			// Case: Single line function
-			if (line.length + header.length < CodeConvertible.maxLineLength)
-				builder += header + line
-			// Case: Two-line function
-			else {
-				builder += header
-				builder += "\t" + line
+		val baseHeader = s"$overridePart$baseString$parametersString$dataTypeString"
+		// Case: Empty (abstract) function
+		if (code.isEmpty)
+			builder += baseHeader
+		else
+		{
+			val header = s"$baseHeader = "
+			if (code.isSingleLine)
+			{
+				val line = code.lines.head
+				// Case: Single line function
+				if (line.length + header.length < CodeConvertible.maxLineLength)
+					builder += header + line
+				// Case: Two-line function
+				else {
+					builder += header
+					builder += "\t" + line
+				}
 			}
-		}
-		// Case: Multi-line function
-		else {
-			builder += header + '{'
-			code.lines.foreach { builder += "\t" + _ }
-			builder += "}"
+			// Case: Multi-line function
+			else
+			{
+				builder += header + '{'
+				code.lines.foreach { builder += "\t" + _ }
+				builder += "}"
+			}
 		}
 		
 		builder.result()

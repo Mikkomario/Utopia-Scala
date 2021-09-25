@@ -1,6 +1,7 @@
 package utopia.vault.coder.model.enumeration
 
 import utopia.flow.util.StringExtensions._
+import utopia.vault.coder.model.data.Enum
 import utopia.vault.coder.model.scala.{Reference, ScalaType}
 
 /**
@@ -241,5 +242,21 @@ object PropertyType
 		override def createsIndex = false
 		
 		override def notNull = if (isNullable) copy(isNullable = false) else this
+	}
+	
+	/**
+	  * Property type that accepts enumeration values
+	  * @param enumeration Enumeration from which the values are picked
+	  * @param isNullable Whether this type accepts null / empty
+	  */
+	case class EnumValue(enumeration: Enum, isNullable: Boolean = false) extends PropertyType
+	{
+		// IMPLEMENTED  ---------------------------
+		
+		override def toScala = enumeration.reference
+		override def toSql = if (isNullable) "INT" else "INT NOT NULL"
+		override def baseDefault = ""
+		override def createsIndex = false
+		override def notNull = copy(isNullable = false)
 	}
 }

@@ -1,8 +1,26 @@
 package utopia.vault.coder.model.scala.declaration
 
-import utopia.vault.coder.model.scala.Visibility.Public
+import utopia.vault.coder.model.scala.Visibility.{Protected, Public}
 import utopia.vault.coder.model.scala.{Code, Parameter, Parameters, ScalaType, Visibility}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+
+object PropertyDeclaration
+{
+	/**
+	  * Creates a new abstract computed property
+	  * @param name Name of this property
+	  * @param outputType Data type of this property
+	  * @param implicitParams Implicit parameters accepted (default = empty)
+	  * @param description Description of this property (default = empty)
+	  * @param isProtected Whether this property should be protected instead of public (default = false)
+	  * @param isOverridden Whether this property overrides a base member (default = false)
+	  * @return A new property declaration
+	  */
+	def newAbstract(name: String, outputType: ScalaType, implicitParams: Vector[Parameter] = Vector(),
+	                description: String = "", isProtected: Boolean = false, isOverridden: Boolean = false) =
+		apply(ComputedProperty, name, Code.empty, if (isProtected) Protected else Public, Some(outputType),
+			description, implicitParams, isOverridden)
+}
 
 /**
   * Used for declaring properties in scala code files

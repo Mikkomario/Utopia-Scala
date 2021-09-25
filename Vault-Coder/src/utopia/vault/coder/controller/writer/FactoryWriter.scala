@@ -53,6 +53,7 @@ object FactoryWriter
 					case None => baseProperties
 				},
 				// Contains fromValidatedModel implementation
+				// TODO: Add enumeration value support
 				methods = Set(MethodDeclaration("fromValidatedModel", Set(modelRef, dataRef, Reference.valueUnwraps),
 					isOverridden = true)(Parameter("model", Reference.model(Reference.constant)))(
 					s"${modelRef.target}(model(${"\"id\""}), ${dataRef.target}(${

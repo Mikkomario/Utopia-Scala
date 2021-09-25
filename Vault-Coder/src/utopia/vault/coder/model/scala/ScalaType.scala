@@ -28,6 +28,11 @@ object ScalaType
 	  * @return An option type
 	  */
 	def option(contentType: ScalaType) = generic("Option", contentType)
+	/**
+	  * @param contentType Vector content type
+	  * @return A vector type
+	  */
+	def vector(contentType: ScalaType) = generic("Vector", contentType)
 	
 	/**
 	  * @param name Name of the (basic) data type

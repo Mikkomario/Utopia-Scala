@@ -9,6 +9,8 @@ object Reference
 	val localDate = apply("java.time", "LocalDate")
 	val localTime = apply("java.time", "LocalTime")
 	
+	val noSuchElementException = apply("java.util", "NoSuchElementException")
+	
 	/**
 	  * Imports implicit value conversions (Flow)
 	  */
@@ -17,6 +19,10 @@ object Reference
 	  * Imports implicit value unwraps (Flow)
 	  */
 	val valueUnwraps = apply("utopia.flow.generic.ValueUnwraps", "_")
+	/**
+	  * Imports implicit collection extensions (Flow)
+	  */
+	val collectionExtensions = apply("utopia.flow.util.CollectionExtensions", "_")
 	/**
 	  * Imports implicit sql features (Vault)
 	  */

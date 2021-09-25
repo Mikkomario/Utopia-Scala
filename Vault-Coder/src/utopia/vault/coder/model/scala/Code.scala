@@ -2,6 +2,14 @@ package utopia.vault.coder.model.scala
 
 import utopia.vault.coder.model.scala.template.{CodeConvertible, Referencing}
 
+object Code
+{
+	/**
+	  * An empty set of code
+	  */
+	val empty = Code(Vector())
+}
+
 /**
   * Represents one or more lines of scala code
   * @author Mikko Hilpinen
@@ -11,6 +19,10 @@ case class Code(lines: Vector[String], references: Set[Reference] = Set()) exten
 {
 	// COMPUTED ------------------------------
 	
+	/**
+	  * @return Whether this code is totally empty
+	  */
+	def isEmpty = lines.isEmpty
 	/**
 	  * @return Whether this code contains multiple lines
 	  */
