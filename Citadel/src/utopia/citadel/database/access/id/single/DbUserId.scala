@@ -17,7 +17,7 @@ object DbUserId
 	  * @param connection DB Connection (implicit)
 	  * @return User id matching specified user name
 	  */
-	@deprecated("Searches based on user name are discouraged and no longer indexed", "v1.0")
+	@deprecated("Since this search may return multiple ids, DbUserIds should be used to access them instead", "v1.0")
 	def forName(userName: String)(implicit connection: Connection) =
 		userIdFromSettings(UserSettingsModel.withName(userName))
 	/**

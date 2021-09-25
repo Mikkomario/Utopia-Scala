@@ -1,5 +1,10 @@
 # Utopia Metropolis - List of Changes
 
+## v1.2 (in development)
+### Breaking Changes
+- **UserSettings**`.email` is now optional
+  - This change is also reflected in **NewUser** and **UserSettingsUpdate**
+
 ## v1.1.1 - 4.9.2021
 This very small update fixes a problem that occurred in some **SimplyDescribed** implementations.
 ### Other Changes

@@ -90,17 +90,17 @@ case class UserSettingsUpdate(name: Option[String] = None, email: Option[Either[
 	def isPotentiallyDifferentFrom(existingData: UserSettingsData) = name.exists { _ != existingData.name } || email.exists
 	{
 		case Right(_) => true
-		case Left(email) => email != existingData.email
+		case Left(email) => !existingData.email.contains(email)
 	}
 	
 	/**
-	  * @param existingEmail Existing email address
+	  * @param existingEmail Existing email address (if available)
 	  * @return Whether this user settings update would potentially change / affect that email address
 	  */
-	def definesPotentiallyDifferentEmailThan(existingEmail: String) = email.exists
+	def definesPotentiallyDifferentEmailThan(existingEmail: Option[String]) = email.exists
 	{
 		case Right(_) => true
-		case Left(email) => email != existingEmail
+		case Left(email) => !existingEmail.contains(email)
 	}
 	
 	/*

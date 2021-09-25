@@ -55,7 +55,6 @@ object UserSettingsModel extends DeprecatableAfter[UserSettingsModel]
 	  * @param userName User name
 	  * @return a model with only user name set
 	  */
-	@deprecated("Searches based on user name are discouraged and no longer indexed", "v1.0")
 	def withName(userName: String) = apply(name = Some(userName))
 	/**
 	  * @param email Email
@@ -72,7 +71,7 @@ object UserSettingsModel extends DeprecatableAfter[UserSettingsModel]
 	  */
 	def insert(userId: Int, data: UserSettingsData)(implicit connection: Connection) =
 	{
-		val newId = apply(None, Some(userId), Some(data.name), Some(data.email), Some(data.created)).insert().getInt
+		val newId = apply(None, Some(userId), Some(data.name), data.email, Some(data.created)).insert().getInt
 		UserSettings(newId, userId, data)
 	}
 }

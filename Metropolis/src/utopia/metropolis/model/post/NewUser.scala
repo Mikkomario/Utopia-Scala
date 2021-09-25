@@ -67,7 +67,7 @@ case class NewUser(settingsData: Either[String, UserSettingsData], password: Str
 	/**
 	  * @return Whether email has been specified in this user data
 	  */
-	def specifiesEmail = settingsData.isRight
+	def specifiesEmail = settingsData.exists { _.specifiesEmail }
 	
 	/**
 	  * @return Proposed username
@@ -81,7 +81,7 @@ case class NewUser(settingsData: Either[String, UserSettingsData], password: Str
 	/**
 	  * @return Proposed email address. None if not specified.
 	  */
-	def email = settingsData.rightOption.map { _.email }
+	def email = settingsData.rightOption.flatMap { _.email }
 	
 	
 	// IMPLEMENTED	-------------------------

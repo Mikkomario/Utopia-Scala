@@ -57,11 +57,20 @@ object ExodusContext
 	  * @return Email validation implementation to use. None if no implementation has been provided.
 	  */
 	def emailValidator = data.flatMap { _.emailValidator }
-	
 	/**
 	  * @return Whether email validation is supported on this implementation
 	  */
 	def isEmailValidationSupported = data.exists { _.emailValidator.isDefined }
+	
+	/**
+	  * @return Whether it is required for an user to have an email address
+	  */
+	def userEmailIsRequired = data.exists { _.userEmailIsRequired }
+	/**
+	  * @return Whether it is required for an user to have a unique user name
+	  */
+	def uniqueUserNamesAreRequired = !userEmailIsRequired
+	
 	
 	@throws[EnvironmentNotSetupException]("If .setup(...) hasn't been called yet")
 	private def get = data match
@@ -80,15 +89,19 @@ object ExodusContext
 	  * @param databaseName Name of the primary database where user data is stored
 	  * @param uuidGenerator A generator which produce new unique user ids (default = Java's random UUID)
 	  * @param emailValidator Email validation implementation, if enabled (optional)
+	  * @param requireUserEmail Whether all users should be required to register (and keep) email addresses
+	  *                         (default = false => allows users to omit an email address if they have
+	  *                         a unique user name)
 	  * @param handleErrors A function for handling thrown errors
 	  */
 	def setup(executionContext: ExecutionContext, connectionPool: ConnectionPool, databaseName: String,
-			  uuidGenerator: UuidGenerator = UuidGenerator.default, emailValidator: Option[EmailValidator] = None)
+			  uuidGenerator: UuidGenerator = UuidGenerator.default, emailValidator: Option[EmailValidator] = None,
+			  requireUserEmail: Boolean = false)
 			 (handleErrors: (Throwable, String) => Unit) =
 	{
 		CitadelContext.setup(executionContext, connectionPool, databaseName)
 		Status.setup()
-		data = Some(Data(uuidGenerator, emailValidator, handleErrors))
+		data = Some(Data(uuidGenerator, emailValidator, handleErrors, requireUserEmail))
 	}
 	
 	/**
@@ -102,5 +115,5 @@ object ExodusContext
 	// NESTED	--------------------------------------
 	
 	private case class Data(uuidGenerator: UuidGenerator, emailValidator: Option[EmailValidator],
-							errorHandler: (Throwable, String) => Unit)
+							errorHandler: (Throwable, String) => Unit, userEmailIsRequired: Boolean)
 }

@@ -1,7 +1,7 @@
 --
 -- DB Structure for Utopia Citadel features
 -- Intended to be inserted after database creation
--- Supports versions from v1.0 until but not including v1.2
+-- Supports versions v1.2 and above
 --
 
 -- Various languages
@@ -51,10 +51,11 @@ CREATE TABLE user_settings
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     name VARCHAR(64) NOT NULL,
-    email VARCHAR(128) NOT NULL,
+    email VARCHAR(128),
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deprecated_after DATETIME,
 
+    INDEX us_user_name_idx (name),
     INDEX us_email_idx (email),
     INDEX us_deprecation_idx (deprecated_after),
 

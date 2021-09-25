@@ -2,6 +2,8 @@
 
 ## v1.2 (in development)
 ### Breaking Changes
+- User email address is now considered optional in various database interactions
+  - Because of this change, username is required to be unique under some conditions / specifications
 - `.validateProposedProficiencies(...)` in **DbLanguage** now returns **Pair**s instead of tuples
   - This should require only minor refactoring
 

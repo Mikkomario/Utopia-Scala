@@ -1,5 +1,6 @@
 package utopia.citadel.database.access.single
 
+import utopia.citadel.database.access.id.many.DbUserIds
 import utopia.citadel.database.access.id.single.DbUserId
 import utopia.citadel.database.access.many.description.DbDescriptions
 import utopia.citadel.database.access.many.language.DbLanguageFamiliarities
@@ -104,7 +105,8 @@ object DbUser extends SingleModelAccess[User]
 		  * @return An access point to invitations for this user
 		  */
 		// Will need to read settings for accessing since joining logic would get rather complex otherwise
-		def receivedInvitations(implicit connection: Connection) = new DbUserInvitations(settings.map { _.email })
+		// TODO: May need to use a different search logic for users that don't have an email address
+		def receivedInvitations(implicit connection: Connection) = new DbUserInvitations(settings.flatMap { _.email })
 		
 		/**
 		  * @return An access point to this user's memberships
@@ -209,21 +211,41 @@ object DbUser extends SingleModelAccess[User]
 			/**
 			  * Updates this user's current settings
 			  * @param newSettings New user settings version
+			  * @param requireUniqueUserName Whether user names should be required to be unique under all circumstances
 			  * @param connection DB Connection (implicit)
-			  * @return Newly inserted settings. Failure if the email address is reserved for another user.
+			  * @return Newly inserted settings. Failure if the email address is reserved for another user
+			  *         (or if user name is taken in case an email address was not provided).
 			  */
-			def update(newSettings: UserSettingsData)(implicit connection: Connection) =
+			def update(newSettings: UserSettingsData, requireUniqueUserName: Boolean = false)
+			          (implicit connection: Connection) =
 			{
-				// Makes sure the email address is still available (or belongs to this user)
-				if (DbUserId.forEmail(newSettings.email).forall { _ == userId })
-				{
+				def _replace() = {
 					// Deprecates the old settings
 					model.nowDeprecated.updateWhere(condition)
 					// Inserts new settings
 					Success(model.insert(userId, newSettings))
 				}
-				else
-					Failure(new AlreadyUsedException(s"Email address ${newSettings.email} is already in use by another user"))
+				def _userNameIsValid() = DbUserIds.forName(newSettings.name).forall { _ == userId }
+				
+				newSettings.email match
+				{
+					// Case: User has specified an email address => it will have to be unique
+					case Some(email) =>
+						// Makes sure the email address is still available (or belongs to this user)
+						// May also check the user name
+						if (DbUserId.forEmail(email).forall { _ == userId } &&
+							(!requireUniqueUserName || _userNameIsValid()))
+							_replace()
+						else
+							Failure(new AlreadyUsedException(s"Email address $email is already in use by another user"))
+					// Case: User hasn't specified an email address => the user name must be unique
+					case None =>
+						if (_userNameIsValid())
+							_replace()
+						else
+							Failure(new AlreadyUsedException(
+								s"User name ${newSettings.name} is already in use by another user"))
+				}
 			}
 		}
 		
