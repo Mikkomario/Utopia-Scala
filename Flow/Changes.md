@@ -43,6 +43,9 @@
 - **Iterator** (**CollectionExtensions**)
   - Added `.existsCount(...)`
   - Added `.skip(Int)`
+- **Model**
+  - Added `.apply(String, String, String*)` that works like standard `.apply(String)`, except that it uses 
+    alternative options if primary search fails.
 - **Path** (**FileExtensions**)
   - Added `.iterateChildren(...)`, `.tryIterateChildren(...)`, `.allChildrenIterator` and `.iterateSiblings(...)` 
     for easier and more memory-friendly child path iterations
