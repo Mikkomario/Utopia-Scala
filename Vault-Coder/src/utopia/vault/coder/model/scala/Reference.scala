@@ -90,6 +90,18 @@ object Reference
 	  */
 	val dataInserter = apply("utopia.vault.model.template", "DataInserter")
 	/**
+	  * Imports the NullDeprecatable trait from Vault
+	  */
+	val nullDeprecatable = apply("utopia.vault.nosql.storable.deprecation", "NullDeprecatable")
+	/**
+	  * Imports the DeprecatableAfter trait from Vault
+	  */
+	val deprecatableAfter = apply("utopia.vault.nosql.storable.deprecation", "DeprecatableAfter")
+	/**
+	  * Imports the Expiring trait from Vault
+	  */
+	val expiring = apply("utopia.vault.nosql.storable.deprecation", "Expiring")
+	/**
 	  * Imports the SingleRowModelAccess trait (Vault)
 	  */
 	val singleRowModelAccess = apply("utopia.vault.nosql.access.single.model", "SingleRowModelAccess")

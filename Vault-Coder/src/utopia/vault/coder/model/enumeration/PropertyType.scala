@@ -226,6 +226,8 @@ object PropertyType
 		typeName.toLowerCase match
 		{
 			case "creation" => Some(CreationTime)
+			case "deprecation" => Some(Deprecation)
+			case "expiration" => Some(Expiration)
 			case other =>
 				if (other.contains("option"))
 					BasicPropertyType.interpret(other.afterFirst("[").untilFirst("]"), length)
@@ -249,6 +251,45 @@ object PropertyType
 		
 		override def notNull = this
 		override def nullable = Optional(DateTime)
+		
+		override def fromValueCode(valueCode: String) = s"$valueCode.getInstant"
+		override def toValueCode(instanceCode: String) = instanceCode
+	}
+	
+	/**
+	  * Property that is null until the instance is deprecated, after which the property contains a timestamp of that
+	  * deprecation event
+	  */
+	case object Deprecation extends PropertyType
+	{
+		override def toScala = ScalaType.option(Reference.instant)
+		override def toSql = "DATETIME"
+		
+		override def isNullable = true
+		override def baseDefault = "None"
+		override def createsIndex = true
+		
+		override def nullable = this
+		override def notNull = Expiration
+		
+		override def fromValueCode(valueCode: String) = s"$valueCode.instant"
+		override def toValueCode(instanceCode: String) = instanceCode
+	}
+	
+	/**
+	  * Contains a time threshold for instance deprecation
+	  */
+	case object Expiration extends PropertyType
+	{
+		override def toScala = Reference.instant
+		override def toSql = "DATETIME NOT NULL"
+		
+		override def isNullable = false
+		override def baseDefault = ""
+		override def createsIndex = true
+		
+		override def nullable = Deprecation
+		override def notNull = this
 		
 		override def fromValueCode(valueCode: String) = s"$valueCode.getInstant"
 		override def toValueCode(instanceCode: String) = instanceCode

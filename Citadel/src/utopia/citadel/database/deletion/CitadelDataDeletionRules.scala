@@ -4,8 +4,8 @@ import utopia.citadel.database.Tables
 import utopia.citadel.database.factory.description.DescriptionLinkFactory
 import utopia.citadel.database.model.organization.{InvitationModel, MemberRoleModel, MembershipModel}
 import utopia.citadel.database.model.user.{UserDeviceModel, UserSettingsModel}
-import utopia.citadel.database.model.TimeDeprecatable
 import utopia.flow.time.TimeExtensions._
+import utopia.vault.nosql.storable.deprecation.TimeDeprecatable
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 

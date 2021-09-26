@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.data
 
 import utopia.vault.coder.model.enumeration.BasicPropertyType.{IntNumber, LongNumber}
-import utopia.vault.coder.model.enumeration.PropertyType.{CreationTime, EnumValue}
+import utopia.vault.coder.model.enumeration.PropertyType.{CreationTime, Deprecation, EnumValue, Expiration}
 import utopia.vault.coder.util.NamingUtils
 
 object Class
@@ -48,6 +48,14 @@ case class Class(name: Name, tableName: String, properties: Vector[Property], pa
 	} }
 	
 	/**
+	  * @return Whether this class supports deprecation or expiration
+	  */
+	def isDeprecatable = properties.exists { _.dataType match {
+		case Deprecation | Expiration => true
+		case _ => false
+	} }
+	
+	/**
 	  * @return Whether this class refers to one or more enumerations in its properties
 	  */
 	def refersToEnumerations = properties.exists { _.dataType match {
@@ -60,6 +68,22 @@ case class Class(name: Name, tableName: String, properties: Vector[Property], pa
 	  */
 	def creationTimeProperty = properties.find { _.dataType match {
 		case CreationTime => true
+		case _ => false
+	} }
+	
+	/**
+	  * @return Property in this class which contains instance deprecation time. None if no such property is present.
+	  */
+	def deprecationProperty = properties.find { _.dataType match {
+		case Deprecation => true
+		case _ => false
+	} }
+	
+	/**
+	  * @return Property in this class which contains instance expiration time. None if no such property is present.
+	  */
+	def expirationProperty = properties.find { _.dataType match {
+		case Expiration => true
 		case _ => false
 	} }
 }
