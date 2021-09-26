@@ -130,7 +130,7 @@ object FactoryWriter
 		}.mkString(", ")
 		val creationLine = s"$innerIndent$creationLineBase$creationLinePropertiesPart))"
 		// Some lines are included for closing brackets
-		val closingLines = (0 until innerIndentCount).map { indent => "\t" * indent + "}" }
+		val closingLines = (0 until innerIndentCount).reverseIterator.map { indent => "\t" * indent + "}" }
 		
 		// Combines the lines together
 		val allLines = (validationLine +: enumDeclarationLines) ++ (nullableDeclarationLines :+

@@ -146,6 +146,7 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 		else
 		{
 			val builder = new VectorBuilder[String]
+			
 			builder += "{"
 			segmentsToWrite.dropRight(1).foreach { case (lines, header) =>
 				builder += s"\t// $header\t--------------------"
