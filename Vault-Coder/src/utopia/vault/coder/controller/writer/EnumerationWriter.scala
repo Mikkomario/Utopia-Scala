@@ -1,6 +1,5 @@
 package utopia.vault.coder.controller.writer
 
-import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Enum, ProjectSetup}
 import utopia.vault.coder.model.scala.{Extension, Parameter, Reference, ScalaType}
@@ -21,7 +20,7 @@ object EnumerationWriter
 	  * @param enum Enumeration to write
 	  * @param setup Project setup to use (implicit)
 	  * @param codec Codec to use (implicit)
-	  * @return Success or failure
+	  * @return Enum reference on success. Failure if writing failed.
 	  */
 	def apply(enum: Enum)(implicit setup: ProjectSetup, codec: Codec) =
 	{
@@ -40,8 +39,7 @@ object EnumerationWriter
 			ObjectDeclaration(enum.name,
 				// Contains the .values -property
 				properties = Vector(
-					ImmutableValue("values", enum.values.map { value =>
-						Reference(s"${enum.packagePath}.${enum.name}", value) }.toSet,
+					ImmutableValue("values", enum.values.map { value => enum.reference/value }.toSet,
 						explicitOutputType = Some(ScalaType.vector(enumDataType)),
 						description = "All available values of this enumeration")(
 						s"Vector(${enum.values.mkString(", ")})")
@@ -68,6 +66,6 @@ object EnumerationWriter
 					)
 				}.toSet
 			)
-		).writeTo(setup.sourceRoot/s"model/enumeration/${enum.name}.scala")
+		).write()
 	}
 }

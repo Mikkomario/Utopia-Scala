@@ -1,7 +1,6 @@
 package utopia.vault.coder.controller.writer
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.enumeration.PropertyType.EnumValue
@@ -32,7 +31,7 @@ object FactoryWriter
 	def apply(classToWrite: Class, tablesRef: Reference, modelRef: Reference, dataRef: Reference)
 	         (implicit codec: Codec, setup: ProjectSetup) =
 	{
-		val parentPackage = s"${setup.projectPackage}.database.factory.${classToWrite.packageName}"
+		val parentPackage = setup.factoryPackage/classToWrite.packageName
 		val objectName = s"${classToWrite.name}Factory"
 		// TODO: Add deprecation support
 		File(parentPackage,
@@ -41,8 +40,7 @@ object FactoryWriter
 				methods = methodsFor(classToWrite, modelRef, dataRef),
 				description = s"Used for reading ${classToWrite.name} data from the DB"
 			)
-		).writeTo(setup.sourceRoot/"database/factory"/classToWrite.packageName/s"$objectName.scala")
-			.map { _ => Reference(parentPackage, objectName) }
+		).write()
 	}
 	
 	private def extensionsFor(classToWrite: Class, modelRef: Reference): Vector[Extension] =

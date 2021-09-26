@@ -2,7 +2,6 @@ package utopia.vault.coder.controller.writer
 
 import utopia.vault.coder.model.scala.Visibility.Protected
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.{Parameter, Reference, ScalaType}
@@ -34,12 +33,10 @@ object AccessWriter
 	def apply(classToWrite: Class, modelRef: Reference, factoryRef: Reference, dbModelRef: Reference)
 	         (implicit codec: Codec, setup: ProjectSetup) =
 	{
-		val accessPackage = setup.projectPackage + ".database.access"
-		val accessDirectory = setup.sourceRoot/"database/access"
+		val accessPackage = setup.accessPackage
 		val connectionParam = Parameter("connection", Reference.connection)
 		// Writes a trait common for unique model access points
-		val singleAccessPackage =  s"$accessPackage.single.${classToWrite.packageName}"
-		val singleAccessDirectory = accessDirectory/"single"/classToWrite.packageName
+		val singleAccessPackage =  accessPackage/s"single.${classToWrite.packageName}"
 		val uniqueAccessName = s"Unique${classToWrite.name}Access"
 		// Standard access point properties (factory, model & defaultOrdering)
 		// are the same for both single and many model access points
@@ -81,9 +78,7 @@ object AccessWriter
 				description = s"A common trait for access points that return individual and distinct ${
 					classToWrite.name.plural}."
 			)
-		).writeTo(singleAccessDirectory/s"$uniqueAccessName.scala").flatMap { _ =>
-			val uniqueAccessRef = Reference(singleAccessPackage, uniqueAccessName)
-			
+		).write().flatMap { uniqueAccessRef =>
 			// Writes the single model access point
 			val singleAccessName = s"Db${classToWrite.name}"
 			val singleIdAccessName = s"DbSingle${classToWrite.name}"
@@ -110,10 +105,9 @@ object AccessWriter
 					nested = Set(singleIdAccess),
 					description = s"Used for accessing individual ${classToWrite.name.plural}"
 				)
-			).writeTo(singleAccessDirectory/s"$singleAccessName.scala").flatMap { _ =>
+			).write().flatMap { singleAccessRef =>
 				// Writes a trait common for the many model access points
-				val manyAccessPackage =  s"$accessPackage.many.${classToWrite.packageName}"
-				val manyAccessDirectory = accessDirectory/"many"/classToWrite.packageName
+				val manyAccessPackage =  accessPackage/s"many.${classToWrite.packageName}"
 				val manyAccessTraitName = s"Many${classToWrite.name.plural}Access"
 				File(manyAccessPackage,
 					TraitDeclaration(manyAccessTraitName,
@@ -132,19 +126,16 @@ object AccessWriter
 						description = s"A common trait for access points which target multiple ${
 							classToWrite.name.plural} at a time"
 					)
-				).writeTo(manyAccessDirectory/s"$manyAccessTraitName.scala").flatMap { _ =>
-					val manyAccessTraitRef = Reference(manyAccessPackage, manyAccessTraitName)
-					
+				).write().flatMap { manyAccessTraitRef =>
 					// Writes the many model access point
 					val manyAccessName = s"Db${classToWrite.name.plural}"
 					File(manyAccessPackage,
 						ObjectDeclaration(manyAccessName, Vector(manyAccessTraitRef, Reference.unconditionalView),
 							description = s"The root access point when targeting multiple ${
 								classToWrite.name.plural} at a time")
-					).writeTo(manyAccessDirectory/s"$manyAccessName.scala")
-						.map { _ => (uniqueAccessRef, Reference(singleAccessPackage, singleAccessName),
-							manyAccessTraitRef, Reference(manyAccessPackage, manyAccessName))
-						}
+					).write().map { manyAccessRef =>
+						(uniqueAccessRef, singleAccessRef, manyAccessTraitRef, manyAccessRef)
+					}
 				}
 			}
 		}

@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.data
 
-import utopia.vault.coder.model.scala.Reference
+import utopia.vault.coder.model.scala.{Package, Reference}
 
 /**
   * Represents a custom (user-defined) enumeration
@@ -10,7 +10,7 @@ import utopia.vault.coder.model.scala.Reference
   * @param values Available values of this enumeration (ordered)
   * @param packagePath Name of the package that contains this enumeration trait / values
   */
-case class Enum(name: String, values: Vector[String], packagePath: String)
+case class Enum(name: String, values: Vector[String], packagePath: Package)
 {
 	/**
 	  * Reference to this enumeration

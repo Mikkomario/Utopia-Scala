@@ -1,7 +1,6 @@
 package utopia.vault.coder.controller.writer
 
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.{Parameter, Reference, declaration}
@@ -26,9 +25,8 @@ object ModelWriter
 	  */
 	def apply(classToWrite: Class)(implicit codec: Codec, setup: ProjectSetup) =
 	{
-		val baseDirectory = setup.sourceRoot/"model"
 		val dataClassName = classToWrite.name.singular + "Data"
-		val dataClassPackage = s"${setup.projectPackage}.model.partial.${classToWrite.packageName}"
+		val dataClassPackage = setup.modelPackage/s"partial.${classToWrite.packageName}"
 		
 		// Writes the data model
 		File(dataClassPackage, Vector(
@@ -47,9 +45,9 @@ object ModelWriter
 				),
 				description = classToWrite.description,
 				isCaseClass = true)
-		)).writeTo(baseDirectory/"partial"/classToWrite.packageName/s"$dataClassName.scala").flatMap { _ =>
+		)).write().flatMap { dataClassRef =>
+			val storePackage = setup.modelPackage/s"stored.${classToWrite.packageName}"
 			// Writes the stored model next
-			val dataClassRef = Reference(dataClassPackage, dataClassName)
 			val storedClass =
 			{
 				val idType = classToWrite.idType.toScala
@@ -72,10 +70,7 @@ object ModelWriter
 						Vector(Reference.storedModelConvertible(dataClassRef)),
 						description = description, isCaseClass = true)
 			}
-			val storePackage = s"${setup.projectPackage}.model.stored.${classToWrite.packageName}"
-			File(storePackage, Vector(storedClass))
-				.writeTo(baseDirectory/"stored"/classToWrite.packageName/s"${classToWrite.name}.scala")
-				.map { _ => Reference(storePackage, storedClass.name) -> dataClassRef }
+			File(storePackage, Vector(storedClass)).write().map { _ -> dataClassRef }
 		}
 	}
 }

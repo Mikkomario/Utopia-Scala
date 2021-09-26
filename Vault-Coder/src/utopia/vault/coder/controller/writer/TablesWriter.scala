@@ -2,7 +2,6 @@ package utopia.vault.coder.controller.writer
 
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.Visibility.Private
-import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.{Parameter, Reference, ScalaType}
@@ -26,9 +25,8 @@ object TablesWriter
 	  */
 	def apply(classes: Iterable[Class])(implicit codec: Codec, setup: ProjectSetup) =
 	{
-		val parentPath = s"${setup.projectPackage}.database"
-		val objectName = setup.projectPackage.afterLast(".").capitalize + "Tables"
-		File(s"$parentPath.$objectName",
+		val objectName = setup.projectPackage.parts.last.capitalize + "Tables"
+		File(setup.databasePackage,
 			ObjectDeclaration(objectName,
 				// Contains a computed property for each class / table
 				properties = classes.toVector.sortBy { _.name }.map { c =>
@@ -47,6 +45,6 @@ object TablesWriter
 					"???")),
 				description = "Used for accessing the database tables introduced in this project"
 			)
-		).writeTo(setup.sourceRoot/"database"/s"$objectName.scala").map { _ => Reference(parentPath, objectName) }
+		).write()
 	}
 }

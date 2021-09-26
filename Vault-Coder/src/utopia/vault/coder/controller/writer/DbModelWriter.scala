@@ -1,7 +1,6 @@
 package utopia.vault.coder.controller.writer
 
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
-import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.{Extension, Parameter, Reference, ScalaType}
@@ -32,7 +31,7 @@ object DbModelWriter
 	def apply(classToWrite: Class, modelRef: Reference, dataRef: Reference, factoryRef: Reference)
 	         (implicit codec: Codec, setup: ProjectSetup) =
 	{
-		val parentPackage = s"${setup.projectPackage}.database.model.${classToWrite.packageName}"
+		val parentPackage = setup.dbModelPackage/classToWrite.packageName
 		val className = classToWrite.name.singular + "Model"
 		val deprecation = DeprecationStyle.of(classToWrite)
 		
@@ -98,8 +97,7 @@ object DbModelWriter
 				}.toSet,
 				description = s"Used for interacting with ${classToWrite.name.plural} in the database",
 				isCaseClass = true)
-		).writeTo(setup.sourceRoot/"database/model"/classToWrite.packageName/s"$className.scala")
-			.map { _ => Reference(parentPackage, className) }
+		).write()
 	}
 	
 	private def factoryExtensionsFor(className: String, modelRef: Reference, dataRef: Reference,

@@ -42,7 +42,7 @@ object VaultCoderApp extends App
 				directory.flatMap { directory =>
 					implicit val setup: ProjectSetup = ProjectSetup(basePackageName, directory)
 					// Writes the enumerations
-					enumerations.tryForeach(EnumerationWriter.apply)
+					enumerations.tryMap { EnumerationWriter(_) }
 						// Next writes the SQL declaration and the tables document
 						.flatMap { _ => SqlWriter(classes, directory/"db_structure.sql") }
 						.flatMap { _ => TablesWriter(classes) }

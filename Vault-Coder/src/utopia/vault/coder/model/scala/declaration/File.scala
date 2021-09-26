@@ -1,8 +1,12 @@
 package utopia.vault.coder.model.scala.declaration
 
+import utopia.flow.util.CollectionExtensions._
+import utopia.vault.coder.model.data.ProjectSetup
+import utopia.vault.coder.model.scala.{Package, Reference}
 import utopia.vault.coder.model.scala.template.CodeConvertible
 
 import scala.collection.immutable.VectorBuilder
+import scala.io.Codec
 
 object File
 {
@@ -13,7 +17,7 @@ object File
 	  * @param moreDeclarations More instance declarations
 	  * @return A new file containing the specified declarations
 	  */
-	def apply(packagePath: String, firstDeclaration: InstanceDeclaration,
+	def apply(packagePath: Package, firstDeclaration: InstanceDeclaration,
 	          moreDeclarations: InstanceDeclaration*): File =
 		apply(packagePath, firstDeclaration +: moreDeclarations.toVector)
 }
@@ -23,9 +27,19 @@ object File
   * @author Mikko Hilpinen
   * @since 31.8.2021, v0.1
   */
-case class File(packagePath: String, declarations: Vector[InstanceDeclaration])
+case class File(packagePath: Package, declarations: Vector[InstanceDeclaration])
 	extends CodeConvertible
 {
+	// COMPUTED --------------------------------------
+	
+	/**
+	  * @return A reference to this file / primary instance in this file
+	  */
+	def reference = Reference(packagePath, declarations.head.name)
+	
+	
+	// IMPLEMENTED  ----------------------------------
+	
 	override def toCodeLines =
 	{
 		val builder = new VectorBuilder[String]()
@@ -35,21 +49,15 @@ case class File(packagePath: String, declarations: Vector[InstanceDeclaration])
 		builder += ""
 		
 		// Writes the imports
-		val imports = declarations.flatMap { _.references }.toSet.groupMap[String, String] { _.parentPath } { _.target }
-		imports.keys.toVector.sorted.foreach { path =>
-			val targets = imports(path)
-			val finalPart =
-			{
-				if (targets.contains("_"))
-					"_"
-				else if (targets.size == 1)
-					targets.head
-				else
-					s"{ ${targets.toVector.sorted.mkString(", ") } }"
-			}
-			builder += s"import $path.$finalPart"
-		}
-		if (imports.nonEmpty)
+		// Those of the imports which can be grouped, are grouped
+		val (individualReferences, groupableReferences) = declarations.flatMap { _.references }.toSet
+			.divideBy { _.canBeGrouped }
+		val importTargets = (individualReferences.toVector.map { _.toScala } ++
+			groupableReferences.groupBy { _.packagePath }.map { case (packagePath, refs) =>
+				s"$packagePath.{${refs.map { _.target }.toVector.sorted.mkString(", ")}"
+			}).sorted
+		builder ++= importTargets.map { target => s"import $target" }
+		if (importTargets.nonEmpty)
 			builder += ""
 		
 		// Writes the objects, then classes
@@ -59,5 +67,20 @@ case class File(packagePath: String, declarations: Vector[InstanceDeclaration])
 		}
 		
 		builder.result()
+	}
+	
+	
+	// OTHER    ----------------------------
+	
+	/**
+	  * Writes this file to the disk
+	  * @param codec Implicit codec to use
+	  * @param setup Implicit project setup
+	  * @return Main reference in this file. Failure if writing failed.
+	  */
+	def write()(implicit codec: Codec, setup: ProjectSetup) =
+	{
+		val ref = reference
+		writeTo(ref.path).map { _ => ref }
 	}
 }
