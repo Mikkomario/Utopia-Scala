@@ -13,6 +13,13 @@ import utopia.flow.util.StringExtensions._
 object NamingUtils
 {
 	/**
+	  * Converts an under_score name to a CamelCase name (with the first character capitalized)
+	  * @param underscoreName A name in underscore format
+	  * @return A name in CamelCase format (capitalized)
+	  */
+	def underscoreToCamel(underscoreName: String) = underscoreName.split('_').map { _.capitalize }.mkString
+	
+	/**
 	  * Converts a camelCase name to underscore_style name
 	  * @param camelName A cameCase property name
 	  * @return and underscore_style property name

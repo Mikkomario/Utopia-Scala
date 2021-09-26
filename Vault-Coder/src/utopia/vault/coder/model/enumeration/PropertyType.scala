@@ -1,10 +1,12 @@
 package utopia.vault.coder.model.enumeration
 
+import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.Enum
+import utopia.vault.coder.model.data.{Enum, Name}
 import utopia.vault.coder.model.enumeration.BasicPropertyType.DateTime
 import utopia.vault.coder.model.enumeration.PropertyType.Optional
 import utopia.vault.coder.model.scala.{Reference, ScalaType}
+import utopia.vault.coder.util.NamingUtils
 
 /**
   * An enumeration for different types a class property may have
@@ -25,6 +27,10 @@ sealed trait PropertyType
 	  * @return Whether this property type allows NULL values
 	  */
 	def isNullable: Boolean
+	/**
+	  * @return Property name to use for this type by default (when no name is specified elsewhere)
+	  */
+	def defaultPropertyName: String
 	/**
 	  * @return Default value assigned for this type by default. Empty string if no specific default is used.
 	  */
@@ -55,6 +61,14 @@ sealed trait PropertyType
 	  * @return A code that returns a value based on this instance
 	  */
 	def toValueCode(instanceCode: String): String
+	
+	/**
+	  * Writes a default documentation / description for a property
+	  * @param className Name of the described class
+	  * @param propName Name of the described property
+	  * @return A default documentation for that property. Empty if no documentation can / should be generated.
+	  */
+	def writeDefaultDescription(className: Name, propName: Name): String
 }
 
 /**
@@ -90,6 +104,8 @@ sealed trait BasicPropertyType extends PropertyType
 	override def fromValueCode(valueCode: String) = s"$valueCode.get${fromValuePropName.capitalize}"
 	
 	override def toValueCode(instanceCode: String) = instanceCode
+	
+	override def writeDefaultDescription(className: Name, propName: Name) = ""
 }
 
 object BasicPropertyType
@@ -109,16 +125,18 @@ object BasicPropertyType
 	def interpret(typeName: String, length: Option[Int] = None) =
 	{
 		val lowerName = typeName
-		objectValues.find { v =>
-			lowerName == v.toScala.toScala.toLowerCase ||
-				lowerName == v.toSql.toLowerCase ||
-				lowerName == v.toString.toLowerCase
-		}.orElse {
-			if (lowerName == "text" || lowerName == "string" || lowerName == "varchar")
-				Some(Text(length.getOrElse(255)))
-			else
-				None
-		}
+		def _findWith(searches: Iterable[BasicPropertyType => Boolean]) =
+			searches.findMap { search => objectValues.find(search) }
+		
+		if (lowerName == "text" || lowerName == "string" || lowerName == "varchar")
+			Some(Text(length.getOrElse(255)))
+		else
+			_findWith(Vector(
+				v => v.fromValuePropName.toLowerCase == lowerName,
+				v => v.toScala.toString.toLowerCase == lowerName,
+				v => v.toSqlBase.toLowerCase == lowerName,
+				v => v.defaultPropertyName.toLowerCase == lowerName
+			))
 	}
 	
 	
@@ -133,6 +151,7 @@ object BasicPropertyType
 		override def toScala = ScalaType.int
 		override def baseDefault = ""
 		override def fromValuePropName = "int"
+		override def defaultPropertyName = "index"
 	}
 	
 	/**
@@ -144,6 +163,7 @@ object BasicPropertyType
 		override def toScala = ScalaType.long
 		override def baseDefault = ""
 		override def fromValuePropName = "long"
+		override def defaultPropertyName = "number"
 	}
 	
 	/**
@@ -155,6 +175,7 @@ object BasicPropertyType
 		override def toScala = ScalaType.double
 		override def baseDefault = ""
 		override def fromValuePropName = "double"
+		override def defaultPropertyName = "amount"
 	}
 	
 	/**
@@ -166,6 +187,7 @@ object BasicPropertyType
 		override def toScala = ScalaType.boolean
 		override def baseDefault = "false"
 		override def fromValuePropName = "boolean"
+		override def defaultPropertyName = "flag"
 	}
 	
 	/**
@@ -177,6 +199,7 @@ object BasicPropertyType
 		override def toScala = Reference.instant
 		override def baseDefault = "Instant.now()"
 		override def fromValuePropName = "instant"
+		override def defaultPropertyName = "timestamp"
 	}
 	
 	/**
@@ -188,6 +211,7 @@ object BasicPropertyType
 		override def toScala = Reference.localDate
 		override def baseDefault = "LocalDate.now()"
 		override def fromValuePropName = "localDate"
+		override def defaultPropertyName = "date"
 	}
 	
 	/**
@@ -199,6 +223,7 @@ object BasicPropertyType
 		override def toScala = Reference.localTime
 		override def baseDefault = "LocalTime.now()"
 		override def fromValuePropName = "localTime"
+		override def defaultPropertyName = "time"
 	}
 	
 	/**
@@ -210,6 +235,7 @@ object BasicPropertyType
 		override def toScala = ScalaType.string
 		override def baseDefault = ""
 		override def fromValuePropName = "string"
+		override def defaultPropertyName = if (length < 100) "name" else "text"
 	}
 }
 
@@ -225,9 +251,9 @@ object PropertyType
 	def interpret(typeName: String, length: Option[Int] = None) =
 		typeName.toLowerCase match
 		{
-			case "creation" => Some(CreationTime)
-			case "deprecation" => Some(Deprecation)
-			case "expiration" => Some(Expiration)
+			case "creation" | "created" => Some(CreationTime)
+			case "deprecation" | "deprecated" => Some(Deprecation)
+			case "expiration" | "expired" => Some(Expiration)
 			case other =>
 				if (other.contains("option"))
 					BasicPropertyType.interpret(other.afterFirst("[").untilFirst("]"), length)
@@ -247,6 +273,7 @@ object PropertyType
 		override def toScala = Reference.instant
 		override def isNullable = false
 		override def baseDefault = "Instant.now()"
+		override def defaultPropertyName = "created"
 		override def createsIndex = true
 		
 		override def notNull = this
@@ -254,6 +281,9 @@ object PropertyType
 		
 		override def fromValueCode(valueCode: String) = s"$valueCode.getInstant"
 		override def toValueCode(instanceCode: String) = instanceCode
+		
+		override def writeDefaultDescription(className: Name, propName: Name) =
+			s"Time when this $className was first created"
 	}
 	
 	/**
@@ -267,6 +297,7 @@ object PropertyType
 		
 		override def isNullable = true
 		override def baseDefault = "None"
+		override def defaultPropertyName = "deprecatedAfter"
 		override def createsIndex = true
 		
 		override def nullable = this
@@ -274,6 +305,9 @@ object PropertyType
 		
 		override def fromValueCode(valueCode: String) = s"$valueCode.instant"
 		override def toValueCode(instanceCode: String) = instanceCode
+		
+		override def writeDefaultDescription(className: Name, propName: Name) =
+			s"Time when this $className became deprecated. None while this $className is still valid."
 	}
 	
 	/**
@@ -286,6 +320,7 @@ object PropertyType
 		
 		override def isNullable = false
 		override def baseDefault = ""
+		override def defaultPropertyName = "expires"
 		override def createsIndex = true
 		
 		override def nullable = Deprecation
@@ -293,6 +328,9 @@ object PropertyType
 		
 		override def fromValueCode(valueCode: String) = s"$valueCode.getInstant"
 		override def toValueCode(instanceCode: String) = instanceCode
+		
+		override def writeDefaultDescription(className: Name, propName: Name) =
+			s"Time when this $className expires / becomes invalid"
 	}
 	
 	/**
@@ -305,6 +343,7 @@ object PropertyType
 		override def toScala = ScalaType.option(baseType.toScala)
 		override def isNullable = true
 		override def baseDefault = "None"
+		override def defaultPropertyName = baseType.defaultPropertyName
 		override def createsIndex = baseType.createsIndex
 		
 		override def notNull = baseType
@@ -312,6 +351,8 @@ object PropertyType
 		
 		override def fromValueCode(valueCode: String) = s"$valueCode.${baseType.fromValuePropName}"
 		override def toValueCode(instanceCode: String) = instanceCode
+		
+		override def writeDefaultDescription(className: Name, propName: Name) = ""
 	}
 	
 	/**
@@ -325,11 +366,10 @@ object PropertyType
 		extends PropertyType
 	{
 		override def toScala = if (isNullable) ScalaType.option(dataType.toScala) else dataType.toScala
-		
 		override def toSql = if (isNullable) dataType.toSqlBase else dataType.toSql
 		
 		override def baseDefault = if (isNullable) "None" else ""
-		
+		override def defaultPropertyName = NamingUtils.underscoreToCamel(referencedTableName).uncapitalize + "Id"
 		// Index is created when foreign key is generated
 		override def createsIndex = false
 		
@@ -344,6 +384,9 @@ object PropertyType
 				dataType.fromValueCode(valueCode)
 		}
 		override def toValueCode(instanceCode: String) = instanceCode
+		
+		override def writeDefaultDescription(className: Name, propName: Name) =
+			s"Id of the ${NamingUtils.camelToUnderscore(referencedTableName)} linked with this $className"
 	}
 	
 	/**
@@ -359,6 +402,7 @@ object PropertyType
 			if (isNullable) ScalaType.option(enumeration.reference) else enumeration.reference
 		override def toSql = if (isNullable) "INT" else "INT NOT NULL"
 		override def baseDefault = ""
+		override def defaultPropertyName = enumeration.name.uncapitalize
 		override def createsIndex = false
 		override def notNull = if (isNullable) copy(isNullable = false) else this
 		override def nullable = if (isNullable) this else copy(isNullable = true)
@@ -373,5 +417,8 @@ object PropertyType
 		}
 		override def toValueCode(instanceCode: String) =
 			if (isNullable) s"$instanceCode.map { _.id }" else s"$instanceCode.id"
+		
+		override def writeDefaultDescription(className: Name, propName: Name) =
+			s"${enumeration.name} of this $className"
 	}
 }
