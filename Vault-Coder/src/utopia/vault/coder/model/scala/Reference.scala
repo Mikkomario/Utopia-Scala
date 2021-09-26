@@ -73,6 +73,10 @@ object Reference
 	  */
 	lazy val indexed = apply(noSql/"template", "Indexed")
 	/**
+	  * Imports the Deprecatable trait from Vault
+	  */
+	lazy val deprecatable = apply(noSql/"template", "Deprecatable")
+	/**
 	  * Imports the FromRowModelFactory trait (Vault)
 	  */
 	lazy val fromRowModelFactory = apply(fromRowFactories/"model", "FromRowModelFactory")
@@ -127,7 +131,11 @@ object Reference
 	/**
 	  * Imports the UnconditionalView trait (Vault)
 	  */
-	lazy val unconditionalView = apply(noSql/"view", "UnconditionalView")
+	lazy val unconditionalView = apply(viewAccess, "UnconditionalView")
+	/**
+	  * Imports the NonDeprecatedView trait (Vault)
+	  */
+	lazy val nonDeprecatedView = apply(viewAccess, "NonDeprecatedView")
 	/**
 	  * Imports the combination of Stored & ModelConvertible (Vault)
 	  */

@@ -82,6 +82,14 @@ object AccessWriter
 			// Writes the single model access point
 			val singleAccessName = s"Db${classToWrite.name}"
 			val singleIdAccessName = s"DbSingle${classToWrite.name}"
+			// Root access points extend either the UnconditionalView or the NonDeprecatedView -trait,
+			// depending on whether deprecation is supported
+			val rootViewExtension = {
+				if (classToWrite.isDeprecatable)
+					Reference.nonDeprecatedView
+				else
+					Reference.unconditionalView
+			}
 			// This access point is used for accessing individual items based on their id
 			val singleIdAccess = ClassDeclaration(singleIdAccessName,
 				Vector(Parameter("id", classToWrite.idType.toScala, prefix = "override val")),
@@ -94,7 +102,7 @@ object AccessWriter
 			)
 			File(singleAccessPackage,
 				ObjectDeclaration(singleAccessName,
-					Vector(Reference.singleRowModelAccess(modelRef), Reference.unconditionalView, Reference.indexed),
+					Vector(Reference.singleRowModelAccess(modelRef), rootViewExtension, Reference.indexed),
 					properties = baseProperties,
 					// Defines an .apply(id) method for accessing individual items
 					methods = Set(MethodDeclaration("apply",
@@ -130,7 +138,7 @@ object AccessWriter
 					// Writes the many model access point
 					val manyAccessName = s"Db${classToWrite.name.plural}"
 					File(manyAccessPackage,
-						ObjectDeclaration(manyAccessName, Vector(manyAccessTraitRef, Reference.unconditionalView),
+						ObjectDeclaration(manyAccessName, Vector(manyAccessTraitRef, rootViewExtension),
 							description = s"The root access point when targeting multiple ${
 								classToWrite.name.plural} at a time")
 					).write().map { manyAccessRef =>

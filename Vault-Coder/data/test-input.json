@@ -48,6 +48,11 @@
 						"name": "created",
 						"name_plural": "creationTimes",
 						"type": "creation"
+					},
+					{
+						"name": "cancelled",
+						"name_plural": "cancellationTimes",
+						"type": "deprecation"
 					}
 				],
 				"doc": "Represents a scheduled meeting between a host and a client"

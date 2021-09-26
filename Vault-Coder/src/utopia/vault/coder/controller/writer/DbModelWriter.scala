@@ -70,7 +70,7 @@ object DbModelWriter
 						returnDescription = s"A model containing only the specified ${prop.name}")(
 						scala.Parameter(prop.name.singular, prop.dataType.notNull.toScala, description = prop.description))(
 						s"apply(${prop.name} = Some(${prop.name}))")
-				},
+				} ++ deprecation.iterator.flatMap { _.methods },
 				description = s"Used for constructing $className instances and for inserting ${
 					classToWrite.name}s to the database"
 			),
@@ -132,6 +132,7 @@ object DbModelWriter
 	{
 		def extensionFor(dbModelClass: ScalaType): Extension
 		def properties: Vector[PropertyDeclaration]
+		def methods: Set[MethodDeclaration]
 	}
 	
 	private object DeprecationStyle
@@ -157,11 +158,19 @@ object DbModelWriter
 		override def properties = if (isDefault) Vector() else Vector(
 			ImmutableValue("deprecationAttName", isOverridden = true)(propertyName.quoted)
 		)
+		
+		// withDeprecatedAfter(...) must be provided separately for custom property names
+		override def methods = if (isDefault) Set() else Set(
+			MethodDeclaration("withDeprecatedAfter", isOverridden = true)(
+				Parameter("deprecationTime", Reference.instant))(s"with${propertyName.capitalize}(deprecationTime)")
+		)
 	}
 	private case class Expires(propertyName: String) extends DeprecationStyle
 	{
 		override def extensionFor(dbModelClass: ScalaType) = Reference.expiring(dbModelClass)
 		
 		override def properties = Vector(ImmutableValue("deprecationAttName", isOverridden = true)(propertyName.quoted))
+		
+		override def methods = Set()
 	}
 }

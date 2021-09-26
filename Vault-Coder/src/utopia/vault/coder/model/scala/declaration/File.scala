@@ -54,7 +54,10 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration])
 			.divideBy { _.canBeGrouped }
 		val importTargets = (individualReferences.toVector.map { _.toScala } ++
 			groupableReferences.groupBy { _.packagePath }.map { case (packagePath, refs) =>
-				s"$packagePath.{${refs.map { _.target }.toVector.sorted.mkString(", ")}"
+				if (refs.size > 1)
+					s"$packagePath.{${refs.map { _.target }.toVector.sorted.mkString(", ")}}"
+				else
+					s"$packagePath.${refs.head.target}"
 			}).sorted
 		builder ++= importTargets.map { target => s"import $target" }
 		if (importTargets.nonEmpty)

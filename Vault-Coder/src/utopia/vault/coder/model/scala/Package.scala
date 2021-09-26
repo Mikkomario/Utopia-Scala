@@ -28,6 +28,7 @@ object Package
 	lazy val fromRowFactories = noSql/"factory.row"
 	lazy val deprecation = noSql/"storable.deprecation"
 	lazy val access = noSql/"access"
+	lazy val viewAccess = access/"view"
 	lazy val singleModelAccess = access/"single.model"
 	lazy val manyModelAccess = access/"many.model"
 	

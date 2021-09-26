@@ -7,8 +7,9 @@ import utopia.vault.coder.model.enumeration.PropertyType.EnumValue
 import utopia.vault.coder.model.scala.Visibility.Public
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.{Code, Extension, Parameter, Reference}
-import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration}
+import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
 
+import scala.collection.immutable.VectorBuilder
 import scala.io.Codec
 
 /**
@@ -33,7 +34,6 @@ object FactoryWriter
 	{
 		val parentPackage = setup.factoryPackage/classToWrite.packageName
 		val objectName = s"${classToWrite.name}Factory"
-		// TODO: Add deprecation support
 		File(parentPackage,
 			ObjectDeclaration(objectName, extensionsFor(classToWrite, modelRef),
 				properties = propertiesFor(classToWrite, tablesRef),
@@ -45,33 +45,47 @@ object FactoryWriter
 	
 	private def extensionsFor(classToWrite: Class, modelRef: Reference): Vector[Extension] =
 	{
+		val builder = new VectorBuilder[Extension]()
+		
 		// If no enumerations are included, the inheritance is more specific (=> uses automatic validation)
-		val baseTrait =
-		{
-			if (classToWrite.refersToEnumerations)
-				Reference.fromRowModelFactory(modelRef)
-			else
-				Reference.fromValidatedRowModelFactory(modelRef)
-		}
+		if (classToWrite.refersToEnumerations)
+			builder += Reference.fromRowModelFactory(modelRef)
+		else
+			builder += Reference.fromValidatedRowModelFactory(modelRef)
+		
 		// For tables which contain a creation time index, additional inheritance is added
 		if (classToWrite.recordsCreationTime)
-			Vector(baseTrait, Reference.fromRowFactoryWithTimestamps(modelRef))
-		else
-			Vector(baseTrait)
+			builder += Reference.fromRowFactoryWithTimestamps(modelRef)
+		
+		// If the class supports deprecation, it is reflected in this factory also
+		if (classToWrite.isDeprecatable)
+			builder += Reference.deprecatable
+		
+		builder.result()
 	}
 	
-	private def propertiesFor(classToWrite: Class, tablesRef: Reference) =
+	private def propertiesFor(classToWrite: Class, tablesRef: Reference)(implicit setup: ProjectSetup) =
 	{
+		val builder = new VectorBuilder[PropertyDeclaration]()
+		
 		// All objects define the table property (implemented)
-		val tableProperty = ComputedProperty("table", Set(tablesRef), isOverridden = true)(
+		builder += ComputedProperty("table", Set(tablesRef), isOverridden = true)(
 			s"${tablesRef.target}.${classToWrite.name.singular.uncapitalize}")
 		// Timestamp-based factories also specify a creation time property name
-		classToWrite.creationTimeProperty match {
-			case Some(createdProp) =>
-				Vector(tableProperty,
-					ComputedProperty("creationTimePropertyName", isOverridden = true)(createdProp.name.singular.quoted))
-			case None => Vector(tableProperty)
+		classToWrite.creationTimeProperty.foreach { createdProp =>
+			builder += ComputedProperty("creationTimePropertyName", isOverridden = true)(
+				createdProp.name.singular.quoted)
 		}
+		// Deprecatable factories specify the deprecation condition (read from the database model)
+		if (classToWrite.isDeprecatable)
+		{
+			val dbModelName = s"${classToWrite.name}Model"
+			val dbModelRef = Reference(setup.dbModelPackage/classToWrite.packageName, dbModelName)
+			builder += ComputedProperty("nonDeprecatedCondition", Set(dbModelRef), isOverridden = true)(
+				s"$dbModelName.nonDeprecatedCondition")
+		}
+		
+		builder.result()
 	}
 	
 	private def methodsFor(classToWrite: Class, modelRef: Reference, dataRef: Reference) =
