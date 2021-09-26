@@ -6,7 +6,7 @@ import utopia.ambassador.model.stored.process.IncompleteAuthLogin
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.model.immutable.StorableWithFactory
-import utopia.vault.model.template.DataInserter
+import utopia.vault.nosql.storable.DataInserter
 
 import java.time.Instant
 

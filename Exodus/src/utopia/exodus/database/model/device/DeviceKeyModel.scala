@@ -1,6 +1,6 @@
 package utopia.exodus.database.model.device
 
-import utopia.citadel.database.model.DeprecatableAfter
+import utopia.vault.nosql.storable.deprecation.DeprecatableAfter
 
 import java.time.Instant
 import utopia.exodus.database.factory.device.DeviceKeyFactory

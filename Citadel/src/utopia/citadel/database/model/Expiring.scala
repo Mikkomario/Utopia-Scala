@@ -9,6 +9,7 @@ import utopia.vault.sql.SqlExtensions._
  * @author Mikko Hilpinen
  * @since 27.6.2021, v1.0
  */
+@deprecated("This trait is now available in Vault", "v1.2")
 trait Expiring extends TimeDeprecatable
 {
 	// IMPLEMENTED  ----------------------------

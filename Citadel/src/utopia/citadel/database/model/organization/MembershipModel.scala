@@ -2,13 +2,13 @@ package utopia.citadel.database.model.organization
 
 import java.time.Instant
 import utopia.citadel.database.factory.organization.MembershipFactory
-import utopia.citadel.database.model.NullDeprecatable
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.metropolis.model.partial.organization.MembershipData
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
+import utopia.vault.nosql.storable.deprecation.NullDeprecatable
 
 object MembershipModel extends NullDeprecatable[MembershipModel]
 {

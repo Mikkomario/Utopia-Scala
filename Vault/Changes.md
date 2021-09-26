@@ -2,10 +2,14 @@
 
 ## v1.10 (in development)
 ### Breaking Changes
+- Moved the **DataInserter** trait from `utopia.vault.model.template` to `utopia.vault.nosql.storable`
 - **References**`.columnsBetween(Table, Table)` and `.connectionBetween(Table, Table)` now return 
   **Pair**s instead of tuples.
   - Also includes additional method variants
   - This change is quite unlikely to require major refactoring
+### New Features
+- Added **TimeDeprecatable**, **NullDeprecatable**, **Expiring** and **DeprecatableAfter** from the **Citadel** module
+  - These allow for easier deprecation implementation in storable factories
 ### New Methods
 - **Table**
   - `.validate(Model)` - shorter version for writing `.requirementsDeclaration.validate(...).toTry`

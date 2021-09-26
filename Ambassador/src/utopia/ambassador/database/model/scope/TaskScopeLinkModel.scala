@@ -3,11 +3,11 @@ package utopia.ambassador.database.model.scope
 import utopia.ambassador.database.factory.scope.TaskScopeLinkFactory
 import utopia.ambassador.model.partial.scope.TaskScopeLinkData
 import utopia.ambassador.model.stored.scope.TaskScopeLink
-import utopia.citadel.database.model.DeprecatableAfter
+import utopia.vault.nosql.storable.deprecation.DeprecatableAfter
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.model.immutable.StorableWithFactory
-import utopia.vault.model.template.DataInserter
+import utopia.vault.nosql.storable.DataInserter
 
 import java.time.Instant
 

@@ -6,7 +6,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.stored.description.Description
 import utopia.vault.model.immutable.StorableWithFactory
-import utopia.vault.model.template.DataInserter
+import utopia.vault.nosql.storable.DataInserter
 
 object DescriptionModel extends DataInserter[DescriptionModel, Description, DescriptionData]
 {

@@ -6,6 +6,9 @@
   - Because of this change, username is required to be unique under some conditions / specifications
 - `.validateProposedProficiencies(...)` in **DbLanguage** now returns **Pair**s instead of tuples
   - This should require only minor refactoring
+### Deprecations
+- **TimeDeprecatable**, **Expiring**, **NullDeprecatable** and **DeprecatableAfter** were copied to **Vault** 
+  and deprecated here
 
 ## v1.1 - 4.9.2021
 This update introduces a few small utility additions. The "breaking" changes to **DbOrganization** are 

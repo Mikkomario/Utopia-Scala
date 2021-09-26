@@ -2,6 +2,7 @@ package utopia.citadel.database.model
 
 import utopia.vault.model.immutable.Storable
 
+@deprecated("This trait is now available in Vault", "v1.2")
 object DeprecatableAfter
 {
 	/**
@@ -17,6 +18,7 @@ object DeprecatableAfter
  * @author Mikko Hilpinen
  * @since 27.6.2021, v1.0
  */
+@deprecated("This trait is now available in Vault", "v1.2")
 trait DeprecatableAfter[+M <: Storable] extends NullDeprecatable[M]
 {
 	// IMPLEMENTED  ----------------------------

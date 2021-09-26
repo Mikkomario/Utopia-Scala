@@ -3,7 +3,7 @@ package utopia.citadel.database.model.user
 import java.time.Instant
 import utopia.citadel.database.Tables
 import utopia.citadel.database.factory.user.UserSettingsFactory
-import utopia.citadel.database.model.DeprecatableAfter
+import utopia.vault.nosql.storable.deprecation.DeprecatableAfter
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.stored.user.UserSettings

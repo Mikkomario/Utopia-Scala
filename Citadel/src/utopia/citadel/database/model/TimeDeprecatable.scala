@@ -13,6 +13,7 @@ import scala.concurrent.duration.FiniteDuration
  * @author Mikko Hilpinen
  * @since 3.7.2021, v1.0
  */
+@deprecated("This trait is now available in Vault", "v1.2")
 trait TimeDeprecatable extends Deprecatable
 {
 	// ABSTRACT ----------------------------------

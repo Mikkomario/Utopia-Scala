@@ -1,6 +1,6 @@
 package utopia.exodus.database.model.user
 
-import utopia.citadel.database.model.Expiring
+import utopia.vault.nosql.storable.deprecation.Expiring
 
 import java.time.Instant
 import utopia.exodus.database.factory.user.EmailValidationFactory
