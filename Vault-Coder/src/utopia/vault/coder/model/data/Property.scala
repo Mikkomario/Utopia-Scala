@@ -32,3 +32,14 @@ object Property
   */
 case class Property(name: Name, columnName: String, dataType: PropertyType, description: String,
                     useDescription: String, customDefault: String)
+{
+	/**
+	  * @return Code for this property converted to a value. Expects ValueConversions to be imported.
+	  */
+	def toValueCode = dataType.toValueCode(name.singular)
+	
+	/**
+	  * @return A nullable copy of this property
+	  */
+	def nullable = if (dataType.isNullable) this else copy(dataType = dataType.nullable)
+}

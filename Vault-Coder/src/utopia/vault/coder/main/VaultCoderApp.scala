@@ -4,8 +4,8 @@ import utopia.flow.generic.DataType
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.vault.coder.controller.ClassReader
-import utopia.vault.coder.controller.writer.{AccessWriter, DbModelWriter, FactoryWriter, ModelWriter, SqlWriter, TablesWriter}
-import utopia.vault.coder.model.data.{Class, ProjectSetup}
+import utopia.vault.coder.controller.writer.{AccessWriter, DbModelWriter, EnumerationWriter, FactoryWriter, ModelWriter, SqlWriter, TablesWriter}
+import utopia.vault.coder.model.data.{Class, Enum, ProjectSetup}
 
 import java.nio.file.Path
 import scala.util.{Failure, Success}
@@ -23,25 +23,28 @@ object VaultCoderApp extends App
 	val inputPath: Path = if (args.isEmpty) "input" else args.head
 	val outputPath: Path = if (args.length < 2) "output" else args(1)
 	
-	def write(data: Map[String, Vector[Class]]) =
+	def write(data: Map[String, (Vector[Class], Vector[Enum])]) =
 	{
-		println(s"Read ${data.valuesIterator.map { _.size }.sum } classes within ${data.size} projects and ${
-			data.valuesIterator.map { _.map { _.packageName }.distinct.size }.sum
-		} packages")
-		println(s"Writing class data to ${outputPath.toAbsolutePath}...")
+		println(s"Read ${data.valuesIterator.map { _._1.size }.sum } classes and ${
+			data.valuesIterator.map { _._2.size }.sum } enumerations within ${data.size} projects and ${
+			data.valuesIterator.map { _._1.map { _.packageName }.distinct.size }.sum } packages")
+		println(s"Writing class and enumeration data to ${outputPath.toAbsolutePath}...")
 		if (args.length < 2)
 			println("Hint: You can customize the output path by specifying it as the second command line argument")
 		
 		outputPath.asExistingDirectory.flatMap { rootDirectory =>
 			// Handles one project at a time
-			data.tryForeach { case (basePackageName, classes) =>
-				println(s"Writing ${classes.size} classes for project $basePackageName")
+			data.tryForeach { case (basePackageName, (classes, enumerations)) =>
+				println(s"Writing ${classes.size} classes and ${
+					enumerations.size} enumerations for project $basePackageName")
 				val directory = if (basePackageName.isEmpty) Success(rootDirectory) else
 					(rootDirectory/basePackageName.replace('.', '-')).asExistingDirectory
 				directory.flatMap { directory =>
 					implicit val setup: ProjectSetup = ProjectSetup(basePackageName, directory)
-					// Writes the SQL declaration and the tables document first
-					SqlWriter(classes, directory/"db_structure.sql")
+					// Writes the enumerations
+					enumerations.tryForeach(EnumerationWriter.apply)
+						// Next writes the SQL declaration and the tables document
+						.flatMap { _ => SqlWriter(classes, directory/"db_structure.sql") }
 						.flatMap { _ => TablesWriter(classes) }
 						.flatMap { tablesRef =>
 							// Next writes all required documents for each class
@@ -81,7 +84,10 @@ object VaultCoderApp extends App
 			jsonFilePaths.tryMap { ClassReader(_) }
 		} match {
 			// Groups read results that target the same base package
-			case Success(data) => write(data.groupMapReduce { _._1 } { _._2 } { _ ++ _ })
+			case Success(data) =>
+				write(data.groupMapReduce { _._1 } { case (_, enums, classes) => classes -> enums } {
+					case ((classes1, enums1), (classes2, enums2)) => (classes1 ++ classes2) -> (enums1 ++ enums2)
+				})
 			case Failure(error) =>
 				error.printStackTrace()
 				println("Class reading failed. Please make sure all of the files are in correct format.")
@@ -93,7 +99,7 @@ object VaultCoderApp extends App
 		
 		ClassReader(inputPath) match
 		{
-			case Success((basePackage, classes)) => write(Map(basePackage -> classes))
+			case Success((basePackage, enums, classes)) => write(Map(basePackage -> (classes -> enums)))
 			case Failure(error) =>
 				error.printStackTrace()
 				println("Class reading failed. Please make sure the file is in correct format.")

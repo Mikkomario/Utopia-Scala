@@ -9,7 +9,6 @@ import utopia.vault.coder.model.scala.{Parameter, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, TraitDeclaration}
 
 import scala.io.Codec
-import utopia.vault.coder.model.scala
 
 /**
   * Used for writing database access templates
@@ -55,12 +54,14 @@ object AccessWriter
 				if (classToWrite.recordsCreationTime) "Some(factory.defaultOrdering)" else "None")
 		// Property setters are common for both distinct access points (unique & many)
 		val propertySetters = classToWrite.properties.map { prop =>
+			val paramName = s"new${prop.name.singular.capitalize}"
+			val paramType = prop.dataType.notNull
 			MethodDeclaration(s"${prop.name}_=",
 				description = s"Updates the ${prop.name} of the targeted ${classToWrite.name} instance(s)",
 				returnDescription = s"Whether any ${classToWrite.name} instance was affected")(
-				scala.Parameter(s"new${prop.name.singular.capitalize}", prop.dataType.notNull.toScala,
-					description = s"A new ${prop.name} to assign").withImplicits(connectionParam))(
-				s"putColumn(model.${prop.name}Column, new${prop.name.singular.capitalize})")
+				Parameter(paramName, paramType.toScala, description = s"A new ${prop.name} to assign")
+					.withImplicits(connectionParam))(
+				s"putColumn(model.${prop.name}Column, ${paramType.toValueCode(paramName)})")
 		}.toSet
 		File(singleAccessPackage,
 			TraitDeclaration(uniqueAccessName,
@@ -73,9 +74,9 @@ object AccessWriter
 					ComputedProperty(prop.name.singular,
 						description = prop.description.notEmpty.getOrElse(s"The ${prop.name} of this instance") +
 							". None if no instance (or value) was found.", implicitParams = Vector(connectionParam))(
-						s"pullColumn(model.${prop.name}Column).${prop.dataType.notNull.toScala.toScala.uncapitalize}")
+						prop.dataType.nullable.fromValueCode(s"pullColumn(model.${prop.name}Column)"))
 				} :+ ComputedProperty("id", implicitParams = Vector(connectionParam))(
-					s"pullColumn(index).${classToWrite.idType.toScala.toScala.uncapitalize}"),
+					classToWrite.idType.nullable.fromValueCode(s"pullColumn(index)")),
 				propertySetters,
 				description = s"A common trait for access points that return individual and distinct ${
 					classToWrite.name.plural}."
@@ -122,10 +123,11 @@ object AccessWriter
 							ComputedProperty(prop.name.plural,
 								description = s"${prop.name.plural} of the accessible ${classToWrite.name.plural}",
 								implicitParams = Vector(connectionParam))(
-								s"pullColumn(model.${prop.name}Column).flatMap { _.${
-									prop.dataType.notNull.toScala.toScala.uncapitalize} }")
+								s"pullColumn(model.${prop.name}Column).flatMap { value => ${
+									prop.dataType.nullable.fromValueCode("value")} }")
 						} :+ ComputedProperty("ids", implicitParams = Vector(connectionParam))(
-							s"pullColumn(index).flatMap { _.${classToWrite.idType.toScala.toScala.uncapitalize} }"),
+							s"pullColumn(index).flatMap { id => ${
+								classToWrite.idType.nullable.fromValueCode("id")} }"),
 						propertySetters,
 						description = s"A common trait for access points which target multiple ${
 							classToWrite.name.plural} at a time"

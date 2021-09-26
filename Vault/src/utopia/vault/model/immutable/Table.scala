@@ -1,6 +1,7 @@
 package utopia.vault.model.immutable
 
 import utopia.flow.datastructure.immutable.{ModelDeclaration, Value}
+import utopia.flow.datastructure.template.{Model, Property}
 import utopia.vault.database.Connection
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 import utopia.vault.sql.{Condition, Exists, JoinType, Limit, Select, SqlSegment, SqlTarget, Where}
@@ -29,7 +30,6 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
      * A model declaration based on this table
      */
     lazy val toModelDeclaration = ModelDeclaration(columns)
-    
     /**
       * A model declaration based on the required (not null) columns in this table
       */
@@ -165,4 +165,11 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
      * @return Whether specified index exists in this table in the database
      */
     def containsIndex(index: Value)(implicit connection: Connection) = Exists.index(this, index)
+    
+    /**
+      * Checks whether the specified model contains all not-null properties defined in this table
+      * @param model A model to validate
+      * @return A validated copy of that model. Failure if the model didn't contain all required properties.
+      */
+    def validate(model: Model[Property]) = requirementDeclaration.validate(model).toTry
 }

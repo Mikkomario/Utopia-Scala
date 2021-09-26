@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.data
 
 import utopia.vault.coder.model.enumeration.BasicPropertyType.{IntNumber, LongNumber}
-import utopia.vault.coder.model.enumeration.PropertyType.CreationTime
+import utopia.vault.coder.model.enumeration.PropertyType.{CreationTime, EnumValue}
 import utopia.vault.coder.util.NamingUtils
 
 object Class
@@ -40,17 +40,25 @@ case class Class(name: Name, tableName: String, properties: Vector[Property], pa
 	def idType =  if (useLongId) LongNumber else IntNumber
 	
 	/**
-	  * @return The property in this class which contains instance creation time. None if no such property is present.
+	  * @return Whether this class records a row / instance creation time
 	  */
-	def creationTimeProperty = properties.find { _.dataType match {
+	def recordsCreationTime = properties.exists { _.dataType match {
 		case CreationTime => true
 		case _ => false
 	} }
 	
 	/**
-	  * @return Whether this class records a row / instance creation time
+	  * @return Whether this class refers to one or more enumerations in its properties
 	  */
-	def recordsCreationTime = properties.exists { _.dataType match {
+	def refersToEnumerations = properties.exists { _.dataType match {
+		case _: EnumValue => true
+		case _ => false
+	} }
+	
+	/**
+	  * @return The property in this class which contains instance creation time. None if no such property is present.
+	  */
+	def creationTimeProperty = properties.find { _.dataType match {
 		case CreationTime => true
 		case _ => false
 	} }

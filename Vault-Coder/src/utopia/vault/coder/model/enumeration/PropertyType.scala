@@ -2,6 +2,8 @@ package utopia.vault.coder.model.enumeration
 
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.Enum
+import utopia.vault.coder.model.enumeration.BasicPropertyType.DateTime
+import utopia.vault.coder.model.enumeration.PropertyType.Optional
 import utopia.vault.coder.model.scala.{Reference, ScalaType}
 
 /**
@@ -33,9 +35,26 @@ sealed trait PropertyType
 	def createsIndex: Boolean
 	
 	/**
+	  * @return A nullable (optional) copy of this property type
+	  */
+	def nullable: PropertyType
+	/**
 	  * @return A non-nullable copy of this data type
 	  */
 	def notNull: PropertyType
+	
+	/**
+	  * Writes a code that reads this property type from a value.
+	  * @param valueCode Code for accessing a value
+	  * @return Code for accessing a value and converting it to this type (in scala)
+	  */
+	def fromValueCode(valueCode: String): String
+	/**
+	  * Writes a code that converts this property to a value. May assume that ValueConversions have been imported.
+	  * @param instanceCode Code for referring to 'this' instance
+	  * @return A code that returns a value based on this instance
+	  */
+	def toValueCode(instanceCode: String): String
 }
 
 /**
@@ -43,10 +62,20 @@ sealed trait PropertyType
   */
 sealed trait BasicPropertyType extends PropertyType
 {
+	// ABSTRACT ------------------------------
+	
 	/**
 	  * @return Converts this property type into SQL without any nullable statement
 	  */
 	def toSqlBase: String
+	
+	/**
+	  * @return Name of the Value's property that converts to this data type (optional version, E.g. "int")
+	  */
+	def fromValuePropName: String
+	
+	
+	// IMPLEMENTED  --------------------------
 	
 	override def toSql = toSqlBase + " NOT NULL"
 	
@@ -55,6 +84,12 @@ sealed trait BasicPropertyType extends PropertyType
 	override def createsIndex = false
 	
 	override def notNull = this
+	
+	override def nullable = Optional(this)
+	
+	override def fromValueCode(valueCode: String) = s"$valueCode.get${fromValuePropName.capitalize}"
+	
+	override def toValueCode(instanceCode: String) = instanceCode
 }
 
 object BasicPropertyType
@@ -97,6 +132,7 @@ object BasicPropertyType
 		override def toSqlBase = "INT"
 		override def toScala = ScalaType.int
 		override def baseDefault = ""
+		override def fromValuePropName = "int"
 	}
 	
 	/**
@@ -107,6 +143,7 @@ object BasicPropertyType
 		override def toSqlBase = "BIGINT"
 		override def toScala = ScalaType.long
 		override def baseDefault = ""
+		override def fromValuePropName = "long"
 	}
 	
 	/**
@@ -117,6 +154,7 @@ object BasicPropertyType
 		override def toSqlBase = "DOUBLE"
 		override def toScala = ScalaType.double
 		override def baseDefault = ""
+		override def fromValuePropName = "double"
 	}
 	
 	/**
@@ -127,6 +165,7 @@ object BasicPropertyType
 		override def toSqlBase = "BOOLEAN"
 		override def toScala = ScalaType.boolean
 		override def baseDefault = "false"
+		override def fromValuePropName = "boolean"
 	}
 	
 	/**
@@ -137,6 +176,7 @@ object BasicPropertyType
 		override def toSqlBase = "DATETIME"
 		override def toScala = Reference.instant
 		override def baseDefault = "Instant.now()"
+		override def fromValuePropName = "instant"
 	}
 	
 	/**
@@ -147,6 +187,7 @@ object BasicPropertyType
 		override def toSqlBase = "DATE"
 		override def toScala = Reference.localDate
 		override def baseDefault = "LocalDate.now()"
+		override def fromValuePropName = "localDate"
 	}
 	
 	/**
@@ -157,6 +198,7 @@ object BasicPropertyType
 		override def toSqlBase = "TIME"
 		override def toScala = Reference.localTime
 		override def baseDefault = "LocalTime.now()"
+		override def fromValuePropName = "localTime"
 	}
 	
 	/**
@@ -167,6 +209,7 @@ object BasicPropertyType
 		override def toSqlBase = s"VARCHAR($length)"
 		override def toScala = ScalaType.string
 		override def baseDefault = ""
+		override def fromValuePropName = "string"
 	}
 }
 
@@ -205,6 +248,10 @@ object PropertyType
 		override def createsIndex = true
 		
 		override def notNull = this
+		override def nullable = Optional(DateTime)
+		
+		override def fromValueCode(valueCode: String) = s"$valueCode.getInstant"
+		override def toValueCode(instanceCode: String) = instanceCode
 	}
 	
 	/**
@@ -220,6 +267,10 @@ object PropertyType
 		override def createsIndex = baseType.createsIndex
 		
 		override def notNull = baseType
+		override def nullable = this
+		
+		override def fromValueCode(valueCode: String) = s"$valueCode.${baseType.fromValuePropName}"
+		override def toValueCode(instanceCode: String) = instanceCode
 	}
 	
 	/**
@@ -242,6 +293,16 @@ object PropertyType
 		override def createsIndex = false
 		
 		override def notNull = if (isNullable) copy(isNullable = false) else this
+		override def nullable = if (isNullable) this else copy(isNullable = true)
+		
+		override def fromValueCode(valueCode: String) =
+		{
+			if (isNullable)
+				s"$valueCode.${dataType.fromValuePropName}"
+			else
+				dataType.fromValueCode(valueCode)
+		}
+		override def toValueCode(instanceCode: String) = instanceCode
 	}
 	
 	/**
@@ -253,10 +314,23 @@ object PropertyType
 	{
 		// IMPLEMENTED  ---------------------------
 		
-		override def toScala = enumeration.reference
+		override def toScala =
+			if (isNullable) ScalaType.option(enumeration.reference) else enumeration.reference
 		override def toSql = if (isNullable) "INT" else "INT NOT NULL"
 		override def baseDefault = ""
 		override def createsIndex = false
-		override def notNull = copy(isNullable = false)
+		override def notNull = if (isNullable) copy(isNullable = false) else this
+		override def nullable = if (isNullable) this else copy(isNullable = true)
+		
+		// TODO: Should add references too (?)
+		override def fromValueCode(valueCode: String) =
+		{
+			if (isNullable)
+				s"$valueCode.int.flatMap(${enumeration.name}.findForId)"
+			else
+				s"${enumeration.name}.forId($valueCode.getInt)"
+		}
+		override def toValueCode(instanceCode: String) =
+			if (isNullable) s"$instanceCode.map { _.id }" else s"$instanceCode.id"
 	}
 }

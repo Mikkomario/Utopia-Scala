@@ -33,9 +33,17 @@ object Reference
 	  */
 	val value = apply("utopia.flow.datastructure.immutable", "Value")
 	/**
+	  * Imports the abstract Property trait (Flow)
+	  */
+	val property = apply("utopia.flow.datastructure.template", "Property")
+	/**
 	  * Imports the constant type from Flow
 	  */
 	val constant = apply("utopia.flow.datastructure.immutable", "Constant")
+	/**
+	  * Imports the template model type (Flow)
+	  */
+	val templateModel = apply("utopia.flow.datastructure", "template.Model")
 	/**
 	  * Imports the immutable model type (Flow)
 	  */
@@ -61,6 +69,10 @@ object Reference
 	  * Imports the Indexed trait (Vault)
 	  */
 	val indexed = apply("utopia.vault.nosql.template", "Indexed")
+	/**
+	  * Imports the FromRowModelFactory trait (Vault)
+	  */
+	val fromRowModelFactory = apply("utopia.vault.nosql.factory.row.model", "FromRowModelFactory")
 	/**
 	  * Imports the FromValidatedRowModelFactory trait (Vault)
 	  */

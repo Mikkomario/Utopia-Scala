@@ -1,5 +1,8 @@
 {
 	"base_package": "utopia.vault.coder.test",
+	"enumerations": {
+		"MeetingType": ["Online", "Offline"]
+	},
 	"classes": {
 		"test": [
 			{
@@ -20,11 +23,6 @@
 				"name": "meeting",
 				"properties": [
 					{
-						"name": "time",
-						"type": "datetime",
-						"doc": "Meeting start time"
-					},
-					{
 						"name": "hostId",
 						"references": "user",
 						"doc": "Id of the employee who is organizing / hosting this meeting",
@@ -34,6 +32,17 @@
 						"name": "participantId",
 						"references": "client",
 						"doc": "Id of the client who is invited to this meeting"
+					},
+					{
+						"name": "time",
+						"type": "datetime",
+						"doc": "Meeting start time"
+					},
+					{
+						"name": "meetingType",
+						"column_name": "type_id",
+						"type": "enum[MeetingType]",
+						"doc": "Type of this meeting"
 					},
 					{
 						"name": "created",

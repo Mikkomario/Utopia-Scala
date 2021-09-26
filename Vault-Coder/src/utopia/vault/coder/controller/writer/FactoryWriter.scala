@@ -1,10 +1,13 @@
 package utopia.vault.coder.controller.writer
 
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
-import utopia.vault.coder.model.scala.{Extension, Parameter, Reference}
+import utopia.vault.coder.model.enumeration.PropertyType.EnumValue
+import utopia.vault.coder.model.scala.Visibility.Public
+import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+import utopia.vault.coder.model.scala.{Code, Extension, Parameter, Reference}
 import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration}
 
 import scala.io.Codec
@@ -31,37 +34,109 @@ object FactoryWriter
 	{
 		val parentPackage = s"${setup.projectPackage}.database.factory.${classToWrite.packageName}"
 		val objectName = s"${classToWrite.name}Factory"
-		val baseTrait = Reference.fromValidatedRowModelFactory(modelRef)
-		val extensions: Vector[Extension] =
-		{
-			if (classToWrite.recordsCreationTime)
-				Vector(baseTrait, Reference.fromRowFactoryWithTimestamps(modelRef))
-			else
-				Vector(baseTrait)
-		}
-		val baseProperties = Vector(ComputedProperty("table", Set(tablesRef), isOverridden = true)(
-			s"${tablesRef.target}.${classToWrite.name.singular.uncapitalize}"))
 		// TODO: Add deprecation support
 		File(parentPackage,
-			// Extends FromValidatedRowModelFactory[A]
-			ObjectDeclaration(objectName, extensions,
-				// Contains implemented table reference
-				properties = classToWrite.creationTimeProperty match {
-					case Some(createdProp) => baseProperties :+
-						ComputedProperty("creationTimePropertyName", isOverridden = true)(
-							createdProp.name.singular.quoted)
-					case None => baseProperties
-				},
-				// Contains fromValidatedModel implementation
-				// TODO: Add enumeration value support
-				methods = Set(MethodDeclaration("fromValidatedModel", Set(modelRef, dataRef, Reference.valueUnwraps),
-					isOverridden = true)(Parameter("model", Reference.model(Reference.constant)))(
-					s"${modelRef.target}(model(${"\"id\""}), ${dataRef.target}(${
-						classToWrite.properties.map { prop =>
-							s"model(${prop.name.singular.quoted})" }.mkString(", ")}))")),
+			ObjectDeclaration(objectName, extensionsFor(classToWrite, modelRef),
+				properties = propertiesFor(classToWrite, tablesRef),
+				methods = methodsFor(classToWrite, modelRef, dataRef),
 				description = s"Used for reading ${classToWrite.name} data from the DB"
 			)
 		).writeTo(setup.sourceRoot/"database/factory"/classToWrite.packageName/s"$objectName.scala")
 			.map { _ => Reference(parentPackage, objectName) }
+	}
+	
+	private def extensionsFor(classToWrite: Class, modelRef: Reference): Vector[Extension] =
+	{
+		// If no enumerations are included, the inheritance is more specific (=> uses automatic validation)
+		val baseTrait =
+		{
+			if (classToWrite.refersToEnumerations)
+				Reference.fromRowModelFactory(modelRef)
+			else
+				Reference.fromValidatedRowModelFactory(modelRef)
+		}
+		// For tables which contain a creation time index, additional inheritance is added
+		if (classToWrite.recordsCreationTime)
+			Vector(baseTrait, Reference.fromRowFactoryWithTimestamps(modelRef))
+		else
+			Vector(baseTrait)
+	}
+	
+	private def propertiesFor(classToWrite: Class, tablesRef: Reference) =
+	{
+		// All objects define the table property (implemented)
+		val tableProperty = ComputedProperty("table", Set(tablesRef), isOverridden = true)(
+			s"${tablesRef.target}.${classToWrite.name.singular.uncapitalize}")
+		// Timestamp-based factories also specify a creation time property name
+		classToWrite.creationTimeProperty match {
+			case Some(createdProp) =>
+				Vector(tableProperty,
+					ComputedProperty("creationTimePropertyName", isOverridden = true)(createdProp.name.singular.quoted))
+			case None => Vector(tableProperty)
+		}
+	}
+	
+	private def methodsFor(classToWrite: Class, modelRef: Reference, dataRef: Reference) =
+	{
+		val applyMethod =
+		{
+			// Case: Enumerations are used => has to process enumeration values separately in custom apply method
+			if (classToWrite.refersToEnumerations)
+				new MethodDeclaration(Public, "apply",
+					Parameter("model", Reference.templateModel(Reference.property)),
+					enumAwareApplyCode(classToWrite, modelRef, dataRef), None, "", "",
+					isOverridden = true)
+			// Case: No enumerations are used => implements a simpler fromValidatedModel
+			else
+				MethodDeclaration("fromValidatedModel", Set(modelRef, dataRef, Reference.valueUnwraps),
+					isOverridden = true)(Parameter("model", Reference.model(Reference.constant)))(
+					s"${modelRef.target}(model(${"\"id\""}), ${dataRef.target}(${
+						classToWrite.properties.map { prop =>
+							s"model(${prop.name.singular.quoted})" }.mkString(", ")}))")
+		}
+		Set(applyMethod)
+	}
+	
+	private def enumAwareApplyCode(classToWrite: Class, modelRef: Reference, dataRef: Reference) =
+	{
+		// Needs to validate the specified model
+		val validationLine = s"table.validate(model).flatMap { valid => "
+		// Divides the class properties into enumeration-based values and standard values
+		val dividedProperties = classToWrite.properties.map { prop => prop.dataType match
+		{
+			case enumVal: EnumValue => Left(prop -> enumVal)
+			case _ => Right(prop)
+		} }
+		val enumProperties = dividedProperties.flatMap { _.leftOption }
+		// Non-nullable enum-based values need to be parsed separately, because they may prevent model parsing
+		val requiredEnumProperties = enumProperties.filter { !_._2.isNullable }
+		val enumDeclarationLines = requiredEnumProperties.zipWithIndex.map { case ((property, enumValue), index) =>
+			// Uses flatMap if there remain more conditions, otherwise uses map
+			val methodName = if (index < requiredEnumProperties.size - 1) "flatMap" else "map"
+			s"${"\t" * (index + 1)}${enumValue.enumeration.name}.forId(valid(${
+				property.name.singular.quoted}).getInt).$methodName { ${property.name} => "
+		}
+		val innerIndentCount = enumDeclarationLines.size + 1
+		val innerIndent = "\t" * innerIndentCount
+		// Stores nullable enum values to increase readability
+		val nullableDeclarationLines = enumProperties.filter { _._2.isNullable }.map { case (prop, enumVal) =>
+			s"${innerIndent}val ${prop.name} = valid(${prop.name.singular.quoted}).int.flatMap(${
+				enumVal.enumeration.name}.findForId)"
+		}
+		val creationLineBase = s"${modelRef.target}(valid(${"id".quoted}), ${dataRef.target}("
+		val creationLinePropertiesPart = dividedProperties.map {
+			case Left((prop, _)) => prop.name.singular
+			case Right(prop) => s"valid(${prop.name.singular.quoted})"
+		}.mkString(", ")
+		val creationLine = s"$innerIndent$creationLineBase$creationLinePropertiesPart))"
+		// Some lines are included for closing brackets
+		val closingLines = (0 until innerIndentCount).map { indent => "\t" * indent + "}" }
+		
+		// Combines the lines together
+		val allLines = (validationLine +: enumDeclarationLines) ++ (nullableDeclarationLines :+
+			creationLine) ++ closingLines
+		// References the enumerations used
+		Code(allLines, enumProperties.map { _._2.enumeration.reference }.toSet ++
+			Set(modelRef, dataRef, Reference.valueUnwraps))
 	}
 }

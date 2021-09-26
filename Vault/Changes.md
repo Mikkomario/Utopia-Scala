@@ -6,6 +6,9 @@
   **Pair**s instead of tuples.
   - Also includes additional method variants
   - This change is quite unlikely to require major refactoring
+### New Methods
+- **Table**
+  - `.validate(Model)` - shorter version for writing `.requirementsDeclaration.validate(...).toTry`
 ### Other Changes
 - **Reference** now uses **Pair** internally instead of two separate **ReferencePoint**s. 
   The interface remains largely the same, however.

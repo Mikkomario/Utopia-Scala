@@ -1,6 +1,5 @@
 package utopia.vault.coder.controller.writer
 
-import utopia.vault.coder.model.enumeration.PropertyType.Optional
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
@@ -75,26 +74,22 @@ object DbModelWriter
 			),
 			ClassDeclaration(className,
 				// Accepts a copy of all properties where each is wrapped in option (unless already an option)
-				scala.Parameter("id", Optional(classToWrite.idType).toScala, "None", s"${classToWrite.name} database id") +:
-					classToWrite.properties.map { prop => Parameter(prop.name.singular,
-						if (prop.dataType.isNullable) prop.dataType.toScala else ScalaType.option(prop.dataType.toScala),
+				Parameter("id", classToWrite.idType.nullable.toScala, "None",
+					description = s"${classToWrite.name} database id") +:
+					classToWrite.properties.map { prop => Parameter(prop.name.singular, prop.dataType.nullable.toScala,
 						"None", description = prop.description) },
 				// Extends StorableWithFactory[A]
 				Vector(Reference.storableWithFactory(modelRef)),
 				// Implements the required properties: factory & valueProperties
 				properties = Vector(
 					ComputedProperty("factory", isOverridden = true)(s"$className.factory"),
-					ComputedProperty("valueProperties", Set(Reference.valueConversions), isOverridden = true)(
-						s"import $className._",
-						s"Vector(${"\"id\" -> id"}, ${
-							classToWrite.properties.map { prop => s"${prop.name}AttName -> ${prop.name}" }
-								.mkString(", ")})")
+					valuePropertiesPropertyFor(classToWrite, className)
 				),
 				// adds withX(...) -methods for convenience
 				methods = classToWrite.properties.map { prop =>
 					MethodDeclaration(s"with${prop.name.singular.capitalize}",
 						returnDescription = s"A new copy of this model with the specified ${prop.name}")(
-						scala.Parameter(prop.name.singular, prop.dataType.notNull.toScala,
+						Parameter(prop.name.singular, prop.dataType.notNull.toScala,
 							description = s"A new ${prop.name}"))(
 						s"copy(${prop.name} = Some(${prop.name}))")
 				}.toSet,
@@ -102,5 +97,15 @@ object DbModelWriter
 				isCaseClass = true)
 		).writeTo(setup.sourceRoot/"database/model"/classToWrite.packageName/s"$className.scala")
 			.map { _ => Reference(parentPackage, className) }
+	}
+	
+	private def valuePropertiesPropertyFor(classToWrite: Class, className: String) =
+	{
+		val propsPart = classToWrite.properties.map { prop => s"${prop.name}AttName -> ${prop.nullable.toValueCode}" }
+			.mkString(", ")
+		ComputedProperty("valueProperties", Set(Reference.valueConversions), isOverridden = true)(
+			s"import $className._",
+			s"Vector(${"\"id\" -> id"}, $propsPart)"
+		)
 	}
 }

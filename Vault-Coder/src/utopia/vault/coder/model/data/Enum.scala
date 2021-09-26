@@ -10,10 +10,10 @@ import utopia.vault.coder.model.scala.Reference
   * @param values Available values of this enumeration (ordered)
   * @param packagePath Name of the package that contains this enumeration trait / values
   */
-case class Enum(name: Name, values: Vector[Name], packagePath: String)
+case class Enum(name: String, values: Vector[String], packagePath: String)
 {
 	/**
 	  * Reference to this enumeration
 	  */
-	val reference = Reference(packagePath, name.singular)
+	val reference = Reference(packagePath, name)
 }

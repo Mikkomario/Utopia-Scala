@@ -42,7 +42,7 @@ object ModelWriter
 				properties = Vector(
 					ComputedProperty("toModel", Set(Reference.model, Reference.valueConversions), isOverridden = true)(
 						s"Model(Vector(${ classToWrite.properties.map { prop =>
-							s"${ NamingUtils.camelToUnderscore(prop.name.singular).quoted } -> ${prop.name}" }
+							s"${ NamingUtils.camelToUnderscore(prop.name.singular).quoted } -> ${prop.toValueCode}" }
 							.mkString(", ") }))")
 				),
 				description = classToWrite.description,
