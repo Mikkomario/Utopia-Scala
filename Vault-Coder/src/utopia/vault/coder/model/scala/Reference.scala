@@ -50,8 +50,7 @@ object Reference
 	/**
 	  * Imports the template model type (Flow)
 	  */
-	// FIXME: Doesn't work
-	lazy val templateModel = apply(struct, "template.Model")
+	lazy val templateModel = apply(struct, "template", "Model")
 	/**
 	  * Imports the immutable model type (Flow)
 	  */
@@ -154,21 +153,12 @@ object Reference
 	// OTHER    -------------------------------
 	
 	/**
-	  * Creates a new standard reference
-	  * @param packagePath The package leading to the target
-	  * @param target Referenced item
-	  * @return A new reference
-	  */
-	def apply(packagePath: Package, target: String): Reference = apply(packagePath, None, target)
-	
-	/**
 	  * Creates a reference to implicit extensions
 	  * @param packagePath Package leading to the target
 	  * @param target File / object that contains the implicits
 	  * @return A reference to the implicits in that file / object
 	  */
-	def extensions(packagePath: Package, target: String) =
-		apply(packagePath, Some(target), "_")
+	def extensions(packagePath: Package, target: String) = apply(packagePath, s"$target._")
 }
 
 /**
@@ -176,23 +166,34 @@ object Reference
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   * @param packagePath Path leading to the imported item. E.g. "utopia.vault.coder.model.scala"
-  * @param parentClass Class / file that hosts this item / items (optional)
-  * @param target Name of the imported item. E.g. "Reference"
+  * @param importTarget The imported item which is present when referring to the referenced item,
+  *                     as well as in the import
+  * @param subReference Item referred to under the imported item. E.g. a specific property
   */
-case class Reference(packagePath: Package, parentClass: Option[String], target: String) extends ScalaConvertible
+case class Reference(packagePath: Package, importTarget: String, subReference: String = "") extends ScalaConvertible
 {
 	// COMPUTED --------------------------------
 	
 	/**
+	  * @return The target of this reference when referred from code (doesn't contain the package path,
+	  *         expects an import)
+	  */
+	def target = if (subReference.isEmpty) importTarget else s"$importTarget.$subReference"
+	
+	/**
 	  * @return Whether it is possible to group this reference with other references using { ... } syntax
 	  */
-	def canBeGrouped = parentClass.isEmpty && !target.contains('.')
+	def canBeGrouped = subReference.isEmpty && !importTarget.contains('.')
 	
 	/**
 	  * @param setup Implicit project setup
 	  * @return Path to the referenced file
 	  */
-	def path(implicit setup: ProjectSetup) = packagePath.pathTo(parentClass.getOrElse(target.untilFirst(".")))
+	def path(implicit setup: ProjectSetup) =
+	{
+		val (packagePart, classPart) = importTarget.splitAtLast(".")
+		(packagePath/packagePart).pathTo(classPart)
+	}
 	
 	
 	// OTHER    --------------------------------
@@ -209,10 +210,10 @@ case class Reference(packagePath: Package, parentClass: Option[String], target: 
 	  * @param newTarget Another target under this reference
 	  * @return Reference to that sub-item
 	  */
-	def /(newTarget: String) = parentClass match
+	def /(newTarget: String) = subReference.notEmpty match
 	{
-		case Some(_) => copy(target = s"$target.$newTarget")
-		case None => copy(parentClass = Some(target), target = newTarget)
+		case Some(oldSubRef) => copy(subReference = s"$oldSubRef.$newTarget")
+		case None => copy(subReference = newTarget)
 	}
 	
 	/**
@@ -226,12 +227,11 @@ case class Reference(packagePath: Package, parentClass: Option[String], target: 
 	
 	override def toScala =
 	{
-		val packagePart = if (packagePath.isEmpty) "" else packagePath.toScala + "."
-		val targetPart = if (target.isEmpty) "" else "." + target
-		parentClass match
-		{
-			case Some(parent) => packagePart + parent + targetPart
-			case None => packagePart + targetPart
-		}
+		if (importTarget.isEmpty)
+			packagePath.toScala
+		else if (packagePath.isEmpty)
+			importTarget
+		else
+			s"${packagePath.toScala}.$importTarget"
 	}
 }

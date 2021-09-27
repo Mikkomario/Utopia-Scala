@@ -53,7 +53,7 @@ object AccessWriter
 		val propertySetters = classToWrite.properties.map { prop =>
 			val paramName = s"new${prop.name.singular.capitalize}"
 			val paramType = prop.dataType.notNull
-			MethodDeclaration(s"${prop.name}_=",
+			MethodDeclaration(s"${prop.name}_=", Set(Reference.valueConversions),
 				description = s"Updates the ${prop.name} of the targeted ${classToWrite.name} instance(s)",
 				returnDescription = s"Whether any ${classToWrite.name} instance was affected")(
 				Parameter(paramName, paramType.toScala, description = s"A new ${prop.name} to assign")
