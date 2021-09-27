@@ -20,8 +20,15 @@ object VaultCoderApp extends App
 {
 	DataType.setup()
 	
-	val inputPath: Path = if (args.isEmpty) "input" else args.head
-	val outputPath: Path = if (args.length < 2) "output" else args(1)
+	val rootPath = if (args.isEmpty) None else Some(args.head: Path)
+	def path(endPath: String): Path = rootPath match
+	{
+		case Some(root) => root/endPath
+		case None => endPath
+	}
+	
+	val inputPath: Path = if (args.length < 2) rootPath.getOrElse("input") else path(args(1))
+	val outputPath: Path = path(if (args.length < 3) "output" else args(2))
 	
 	def write(data: Map[String, (Vector[Class], Vector[Enum])]) =
 	{
@@ -73,7 +80,10 @@ object VaultCoderApp extends App
 	
 	println(s"Reading class data from ${inputPath.toAbsolutePath}...")
 	if (args.isEmpty)
-		println("Hint: You can customize the read location by specifying it as the first command line argument")
+	{
+		println("Hint: You can customize the read location by specifying it as the second command line argument")
+		println("The first command line argument is the root path for both the input (2) and output (3) path arguments")
+	}
 	
 	if (inputPath.notExists)
 		println("Looks like no data can be found from that location. Please try again with different input.")

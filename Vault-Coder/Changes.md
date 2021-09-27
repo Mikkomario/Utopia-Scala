@@ -1,10 +1,13 @@
 # Utopia Vault Coder
 
 ## v1.1 (in development)
-(working on enum support & abstract functions)
 ### Breaking Changes
 - Renamed this module to **Utopia Vault Coder** - Also renamed code occurrences and removed **Metropolis** dependencies
   - Because of this, the **Tables** object implementation is left partially open.
+- Updated accepted command line arguments:
+  - The first argument specifies the path common for both input and output
+  - The second argument specifies input file location relative to the common path
+  - The third argument specifies the output file location relative to the common path
 ### New Features
 - Added support for enumerations (see README for more details)
 - Added support for deprecation (deprecation data type)

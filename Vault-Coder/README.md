@@ -7,12 +7,14 @@ First, you need to prepare a .json file describing the model structure you want 
 See the required document structure below.  
 
 Once you have created a specification document, run the application using the following command line command: 
-`java -jar Vault-Coder.jar <input file path> <output directory path>`
+`java -jar Vault-Coder.jar <common path> <input file path> <output directory path>`
+- The `<common path>` argument specifies the path (beginning) that is common for both the input and the output
 - The `<input file path>` argument should point towards your specification .json file or to a directory that 
-  holds such files. This parameter defaults to a directory called "input" within the directory from which you run 
-  this application.
-- The `<output directory path>` argument defaults to a directory named "output" within the directory from which you run 
-  this application. If the output directory doesn't exist, one will be created.
+  holds such files. This should be a relative path after the `<common path>`. If empty, `<common path>` is used. 
+  If both are empty, `./input` is used.
+- The `<output directory path>` argument specifies a path to where the generated code will be stored. 
+  - Defaults to `<common path>/output` or `./output` depending on whether the <common path> has been specified.
+  - If the target directory doesn't exist, it will be created
 
 The program will inform you if there were any problems during input file processing or during output write operations.
 
