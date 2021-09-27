@@ -44,14 +44,15 @@ object NamingUtils
 				// Case: 1 Uppercase character or all-caps => lower-cases the name
 				else
 					camelName.toLowerCase
-			} else
+			}
+			else
 			{
 				// Adds an underscore before uppercase letters. For multiple sequential uppercase letters, adds an
 				// underscore to the end as well (unless at the end of the string)
 				val lastIndex = camelName.length - 1
 				val builder = new StringBuilder
 				// Adds the portion before the first uppercase letter
-				builder ++= camelName.substring(0, appliedRanges.head.start)
+				builder ++= camelName.substring(0, appliedRanges.head.start).toLowerCase
 				// Adds the first uppercase sequence
 				builder += '_'
 				builder ++= camelName.slice(appliedRanges.head).toLowerCase

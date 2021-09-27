@@ -4,6 +4,7 @@ import utopia.flow.util.FileExtensions._
 import utopia.vault.coder.model.data.ProjectSetup
 import utopia.vault.coder.model.scala.template.ScalaConvertible
 
+import scala.collection.StringOps
 import scala.language.implicitConversions
 
 object Package
@@ -17,6 +18,7 @@ object Package
 	lazy val vault = utopia/"vault"
 	
 	lazy val flowGenerics = flow/"generic"
+	lazy val flowTime = flow/"time"
 	lazy val flowUtils = flow/"util"
 	lazy val struct = flow/"datastructure"
 	lazy val immutableStruct = struct/"immutable"
@@ -44,7 +46,7 @@ object Package
 	  * @param path Package path (E.g. "utopia.vault.coder")
 	  * @return That path as a package
 	  */
-	def apply(path: String): Package = apply(path.split('.').toVector.filter { _.nonEmpty })
+	def apply(path: String): Package = apply(path.split('.').toVector.filter { s => (s: StringOps).nonEmpty })
 }
 
 /**
@@ -55,6 +57,15 @@ object Package
 case class Package(parts: Vector[String]) extends ScalaConvertible
 {
 	// COMPUTED ---------------------------
+	
+	/**
+	  * @return Whether this package is empty ("")
+	  */
+	def isEmpty = parts.isEmpty
+	/**
+	  * @return Whether this package path contains at least one package
+	  */
+	def nonEmpty = !isEmpty
 	
 	/**
 	  * @param setup Implicit project-specific setup
@@ -85,5 +96,29 @@ case class Package(parts: Vector[String]) extends ScalaConvertible
 	{
 		val fullFileName = if (fileName.contains('.')) fileName else s"$fileName.scala"
 		toPath/fullFileName
+	}
+	
+	/**
+	  * Checks whether this package resides under the specified package
+	  * @param another Another package
+	  * @return Whether this package is relative to that one
+	  */
+	def isRelativeTo(another: Package) = parts.take(another.parts.size) == another.parts
+	
+	/**
+	  * Updates this package by referencing it from the other package. If this package is not relative to the
+	  * other package, this is returned. If these two packages are equal, an empty path is returned.
+	  * E.g. "vault.coder.test" relativeTo "vault" would return "coder.test".
+	  * "vault.coder.test" relativeTo "vault.database" would return "vault.coder.test"
+	  * @param another Another package
+	  * @return A copy of this package from the perspective of the other package.
+	  *         This package if not relative to the other.
+	  */
+	def fromPerspectiveOf(another: Package) =
+	{
+		if (isRelativeTo(another))
+			Package(parts.drop(another.parts.size))
+		else
+			this
 	}
 }

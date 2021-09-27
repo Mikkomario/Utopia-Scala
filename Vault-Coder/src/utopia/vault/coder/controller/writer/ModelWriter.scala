@@ -37,12 +37,11 @@ object ModelWriter
 				// Extends ModelConvertible
 				Vector(Reference.modelConvertible),
 				// Implements the toModel -property
-				properties = Vector(
+				properties = deprecationPropertiesFor(classToWrite) :+
 					ComputedProperty("toModel", Set(Reference.model, Reference.valueConversions), isOverridden = true)(
 						s"Model(Vector(${ classToWrite.properties.map { prop =>
 							s"${ NamingUtils.camelToUnderscore(prop.name.singular).quoted } -> ${prop.toValueCode}" }
-							.mkString(", ") }))")
-				),
+							.mkString(", ") }))"),
 				description = classToWrite.description,
 				isCaseClass = true)
 		)).write().flatMap { dataClassRef =>
@@ -71,6 +70,30 @@ object ModelWriter
 						description = description, isCaseClass = true)
 			}
 			File(storePackage, Vector(storedClass)).write().map { _ -> dataClassRef }
+		}
+	}
+	
+	// Deprecation-supporting classes can have custom properties
+	private def deprecationPropertiesFor(classToWrite: Class) =
+	{
+		classToWrite.deprecationProperty match
+		{
+			case Some(prop) =>
+				Vector(
+					ComputedProperty("isDeprecated")(s"${prop.name}.isDefined"),
+					ComputedProperty("isValid")("!isDeprecated")
+				)
+			case None =>
+				classToWrite.expirationProperty match
+				{
+					case Some(prop) =>
+						Vector(
+							ComputedProperty("hasExpired", Set(Reference.timeExtensions, Reference.now))(
+								s"${prop.name} <= Now"),
+							ComputedProperty("isValid")("!hasExpired")
+						)
+					case None => Vector()
+				}
 		}
 	}
 }

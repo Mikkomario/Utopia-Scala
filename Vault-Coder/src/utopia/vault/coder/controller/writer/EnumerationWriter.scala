@@ -39,8 +39,7 @@ object EnumerationWriter
 			ObjectDeclaration(enum.name,
 				// Contains the .values -property
 				properties = Vector(
-					ImmutableValue("values", enum.values.map { value => enum.reference/value }.toSet,
-						explicitOutputType = Some(ScalaType.vector(enumDataType)),
+					ImmutableValue("values", explicitOutputType = Some(ScalaType.vector(enumDataType)),
 						description = "All available values of this enumeration")(
 						s"Vector(${enum.values.mkString(", ")})")
 				),

@@ -4,7 +4,7 @@ import utopia.vault.coder.model.scala.Visibility.Protected
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
-import utopia.vault.coder.model.scala.{Parameter, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{Extension, Parameter, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, TraitDeclaration}
 
 import scala.io.Codec
@@ -84,9 +84,9 @@ object AccessWriter
 			val singleIdAccessName = s"DbSingle${classToWrite.name}"
 			// Root access points extend either the UnconditionalView or the NonDeprecatedView -trait,
 			// depending on whether deprecation is supported
-			val rootViewExtension = {
+			val rootViewExtension: Extension = {
 				if (classToWrite.isDeprecatable)
-					Reference.nonDeprecatedView
+					Reference.nonDeprecatedView(modelRef)
 				else
 					Reference.unconditionalView
 			}

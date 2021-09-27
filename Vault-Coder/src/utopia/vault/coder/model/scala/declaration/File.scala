@@ -49,9 +49,12 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration])
 		builder += ""
 		
 		// Writes the imports
+		// Doesn't write references that are in the same package. Also simplifies imports in nested packages
+		val referencesToWrite = declarations.flatMap { _.references }.toSet
+			.filter { ref => ref.packagePath != packagePath || !ref.canBeGrouped }
+			.map { _.from(packagePath) }
 		// Those of the imports which can be grouped, are grouped
-		val (individualReferences, groupableReferences) = declarations.flatMap { _.references }.toSet
-			.divideBy { _.canBeGrouped }
+		val (individualReferences, groupableReferences) = referencesToWrite.divideBy { _.canBeGrouped }
 		val importTargets = (individualReferences.toVector.map { _.toScala } ++
 			groupableReferences.groupBy { _.packagePath }.map { case (packagePath, refs) =>
 				if (refs.size > 1)

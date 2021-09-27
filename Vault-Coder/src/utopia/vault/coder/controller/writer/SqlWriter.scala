@@ -60,7 +60,7 @@ object SqlWriter
 						{
 							case ClassReference(referencedTableName, _, isNullable) =>
 								val constraintNameBase = s"${classInitials}_${initialsFrom(referencedTableName)}_${
-									referencedTableName}_ref"
+									prop.columnName.replace("_id", "")}_ref"
 								Some(s"CONSTRAINT ${constraintNameBase}_fk FOREIGN KEY ${constraintNameBase}_idx (${
 									prop.columnName}) REFERENCES `$referencedTableName`(id) ON DELETE ${
 									if (isNullable) "SET NULL" else "CASCADE"}")

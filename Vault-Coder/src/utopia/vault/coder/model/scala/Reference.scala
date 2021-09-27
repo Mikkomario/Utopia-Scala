@@ -27,6 +27,10 @@ object Reference
 	  */
 	lazy val collectionExtensions = extensions(flowUtils, "CollectionExtensions")
 	/**
+	  * Imports time extensions (flow)
+	  */
+	lazy val timeExtensions = extensions(flowTime, "TimeExtensions")
+	/**
 	  * Imports implicit sql features (Vault)
 	  */
 	lazy val sqlExtensions = extensions(sql, "SqlExtensions")
@@ -46,6 +50,7 @@ object Reference
 	/**
 	  * Imports the template model type (Flow)
 	  */
+	// FIXME: Doesn't work
 	lazy val templateModel = apply(struct, "template.Model")
 	/**
 	  * Imports the immutable model type (Flow)
@@ -55,6 +60,10 @@ object Reference
 	  * Imports the ModelConvertible trait (Flow)
 	  */
 	lazy val modelConvertible = apply(flowGenerics, "ModelConvertible")
+	/**
+	  * Imports the Now -object (Flow)
+	  */
+	lazy val now = apply(flowTime, "Now")
 	
 	/**
 	  * Imports a database connection (Vault)
@@ -206,12 +215,23 @@ case class Reference(packagePath: Package, parentClass: Option[String], target: 
 		case None => copy(parentClass = Some(target), target = newTarget)
 	}
 	
+	/**
+	  * @param packagePath A package from which this reference is viewed from
+	  * @return A copy of this reference, relative to that package
+	  */
+	def from(packagePath: Package) = copy(packagePath = this.packagePath.fromPerspectiveOf(packagePath))
+	
 	
 	// IMPLEMENTED  ----------------------------
 	
-	override def toScala = parentClass match
+	override def toScala =
 	{
-		case Some(parent) => s"$packagePath.$parent.$target"
-		case None => s"$packagePath.$target"
+		val packagePart = if (packagePath.isEmpty) "" else packagePath.toScala + "."
+		val targetPart = if (target.isEmpty) "" else "." + target
+		parentClass match
+		{
+			case Some(parent) => packagePart + parent + targetPart
+			case None => packagePart + targetPart
+		}
 	}
 }
