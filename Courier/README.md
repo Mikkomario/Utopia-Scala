@@ -44,14 +44,15 @@ First, you need to construct an (implicit) **ReadSettings** instance. Your optio
 - Create a custom **ReadSettings** implementation
 
 Next, construct a new **EmailReader** instance
-- `EmailReader.default` parses **Email** instances
+- `EmailReader.default` and `EmailReader.defaultWithAttachments(Path)` parse **Email** instances
 - You can utilize a custom filter by using `EmailReader.filteredDefault(...)`
 - Alternatively, you can create your own **FromEmailBuilder** implementation and pass it to 
   `EmailReader(...)` or `EmailReader.filtered(...)`. This will allow you to return data types besides **Email**.
 
 Finally, use one of the **EmailReader** methods to read email from the server
 - `.apply(...)` asynchronously reads all the parsed messages into a vector, returning a future
+  - `.readBlocking(...)` works like `.apply(...)`, except that it runs synchronously
 - `.iterateAsync(...)(...)` asynchronously iterates over the read messages, returning a future with the 
-  specified function completion
-  - This is the most memory-efficient function, if you're not intending to simply parse the read messages into a vector
-- `.readBlocking(...)` works like `.apply(...)`, except that it runs synchronously
+  specified function completion. `.iterateBlocking(...)(...)` does the same synchronously.
+  - These are the most memory-efficient functions, unless you're simply intending to parse the read messages 
+    into a vector anyway

@@ -1,4 +1,4 @@
-package utopia.courier.model.read
+package utopia.courier.controller.read
 
 import java.io.InputStream
 import scala.util.Try
@@ -28,7 +28,7 @@ trait FromEmailBuilder[+A]
 	/**
 	  * Includes an attachment
 	  * @param attachmentName Name of the attachment (may be empty)
-	  * @param stream Attachment contents as a stream
+	  * @param stream         Attachment contents as a stream
 	  * @return Success or failure
 	  */
 	def attachFrom(attachmentName: String, stream: InputStream): Try[Unit]

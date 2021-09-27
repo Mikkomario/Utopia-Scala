@@ -1,16 +1,18 @@
-package utopia.courier.controller
+package utopia.courier.controller.read
 
 import utopia.courier.model.Email
 import utopia.courier.model.read.DeletionRule.NeverDelete
-import utopia.courier.model.read.{DeletionRule, EmailBuilder, FromEmailBuilder, LazyEmailHeadersView, ReadSettings}
+import utopia.courier.model.read.{DeletionRule, ReadSettings}
 import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.AutoCloseWrapper
 import utopia.flow.util.CollectionExtensions._
 
 import java.io.InputStream
+import java.nio.file.Path
 import java.util.Properties
 import javax.mail.Message.RecipientType
+import javax.mail.internet.MimeMessage
 import javax.mail.{Flags, Folder, Message, Multipart, Part, Session}
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{ExecutionContext, Future}
@@ -23,7 +25,7 @@ object EmailReader
 	/**
 	  * Creates a new default email reader implementation
 	  * @param settings Implicit email reading settings to use
-	  * @return A new reader
+	  * @return A new reader which processes emails without attachments
 	  */
 	def default(implicit settings: ReadSettings) =
 		apply { headers => new EmailBuilder(headers.toHeaders) }
@@ -53,15 +55,39 @@ object EmailReader
 		new EmailReader[A](settings, makeBuilder)
 	
 	/**
+	  * @param attachmentsStoreDirectory Directory where the read attachments will be stored
+	  * @param settings Implicit email reading settings
+	  * @return A reader that processes emails and includes attachments
+	  */
+	def defaultWithAttachments(attachmentsStoreDirectory: Path)(implicit settings: ReadSettings) =
+		apply { headers => new EmailBuilder(headers.toHeaders, Some(attachmentsStoreDirectory)) }
+	
+	/**
 	  * Creates a new mail reader that filters based on email subject
 	  * @param filter A function that accepts email headers and returns whether they should be processed
 	  * @param settings Implicit email reading settings to use
-	  * @return A new email reader
+	  * @return A new email reader (NB: Ignores attachments)
 	  */
 	def filteredDefault(filter: LazyEmailHeadersView => Boolean)(implicit settings: ReadSettings): EmailReader[Email] =
 		filtered { headers =>
 			if (filter(headers))
 				Some(new EmailBuilder(headers.toHeaders))
+			else
+				None
+		}
+	
+	/**
+	  * Creates a new mail reader that filters based on email subject and stores attachments
+	  * @param filter A function that accepts email headers and returns whether they should be processed
+	  * @param settings Implicit email reading settings to use
+	  * @return A new email reader
+	  */
+	def filteredDefaultWithAttachments(attachmentsDirectory: Path)
+	                                  (filter: LazyEmailHeadersView => Boolean)
+	                                  (implicit settings: ReadSettings): EmailReader[Email] =
+		filtered { headers =>
+			if (filter(headers))
+				Some(new EmailBuilder(headers.toHeaders, Some(attachmentsDirectory)))
 			else
 				None
 		}
@@ -209,7 +235,26 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 		override def next() = nextMaterials.pop().get match {
 			// Case: Next message items could be successfully acquired => Processes message content
 			case Success((message, builder)) =>
-				val result = Try { message.getContent }
+				// Reads the message content. If the primary content read fails,
+				// attempts to get around it by wrapping the message in another instance
+				// (Unable to load BODYSTRUCTURE exception workaround)
+				val content = Try { message.getContent } match
+				{
+					// Case: Access succeeded => continues normally
+					case success: Success[AnyRef] => success
+					// Case: Initial access failed => Attempts the workaround if applicable
+					case failure: Failure[AnyRef] =>
+						message match
+						{
+							// Case: MimeMessage => Tries the workaround
+							case mimeMessage: MimeMessage =>
+								// If the workaround fails also, refers back to the original exception
+								Try { new MimeMessage(mimeMessage).getContent }.orElse(failure)
+							// Case: Not a MimeMessage => Workaround doesn't apply
+							case _ => failure
+						}
+				}
+				val result = content
 					.flatMap { processContent(_, builder) }
 					.flatMap { _ => builder.result() }
 				// Remembers the result

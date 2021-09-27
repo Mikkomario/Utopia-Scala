@@ -1,7 +1,7 @@
-package utopia.courier.model.read
+package utopia.courier.controller.read
 
-import utopia.courier.model.{EmailHeaders, EmailHeadersLike}
 import utopia.courier.model.write.Recipients
+import utopia.courier.model.{EmailHeaders, EmailHeadersLike}
 import utopia.flow.time.Now
 import utopia.flow.util.StringExtensions._
 

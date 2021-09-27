@@ -1,6 +1,6 @@
 package utopia.courier.test
 
-import utopia.courier.controller.EmailSender
+import utopia.courier.controller.write.EmailSender
 import utopia.courier.model.{Email, EmailContent, EmailHeaders}
 import utopia.courier.model.write.{GmailWriteSettings, Recipients}
 import utopia.flow.generic.DataType

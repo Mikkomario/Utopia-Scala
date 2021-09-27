@@ -1,4 +1,4 @@
-package utopia.courier.model.read
+package utopia.courier.controller.read
 
 import utopia.courier.model.{Email, EmailContent, EmailHeaders}
 import utopia.flow.time.Today
