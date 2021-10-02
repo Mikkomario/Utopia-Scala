@@ -167,7 +167,7 @@ object DbModelWriter
 	}
 	private case class Expires(propertyName: String) extends DeprecationStyle
 	{
-		override def extensionFor(dbModelClass: ScalaType) = Reference.expiring(dbModelClass)
+		override def extensionFor(dbModelClass: ScalaType) = Reference.expiring
 		
 		override def properties = Vector(ImmutableValue("deprecationAttName", isOverridden = true)(propertyName.quoted))
 		

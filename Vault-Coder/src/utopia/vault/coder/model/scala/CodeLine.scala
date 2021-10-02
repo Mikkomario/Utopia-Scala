@@ -13,7 +13,7 @@ object CodeLine
 	/**
 	  * Recommended maximum line length
 	  */
-	val maxLineLength = 120
+	val maxLineLength = 110
 	/**
 	  * How many characters (spaces) a single tab represents
 	  */

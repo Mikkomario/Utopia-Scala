@@ -112,12 +112,6 @@ object FactoryWriter
 	
 	private def enumAwareApplyCode(classToWrite: Class, modelRef: Reference, dataRef: Reference) =
 	{
-		val builder = new CodeBuilder()
-		
-		// Needs to validate the specified model
-		builder += s"table.validate(model).flatMap { valid => "
-		builder.indent()
-		
 		// Divides the class properties into enumeration-based values and standard values
 		val dividedProperties = classToWrite.properties.map { prop => prop.dataType match
 		{
@@ -127,6 +121,14 @@ object FactoryWriter
 		val enumProperties = dividedProperties.flatMap { _.leftOption }
 		// Non-nullable enum-based values need to be parsed separately, because they may prevent model parsing
 		val requiredEnumProperties = enumProperties.filter { !_._2.isNullable }
+		
+		val builder = new CodeBuilder()
+		
+		// Needs to validate the specified model
+		val validateMapMethod = if (requiredEnumProperties.isEmpty) "map" else "flatMap"
+		builder += s"table.validate(model).$validateMapMethod { valid => "
+		builder.indent()
+		
 		declareEnumerations(builder, requiredEnumProperties.dropRight(1), "flatMap")
 		declareEnumerations(builder, requiredEnumProperties.lastOption, "map")
 		val innerIndentCount = requiredEnumProperties.size + 1

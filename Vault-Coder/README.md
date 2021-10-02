@@ -20,6 +20,7 @@ The program will inform you if there were any problems during input file process
 
 ## Input File Structure
 The input .json file should contain a single object with following properties:
+- **"author": String (optional)** - Author of this project's model structure
 - **"base_package" / "package": String (optional)** - Contains the package prefix common to all generated files 
   (e.g. "utopia.vault.coder")
 - **"enumerations" / "enums": Object (optional)** - Contains a property for each introduced enumeration. 
@@ -39,6 +40,7 @@ Class objects should contain following properties:
 - **"use_long_id": Boolean (optional)** - Whether Long should be used in the id property instead of Int. 
   Defaults to false.
 - **"doc": String (optional)** - A description of this class, which is written to class documentation
+- **"author": String (optional)** - Author of this class. If omitted, the project author will be used.
 - **"properties" / "props": [Object]** - An array of **property objects** for this class
 
 #### Property Object Structure

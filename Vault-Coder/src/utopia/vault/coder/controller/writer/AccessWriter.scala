@@ -46,9 +46,6 @@ object AccessWriter
 			ComputedProperty("model", Set(dbModelRef), Protected,
 				description = "Factory used for constructing database the interaction models")(dbModelRef.target)
 		)
-		val distinctAccessBaseProperties = baseProperties :+
-			ComputedProperty("defaultOrdering", Set(factoryRef), isOverridden = true)(
-				if (classToWrite.recordsCreationTime) "Some(factory.defaultOrdering)" else "None")
 		// Property setters are common for both distinct access points (unique & many)
 		val propertySetters = classToWrite.properties.map { prop =>
 			val paramName = s"new${prop.name.singular.capitalize}"
@@ -67,7 +64,7 @@ object AccessWriter
 					Reference.distinctModelAccess(modelRef, ScalaType.option(modelRef), Reference.value),
 					Reference.indexed),
 				// Provides computed accessors for individual properties
-				distinctAccessBaseProperties ++ classToWrite.properties.map { prop =>
+				baseProperties ++ classToWrite.properties.map { prop =>
 					ComputedProperty(prop.name.singular,
 						description = prop.description.notEmpty.getOrElse(s"The ${prop.name} of this instance") +
 							". None if no instance (or value) was found.", implicitParams = Vector(connectionParam))(
@@ -92,12 +89,11 @@ object AccessWriter
 			}
 			// This access point is used for accessing individual items based on their id
 			val singleIdAccess = ClassDeclaration(singleIdAccessName,
-				Vector(Parameter("id", classToWrite.idType.toScala, prefix = "override val")),
+				Vector(Parameter("id", classToWrite.idType.toScala, prefix = "val")),
 				Vector(uniqueAccessRef, Reference.uniqueModelAccess(modelRef)),
 				// Implements the .condition property
 				properties = Vector(
-					ComputedProperty("condition", Set(Reference.valueConversions, Reference.sqlExtensions),
-						isOverridden = true)("index <=> id")
+					ComputedProperty("condition", Set(Reference.valueConversions), isOverridden = true)("index <=> id")
 				)
 			)
 			File(singleAccessPackage,
@@ -122,7 +118,7 @@ object AccessWriter
 					TraitDeclaration(manyAccessTraitName,
 						Vector(Reference.manyRowModelAccess(modelRef), Reference.indexed),
 						// Contains computed properties to access class properties
-						distinctAccessBaseProperties ++ classToWrite.properties.map { prop =>
+						baseProperties ++ classToWrite.properties.map { prop =>
 							ComputedProperty(prop.name.plural,
 								description = s"${prop.name.plural} of the accessible ${classToWrite.name.plural}",
 								implicitParams = Vector(connectionParam))(
@@ -130,7 +126,9 @@ object AccessWriter
 									prop.dataType.nullable.fromValueCode("value")} }")
 						} :+ ComputedProperty("ids", implicitParams = Vector(connectionParam))(
 							s"pullColumn(index).flatMap { id => ${
-								classToWrite.idType.nullable.fromValueCode("id")} }"),
+								classToWrite.idType.nullable.fromValueCode("id")} }") :+
+							ComputedProperty("defaultOrdering", Set(factoryRef), Protected, isOverridden = true)(
+								if (classToWrite.recordsCreationTime) "Some(factory.defaultOrdering)" else "None"),
 						propertySetters,
 						description = s"A common trait for access points which target multiple ${
 							classToWrite.name.plural} at a time", author = classToWrite.author
