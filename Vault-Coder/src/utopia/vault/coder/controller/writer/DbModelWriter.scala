@@ -72,7 +72,7 @@ object DbModelWriter
 						s"apply(${prop.name} = Some(${prop.name}))")
 				} ++ deprecation.iterator.flatMap { _.methods },
 				description = s"Used for constructing $className instances and for inserting ${
-					classToWrite.name}s to the database"
+					classToWrite.name}s to the database", author = classToWrite.author
 			),
 			ClassDeclaration(className,
 				// Accepts a copy of all properties where each is wrapped in option (unless already an option)
@@ -96,7 +96,7 @@ object DbModelWriter
 						s"copy(${prop.name} = Some(${prop.name}))")
 				}.toSet,
 				description = s"Used for interacting with ${classToWrite.name.plural} in the database",
-				isCaseClass = true)
+				author = classToWrite.author, isCaseClass = true)
 		).write()
 	}
 	

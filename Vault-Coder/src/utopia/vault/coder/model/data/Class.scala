@@ -12,12 +12,14 @@ object Class
 	  * @param properties Properties in this class
 	  * @param packageName Name of the package in which to wrap this class (default = empty)
 	  * @param description A description of this class (default = empty)
+	  * @param author Author who wrote this class (may be empty)
 	  * @param useLongId Whether to use long instead of int in the id property (default = false)
 	  * @return A new class
 	  */
 	def apply(name: Name, properties: Vector[Property], packageName: String = "", description: String = "",
-	          useLongId: Boolean = false): Class =
-		apply(name, NamingUtils.camelToUnderscore(name.singular), properties, packageName, description, useLongId)
+	          author: String = "", useLongId: Boolean = false): Class =
+		apply(name, NamingUtils.camelToUnderscore(name.singular), properties, packageName, description,
+			author, useLongId)
 }
 
 /**
@@ -32,7 +34,7 @@ object Class
   * @param useLongId Whether to use long instead of int in the id property
   */
 case class Class(name: Name, tableName: String, properties: Vector[Property], packageName: String,
-                 description: String, useLongId: Boolean)
+                 description: String, author: String, useLongId: Boolean)
 {
 	/**
 	  * @return Type of the ids used in this class

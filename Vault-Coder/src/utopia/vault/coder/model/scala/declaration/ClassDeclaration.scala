@@ -13,7 +13,8 @@ case class ClassDeclaration(name: String, constructionParams: Parameters = Param
                             creationCode: Option[Code] = None,
                             properties: Vector[PropertyDeclaration] = Vector(),
                             methods: Set[MethodDeclaration] = Set(), nested: Set[InstanceDeclaration] = Set(),
-                            visibility: Visibility = Public, description: String = "", isCaseClass: Boolean = false)
+                            visibility: Visibility = Public, description: String = "", author: String = "",
+                            isCaseClass: Boolean = false)
 	extends InstanceDeclaration
 {
 	override val keyword =

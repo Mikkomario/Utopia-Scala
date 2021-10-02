@@ -42,7 +42,7 @@ object ModelWriter
 						s"Model(Vector(${ classToWrite.properties.map { prop =>
 							s"${ NamingUtils.camelToUnderscore(prop.name.singular).quoted } -> ${prop.toValueCode}" }
 							.mkString(", ") }))"),
-				description = classToWrite.description,
+				description = classToWrite.description, author = classToWrite.author,
 				isCaseClass = true)
 		)).write().flatMap { dataClassRef =>
 			val storePackage = setup.modelPackage/s"stored.${classToWrite.packageName}"
@@ -67,7 +67,7 @@ object ModelWriter
 				else
 					declaration.ClassDeclaration(classToWrite.name.singular, constructionParams,
 						Vector(Reference.storedModelConvertible(dataClassRef)),
-						description = description, isCaseClass = true)
+						description = description, author = classToWrite.author, isCaseClass = true)
 			}
 			File(storePackage, Vector(storedClass)).write().map { _ -> dataClassRef }
 		}

@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.scala.declaration
 
-import utopia.vault.coder.model.scala.ScalaDocKeyword.Since
+import utopia.vault.coder.model.scala.ScalaDocKeyword.{Author, Since}
 import utopia.flow.util.CombinedOrdering
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.coder.controller.CodeBuilder
@@ -54,6 +54,11 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 	  */
 	def description: String
 	
+	/**
+	  * @return Author that wrote this declaration (may be empty)
+	  */
+	def author: String
+	
 	
 	// IMPLEMENTED  --------------------------
 	
@@ -67,8 +72,13 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 		if (desc.nonEmpty)
 			builder += ScalaDocPart.description(desc)
 		constructorParams.foreach { builder ++= _.documentation }
+		// If there are other scaladocs, adds author and since -tags
 		if (description.nonEmpty)
+		{
+			if (author.nonEmpty)
+				builder += ScalaDocPart(Author, author)
 			builder += ScalaDocPart(Since, LocalDate.now().toString)
+		}
 		builder.result()
 	}
 	

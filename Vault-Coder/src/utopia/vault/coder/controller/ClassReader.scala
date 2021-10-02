@@ -23,31 +23,34 @@ object ClassReader
 	/**
 	  * Reads class data from a .json file
 	  * @param path Path to the file to read
-	  * @return Base package name, followed by the read enumerations and the read classes.
+	  * @return Base package name, followed by the read enumerations, the read classes and the project author.
 	  *         Failure if file reading or class parsing failed.
 	  */
 	def apply(path: Path) = JsonBunny(path).flatMap { v =>
 		val root = v.getModel
+		val author = root("author").getString
 		val basePackage = root("base_package", "package").getString
 		val enumPackage = s"$basePackage.model.enumeration"
 		val enumerations = root("enumerations", "enums").getModel.attributes.map { enumAtt =>
 			Enum(enumAtt.name.capitalize, enumAtt.value.getVector.flatMap { _.string }.map { _.capitalize },
-				enumPackage)
+				enumPackage, author)
 		}
 		val classes = root("classes", "class").getModel.attributes.tryMap { packageAtt =>
 			packageAtt.value.model match
 			{
-				case Some(classModel) => parseClassFrom(classModel, packageAtt.name, enumerations).map { Vector(_) }
+				case Some(classModel) =>
+					parseClassFrom(classModel, packageAtt.name, enumerations, author).map { Vector(_) }
 				case None =>
 					packageAtt.value.getVector.flatMap { _.model }
-						.tryMap { parseClassFrom(_, packageAtt.name, enumerations) }
+						.tryMap { parseClassFrom(_, packageAtt.name, enumerations, author) }
 			}
 		}.map { _.flatten }
 		
 		classes.map { (basePackage, enumerations, _) }
 	}
 	
-	private def parseClassFrom(classModel: Model[Constant], packageName: String, enumerations: Iterable[Enum]) =
+	private def parseClassFrom(classModel: Model[Constant], packageName: String, enumerations: Iterable[Enum],
+	                           defaultAuthor: String) =
 	{
 		val rawClassName = classModel("name").string.filter { _.nonEmpty }.map { _.capitalize }
 		val rawTableName = classModel("table_name", "table").string.filter { _.nonEmpty }
@@ -64,7 +67,7 @@ object ClassReader
 				.map { propertyFrom(_, enumerations, fullName) }
 			
 			Success(Class(fullName, tableName, properties, packageName, classModel("doc").getString,
-				classModel("use_long_id").getBoolean))
+				classModel("author").stringOr(defaultAuthor), classModel("use_long_id").getBoolean))
 		}
 	}
 	

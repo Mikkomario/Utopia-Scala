@@ -39,7 +39,7 @@ object FactoryWriter
 			ObjectDeclaration(objectName, extensionsFor(classToWrite, modelRef),
 				properties = propertiesFor(classToWrite, tablesRef),
 				methods = methodsFor(classToWrite, modelRef, dataRef),
-				description = s"Used for reading ${classToWrite.name} data from the DB"
+				description = s"Used for reading ${classToWrite.name} data from the DB", author = classToWrite.author
 			)
 		).write()
 	}

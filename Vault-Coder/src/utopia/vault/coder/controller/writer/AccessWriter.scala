@@ -76,7 +76,7 @@ object AccessWriter
 					classToWrite.idType.nullable.fromValueCode(s"pullColumn(index)")),
 				propertySetters,
 				description = s"A common trait for access points that return individual and distinct ${
-					classToWrite.name.plural}."
+					classToWrite.name.plural}.", author = classToWrite.author
 			)
 		).write().flatMap { uniqueAccessRef =>
 			// Writes the single model access point
@@ -111,7 +111,8 @@ object AccessWriter
 							description = s"Database id of the targeted ${classToWrite.name} instance"))(
 						s"new $singleIdAccessName(id)")),
 					nested = Set(singleIdAccess),
-					description = s"Used for accessing individual ${classToWrite.name.plural}"
+					description = s"Used for accessing individual ${classToWrite.name.plural}",
+					author = classToWrite.author
 				)
 			).write().flatMap { singleAccessRef =>
 				// Writes a trait common for the many model access points
@@ -132,7 +133,7 @@ object AccessWriter
 								classToWrite.idType.nullable.fromValueCode("id")} }"),
 						propertySetters,
 						description = s"A common trait for access points which target multiple ${
-							classToWrite.name.plural} at a time"
+							classToWrite.name.plural} at a time", author = classToWrite.author
 					)
 				).write().flatMap { manyAccessTraitRef =>
 					// Writes the many model access point
@@ -140,7 +141,8 @@ object AccessWriter
 					File(manyAccessPackage,
 						ObjectDeclaration(manyAccessName, Vector(manyAccessTraitRef, rootViewExtension),
 							description = s"The root access point when targeting multiple ${
-								classToWrite.name.plural} at a time")
+								classToWrite.name.plural} at a time", author = classToWrite.author
+						)
 					).write().map { manyAccessRef =>
 						(uniqueAccessRef, singleAccessRef, manyAccessTraitRef, manyAccessRef)
 					}

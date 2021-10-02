@@ -9,8 +9,9 @@ import utopia.vault.coder.model.scala.{Package, Reference}
   * @param name Name of this enumeration
   * @param values Available values of this enumeration (ordered)
   * @param packagePath Name of the package that contains this enumeration trait / values
+  * @param author Author who wrote these enumerations (default = empty)
   */
-case class Enum(name: String, values: Vector[String], packagePath: Package)
+case class Enum(name: String, values: Vector[String], packagePath: Package, author: String = "")
 {
 	/**
 	  * Reference to this enumeration

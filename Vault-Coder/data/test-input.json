@@ -1,4 +1,5 @@
 {
+	"author": "Mikko Hilpinen",
 	"base_package": "utopia.vault.coder.test",
 	"enumerations": {
 		"MeetingType": ["Online", "Offline"]

@@ -43,7 +43,8 @@ object TablesWriter
 					"// If you're using the Citadel module, import utopia.citadel.database.Tables",
 					"// Tables(tableName)",
 					"???")),
-				description = "Used for accessing the database tables introduced in this project"
+				description = "Used for accessing the database tables introduced in this project",
+				author = classes.map { _.author }.toSet.filter { _.nonEmpty }.mkString(", ")
 			)
 		).write()
 	}

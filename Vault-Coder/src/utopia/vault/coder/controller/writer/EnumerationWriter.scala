@@ -33,6 +33,7 @@ object EnumerationWriter
 				// Each value contains an id so that it can be referred from the database
 				properties = Vector(PropertyDeclaration.newAbstract("id", ScalaType.int,
 					description = "Id used for this value in database / SQL")),
+				description = s"Common trait for all ${enum.name} values", author = enum.author,
 				isSealed = true
 			),
 			// Enumeration values are nested within a companion object
