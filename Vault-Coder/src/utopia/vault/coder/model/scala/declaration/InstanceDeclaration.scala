@@ -3,6 +3,7 @@ package utopia.vault.coder.model.scala.declaration
 import utopia.vault.coder.model.scala.ScalaDocKeyword.Since
 import utopia.flow.util.CombinedOrdering
 import utopia.flow.util.CollectionExtensions._
+import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.model.scala.{Code, Extension, Parameters, ScalaDocPart}
 import utopia.vault.coder.model.scala.template.{CodeConvertible, ScalaDocConvertible}
 
@@ -71,28 +72,22 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 		builder.result()
 	}
 	
-	override def toCodeLines =
+	override def toCode =
 	{
-		val builder = new VectorBuilder[String]
+		val builder = new CodeBuilder()
 		
+		// Writes the scaladoc
 		builder ++= scalaDoc
 		// Writes the declaration and the extensions
-		val paramsString = constructorParams match {
-			case Some(params) => params.toScala
-			case None => ""
-		}
-		val base = s"$baseString$paramsString"
+		builder.appendPartial(baseString)
+		constructorParams.foreach(builder.appendPartial)
+		
 		val ext = extensions
-		if (ext.isEmpty)
-			builder += base
-		else {
-			val extensionsString = s"extends ${ ext.map { _.toScala }.mkString(" with ") }"
-			if (base.length + extensionsString.length < CodeConvertible.maxLineLength)
-				builder += base + ' ' + extensionsString
-			else {
-				builder += base
-				builder += "\t" + extensionsString
-			}
+		if (ext.nonEmpty)
+		{
+			builder.appendPartial(s"extends ${ ext.map { _.toScala }.mkString(" with ") }", " ",
+				allowLineSplit = true)
+			builder.addReferences(ext.flatMap { _.references })
 		}
 		
 		// Starts writing the instance body
@@ -118,7 +113,7 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 		val fullOrdering = new CombinedOrdering[Declaration](Vector(
 			visibilityOrdering, Ordering.by[Declaration, String] { _.name }))
 		
-		builder ++= bodyLinesFrom(Vector(
+		appendSegments(builder, Vector[(Iterable[CodeConvertible], String)](
 			attributes -> "ATTRIBUTES",
 			creationCode.toVector -> "INITIAL CODE",
 			(abstractComputed.sorted(visibilityOrdering) ++
@@ -136,30 +131,29 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 	
 	// OTHER    ---------------------------------
 	
-	private def bodyLinesFrom(segments: Seq[(Iterable[CodeConvertible], String)]) =
+	private def appendSegments(builder: CodeBuilder, segments: Seq[(Iterable[CodeConvertible], String)]) =
 	{
 		val segmentsToWrite = segments
-			.map { case (code, header) => code.flatMap { _.toCodeLines } -> header }
+			.map { case (code, header) => code.map { _.toCode } -> header }
 			.filter { _._1.nonEmpty }
-		if (segmentsToWrite.isEmpty)
-			Vector()
-		else
-		{
-			val builder = new VectorBuilder[String]
-			
-			builder += "{"
-			segmentsToWrite.dropRight(1).foreach { case (lines, header) =>
-				builder += s"\t// $header\t--------------------"
-				builder += "\t"
-				builder ++= lines.map { "\t" + _ }
-				builder ++= Vector.fill(2)("\t")
+		if (segmentsToWrite.nonEmpty)
+			builder.block { builder =>
+				segmentsToWrite.dropRight(1).foreach { case (codes, header) =>
+					builder += s"// $header\t--------------------"
+					builder.addEmptyLine()
+					codes.foreach { code =>
+						builder ++= code
+						builder.addEmptyLine()
+					}
+					builder.addEmptyLine()
+				}
+				// Writes the last portion separately because the separators are different at the end
+				val (lastCodes, lastHeader) = segmentsToWrite.last
+				builder += s"// $lastHeader\t--------------------"
+				lastCodes.foreach { code =>
+					builder.addEmptyLine()
+					builder ++= code
+				}
 			}
-			val (lastLines, lastHeader) = segmentsToWrite.last
-			builder += s"\t// $lastHeader\t--------------------"
-			builder += "\t"
-			builder ++= lastLines.map { "\t" + _ }
-			builder += "}"
-			builder.result()
-		}
 	}
 }

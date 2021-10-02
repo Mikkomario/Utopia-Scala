@@ -1,6 +1,7 @@
 package utopia.vault.coder.model.scala.template
 
-import utopia.vault.coder.model.scala.ScalaDocPart
+import utopia.vault.coder.controller.CodeBuilder
+import utopia.vault.coder.model.scala.{Code, ScalaDocPart}
 
 /**
   * Common trait for instances that can be converted to scaladoc lines
@@ -22,13 +23,19 @@ trait ScalaDocConvertible
 	/**
 	  * @return A full scaladoc for this item
 	  */
-	def scalaDoc =
+	def scalaDoc: Code =
 	{
 		// Adds the documentation first
-		val documentationLines = documentation.flatMap { _.toCodeLines }
-		if (documentationLines.nonEmpty)
-			"/**" +: documentationLines.map { line => "  * " + line} :+  "  */"
+		val documentationCode = documentation.map { _.toCode }.filter { _.nonEmpty }
+		if (documentationCode.nonEmpty)
+		{
+			val builder = new CodeBuilder()
+			builder += "/**"
+			documentationCode.foreach { builder ++= _.prependAll("  * ") }
+			builder += "  */"
+			builder.result()
+		}
 		else
-			Vector()
+			Code.empty
 	}
 }

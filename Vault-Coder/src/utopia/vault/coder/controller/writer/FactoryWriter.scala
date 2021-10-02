@@ -2,11 +2,12 @@ package utopia.vault.coder.controller.writer
 
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, ProjectSetup}
+import utopia.vault.coder.controller.CodeBuilder
+import utopia.vault.coder.model.data.{Class, ProjectSetup, Property}
 import utopia.vault.coder.model.enumeration.PropertyType.EnumValue
 import utopia.vault.coder.model.scala.Visibility.Public
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-import utopia.vault.coder.model.scala.{Code, Extension, Parameter, Reference}
+import utopia.vault.coder.model.scala.{Extension, Parameter, Reference}
 import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
 
 import scala.collection.immutable.VectorBuilder
@@ -111,8 +112,12 @@ object FactoryWriter
 	
 	private def enumAwareApplyCode(classToWrite: Class, modelRef: Reference, dataRef: Reference) =
 	{
+		val builder = new CodeBuilder()
+		
 		// Needs to validate the specified model
-		val validationLine = s"table.validate(model).flatMap { valid => "
+		builder += s"table.validate(model).flatMap { valid => "
+		builder.indent()
+		
 		// Divides the class properties into enumeration-based values and standard values
 		val dividedProperties = classToWrite.properties.map { prop => prop.dataType match
 		{
@@ -122,33 +127,37 @@ object FactoryWriter
 		val enumProperties = dividedProperties.flatMap { _.leftOption }
 		// Non-nullable enum-based values need to be parsed separately, because they may prevent model parsing
 		val requiredEnumProperties = enumProperties.filter { !_._2.isNullable }
-		val enumDeclarationLines = requiredEnumProperties.zipWithIndex.map { case ((property, enumValue), index) =>
-			// Uses flatMap if there remain more conditions, otherwise uses map
-			val methodName = if (index < requiredEnumProperties.size - 1) "flatMap" else "map"
-			s"${"\t" * (index + 1)}${enumValue.enumeration.name}.forId(valid(${
-				property.name.singular.quoted}).getInt).$methodName { ${property.name} => "
-		}
-		val innerIndentCount = enumDeclarationLines.size + 1
-		val innerIndent = "\t" * innerIndentCount
+		declareEnumerations(builder, requiredEnumProperties.dropRight(1), "flatMap")
+		declareEnumerations(builder, requiredEnumProperties.lastOption, "map")
+		val innerIndentCount = requiredEnumProperties.size + 1
+		
 		// Stores nullable enum values to increase readability
-		val nullableDeclarationLines = enumProperties.filter { _._2.isNullable }.map { case (prop, enumVal) =>
-			s"${innerIndent}val ${prop.name} = valid(${prop.name.singular.quoted}).int.flatMap(${
+		enumProperties.filter { _._2.isNullable }.foreach { case (prop, enumVal) =>
+			builder += s"val ${prop.name} = valid(${prop.name.singular.quoted}).int.flatMap(${
 				enumVal.enumeration.name}.findForId)"
 		}
-		val creationLineBase = s"${modelRef.target}(valid(${"id".quoted}), ${dataRef.target}("
-		val creationLinePropertiesPart = dividedProperties.map {
+		
+		// Writes the instance creation now that the enum-based properties have been declared
+		builder.appendPartial(s"${modelRef.target}(valid(${"id".quoted}), ${dataRef.target}(")
+		builder.appendPartial(dividedProperties.map {
 			case Left((prop, _)) => prop.name.singular
 			case Right(prop) => s"valid(${prop.name.singular.quoted})"
-		}.mkString(", ")
-		val creationLine = s"$innerIndent$creationLineBase$creationLinePropertiesPart))"
-		// Some lines are included for closing brackets
-		val closingLines = (0 until innerIndentCount).reverseIterator.map { indent => "\t" * indent + "}" }
+		}.mkString(", ") + "))", allowLineSplit = true)
 		
-		// Combines the lines together
-		val allLines = (validationLine +: enumDeclarationLines) ++ (nullableDeclarationLines :+
-			creationLine) ++ closingLines
+		// Closes open blocks
+		(0 until innerIndentCount).foreach { _ => builder.closeBlock() }
+		
 		// References the enumerations used
-		Code(allLines, enumProperties.map { _._2.enumeration.reference }.toSet ++
+		builder.result().referringTo(enumProperties.map { _._2.enumeration.reference }.toSet ++
 			Set(modelRef, dataRef, Reference.valueUnwraps))
 	}
+	
+	// NB: Indents for each declared enumeration
+	private def declareEnumerations(builder: CodeBuilder, enumProps: Iterable[(Property, EnumValue)],
+	                                mapMethod: String) =
+		enumProps.foreach { case (prop, enumVal) =>
+			builder += s"${enumVal.enumeration.name}.forId(valid(${
+				prop.name.singular.quoted}).getInt).$mapMethod { ${prop.name} => "
+			builder.indent()
+		}
 }

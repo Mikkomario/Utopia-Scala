@@ -32,6 +32,18 @@ trait ResettableLazyLike[+A] extends LazyLike[A]
 	}
 	
 	/**
+	  * Retrieves a value from this lazy, if one has already been initialized, and resets it afterwards (if necessary)
+	  * @return The value in this lazy before the reset. None if this lazy didn't have an initialized value.
+	  */
+	def popCurrent() =
+	{
+		val result = current
+		if (result.nonEmpty)
+			reset()
+		result
+	}
+	
+	/**
 	  * Resets this lazy instance and immediately requests a new value
 	  * @return The newly generated and stored value
 	  */

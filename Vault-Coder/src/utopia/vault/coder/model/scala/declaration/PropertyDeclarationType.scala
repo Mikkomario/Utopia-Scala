@@ -28,8 +28,8 @@ sealed trait PropertyDeclarationType extends ScalaConvertible
 	          explicitOutputType: Option[ScalaType] = None, description: String = "",
 	          implicitParams: Vector[Parameter] = Vector(), isOverridden: Boolean = false)
 	         (line1: String, moreLines: String*) =
-		PropertyDeclaration(this, name, Code(line1 +: moreLines.toVector, references), visibility, explicitOutputType,
-			description, implicitParams, isOverridden)
+		PropertyDeclaration(this, name, Code.from(line1 +: moreLines.toVector).referringTo(references), visibility,
+			explicitOutputType, description, implicitParams, isOverridden)
 }
 
 object PropertyDeclarationType

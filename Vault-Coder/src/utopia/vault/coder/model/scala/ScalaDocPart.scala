@@ -35,15 +35,15 @@ object ScalaDocPart
   */
 case class ScalaDocPart(content: Vector[String], keyword: Option[ScalaDocKeyword]) extends CodeConvertible
 {
-	override def toCodeLines =
+	override def toCode =
 	{
 		if (content.isEmpty)
-			Vector()
+			Code.empty
 		else
 			keyword match
 			{
-				case Some(keyword) => s"$keyword ${content.head}" +: content.tail
-				case None => content
+				case Some(keyword) => Code.from(s"$keyword ${content.head}" +: content.tail)
+				case None => Code.from(content)
 			}
 	}
 }

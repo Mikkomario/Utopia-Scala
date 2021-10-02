@@ -23,8 +23,8 @@ object MethodDeclaration
 	          explicitOutputType: Option[ScalaType] = None, description: String = "", returnDescription: String = "",
 	          isOverridden: Boolean = false)(params: Parameters = Parameters.empty)
 	         (firstLine: String, moreLines: String*): MethodDeclaration =
-		apply(visibility, name, params, Code(firstLine +: moreLines.toVector, codeReferences), explicitOutputType,
-			description, returnDescription, isOverridden)
+		apply(visibility, name, params, Code.from(firstLine +: moreLines.toVector).referringTo(codeReferences),
+			explicitOutputType, description, returnDescription, isOverridden)
 }
 
 /**
@@ -34,13 +34,13 @@ object MethodDeclaration
   * @param visibility Visibility of this method
   * @param name Method name
   * @param parameters Parameters accepted by this method
-  * @param code Code executed within this method
+  * @param bodyCode Code executed within this method
   * @param explicitOutputType Data type returned by this method, when explicitly defined (optional)
   * @param description Description of this method (may be empty)
   * @param returnDescription Description of the return value of this method (may be empty)
   * @param isOverridden Whether this method overrides a base version
   */
-case class MethodDeclaration(visibility: Visibility, name: String, parameters: Parameters, code: Code,
+case class MethodDeclaration(visibility: Visibility, name: String, parameters: Parameters, bodyCode: Code,
                              explicitOutputType: Option[ScalaType], description: String, returnDescription: String,
                              isOverridden: Boolean) extends FunctionDeclaration
 {

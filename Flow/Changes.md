@@ -52,6 +52,10 @@
   - Added `.unique`, which makes sure a non-existing path is used
 - **PollingIterator**
   - Added `.pollToNextWhere(...)`, which enables one to make sure the next item will fulfill a specific requirement
+- **Regex**
+  - Added multiple new iterator-based methods
+- **ResettableLazyLike**
+  - Added `.popCurrent()`, which is a variation of `.pop()` that doesn't generate a value if one didn't exist already.
 - **String** (**StringExtensions**)
   - Added `.containsMany(String, Int)`, which checks whether the string contains multiple occurrences of a sub-string
 ### Other Changes

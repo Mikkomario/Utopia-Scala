@@ -192,7 +192,12 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	def path(implicit setup: ProjectSetup) =
 	{
 		val (packagePart, classPart) = importTarget.splitAtLast(".")
-		(packagePath/packagePart).pathTo(classPart)
+		// Case: There are no two parts in the target => Uses the only part as the file name
+		if (classPart.isEmpty)
+			packagePath.pathTo(packagePart)
+		// Case: Target consists of multiple parts => appends the package part to the package path (directory path)
+		else
+			(packagePath/packagePart).pathTo(classPart)
 	}
 	
 	

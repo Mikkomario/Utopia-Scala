@@ -80,17 +80,25 @@ object ModelWriter
 		{
 			case Some(prop) =>
 				Vector(
-					ComputedProperty("isDeprecated")(s"${prop.name}.isDefined"),
-					ComputedProperty("isValid")("!isDeprecated")
+					ComputedProperty("isDeprecated",
+						description = s"Whether this ${classToWrite.name} has already been deprecated")(
+						s"${prop.name}.isDefined"),
+					ComputedProperty("isValid",
+						description = s"Whether this ${classToWrite.name} is still valid (not deprecated)")(
+						"!isDeprecated")
 				)
 			case None =>
 				classToWrite.expirationProperty match
 				{
 					case Some(prop) =>
 						Vector(
-							ComputedProperty("hasExpired", Set(Reference.timeExtensions, Reference.now))(
+							ComputedProperty("hasExpired", Set(Reference.timeExtensions, Reference.now),
+								description = s"Whether this ${
+									classToWrite.name} is no longer valid because it has expired")(
 								s"${prop.name} <= Now"),
-							ComputedProperty("isValid")("!hasExpired")
+							ComputedProperty("isValid",
+								description = s"Whether this ${classToWrite.name} is still valid (hasn't expired yet)")(
+								"!hasExpired")
 						)
 					case None => Vector()
 				}

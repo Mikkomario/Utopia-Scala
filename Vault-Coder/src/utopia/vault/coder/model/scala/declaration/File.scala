@@ -1,11 +1,11 @@
 package utopia.vault.coder.model.scala.declaration
 
 import utopia.flow.util.CollectionExtensions._
+import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.model.data.ProjectSetup
 import utopia.vault.coder.model.scala.{Package, Reference}
 import utopia.vault.coder.model.scala.template.CodeConvertible
 
-import scala.collection.immutable.VectorBuilder
 import scala.io.Codec
 
 object File
@@ -40,13 +40,13 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration])
 	
 	// IMPLEMENTED  ----------------------------------
 	
-	override def toCodeLines =
+	override def toCode =
 	{
-		val builder = new VectorBuilder[String]()
+		val builder = new CodeBuilder()
 		
 		// Writes the package declaration
 		builder += s"package $packagePath"
-		builder += ""
+		builder.addEmptyLine()
 		
 		// Writes the imports
 		// Doesn't write references that are in the same package. Also simplifies imports in nested packages
@@ -64,15 +64,15 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration])
 			}).sorted
 		builder ++= importTargets.map { target => s"import $target" }
 		if (importTargets.nonEmpty)
-			builder += ""
+			builder.addEmptyLine()
 		
 		// Writes the objects, then classes
 		declarations.foreach { declaration =>
-			builder ++= declaration.toCodeLines
-			builder += ""
+			builder ++= declaration.toCode
+			builder.addEmptyLine()
 		}
 		
-		builder.result()
+		builder.result().split
 	}
 	
 	

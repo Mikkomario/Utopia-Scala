@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.scala.declaration
 
+import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.model.scala.ScalaDocKeyword.Return
 import utopia.vault.coder.model.scala.{Code, Parameters, ScalaDocPart, ScalaType}
 import utopia.vault.coder.model.scala.template.{CodeConvertible, ScalaDocConvertible}
@@ -18,7 +19,7 @@ trait FunctionDeclaration extends Declaration with CodeConvertible with ScalaDoc
 	/**
 	  * @return Code that forms this method / property
 	  */
-	def code: Code
+	def bodyCode: Code
 	
 	/**
 	  * @return Whether this declaration overrides a base declaration
@@ -49,12 +50,12 @@ trait FunctionDeclaration extends Declaration with CodeConvertible with ScalaDoc
 	/**
 	  * @return Whether this function is abstract (doesn't specify a body)
 	  */
-	def isAbstract = code.isEmpty
+	def isAbstract = bodyCode.isEmpty
 	
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def references = code.references ++ params.iterator.flatMap { _.references } ++
+	override def references = bodyCode.references ++ params.iterator.flatMap { _.references } ++
 		explicitOutputType.iterator.flatMap { _.references }
 	
 	override def documentation =
@@ -70,48 +71,30 @@ trait FunctionDeclaration extends Declaration with CodeConvertible with ScalaDoc
 		resultBuilder.result()
 	}
 	
-	override def toCodeLines =
+	override def toCode =
 	{
-		val builder = new VectorBuilder[String]()
+		val builder = new CodeBuilder()
 		// Adds the documentation first
 		builder ++= scalaDoc
 		// Then the header and body
-		val overridePart = if (isOverridden) "override " else ""
-		val parametersString = params match {
-			case Some(params) => params.toScala
-			case None => ""
+		if (isOverridden)
+			builder.appendPartial("override ")
+		builder.appendPartial(baseString)
+		params.foreach(builder.appendPartial)
+		explicitOutputType.foreach { outputType =>
+			builder.appendPartial(outputType.toScala, ": ")
+			builder.addReferences(outputType.references)
 		}
-		val dataTypeString = explicitOutputType match
+		
+		// Case: Concrete function
+		if (bodyCode.nonEmpty)
 		{
-			case Some(dataType) => s": ${dataType.toScala}"
-			case None => ""
-		}
-		val baseHeader = s"$overridePart$baseString$parametersString$dataTypeString"
-		// Case: Empty (abstract) function
-		if (code.isEmpty)
-			builder += baseHeader
-		else
-		{
-			val header = s"$baseHeader = "
-			if (code.isSingleLine)
-			{
-				val line = code.lines.head
-				// Case: Single line function
-				if (line.length + header.length < CodeConvertible.maxLineLength)
-					builder += header + line
-				// Case: Two-line function
-				else {
-					builder += header
-					builder += "\t" + line
-				}
-			}
+			builder.appendPartial(" = ")
+			if (bodyCode.isSingleLine)
+				builder.appendPartial(bodyCode.lines.head.code, allowLineSplit = true)
 			// Case: Multi-line function
 			else
-			{
-				builder += header + '{'
-				code.lines.foreach { builder += "\t" + _ }
-				builder += "}"
-			}
+				builder.addBlock(bodyCode)
 		}
 		
 		builder.result()

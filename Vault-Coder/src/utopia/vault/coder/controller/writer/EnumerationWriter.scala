@@ -53,8 +53,8 @@ object EnumerationWriter
 						codeReferences = Set(Reference.collectionExtensions, Reference.noSuchElementException),
 						returnDescription = s"${enum.name} matching that id. Failure if no suitable value was found.")(
 						Parameter("id", ScalaType.int, description = s"Id matching a ${enum.name}"))(
-						s"findForId(id).toTry { new NoSuchElementException(${
-							s"No value of ${enum.name} matches id '${"s${id}"}'".quoted}) }")
+						s"findForId(id).toTry { new NoSuchElementException(s${
+							s"No value of ${enum.name} matches id '${"${id}"}'".quoted}) }")
 				),
 				// Contains an object for each value
 				nested = enum.values.zipWithIndex.map { case (valueName, index) =>

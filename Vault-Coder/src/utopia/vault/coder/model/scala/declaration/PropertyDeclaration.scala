@@ -27,7 +27,7 @@ object PropertyDeclaration
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: String, code: Code,
+case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: String, bodyCode: Code,
                                visibility: Visibility = Public, explicitOutputType: Option[ScalaType] = None,
                                description: String = "", implicitParams: Vector[Parameter] = Vector(),
                                isOverridden: Boolean = false)

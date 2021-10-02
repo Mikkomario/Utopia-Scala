@@ -1,6 +1,8 @@
 package utopia.flow.parse
 
-import java.util.regex.Pattern
+import utopia.flow.datastructure.mutable.ResettableLazy
+
+import java.util.regex.{Matcher, Pattern}
 import scala.collection.immutable.VectorBuilder
 import scala.language.implicitConversions
 
@@ -211,7 +213,7 @@ case class Regex(string: String)
 	  * @param str A string
 	  * @return A version of the string that only contains items accepted by this regex
 	  */
-	def filter(str: String) = findAllFrom(str).reduceOption { _ + _ } getOrElse ""
+	def filter(str: String) = matchesIteratorFrom(str).reduceOption { _ + _ } getOrElse ""
 	
 	/**
 	 * Extracts the matches of this regex from the specified string, returning both the extracted results and the
@@ -254,44 +256,19 @@ case class Regex(string: String)
 	  * @param str A string
 	  * @return The first match from the string
 	  */
-	def findFirstFrom(str: String) =
-	{
-		val matcher = pattern.matcher(str)
-		if (matcher.find())
-			Some(matcher.group())
-		else
-			None
-	}
+	def findFirstFrom(str: String) = matchesIteratorFrom(str).nextOption()
 	/**
 	  * Finds all matches of this regex from a string
 	  * @param str A string
 	  * @return All matches for this regex
 	  */
-	def findAllFrom(str: String) =
-	{
-		val matcher = pattern.matcher(str)
-		val builder = new VectorBuilder[String]()
-		while (matcher.find())
-		{
-			builder += matcher.group()
-		}
-		builder.result()
-	}
+	def findAllFrom(str: String) = matchesIteratorFrom(str).toVector
 	
 	/**
 	  * @param str A string
 	  * @return All character ranges within that string that match this regular expression
 	  */
-	def rangesFrom(str: String) =
-	{
-		val matcher = pattern.matcher(str)
-		val builder = new VectorBuilder[Range]()
-		while (matcher.find())
-		{
-			builder += matcher.start() until matcher.end()
-		}
-		builder.result()
-	}
+	def rangesFrom(str: String) = rangesIteratorIn(str).toVector
 	
 	/**
 	 * Splits the specified string using this regex
@@ -321,5 +298,56 @@ case class Regex(string: String)
 			builder.result() :+ str.substring(lastEndIndex)
 		else
 			builder.result()
+	}
+	
+	/**
+	  * @param str A string
+	  * @return An iterator that returns pattern match results (substrings) from that string
+	  */
+	def matchesIteratorFrom(str: String): Iterator[String] = MatcherIterator.matches(pattern.matcher(str))
+	/**
+	  * @param str A string
+	  * @return An iterator that returns pattern match ranges within that string
+	  */
+	def rangesIteratorIn(str: String): Iterator[Range] = MatcherIterator.ranges(pattern.matcher(str))
+	/**
+	  * @param str A string
+	  * @return An iterator that returns match start indices (inclusive) within that string
+	  */
+	def startIndexIteratorIn(str: String): Iterator[Int] = MatcherIterator.startIndices(pattern.matcher(str))
+	/**
+	  * @param str A string
+	  * @return An iterator that returns match end indices (exclusive) within that string
+	  */
+	def endIndexIteratorIn(str: String): Iterator[Int] = MatcherIterator.endIndices(pattern.matcher(str))
+}
+
+private object MatcherIterator
+{
+	def apply[A](matcher: Matcher)(f: Matcher => A) = new MatcherIterator[A](matcher)(f)
+	
+	def startIndices(matcher: Matcher) = apply(matcher) { _.start() }
+	def endIndices(matcher: Matcher) = apply(matcher) { _.end() }
+	def ranges(matcher: Matcher) = apply(matcher) { m => m.start() until m.end() }
+	def matches(matcher: Matcher) = apply(matcher) { _.group() }
+}
+
+private class MatcherIterator[+A](matcher: Matcher)(f: Matcher => A) extends Iterator[A]
+{
+	// ATTRIBUTES   -------------------
+	
+	private val findCache = ResettableLazy { matcher.find() }
+	
+	
+	// IMPLEMENTED  ------------------
+	
+	override def hasNext = findCache.value
+	
+	override def next() =
+	{
+		if (findCache.pop())
+			f(matcher)
+		else
+			throw new NoSuchElementException("Calling .next() after the end of this iterator")
 	}
 }
