@@ -1,6 +1,8 @@
 # Utopia Disciple - List of changes
 
-## v1.2 (in development)
+## v1.2 - 3.10.2021
+This update reflects changes in **Flow** and **Vault**. Also, module logic was altered concerning use of 
+email address vs. username.
 ### Breaking Changes
 - User email address is now considered optional in various database interactions
   - Because of this change, username is required to be unique under some conditions / specifications

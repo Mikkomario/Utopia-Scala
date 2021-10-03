@@ -1,6 +1,7 @@
 # Utopia Ambassador - List of Changes
 
-## v1.2 (in development)
+## v1.2 - 3.10.2021
+This update reflects changes in **Utopia Flow**, using the new **Pair** class. 
 ### Breaking Changes
 - `.insert(Seq) `in **TokenScopeLinkModel** now accepts **Pair**s instead of tuples
   - This shouldn't require much refactoring, if any

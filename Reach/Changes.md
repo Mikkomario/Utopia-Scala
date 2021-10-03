@@ -1,6 +1,8 @@
 # Utopia Reach - List of Changes
 
-## v0.3 (alpha)
+## v0.3 (alpha) - 3.10.2021
+This update simply reflects changes in the **Flow**, **Genesis** and **Reflection** modules, utilizing the new 
+traits and classes.
 ### Breaking Changes
 - Use of **Direction1D** was replaced with **Sign** (according to **Genesis** and **Reflection** changes)
 - **StackFactory**'s `.forPair(...)` -variants now expect a **Pair** instead of a tuple

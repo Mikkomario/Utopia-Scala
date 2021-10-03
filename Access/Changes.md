@@ -1,6 +1,7 @@
 # Utopia Access - List of Changes
 
-## v1.4.1 (in development)
+## v1.4.1 - 3.10.2021
+This minor update reflects some additions made to the **Flow** module. Namely, adding **Pair** support to **Headers**.
 ### New Methods
 - **Headers**
   - Added a variant of + that accepts a **Pair**

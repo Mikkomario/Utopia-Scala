@@ -1,6 +1,10 @@
 # Utopia Reflection - List of Changes
 
-## v2.6 (in development)
+## v2.6 - 3.10.2021
+In this major (refactoring) update, many of the previously used traits were deprecated and new versions were added 
+to the **Flow** module. Shape classes were also refactored to use the new **Pair** class from **Flow**. These 
+updates will most likely require refactoring from your part, at least if you've extended some traits 
+introduced in this module.
 ### Breaking Changes
 - **Direction1D** was replaced with **Sign** in **Utopia Flow**
   - The new enumeration works almost identically (with some additions)

@@ -139,10 +139,10 @@ whether they be servers, desktop clients or real-time games.
 interface as the JSONReader.
 
 ### Utopia Courier
-*Email interactions you might actually want to use*
+*Intuitive Email interactions*
 
-**Utopia Courier** model is focused on email integration. Both sending and writing messages are included. 
-This module wraps the JavaMail API, providing a much cleaner and more usable interface.
+**Utopia Courier** model is focused on email integration and supports both sending and writing messages. 
+This module wraps the JavaMail API, providing a much cleaner interface.
 
 ### Utopia Vault
 *All the benefits of SQL - with no SQL required*
@@ -306,15 +306,17 @@ If you already have an **Utopia Exodus** server, this module is very easy to add
 will be able to skip tens of hours of work. **Ambassador** comes with all rest nodes towards both 
 the web client and the 3rd party redirection, so you will only need to add your business logic.
 
-### Utopia Journey
+### Utopia Journey (incomplete)
 *Leverage your Exodus server with a pre-built client interface*
 
-**Utopia Journey** is the client-side interface to **Utopia Exodus** server, handling request authorization and local session management. 
-Having a pre-built and easy-to-use interface for server interactions in your client takes you many steps ahead and saves you 
-the trouble of worrying about a secure interface.
+Please note that this module is in very early development and not ready for production use.
+
+**Utopia Journey** is the client-side interface to **Utopia Exodus** server, handling request authorization and 
+local session management. Having a pre-built and easy-to-use interface for server interactions in your client 
+takes you many steps ahead and saves you the trouble of worrying about a secure interface.
 
 ## Module Hierarchy
-*Utopia* modules have following dependency-hierarchy. Modules lower at the list depend from those higher in the list.
+*Utopia* modules have following dependency-hierarchy. Modules lower at the list depend on those higher in the list.
 - **Flow** - The standard library
     - **BunnyMunch** - Json parsing
     - **Courier** - Email integration

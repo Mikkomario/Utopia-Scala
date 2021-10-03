@@ -1,6 +1,10 @@
 # Utopia Vault - List of Changes
 
-## v1.10 (in development)
+## v1.10- 3.10.2021
+This update contains some package-related refactoring, as well as refactoring based on the latest **Flow** changes. 
+Unfortunately this means that you will most likely also have to do some refactoring on your end. Besides this, 
+new deprecation support was added based on traits that previously existed on the **Utopia Citadel** module. These 
+are now more widely available.
 ### Breaking Changes
 - Moved the **DataInserter** trait from `utopia.vault.model.template` to `utopia.vault.nosql.storable`
 - **References**`.columnsBetween(Table, Table)` and `.connectionBetween(Table, Table)` now return 

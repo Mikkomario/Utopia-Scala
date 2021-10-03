@@ -1,6 +1,12 @@
 # Utopia Vault Coder
 
-## v1.1 (in development)
+## v1.1 - 3.10.2021
+This is a major update to the **Vault Coder** utility application, making it actually usable in production use. 
+Beside the important bugfixes, this update adds very useful features and utility updates: Enumerations and deprecation 
+are now supported, automatic line splitting is added and the model structure document reading is now more flexible. 
+
+Of course, this update is also important in the sense that the module / application name and function was changed 
+so that **Citadel** module is no longer a requirement in the use cases, making this application more widely applicable.
 ### Breaking Changes
 - Renamed this module to **Utopia Vault Coder** - Also renamed code occurrences and removed **Metropolis** dependencies
   - Because of this, the **Tables** object implementation is left partially open.

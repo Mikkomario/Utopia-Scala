@@ -1,6 +1,9 @@
 # Utopia Flow - List of Changes
 
-## v1.12 (in development)
+## v1.12 - 3.10.2021
+This major update adds a number of new traits (based on previous **Genesis** versions) for classes which support 
+certain operators (*, +). New **Pair** data structure is also added and taken into use where applicable. 
+There are also a large number of new utility methods added.
 ### Breaking Changes
 - **Iterator**`.takeNextTo(...)` and `.takeNext(Int)` (**CollectionExtensions**) now return an iterator and not a vector, 
   and don't advance the iterator immediately. The previous implementations are available as `.collectTo(...)` and 
