@@ -1,7 +1,7 @@
 package utopia.access.http
 
 import utopia.flow.generic.ModelConvertible
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.datastructure.immutable.{Model, Pair}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
@@ -17,7 +17,6 @@ import java.time.format.DateTimeFormatter
 import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.ZoneOffset
-
 import scala.language.implicitConversions
 import scala.io.Codec
 import scala.math.Ordering.Double.TotalOrdering
@@ -249,6 +248,12 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
       * @param header A header key value pair
       * @return A copy of these headers with specified header appended (';' is used to separate multiple header values)
       */
+    def +(header: Pair[String]) = withHeaderAdded(header.first, header.second)
+    /**
+      * @param header A header key value pair
+      * @return A copy of these headers with specified header appended (';' is used to separate multiple header values)
+      */
+    // Kept for backwards compatibility (v1.4.1)
     def +(header: (String, String)) = withHeaderAdded(header._1, header._2)
     
     /**

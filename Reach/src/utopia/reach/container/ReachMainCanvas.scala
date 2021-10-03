@@ -6,7 +6,6 @@ import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, MouseButto
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Point}
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.HandlerType

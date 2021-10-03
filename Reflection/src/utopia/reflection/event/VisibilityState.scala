@@ -1,8 +1,7 @@
 package utopia.reflection.event
 
-import utopia.flow.util.RichComparable
-import utopia.genesis.shape.shape1D.Direction1D
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
+import utopia.flow.operator.BinarySigned
+import utopia.flow.util.SelfComparable
 import utopia.reflection.event.Visibility.{Invisible, Visible}
 import utopia.reflection.event.VisibilityChange.{Appearing, Disappearing}
 
@@ -11,8 +10,10 @@ import utopia.reflection.event.VisibilityChange.{Appearing, Disappearing}
   * @author Mikko Hilpinen
   * @since 19.8.2020, v1.2
   */
-sealed trait VisibilityState extends RichComparable[Visibility]
+sealed trait VisibilityState extends SelfComparable[VisibilityState] with BinarySigned[VisibilityState]
 {
+	// ABSTRACT ---------------------------------
+	
 	/**
 	  * @return A visibility state opposite to this one
 	  */
@@ -23,17 +24,27 @@ sealed trait VisibilityState extends RichComparable[Visibility]
 	  */
 	def isVisible: Boolean
 	
+	
+	// COMPUTED ---------------------------------
+	
 	/**
 	  * @return Whether components having this state are completely invisible
 	  */
 	def isNotVisible = !isVisible
+	
+	
+	// IMPLEMENTED  -----------------------------
+	
+	override def unary_- = opposite
 }
 
 /**
   * An enumeration for static visibility states
   */
-sealed trait Visibility extends VisibilityState
+sealed trait Visibility extends VisibilityState with BinarySigned[Visibility]
 {
+	// ABSTRACT ------------------------------
+	
 	/**
 	  * @return A visibility transition used when introducing this visibility state
 	  */
@@ -48,6 +59,15 @@ sealed trait Visibility extends VisibilityState
 	  * @return A visibility opposite to this one
 	  */
 	override def opposite: Visibility
+	
+	
+	// IMPLEMENTED  ---------------------------
+	
+	override def repr = this
+	
+	override def unary_- = opposite
+	
+	override def isPositive = isVisible
 }
 
 /**
@@ -55,33 +75,36 @@ sealed trait Visibility extends VisibilityState
   */
 sealed trait VisibilityChange extends VisibilityState
 {
+	// ABSTRACT -------------------------------
+	
 	/**
 	  * @return The starting state for this transition
 	  */
 	def originalState: Visibility
-	
 	/**
 	  * @return The final state of this transition
 	  */
 	def targetState: Visibility
 	
 	/**
-	  * @return Direction of this transition, in terms of visibility
-	  */
-	def direction: Direction1D
-	
-	/**
 	  * @return A change opposite to this one
 	  */
 	override def opposite: VisibilityChange
 	
-	override def isVisible = true
 	
-	override def compareTo(o: Visibility) = o match
-	{
-		case Visible => -1
-		case Invisible => 1
-	}
+	// COMPUTED -----------------------------
+	
+	/**
+	  * @return Direction of this visibility change (same as sign)
+	  */
+	def direction = sign
+	
+	
+	// IMPLEMENTED  -------------------------
+	
+	override def repr = this
+	
+	override def isVisible = true
 }
 
 object Visibility
@@ -97,7 +120,7 @@ object Visibility
 		
 		override def opposite = Invisible
 		
-		override def compareTo(o: Visibility) = o match
+		override def compareTo(o: VisibilityState) = o match
 		{
 			case Visible => 0
 			case _ => 1
@@ -115,7 +138,7 @@ object Visibility
 		
 		override def opposite = Visible
 		
-		override def compareTo(o: Visibility) = o match
+		override def compareTo(o: VisibilityState) = o match
 		{
 			case Invisible => 0
 			case _ => -1
@@ -130,13 +153,19 @@ object VisibilityChange
 	  */
 	case object Appearing extends VisibilityChange
 	{
-		override def originalState = Invisible
+		override def isPositive = true
 		
+		override def originalState = Invisible
 		override def targetState = Visible
 		
-		override def direction = Positive
-		
 		override def opposite = Disappearing
+		
+		override def compareTo(o: VisibilityState) = o match
+		{
+			case Visible => -1
+			case Appearing => 0
+			case _ => 1
+		}
 	}
 	
 	/**
@@ -144,12 +173,18 @@ object VisibilityChange
 	  */
 	case object Disappearing extends VisibilityChange
 	{
-		override def originalState = Visible
+		override def isPositive = false
 		
+		override def originalState = Visible
 		override def targetState = Invisible
 		
-		override def direction = Negative
-		
 		override def opposite = Appearing
+		
+		override def compareTo(o: VisibilityState) = o match
+		{
+			case Invisible => 1
+			case Disappearing => 0
+			case _ => -1
+		}
 	}
 }

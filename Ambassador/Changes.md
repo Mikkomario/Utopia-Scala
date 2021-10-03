@@ -1,5 +1,11 @@
 # Utopia Ambassador - List of Changes
 
+## v1.2 - 3.10.2021
+This update reflects changes in **Utopia Flow**, using the new **Pair** class. 
+### Breaking Changes
+- `.insert(Seq) `in **TokenScopeLinkModel** now accepts **Pair**s instead of tuples
+  - This shouldn't require much refactoring, if any
+
 ## v1.1 - 4.9.2021
 This update contains important practical bugfixes and additions, the kind of things one finds out during early 
 use case testing. **GoogleRedirector** interface was updated to support a wider range of features, 

@@ -1,9 +1,9 @@
 package utopia.genesis.shape.template
 
+import utopia.flow.operator.Combinable
 import utopia.genesis.shape.shape1D.LinearAcceleration
 import utopia.genesis.shape.shape2D.Vector2DLike
 import utopia.genesis.shape.{Axis, shape1D}
-import utopia.genesis.util.Arithmetic
 
 import scala.concurrent.duration.Duration
 
@@ -11,16 +11,15 @@ import scala.concurrent.duration.Duration
   * Represents a change in velocity over a time period
   * @author Mikko Hilpinen
   * @since 14.7.2020, v2.3
+  * @tparam X Type of position information
+  * @tparam V Type of velocity information
+  * @tparam Repr A concrete implementation of this trait
   */
 trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
-	+Repr <: Change[V, _] with Arithmetic[Change[V, _], Repr]] extends Change[V, Repr]
-	with Arithmetic[Change[V, _], Repr] with Dimensional[LinearAcceleration] with VectorProjectable[Repr]
+	+Repr <: Change[V, _] /*with Arithmetic[Change[V, _], Repr]*/]
+	extends Change[V, Repr] with Combinable[Repr, Change[V, _]] with Dimensional[LinearAcceleration]
+		with VectorProjectable[Repr]
 {
-	// ATTRIBUTES	-------------------
-	
-	override lazy val dimensions = amount.dimensions.map { shape1D.LinearAcceleration(_, duration) }
-	
-	
 	// ABSTRACT	-----------------------
 	
 	/**
@@ -32,6 +31,8 @@ trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
 	
 	
 	// COMPUTED	-----------------------
+	
+	override def dimensions = amount.dimensions.map { shape1D.LinearAcceleration(_, duration) }
 	
 	override protected def zeroDimension = LinearAcceleration.zero
 	
@@ -52,8 +53,6 @@ trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
 	
 	
 	// IMPLEMENTED	-------------------
-	
-	override def -(another: Change[V, _]) = buildCopy(amount - another(duration))
 	
 	override def *(mod: Double) = buildCopy(amount * mod)
 	

@@ -1,5 +1,6 @@
 package utopia.genesis.shape.shape2D
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.Rotation
@@ -44,6 +45,14 @@ object Matrix2D
 	// OTHER	-------------------------------
 	
 	/**
+	  * @param xTransform Transformation applied over the x axis (first column)
+	  * @param yTransform Transformation applied over the y axis (second column)
+	  * @return A new matrix
+	  */
+	def apply(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D = Vector2D.zero): Matrix2D =
+		apply(Pair(xTransform, yTransform))
+	
+	/**
 	  * Creates a new matrix by providing the numbers from left to right, up to down
 	  * @param xx X-component of the x-transformation
 	  * @param yx X-component of the y-transformation
@@ -51,7 +60,7 @@ object Matrix2D
 	  * @param yy Y-component of the y-transformation
 	  * @return A matrix that consists of the two transformations
 	  */
-	def apply(xx: Double, yx: Double, xy: Double, yy: Double): Matrix2D = Matrix2D(Vector2D(xx, xy), Vector2D(yx, yy))
+	def apply(xx: Double, yx: Double, xy: Double, yy: Double): Matrix2D = apply(Vector2D(xx, xy), Vector2D(yx, yy))
 	
 	/**
 	  * Creates a new linear scaling transformation matrix
@@ -119,11 +128,11 @@ object Matrix2D
   * @author Mikko Hilpinen
   * @since 15.7.2020, v2.3
   */
-case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D = Vector2D.zero)
+case class Matrix2D(override val columns: Pair[Vector2D])
 	extends MatrixLike[Vector2D, Matrix2D] with TwoDimensional[Vector2D] with LinearTransformable[Matrix2D]
 		with AffineTransformable[Matrix3D] with JavaAffineTransformConvertible
 {
-	// COMPUTED	--------------------------------
+	// ATTRIBUTES   ----------------------------
 	
 	// [[x1, y1], [x2, y2]] => det = x1*y2 - y1*x2, kind of a cross between this matrix
 	/**
@@ -133,13 +142,13 @@ case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D =
 	  *         yield points on a 1D line or on a 0D point. If determinant is negative, that means that this
 	  *         transformation flips one of the axes (resulting area is mirrored horizontally or vertically).
 	  */
-	lazy val determinant = xTransform.x * yTransform.y - yTransform.x * xTransform.y
+	override lazy val determinant = xTransform.x * yTransform.y - yTransform.x * xTransform.y
 	
 	/**
 	  * @return An inverse of this matrix / transformation. When this matrix is multiplied with its inverse, that
 	  *         yields an identity matrix.
 	  */
-	lazy val inverse =
+	override lazy val inverse =
 	{
 		if (determinant == 0.0)
 			None
@@ -151,6 +160,20 @@ case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D =
 			) / determinant)
 		}
 	}
+	
+	override lazy val rows = Pair(Vector2D(xTransform.x, yTransform.x), Vector2D(xTransform.y, yTransform.y))
+	
+	
+	// COMPUTED	--------------------------------
+	
+	/**
+	  * @return Transformation applied on X axis (first column)
+	  */
+	def xTransform = columns.first
+	/**
+	  * @return Transformation applied on Y axis (second column)
+	  */
+	def yTransform = columns.second
 	
 	/**
 	  * @return A 3x3 matrix based on this matrix. The z-transformation matches that of the identity matrix (0, 0, 1)
@@ -170,13 +193,13 @@ case class Matrix2D(xTransform: Vector2D = Vector2D.zero, yTransform: Vector2D =
 	
 	// IMPLEMENTED	----------------------------
 	
+	override def dimensions = columns
+	
 	override def repr = this
 	
-	override val columns = Vector(xTransform, yTransform)
+	override def dimensions2D = columns
 	
-	override lazy val rows = Vector(Vector2D(xTransform.x, yTransform.x), Vector2D(xTransform.y, yTransform.y))
-	
-	override protected def buildCopy(columns: Vector[Vector2D]) =
+	override protected def buildCopy(columns: Seq[Vector2D]) =
 	{
 		val fullColumns = columns.padTo(2, Vector2D.zero)
 		Matrix2D(fullColumns.head, fullColumns(1))

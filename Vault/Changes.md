@@ -1,5 +1,26 @@
 # Utopia Vault - List of Changes
 
+## v1.10- 3.10.2021
+This update contains some package-related refactoring, as well as refactoring based on the latest **Flow** changes. 
+Unfortunately this means that you will most likely also have to do some refactoring on your end. Besides this, 
+new deprecation support was added based on traits that previously existed on the **Utopia Citadel** module. These 
+are now more widely available.
+### Breaking Changes
+- Moved the **DataInserter** trait from `utopia.vault.model.template` to `utopia.vault.nosql.storable`
+- **References**`.columnsBetween(Table, Table)` and `.connectionBetween(Table, Table)` now return 
+  **Pair**s instead of tuples.
+  - Also includes additional method variants
+  - This change is quite unlikely to require major refactoring
+### New Features
+- Added **TimeDeprecatable**, **NullDeprecatable**, **Expiring** and **DeprecatableAfter** from the **Citadel** module
+  - These allow for easier deprecation implementation in storable factories
+### New Methods
+- **Table**
+  - `.validate(Model)` - shorter version for writing `.requirementsDeclaration.validate(...).toTry`
+### Other Changes
+- **Reference** now uses **Pair** internally instead of two separate **ReferencePoint**s. 
+  The interface remains largely the same, however.
+
 ## v1.9 - 4.9.2021
 This update mostly contains some non-breaking refactoring and utility updates. However, the bugfix to the `exists` 
 function in **FactoryView** / **View** is of major importance. I do recommend applying this update on a high priority.

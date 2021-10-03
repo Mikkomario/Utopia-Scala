@@ -1,5 +1,6 @@
 package utopia.reflection.component.swing.display
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
@@ -199,7 +200,7 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 			Vector(first, second.trim)
 		}
 		else
-			(-1 +: lineSplitIndices :+ text.length).paired.map { case (start, end) => text.substring(start + 1, end) }
+			(-1 +: lineSplitIndices :+ text.length).paired.map { case Pair(start, end) => text.substring(start + 1, end) }
 	}
 	
 	

@@ -11,6 +11,7 @@ import utopia.flow.util.NullSafe._
 import javax.imageio.ImageIO
 import utopia.flow.datastructure.immutable.{Lazy, LazyWrapper}
 import utopia.flow.datastructure.template.LazyLike
+import utopia.flow.operator.LinearScalable
 import utopia.genesis.color.Color
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
 import utopia.genesis.shape.Axis.{X, Y}
@@ -18,7 +19,7 @@ import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape1D.{Angle, Rotation}
 import utopia.genesis.shape.shape2D.{Area2D, Bounds, Direction2D, Insets, Matrix2D, Point, Size, Vector2D}
 import utopia.genesis.shape.template.{Dimensional, VectorLike}
-import utopia.genesis.util.{Drawer, Scalable}
+import utopia.genesis.util.Drawer
 
 import scala.util.{Failure, Success, Try}
 
@@ -145,7 +146,7 @@ object Image
 case class Image private(override protected val source: Option[BufferedImage], override val scaling: Vector2D,
 						 override val alpha: Double, override val specifiedOrigin: Option[Point],
 						 private val _pixels: LazyLike[PixelTable])
-	extends ImageLike with Scalable[Image]
+	extends ImageLike with LinearScalable[Image]
 {
 	// ATTRIBUTES	----------------
 	
@@ -253,6 +254,8 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	
 	// IMPLEMENTED	----------------
 	
+	override def repr = this
+	
 	override def preCalculatedPixels = _pixels.current
 	
 	/**
@@ -264,8 +267,6 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  * @return The pixels in this image
 	  */
 	override def pixels = _pixels.value
-	
-	override def repr = this
 	
 	override def *(scaling: Double): Image = this * Vector2D(scaling, scaling)
 	

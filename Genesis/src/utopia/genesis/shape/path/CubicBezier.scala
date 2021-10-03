@@ -1,7 +1,7 @@
 package utopia.genesis.shape.path
 
-import utopia.genesis.util.Arithmetic.ArithMeticDouble
-import utopia.genesis.util.{Arithmetic, DistanceLike}
+import utopia.flow.operator.DoubleLike.DoubleWrapper
+import utopia.flow.operator.{Combinable, LinearMeasurable, LinearScalable}
 
 object CubicBezier
 {
@@ -14,7 +14,7 @@ object CubicBezier
 	  * @return A new cubic bezier for doubles
 	  */
 	def apply(start: Double, controlStart: Double, controlEnd: Double, end: Double) =
-		new CubicBezier[ArithMeticDouble](start, controlStart, controlEnd, end)
+		new CubicBezier[DoubleWrapper](start, controlStart, controlEnd, end)
 }
 
 /**
@@ -27,9 +27,9 @@ object CubicBezier
   * @param controlEnd The second control point
   * @param end The curve end point
   */
-case class CubicBezier[P <: Arithmetic[P, P] with DistanceLike](override val start: P, controlStart: P, controlEnd: P,
-                                                                override val end: P)
-	extends Path[P] with DistanceLike
+case class CubicBezier[P <: Combinable[P, P] with LinearScalable[P] with LinearMeasurable]
+(override val start: P, controlStart: P, controlEnd: P, override val end: P)
+	extends Path[P] with LinearMeasurable
 {
 	// IMPLEMENTED	----------------------
 	
@@ -63,5 +63,6 @@ case class CubicBezier[P <: Arithmetic[P, P] with DistanceLike](override val sta
 	  * @param sequenceCount The number of sequences used for calculating arc length at different points
 	  * @return A copy of this path with standardized t
 	  */
-	def withStandardizedVelocity(sequenceCount: Int) = StandardVelocityPath(this, sequenceCount)
+	def withStandardizedVelocity(sequenceCount: Int) =
+		StandardVelocityPath(this, sequenceCount)
 }

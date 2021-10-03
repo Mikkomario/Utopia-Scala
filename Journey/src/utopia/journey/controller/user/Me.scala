@@ -30,10 +30,14 @@ class Me(queueSystem: QueueSystem, loginEmail: Option[String])
 	
 	private val previousUserId = container.current.map { _.id }
 	// This value is updated when more information becomes available
-	private var userWasChanged = container.current.forall { user => loginEmail.exists { _ != user.settings.email } }
-	
-	private val schrodinger = new TryFindSchrodinger(container.current.filter { local =>
-		loginEmail.forall { local.settings.email == _ } }.toTry { new NoUserDataError("No local user data stored") })
+	// FIXME: This implementation expects email address to always be specified
+	private var userWasChanged = container.current.forall { user =>
+		loginEmail.exists { email => !user.settings.email.contains(email) }
+	}
+	// FIXME: Same problem here
+	private val schrodinger = new TryFindSchrodinger(container.current
+		.filter { local => loginEmail.forall { local.settings.email.contains(_) } }
+		.toTry { new NoUserDataError("No local user data stored") })
 	
 	// When initializing the invitations access point (lazy), uses the latest known status about active user changing
 	// If this information is incorrect, cached invitation answers may not get posted or they may be rejected by

@@ -3,7 +3,6 @@ package utopia.genesis.shape.shape3D
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape1D.LinearVelocity
 import utopia.genesis.shape.shape2D.movement
-import utopia.genesis.shape.shape2D.movement.Velocity2D
 import utopia.genesis.shape.template.{Dimensional, VectorLike, VelocityLike}
 
 import scala.concurrent.duration.{Duration, TimeUnit}
@@ -41,6 +40,12 @@ object Velocity3D
 case class Velocity3D(transition: Vector3D, override val duration: Duration) extends VelocityLike[Vector3D, Velocity3D]
 	with ThreeDimensional[LinearVelocity]
 {
+	// ATTRIBUTES   -------------
+	
+	// Caches the dimensions
+	override lazy val dimensions = super.dimensions
+	
+	
 	// COMPUTED	-----------------
 	
 	/**

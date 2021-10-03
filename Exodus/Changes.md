@@ -1,5 +1,19 @@
 # Utopia Exodus - List of Changes
 
+## v2.1 - 3.10.2021
+This update reflects changes in the **Citadel** module, where email address was made optional. This feature / setting 
+is specified with `ExodusContext.setup(...)`.
+### Breaking Changes
+- `ExodusContext.setup(...)` now accepts a boolean property `requireUserEmail`, which specifies whether 
+  email address is considered a required field in **UserSettings** and related functions.
+  - Unlike the earlier versions where email address was always required, the default value of this property is false
+    - If you want to keep the email requirement, you will have to update the `ExodusContext.setup()` -call.
+  - When user email address is considered optional, usernames are required to be unique
+- Some deprecated user-related classes were removed
+### New Methods
+- **ExodusContext**
+  - `.userEmailIsRequired` and `.uniqueUserNamesAreRequired` which are mutually exclusive (see breaking change above)
+
 ## v2.0.1 - 4.9.2021
 This update focuses on extending the custom extension capabilities of the base **Exodus** implementation.
 ### New Features

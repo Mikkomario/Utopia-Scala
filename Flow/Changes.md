@@ -1,5 +1,71 @@
 # Utopia Flow - List of Changes
 
+## v1.12 - 3.10.2021
+This major update adds a number of new traits (based on previous **Genesis** versions) for classes which support 
+certain operators (*, +). New **Pair** data structure is also added and taken into use where applicable. 
+There are also a large number of new utility methods added.
+### Breaking Changes
+- **Iterator**`.takeNextTo(...)` and `.takeNext(Int)` (**CollectionExtensions**) now return an iterator and not a vector, 
+  and don't advance the iterator immediately. The previous implementations are available as `.collectTo(...)` and 
+  `.collectNext(Int)`
+- **Seq**`.paired` now returns **Pair**s instead of tuples. This may require refactoring when used with pattern matching.
+### Deprecations
+- Deprecated **Iterable**`.tryForEach(...)` in favor of **IterableOnce**`.tryForeach(...)` (**CollectionExtensions**)
+- Deprecated **Path**`.forChildren(...)` and `.foldChildren(...)` in favor of the new iteration functions 
+  (**FileExtensions**)
+### New Features
+- Added **Pair**, a data structure that holds exactly two values of the same type
+- Added **PollableOnce**, a container that returns its value once before becoming invalid
+- Added **RecursiveDirectoryIterator**, which is also used by some refactored **FileExtensions** functions
+- Added **Sign** class to represent binary direction (+ or -). This closely resembles 
+  **Direction1D** from **Utopia Genesis**
+- Added following new operator -related traits that enable easier creation and handling of scalable and combinable 
+  data types
+  - **LinearMeasurable** - Provides `.length` -property, which is used in **Utopia Genesis**
+  - **Reversible** - Supports the unary - operator
+  - **Zeroable** - Recognizes between zero and non-zero instances
+  - **Signed** - Recognizes between positive and negative and can swap between them
+  - **SignedOrZero** - Adds zero handling to Signed
+  - **BinarySigned** - Special case for signed items that can never be zero
+  - **Scalable** - Allows multiplication
+  - **LinearScalable** - Allows linear multiplication
+  - **Combinable** - Supports the + operator (and possibly -)
+  - **Multiplicable** - Supports * operator for integers but not doubles
+  - **DoubleLike** - Performs like a double number
+  - **IntLike** - Performs like an integer number (doesn't support /)
+### New Methods
+- **Graph**
+  - `.edgesTo(N)`
+  - `.withoutEdge(E)`
+- **GraphNode**
+  - `.cheapestRoutesTo(...)(...)` and `.shortestRoutesTo(...)`, which return multiple routes in case of equal costs
+- **IterableOnce** (**CollectionExtensions**)
+  - `.takeTo(...)`, which works like `.takeWhile(...)`, except that it includes the terminating item
+  - `.tryForeach(...)`, based on` .TryForEach(...)` in **Iterable**
+  - `.tryFlatMap(...)`, which combines the ideas of `.tryMap(...)` and `.flatMap(...)`
+- **Iterator** (**CollectionExtensions**)
+  - Added `.existsCount(...)`
+  - Added `.skip(Int)`
+- **Model**
+  - Added `.apply(String, String, String*)` that works like standard `.apply(String)`, except that it uses 
+    alternative options if primary search fails.
+- **Path** (**FileExtensions**)
+  - Added `.iterateChildren(...)`, `.tryIterateChildren(...)`, `.allChildrenIterator` and `.iterateSiblings(...)` 
+    for easier and more memory-friendly child path iterations
+  - Added `.unique`, which makes sure a non-existing path is used
+- **PollingIterator**
+  - Added `.pollToNextWhere(...)`, which enables one to make sure the next item will fulfill a specific requirement
+- **Regex**
+  - Added multiple new iterator-based methods
+- **ResettableLazyLike**
+  - Added `.popCurrent()`, which is a variation of `.pop()` that doesn't generate a value if one didn't exist already.
+- **String** (**StringExtensions**)
+  - Added `.containsMany(String, Int)`, which checks whether the string contains multiple occurrences of a sub-string
+### Other Changes
+- **Path**`.withFileName(String)` now applies the existing file extension if no new extension is provided in the 
+  file name parameter (**FileExtensions**)
+- `TryLoop.attempt(...)` now has a special handling for cases where the maximum number of allowed attempts is 1 or lower
+
 ## v1.11.1 - 9.9.2021
 This small patch resolves a bug in **TimeExtensions** where two dates couldn't be subtracted from each other 
 (since v1.10).

@@ -1,23 +1,23 @@
 package utopia.genesis.shape.path
 
+import utopia.flow.operator.{Combinable, LinearMeasurable, Reversible}
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.path.Path.PathWithDistance
-import utopia.genesis.util.{Arithmetic, DistanceLike}
 
 /**
   * This path works exactly like a the original path, except that the "velocity" within the curve is standardized
   * @author Mikko Hilpinen
   * @since 24.6.2019, v2.1+
   */
-case class StandardVelocityPath[P <: Arithmetic[P, P] with DistanceLike](private val original: PathWithDistance[P],
-                                                                         sequenceAmount: Int)
-	extends Path[P] with DistanceLike
+case class StandardVelocityPath[P <: Combinable[P, P] with Reversible[P] with LinearMeasurable]
+(private val original: PathWithDistance[P], sequenceAmount: Int)
+	extends Path[P] with LinearMeasurable
 {
 	// ATTRIBUTES	-------------------
 	
 	// TODO: Could optimize this by combining similar values into a single larger range
 	private val sequenceLengths = (0 to sequenceAmount).map { i => original(i.toDouble / sequenceAmount) }.paired.map {
-		p => (p._2 - p._1).length }
+		p => (p.second - p.first).length }
 	
 	// IMPLEMENTED	-------------------
 	

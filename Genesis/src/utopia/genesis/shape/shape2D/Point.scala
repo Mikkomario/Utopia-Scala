@@ -1,14 +1,13 @@
 package utopia.genesis.shape.shape2D
 
 import utopia.flow.generic.ValueConversions._
-import java.awt.geom.Point2D
 
+import java.awt.geom.Point2D
 import scala.collection.immutable.HashMap
 import utopia.flow.generic.ValueConvertible
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.datastructure.immutable.{Model, Pair, Value}
 import utopia.genesis.generic.PointType
 import utopia.flow.generic.ModelConvertible
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
 import utopia.genesis.util.ApproximatelyEquatable
@@ -20,10 +19,28 @@ import scala.util.Success
 
 object Point extends FromModelFactory[Point]
 {
-    val origin = Point(0, 0)
+	// ATTRIBUTES   ---------------------------
+	
+	/**
+	  * (0,0) location
+	  */
+    val origin = apply()
+	
     
+	// IMPLEMENTED  ---------------------------
+	
     def apply(model: utopia.flow.datastructure.template.Model[Property]) = Success(
             Point(model("x").getDouble, model("y").getDouble))
+	
+	
+	// OTHER    -------------------------------
+	
+	/**
+	  * @param x An x-coordinate (default = 0)
+	  * @param y An y-coordinate (default = 0)
+	  * @return A new point with those coordinates
+	  */
+	def apply(x: Double = 0.0, y: Double = 0.0): Point = apply(Pair(x, y))
 	
 	/**
 	  * @param l Position length-wise
@@ -41,12 +58,10 @@ object Point extends FromModelFactory[Point]
      * Converts an awt point to Utopia point
      */
     def of(point: java.awt.Point) = Point(point.getX, point.getY)
-    
     /**
      * Converts an awt geom point to Utopia point
      */
     def of(point: Point2D) = Point(point.getX, point.getY)
-    
     /**
      * Converts a coordinate map into a point
      */
@@ -64,12 +79,10 @@ object Point extends FromModelFactory[Point]
      */
 	@deprecated("Please call this method through the point instance", "v2")
     def topLeft(a: Point, b: Point) = Point(Math.min(a.x, b.x), Math.min(a.y, b.y))
-    
     /**
      * A combination of the points with minimum x and y coordinates. None if collection is empty
      */
     def topLeftOption(points: IterableOnce[Point]) = points.iterator.reduceLeftOption { _ topLeft _ }
-    
     /**
      * A combination of the points with minimum x and y coordinates
      */
@@ -80,12 +93,10 @@ object Point extends FromModelFactory[Point]
      */
 	@deprecated("Please call this method through the point instance", "v2")
     def bottomRight(a: Point, b: Point) = Point(Math.max(a.x, b.x), Math.max(a.y, b.y))
-    
     /**
      * A combination of the points with maximum x and y coordinates. None if collection is empty
      */
     def bottomRightOption(points: IterableOnce[Point]) = points.iterator.reduceLeftOption { _ bottomRight _ }
-    
     /**
      * A combination of the points with maximum x and y coordinates
      */
@@ -97,25 +108,23 @@ object Point extends FromModelFactory[Point]
 * @author Mikko Hilpinen
 * @since 20.11.2018
 **/
-case class Point(override val x: Double, override val y: Double) extends Vector2DLike[Point]
-	with ApproximatelyEquatable[Point] with ValueConvertible with ModelConvertible
+case class Point(override val dimensions2D: Pair[Double])
+	extends Vector2DLike[Point] with ApproximatelyEquatable[Point] with ValueConvertible with ModelConvertible
+		with TwoDimensional[Double]
 {
     // IMPLEMENTED    -----------------
 	
-	override lazy val dimensions = Vector(x, y)
+	override def buildCopy(vector: Vector2D) = Point(vector.dimensions2D)
+	override def buildCopy(vector: Vector3D) = Point(vector.dimensions2D)
 	
-	override def buildCopy(vector: Vector2D) = Point(vector.x, vector.y)
-	
-	override def buildCopy(vector: Vector3D) = Point(vector.x, vector.y)
-	
-	override def buildCopy(dimensions: Vector[Double]) =
+	override def buildCopy(dimensions: Seq[Double]) =
 	{
 		if (dimensions.size >= 2)
-			Point(dimensions(0), dimensions(1))
+			Point(dimensions.head, dimensions(1))
 		else if (dimensions.isEmpty)
 			Point.origin
 		else
-			Point(dimensions(0), 0)
+			Point(dimensions.head)
 	}
 	
 	override def toValue = new Value(Some(this), PointType)
@@ -124,31 +133,26 @@ case class Point(override val x: Double, override val y: Double) extends Vector2
 	
 	override def repr = this
 	
-	override def toString = s"($x, $y)"
-	
 	
 	// COMPUTED	-----------------------
 	
 	/**
 	  * A vector representation of this point
 	  */
-	def toVector = Vector2D(x, y)
-	
+	def toVector = Vector2D(dimensions2D)
 	/**
 	  * @return A 3D vector representation of this point
 	  */
 	def in3D = Vector3D(x, y)
-	
 	/**
 	  * @return A size representation of this point
 	  */
-	def toSize = Size(x, y)
+	def toSize = Size(dimensions2D)
 	
 	/**
 	  * An awt representation of this point
 	  */
 	def toAwtPoint = new java.awt.Point(x.round.toInt, y.round.toInt)
-	
 	/**
 	  * An awt geom representation of this point
 	  */

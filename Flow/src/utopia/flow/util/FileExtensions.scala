@@ -1,19 +1,19 @@
 package utopia.flow.util
 
-import java.awt.Desktop
-import java.io.{BufferedOutputStream, FileInputStream, FileNotFoundException, FileOutputStream, IOException, InputStream, OutputStreamWriter, PrintWriter, Reader}
-import java.nio.file.{DirectoryNotEmptyException, Files, Path, Paths, StandardCopyOption, StandardOpenOption}
-
 import utopia.flow.parse.JsonConvertible
-
-import scala.language.implicitConversions
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.NullSafe._
 import StringExtensions._
+import utopia.flow.datastructure.mutable.PollableOnce
 
+import scala.language.implicitConversions
+import scala.jdk.CollectionConverters._
 import scala.io.Codec
 import scala.util.{Failure, Success, Try}
+import java.awt.Desktop
+import java.io.{BufferedOutputStream, FileInputStream, FileNotFoundException, FileOutputStream, IOException, InputStream, OutputStreamWriter, PrintWriter, Reader}
+import java.nio.file.{DirectoryNotEmptyException, Files, Path, Paths, StandardCopyOption, StandardOpenOption}
 
 /**
  * Provides some extensions to be used with java.nio.file classes
@@ -40,7 +40,6 @@ object FileExtensions
 		 * @return Whether this file exists in the file system (false if undetermined)
 		 */
 		def exists = Files.exists(p)
-		
 		/**
 		 * @return Whether this file doesn't exist in the file system (false if undetermined)
 		 */
@@ -67,7 +66,6 @@ object FileExtensions
 		 * @return This path extended with another path
 		 */
 		def /(another: Path) = p.resolve(another)
-		
 		/**
 		 * @param another A sub-path
 		 * @return This path extended with another path
@@ -83,16 +81,49 @@ object FileExtensions
 		 * @return Whether this path represents an existing directory
 		 */
 		def isDirectory = Files.isDirectory(p)
-		
 		/**
 		 * @return Whether this path represents an existing regular file (non-directory)
 		 */
 		def isRegularFile = Files.isRegularFile(p)
 		
 		/**
-		 * @return This path as an existing directory (creating the directory if possible & necessary).
-		  *         Fails if this is a regular file and not a directory.
+		 * @return A parent path for this path. None if this path is already a root path
 		 */
+		def parentOption = p.getParent.toOption
+		/**
+		 * @return A parent path for this path. Return this path if already a root path
+		 */
+		def parent = parentOption.getOrElse(p)
+		
+		/**
+		 * @return All children (files and directories) directly under this directory (empty vector if not directory). May fail.
+		 */
+		def children = iterateChildren { _.toVector }
+		
+		/**
+		 * @return Directories directly under this one (returns empty vector for regular files). May fail.
+		 */
+		def subDirectories = iterateChildren { _.filter { _.isDirectory }.toVector }
+		
+		/**
+		  * @return An iterator that accesses all child paths within this directory.
+		  *         The iterator may terminate and return failure on read failures.
+		  */
+		def allChildrenIterator = children match
+		{
+			case Success(children) => children.iterator.flatMap { new RecursiveDirectoryIterator(_) }
+			case Failure(error) => PollableOnce(Failure(error))
+		}
+		
+		/**
+		 * @return All non-directory files in this directory and its sub-directories
+		 */
+		def allRegularFileChildren = findDescendants { _.isRegularFile }
+		
+		/**
+		  * @return This path as an existing directory (creating the directory if possible & necessary).
+		  *         Fails if this is a regular file and not a directory.
+		  */
 		def asExistingDirectory =
 		{
 			if (notExists)
@@ -104,42 +135,42 @@ object FileExtensions
 		}
 		
 		/**
-		 * @return A parent path for this path. None if this path is already a root path
-		 */
-		def parentOption = p.getParent.toOption
-		
-		/**
-		 * @return A parent path for this path. Return this path if already a root path
-		 */
-		def parent = parentOption.getOrElse(p)
-		
-		/**
-		 * @return All children (files and directories) directly under this directory (empty vector if not directory). May fail.
-		 */
-		def children =
+		  * @return This path in case it doesn't exist yet. Otherwise another non-existing path similar name
+		  *         in the same directory.
+		  */
+		def unique =
 		{
-			// Non-directory paths don't have children
-			if (isDirectory)
-				Try { Files.list(p).consume { _.collect(new VectorCollector[Path]) } }
+			// Case: This path doesn't exist yet => Can't conflict
+			if (notExists)
+				p
+			// Case: This path exists => Has to generate a new name
 			else
-				Success(Vector())
+			{
+				val myName = fileName
+				// Finds similar file names that are already being used
+				val competitorNames = iterateSiblings { _.map { _.fileName }.filter { _.startsWith(myName) }.toSet }
+					.getOrElse(Set())
+				// Checks which character to use to separate the index from the main file name part
+				val separatorChar =
+				{
+					if (myName.contains('-'))
+						'-'
+					else if (myName.contains('_'))
+						'_'
+					else if (myName.containsMany("."))
+						'.'
+					else
+						'-'
+				}
+				val (myNameBeginning, myExtension) = myName.splitAtLast(".")
+				val myFullExtension = if (myExtension.isEmpty) myExtension else s".$myExtension"
+				// Generates new names until one is found which isn't a duplicate
+				val newName = Iterator.iterate(2) { _ + 1 }
+					.map { index => s"$myNameBeginning$separatorChar$index$myFullExtension" }
+					.find { !competitorNames.contains(_) }.get
+				withFileName(newName)
+			}
 		}
-		
-		/**
-		 * @return Directories directly under this one (returns empty vector for regular files). May fail.
-		 */
-		def subDirectories =
-		{
-			if (isDirectory)
-				Try { Files.list(p).consume { _.filter { p => p.isDirectory }.collect(new VectorCollector[Path]) } }
-			else
-				Success(Vector())
-		}
-		
-		/**
-		 * @return All non-directory files in this directory and its sub-directories
-		 */
-		def allRegularFileChildren = findDescendants { _.isRegularFile }
 		
 		/**
 		 * @return The size of this file in bytes. If called for a directory, returns the combined size of all files and
@@ -151,18 +182,79 @@ object FileExtensions
 			if (isRegularFile)
 				Try { Files.size(p) }
 			else
-				children.flatMap { _.tryMap { _.size }.map { _.sum } }
+			{
+				// Iterates through the children, calculating file sizes.
+				// Terminates the process if any failure is found.
+				val iterator = allChildrenIterator
+				var total = 0L
+				var failure: Option[Throwable] = None
+				while (iterator.hasNext && failure.isEmpty)
+				{
+					iterator.next() match {
+						case Success(path) =>
+							if (path.isRegularFile)
+								Try { Files.size(path) } match
+								{
+									case Success(size) => total += size
+									case Failure(error) => failure = Some(error)
+								}
+						case Failure(error) => failure = Some(error)
+					}
+				}
+				failure match
+				{
+					case Some(error) => Failure(error)
+					case None => Success(total)
+				}
+			}
 		}
 		
 		
 		// OTHER    -------------------------------
 		
 		/**
+		  * Iterates over the children of this directory
+		  * @param f A function that accepts an iterator that returns all paths that are the children of this directory.
+		  *          Receives an empty iterator in case this is not an existing directory. The function may throw.
+		  *          The errors thrown by the function are caught by this function.
+		  * @tparam A Type of returned value
+		  * @return The returned value. Failure if something threw during this operation.
+		  */
+		def iterateChildren[A](f: Iterator[Path] => A) =
+		{
+			if (isDirectory)
+				Try { Files.list(p).consume { stream => f(stream.iterator().asScala) } }
+			else
+				Try { f(Iterator.empty) }
+		}
+		/**
+		  * Iterates over the children of this directory
+		  * @param f A function that accepts an iterator that returns all paths that are the children of this directory.
+		  *          Receives an empty iterator in case this is not an existing directory.
+		  *          Returns a success or a failure.
+		  * @tparam A Type of returned value
+		  * @return The returned value. Failure if something threw during this operation or if the specified
+		  *         function returned a failure.
+		  */
+		def tryIterateChildren[A](f: Iterator[Path] => Try[A]) = iterateChildren(f).flatten
+		
+		/**
+		  * Iterates over the siblings of this file / path
+		  * @param f A function that accepts an iterator that returns all siblings of this path
+		  * @tparam A Type of returned value
+		  * @return The returned value. Failure if something threw during this operation.
+		  */
+		def iterateSiblings[A](f: Iterator[Path] => A) = parentOption match
+		{
+			case Some(parent) => parent.iterateChildren { children => f(children.filterNot { _ == p }) }
+			case None => Try { f(Iterator.empty) }
+		}
+		
+		/**
 		 * @param childFileName Name of a child file
 		 * @return Whether this directory contains the specified file (false if this is not a directory)
 		 */
 		def containsDirect(childFileName: String) = (this/childFileName).exists
-		
 		/**
 		 * Checks whether this directory or any sub-directory within this directory contains a file with the
 		 * specified name (case-insensitive).
@@ -171,21 +263,35 @@ object FileExtensions
 		 */
 		def containsRecursive(childFileName: String): Boolean =
 		{
-			children.getOrElse(Vector()).exists { c =>
-				(c.fileName ~== childFileName) || (c.isDirectory && c.containsRecursive(childFileName))
-			}
+			iterateChildren { _.exists { child =>
+				(child.fileName ~== childFileName) || child.containsRecursive(childFileName)
+			} }.getOrElse(false)
 		}
 		
 		/**
-		 * @param newFileName New file name
-		 * @return A copy of this path with specified file name
+		 * @param newFileName New file name (may or may not contain an extension)
+		 * @return A copy of this path with specified file name (NB: No file is being renamed as part of this operation)
 		 */
 		def withFileName(newFileName: String) =
 		{
-			if (fileName == newFileName)
+			val myName = fileName
+			// Case: Already has that file name => returns self
+			if (myName == newFileName)
 				p
+			// Case: Name needs to be changed
 			else
-				parentOption.map { _/newFileName }.getOrElse(newFileName: Path)
+			{
+				// Checks whether extension was specified in the new file name.
+				// Includes the extension from the old name if necessary
+				val actualNewName = if (!newFileName.contains('.') && myName.contains('.'))
+					s"$newFileName.${myName.afterLast(".")}" else newFileName
+				// Resolves a new path
+				parentOption match
+				{
+					case Some(parent) => parent/actualNewName
+					case None => actualNewName: Path
+				}
+			}
 		}
 		
 		/**
@@ -194,13 +300,9 @@ object FileExtensions
 		 * @param operation Operation performed for each path
 		 * @return A try that may contain a failure if this operation failed
 		 */
+		@deprecated("Please use the new, more flexible, .iterateChildren(...) instead", "v1.11.2")
 		def forChildren(filter: Path => Boolean = _ => true)(operation: Path => Unit): Try[Unit] =
-		{
-			if (isDirectory)
-				Try { Files.list(p).consume { _.filter(p => filter(p)).forEach(p => operation(p)) } }
-			else
-				Success(())
-		}
+			iterateChildren { _.filter(filter).foreach(operation) }
 		
 		/**
 		 * Merges values of child paths into a single value
@@ -210,19 +312,9 @@ object FileExtensions
 		 * @tparam A Type of fold result
 		 * @return Fold result. May contain a failure.
 		 */
+		@deprecated("Please use the new, more flexible, .iterateChildren(...) instead", "v1.11.2")
 		def foldChildren[A](start: A, filter: Path => Boolean = _ => true)(f: (A, Path) => A) =
-		{
-			if (isDirectory)
-			{
-				Try { Files.list(p).consume { stream =>
-					var result = start
-					stream.filter(p => filter(p)).forEach(p => result = f(result, p))
-					result
-				} }
-			}
-			else
-				Success(start)
-		}
+			iterateChildren { _.filter(filter).foldLeft(start)(f) }
 		
 		/**
 		 * @param filter A filter that determines which paths will be included. Will be called once for each file
@@ -230,12 +322,7 @@ object FileExtensions
 		 * @return Paths accepted by the filter
 		 */
 		def findDescendants(filter: Path => Boolean): Try[Vector[Path]] =
-		{
-			// Finds direct children, and the children under those via recursion
-			children.map { children =>
-				children.filter(filter) ++ children.flatMap { _.findDescendants(filter).getOrElse(Vector()) }
-			}
-		}
+			allChildrenIterator.tryFlatMap { _.map { Some(_).filter(filter) } }.map { _.toVector }
 		
 		/**
 		 * @param extension A file extension (Eg. "png"), not including the '.'
@@ -341,7 +428,9 @@ object FileExtensions
 		{
 			// May need to delete the existing file first
 			newPath.delete().flatMap { _ => Try { Files.copy(p, newPath) } }.flatMap { newParent =>
-				children.flatMap { _.tryForEach { c => new RichPath(c).recursiveCopyTo(newParent) } }.map { _ => newParent }}
+				children.flatMap { _.tryForeach { c => new RichPath(c).recursiveCopyTo(newParent).map { _ => () } } }
+					.map { _ => newParent }
+			}
 		}
 		
 		/**

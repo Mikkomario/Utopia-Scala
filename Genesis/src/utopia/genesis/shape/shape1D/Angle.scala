@@ -1,10 +1,11 @@
 package utopia.genesis.shape.shape1D
 
+import utopia.flow.operator.{Combinable, LinearScalable}
 import utopia.flow.util.SelfComparable
 import utopia.genesis.shape.shape1D.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.genesis.shape.shape2D.Direction2D
 import utopia.genesis.util.Extensions._
-import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic}
+import utopia.genesis.util.ApproximatelyEquatable
 
 object Angle
 {
@@ -120,8 +121,9 @@ object Angle
  * @author Mikko Hilpinen
  * @since 30.6.2017
  */
-case class Angle private(radians: Double) extends ApproximatelyEquatable[Angle] with SelfComparable[Angle]
-    with Arithmetic[Rotation, Angle]
+case class Angle private(radians: Double)
+    extends LinearScalable[Angle] with Combinable[Angle, Rotation] with ApproximatelyEquatable[Angle]
+        with SelfComparable[Angle]
 {
     // ATTRIBUTES    ------------------
     

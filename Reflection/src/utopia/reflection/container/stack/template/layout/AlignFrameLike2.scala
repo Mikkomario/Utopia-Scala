@@ -1,7 +1,7 @@
 package utopia.reflection.container.stack.template.layout
 
+import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Point}
 import utopia.reflection.component.template.layout.stack.{CachingStackable2, Stackable2}
 import utopia.reflection.container.template.SingleContainer2

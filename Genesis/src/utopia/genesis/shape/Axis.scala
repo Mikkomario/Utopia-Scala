@@ -1,7 +1,7 @@
 package utopia.genesis.shape
 
-import utopia.genesis.shape.shape1D.Direction1D
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
+import utopia.flow.operator.Sign
+import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Direction2D, Vector2D}
 import utopia.genesis.shape.shape3D.Vector3D
 import utopia.genesis.shape.template.VectorLike
@@ -121,12 +121,12 @@ sealed trait Axis2D extends Axis
       * @param isPositive Whether direction should be positive (true) or negative (false)
       * @return A direction along this axis with specified sign
       */
-    @deprecated("Please use toDirection(Direction1D) instead")
+    @deprecated("Please use toDirection(Sign) instead")
     def direction(isPositive: Boolean) = Direction2D(this, if (isPositive) Positive else Negative)
     
     /**
       * @param sign Sign of the resulting direction
       * @return A direction along this axis with specified sign
       */
-    def toDirection(sign: Direction1D) = Direction2D(this, sign)
+    def toDirection(sign: Sign) = Direction2D(this, sign)
 }

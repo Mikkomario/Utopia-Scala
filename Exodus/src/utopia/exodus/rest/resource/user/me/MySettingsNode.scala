@@ -97,17 +97,21 @@ object MySettingsNode extends ExtendableSessionResource
 						}
 						proposedEmail match {
 							case Right(email) =>
-								// Email address is required on PUT requests. On PATCH requests,
-								// backs up with existing settings.
-								(if (requireAll) email else email.orElse { oldSettings.map { _.email } }) match {
-									case Some(newEmail) =>
-										settings.update(UserSettingsData(newName, newEmail)) match {
-											case Success(inserted) => Result.Success(inserted.toModel)
-											case Failure(error) => Result.Failure(Forbidden, error.getMessage)
-										}
-									case None => Result.Failure(BadRequest,
-										if (ExodusContext.isEmailValidationSupported)
-											"'email_key' is required" else "'email' is required")
+								// Email address may be required on PUT requests.
+								// On PATCH requests, backs up with existing settings.
+								if (requireAll && ExodusContext.userEmailIsRequired && email.isEmpty)
+									Result.Failure(BadRequest, if (ExodusContext.isEmailValidationSupported)
+										"'email_key' is required" else "'email' is required")
+								else
+								{
+									val newEmail = if (requireAll) email else
+										email.orElse { oldSettings.flatMap { _.email } }
+									settings.update(UserSettingsData(newName, newEmail),
+										ExodusContext.uniqueUserNamesAreRequired) match
+									{
+										case Success(inserted) => Result.Success(inserted.toModel)
+										case Failure(error) => Result.Failure(Forbidden, error.getMessage)
+									}
 								}
 							case Left((status, message)) => Result.Failure(status, message)
 						}

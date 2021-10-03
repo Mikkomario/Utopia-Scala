@@ -11,8 +11,8 @@ import utopia.genesis.shape.template.{Dimensional, VectorLike}
   * @author Mikko Hilpinen
   * @since 14.7.2020, v2.3
   */
-trait Vector2DLike[+Repr <: Vector2DLike[Repr]] extends VectorLike[Repr] with TwoDimensional[Double]
-	with Transformable[Repr]
+trait Vector2DLike[+Repr <: Vector2DLike[Repr]]
+	extends VectorLike[Repr] with MultiDimensional[Double] with Transformable[Repr]
 {
 	// ABSTRACT	--------------------------
 	
@@ -97,7 +97,6 @@ trait Vector2DLike[+Repr <: Vector2DLike[Repr]] extends VectorLike[Repr] with Tw
 	  * A copy of this point with specified x
 	  */
 	def withX(x: Double) = withDimension(x, X)
-	
 	/**
 	  * A copy of this point with specified y
 	  */
@@ -108,7 +107,6 @@ trait Vector2DLike[+Repr <: Vector2DLike[Repr]] extends VectorLike[Repr] with Tw
 	  * @return A copy of this vector with mapped x-coordinate
 	  */
 	def mapX(f: Double => Double) = mapAxis(X)(f)
-	
 	/**
 	  * @param f A mapping function
 	  * @return A copy of this vector with mapped y-coordinate
@@ -119,7 +117,6 @@ trait Vector2DLike[+Repr <: Vector2DLike[Repr]] extends VectorLike[Repr] with Tw
 	  * Point translated over X axis
 	  */
 	def plusX(increase: Double) = mapX { _ + increase }
-	
 	/**
 	  * Point translated over Y axis
 	  */
@@ -130,7 +127,6 @@ trait Vector2DLike[+Repr <: Vector2DLike[Repr]] extends VectorLike[Repr] with Tw
 	  * @return Translated point
 	  */
 	def minusX(decrease: Double) = plusX(-decrease)
-	
 	/**
 	  * @param decrease Amount of translation to right
 	  * @return Translated point

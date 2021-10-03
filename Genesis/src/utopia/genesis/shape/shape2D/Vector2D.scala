@@ -1,5 +1,6 @@
 package utopia.genesis.shape.shape2D
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.Axis.{X, Y}
@@ -17,12 +18,10 @@ object Vector2D
 	  * A (0,0) vector
 	  */
 	val zero = Vector2D()
-	
 	/**
 	  * A (1,1) vector
 	  */
 	val identity = Vector2D(1, 1)
-	
 	/**
 	  * A (1,0) vector
 	  */
@@ -30,6 +29,13 @@ object Vector2D
 	
 	
 	// OTHER	------------------------------
+	
+	/**
+	  * @param x The x-coordinate of this vector (default = 0)
+	  * @param y The y-coordinate of this vector (default = 0)
+	  * @return A new vector
+	  */
+	def apply(x: Double = 0.0, y: Double = 0.0): Vector2D = apply(Pair(x, y))
 	
 	/**
 	  * Creates a new vector with specified length and direction
@@ -54,7 +60,7 @@ object Vector2D
   * @author Mikko Hilpinen
   * @since 14.7.2020, v2.3
   */
-case class Vector2D(override val x: Double = 0.0, override val y: Double = 0.0) extends Vector2DLike[Vector2D]
+case class Vector2D(override val dimensions2D: Pair[Double]) extends Vector2DLike[Vector2D] with TwoDimensional[Double]
 {
 	// COMPUTED	---------------------------------
 	
@@ -62,37 +68,33 @@ case class Vector2D(override val x: Double = 0.0, override val y: Double = 0.0) 
 	  * @return A three dimensional copy of this vector
 	  */
 	def in3D = Vector3D(x, y)
-	
 	/**
 	  * @return A point that matches this vector
 	  */
-	def toPoint = Point(x, y)
-	
+	def toPoint = Point(dimensions2D)
 	/**
 	  * @return A size that matches this vector
 	  */
-	def toSize = Size(x, y)
+	def toSize = Size(dimensions2D)
 	
 	/**
 	  * @return Whether this vector is an identity vector (1,1)
 	  */
-	def isIdentity = x == 1 && y == 1
+	def isIdentity = dimensions2D.forall { _ == 1 }
 	
 	
 	// IMPLEMENTED	-----------------------------
 	
 	override def in2D = this
 	
-	override val dimensions = Vector(x, y)
-	
 	override def buildCopy(vector: Vector2D) = vector
 	
 	override def buildCopy(vector: Vector3D) = vector.in2D
 	
-	override def buildCopy(dimensions: Vector[Double]) =
+	override def buildCopy(dimensions: Seq[Double]) =
 	{
 		if (dimensions.size >= 2)
-			Vector2D(dimensions(0), dimensions(1))
+			Vector2D(dimensions.head, dimensions(1))
 		else if (dimensions.nonEmpty)
 			Vector2D(dimensions.head)
 		else
@@ -100,8 +102,6 @@ case class Vector2D(override val x: Double = 0.0, override val y: Double = 0.0) 
 	}
 	
 	override def repr = this
-	
-	override def toString = s"($x, $y)"
 	
 	
 	// OTHER	---------------------------------

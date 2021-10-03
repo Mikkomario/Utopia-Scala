@@ -1,10 +1,11 @@
 package utopia.genesis.shape.template
 
+import utopia.flow.operator.{Combinable, LinearMeasurable, LinearScalable, Zeroable}
 import utopia.genesis.shape.Axis
 import utopia.genesis.shape.Axis.{X, Y, Z}
 import utopia.genesis.shape.shape1D.Angle
 import utopia.genesis.util.Extensions._
-import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic, DistanceLike}
+import utopia.genesis.util.ApproximatelyEquatable
 
 import scala.collection.immutable.VectorBuilder
 import scala.math.Ordering.Double.TotalOrdering
@@ -29,25 +30,24 @@ object VectorLike
   * matching an axis (X, Y, Z, ...)
   * @tparam Repr the concrete implementing class
   */
-trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Double], Repr] with DistanceLike
-	with Dimensional[Double] with VectorProjectable[Repr] with ApproximatelyEquatable[Dimensional[Double]]
+trait VectorLike[+Repr <: VectorLike[Repr]]
+	extends LinearScalable[Repr] with Combinable[Repr, Dimensional[Double]] with LinearMeasurable
+		with Dimensional[Double] with VectorProjectable[Repr] with ApproximatelyEquatable[Dimensional[Double]]
+		with Zeroable[Repr]
 {
 	// ABSTRACT	---------------------
-	
-	/**
-	  * @return The X, Y, Z ... dimensions of this vectorlike instance. No specific length required, however.
-	  */
-	def dimensions: Vector[Double]
 	
 	/**
 	  * Builds a new vectorlike instance from the provided dimensions
 	  * @param dimensions A set of dimensions
 	  * @return A parsed version of the dimensions
 	  */
-	def buildCopy(dimensions: Vector[Double]): Repr
+	def buildCopy(dimensions: Seq[Double]): Repr
 	
 	
 	// IMPLEMENTED	-----------------
+	
+	override def isZero = dimensions.forall { _ == 0 }
 	
 	override protected def zeroDimension = 0.0
 	
@@ -55,7 +55,7 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	
 	override def +(other: Dimensional[Double]) = combineWith(other) { _ + _ }
 	
-	override def -(other: Dimensional[Double]) = combineWith(other) { _ - _ }
+	def -(other: Dimensional[Double]) = combineWith(other) { _ - _ }
 	
 	override def *(n: Double) = map { _ * n }
 	
@@ -67,33 +67,12 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * Calculates the scalar projection of this vector over the other vector. This is the same as
 	  * the length of this vector's projection over the other vector
 	  */
-	def scalarProjection(other: VectorLike[_]) = dot(other) / other.length
+	def scalarProjection(other: Dimensional[Double] with LinearMeasurable) = dot(other) / other.length
 	
-	override def ~==(other: Dimensional[Double]) =
-	{
-		val myDim = dimensions
-		val theirDim = other.dimensions
-		
-		if (myDim.size > theirDim.size && myDim.drop(theirDim.size).exists { _ !~== 0.0 })
-			false
-		else if (theirDim.size > myDim.size && theirDim.drop(myDim.size).exists { _ !~== 0.0 })
-			false
-		else
-			myDim.zip(theirDim).forall { case (a, b) => a ~== b }
-	}
+	override def ~==(other: Dimensional[Double]) = compareEqualityWith(other) { _ ~== _ }
 	
 	
 	// COMPUTED	---------------------
-	
-	/**
-	  * @return Whether all of this instance's dimensions are zero
-	  */
-	def isZero = dimensions.forall { _ == 0 }
-	
-	/**
-	  * @return Whether one or more of this instance's dimensions are not zero
-	  */
-	def nonZero = !isZero
 	
 	/**
 	  * This vector with length of 1
@@ -105,19 +84,16 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * This operation always rounds the numbers down, never up.
 	  */
 	def floor = map(math.floor)
-	
 	/**
 	  * a copy of this element where the coordinate values have been increased to whole integer
 	  * numbers. This operation always rounds the numbers up, never down.
 	  */
 	def ceil = map(math.ceil)
-	
 	/**
 	  * a copy of this element where the coordinates have been rounded to nearest integer / long
 	  * numbers.
 	  */
 	def round = map { math.round(_).toDouble }
-	
 	/**
 	  * a copy of this element where the coordinates have been rounded to nearest integer / long
 	  * numbers.
@@ -134,7 +110,6 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * @return Smallest of this vector's dimensions
 	  */
 	def minDimension = dimensions.min
-	
 	/**
 	  * @return Largest of this vector's dimensions
 	  */
@@ -147,23 +122,21 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * @param dimensions Dimensions to append
 	  * @return A combination of this vector and specified dimensions
 	  */
-	def +(dimensions: Seq[Double]) = combineDimensions(dimensions) { _ + _ }
-	
+	def +(dimensions: Iterable[Double]) = combineWithDimensions(dimensions) { _ + _ }
 	/**
 	  * @param x X translation
 	  * @param more Y, Z, ... translation
 	  * @return A translated version of this element
 	  */
 	@deprecated("This method will be removed. Please use another variation of + instead", "v2.3")
-	def +(x: Double, more: Double*) = combineDimensions(x +: more) { _ + _ }
-	
+	def +(x: Double, more: Double*) = combineWithDimensions(x +: more) { _ + _ }
 	/**
 	  * @param adjust Translation on target axis
 	  * @param axis Target axis
 	  * @return A copy of this element with one dimension translated
 	  */
+	@deprecated("Please use the tuple version of this method instead", "v2.6")
 	def +(adjust: Double, axis: Axis) = mapAxis(axis) { _ + adjust }
-	
 	/**
 	  * @param directionalAdjust Axis adjust combo
 	  * @return A copy of this vector with specified dimension appended
@@ -175,53 +148,48 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * @param axis Target axis
 	  * @return A copy of this element with one dimension translated
 	  */
-	def -(adjust: Double, axis: Axis) = this.+(-adjust, axis)
-	
+	@deprecated("Please use the tuple version of this method instead", "v2.6")
+	def -(adjust: Double, axis: Axis) = this + (axis -> -adjust)
 	/**
 	  * @param directionalAdjust An axis adjust combo
 	  * @return A copy of this vector with specified dimension subtracted
 	  */
 	def -(directionalAdjust: (Axis, Double)) = mapAxis(directionalAdjust._1) { _ - directionalAdjust._2 }
-	
 	/**
 	  * @param dimensions Dimensions to subtract
 	  * @return A copy of this vector with specified dimensions subtracted
 	  */
-	def -(dimensions: Seq[Double]) = combineDimensions(dimensions) { _ - _ }
-	
+	def -(dimensions: Iterable[Double]) = combineWithDimensions(dimensions) { _ - _ }
 	/**
 	  * @param x X translation (negative)
 	  * @param more Y, Z, ... translation (negative)
 	  * @return A translated version of this element
 	  */
 	@deprecated("This method will be removed. Please use another variation of - instead", "v2.3")
-	def -(x: Double, more: Double*) = combineDimensions(x +: more) { _ - _ }
+	def -(x: Double, more: Double*) = combineWithDimensions(x +: more) { _ - _ }
 	
 	/**
 	  * @param dimensions Dimensions to use as multipliers (missing dimensions will be treated as 1)
 	  * @return A multiplied copy of this vector
 	  */
-	def *(dimensions: Seq[Double]) = combineDimensions(dimensions) { _ * _ }
-	
+	def *(dimensions: Iterable[Double]) = combineWithDimensions(dimensions) { _ * _ }
 	/**
 	  * @param other Another vectorlike element
 	  * @return This element multiplied on each axis of the provided element
 	  */
 	def *(other: Dimensional[Double]) = combineWith(other) { _ * _ }
-	
 	/**
 	  * @param directedMultiplier Amount axis combo
 	  * @return A copy of this vector multiplied only along the specified axis
 	  */
 	def *(directedMultiplier: (Axis, Double)) = mapAxis(directedMultiplier._1) { _ * directedMultiplier._2 }
-	
 	/**
 	  * @param n A multiplier for specified axis
 	  * @param axis Target axis
 	  * @return A copy of this element with one dimension multiplied
 	  */
+	@deprecated("Please use the tuple version of this method instead", "v2.6")
 	def *(n: Double, axis: Axis) = mapAxis(axis) { _ * n }
-	
 	/**
 	 * @param x X modifier
 	 * @param y Y modifier
@@ -229,32 +197,30 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	 * @return A modified copy of this vectorlike instance
 	 */
 	@deprecated("This method will be removed, please use another variation of *", "v2.3")
-	def *(x: Double, y: Double, more: Double*) = combineDimensions(Vector(x, y) ++ more) { _ * _ }
+	def *(x: Double, y: Double, more: Double*) = combineWithDimensions(Vector(x, y) ++ more) { _ * _ }
 	
 	/**
 	  * @param dimensions Dimensions to use as dividers. 0s and missing dimensions are ignored (treated as 1)
 	  * @return A divided copy of this vector
 	  */
-	def /(dimensions: Seq[Double]) = combineDimensions(dimensions) { (a, b) => if (b == 0) a else a / b }
-	
+	def /(dimensions: Iterable[Double]) = combineWithDimensions(dimensions) { (a, b) => if (b == 0) a else a / b }
 	/**
 	  * @param other Another vectorlike element
 	  * @return This element divided on each axis of the provided element. Dividing by 0 is ignored
 	  */
 	def /(other: Dimensional[Double]): Repr = this / other.dimensions
-	
 	/**
 	  * @param directedDivider A divider axis combination
 	  * @return A copy of this vector divided along the specified axis
 	  */
 	def /(directedDivider: (Axis, Double)) = if (directedDivider._2 == 0) repr else
 		mapAxis(directedDivider._1) { _ / directedDivider._2 }
-	
 	/**
 	  * @param n A divider for target axis
 	  * @param axis Target axis
 	  * @return This element divided on specified axis
 	  */
+	@deprecated("Please use the tuple version of this method instead", "v2.6")
 	def /(n: Double, axis: Axis) = if (n == 0) repr else mapAxis(axis) { _ / n }
 	
 	
@@ -271,21 +237,18 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * @return A mapped version of this element
 	  */
 	def map(f: Double => Double) = buildCopy(dimensions.map(f))
-	
 	/**
 	  * @param f A mapping function that also takes dimension index (0 for the first dimension)
 	  * @return A mapped copy of this vector
 	  */
 	def mapWithIndex(f: (Double, Int) => Double) = buildCopy(
 		dimensions.zipWithIndex.map { case (d, i) => f(d, i) })
-	
 	/**
 	  * @param f A mapping function that also takes targeted axis
 	  * @return A mapped copy of this vector
 	  */
 	def mapWithAxis(f: (Double, Axis) => Double) = buildCopy(
 		dimensions.zip(Vector(X, Y, Z)).map { case (d, a) => f(d, a) })
-	
 	/**
 	  * Transforms a coordinate of this vectorlike element and returns the transformed element
 	  * @param f The map function that maps a current coordinate into a new coordinate
@@ -306,7 +269,6 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 			buildCopy(firstPart ++ myDimensions.drop(mapIndex + 1))
 		}
 	}
-	
 	/**
 	  * Maps a single coordinate in this vectorlike element
 	  * @param axis Targeted axis
@@ -335,9 +297,15 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * @return A new element with merged or copied dimensions
 	  */
 	def combineWith(other: Dimensional[Double])(merge: (Double, Double) => Double) =
-		combineDimensions(other.dimensions)(merge)
-	
-	private def combineDimensions(dimensions: Seq[Double])(merge: (Double, Double) => Double) =
+		combineWithDimensions(other.dimensions)(merge)
+	/**
+	  * Merges this vectorlike element with specified dimensions using a merge function.
+	  * Dimensions not present in one of the elements will be treated as 0
+	  * @param dimensions a set of dimensions
+	  * @param merge A merge function
+	  * @return A new element with merged or copied dimensions
+	  */
+	def combineWithDimensions(dimensions: Iterable[Double])(merge: (Double, Double) => Double) =
 	{
 		val myDimensions = this.dimensions
 		val otherDimensions = dimensions
@@ -360,7 +328,6 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * @return The minimum combination of these two elements where each dimension is taken from the smaller alternative
 	  */
 	def min(other: Dimensional[Double]) = combineWith(other) { _ min _ }
-	
 	/**
 	  * The top left corner of a bounds between these two elements. In other words,
 	  * creates a vector that has the smallest available value on each axis from the two candidates
@@ -368,13 +335,11 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * @return a minimum of these two elements on each axis
 	  */
 	def topLeft(other: Dimensional[Double]) = this min other
-	
 	/**
 	  * @param other Another vectorlike element
 	  * @return A maximum combination of these two elements where each dimension is taken from the larger alternative
 	  */
 	def max(other: Dimensional[Double]) = combineWith(other) { _ max _ }
-	
 	/**
 	  * The bottom right corner of a bounds between the two vertices. In other words,
 	  * creates a vector that has the largest available value on each axis from the two candidates
@@ -431,7 +396,6 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * This vector with increased length
 	  */
 	def +(n: Double) = withLength(length + n)
-	
 	/**
 	  * This vector with decreased length (the direction may change to opposite)
 	  */
@@ -461,13 +425,13 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * The length of the cross product of these two vectors. |a||b|sin(a, b)
 	  */
 	// = |a||b|sin(a, b)e, |e| = 1 (in this we skip the e)
-	def crossProductLength(other: VectorLike[_ <: VectorLike[_]]) = length * other.length * angleDifference(other).sine
+	def crossProductLength(other: VectorLike[_ <: VectorLike[_]]) =
+		length * other.length * angleDifference(other).sine
 	
 	/**
 	  * Checks whether this vector is parallel with another vector (has same or opposite direction)
 	  */
 	def isParallelWith(other: VectorLike[_ <: VectorLike[_]]) = crossProductLength(other) ~== 0.0
-	
 	/**
 	  * @param axis Target axis
 	  * @return Whether this vector is parallel to the specified axis
@@ -478,7 +442,6 @@ trait VectorLike[+Repr <: VectorLike[Repr]] extends Arithmetic[Dimensional[Doubl
 	  * Checks whether this vector is perpendicular to another vector (ie. (1, 0) vs. (0, 1))
 	  */
 	def isPerpendicularTo(other: Dimensional[Double]) = dot(other) ~== 0.0
-	
 	/**
 	  * @param axis Target axis
 	  * @return Whether this vector is perpendicular to the specified axis

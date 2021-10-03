@@ -1,9 +1,10 @@
 package utopia.genesis.image
 
+import utopia.flow.operator.Sign.{Negative, Positive}
+
 import java.awt.image.BufferedImage
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.color.Color
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Direction2D, JavaAffineTransformConvertible, Matrix2D, Point, Size, Vector2D}
 import utopia.genesis.shape.shape3D.Matrix3D
 import utopia.genesis.util.Drawer

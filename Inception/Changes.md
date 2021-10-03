@@ -1,4 +1,5 @@
 # Utopia Inception - List of Changes
+
 ## v2.3 - 17.4.2021
 This small update fixes a design problem in the **Killable** trait. 
 It is generally not a good idea to include attributes in traits, 

@@ -7,9 +7,9 @@
       <module fileurl="file://$PROJECT_DIR$/Annex/Annex.iml" filepath="$PROJECT_DIR$/Annex/Annex.iml" />
       <module fileurl="file://$PROJECT_DIR$/BunnyMunch/BunnyMunch.iml" filepath="$PROJECT_DIR$/BunnyMunch/BunnyMunch.iml" />
       <module fileurl="file://$PROJECT_DIR$/Citadel/Citadel.iml" filepath="$PROJECT_DIR$/Citadel/Citadel.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Citadel-Coder/Citadel-Coder.iml" filepath="$PROJECT_DIR$/Citadel-Coder/Citadel-Coder.iml" />
       <module fileurl="file://$PROJECT_DIR$/Citadel-Description-Importer/Citadel-Description-Importer.iml" filepath="$PROJECT_DIR$/Citadel-Description-Importer/Citadel-Description-Importer.iml" />
       <module fileurl="file://$PROJECT_DIR$/Conflict/Conflict.iml" filepath="$PROJECT_DIR$/Conflict/Conflict.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Courier/Courier.iml" filepath="$PROJECT_DIR$/Courier/Courier.iml" />
       <module fileurl="file://$PROJECT_DIR$/Disciple/Disciple.iml" filepath="$PROJECT_DIR$/Disciple/Disciple.iml" />
       <module fileurl="file://$PROJECT_DIR$/Exodus/Exodus.iml" filepath="$PROJECT_DIR$/Exodus/Exodus.iml" />
       <module fileurl="file://$PROJECT_DIR$/Exodus-Test-Server/Exodus-Test-Server.iml" filepath="$PROJECT_DIR$/Exodus-Test-Server/Exodus-Test-Server.iml" />
@@ -24,6 +24,7 @@
       <module fileurl="file://$PROJECT_DIR$/Reflection/Reflection.iml" filepath="$PROJECT_DIR$/Reflection/Reflection.iml" />
       <module fileurl="file://$PROJECT_DIR$/Trove/Trove.iml" filepath="$PROJECT_DIR$/Trove/Trove.iml" />
       <module fileurl="file://$PROJECT_DIR$/Vault/Vault.iml" filepath="$PROJECT_DIR$/Vault/Vault.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Vault-Coder/Vault-Coder.iml" filepath="$PROJECT_DIR$/Vault-Coder/Vault-Coder.iml" />
     </modules>
   </component>
 </project>

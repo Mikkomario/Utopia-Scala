@@ -1,8 +1,8 @@
 package utopia.genesis.shape.template
 
+import utopia.flow.operator.{Combinable, Zeroable, LinearScalable}
 import utopia.genesis.shape.shape1D.{LinearAcceleration, LinearVelocity}
 import utopia.genesis.shape.shape2D.Vector2DLike
-import utopia.genesis.util.Arithmetic
 
 import scala.concurrent.duration.Duration
 
@@ -11,9 +11,9 @@ import scala.concurrent.duration.Duration
   * @author Mikko Hilpinen
   * @since 14.7.2020, v2.3
   */
-trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: VelocityLike[Transition, Repr]]
-	extends Change[Transition, Repr] with Arithmetic[Change[Dimensional[Double], _], Repr] with Dimensional[LinearVelocity]
-		with VectorProjectable[Repr]
+trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Transition, Repr]]
+	extends Change[Transition, Repr] with LinearScalable[Repr] with Combinable[Repr, Change[Dimensional[Double], _]]
+		with Zeroable[Repr] with Dimensional[LinearVelocity] with VectorProjectable[Repr]
 {
 	// ABSTRACT	-----------------
 	
@@ -30,17 +30,12 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: VelocityLike
 	protected def buildCopy(transition: Transition = transition, duration: Duration = duration): Repr
 	
 	
-	// ATTRIBUTES	-------------
+	// COMPUTED	-----------------
 	
 	/**
 	  * @return A linear copy of this velocity, based on transition amount / length
 	  */
-	lazy val linear = LinearVelocity(transition.length, duration)
-	
-	override lazy val dimensions = transition.dimensions.map { LinearVelocity(_, duration) }
-	
-	
-	// COMPUTED	-----------------
+	def linear = LinearVelocity(transition.length, duration)
 	
 	override protected def zeroDimension = LinearVelocity.zero
 	
@@ -49,13 +44,15 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: VelocityLike
 	  */
 	def direction = transition.direction
 	
+	
+	// IMPLEMENTED	-------------
+	
+	override def dimensions = transition.dimensions.map { LinearVelocity(_, duration) }
+	
 	/**
 	  * @return Whether this velocity is actually stationary (zero)
 	  */
-	def isZero = transition.isZero
-	
-	
-	// IMPLEMENTED	-------------
+	override def isZero = transition.isZero
 	
 	override def amount = transition
 	
@@ -63,7 +60,7 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: VelocityLike
 	
 	override def +(other: Change[Dimensional[Double], _]) = buildCopy(transition + other(duration))
 	
-	override def -(other: Change[Dimensional[Double], _]) = buildCopy(transition - other(duration))
+	def -(other: Change[Dimensional[Double], _]) = buildCopy(transition - other(duration))
 	
 	override def toString = s"$perMilliSecond/ms"
 	
@@ -117,7 +114,7 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: VelocityLike
 	def apply(time: Duration, acceleration: Change[Change[Dimensional[Double], _], _]): (Transition, Repr) =
 	{
 		val endVelocity = this + acceleration(time)
-		val averageVelocity = average(endVelocity)
+		val averageVelocity = this.average(endVelocity)
 		averageVelocity(time) -> endVelocity
 	}
 	
@@ -145,7 +142,7 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: VelocityLike
 			case Some(limit) => apply(limit, acceleration)
 			case None =>
 				val endVelocity = this + acceleration(time)
-				val averageVelocity = average(endVelocity)
+				val averageVelocity = this.average(endVelocity)
 				averageVelocity(time) -> endVelocity
 		}
 	}

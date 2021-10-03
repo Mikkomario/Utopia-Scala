@@ -2,13 +2,13 @@ package utopia.reach.component.label.text.selectable
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeListener, ChangingLike, Fixed}
+import utopia.flow.operator.Sign
+import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.event._
 import utopia.genesis.handling._
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.shape1D.Direction1D
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Direction2D, Point}
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
@@ -280,7 +280,7 @@ abstract class AbstractSelectableTextLabel
 	}
 	
 	// Returns new index after skip
-	private def skipWord(originIndex: Int, direction: Direction1D) =
+	private def skipWord(originIndex: Int, direction: Sign) =
 	{
 		// Checks whether there is space to move
 		val isSpaceAvailable = direction match

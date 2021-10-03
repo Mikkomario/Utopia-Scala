@@ -1,5 +1,10 @@
 # Utopia Reflection - List of Changes
 
+## v2.0-alpha-4 - 3.10.2021
+This update reflects changes in the **Utopia Genesis** module.
+### Breaking Changes
+- Use of **Direction1D** was replaced with **Sign** (reflecting changes in **Genesis**)
+
 ## v2.0-alpha-3 (incomplete update) - 13.7.2021
 This update doesn't add much concerning **Reflection**, it simply adds support for the breaking changes 
 in **Utopia Flow** module v1.10.

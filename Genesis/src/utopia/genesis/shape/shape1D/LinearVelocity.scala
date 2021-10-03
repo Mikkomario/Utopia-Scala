@@ -1,13 +1,13 @@
 package utopia.genesis.shape.shape1D
 
-import utopia.flow.util.RichComparable
+import utopia.flow.operator.DoubleLike
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape2D.{Vector2D, movement}
 import utopia.genesis.shape.shape2D.movement.Velocity2D
 import utopia.genesis.shape.shape3D.{Vector3D, Velocity3D}
 import utopia.genesis.shape.template.Change
 import utopia.genesis.util.Extensions._
-import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic, Signed}
+import utopia.genesis.util.ApproximatelyEquatable
 
 import scala.concurrent.duration.{Duration, TimeUnit}
 
@@ -31,19 +31,17 @@ object LinearVelocity
   * @author Mikko Hilpinen
   * @since 11.9.2019, v2.1+
   */
-case class LinearVelocity(override val amount: Double, override val duration: Duration) extends
-	Change[Double, LinearVelocity] with Arithmetic[LinearVelocity, LinearVelocity] with RichComparable[LinearVelocity]
-	with Signed[LinearVelocity] with ApproximatelyEquatable[LinearVelocity]
+case class LinearVelocity(override val amount: Double, override val duration: Duration)
+	extends Change[Double, LinearVelocity] with DoubleLike[LinearVelocity] with ApproximatelyEquatable[LinearVelocity]
 {
-	// COMPUTED	------------------------
+	// IMPLEMENTED	--------------------
+	
+	override def length = perMilliSecond
 	
 	/**
 	  * @return Whether this velocity has 0 amount and doesn't move items
 	  */
-	def isZero = amount == 0
-	
-	
-	// IMPLEMENTED	--------------------
+	override def isZero = amount == 0
 	
 	override def repr = this
 	
@@ -57,7 +55,8 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	
 	def -(another: LinearVelocity) = this + (-another)
 	
-	def isPositive = amount >= 0
+	// The amount and the duration may cancel each other out
+	override def isPositive = nonZero && (if (amount > 0) duration >= Duration.Zero else duration < Duration.Zero)
 	
 	override protected def zero = LinearVelocity.zero
 	
@@ -139,7 +138,7 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 			case Some(limit) => apply(limit, acceleration)
 			case None =>
 				val endVelocity = this + acceleration(time)
-				val averageVelocity = average(endVelocity)
+				val averageVelocity = this.average(endVelocity)
 				averageVelocity(time) -> endVelocity
 		}
 	}

@@ -1,5 +1,6 @@
 package utopia.reach.component.label.image
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeListener, ChangingLike, Fixed}
 import utopia.genesis.color.Color
@@ -8,7 +9,7 @@ import utopia.reach.component.factory.{ContextInsertableComponentFactory, Contex
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.ReachComponentWrapper
-import utopia.reach.component.wrapper.{ComponentCreationResult, Open}
+import utopia.reach.component.wrapper.Open
 import utopia.reach.container.multi.stack.Stack
 import utopia.reach.util.Priority.Low
 import utopia.reflection.color.ColorShade.Standard
@@ -251,7 +252,7 @@ class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, val itemPoin
 				useLowPrioritySize = useLowPriorityImageSize)
 			val textLabel = ViewTextLabel(hierarchy).apply(itemPointer, stylePointer, displayFunction,
 				allowLineBreaks = allowLineBreaks, allowTextShrink = allowTextShrink)
-			ComponentCreationResult(imageLabel -> textLabel)
+			Pair(imageLabel, textLabel)
 		}(parentHierarchy.top)
 		// Wraps the components in a stack
 		Stack(parentHierarchy).forPair(openItems, alignment, StackLength.fixedZero,

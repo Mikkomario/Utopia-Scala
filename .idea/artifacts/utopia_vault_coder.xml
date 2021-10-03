@@ -1,0 +1,17 @@
+<component name="ArtifactManager">
+  <artifact name="utopia-vault-coder">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_vault_coder</output-path>
+    <root id="root">
+      <element id="archive" name="Vault-Coder.jar">
+        <element id="directory" name="META-INF">
+          <element id="file-copy" path="$PROJECT_DIR$/Vault-Coder/META-INF/MANIFEST.MF" />
+        </element>
+        <element id="module-output" name="Vault-Coder" />
+        <element id="module-output" name="BunnyMunch" />
+        <element id="module-output" name="Flow" />
+      </element>
+      <element id="library" level="application" name="scala-sdk-2.13.3" />
+      <element id="file-copy" path="$PROJECT_DIR$/Vault-Coder/README.md" />
+    </root>
+  </artifact>
+</component>

@@ -5,11 +5,5 @@ package utopia.genesis.util
   * @author Mikko Hilpinen
   * @since 20.6.2019, v2.1
   */
-trait Combinable[-N, +Repr]
-{
-	/**
-	  * @param another Another item
-	  * @return A combination of thse two items
-	  */
-	def +(another: N): Repr
-}
+@deprecated("Please use Combinable from Flow instead", "v2.6")
+trait Combinable[-N, +Repr] extends utopia.flow.operator.Combinable[Repr, N]

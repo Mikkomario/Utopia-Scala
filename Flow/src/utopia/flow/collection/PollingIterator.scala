@@ -66,6 +66,21 @@ class PollingIterator[A](source: Iterator[A]) extends Iterator[A]
 	def nextIf(condition: A => Boolean) = if (pollOption.exists(condition)) Some(next()) else None
 	
 	/**
+	  * Advances this iterator until the next item satisfies the specified condition or the end of this iterator is met.
+	  * @param condition A search condition
+	  * @return The next item that will satisfy the specified condition. This will also be returned by .pollOption
+	  *         and .nextOption()
+	  */
+	def pollToNextWhere(condition: A => Boolean) =
+	{
+		while (pollOption.exists { item => !condition(item) })
+		{
+			next()
+		}
+		pollOption
+	}
+	
+	/**
 	 * Takes items as long as they fulfill the specified condition. After this method call, the next item will
 	 * <b>not</b> fulfill the specified condition, or there won't be any items left.
 	 * @param condition Condition that must be fulfilled for an item to be included

@@ -7,7 +7,7 @@ import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.vault.model.immutable.StorableWithFactory
-import utopia.vault.model.template.DataInserter
+import utopia.vault.nosql.storable.DataInserter
 import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.sql.SqlExtensions._
 

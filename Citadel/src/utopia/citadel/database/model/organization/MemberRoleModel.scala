@@ -2,7 +2,7 @@ package utopia.citadel.database.model.organization
 
 import java.time.Instant
 import utopia.citadel.database.Tables
-import utopia.citadel.database.model.DeprecatableAfter
+import utopia.vault.nosql.storable.deprecation.DeprecatableAfter
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.enumeration.UserRole
 import utopia.vault.database.Connection

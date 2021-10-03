@@ -1,12 +1,12 @@
 package utopia.reflection.controller.data
 
+import utopia.flow.operator.Sign
+import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.{Actor, ActorHandlerType, KeyStateListener}
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.Direction1D
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
 
@@ -101,7 +101,7 @@ class SelectionKeyListener2(nextKeyCode: Int = KeyEvent.VK_DOWN, prevKeyCode: In
 	// ATTRIBUTES	-----------------------------
 	
 	private var buttonDown = false
-	private var currentDirection: Direction1D = Positive
+	private var currentDirection: Sign = Positive
 	private var nextDelay = initialScrollDelay
 	private var remainingDelay = nextDelay
 	

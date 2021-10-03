@@ -1,24 +1,25 @@
 package utopia.genesis.shape.template
 
-import utopia.genesis.util.{ApproximatelyEquatable, Scalable}
+import utopia.flow.operator.LinearScalable
+import utopia.genesis.util.ApproximatelyEquatable
 
 /**
   * A common trait for matrix implementations
   * @author Mikko Hilpinen
   * @since 15.7.2020, v2.3
   */
-trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with Scalable[Repr]
-	with ApproximatelyEquatable[Dimensional[V]]
+trait MatrixLike[V <: VectorLike[V], +Repr]
+	extends Dimensional[V] with LinearScalable[Repr] with ApproximatelyEquatable[Dimensional[V]]
 {
 	// ABSTRACT	---------------------
 	
 	// x-transformation at index 0, y-transformation at index 1 and so on
-	def columns: Vector[V]
+	def columns: Seq[V]
 	
 	/**
 	  * @return The rows in this matrix
 	  */
-	def rows: Vector[V]
+	def rows: Seq[V]
 	
 	/**
 	  * The determinant of this matrix. The determinant shows the scaling applied to the volume
@@ -36,8 +37,7 @@ trait MatrixLike[V <: VectorLike[V], +Repr] extends Dimensional[V] with Scalable
 	  */
 	def inverse: Option[Repr]
 	
-	protected def buildCopy(columns: Vector[V]): Repr
-	
+	protected def buildCopy(columns: Seq[V]): Repr
 	
 	
 	// IMPLEMENTED	----------------

@@ -3,11 +3,11 @@ package utopia.ambassador.database.model.process
 import utopia.ambassador.database.factory.process.AuthPreparationFactory
 import utopia.ambassador.model.partial.process.AuthPreparationData
 import utopia.ambassador.model.stored.process.AuthPreparation
-import utopia.citadel.database.model.Expiring
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.model.immutable.StorableWithFactory
-import utopia.vault.model.template.DataInserter
+import utopia.vault.nosql.storable.DataInserter
+import utopia.vault.nosql.storable.deprecation.Expiring
 
 import java.time.Instant
 

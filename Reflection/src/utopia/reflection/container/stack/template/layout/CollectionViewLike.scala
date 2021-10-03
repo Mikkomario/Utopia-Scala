@@ -1,5 +1,6 @@
 package utopia.reflection.container.stack.template.layout
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.util.CollectionExtensions._
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.component.template.layout.stack.{Stackable, StackableWrapper}
@@ -61,7 +62,7 @@ trait CollectionViewLike[C <: ComponentLike, Collection <: MultiContainer[C], Co
 		// a) Each one contains as many components as possible, and that...
 		// b) Each of them is filled up to or below the maximum
 		val maxCapacity = components.map(spaceOf).maxOption.map { _ max collectionMaxCapacity }.getOrElse(collectionMaxCapacity)
-		collections.paired.foreach { case (coll, nextColl) =>
+		collections.paired.foreach { case Pair(coll, nextColl) =>
 			// Also, empty collections are removed
 			if (coll.isEmpty)
 				container -= coll

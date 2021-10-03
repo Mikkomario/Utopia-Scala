@@ -1,12 +1,12 @@
 package utopia.genesis.shape.shape1D
 
-import utopia.flow.util.RichComparable
+import utopia.flow.operator.DoubleLike
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape2D.{Vector2D, movement}
 import utopia.genesis.shape.shape2D.movement.Acceleration2D
 import utopia.genesis.shape.shape3D.{Acceleration3D, Vector3D}
 import utopia.genesis.shape.template.Change
-import utopia.genesis.util.{ApproximatelyEquatable, Arithmetic, Signed}
+import utopia.genesis.util.ApproximatelyEquatable
 
 import scala.concurrent.duration.{Duration, TimeUnit}
 
@@ -31,19 +31,18 @@ object LinearAcceleration
   * @author Mikko Hilpinen
   * @since 13.9.2019, v2.1+
   */
-case class LinearAcceleration(override val amount: LinearVelocity, override val duration: Duration) extends
-	Change[LinearVelocity, LinearAcceleration] with Arithmetic[LinearAcceleration, LinearAcceleration]
-	with RichComparable[LinearAcceleration] with Signed[LinearAcceleration] with ApproximatelyEquatable[LinearAcceleration]
+case class LinearAcceleration(override val amount: LinearVelocity, override val duration: Duration)
+	extends Change[LinearVelocity, LinearAcceleration] with DoubleLike[LinearAcceleration]
+		with ApproximatelyEquatable[LinearAcceleration]
 {
-	// COMPUTED	-----------------------
+	// IMPLEMENTED	-------------------
+	
+	override def length = perMilliSecond.length
 	
 	/**
 	  * @return Whether this is a zero acceleration that doesn't actually affect velocity
 	  */
-	def isZero = amount.amount == 0
-	
-	
-	// IMPLEMENTED	-------------------
+	override def isZero = amount.amount == 0
 	
 	override def repr = this
 	
@@ -51,13 +50,13 @@ case class LinearAcceleration(override val amount: LinearVelocity, override val 
 	
 	override def +(another: LinearAcceleration) = LinearAcceleration(amount + another(duration), duration)
 	
-	override def -(another: LinearAcceleration) = this + (-another)
+	def -(another: LinearAcceleration) = this + (-another)
 	
 	override def toString = s"${perMilliSecond.amount}/ms^2"
 	
 	override def compareTo(o: LinearAcceleration) = perMilliSecond.compareTo(o.perMilliSecond)
 	
-	def isPositive = amount.isPositive
+	override def isPositive = if (duration >= Duration.Zero) amount.isPositive else amount.isNegative
 	
 	override protected def zero = LinearAcceleration.zero
 	

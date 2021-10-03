@@ -96,6 +96,17 @@ trait Model[+Attribute <: Property] extends MapLike[String, Value] with JsonConv
     // OTHER METHODS    -----------
     
     /**
+      * Finds an attribute value in this model, possibly searching from alternative properties.
+      * May generate one or more new attributes.
+      * @param attName Name of the primary target attribute
+      * @param secondaryAttName Name of the secondary target attribute
+      * @param moreAttNames Name of the additional backup attributes
+      * @return The first attribute value which was non-empty. Empty value if all searches resulted in empty values.
+      */
+    def apply(attName: String, secondaryAttName: String, moreAttNames: String*): Value =
+        (Vector(attName, secondaryAttName) ++ moreAttNames).view.map(apply).find { _.isDefined }.getOrElse(Value.empty)
+    
+    /**
      * Finds an existing attribute from this model. No new attributes will be generated
      * @param attName The name of the attribute
      * @return an attribute in this model with the provided name or None if no such attribute 

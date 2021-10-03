@@ -13,9 +13,9 @@ import utopia.exodus.rest.resource.CustomAuthorizationResourceFactory
 import utopia.exodus.rest.resource.user.me.MeNode
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.CollectionExtensions._
 import utopia.metropolis.model.combined.user.{UserCreationResult, UserWithLinks}
 import utopia.metropolis.model.error.{AlreadyUsedException, IllegalPostModelException}
 import utopia.metropolis.model.partial.user.{UserLanguageData, UserSettingsData}
@@ -39,7 +39,7 @@ object UsersNode extends CustomAuthorizationResourceFactory[UsersNode]
 		if (ExodusContext.isEmailValidationSupported)
 			new EmailValidatingUsersNode()
 		else
-			new NoEmailValidationUsersNode(authorize)
+			new NoEmailValidationUsersNode(ExodusContext.userEmailIsRequired)(authorize)
 	}
 }
 
@@ -69,7 +69,8 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 	
 	// OTHER	-------------------------------
 	
-	protected def insertUser(getEmail: NewUser => Try[String])
+	// Specified function can return Success(None) if email isn't required
+	protected def insertUser(getEmail: NewUser => Try[Option[String]])
 							(implicit context: AuthorizedContext, connection: Connection) =
 	{
 		context.handlePost(NewUser) { newUser =>
@@ -111,17 +112,19 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 	                             (implicit connection: Connection, context: AuthorizedContext) =
 		DbUserSession(userId, deviceId).start(context.modelStyle).key
 	
-	private def tryInsert(newUser: NewUser, email: String)(implicit connection: Connection): Try[UserWithLinks] =
+	private def tryInsert(newUser: NewUser, email: Option[String])(implicit connection: Connection): Try[UserWithLinks] =
 	{
 		// Checks whether the proposed email already exist
 		val userName = newUser.userName.trim
 		
-		if (!email.contains('@'))
+		if (email.exists { !_.contains('@') })
 			Failure(new IllegalPostModelException("Email must be a valid email address"))
 		else if (userName.isEmpty)
 			Failure(new IllegalPostModelException("User name must not be empty"))
-		else if (DbUsers.existsUserWithEmail(email))
+		else if (email.exists { DbUsers.existsUserWithEmail(_) })
 			Failure(new AlreadyUsedException("Email is already in use"))
+		else if (email.isEmpty && DbUsers.existsUserWithName(newUser.userName))
+			Failure(new AlreadyUsedException("User name is already in use"))
 		else {
 			// Makes sure provided device id or language id matches data in the DB
 			val idsAreValid = newUser.device.forall {
@@ -135,7 +138,7 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 					// Inserts new user data
 					val user = UserModel.insert(UserSettingsData(userName, email))
 					UserAuthModel.insert(user.id, newUser.password)
-					val insertedLanguages = languages.map { case (languageId, familiarity) =>
+					val insertedLanguages = languages.map { case Pair(languageId, familiarity) =>
 						UserLanguageModel.insert(UserLanguageData(user.id, languageId, familiarity))
 					}
 					// Links user with device (if device has been specified) (uses existing or a new device)
@@ -159,7 +162,8 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
-private class NoEmailValidationUsersNode(authorize: (AuthorizedContext, Connection => Result) => Response)
+private class NoEmailValidationUsersNode(isEmailRequired: Boolean)
+                                        (authorize: (AuthorizedContext, Connection => Result) => Response)
 	extends UsersNode
 {
 	// IMPLEMENTED	---------------------------
@@ -176,9 +180,14 @@ private class NoEmailValidationUsersNode(authorize: (AuthorizedContext, Connecti
 	
 	private def postUser()(implicit context: AuthorizedContext, connection: Connection) =
 	{
-		// Requires email to be specified in the request body (since its not available as a part of the context)
-		insertUser { _.email.toTry { new IllegalPostModelException(
-			"'settings' property must be specified in the request body") } }
+		// May require email to be specified in the request body, based on settings used
+		insertUser { newUser =>
+			if (isEmailRequired && newUser.email.forall { _.isEmpty })
+				Failure(new IllegalPostModelException(
+					"'email' must be specified in the request body (under 'settings')"))
+			else
+				Success(newUser.email)
+		}
 	}
 }
 
@@ -191,7 +200,7 @@ private class EmailValidatingUsersNode extends UsersNode
 		context.emailAuthorized(UserCreation.id) { (validation, connection) =>
 			implicit val c: Connection = connection
 			// Uses the email that was specified in the validation message
-			val result = insertUser { _ => Success(validation.email) }
+			val result = insertUser { _ => Success(Some(validation.email)) }
 			// Closes the email validation if the operation succeeded
 			result.isSuccess -> result
 		}

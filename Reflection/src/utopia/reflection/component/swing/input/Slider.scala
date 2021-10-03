@@ -3,6 +3,8 @@ package utopia.reflection.component.swing.input
 import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
+import utopia.flow.operator.Sign
+import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.genesis.animation.Animation
 import utopia.genesis.animation.AnimationLike.AnyAnimation
 import utopia.genesis.color.Color
@@ -10,8 +12,6 @@ import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent,
 import utopia.genesis.handling.{Actor, KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.shape.path.{ProjectilePath, SegmentedPath}
-import utopia.genesis.shape.shape1D.Direction1D
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Size}
 import utopia.genesis.util.Drawer
 import utopia.genesis.view.GlobalMouseEventHandler
@@ -420,7 +420,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	  * @param amount How much this slider is moved [0, 1]. If using sticky points, this value is ignored
 	  *               (default = same as with arrow keys)
 	  */
-	def stepTowards(direction: Direction1D, amount: Double = arrowMovement) =
+	def stepTowards(direction: Sign, amount: Double = arrowMovement) =
 	{
 		if (stickyPoints.nonEmpty)
 			progressPointer.value = nextStickyPointInDirection(direction)
@@ -454,7 +454,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	
 	private def stickyPointClosestTo(progress: Double) = stickyPoints.minBy { sp => (progress - sp).abs }
 	
-	private def nextStickyPointInDirection(direction: Direction1D) =
+	private def nextStickyPointInDirection(direction: Sign) =
 	{
 		val p = progressPointer.value
 		direction match

@@ -2,11 +2,11 @@ package utopia.reach.component.input
 
 import utopia.flow.datastructure.mutable.{PointerWithEvents, ResettableLazy}
 import utopia.flow.event.{ChangingLike, Fixed}
+import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.genesis.color.Color
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.shape.Axis.Y
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.genesis.shape.shape2D.Direction2D.Down
 import utopia.genesis.shape.shape2D.Size
 import utopia.genesis.view.GlobalKeyboardEventHandler

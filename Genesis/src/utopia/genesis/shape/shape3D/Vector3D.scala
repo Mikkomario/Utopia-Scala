@@ -274,7 +274,7 @@ case class Vector3D(override val x: Double = 0.0, override val y: Double = 0.0, 
 	  * @param dimensions A set of dimensions
 	  * @return A parsed version of the dimensions
 	  */
-	override def buildCopy(dimensions: Vector[Double]) = Vector3D.withDimensions(dimensions)
+	override def buildCopy(dimensions: Seq[Double]) = Vector3D.withDimensions(dimensions)
     
     
     // OTHER METHODS    ----------------

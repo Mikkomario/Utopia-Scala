@@ -1,6 +1,7 @@
 package utopia.genesis.shape.shape1D
 
-import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
+import utopia.flow.operator.Sign
+import utopia.flow.operator.Sign.{Negative, Positive}
 
 /**
 * objects of rotation direction are used as enumerations to describe different circular directions
@@ -14,7 +15,7 @@ sealed trait RotationDirection
     /**
       * @return Sign used with this direction
       */
-    def sign: Direction1D
+    def sign: Sign
     
     /**
      * The opposite direction to this one
@@ -59,7 +60,7 @@ object RotationDirection
       * @param sign A sign
       * @return A rotation direction with the same sign
       */
-    def apply(sign: Direction1D) = sign match
+    def apply(sign: Sign) = sign match
     {
         case Positive => positive
         case Negative => negative

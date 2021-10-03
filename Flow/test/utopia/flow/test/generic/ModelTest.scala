@@ -37,6 +37,9 @@ object ModelTest extends App
 	assert(model1.attributes.size == 2)
 	assert(model1("Another").content.get == "Hello2")
 	
+	assert(model1("something", "another").getString == "Hello2")
+	assert(model1.attributes.size == 3)
+	
 	// 2) model with default value
 	val model2 = new mutable.Model(generator2)
 	assert(model2.findExisting("Test").isEmpty)

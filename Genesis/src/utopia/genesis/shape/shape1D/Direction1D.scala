@@ -1,15 +1,16 @@
 package utopia.genesis.shape.shape1D
 
+import utopia.flow.operator.{LinearScalable, SignedOrZero}
 import utopia.flow.util.SelfComparable
 import utopia.genesis.shape.Axis2D
 import utopia.genesis.shape.shape2D.Direction2D
-import utopia.genesis.util.{Scalable, Signed}
 
 /**
   * A common trait for one dimensional directions (positive and negative)
   * @author Mikko Hilpinen
   * @since 17.4.2020, v2.3
   */
+@deprecated("Please use Sign instead", "v2.6")
 sealed trait Direction1D extends SelfComparable[Direction1D]
 {
 	// ABSTRACT	-----------------------------
@@ -59,7 +60,7 @@ sealed trait Direction1D extends SelfComparable[Direction1D]
 	  * @tparam S Original
 	  * @return 's' length to this direction
 	  */
-	def *[S2, S <: Scalable[S2]](s: S) = if (isPositive) s.repr else s * -1.0
+	def *[S2, S <: LinearScalable[S2]](s: S) = s * modifier
 	
 	/**
 	  * @param i A length
@@ -79,20 +80,17 @@ sealed trait Direction1D extends SelfComparable[Direction1D]
 	  * @tparam S Original
 	  * @return 's' length (absolute) to this direction
 	  */
-	def apply[S2, S <: Scalable[S2] with Signed[S2]](s: S) = if (s.isPositive == isPositive) s.repr else s * -1.0
-	
-	/**
-	  * @param axis Targeted axis
-	  * @return A 2D version of this direction
-	  */
-	def along(axis: Axis2D) = Direction2D(axis, this)
+	def apply[S2, S <: LinearScalable[S2] with SignedOrZero[S2]](s: S) =
+		if (s.isPositive == isPositive) s.repr else s * -1.0
 }
 
+@deprecated("Please use Sign instead", "v2.6")
 object Direction1D
 {
 	/**
 	  * Positive / forward / more direction
 	  */
+	@deprecated("Please use Sign.Positive instead", "v2.6")
 	case object Positive extends Direction1D
 	{
 		override val isPositive = true
@@ -112,6 +110,7 @@ object Direction1D
 	/**
 	  * Negative / backward / less direction
 	  */
+	@deprecated("Please use Sign.Negative instead", "v2.6")
 	case object Negative extends Direction1D
 	{
 		override val isPositive = false

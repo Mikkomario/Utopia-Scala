@@ -100,7 +100,7 @@ object GenesisValueCaster extends ValueCaster
     }
     
     private def vectorOf(vectorLike: VectorLike[_]) = vectorLike.dimensions.map {
-        x => if (x ~== 0.0) 0.0.toValue else x.toValue }
+        x => if (x ~== 0.0) 0.0.toValue else x.toValue }.toVector
     
     private def modelOf(value: Value): Option[Model[Constant]] = 
     {

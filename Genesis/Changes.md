@@ -1,5 +1,24 @@
 # Utopia Reflection - List of Changes
 
+## v2.6 - 3.10.2021
+In this major (refactoring) update, many of the previously used traits were deprecated and new versions were added 
+to the **Flow** module. Shape classes were also refactored to use the new **Pair** class from **Flow**. These 
+updates will most likely require refactoring from your part, at least if you've extended some traits 
+introduced in this module.
+### Breaking Changes
+- **Direction1D** was replaced with **Sign** in **Utopia Flow**
+  - The new enumeration works almost identically (with some additions)
+  - Existing classes **won't** accept **Direction1D** anymore, causing build errors before they are refactored
+- **Scalable**, **Combinable**, **Arithmetic**, **Signed** and **DistanceLike** were replaced 
+  with **Utopia Flow** counterparts
+  - This has many implications, although for the most part, renaming and replacing extensions should be enough
+- **TwoDimensional** was replaced with **MultiDimensional**. Another **TwoDimensional** trait was added that 
+  applies to items with **exactly** two dimensions (**Vector2D**, **Point**, etc.).
+### Other Changes
+- Two-dimensional structures are now based on a **Pair** instance instead of two separate values. 
+  The interface remains the same, however.
+- Many shape classes have received new methods due to added traits from **Flow**
+
 ## v2.5.1 - 13.7.2021
 This is a relatively small update for the **Genesis** module, since the planned update on drawing 
 didn't make it to this release.

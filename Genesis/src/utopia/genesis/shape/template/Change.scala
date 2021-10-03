@@ -1,7 +1,7 @@
 package utopia.genesis.shape.template
 
+import utopia.flow.operator.LinearScalable
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.util.Scalable
 
 import scala.concurrent.duration.Duration
 
@@ -9,8 +9,10 @@ import scala.concurrent.duration.Duration
   * Used for describing a change over time
   * @author Mikko Hilpinen
   * @since 11.9.2019, v2.1+
+  * @tparam A Type of change amount over a specific time period
+  * @tparam Repr A concrete implementation of this trait
   */
-trait Change[+A, +Repr <: Change[A, _]] extends Scalable[Repr]
+trait Change[+A, +Repr <: Change[A, _]] extends LinearScalable[Repr]
 {
 	// ABSTRACT	-----------------
 	

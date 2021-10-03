@@ -15,6 +15,7 @@ import java.time.Instant
  * @author Mikko Hilpinen
  * @since 27.6.2021, v1.0
  */
+@deprecated("This trait is now available in Vault", "v1.2")
 trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable
 {
 	// ABSTRACT   ----------------------------

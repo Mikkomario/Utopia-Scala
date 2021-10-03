@@ -1,6 +1,7 @@
 package utopia.ambassador.database.model.token
 
 import utopia.ambassador.database.AmbassadorTables
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
@@ -56,8 +57,8 @@ object TokenScopeLinkModel
 	  * @param connection Implicit DB Connection
 	  * @return Ids of the generated links
 	  */
-	def insert(data: Seq[(Int, Int)])(implicit connection: Connection) =
-		Insert(table, data.map { case (tokenId, scopeId) => apply(None, Some(tokenId), Some(scopeId)).toModel })
+	def insert(data: Seq[Pair[Int]])(implicit connection: Connection) =
+		Insert(table, data.map { idPair => apply(None, Some(idPair.first), Some(idPair.second)).toModel })
 			.generatedIntKeys
 	/**
 	  * Inserts multiple new token-scope-links to the database

@@ -2,6 +2,7 @@ package utopia.citadel.database.access.single.language
 
 import utopia.citadel.database.access.id.single.DbLanguageId
 import utopia.citadel.database.factory.language.LanguageFactory
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.metropolis.model.error.NoDataFoundException
@@ -10,7 +11,7 @@ import utopia.metropolis.model.stored.language.Language
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleModelAccessById
 
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 /**
   * Used for accessing individual languages
@@ -34,7 +35,8 @@ object DbLanguage extends SingleModelAccessById[Language, Int]
 	  * @param connection    DB Connection (implicit)
 	  * @return List of language id -> familiarity id pairs. Failure if some of the ids or codes were invalid
 	  */
-	def validateProposedProficiencies(proficiencies: Vector[NewLanguageProficiency])(implicit connection: Connection) =
+	def validateProposedProficiencies(proficiencies: Vector[NewLanguageProficiency])
+	                                 (implicit connection: Connection): Try[Vector[Pair[Int]]] =
 	{
 		proficiencies.tryMap { proficiency =>
 			// Validates / retrieves language id
@@ -49,7 +51,7 @@ object DbLanguage extends SingleModelAccessById[Language, Int]
 						new NoDataFoundException(s"$languageCode is not a valid language code")
 					}
 			}
-			languageId.flatMap { languageId =>
+			languageId.flatMap[Pair[Int]] { languageId =>
 				// Validates language familiarity id
 				if (DbLanguageFamiliarity(proficiency.familiarityId).isDefined)
 					Success(languageId -> proficiency.familiarityId)

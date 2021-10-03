@@ -132,11 +132,17 @@ development in almost any kind of project. **Flow** is a **standard inclusion fo
 whether they be servers, desktop clients or real-time games.
 
 ### Utopia BunnyMunch
-*Speed and easy-of-use combined when it comes to json parsing*
+*Speed and ease-of-use combined when it comes to json parsing*
 
 **Utopia BunnyMunch** is a very simple model, meant to replace the inefficient JSONReader implementation. 
 *BunnyMunch* uses a very fast *Jawn* json parsing library internally, but offers the same Value-based 
 interface as the JSONReader.
+
+### Utopia Courier
+*Intuitive Email interactions*
+
+**Utopia Courier** model is focused on email integration and supports both sending and writing messages. 
+This module wraps the JavaMail API, providing a much cleaner interface.
 
 ### Utopia Vault
 *All the benefits of SQL - with no SQL required*
@@ -146,6 +152,14 @@ levels to operate on when it comes to database interactions. I especially enjoy 
 you don't need to write a single string of SQL. But unlike other noSQL-frameworks, this one actually still lets 
 you operate directly on SQL when or if you need it.
 
+#### Utopia Vault Coder
+*Allows you to skip hours of work at project setup*
+
+This **Vault** add-on helps you by generating much of the model and database interaction code you would
+otherwise have to write manually, saving a lot of your time. If you're using **Utopia Vault** or any of the
+dependent modules (especially if you're using **Citadel**), please check the README file of this application for
+more details.
+
 ### Utopia Trove
 *Embedded databases made easy*
 
@@ -153,6 +167,62 @@ you operate directly on SQL when or if you need it.
 (see ch.vorburger.mariaDB4j:mariaDB4j:2.4.0 in Maven) that is used for setting up a local embedded database directly from Java 
 (in this case Scala) code. Most of the heavy lifting is done by the Vorburger's library, but **Trove** adds its own flavor: 
 Database structure setup, version control and updates, as well as an easy one-line database setup and shutdown functions.
+
+### Utopia Inception & Utopia Genesis
+*A foundation for anything real-time and/or visual*
+
+**Utopia Inception** and **Utopia Genesis** have their background in real-time 2D game development, although
+they're by no means limited to such purposes and are most often used as a foundation for standard client side programs.
+
+**Inception** allows you to easily distribute various types of events among a multitude of listeners that may come and
+go during a program's runtime, a feature that is very often needed in interactive client side programs.
+
+**Genesis** provides you with a powerful set of shapes and tools for doing everything visual, especially in 2D.
+You have images, animations, curves, 2D shapes, 3D vectors, affine transformations, mouse events, keyboard events,
+real-time action events - everything you need when doing anything visual. Without **Genesis**, you would normally
+have to rely on awt-tools, which are less flexible, less scalable, less functional and less easy to use.
+
+The only problem with **Genesis** and **Inception** is that the standard Swing framework isn't build upon them,
+but that's why we have **Utopia Reflection** and **Utopia Reach**.
+
+### Utopia Reflection
+*A GUI framework that actually works and does what you want it to do*
+
+I personally have a love-hate (mostly hate) relationship with the Swing framework. On the other hand, it's one of the few
+GUI frameworks for Java/Scala. On the other hand, it consistently keeps frustrating me with its limitations,
+difficulty of use and by simply not working.
+
+**Reflection** is a swing-like GUI framework that provides a foundation for both Swing-reliant and **non-Swing** GUIs (see **Utopia Reach**).
+Swing dependencies are clearly separated from the generic models and traits. First of all **Reflection**
+let's you use the models from **Genesis**, also providing it's own addition. Second, **Reflection** handles layout
+like it should be handled (much like Swift handles layout with StackPanels and constraints). Third, **Reflection**
+has a built-in support for **your** own localization feature, if you wish to implement one.
+
+There are a number of pre-existing component implementations (swing-based). You also have access to all the higher abstraction
+level interfaces, which let's you create your own components with relative ease, in case you want to.
+
+### Utopia Reach
+*A GUI framework for those who REALLY hate Swing*
+
+Turns out even **Reflection** was subject to limitations caused by Swing-dependency, preventing full scalability. Therefore we have **Utopia Reach**,
+a framework that uses only a single Swing component. **Reach** has the same core principles as **Reflection**, but takes things even further
+by having it's own, non Swing-dependent component, focus, paint and other systems. **Reach** even supports multithreading, which was *apparently*
+supposed to be impossible.
+
+**Reach** obviously doesn't have the same look and feel as Swing does. The existing component designs are somewhat inspired by Material Design.
+However, as with all the other *Utopia* modules, **Reach** allows you to design and implement your own style on top of the existing capabilities.
+The only requirement when using **Reach** is that you can't really rely on Swing or Awt components. If you would rather still use mostly Swing,
+consider using **Reflection** instead.
+
+### Utopia Conflict
+*Advanced collision detection, yet simple interface*
+
+**Utopia Conflict** let's you include collision checking and collision events in your program. Collision detection
+is a required feature in most 2D games but it's also one of the toughest to implement from scratch. I've done the
+vector mathematics for you here and wrapped the logic in a familiar **Inception** style handling system.
+
+You probably don't need to use **Conflict** in your normal business software, but if you happen to be creating a 2D
+game or a physics-based software, this will most likely help you a lot in getting started.
 
 ### Utopia Access
 *Single solution for both server and client*
@@ -201,62 +271,6 @@ operations must be performed 24/7 and all data needs to be reliably captured and
 I would recommend you to use **Annex** in cases where you have considerable data-interaction with your server. 
 For individual requests, I would recommend you to stick with **Disciple** since it's more light-weight.
 
-### Utopia Inception & Utopia Genesis
-*A foundation for anything real-time and/or visual*
-
-**Utopia Inception** and **Utopia Genesis** have their background in real-time 2D game development, although 
-they're by no means limited to such purposes and are most often used as a foundation for standard client side programs.
-
-**Inception** allows you to easily distribute various types of events among a multitude of listeners that may come and 
-go during a program's runtime, a feature that is very often needed in interactive client side programs.
-
-**Genesis** provides you with a powerful set of shapes and tools for doing everything visual, especially in 2D. 
-You have images, animations, curves, 2D shapes, 3D vectors, affine transformations, mouse events, keyboard events, 
-real-time action events - everything you need when doing anything visual. Without **Genesis**, you would normally 
-have to rely on awt-tools, which are less flexible, less scalable, less functional and less easy to use.
-
-The only problem with **Genesis** and **Inception** is that the standard Swing framework isn't build upon them, 
-but that's why we have **Utopia Reflection** and **Utopia Reach**.
-
-### Utopia Reflection
-*A GUI framework that actually works and does what you want it to do*
-
-I personally have a love-hate (mostly hate) relationship with the Swing framework. On the other hand, it's one of the few 
-GUI frameworks for Java/Scala. On the other hand, it consistently keeps frustrating me with its limitations, 
-difficulty of use and by simply not working.
-
-**Reflection** is a swing-like GUI framework that provides a foundation for both Swing-reliant and **non-Swing** GUIs (see **Utopia Reach**). 
-Swing dependencies are clearly separated from the generic models and traits. First of all **Reflection** 
-let's you use the models from **Genesis**, also providing it's own addition. Second, **Reflection** handles layout 
-like it should be handled (much like Swift handles layout with StackPanels and constraints). Third, **Reflection** 
-has a built-in support for **your** own localization feature, if you wish to implement one.
-
-There are a number of pre-existing component implementations (swing-based). You also have access to all the higher abstraction 
-level interfaces, which let's you create your own components with relative ease, in case you want to.
-
-### Utopia Reach
-*A GUI framework for those who REALLY hate Swing*
-
-Turns out even **Reflection** was subject to limitations caused by Swing-dependency, preventing full scalability. Therefore we have **Utopia Reach**, 
-a framework that uses only a single Swing component. **Reach** has the same core principles as **Reflection**, but takes things even further 
-by having it's own, non Swing-dependent component, focus, paint and other systems. **Reach** even supports multithreading, which was *apparently* 
-supposed to be impossible.
-
-**Reach** obviously doesn't have the same look and feel as Swing does. The existing component designs are somewhat inspired by Material Design. 
-However, as with all the other *Utopia* modules, **Reach** allows you to design and implement your own style on top of the existing capabilities. 
-The only requirement when using **Reach** is that you can't really rely on Swing or Awt components. If you would rather still use mostly Swing, 
-consider using **Reflection** instead.
-
-### Utopia Conflict
-*Advanced collision detection, yet simple interface*
-
-**Utopia Conflict** let's you include collision checking and collision events in your program. Collision detection 
-is a required feature in most 2D games but it's also one of the toughest to implement from scratch. I've done the 
-vector mathematics for you here and wrapped the logic in a familiar **Inception** style handling system.
-
-You probably don't need to use **Conflict** in your normal business software, but if you happen to be creating a 2D 
-game or a physics-based software, this will most likely help you a lot in getting started.
-
 ### Utopia Metropolis
 *Client-Server user management and authorization made simple*
 
@@ -277,12 +291,6 @@ The **Citadel** module comes with this utility application for importing item de
 without difficult SQL operations. If you're utilizing **Utopia Citadel** or any of the dependent modules in 
 your project, please make sure to check out the README file of this application for more details.
 
-#### Utopia Citadel Coder
-This **Citadel** module add-on helps you by generating much of the model and database interaction code you would 
-otherwise have to write manually, saving a lot of your time. If you're using **Utopia Citadel** or any of the 
-dependent modules (or even if you're only using **Vault**), please check the README file of this application for 
-more details.
-
 ### Utopia Exodus
 *Server-base that lets you skip right to your business logic*
 
@@ -298,34 +306,37 @@ If you already have an **Utopia Exodus** server, this module is very easy to add
 will be able to skip tens of hours of work. **Ambassador** comes with all rest nodes towards both 
 the web client and the 3rd party redirection, so you will only need to add your business logic.
 
-### Utopia Journey
+### Utopia Journey (incomplete)
 *Leverage your Exodus server with a pre-built client interface*
 
-**Utopia Journey** is the client-side interface to **Utopia Exodus** server, handling request authorization and local session management. 
-Having a pre-built and easy-to-use interface for server interactions in your client takes you many steps ahead and saves you 
-the trouble of worrying about a secure interface.
+Please note that this module is in very early development and not ready for production use.
+
+**Utopia Journey** is the client-side interface to **Utopia Exodus** server, handling request authorization and 
+local session management. Having a pre-built and easy-to-use interface for server interactions in your client 
+takes you many steps ahead and saves you the trouble of worrying about a secure interface.
 
 ## Module Hierarchy
-*Utopia* modules have following dependency-hierarchy. Modules lower at the list depend from those higher in the list.
-- Utopia Flow
-	- Utopia BunnyMunch
-    - Utopia Vault
-		- Utopia Trove
-    - Utopia Inception
-        - Utopia Genesis
-            - Utopia Reflection
-                - Utopia Reach
-            - Utopia Conflict
-    - Utopia Access
-        - Utopia Nexus
-            - Utopia Nexus for Tomcat
-        - Utopia Disciple
-			- Utopia Annex
-	- Utopia Metropolis
-		- Utopia Citadel (also requires Vault)
-			- Utopia Exodus (also requires Nexus)
-                - Utopia Ambassador (also requires Disciple)
-		- Utopia Journey (also requires Annex)
+*Utopia* modules have following dependency-hierarchy. Modules lower at the list depend on those higher in the list.
+- **Flow** - The standard library
+    - **BunnyMunch** - Json parsing
+    - **Courier** - Email integration
+    - **Vault** - MySQL integration
+        - **Trove** - Hosting MySQL DB from within an application
+    - **Inception** - Events
+        - **Genesis** - Shapes & drawing
+            - **Reflection** - UI
+                - **Reach** - Non-Swing UI
+            - **Conflict** - Collision handling
+    - **Access** - Http base library
+        - **Nexus** - Server-side http base library
+            - **Nexus for Tomcat** - Nexus integration for Apache Tomcat
+        - **Disciple** - Client-side http base library
+            - **Annex** - Advanced client-side http interface
+    - **Metropolis** - User management base library
+        - **Citadel** (also requires Vault) - User management DB base library
+            - **Exodus** (also requires Nexus) - Server with user management
+                - **Ambassador** (also requires Disciple) - OAuth support
+        - **Journey** (also requires Annex) - Client-side user management / Exodus integration
            
 Basically every other *Utopia* module is dependent from **Flow**. All http-related modules are dependent from 
 **Access** and all 2D visual modules are dependent from **Inception** and **Genesis**. **Nexus** is the base 

@@ -5,20 +5,20 @@ import utopia.genesis.util.Extensions._
 import java.awt.geom.Line2D
 import scala.collection.mutable.ListBuffer
 import utopia.flow.generic.ValueConvertible
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.datastructure.immutable.{Model, Pair, Value}
 import utopia.flow.generic.ModelConvertible
-import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.datastructure.template
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
+import utopia.flow.operator.LinearMeasurable
 import utopia.genesis.generic.GenesisValue._
 import utopia.genesis.generic.LineType
 import utopia.genesis.shape.path.LinearPathLike
 import utopia.genesis.shape.shape2D.transform.Transformable
 import utopia.genesis.shape.shape3D.{Matrix3D, Vector3D}
 import utopia.genesis.shape.template.VectorLike
-import utopia.genesis.util.DistanceLike
+import utopia.genesis.util.ApproximatelyEquatable
 
 import scala.util.Success
 
@@ -38,6 +38,13 @@ object Line extends FromModelFactory[Line]
     
     
     // OTHER METHODS    ---------------------
+    
+    /**
+      * @param start Line start point
+      * @param end Line end point
+      * @return A new line
+      */
+    def apply(start: Point, end: Point): Line = apply(Pair(start, end))
     
     /**
      * Creates a new line from position and vector combo
@@ -82,9 +89,10 @@ object Line extends FromModelFactory[Line]
  * @author Mikko Hilpinen
  * @since 13.12.2016
  */
-case class Line(override val start: Point, override val end: Point)
+// (override val start: Point, override val end: Point)
+case class Line(points: Pair[Point])
     extends ShapeConvertible with ValueConvertible with ModelConvertible with Projectable with LinearPathLike[Point]
-        with DistanceLike with Transformable[Line]
+        with LinearMeasurable with Transformable[Line] with ApproximatelyEquatable[Line]
 {
     // ATTRIBUTES    -------------------
     
@@ -118,16 +126,10 @@ case class Line(override val start: Point, override val end: Point)
     
     // COMPUTED PROPERTIES    ----------
     
-    override def toShape = new Line2D.Double(start.x, start.y, end.x, end.y)
-    
-    override def toValue = new Value(Some(this), LineType)
-    
-    override def toModel = Model(Vector("start" -> start, "end" -> end))
-    
     /**
      * This line with inverted / reversed direction
      */
-    def reverse = Line(end, start)
+    def reverse = Line(points.reverse)
     
     /**
      * The axes that are necessary to include when checking collisions for this line
@@ -150,15 +152,19 @@ case class Line(override val start: Point, override val end: Point)
     def direction = vector.direction
     
     
-    // OPERATORS    --------------------
-    
-    /**
-     * Checks if the two lines are practically (approximately) identical
-     */
-    def ~==(other: Line) = (start ~== other.start) && (end ~== other.end)
-    
-    
     // IMPLEMENTED METHODS    ----------
+    
+    override def toShape = new Line2D.Double(start.x, start.y, end.x, end.y)
+    
+    override def toValue = new Value(Some(this), LineType)
+    
+    override def toModel = Model(Vector("start" -> start, "end" -> end))
+    
+    override def ~==(other: Line) = (start ~== other.start) && (end ~== other.end)
+    
+    override def start = points.first
+    
+    override def end = points.second
     
     override def transformedWith(transformation: Matrix3D) = map { transformation(_).toPoint }
     
@@ -176,7 +182,7 @@ case class Line(override val start: Point, override val end: Point)
       * @param f A mapping function for both the start and end point of this line
       * @return A mapped copy of this line
       */
-    def map(f: Point => Point) = Line(f(start), f(end))
+    def map(f: Point => Point) = Line(points.map(f))
     
     /**
      * Calculates the intersection point between this and another line

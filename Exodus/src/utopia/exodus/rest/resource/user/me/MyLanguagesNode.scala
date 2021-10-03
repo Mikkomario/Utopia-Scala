@@ -79,7 +79,7 @@ object MyLanguagesNode extends Resource[AuthorizedContext]
 								val existingLanguages = user.languages.withFamiliarityLevels.toMap
 								
 								// Groups the changes
-								val changesMap = proficiencies.toMap
+								val changesMap = proficiencies.map { _.toTuple }.toMap
 								
 								val changesInExisting = existingLanguages.flatMap { case (languageId, familiarity) =>
 									changesMap.get(languageId).map { newFamiliarity =>

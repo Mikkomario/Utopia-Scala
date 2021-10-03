@@ -3,7 +3,7 @@ package utopia.citadel.database.model.organization
 import java.time.Instant
 import utopia.citadel.database.Tables
 import utopia.citadel.database.factory.organization.InvitationFactory
-import utopia.citadel.database.model.Expiring
+import utopia.vault.nosql.storable.deprecation.Expiring
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.metropolis.model.partial.organization.InvitationData

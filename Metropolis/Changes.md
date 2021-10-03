@@ -1,5 +1,13 @@
 # Utopia Metropolis - List of Changes
 
+## v1.2 - 3.10.2021
+This update, which is closely connected to **Citadel** and **Exodus** updates, makes the user's email address 
+an optional field. This is to support a wider range of use cases (e.g. when data protection requires one to omit such 
+personal information).
+### Breaking Changes
+- **UserSettings**`.email` is now optional
+  - This change is also reflected in **NewUser** and **UserSettingsUpdate**
+
 ## v1.1.1 - 4.9.2021
 This very small update fixes a problem that occurred in some **SimplyDescribed** implementations.
 ### Other Changes
