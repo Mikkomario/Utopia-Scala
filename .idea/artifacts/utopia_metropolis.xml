@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="utopia-metropolis">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_metropolis</output-path>
+    <root id="archive" name="utopia-metropolis.jar">
+      <element id="module-output" name="Metropolis" />
+      <element id="module-source" name="Metropolis" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/Metropolis/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>

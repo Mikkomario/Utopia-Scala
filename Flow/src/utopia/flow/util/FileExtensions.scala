@@ -1,6 +1,6 @@
 package utopia.flow.util
 
-import utopia.flow.parse.JsonConvertible
+import utopia.flow.parse.{FileEditor, JsonConvertible}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.NullSafe._
@@ -293,6 +293,11 @@ object FileExtensions
 				}
 			}
 		}
+		/**
+		 * @param f a file name mapping function
+		 * @return A copy of this path that has the mapped file name
+		 */
+		def withMappedFileName(f: String => String) = withFileName(f(fileName))
 		
 		/**
 		 * Performs an operation on all files directly under this path
@@ -652,16 +657,6 @@ object FileExtensions
 		 * @return This path. Failure if writing failed.
 		 */
 		def write(text: String)(implicit codec: Codec) = Try { Files.write(p, text.getBytes(codec.charSet)) }
-		
-		/**
-		 * Appends specified text to this file
-		 * @param text Text to append to this file
-		 * @param codec Charset / codec used (implicit)
-		 * @return This path. Failure if writing failed.
-		 */
-		def append(text: String)(implicit codec: Codec) = Try { Files.write(p, text.getBytes(codec.charSet),
-			StandardOpenOption.APPEND, StandardOpenOption.CREATE) }
-		
 		/**
 		  * Writes a json-convertible instance to this file
 		  * @param json A json-convertible instance that will produce contents of this file
@@ -669,14 +664,12 @@ object FileExtensions
 		  */
 		@deprecated("Replaced with writeJson", "v1.9")
 		def writeJSON(json: JsonConvertible) = write(json.toJson)(Codec.UTF8)
-		
 		/**
 		 * Writes a json-convertible instance to this file
 		 * @param json A json-convertible instance that will produce contents of this file
 		 * @return This path. Failure if writing failed.
 		 */
 		def writeJson(json: JsonConvertible) = write(json.toJson)(Codec.UTF8)
-		
 		/**
 		  * Writes the specified text lines to a file
 		  * @param lines Lines to write to the file
@@ -693,14 +686,12 @@ object FileExtensions
 					} } }
 			}
 		}
-		
 		/**
 		 * Writes into this file with a function. An output stream is opened for the duration of the function.
 		 * @param writer A writer function that uses an output stream (may throw)
 		 * @return This path. Failure if writing function threw or stream couldn't be opened
 		 */
 		def writeWith[U](writer: BufferedOutputStream => U) = _writeWith(append = false)(writer)
-		
 		/**
 		  * Writes a file using a function.
 		  * A PrintWriter instance is acquired for the duration of the function execution.
@@ -712,11 +703,9 @@ object FileExtensions
 		def writeUsing[U](writer: PrintWriter => U)(implicit codec: Codec) = writeWith { stream =>
 			stream.consume { new OutputStreamWriter(_, codec.charSet).consume { new PrintWriter(_).consume(writer) } }
 		}
-		
 		private def _writeWith[U](append: Boolean)(writer: BufferedOutputStream => U) =
 			Try { new FileOutputStream(p.toFile, append).consume { new BufferedOutputStream(_).consume(writer) } }
 				.map { _ => p }
-		
 		/**
 		  * Writes into this file by reading data from a reader.
 		  * @param reader Reader that supplies the data
@@ -731,7 +720,6 @@ object FileExtensions
 				.takeWhile { _ != -1 }
 				.foreach(output.write)
 		}
-		
 		/**
 		  * Writes the specified input stream into this file
 		  * @param inputStream Reader that supplies the data
@@ -741,20 +729,26 @@ object FileExtensions
 			StandardCopyOption.REPLACE_EXISTING) }.map { _ => p }
 		
 		/**
+		 * Appends specified text to this file
+		 * @param text Text to append to this file
+		 * @param codec Charset / codec used (implicit)
+		 * @return This path. Failure if writing failed.
+		 */
+		def append(text: String)(implicit codec: Codec) = Try { Files.write(p, text.getBytes(codec.charSet),
+			StandardOpenOption.APPEND, StandardOpenOption.CREATE) }
+		/**
 		  * Writes into this file with a function. An output stream is opened for the duration of the function.
 		  * Doesn't overwrite the current contents of this file but appends to them instead.
 		  * @param writer A writer function that uses an output stream (may throw)
 		  * @return This path. Failure if writing function threw or stream couldn't be opened
 		  */
 		def appendWith[U](writer: BufferedOutputStream => U) = _writeWith(append = true)(writer)
-		
 		/**
 		  * Writes the specified text lines to the end of this file
 		  * @param lines Lines to write to the file
 		  * @param codec Encoding used (implicit)
 		  */
 		def appendLines(lines: IterableOnce[String])(implicit codec: Codec) = writeLines(lines, append = true)
-		
 		/**
 		  * Writes into this file by reading data from a reader. Doesn't overwrite existing file data but appends
 		  * to it instead.
@@ -770,7 +764,6 @@ object FileExtensions
 		 * @return Returned value or failure if stream couldn't be opened / read or the reader function threw.
 		 */
 		def readWith[A](reader: FileInputStream => A) = Try { new FileInputStream(p.toFile).consume(reader) }
-		
 		/**
 		 * Reads data from this file
 		 * @param reader A function that reads this file's data stream and returns a Try
@@ -780,16 +773,74 @@ object FileExtensions
 		def tryReadWith[A](reader: FileInputStream => Try[A]) = readWith(reader).flatten
 		
 		/**
+		 * Edits this file, saving the edited copy as a separate file
+		 * @param copyPath Path of the edited copy
+		 * @param f A function that uses the specified file editor to perform the edits
+		 * @param codec Implicit codec to use when writing the new file
+		 * @tparam U Arbitrary function result type
+		 * @return Edited copy path. Failure if this path was a directory or didn't exist,
+		 *         or if the writing or reading failed.
+		 */
+		def editToCopy[U](copyPath: Path)(f: FileEditor => U)(implicit codec: Codec) =
+		{
+			// Makes sure this is an existing regular file
+			if (isDirectory)
+				Failure(new IOException("Directories can't be edited using .editToCopy(...)"))
+			else if (notExists)
+				Failure(new FileNotFoundException(s"$p doesn't exists and therefore can't be edited"))
+			else
+				// Writes into the new file using an editor and the specified controlling function
+				copyPath.writeUsing { writer =>
+					IterateLines.fromPath(p) { linesIterator =>
+						val editor = new FileEditor(linesIterator.pollable, writer)
+						f(editor)
+						// Remaining non-edited lines are copied as is
+						editor.flush()
+					}
+				}
+		}
+		/**
+		 * Edits this file, saving the edited copy as a separate file in the same directory
+		 * @param copyName Name of the edited copy file (extension isn't required)
+		 * @param f A function that uses the specified file editor to perform the edits
+		 * @param codec Implicit codec to use when writing the new file
+		 * @tparam U Arbitrary function result type
+		 * @return Edited copy path. Failure if this path was a directory or didn't exist,
+		 *         or if the writing or reading failed.
+		 */
+		def editToCopy[U](copyName: String)(f: FileEditor => U)(implicit codec: Codec): Try[Path] =
+			editToCopy(withFileName(copyName))(f)
+		/**
+		 * Edits the contents of this file. The edits actualize at the end of this method call.
+		 * @param f A function that uses a file editor to make the edits
+		 * @param codec Implicit codec used when writing the new version
+		 * @tparam U Arbitrary function result type
+		 * @return This path. Failure if this file was not editable (e.g. non-existing or a directory) or if
+		 *         reading, writing, or replacing failed
+		 */
+		def edit[U](f: FileEditor => U)(implicit codec: Codec) =
+		{
+			// Finds a copy name that hasn't been taken yet
+			val (fileNamePart, extensionPart) = fileName.splitAtLast(".")
+			// Writes to copy by editing the original
+			editToCopy(withFileName(s"$fileNamePart-temp.$extensionPart").unique)(f)
+				.flatMap { copyPath =>
+					// Replaces the original with the copy
+					copyPath.rename(fileName, allowOverwrite = true)
+				}
+		}
+		
+		/**
 		 * Opens this file in the default desktop application. If this is a directory, opens it in resource manager
 		 * @return Success of failure
 		 */
 		def openInDesktop() = performDesktopOperation { _.open(p.toFile) }
-		
 		/**
 		 * Opens this file for editing in the default desktop application. If this is a directory, opens it in resource manager
 		 * @return Success or failure
 		 */
-		def editInDesktop() = performDesktopOperation { d => if (isDirectory) d.open(p.toFile) else d.edit(p.toFile) }
+		def editInDesktop() =
+			performDesktopOperation { d => if (isDirectory) d.open(p.toFile) else d.edit(p.toFile) }
 		
 		/**
 		 * Prints this file using the default desktop application
@@ -803,7 +854,6 @@ object FileExtensions
 		 */
 		def openDirectory() = performDesktopOperation { d =>
 			if (isDirectory) d.open(p.toFile) else d.open(parent.toFile) }
-		
 		/**
 		 * Opens resource manager for this file's / directory's parent directory
 		 * @return Success or failure

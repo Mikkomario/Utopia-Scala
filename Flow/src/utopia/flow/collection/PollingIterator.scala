@@ -1,5 +1,7 @@
 package utopia.flow.collection
 
+import utopia.flow.datastructure.mutable.ResettableLazy
+
 import scala.collection.immutable.VectorBuilder
 
 /**
@@ -11,7 +13,7 @@ class PollingIterator[A](source: Iterator[A]) extends Iterator[A]
 {
 	// ATTRIBUTES   -------------------------
 	
-	private var polled: Option[A] = None
+	private val pollCache = ResettableLazy { source.next() }
 	
 	
 	// COMPUTED -----------------------------
@@ -23,15 +25,7 @@ class PollingIterator[A](source: Iterator[A]) extends Iterator[A]
 	 * @throws NoSuchElementException If there are no more elements in this iterator
 	 */
 	@throws[NoSuchElementException]("If there are no more elements in this iterator")
-	def poll = polled match
-	{
-		case Some(item) => item
-		// Polls a new item if necessary
-		case None =>
-			val item = source.next()
-			polled = Some(item)
-			item
-	}
+	def poll = pollCache.value
 	
 	/**
 	 * Checks the next available item in this iterator without consuming it
@@ -43,16 +37,9 @@ class PollingIterator[A](source: Iterator[A]) extends Iterator[A]
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def hasNext = polled.nonEmpty || source.hasNext
+	override def hasNext = pollCache.isInitialized || source.hasNext
 	
-	override def next() = polled match
-	{
-		// Consumes the polled item first, if there is one
-		case Some(item) =>
-			polled = None
-			item
-		case None => source.next()
-	}
+	override def next() = pollCache.popCurrent().getOrElse { source.next() }
 	
 	
 	// OTHER    -----------------------------
@@ -81,18 +68,53 @@ class PollingIterator[A](source: Iterator[A]) extends Iterator[A]
 	}
 	
 	/**
+	 * Performs the specified action to each item in this iterator while the specified condition is met.
+	 * After this method call, the next item in this iterator, if there is one, will be the item that
+	 * didn't fulfill that condition.
+	 * @param condition A condition for continuing operations
+	 * @param f Function performed to items that fulfilled that condition
+	 */
+	def foreachWhile(condition: A => Boolean)(f: A => Unit) =
+	{
+		while (pollOption.exists(condition))
+		{
+			f(next())
+		}
+	}
+	/**
+	 * Performs the specified action to each item in this iterator until the specified condition is met.
+	 * After this method call, the next item in this iterator, if there is one, will be the item that
+	 * fulfilled that condition.
+	 * @param terminator A condition for stopping the iteration
+	 * @param f Function performed to items that fulfilled that condition
+	 */
+	def foreachUntil(terminator: A => Boolean)(f: A => Unit) = foreachWhile { !terminator(_) }(f)
+	
+	/**
 	 * Takes items as long as they fulfill the specified condition. After this method call, the next item will
 	 * <b>not</b> fulfill the specified condition, or there won't be any items left.
 	 * @param condition Condition that must be fulfilled for an item to be included
 	 * @return All of the consecutive items which fulfilled the specified condition
 	 */
-	def takeNextWhile(condition: A => Boolean) =
+	def collectWhile(condition: A => Boolean) =
 	{
 		val resultsBuilder = new VectorBuilder[A]()
-		while (pollOption.exists(condition))
-		{
-			resultsBuilder += next()
-		}
+		foreachWhile(condition) { resultsBuilder += _ }
 		resultsBuilder.result()
 	}
+	/**
+	 * Takes items as long as they don't fulfill the specified condition. After this method call, the next item will
+	 * fulfill the specified condition, or there won't be any items left.
+	 * @param terminator Condition that returns true for the first excluded item
+	 * @return All of the consecutive items which didn't fulfill the specified condition
+	 */
+	def collectUntil(terminator: A => Boolean) = collectWhile { !terminator(_) }
+	/**
+	 * Takes items as long as they fulfill the specified condition. After this method call, the next item will
+	 * <b>not</b> fulfill the specified condition, or there won't be any items left.
+	 * @param condition Condition that must be fulfilled for an item to be included
+	 * @return All of the consecutive items which fulfilled the specified condition
+	 */
+	@deprecated("Please use .collectWhile(...) instead - take-methods are usually meant to return iterators", "v1.12.1")
+	def takeNextWhile(condition: A => Boolean) = collectWhile(condition)
 }
