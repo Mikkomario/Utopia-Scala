@@ -13,6 +13,8 @@
 - **PollingIterator**
   - Added `.foreachWhile(...)(...)` and `.foreachUntil(...)(...)`
   - Added `.collectWhile(...)` and `.collectUntil(...)`
+### Other Changes
+- Added a custom `.toString` implementation to **Today**
 
 ## v1.12 - 3.10.2021
 This major update adds a number of new traits (based on previous **Genesis** versions) for classes which support 

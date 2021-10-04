@@ -33,6 +33,8 @@ object Today extends ValueConvertible with RichComparable[LocalDate]
 	
 	// IMPLEMENTED  ------------------------
 	
+	override def toString = toLocalDate.toString
+	
 	override implicit def toValue: Value = toLocalDate
 	
 	override def compareTo(o: LocalDate) = toLocalDate.compareTo(o)
