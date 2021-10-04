@@ -1,5 +1,23 @@
 # Utopia Flow - List of Changes
 
+## v1.12.1 - 04.10.2021
+This small update adds file editing through **CollectionExtensions**.
+Many collection-related utility additions are also included.
+### Deprecations
+- Deprecated **PollingIterator**'s `.takeNextWhile(...)` in favor of `.collectWhile(...)`
+### New Features
+- Added **Version** class for version number handling
+### New Methods
+- **Either** (**CollectionExtensions**)
+  - Added `.rightOrMap(...)` and `.leftOrMap(...)` utility functions
+- **Path** (**FileExtensions**)
+  - Added `.edit(...)` and `.editToCopy(...)(...)` -methods for text/line -based file editing
+- **PollingIterator**
+  - Added `.foreachWhile(...)(...)` and `.foreachUntil(...)(...)`
+  - Added `.collectWhile(...)` and `.collectUntil(...)`
+### Other Changes
+- Added a custom `.toString` implementation to **Today**
+
 ## v1.12 - 3.10.2021
 This major update adds a number of new traits (based on previous **Genesis** versions) for classes which support 
 certain operators (*, +). New **Pair** data structure is also added and taken into use where applicable. 

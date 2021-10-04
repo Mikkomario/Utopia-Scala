@@ -1106,7 +1106,6 @@ object CollectionExtensions
             case Left(l) => Some(l)
             case Right(_) => None
         }
-    
         /**
           * @return This either's right value or None if this either is left (same as toOption)
           */
@@ -1123,7 +1122,6 @@ object CollectionExtensions
             case Right(r) => Right(r)
             case Left(l) => Left(f(l))
         }
-    
         /**
           * If this either is right, maps it
           * @param f A mapping function for left side
@@ -1137,6 +1135,27 @@ object CollectionExtensions
         }
     
         /**
+         * @param f A mapping function for left values
+         * @tparam B Type of map result
+         * @return Right value or the mapped left value
+         */
+        def rightOrMap[B >: R](f: L => B) = e match
+        {
+            case Right(r) => r
+            case Left(l) => f(l)
+        }
+        /**
+         * @param f A mapping function for right values
+         * @tparam B Type of map result
+         * @return Left value or the mapped right value
+         */
+        def leftOrMap[B >: L](f: R => B) = e match
+        {
+            case Right(r) => f(r)
+            case Left(l) => l
+        }
+        
+        /**
          * Maps the value of this either to a single value, whichever side this is
          * @param leftMap Mapping function used when left value is present
          * @param rightMap Mapping function used when right value is present
@@ -1148,7 +1167,6 @@ object CollectionExtensions
             case Right(r) => rightMap(r)
             case Left(l) => leftMap(l)
         }
-    
         /**
          * Maps this either, no matter which side it is
          * @param leftMap Mapping function used when this either is left
