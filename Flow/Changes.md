@@ -1,6 +1,8 @@
 # Utopia Flow - List of Changes
 
-## v1.12.1 (in development)
+## v1.12.1 - 04.10.2021
+This small update adds file editing through **CollectionExtensions**.
+Many collection-related utility additions are also included.
 ### Deprecations
 - Deprecated **PollingIterator**'s `.takeNextWhile(...)` in favor of `.collectWhile(...)`
 ### New Features
