@@ -2,6 +2,7 @@
 
 ## v1.2
 ### New Features
+- Added support for described classes (**Citadel**-specific feature)
 - Added support for **Days** and **FiniteDuration** data types (both concrete and optional variants)
 ### Bugfixes
 - Added the missing "id" property to data model's `.toModel` -implementation

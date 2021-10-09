@@ -4,7 +4,7 @@ import utopia.flow.generic.DataType
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.vault.coder.controller.ClassReader
-import utopia.vault.coder.controller.writer.{AccessWriter, DbModelWriter, EnumerationWriter, FactoryWriter, ModelWriter, SqlWriter, TablesWriter}
+import utopia.vault.coder.controller.writer.{AccessWriter, DbDescriptionInteractionsWriter, DbModelWriter, DescribedModelWriter, EnumerationWriter, FactoryWriter, ModelWriter, SqlWriter, TablesWriter}
 import utopia.vault.coder.model.data.{Class, Enum, ProjectSetup}
 
 import java.nio.file.Path
@@ -61,8 +61,16 @@ object VaultCoderApp extends App
 										DbModelWriter(classToWrite, modelRef, dataRef, factoryRef)
 											.flatMap { dbModelRef =>
 												AccessWriter(classToWrite, modelRef, factoryRef, dbModelRef)
+											}
+									}.flatMap { _ =>
+										// May also write description-related documents
+										classToWrite.descriptionLinkClass.tryForeach { descriptionLinkClass =>
+											DescribedModelWriter(classToWrite, modelRef).flatMap { _ =>
+												DbDescriptionInteractionsWriter(descriptionLinkClass, tablesRef,
+													classToWrite.name)
 													.map { _ => () }
 											}
+										}
 									}
 								}
 							}

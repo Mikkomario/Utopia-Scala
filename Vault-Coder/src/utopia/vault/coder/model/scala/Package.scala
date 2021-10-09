@@ -18,6 +18,7 @@ object Package
 	lazy val utopia = apply("utopia")
 	lazy val flow = utopia/"flow"
 	lazy val vault = utopia/"vault"
+	lazy val metropolis = utopia/"metropolis"
 	
 	lazy val flowGenerics = flow/"generic"
 	lazy val flowTime = flow/"time"
@@ -35,6 +36,13 @@ object Package
 	lazy val viewAccess = noSql/"view"
 	lazy val singleModelAccess = access/"single.model"
 	lazy val manyModelAccess = access/"many.model"
+	
+	lazy val metropolisModel = metropolis/"model"
+	lazy val description = metropolisModel/"stored.description"
+	lazy val combinedDescription = metropolisModel/"combined.description"
+	
+	lazy val citadelDatabase = utopia/"citadel.database"
+	lazy val citadelAccess = citadelDatabase/"access"
 	
 	
 	// IMPLICIT -------------------------------

@@ -21,11 +21,19 @@ case class ProjectSetup(projectPackage: Package, sourceRoot: Path)
 	  * Package that contains all project database interactions
 	  */
 	lazy val databasePackage = projectPackage/"database"
-	
 	/**
 	  * @return Package that contains database access points
 	  */
-	def accessPackage = databasePackage/"access"
+	lazy val accessPackage = databasePackage/"access"
+	
+	/**
+	  * @return Package that contains database access points that retrieve individual items
+	  */
+	def singleAccessPackage = accessPackage/"single"
+	/**
+	  * @return Package that contains database access points that retrieve multiple items at once
+	  */
+	def manyAccessPackage = accessPackage/"many"
 	/**
 	  * @return Package that contains from database read factories
 	  */

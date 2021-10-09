@@ -25,6 +25,11 @@ object ScalaType
 	// OTHER    -------------------------------
 	
 	/**
+	  * @param contentType Collection content type
+	  * @return Iterable type
+	  */
+	def iterable(contentType: ScalaType) = generic("Iterable", contentType)
+	/**
 	  * @param contentType Option content type
 	  * @return An option type
 	  */
@@ -34,6 +39,11 @@ object ScalaType
 	  * @return A vector type
 	  */
 	def vector(contentType: ScalaType) = generic("Vector", contentType)
+	/**
+	  * @param contentType Set content type
+	  * @return A set type
+	  */
+	def set(contentType: ScalaType) = generic("Set", contentType)
 	
 	/**
 	  * @param name Name of the (basic) data type

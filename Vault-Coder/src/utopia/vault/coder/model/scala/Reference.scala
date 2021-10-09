@@ -8,15 +8,23 @@ object Reference
 {
 	import Package._
 	
+	// Java time
+	
 	lazy val instant = apply(javaTime, "Instant")
 	lazy val localDate = apply(javaTime, "LocalDate")
 	lazy val localTime = apply(javaTime, "LocalTime")
 	lazy val timeUnit = apply(java/"util.concurrent", "TimeUnit")
 	
+	// Scala time
+	
 	lazy val duration = apply(scalaDuration, "Duration")
 	lazy val finiteDuration = apply(scalaDuration, "FiniteDuration")
 	
+	// Other Java
+	
 	lazy val noSuchElementException = apply("java.util", "NoSuchElementException")
+	
+	// Extensions
 	
 	/**
 	  * Imports implicit value conversions (Flow)
@@ -38,6 +46,8 @@ object Reference
 	  * Imports implicit sql features (Vault)
 	  */
 	lazy val sqlExtensions = extensions(sql, "SqlExtensions")
+	
+	// Flow
 	
 	/**
 	  * Imports the (generic) Value type from Flow
@@ -71,6 +81,8 @@ object Reference
 	  * Imports the Days class (Flow)
 	  */
 	lazy val days = apply(flowTime, "Days")
+	
+	// Vault
 	
 	/**
 	  * Imports a database connection (Vault)
@@ -156,6 +168,24 @@ object Reference
 	  * Imports the combination of Stored & ModelConvertible (Vault)
 	  */
 	lazy val storedModelConvertible = apply(vaultModels/"template", "StoredModelConvertible")
+	
+	// Metropolis
+	
+	lazy val descriptionRole = apply(description, "DescriptionRole")
+	lazy val descriptionLink = apply(description, "DescriptionLink")
+	lazy val describedWrapper = apply(combinedDescription, "DescribedWrapper")
+	lazy val simplyDescribed = apply(combinedDescription, "SimplyDescribed")
+	lazy val describedFromModelFactory = apply(combinedDescription, "DescribedFromModelFactory")
+	
+	// Citadel
+	
+	lazy val descriptionLinkModelFactory = apply(citadelDatabase/"model.description", "DescriptionLinkModelFactory")
+	lazy val descriptionLinkFactory = apply(citadelDatabase/"factory.description", "DescriptionLinkFactory")
+	lazy val descriptionOfSingle = apply(citadelAccess/"single.description.DbDescription", "DescriptionOfSingle")
+	private lazy val dbDescriptionsOrigin = citadelAccess/"many.description.DbDescriptions"
+	lazy val descriptionsOfAll = apply(dbDescriptionsOrigin, "DescriptionsOfAll")
+	lazy val descriptionsOfMany = apply(dbDescriptionsOrigin, "DescriptionsOfMany")
+	lazy val descriptionsOfSingle = apply(dbDescriptionsOrigin, "DescriptionsOfSingle")
 	
 	
 	// OTHER    -------------------------------

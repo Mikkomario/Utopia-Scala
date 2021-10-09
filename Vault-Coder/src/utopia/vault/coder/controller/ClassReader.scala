@@ -65,9 +65,18 @@ object ClassReader
 				classModel("name_plural", "plural_name").string.map { _.capitalize }.getOrElse(className + "s"))
 			val properties = classModel("properties", "props").getVector.flatMap { _.model }
 				.map { propertyFrom(_, enumerations, fullName) }
+			// Checks whether descriptions are supported for this class
+			val descriptionLinkColumnName = classModel("description_link_column", "description_link", "desc_link")
+				.stringOr {
+					if (classModel("described", "is_described").getBoolean)
+						tableName + "_id"
+					else
+						""
+				}
 			
 			Success(Class(fullName, tableName, properties, packageName, classModel("doc").getString,
-				classModel("author").stringOr(defaultAuthor), classModel("use_long_id").getBoolean))
+				classModel("author").stringOr(defaultAuthor), descriptionLinkColumnName,
+				classModel("use_long_id").getBoolean))
 		}
 	}
 	

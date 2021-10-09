@@ -33,10 +33,9 @@ object AccessWriter
 	def apply(classToWrite: Class, modelRef: Reference, factoryRef: Reference, dbModelRef: Reference)
 	         (implicit codec: Codec, setup: ProjectSetup) =
 	{
-		val accessPackage = setup.accessPackage
 		val connectionParam = Parameter("connection", Reference.connection)
 		// Writes a trait common for unique model access points
-		val singleAccessPackage =  accessPackage/s"single.${classToWrite.packageName}"
+		val singleAccessPackage =  setup.singleAccessPackage/classToWrite.packageName
 		val uniqueAccessName = s"Unique${classToWrite.name}Access"
 		// Standard access point properties (factory, model & defaultOrdering)
 		// are the same for both single and many model access points
@@ -115,7 +114,7 @@ object AccessWriter
 				)
 			).write().flatMap { singleAccessRef =>
 				// Writes a trait common for the many model access points
-				val manyAccessPackage =  accessPackage/s"many.${classToWrite.packageName}"
+				val manyAccessPackage =  setup.manyAccessPackage/classToWrite.packageName
 				val manyAccessTraitName = s"Many${classToWrite.name.plural}Access"
 				File(manyAccessPackage,
 					TraitDeclaration(manyAccessTraitName,
