@@ -179,6 +179,7 @@ object Reference
 	
 	// Citadel
 	
+	lazy val citadelTables = apply(citadelDatabase, "Tables")
 	lazy val descriptionLinkModelFactory = apply(citadelDatabase/"model.description", "DescriptionLinkModelFactory")
 	lazy val descriptionLinkFactory = apply(citadelDatabase/"factory.description", "DescriptionLinkFactory")
 	lazy val descriptionOfSingle = apply(citadelAccess/"single.description.DbDescription", "DescriptionOfSingle")

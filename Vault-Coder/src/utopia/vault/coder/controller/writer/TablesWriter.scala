@@ -27,6 +27,19 @@ object TablesWriter
 	def apply(classes: Iterable[Class])(implicit codec: Codec, setup: ProjectSetup) =
 	{
 		val objectName = setup.projectPackage.parts.last.capitalize + "Tables"
+		// If one of the classes uses descriptions, considers Citadel to be used
+		// and bases the apply method on that knowledge
+		// Otherwise leaves the implementation to the user
+		val (applyImplementation, applyReferences) =
+		{
+			if (classes.exists { _.isDescribed })
+				Vector("Tables(tableName)") -> Set[Reference](Reference.citadelTables)
+			else
+				Vector("// TODO: Refer to a tables instance of your choice",
+					"// If you're using the Citadel module, import utopia.citadel.database.Tables",
+					"// Tables(tableName)",
+					"???") -> Set[Reference]()
+		}
 		File(setup.databasePackage,
 			ObjectDeclaration(objectName,
 				// Contains a computed property for each class / table
@@ -39,12 +52,8 @@ object TablesWriter
 					}
 				},
 				// Defines a private apply method but leaves the implementation open
-				methods = Set(MethodDeclaration("apply", visibility = Private,
-					explicitOutputType = Some(Reference.table))(
-					Parameter("tableName", ScalaType.string))("// TODO: Refer to a tables instance of your choice",
-					"// If you're using the Citadel module, import utopia.citadel.database.Tables",
-					"// Tables(tableName)",
-					"???")),
+				methods = Set(MethodDeclaration("apply", applyReferences, Private, Some(Reference.table))(
+					Parameter("tableName", ScalaType.string))(applyImplementation.head, applyImplementation.tail: _*)),
 				description = "Used for accessing the database tables introduced in this project",
 				author = classes.map { _.author }.toSet.filter { _.nonEmpty }.mkString(", ")
 			)
