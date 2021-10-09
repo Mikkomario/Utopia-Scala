@@ -3,6 +3,7 @@ package utopia.vault.coder.model.scala
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.scala.template.ScalaConvertible
 import utopia.vault.coder.model.data.ProjectSetup
+import utopia.vault.coder.model.scala.code.CodePiece
 
 object Reference
 {
@@ -218,6 +219,10 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	  *         expects an import)
 	  */
 	def target = if (subReference.isEmpty) importTarget else s"$importTarget.$subReference"
+	/**
+	  * @return A code referring to the target of this reference using its name
+	  */
+	def targetCode = CodePiece(target, Set(this))
 	
 	/**
 	  * @return Whether it is possible to group this reference with other references using { ... } syntax

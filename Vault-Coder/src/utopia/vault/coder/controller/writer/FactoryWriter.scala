@@ -10,6 +10,7 @@ import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.{Extension, Parameter, Reference}
 import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
+import utopia.vault.coder.util.ClassMethodFactory
 
 import scala.collection.immutable.VectorBuilder
 import scala.io.Codec
@@ -92,6 +93,21 @@ object FactoryWriter
 	
 	private def methodsFor(classToWrite: Class, modelRef: Reference, dataRef: Reference) =
 	{
+		/*
+		val asd =
+		{
+			if (classToWrite.refersToEnumerations)
+				ClassMethodFactory.classFromModel(classToWrite, "table.validate(model)") {
+					_.name.singular } { assignments =>
+					modelRef.targetCode +
+						classToWrite.idType.fromValueCode("model(\"id\")")
+							.append(dataRef.targetCode + assignments.withinParenthesis, ", ")
+							.withinParenthesis
+				}
+			else
+				??? // ClassMethodFactory.classFromModel(classToWrite, )
+		}*/
+		
 		val applyMethod =
 		{
 			// Case: Enumerations are used => has to process enumeration values separately in custom apply method

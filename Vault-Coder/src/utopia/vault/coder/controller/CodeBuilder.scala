@@ -149,6 +149,7 @@ class CodeBuilder(startIndentation: Int = 0) extends mutable.Builder[String, Cod
 	  */
 	def indent() =
 	{
+		closeOpenLine()
 		currentIndent += 1
 		this
 	}
@@ -158,6 +159,7 @@ class CodeBuilder(startIndentation: Int = 0) extends mutable.Builder[String, Cod
 	  */
 	def unindent() =
 	{
+		closeOpenLine()
 		currentIndent = (currentIndent - 1) max 0
 		this
 	}

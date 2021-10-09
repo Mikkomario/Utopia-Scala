@@ -4,7 +4,7 @@ import utopia.flow.generic.DataType
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.vault.coder.controller.ClassReader
-import utopia.vault.coder.controller.writer.{AccessWriter, DbDescriptionInteractionsWriter, DbModelWriter, DescribedModelWriter, EnumerationWriter, FactoryWriter, ModelWriter, SqlWriter, TablesWriter}
+import utopia.vault.coder.controller.writer.{AccessWriter, DbDescriptionAccessWriter, DbModelWriter, DescribedModelWriter, DescriptionLinkInterfaceWriter, EnumerationWriter, FactoryWriter, ModelWriter, SqlWriter, TablesWriter}
 import utopia.vault.coder.model.data.{Class, Enum, ProjectSetup}
 
 import java.nio.file.Path
@@ -57,23 +57,35 @@ object VaultCoderApp extends App
 						.flatMap { _ => SqlWriter(classes, directory/"db_structure.sql") }
 						.flatMap { _ => TablesWriter(classes) }
 						.flatMap { tablesRef =>
-							// Next writes all required documents for each class
-							classes.tryForeach { classToWrite =>
-								ModelWriter(classToWrite).flatMap { case (modelRef, dataRef) =>
-									FactoryWriter(classToWrite, tablesRef, modelRef, dataRef).flatMap { factoryRef =>
-										DbModelWriter(classToWrite, modelRef, dataRef, factoryRef)
-											.flatMap { dbModelRef =>
-												AccessWriter(classToWrite, modelRef, factoryRef, dbModelRef)
-											}
-									}.flatMap { _ =>
-										// May also write description-related documents
-										classToWrite.descriptionLinkClass.tryForeach { descriptionLinkClass =>
-											DescribedModelWriter(classToWrite, modelRef).flatMap { _ =>
-												DbDescriptionInteractionsWriter(descriptionLinkClass, tablesRef,
-													classToWrite.name)
-													.map { _ => () }
-											}
+							DescriptionLinkInterfaceWriter(classes, tablesRef).flatMap { descriptionLinkObjects =>
+								// Next writes all required documents for each class
+								classes.tryMap { classToWrite =>
+									ModelWriter(classToWrite).flatMap { case (modelRef, dataRef) =>
+										FactoryWriter(classToWrite, tablesRef, modelRef, dataRef).flatMap { factoryRef =>
+											DbModelWriter(classToWrite, modelRef, dataRef, factoryRef)
+												.flatMap { dbModelRef =>
+													AccessWriter(classToWrite, modelRef, factoryRef, dbModelRef)
+														.map { _ => classToWrite -> modelRef }
+												}
 										}
+									}
+								}.flatMap { classesWithModels =>
+									// May also write description-related documents
+									descriptionLinkObjects match
+									{
+										// Case: At least one class uses descriptions
+										case Some((linkModels, linkFactories)) =>
+											classesWithModels.tryForeach { case (classToWrite, modelRef) =>
+												classToWrite.descriptionLinkClass.tryForeach { descriptionLinkClass =>
+													DescribedModelWriter(classToWrite, modelRef).flatMap { _ =>
+														DbDescriptionAccessWriter(descriptionLinkClass,
+															classToWrite.name, linkModels, linkFactories)
+															.map { _ => () }
+													}
+												}
+											}
+										// Case: No classes use descriptions => automatically succeeds
+										case None => Success(())
 									}
 								}
 							}

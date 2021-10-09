@@ -1,9 +1,10 @@
 package utopia.vault.coder.controller.writer
 
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.{Parameter, Reference, declaration}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File}
 import utopia.vault.coder.util.NamingUtils
@@ -31,12 +32,19 @@ object ModelWriter
 		val propertyModelWrites = classToWrite.properties.map { prop =>
 			prop.toValueCode.withPrefix(NamingUtils.camelToUnderscore(prop.name.singular).quoted + " -> ")
 		}
-		val propertyModelCode = if (propertyModelWrites.isEmpty) "Model.empty" else
+		// Properties are both written to and read from models
+		// TODO: Take enumerations into account...
+		val (propWrites, propReads) = classToWrite.properties.splitMap { prop =>
+			val propNameInModel = NamingUtils.camelToUnderscore(prop.name.singular).quoted
+			prop.toValueCode.withPrefix(propNameInModel + " -> ") ->
+				prop.dataType.fromValueCode(s"model($propNameInModel)")
+		}
+		val propWriteCode = if (propertyModelWrites.isEmpty) "Model.empty" else
 			s"Model(Vector(${ propertyModelWrites.mkString(", ") }))"
 		
-		// Writes the data model
-		File(dataClassPackage, Vector(
-			declaration.ClassDeclaration(dataClassName,
+		// Writes the data model and the companion object, which is used for parsing model data
+		File(dataClassPackage,
+			ClassDeclaration(dataClassName,
 				// Accepts a copy of each property. Uses default values where possible.
 				classToWrite.properties.map { prop =>
 					val defaultValueCode = prop.customDefault match
@@ -52,10 +60,10 @@ object ModelWriter
 				// Implements the toModel -property
 				properties = deprecationPropertiesFor(classToWrite) :+
 					ComputedProperty("toModel", propertyModelWrites.flatMap { _.references }.toSet + Reference.model,
-						isOverridden = true)(propertyModelCode),
+						isOverridden = true)(propWriteCode),
 				description = classToWrite.description, author = classToWrite.author,
 				isCaseClass = true)
-		)).write().flatMap { dataClassRef =>
+		).write().flatMap { dataClassRef =>
 			val storePackage = setup.modelPackage/s"stored.${classToWrite.packageName}"
 			// Writes the stored model next
 			val storedClass =
@@ -80,7 +88,7 @@ object ModelWriter
 						Vector(Reference.storedModelConvertible(dataClassRef)),
 						description = description, author = classToWrite.author, isCaseClass = true)
 			}
-			File(storePackage, Vector(storedClass)).write().map { _ -> dataClassRef }
+			File(storePackage, storedClass).write().map { _ -> dataClassRef }
 		}
 	}
 	

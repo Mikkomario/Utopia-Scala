@@ -81,6 +81,11 @@ case class Class(name: Name, tableName: String, properties: Vector[Property], pa
 	// COMPUTED ------------------------------------
 	
 	/**
+	  * @return Whether this class uses integer type ids
+	  */
+	def useIntId = !useLongId
+	
+	/**
 	  * @return Type of the ids used in this class
 	  */
 	def idType =  if (useLongId) LongNumber else IntNumber
