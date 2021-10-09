@@ -61,6 +61,13 @@ Each property object should contain following properties:
   - **"datetime" / "timestamp"** - Results in Instant / Datetime type (default name: "timestamp")
   - **"date" / "LocalDate"** - Results in LocalDate / Date type (default name: "date")
   - **"time" / "LocalTime"** - Results in LocalTime / Time type (default name: "time")
+  - **"days"** - Results in Days type (default name: "duration")
+  - **"duration[X]"** - Results in a time duration type (default name: "duration")
+    - **X** determines the unit used when storing the duration to the database. Available options are:
+      - **h / hour / hours** - Stores as hours (int)
+      - **m / min / minute / minutes** - Stores as minutes (int)
+      - **s / second / seconds** - Stores as seconds (int)
+      - **ms** - Stores as milliseconds (bigint, default)
   - **"creation" / "created"** - Results in Instant / Timestamp type and is used as the row creation time 
     (default name: "created")
     - Enables creation time -based indexing

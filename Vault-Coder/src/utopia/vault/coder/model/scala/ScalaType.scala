@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.scala
 
+import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.template.ScalaConvertible
 
 import scala.language.implicitConversions
@@ -76,10 +77,10 @@ case class ScalaType(data: Either[String, Reference], typeParameters: Vector[Sca
 {
 	// COMPUTED ---------------------------------
 	
-	/**
+	/*
 	  * @return Reference used by this type. None if not referring to any external type.
 	  */
-	def references: Set[Reference] = typeParameters.flatMap { _.references }.toSet ++ data.toOption
+	// def references: Set[Reference] = typeParameters.flatMap { _.references }.toSet ++ data.toOption
 	
 	
 	// IMPLEMENTED  -----------------------------
@@ -88,12 +89,12 @@ case class ScalaType(data: Either[String, Reference], typeParameters: Vector[Sca
 	{
 		val base = data match
 		{
-			case Left(basic) => basic
-			case Right(reference) => reference.target
+			case Left(basic) => CodePiece(basic)
+			case Right(reference) => CodePiece(reference.target, Set(reference))
 		}
 		if (typeParameters.isEmpty)
 			base
 		else
-			s"$base[${typeParameters.map { _.toScala }.mkString(", ")}]"
+			base + typeParameters.map { _.toScala }.reduceLeft { _.append(_, ", ") }.withinSquareBrackets
 	}
 }

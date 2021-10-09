@@ -50,13 +50,14 @@ object AccessWriter
 		val propertySetters = classToWrite.properties.map { prop =>
 			val paramName = s"new${prop.name.singular.capitalize}"
 			val paramType = prop.dataType.notNull
-			MethodDeclaration(s"${prop.name}_=", Set(Reference.valueConversions),
+			val valueConversionCode = paramType.toValueCode(paramName)
+			MethodDeclaration(s"${prop.name}_=", valueConversionCode.references,
 				description = s"Updates the ${prop.name} of the targeted ${classToWrite.name} instance(s)",
 				returnDescription = s"Whether any ${classToWrite.name} instance was affected")(
 				Parameter(paramName, paramType.toScala, description = s"A new ${prop.name} to assign")
-					.withImplicits(connectionParam))(
-				s"putColumn(model.${prop.name}Column, ${paramType.toValueCode(paramName)})")
+					.withImplicits(connectionParam))(s"putColumn(model.${prop.name}Column, $valueConversionCode)")
 		}.toSet
+		val pullIdCode = classToWrite.idType.nullable.fromValueCode(s"pullColumn(index)")
 		File(singleAccessPackage,
 			TraitDeclaration(uniqueAccessName,
 				// Extends SingleRowModelAccess, DistinctModelAccess and Indexed
@@ -65,12 +66,14 @@ object AccessWriter
 					Reference.indexed),
 				// Provides computed accessors for individual properties
 				baseProperties ++ classToWrite.properties.map { prop =>
-					ComputedProperty(prop.name.singular,
+					val pullCode = prop.dataType.nullable
+						.fromValueCode(s"pullColumn(model.${prop.name}Column)")
+					ComputedProperty(prop.name.singular, pullCode.references,
 						description = prop.description.notEmpty.getOrElse(s"The ${prop.name} of this instance") +
 							". None if no instance (or value) was found.", implicitParams = Vector(connectionParam))(
-						prop.dataType.nullable.fromValueCode(s"pullColumn(model.${prop.name}Column)"))
-				} :+ ComputedProperty("id", implicitParams = Vector(connectionParam))(
-					classToWrite.idType.nullable.fromValueCode(s"pullColumn(index)")),
+						pullCode.text)
+				} :+ ComputedProperty("id", pullIdCode.references, implicitParams = Vector(connectionParam))(
+					pullIdCode.text),
 				propertySetters,
 				description = s"A common trait for access points that return individual and distinct ${
 					classToWrite.name.plural}.", author = classToWrite.author

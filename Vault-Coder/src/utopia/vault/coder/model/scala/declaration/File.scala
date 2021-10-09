@@ -42,37 +42,42 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration])
 	
 	override def toCode =
 	{
-		val builder = new CodeBuilder()
+		// Writes the code first in order to access the references from there
+		val codeBuilder = new CodeBuilder()
+		// Writes the objects, then classes
+		declarations.foreach { declaration =>
+			codeBuilder ++= declaration.toCode
+			codeBuilder.addEmptyLine()
+		}
+		val mainCode = codeBuilder.result()
+		
+		// Next writes the references part
+		val refsBuilder = new CodeBuilder()
 		
 		// Writes the package declaration
-		builder += s"package $packagePath"
-		builder.addEmptyLine()
+		refsBuilder += s"package $packagePath"
+		refsBuilder.addEmptyLine()
 		
 		// Writes the imports
 		// Doesn't write references that are in the same package. Also simplifies imports in nested packages
-		val referencesToWrite = declarations.flatMap { _.references }.toSet
+		val referencesToWrite = mainCode.references
 			.filter { ref => ref.packagePath != packagePath || !ref.canBeGrouped }
 			.map { _.from(packagePath) }
 		// Those of the imports which can be grouped, are grouped
 		val (individualReferences, groupableReferences) = referencesToWrite.divideBy { _.canBeGrouped }
-		val importTargets = (individualReferences.toVector.map { _.toScala } ++
+		val importTargets = (individualReferences.toVector.map { _.toScala.text } ++
 			groupableReferences.groupBy { _.packagePath }.map { case (packagePath, refs) =>
 				if (refs.size > 1)
 					s"$packagePath.{${refs.map { _.target }.toVector.sorted.mkString(", ")}}"
 				else
 					s"$packagePath.${refs.head.target}"
 			}).sorted
-		builder ++= importTargets.map { target => s"import $target" }
+		refsBuilder ++= importTargets.map { target => s"import $target" }
 		if (importTargets.nonEmpty)
-			builder.addEmptyLine()
+			refsBuilder.addEmptyLine()
 		
-		// Writes the objects, then classes
-		declarations.foreach { declaration =>
-			builder ++= declaration.toCode
-			builder.addEmptyLine()
-		}
-		
-		builder.result().split
+		// Combines the two parts together. Splits the main code where possible.
+		refsBuilder.result() ++ mainCode.split
 	}
 	
 	

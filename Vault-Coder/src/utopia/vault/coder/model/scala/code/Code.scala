@@ -1,5 +1,6 @@
-package utopia.vault.coder.model.scala
+package utopia.vault.coder.model.scala.code
 
+import utopia.vault.coder.model.scala.Reference
 import utopia.vault.coder.model.scala.template.{CodeConvertible, Referencing}
 
 import scala.language.implicitConversions
@@ -69,6 +70,13 @@ case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set()) ext
 	
 	
 	// OTHER    -------------------------------
+	
+	/**
+	  * Combines these two codes, writing the back to back
+	  * @param other Another code
+	  * @return A combination of these codes
+	  */
+	def ++(other: Code) = Code(lines ++ other.lines, references ++ other.references)
 	
 	/**
 	  * @param reference A reference

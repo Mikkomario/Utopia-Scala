@@ -1,8 +1,10 @@
 package utopia.vault.coder.controller
 
 import utopia.flow.datastructure.mutable.{Pointer, ResettableLazy}
-import utopia.vault.coder.model.scala.template.{Referencing, ScalaConvertible}
-import utopia.vault.coder.model.scala.{Code, CodeLine, Reference}
+import utopia.vault.coder.model.scala.code
+import utopia.vault.coder.model.scala.code.{Code, CodeLine, CodePiece}
+import utopia.vault.coder.model.scala.template.Referencing
+import utopia.vault.coder.model.scala.Reference
 
 import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable
@@ -32,7 +34,7 @@ class CodeBuilder(startIndentation: Int = 0) extends mutable.Builder[String, Cod
 		currentIndent = startIndentation
 	}
 	
-	override def result() = Code(linesBuilder.result() ++ openLineCache.popCurrent().map { _.value }, references.toSet)
+	override def result() = code.Code(linesBuilder.result() ++ openLineCache.popCurrent().map { _.value }, references.toSet)
 	
 	override def addOne(elem: String) =
 	{
@@ -61,6 +63,12 @@ class CodeBuilder(startIndentation: Int = 0) extends mutable.Builder[String, Cod
 		references += reference
 		this
 	}
+	/**
+	  * Appends a piece of code to this builder, but leaves the line open for possibly more pieces
+	  * @param codePiece A piece of code
+	  * @return This builder
+	  */
+	def +=(codePiece: CodePiece) = appendPartial(codePiece)
 	
 	/**
 	  * Appends code to this builder. Adds relative indentation.
@@ -114,33 +122,26 @@ class CodeBuilder(startIndentation: Int = 0) extends mutable.Builder[String, Cod
 	  *                       Default = false.
 	  * @return This builder
 	  */
-	def appendPartial(code: String, separator: => String = "", allowLineSplit: Boolean = false) =
+	def appendPartial(code: CodePiece, separator: => String = "", allowLineSplit: Boolean = false) =
 	{
 		openLineCache.value.update { old =>
 			// Case: No line open yet => just adds the code
 			if (old.isEmpty)
-				old + code
+				old + code.text
 			// Case: Line split is supported and the code won't fit to the same line
 			// => adds the opened line and starts a new one (indented)
 			else if (allowLineSplit && old.length + separator.length + code.length > CodeLine.maxLineLength)
 			{
 				linesBuilder += old + separator
-				CodeLine(old.indentation + 1, code)
+				CodeLine(old.indentation + 1, code.text)
 			}
 			// Case: Code fits to the line => continues
 			else
-				old + separator + code
+				old + separator + code.text
 		}
+		references ++= code.references
 		this
 	}
-	/**
-	  * Appends a partial line to the code. This will be combined with other subsequent calls of appendPartial(...)
-	  * to form a single line of code. The appended item's references are also included.
-	  * @param item Item to append
-	  * @return This builder
-	  */
-	def appendPartial(item: ScalaConvertible with Referencing): CodeBuilder =
-		appendPartial(item.toScala).addReferences(item.references)
 	
 	/**
 	  * Indents this builder so that the following added lines will be indented

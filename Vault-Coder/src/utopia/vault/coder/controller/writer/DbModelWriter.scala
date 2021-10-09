@@ -117,12 +117,20 @@ object DbModelWriter
 	
 	private def valuePropertiesPropertyFor(classToWrite: Class, className: String) =
 	{
-		val propsPart = classToWrite.properties.map { prop => s"${prop.name}AttName -> ${prop.nullable.toValueCode}" }
-			.mkString(", ")
-		ComputedProperty("valueProperties", Set(Reference.valueConversions), isOverridden = true)(
-			s"import $className._",
-			s"Vector(${"\"id\" -> id"}, $propsPart)"
-		)
+		if (classToWrite.properties.isEmpty)
+			ComputedProperty("valueProperties", Set(Reference.valueConversions), isOverridden = true)(
+				s"Vector(${"\"id\" -> id"})"
+			)
+		else
+		{
+			val propsPart = classToWrite.properties
+				.map { prop => prop.nullable.toValueCode.withPrefix(s"${prop.name}AttName -> ") }
+				.reduceLeft { _.append(_, ", ") }
+			ComputedProperty("valueProperties", propsPart.references + Reference.valueConversions, isOverridden = true)(
+				s"import $className._",
+				s"Vector(${"\"id\" -> id"}, $propsPart)"
+			)
+		}
 	}
 	
 	

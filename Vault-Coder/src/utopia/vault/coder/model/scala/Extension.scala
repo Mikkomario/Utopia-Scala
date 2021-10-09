@@ -1,6 +1,7 @@
 package utopia.vault.coder.model.scala
 
-import utopia.vault.coder.model.scala.template.{Referencing, ScalaConvertible}
+import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.template.ScalaConvertible
 
 import scala.language.implicitConversions
 
@@ -16,19 +17,17 @@ object Extension
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-case class Extension(parentType: ScalaType, constructionAssignments: Vector[Vector[String]] = Vector(),
-                     constructionReferences: Set[Reference] = Set())
-	extends Referencing with ScalaConvertible
+case class Extension(parentType: ScalaType, constructionAssignments: Vector[Vector[CodePiece]] = Vector())
+	extends ScalaConvertible
 {
 	// IMPLEMENTED  -------------------------------------
 	
-	override def references = constructionReferences ++ parentType.references
-	
 	override def toScala =
 	{
-		val parametersString = if (constructionAssignments.isEmpty) "" else
-			s"(${constructionAssignments.map { assignments => s"(${assignments.mkString(", ")})"} })"
-		s"${parentType.toScala}$parametersString"
+		val parametersPart = if (constructionAssignments.isEmpty) CodePiece.empty else
+			CodePiece(s"(${constructionAssignments.map { assignments => s"(${assignments.mkString(", ")})"} })")
+				.referringTo(constructionAssignments.flatten.flatMap { _.references })
+		parentType.toScala + parametersPart
 	}
 	
 	
@@ -36,10 +35,18 @@ case class Extension(parentType: ScalaType, constructionAssignments: Vector[Vect
 	
 	/**
 	  * Creates a copy of this extension which includes a constructor call
-	  * @param references References used during this call
-	  * @param paramValues Parameter value assignments
+	  * @param assignments Parameter assignments (a single parameter list)
 	  * @return A copy of this extension which includes a constructor call
 	  */
-	def withConstructor(references: Set[Reference], paramValues: String*) =
-		copy(constructionAssignments = Vector(paramValues.toVector), constructionReferences = references)
+	def withConstructor(assignments: Vector[CodePiece]) =
+		copy(constructionAssignments = constructionAssignments :+ assignments)
+	
+	/**
+	  * Creates a copy of this extension which includes a constructor call (one more parameter list)
+	  * @param firstAssignment First parameter assignment
+	  * @param moreAssignments More parameter assignments
+	  * @return A copy of this extension which includes a constructor call
+	  */
+	def withConstructor(firstAssignment: CodePiece, moreAssignments: CodePiece*) =
+		copy(constructionAssignments = constructionAssignments :+ (firstAssignment +: moreAssignments.toVector))
 }

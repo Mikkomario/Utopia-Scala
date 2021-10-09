@@ -1,6 +1,7 @@
 package utopia.vault.coder.model.scala
 
-import utopia.vault.coder.model.scala.template.{Referencing, ScalaConvertible, ScalaDocConvertible}
+import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.template.{ScalaConvertible, ScalaDocConvertible}
 
 import scala.language.implicitConversions
 
@@ -47,7 +48,7 @@ object Parameters
   * @since 2.9.2021, v0.1
   */
 case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Vector[Parameter] = Vector())
-	extends ScalaConvertible with Referencing with ScalaDocConvertible
+	extends ScalaConvertible with ScalaDocConvertible
 {
 	// COMPUTED -----------------------------------
 	
@@ -63,20 +64,20 @@ case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Ve
 	
 	// IMPLEMENTED  -------------------------------
 	
-	override def references = (lists.flatten ++ implicits).flatMap { _.references }.toSet
-	
 	override def documentation = (lists.flatten ++ implicits).flatMap { _.documentation }
 	
 	override def toScala =
 	{
-		if (lists.isEmpty && implicits.isEmpty)
+		if (isEmpty)
 			"()"
 		else
 		{
-			val base = lists.map { list => s"(${list.map { _.toScala }.mkString(", ")})" }.mkString
-			val implicitString = if (implicits.isEmpty) "" else
-				s"(implicit ${implicits.map { _.toScala }.mkString(", ")})"
-			base + implicitString
+			val basePart = lists.map(parameterListFrom).reduceLeft { _ + _ }
+			if (implicits.isEmpty)
+				basePart
+			else
+				basePart + implicits.map { _.toScala }
+					.reduceLeft { _.append(_, ", ") }.withPrefix("implicit ").withinParenthesis
 		}
 	}
 	
@@ -98,4 +99,12 @@ case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Ve
 	  */
 	def withImplicits(firstParam: Parameter, moreParams: Parameter*) =
 		copy(implicits = firstParam +: moreParams.toVector)
+	
+	private def parameterListFrom(list: Seq[Parameter]) =
+	{
+		if (list.isEmpty)
+			CodePiece("()")
+		else
+			list.map { _.toScala }.reduceLeft { _.append(_, ", ") }.withinParenthesis
+	}
 }

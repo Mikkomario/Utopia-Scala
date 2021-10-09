@@ -4,7 +4,8 @@ import utopia.vault.coder.model.scala.ScalaDocKeyword.{Author, Since}
 import utopia.flow.util.CombinedOrdering
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.coder.controller.CodeBuilder
-import utopia.vault.coder.model.scala.{Code, Extension, Parameters, ScalaDocPart}
+import utopia.vault.coder.model.scala.code.Code
+import utopia.vault.coder.model.scala.{Extension, Parameters, ScalaDocPart}
 import utopia.vault.coder.model.scala.template.{CodeConvertible, ScalaDocConvertible}
 
 import java.time.LocalDate
@@ -62,9 +63,6 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def references = (constructorParams ++ extensions ++ creationCode ++ properties ++ methods ++ nested)
-		.flatMap { _.references }.toSet
-	
 	override def documentation =
 	{
 		val builder = new VectorBuilder[ScalaDocPart]()
@@ -89,16 +87,13 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 		// Writes the scaladoc
 		builder ++= scalaDoc
 		// Writes the declaration and the extensions
-		builder.appendPartial(baseString)
-		constructorParams.foreach(builder.appendPartial)
+		builder += basePart
+		constructorParams.foreach { builder += _.toScala }
 		
 		val ext = extensions
 		if (ext.nonEmpty)
-		{
-			builder.appendPartial(s"extends ${ ext.map { _.toScala }.mkString(" with ") }", " ",
-				allowLineSplit = true)
-			builder.addReferences(ext.flatMap { _.references })
-		}
+			builder.appendPartial(ext.map { _.toScala }.reduceLeft { _.append(_, " with ") }
+				.withPrefix("extends "), " ", allowLineSplit = true)
 		
 		// Starts writing the instance body
 		/* Write order is as follows:

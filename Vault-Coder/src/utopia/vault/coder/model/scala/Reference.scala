@@ -11,6 +11,10 @@ object Reference
 	lazy val instant = apply(javaTime, "Instant")
 	lazy val localDate = apply(javaTime, "LocalDate")
 	lazy val localTime = apply(javaTime, "LocalTime")
+	lazy val timeUnit = apply(java/"util.concurrent", "TimeUnit")
+	
+	lazy val duration = apply(scalaDuration, "Duration")
+	lazy val finiteDuration = apply(scalaDuration, "FiniteDuration")
 	
 	lazy val noSuchElementException = apply("java.util", "NoSuchElementException")
 	
@@ -63,6 +67,10 @@ object Reference
 	  * Imports the Now -object (Flow)
 	  */
 	lazy val now = apply(flowTime, "Now")
+	/**
+	  * Imports the Days class (Flow)
+	  */
+	lazy val days = apply(flowTime, "Days")
 	
 	/**
 	  * Imports a database connection (Vault)

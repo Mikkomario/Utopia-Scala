@@ -1,7 +1,8 @@
 package utopia.vault.coder.model.scala.declaration
 
+import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.Visibility.Public
-import utopia.vault.coder.model.scala.{Code, Parameters, Reference, ScalaType, Visibility}
+import utopia.vault.coder.model.scala.{Parameters, Reference, ScalaType, Visibility}
 
 object MethodDeclaration
 {

@@ -3,6 +3,7 @@ package utopia.vault.coder.controller.writer
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
+import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.{Parameter, Reference, declaration}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File}
 import utopia.vault.coder.util.NamingUtils
@@ -27,21 +28,30 @@ object ModelWriter
 	{
 		val dataClassName = classToWrite.name.singular + "Data"
 		val dataClassPackage = setup.modelPackage/s"partial.${classToWrite.packageName}"
+		val propertyModelReads = CodePiece(s"${"id".quoted} -> id", Set(Reference.valueConversions)) +:
+			classToWrite.properties.map { prop =>
+				prop.toValueCode.withPrefix(NamingUtils.camelToUnderscore(prop.name.singular).quoted + " -> ")
+			}
 		
 		// Writes the data model
 		File(dataClassPackage, Vector(
 			declaration.ClassDeclaration(dataClassName,
 				// Accepts a copy of each property. Uses default values where possible.
-				classToWrite.properties.map { prop => Parameter(prop.name.singular, prop.dataType.toScala,
-					prop.customDefault.notEmpty.getOrElse(prop.dataType.baseDefault), description = prop.description) },
+				classToWrite.properties.map { prop =>
+					val defaultValueCode = prop.customDefault match
+					{
+						case "" => prop.dataType.baseDefault
+						case defined => CodePiece(defined)
+					}
+					Parameter(prop.name.singular, prop.dataType.toScala, defaultValueCode,
+						description = prop.description)
+				},
 				// Extends ModelConvertible
 				Vector(Reference.modelConvertible),
 				// Implements the toModel -property
 				properties = deprecationPropertiesFor(classToWrite) :+
-					ComputedProperty("toModel", Set(Reference.model, Reference.valueConversions), isOverridden = true)(
-						s"Model(Vector(${ classToWrite.properties.map { prop =>
-							s"${ NamingUtils.camelToUnderscore(prop.name.singular).quoted } -> ${prop.toValueCode}" }
-							.mkString(", ") }))"),
+					ComputedProperty("toModel", propertyModelReads.flatMap { _.references }.toSet + Reference.model,
+						isOverridden = true)(s"Model(Vector(${ propertyModelReads.mkString(", ") }))"),
 				description = classToWrite.description, author = classToWrite.author,
 				isCaseClass = true)
 		)).write().flatMap { dataClassRef =>

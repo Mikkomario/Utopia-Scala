@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.scala
 
+import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.template.CodeConvertible
 
 object ScalaDocPart

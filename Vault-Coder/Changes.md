@@ -1,5 +1,13 @@
 # Utopia Vault Coder
 
+## v1.2
+### New Features
+- Added support for **Days** and **FiniteDuration** data types (both concrete and optional variants)
+### Bugfixes
+- Added the missing "id" property to data model's `.toModel` -implementation
+### Other Changes
+- Instant default value is now `Now` instead of `Instant.now()`
+
 ## v1.1 - 3.10.2021
 This is a major update to the **Vault Coder** utility application, making it actually usable in production use. 
 Beside the important bugfixes, this update adds very useful features and utility updates: Enumerations and deprecation 

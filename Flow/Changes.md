@@ -1,5 +1,11 @@
 # Utopia Flow - List of Changes
 
+## v1.12.2 (in development)
+### Deprecations
+- Deprecated **AutoCloseWrapper**`.get` in favor of `.wrapped`
+### Other Changes
+- **AutoCloseWrapper** now extends **Extender**, allowing implicit access to its contents
+
 ## v1.12.1 - 04.10.2021
 This small update adds file editing through **CollectionExtensions**.
 Many collection-related utility additions are also included.

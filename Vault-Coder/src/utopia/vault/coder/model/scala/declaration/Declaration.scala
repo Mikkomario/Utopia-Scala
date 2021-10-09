@@ -1,15 +1,14 @@
 package utopia.vault.coder.model.scala.declaration
 
-import utopia.vault.coder.model.scala.Visibility.Public
 import utopia.vault.coder.model.scala.Visibility
-import utopia.vault.coder.model.scala.template.Referencing
+import utopia.vault.coder.model.scala.code.CodePiece
 
 /**
   * Declares a scala item of some sort
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-trait Declaration extends Referencing
+trait Declaration
 {
 	// ABSTRACT ------------------------------
 	
@@ -21,7 +20,7 @@ trait Declaration extends Referencing
 	/**
 	  * @return Keyword for this declaration (E.g. "def" or "val")
 	  */
-	def keyword: String
+	def keyword: CodePiece
 	
 	/**
 	  * @return Name of this method / property
@@ -34,9 +33,13 @@ trait Declaration extends Referencing
 	/**
 	  * @return The base part of this declaration as a string. E.g. "private def test"
 	  */
-	protected def baseString =
+	protected def basePart =
 	{
-		val visibilityString = if (visibility == Public) "" else s"${ visibility.toScala } "
-		s"$visibilityString$keyword $name"
+		val visibilityPart = visibility.toScala
+		val otherPart = keyword + s" $name"
+		if (visibilityPart.isEmpty)
+			otherPart
+		else
+			visibility.toScala + otherPart.withPrefix(" ")
 	}
 }

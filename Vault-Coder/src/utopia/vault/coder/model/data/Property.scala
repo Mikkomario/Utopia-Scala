@@ -1,6 +1,7 @@
 package utopia.vault.coder.model.data
 
 import utopia.vault.coder.model.enumeration.PropertyType
+import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.util.NamingUtils
 
 object Property
@@ -36,7 +37,7 @@ case class Property(name: Name, columnName: String, dataType: PropertyType, desc
 	/**
 	  * @return Code for this property converted to a value. Expects ValueConversions to be imported.
 	  */
-	def toValueCode = dataType.toValueCode(name.singular)
+	def toValueCode: CodePiece = dataType.toValueCode(name.singular)
 	
 	/**
 	  * @return A nullable copy of this property

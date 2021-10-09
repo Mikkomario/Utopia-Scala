@@ -1,7 +1,8 @@
 package utopia.vault.coder.model.scala.declaration
 
+import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.Visibility.{Protected, Public}
-import utopia.vault.coder.model.scala.{Code, Parameter, Parameters, ScalaType, Visibility}
+import utopia.vault.coder.model.scala.{Parameter, Parameters, ScalaType, Visibility}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 
 object PropertyDeclaration

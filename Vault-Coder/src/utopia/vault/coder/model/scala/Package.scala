@@ -11,7 +11,9 @@ object Package
 {
 	// ATTRIBUTES   ---------------------------
 	
-	lazy val javaTime = apply("java.time")
+	lazy val java = apply("java")
+	lazy val scalaDuration = apply("scala.concurrent.duration")
+	lazy val javaTime = java/"time"
 	
 	lazy val utopia = apply("utopia")
 	lazy val flow = utopia/"flow"
