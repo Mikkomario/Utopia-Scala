@@ -262,21 +262,26 @@ object PropertyType
 					_interpret(other, length, isNullable = false)
 		}
 	
-	private def _interpret(typeName: String, length: Option[Int], isNullable: Boolean) =
+	private def _interpret(typeName: String, length: Option[Int], isNullable: Boolean): Option[PropertyType] =
 		typeName match
 		{
 			case "days" => Some(if (isNullable) OptionalDayCount else DayCount)
 			case other =>
 				if (typeName.contains("duration"))
-					Some(typeName.afterFirst("[").untilLast("]") match
+				{
+					val notNull = typeName.afterFirst("[").untilLast("]") match
 					{
 						case "s" | "second" | "seconds" => TimeDuration.seconds
 						case "m" | "min" | "minute" | "minutes" => TimeDuration.minutes
 						case "h" | "hour" | "hours" => TimeDuration.hours
 						case _ => TimeDuration.millis
-					})
+					}
+					Some(if (isNullable) notNull.nullable else notNull)
+				}
 				else
-					BasicPropertyType.interpret(other, length)
+					BasicPropertyType.interpret(other, length).map { base =>
+						if (isNullable) Optional(base) else base
+					}
 		}
 	
 	

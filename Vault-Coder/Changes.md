@@ -5,7 +5,7 @@
 - Added support for described classes (**Citadel**-specific feature)
 - Added support for **Days** and **FiniteDuration** data types (both concrete and optional variants)
 ### Bugfixes
-- Added the missing "id" property to data model's `.toModel` -implementation
+- Fixed a bug in some factory implementations where read values were not unwrapped correctly
 ### Other Changes
 - Instant default value is now `Now` instead of `Instant.now()`
 

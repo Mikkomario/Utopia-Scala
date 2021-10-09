@@ -28,10 +28,11 @@ object ModelWriter
 	{
 		val dataClassName = classToWrite.name.singular + "Data"
 		val dataClassPackage = setup.modelPackage/s"partial.${classToWrite.packageName}"
-		val propertyModelReads = CodePiece(s"${"id".quoted} -> id", Set(Reference.valueConversions)) +:
-			classToWrite.properties.map { prop =>
-				prop.toValueCode.withPrefix(NamingUtils.camelToUnderscore(prop.name.singular).quoted + " -> ")
-			}
+		val propertyModelWrites = classToWrite.properties.map { prop =>
+			prop.toValueCode.withPrefix(NamingUtils.camelToUnderscore(prop.name.singular).quoted + " -> ")
+		}
+		val propertyModelCode = if (propertyModelWrites.isEmpty) "Model.empty" else
+			s"Model(Vector(${ propertyModelWrites.mkString(", ") }))"
 		
 		// Writes the data model
 		File(dataClassPackage, Vector(
@@ -50,8 +51,8 @@ object ModelWriter
 				Vector(Reference.modelConvertible),
 				// Implements the toModel -property
 				properties = deprecationPropertiesFor(classToWrite) :+
-					ComputedProperty("toModel", propertyModelReads.flatMap { _.references }.toSet + Reference.model,
-						isOverridden = true)(s"Model(Vector(${ propertyModelReads.mkString(", ") }))"),
+					ComputedProperty("toModel", propertyModelWrites.flatMap { _.references }.toSet + Reference.model,
+						isOverridden = true)(propertyModelCode),
 				description = classToWrite.description, author = classToWrite.author,
 				isCaseClass = true)
 		)).write().flatMap { dataClassRef =>

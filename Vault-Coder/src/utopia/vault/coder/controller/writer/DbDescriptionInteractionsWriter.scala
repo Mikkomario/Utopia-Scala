@@ -34,6 +34,8 @@ object DbDescriptionInteractionsWriter
 		val linkProperty = descriptionLinkClass.properties.head
 		val linkPropertyName = linkProperty.name.singular
 		
+		// FIXME: The model and factory can't be objects but must be values
+		
 		// Writes the link model factory object (edit) first
 		File(setup.dbModelPackage/descriptionLinkClass.packageName,
 			ObjectDeclaration(linkClassName + "LinkModel",

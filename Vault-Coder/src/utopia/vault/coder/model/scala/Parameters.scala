@@ -72,7 +72,7 @@ case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Ve
 			"()"
 		else
 		{
-			val basePart = lists.map(parameterListFrom).reduceLeft { _ + _ }
+			val basePart = lists.map(parameterListFrom).reduceLeftOption { _ + _ }.getOrElse(CodePiece.empty)
 			if (implicits.isEmpty)
 				basePart
 			else

@@ -29,8 +29,11 @@ object DescribedModelWriter
 		
 		File(setup.modelPackage/"combined"/classToWrite.packageName,
 			// Companion object is used for parsing from model data
-			ObjectDeclaration(className, Vector(Reference.describedFromModelFactory(ScalaType.basic(className))),
+			ObjectDeclaration(className,
+				Vector(Reference.describedFromModelFactory(ScalaType.basic(className), modelRef)),
 				properties = Vector(
+					// TODO: This requires the model companion object to extend FromModelFactory,
+					//  which it doesn't do at the moment
 					ComputedProperty("undescribedFactory", Set(modelRef), isOverridden = true)(modelRef.target)
 				),
 				description = s"Used for parsing described copies of ${classToWrite.name.plural} from model data"

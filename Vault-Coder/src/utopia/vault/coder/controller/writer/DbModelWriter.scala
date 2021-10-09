@@ -56,8 +56,8 @@ object DbModelWriter
 				// Also includes withX(...) methods for each property
 				methods = Set(
 					MethodDeclaration("apply", isOverridden = true)(Parameter("data", dataRef))(
-						s"apply(None, ${classToWrite.properties.map { prop =>
-							if (prop.dataType.isNullable) s"data.${prop.name}" else s"Some(data.${prop.name})" }
+						s"apply(${("None" +: classToWrite.properties.map { prop =>
+							if (prop.dataType.isNullable) s"data.${prop.name}" else s"Some(data.${prop.name})" })
 							.mkString(", ")})"),
 					MethodDeclaration("complete", Set(modelRef), isOverridden = true)(
 						Vector(Parameter("id", Reference.value), Parameter("data", dataRef)))(

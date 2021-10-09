@@ -74,8 +74,8 @@ object ClassReader
 						""
 				}
 			
-			Success(Class(fullName, tableName, properties, packageName, classModel("doc").getString,
-				classModel("author").stringOr(defaultAuthor), descriptionLinkColumnName,
+			Success(Class(fullName, tableName, properties, packageName, descriptionLinkColumnName,
+				classModel("doc").getString, classModel("author").stringOr(defaultAuthor),
 				classModel("use_long_id").getBoolean))
 		}
 	}

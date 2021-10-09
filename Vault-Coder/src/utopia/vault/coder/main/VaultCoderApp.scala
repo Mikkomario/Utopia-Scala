@@ -8,6 +8,7 @@ import utopia.vault.coder.controller.writer.{AccessWriter, DbDescriptionInteract
 import utopia.vault.coder.model.data.{Class, Enum, ProjectSetup}
 
 import java.nio.file.Path
+import scala.io.Codec
 import scala.util.{Failure, Success}
 
 /**
@@ -19,6 +20,8 @@ import scala.util.{Failure, Success}
 object VaultCoderApp extends App
 {
 	DataType.setup()
+	
+	implicit val codec: Codec = Codec.UTF8
 	
 	val rootPath = if (args.isEmpty) None else Some(args.head: Path)
 	def path(endPath: String): Path = rootPath match

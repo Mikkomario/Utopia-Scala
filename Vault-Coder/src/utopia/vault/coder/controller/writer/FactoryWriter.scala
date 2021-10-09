@@ -6,6 +6,7 @@ import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.model.data.{Class, ProjectSetup, Property}
 import utopia.vault.coder.model.enumeration.PropertyType.EnumValue
 import utopia.vault.coder.model.scala.Visibility.Public
+import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.{Extension, Parameter, Reference}
 import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
@@ -101,11 +102,14 @@ object FactoryWriter
 					isOverridden = true)
 			// Case: No enumerations are used => implements a simpler fromValidatedModel
 			else
-				MethodDeclaration("fromValidatedModel", Set(modelRef, dataRef, Reference.valueUnwraps),
+			{
+				val dataAssignments = classToWrite.properties
+					.map { prop => prop.dataType.fromValueCode(s"model(${prop.name.singular.quoted})") }
+				MethodDeclaration("fromValidatedModel",
+					Set(modelRef, dataRef, Reference.valueUnwraps) ++ dataAssignments.flatMap { _.references },
 					isOverridden = true)(Parameter("model", Reference.model(Reference.constant)))(
-					s"${modelRef.target}(model(${"\"id\""}), ${dataRef.target}(${
-						classToWrite.properties.map { prop =>
-							s"model(${prop.name.singular.quoted})" }.mkString(", ")}))")
+					s"${modelRef.target}(model(${"\"id\""}), ${dataRef.target}(${dataAssignments.mkString(", ")}))")
+			}
 		}
 		Set(applyMethod)
 	}
@@ -142,9 +146,9 @@ object FactoryWriter
 		// Writes the instance creation now that the enum-based properties have been declared
 		builder.appendPartial(s"${modelRef.target}(valid(${"id".quoted}), ${dataRef.target}(")
 		builder.appendPartial(dividedProperties.map {
-			case Left((prop, _)) => prop.name.singular
-			case Right(prop) => s"valid(${prop.name.singular.quoted})"
-		}.mkString(", ") + "))", allowLineSplit = true)
+			case Left((prop, _)) => CodePiece(prop.name.singular)
+			case Right(prop) => prop.dataType.fromValueCode(s"valid(${prop.name.singular.quoted})")
+		}.reduceLeft { _.append(_, ", ") } + "))", allowLineSplit = true)
 		
 		// Closes open blocks
 		(0 until innerIndentCount).foreach { _ => builder.closeBlock() }

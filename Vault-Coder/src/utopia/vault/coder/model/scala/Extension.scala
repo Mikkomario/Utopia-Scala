@@ -25,8 +25,10 @@ case class Extension(parentType: ScalaType, constructionAssignments: Vector[Vect
 	override def toScala =
 	{
 		val parametersPart = if (constructionAssignments.isEmpty) CodePiece.empty else
-			CodePiece(s"(${constructionAssignments.map { assignments => s"(${assignments.mkString(", ")})"} })")
-				.referringTo(constructionAssignments.flatten.flatMap { _.references })
+			constructionAssignments
+				.map { _.reduceLeftOption { _.append(_, ", ") }.getOrElse(CodePiece.empty)
+					.withinParenthesis }
+				.reduceLeft { _ + _ }
 		parentType.toScala + parametersPart
 	}
 	
