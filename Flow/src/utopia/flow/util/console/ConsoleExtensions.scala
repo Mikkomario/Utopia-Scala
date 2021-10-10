@@ -70,5 +70,23 @@ object ConsoleExtensions
 					if (firstChar == 'y') true else if (firstChar == 'n') false else default
 				case None => default
 			}
+		
+		/**
+		 * @return An iterator that reads new lines
+		 */
+		def readLineIterator = Iterator.continually { in.readLine() }
+		/**
+		 * @return An iterator that reads values
+		 */
+		def readIterator = Iterator.continually { read() }
+		
+		/**
+		 * @return Reads lines until a non-empty response is given
+		 */
+		def readLineUntilNotEmpty() = readLineIterator.find { _.nonEmpty }.get
+		/**
+		 * @return Reads lines while a non-empty response is given
+		 */
+		def readLineWhileNotEmpty() = readLineIterator.takeWhile { _.nonEmpty }.toVector
 	}
 }
