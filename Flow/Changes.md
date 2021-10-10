@@ -1,8 +1,17 @@
 # Utopia Flow - List of Changes
 
-## v1.12.2 (in development)
+## v1.13 (in development)
+### Breaking Changes
+- The third parameter in `ArgumentSchema.flag(...)` is now `hint: String` and not `defaultValue: Boolean`.
+  - This is quite unlikely to require major refactoring, as the usual use case for the default value is
+    to specify it as a named parameter
 ### Deprecations
 - Deprecated **AutoCloseWrapper**`.get` in favor of `.wrapped`
+### New Features
+- Added multiple console interaction features (**Console** and **Command** classes)
+### New Methods
+- **VolatileFlag**
+  - Added `.getAndReset()`
 ### Other Changes
 - **AutoCloseWrapper** now extends **Extender**, allowing implicit access to its contents
 

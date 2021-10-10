@@ -13,7 +13,6 @@ class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](init
      * Whether this flag is currently set
      */
     def isSet = value
-    
     /**
       * @return Whether this flag isn't currently set
       */
@@ -26,7 +25,6 @@ class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](init
      * Sets this flag (same as set(true))
      */
     def set(): Unit = value = true
-    
     /**
      * Resets this flag (same as set(false))
      */
@@ -35,7 +33,12 @@ class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](init
     /**
      * Sets this flag and also returns the state before conversion
      */
-    def getAndSet(): Boolean = getAndSet(true)
+    def getAndSet(): Boolean = getAndSet(newValue = true)
+    /**
+     * Resets this flag
+     * @return Value before this flag was reset
+     */
+    def getAndReset() = getAndSet(newValue = false)
     
     /**
      * If this flag is not set, performs the operation. Locks this flag while the operation runs.

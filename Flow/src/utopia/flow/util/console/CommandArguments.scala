@@ -104,4 +104,52 @@ case class CommandArguments(schema: CommandArgumentsSchema, input: Vector[String
 		case Some(schema) => apply(schema)
 		case None => Value.empty
 	}
+	
+	/**
+	 * @param schema An argument schema
+	 * @return Whether these arguments explicitly specify a value for that argument
+	 */
+	def specifiesValueFor(schema: ArgumentSchema) = values.contains(schema)
+	/**
+	 * @param parameterName Name of the targeted parameter
+	 * @return Whether these arguments explicitly specify a value for that argument / parameter
+	 */
+	def specifiesValueFor(parameterName: String): Boolean = schema(parameterName).exists(specifiesValueFor)
+	/**
+	 * @param schemas Argument schema
+	 * @return Whether these arguments explicitly specify a value for each of those arguments
+	 */
+	def specifiesValuesFor(schemas: IterableOnce[ArgumentSchema]) = schemas.iterator.forall(specifiesValueFor)
+	/**
+	 * @param firstParamName Parameter name
+	 * @param secondParamName Another parameter name
+	 * @param moreParamNames More parameter names
+	 * @return Whether these arguments explicitly specify a value for all of those parameters
+	 */
+	def specifiesValuesFor(firstParamName: String, secondParamName: String, moreParamNames: String*): Boolean =
+		(Vector(firstParamName, secondParamName) ++ moreParamNames).forall(specifiesValueFor)
+	
+	/**
+	 * @param schema An argument schema
+	 * @return Whether these arguments contain a non-empty value for that argument
+	 */
+	def containsValueFor(schema: ArgumentSchema) = schema.hasDefault || specifiesValueFor(schema)
+	/**
+	 * @param parameterName Name of the targeted parameter
+	 * @return Whether these arguments contain a non-empty value for that argument / parameter
+	 */
+	def containsValueFor(parameterName: String): Boolean = schema(parameterName).exists(containsValueFor)
+	/**
+	 * @param schemas Argument schema
+	 * @return Whether these arguments contain a non-empty value for each of those arguments
+	 */
+	def containsValuesFor(schemas: IterableOnce[ArgumentSchema]) = schemas.iterator.forall(containsValueFor)
+	/**
+	 * @param firstParamName Parameter name
+	 * @param secondParamName Another parameter name
+	 * @param moreParamNames More parameter names
+	 * @return Whether these arguments contain a non-empty value for all of those parameters
+	 */
+	def containsValuesFor(firstParamName: String, secondParamName: String, moreParamNames: String*) =
+		(Vector(firstParamName, secondParamName) ++ moreParamNames).forall(containsValueFor)
 }

@@ -1,0 +1,113 @@
+package utopia.flow.util.console
+
+import utopia.flow.parse.{JsonParser, Regex}
+import utopia.flow.util.console.Command.findArgumentsRegex
+
+object Command
+{
+	// Escapes quotes, finds words
+	// "(([\"']).*?\\2|(?:[^\\\\ ]+\\\\\\s+)+[^\\\\ ]+|\\S+)"
+	// "(?i)((?:(['|\"]).+\\2)|(?:\\w+\\\\\\s\\w+)+|\\b(?=\\w)\\w+\\b(?!\\w))"
+	private lazy val findArgumentsRegex = Regex("(([\"']).*?\\2|(?:[^\\\\ ]+\\\\\\s+)+[^\\\\ ]+|\\S+)")
+	
+	/**
+	 * Creates a new command that doesn't take any arguments
+	 * @param name Name of this command
+	 * @param alias Alias for this command (default = empty = no alias)
+	 * @param help A helpful description of this command (default = empty = no description)
+	 * @param execute Function to be called when this command should be executed
+	 * @return A new command
+	 */
+	def withoutArguments(name: String, alias: String = "", help: String = "")(execute: => Unit) =
+		new Command(name, alias, help = help)(_ => execute)
+	/**
+	 * Creates a new command utilizing an existing command arguments schema
+	 * @param schema Arguments schema
+	 * @param name Name of this command
+	 * @param alias Alias for this command (default = empty = no alias)
+	 * @param help A helpful description of this command (default = empty = no description)
+	 * @param execute Function to be called when this command should be executed. Accepts processed command arguments.
+	 * @return A new command
+	 */
+	def withSchema(schema: CommandArgumentsSchema, name: String, alias: String = "", help: String = "")
+	              (execute: CommandArguments => Unit) = new Command(name, alias, schema, help)(execute)
+	
+	/**
+	 * Creates a new command
+	 * @param name Name of this command
+	 * @param alias Alias for this command (default = empty = no alias)
+	 * @param help A helpful description of this command (default = empty = no description)
+	 * @param args Schemas for the arguments accepted by this command
+	 * @param execute Function to be called when this command should be executed. Accepts processed command arguments.
+	 * @return A new command
+	 */
+	def apply(name: String, alias: String = "", help: String = "")
+	         (args: ArgumentSchema*)
+	         (execute: CommandArguments => Unit) =
+		new Command(name, alias, CommandArgumentsSchema(args.toVector), help)(execute)
+}
+
+/**
+ * Commands are used for interacting with users in a console. Usually commands accept arguments of some kind.
+ * @author Mikko Hilpinen
+ * @since 10.10.2021, v1.12.2
+ */
+class Command(val name: String, val alias: String = "",
+              val argumentsSchema: CommandArgumentsSchema = CommandArgumentsSchema.empty, val help: String = "")
+             (execute: CommandArguments => Unit)
+	extends ArgumentMatchable
+{
+	// COMPUTED ------------------------------
+	
+	/**
+	 * @return Whether this command receives at least one argument
+	 */
+	def takesArguments = argumentsSchema.nonEmpty
+	
+	
+	// IMPLEMENTED  --------------------------
+	
+	override def toString =
+	{
+		val argsPart = argumentsSchema.arguments.map { arg => s" <${arg.name}>" }.mkString
+		val descPart = if (hasHelp) " // " + help else ""
+		nameAndAlias + argsPart + descPart
+	}
+	
+	
+	// OTHER    ------------------------------
+	
+	/**
+	 * Executes this command with the specified arguments
+	 * @param arguments Arguments for executing this command
+	 * @param jsonParser Implicit json parser
+	 */
+	def apply(arguments: Vector[String])(implicit jsonParser: JsonParser) =
+		execute(CommandArguments(argumentsSchema, arguments))
+	/**
+	 * Executes this command without arguments
+	 * @param jsonParser Implicit json parser
+	 */
+	def apply()(implicit jsonParser: JsonParser): Unit = apply(Vector())
+	/**
+	 * Executes this command with the specified arguments
+	 * @param firstParam First command argument
+	 * @param moreParams More command arguments
+	 * @param jsonParser Implicit json parser
+	 */
+	def apply(firstParam: String, moreParams: String*)(implicit jsonParser: JsonParser): Unit =
+		apply(firstParam +: moreParams.toVector)
+	
+	/**
+	 * Processes the specified string into an argument list and then executes this command with those arguments
+	 * @param argumentsString A string representing an argument list
+	 * @param jsonParser Implicit json parser
+	 */
+	def parseAndExecute(argumentsString: String)(implicit jsonParser: JsonParser) =
+	{
+		if (argumentsString.isEmpty)
+			apply()
+		else
+			apply(findArgumentsRegex.findAllFrom(argumentsString))
+	}
+}

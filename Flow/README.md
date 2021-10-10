@@ -37,9 +37,9 @@ becomes an issue.
 - `.waitFor` -simplification of **Future** waiting available through extension (**AsyncExtensions**)
 
 ### Data caching & Local data containment
-- utopia.flow.caching package contains various tools for caching individual or multiple pieces of data either
+- `utopia.flow.caching` package contains various tools for caching individual or multiple pieces of data either
 temporarily or permanently, asynchronously or synchronously
-- utopia.flow.container package contains numerous classes and traits for storing data locally in json files, 
+- `utopia.flow.container` package contains numerous classes and traits for storing data locally in json files, 
 which is useful when you need to store small amounts of data and don't want to use a local database 
 (**Vault** and/or **Trove**)
   
@@ -54,6 +54,10 @@ extension (**TimeExtensions**)
 
 ### Lots of quality-of-life collection updates
 - Access to a number of new collection methods via extension (**CollectionExtensions**)
+
+### Command line interface template
+- `utopia.flow.util.console` package contains various tools for command line argument handling
+- Full console-based interface is also supported (see **Console** class)
 
 ## Implementation Hints
 Hints and advice to help you get started and to get most out of Utopia Flow
@@ -89,6 +93,8 @@ When you wish to instantiate typeless values, please enable implicit value conve
     - Utility methods for String
 - utopia.flow.util.**FileExtensions**
     - A number of new scala-friendly methods for java.nio.file.Path
+- utopia.flow.util.console.**ConsoleExtensions**
+  - Specifies a number of utility methods for StdIn
 - utopia.flow.util.**NullSafe**
     - When working with Java classes, you sometimes need to perform null-checks. In case you do, you can simply
       convert a possibly null value into an option by calling `.toOption`
