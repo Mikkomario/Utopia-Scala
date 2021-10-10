@@ -2,8 +2,8 @@ package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{Created, NotFound}
-import utopia.citadel.database.access.many.organization.DbOrganizations
 import utopia.citadel.database.access.single.language.DbLanguage
+import utopia.citadel.database.access.single.organization.DbOrganization
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.post.NewOrganization
@@ -34,7 +34,8 @@ object OrganizationsNode extends Resource[AuthorizedContext]
 				// Checks that language id is valid, then inserts the new organization
 				if (DbLanguage(newOrganization.languageId).isDefined)
 				{
-					val organizationId = DbOrganizations.insert(newOrganization.name, newOrganization.languageId, session.userId)
+					val organizationId = DbOrganization.insert(newOrganization.name, newOrganization.languageId,
+						session.userId)
 					Result.Success(organizationId, Created)
 				}
 				else

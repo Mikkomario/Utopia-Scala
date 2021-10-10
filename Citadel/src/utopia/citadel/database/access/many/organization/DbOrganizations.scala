@@ -1,11 +1,8 @@
 package utopia.citadel.database.access.many.organization
 
-import utopia.citadel.database.access.many.description.DbDescriptions
-import utopia.citadel.database.model.organization.{DeletionModel, MemberRoleModel, MembershipModel, OrganizationModel}
-import utopia.citadel.model.enumeration.StandardDescriptionRoleId
-import utopia.citadel.model.enumeration.StandardUserRole.Owner
+import utopia.citadel.database.access.single.organization.DbOrganization
+import utopia.citadel.database.model.organization.{DeletionModel, OrganizationModel}
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.partial.organization.MembershipData
 import utopia.vault.database.Connection
 import utopia.vault.sql.{Delete, Where}
 import utopia.vault.sql.SqlExtensions._
@@ -38,19 +35,9 @@ object DbOrganizations
 	  * @param connection DB Connection (implicit)
 	  * @return Id of the newly inserted organization
 	  */
+	@deprecated("Please call this method from DbOrganization instead", "v1.3")
 	def insert(organizationName: String, languageId: Int, founderId: Int)(implicit connection: Connection) =
-	{
-		// Inserts a new organization
-		val organizationId = factory.insert(founderId)
-		// Adds the user to the organization (as owner)
-		val membership = MembershipModel.insert(MembershipData(organizationId, founderId, Some(founderId)))
-		MemberRoleModel.insert(membership.id, Owner.id, founderId)
-		// Inserts a name for that organization
-		DbDescriptions.ofOrganizationWithId(organizationId).update(StandardDescriptionRoleId.name, languageId,
-			founderId, organizationName)
-		// Returns organization id
-		organizationId
-	}
+		DbOrganization.insert(organizationName, languageId, founderId)
 	
 	
 	// NESTED	------------------------

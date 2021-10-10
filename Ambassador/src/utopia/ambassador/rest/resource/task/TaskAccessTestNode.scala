@@ -7,8 +7,8 @@ import utopia.ambassador.database.access.many.service.DbAuthServices
 import utopia.ambassador.model.combined.scope.DescribedScope
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
-import utopia.citadel.database.access.single.DbUser
 import utopia.citadel.database.access.single.organization.DbTask
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._

@@ -4,7 +4,8 @@ import utopia.access.http.Method
 import utopia.access.http.Method.Put
 import utopia.access.http.Status.{BadRequest, InternalServerError, NotFound, Unauthorized}
 import utopia.citadel.database.access.id.single.DbUserId
-import utopia.citadel.database.access.single.{DbDevice, DbUser}
+import utopia.citadel.database.access.single.device.DbDevice
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.database.access.single.{DbEmailValidation, DbUserSession}
 import utopia.exodus.database.UserDbExtensions._
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.PasswordReset

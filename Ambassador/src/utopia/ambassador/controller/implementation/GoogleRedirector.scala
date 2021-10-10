@@ -4,7 +4,7 @@ import utopia.ambassador.controller.template.AuthRedirector
 import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.ambassador.model.stored.service.ServiceSettings
-import utopia.citadel.database.access.single.DbUser
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection

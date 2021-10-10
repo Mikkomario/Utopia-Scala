@@ -3,7 +3,7 @@ package utopia.exodus.rest.resource.description
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.InternalServerError
 import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DescriptionLinksForManyAccess}
-import utopia.citadel.database.access.single.DbUser
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._

@@ -1,4 +1,4 @@
-package utopia.citadel.database.access.single
+package utopia.citadel.database.access.single.user
 
 import utopia.citadel.database.access.id.many.DbUserIds
 import utopia.citadel.database.access.id.single.DbUserId
@@ -71,7 +71,7 @@ object DbUser extends SingleModelAccess[User]
 		/**
 		  * @return An access point to this user's known languages
 		  */
-		def languages = DbUserLanguages
+		def languages = DbSingleUserLanguages
 		
 		/**
 		  * @param connection DB Connection
@@ -98,7 +98,7 @@ object DbUser extends SingleModelAccess[User]
 		/**
 		  * @return An access point to this user's current settings
 		  */
-		def settings = DbUserSettings
+		def settings = DbSingleUserSettings
 		
 		/**
 		  * @param connection DB Connection (implicit), used for reading user email address
@@ -106,51 +106,52 @@ object DbUser extends SingleModelAccess[User]
 		  */
 		// Will need to read settings for accessing since joining logic would get rather complex otherwise
 		// TODO: May need to use a different search logic for users that don't have an email address
-		def receivedInvitations(implicit connection: Connection) = new DbUserInvitations(settings.flatMap { _.email })
+		def receivedInvitations(implicit connection: Connection) = new DbSingleUserInvitations(settings.flatMap { _.email })
 		
 		/**
 		  * @return An access point to this user's memberships
 		  */
-		def memberships = DbUserMemberships
+		def memberships = DbSingleUserMemberships
 		
 		
 		// OTHER	----------------------
 		
 		/**
 		  * @param organizationId Id of the targeted organization
-		  * @param connection DB Connection (implicit)
+		  * @param connection     DB Connection (implicit)
 		  * @return Whether this user is a member of the specified organization
 		  */
 		def isMemberInOrganizationWithId(organizationId: Int)(implicit connection: Connection) =
 			membershipIdInOrganizationWithId(organizationId).isDefined
+		
 		/**
-		 * @param organizationIds A set of organization ids
-		 * @param connection Implicit DB Connection
-		 * @return Whether this user is a member of any of those organizations
-		 */
+		  * @param organizationIds A set of organization ids
+		  * @param connection      Implicit DB Connection
+		  * @return Whether this user is a member of any of those organizations
+		  */
 		def isMemberOfAnyOrganizationOfIds(organizationIds: Iterable[Int])(implicit connection: Connection) =
 			memberships.exists(membershipModel.organizationIdColumn.in(organizationIds))
+		
 		/**
 		  * @param organizationId Id of targeted organization
 		  * @return An access point to this user's membership id in that organization
 		  */
 		def membershipIdInOrganizationWithId(organizationId: Int) =
-			DbUserMembershipId(organizationId)
+			DbSingleUserMembershipId(organizationId)
 		
 		/**
-		 * Checks whether this user is a member of one or more organizations the other user is a member of
-		 * @param otherUserId Another user's id
-		 * @param connection Implicit DB Connection
-		 * @return Whether these two users have at least one common organization
-		 */
+		  * Checks whether this user is a member of one or more organizations the other user is a member of
+		  * @param otherUserId Another user's id
+		  * @param connection  Implicit DB Connection
+		  * @return Whether these two users have at least one common organization
+		  */
 		def sharesOrganizationWithUserWithId(otherUserId: Int)(implicit connection: Connection) =
 		{
 			// Case: Testing against self
 			if (userId == otherUserId)
 				true
 			// Case: Testing against other user
-			else
-			{
+			else {
 				// First reads the organization ids of this user and then checks whether the other user
 				// is a member in any of them
 				// This is to avoid joining same table (membership) twice
@@ -161,7 +162,7 @@ object DbUser extends SingleModelAccess[User]
 		
 		/**
 		  * Links this user with the specified device
-		  * @param deviceId Id of targeted device (must be valid)
+		  * @param deviceId   Id of targeted device (must be valid)
 		  * @param connection DB Connection (implicit)
 		  * @return Whether a new link was created (false if there already existed a link between this user and the device)
 		  */
@@ -171,8 +172,7 @@ object DbUser extends SingleModelAccess[User]
 			if (UserDeviceModel.exists(UserDeviceModel.withUserId(userId).withDeviceId(deviceId).toCondition &&
 				UserDeviceModel.nonDeprecatedCondition))
 				false
-			else
-			{
+			else {
 				UserDeviceModel.insert(userId, deviceId)
 				true
 			}
@@ -181,7 +181,7 @@ object DbUser extends SingleModelAccess[User]
 		
 		// NESTED	-----------------------
 		
-		object DbUserSettings extends UniqueModelAccess[UserSettings]
+		object DbSingleUserSettings extends UniqueModelAccess[UserSettings]
 		{
 			// IMPLEMENTED	---------------
 			
@@ -199,6 +199,7 @@ object DbUser extends SingleModelAccess[User]
 			  * @return This user's current user name
 			  */
 			def name(implicit connection: Connection) = pullAttribute(model.userNameAttName).string
+			
 			/**
 			  * @param connection Implicit DB Connection
 			  * @return This user's current email address
@@ -210,25 +211,26 @@ object DbUser extends SingleModelAccess[User]
 			
 			/**
 			  * Updates this user's current settings
-			  * @param newSettings New user settings version
+			  * @param newSettings           New user settings version
 			  * @param requireUniqueUserName Whether user names should be required to be unique under all circumstances
-			  * @param connection DB Connection (implicit)
+			  * @param connection            DB Connection (implicit)
 			  * @return Newly inserted settings. Failure if the email address is reserved for another user
 			  *         (or if user name is taken in case an email address was not provided).
 			  */
 			def update(newSettings: UserSettingsData, requireUniqueUserName: Boolean = false)
 			          (implicit connection: Connection) =
 			{
-				def _replace() = {
+				def _replace() =
+				{
 					// Deprecates the old settings
 					model.nowDeprecated.updateWhere(condition)
 					// Inserts new settings
 					Success(model.insert(userId, newSettings))
 				}
+				
 				def _userNameIsValid() = DbUserIds.forName(newSettings.name).forall { _ == userId }
 				
-				newSettings.email match
-				{
+				newSettings.email match {
 					// Case: User has specified an email address => it will have to be unique
 					case Some(email) =>
 						// Makes sure the email address is still available (or belongs to this user)
@@ -244,12 +246,12 @@ object DbUser extends SingleModelAccess[User]
 							_replace()
 						else
 							Failure(new AlreadyUsedException(
-								s"User name ${newSettings.name} is already in use by another user"))
+								s"User name ${ newSettings.name } is already in use by another user"))
 				}
 			}
 		}
 		
-		object DbUserLanguages extends ManyModelAccess[UserLanguage]
+		object DbSingleUserLanguages extends ManyModelAccess[UserLanguage]
 		{
 			// IMPLEMENTED	---------------
 			
@@ -286,7 +288,7 @@ object DbUser extends SingleModelAccess[User]
 			/**
 			  * @param descriptionLanguageIds Ids of the languages the descriptions are retrieved in
 			  *                               (in order from most to least preferred)
-			  * @param connection DB Connection (implicit)
+			  * @param connection             DB Connection (implicit)
 			  * @return User language links, including described languages
 			  */
 			def withDescriptionsInLanguages(descriptionLanguageIds: Seq[Int])(implicit connection: Connection) =
@@ -310,9 +312,9 @@ object DbUser extends SingleModelAccess[User]
 			
 			/**
 			  * Inserts a new user language combination (please make sure to only insert new languages)
-			  * @param languageId Id of the known language
+			  * @param languageId    Id of the known language
 			  * @param familiarityId Id of the user's level of familiarity with this language
-			  * @param connection DB Connection (implicit)
+			  * @param connection    DB Connection (implicit)
 			  * @return Newly inserted user langauge link
 			  */
 			def insert(languageId: Int, familiarityId: Int)(implicit connection: Connection) =
@@ -321,7 +323,7 @@ object DbUser extends SingleModelAccess[User]
 			/**
 			  * Removes specified languages from the list of known languages
 			  * @param languageIds Ids of the languages to remove
-			  * @param connection DB Connection (implicit)
+			  * @param connection  DB Connection (implicit)
 			  * @return Number of removed languages
 			  */
 			def remove(languageIds: Set[Int])(implicit connection: Connection) =
@@ -333,7 +335,7 @@ object DbUser extends SingleModelAccess[User]
 			}
 		}
 		
-		case class DbUserMembershipId(organizationId: Int) extends UniqueIdAccess[Int]
+		case class DbSingleUserMembershipId(organizationId: Int) extends UniqueIdAccess[Int]
 		{
 			// ATTRIBUTES	------------------------
 			
@@ -358,12 +360,10 @@ object DbUser extends SingleModelAccess[User]
 		}
 		
 		// If email is empty, it is not searched
-		class DbUserInvitations(email: Option[String]) extends InvitationsAccess
+		class DbSingleUserInvitations(email: Option[String]) extends InvitationsAccess
 		{
-			override val globalCondition =
-			{
-				email match
-				{
+			override val globalCondition = {
+				email match {
 					case Some(email) => Some(model.withRecipientId(userId)
 						.withRecipientEmail(email).toConditionWithOperator(combineOperator = Or))
 					case None => Some(model.withRecipientId(userId).toCondition)
@@ -373,13 +373,14 @@ object DbUser extends SingleModelAccess[User]
 			override protected def defaultOrdering = None
 		}
 		
-		object DbUserMemberships extends ManyModelAccess[Membership]
+		object DbSingleUserMemberships extends ManyModelAccess[Membership]
 		{
 			// COMPUTED	--------------------------------
 			
 			private def model = membershipModel
 			
 			private def userCondition = model.withUserId(userId).toCondition
+			
 			private def condition = userCondition && factory.nonDeprecatedCondition
 			
 			/**
@@ -402,40 +403,42 @@ object DbUser extends SingleModelAccess[User]
 			// OTHER    ------------------------------
 			
 			/**
-			 * Reads described organization and role information for this user
-			 * @param languageIds Ids of the languages in which descriptions are retrieved
-			 *                    (from most preferred to least preferred)
-			 * @param connection Implicit DB Connection
-			 * @return This user's organizations and roles within those organizations
-			 */
+			  * Reads described organization and role information for this user
+			  * @param languageIds Ids of the languages in which descriptions are retrieved
+			  *                    (from most preferred to least preferred)
+			  * @param connection  Implicit DB Connection
+			  * @return This user's organizations and roles within those organizations
+			  */
 			def myOrganizations(languageIds: Seq[Int])(implicit connection: Connection): Vector[MyOrganization] =
 				myOrganizations(languageIds, None).get
+			
 			/**
-			 * Reads described organization and role information for this user
-			 * @param languageIds Ids of the languages in which descriptions are retrieved
-			 *                    (from most preferred to least preferred)
-			 * @param ifModifiedThreshold A time threshold for checking if the results have been modified
-			 *                            since that time
-			 * @param connection Implicit DB Connection
-			 * @return This user's organizations and roles within those organizations.
-			 *         None if the items were not modified since the threshold time.
-			 */
+			  * Reads described organization and role information for this user
+			  * @param languageIds         Ids of the languages in which descriptions are retrieved
+			  *                            (from most preferred to least preferred)
+			  * @param ifModifiedThreshold A time threshold for checking if the results have been modified
+			  *                            since that time
+			  * @param connection          Implicit DB Connection
+			  * @return This user's organizations and roles within those organizations.
+			  *         None if the items were not modified since the threshold time.
+			  */
 			def myOrganizations(languageIds: Seq[Int], ifModifiedThreshold: Instant)
-			                    (implicit connection: Connection): Option[Vector[MyOrganization]] =
+			                   (implicit connection: Connection): Option[Vector[MyOrganization]] =
 				myOrganizations(languageIds, Some(ifModifiedThreshold))
+			
 			/**
-			 * Reads described organization and role information for this user
-			 * @param languageIds Ids of the languages in which descriptions are retrieved
-			 *                    (from most preferred to least preferred)
-			 * @param ifModifiedThreshold An optional time threshold for checking if the results have been modified
-			 *                            since that time (default = None)
-			 * @param connection Implicit DB Connection
-			 * @return This user's organizations and roles within those organizations.
-			 *         None if 'ifModifiedSinceThreshold' -parameter was specified and the items were not modified
-			 *         since that time.
-			 */
+			  * Reads described organization and role information for this user
+			  * @param languageIds         Ids of the languages in which descriptions are retrieved
+			  *                            (from most preferred to least preferred)
+			  * @param ifModifiedThreshold An optional time threshold for checking if the results have been modified
+			  *                            since that time (default = None)
+			  * @param connection          Implicit DB Connection
+			  * @return This user's organizations and roles within those organizations.
+			  *         None if 'ifModifiedSinceThreshold' -parameter was specified and the items were not modified
+			  *         since that time.
+			  */
 			def myOrganizations(languageIds: Seq[Int], ifModifiedThreshold: Option[Instant])
-			                       (implicit connection: Connection) =
+			                   (implicit connection: Connection) =
 			{
 				// Reads all memberships & roles first
 				val memberships = MembershipWithRolesFactory
@@ -443,12 +446,12 @@ object DbUser extends SingleModelAccess[User]
 				// Reads organization descriptions
 				val organizationIds = memberships.map { _.wrapped.organizationId }.toSet
 				// Case: Organizations / memberships found => Reads descriptions (may check for modified state first)
-				if (organizationIds.nonEmpty)
-				{
+				if (organizationIds.nonEmpty) {
 					// Case: Modified or modification not checked
-					if (ifModifiedThreshold.forall { t => wereModifiedSince(t) ||
-						DbDescriptions.ofOrganizationsWithIds(organizationIds).isModifiedSince(t) })
-					{
+					if (ifModifiedThreshold.forall { t =>
+						wereModifiedSince(t) ||
+							DbDescriptions.ofOrganizationsWithIds(organizationIds).isModifiedSince(t)
+					}) {
 						// Reads organization descriptions
 						val organizationDescriptions = DbDescriptions.ofOrganizationsWithIds(organizationIds)
 							.inLanguages(languageIds)
@@ -467,8 +470,7 @@ object DbUser extends SingleModelAccess[User]
 						None
 				}
 				// Case: No organizations / memberships found => Returns an empty vector (or None if not modified)
-				else
-				{
+				else {
 					if (ifModifiedThreshold.forall(wereModifiedSince))
 						Some(Vector())
 					else
@@ -477,11 +479,11 @@ object DbUser extends SingleModelAccess[User]
 			}
 			
 			/**
-			 * Checks whether this user's memberships were modified after the specified time threshold
-			 * @param threshold A time threshold
-			 * @param connection Implicit DB Connection
-			 * @return Whether these memberships were modified after that threshold
-			 */
+			  * Checks whether this user's memberships were modified after the specified time threshold
+			  * @param threshold  A time threshold
+			  * @param connection Implicit DB Connection
+			  * @return Whether these memberships were modified after that threshold
+			  */
 			def wereModifiedSince(threshold: Instant)(implicit connection: Connection) =
 				Exists(target, userCondition &&
 					(factory.createdAfterCondition(threshold) || model.deprecatedAfterCondition(threshold)))

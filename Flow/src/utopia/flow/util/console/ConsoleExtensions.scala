@@ -83,10 +83,18 @@ object ConsoleExtensions
 		/**
 		 * @return Reads lines until a non-empty response is given
 		 */
-		def readLineUntilNotEmpty() = readLineIterator.find { _.nonEmpty }.get
+		def readLineUntilNotEmpty(prompt: String = "") =
+		{
+			prompt.notEmpty.foreach(println)
+			readLineIterator.find { _.nonEmpty }.get
+		}
 		/**
 		 * @return Reads lines while a non-empty response is given
 		 */
-		def readLineWhileNotEmpty() = readLineIterator.takeWhile { _.nonEmpty }.toVector
+		def readLineWhileNotEmpty(prompt: String = "") =
+		{
+			prompt.notEmpty.foreach(println)
+			readLineIterator.takeWhile { _.nonEmpty }.toVector
+		}
 	}
 }

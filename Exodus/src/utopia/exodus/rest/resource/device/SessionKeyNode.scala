@@ -2,7 +2,8 @@ package utopia.exodus.rest.resource.device
 
 import utopia.access.http.Method.{Delete, Get}
 import utopia.access.http.Status.NotFound
-import utopia.citadel.database.access.single.{DbDevice, DbUser}
+import utopia.citadel.database.access.single.device.DbDevice
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.database.access.single.DbUserSession
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.uuidGenerator

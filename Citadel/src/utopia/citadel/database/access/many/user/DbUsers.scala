@@ -1,4 +1,4 @@
-package utopia.citadel.database.access.many
+package utopia.citadel.database.access.many.user
 
 import utopia.citadel.database.factory.user.{UserFactory, UserSettingsFactory}
 import utopia.citadel.database.model.user.UserSettingsModel
@@ -41,15 +41,16 @@ object DbUsers extends ManyModelAccess[User]
 	
 	/**
 	  * Checks whether a user name is currently in use
-	  * @param userName Tested user name
+	  * @param userName   Tested user name
 	  * @param connection DB Connection (implicit)
 	  * @return Whether specified user name is currently in use
 	  */
 	def existsUserWithName(userName: String)(implicit connection: Connection) =
 		settingsFactory.exists(settingsModel.withName(userName).toCondition && settingsFactory.nonDeprecatedCondition)
+	
 	/**
 	  * Checks whether a user email is currently in use
-	  * @param email Tested user email
+	  * @param email      Tested user email
 	  * @param connection DB Connection (implicit)
 	  * @return Whether specified email address is currently in use
 	  */

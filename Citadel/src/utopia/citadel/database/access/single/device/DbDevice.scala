@@ -1,9 +1,7 @@
-package utopia.citadel.database.access.single
+package utopia.citadel.database.access.single.device
 
 import utopia.citadel.database.access.many.description.DbDescriptions
 import utopia.citadel.database.access.single.description.DbDescription
-
-import java.time.Instant
 import utopia.citadel.database.model.device.ClientDeviceModel
 import utopia.citadel.database.model.user.UserDeviceModel
 import utopia.citadel.model.enumeration.StandardDescriptionRoleId
@@ -11,6 +9,8 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
 import utopia.vault.sql.{Select, Where}
+
+import java.time.Instant
 
 /**
   * Used for accessing and modifying individual devices
@@ -31,6 +31,23 @@ object DbDevice
 	  * @return An access point to that device's data
 	  */
 	def apply(id: Int) = new SingleDevice(id)
+	
+	/**
+	 * Inserts data for a new device
+	 * @param deviceName Name of the device
+	 * @param languageId Id of the language the name is written in
+	 * @param authorId   Id of the user who added this device
+	 * @param connection DB Connection (implicit)
+	 * @return Newly inserted device description, containing new device id
+	 */
+	def insert(deviceName: String, languageId: Int, authorId: Int)(implicit connection: Connection) =
+	{
+		// Inserts a new device first
+		val newDeviceId = factory.insert(authorId)
+		// Then inserts a description for the device
+		DbDescriptions.ofDeviceWithId(newDeviceId)
+			.update(StandardDescriptionRoleId.name, languageId, authorId, deviceName)
+	}
 	
 	
 	// NESTED	---------------------------------
@@ -72,7 +89,7 @@ object DbDevice
 		
 		/**
 		  * Checks whether this device's data has been modified since the specified time threshold
-		  * @param threshold A time threshold (inclusive)
+		  * @param threshold  A time threshold (inclusive)
 		  * @param connection DB Connection (implicit)
 		  * @return Whether this devices information has been modified since that time
 		  */
@@ -81,8 +98,7 @@ object DbDevice
 			// Checks for modified device-user links first
 			val newLinkCondition = userLinkModel.withCreationTime(threshold).toConditionWithOperator(LargerOrEqual)
 			val removedLinkCondition = userLinkModel.withDeprecatedAfter(threshold).toConditionWithOperator(LargerOrEqual)
-			if (!userLinkModel.exists(anyUserLinkConnectionCondition && (newLinkCondition || removedLinkCondition)))
-			{
+			if (!userLinkModel.exists(anyUserLinkConnectionCondition && (newLinkCondition || removedLinkCondition))) {
 				// If not, checks for new descriptions
 				DbDescriptions.ofDeviceWithId(deviceId).isModifiedSince(threshold)
 			}
@@ -91,7 +107,7 @@ object DbDevice
 		}
 		
 		/**
-		  * @param userId Id of tested user
+		  * @param userId     Id of tested user
 		  * @param connection DB Connection (implicit)
 		  * @return Whether there exists an active link between this device and the specified user
 		  */

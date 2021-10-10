@@ -1,5 +1,8 @@
 # Utopia Exodus - List of Changes
 
+## v2.1.1 (in development)
+Supports changes in Citadel
+
 ## v2.1 - 3.10.2021
 This update reflects changes in the **Citadel** module, where email address was made optional. This feature / setting 
 is specified with `ExodusContext.setup(...)`.

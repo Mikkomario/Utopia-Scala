@@ -5,8 +5,8 @@ import utopia.access.http.Status.{BadRequest, Forbidden, InternalServerError, Un
 import utopia.access.http.error.ContentTypeException
 import utopia.citadel.database.access.id.single.DbUserId
 import utopia.citadel.database.access.many.language.DbLanguages
-import utopia.citadel.database.access.single.DbUser
 import utopia.citadel.database.access.single.organization.DbMembership
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.citadel.util.CitadelContext.connectionPool
 import utopia.citadel.util.CitadelContext._
 import utopia.exodus.database.UserDbExtensions._

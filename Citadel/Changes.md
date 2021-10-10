@@ -1,5 +1,17 @@
 # Utopia Disciple - List of changes
 
+## v1.3 (in development)
+### Breaking Changes
+- Moved **DbUser**, **DbUsers**, **DbDevice** and **DbDevices** to new sub-packages (user & device)
+### Deprecations
+- Deprecated `DbOrganizations.insert(...)` and `DbDevices.insert(...)` and copied those methods to 
+  **DbOrganization** and **DbDevice**
+### New Features
+- Added **DbManyUserSettings**
+### New Methods
+- **DbLanguageId**
+  - Added `.getOrInsert()` under `.forCode(String)`
+
 ## v1.2 - 3.10.2021
 This update reflects changes in **Flow** and **Vault**. Also, module logic was altered concerning use of 
 email address vs. username.

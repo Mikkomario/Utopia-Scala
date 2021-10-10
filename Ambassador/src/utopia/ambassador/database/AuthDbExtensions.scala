@@ -3,7 +3,7 @@ package utopia.ambassador.database
 import utopia.ambassador.database.access.many.scope.DbScopes
 import utopia.ambassador.database.access.many.token.DbAuthTokens
 import utopia.ambassador.rest.util.AuthUtils
-import utopia.citadel.database.access.single.DbUser.DbSingleUser
+import utopia.citadel.database.access.single.user.DbUser.DbSingleUser
 import utopia.citadel.database.access.single.organization.DbTask
 import utopia.citadel.database.access.single.organization.DbTask.DbSingleTask
 import utopia.vault.database.Connection

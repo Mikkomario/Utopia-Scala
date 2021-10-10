@@ -2,8 +2,9 @@ package utopia.exodus.rest.resource.user
 
 import utopia.access.http.Method.Post
 import utopia.access.http.Status._
-import utopia.citadel.database.access.many.{DbDevices, DbUsers}
-import utopia.citadel.database.access.single.DbDevice
+import utopia.citadel.database.access.many.device.DbDevices
+import utopia.citadel.database.access.many.user.DbUsers
+import utopia.citadel.database.access.single.device.DbDevice
 import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.citadel.database.model.user.{UserDeviceModel, UserLanguageModel, UserModel}
 import utopia.exodus.database.access.single.{DbDeviceKey, DbUserSession}
@@ -144,7 +145,7 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 					// Links user with device (if device has been specified) (uses existing or a new device)
 					val deviceId = newUser.device.map {
 						case Right(deviceId) => deviceId
-						case Left(newDevice) => DbDevices.insert(newDevice.name, newDevice.languageId, user.id).targetId
+						case Left(newDevice) => DbDevice.insert(newDevice.name, newDevice.languageId, user.id).targetId
 					}
 					deviceId.foreach { UserDeviceModel.insert(user.id, _) }
 					// Returns inserted user

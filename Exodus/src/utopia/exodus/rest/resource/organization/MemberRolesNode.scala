@@ -3,8 +3,8 @@ package utopia.exodus.rest.resource.organization
 import utopia.access.http.Method.{Delete, Post, Put}
 import utopia.access.http.Status.{BadRequest, Forbidden, NotFound}
 import utopia.citadel.database.access.id.many.DbUserRoleIds
-import utopia.citadel.database.access.single.DbUser
 import utopia.citadel.database.access.single.organization.DbMembership
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.model.enumeration.StandardTask.ChangeRoles
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._

@@ -26,7 +26,7 @@ object TablesWriter
 	  */
 	def apply(classes: Iterable[Class])(implicit codec: Codec, setup: ProjectSetup) =
 	{
-		val objectName = setup.projectPackage.parts.last.capitalize + "Tables"
+		val objectName = setup.projectPackage.parts.lastOption.map { _.capitalize }.getOrElse("") + "Tables"
 		// If one of the classes uses descriptions, considers Citadel to be used
 		// and bases the apply method on that knowledge
 		// Otherwise leaves the implementation to the user

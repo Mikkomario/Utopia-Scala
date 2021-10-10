@@ -10,6 +10,9 @@ import utopia.vault.sql.{Condition, Update, Where}
   * method. These accessors also support auto-access to their values.
   * @author Mikko Hilpinen
   * @since 6.4.2021, v1.7
+  * @tparam M Type of model returned
+  * @tparam A The format in which model data is returned (E.g. a list of models)
+  * @tparam V Format in which column values are returned (E.g. A single value or a vector of values)
   */
 trait DistinctModelAccess[+M, +A, +V] extends DistinctReadModelAccess[M, A, V]
 {
