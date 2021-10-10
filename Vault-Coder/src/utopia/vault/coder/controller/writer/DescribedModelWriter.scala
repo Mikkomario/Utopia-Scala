@@ -2,9 +2,8 @@ package utopia.vault.coder.controller.writer
 
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.Visibility.Protected
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.{Parameter, Parameters, Reference, ScalaType}
-import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration}
+import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration}
 
 import scala.io.Codec
 
@@ -29,15 +28,17 @@ object DescribedModelWriter
 		
 		File(setup.modelPackage/"combined"/classToWrite.packageName,
 			// Companion object is used for parsing from model data
+			// (not present in this version,
+			// because implementation requires data and stored models to have fromModel parsing)
+			/*
 			ObjectDeclaration(className,
 				Vector(Reference.describedFromModelFactory(ScalaType.basic(className), modelRef)),
 				properties = Vector(
-					// TODO: This requires the model companion object to extend FromModelFactory,
 					//  which it doesn't do at the moment
 					ComputedProperty("undescribedFactory", Set(modelRef), isOverridden = true)(modelRef.target)
 				),
 				description = s"Used for parsing described copies of ${classToWrite.name.plural} from model data"
-			),
+			),*/
 			// Class combines the model with its descriptions
 			ClassDeclaration(className,
 				Parameters(Parameter("wrapped", modelRef),

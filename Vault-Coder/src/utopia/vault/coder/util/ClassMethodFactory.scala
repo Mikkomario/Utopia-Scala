@@ -36,13 +36,38 @@ object ClassMethodFactory
 	                  (propNameInModel: Property => String)
 	                  (wrapAssignments: CodePiece => CodePiece) =
 	{
+		// Case: Class contains no properties
+		if (targetClass.properties.isEmpty)
+		{
+			val code = wrapAssignments(CodePiece.empty)
+			MethodDeclaration(methodName, code.references, isOverridden = true)(param)(code.text)
+		}
 		// Case: Enumerations are used => has to process enumeration values separately in custom apply method
-		if (targetClass.refersToEnumerations)
+		else
 			new MethodDeclaration(Public, methodName, param,
 				enumAwareApplyCode(targetClass, validatedModelCode)(propNameInModel)(wrapAssignments), None,
 				"", "", isOverridden = true)
+	}
+	
+	/**
+	  * Creates a new method that parses instances from a validated model
+	  * @param targetClass Class being parsed
+	  * @param methodName Name of the method (default = fromValidatedModel)
+	  * @param param Parameter accepted by the method (default = model called "valid")
+	  * @param propNameInModel A function for determining the name of a property in the parameter model.
+	  *                        Double quotes are added after the function call.
+	  * @param wrapAssignments A function that accepts assignments that provide enough data for a data instance
+	  *                        creation (e.g. "param1Value, param2Value, param3Value") and produces the code
+	  *                        resulting in the desired output type (like stored model, for example)
+	  * @return A method declaration
+	  */
+	def classFromValidatedModel(targetClass: Class, methodName: String = "fromValidatedModel",
+	                            param: Parameter = Parameter("valid", Reference.model(Reference.constant)))
+	                           (propNameInModel: Property => String)
+	                           (wrapAssignments: CodePiece => CodePiece) =
+	{
 		// Case: Class contains no properties
-		else if (targetClass.properties.isEmpty)
+		if (targetClass.properties.isEmpty)
 		{
 			val code = wrapAssignments(CodePiece.empty)
 			MethodDeclaration(methodName, code.references, isOverridden = true)(param)(code.text)
@@ -50,10 +75,10 @@ object ClassMethodFactory
 		// Case: No enumerations are used => implements a simpler fromValidatedModel
 		else
 		{
-			// TODO: ValidatedModel case doesn't need validated access... handle these two separately?
+			val modelName = param.name
 			val dataCreation = targetClass.properties
-					.map { prop => prop.dataType.fromValueCode(s"model(${propNameInModel(prop).quoted})") }
-					.reduceLeft { _.append(_, ", ") }
+				.map { prop => prop.dataType.fromValueCode(s"$modelName(${propNameInModel(prop).quoted})") }
+				.reduceLeft { _.append(_, ", ") }
 			val code = wrapAssignments(dataCreation)
 			MethodDeclaration(methodName, code.references, isOverridden = true)(param)(code.text)
 		}

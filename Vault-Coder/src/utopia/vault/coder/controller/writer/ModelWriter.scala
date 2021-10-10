@@ -1,6 +1,5 @@
 package utopia.vault.coder.controller.writer
 
-import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.code.CodePiece
@@ -29,20 +28,15 @@ object ModelWriter
 	{
 		val dataClassName = classToWrite.name.singular + "Data"
 		val dataClassPackage = setup.modelPackage/s"partial.${classToWrite.packageName}"
-		val propertyModelWrites = classToWrite.properties.map { prop =>
-			prop.toValueCode.withPrefix(NamingUtils.camelToUnderscore(prop.name.singular).quoted + " -> ")
-		}
-		// Properties are both written to and read from models
-		// TODO: Take enumerations into account...
-		val (propWrites, propReads) = classToWrite.properties.splitMap { prop =>
+		val propWrites = classToWrite.properties.map { prop =>
 			val propNameInModel = NamingUtils.camelToUnderscore(prop.name.singular).quoted
-			prop.toValueCode.withPrefix(propNameInModel + " -> ") ->
-				prop.dataType.fromValueCode(s"model($propNameInModel)")
+			prop.toValueCode.withPrefix(propNameInModel + " -> ")
 		}
-		val propWriteCode = if (propertyModelWrites.isEmpty) "Model.empty" else
-			s"Model(Vector(${ propertyModelWrites.mkString(", ") }))"
+		val propWriteCode = if (propWrites.isEmpty) CodePiece("Model.empty", Set(Reference.model)) else
+			propWrites.reduceLeft { _.append(_, ", ") }.withinParenthesis.withPrefix("Vector")
+				.withinParenthesis.withPrefix("Model").referringTo(Reference.model)
 		
-		// Writes the data model and the companion object, which is used for parsing model data
+		// Writes the data model
 		File(dataClassPackage,
 			ClassDeclaration(dataClassName,
 				// Accepts a copy of each property. Uses default values where possible.
@@ -59,8 +53,7 @@ object ModelWriter
 				Vector(Reference.modelConvertible),
 				// Implements the toModel -property
 				properties = deprecationPropertiesFor(classToWrite) :+
-					ComputedProperty("toModel", propertyModelWrites.flatMap { _.references }.toSet + Reference.model,
-						isOverridden = true)(propWriteCode),
+					ComputedProperty("toModel", propWriteCode.references, isOverridden = true)(propWriteCode.text),
 				description = classToWrite.description, author = classToWrite.author,
 				isCaseClass = true)
 		).write().flatMap { dataClassRef =>

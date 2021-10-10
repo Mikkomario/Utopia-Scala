@@ -6,6 +6,7 @@
 - Added support for **Days** and **FiniteDuration** data types (both concrete and optional variants)
 ### Bugfixes
 - Fixed a bug in some factory implementations where read values were not unwrapped correctly
+  - Please note that as a side effect, **ValueUnwraps** are no longer used when parsing instance data from models
 ### Other Changes
 - Instant default value is now `Now` instead of `Instant.now()`
 

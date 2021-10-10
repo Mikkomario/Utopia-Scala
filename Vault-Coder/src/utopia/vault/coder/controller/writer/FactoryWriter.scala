@@ -1,15 +1,11 @@
 package utopia.vault.coder.controller.writer
 
-import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.controller.CodeBuilder
-import utopia.vault.coder.model.data.{Class, ProjectSetup, Property}
-import utopia.vault.coder.model.enumeration.PropertyType.EnumValue
-import utopia.vault.coder.model.scala.Visibility.Public
+import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-import utopia.vault.coder.model.scala.{Extension, Parameter, Reference}
-import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
+import utopia.vault.coder.model.scala.{Extension, Reference}
+import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration, PropertyDeclaration}
 import utopia.vault.coder.util.ClassMethodFactory
 
 import scala.collection.immutable.VectorBuilder
@@ -93,93 +89,21 @@ object FactoryWriter
 	
 	private def methodsFor(classToWrite: Class, modelRef: Reference, dataRef: Reference) =
 	{
-		/*
-		val asd =
+		def _modelFromAssignments(assignments: CodePiece) =
+			modelRef.targetCode +
+				classToWrite.idType.fromValueCode("valid(\"id\")")
+					.append(dataRef.targetCode + assignments.withinParenthesis, ", ")
+					.withinParenthesis
+		
+		val fromModelMethod =
 		{
 			if (classToWrite.refersToEnumerations)
 				ClassMethodFactory.classFromModel(classToWrite, "table.validate(model)") {
-					_.name.singular } { assignments =>
-					modelRef.targetCode +
-						classToWrite.idType.fromValueCode("model(\"id\")")
-							.append(dataRef.targetCode + assignments.withinParenthesis, ", ")
-							.withinParenthesis
-				}
+					_.name.singular }(_modelFromAssignments)
 			else
-				??? // ClassMethodFactory.classFromModel(classToWrite, )
-		}*/
-		
-		val applyMethod =
-		{
-			// Case: Enumerations are used => has to process enumeration values separately in custom apply method
-			if (classToWrite.refersToEnumerations)
-				new MethodDeclaration(Public, "apply",
-					Parameter("model", Reference.templateModel(Reference.property)),
-					enumAwareApplyCode(classToWrite, modelRef, dataRef), None, "", "",
-					isOverridden = true)
-			// Case: No enumerations are used => implements a simpler fromValidatedModel
-			else
-			{
-				val dataAssignments = classToWrite.properties
-					.map { prop => prop.dataType.fromValueCode(s"model(${prop.name.singular.quoted})") }
-				MethodDeclaration("fromValidatedModel",
-					Set(modelRef, dataRef, Reference.valueUnwraps) ++ dataAssignments.flatMap { _.references },
-					isOverridden = true)(Parameter("model", Reference.model(Reference.constant)))(
-					s"${modelRef.target}(model(${"\"id\""}), ${dataRef.target}(${dataAssignments.mkString(", ")}))")
-			}
+				ClassMethodFactory.classFromValidatedModel(classToWrite) { _.name.singular }(_modelFromAssignments)
 		}
-		Set(applyMethod)
+		
+		Set(fromModelMethod)
 	}
-	
-	private def enumAwareApplyCode(classToWrite: Class, modelRef: Reference, dataRef: Reference) =
-	{
-		// Divides the class properties into enumeration-based values and standard values
-		val dividedProperties = classToWrite.properties.map { prop => prop.dataType match
-		{
-			case enumVal: EnumValue => Left(prop -> enumVal)
-			case _ => Right(prop)
-		} }
-		val enumProperties = dividedProperties.flatMap { _.leftOption }
-		// Non-nullable enum-based values need to be parsed separately, because they may prevent model parsing
-		val requiredEnumProperties = enumProperties.filter { !_._2.isNullable }
-		
-		val builder = new CodeBuilder()
-		
-		// Needs to validate the specified model
-		val validateMapMethod = if (requiredEnumProperties.isEmpty) "map" else "flatMap"
-		builder += s"table.validate(model).$validateMapMethod { valid => "
-		builder.indent()
-		
-		declareEnumerations(builder, requiredEnumProperties.dropRight(1), "flatMap")
-		declareEnumerations(builder, requiredEnumProperties.lastOption, "map")
-		val innerIndentCount = requiredEnumProperties.size + 1
-		
-		// Stores nullable enum values to increase readability
-		enumProperties.filter { _._2.isNullable }.foreach { case (prop, enumVal) =>
-			builder += s"val ${prop.name} = valid(${prop.name.singular.quoted}).int.flatMap(${
-				enumVal.enumeration.name}.findForId)"
-		}
-		
-		// Writes the instance creation now that the enum-based properties have been declared
-		builder.appendPartial(s"${modelRef.target}(valid(${"id".quoted}), ${dataRef.target}(")
-		builder.appendPartial(dividedProperties.map {
-			case Left((prop, _)) => CodePiece(prop.name.singular)
-			case Right(prop) => prop.dataType.fromValueCode(s"valid(${prop.name.singular.quoted})")
-		}.reduceLeft { _.append(_, ", ") } + "))", allowLineSplit = true)
-		
-		// Closes open blocks
-		(0 until innerIndentCount).foreach { _ => builder.closeBlock() }
-		
-		// References the enumerations used
-		builder.result().referringTo(enumProperties.map { _._2.enumeration.reference }.toSet ++
-			Set(modelRef, dataRef, Reference.valueUnwraps))
-	}
-	
-	// NB: Indents for each declared enumeration
-	private def declareEnumerations(builder: CodeBuilder, enumProps: Iterable[(Property, EnumValue)],
-	                                mapMethod: String) =
-		enumProps.foreach { case (prop, enumVal) =>
-			builder += s"${enumVal.enumeration.name}.forId(valid(${
-				prop.name.singular.quoted}).getInt).$mapMethod { ${prop.name} => "
-			builder.indent()
-		}
 }

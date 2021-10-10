@@ -32,14 +32,15 @@ object DbDescriptionAccessWriter
 		val linkClassName = descriptionLinkClass.name.singular
 		val linkProperty = descriptionLinkClass.properties.head
 		val linkPropertyName = linkProperty.name.singular
+		val factoryPropertyName = baseClassName.singular.uncapitalize
 		
 		val baseAccessProperties = Vector(
 			ComputedProperty("model", Set(linkModelsRef),
 				description = s"Model factory used when interacting with $baseClassName description links")(
-				s"${linkModelsRef.target}.${linkClassName.uncapitalize}"),
+				s"${linkModelsRef.target}.$factoryPropertyName"),
 			ComputedProperty("factory", Set(linkFactoriesRef),
 				description = s"Factory used when reading $baseClassName description links")(
-				s"${linkFactoriesRef.target}.${linkClassName.uncapitalize}")
+				s"${linkFactoriesRef.target}.$factoryPropertyName")
 		)
 		val linkInputDataType = linkProperty.dataType.notNull.toScala
 		// Next writes the individual description access point
