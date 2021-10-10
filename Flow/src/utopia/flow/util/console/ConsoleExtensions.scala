@@ -96,5 +96,13 @@ object ConsoleExtensions
 			prompt.notEmpty.foreach(println)
 			readLineIterator.takeWhile { _.nonEmpty }.toVector
 		}
+		/**
+		 * Reads lines until a non-empty value is given
+		 */
+		def readUntilNotEmpty(prompt: String = "") =
+		{
+			prompt.notEmpty.foreach(println)
+			readIterator.find { _.isDefined }.get
+		}
 	}
 }
