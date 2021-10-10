@@ -10,6 +10,8 @@
 ### New Features
 - Added multiple console interaction features (**Console** and **Command** classes)
 ### New Methods
+- **Regex**
+  - Added `.ignoringQuotations`
 - **VolatileFlag**
   - Added `.getAndReset()`
 ### Other Changes

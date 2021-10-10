@@ -1,14 +1,11 @@
 package utopia.flow.util.console
 
 import utopia.flow.parse.{JsonParser, Regex}
-import utopia.flow.util.console.Command.findArgumentsRegex
+import utopia.flow.util.console.Command.whiteSpacesOutsideQuotationsRegex
 
 object Command
 {
-	// Escapes quotes, finds words
-	// "(([\"']).*?\\2|(?:[^\\\\ ]+\\\\\\s+)+[^\\\\ ]+|\\S+)"
-	// "(?i)((?:(['|\"]).+\\2)|(?:\\w+\\\\\\s\\w+)+|\\b(?=\\w)\\w+\\b(?!\\w))"
-	private lazy val findArgumentsRegex = Regex("(([\"']).*?\\2|(?:[^\\\\ ]+\\\\\\s+)+[^\\\\ ]+|\\S+)")
+	private val whiteSpacesOutsideQuotationsRegex = Regex.whiteSpace.ignoringQuotations
 	
 	/**
 	 * Creates a new command that doesn't take any arguments
@@ -108,6 +105,6 @@ class Command(val name: String, val alias: String = "",
 		if (argumentsString.isEmpty)
 			apply()
 		else
-			apply(findArgumentsRegex.findAllFrom(argumentsString))
+			apply(whiteSpacesOutsideQuotationsRegex.split(argumentsString).toVector)
 	}
 }
