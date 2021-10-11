@@ -159,8 +159,6 @@ object DbDescriptions
 		
 		override def globalCondition = Some(factory.nonDeprecatedCondition)
 		
-		override protected def defaultOrdering = None
-		
 		override protected def subGroup(remainingTargetIds: Set[Int]) =
 			DescriptionsOfMany(remainingTargetIds, factory, linkModelFactory)
 		
@@ -207,8 +205,6 @@ object DbDescriptions
 			}
 		}
 		
-		override protected def defaultOrdering = None
-		
 		override protected def subGroup(remainingTargetIds: Set[Int]) =
 		{
 			if (remainingTargetIds == targetIds)
@@ -253,8 +249,6 @@ object DbDescriptions
 		
 		override val globalCondition = Some(linkModelFactory.withTargetId(targetId).toCondition &&
 			factory.nonDeprecatedCondition)
-		
-		override protected def defaultOrdering = None
 		
 		
 		// OTHER	-------------------------
