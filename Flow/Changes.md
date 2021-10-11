@@ -15,6 +15,7 @@
 - **VolatileFlag**
   - Added `.getAndReset()`
 ### Other Changes
+- Value casting from String to LocalDate now accepts format dd.MM.yyyy also
 - **AutoCloseWrapper** now extends **Extender**, allowing implicit access to its contents
 
 ## v1.12.1 - 04.10.2021

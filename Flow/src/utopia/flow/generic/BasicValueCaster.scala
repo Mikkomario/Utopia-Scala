@@ -6,8 +6,9 @@ import utopia.flow.generic.ConversionReliability.DATA_LOSS
 import utopia.flow.generic.ConversionReliability.DANGEROUS
 import utopia.flow.generic.ConversionReliability.MEANING_LOSS
 import utopia.flow.datastructure.immutable.Value
-import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, ZoneId, ZonedDateTime}
 
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, ZoneId, ZonedDateTime}
 import scala.util.Try
 
 /**
@@ -18,6 +19,8 @@ import scala.util.Try
 object BasicValueCaster extends ValueCaster
 {
     // ATTRIBUTES    --------------
+    
+    private val alternativeDateFormat = DateTimeFormatter.ofPattern("dd.MM.uuuu")
     
     override lazy val conversions = HashSet(
             Conversion(AnyType, StringType, DATA_LOSS), 
@@ -186,8 +189,10 @@ object BasicValueCaster extends ValueCaster
     {
         value.dataType match 
         {
-            case LocalDateTimeType => Some(value.localDateTimeOr().toLocalDate)
-            case StringType => Try(LocalDate.parse(value.toString())).toOption
+            case LocalDateTimeType => Some(value.getLocalDateTime.toLocalDate)
+            case StringType =>
+                val s = value.getString
+                Try { LocalDate.parse(s) }.orElse { Try { LocalDate.parse(s, alternativeDateFormat) } }.toOption
             case _ => None
         }
     }
