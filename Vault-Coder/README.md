@@ -7,14 +7,27 @@ First, you need to prepare a .json file describing the model structure you want 
 See the required document structure below.  
 
 Once you have created a specification document, run the application using the following command line command: 
-`java -jar Vault-Coder.jar <common path> <input file path> <output directory path>`
-- The `<common path>` argument specifies the path (beginning) that is common for both the input and the output
-- The `<input file path>` argument should point towards your specification .json file or to a directory that 
-  holds such files. This should be a relative path after the `<common path>`. If empty, `<common path>` is used. 
-  If both are empty, `./input` is used.
-- The `<output directory path>` argument specifies a path to where the generated code will be stored. 
-  - Defaults to `<common path>/output` or `./output` depending on whether the <common path> has been specified.
+`java -jar Vault-Coder.jar <root> <input> <output> <filter> <group>`
+- `<root>` argument specifies the path (beginning) that is common for both the input and the output
+  - This argument is optional
+- `<input>` (`in`) points towards your specification .json file or to a directory that holds such files
+  - This argument is optional, but if `<root>` is not specified, this value is requested during application use
+  - If `<root>` is specified, this path should be relative to it
+  - If `<root>` is specified and this is not specified, uses `<root>` as the input path
+- `<output>` (`out`) argument specifies the path to where the generated code will be stored 
+  - If `<root>` is specified, this path should be relative to it
+  - If this argument is not specified, it is requested during application use
   - If the target directory doesn't exist, it will be created
+- `<filter>` is a filter that is used to reduce the number of classes or enumerations that are written
+  - This argument is optional
+  - If `<group>` is specified and this value is not, the application allows the user to type a filter during 
+    application use
+  - This argument is case-insensitive and should represent a portion of the targeted item's name
+- `<group>` Specifies, which sub-category of items will be written, or which target is filtered using the `<filter>`
+  - This argument is optional
+  - Allowed values are `class`, `enum`, `package` and `all`
+  - If `<filter>` is specified and this value is not, the application asks for this value from the user
+  - You can use `-A` flag to specify group `all`
 
 The program will inform you if there were any problems during input file processing or during output write operations.
 
@@ -97,9 +110,14 @@ Each property object should contain following properties:
 
 ## Output Format
 This application will produce the following documents 
-(where **X** is replaced by class name and **P** by class-related package name):
+(where **X** is replaced by class name, **P** by class-related package name 
+and **S** is replaced with last project package name):
 - **database_structure.sql** -document that contains create table sql statements
 - model
+  - combined
+    - **P**
+      - **DescribedX.scala** - A version of the class which includes descriptions 
+      (only for classes with description support)
   - enumeration
     - **E.scala** where **E** goes through each introduced enumeration
   - partial
@@ -109,11 +127,13 @@ This application will produce the following documents
     - **P**
       - **X.scala** - A stored variant of the class model
 - database
-  - **Tables.scala** - An object containing a reference to all tables listed in the **database_structure.sql** document
+  - **STables.scala** - An object containing a reference to all tables listed in the **database_structure.sql** document
   - factory
+    - **SDescriptionLinkFactory.scala** - An object that contains description link factories for described classes
     - **P**
       - **XFactory.scala** - A factory object used for reading models from database
   - model
+    - **SDescriptionLinkModel.scala** - An object that contains description link model factories for described classes
     - **P**
       - **XModel.scala** - Database interaction model class + the associated companion object used for forming queries etc.
   - access
