@@ -117,7 +117,7 @@ object VaultCoderApp extends App
 	{
 		case Some(filter) => filter.notEmpty
 		case None =>
-			if (specifiedTargetType.exists { t => t != _all && t != _enums })
+			if (specifiedTargetType.exists { _ != _all })
 				StdIn.readNonEmptyLine(s"Please specify the ${
 					arguments("type").getString} filter to use (leave empty if you want to target all of them)")
 			else
