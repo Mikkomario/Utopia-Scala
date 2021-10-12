@@ -2,10 +2,12 @@ package utopia.citadel.database.access.single.description
 
 import utopia.citadel.database.factory.description.DescriptionLinkFactory
 import utopia.citadel.database.model.description.{DescriptionLinkModelFactory, DescriptionModel}
+import utopia.citadel.model.enumeration.StandardDescriptionRoleId
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 import utopia.vault.nosql.access.single.model.SingleModelAccess
+import utopia.vault.sql.{Select, Where}
 
 /**
   * A common trait for individual description link access points
@@ -40,16 +42,38 @@ trait DescriptionLinkAccess extends SingleModelAccess[DescriptionLink]
 	// OTHER	------------------------
 	
 	/**
+	 * Reads a single description text
+	 * @param languageId Id of the language the description should be in
+	 * @param roleId Id of the role the description has
+	 * @param connection Implicit DB Connection
+	 * @return That description (as text) of this item
+	 */
+	def apply(languageId: Int, roleId: Int)(implicit connection: Connection) =
+		connection(Select(target, descriptionModel.textColumn) +
+			Where(mergeCondition(descriptionModel.withLanguageId(languageId).withRoleId(roleId))))
+			.firstValue.string
+	
+	/**
 	  * @param languageId Id of targeted language
 	  * @return An access point to a subset of these descriptions. Only contains desriptions written in that language.
 	  */
-	def inLanguageWithId(languageId: Int) = DescriptionInLanguage(languageId)
+	def inLanguageWithId(languageId: Int) = new DescriptionInLanguage(languageId)
 	
 	
 	// NESTED	-------------------------
 	
-	case class DescriptionInLanguage(languageId: Int) extends SingleModelAccess[DescriptionLink]
+	class DescriptionInLanguage(val languageId: Int) extends SingleModelAccess[DescriptionLink]
 	{
+		// COMPUTED ---------------------
+		
+		/**
+		 * @param connection Implicit DB Connection
+		 * @return Link to the name description of this item
+		 */
+		def name(implicit connection: Connection) =
+			forRoleWithId(StandardDescriptionRoleId.name)
+		
+		
 		// IMPLEMENTED	-----------------
 		
 		override def factory = DescriptionLinkAccess.this.factory

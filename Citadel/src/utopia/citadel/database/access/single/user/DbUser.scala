@@ -38,6 +38,7 @@ object DbUser extends SingleModelAccess[User]
 {
 	// COMPUTED -------------------------
 	
+	private def languageLinkModel = UserLanguageModel
 	private def membershipModel = MembershipModel
 	
 	
@@ -61,7 +62,7 @@ object DbUser extends SingleModelAccess[User]
 	
 	case class DbSingleUser(userId: Int) extends SingleIdModelAccess(userId, DbUser.factory)
 	{
-		// IMPLEMENTED	-----------------
+		// ATTRIBUTES	-----------------
 		
 		override val factory = DbUser.factory
 		
@@ -72,13 +73,19 @@ object DbUser extends SingleModelAccess[User]
 		  * @return An access point to this user's known languages
 		  */
 		def languages = DbSingleUserLanguages
-		
 		/**
 		  * @param connection DB Connection
 		  * @return Ids of the languages known by this user
 		  */
 		def languageIds(implicit connection: Connection) = connection(Select(UserLanguageModel.table,
 			UserLanguageModel.languageIdAttName) + Where(UserLanguageModel.withUserId(userId).toCondition)).rowIntValues
+		/*
+		def primaryLanguageId(implicit connection: Connection) =
+		{
+			// TODO: For this we need a languageFamiliarity model, which is missing
+			// val familiarityModel = LanguageFamiliarityMo
+			connection(Select(languageLinkModel.table join ))
+		}*/
 		
 		/**
 		  * @param connection DB Connection
@@ -251,6 +258,7 @@ object DbUser extends SingleModelAccess[User]
 			}
 		}
 		
+		// TODO: This should be moved under DbUserLanguages (same with the other non-user access points)
 		object DbSingleUserLanguages extends ManyModelAccess[UserLanguage]
 		{
 			// IMPLEMENTED	---------------
@@ -273,7 +281,6 @@ object DbUser extends SingleModelAccess[User]
 			  * @return User languages, including language data
 			  */
 			def full(implicit connection: Connection) = FullUserLanguageFactory.getMany(condition)
-			
 			/**
 			  * @param connection DB Connection (implicit)
 			  * @return Ids of the languages known to this user, each paired with this user's familiarity level

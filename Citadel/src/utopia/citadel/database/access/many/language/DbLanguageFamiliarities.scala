@@ -12,6 +12,7 @@ import utopia.vault.sql.{SelectAll, Where}
   * @author Mikko Hilpinen
   * @since 25.7.2020, v1.0
   */
+// TODO: Add default ordering based on order index
 object DbLanguageFamiliarities extends ManyRowModelAccess[LanguageFamiliarity]
 {
 	// IMPLEMENTED	------------------------

@@ -6,11 +6,14 @@
 ### Deprecations
 - Deprecated `DbOrganizations.insert(...)` and `DbDevices.insert(...)` and copied those methods to 
   **DbOrganization** and **DbDevice**
+- Deprecated `DescriptionModel.descriptionRoleIdAttName` and the associated column property in favor of shorter 
+  `.roleIdAttName` and `.roleIdColumn` properties
 ### New Features
 - Added **DbManyUserSettings**
 ### New Methods
 - **DbLanguageId**
   - Added `.getOrInsert()` under `.forCode(String)`
+- Added a number of (utility) methods related to description database interactions
 
 ## v1.2 - 3.10.2021
 This update reflects changes in **Flow** and **Vault**. Also, module logic was altered concerning use of 

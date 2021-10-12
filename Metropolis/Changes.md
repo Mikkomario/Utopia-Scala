@@ -1,5 +1,12 @@
 # Utopia Metropolis - List of Changes
 
+## v1.2.1 (in development)
+### New Methods
+- **Described**
+  - Added `descriptionWithRoleId(roleId: Int)` and `valueOfRoleWithId(roleId: Int)` functions
+### Other Changes
+- **LanguageFamiliarity** now extends **SelfComparable**
+
 ## v1.2 - 3.10.2021
 This update, which is closely connected to **Citadel** and **Exodus** updates, makes the user's email address 
 an optional field. This is to support a wider range of use cases (e.g. when data protection requires one to omit such 

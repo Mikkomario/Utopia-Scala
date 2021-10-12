@@ -32,7 +32,8 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 	  */
 	def inLanguages(languageIds: Seq[Int])(implicit connection: Connection): Map[Int, Vector[DescriptionLink]] =
 	{
-		languageIds.headOption match {
+		languageIds.headOption match
+		{
 			case Some(languageId: Int) =>
 				// In the first iteration, reads all descriptions. After that divides into sub-groups
 				val readDescriptions = inLanguageWithId(languageId).all.groupBy { _.targetId }
@@ -63,6 +64,38 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 		
 		// Reads the rest of the descriptions recursively
 		readRemaining(languageIds, remainingRoleIds, newAccessPoint, readDescriptions)
+	}
+	
+	/**
+	 * Reads description data from specified targets
+	 * @param roleId Id of the targeted role
+	 * @param remainingTargetIds Targeted target ids (shouldn't be empty)
+	 * @param languageIds        Ids of the languages to use, from most to least preferred (mustn't be empty)
+	 * @param connection         DB Connection (implicit)
+	 * @return Read descriptions, grouped by target id
+	 */
+	protected def forRoleInLanguages(roleId: Int, remainingTargetIds: Set[Int], languageIds: Seq[Int])
+	                                (implicit connection: Connection): Map[Int, DescriptionLink] =
+	{
+		// Reads descriptions in target languages until either all targets have been read or all language
+		// options exhausted
+		val languageId = languageIds.head
+		val newAccessPoint = subGroup(remainingTargetIds)
+		// Target id -> Description link
+		val readDescriptions = newAccessPoint.inLanguageWithId(languageId).forRoleWithId(roleId)
+			.map { link => link.targetId -> link }.toMap
+		
+		// Reads the rest of the descriptions recursively, if possible and necessary
+		if (languageIds.size > 1)
+		{
+			val newRemainingTargetIds = remainingTargetIds -- readDescriptions.keySet
+			if (remainingTargetIds.isEmpty)
+				readDescriptions
+			else
+				readDescriptions ++ forRoleInLanguages(roleId, newRemainingTargetIds, languageIds.tail)
+		}
+		else
+			readDescriptions
 	}
 	
 	// Continues read through recursion, if possible. Utilizes (and includes) existing read results.

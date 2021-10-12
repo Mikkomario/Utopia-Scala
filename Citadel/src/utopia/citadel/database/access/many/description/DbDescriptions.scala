@@ -233,6 +233,24 @@ object DbDescriptions
 			else
 				inLanguages(targetIds, languageIds, roleIds)
 		}
+		
+		/**
+		 * Reads descriptions of these items targeting a single description role. If some descriptions couldn't
+		 * be found in the first language, the second language is searched as a backup, moving to third, fourth etc.
+		 * language when/if necessary.
+		 * @param roleId Id of the targeted description role
+		 * @param languageIds Ids of the languages used in the search, from most preferred to least preferred
+		 * @param connection Implicit DB Connection
+		 * @return Description links, each mapped to their target's id
+		 */
+		def forRoleInLanguages(roleId: Int, languageIds: Seq[Int])
+		                      (implicit connection: Connection): Map[Int, DescriptionLink] =
+		{
+			if (languageIds.isEmpty)
+				Map()
+			else
+				forRoleInLanguages(roleId, targetIds, languageIds)
+		}
 	}
 	
 	/**
