@@ -9,6 +9,7 @@
 - Added support for **Days** and **FiniteDuration** data types (both concrete and optional variants)
 - Added custom indexing support (see README for details)
 - The app can now write specific classes, packages or enumerations based on filtering applied on program use
+- Written Stored models now contain a property `access`, which points to their id-specific access point
 ### Bugfixes
 - Optional references didn't work previously - now fixed
 - Fixed a bug in some factory implementations where read values were not unwrapped correctly

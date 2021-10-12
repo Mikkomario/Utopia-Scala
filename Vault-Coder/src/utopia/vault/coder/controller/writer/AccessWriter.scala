@@ -17,6 +17,25 @@ import scala.io.Codec
 object AccessWriter
 {
 	/**
+	  * @param c A class
+	  * @return Name of the single id access point for that class
+	  */
+	def singleIdAccessNameFor(c: Class) = s"DbSingle${c.name}"
+	/**
+	  * @param c A class
+	  * @param setup Project setup (implicit)
+	  * @return Package that contains singular access points for that class
+	  */
+	def singleAccessPackageFor(c: Class)(implicit setup: ProjectSetup) = setup.singleAccessPackage/c.packageName
+	/**
+	  * @param c A class
+	  * @param setup Project setup (implicit)
+	  * @return Reference to the access point for unique instances of that class based on their id
+	  */
+	def singleIdReferenceFor(c: Class)(implicit setup: ProjectSetup) =
+		Reference(singleAccessPackageFor(c), singleIdAccessNameFor(c))
+	
+	/**
 	  * Writes database access point objects and traits
 	  * @param classToWrite Class based on which these access points are written
 	  * @param modelRef Reference to the stored model class
@@ -35,7 +54,7 @@ object AccessWriter
 	{
 		val connectionParam = Parameter("connection", Reference.connection)
 		// Writes a trait common for unique model access points
-		val singleAccessPackage =  setup.singleAccessPackage/classToWrite.packageName
+		val singleAccessPackage =  singleAccessPackageFor(classToWrite)
 		val uniqueAccessName = s"Unique${classToWrite.name}Access"
 		// Standard access point properties (factory, model & defaultOrdering)
 		// are the same for both single and many model access points
@@ -81,7 +100,7 @@ object AccessWriter
 			// Writes the single model by id access point
 			// This access point is used for accessing individual items based on their id
 			File(singleAccessPackage,
-				ClassDeclaration(s"DbSingle${classToWrite.name}",
+				ClassDeclaration(singleIdAccessNameFor(classToWrite),
 					Vector(Parameter("id", classToWrite.idType.toScala)),
 					Vector(uniqueAccessRef, Reference.uniqueModelAccess(modelRef)),
 					// Implements the .condition property
