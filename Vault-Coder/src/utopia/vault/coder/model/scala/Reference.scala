@@ -93,6 +93,7 @@ object Reference
 	  * Imports a database table (Vault)
 	  */
 	lazy val table = apply(vaultModels/"immutable", "Table")
+	lazy val condition = apply(vault/"sql", "Condition")
 	/**
 	  * Imports the Stored trait (Vault)
 	  */
@@ -157,6 +158,7 @@ object Reference
 	  * Imports the SingleIdModel class from Vault
 	  */
 	lazy val singleIdModelAccess = apply(singleModelAccess/"distinct", "SingleIdModelAccess")
+	lazy val subView = apply(viewAccess, "SubView")
 	/**
 	  * Imports the UnconditionalView trait (Vault)
 	  */

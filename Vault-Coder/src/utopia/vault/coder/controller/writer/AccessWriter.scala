@@ -1,10 +1,10 @@
 package utopia.vault.coder.controller.writer
 
-import utopia.vault.coder.model.scala.Visibility.Protected
+import utopia.vault.coder.model.scala.Visibility.{Private, Protected}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
-import utopia.vault.coder.model.scala.{Extension, Parameter, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{Extension, Parameter, Parameters, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, TraitDeclaration}
 
 import scala.io.Codec
@@ -139,7 +139,19 @@ object AccessWriter
 					// Writes a trait common for the many model access points
 					val manyAccessPackage =  setup.manyAccessPackage/classToWrite.packageName
 					val manyAccessTraitName = s"Many${classToWrite.name.plural}Access"
+					val subViewName = s"Many${classToWrite.name.plural}SubView"
+					val traitType = ScalaType.basic(manyAccessTraitName)
+					
 					File(manyAccessPackage,
+						ObjectDeclaration(manyAccessTraitName, nested = Set(
+							ClassDeclaration(subViewName,
+								Parameters(
+									Parameter("parent", Reference.manyRowModelAccess(modelRef), prefix = "override val"),
+									Parameter("filterCondition", Reference.condition, prefix = "override val")),
+								Vector(traitType, Reference.subView),
+								visibility = Private
+							)
+						)),
 						TraitDeclaration(manyAccessTraitName,
 							Vector(Reference.manyRowModelAccess(modelRef), Reference.indexed),
 							// Contains computed properties to access class properties
@@ -149,12 +161,16 @@ object AccessWriter
 									implicitParams = Vector(connectionParam))(
 									s"pullColumn(model.${prop.name}Column).flatMap { value => ${
 										prop.dataType.nullable.fromValueCode("value")} }")
-							} :+ ComputedProperty("ids", implicitParams = Vector(connectionParam))(
-								s"pullColumn(index).flatMap { id => ${
-									classToWrite.idType.nullable.fromValueCode("id")} }") :+
+							} ++ Vector(
+								ComputedProperty("ids", implicitParams = Vector(connectionParam))(
+									s"pullColumn(index).flatMap { id => ${
+										classToWrite.idType.nullable.fromValueCode("id")} }"),
 								ComputedProperty("defaultOrdering", Set(factoryRef), Protected, isOverridden = true)(
-									if (classToWrite.recordsIndexedCreationTime) "Some(factory.defaultOrdering)" else "None"),
-							propertySetters,
+									if (classToWrite.recordsIndexedCreationTime) "Some(factory.defaultOrdering)" else "None")
+							),
+							propertySetters + MethodDeclaration("filter", isOverridden = true)(
+								Parameter("additionalCondition", Reference.condition))(
+								s"new $subViewName(additionalCondition)"),
 							description = s"A common trait for access points which target multiple ${
 								classToWrite.name.plural} at a time", author = classToWrite.author
 						)
