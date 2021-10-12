@@ -134,7 +134,7 @@ object AccessWriter
 								s"pullColumn(index).flatMap { id => ${
 									classToWrite.idType.nullable.fromValueCode("id")} }") :+
 								ComputedProperty("defaultOrdering", Set(factoryRef), Protected, isOverridden = true)(
-									if (classToWrite.recordsCreationTime) "Some(factory.defaultOrdering)" else "None"),
+									if (classToWrite.recordsIndexedCreationTime) "Some(factory.defaultOrdering)" else "None"),
 							propertySetters,
 							description = s"A common trait for access points which target multiple ${
 								classToWrite.name.plural} at a time", author = classToWrite.author

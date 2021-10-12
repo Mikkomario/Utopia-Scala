@@ -3,6 +3,8 @@
 ## v1.13 (in development)
 ### Breaking Changes
 - Instant to Long conversion now converts to milliseconds instead of seconds. The same is true the other way around.
+- String to Vector conversion now first attempts to find either arrays `[a, b, c]` or tuples `(d, e, f)` 
+  or parts separated by `,` or `;`, and if neither of those applies, wraps the value in an array like before.
 - The third parameter in `ArgumentSchema.flag(...)` is now `hint: String` and not `defaultValue: Boolean`.
   - This is quite unlikely to require major refactoring, as the usual use case for the default value is
     to specify it as a named parameter

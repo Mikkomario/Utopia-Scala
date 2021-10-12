@@ -7,6 +7,7 @@
 ### New Features
 - Added support for described classes (**Citadel**-specific feature)
 - Added support for **Days** and **FiniteDuration** data types (both concrete and optional variants)
+- Added custom indexing support (see README for details)
 - The app can now write specific classes, packages or enumerations based on filtering applied on program use
 ### Bugfixes
 - Optional references didn't work previously - now fixed

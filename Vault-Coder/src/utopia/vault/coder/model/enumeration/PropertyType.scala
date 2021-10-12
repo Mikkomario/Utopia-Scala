@@ -42,7 +42,7 @@ sealed trait PropertyType
 	/**
 	  * @return Whether a database index should be created based on this property type
 	  */
-	def createsIndex: Boolean
+	def createsIndexByDefault: Boolean
 	
 	/**
 	  * @return A nullable (optional) copy of this property type
@@ -98,7 +98,7 @@ sealed trait BasicPropertyType extends PropertyType
 	override def toSql = toSqlBase + " NOT NULL"
 	
 	override def isNullable = false
-	override def createsIndex = false
+	override def createsIndexByDefault = false
 	
 	override def notNull = this
 	override def nullable = Optional(this)
@@ -297,7 +297,7 @@ object PropertyType
 		override def isNullable = false
 		override def baseDefault = CodePiece("Now", Set(Reference.now))
 		override def defaultPropertyName = "created"
-		override def createsIndex = true
+		override def createsIndexByDefault = true
 		
 		override def notNull = this
 		override def nullable = Optional(DateTime)
@@ -322,7 +322,7 @@ object PropertyType
 		override def isNullable = true
 		override def baseDefault = "None"
 		override def defaultPropertyName = "deprecatedAfter"
-		override def createsIndex = true
+		override def createsIndexByDefault = true
 		
 		override def nullable = this
 		override def notNull = Expiration
@@ -346,7 +346,7 @@ object PropertyType
 		override def isNullable = false
 		override def baseDefault = ""
 		override def defaultPropertyName = "expires"
-		override def createsIndex = true
+		override def createsIndexByDefault = true
 		
 		override def nullable = Deprecation
 		override def notNull = this
@@ -373,7 +373,7 @@ object PropertyType
 		
 		override def baseDefault = "Days.zero"
 		
-		override def createsIndex = false
+		override def createsIndexByDefault = false
 		
 		override def nullable = OptionalDayCount
 		override def notNull = this
@@ -394,7 +394,7 @@ object PropertyType
 		override def toSql = "INT"
 		
 		override def isNullable = true
-		override def createsIndex = false
+		override def createsIndexByDefault = false
 		
 		override def defaultPropertyName = "duration"
 		override def baseDefault = "None"
@@ -421,7 +421,7 @@ object PropertyType
 		override def isNullable = true
 		override def baseDefault = "None"
 		override def defaultPropertyName = baseType.defaultPropertyName
-		override def createsIndex = baseType.createsIndex
+		override def createsIndexByDefault = baseType.createsIndexByDefault
 		
 		override def notNull = baseType
 		override def nullable = this
@@ -461,7 +461,7 @@ object PropertyType
 		override def defaultPropertyName = "duration"
 		override def baseDefault = CodePiece("Duration.Zero", Set(Reference.duration))
 		
-		override def createsIndex = false
+		override def createsIndexByDefault = false
 		
 		override def nullable = copy(isNullable = true)
 		override def notNull = copy(isNullable = false)
@@ -503,7 +503,7 @@ object PropertyType
 		override def baseDefault = if (isNullable) "None" else CodePiece.empty
 		override def defaultPropertyName = NamingUtils.underscoreToCamel(referencedTableName).uncapitalize + "Id"
 		// Index is created when foreign key is generated
-		override def createsIndex = false
+		override def createsIndexByDefault = false
 		
 		override def notNull = if (isNullable) copy(isNullable = false) else this
 		override def nullable = if (isNullable) this else copy(isNullable = true)
@@ -535,7 +535,7 @@ object PropertyType
 		override def toSql = if (isNullable) "INT" else "INT NOT NULL"
 		override def baseDefault = CodePiece.empty
 		override def defaultPropertyName = enumeration.name.uncapitalize
-		override def createsIndex = false
+		override def createsIndexByDefault = false
 		override def notNull = if (isNullable) copy(isNullable = false) else this
 		override def nullable = if (isNullable) this else copy(isNullable = true)
 		

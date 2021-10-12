@@ -65,6 +65,18 @@ object ClassReader
 				classModel("name_plural", "plural_name").string.map { _.capitalize }.getOrElse(className + "s"))
 			val properties = classModel("properties", "props").getVector.flatMap { _.model }
 				.map { propertyFrom(_, enumerations, fullName) }
+			// Finds the combo indices
+			// The indices in the document are given as property names, but here they are converted to column names
+			val comboIndexColumnNames: Vector[Vector[String]] = classModel("index", "combo", "combo_index")
+				.vector.map[Vector[Vector[String]]] { v => Vector(v.flatMap { _.string }) }
+				.orElse {
+					classModel("indices", "combos", "combo_indices").vector
+						.map { vectors => vectors.map[Vector[String]] { vector => vector.getVector.flatMap { _.string } } }
+				}
+				.getOrElse(Vector())
+				.map { combo => combo.flatMap { propName =>
+					properties.find { _.name.variants.exists { _ ~== propName } }.map { _.columnName } } }
+				.filter { _.nonEmpty }
 			// Checks whether descriptions are supported for this class
 			val descriptionLinkColumnName = classModel("description_link_column", "description_link", "desc_link")
 				.stringOr {
@@ -74,8 +86,8 @@ object ClassReader
 						""
 				}
 			
-			Success(Class(fullName, tableName, properties, packageName, descriptionLinkColumnName,
-				classModel("doc").getString, classModel("author").stringOr(defaultAuthor),
+			Success(Class(fullName, tableName, properties, packageName, comboIndexColumnNames,
+				descriptionLinkColumnName, classModel("doc").getString, classModel("author").stringOr(defaultAuthor),
 				classModel("use_long_id").getBoolean))
 		}
 	}
@@ -136,6 +148,6 @@ object ClassReader
 		val doc = rawDoc.getOrElse { actualDataType.writeDefaultDescription(className, fullName) }
 		
 		Property(fullName, columnName, actualDataType, doc, propModel("usage").getString,
-			propModel("default", "def").getString)
+			propModel("default", "def").getString, propModel("indexed", "index", "is_index").boolean)
 	}
 }

@@ -1,5 +1,6 @@
 package utopia.flow.datastructure.immutable
 
+import utopia.flow.datastructure.immutable.Value.emptyWithType
 import utopia.flow.datastructure.template.Node
 import utopia.flow.generic.{AnyType, BooleanType, ConversionHandler, DataType, DataTypeException, DoubleType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, StringType, VectorType}
 import utopia.flow.parse.JsonValueConverter
@@ -105,9 +106,22 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
     def isOfType(dataType: DataType) = this.dataType.isOfType(dataType)
     
     /**
-     * Casts the value to a certain data type. Returns None if the casting failed
+     * Casts this value to a certain data type. Returns None if the casting failed
      */
     def castTo(dataType: DataType) = ConversionHandler.cast(this, dataType)
+    /**
+      * Casts this value to either of two data types
+      * @param primaryDataType The primary cast target type
+      * @param secondaryDataType The secondary cast target type
+      * @return Either: Right: This value converted to primary target type or
+      *         Left: This value converted to the secondary target type if first cast failed and second succeeded
+      */
+    def castTo(primaryDataType: DataType, secondaryDataType: DataType): Either[Value, Value] =
+        castTo(primaryDataType) match
+        {
+            case Some(primarySuccess) => Right(primarySuccess)
+            case None => castTo(secondaryDataType).map { Left(_) }.getOrElse { Right(emptyWithType(primaryDataType)) }
+        }
     
     /**
      * Casts this value to a new data type
@@ -115,7 +129,8 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
      * @return This value casted to a new data type. If the value couldn't be casted, an empty 
      * value is returned instead
      */
-    def withType(dataType: DataType) = ConversionHandler.cast(this, dataType).getOrElse(Value.emptyWithType(dataType))
+    def withType(dataType: DataType) = ConversionHandler.cast(this, dataType)
+        .getOrElse(Value.emptyWithType(dataType))
     
     /**
      * Returns the contents of this value, casted to the desired type range

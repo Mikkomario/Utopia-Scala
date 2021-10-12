@@ -55,8 +55,13 @@ object SqlWriter
 			
 			val propertyDeclarations = classToWrite.properties
 				.map { prop => s"`${prop.columnName}` ${prop.dataType.toSql}" }
-			val indexDeclarations = classToWrite.properties.filter { _.dataType.createsIndex }
+			val firstComboIndexColumns = classToWrite.comboIndexColumnNames.filter { _.size > 1 }.map { _.head }.toSet
+			val individualIndexDeclarations = classToWrite.properties
+				.filter { prop => prop.isIndexed && !firstComboIndexColumns.contains(prop.columnName) }
 				.map { prop => s"INDEX ${classInitials}_${prop.columnName}_idx (`${prop.columnName})`" }
+			val comboIndexDeclarations = classToWrite.comboIndexColumnNames.filter { _.size > 1 }
+				.zipWithIndex.map { case (colNames, index) =>
+				s"INDEX ${classInitials}_combo_${index + 1}_idx (${colNames.mkString(", ")})" }
 			val foreignKeyDeclarations = classToWrite.properties.flatMap { prop =>
 				prop.dataType match
 				{
@@ -70,7 +75,8 @@ object SqlWriter
 				}
 			}
 			
-			val allDeclarations = propertyDeclarations ++ indexDeclarations ++ foreignKeyDeclarations
+			val allDeclarations = propertyDeclarations ++ individualIndexDeclarations ++ comboIndexDeclarations ++
+				foreignKeyDeclarations
 			allDeclarations.dropRight(1).foreach { line => writer.println(s"\t$line, ") }
 			writer.println("\t" + allDeclarations.last)
 		}

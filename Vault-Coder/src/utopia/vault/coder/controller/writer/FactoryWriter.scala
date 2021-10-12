@@ -53,7 +53,7 @@ object FactoryWriter
 			builder += Reference.fromValidatedRowModelFactory(modelRef)
 		
 		// For tables which contain a creation time index, additional inheritance is added
-		if (classToWrite.recordsCreationTime)
+		if (classToWrite.recordsIndexedCreationTime)
 			builder += Reference.fromRowFactoryWithTimestamps(modelRef)
 		
 		// If the class supports deprecation, it is reflected in this factory also

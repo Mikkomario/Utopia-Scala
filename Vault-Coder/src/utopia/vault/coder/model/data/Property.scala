@@ -13,11 +13,14 @@ object Property
 	  * @param description Description of this property (Default = empty)
 	  * @param useDescription Description on how this property is used (Default = empty)
 	  * @param customDefault Default value passed for this property (empty if no default (default))
+	  * @param customIndexing User-specified setting whether this property should be indexed.
+	  *                       None if user didn't specify, which results in data type -based indexing (default)
 	  * @return A new property
 	  */
 	def apply(name: Name, dataType: PropertyType, description: String = "", useDescription: String = "",
-	          customDefault: String = ""): Property =
-		apply(name, NamingUtils.camelToUnderscore(name.singular), dataType, description, useDescription, customDefault)
+	          customDefault: String = "", customIndexing: Option[Boolean] = None): Property =
+		apply(name, NamingUtils.camelToUnderscore(name.singular), dataType, description, useDescription,
+			customDefault, customIndexing)
 }
 
 /**
@@ -30,10 +33,19 @@ object Property
   * @param description Description of this property (may be empty)
   * @param useDescription Description on how this property is used (may be empty)
   * @param customDefault Default value passed for this property (empty if no default)
+  * @param customIndexing User-specified setting whether this property should be indexed.
+  *                       None if user didn't specify, which results in data type -based indexing
   */
 case class Property(name: Name, columnName: String, dataType: PropertyType, description: String,
-                    useDescription: String, customDefault: String)
+                    useDescription: String, customDefault: String, customIndexing: Option[Boolean])
 {
+	// COMPUTED ----------------------------
+	
+	/**
+	  * @return Whether there exists an index based on this property
+	  */
+	def isIndexed = customIndexing.getOrElse(dataType.createsIndexByDefault)
+	
 	/**
 	  * @return Code for this property converted to a value. Expects ValueConversions to be imported.
 	  */

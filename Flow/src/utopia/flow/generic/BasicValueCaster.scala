@@ -84,8 +84,7 @@ object BasicValueCaster extends ValueCaster
     
     // OTHER METHODS    ---------
     
-    private def stringOf(value: Value): Option[String] = 
-    {
+    private def stringOf(value: Value): Option[String] =
         value.dataType match 
         {
             // Vectors have a special formatting like "[a, b, c, d]" 
@@ -95,7 +94,6 @@ object BasicValueCaster extends ValueCaster
                 if (vector.isEmpty) Some("[]") else Some(s"[${ vector.map { _.toJson }.reduceLeft { _ + ", " + _ } }]")
             case _ => value.content.map { _.toString() }
         }
-    }
     
     private def intOf(value: Value): Option[Int] = 
     {
@@ -112,8 +110,7 @@ object BasicValueCaster extends ValueCaster
         }
     }
     
-    private def doubleOf(value: Value): Option[Double] = 
-    {
+    private def doubleOf(value: Value): Option[Double] =
         value.dataType match 
         {
             case IntType => Some(value.getInt.toDouble)
@@ -124,10 +121,8 @@ object BasicValueCaster extends ValueCaster
                     .flatMap { s => Try { s.toDouble }.toOption }
             case _ => None
         }
-    }
     
-    private def floatOf(value: Value): Option[Float] = 
-    {
+    private def floatOf(value: Value): Option[Float] =
         value.dataType match 
         {
             case IntType => Some(value.getInt.toFloat)
@@ -136,10 +131,8 @@ object BasicValueCaster extends ValueCaster
             case StringType => Try { value.stringOr("0").toFloat }.toOption
             case _ => None
         }
-    }
     
-    private def longOf(value: Value): Option[Long] = 
-    {
+    private def longOf(value: Value): Option[Long] =
         value.dataType match 
         {
             case IntType => Some(value.getInt.toLong)
@@ -149,20 +142,16 @@ object BasicValueCaster extends ValueCaster
             case StringType => Try { value.stringOr("0").toDouble.toLong }.toOption
             case _ => None
         }
-    }
     
-    private def booleanOf(value: Value): Option[Boolean] = 
-    {
+    private def booleanOf(value: Value): Option[Boolean] =
         value.dataType match 
         {
             case IntType => Some(value.getInt != 0)
             case StringType => Some(value.getString.toLowerCase() == "true")
             case _ => None
         }
-    }
     
-    private def instantOf(value: Value): Option[Instant] = 
-    {
+    private def instantOf(value: Value): Option[Instant] =
         value.dataType match 
         {
             case LongType => Some(Instant.ofEpochMilli(value.getLong))
@@ -183,10 +172,8 @@ object BasicValueCaster extends ValueCaster
                 Some(dateTime.toInstant(ZoneId.systemDefault().getRules.getOffset(dateTime)))
             case _ => None
         }
-    }
     
-    private def localDateOf(value: Value): Option[LocalDate] = 
-    {
+    private def localDateOf(value: Value): Option[LocalDate] =
         value.dataType match 
         {
             case LocalDateTimeType => Some(value.getLocalDateTime.toLocalDate)
@@ -195,20 +182,16 @@ object BasicValueCaster extends ValueCaster
                 Try { LocalDate.parse(s) }.orElse { Try { LocalDate.parse(s, alternativeDateFormat) } }.toOption
             case _ => None
         }
-    }
     
-    private def localTimeOf(value: Value): Option[LocalTime] = 
-    {
+    private def localTimeOf(value: Value): Option[LocalTime] =
         value.dataType match 
         {
             case LocalDateTimeType => Some(value.getLocalDateTime.toLocalTime)
             case StringType => Try(LocalTime.parse(value.toString())).toOption
             case _ => None
         }
-    }
     
-    private def localDateTimeOf(value: Value): Option[LocalDateTime] = 
-    {
+    private def localDateTimeOf(value: Value): Option[LocalDateTime] =
         value.dataType match 
         {
             case InstantType => Some(LocalDateTime.ofInstant(value.getInstant, ZoneId.systemDefault()))
@@ -216,7 +199,27 @@ object BasicValueCaster extends ValueCaster
             case StringType => Try(LocalDateTime.parse(value.toString())).toOption
             case _ => None
         }
+    
+    private def vectorOf(value: Value) = value.dataType match
+    {
+        case StringType =>
+            val s = value.getString
+            if ((s.startsWith("[") && s.endsWith("]")) || (s.startsWith("(") && s.startsWith(")")))
+                Some(splitToValueVector(s.drop(1).dropRight(1), ','))
+            else if (s.contains(','))
+                Some(splitToValueVector(s, ','))
+            else if (s.contains(';'))
+                Some(splitToValueVector(s, ';'))
+            else
+                Some(Vector(value))
+        case _ => Some(Vector(value))
     }
     
-    private def vectorOf(value: Value) = Some(Vector(value))
+    private def splitToValueVector(s: String, separator: Char) =
+        s.split(separator).toVector.map { _.trim }.map { s =>
+            if (s.isEmpty)
+                Value.empty
+            else
+                Value(Some(s), StringType)
+        }
 }
