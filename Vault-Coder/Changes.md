@@ -3,11 +3,13 @@
 ## v1.2 (in development)
 ### Breaking Changes
 - Updated how program arguments are handled and added some interactive elements to the application
+- Access points, which targeted individual items based on their id are now written into separate files (DbSingleXAccess)
 ### New Features
 - Added support for described classes (**Citadel**-specific feature)
 - Added support for **Days** and **FiniteDuration** data types (both concrete and optional variants)
 - The app can now write specific classes, packages or enumerations based on filtering applied on program use
 ### Bugfixes
+- Optional references didn't work previously - now fixed
 - Fixed a bug in some factory implementations where read values were not unwrapped correctly
   - Please note that as a side effect, **ValueUnwraps** are no longer used when parsing instance data from models
 ### Other Changes

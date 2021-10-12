@@ -2,7 +2,7 @@ package utopia.vault.coder.controller
 
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.vault.coder.model.enumeration.BasicPropertyType.{IntNumber, Text}
-import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, EnumValue}
+import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, EnumValue, Optional}
 import utopia.flow.datastructure.immutable.{Constant, Model, ModelValidationFailedException}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
@@ -113,8 +113,9 @@ object ClassReader
 			case Some(tableName) =>
 				ClassReference(tableName, baseDataType.findMap {
 					case b: BasicPropertyType => Some(b)
+					case Optional(wrapped) => Some(wrapped)
 					case _ => None
-				}.getOrElse(IntNumber))
+				}.getOrElse(IntNumber), isNullable = baseDataType.exists { _.isNullable })
 			case None =>
 				baseDataType.getOrElse {
 					length match
