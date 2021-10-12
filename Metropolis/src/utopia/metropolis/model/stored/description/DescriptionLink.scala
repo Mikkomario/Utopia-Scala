@@ -47,6 +47,7 @@ object DescriptionLink extends FromModelFactory[DescriptionLink]
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1
   */
+// TODO: Refactor by separating the description data from here (add a separate combined model for that)
 case class DescriptionLink(id: Int, data: FullDescriptionLinkData)
 	extends Stored[FullDescriptionLinkData] with ModelConvertible
 {

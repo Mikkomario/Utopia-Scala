@@ -1,9 +1,12 @@
 # Utopia Metropolis - List of Changes
 
 ## v1.2.1 (in development)
+### New Features
+- Added **DescriptionRoleIdWrapper** trait to support easier description reading
 ### New Methods
 - **Described**
-  - Added `descriptionWithRoleId(roleId: Int)` and `valueOfRoleWithId(roleId: Int)` functions
+  - Added `descriptionWithRoleId(roleId: Int)` and `valueOfRoleWithId(roleId: Int)` functions, 
+    as well as variants that utilize the new description role id wrapper trait
 ### Other Changes
 - **LanguageFamiliarity** now extends **SelfComparable**
 

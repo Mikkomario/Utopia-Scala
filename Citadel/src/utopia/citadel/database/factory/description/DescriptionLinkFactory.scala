@@ -89,6 +89,7 @@ object DescriptionLinkFactory
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1.0
   */
+// TODO: This ought to be refactored to use data models separately
 trait DescriptionLinkFactory[+E] extends LinkedFactory[E, Description] with Deprecatable
 {
 	// ABSTRACT	----------------------------------

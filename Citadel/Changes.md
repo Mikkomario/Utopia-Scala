@@ -8,6 +8,7 @@
   **DbOrganization** and **DbDevice**
 - Deprecated `DescriptionModel.descriptionRoleIdAttName` and the associated column property in favor of shorter 
   `.roleIdAttName` and `.roleIdColumn` properties
+- Deprecated **StandardDescriptionRoleId** in favor of **CitadelDescriptionRole**
 ### New Features
 - Added **DbManyUserSettings**
 ### New Methods

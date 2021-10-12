@@ -4,7 +4,7 @@ import utopia.citadel.database.access.many.description.DbDescriptions
 import utopia.citadel.database.access.single.description.DbDescription
 import utopia.citadel.database.model.device.ClientDeviceModel
 import utopia.citadel.database.model.user.UserDeviceModel
-import utopia.citadel.model.enumeration.StandardDescriptionRoleId
+import utopia.citadel.model.enumeration.CitadelDescriptionRole.Name
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
@@ -45,8 +45,7 @@ object DbDevice
 		// Inserts a new device first
 		val newDeviceId = factory.insert(authorId)
 		// Then inserts a description for the device
-		DbDescriptions.ofDeviceWithId(newDeviceId)
-			.update(StandardDescriptionRoleId.name, languageId, authorId, deviceName)
+		DbDescriptions.ofDeviceWithId(newDeviceId).update(Name.id, languageId, authorId, deviceName)
 	}
 	
 	
@@ -121,6 +120,6 @@ object DbDevice
 		  */
 		def nameInLanguageWithId(languageId: Int)(implicit connection: Connection) =
 			DbDescription.ofDeviceWithId(deviceId).inLanguageWithId(languageId)
-				.forRoleWithId(StandardDescriptionRoleId.name).map { _.description.text }
+				.forRoleWithId(Name.id).map { _.description.text }
 	}
 }

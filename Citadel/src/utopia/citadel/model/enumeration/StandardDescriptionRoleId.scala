@@ -5,6 +5,7 @@ package utopia.citadel.model.enumeration
   * @author Mikko Hilpinen
   * @since 25.7.2020, v1.0
   */
+@deprecated("Please refer to CitadelDescriptionRole instead", "v1.3")
 object StandardDescriptionRoleId
 {
 	/**

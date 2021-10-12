@@ -5,6 +5,7 @@ import utopia.citadel.database.factory.description.DescriptionLinkFactory
 import utopia.citadel.database.model.description.{DescriptionLinkModel, DescriptionLinkModelFactory, DescriptionModel}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
+import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
@@ -101,7 +102,14 @@ trait DescriptionLinksAccess extends ManyRowModelAccess[DescriptionLink]
 	 * @return An access point to Recorded descriptions for those roles (in this language & target)
 	 */
 	def forRolesWithIds(roleIds: Set[Int])(implicit connection: Connection) =
-		subView(descriptionModel.descriptionRoleIdColumn.in(roleIds))
+		subView(descriptionModel.roleIdColumn.in(roleIds))
+	/**
+	  * @param roles Targeted Description roles
+	  * @param connection DB Connection (implicit)
+	  * @return An access point to Recorded descriptions for those roles (in this language & target)
+	  */
+	def forRoles(roles: Set[DescriptionRoleIdWrapper])(implicit connection: Connection) =
+		forRolesWithIds(roles.map { _.id })
 	
 	/**
 	 * Accesses descriptions of this item / items, except those in excluded description roles
@@ -110,7 +118,15 @@ trait DescriptionLinksAccess extends ManyRowModelAccess[DescriptionLink]
 	 * @return An access point to the targeted descriptions
 	 */
 	def forRolesOutsideIds(excludedRoleIds: Set[Int])(implicit connection: Connection) =
-		subView(!descriptionModel.descriptionRoleIdColumn.in(excludedRoleIds))
+		subView(!descriptionModel.roleIdColumn.in(excludedRoleIds))
+	/**
+	  * Accesses descriptions of this item / items, except those in excluded description roles
+	  * @param excludedRoles excluded description roles
+	  * @param connection      DB Connection (implicit)
+	  * @return An access point to the targeted descriptions
+	  */
+	def forRolesOutside(excludedRoles: Set[DescriptionRoleIdWrapper])(implicit connection: Connection) =
+		forRolesOutsideIds(excludedRoles.map { _.id })
 	
 	/**
 	 * @param roleId     Targeted description role's id
@@ -119,6 +135,13 @@ trait DescriptionLinksAccess extends ManyRowModelAccess[DescriptionLink]
 	 */
 	def forRoleWithId(roleId: Int)(implicit connection: Connection) =
 		subView(descriptionModel.withRoleId(roleId).toCondition)
+	/**
+	  * @param role Targeted description role
+	  * @param connection Implicit DB Connection
+	  * @return Description for that role for this item in targeted language
+	  */
+	def forRole(role: DescriptionRoleIdWrapper)(implicit connection: Connection) =
+		forRoleWithId(role.id)
 	
 	/**
 	 * @param condition A search-condition

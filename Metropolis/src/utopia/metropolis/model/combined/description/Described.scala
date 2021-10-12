@@ -1,5 +1,6 @@
 package utopia.metropolis.model.combined.description
 
+import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 import utopia.metropolis.model.stored.description.DescriptionLink
 
 /**
@@ -30,4 +31,15 @@ trait Described
 	 * @return Text associated with that description role, if available
 	 */
 	def valueOfRoleWithId(roleId: Int) = descriptionWithRoleId(roleId).map { _.text }
+	
+	/**
+	  * @param role A description role
+	  * @return This item's description of that role. None if not found.
+	  */
+	def description(role: DescriptionRoleIdWrapper) = descriptionWithRoleId(role.id)
+	/**
+	  * @param descriptionRole A description role
+	  * @return This item's description of that role as text. None if not found.
+	  */
+	def apply(descriptionRole: DescriptionRoleIdWrapper) = valueOfRoleWithId(descriptionRole.id)
 }

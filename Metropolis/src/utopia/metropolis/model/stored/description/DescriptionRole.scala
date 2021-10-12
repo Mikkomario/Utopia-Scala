@@ -1,5 +1,6 @@
 package utopia.metropolis.model.stored.description
 
+import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 import utopia.metropolis.model.partial.description.DescriptionRoleData
 import utopia.metropolis.model.stored.{StoredFromModelFactory, StoredModelConvertible}
 
@@ -13,4 +14,5 @@ object DescriptionRole extends StoredFromModelFactory[DescriptionRole, Descripti
   * @author Mikko Hilpinen
   * @since 25.7.2020, v1
   */
-case class DescriptionRole(id: Int, data: DescriptionRoleData) extends StoredModelConvertible[DescriptionRoleData]
+case class DescriptionRole(id: Int, data: DescriptionRoleData)
+	extends StoredModelConvertible[DescriptionRoleData] with DescriptionRoleIdWrapper
