@@ -151,7 +151,13 @@ and **S** is replaced with last project package name):
         - **UniqueXAccess.scala** - A trait common to distinct single access points that return instances of **X**
         - **DbSingleX.scala** - A class that accesses individual instances of **X** based on their id
         - **DbX.scala** - The root access point for individual instances of **X**
+      - description
+        - **DbXDescription.scala** - The root access point for individual descriptions targeting instances of **X**
+          - Only generated for classes which support descriptions
     - many
       - **P**
         - **ManyXsAccess.scala** - A trait common to access points that return multiple instances of **X** at a time
         - **DbXs.scala** - The root access point for multiple instances of **X**
+      - description
+        - **DbXDescriptions.scala** - The root access point for accessing multiple **X**-descriptions at once
+          - Only generated for classes which support descriptions
