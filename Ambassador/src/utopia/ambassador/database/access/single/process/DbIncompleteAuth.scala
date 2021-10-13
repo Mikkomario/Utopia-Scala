@@ -3,10 +3,9 @@ package utopia.ambassador.database.access.single.process
 import utopia.ambassador.database.factory.process.IncompleteAuthFactory
 import utopia.ambassador.database.model.process.IncompleteAuthModel
 import utopia.ambassador.model.stored.process.IncompleteAuth
-import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.access.single.model.distinct.SingleIdModelAccess
+import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
 import utopia.vault.nosql.view.NonDeprecatedView
 
 /**
@@ -45,20 +44,24 @@ object DbIncompleteAuth extends SingleRowModelAccess[IncompleteAuth] with NonDep
 	
 	// NESTED   ---------------------------------
 	
-	class DbSingleIncompleteAuth(authId: Int)
-		extends SingleIdModelAccess[IncompleteAuth](authId, DbIncompleteAuth.factory)
+	class DbSingleIncompleteAuth(override val id: Int) extends SingleIntIdModelAccess[IncompleteAuth]
 	{
 		// COMPUTED -----------------------------
 		
 		/**
 		  * @return An access point to this authentication's login
 		  */
-		def login = DbIncompleteAuthLogin.forAuthenticationWithId(authId)
+		def login = DbIncompleteAuthLogin.forAuthenticationWithId(id)
 		
 		/**
 		  * @param connection Implicit DB connection
 		  * @return Whether this authentication attempt has been completed already
 		  */
 		def isClosed(implicit connection: Connection) = login.nonEmpty
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override def factory = DbIncompleteAuth.factory
 	}
 }

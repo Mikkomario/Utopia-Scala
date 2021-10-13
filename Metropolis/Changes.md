@@ -1,14 +1,16 @@
 # Utopia Metropolis - List of Changes
 
-## v1.2.1 (in development)
+## v1.3 (in development)
+### Breaking Changes
+- Switched **DescribedFromModelFactory**'s `A` and `D` type parameters around (from `[D, A]` to `[A, D]`)
 ### New Features
 - Added **DescriptionRoleIdWrapper** trait to support easier description reading
 ### New Methods
 - **Described**
-  - Added `descriptionWithRoleId(roleId: Int)` and `valueOfRoleWithId(roleId: Int)` functions, 
-    as well as variants that utilize the new description role id wrapper trait
+  - Added multiple new utility functions for accessing various descriptions
 ### Other Changes
 - **LanguageFamiliarity** now extends **SelfComparable**
+- Added **DescribedFactory** trait (parent trait for **DescribedFromModelFactory**)
 
 ## v1.2 - 3.10.2021
 This update, which is closely connected to **Citadel** and **Exodus** updates, makes the user's email address 

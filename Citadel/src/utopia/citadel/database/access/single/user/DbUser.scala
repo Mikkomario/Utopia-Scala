@@ -22,7 +22,7 @@ import utopia.vault.model.enumeration.BasicCombineOperator.Or
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.access.single.column.UniqueIdAccess
 import utopia.vault.nosql.access.single.model.SingleModelAccess
-import utopia.vault.nosql.access.single.model.distinct.{SingleIdModelAccess, UniqueModelAccess}
+import utopia.vault.nosql.access.single.model.distinct.{SingleIntIdModelAccess, UniqueModelAccess}
 import utopia.vault.sql.{Delete, Exists, Select, Where}
 import utopia.vault.sql.SqlExtensions._
 
@@ -38,7 +38,7 @@ object DbUser extends SingleModelAccess[User]
 {
 	// COMPUTED -------------------------
 	
-	private def languageLinkModel = UserLanguageModel
+	// private def languageLinkModel = UserLanguageModel
 	private def membershipModel = MembershipModel
 	
 	
@@ -60,14 +60,14 @@ object DbUser extends SingleModelAccess[User]
 	
 	// NESTED	-------------------------
 	
-	case class DbSingleUser(userId: Int) extends SingleIdModelAccess(userId, DbUser.factory)
+	case class DbSingleUser(override val id: Int) extends SingleIntIdModelAccess[User]
 	{
-		// ATTRIBUTES	-----------------
-		
-		override val factory = DbUser.factory
-		
-		
 		// COMPUTED	---------------------
+		
+		/**
+		 * @return Id of the targeted user
+		 */
+		def userId = id
 		
 		/**
 		  * @return An access point to this user's known languages
@@ -78,7 +78,7 @@ object DbUser extends SingleModelAccess[User]
 		  * @return Ids of the languages known by this user
 		  */
 		def languageIds(implicit connection: Connection) = connection(Select(UserLanguageModel.table,
-			UserLanguageModel.languageIdAttName) + Where(UserLanguageModel.withUserId(userId).toCondition)).rowIntValues
+			UserLanguageModel.languageIdAttName) + Where(UserLanguageModel.withUserId(id).toCondition)).rowIntValues
 		/*
 		def primaryLanguageId(implicit connection: Connection) =
 		{
@@ -92,7 +92,7 @@ object DbUser extends SingleModelAccess[User]
 		  * @return Ids of the devices this user has used
 		  */
 		def deviceIds(implicit connection: Connection) = connection(Select(UserDeviceModel.table,
-			UserDeviceModel.deviceIdAttName) + Where(UserDeviceModel.withUserId(userId).toCondition &&
+			UserDeviceModel.deviceIdAttName) + Where(UserDeviceModel.withUserId(id).toCondition &&
 			UserDeviceModel.nonDeprecatedCondition)).rowIntValues
 		
 		/**
@@ -119,6 +119,11 @@ object DbUser extends SingleModelAccess[User]
 		  * @return An access point to this user's memberships
 		  */
 		def memberships = DbSingleUserMemberships
+		
+		
+		// IMPLEMENTED  ------------------
+		
+		override def factory = DbUser.factory
 		
 		
 		// OTHER	----------------------
@@ -155,7 +160,7 @@ object DbUser extends SingleModelAccess[User]
 		def sharesOrganizationWithUserWithId(otherUserId: Int)(implicit connection: Connection) =
 		{
 			// Case: Testing against self
-			if (userId == otherUserId)
+			if (id == otherUserId)
 				true
 			// Case: Testing against other user
 			else {
@@ -176,11 +181,11 @@ object DbUser extends SingleModelAccess[User]
 		def linkWithDeviceWithId(deviceId: Int)(implicit connection: Connection) =
 		{
 			// Checks whether there already exists a connection between this user and specified device
-			if (UserDeviceModel.exists(UserDeviceModel.withUserId(userId).withDeviceId(deviceId).toCondition &&
+			if (UserDeviceModel.exists(UserDeviceModel.withUserId(id).withDeviceId(deviceId).toCondition &&
 				UserDeviceModel.nonDeprecatedCondition))
 				false
 			else {
-				UserDeviceModel.insert(userId, deviceId)
+				UserDeviceModel.insert(id, deviceId)
 				true
 			}
 		}

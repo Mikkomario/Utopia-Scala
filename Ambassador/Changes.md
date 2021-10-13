@@ -1,7 +1,8 @@
 # Utopia Ambassador - List of Changes
 
 ## v1.2.1 (in development)
-Supports changes in Citadel
+### Other Changes
+- Supports changes in **Citadel** and **Vault**
 
 ## v1.2 - 3.10.2021
 This update reflects changes in **Utopia Flow**, using the new **Pair** class. 

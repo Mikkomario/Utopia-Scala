@@ -3,6 +3,7 @@
 ## v1.3 (in development)
 ### Breaking Changes
 - Moved **DbUser**, **DbUsers**, **DbDevice** and **DbDevices** to new sub-packages (user & device)
+- Refactored descriptions accessing a lot, so there may be multiple errors related to that when you apply this update
 ### Deprecations
 - Deprecated `DbOrganizations.insert(...)` and `DbDevices.insert(...)` and copied those methods to 
   **DbOrganization** and **DbDevice**
@@ -10,6 +11,8 @@
   `.roleIdAttName` and `.roleIdColumn` properties
 - Deprecated **StandardDescriptionRoleId** in favor of **CitadelDescriptionRole**
 ### New Features
+- Added **SingleIdDescribedAccess** trait for more convenient accessing of described model variants and 
+  descriptions belonging to an individual model
 - Added **DbManyUserSettings**
 ### New Methods
 - **DbLanguageId**

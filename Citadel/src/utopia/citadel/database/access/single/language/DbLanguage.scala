@@ -5,13 +5,12 @@ import utopia.citadel.database.access.many.description.DbDescriptions
 import utopia.citadel.database.factory.language.LanguageFactory
 import utopia.citadel.database.model.language.LanguageModel
 import utopia.flow.datastructure.immutable.Pair
-import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.metropolis.model.error.NoDataFoundException
 import utopia.metropolis.model.post.NewLanguageProficiency
 import utopia.metropolis.model.stored.language.Language
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.single.model.distinct.{SingleIdModelAccess, UniqueModelAccess}
+import utopia.vault.nosql.access.single.model.distinct.{SingleIntIdModelAccess, UniqueModelAccess}
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.{SubView, UnconditionalView}
@@ -85,8 +84,10 @@ object DbLanguage extends SingleRowModelAccess[Language] with UnconditionalView 
 	
 	// NESTED   -----------------------------------
 	
-	class DbSingleLanguage(id: Int) extends SingleIdModelAccess[Language](id, factory)
+	class DbSingleLanguage(override val id: Int) extends SingleIntIdModelAccess[Language]
 	{
+		override def factory = DbLanguage.factory
+		
 		/**
 		 * @param connection Implicit DB Connection
 		 * @return The ISO-code associated with this language

@@ -17,6 +17,10 @@ object DescriptionModel extends DataInserter[DescriptionModel, Description, Desc
 	 */
 	val roleIdAttName = "roleId"
 	/**
+	 * Name of the attribute that contains description language id
+	 */
+	val languageIdAttName = "languageId"
+	/**
 	 * Name of the attribute that contains description text
 	 */
 	val textAttName = "text"
@@ -44,6 +48,10 @@ object DescriptionModel extends DataInserter[DescriptionModel, Description, Desc
 	  */
 	@deprecated("Please use roleIdColumn instead", "v1.3")
 	def descriptionRoleIdColumn = roleIdColumn
+	/**
+	 * @return Column that links to description language
+	 */
+	def languageIdColumn = table(languageIdAttName)
 	/**
 	 * @return Column that contains description text
 	 */
@@ -93,7 +101,7 @@ case class DescriptionModel(id: Option[Int] = None, roleId: Option[Int] = None, 
 	override def factory = DescriptionFactory
 	
 	override def valueProperties = Vector("id" -> id, roleIdAttName -> roleId,
-		"languageId" -> languageId, textAttName -> text, "authorId" -> authorId)
+		languageIdAttName -> languageId, textAttName -> text, "authorId" -> authorId)
 	
 	
 	// OTHER	------------------------------------

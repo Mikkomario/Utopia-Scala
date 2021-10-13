@@ -2,14 +2,13 @@ package utopia.citadel.database.access.single.organization
 
 import utopia.citadel.database.factory.organization.{InvitationFactory, InvitationResponseFactory, InvitationWithResponseFactory}
 import utopia.citadel.database.model.organization.InvitationResponseModel
-import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.organization.InvitationWithResponse
 import utopia.metropolis.model.partial.organization.InvitationResponseData
 import utopia.metropolis.model.post.NewInvitationResponse
 import utopia.metropolis.model.stored.organization.{Invitation, InvitationResponse}
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleModelAccess
-import utopia.vault.nosql.access.single.model.distinct.{SingleIdModelAccess, UniqueModelAccess}
+import utopia.vault.nosql.access.single.model.distinct.{SingleIntIdModelAccess, UniqueModelAccess}
 
 /**
   * Used for accessing individual invitations
@@ -36,8 +35,7 @@ object DbInvitation extends SingleModelAccess[Invitation]
 	
 	// NESTED	-------------------------------
 	
-	class SingleInvitation(invitationId: Int)
-		extends SingleIdModelAccess[Invitation](invitationId, DbInvitation.factory)
+	class SingleInvitation(val invitationId: Int) extends SingleIntIdModelAccess[Invitation]
 	{
 		// COMPUTED	---------------------------
 		
@@ -51,6 +49,13 @@ object DbInvitation extends SingleModelAccess[Invitation]
 		  *         access point will only find invitations that have responses.
 		  */
 		def withResponse = InvitationWithResponseAccess
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override def id = invitationId
+		
+		override def factory = DbInvitation.factory
 		
 		
 		// NESTED	---------------------------
@@ -96,7 +101,11 @@ object DbInvitation extends SingleModelAccess[Invitation]
 				insert(newResponse.wasAccepted, newResponse.wasBlocked, creatorId)
 		}
 		
-		object InvitationWithResponseAccess extends SingleIdModelAccess[InvitationWithResponse](invitationId,
-			InvitationWithResponseFactory)
+		object InvitationWithResponseAccess extends SingleIntIdModelAccess[InvitationWithResponse]
+		{
+			override def id = invitationId
+			
+			override def factory = InvitationWithResponseFactory
+		}
 	}
 }

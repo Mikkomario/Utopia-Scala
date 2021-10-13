@@ -1,5 +1,13 @@
 # Utopia Vault - List of Changes
 
+## v1.11 (in development)
+### Breaking Changes
+- **SingleIdModelAccess** is now a trait and not a class
+  - This will break the existing `extends` -statements and require a new idValue -property from the extending classes
+### New Features
+- Added **SingleIntIdModelAccess** trait, which is a version of **SingleIdModelAccess** that is less generic and 
+  easier to implement (if you use integers as row ids) 
+
 ## v1.10 - 3.10.2021
 This update contains some package-related refactoring, as well as refactoring based on the latest **Flow** changes. 
 Unfortunately this means that you will most likely also have to do some refactoring on your end. Besides this, 

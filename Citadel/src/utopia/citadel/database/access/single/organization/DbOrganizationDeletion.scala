@@ -1,11 +1,10 @@
 package utopia.citadel.database.access.single.organization
 
 import utopia.citadel.database.factory.organization.{DeletionFactory, DeletionWithCancellationsFactory}
-import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.organization.Deletion
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.access.single.model.distinct.SingleIdModelAccess
+import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
 
 /**
   * An access point to individual organization deletions
@@ -37,9 +36,11 @@ object DbOrganizationDeletion extends SingleRowModelAccess[Deletion]
 	
 	// NESTED   ----------------------------------
 	
-	class DbSingleOrganizationDeletion(deletionId: Int)
-		extends SingleIdModelAccess[Deletion](deletionId, DbOrganizationDeletion.factory)
+	class DbSingleOrganizationDeletion(override val id: Int)
+		extends SingleIntIdModelAccess[Deletion]
 	{
+		override def factory = DbOrganizationDeletion.factory
+		
 		/**
 		  * Checks whether this deletion has been cancelled
 		  * @param connection Implicit database connection

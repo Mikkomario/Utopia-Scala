@@ -4,10 +4,9 @@ import utopia.ambassador.database.access.many.scope.DbScopes
 import utopia.ambassador.database.factory.service.{AuthServiceFactory, ServiceSettingsFactory}
 import utopia.ambassador.database.model.service.ServiceSettingsModel
 import utopia.ambassador.model.stored.service.{AuthService, ServiceSettings}
-import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.access.single.model.distinct.{LatestModelAccess, SingleIdModelAccess}
+import utopia.vault.nosql.access.single.model.distinct.{LatestModelAccess, SingleIntIdModelAccess}
 import utopia.vault.nosql.view.UnconditionalView
 
 /**
@@ -33,8 +32,7 @@ object DbAuthService extends SingleRowModelAccess[AuthService] with Unconditiona
 	
 	// NESTED   -------------------------------
 	
-	class DbSingleAuthService(val serviceId: Int)
-		extends SingleIdModelAccess[AuthService](serviceId, DbAuthService.factory)
+	class DbSingleAuthService(override val id: Int) extends SingleIntIdModelAccess[AuthService]
 	{
 		// COMPUTED ---------------------------
 		
@@ -45,12 +43,17 @@ object DbAuthService extends SingleRowModelAccess[AuthService] with Unconditiona
 		/**
 		  * @return An access point to this service's scopes
 		  */
-		def scopes = DbScopes.forServiceWithId(serviceId)
+		def scopes = DbScopes.forServiceWithId(id)
 		/**
 		  * @param connection Implicit DB connection
 		  * @return Ids of the tasks that require authentication with this service
 		  */
 		def taskIds(implicit connection: Connection) = scopes.taskIds
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override def factory = DbAuthService.factory
 		
 		
 		// NESTED   ---------------------------
@@ -73,7 +76,7 @@ object DbAuthService extends SingleRowModelAccess[AuthService] with Unconditiona
 			
 			override def factory = ServiceSettingsFactory
 			
-			override def globalCondition = Some(model.withServiceId(serviceId).toCondition)
+			override def globalCondition = Some(model.withServiceId(id).toCondition)
 		}
 	}
 }

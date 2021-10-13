@@ -3,18 +3,24 @@ package utopia.citadel.database.access.single.description
 import utopia.citadel.database.factory.description.DescriptionLinkFactory
 import utopia.citadel.database.model.description.{DescriptionLinkModelFactory, DescriptionModel}
 import utopia.citadel.model.enumeration.CitadelDescriptionRole.Name
+import utopia.flow.generic.ValueConversions._
+import utopia.flow.util.CollectionExtensions._
 import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
-import utopia.vault.nosql.access.single.model.{SingleModelAccess, SingleRowModelAccess}
+import utopia.vault.nosql.access.single.model.SingleRowModelAccess
+import utopia.vault.nosql.access.single.model.distinct.UniqueModelAccess
+import utopia.vault.nosql.view.{RowFactoryView, SubView}
+import utopia.vault.sql.SqlExtensions._
 
 /**
   * A common trait for individual description link access points
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1.0
   */
-trait DescriptionLinkAccess extends SingleModelAccess[DescriptionLink]
+@deprecated("Replaced with DbDescriptionOf", "v1.3")
+trait DescriptionLinkAccess extends SingleRowModelAccess[DescriptionLink]
 {
 	// ABSTRACT	-------------------------
 	
@@ -32,34 +38,30 @@ trait DescriptionLinkAccess extends SingleModelAccess[DescriptionLink]
 	  * @return A model used for constructing description-related conditions
 	  */
 	protected def descriptionModel = DescriptionModel
-	
 	/**
 	  * @return A model factory used for constructing description search models
 	  */
 	protected def descriptionFactory = factory.childFactory
 	
+	/**
+	 * @return An access point to this item's name description
+	 */
+	def name = withRole(Name)
+	
 	
 	// OTHER	------------------------
 	
+	def forRoleWithId(roleId: Int) = withRoleId(roleId)
 	/**
-	 * Reads a single description text
-	 * @param languageId Id of the language the description should be in
-	 * @param roleId Id of the role the description has
-	 * @param connection Implicit DB Connection
-	 * @return That description (as text) of this item
+	 * @param roleId Id of the targeted description role
+	 * @return An access point to that role's individual descriptions
 	 */
-	def apply(languageId: Int, roleId: Int)(implicit connection: Connection) =
-		findColumn(descriptionModel.textColumn,
-			descriptionModel.withLanguageId(languageId).withRoleId(roleId).toCondition).string
+	def withRoleId(roleId: Int) = new DescriptionOfRole(roleId)
 	/**
-	  * Reads a single description text
-	  * @param languageId Id of the language the description should be in
-	  * @param role the role the description has
-	  * @param connection Implicit DB Connection
-	  * @return That description (as text) of this item
-	  */
-	def apply(languageId: Int, role: DescriptionRoleIdWrapper)(implicit connection: Connection): Option[String] =
-		apply(languageId, role.id)
+	 * @param role targeted description role
+	 * @return An access point to that role's individual descriptions
+	 */
+	def withRole(role: DescriptionRoleIdWrapper) = withRoleId(role.id)
 	
 	/**
 	  * @param languageId Id of targeted language
@@ -75,10 +77,9 @@ trait DescriptionLinkAccess extends SingleModelAccess[DescriptionLink]
 		// COMPUTED ---------------------
 		
 		/**
-		 * @param connection Implicit DB Connection
-		 * @return Name of this item in targeted language
+		 * @return An access point to name description of targeted item in this language
 		 */
-		def name(implicit connection: Connection) = apply(Name)
+		def name = apply(Name)
 		
 		
 		// IMPLEMENTED	-----------------
@@ -91,28 +92,91 @@ trait DescriptionLinkAccess extends SingleModelAccess[DescriptionLink]
 		
 		// OTHER	---------------------
 		
-		/**
-		  * @param role targeted description role
-		  * @param connection Implicit connection
-		  * @return Description of that role in targeted language, as text
-		  */
-		def apply(role: DescriptionRoleIdWrapper)(implicit connection: Connection) =
-			textForRoleWithId(role.id)
-		
+		def forRoleWithId(roleId: Int) = withRoleId(roleId)
 		/**
 		  * @param roleId     Targeted description role's id
-		  * @param connection Db Connection
-		  * @return Description for that role for this item in targeted language
+		  * @return An access point to that description
 		  */
-		def forRoleWithId(roleId: Int)(implicit connection: Connection): Option[DescriptionLink] =
-			find(descriptionModel.withRoleId(roleId).toCondition)
+		def withRoleId(roleId: Int) = new UniqueDescriptionAccess(languageId, roleId)
+		/**
+		 * @param role A description role
+		 * @return An access point to that description
+		 */
+		def apply(role: DescriptionRoleIdWrapper) = withRoleId(role.id)
+	}
+	
+	class DescriptionOfRole(roleId: Int) extends SingleRowModelAccess[DescriptionLink] with SubView
+	{
+		// IMPLEMENTED  -------------------------------------
+		
+		override protected def parent = DescriptionLinkAccess.this
+		
+		override def filterCondition = descriptionModel.withRoleId(roleId).toCondition
+		
+		override def factory = parent.factory
+		
+		
+		// OTHER    -----------------------------------------
 		
 		/**
-		  * @param roleId Id of the targeted description role
-		  * @param connection Implicit connection
-		  * @return Description of that role in targeted language, as text
-		  */
-		def textForRoleWithId(roleId: Int)(implicit connection: Connection) =
-			findColumn(descriptionModel.textColumn, descriptionModel.withRoleId(roleId).toCondition).string
+		 * @param languageId Id of the targeted language
+		 * @return An access point to that description
+		 */
+		def inLanguageWithId(languageId: Int) = new UniqueDescriptionAccess(languageId, roleId)
+		
+		/**
+		 * @param languageIds A set of accepted language ids, from most preferred to least preferred
+		 * @param connection Implicit DB Connection
+		 * @return This description in the most preferable available language
+		 */
+		def inLanguage(languageIds: Seq[Int])(implicit connection: Connection) =
+		{
+			// Reads the options in groups of three until at least one result is found
+			languageIds.grouped(3).findMap { nextLanguageIds =>
+				val options = find(descriptionModel.languageIdColumn.in(nextLanguageIds.toSet))
+				// Selects the result that is most preferred by the user
+				nextLanguageIds.findMap { languageId => options.find { _.description.languageId == languageId } }
+			}
+		}
+	}
+	
+	class UniqueDescriptionAccess(val languageId: Int, val roleId: Int)
+		extends UniqueModelAccess[DescriptionLink] with RowFactoryView[DescriptionLink] with SubView
+	{
+		// COMPUTED --------------------------------------
+		
+		/**
+		 * @param connection Implicit DB Connection
+		 * @return Text associated with this description
+		 */
+		def text(implicit connection: Connection) = pullColumn(descriptionModel.textColumn).string
+		
+		
+		// IMPLEMENTED  ----------------------------------
+		
+		override def factory = parent.factory
+		
+		override protected def parent = DescriptionLinkAccess.this
+		
+		override def filterCondition =
+			descriptionModel.withLanguageId(languageId).withRoleId(roleId).toCondition
+		
+		
+		// OTHER    -------------------------------------
+		
+		/**
+		 * Deprecates this description
+		 * @param connection Implicit DB Connection
+		 * @return Whether there was a description to deprecate
+		 */
+		def deprecate()(implicit connection: Connection) =
+			linkModelFactory.nowDeprecated.updateWhere(condition, Some(target)) > 0
+		
+		/*
+		def replaceWith(newDescription: String, authorId: Option[Int] = None)(implicit connection: Connection) =
+		{
+			deprecate()
+			linkModelFactory.insert(tar)
+		}*/
 	}
 }

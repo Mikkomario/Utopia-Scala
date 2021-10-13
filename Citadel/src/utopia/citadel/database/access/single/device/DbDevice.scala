@@ -119,7 +119,6 @@ object DbDevice
 		  * @return This device's name in specified language
 		  */
 		def nameInLanguageWithId(languageId: Int)(implicit connection: Connection) =
-			DbDescription.ofDeviceWithId(deviceId).inLanguageWithId(languageId)
-				.forRoleWithId(Name.id).map { _.description.text }
+			DbDescription.ofDeviceWithId(deviceId).inLanguageWithId(languageId).name.text
 	}
 }

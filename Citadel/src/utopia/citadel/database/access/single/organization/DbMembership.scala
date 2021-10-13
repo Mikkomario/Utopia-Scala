@@ -8,7 +8,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleModelAccess
-import utopia.vault.nosql.access.single.model.distinct.SingleIdModelAccess
+import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
 import utopia.vault.sql.{Exists, Select, SelectDistinct, Where}
 import utopia.vault.sql.SqlExtensions._
 
@@ -42,13 +42,8 @@ object DbMembership extends SingleModelAccess[Membership]
 	
 	// NESTED	------------------------------
 	
-	class SingleMembership(membershipId: Int) extends SingleIdModelAccess(membershipId, factory)
+	class SingleMembership(val membershipId: Int) extends SingleIntIdModelAccess[Membership]
 	{
-		// IMPLEMENTED	----------------------
-		
-		override val factory = DbMembership.factory
-		
-		
 		// COMPUTED	--------------------------
 		
 		private def memberRoleFactory = MemberRoleModel
@@ -78,6 +73,13 @@ object DbMembership extends SingleModelAccess[Membership]
 		
 		private def rolesCondition = memberRoleFactory.withMembershipId(membershipId).toCondition &&
 			memberRoleFactory.nonDeprecatedCondition
+		
+		
+		// IMPLEMENTED	----------------------
+		
+		override def id = membershipId
+		
+		override def factory = DbMembership.factory
 		
 		
 		// OTHER	---------------------------

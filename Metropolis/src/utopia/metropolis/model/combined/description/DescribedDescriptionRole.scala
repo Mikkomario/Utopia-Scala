@@ -2,7 +2,7 @@ package utopia.metropolis.model.combined.description
 
 import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
 
-object DescribedDescriptionRole extends DescribedFromModelFactory[DescribedDescriptionRole, DescriptionRole]
+object DescribedDescriptionRole extends DescribedFromModelFactory[DescriptionRole, DescribedDescriptionRole]
 {
 	override protected def undescribedFactory = DescriptionRole
 }

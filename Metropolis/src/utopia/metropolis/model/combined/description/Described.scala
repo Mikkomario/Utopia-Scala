@@ -18,6 +18,16 @@ trait Described
 	def descriptions: Set[DescriptionLink]
 	
 	
+	// COMPUTED -------------------------
+	
+	/**
+	 * @return Descriptions of this instance in a map format where the keys are description role ids and values
+	 *         are description texts
+	 */
+	def descriptionsMap =
+		descriptions.map { link => link.description.roleId -> link.description.text }.toMap
+	
+	
 	// OTHER    -------------------------
 	
 	/**
@@ -30,7 +40,7 @@ trait Described
 	 * @param roleId If of the targeted description role
 	 * @return Text associated with that description role, if available
 	 */
-	def valueOfRoleWithId(roleId: Int) = descriptionWithRoleId(roleId).map { _.text }
+	def textOfRoleWithId(roleId: Int) = descriptionWithRoleId(roleId).map { _.text }
 	
 	/**
 	  * @param role A description role
@@ -41,5 +51,5 @@ trait Described
 	  * @param descriptionRole A description role
 	  * @return This item's description of that role as text. None if not found.
 	  */
-	def apply(descriptionRole: DescriptionRoleIdWrapper) = valueOfRoleWithId(descriptionRole.id)
+	def apply(descriptionRole: DescriptionRoleIdWrapper) = textOfRoleWithId(descriptionRole.id)
 }
