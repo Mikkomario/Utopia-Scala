@@ -104,7 +104,7 @@ object AccessWriter
 			// This access point is used for accessing individual items based on their id
 			// The inherited trait depends on whether descriptions are supported,
 			// this also affects implemented properties
-			val (singleIdAccessParent: Extension, singleIdAccessParentProperties) = descriptionReferences match
+			val (singleIdAccessParent, singleIdAccessParentProperties) = descriptionReferences match
 			{
 				// Case: Class uses description => extends described access version with its propeties
 				case Some((describedRef, singleDescRef, manyDescsRef)) =>
@@ -116,17 +116,17 @@ object AccessWriter
 						ComputedProperty("describedFactory", Set(describedRef), Protected, isOverridden = true)(
 							describedRef.target)
 					)
-					Reference.singleIdDescribedAccess(modelRef, describedRef) -> props
+					Extension(Reference.singleIdDescribedAccess(modelRef, describedRef)) -> props
 				// Case: Descriptions are not supported => Extends SingleIdModel or its easier sub-trait
 				case None =>
 					if (classToWrite.useLongId)
 					{
 						val idValueCode = classToWrite.idType.toValueCode("id")
-						Reference.singleIdModelAccess -> Vector(
+						Extension(Reference.singleIdModelAccess) -> Vector(
 							ComputedProperty("idValue", idValueCode.references, isOverridden = true)(idValueCode.text))
 					}
 					else
-						Reference.singleIntIdModelAccess -> Vector()
+						Extension(Reference.singleIntIdModelAccess) -> Vector()
 			}
 			File(singleAccessPackage,
 				ClassDeclaration(singleIdAccessNameFor(classToWrite),
@@ -168,17 +168,17 @@ object AccessWriter
 					val traitType = ScalaType.basic(manyAccessTraitName)
 					
 					// Trait parent type depends on whether descriptions are used or not
-					val (manyTraitParent: Extension, manyParentProperties, manyParentMethods) = descriptionReferences match
+					val (manyTraitParent, manyParentProperties, manyParentMethods) = descriptionReferences match
 					{
 						case Some((describedRef, _, manyDescsRef)) =>
-							(Reference.manyDescribedAccess(modelRef, describedRef), Vector(
+							(Extension(Reference.manyDescribedAccess(modelRef, describedRef)), Vector(
 								ComputedProperty("manyDescriptionsAccess", Set(manyDescsRef), Protected,
 									isOverridden = true)(manyDescsRef.target),
 								ComputedProperty("describedFactory", Set(describedRef), Protected,
 									isOverridden = true)(describedRef.target)
 							), Set(MethodDeclaration("idOf", isOverridden = true)(Parameter("item", modelRef))(
 								"item.id")))
-						case None => (Reference.indexed, Vector(), Set[MethodDeclaration]())
+						case None => (Extension(Reference.indexed), Vector(), Set[MethodDeclaration]())
 					}
 					File(manyAccessPackage,
 						ObjectDeclaration(manyAccessTraitName, nested = Set(
