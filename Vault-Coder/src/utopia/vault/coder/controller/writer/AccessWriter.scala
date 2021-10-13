@@ -41,6 +41,8 @@ object AccessWriter
 	  * @param modelRef Reference to the stored model class
 	  * @param factoryRef Reference to the from DB factory object
 	  * @param dbModelRef Reference to the database model class
+	  * @param descriptionReferences References to the described model version + single description link access point +
+	  *                            many description links access point, if applicable for this class
 	  * @param codec Implicit codec to use when writing files
 	  * @param setup Implicit project-specific setup to use
 	  * @return References to<br>
@@ -49,7 +51,8 @@ object AccessWriter
 	  *         3) Trait common for many model access points<br>
 	  *         4) Many model access point object
 	  */
-	def apply(classToWrite: Class, modelRef: Reference, factoryRef: Reference, dbModelRef: Reference)
+	def apply(classToWrite: Class, modelRef: Reference, factoryRef: Reference, dbModelRef: Reference,
+	          descriptionReferences: Option[(Reference, Reference, Reference)])
 	         (implicit codec: Codec, setup: ProjectSetup) =
 	{
 		val connectionParam = Parameter("connection", Reference.connection)
@@ -99,15 +102,38 @@ object AccessWriter
 		).write().flatMap { uniqueAccessRef =>
 			// Writes the single model by id access point
 			// This access point is used for accessing individual items based on their id
+			// The inherited trait depends on whether descriptions are supported,
+			// this also affects implemented properties
+			val (singleIdAccessParent: Extension, singleIdAccessParentProperties) = descriptionReferences match
+			{
+				// Case: Class uses description => extends described access version with its propeties
+				case Some((describedRef, singleDescRef, manyDescsRef)) =>
+					val props = Vector(
+						ComputedProperty("singleDescriptionAccess", Set(singleDescRef), Protected,
+							isOverridden = true)(singleDescRef.target),
+						ComputedProperty("manyDescriptionsAccess", Set(manyDescsRef), Protected, isOverridden = true)(
+							manyDescsRef.target),
+						ComputedProperty("describedFactory", Set(describedRef), Protected, isOverridden = true)(
+							describedRef.target)
+					)
+					Reference.singleIdDescribedAccess(modelRef, describedRef) -> props
+				// Case: Descriptions are not supported => Extends SingleIdModel or its easier sub-trait
+				case None =>
+					if (classToWrite.useLongId)
+					{
+						val idValueCode = classToWrite.idType.toValueCode("id")
+						Reference.singleIdModelAccess -> Vector(
+							ComputedProperty("idValue", idValueCode.references, isOverridden = true)(idValueCode.text))
+					}
+					else
+						Reference.singleIntIdModelAccess -> Vector()
+			}
 			File(singleAccessPackage,
 				ClassDeclaration(singleIdAccessNameFor(classToWrite),
 					Vector(Parameter("id", classToWrite.idType.toScala)),
-					Vector(uniqueAccessRef, Reference.uniqueModelAccess(modelRef)),
+					Vector(uniqueAccessRef, singleIdAccessParent),
 					// Implements the .condition property
-					properties = Vector(
-						ComputedProperty("condition", Set(Reference.valueConversions), isOverridden = true)(
-							"index <=> id")
-					),
+					properties = singleIdAccessParentProperties,
 					description = s"An access point to individual ${classToWrite.name.plural}, based on their id",
 					isCaseClass = true
 				)
@@ -121,7 +147,6 @@ object AccessWriter
 					else
 						Reference.unconditionalView
 				}
-				
 				File(singleAccessPackage,
 					ObjectDeclaration(s"Db${classToWrite.name}",
 						Vector(Reference.singleRowModelAccess(modelRef), rootViewExtension, Reference.indexed),
@@ -142,6 +167,19 @@ object AccessWriter
 					val subViewName = s"Many${classToWrite.name.plural}SubView"
 					val traitType = ScalaType.basic(manyAccessTraitName)
 					
+					// Trait parent type depends on whether descriptions are used or not
+					val (manyTraitParent: Extension, manyParentProperties, manyParentMethods) = descriptionReferences match
+					{
+						case Some((describedRef, _, manyDescsRef)) =>
+							(Reference.manyDescribedAccess(modelRef, describedRef), Vector(
+								ComputedProperty("manyDescriptionsAccess", Set(manyDescsRef), Protected,
+									isOverridden = true)(manyDescsRef.target),
+								ComputedProperty("describedFactory", Set(describedRef), Protected,
+									isOverridden = true)(describedRef.target)
+							), Set(MethodDeclaration("idOf", isOverridden = true)(Parameter("item", modelRef))(
+								"item.id")))
+						case None => (Reference.indexed, Vector(), Set[MethodDeclaration]())
+					}
 					File(manyAccessPackage,
 						ObjectDeclaration(manyAccessTraitName, nested = Set(
 							ClassDeclaration(subViewName,
@@ -153,7 +191,7 @@ object AccessWriter
 							)
 						)),
 						TraitDeclaration(manyAccessTraitName,
-							Vector(Reference.manyRowModelAccess(modelRef), Reference.indexed),
+							Vector(Reference.manyRowModelAccess(modelRef), manyTraitParent),
 							// Contains computed properties to access class properties
 							baseProperties ++ classToWrite.properties.map { prop =>
 								ComputedProperty(prop.name.plural,
@@ -167,8 +205,8 @@ object AccessWriter
 										classToWrite.idType.nullable.fromValueCode("id")} }"),
 								ComputedProperty("defaultOrdering", Set(factoryRef), Protected, isOverridden = true)(
 									if (classToWrite.recordsIndexedCreationTime) "Some(factory.defaultOrdering)" else "None")
-							),
-							propertySetters + MethodDeclaration("filter", isOverridden = true)(
+							) ++ manyParentProperties,
+							propertySetters ++ manyParentMethods + MethodDeclaration("filter", isOverridden = true)(
 								Parameter("additionalCondition", Reference.condition))(
 								s"new $subViewName(additionalCondition)"),
 							description = s"A common trait for access points which target multiple ${
@@ -177,8 +215,24 @@ object AccessWriter
 					).write().flatMap { manyAccessTraitRef =>
 						// Writes the many model access point
 						val manyAccessName = s"Db${classToWrite.name.plural}"
+						// Classes that support descriptions also get a nested object for id-based multi-access
+						val manyByIdsAccess = descriptionReferences.map { case (describedRef, _, _) =>
+							val subsetClassName = s"Db${classToWrite.name.plural}Subset"
+							ClassDeclaration(subsetClassName,
+								Parameter("ids", ScalaType.set(ScalaType.int), prefix = "override val"),
+								Vector(manyAccessTraitRef,
+									Reference.manyDescribedAccessByIds(modelRef, describedRef))
+							) -> MethodDeclaration("apply",
+								returnDescription = s"An access point to ${
+									classToWrite.name.plural} with the specified ids")(
+								Parameter("ids", ScalaType.set(ScalaType.int),
+									description = s"Ids of the targeted ${classToWrite.name.plural}"))(
+								s"new $subsetClassName(ids)")
+						}
 						File(manyAccessPackage,
 							ObjectDeclaration(manyAccessName, Vector(manyAccessTraitRef, rootViewExtension),
+								methods = manyByIdsAccess.map { _._2 }.toSet,
+								nested = manyByIdsAccess.map { _._1 }.toSet,
 								description = s"The root access point when targeting multiple ${
 									classToWrite.name.plural} at a time", author = classToWrite.author
 							)

@@ -29,7 +29,7 @@ object WriteTest extends App
 			ModelWriter(testClass).flatMap { case (modelRef, dataRef) =>
 				FactoryWriter(testClass, tablesRef, modelRef, dataRef).flatMap { factoryRef =>
 					DbModelWriter(testClass, modelRef, dataRef, factoryRef).flatMap { dbModelRef =>
-						AccessWriter(testClass, modelRef, factoryRef, dbModelRef)
+						AccessWriter(testClass, modelRef, factoryRef, dbModelRef, None)
 					}
 				}
 			}

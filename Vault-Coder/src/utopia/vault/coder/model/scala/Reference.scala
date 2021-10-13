@@ -158,6 +158,7 @@ object Reference
 	  * Imports the SingleIdModel class from Vault
 	  */
 	lazy val singleIdModelAccess = apply(singleModelAccess/"distinct", "SingleIdModelAccess")
+	lazy val singleIntIdModelAccess = apply(singleModelAccess/"distinct", "SingleIntIdModelAccess")
 	lazy val subView = apply(viewAccess, "SubView")
 	/**
 	  * Imports the UnconditionalView trait (Vault)
@@ -187,6 +188,9 @@ object Reference
 	lazy val descriptionLinkFactory = apply(citadelDatabase/"factory.description", "DescriptionLinkFactory")
 	lazy val descriptionLinkAccess = apply(descriptionAccess, "DescriptionLinkAccess")
 	lazy val descriptionLinksAccess = apply(descriptionsAccess, "DescriptionLinksAccess")
+	lazy val singleIdDescribedAccess = apply(descriptionAccess, "SingleIdDescribedAccess")
+	lazy val manyDescribedAccess = apply(descriptionsAccess, "ManyDescribedAccess")
+	lazy val manyDescribedAccessByIds = apply(descriptionsAccess, "ManyDescribedAccessByIds")
 	
 	
 	// OTHER    -------------------------------

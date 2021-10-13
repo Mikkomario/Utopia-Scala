@@ -13,7 +13,7 @@ import utopia.vault.coder.model.data.{Class, Enum, ProjectSetup}
 
 import java.nio.file.{Path, Paths}
 import scala.io.{Codec, StdIn}
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 /**
   * The command line application for this project, which simply reads data from a json file and outputs it to a certain
@@ -143,7 +143,41 @@ object VaultCoderApp extends App
 		}
 	}
 	
-	def write(data: Map[String, (Vector[Class], Vector[Enum])]) =
+	println()
+	println(s"Reading class data from ${inputPath.toAbsolutePath}...")
+	
+	if (inputPath.notExists)
+		println("Looks like no data can be found from that location. Please try again with different input.")
+	else if (inputPath.isDirectory)
+		inputPath.children.flatMap { filePaths =>
+			val jsonFilePaths = filePaths.filter { _.fileType.toLowerCase == "json" }
+			println(s"Found ${jsonFilePaths.size} json file(s) from the input directory (${inputPath.fileName})")
+			jsonFilePaths.tryMap { ClassReader(_) }
+		} match {
+			// Groups read results that target the same base package
+			case Success(data) =>
+				write(data.groupMapReduce { _._1 } { case (_, enums, classes) => classes -> enums } {
+					case ((classes1, enums1), (classes2, enums2)) => (classes1 ++ classes2) -> (enums1 ++ enums2)
+				})
+			case Failure(error) =>
+				error.printStackTrace()
+				println("Class reading failed. Please make sure all of the files are in correct format.")
+		}
+	else
+	{
+		if (inputPath.fileType.toLowerCase != "json")
+			println(s"Warning: Expect file type is .json. Specified file is of type .${inputPath.fileType}")
+		
+		ClassReader(inputPath) match
+		{
+			case Success((basePackage, enums, classes)) => write(Map(basePackage -> (classes -> enums)))
+			case Failure(error) =>
+				error.printStackTrace()
+				println("Class reading failed. Please make sure the file is in correct format.")
+		}
+	}
+	
+	def write(data: Map[String, (Vector[Class], Vector[Enum])]): Unit =
 	{
 		println()
 		// Applies filters
@@ -211,45 +245,7 @@ object VaultCoderApp extends App
 						(rootDirectory/basePackageName.replace('.', '-')).asExistingDirectory
 					directory.flatMap { directory =>
 						implicit val setup: ProjectSetup = ProjectSetup(basePackageName, directory)
-						// Writes the enumerations
-						enumerations.tryMap { EnumerationWriter(_) }
-							// Next writes the SQL declaration and the tables document
-							.flatMap { _ => SqlWriter(classes, directory/"db_structure.sql") }
-							.flatMap { _ => TablesWriter(classes) }
-							.flatMap { tablesRef =>
-								DescriptionLinkInterfaceWriter(classes, tablesRef).flatMap { descriptionLinkObjects =>
-									// Next writes all required documents for each class
-									classes.tryMap { classToWrite =>
-										ModelWriter(classToWrite).flatMap { case (modelRef, dataRef) =>
-											FactoryWriter(classToWrite, tablesRef, modelRef, dataRef).flatMap { factoryRef =>
-												DbModelWriter(classToWrite, modelRef, dataRef, factoryRef)
-													.flatMap { dbModelRef =>
-														AccessWriter(classToWrite, modelRef, factoryRef, dbModelRef)
-															.map { _ => classToWrite -> modelRef }
-													}
-											}
-										}
-									}.flatMap { classesWithModels =>
-										// May also write description-related documents
-										descriptionLinkObjects match
-										{
-											// Case: At least one class uses descriptions
-											case Some((linkModels, linkFactories)) =>
-												classesWithModels.tryForeach { case (classToWrite, modelRef) =>
-													classToWrite.descriptionLinkClass.tryForeach { descriptionLinkClass =>
-														DescribedModelWriter(classToWrite, modelRef).flatMap { _ =>
-															DbDescriptionAccessWriter(descriptionLinkClass,
-																classToWrite.name, linkModels, linkFactories)
-																.map { _ => () }
-														}
-													}
-												}
-											// Case: No classes use descriptions => automatically succeeds
-											case None => Success(())
-										}
-									}
-								}
-							}
+						write(directory, classes, enumerations)
 					}
 				}
 			}
@@ -262,37 +258,51 @@ object VaultCoderApp extends App
 		}
 	}
 	
-	println()
-	println(s"Reading class data from ${inputPath.toAbsolutePath}...")
-	
-	if (inputPath.notExists)
-		println("Looks like no data can be found from that location. Please try again with different input.")
-	else if (inputPath.isDirectory)
-		inputPath.children.flatMap { filePaths =>
-			val jsonFilePaths = filePaths.filter { _.fileType.toLowerCase == "json" }
-			println(s"Found ${jsonFilePaths.size} json file(s) from the input directory (${inputPath.fileName})")
-			jsonFilePaths.tryMap { ClassReader(_) }
-		} match {
-			// Groups read results that target the same base package
-			case Success(data) =>
-				write(data.groupMapReduce { _._1 } { case (_, enums, classes) => classes -> enums } {
-					case ((classes1, enums1), (classes2, enums2)) => (classes1 ++ classes2) -> (enums1 ++ enums2)
-				})
-			case Failure(error) =>
-				error.printStackTrace()
-				println("Class reading failed. Please make sure all of the files are in correct format.")
-		}
-	else
+	def write(directory: Path, classes: Vector[Class], enumerations: Vector[Enum])
+	         (implicit setup: ProjectSetup): Try[Unit] =
 	{
-		if (inputPath.fileType.toLowerCase != "json")
-			println(s"Warning: Expect file type is .json. Specified file is of type .${inputPath.fileType}")
-		
-		ClassReader(inputPath) match
-		{
-			case Success((basePackage, enums, classes)) => write(Map(basePackage -> (classes -> enums)))
-			case Failure(error) =>
-				error.printStackTrace()
-				println("Class reading failed. Please make sure the file is in correct format.")
-		}
+		// Writes the enumerations
+		enumerations.tryMap { EnumerationWriter(_) }
+			// Next writes the SQL declaration and the tables document
+			.flatMap { _ => SqlWriter(classes, directory/"db_structure.sql") }
+			.flatMap { _ => TablesWriter(classes) }
+			.flatMap { tablesRef =>
+				DescriptionLinkInterfaceWriter(classes, tablesRef).flatMap { descriptionLinkObjects =>
+					// Next writes all required documents for each class
+					classes.tryForeach { classToWrite =>
+						ModelWriter(classToWrite).flatMap { case (modelRef, dataRef) =>
+							FactoryWriter(classToWrite, tablesRef, modelRef, dataRef).flatMap { factoryRef =>
+								DbModelWriter(classToWrite, modelRef, dataRef, factoryRef)
+									.flatMap { dbModelRef =>
+										// Adds description-specific references if applicable
+										(descriptionLinkObjects match
+										{
+											// Case: At least one class uses descriptions
+											case Some((linkModels, linkFactories)) =>
+												classToWrite.descriptionLinkClass match
+												{
+													case Some(descriptionLinkClass) =>
+														DescribedModelWriter(classToWrite, modelRef).flatMap { describedRef =>
+															DbDescriptionAccessWriter(descriptionLinkClass,
+																classToWrite.name, linkModels, linkFactories)
+																.map { case (singleAccessRef, manyAccessRef) =>
+																	Some(describedRef, singleAccessRef, manyAccessRef)
+																}
+														}
+													case None => Success(None)
+												}
+											// Case: No classes use descriptions => automatically succeeds
+											case None => Success(None)
+										}).flatMap { descriptionReferences =>
+											// Finally writes the access points
+											AccessWriter(classToWrite, modelRef, factoryRef, dbModelRef,
+												descriptionReferences).map { _ => () }
+										}
+									}
+							}
+						}
+					}
+				}
+			}
 	}
 }
