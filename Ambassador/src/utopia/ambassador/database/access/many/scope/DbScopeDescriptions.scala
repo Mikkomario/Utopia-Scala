@@ -21,5 +21,5 @@ object DbScopeDescriptions extends DescriptionLinksAccess
 	/**
 	  * The read factory used by this access point
 	  */
-	override val linkFactory = DescriptionLinkFactory(linkModel)
+	override val factory = DescriptionLinkFactory(linkModel)
 }

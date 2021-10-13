@@ -9,5 +9,5 @@ import utopia.citadel.database.factory.description.DescriptionLinkFactory
   */
 object DbDescriptionRoleDescriptions extends DescriptionLinksAccess
 {
-	override def linkFactory = DescriptionLinkFactory.descriptionRole
+	override def factory = DescriptionLinkFactory.descriptionRole
 }

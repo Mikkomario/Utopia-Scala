@@ -178,18 +178,15 @@ object Reference
 	lazy val descriptionLink = apply(description, "DescriptionLink")
 	lazy val describedWrapper = apply(combinedDescription, "DescribedWrapper")
 	lazy val simplyDescribed = apply(combinedDescription, "SimplyDescribed")
-	lazy val describedFromModelFactory = apply(combinedDescription, "DescribedFromModelFactory")
+	lazy val describedFactory = apply(combinedDescription, "DescribedFactory")
 	
 	// Citadel
 	
 	lazy val citadelTables = apply(citadelDatabase, "Tables")
 	lazy val descriptionLinkModelFactory = apply(citadelDatabase/"model.description", "DescriptionLinkModelFactory")
 	lazy val descriptionLinkFactory = apply(citadelDatabase/"factory.description", "DescriptionLinkFactory")
-	lazy val descriptionOfSingle = apply(citadelAccess/"single.description.DbDescription", "DescriptionOfSingle")
-	private lazy val dbDescriptionsOrigin = citadelAccess/"many.description.DbDescriptions"
-	lazy val descriptionsOfAll = apply(dbDescriptionsOrigin, "DescriptionsOfAll")
-	lazy val descriptionsOfMany = apply(dbDescriptionsOrigin, "DescriptionsOfMany")
-	lazy val descriptionsOfSingle = apply(dbDescriptionsOrigin, "DescriptionsOfSingle")
+	lazy val descriptionLinkAccess = apply(descriptionAccess, "DescriptionLinkAccess")
+	lazy val descriptionLinksAccess = apply(descriptionsAccess, "DescriptionLinksAccess")
 	
 	
 	// OTHER    -------------------------------

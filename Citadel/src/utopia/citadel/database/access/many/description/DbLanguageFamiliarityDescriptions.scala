@@ -9,5 +9,5 @@ import utopia.citadel.database.factory.description.DescriptionLinkFactory
   */
 object DbLanguageFamiliarityDescriptions extends DescriptionLinksAccess
 {
-	override def linkFactory = DescriptionLinkFactory.languageFamiliarity
+	override def factory = DescriptionLinkFactory.languageFamiliarity
 }

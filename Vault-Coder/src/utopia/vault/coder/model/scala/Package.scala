@@ -43,6 +43,8 @@ object Package
 	
 	lazy val citadelDatabase = utopia/"citadel.database"
 	lazy val citadelAccess = citadelDatabase/"access"
+	lazy val descriptionsAccess = citadelAccess/"many.description"
+	lazy val descriptionAccess = citadelAccess/"single.description"
 	
 	
 	// IMPLICIT -------------------------------

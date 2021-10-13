@@ -8,7 +8,7 @@ import utopia.metropolis.model.post.NewDescription
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Table
-import utopia.vault.nosql.view.NonDeprecatedView
+import utopia.vault.nosql.view.{NonDeprecatedView, SubView}
 import utopia.vault.sql.SqlExtensions._
 
 object DescriptionLinksAccess
@@ -35,7 +35,7 @@ object DescriptionLinksAccess
 	
 	// NESTED   -------------------------------
 	
-	private class SimpleDescriptionLinksAccess(override val linkFactory: DescriptionLinkFactory[DescriptionLink])
+	private class SimpleDescriptionLinksAccess(override val factory: DescriptionLinkFactory[DescriptionLink])
 		extends DescriptionLinksAccess
 }
 
@@ -48,15 +48,10 @@ trait DescriptionLinksAccess extends DescriptionLinksForManyAccessLike with NonD
 {
 	// ABSTRACT ----------------------------
 	
-	/**
-	  * @return Factory used for reading description links
-	  */
-	def linkFactory: DescriptionLinkFactory[DescriptionLink]
+	override def factory: DescriptionLinkFactory[DescriptionLink]
 	
 	
 	// IMPLEMENTED  ------------------------
-	
-	override def factory = linkFactory
 	
 	override protected def subGroup(remainingTargetIds: Set[Int]) = new DescriptionsOfMany(remainingTargetIds)
 	
@@ -86,14 +81,15 @@ trait DescriptionLinksAccess extends DescriptionLinksForManyAccessLike with NonD
 	  * Provides access to multiple items' descriptions
 	  * @param targetIds Ids of the targeted items
 	  */
-	class DescriptionsOfMany(targetIds: Set[Int]) extends DescriptionLinksForManyAccessLike
+	class DescriptionsOfMany(targetIds: Set[Int]) extends DescriptionLinksForManyAccessLike with SubView
 	{
 		// IMPLEMENTED	---------------------
 		
-		override def factory = linkFactory
+		override protected def parent = DescriptionLinksAccess.this
 		
-		override def globalCondition =
-			Some(linkModel.targetIdColumn.in(targetIds) && factory.nonDeprecatedCondition)
+		override def filterCondition = linkModel.targetIdColumn.in(targetIds)
+		
+		override def factory = parent.factory
 		
 		override protected def subGroup(remainingTargetIds: Set[Int]) =
 		{
@@ -160,14 +156,15 @@ trait DescriptionLinksAccess extends DescriptionLinksForManyAccessLike with NonD
 	  * Provides access to all descriptions of a single item
 	  * @param targetId Id of the target item
 	  */
-	class DescriptionsOfSingle(targetId: Int) extends DescriptionLinksAccessLike
+	class DescriptionsOfSingle(targetId: Int) extends DescriptionLinksAccessLike with SubView
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def factory = linkFactory
+		override protected def parent = DescriptionLinksAccess.this
 		
-		override def globalCondition =
-			Some(linkModel.withTargetId(targetId).toCondition && factory.nonDeprecatedCondition)
+		override def filterCondition = linkModel.withTargetId(targetId).toCondition
+		
+		override def factory = parent.factory
 		
 		
 		// OTHER	-------------------------

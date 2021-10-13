@@ -3,7 +3,7 @@ package utopia.vault.coder.controller.writer
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.Visibility.Protected
 import utopia.vault.coder.model.scala.{Parameter, Parameters, Reference, ScalaType}
-import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration}
+import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration}
 
 import scala.io.Codec
 
@@ -26,9 +26,8 @@ object DescribedModelWriter
 	{
 		val className = s"Described${classToWrite.name}"
 		
-		// TODO: Add a companion object that extends DescribedFactory
 		File(setup.modelPackage/"combined"/classToWrite.packageName,
-			// Companion object is used for parsing from model data
+			ObjectDeclaration(className, Vector(Reference.describedFactory)),
 			// (not present in this version,
 			// because implementation requires data and stored models to have fromModel parsing)
 			/*
