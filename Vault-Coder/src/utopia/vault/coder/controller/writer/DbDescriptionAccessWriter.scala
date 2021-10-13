@@ -44,7 +44,9 @@ object DbDescriptionAccessWriter
 		).write().flatMap { singleDescriptionAccessRef =>
 			// Finally writes the multiple descriptions access point
 			File(setup.manyAccessPackage/descriptionLinkClass.packageName,
-				ObjectDeclaration(s"Db${descriptionLinkClass.name.plural}", Vector(Reference.descriptionLinksAccess))
+				ObjectDeclaration(s"Db${descriptionLinkClass.name.plural}",
+					Vector(Reference.descriptionLinksAccess), properties = baseAccessProperties
+				)
 			).write().map { singleDescriptionAccessRef -> _ }
 		}
 	}
