@@ -3,7 +3,7 @@ package utopia.exodus.rest.resource.organization
 import utopia.access.http.Method.{Get, Put}
 import utopia.access.http.Status.NotFound
 import utopia.citadel.database.access.id.many.DbDescriptionRoleIds
-import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbDescriptions}
+import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbOrganizationDescriptions}
 import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.exodus.model.enumeration.StandardTask.DocumentOrganization
 import utopia.exodus.rest.util.AuthorizedContext
@@ -40,7 +40,7 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends Resource[Au
 				implicit val c: Connection = connection
 				// Checks the languages the user wants to use and gathers descriptions in those languages
 				val languages = context.languageIdListFor(session.userId)
-				val descriptions = DbDescriptions.ofOrganizationWithId(organizationId).inLanguages(languages)
+				val descriptions = DbOrganizationDescriptions(organizationId).inLanguages(languages)
 				// Supports simple model style also
 				Result.Success(session.modelStyle match {
 					case Full => descriptions.map { _.toModel }
@@ -61,7 +61,7 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends Resource[Au
 					if (DbLanguage(newDescription.languageId).isDefined)
 					{
 						// Updates the organization's descriptions accordingly
-						val dbDescriptions = DbDescriptions.ofOrganizationWithId(organizationId)
+						val dbDescriptions = DbOrganizationDescriptions(organizationId)
 						val insertedDescriptions = dbDescriptions.update(newDescription, session.userId)
 						// Returns new version of organization's descriptions (in specified language)
 						val otherDescriptions =

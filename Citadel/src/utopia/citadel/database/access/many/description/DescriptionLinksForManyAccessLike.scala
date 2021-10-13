@@ -9,7 +9,7 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 20.5.2020, v1.0
   */
-trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
+trait DescriptionLinksForManyAccessLike extends DescriptionLinksAccessLike
 {
 	// ABSTRACT	------------------------------------
 	
@@ -17,7 +17,7 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 	  * @param remainingTargetIds Target item ids
 	  * @return An access point that targets only those items
 	  */
-	protected def subGroup(remainingTargetIds: Set[Int]): DescriptionLinksForManyAccess
+	protected def subGroup(remainingTargetIds: Set[Int]): DescriptionLinksForManyAccessLike
 	
 	
 	// OTHER	------------------------------------
@@ -59,7 +59,7 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 		val languageId = languageIds.head
 		val newAccessPoint = subGroup(remainingTargetIds)
 		// Target id -> Descriptions
-		val readDescriptions = newAccessPoint.inLanguageWithId(languageId).forRolesWithIds(remainingRoleIds)
+		val readDescriptions = newAccessPoint.inLanguageWithId(languageId).outsideRoleIds(remainingRoleIds)
 			.groupBy { _.targetId }
 		
 		// Reads the rest of the descriptions recursively
@@ -74,15 +74,15 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 	 * @param connection         DB Connection (implicit)
 	 * @return Read descriptions, grouped by target id
 	 */
-	protected def forRoleInLanguages(roleId: Int, remainingTargetIds: Set[Int], languageIds: Seq[Int])
-	                                (implicit connection: Connection): Map[Int, DescriptionLink] =
+	protected def withRoleIdInLanguages(roleId: Int, remainingTargetIds: Set[Int], languageIds: Seq[Int])
+	                                   (implicit connection: Connection): Map[Int, DescriptionLink] =
 	{
 		// Reads descriptions in target languages until either all targets have been read or all language
 		// options exhausted
 		val languageId = languageIds.head
 		val newAccessPoint = subGroup(remainingTargetIds)
 		// Target id -> Description link
-		val readDescriptions = newAccessPoint.inLanguageWithId(languageId).forRoleWithId(roleId)
+		val readDescriptions = newAccessPoint.inLanguageWithId(languageId).withRoleId(roleId)
 			.map { link => link.targetId -> link }.toMap
 		
 		// Reads the rest of the descriptions recursively, if possible and necessary
@@ -92,7 +92,7 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 			if (remainingTargetIds.isEmpty)
 				readDescriptions
 			else
-				readDescriptions ++ forRoleInLanguages(roleId, newRemainingTargetIds, languageIds.tail)
+				readDescriptions ++ withRoleIdInLanguages(roleId, newRemainingTargetIds, languageIds.tail)
 		}
 		else
 			readDescriptions
@@ -101,7 +101,7 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 	// Continues read through recursion, if possible. Utilizes (and includes) existing read results.
 	// LanguageIds and roles should be passed as they were at the start of the last read
 	private def readRemaining(languageIds: Seq[Int],
-	                          remainingRoleIds: Set[Int], lastAccessPoint: DescriptionLinksForManyAccess,
+	                          remainingRoleIds: Set[Int], lastAccessPoint: DescriptionLinksForManyAccessLike,
 	                          lastReadResults: Map[Int, Vector[DescriptionLink]])
 	                         (implicit connection: Connection): Map[Int, Vector[DescriptionLink]] =
 	{

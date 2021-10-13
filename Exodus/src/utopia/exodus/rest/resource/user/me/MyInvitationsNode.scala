@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method.Get
-import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbDescriptions}
+import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbOrganizationDescriptions}
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Value
@@ -36,8 +36,7 @@ object MyInvitationsNode extends Resource[AuthorizedContext]
 				// Reads organization descriptions
 				val languageIds = context.languageIdListFor(session.userId)
 				val organizationIds = pendingInvitations.map { _.organizationId }.toSet
-				val organizationDescriptions = DbDescriptions.ofOrganizationsWithIds(organizationIds)
-					.inLanguages(languageIds)
+				val organizationDescriptions = DbOrganizationDescriptions(organizationIds).inLanguages(languageIds)
 				
 				// Attaches sender data to each invitation where applicable
 				val enrichedInvitations = pendingInvitations.map { invitation =>

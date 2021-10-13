@@ -1,12 +1,11 @@
 package utopia.citadel.database.access.single.description
 
-import utopia.citadel.database.access.many.description.DbDescriptions
-import utopia.citadel.database.factory.description.DescriptionLinkFactory
-import utopia.citadel.database.model.description.DescriptionLinkModelFactory
+import utopia.citadel.database.access.many.description.DescriptionLinksAccess
 import utopia.metropolis.model.combined.description.DescribedFactory
+import utopia.metropolis.model.partial.description.DescriptionData
+import utopia.metropolis.model.post.NewDescription
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
-import utopia.vault.model.immutable.Storable
 import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
 
 /**
@@ -20,13 +19,14 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	// ABSTRACT --------------------------------
 	
 	/**
-	 * @return Factory used for reading description links for this model type
-	 */
-	def descriptionLinkFactory: DescriptionLinkFactory[DescriptionLink]
+	  * @return An access point used for accessing individual description links for this model type
+	  */
+	protected def singleDescriptionAccess: DescriptionLinkAccess
 	/**
-	 * @return Database model (factory) user for interacting with description links for this model type
-	 */
-	def descriptionLinkModel: DescriptionLinkModelFactory[Storable]
+	  * @return An access point used for accessing groups of description links for this model type
+	  */
+	protected def manyDescriptionsAccess: DescriptionLinksAccess
+	
 	/**
 	 * @return Factory used for creating described compies of this model type
 	 */
@@ -38,11 +38,11 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	/**
 	 * @return An access point to the descriptions for this instance that returns multiple descriptions at once
 	 */
-	def descriptions = DbDescriptions.DescriptionsOfSingle(id, descriptionLinkFactory, descriptionLinkModel)
+	def descriptions = manyDescriptionsAccess(id)
 	/**
 	 * @return An access point to individual descriptions concerning this instance
 	 */
-	def description = DbDescription(id, descriptionLinkFactory, descriptionLinkModel)
+	def description = singleDescriptionAccess(id)
 	
 	/**
 	 * @param connection Implicit DB Connection
@@ -69,6 +69,24 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	 */
 	def describedInLanguages(languageIds: Seq[Int])(implicit connection: Connection) =
 		pullDescribed(descriptions.inLanguages(languageIds))
+	
+	/**
+	  * Inserts a new description for this item, replacing the existing description
+	  * @param newDescription New description to apply
+	  * @param connection Implicit Connection
+	  * @return Inserted description link
+	  */
+	def describe(newDescription: DescriptionData)(implicit connection: Connection) =
+		descriptions.update(newDescription)
+	/**
+	  * Inserts possibly multiple new descriptions for this item, replacing existing versions
+	  * @param newDescription New description of this item
+	  * @param authorId Id of the user who wrote the description
+	  * @param connection Implicit DB connection
+	  * @return Description links that were inserted
+	  */
+	def describe(newDescription: NewDescription, authorId: Int)(implicit connection: Connection) =
+		descriptions.update(newDescription, authorId)
 	
 	private def pullDescribed(pullDescriptions: => Iterable[DescriptionLink])(implicit connection: Connection) =
 		pull.map { item => describedFactory(item, pullDescriptions.toSet) }

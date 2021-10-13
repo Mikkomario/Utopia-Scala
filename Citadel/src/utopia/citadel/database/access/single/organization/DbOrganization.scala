@@ -1,9 +1,10 @@
 package utopia.citadel.database.access.single.organization
 
 import utopia.citadel.database.Tables
-import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.description.DbOrganizationDescriptions
 import utopia.citadel.database.access.many.organization.{DbUserRoles, InvitationsAccess, OrganizationDeletionsAccess}
 import utopia.citadel.database.access.many.user.DbUsers
+import utopia.citadel.database.access.single.description.DbOrganizationDescription
 import utopia.citadel.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory}
 import utopia.citadel.database.model.organization.{DeletionModel, MemberRoleModel, MembershipModel, OrganizationModel}
 import utopia.citadel.model.enumeration.CitadelDescriptionRole.Name
@@ -54,7 +55,7 @@ object DbOrganization
 		val membership = MembershipModel.insert(MembershipData(organizationId, founderId, Some(founderId)))
 		MemberRoleModel.insert(membership.id, Owner.id, founderId)
 		// Inserts a name for that organization
-		DbDescriptions.ofOrganizationWithId(organizationId).update(Name.id, languageId, founderId, organizationName)
+		DbOrganizationDescriptions(organizationId).update(Name.id, languageId, founderId, organizationName)
 		// Returns organization id
 		organizationId
 	}
@@ -84,9 +85,13 @@ object DbOrganization
 		def deletions = DbOrganizationDeletions
 		
 		/**
+		  * @return An access point to individual descriptions of this organization
+		  */
+		def description = DbOrganizationDescription(organizationId)
+		/**
 		  * @return An access point to descriptions of this organization
 		  */
-		def descriptions = DbDescriptions.ofOrganizationWithId(organizationId)
+		def descriptions = DbOrganizationDescriptions(organizationId)
 		
 		
 		// OTHER    -------------------------------

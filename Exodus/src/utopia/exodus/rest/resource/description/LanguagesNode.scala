@@ -1,6 +1,6 @@
 package utopia.exodus.rest.resource.description
 
-import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.description.DbLanguageDescriptions
 import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.metropolis.model.combined.language.DescribedLanguage
@@ -35,7 +35,7 @@ class LanguagesNode(authorization: (AuthorizedContext, => Result, Connection) =>
 	
 	override protected def items(implicit connection: Connection) = DbLanguages.all
 	
-	override protected def descriptionsAccess = DbDescriptions.ofAllLanguages
+	override protected def descriptionsAccess = DbLanguageDescriptions
 	
 	override protected def idOf(item: Language) = item.id
 	

@@ -2,7 +2,7 @@ package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.NotFound
-import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbDescriptions}
+import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbTaskDescriptions}
 import utopia.citadel.database.access.single.organization.DbTask
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, ExtendableSessionResourceFactory, SessionUseCaseImplementation}
 import utopia.exodus.rest.util.AuthorizedContext
@@ -34,7 +34,7 @@ class TaskNode(val taskId: Int) extends ExtendableSessionResource
 		if (DbTask(taskId).nonEmpty)
 		{
 			// Reads the descriptions of this task
-			val descriptions = DbDescriptions.ofTaskWithId(taskId)
+			val descriptions = DbTaskDescriptions(taskId)
 				.inLanguages(context.languageIdListFor(session.userId))
 			val task = DescribedTask(taskId, descriptions.toSet)
 			// Forms a response based on this described task

@@ -1,6 +1,6 @@
 package utopia.exodus.rest.resource.description
 
-import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.description.DbDescriptionRoleDescriptions
 import utopia.citadel.database.factory.description.DescriptionRoleFactory
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.metropolis.model.combined.description.DescribedDescriptionRole
@@ -37,7 +37,7 @@ class DescriptionRolesNode(authorization: (AuthorizedContext, => Result, Connect
 	override protected def items(implicit connection: Connection) =
 		DescriptionRoleFactory.getAll()
 	
-	override protected def descriptionsAccess = DbDescriptions.ofAllDescriptionRoles
+	override protected def descriptionsAccess = DbDescriptionRoleDescriptions
 	
 	override protected def idOf(item: DescriptionRole) = item.id
 	

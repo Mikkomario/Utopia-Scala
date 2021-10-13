@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
-import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbDescriptions}
+import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbUserRoleDescriptions}
 import utopia.citadel.database.access.many.organization.DbUserRoles
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
@@ -32,7 +32,7 @@ object RolesNode extends Resource[AuthorizedContext]
 			// Reads all user roles and their allowed tasks
 			val roles = DbUserRoles.withRights
 			// Reads role descriptions and combines them with roles
-			val descriptions = DbDescriptions.ofAllUserRoles.inLanguages(languageIds)
+			val descriptions = DbUserRoleDescriptions.inLanguages(languageIds)
 			val rolesWithDescriptions = roles.map { role =>
 				DescribedRole(role, descriptions.getOrElse(role.roleId, Set()).toSet) }
 			// Supports simple model style if needed

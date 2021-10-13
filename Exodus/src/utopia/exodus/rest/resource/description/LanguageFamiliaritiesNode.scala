@@ -1,6 +1,6 @@
 package utopia.exodus.rest.resource.description
 
-import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.description.DbLanguageFamiliarityDescriptions
 import utopia.citadel.database.access.many.language.DbLanguageFamiliarities
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.metropolis.model.combined.language.DescribedLanguageFamiliarity
@@ -31,7 +31,7 @@ class LanguageFamiliaritiesNode(authorization: (AuthorizedContext, => Result, Co
 	
 	override def defaultModelStyle = Simple
 	
-	override protected def descriptionsAccess = DbDescriptions.ofAllLanguageFamiliarities
+	override protected def descriptionsAccess = DbLanguageFamiliarityDescriptions
 	
 	override protected def idOf(item: LanguageFamiliarity) = item.id
 	

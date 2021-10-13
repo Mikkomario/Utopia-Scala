@@ -1,7 +1,7 @@
 package utopia.citadel.database.access.single.device
 
-import utopia.citadel.database.access.many.description.DbDescriptions
-import utopia.citadel.database.access.single.description.DbDescription
+import utopia.citadel.database.access.many.description.DbDeviceDescriptions
+import utopia.citadel.database.access.single.description.DbDeviceDescription
 import utopia.citadel.database.model.device.ClientDeviceModel
 import utopia.citadel.database.model.user.UserDeviceModel
 import utopia.citadel.model.enumeration.CitadelDescriptionRole.Name
@@ -45,7 +45,7 @@ object DbDevice
 		// Inserts a new device first
 		val newDeviceId = factory.insert(authorId)
 		// Then inserts a description for the device
-		DbDescriptions.ofDeviceWithId(newDeviceId).update(Name.id, languageId, authorId, deviceName)
+		DbDeviceDescriptions(newDeviceId).update(Name.id, languageId, authorId, deviceName)
 	}
 	
 	
@@ -69,9 +69,13 @@ object DbDevice
 		def isDefined(implicit connection: Connection) = factory.table.containsIndex(deviceId)
 		
 		/**
+		  * @return An access point to individual descriptions of this device
+		  */
+		def description = DbDeviceDescription(deviceId)
+		/**
 		  * @return An access point to descriptions of this device
 		  */
-		def descriptions = DbDescriptions.ofDeviceWithId(deviceId)
+		def descriptions = DbDeviceDescriptions(deviceId)
 		
 		/**
 		  * @param connection Database connection (implicit)
@@ -99,7 +103,7 @@ object DbDevice
 			val removedLinkCondition = userLinkModel.withDeprecatedAfter(threshold).toConditionWithOperator(LargerOrEqual)
 			if (!userLinkModel.exists(anyUserLinkConnectionCondition && (newLinkCondition || removedLinkCondition))) {
 				// If not, checks for new descriptions
-				DbDescriptions.ofDeviceWithId(deviceId).isModifiedSince(threshold)
+				descriptions.isModifiedSince(threshold)
 			}
 			else
 				true
@@ -119,6 +123,6 @@ object DbDevice
 		  * @return This device's name in specified language
 		  */
 		def nameInLanguageWithId(languageId: Int)(implicit connection: Connection) =
-			DbDescription.ofDeviceWithId(deviceId).inLanguageWithId(languageId).name.text
+			description.inLanguageWithId(languageId).name.text
 	}
 }

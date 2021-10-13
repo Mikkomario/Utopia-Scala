@@ -13,6 +13,7 @@ import scala.io.Codec
   * @author Mikko Hilpinen
   * @since 9.10.2021, v1.2
   */
+// TODO: Update this class to match changes in Citadel
 object DbDescriptionAccessWriter
 {
 	/**

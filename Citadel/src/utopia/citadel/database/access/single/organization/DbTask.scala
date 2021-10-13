@@ -1,7 +1,8 @@
 package utopia.citadel.database.access.single.organization
 
 import utopia.citadel.database.Tables
-import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.description.DbTaskDescriptions
+import utopia.citadel.database.access.single.description.DbTaskDescription
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.{SubView, UnconditionalView}
@@ -36,9 +37,13 @@ object DbTask extends UnconditionalView with Indexed
 		// COMPUTED -------------------------
 		
 		/**
+		  * @return An access point to this task's individual descriptions
+		  */
+		def description = DbTaskDescription(taskId)
+		/**
 		  * @return An access point to this task's descriptions
 		  */
-		def descriptions = DbDescriptions.ofTaskWithId(taskId)
+		def descriptions = DbTaskDescriptions(taskId)
 		
 		
 		// IMPLEMENTED  --------------------

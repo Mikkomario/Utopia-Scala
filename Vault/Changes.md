@@ -6,7 +6,10 @@
   - This will break the existing `extends` -statements and require a new idValue -property from the extending classes
 ### New Features
 - Added **SingleIntIdModelAccess** trait, which is a version of **SingleIdModelAccess** that is less generic and 
-  easier to implement (if you use integers as row ids) 
+  easier to implement (if you use integers as row ids)
+### New Methods
+- **NullDeprecatable**
+  - Added `.deprecatedCondition`
 
 ## v1.10 - 3.10.2021
 This update contains some package-related refactoring, as well as refactoring based on the latest **Flow** changes. 

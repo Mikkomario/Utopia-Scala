@@ -1,16 +1,18 @@
 package utopia.citadel.database.access.single.language
 
 import utopia.citadel.database.access.id.single.DbLanguageId
-import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.description.DbLanguageDescriptions
+import utopia.citadel.database.access.single.description.{DbLanguageDescription, SingleIdDescribedAccess}
 import utopia.citadel.database.factory.language.LanguageFactory
 import utopia.citadel.database.model.language.LanguageModel
 import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.util.CollectionExtensions._
+import utopia.metropolis.model.combined.language.DescribedLanguage
 import utopia.metropolis.model.error.NoDataFoundException
 import utopia.metropolis.model.post.NewLanguageProficiency
 import utopia.metropolis.model.stored.language.Language
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.single.model.distinct.{SingleIntIdModelAccess, UniqueModelAccess}
+import utopia.vault.nosql.access.single.model.distinct.UniqueModelAccess
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.{SubView, UnconditionalView}
@@ -84,8 +86,14 @@ object DbLanguage extends SingleRowModelAccess[Language] with UnconditionalView 
 	
 	// NESTED   -----------------------------------
 	
-	class DbSingleLanguage(override val id: Int) extends SingleIntIdModelAccess[Language]
+	class DbSingleLanguage(override val id: Int) extends SingleIdDescribedAccess[Language, DescribedLanguage]
 	{
+		override protected def singleDescriptionAccess = DbLanguageDescription
+		
+		override protected def manyDescriptionsAccess = DbLanguageDescriptions
+		
+		override protected def describedFactory = DescribedLanguage
+		
 		override def factory = DbLanguage.factory
 		
 		/**
@@ -93,11 +101,6 @@ object DbLanguage extends SingleRowModelAccess[Language] with UnconditionalView 
 		 * @return The ISO-code associated with this language
 		 */
 		def isoCode(implicit connection: Connection) = pullAttribute(model.isoCodeAttName)
-		
-		/**
-		 * @return An access point to this language's descriptions
-		 */
-		def descriptions = DbDescriptions.ofLanguageWithId(id)
 	}
 	
 	class DbLanguageForIsoCode(val code: String) extends UniqueModelAccess[Language] with SubView

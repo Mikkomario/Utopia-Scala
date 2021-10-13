@@ -1,7 +1,7 @@
 package utopia.citadel.database.access.many.organization
 
 import utopia.citadel.database.access.id.many.DbUserRoleIds
-import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.description.DbUserRoleDescriptions
 import utopia.citadel.database.factory.organization.RoleRightFactory
 import utopia.citadel.database.model.organization.RoleRightModel
 import utopia.flow.generic.ValueConversions._
@@ -37,7 +37,7 @@ object DbUserRoles
 	/**
 	  * @return An access point to descriptions concerning (all) user roles
 	  */
-	def descriptions = DbDescriptions.ofAllUserRoles
+	def descriptions = DbUserRoleDescriptions
 	
 	
 	// OTHER	----------------------------
@@ -68,6 +68,6 @@ object DbUserRoles
 		/**
 		  * @return An access point to descriptions concerning these user roles
 		  */
-		def descriptions = DbDescriptions.ofUserRolesWithIds(roleIds)
+		def descriptions = DbUserRoleDescriptions(roleIds)
 	}
 }

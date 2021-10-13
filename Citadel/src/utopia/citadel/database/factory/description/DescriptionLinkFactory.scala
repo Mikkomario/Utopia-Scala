@@ -76,7 +76,7 @@ object DescriptionLinkFactory
 	
 	// NESTED	----------------------------------
 	
-	private case class DescriptionLinkFactoryImplementation(modelFactory: DescriptionLinkModelFactory[Storable])
+	private case class DescriptionLinkFactoryImplementation(model: DescriptionLinkModelFactory[Storable])
 		extends DescriptionLinkFactory[DescriptionLink]
 	{
 		override protected def apply(id: Int, targetId: Int, description: Description, created: Instant) =
@@ -97,7 +97,7 @@ trait DescriptionLinkFactory[+E] extends LinkedFactory[E, Description] with Depr
 	/**
 	  * @return Factory used in database model construction
 	  */
-	def modelFactory: DescriptionLinkModelFactory[Storable]
+	def model: DescriptionLinkModelFactory[Storable]
 	
 	/**
 	  * Creates a new existing model based on specified data
@@ -112,7 +112,7 @@ trait DescriptionLinkFactory[+E] extends LinkedFactory[E, Description] with Depr
 	
 	// IMPLEMENTED	------------------------------
 	
-	override def table = modelFactory.table
+	override def table = model.table
 	
 	override def nonDeprecatedCondition = table("deprecatedAfter").isNull
 	
@@ -120,6 +120,6 @@ trait DescriptionLinkFactory[+E] extends LinkedFactory[E, Description] with Depr
 	
 	override def apply(model: Model[Constant], child: Description) =
 		table.requirementDeclaration.validate(model).toTry.flatMap { valid =>
-			apply(valid("id").getInt, valid(modelFactory.targetIdAttName).getInt, child, valid("created").getInstant)
+			apply(valid("id").getInt, valid(this.model.targetIdAttName).getInt, child, valid("created").getInstant)
 		}
 }

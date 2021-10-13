@@ -13,6 +13,8 @@
 ### New Features
 - Added **SingleIdDescribedAccess** trait for more convenient accessing of described model variants and 
   descriptions belonging to an individual model
+- Added **ManyDescribedAccess** and **ManyDescribedAccessByIds** traits for convenient accessing of described model 
+  variants
 - Added **DbManyUserSettings**
 ### New Methods
 - **DbLanguageId**

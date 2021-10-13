@@ -2,7 +2,7 @@ package utopia.citadel.database.access.single.user
 
 import utopia.citadel.database.access.id.many.DbUserIds
 import utopia.citadel.database.access.id.single.DbUserId
-import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.description.{DbLanguageDescriptions, DbLanguageFamiliarityDescriptions, DbOrganizationDescriptions}
 import utopia.citadel.database.access.many.language.DbLanguageFamiliarities
 import utopia.citadel.database.access.many.organization.{DbUserRoles, InvitationsAccess}
 import utopia.citadel.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory}
@@ -308,9 +308,9 @@ object DbUser extends SingleModelAccess[User]
 				// Reads languages and familiarities, then attaches descriptions
 				val languages = full
 				val languageIds = languages.map { _.languageId }.toSet
-				val languageDescriptions = DbDescriptions.ofLanguagesWithIds(languageIds).inLanguages(descriptionLanguageIds)
+				val languageDescriptions = DbLanguageDescriptions(languageIds).inLanguages(descriptionLanguageIds)
 				val familiarityIds = languages.map { _.familiarityId }.toSet
-				val familiarityDescriptions = DbDescriptions.ofLanguageFamiliaritiesWithIds(familiarityIds)
+				val familiarityDescriptions = DbLanguageFamiliarityDescriptions(familiarityIds)
 					.inLanguages(descriptionLanguageIds)
 				languages.map { base =>
 					val language = base.language
@@ -462,10 +462,10 @@ object DbUser extends SingleModelAccess[User]
 					// Case: Modified or modification not checked
 					if (ifModifiedThreshold.forall { t =>
 						wereModifiedSince(t) ||
-							DbDescriptions.ofOrganizationsWithIds(organizationIds).isModifiedSince(t)
+							DbOrganizationDescriptions(organizationIds).isModifiedSince(t)
 					}) {
 						// Reads organization descriptions
-						val organizationDescriptions = DbDescriptions.ofOrganizationsWithIds(organizationIds)
+						val organizationDescriptions = DbOrganizationDescriptions(organizationIds)
 							.inLanguages(languageIds)
 						// Reads all role right information concerning the targeted roles
 						val rolesWithRights = DbUserRoles(memberships.flatMap { _.roleIds }.toSet).withRights

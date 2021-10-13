@@ -2,7 +2,7 @@ package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.InternalServerError
-import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DescriptionLinksForManyAccess}
+import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DescriptionLinksForManyAccessLike}
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ModelConvertible
@@ -40,7 +40,7 @@ trait PublicDescriptionsNode[Item, +Combined <: ModelConvertible with SimplyDesc
 	/**
 	 * @return An access point to the descriptions of the returned items
 	 */
-	protected def descriptionsAccess: DescriptionLinksForManyAccess
+	protected def descriptionsAccess: DescriptionLinksForManyAccessLike
 	
 	/**
 	  * Authorizes the incoming request

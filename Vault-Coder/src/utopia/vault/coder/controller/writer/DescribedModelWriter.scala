@@ -26,6 +26,7 @@ object DescribedModelWriter
 	{
 		val className = s"Described${classToWrite.name}"
 		
+		// TODO: Add a companion object that extends DescribedFactory
 		File(setup.modelPackage/"combined"/classToWrite.packageName,
 			// Companion object is used for parsing from model data
 			// (not present in this version,
