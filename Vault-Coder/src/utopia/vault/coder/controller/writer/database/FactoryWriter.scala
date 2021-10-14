@@ -71,10 +71,11 @@ object FactoryWriter
 		builder += ComputedProperty("table", Set(tablesRef), isOverridden = true)(
 			s"${ tablesRef.target }.${ classToWrite.name.singular.uncapitalize }")
 		// Timestamp-based factories also specify a creation time property name
-		classToWrite.creationTimeProperty.foreach { createdProp =>
-			builder += ComputedProperty("creationTimePropertyName", isOverridden = true)(
-				createdProp.name.singular.quoted)
-		}
+		if (classToWrite.recordsIndexedCreationTime)
+			classToWrite.creationTimeProperty.foreach { createdProp =>
+				builder += ComputedProperty("creationTimePropertyName", isOverridden = true)(
+					createdProp.name.singular.quoted)
+			}
 		// Deprecatable factories specify the deprecation condition (read from the database model)
 		if (classToWrite.isDeprecatable) {
 			val dbModelName = s"${ classToWrite.name }Model"

@@ -123,11 +123,11 @@ object AccessWriter
 				case None =>
 					if (classToWrite.useLongId) {
 						val idValueCode = classToWrite.idType.toValueCode("id")
-						Extension(Reference.singleIdModelAccess) -> Vector(
+						Extension(Reference.singleIdModelAccess(modelRef)) -> Vector(
 							ComputedProperty("idValue", idValueCode.references, isOverridden = true)(idValueCode.text))
 					}
 					else
-						Extension(Reference.singleIntIdModelAccess) -> Vector()
+						Extension(Reference.singleIntIdModelAccess(modelRef)) -> Vector()
 			}
 			File(singleAccessPackage,
 				ClassDeclaration(singleIdAccessNameFor(classToWrite),
@@ -208,16 +208,25 @@ object AccessWriter
 								ComputedProperty("defaultOrdering", Set(factoryRef), Protected, isOverridden = true)(
 									if (classToWrite.recordsIndexedCreationTime) "Some(factory.defaultOrdering)" else "None")
 							) ++ manyParentProperties,
-							propertySetters ++ manyParentMethods + MethodDeclaration("filter", isOverridden = true)(
-								Parameter("additionalCondition", Reference.condition))(
-								s"new $subViewName(additionalCondition)"),
+							propertySetters ++ manyParentMethods +
+								MethodDeclaration("filter",
+									explicitOutputType = Some(ScalaType.basic(manyAccessTraitName)),
+									isOverridden = true)(
+									Parameter("additionalCondition", Reference.condition))(
+									s"new $manyAccessTraitName.$subViewName(this, additionalCondition)"),
 							description = s"A common trait for access points which target multiple ${
 								classToWrite.name.plural
 							} at a time", author = classToWrite.author
 						)
 					).write().flatMap { manyAccessTraitRef =>
 						// Writes the many model access point
-						val manyAccessName = s"Db${ classToWrite.name.plural }"
+						val manyAccessName =
+						{
+							if (classToWrite.name.singular == classToWrite.name.plural)
+								s"DbMany${classToWrite.name.plural}"
+							else
+								s"Db${ classToWrite.name.plural }"
+						}
 						// Classes that support descriptions also get a nested object for id-based multi-access
 						val manyByIdsAccess = descriptionReferences.map { case (describedRef, _, _) =>
 							val subsetClassName = s"Db${ classToWrite.name.plural }Subset"

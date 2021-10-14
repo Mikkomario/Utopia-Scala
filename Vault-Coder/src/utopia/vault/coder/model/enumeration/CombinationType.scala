@@ -36,7 +36,7 @@ sealed trait CombinationType
 	  * @return Extension for the factory implementation
 	  */
 	def extensionWith(references: CombinationReferences): Extension =
-		parentTraitRef(references.parent, references.child, references.combined)
+		parentTraitRef(references.combined, references.parent, references.child)
 	
 	/**
 	  * @param parentName Name of the parent parameter

@@ -27,7 +27,7 @@ object DescribedModelWriter
 		val className = s"Described${ classToWrite.name }"
 		
 		File(setup.combinedModelPackage/classToWrite.packageName,
-			ObjectDeclaration(className, Vector(Reference.describedFactory)),
+			ObjectDeclaration(className, Vector(Reference.describedFactory(modelRef, ScalaType.basic(className)))),
 			// (not present in this version,
 			// because implementation requires data and stored models to have fromModel parsing)
 			/*
