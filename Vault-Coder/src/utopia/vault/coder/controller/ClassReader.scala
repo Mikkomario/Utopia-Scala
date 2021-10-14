@@ -61,7 +61,8 @@ object ClassReader
 							.getOrElse {
 								if (combo.childrenDefinedAsPlural)
 									MultiCombined
-								else if (combo.childName ~== childClass.name.plural)
+								else if (!(combo.childName ~== childClass.name.singular) &&
+									(combo.childName ~== childClass.name.plural))
 									MultiCombined
 								else if (combo.alwaysLinked.isTrue)
 									Combined
@@ -146,7 +147,7 @@ object ClassReader
 				comboModel("child", "children").string.map { childName =>
 					RawCombinationData(childName, comboModel("parent_alias", "alias_parent").getString,
 						comboModel("child_alias", "alias_child").getString, comboModel("type").getString,
-						comboModel("name").getString, comboModel("name_plural").getString,
+						comboModel("name").getString.capitalize, comboModel("name_plural").getString.capitalize,
 						comboModel("always_linked", "is_always_linked").boolean,
 						comboModel.containsNonEmpty("children"))
 				}

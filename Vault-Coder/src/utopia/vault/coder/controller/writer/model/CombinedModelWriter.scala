@@ -1,5 +1,6 @@
 package utopia.vault.coder.controller.writer.model
 
+import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{CombinationData, CombinationReferences, ProjectSetup}
 import utopia.vault.coder.model.scala.Reference
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
@@ -35,9 +36,10 @@ object CombinedModelWriter
 				properties = Vector(
 					// Provides direct access to parent.id
 					ComputedProperty("id", description = s"Id of this ${data.parentName} in the database")(
-						s"${data.parentName}.id"),
-					ComputedProperty("wrapped", isOverridden = true)(s"${data.parentName}.data")
-				), description = s"Combines ${data.parentName} with ${data.childName} data", isCaseClass = true
+						s"${data.parentName.uncapitalize}.id"),
+					ComputedProperty("wrapped", isOverridden = true)(s"${data.parentName.uncapitalize}.data")
+				), description = s"Combines ${data.parentName} with ${data.childName} data", author = data.author,
+				isCaseClass = true
 			)
 		).write().map { comboRef => CombinationReferences(parentRef, childRef, comboRef) }
 	}

@@ -58,7 +58,7 @@ sealed trait CombinationType
 	def factoryApplyMethodWith(parentName: String, childName: String, references: CombinationReferences) =
 		MethodDeclaration("apply", Set(references.combined), isOverridden = true)(
 			applyParamsWith(parentName, childName, references.parent, references.child))(
-			s"${references.combined.target}($parentName, $childName)")
+			s"${references.combined.target}(${parentName.uncapitalize}, ${childName.uncapitalize})")
 }
 
 object CombinationType

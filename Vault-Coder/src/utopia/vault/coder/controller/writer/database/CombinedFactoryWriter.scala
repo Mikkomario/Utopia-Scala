@@ -71,7 +71,7 @@ object CombinedFactoryWriter
 					ComputedProperty("childFactory", Set(childFactoryRef), isOverridden = true)(childFactoryRef.target)
 				) ++ linkingProperty ++ deprecation.map { _._2 },
 				methods = Set(data.combinationType.factoryApplyMethodWith(data.parentName, data.childName, references)),
-				description = s"Used for reading ${data.name.plural} from the database"
+				description = s"Used for reading ${data.name.plural} from the database", author = data.author
 			)
 		).write()
 	}

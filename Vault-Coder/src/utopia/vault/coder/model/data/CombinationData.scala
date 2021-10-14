@@ -37,4 +37,9 @@ case class CombinationData(combinationType: CombinationType, name: Name, parentC
 	  * @return Name of the sub-package for the combined model / factory
 	  */
 	def packageName = parentClass.packageName
+	
+	/**
+	  * @return Author of this combined class
+	  */
+	def author = parentClass.author.notEmpty.getOrElse(childClass.author)
 }

@@ -217,7 +217,7 @@ object VaultCoderApp extends App
 		println()
 		println(s"Read ${filteredData.map { _.classes.size }.sum } classes, ${
 			filteredData.map { _.enumerations.size }.sum } enumerations and ${
-			filteredData.map { _.combinations.size }.sum} within ${filteredData.size} projects and ${
+			filteredData.map { _.combinations.size }.sum} combinations within ${filteredData.size} projects and ${
 			filteredData.map { _.classes.map { _.packageName }.toSet.size }.sum } packages")
 		println()
 		println(s"Writing class and enumeration data to ${outputPath.toAbsolutePath}...")
