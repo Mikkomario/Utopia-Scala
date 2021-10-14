@@ -5,6 +5,7 @@
 - Updated how program arguments are handled and added some interactive elements to the application
 - Access points, which targeted individual items based on their id are now written into separate files (DbSingleXAccess)
 ### New Features
+- Added support for combined models (e.g. combining Foo and Bar classes to form FooWithBars)
 - Added support for described classes (**Citadel**-specific feature)
 - Added support for **Days** and **FiniteDuration** data types (both concrete and optional variants)
 - Added custom indexing support (see README for details)

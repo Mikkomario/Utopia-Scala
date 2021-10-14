@@ -1,4 +1,4 @@
-package utopia.vault.coder.controller.writer
+package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
@@ -18,10 +18,10 @@ object DescriptionLinkInterfaceWriter
 {
 	/**
 	  * Writes description link model factory and description link factory access objects
-	  * @param classes Project classes
+	  * @param classes   Project classes
 	  * @param tablesRef Reference to the tables object
-	  * @param setup Implicit project setup
-	  * @param codec Implicit codec to use when writing files
+	  * @param setup     Implicit project setup
+	  * @param codec     Implicit codec to use when writing files
 	  * @return Reference to the link model factory + reference to the link factory. Failure if file writing failed.
 	  *         None if there weren't any classes that used descriptions.
 	  */
@@ -29,17 +29,18 @@ object DescriptionLinkInterfaceWriter
 	{
 		val targets = classes.flatMap { c => c.descriptionLinkClass.map { dc => (c, dc, dc.properties.head) } }
 			.sortBy { _._1.name.singular }
-		if (targets.nonEmpty)
-		{
+		if (targets.nonEmpty) {
 			val projectPrefix = setup.projectPackage.parts.last.capitalize
 			// Contains a property for each described class
 			val modelProps = targets.map { case (parent, desc, linkProp) =>
 				ImmutableValue(parent.name.singular.uncapitalize,
 					Set(tablesRef, Reference.descriptionLinkModelFactory),
 					description = s"Database interaction model factory for ${
-						parent.name.singular} description links")(
-					s"DescriptionLinkModelFactory(${tablesRef.target}.${desc.name.singular.uncapitalize}, ${
-						linkProp.name.singular.quoted})")
+						parent.name.singular
+					} description links")(
+					s"DescriptionLinkModelFactory(${ tablesRef.target }.${ desc.name.singular.uncapitalize }, ${
+						linkProp.name.singular.quoted
+					})")
 			}
 			File(setup.dbModelPackage,
 				ObjectDeclaration(projectPrefix + "DescriptionLinkModel", properties = modelProps)
@@ -49,7 +50,7 @@ object DescriptionLinkInterfaceWriter
 						// Contains a property matching each link model factory property
 						properties = modelProps.map { modelProp =>
 							ImmutableValue(modelProp.name, Set(modelsRef, Reference.descriptionLinkFactory))(
-								s"DescriptionLinkFactory(${modelsRef.target}.${modelProp.name})")
+								s"DescriptionLinkFactory(${ modelsRef.target }.${ modelProp.name })")
 						}
 					)
 				).write().map { fRef => Some(modelsRef -> fRef) }

@@ -27,6 +27,11 @@ case class ProjectSetup(projectPackage: Package, sourceRoot: Path)
 	lazy val accessPackage = databasePackage/"access"
 	
 	/**
+	  * @return Package that contains combined models
+	  */
+	def combinedModelPackage = modelPackage/"combined"
+	
+	/**
 	  * @return Package that contains database access points that retrieve individual items
 	  */
 	def singleAccessPackage = accessPackage/"single"
@@ -34,6 +39,7 @@ case class ProjectSetup(projectPackage: Package, sourceRoot: Path)
 	  * @return Package that contains database access points that retrieve multiple items at once
 	  */
 	def manyAccessPackage = accessPackage/"many"
+	
 	/**
 	  * @return Package that contains from database read factories
 	  */

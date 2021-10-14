@@ -8,8 +8,9 @@ import utopia.flow.util.FileExtensions._
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments}
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.ClassReader
-import utopia.vault.coder.controller.writer.{AccessWriter, DbDescriptionAccessWriter, DbModelWriter, DescribedModelWriter, DescriptionLinkInterfaceWriter, EnumerationWriter, FactoryWriter, ModelWriter, SqlWriter, TablesWriter}
-import utopia.vault.coder.model.data.{Class, Enum, ProjectSetup}
+import utopia.vault.coder.controller.writer.database.{AccessWriter, DbDescriptionAccessWriter, DbModelWriter, DescriptionLinkInterfaceWriter, FactoryWriter, SqlWriter, TablesWriter}
+import utopia.vault.coder.controller.writer.model.{DescribedModelWriter, EnumerationWriter, ModelWriter}
+import utopia.vault.coder.model.data.{Filter, ProjectData, ProjectSetup}
 
 import java.nio.file.{Path, Paths}
 import scala.io.{Codec, StdIn}
@@ -113,6 +114,7 @@ object VaultCoderApp extends App
 					None
 			}
 	}
+	// TODO: Add support for exact filtering (new argument)
 	lazy val filter = (arguments("filter").string match
 	{
 		case Some(filter) => filter.notEmpty
@@ -122,7 +124,7 @@ object VaultCoderApp extends App
 					arguments("type").getString} filter to use (leave empty if you want to target all of them)")
 			else
 				None
-	}).map { _.toLowerCase }
+	}).map { Filter(_) }
 	lazy val targetType = specifiedTargetType.getOrElse {
 		filter match
 		{
@@ -156,9 +158,11 @@ object VaultCoderApp extends App
 		} match {
 			// Groups read results that target the same base package
 			case Success(data) =>
-				write(data.groupMapReduce { _._1 } { case (_, enums, classes) => classes -> enums } {
-					case ((classes1, enums1), (classes2, enums2)) => (classes1 ++ classes2) -> (enums1 ++ enums2)
-				})
+				val groupedData = data.groupBy { _.basePackage }.map { case (basePackage, data) =>
+					data.reduce { (a, b) => ProjectData(basePackage, a.enumerations ++ b.enumerations,
+						a.classes ++ b.classes, a.combinations ++ b.combinations) }
+				}
+				write(groupedData)
 			case Failure(error) =>
 				error.printStackTrace()
 				println("Class reading failed. Please make sure all of the files are in correct format.")
@@ -170,14 +174,14 @@ object VaultCoderApp extends App
 		
 		ClassReader(inputPath) match
 		{
-			case Success((basePackage, enums, classes)) => write(Map(basePackage -> (classes -> enums)))
+			case Success(data) => write(Some(data))
 			case Failure(error) =>
 				error.printStackTrace()
 				println("Class reading failed. Please make sure the file is in correct format.")
 		}
 	}
 	
-	def write(data: Map[String, (Vector[Class], Vector[Enum])]): Unit =
+	def write(data: Iterable[ProjectData]): Unit =
 	{
 		println()
 		// Applies filters
@@ -186,66 +190,53 @@ object VaultCoderApp extends App
 			if (targetType == _class)
 				filter match
 				{
-					case Some(filter) =>
-						data.map { case (base, (classes, _)) => base ->
-							(classes.filter { _.name.variants.exists { _.toLowerCase.contains(filter) } }, Vector())
-						}
-					case None => data.map { case (base, (classes, _)) => base -> (classes, Vector()) }
+					case Some(filter) => data.map { _.filterByClassName(filter) }
+					case None => data.map { _.onlyClasses }
 				}
 			else if (targetType == _package)
 				filter match
 				{
-					case Some(filter) =>
-						data.map { case (base, (classes, _)) =>
-							base -> (classes.filter { _.packageName.toLowerCase.contains(filter) }, Vector())
-						}
+					case Some(filter) => data.map { _.filterByPackage(filter) }
 					case None => data
 				}
 			else if (targetType == _enums)
 				filter match
 				{
-					case Some(filter) =>
-						data.map { case (base, (_, enums)) =>
-							base -> (Vector(), enums.filter { _.name.toLowerCase.contains(filter) })
-						}
-					case None => data.map { case (base, (_, enums)) => base -> (Vector(), enums) }
+					case Some(filter) => data.map { _.filterByEnumName(filter) }
+					case None => data.map { _.onlyEnumerations }
 				}
 			else
 				filter match
 				{
-					case Some(filter) =>
-						data.map { case (base, (classes, enums)) =>
-							val filteredEnums = enums.filter { _.name.toLowerCase.contains(filter) }
-							val filteredClasses = classes.filter { c => c.packageName.toLowerCase.contains(filter) ||
-								c.name.variants.exists { _.toLowerCase.contains(filter) } }
-							base -> (filteredClasses, filteredEnums)
-						}
+					case Some(filter) => data.map { _.filter(filter) }
 					case None => data
 				}
 		}
 		
 		println()
-		println(s"Read ${filteredData.valuesIterator.map { _._1.size }.sum } classes and ${
-			filteredData.valuesIterator.map { _._2.size }.sum } enumerations within ${filteredData.size} projects and ${
-			filteredData.valuesIterator.map { _._1.map { _.packageName }.distinct.size }.sum } packages")
+		println(s"Read ${filteredData.map { _.classes.size }.sum } classes, ${
+			filteredData.map { _.enumerations.size }.sum } enumerations and ${
+			filteredData.map { _.combinations.size }.sum} within ${filteredData.size} projects and ${
+			filteredData.map { _.classes.map { _.packageName }.toSet.size }.sum } packages")
 		println()
 		println(s"Writing class and enumeration data to ${outputPath.toAbsolutePath}...")
 		
 		outputPath.asExistingDirectory.flatMap { rootDirectory =>
 			// Handles one project at a time
-			filteredData.tryForeach { case (basePackageName, (classes, enumerations)) =>
+			filteredData.tryForeach { data =>
 				// Makes sure there is something to write
-				if (classes.isEmpty && enumerations.isEmpty)
+				if (data.isEmpty)
 					Success(())
 				else
 				{
-					println(s"Writing ${classes.size} classes and ${
-						enumerations.size} enumerations for project $basePackageName")
-					val directory = if (basePackageName.isEmpty) Success(rootDirectory) else
-						(rootDirectory/basePackageName.replace('.', '-')).asExistingDirectory
+					println(s"Writing ${data.classes.size} classes, ${
+						data.enumerations.size} enumerations and ${
+						data.combinations.size } combinations for project ${data.basePackage}")
+					val directory = if (data.basePackage.isEmpty) Success(rootDirectory) else
+						(rootDirectory/data.basePackage.parts.mkString("-")).asExistingDirectory
 					directory.flatMap { directory =>
-						implicit val setup: ProjectSetup = ProjectSetup(basePackageName, directory)
-						write(directory, classes, enumerations)
+						implicit val setup: ProjectSetup = ProjectSetup(data.basePackage, directory)
+						write(data)
 					}
 				}
 			}
@@ -258,18 +249,17 @@ object VaultCoderApp extends App
 		}
 	}
 	
-	def write(directory: Path, classes: Vector[Class], enumerations: Vector[Enum])
-	         (implicit setup: ProjectSetup): Try[Unit] =
+	def write(data: ProjectData)(implicit setup: ProjectSetup): Try[Unit] =
 	{
 		// Writes the enumerations
-		enumerations.tryMap { EnumerationWriter(_) }
+		data.enumerations.tryMap { EnumerationWriter(_) }
 			// Next writes the SQL declaration and the tables document
-			.flatMap { _ => SqlWriter(classes, directory/"db_structure.sql") }
-			.flatMap { _ => TablesWriter(classes) }
+			.flatMap { _ => SqlWriter(data.classes, setup.sourceRoot/"db_structure.sql") }
+			.flatMap { _ => TablesWriter(data.classes) }
 			.flatMap { tablesRef =>
-				DescriptionLinkInterfaceWriter(classes, tablesRef).flatMap { descriptionLinkObjects =>
+				DescriptionLinkInterfaceWriter(data.classes, tablesRef).flatMap { descriptionLinkObjects =>
 					// Next writes all required documents for each class
-					classes.tryForeach { classToWrite =>
+					data.classes.tryForeach { classToWrite =>
 						ModelWriter(classToWrite).flatMap { case (modelRef, dataRef) =>
 							FactoryWriter(classToWrite, tablesRef, modelRef, dataRef).flatMap { factoryRef =>
 								DbModelWriter(classToWrite, modelRef, dataRef, factoryRef)

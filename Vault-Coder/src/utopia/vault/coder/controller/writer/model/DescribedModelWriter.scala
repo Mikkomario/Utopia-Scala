@@ -1,9 +1,9 @@
-package utopia.vault.coder.controller.writer
+package utopia.vault.coder.controller.writer.model
 
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.Visibility.Protected
-import utopia.vault.coder.model.scala.{Parameter, Parameters, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration}
+import utopia.vault.coder.model.scala.{Parameter, Parameters, Reference, ScalaType}
 
 import scala.io.Codec
 
@@ -17,16 +17,16 @@ object DescribedModelWriter
 	/**
 	  * Writes a described model class for the specified class
 	  * @param classToWrite Class based on which the model class is generated
-	  * @param modelRef Reference to the stored model class version
-	  * @param setup Implicit project setup
-	  * @param codec Implicit codec to use when writing files
+	  * @param modelRef     Reference to the stored model class version
+	  * @param setup        Implicit project setup
+	  * @param codec        Implicit codec to use when writing files
 	  * @return Reference to the written file. Failure if file writing failed.
 	  */
 	def apply(classToWrite: Class, modelRef: Reference)(implicit setup: ProjectSetup, codec: Codec) =
 	{
-		val className = s"Described${classToWrite.name}"
+		val className = s"Described${ classToWrite.name }"
 		
-		File(setup.modelPackage/"combined"/classToWrite.packageName,
+		File(setup.combinedModelPackage/classToWrite.packageName,
 			ObjectDeclaration(className, Vector(Reference.describedFactory)),
 			// (not present in this version,
 			// because implementation requires data and stored models to have fromModel parsing)
@@ -46,7 +46,7 @@ object DescribedModelWriter
 				Vector(Reference.describedWrapper(modelRef), Reference.simplyDescribed),
 				methods = Set(MethodDeclaration("simpleBaseModel", visibility = Protected, isOverridden = true)(
 					Parameter("roles", ScalaType.iterable(Reference.descriptionRole)))("wrapped.toModel")),
-				description = s"Combines ${classToWrite.name} with the linked descriptions",
+				description = s"Combines ${ classToWrite.name } with the linked descriptions",
 				isCaseClass = true
 			)
 		).write()

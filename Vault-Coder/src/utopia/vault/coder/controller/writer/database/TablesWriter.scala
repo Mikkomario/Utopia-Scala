@@ -1,12 +1,12 @@
-package utopia.vault.coder.controller.writer
+package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.datastructure.immutable.Pair
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-import utopia.vault.coder.model.scala.Visibility.Private
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
-import utopia.vault.coder.model.scala.{Parameter, Reference, ScalaType}
+import utopia.vault.coder.model.scala.Visibility.Private
+import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration}
+import utopia.vault.coder.model.scala.{Parameter, Reference, ScalaType}
 
 import scala.io.Codec
 
@@ -20,8 +20,8 @@ object TablesWriter
 	/**
 	  * Writes the table reference file
 	  * @param classes Classes introduced in this project
-	  * @param codec Codec to use when writing the file (implicit)
-	  * @param setup Target project -specific settings (implicit)
+	  * @param codec   Codec to use when writing the file (implicit)
+	  * @param setup   Target project -specific settings (implicit)
 	  * @return Reference to the written object. Failure if writing failed.
 	  */
 	def apply(classes: Iterable[Class])(implicit codec: Codec, setup: ProjectSetup) =
@@ -30,8 +30,7 @@ object TablesWriter
 		// If one of the classes uses descriptions, considers Citadel to be used
 		// and bases the apply method on that knowledge
 		// Otherwise leaves the implementation to the user
-		val (applyImplementation, applyReferences) =
-		{
+		val (applyImplementation, applyReferences) = {
 			if (classes.exists { _.isDescribed })
 				Vector("Tables(tableName)") -> Set[Reference](Reference.citadelTables)
 			else
@@ -44,8 +43,7 @@ object TablesWriter
 			ObjectDeclaration(objectName,
 				// Contains a computed property for each class / table
 				properties = classes.toVector.sortBy { _.name }.flatMap { c =>
-					c.descriptionLinkClass match
-					{
+					c.descriptionLinkClass match {
 						case Some(descriptionLinkClass) =>
 							Pair(tablePropertyFrom(c), tablePropertyFrom(descriptionLinkClass))
 						case None => Vector(tablePropertyFrom(c))
@@ -62,10 +60,10 @@ object TablesWriter
 	
 	private def tablePropertyFrom(c: Class) =
 	{
-		val baseDescription = s"Table that contains ${c.name.plural}"
+		val baseDescription = s"Table that contains ${ c.name.plural }"
 		val completeDescription = if (c.description.isEmpty) baseDescription else
-			s"$baseDescription (${c.description})"
+			s"$baseDescription (${ c.description })"
 		ComputedProperty(c.name.singular.uncapitalize, description = completeDescription)(
-			s"apply(${c.tableName.quoted})")
+			s"apply(${ c.tableName.quoted })")
 	}
 }

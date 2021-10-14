@@ -11,14 +11,20 @@ object Package
 {
 	// ATTRIBUTES   ---------------------------
 	
+	// Java & Scala
+	
 	lazy val java = apply("java")
 	lazy val scalaDuration = apply("scala.concurrent.duration")
 	lazy val javaTime = java/"time"
+	
+	// Utopia base packages
 	
 	lazy val utopia = apply("utopia")
 	lazy val flow = utopia/"flow"
 	lazy val vault = utopia/"vault"
 	lazy val metropolis = utopia/"metropolis"
+	
+	// Flow
 	
 	lazy val flowGenerics = flow/"generic"
 	lazy val flowTime = flow/"time"
@@ -26,20 +32,30 @@ object Package
 	lazy val struct = flow/"datastructure"
 	lazy val immutableStruct = struct/"immutable"
 	
+	// Vault
+	
 	lazy val database = vault/"database"
 	lazy val vaultModels = vault/"model"
 	lazy val sql = vault/"sql"
 	lazy val noSql = vault/"nosql"
-	lazy val fromRowFactories = noSql/"factory.row"
 	lazy val deprecation = noSql/"storable.deprecation"
+	
+	lazy val factories = noSql/"factory"
+	lazy val fromRowFactories = factories/".row"
+	lazy val singleLinkedFactories = fromRowFactories/"linked"
+	
 	lazy val access = noSql/"access"
 	lazy val viewAccess = noSql/"view"
 	lazy val singleModelAccess = access/"single.model"
 	lazy val manyModelAccess = access/"many.model"
 	
+	// Metropolis
+	
 	lazy val metropolisModel = metropolis/"model"
 	lazy val description = metropolisModel/"stored.description"
 	lazy val combinedDescription = metropolisModel/"combined.description"
+	
+	// Citadel
 	
 	lazy val citadelDatabase = utopia/"citadel.database"
 	lazy val citadelAccess = citadelDatabase/"access"
