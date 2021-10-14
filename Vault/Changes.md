@@ -10,6 +10,8 @@
 ### New Methods
 - **NullDeprecatable**
   - Added `.deprecatedCondition`
+### Other Changes
+- **Table** now uses a Map internally for matching property names to columns. The matching is also now case-insensitive.
 
 ## v1.10 - 3.10.2021
 This update contains some package-related refactoring, as well as refactoring based on the latest **Flow** changes. 

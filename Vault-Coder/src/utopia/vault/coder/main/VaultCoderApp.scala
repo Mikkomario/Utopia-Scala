@@ -8,9 +8,10 @@ import utopia.flow.util.FileExtensions._
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments}
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.ClassReader
-import utopia.vault.coder.controller.writer.database.{AccessWriter, DbDescriptionAccessWriter, DbModelWriter, DescriptionLinkInterfaceWriter, FactoryWriter, SqlWriter, TablesWriter}
-import utopia.vault.coder.controller.writer.model.{DescribedModelWriter, EnumerationWriter, ModelWriter}
-import utopia.vault.coder.model.data.{Filter, ProjectData, ProjectSetup}
+import utopia.vault.coder.controller.writer.database.{AccessWriter, CombinedFactoryWriter, DbDescriptionAccessWriter, DbModelWriter, DescriptionLinkInterfaceWriter, FactoryWriter, SqlWriter, TablesWriter}
+import utopia.vault.coder.controller.writer.model.{CombinedModelWriter, DescribedModelWriter, EnumerationWriter, ModelWriter}
+import utopia.vault.coder.model.data.{Class, ClassReferences, Filter, ProjectData, ProjectSetup}
+import utopia.vault.coder.model.scala.Reference
 
 import java.nio.file.{Path, Paths}
 import scala.io.{Codec, StdIn}
@@ -162,7 +163,7 @@ object VaultCoderApp extends App
 					data.reduce { (a, b) => ProjectData(basePackage, a.enumerations ++ b.enumerations,
 						a.classes ++ b.classes, a.combinations ++ b.combinations) }
 				}
-				write(groupedData)
+				filterAndWrite(groupedData)
 			case Failure(error) =>
 				error.printStackTrace()
 				println("Class reading failed. Please make sure all of the files are in correct format.")
@@ -174,14 +175,14 @@ object VaultCoderApp extends App
 		
 		ClassReader(inputPath) match
 		{
-			case Success(data) => write(Some(data))
+			case Success(data) => filterAndWrite(Some(data))
 			case Failure(error) =>
 				error.printStackTrace()
 				println("Class reading failed. Please make sure the file is in correct format.")
 		}
 	}
 	
-	def write(data: Iterable[ProjectData]): Unit =
+	def filterAndWrite(data: Iterable[ProjectData]): Unit =
 	{
 		println()
 		// Applies filters
@@ -259,40 +260,58 @@ object VaultCoderApp extends App
 			.flatMap { tablesRef =>
 				DescriptionLinkInterfaceWriter(data.classes, tablesRef).flatMap { descriptionLinkObjects =>
 					// Next writes all required documents for each class
-					data.classes.tryForeach { classToWrite =>
-						ModelWriter(classToWrite).flatMap { case (modelRef, dataRef) =>
-							FactoryWriter(classToWrite, tablesRef, modelRef, dataRef).flatMap { factoryRef =>
-								DbModelWriter(classToWrite, modelRef, dataRef, factoryRef)
-									.flatMap { dbModelRef =>
-										// Adds description-specific references if applicable
-										(descriptionLinkObjects match
-										{
-											// Case: At least one class uses descriptions
-											case Some((linkModels, linkFactories)) =>
-												classToWrite.descriptionLinkClass match
-												{
-													case Some(descriptionLinkClass) =>
-														DescribedModelWriter(classToWrite, modelRef).flatMap { describedRef =>
-															DbDescriptionAccessWriter(descriptionLinkClass,
-																classToWrite.name, linkModels, linkFactories)
-																.map { case (singleAccessRef, manyAccessRef) =>
-																	Some(describedRef, singleAccessRef, manyAccessRef)
-																}
-														}
-													case None => Success(None)
-												}
-											// Case: No classes use descriptions => automatically succeeds
-											case None => Success(None)
-										}).flatMap { descriptionReferences =>
-											// Finally writes the access points
-											AccessWriter(classToWrite, modelRef, factoryRef, dbModelRef,
-												descriptionReferences).map { _ => () }
-										}
-									}
-							}
+					data.classes.tryMap { write(_, tablesRef, descriptionLinkObjects) }.flatMap { classRefs =>
+						// Finally writes the combined models
+						val classRefsMap = classRefs.toMap
+						data.combinations.tryForeach { combination =>
+							val parentRefs = classRefsMap(combination.parentClass)
+							val childRefs = classRefsMap(combination.childClass)
+							CombinedModelWriter(combination, parentRefs.model, parentRefs.data, childRefs.model)
+								.flatMap { combinedRefs =>
+									CombinedFactoryWriter(combination, combinedRefs, parentRefs.factory,
+										childRefs.factory)
+										.map { _ => () }
+								}
 						}
 					}
 				}
 			}
+	}
+	
+	def write(classToWrite: Class, tablesRef: Reference, descriptionLinkObjects: Option[(Reference, Reference)])
+	         (implicit setup: ProjectSetup): Try[(Class, ClassReferences)] =
+	{
+		ModelWriter(classToWrite).flatMap { case (modelRef, dataRef) =>
+			FactoryWriter(classToWrite, tablesRef, modelRef, dataRef).flatMap { factoryRef =>
+				DbModelWriter(classToWrite, modelRef, dataRef, factoryRef)
+					.flatMap { dbModelRef =>
+						// Adds description-specific references if applicable
+						(descriptionLinkObjects match
+						{
+							// Case: At least one class uses descriptions
+							case Some((linkModels, linkFactories)) =>
+								classToWrite.descriptionLinkClass match
+								{
+									case Some(descriptionLinkClass) =>
+										DescribedModelWriter(classToWrite, modelRef).flatMap { describedRef =>
+											DbDescriptionAccessWriter(descriptionLinkClass,
+												classToWrite.name, linkModels, linkFactories)
+												.map { case (singleAccessRef, manyAccessRef) =>
+													Some(describedRef, singleAccessRef, manyAccessRef)
+												}
+										}
+									case None => Success(None)
+								}
+							// Case: No classes use descriptions => automatically succeeds
+							case None => Success(None)
+						}).flatMap { descriptionReferences =>
+							// Finally writes the access points
+							AccessWriter(classToWrite, modelRef, factoryRef, dbModelRef,
+								descriptionReferences)
+								.map { _ => classToWrite -> ClassReferences(modelRef, dataRef, factoryRef, dbModelRef) }
+						}
+					}
+			}
+		}
 	}
 }

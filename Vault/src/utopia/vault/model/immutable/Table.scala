@@ -25,6 +25,10 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
       * The primary column for this table. Not all tables do have primary columns though.
       */
     val primaryColumn = columns.find { _.isPrimary }
+    /**
+      * A map that contains all the columns of this table with their lower case property names as keys
+      */
+    private lazy val columnsByAttName = columns.map { c => c.name.toLowerCase -> c }.toMap
     
     /**
      * A model declaration based on this table
@@ -67,7 +71,8 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
       * @param connection Database connection
       * @return All defined indices for this table in database
       */
-    def allIndices(implicit connection: Connection) = Select.index(this).execute().indicesForTable(this)
+    def allIndices(implicit connection: Connection) =
+        Select.index(this).execute().indicesForTable(this)
     
     
     // OPERATORS    ----------------------------
@@ -76,23 +81,22 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
      * Finds a column with the provided property name associated with it. If you are unsure whether
      * such a column exists in the table, use find instead
      */
-    def apply(propertyName: String) = find(propertyName) match
-    {
-        case Some(prop) => prop
-        case None => throw new NoSuchElementException(
-            s"Table '$name' doesn't contain property '$propertyName'. Available properties: [${columns.map { _.name }.mkString(", ")}]")
+    def apply(propertyName: String) = find(propertyName).getOrElse {
+        throw new NoSuchElementException(
+            s"Table '$name' doesn't contain property '$propertyName'. Available properties: [${
+                columns.map { _.name }.mkString(", ")}]")
     }
     
     /**
      * Finds the columns matching the provided property names
      */
-    def apply(propertyNames: Iterable[String]) = columns.filter {
-            column => propertyNames.exists { _ == column.name } }
-    
+    def apply(propertyNames: Iterable[String]) =
+        columns.filter { column => propertyNames.exists { _ == column.name } }
     /**
      * Finds columns matching the provided property names
      */
-    def apply(propertyName: String, second: String, others: String*): Vector[Column] = apply(Vector(propertyName, second) ++ others)
+    def apply(propertyName: String, second: String, others: String*): Vector[Column] =
+        apply(Vector(propertyName, second) ++ others)
     
     
     // OTHER METHODS    ------------------------
@@ -101,7 +105,7 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
      * Finds a column with the provided property name. Returns None if no such column exists in
      * this table
      */
-    def find(propertyName: String) = columns.find { _.name == propertyName }
+    def find(propertyName: String) = columnsByAttName.get(propertyName.toLowerCase)
     
     /**
      * Finds a column with the specified column name. Returns None if no such column exists.
@@ -116,18 +120,18 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
     {
         case Some(column) => column
         case None => throw new NoSuchElementException(
-            s"Table '$name' doesn't contain column named '$columnName'. Available columns: [${columns.map { _.columnName }.mkString(", ")}]")
+            s"Table '$name' doesn't contain column named '$columnName'. Available columns: [${
+                columns.map { _.columnName }.mkString(", ")}]")
     }
     
     /**
      * Checks whether this table contains a matching column
      */
     def contains(column: Column) = columns.contains(column)
-    
     /**
      * checks whether this table contains a column matching the provided property name
      */
-    def contains(propertyName: String) = columns.exists { _.name == propertyName }
+    def contains(propertyName: String) = columnsByAttName.contains(propertyName.toLowerCase)
     
     /**
      * Joins a new table, creating a new sql target.
@@ -143,9 +147,7 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
       * @return The first index in this table that matches the specified condition
       */
     def index(where: Condition)(implicit connection: Connection) =
-    {
         connection(Select.index(this) + Where(where) + Limit(1)).firstIndexForTable(this)
-    }
 
     /**
       * Finds indices in this table for rows where specified condition is met
@@ -154,9 +156,7 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
       * @return Indices in this table for rows matching the condition
       */
     def indices(where: Condition)(implicit connection: Connection) =
-    {
         connection(Select.index(this) + Where(where)).indicesForTable(this)
-    }
     
     /**
      * Checks whether the specified index exists in this table in database
