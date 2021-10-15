@@ -1,6 +1,7 @@
 package utopia.citadel.database.access.single.description
 
 import utopia.citadel.database.access.many.description.DescriptionLinksAccess
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.description.DescribedFactory
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.post.NewDescription
@@ -50,6 +51,14 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	 *         in all available languages
 	 */
 	def fullyDescribed(implicit connection: Connection) = pullDescribed(descriptions)
+	/**
+	  * @param connection Implicit DB Connection
+	  * @param languageIds Ids of the accepted languages, from most preferred to least preferred
+	  * @return A described copy of this instance, containing 0-1 descriptions per role.
+	  *         Uses the most preferred available language.
+	  */
+	def described(implicit connection: Connection, languageIds: LanguageIds) =
+		pullDescribed(descriptions.inPreferredLanguages)
 	
 	
 	// OTHER    ------------------------------
@@ -67,8 +76,9 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	 * @return A described copy of this instance, containing 0-1 descriptions per role.
 	 *         Uses the most preferred available language.
 	 */
+	@deprecated("Please use described instead", "v1.3")
 	def describedInLanguages(languageIds: Seq[Int])(implicit connection: Connection) =
-		pullDescribed(descriptions.inLanguages(languageIds))
+		described(connection, LanguageIds(languageIds.toVector))
 	
 	/**
 	  * Inserts a new description for this item, replacing the existing description

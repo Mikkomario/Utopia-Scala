@@ -6,6 +6,7 @@ import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.organization.DescribedInvitation
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
@@ -34,9 +35,9 @@ object MyInvitationsNode extends Resource[AuthorizedContext]
 			// Attaches metadata to the invitations
 			if (pendingInvitations.nonEmpty) {
 				// Reads organization descriptions
-				val languageIds = context.languageIdListFor(session.userId)
+				implicit val languageIds: LanguageIds = context.languageIdListFor(session.userId)
 				val organizationIds = pendingInvitations.map { _.organizationId }.toSet
-				val organizationDescriptions = DbOrganizationDescriptions(organizationIds).inLanguages(languageIds)
+				val organizationDescriptions = DbOrganizationDescriptions(organizationIds).inPreferredLanguages
 				
 				// Attaches sender data to each invitation where applicable
 				val enrichedInvitations = pendingInvitations.map { invitation =>

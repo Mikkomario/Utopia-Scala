@@ -3,6 +3,7 @@
 ## v2.1.1 (in development)
 ### Other Changes
 - Supports changes in **Citadel** and **Vault**
+- **AuthorizedContext**`.languageIdListFor(=> Int)` now returns **LanguageIds** instead of a Vector
 - Deleted some deprecated access objects
 
 ## v2.1 - 3.10.2021

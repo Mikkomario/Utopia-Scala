@@ -4,6 +4,8 @@
 ### Breaking Changes
 - Moved **DbUser**, **DbUsers**, **DbDevice** and **DbDevices** to new sub-packages (user & device)
 - Refactored descriptions accessing a lot, so there may be multiple errors related to that when you apply this update
+- Renamed `.myOrganizations(...)` to `.myOrganizationsIfModifiedSince(...) `in **DbUser**/memberships
+  - `.myOrganizations` is now a computed property that accepts an implicit **LanguageIds** parameter
 ### Deprecations
 - Deprecated `DbOrganizations.insert(...)` and `DbDevices.insert(...)` and copied those methods to 
   **DbOrganization** and **DbDevice**

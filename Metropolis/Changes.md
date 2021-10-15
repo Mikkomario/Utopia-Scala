@@ -5,6 +5,7 @@
 - Switched **DescribedFromModelFactory**'s `A` and `D` type parameters around (from `[D, A]` to `[A, D]`)
 ### New Features
 - Added **DescriptionRoleIdWrapper** trait to support easier description reading
+- Added **LanguageIds** model for easier preferred language management
 ### New Methods
 - **Described**
   - Added multiple new utility functions for accessing various descriptions

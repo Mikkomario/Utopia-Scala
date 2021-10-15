@@ -5,6 +5,7 @@ import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbUs
 import utopia.citadel.database.access.many.organization.DbUserRoles
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.organization.DescribedRole
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
@@ -28,11 +29,11 @@ object RolesNode extends Resource[AuthorizedContext]
 	{
 		context.sessionKeyAuthorized { (session, connection) =>
 			implicit val c: Connection = connection
-			val languageIds = context.languageIdListFor(session.userId)
+			implicit val languageIds: LanguageIds = context.languageIdListFor(session.userId)
 			// Reads all user roles and their allowed tasks
 			val roles = DbUserRoles.withRights
 			// Reads role descriptions and combines them with roles
-			val descriptions = DbUserRoleDescriptions.inLanguages(languageIds)
+			val descriptions = DbUserRoleDescriptions.inPreferredLanguages
 			val rolesWithDescriptions = roles.map { role =>
 				DescribedRole(role, descriptions.getOrElse(role.roleId, Set()).toSet) }
 			// Supports simple model style if needed

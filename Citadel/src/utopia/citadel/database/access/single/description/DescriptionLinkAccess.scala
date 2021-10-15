@@ -5,6 +5,7 @@ import utopia.citadel.database.model.description.DescriptionModel
 import utopia.citadel.model.enumeration.CitadelDescriptionRole.Name
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.stored.description.DescriptionLink
@@ -147,6 +148,24 @@ trait DescriptionLinkAccess extends SingleRowModelAccess[DescriptionLink] with N
 		
 		class DescriptionOfRole(roleId: Int) extends SingleRowModelAccess[DescriptionLink] with SubView
 		{
+			// COMPUTED -----------------------------------------
+			
+			/**
+			  * @param connection Implicit DB Connection
+			  * @param languageIds A set of accepted language ids, from most preferred to least preferred
+			  * @return This description in the most preferable available language
+			  */
+			def inPreferredLanguage(implicit connection: Connection, languageIds: LanguageIds) =
+			{
+				// Reads the options in groups of three until at least one result is found
+				languageIds.grouped(3).findMap { nextLanguageIds =>
+					val options = find(descriptionModel.languageIdColumn.in(nextLanguageIds.toSet))
+					// Selects the result that is most preferred by the user
+					nextLanguageIds.findMap { languageId => options.find { _.description.languageId == languageId } }
+				}
+			}
+			
+			
 			// IMPLEMENTED  -------------------------------------
 			
 			override protected def parent = SingleTargetDescription.this
@@ -169,15 +188,9 @@ trait DescriptionLinkAccess extends SingleRowModelAccess[DescriptionLink] with N
 			  * @param connection Implicit DB Connection
 			  * @return This description in the most preferable available language
 			  */
+			@deprecated("Please use inPreferredLanguage instead", "v1.3")
 			def inLanguage(languageIds: Seq[Int])(implicit connection: Connection) =
-			{
-				// Reads the options in groups of three until at least one result is found
-				languageIds.grouped(3).findMap { nextLanguageIds =>
-					val options = find(descriptionModel.languageIdColumn.in(nextLanguageIds.toSet))
-					// Selects the result that is most preferred by the user
-					nextLanguageIds.findMap { languageId => options.find { _.description.languageId == languageId } }
-				}
-			}
+				inPreferredLanguage(connection, LanguageIds(languageIds.toVector))
 		}
 		
 		class UniqueDescriptionAccess(val languageId: Int, val roleId: Int)

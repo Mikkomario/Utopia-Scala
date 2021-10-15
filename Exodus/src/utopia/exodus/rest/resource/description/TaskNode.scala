@@ -7,6 +7,7 @@ import utopia.citadel.database.access.single.organization.DbTask
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, ExtendableSessionResourceFactory, SessionUseCaseImplementation}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.organization.DescribedTask
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.result.Result
@@ -34,8 +35,8 @@ class TaskNode(val taskId: Int) extends ExtendableSessionResource
 		if (DbTask(taskId).nonEmpty)
 		{
 			// Reads the descriptions of this task
-			val descriptions = DbTaskDescriptions(taskId)
-				.inLanguages(context.languageIdListFor(session.userId))
+			implicit val languageIds: LanguageIds = context.languageIdListFor(session.userId)
+			val descriptions = DbTaskDescriptions(taskId).inPreferredLanguages
 			val task = DescribedTask(taskId, descriptions.toSet)
 			// Forms a response based on this described task
 			Result.Success(session.modelStyle match

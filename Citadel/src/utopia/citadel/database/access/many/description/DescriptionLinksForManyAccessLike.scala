@@ -1,6 +1,7 @@
 package utopia.citadel.database.access.many.description
 
 import utopia.citadel.database.access.id.many.DbDescriptionRoleIds
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 
@@ -19,6 +20,25 @@ trait DescriptionLinksForManyAccessLike extends DescriptionLinksAccessLike
 	  */
 	protected def subGroup(remainingTargetIds: Set[Int]): DescriptionLinksForManyAccessLike
 	
+	/**
+	  * Reads descriptions for these items using the specified languages. Only up to one description per
+	  * role per target is read.
+	  * @param connection  DB Connection (implicit)
+	  * @param languageIds Ids of the targeted languages, from most preferred to least preferred (less preferred
+	  *                    language ids are used when no results can be found with the more preferred options)
+	  * @return Read descriptions, grouped by target id
+	  */
+	def inPreferredLanguages(implicit connection: Connection, languageIds: LanguageIds): Map[Int, Vector[DescriptionLink]] =
+		languageIds.headOption match
+		{
+			case Some(languageId: Int) =>
+				// In the first iteration, reads all descriptions. After that divides into sub-groups
+				val readDescriptions = inLanguageWithId(languageId).all.groupBy { _.targetId }
+				// Reads the rest of the data using recursion
+				readRemaining(DbDescriptionRoleIds.all.toSet, this, readDescriptions)
+			case None => Map()
+		}
+	
 	
 	// OTHER	------------------------------------
 	
@@ -30,19 +50,32 @@ trait DescriptionLinksForManyAccessLike extends DescriptionLinksAccessLike
 	  * @param connection  DB Connection (implicit)
 	  * @return Read descriptions, grouped by target id
 	  */
+	@deprecated("Please use inPreferredLanguages instead", "v1.3")
 	def inLanguages(languageIds: Seq[Int])(implicit connection: Connection): Map[Int, Vector[DescriptionLink]] =
-	{
-		languageIds.headOption match
-		{
-			case Some(languageId: Int) =>
-				// In the first iteration, reads all descriptions. After that divides into sub-groups
-				val readDescriptions = inLanguageWithId(languageId).all.groupBy { _.targetId }
-				// Reads the rest of the data using recursion
-				readRemaining(languageIds, DbDescriptionRoleIds.all.toSet, this, readDescriptions)
-			case None => Map()
-		}
-	}
+		inPreferredLanguages(connection, LanguageIds(languageIds.toVector))
 	
+	/**
+	  * Reads description data from specified targets
+	  * @param remainingTargetIds Targeted target ids (shouldn't be empty)
+	  * @param remainingRoleIds   Ids of the remaining description roles to read (shouldn't be empty)
+	  * @param languageIds        Ids of the languages to use, from most to least preferred (mustn't be empty)
+	  * @param connection         DB Connection (implicit)
+	  * @return Read descriptions, grouped by target id
+	  */
+	protected def findInPreferredLanguages(remainingTargetIds: Set[Int], remainingRoleIds: Set[Int])(
+		implicit connection: Connection, languageIds: LanguageIds): Map[Int, Vector[DescriptionLink]] =
+	{
+		// Reads descriptions in target languages until either all description types have been read or all language
+		// options exhausted
+		val languageId = languageIds.mostPreferred
+		val newAccessPoint = subGroup(remainingTargetIds)
+		// Target id -> Descriptions
+		val readDescriptions = newAccessPoint.inLanguageWithId(languageId).withRoleIds(remainingRoleIds)
+			.groupBy { _.targetId }
+		
+		// Reads the rest of the descriptions recursively
+		readRemaining(remainingRoleIds, newAccessPoint, readDescriptions)
+	}
 	/**
 	  * Reads description data from specified targets
 	  * @param remainingTargetIds Targeted target ids (shouldn't be empty)
@@ -51,35 +84,26 @@ trait DescriptionLinksForManyAccessLike extends DescriptionLinksAccessLike
 	  * @param connection         DB Connection (implicit)
 	  * @return Read descriptions, grouped by target id
 	  */
+	@deprecated("Please use findInPreferredLanguages instead", "v1.3")
 	protected def inLanguages(remainingTargetIds: Set[Int], languageIds: Seq[Int], remainingRoleIds: Set[Int])(
 		implicit connection: Connection): Map[Int, Vector[DescriptionLink]] =
-	{
-		// Reads descriptions in target languages until either all description types have been read or all language
-		// options exhausted
-		val languageId = languageIds.head
-		val newAccessPoint = subGroup(remainingTargetIds)
-		// Target id -> Descriptions
-		val readDescriptions = newAccessPoint.inLanguageWithId(languageId).outsideRoleIds(remainingRoleIds)
-			.groupBy { _.targetId }
-		
-		// Reads the rest of the descriptions recursively
-		readRemaining(languageIds, remainingRoleIds, newAccessPoint, readDescriptions)
-	}
+		findInPreferredLanguages(remainingTargetIds, remainingRoleIds)(connection, LanguageIds(languageIds.toVector))
 	
 	/**
-	 * Reads description data from specified targets
-	 * @param roleId Id of the targeted role
-	 * @param remainingTargetIds Targeted target ids (shouldn't be empty)
-	 * @param languageIds        Ids of the languages to use, from most to least preferred (mustn't be empty)
-	 * @param connection         DB Connection (implicit)
-	 * @return Read descriptions, grouped by target id
-	 */
-	protected def withRoleIdInLanguages(roleId: Int, remainingTargetIds: Set[Int], languageIds: Seq[Int])
-	                                   (implicit connection: Connection): Map[Int, DescriptionLink] =
+	  * Reads description data from specified targets
+	  * @param roleId Id of the targeted role
+	  * @param remainingTargetIds Targeted target ids (shouldn't be empty)
+	  * @param connection         DB Connection (implicit)
+	  * @param languageIds        Ids of the languages to use, from most to least preferred (mustn't be empty)
+	  * @return Read descriptions, grouped by target id
+	  */
+	protected def withRoleIdInPreferredLanguages(roleId: Int, remainingTargetIds: Set[Int])
+	                                            (implicit connection: Connection,
+	                                             languageIds: LanguageIds): Map[Int, DescriptionLink] =
 	{
 		// Reads descriptions in target languages until either all targets have been read or all language
 		// options exhausted
-		val languageId = languageIds.head
+		val languageId = languageIds.mostPreferred
 		val newAccessPoint = subGroup(remainingTargetIds)
 		// Target id -> Description link
 		val readDescriptions = newAccessPoint.inLanguageWithId(languageId).withRoleId(roleId)
@@ -92,18 +116,30 @@ trait DescriptionLinksForManyAccessLike extends DescriptionLinksAccessLike
 			if (remainingTargetIds.isEmpty)
 				readDescriptions
 			else
-				readDescriptions ++ withRoleIdInLanguages(roleId, newRemainingTargetIds, languageIds.tail)
+				readDescriptions ++
+					withRoleIdInPreferredLanguages(roleId, newRemainingTargetIds)(connection, languageIds.tail)
 		}
 		else
 			readDescriptions
 	}
+	/**
+	 * Reads description data from specified targets
+	 * @param roleId Id of the targeted role
+	 * @param remainingTargetIds Targeted target ids (shouldn't be empty)
+	 * @param languageIds        Ids of the languages to use, from most to least preferred (mustn't be empty)
+	 * @param connection         DB Connection (implicit)
+	 * @return Read descriptions, grouped by target id
+	 */
+	@deprecated("Please use withRoleInPreferredLanguages instead", "v1.3")
+	protected def withRoleIdInLanguages(roleId: Int, remainingTargetIds: Set[Int], languageIds: Seq[Int])
+	                                   (implicit connection: Connection): Map[Int, DescriptionLink] =
+		withRoleIdInPreferredLanguages(roleId, remainingTargetIds)(connection, LanguageIds(languageIds.toVector))
 	
 	// Continues read through recursion, if possible. Utilizes (and includes) existing read results.
 	// LanguageIds and roles should be passed as they were at the start of the last read
-	private def readRemaining(languageIds: Seq[Int],
-	                          remainingRoleIds: Set[Int], lastAccessPoint: DescriptionLinksForManyAccessLike,
+	private def readRemaining(remainingRoleIds: Set[Int], lastAccessPoint: DescriptionLinksForManyAccessLike,
 	                          lastReadResults: Map[Int, Vector[DescriptionLink]])
-	                         (implicit connection: Connection): Map[Int, Vector[DescriptionLink]] =
+	                         (implicit connection: Connection, languageIds: LanguageIds): Map[Int, Vector[DescriptionLink]] =
 	{
 		val remainingLanguageIds = languageIds.tail
 		if (remainingLanguageIds.nonEmpty) {
@@ -119,9 +155,8 @@ trait DescriptionLinksForManyAccessLike extends DescriptionLinksAccessLike
 				lastReadResults
 			else {
 				val recursiveReadResults = remainingRolesWithTargets.map { case (roleIds, targetIds) =>
-					lastAccessPoint.inLanguages(targetIds.toSet, remainingLanguageIds, roleIds)
-				}
-					.reduce { _ ++ _ }
+					lastAccessPoint.findInPreferredLanguages(targetIds.toSet, roleIds)(connection, remainingLanguageIds)
+				}.reduce { _ ++ _ }
 				lastReadResults ++ recursiveReadResults
 			}
 		}

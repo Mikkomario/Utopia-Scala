@@ -1,5 +1,6 @@
 package utopia.citadel.database.access.many.description
 
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.description.DescribedFactory
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
@@ -38,6 +39,14 @@ trait ManyDescribedAccess[A, +D] extends ManyModelAccess[A] with Indexed
 	  * @return All accessible items with all available descriptions
 	  */
 	def fullyDescribed(implicit connection: Connection) = pullDescribed { _.pull.groupBy { _.targetId } }
+	/**
+	  * @param connection Implicit DB connection
+	  * @param languageIds Ids of the targeted languages, from most to least preferred
+	  * @return All accessible items described. Descriptions are chosen from the specified languages. Only one
+	  *         description per description role is included.
+	  */
+	def described(implicit connection: Connection, languageIds: LanguageIds) =
+		pullDescribed { _.inPreferredLanguages }
 	
 	
 	// OTHER    --------------------------------
@@ -48,8 +57,9 @@ trait ManyDescribedAccess[A, +D] extends ManyModelAccess[A] with Indexed
 	  * @return All accessible items described. Descriptions are chosen from the specified languages. Only one
 	  *         description per description role is included.
 	  */
+	@deprecated("Please use described instead", "v1.3")
 	def describedInLanguages(languageIds: Seq[Int])(implicit connection: Connection) =
-		pullDescribed { _.inLanguages(languageIds) }
+		described(connection, LanguageIds(languageIds.toVector))
 	
 	/**
 	  * @param languageId Id of the target language

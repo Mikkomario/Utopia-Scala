@@ -11,6 +11,7 @@ import utopia.citadel.database.model.organization.MembershipModel
 import utopia.citadel.database.model.user.{UserDeviceModel, UserLanguageModel, UserSettingsModel}
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.language.{DescribedLanguage, DescribedLanguageFamiliarity}
 import utopia.metropolis.model.combined.user.{DescribedUserLanguage, MyOrganization}
 import utopia.metropolis.model.error.AlreadyUsedException
@@ -294,24 +295,21 @@ object DbUser extends SingleModelAccess[User]
 			def withFamiliarityLevels(implicit connection: Connection) =
 				DbLanguageFamiliarities.familiarityLevelsForUserWithId(userId)
 			
-			
-			// OTHER	-------------------
-			
 			/**
 			  * @param descriptionLanguageIds Ids of the languages the descriptions are retrieved in
 			  *                               (in order from most to least preferred)
 			  * @param connection             DB Connection (implicit)
 			  * @return User language links, including described languages
 			  */
-			def withDescriptionsInLanguages(descriptionLanguageIds: Seq[Int])(implicit connection: Connection) =
+			def withDescriptions(implicit connection: Connection, descriptionLanguageIds: LanguageIds) =
 			{
 				// Reads languages and familiarities, then attaches descriptions
 				val languages = full
 				val languageIds = languages.map { _.languageId }.toSet
-				val languageDescriptions = DbLanguageDescriptions(languageIds).inLanguages(descriptionLanguageIds)
+				val languageDescriptions = DbLanguageDescriptions(languageIds).inPreferredLanguages
 				val familiarityIds = languages.map { _.familiarityId }.toSet
 				val familiarityDescriptions = DbLanguageFamiliarityDescriptions(familiarityIds)
-					.inLanguages(descriptionLanguageIds)
+					.inPreferredLanguages
 				languages.map { base =>
 					val language = base.language
 					val describedLanguage = DescribedLanguage(language,
@@ -321,6 +319,19 @@ object DbUser extends SingleModelAccess[User]
 					DescribedUserLanguage(base, describedLanguage, describedFamiliarity)
 				}
 			}
+			
+			
+			// OTHER	-------------------
+			
+			/**
+			  * @param descriptionLanguageIds Ids of the languages the descriptions are retrieved in
+			  *                               (in order from most to least preferred)
+			  * @param connection             DB Connection (implicit)
+			  * @return User language links, including described languages
+			  */
+			@deprecated("Please use withDescriptions instead", "v1.3")
+			def withDescriptionsInLanguages(descriptionLanguageIds: Seq[Int])(implicit connection: Connection) =
+				withDescriptions(connection, LanguageIds(descriptionLanguageIds.toVector))
 			
 			/**
 			  * Inserts a new user language combination (please make sure to only insert new languages)
@@ -416,41 +427,41 @@ object DbUser extends SingleModelAccess[User]
 			
 			/**
 			  * Reads described organization and role information for this user
+			  * @param connection  Implicit DB Connection
 			  * @param languageIds Ids of the languages in which descriptions are retrieved
 			  *                    (from most preferred to least preferred)
-			  * @param connection  Implicit DB Connection
 			  * @return This user's organizations and roles within those organizations
 			  */
-			def myOrganizations(languageIds: Seq[Int])(implicit connection: Connection): Vector[MyOrganization] =
-				myOrganizations(languageIds, None).get
+			def myOrganizations(implicit connection: Connection, languageIds: LanguageIds): Vector[MyOrganization] =
+				myOrganizationsIfModifiedSince(None).get
 			
 			/**
 			  * Reads described organization and role information for this user
-			  * @param languageIds         Ids of the languages in which descriptions are retrieved
-			  *                            (from most preferred to least preferred)
 			  * @param ifModifiedThreshold A time threshold for checking if the results have been modified
 			  *                            since that time
 			  * @param connection          Implicit DB Connection
+			  * @param languageIds         Ids of the languages in which descriptions are retrieved
+			  *                            (from most preferred to least preferred)
 			  * @return This user's organizations and roles within those organizations.
 			  *         None if the items were not modified since the threshold time.
 			  */
-			def myOrganizations(languageIds: Seq[Int], ifModifiedThreshold: Instant)
-			                   (implicit connection: Connection): Option[Vector[MyOrganization]] =
-				myOrganizations(languageIds, Some(ifModifiedThreshold))
+			def myOrganizationsIfModifiedSince(ifModifiedThreshold: Instant)
+			                   (implicit connection: Connection, languageIds: LanguageIds): Option[Vector[MyOrganization]] =
+				myOrganizationsIfModifiedSince(Some(ifModifiedThreshold))
 			
 			/**
-			  * Reads described organization and role information for this user
+			  * Reads described organization and role information for this uses
+			  * @param ifModifiedThreshold An optional time threshold for checking if the results have been modified
+			  *                            since that time
+			  * @param connection          Implicit DB Connection
 			  * @param languageIds         Ids of the languages in which descriptions are retrieved
 			  *                            (from most preferred to least preferred)
-			  * @param ifModifiedThreshold An optional time threshold for checking if the results have been modified
-			  *                            since that time (default = None)
-			  * @param connection          Implicit DB Connection
 			  * @return This user's organizations and roles within those organizations.
 			  *         None if 'ifModifiedSinceThreshold' -parameter was specified and the items were not modified
 			  *         since that time.
 			  */
-			def myOrganizations(languageIds: Seq[Int], ifModifiedThreshold: Option[Instant])
-			                   (implicit connection: Connection) =
+			def myOrganizationsIfModifiedSince(ifModifiedThreshold: Option[Instant])
+			                                  (implicit connection: Connection, languageIds: LanguageIds) =
 			{
 				// Reads all memberships & roles first
 				val memberships = MembershipWithRolesFactory
@@ -466,7 +477,7 @@ object DbUser extends SingleModelAccess[User]
 					}) {
 						// Reads organization descriptions
 						val organizationDescriptions = DbOrganizationDescriptions(organizationIds)
-							.inLanguages(languageIds)
+							.inPreferredLanguages
 						// Reads all role right information concerning the targeted roles
 						val rolesWithRights = DbUserRoles(memberships.flatMap { _.roleIds }.toSet).withRights
 						
