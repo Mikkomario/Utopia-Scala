@@ -80,13 +80,12 @@ object DbUser extends SingleModelAccess[User]
 		  */
 		def languageIds(implicit connection: Connection) = connection(Select(UserLanguageModel.table,
 			UserLanguageModel.languageIdAttName) + Where(UserLanguageModel.withUserId(id).toCondition)).rowIntValues
-		/*
-		def primaryLanguageId(implicit connection: Connection) =
-		{
-			// TODO: For this we need a languageFamiliarity model, which is missing
-			// val familiarityModel = LanguageFamiliarityMo
-			connection(Select(languageLinkModel.table join ))
-		}*/
+		/**
+		  * @param connection Implicit DB Connection
+		  * @return An ordered language id list based on this user's language familiarities
+		  */
+		def languageIdsList(implicit connection: Connection) =
+			LanguageIds(languages.withFamiliarityLevels.sortBy { _._2.orderIndex }.map { _._1 })
 		
 		/**
 		  * @param connection DB Connection

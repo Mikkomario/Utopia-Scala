@@ -137,7 +137,7 @@ trait AuthorizedContext extends Context
 		if (languagesFromHeaders.nonEmpty)
 			LanguageIds(languagesFromHeaders.map { _.id })
 		else
-			LanguageIds(DbUser(userId).languages.withFamiliarityLevels.sortBy { _._2.orderIndex }.map { _._1 })
+			DbUser(userId).languageIdsList
 	}
 	
 	/**
