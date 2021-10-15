@@ -1,7 +1,9 @@
 package utopia.vault.coder.controller.writer.model
 
+import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.Visibility.Protected
+import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration}
 import utopia.vault.coder.model.scala.{Parameter, Parameters, Reference, ScalaType}
 
@@ -22,9 +24,11 @@ object DescribedModelWriter
 	  * @param codec        Implicit codec to use when writing files
 	  * @return Reference to the written file. Failure if file writing failed.
 	  */
-	def apply(classToWrite: Class, modelRef: Reference)(implicit setup: ProjectSetup, codec: Codec) =
+	def apply(classToWrite: Class, modelRef: Reference)
+	         (implicit setup: ProjectSetup, codec: Codec) =
 	{
 		val className = s"Described${ classToWrite.name }"
+		val modelParamName = classToWrite.name.singular.uncapitalize
 		
 		File(setup.combinedModelPackage/classToWrite.packageName,
 			ObjectDeclaration(className, Vector(Reference.describedFactory(modelRef, ScalaType.basic(className)))),
@@ -41,9 +45,11 @@ object DescribedModelWriter
 			),*/
 			// Class combines the model with its descriptions
 			ClassDeclaration(className,
-				Parameters(Parameter("wrapped", modelRef),
-					Parameter("descriptions", ScalaType.set(Reference.descriptionLink))),
+				Parameters(Parameter(modelParamName, modelRef, description = s"${classToWrite.name} to wrap"),
+					Parameter("descriptions", ScalaType.set(Reference.descriptionLink),
+						description = s"Descriptions concerning the wrapped ${classToWrite.name}")),
 				Vector(Reference.describedWrapper(modelRef), Reference.simplyDescribed),
+				properties = Vector(ComputedProperty("wrapped", isOverridden = true)(modelParamName)),
 				methods = Set(MethodDeclaration("simpleBaseModel", visibility = Protected, isOverridden = true)(
 					Parameter("roles", ScalaType.iterable(Reference.descriptionRole)))("wrapped.toModel")),
 				description = s"Combines ${ classToWrite.name } with the linked descriptions",

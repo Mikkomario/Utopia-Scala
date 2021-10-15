@@ -21,6 +21,8 @@
 ### New Methods
 - **DbLanguageId**
   - Added `.getOrInsert()` under `.forCode(String)`
+- **DbUser** (single)
+  - Added `.languageIdsList`
 - Added a number of (utility) methods related to description database interactions
 
 ## v1.2 - 3.10.2021

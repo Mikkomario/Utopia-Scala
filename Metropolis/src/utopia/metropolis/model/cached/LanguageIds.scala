@@ -20,6 +20,8 @@ object LanguageIds
   */
 case class LanguageIds(wrapped: Vector[Int]) extends Extender[Vector[Int]]
 {
+	// COMPUTED ------------------------------
+	
 	/**
 	  * @return Id of the most preferred language in this list
 	  * @throws IllegalStateException If this list is empty
@@ -33,4 +35,13 @@ case class LanguageIds(wrapped: Vector[Int]) extends Extender[Vector[Int]]
 	  */
 	@throws[IllegalStateException]
 	def tail = LanguageIds(wrapped.tail)
+	
+	
+	// OTHER    -----------------------------
+	
+	/**
+	 * @param languageId A language id
+	 * @return A copy of this language id list with that language as the one most preferred
+	 */
+	def preferringLanguageWithId(languageId: Int) = LanguageIds(languageId +: wrapped.filter { _ != languageId })
 }
