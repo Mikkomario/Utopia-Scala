@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.data
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.vault.coder.model.scala.Package
 
 /**
@@ -43,10 +44,10 @@ case class ProjectData(basePackage: Package, enumerations: Vector[Enum], classes
 	  */
 	def filter(filter: Filter) =
 	{
-		val filteredClasses = classes.filter { c => filter(c.name) || filter(c.packageName) }
+		val baseFilteredClasses = classes.filter { c => filter(c.name) || filter(c.packageName) }
+		val (filteredClasses, filteredCombos) = comboInclusiveClasses(baseFilteredClasses) { c => filter(c.name) }
 		copy(classes = filteredClasses, enumerations = enumerations.filter { e => filter(e.name) },
-			combinations = combinations.filter { c =>
-				filteredClasses.contains(c.parentClass) || filteredClasses.contains(c.childClass) || filter(c.name) })
+			combinations = filteredCombos)
 	}
 	
 	/**
@@ -63,12 +64,19 @@ case class ProjectData(basePackage: Package, enumerations: Vector[Enum], classes
 	  * @param f A filter to apply
 	  * @return A copy of this data with only classes remaining which match the filter
 	  */
-	def filterByClass(f: Class => Boolean) =
+	def filterByClass(f: Class => Boolean) = filterByClassOrCombo(f) { _ => false }
+	/**
+	  * @param includeClass A function that returns true for classes that should be included in the results
+	  *                     (also includes their related combinations)
+	  * @param includeCombo A function that returns true for combinations that should be included in the results
+	  *                     (also includes their classes)
+	  * @return A copy of this data with only classes remaining which match the filter
+	  */
+	def filterByClassOrCombo(includeClass: Class => Boolean)(includeCombo: CombinationData => Boolean) =
 	{
-		val remainingClasses = classes.filter(f)
-		copy(enumerations =  Vector(), classes = remainingClasses,
-			combinations = combinations.filter { c => remainingClasses.contains(c.parentClass) ||
-				remainingClasses.contains(c.childClass) })
+		val remainingClasses = classes.filter(includeClass)
+		val (filteredClasses, filteredCombos) = comboInclusiveClasses(remainingClasses)(includeCombo)
+		copy(enumerations = Vector(), classes = filteredClasses, combinations = filteredCombos)
 	}
 	
 	/**
@@ -77,4 +85,13 @@ case class ProjectData(basePackage: Package, enumerations: Vector[Enum], classes
 	  */
 	def filterByEnumName(filter: Filter) =
 		copy(enumerations = enumerations.filter { e => filter(e.name) }, classes = Vector(), combinations = Vector())
+	
+	private def comboInclusiveClasses(filteredClasses: Vector[Class])
+	                                 (comboInclusionCondition: CombinationData => Boolean) =
+	{
+		val filteredCombos = combinations.filter { c => comboInclusionCondition(c) ||
+			filteredClasses.contains(c.childClass) || filteredClasses.contains(c.parentClass) }
+		val comboClasses = filteredCombos.flatMap { c => Pair(c.parentClass, c.childClass) }
+		(filteredClasses ++ comboClasses).distinct -> filteredCombos
+	}
 }

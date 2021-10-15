@@ -38,7 +38,8 @@ object VaultCoderApp extends App
 		ArgumentSchema("target", "filter",
 			help = "Search filter applied to written classes and/or enums (case-insensitive)"),
 		ArgumentSchema("type", "group", help = "Specifies the group of items to write (all, class, enums or package)"),
-		ArgumentSchema.flag("all", "A", help = "Flag for selecting group 'all'")),
+		ArgumentSchema.flag("all", "A", help = "Flag for selecting group 'all'"),
+		ArgumentSchema.flag("single", "S", help = "Flag for limiting filter results to exact matches")),
 		args.toVector)
 	
 	// Writes hints and warnings
@@ -115,7 +116,6 @@ object VaultCoderApp extends App
 					None
 			}
 	}
-	// TODO: Add support for exact filtering (new argument)
 	lazy val filter = (arguments("filter").string match
 	{
 		case Some(filter) => filter.notEmpty
@@ -125,7 +125,8 @@ object VaultCoderApp extends App
 					arguments("type").getString} filter to use (leave empty if you want to target all of them)")
 			else
 				None
-	}).map { Filter(_) }
+			// The filter may be more or less inclusive, based on the "single" flag
+	}).map { filterText => Filter(filterText, arguments("single").getBoolean) }
 	lazy val targetType = specifiedTargetType.getOrElse {
 		filter match
 		{

@@ -23,6 +23,8 @@ Once you have created a specification document, run the application using the fo
   - If `<group>` is specified and this value is not, the application allows the user to type a filter during 
     application use
   - This argument is case-insensitive and should represent a portion of the targeted item's name
+    - If, however, you include the `-S` flag in command arguments, class names must match the filter exactly
+      (except for casing) and not just partially.
 - `<group>` Specifies, which sub-category of items will be written, or which target is filtered using the `<filter>`
   - This argument is optional
   - Allowed values are `class`, `enum`, `package` and `all`
