@@ -46,7 +46,12 @@ trait ManyDescribedAccess[A, +D] extends ManyModelAccess[A] with Indexed
 	  *         description per description role is included.
 	  */
 	def described(implicit connection: Connection, languageIds: LanguageIds) =
-		pullDescribed { _.inPreferredLanguages }
+	{
+		if (languageIds.isEmpty)
+			fullyDescribed
+		else
+			pullDescribed { _.inPreferredLanguages }
+	}
 	
 	
 	// OTHER    --------------------------------

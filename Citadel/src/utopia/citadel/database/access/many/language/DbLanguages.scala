@@ -1,6 +1,6 @@
 package utopia.citadel.database.access.many.language
 
-import utopia.citadel.database.access.many.description.{DbLanguageDescriptions, ManyDescribedAccessByIds}
+import utopia.citadel.database.access.many.description.{DbLanguageDescriptions, ManyDescribedAccess, ManyDescribedAccessByIds}
 import utopia.citadel.database.factory.language.LanguageFactory
 import utopia.citadel.database.model.language.LanguageModel
 import utopia.flow.generic.ValueConversions._
@@ -16,13 +16,20 @@ import utopia.vault.sql.SqlExtensions._
   * @author Mikko Hilpinen
   * @since 10.5.2020, v1.0
   */
-object DbLanguages extends ManyRowModelAccess[Language] with UnconditionalView
+object DbLanguages
+	extends ManyRowModelAccess[Language] with ManyDescribedAccess[Language, DescribedLanguage] with UnconditionalView
 {
 	// IMPLEMENTED	----------------------------
 	
 	override def factory = LanguageFactory
 	
 	override protected def defaultOrdering = None
+	
+	override protected def manyDescriptionsAccess = DbLanguageDescriptions
+	
+	override protected def describedFactory = DescribedLanguage
+
+	override protected def idOf(item: Language) = item.id
 	
 	
 	// COMPUTED	--------------------------------

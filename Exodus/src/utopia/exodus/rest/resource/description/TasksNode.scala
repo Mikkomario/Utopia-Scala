@@ -39,9 +39,10 @@ object TasksNode extends Resource[AuthorizedContext]
 			implicit val c: Connection = connection
 			implicit val languageIds: LanguageIds = context.languageIdListFor(session.userId)
 			// Reads task descriptions
-			val descriptions = DbTaskDescriptions.inPreferredLanguages
+			val taskIds = DbTaskIds.all
+			val descriptions = DbTaskDescriptions(taskIds.toSet).inPreferredLanguages
 			// Combines the descriptions with the tasks and returns them
-			val describedTasks = DbTaskIds.all.map { taskId => DescribedTask(taskId,
+			val describedTasks = taskIds.map { taskId => DescribedTask(taskId,
 				descriptions.getOrElse(taskId, Set()).toSet) }
 			// May use simpler model style
 			session.modelStyle match

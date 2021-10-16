@@ -86,6 +86,29 @@ trait DescriptionLinksAccess extends DescriptionLinksForManyAccessLike with NonD
 	{
 		// IMPLEMENTED	---------------------
 		
+		/**
+		 * Reads descriptions for these items using the specified languages. Only up to one description per
+		 * role per target is read.
+		 * @param connection  DB Connection (implicit)
+		 * @param languageIds Ids of the targeted languages, from most preferred to least preferred (less preferred
+		 *                    language ids are used when no results can be found with the more preferred options)
+		 * @return Read descriptions, grouped by target id
+		 */
+		def inPreferredLanguages(implicit connection: Connection,
+		                                  languageIds: LanguageIds): Map[Int, Vector[DescriptionLink]] =
+			languageIds.headOption match
+			{
+				case Some(languageId: Int) =>
+					// In the first iteration, reads all descriptions. After that divides into sub-groups
+					val readDescriptions = inLanguageWithId(languageId).pull.groupBy { _.targetId }
+					// Reads the rest of the data using recursion
+					if (languageIds.size > 1)
+						readRemaining(DbDescriptionRoleIds.all.toSet, this, readDescriptions)
+					else
+						readDescriptions
+				case None => Map()
+			}
+		
 		override protected def parent = DescriptionLinksAccess.this
 		
 		override def filterCondition = linkModel.targetIdColumn.in(targetIds)
@@ -97,7 +120,7 @@ trait DescriptionLinksAccess extends DescriptionLinksForManyAccessLike with NonD
 			if (remainingTargetIds == targetIds)
 				this
 			else
-				new DescriptionsOfMany(remainingTargetIds)
+				new DescriptionsOfMany(targetIds & remainingTargetIds)
 		}
 		
 		

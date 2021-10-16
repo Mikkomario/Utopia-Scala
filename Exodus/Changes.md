@@ -1,6 +1,10 @@
 # Utopia Exodus - List of Changes
 
 ## v2.1.1 (in development)
+### Breaking Changes
+- Refactored **PublicDescriptionsNode** to support **Citadel** changes - This affects all subclasses
+### Bugfixes
+- **PublicDescriptionsNode** was not performing authorization before
 ### Other Changes
 - Supports changes in **Citadel** and **Vault**
 - **AuthorizedContext**`.languageIdListFor(=> Int)` now returns **LanguageIds** instead of a Vector

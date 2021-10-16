@@ -2,15 +2,15 @@ package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.InternalServerError
-import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DescriptionLinksForManyAccessLike}
+import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.description.SimplyDescribed
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
-import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
 import utopia.nexus.rest.ResourceSearchResult.Error
@@ -38,11 +38,6 @@ trait PublicDescriptionsNode[Item, +Combined <: ModelConvertible with SimplyDesc
 	def defaultModelStyle: ModelStyle
 	
 	/**
-	 * @return An access point to the descriptions of the returned items
-	 */
-	protected def descriptionsAccess: DescriptionLinksForManyAccessLike
-	
-	/**
 	  * Authorizes the incoming request
 	  * @param onAuthorized A function to call if the request is authorized. Produces final result
 	  * @param context Request context
@@ -52,25 +47,7 @@ trait PublicDescriptionsNode[Item, +Combined <: ModelConvertible with SimplyDesc
 	protected def authorize(onAuthorized: => Result)
 	                       (implicit context: AuthorizedContext, connection: Connection): Result
 	
-	/**
-	  * @param connection DB Connection (implicit)
-	  * @return All returned items
-	  */
-	protected def items(implicit connection: Connection): Vector[Item]
-	
-	/**
-	  * @param item An item
-	  * @return The item's id
-	  */
-	protected def idOf(item: Item): Int
-	
-	/**
-	  * Combines items with their descriptions
-	  * @param item An item
-	  * @param descriptions Descriptions for that item
-	  * @return A combined item
-	  */
-	protected def combine(item: Item, descriptions: Set[DescriptionLink]): Combined
+	protected def describedItems(implicit connection: Connection, languageIds: LanguageIds): Vector[Combined]
 	
 	
 	// IMPLEMENTED	--------------------------------
@@ -84,17 +61,20 @@ trait PublicDescriptionsNode[Item, +Combined <: ModelConvertible with SimplyDesc
 		connectionPool.tryWith { implicit connection =>
 			val accepted = context.requestedLanguages
 			if (accepted.nonEmpty)
-				get(accepted.map { _.id }, context.modelStyle.getOrElse(defaultModelStyle)).toResponse
+				authorize {
+					implicit val languageIds: LanguageIds = LanguageIds(accepted.map { _.id })
+					get(context.modelStyle.getOrElse(defaultModelStyle))
+				}.toResponse
 			else if (context.request.headers.containsAuthorization)
-			{
 				context.sessionKeyAuthorized { (session, _) =>
-					val userLanguages = DbUser(session.userId).languages.withFamiliarityLevels
-						.sortBy { _._2.orderIndex }.map { _._1 }
-					get(userLanguages, session.modelStyle)
+					implicit val userLanguages: LanguageIds = DbUser(session.userId).languageIdsList
+					get(session.modelStyle)
 				}
-			}
 			else
-				get(Vector(), context.modelStyle.getOrElse(defaultModelStyle)).toResponse
+				authorize {
+					implicit val languageIds: LanguageIds = LanguageIds(Vector())
+					get(context.modelStyle.getOrElse(defaultModelStyle))
+				}.toResponse
 		} match
 		{
 			case Success(response) => response
@@ -110,18 +90,10 @@ trait PublicDescriptionsNode[Item, +Combined <: ModelConvertible with SimplyDesc
 	
 	// OTHER	---------------------------------
 	
-	private def get(languageIds: Seq[Int], resultStyle: ModelStyle)(implicit connection: Connection) =
+	private def get(resultStyle: ModelStyle)(implicit connection: Connection, languageIds: LanguageIds) =
 	{
-		// Reads all descriptions
-		val descriptions =
-		{
-			if (languageIds.isEmpty)
-				descriptionsAccess.all.groupBy { _.targetId }
-			else
-				descriptionsAccess.inLanguages(languageIds)
-		}
-		// Reads all items and combines them with descriptions. Then returns them in response
-		val combined = items.map { item => combine(item, descriptions.getOrElse(idOf(item), Set()).toSet) }
+		// Reads all described items. Then returns them in response
+		val combined = describedItems
 		// Converts the results to correct format
 		resultStyle match
 		{
