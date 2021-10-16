@@ -55,7 +55,7 @@ object SqlWriter
 			val firstComboIndexColumns = classToWrite.comboIndexColumnNames.filter { _.size > 1 }.map { _.head }.toSet
 			val individualIndexDeclarations = classToWrite.properties
 				.filter { prop => prop.isIndexed && !firstComboIndexColumns.contains(prop.columnName) }
-				.map { prop => s"INDEX ${ classInitials }_${ prop.columnName }_idx (`${ prop.columnName })`" }
+				.map { prop => s"INDEX ${ classInitials }_${ prop.columnName }_idx (`${ prop.columnName }`)" }
 			val comboIndexDeclarations = classToWrite.comboIndexColumnNames.filter { _.size > 1 }
 				.zipWithIndex.map { case (colNames, index) =>
 				s"INDEX ${ classInitials }_combo_${ index + 1 }_idx (${ colNames.mkString(", ") })"

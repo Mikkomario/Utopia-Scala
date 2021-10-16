@@ -14,6 +14,7 @@
 - Written Stored models now contain a property `access`, which points to their id-specific access point
 ### Bugfixes
 - Optional references didn't work previously - now fixed
+- Fixed a bug where SQL indices where written incorrectly
 - Fixed a bug in some factory implementations where read values were not unwrapped correctly
   - Please note that as a side effect, **ValueUnwraps** are no longer used when parsing instance data from models
 ### Other Changes
