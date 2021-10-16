@@ -1,5 +1,6 @@
 package utopia.metropolis.model.combined.description
 
+import utopia.flow.util.CollectionExtensions._
 import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 import utopia.metropolis.model.stored.description.DescriptionLink
 
@@ -52,4 +53,13 @@ trait Described
 	  * @return This item's description of that role as text. None if not found.
 	  */
 	def apply(descriptionRole: DescriptionRoleIdWrapper) = textOfRoleWithId(descriptionRole.id)
+	/**
+	 * @param primaryRole Primary searched description role
+	 * @param secondaryRole Role used as backup
+	 * @param moreRoles More backup roles
+	 * @return The first available description text from those roles
+	 */
+	def apply(primaryRole: DescriptionRoleIdWrapper, secondaryRole: DescriptionRoleIdWrapper,
+	          moreRoles: DescriptionRoleIdWrapper*): Option[String] =
+		(Vector(primaryRole, secondaryRole) ++ moreRoles).findMap(apply)
 }
