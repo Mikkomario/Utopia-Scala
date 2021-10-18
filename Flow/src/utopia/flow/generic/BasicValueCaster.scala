@@ -204,7 +204,7 @@ object BasicValueCaster extends ValueCaster
     {
         case StringType =>
             val s = value.getString
-            if ((s.startsWith("[") && s.endsWith("]")) || (s.startsWith("(") && s.startsWith(")")))
+            if ((s.startsWith("[") && s.endsWith("]")) || (s.startsWith("(") && s.endsWith(")")))
                 Some(splitToValueVector(s.drop(1).dropRight(1), ','))
             else if (s.contains(','))
                 Some(splitToValueVector(s, ','))

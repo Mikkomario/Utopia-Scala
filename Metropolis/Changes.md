@@ -1,6 +1,8 @@
 # Utopia Metropolis - List of Changes
 
 ## v1.3 (in development)
+This update adds a lot of utility for description handling, unfortunately also breaking the 
+**DescribedFromModelFactory** implementations, although not badly.
 ### Breaking Changes
 - Switched **DescribedFromModelFactory**'s `A` and `D` type parameters around (from `[D, A]` to `[A, D]`)
 ### New Features

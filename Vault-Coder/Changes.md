@@ -1,6 +1,8 @@
 # Utopia Vault Coder
 
 ## v1.2 (in development)
+This major update adds a number of new important features and bugfix (see details below). The program interface is 
+also refactored, somewhat.
 ### Breaking Changes
 - Updated how program arguments are handled and added some interactive elements to the application
 - Access points, which targeted individual items based on their id are now written into separate files (DbSingleXAccess)

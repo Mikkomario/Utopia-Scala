@@ -1,6 +1,8 @@
 # Utopia Flow - List of Changes
 
 ## v1.13 (in development)
+Updated built-in value conversions (concerning Vector and LocalDate types). Added interactive console support with 
+the new **Console** class and **ConsoleExtensions** object, as well as by working on the command arguments -system.
 ### Breaking Changes
 - Instant to Long conversion now converts to milliseconds instead of seconds. The same is true the other way around.
 - String to Vector conversion now first attempts to find either arrays `[a, b, c]` or tuples `(d, e, f)` 

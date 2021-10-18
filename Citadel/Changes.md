@@ -1,6 +1,9 @@
 # Utopia Disciple - List of changes
 
 ## v1.3 (in development)
+This relatively big update heavily updates description-related features, making description accessing more easy and 
+readable. This update comes with some refactoring requirements, however, especially with the updates on certain 
+access class packages, which were due sooner or later anyway.
 ### Breaking Changes
 - Moved **DbUser**, **DbUsers**, **DbDevice** and **DbDevices** to new sub-packages (user & device)
 - Refactored descriptions accessing a lot, so there may be multiple errors related to that when you apply this update
