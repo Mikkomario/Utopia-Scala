@@ -11,6 +11,7 @@
 - **NullDeprecatable**
   - Added `.deprecatedCondition`
 ### Other Changes
+- **FromRowFactory** now filters out duplicate rows (based on row primary keys) before parsing them
 - **Table** now uses a Map internally for matching property names to columns. The matching is also now case-insensitive.
 
 ## v1.10 - 3.10.2021

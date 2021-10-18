@@ -6,6 +6,7 @@ import utopia.vault.coder.model.scala
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
 import utopia.vault.coder.model.scala.{Extension, Parameter, Reference, ScalaType}
+import utopia.vault.coder.util.NamingUtils
 
 import _root_.scala.io.Codec
 
@@ -44,7 +45,7 @@ object DbModelWriter
 					Vector(
 						ImmutableValue(s"${ prop.name }AttName",
 							description = s"Name of the property that contains ${ classToWrite.name } ${ prop.name }")(
-							prop.name.singular.quoted),
+							NamingUtils.underscoreToCamel(prop.columnName).quoted),
 						ComputedProperty(s"${ prop.name }Column",
 							description = s"Column that contains ${ classToWrite.name } ${ prop.name }")(
 							s"table(${ prop.name }AttName)")

@@ -62,4 +62,10 @@ trait Described
 	def apply(primaryRole: DescriptionRoleIdWrapper, secondaryRole: DescriptionRoleIdWrapper,
 	          moreRoles: DescriptionRoleIdWrapper*): Option[String] =
 		(Vector(primaryRole, secondaryRole) ++ moreRoles).findMap(apply)
+	
+	/**
+	 * @param role A description role
+	 * @return Whether this item has that role described
+	 */
+	def has(role: DescriptionRoleIdWrapper) = descriptions.exists { _.description.roleId == role.id }
 }

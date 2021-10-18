@@ -31,7 +31,12 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	
 	// IMPLEMENTED	----------------
 	
-	override def apply(result: Result): Vector[A] = result.rows.flatMap(parseIfPresent)
+	override def apply(result: Result): Vector[A] =
+	{
+		// Makes sure duplicate rows are not present by only including each index (group) once
+		val indices = tables.flatMap { table => table.primaryColumn }
+		result.rows.distinctBy { row => indices.map(row.apply) }.flatMap(parseIfPresent)
+	}
 	
 	/**
 	  * Retrieves an object's data from the database and parses it to a proper instance
@@ -39,9 +44,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @return database data parsed into an instance. None if there was no data available.
 	  */
 	override def get(index: Value)(implicit connection: Connection): Option[A] =
-	{
 		table.primaryColumn.flatMap { column => get(column <=> index) }
-	}
 	
 	/**
 	  * Retrieves an object's data from the database and parses it to a proper instance

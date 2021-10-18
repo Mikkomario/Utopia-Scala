@@ -1,12 +1,12 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, ProjectSetup}
+import utopia.vault.coder.model.data.{Class, ProjectSetup, Property}
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration, PropertyDeclaration}
 import utopia.vault.coder.model.scala.{Extension, Reference}
-import utopia.vault.coder.util.ClassMethodFactory
+import utopia.vault.coder.util.{ClassMethodFactory, NamingUtils}
 
 import scala.collection.immutable.VectorBuilder
 import scala.io.Codec
@@ -89,6 +89,7 @@ object FactoryWriter
 	
 	private def methodsFor(classToWrite: Class, modelRef: Reference, dataRef: Reference) =
 	{
+		
 		def _modelFromAssignments(assignments: CodePiece) =
 			modelRef.targetCode +
 				classToWrite.idType.fromValueCode("valid(\"id\")")
@@ -97,13 +98,14 @@ object FactoryWriter
 		
 		val fromModelMethod = {
 			if (classToWrite.refersToEnumerations)
-				ClassMethodFactory.classFromModel(classToWrite, "table.validate(model)") {
-					_.name.singular
-				}(_modelFromAssignments)
+				ClassMethodFactory.classFromModel(classToWrite, "table.validate(model)")(
+					propNameInModel)(_modelFromAssignments)
 			else
-				ClassMethodFactory.classFromValidatedModel(classToWrite) { _.name.singular }(_modelFromAssignments)
+				ClassMethodFactory.classFromValidatedModel(classToWrite)(propNameInModel)(_modelFromAssignments)
 		}
 		
 		Set(fromModelMethod)
 	}
+	
+	private def propNameInModel(prop: Property) = NamingUtils.underscoreToCamel(prop.columnName)
 }
