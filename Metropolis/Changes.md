@@ -1,5 +1,20 @@
 # Utopia Metropolis - List of Changes
 
+## v1.3 (in development)
+This update adds a lot of utility for description handling, unfortunately also breaking the 
+**DescribedFromModelFactory** implementations, although not badly.
+### Breaking Changes
+- Switched **DescribedFromModelFactory**'s `A` and `D` type parameters around (from `[D, A]` to `[A, D]`)
+### New Features
+- Added **DescriptionRoleIdWrapper** trait to support easier description reading
+- Added **LanguageIds** model for easier preferred language management
+### New Methods
+- **Described**
+  - Added multiple new utility functions for accessing various descriptions
+### Other Changes
+- **LanguageFamiliarity** now extends **SelfComparable**
+- Added **DescribedFactory** trait (parent trait for **DescribedFromModelFactory**)
+
 ## v1.2 - 3.10.2021
 This update, which is closely connected to **Citadel** and **Exodus** updates, makes the user's email address 
 an optional field. This is to support a wider range of use cases (e.g. when data protection requires one to omit such 

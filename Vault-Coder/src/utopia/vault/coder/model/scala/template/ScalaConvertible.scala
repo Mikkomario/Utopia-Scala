@@ -1,5 +1,7 @@
 package utopia.vault.coder.model.scala.template
 
+import utopia.vault.coder.model.scala.code.CodePiece
+
 /**
   * Common trait for items which may be converted to scala code
   * @author Mikko Hilpinen
@@ -12,10 +14,10 @@ trait ScalaConvertible
 	/**
 	  * @return A scala string based on this item
 	  */
-	def toScala: String
+	def toScala: CodePiece
 	
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def toString = toScala
+	override def toString = toScala.text
 }

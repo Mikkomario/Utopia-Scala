@@ -3,11 +3,12 @@ package utopia.exodus.rest.resource.user.me
 import utopia.access.http.Method.{Delete, Get, Post, Put}
 import utopia.access.http.Status.{BadRequest, Forbidden}
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
-import utopia.citadel.database.access.single.DbUser
 import utopia.citadel.database.access.single.language.DbLanguage
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.metropolis.model.post.NewLanguageProficiency
 import utopia.nexus.http.Path
@@ -41,8 +42,8 @@ object MyLanguagesNode extends Resource[AuthorizedContext]
 			// GET simply returns existing user language links (with appropriate descriptions)
 			if (method == Get) {
 				// Reads language descriptions from the database, uses languages in the accept-language header
-				val languages = user.languages.withDescriptionsInLanguages(context.languageIdListFor(session.userId))
-					.sortBy { _.familiarity.orderIndex }
+				implicit val acceptedLanguageIds: LanguageIds = context.languageIdListFor(session.userId)
+				val languages = user.languages.withDescriptions.sortBy { _.familiarity.orderIndex }
 				// Supports simple model style also
 				Result.Success(session.modelStyle match {
 					case Full => languages.map { _.toModelWithoutUser }

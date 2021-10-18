@@ -8,8 +8,10 @@ import utopia.metropolis.model.stored.description.DescriptionLink
   * A common trait for factories which parse models into described elements
   * @author Mikko Hilpinen
   * @since 19.7.2020, v1
+ *  @tparam A Type of item being described / wrapped (input)
+ *  @tparam D Type of described copy of that item (output)
   */
-trait DescribedFromModelFactory[+D, A] extends FromModelFactory[D]
+trait DescribedFromModelFactory[A, +D] extends DescribedFactory[A, D] with FromModelFactory[D]
 {
 	// ABSTRACT	---------------------------
 	
@@ -17,14 +19,6 @@ trait DescribedFromModelFactory[+D, A] extends FromModelFactory[D]
 	  * @return A factory used for parsing the item without descriptions included
 	  */
 	protected def undescribedFactory: FromModelFactory[A]
-	
-	/**
-	  * Combines an item with its descriptions
-	  * @param item An item
-	  * @param descriptions Descriptions for the item
-	  * @return A described version of the item
-	  */
-	protected def apply(item: A, descriptions: Set[DescriptionLink]): D
 	
 	
 	// IMPLEMENTED	-----------------------

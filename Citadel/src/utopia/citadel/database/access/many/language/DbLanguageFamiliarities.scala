@@ -1,10 +1,13 @@
 package utopia.citadel.database.access.many.language
 
+import utopia.citadel.database.access.many.description.{DbLanguageFamiliarityDescriptions, ManyDescribedAccess}
 import utopia.citadel.database.factory.language.LanguageFamiliarityFactory
 import utopia.citadel.database.model.user.UserLanguageModel
+import utopia.metropolis.model.combined.language.DescribedLanguageFamiliarity
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.{SelectAll, Where}
 
 /**
@@ -12,15 +15,23 @@ import utopia.vault.sql.{SelectAll, Where}
   * @author Mikko Hilpinen
   * @since 25.7.2020, v1.0
   */
-object DbLanguageFamiliarities extends ManyRowModelAccess[LanguageFamiliarity]
+// TODO: Add default ordering based on order index
+object DbLanguageFamiliarities
+	extends ManyRowModelAccess[LanguageFamiliarity]
+		with ManyDescribedAccess[LanguageFamiliarity, DescribedLanguageFamiliarity] with UnconditionalView
 {
 	// IMPLEMENTED	------------------------
 	
 	override def factory = LanguageFamiliarityFactory
 	
-	override def globalCondition = None
-	
 	override protected def defaultOrdering = None
+	
+	override protected def manyDescriptionsAccess =
+		DbLanguageFamiliarityDescriptions
+	override protected def describedFactory =
+		DescribedLanguageFamiliarity
+	
+	override protected def idOf(item: LanguageFamiliarity) = item.id
 	
 	
 	// OTHER	----------------------------

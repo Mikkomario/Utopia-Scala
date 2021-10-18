@@ -4,7 +4,7 @@ import utopia.metropolis.model.combined.description.{DescribedFromModelFactory, 
 import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
 import utopia.metropolis.model.stored.language.Language
 
-object DescribedLanguage extends DescribedFromModelFactory[DescribedLanguage, Language]
+object DescribedLanguage extends DescribedFromModelFactory[Language, DescribedLanguage]
 {
 	override protected def undescribedFactory = Language
 }

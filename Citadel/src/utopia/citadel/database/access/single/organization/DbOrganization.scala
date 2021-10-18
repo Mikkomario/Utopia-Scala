@@ -1,11 +1,14 @@
 package utopia.citadel.database.access.single.organization
 
 import utopia.citadel.database.Tables
-import utopia.citadel.database.access.many.DbUsers
-import utopia.citadel.database.access.many.description.DbDescriptions
+import utopia.citadel.database.access.many.description.DbOrganizationDescriptions
 import utopia.citadel.database.access.many.organization.{DbUserRoles, InvitationsAccess, OrganizationDeletionsAccess}
+import utopia.citadel.database.access.many.user.DbUsers
+import utopia.citadel.database.access.single.description.DbOrganizationDescription
 import utopia.citadel.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory}
 import utopia.citadel.database.model.organization.{DeletionModel, MemberRoleModel, MembershipModel, OrganizationModel}
+import utopia.citadel.model.enumeration.CitadelDescriptionRole.Name
+import utopia.citadel.model.enumeration.StandardUserRole.Owner
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.metropolis.model.combined.organization.DescribedMembership
@@ -28,6 +31,8 @@ object DbOrganization
 	
 	private def table = Tables.organization
 	
+	private def factory = OrganizationModel
+	
 	private def model = OrganizationModel
 	
 	/**
@@ -35,6 +40,25 @@ object DbOrganization
 	  * @return An access point to that organization's data
 	  */
 	def apply(id: Int) = new DbSingleOrganization(id)
+	
+	/**
+	 * Inserts a new organization to the database
+	 * @param founderId  Id of the user who created the organization
+	 * @param connection DB Connection (implicit)
+	 * @return Id of the newly inserted organization
+	 */
+	def insert(organizationName: String, languageId: Int, founderId: Int)(implicit connection: Connection) =
+	{
+		// Inserts a new organization
+		val organizationId = factory.insert(founderId)
+		// Adds the user to the organization (as owner)
+		val membership = MembershipModel.insert(MembershipData(organizationId, founderId, Some(founderId)))
+		MemberRoleModel.insert(membership.id, Owner.id, founderId)
+		// Inserts a name for that organization
+		DbOrganizationDescriptions(organizationId).update(Name.id, languageId, founderId, organizationName)
+		// Returns organization id
+		organizationId
+	}
 	
 	
 	// NESTED	----------------------------
@@ -61,9 +85,13 @@ object DbOrganization
 		def deletions = DbOrganizationDeletions
 		
 		/**
+		  * @return An access point to individual descriptions of this organization
+		  */
+		def description = DbOrganizationDescription(organizationId)
+		/**
 		  * @return An access point to descriptions of this organization
 		  */
-		def descriptions = DbDescriptions.ofOrganizationWithId(organizationId)
+		def descriptions = DbOrganizationDescriptions(organizationId)
 		
 		
 		// OTHER    -------------------------------

@@ -6,10 +6,9 @@ import utopia.ambassador.database.factory.scope.ScopeFactory
 import utopia.ambassador.database.model.process.AuthPreparationModel
 import utopia.ambassador.database.model.scope.{AuthPreparationScopeLinkModel, ScopeModel}
 import utopia.ambassador.model.stored.process.AuthPreparation
-import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.access.single.model.distinct.SingleIdModelAccess
+import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
 import utopia.vault.nosql.view.NonDeprecatedView
 import utopia.vault.sql.{Select, Where}
 
@@ -50,8 +49,7 @@ object DbAuthPreparation extends SingleRowModelAccess[AuthPreparation] with NonD
 	
 	// NESTED   ----------------------------------
 	
-	class DbSinglePreparation(val preparationId: Int)
-		extends SingleIdModelAccess[AuthPreparation](preparationId, DbAuthPreparation.factory)
+	class DbSinglePreparation(override val id: Int) extends SingleIntIdModelAccess[AuthPreparation]
 	{
 		// COMPUTED ------------------------------
 		
@@ -61,14 +59,19 @@ object DbAuthPreparation extends SingleRowModelAccess[AuthPreparation] with NonD
 		/**
 		  * @return Redirect targets specified for this authentication attempt
 		  */
-		def redirectTargets = DbAuthCompletionRedirectTargets.forPreparationWithId(preparationId)
+		def redirectTargets = DbAuthCompletionRedirectTargets.forPreparationWithId(id)
 		
 		/**
 		  * @param connection Implicit DB Connection
 		  * @return Whether this preparation has already been consumed with a user redirect
 		  */
 		def isClosed(implicit connection: Connection) =
-			DbAuthRedirect.forPreparationWithId(preparationId).nonEmpty
+			DbAuthRedirect.forPreparationWithId(id).nonEmpty
+		
+		
+		// IMPLEMENTED  --------------------------
+		
+		override def factory = DbAuthPreparation.factory
 		
 		
 		// OTHER    ------------------------------
@@ -81,7 +84,7 @@ object DbAuthPreparation extends SingleRowModelAccess[AuthPreparation] with NonD
 		def requestedScopesForServiceWithId(serviceId: Int)(implicit connection: Connection) =
 		{
 			val target = scopeFactory.target join scopeLinkModel.table
-			val preparationCondition = scopeLinkModel.withPreparationId(preparationId).toCondition
+			val preparationCondition = scopeLinkModel.withPreparationId(id).toCondition
 			val serviceCondition = scopeModel.withServiceId(serviceId).toCondition
 			
 			scopeFactory(connection(

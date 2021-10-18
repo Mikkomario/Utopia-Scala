@@ -28,6 +28,16 @@ object Name
   */
 case class Name(singular: String, plural: String) extends SelfComparable[Name]
 {
+	// COMPUTED ------------------------------
+	
+	/**
+	  * Different versions (singular & plural) of this name - doesn't contain duplicates
+	  */
+	lazy val variants = Vector(singular, plural).distinct
+	
+	
+	// IMPLEMENTED  --------------------------
+	
 	override def toString = singular
 	
 	override def repr = this

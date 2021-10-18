@@ -1,64 +1,55 @@
 package utopia.citadel.database.access.single.description
 
-import utopia.citadel.database.factory.description.DescriptionLinkFactory
-import utopia.citadel.database.model.description.{DescriptionLinkModel, DescriptionLinkModelFactory}
-import utopia.metropolis.model.stored.description.DescriptionLink
-import utopia.vault.model.immutable.Storable
+import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 
-/**
-  * Used for accessing various types of individual descriptions
-  * @author Mikko Hilpinen
-  * @since 10.5.2020, v1.0
-  */
+@deprecated("This object will be replaced with a description access object", "v1.3")
 object DbDescription
 {
-	// OTHER	----------------------------
+	/**
+	 * @param organizationId Organization id
+	 * @return An access point to that organization's individual descriptions
+	 */
+	@deprecated("Please use DbOrganizationDescription instead", "v1.3")
+	def ofOrganizationWithId(organizationId: Int) = DbOrganizationDescription(organizationId)
 	
 	/**
-	  * @param organizationId Organization id
-	  * @return An access point to that organization's individual descriptions
-	  */
-	def ofOrganizationWithId(organizationId: Int) =
-		DescriptionOfSingle(organizationId, DescriptionLinkFactory.organization, DescriptionLinkModel.organization)
+	 * @param deviceId Device id
+	 * @return An access point to that device's individual descriptions
+	 */
+	@deprecated("Please use DbDeviceDescription instead", "v1.3")
+	def ofDeviceWithId(deviceId: Int) = DbDeviceDescription(deviceId)
 	
 	/**
-	  * @param deviceId Device id
-	  * @return An access point to that device's individual descriptions
-	  */
-	def ofDeviceWithId(deviceId: Int) =
-		DescriptionOfSingle(deviceId, DescriptionLinkFactory.device, DescriptionLinkModel.device)
+	 * @param taskId Task id
+	 * @return An access point to individual descriptions of that task type
+	 */
+	@deprecated("Please use DbTaskDescription instead", "v1.3")
+	def ofTaskWithId(taskId: Int) = DbTaskDescription(taskId)
 	
 	/**
-	  * @param taskId Task id
-	  * @return An access point to individual descriptions of that task type
-	  */
-	def ofTaskWithId(taskId: Int) = DescriptionOfSingle(taskId, DescriptionLinkFactory.task,
-		DescriptionLinkModel.task)
+	 * @param roleId User role id
+	 * @return An access point to individual descriptions of that user role
+	 */
+	@deprecated("Please use DbUserRoleDescription instead", "v1.3")
+	def ofUserRoleWithId(roleId: Int) = DbUserRoleDescription(roleId)
 	
 	/**
-	  * @param roleId User role id
-	  * @return An access point to individual descriptions of that user role
-	  */
-	def ofRoleWithId(roleId: Int) =
-		DescriptionOfSingle(roleId, DescriptionLinkFactory.userRole, DescriptionLinkModel.userRole)
+	 * @param languageId Language id
+	 * @return An access point to that language's individual descriptions
+	 */
+	@deprecated("Please use DbLanguageDescription instead", "v1.3")
+	def ofLanguageWithId(languageId: Int) = DbLanguageDescription(languageId)
 	
 	/**
-	  * @param languageId Language id
-	  * @return An access point to that language's individual descriptions
+	 * @param roleId Id of the targeted description role
+	 * @return An access point to that description role's individual descriptions
+	 */
+	@deprecated("Please use DbDescriptionRoleDescription instead", "v1.3")
+	def ofDescriptionRoleWithId(roleId: Int) = DbDescriptionRoleDescription(roleId)
+	/**
+	  * @param descriptionRole A description role
+	  * @return An access point to that description role's individual descriptions
 	  */
-	def ofLanguageWithId(languageId: Int) =
-		DescriptionOfSingle(languageId, DescriptionLinkFactory.language, DescriptionLinkModel.language)
-	
-	
-	// NESTED	----------------------------
-	
-	case class DescriptionOfSingle(targetId: Int, factory: DescriptionLinkFactory[DescriptionLink],
-	                               linkModelFactory: DescriptionLinkModelFactory[Storable])
-		extends DescriptionLinkAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override val globalCondition = Some(linkModelFactory.withTargetId(targetId).toCondition &&
-			factory.nonDeprecatedCondition)
-	}
+	@deprecated("Please use DbDescriptionRoleDescription instead", "v1.3")
+	def of(descriptionRole: DescriptionRoleIdWrapper) = ofDescriptionRoleWithId(descriptionRole.id)
 }

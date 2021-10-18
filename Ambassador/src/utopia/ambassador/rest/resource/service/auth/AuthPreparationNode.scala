@@ -11,8 +11,8 @@ import utopia.ambassador.model.partial.process.{AuthCompletionRedirectTargetData
 import utopia.ambassador.model.post.NewAuthPreparation
 import AuthPreparationNode.maxStateLength
 import utopia.ambassador.rest.util.ServiceTarget
-import utopia.citadel.database.access.single.DbUser
 import utopia.citadel.database.access.single.organization.DbTask
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.flow.datastructure.immutable.{Constant, Model}

@@ -1,11 +1,10 @@
 package utopia.exodus.rest.resource.description
 
-import utopia.citadel.database.access.many.description.DbDescriptions
 import utopia.citadel.database.access.many.language.DbLanguageFamiliarities
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.language.DescribedLanguageFamiliarity
 import utopia.metropolis.model.enumeration.ModelStyle.Simple
-import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
@@ -27,16 +26,10 @@ class LanguageFamiliaritiesNode(authorization: (AuthorizedContext, => Result, Co
 	override protected def authorize(onAuthorized: => Result)(implicit context: AuthorizedContext, connection: Connection) =
 		authorization(context, onAuthorized, connection)
 	
-	override protected def items(implicit connection: Connection) = DbLanguageFamiliarities.all
+	override protected def describedItems(implicit connection: Connection, languageIds: LanguageIds) =
+		DbLanguageFamiliarities.described
 	
 	override def defaultModelStyle = Simple
-	
-	override protected def descriptionsAccess = DbDescriptions.ofAllLanguageFamiliarities
-	
-	override protected def idOf(item: LanguageFamiliarity) = item.id
-	
-	override protected def combine(item: LanguageFamiliarity, descriptions: Set[DescriptionLink]) =
-		DescribedLanguageFamiliarity(item, descriptions)
 	
 	override def name = "language-familiarities"
 }

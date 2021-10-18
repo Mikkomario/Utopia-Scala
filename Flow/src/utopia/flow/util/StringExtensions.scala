@@ -189,7 +189,6 @@ object StringExtensions
 		 *         specified string is not a substring of this string), (case-sensitive)
 		 */
 		def afterFirst(str: String) = optionIndexOf(str).map { i => s.drop(i + str.length) }.getOrElse("")
-		
 		/**
 		 * @param str A string
 		 * @return A portion of this string that comes after the last occurrence of specified string (empty string if
@@ -204,7 +203,6 @@ object StringExtensions
 		 *         specified string is not a substring of this string), (case-sensitive)
 		 */
 		def dropUntil(str: String) = optionIndexOf(str).map(s.drop).getOrElse("")
-		
 		/**
 		 * @param str A string
 		 * @return A portion of this string that comes after the last occurrence of specified string,
@@ -219,7 +217,6 @@ object StringExtensions
 		 *         (returns this string if specified string is not a substring of this string), (case-sensitive)
 		 */
 		def untilFirst(str: String) = optionIndexOf(str).map(s.take).getOrElse(s)
-		
 		/**
 		 * @param str A string
 		 * @return A portion of this string that comes before the last occurrence of specified string
@@ -253,7 +250,6 @@ object StringExtensions
 			case Some(index) => s.take(index) -> s.drop(index + str.length)
 			case None => s -> ""
 		}
-		
 		/**
 		 * Splits this string into two at the last occurrence of specified substring. Eg. "apple".splitAtLast("p") = "ap" -> "le"
 		 * @param str A separator string where this string will be split

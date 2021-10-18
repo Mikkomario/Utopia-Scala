@@ -2,9 +2,10 @@ package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
 import utopia.citadel.database.access.id.many.DbTaskIds
-import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbDescriptions}
+import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbTaskDescriptions}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.organization.DescribedTask
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
@@ -36,11 +37,12 @@ object TasksNode extends Resource[AuthorizedContext]
 	{
 		context.sessionKeyAuthorized { (session, connection) =>
 			implicit val c: Connection = connection
-			val languageIds = context.languageIdListFor(session.userId)
+			implicit val languageIds: LanguageIds = context.languageIdListFor(session.userId)
 			// Reads task descriptions
-			val descriptions = DbDescriptions.ofAllTasks.inLanguages(languageIds)
+			val taskIds = DbTaskIds.all
+			val descriptions = DbTaskDescriptions(taskIds.toSet).inPreferredLanguages
 			// Combines the descriptions with the tasks and returns them
-			val describedTasks = DbTaskIds.all.map { taskId => DescribedTask(taskId,
+			val describedTasks = taskIds.map { taskId => DescribedTask(taskId,
 				descriptions.getOrElse(taskId, Set()).toSet) }
 			// May use simpler model style
 			session.modelStyle match

@@ -28,6 +28,11 @@ object RoleWithRights extends FromModelFactoryWithSchema[RoleWithRights]
   */
 case class RoleWithRights(roleId: Int, taskIds: Set[Int]) extends ModelConvertible
 {
+	/**
+	  * @return Id of this user role
+	  */
+	def id = roleId
+	
 	override def toModel = Model(Vector("id" -> roleId,
 		"task_ids" -> taskIds.toVector.sorted))
 }

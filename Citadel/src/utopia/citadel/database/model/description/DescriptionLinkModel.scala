@@ -100,6 +100,6 @@ trait DescriptionLinkModel[+E, +F <: DescriptionLinkFactory[E]] extends Storable
 	
 	// IMPLEMENTED	--------------------------
 	
-	override def valueProperties = Vector("id" -> id, factory.modelFactory.targetIdAttName -> targetId,
+	override def valueProperties = Vector("id" -> id, factory.model.targetIdAttName -> targetId,
 		"descriptionId" -> descriptionId, "created" -> created, "deprecatedAfter" -> deprecatedAfter)
 }

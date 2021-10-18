@@ -21,17 +21,20 @@ object AutoCloseWrapper
  * @author Mikko Hilpinen
  * @since 16.2.2020, v1.6.1
  */
-class AutoCloseWrapper[A](val content: A, closeContent: A => Unit) extends AutoCloseable
+class AutoCloseWrapper[A](val content: A, closeContent: A => Unit) extends AutoCloseable with Extender[A]
 {
 	// COMPUTED	---------------------------
 	
 	/**
 	 * @return The contents of this wrapper (same as calling content)
 	 */
+	@deprecated("Please call .content or .wrapped instead", "v1.12.2")
 	def get = content
 	
 	
 	// IMPLEMENTED	-----------------------
+	
+	override def wrapped = content
 	
 	override def close() = closeContent(content)
 	

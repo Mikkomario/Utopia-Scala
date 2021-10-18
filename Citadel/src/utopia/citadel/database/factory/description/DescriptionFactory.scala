@@ -26,7 +26,7 @@ object DescriptionFactory extends FromValidatedRowModelFactory[Description]
 	// IMPLEMENTED	--------------------------------
 	
 	override protected def fromValidatedModel(model: Model[Constant]) = Description(model("id"),
-		DescriptionData(model(this.model.descriptionRoleIdAttName), model("languageId"), model("text"),
+		DescriptionData(model(this.model.roleIdAttName), model("languageId"), model(this.model.textAttName),
 			model("authorId")))
 	
 	override def table = Tables.description

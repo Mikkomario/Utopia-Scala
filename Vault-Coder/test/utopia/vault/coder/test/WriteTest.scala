@@ -3,7 +3,9 @@ package utopia.vault.coder.test
 import utopia.vault.coder.model.enumeration.BasicPropertyType.Text
 import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, CreationTime, Optional}
 import utopia.flow.util.FileExtensions._
-import utopia.vault.coder.controller.writer.{AccessWriter, DbModelWriter, FactoryWriter, ModelWriter, SqlWriter, TablesWriter}
+import utopia.vault.coder.controller.writer.database.{AccessWriter, DbModelWriter, FactoryWriter, SqlWriter, TablesWriter}
+import utopia.vault.coder.controller.writer.model
+import utopia.vault.coder.controller.writer.model.ModelWriter
 import utopia.vault.coder.model.data.{Class, ProjectSetup, Property}
 
 import java.nio.file.Path
@@ -26,10 +28,10 @@ object WriteTest extends App
 	println("Writing files...")
 	SqlWriter(Vector(testClass), targetDirectory/"db_structure.sql").flatMap { _ =>
 		TablesWriter(Vector(testClass)).flatMap { tablesRef =>
-			ModelWriter(testClass).flatMap { case (modelRef, dataRef) =>
+			model.ModelWriter(testClass).flatMap { case (modelRef, dataRef) =>
 				FactoryWriter(testClass, tablesRef, modelRef, dataRef).flatMap { factoryRef =>
 					DbModelWriter(testClass, modelRef, dataRef, factoryRef).flatMap { dbModelRef =>
-						AccessWriter(testClass, modelRef, factoryRef, dbModelRef)
+						AccessWriter(testClass, modelRef, factoryRef, dbModelRef, None)
 					}
 				}
 			}

@@ -1,7 +1,7 @@
 package utopia.citadel.database.factory.user
 
 import utopia.citadel.database.Tables
-import utopia.citadel.database.access.single.DbUser
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.metropolis.model.combined.user.UserWithLinks
 import utopia.metropolis.model.stored.user.{User, UserSettings}

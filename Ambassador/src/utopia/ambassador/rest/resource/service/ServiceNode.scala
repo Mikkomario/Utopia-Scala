@@ -14,6 +14,7 @@ import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.datastructure.template.MapLike
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
 import utopia.nexus.rest.ResourceWithChildren
@@ -49,8 +50,8 @@ class ServiceNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirecto
 				case Some(service) =>
 					// Reads scopes and task ids
 					val scopes = DbAuthService(service.id).scopes.pull
-					val scopeDescriptions = DbScopeDescriptions(scopes.map { _.id }.toSet)
-						.inLanguages(context.languageIdListFor { session.userId })
+					implicit val languageIds: LanguageIds = context.languageIdListFor { session.userId }
+					val scopeDescriptions = DbScopeDescriptions(scopes.map { _.id }.toSet).inPreferredLanguages
 					val describedScopes = scopes.map { scope =>
 						DescribedScope(scope, scopeDescriptions.getOrElse(scope.id, Vector()).toSet)
 					}

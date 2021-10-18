@@ -149,15 +149,27 @@ trait DescriptionLinkModelFactory[+M <: Storable] extends DeprecatableAfter[M]
 	  * Inserts a number of new descriptions & description links to the DB
 	  * @param data A sequence of description target id + description data pairs
 	  * @param connection Implicit database connection
-	  * @return Generated description link ids, each paired with the matching description instance
+	  * @return Inserted description links
 	  */
 	def insert(data: Seq[(Int, DescriptionData)])(implicit connection: Connection) =
 	{
 		val descriptions = DescriptionModel.insert(data.map { _._2 })
 		val linkTime = Now.toInstant
-		Insert(table, data.zip(descriptions)
-			.map { case ((targetId, _), description) =>
-				apply(None, Some(targetId), Some(description.id), Some(linkTime)).toModel })
-			.generatedIntKeys.zip(descriptions)
+		val dataToInsert = data.zip(descriptions).map { case ((targetId, _), description) =>
+				apply(None, Some(targetId), Some(description.id), Some(linkTime)).toModel
+		}
+		val generatedLinkIds = Insert(table, dataToInsert).generatedIntKeys
+		generatedLinkIds.indices
+			.map { i => DescriptionLink(generatedLinkIds(i), DescriptionLinkData(data(i)._1, descriptions(i))) }
+			.toVector
 	}
+	/**
+	 * Inserts a number of new descriptions for a single item to the database
+	 * @param targetId Id of the described item
+	 * @param data Description data for that item
+	 * @param connection Implicit DB Connection
+	 * @return Inserted description links
+	 */
+	def insert(targetId: Int, data: Seq[DescriptionData])(implicit connection: Connection): Vector[DescriptionLink] =
+		insert(data.map { targetId -> _ })
 }

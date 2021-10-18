@@ -1,8 +1,9 @@
 package utopia.vault.coder.model.scala.declaration
 
 import utopia.vault.coder.controller.CodeBuilder
+import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.ScalaDocKeyword.Return
-import utopia.vault.coder.model.scala.{Code, Parameters, ScalaDocPart, ScalaType}
+import utopia.vault.coder.model.scala.{Parameters, ScalaDocPart, ScalaType}
 import utopia.vault.coder.model.scala.template.{CodeConvertible, ScalaDocConvertible}
 
 import scala.collection.immutable.VectorBuilder
@@ -55,9 +56,6 @@ trait FunctionDeclaration extends Declaration with CodeConvertible with ScalaDoc
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def references = bodyCode.references ++ params.iterator.flatMap { _.references } ++
-		explicitOutputType.iterator.flatMap { _.references }
-	
 	override def documentation =
 	{
 		val desc = description
@@ -79,20 +77,19 @@ trait FunctionDeclaration extends Declaration with CodeConvertible with ScalaDoc
 		// Then the header and body
 		if (isOverridden)
 			builder.appendPartial("override ")
-		builder.appendPartial(baseString)
-		params.foreach(builder.appendPartial)
-		explicitOutputType.foreach { outputType =>
-			builder.appendPartial(outputType.toScala, ": ")
-			builder.addReferences(outputType.references)
-		}
+		builder += basePart
+		params.foreach { builder += _.toScala }
+		explicitOutputType.foreach { outputType => builder.appendPartial(outputType.toScala, ": ") }
 		
 		// Case: Concrete function
 		if (bodyCode.nonEmpty)
 		{
 			builder.appendPartial(" = ")
 			if (bodyCode.isSingleLine)
+			{
 				builder.appendPartial(bodyCode.lines.head.code, allowLineSplit = true)
-			// Case: Multi-line function
+				builder.addReferences(bodyCode.references)
+			} // Case: Multi-line function
 			else
 				builder.addBlock(bodyCode)
 		}

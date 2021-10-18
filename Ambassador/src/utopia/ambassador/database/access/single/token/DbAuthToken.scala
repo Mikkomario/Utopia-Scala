@@ -3,10 +3,9 @@ package utopia.ambassador.database.access.single.token
 import utopia.ambassador.database.factory.token.AuthTokenFactory
 import utopia.ambassador.database.model.token.AuthTokenModel
 import utopia.ambassador.model.stored.token.AuthToken
-import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.access.single.model.distinct.SingleIdModelAccess
+import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
 import utopia.vault.nosql.view.NonDeprecatedView
 
 /**
@@ -37,8 +36,10 @@ object DbAuthToken extends SingleRowModelAccess[AuthToken] with NonDeprecatedVie
 	
 	// NESTED   -----------------------------------
 	
-	class DbSingleAuthToken(tokenId: Int) extends SingleIdModelAccess[AuthToken](tokenId, DbAuthToken.factory)
+	class DbSingleAuthToken(override val id: Int) extends SingleIntIdModelAccess[AuthToken]
 	{
+		override def factory = DbAuthToken.factory
+		
 		/**
 		  * Deprecates this authentication token
 		  * @param connection Implicit DB Connection

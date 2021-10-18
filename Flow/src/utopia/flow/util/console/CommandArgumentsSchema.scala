@@ -1,7 +1,5 @@
 package utopia.flow.util.console
 
-import utopia.flow.util.StringExtensions._
-
 object CommandArgumentsSchema
 {
 	/**
@@ -18,10 +16,18 @@ object CommandArgumentsSchema
 case class CommandArgumentsSchema(arguments: Vector[ArgumentSchema])
 {
 	/**
+	 * @return Whether this schema is empty
+	 */
+	def isEmpty = arguments.isEmpty
+	/**
+	 * @return Whether this schema contains at least one argument specification
+	 */
+	def nonEmpty = !isEmpty
+	
+	/**
 	 * Finds an argument schema that matches the specified name
 	 * @param name Argument name
 	 * @return A schema matching that name
 	 */
-	def apply(name: String) = arguments.find { _.name ~== name }
-		.orElse { arguments.find { a => a.alias.nonEmpty && (a.alias ~== name) } }
+	def apply(name: String) = arguments.find { _.matchesName(name) }
 }

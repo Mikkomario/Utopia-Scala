@@ -2,13 +2,14 @@ package utopia.citadel.database.model.user
 
 import utopia.citadel.database.Tables
 import utopia.citadel.database.factory.user.UserLanguageFactory
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.partial.user.UserLanguageData
 import utopia.metropolis.model.stored.user.UserLanguage
-import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
+import utopia.vault.nosql.storable.DataInserter
 
-object UserLanguageModel
+object UserLanguageModel extends DataInserter[UserLanguageModel, UserLanguage, UserLanguageData]
 {
 	// ATTRIBUTES	-------------------------
 	
@@ -31,6 +32,14 @@ object UserLanguageModel
 	def languageIdColumn = table(languageIdAttName)
 	
 	
+	// IMPLEMENTED  -------------------------
+	
+	override def apply(data: UserLanguageData) =
+		apply(None, Some(data.userId), Some(data.languageId), Some(data.familiarityId))
+	
+	override protected def complete(id: Value, data: UserLanguageData) = UserLanguage(id.getInt, data)
+	
+	
 	// OTHER	-----------------------------
 	
 	/**
@@ -38,17 +47,6 @@ object UserLanguageModel
 	  * @return Model with only user id set
 	  */
 	def withUserId(userId: Int) = apply(userId = Some(userId))
-	
-	/**
-	  * Inserts a new connection between a user and a language
-	  * @param data New user language link to insert
-	  * @return Id of the newly inserted link
-	  */
-	def insert(data: UserLanguageData)(implicit connection: Connection) =
-	{
-		val newId = apply(None, Some(data.userId), Some(data.languageId), Some(data.familiarityId)).insert().getInt
-		UserLanguage(newId, data)
-	}
 }
 
 /**

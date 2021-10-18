@@ -1,5 +1,28 @@
 # Utopia Flow - List of Changes
 
+## v1.13 (in development)
+Updated built-in value conversions (concerning Vector and LocalDate types). Added interactive console support with 
+the new **Console** class and **ConsoleExtensions** object, as well as by working on the command arguments -system.
+### Breaking Changes
+- Instant to Long conversion now converts to milliseconds instead of seconds. The same is true the other way around.
+- String to Vector conversion now first attempts to find either arrays `[a, b, c]` or tuples `(d, e, f)` 
+  or parts separated by `,` or `;`, and if neither of those applies, wraps the value in an array like before.
+- The third parameter in `ArgumentSchema.flag(...)` is now `hint: String` and not `defaultValue: Boolean`.
+  - This is quite unlikely to require major refactoring, as the usual use case for the default value is
+    to specify it as a named parameter
+### Deprecations
+- Deprecated **AutoCloseWrapper**`.get` in favor of `.wrapped`
+### New Features
+- Added multiple console interaction features (**Console** and **Command** classes)
+### New Methods
+- **Regex**
+  - Added `.ignoringQuotations`
+- **VolatileFlag**
+  - Added `.getAndReset()`
+### Other Changes
+- Value casting from String to LocalDate now accepts format dd.MM.yyyy also
+- **AutoCloseWrapper** now extends **Extender**, allowing implicit access to its contents
+
 ## v1.12.1 - 04.10.2021
 This small update adds file editing through **CollectionExtensions**.
 Many collection-related utility additions are also included.

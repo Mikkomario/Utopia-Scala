@@ -2,7 +2,7 @@ package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method.Get
 import utopia.citadel.database.access.many.organization.DbOrganizations
-import utopia.citadel.database.access.single.DbUser
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path

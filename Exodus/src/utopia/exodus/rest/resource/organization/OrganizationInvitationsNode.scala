@@ -3,8 +3,8 @@ package utopia.exodus.rest.resource.organization
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{BadRequest, Forbidden, NotImplemented}
 import utopia.citadel.database.access.id.single.DbUserId
-import utopia.citadel.database.access.single.DbUser
 import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.model.enumeration.StandardTask.InviteMembers
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model

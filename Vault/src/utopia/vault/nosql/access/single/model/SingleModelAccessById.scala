@@ -6,6 +6,31 @@ import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 
+object SingleModelAccessById
+{
+	// OTHER	----------------------
+	
+	/**
+	 * Creates a new access point by wrapping a model factory
+	 * @param factory A factory
+	 * @param idConversion An implicit conversion from specified id type to value
+	 * @tparam A Type of model read
+	 * @tparam ID Type of id used in searches
+	 * @return A new access point
+	 */
+	def apply[A, ID](factory: FromResultFactory[A])(implicit idConversion: ID => Value): SingleModelAccessById[A, ID] =
+		new FactoryWrapper(factory)
+	
+	
+	// NESTED	----------------------
+	
+	private class FactoryWrapper[+A, -ID](val factory: FromResultFactory[A])(implicit idConversion: ID => Value)
+		extends SingleModelAccessById[A, ID]
+	{
+		override def idToValue(id: ID) = idConversion(id)
+	}
+}
+
 /**
  * Used as a top-level accessor that provides access to individual models by searching with their ids
  * @author Mikko Hilpinen
@@ -30,31 +55,5 @@ trait SingleModelAccessById[+A, -ID] extends SingleModelAccess[A] with Unconditi
 	 * @param id An id
 	 * @return An access point to a model with that id
 	 */
-	def apply(id: ID): SingleIdModelAccess[A] = new SingleIdModelAccess[A](
-		idToValue(id), factory)
-}
-
-object SingleModelAccessById
-{
-	// OTHER	----------------------
-	
-	/**
-	 * Creates a new access point by wrapping a model factory
-	 * @param factory A factory
-	 * @param idConversion An implicit conversion from specified id type to value
-	 * @tparam A Type of model read
-	 * @tparam ID Type of id used in searches
-	 * @return A new access point
-	 */
-	def apply[A, ID](factory: FromResultFactory[A])(implicit idConversion: ID => Value): SingleModelAccessById[A, ID] =
-		new FactoryWrapper(factory)
-	
-	
-	// NESTED	----------------------
-	
-	private class FactoryWrapper[+A, -ID](val factory: FromResultFactory[A])(implicit idConversion: ID => Value)
-		extends SingleModelAccessById[A, ID]
-	{
-		override def idToValue(id: ID) = idConversion(id)
-	}
+	def apply(id: ID): SingleIdModelAccess[A] = SingleIdModelAccess[A](idToValue(id), factory)
 }

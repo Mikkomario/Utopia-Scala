@@ -3,10 +3,9 @@ package utopia.ambassador.database.access.single.process
 import utopia.ambassador.database.factory.process.AuthRedirectFactory
 import utopia.ambassador.database.model.process.AuthRedirectModel
 import utopia.ambassador.model.stored.process.AuthRedirect
-import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.access.single.model.distinct.{SingleIdModelAccess, UniqueModelAccess}
+import utopia.vault.nosql.access.single.model.distinct.{SingleIntIdModelAccess, UniqueModelAccess}
 import utopia.vault.nosql.view.{SubView, UnconditionalView}
 
 /**
@@ -69,19 +68,25 @@ object DbAuthRedirect extends SingleRowModelAccess[AuthRedirect] with Unconditio
 			find(model.withToken(token).toCondition)
 	}
 	
-	class DbSingleRedirect(val redirectId: Int)
-		extends SingleIdModelAccess[AuthRedirect](redirectId, DbAuthRedirect.factory)
+	class DbSingleRedirect(override val id: Int) extends SingleIntIdModelAccess[AuthRedirect]
 	{
+		// COMPUTED -------------------------------
+		
 		/**
 		  * @return An access point to the result of this redirection
 		  */
-		def result = DbAuthRedirectResult.forRedirectWithId(redirectId)
+		def result = DbAuthRedirectResult.forRedirectWithId(id)
 		
 		/**
 		  * @param connection Implicit DB connection
 		  * @return Whether this redirection has already been closed / responded to
 		  */
 		def isClosed(implicit connection: Connection) = result.nonEmpty
+		
+		
+		// IMPLEMENTED  ------------------------
+		
+		override def factory = DbAuthRedirect.factory
 	}
 	
 	class DbRedirectForPreparation(val preparationId: Int) extends UniqueModelAccess[AuthRedirect]

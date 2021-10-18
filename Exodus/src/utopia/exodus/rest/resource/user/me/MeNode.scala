@@ -2,7 +2,7 @@ package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.Unauthorized
-import utopia.citadel.database.access.single.DbUser
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, SessionUseCaseImplementation}
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.rest.scalable.FollowImplementation

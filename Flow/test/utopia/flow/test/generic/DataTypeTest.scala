@@ -117,5 +117,12 @@ object DataTypeTest extends App
 	assert("2007-11-20T22:19:17+02:00".instant.isDefined)
 	assert("2018-05-15T10:33:16+03:00".instant.isDefined)
 	
+	// Tests string to array conversion
+	assert("[1, 2, 3]".getVector.map { _.getInt } == Vector(1, 2, 3))
+	println("(1, 2, 3)".getVector.map { _.description }.mkString(", "))
+	assert("(1, 2, 3)".getVector.map { _.getInt } == Vector(1, 2, 3))
+	assert("1, 2, 3".getVector.map { _.getInt } == Vector(1, 2, 3))
+	assert("1;2;3".getVector.map { _.getInt } == Vector(1, 2, 3))
+	
 	println("Success")
 }

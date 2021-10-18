@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.scala.template
 
 import utopia.flow.util.FileExtensions._
-import utopia.vault.coder.model.scala.Code
+import utopia.vault.coder.model.scala.code.Code
 
 import java.nio.file.Path
 import scala.io.Codec

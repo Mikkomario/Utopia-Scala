@@ -1,8 +1,8 @@
 package utopia.exodus.rest.resource.device
 
 import utopia.access.http.Method.Post
-import utopia.citadel.database.access.many.DbDevices
-import utopia.citadel.database.access.single.DbUser
+import utopia.citadel.database.access.single.device.DbDevice
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.device.FullDevice
@@ -30,7 +30,7 @@ object DevicesNode extends Resource[AuthorizedContext]
 			context.handlePost(NewDevice) { newDevice =>
 				implicit val c: Connection = connection
 				// Inserts a new device and links it with the authorized user
-				val descriptionLink = DbDevices.insert(newDevice.name, newDevice.languageId, userId)
+				val descriptionLink = DbDevice.insert(newDevice.name, newDevice.languageId, userId)
 				DbUser(userId).linkWithDeviceWithId(descriptionLink.targetId)
 				
 				// Returns a "full" device model

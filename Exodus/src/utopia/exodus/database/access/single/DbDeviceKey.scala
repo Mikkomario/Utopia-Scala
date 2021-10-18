@@ -5,10 +5,9 @@ import utopia.exodus.database.model.device.DeviceKeyModel
 import utopia.exodus.model.partial.DeviceKeyData
 import utopia.exodus.model.stored.DeviceKey
 import utopia.exodus.util.UuidGenerator
-import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.access.single.model.distinct.{SingleIdModelAccess, UniqueModelAccess}
+import utopia.vault.nosql.access.single.model.distinct.{SingleIntIdModelAccess, UniqueModelAccess}
 
 /**
   * Used for accessing individual device keys in DB
@@ -53,8 +52,10 @@ object DbDeviceKey extends SingleRowModelAccess[DeviceKey]
 	
 	// NESTED	-----------------------------------------
 	
-	class SingleDeviceKeyById(deviceKeyId: Int) extends SingleIdModelAccess[DeviceKey](deviceKeyId, DbDeviceKey.factory)
+	class SingleDeviceKeyById(override val id: Int) extends SingleIntIdModelAccess[DeviceKey]
 	{
+		override def factory = DbDeviceKey.factory
+		
 		/**
 		  * Invalidates this key so that it can no longer be used for authenticating requests
 		  * @param connection DB Connection (implicit)

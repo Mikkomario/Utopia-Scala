@@ -3,151 +3,105 @@ package utopia.vault.coder.model.scala
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.scala.template.ScalaConvertible
 import utopia.vault.coder.model.data.ProjectSetup
+import utopia.vault.coder.model.scala.code.CodePiece
 
 object Reference
 {
 	import Package._
 	
+	// Java time
+	
 	lazy val instant = apply(javaTime, "Instant")
 	lazy val localDate = apply(javaTime, "LocalDate")
 	lazy val localTime = apply(javaTime, "LocalTime")
+	lazy val timeUnit = apply(java/"util.concurrent", "TimeUnit")
+	
+	// Scala time
+	
+	lazy val duration = apply(scalaDuration, "Duration")
+	lazy val finiteDuration = apply(scalaDuration, "FiniteDuration")
+	
+	// Other Java
 	
 	lazy val noSuchElementException = apply("java.util", "NoSuchElementException")
 	
-	/**
-	  * Imports implicit value conversions (Flow)
-	  */
+	// Extensions
+	
 	lazy val valueConversions = extensions(flowGenerics, "ValueConversions")
-	/**
-	  * Imports implicit value unwraps (Flow)
-	  */
 	lazy val valueUnwraps = extensions(flowGenerics, "ValueUnwraps")
-	/**
-	  * Imports implicit collection extensions (Flow)
-	  */
 	lazy val collectionExtensions = extensions(flowUtils, "CollectionExtensions")
-	/**
-	  * Imports time extensions (flow)
-	  */
 	lazy val timeExtensions = extensions(flowTime, "TimeExtensions")
-	/**
-	  * Imports implicit sql features (Vault)
-	  */
 	lazy val sqlExtensions = extensions(sql, "SqlExtensions")
 	
-	/**
-	  * Imports the (generic) Value type from Flow
-	  */
-	lazy val value = apply(immutableStruct, "Value")
-	/**
-	  * Imports the abstract Property trait (Flow)
-	  */
-	lazy val property = apply(struct/"template", "Property")
-	/**
-	  * Imports the constant type from Flow
-	  */
-	lazy val constant = apply(immutableStruct, "Constant")
-	/**
-	  * Imports the template model type (Flow)
-	  */
-	lazy val templateModel = apply(struct, "template", "Model")
-	/**
-	  * Imports the immutable model type (Flow)
-	  */
-	lazy val model = apply(immutableStruct, "Model")
-	/**
-	  * Imports the ModelConvertible trait (Flow)
-	  */
-	lazy val modelConvertible = apply(flowGenerics, "ModelConvertible")
-	/**
-	  * Imports the Now -object (Flow)
-	  */
-	lazy val now = apply(flowTime, "Now")
+	// Flow
 	
-	/**
-	  * Imports a database connection (Vault)
-	  */
+	lazy val value = apply(immutableStruct, "Value")
+	lazy val property = apply(struct/"template", "Property")
+	lazy val constant = apply(immutableStruct, "Constant")
+	lazy val templateModel = apply(struct, "template", "Model")
+	lazy val model = apply(immutableStruct, "Model")
+	lazy val modelConvertible = apply(flowGenerics, "ModelConvertible")
+	
+	lazy val now = apply(flowTime, "Now")
+	lazy val days = apply(flowTime, "Days")
+	
+	lazy val extender = apply(flowUtils, "Extender")
+	
+	// Vault
+	
 	lazy val connection = apply(database, "Connection")
-	/**
-	  * Imports a database table (Vault)
-	  */
 	lazy val table = apply(vaultModels/"immutable", "Table")
-	/**
-	  * Imports the Stored trait (Vault)
-	  */
+	lazy val condition = apply(vault/"sql", "Condition")
+	
 	lazy val stored = apply(vaultModels/"template", "Stored")
-	/**
-	  * Imports the Indexed trait (Vault)
-	  */
-	lazy val indexed = apply(noSql/"template", "Indexed")
-	/**
-	  * Imports the Deprecatable trait from Vault
-	  */
-	lazy val deprecatable = apply(noSql/"template", "Deprecatable")
-	/**
-	  * Imports the FromRowModelFactory trait (Vault)
-	  */
-	lazy val fromRowModelFactory = apply(fromRowFactories/"model", "FromRowModelFactory")
-	/**
-	  * Imports the FromValidatedRowModelFactory trait (Vault)
-	  */
-	lazy val fromValidatedRowModelFactory = apply(fromRowFactories/"model", "FromValidatedRowModelFactory")
-	/**
-	  * Imports the FromRowFactoryWithTimestamps trait (Vault)
-	  */
-	lazy val fromRowFactoryWithTimestamps = apply(fromRowFactories, "FromRowFactoryWithTimestamps")
-	/**
-	  * Imports the Storable (with factory) trait (Vault)
-	  */
-	lazy val storableWithFactory = apply(vaultModels/"immutable", "StorableWithFactory")
-	/**
-	  * Imports the DataInserter trait (Vault)
-	  */
-	lazy val dataInserter = apply(noSql/"storable", "DataInserter")
-	/**
-	  * Imports the NullDeprecatable trait from Vault
-	  */
-	lazy val nullDeprecatable = apply(deprecation, "NullDeprecatable")
-	/**
-	  * Imports the DeprecatableAfter trait from Vault
-	  */
-	lazy val deprecatableAfter = apply(deprecation, "DeprecatableAfter")
-	/**
-	  * Imports the Expiring trait from Vault
-	  */
-	lazy val expiring = apply(deprecation, "Expiring")
-	/**
-	  * Imports the SingleRowModelAccess trait (Vault)
-	  */
-	lazy val singleRowModelAccess = apply(singleModelAccess, "SingleRowModelAccess")
-	/**
-	  * Imports the ManyRowModelAccess trait (Vault)
-	  */
-	lazy val manyRowModelAccess = apply(manyModelAccess, "ManyRowModelAccess")
-	/**
-	  * Imports the DistinctModelAccess trait (Vault)
-	  */
-	lazy val distinctModelAccess = apply(access/"template.model", "DistinctModelAccess")
-	/**
-	  * Imports the UniqueModelAccess trait (Vault)
-	  */
-	lazy val uniqueModelAccess = apply(singleModelAccess/"distinct", "UniqueModelAccess")
-	/**
-	  * Imports the SingleIdModel class from Vault
-	  */
-	lazy val singleIdModelAccess = apply(singleModelAccess/"distinct", "SingleIdModelAccess")
-	/**
-	  * Imports the UnconditionalView trait (Vault)
-	  */
-	lazy val unconditionalView = apply(viewAccess, "UnconditionalView")
-	/**
-	  * Imports the NonDeprecatedView trait (Vault)
-	  */
-	lazy val nonDeprecatedView = apply(viewAccess, "NonDeprecatedView")
-	/**
-	  * Imports the combination of Stored & ModelConvertible (Vault)
-	  */
 	lazy val storedModelConvertible = apply(vaultModels/"template", "StoredModelConvertible")
+	
+	lazy val indexed = apply(noSql/"template", "Indexed")
+	lazy val deprecatable = apply(noSql/"template", "Deprecatable")
+	lazy val nullDeprecatable = apply(deprecation, "NullDeprecatable")
+	lazy val deprecatableAfter = apply(deprecation, "DeprecatableAfter")
+	lazy val expiring = apply(deprecation, "Expiring")
+	
+	lazy val fromRowModelFactory = apply(fromRowFactories/"model", "FromRowModelFactory")
+	lazy val fromValidatedRowModelFactory = apply(fromRowFactories/"model", "FromValidatedRowModelFactory")
+	lazy val fromRowFactoryWithTimestamps = apply(fromRowFactories, "FromRowFactoryWithTimestamps")
+	lazy val combiningFactory = apply(singleLinkedFactories, "CombiningFactory")
+	lazy val possiblyCombiningFactory = apply(singleLinkedFactories, "PossiblyCombiningFactory")
+	lazy val multiCombiningFactory = apply(factories/"multi", "MultiCombiningFactory")
+	
+	lazy val storableWithFactory = apply(vaultModels/"immutable", "StorableWithFactory")
+	lazy val dataInserter = apply(noSql/"storable", "DataInserter")
+	
+	lazy val subView = apply(viewAccess, "SubView")
+	lazy val unconditionalView = apply(viewAccess, "UnconditionalView")
+	lazy val nonDeprecatedView = apply(viewAccess, "NonDeprecatedView")
+	
+	lazy val singleRowModelAccess = apply(singleModelAccess, "SingleRowModelAccess")
+	lazy val manyRowModelAccess = apply(manyModelAccess, "ManyRowModelAccess")
+	lazy val distinctModelAccess = apply(access/"template.model", "DistinctModelAccess")
+	lazy val uniqueModelAccess = apply(singleModelAccess/"distinct", "UniqueModelAccess")
+	lazy val singleIdModelAccess = apply(singleModelAccess/"distinct", "SingleIdModelAccess")
+	lazy val singleIntIdModelAccess = apply(singleModelAccess/"distinct", "SingleIntIdModelAccess")
+	
+	
+	// Metropolis
+	
+	lazy val descriptionRole = apply(description, "DescriptionRole")
+	lazy val descriptionLink = apply(description, "DescriptionLink")
+	lazy val describedWrapper = apply(combinedDescription, "DescribedWrapper")
+	lazy val simplyDescribed = apply(combinedDescription, "SimplyDescribed")
+	lazy val describedFactory = apply(combinedDescription, "DescribedFactory")
+	
+	// Citadel
+	
+	lazy val citadelTables = apply(citadelDatabase, "Tables")
+	lazy val descriptionLinkModelFactory = apply(citadelDatabase/"model.description", "DescriptionLinkModelFactory")
+	lazy val descriptionLinkFactory = apply(citadelDatabase/"factory.description", "DescriptionLinkFactory")
+	lazy val descriptionLinkAccess = apply(descriptionAccess, "DescriptionLinkAccess")
+	lazy val descriptionLinksAccess = apply(descriptionsAccess, "DescriptionLinksAccess")
+	lazy val singleIdDescribedAccess = apply(descriptionAccess, "SingleIdDescribedAccess")
+	lazy val manyDescribedAccess = apply(descriptionsAccess, "ManyDescribedAccess")
+	lazy val manyDescribedAccessByIds = apply(descriptionsAccess, "ManyDescribedAccessByIds")
 	
 	
 	// OTHER    -------------------------------
@@ -179,6 +133,10 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	  *         expects an import)
 	  */
 	def target = if (subReference.isEmpty) importTarget else s"$importTarget.$subReference"
+	/**
+	  * @return A code referring to the target of this reference using its name
+	  */
+	def targetCode = CodePiece(target, Set(this))
 	
 	/**
 	  * @return Whether it is possible to group this reference with other references using { ... } syntax

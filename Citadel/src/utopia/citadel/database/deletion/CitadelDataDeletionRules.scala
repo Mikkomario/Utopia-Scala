@@ -72,7 +72,7 @@ object CitadelDataDeletionRules
 		description.finite match {
 			case Some(descriptionHistoryDuration) =>
 				base ++ DescriptionLinkFactory.defaultImplementations
-					.map { _.modelFactory.deletionAfterDeprecation(descriptionHistoryDuration) }
+					.map { _.model.deletionAfterDeprecation(descriptionHistoryDuration) }
 			case None => base
 		}
 	}

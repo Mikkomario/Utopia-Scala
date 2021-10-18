@@ -13,12 +13,26 @@ object DescriptionModel extends DataInserter[DescriptionModel, Description, Desc
 	// ATTRIBUTES	--------------------------------
 	
 	/**
-	  * Name of the attribute that contains description role id
-	  */
-	val descriptionRoleIdAttName = "roleId"
+	 * Name of the attribute that contains description role id
+	 */
+	val roleIdAttName = "roleId"
+	/**
+	 * Name of the attribute that contains description language id
+	 */
+	val languageIdAttName = "languageId"
+	/**
+	 * Name of the attribute that contains description text
+	 */
+	val textAttName = "text"
 	
 	
 	// COMPUTED	-------------------------------------
+	
+	/**
+	 * Name of the attribute that contains description role id
+	 */
+	@deprecated("Please use roleIdAttName instead", "v1.3")
+	def descriptionRoleIdAttName = roleIdAttName
 	
 	/**
 	  * @return Factory associated with this model
@@ -26,9 +40,22 @@ object DescriptionModel extends DataInserter[DescriptionModel, Description, Desc
 	def factory = DescriptionFactory
 	
 	/**
+	 * @return Column that contains description role id
+	 */
+	def roleIdColumn = table(roleIdAttName)
+	/**
 	  * @return Column that contains description role id
 	  */
-	def descriptionRoleIdColumn = table(descriptionRoleIdAttName)
+	@deprecated("Please use roleIdColumn instead", "v1.3")
+	def descriptionRoleIdColumn = roleIdColumn
+	/**
+	 * @return Column that links to description language
+	 */
+	def languageIdColumn = table(languageIdAttName)
+	/**
+	 * @return Column that contains description text
+	 */
+	def textColumn = table(textAttName)
 	
 	
 	// IMPLEMENTED  ---------------------------------
@@ -73,12 +100,17 @@ case class DescriptionModel(id: Option[Int] = None, roleId: Option[Int] = None, 
 	
 	override def factory = DescriptionFactory
 	
-	override def valueProperties = Vector("id" -> id, descriptionRoleIdAttName -> roleId,
-		"languageId" -> languageId, "text" -> text, "authorId" -> authorId)
+	override def valueProperties = Vector("id" -> id, roleIdAttName -> roleId,
+		languageIdAttName -> languageId, textAttName -> text, "authorId" -> authorId)
 	
 	
 	// OTHER	------------------------------------
 	
+	/**
+	 * @param roleId Id of the role of this description
+	 * @return A copy of this model with specified role (id)
+	 */
+	def withRoleId(roleId: Int) = copy(roleId = Some(roleId))
 	/**
 	  * @param languageId Id of description language
 	  * @return A copy of this model with specified language

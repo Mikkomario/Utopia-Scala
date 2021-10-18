@@ -1,7 +1,8 @@
 package utopia.vault.coder.model.scala.declaration
 
+import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.Visibility.Public
-import utopia.vault.coder.model.scala.{Code, Extension, Parameters, Visibility}
+import utopia.vault.coder.model.scala.{Extension, Parameters, Visibility}
 
 /**
   * Used for declaring scala classes

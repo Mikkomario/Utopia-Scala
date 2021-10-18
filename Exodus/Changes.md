@@ -1,5 +1,17 @@
 # Utopia Exodus - List of Changes
 
+## v2.2 (in development)
+This update mostly reflects changes in **Citadel** and **Vault** modules, but includes one bugfix besides those 
+which may be of importance to you.
+### Breaking Changes
+- Refactored **PublicDescriptionsNode** to support **Citadel** v1.3 changes - This affects all subclasses
+### Bugfixes
+- **PublicDescriptionsNode** was not performing authorization before
+### Other Changes
+- Supports changes in **Citadel** v1.3 and **Vault** v1.11
+- **AuthorizedContext**`.languageIdListFor(=> Int)` now returns **LanguageIds** instead of a Vector
+- Deleted some deprecated access objects
+
 ## v2.1 - 3.10.2021
 This update reflects changes in the **Citadel** module, where email address was made optional. This feature / setting 
 is specified with `ExodusContext.setup(...)`.

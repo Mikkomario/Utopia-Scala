@@ -1,6 +1,6 @@
 package utopia.exodus.database
 
-import utopia.citadel.database.access.single.DbUser.DbSingleUser
+import utopia.citadel.database.access.single.user.DbUser.DbSingleUser
 import utopia.exodus.database.model.user.UserAuthModel
 import utopia.exodus.util.PasswordHash
 import utopia.vault.database.Connection

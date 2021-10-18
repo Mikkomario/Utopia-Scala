@@ -3,10 +3,11 @@ package utopia.exodus.rest.resource.device
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.Unauthorized
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
-import utopia.citadel.database.access.single.DbDevice
+import utopia.citadel.database.access.single.device.DbDevice
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.device.FullDevice
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
@@ -39,9 +40,9 @@ case class DeviceNode(deviceId: Int) extends Resource[AuthorizedContext]
 				// May return no content if if-modified-since header is provided and data hasn't been changed
 				if (context.request.headers.ifModifiedSince.forall { threshold => deviceAccess.isModifiedSince(threshold) })
 				{
-					val languageIds = context.languageIdListFor(session.userId)
+					implicit val languageIds: LanguageIds = context.languageIdListFor(session.userId)
 					val userIds = deviceAccess.userIds
-					val descriptions = deviceAccess.descriptions.inLanguages(languageIds)
+					val descriptions = deviceAccess.descriptions.inPreferredLanguages
 					val device = FullDevice(deviceId, descriptions.toSet, userIds.toSet)
 					Result.Success(session.modelStyle match {
 						case Full => device.toModel

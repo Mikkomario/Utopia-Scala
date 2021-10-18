@@ -7,12 +7,13 @@ import utopia.ambassador.database.access.many.service.DbAuthServices
 import utopia.ambassador.model.combined.scope.DescribedScope
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
-import utopia.citadel.database.access.single.DbUser
 import utopia.citadel.database.access.single.organization.DbTask
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
 import utopia.nexus.rest.LeafResource
@@ -57,8 +58,8 @@ case class TaskAccessTestNode(taskId: Int) extends LeafResource[AuthorizedContex
 					// Reads the descriptions of the missing scopes
 					val missingScopes = remainingRequiredScopes ++ remainingAlternativeGroups.values.flatten
 					val missingScopeIds = missingScopes.map { _.id }.toSet
-					val descriptions = DbScopeDescriptions(missingScopeIds)
-						.inLanguages(context.languageIdListFor(session.userId))
+					implicit val languageIds: LanguageIds = context.languageIdListFor(session.userId)
+					val descriptions = DbScopeDescriptions(missingScopeIds).inPreferredLanguages
 					// Reads service names
 					val services = DbAuthServices(missingScopes.map { _.serviceId }.toSet).pull
 					

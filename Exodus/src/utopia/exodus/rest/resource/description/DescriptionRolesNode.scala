@@ -1,11 +1,11 @@
 package utopia.exodus.rest.resource.description
 
-import utopia.citadel.database.access.many.description.DbDescriptions
-import utopia.citadel.database.factory.description.DescriptionRoleFactory
+import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.description.DescribedDescriptionRole
 import utopia.metropolis.model.enumeration.ModelStyle.Simple
-import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
+import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -34,13 +34,6 @@ class DescriptionRolesNode(authorization: (AuthorizedContext, => Result, Connect
 									(implicit context: AuthorizedContext, connection: Connection) =
 		authorization(context, onAuthorized, connection)
 	
-	override protected def items(implicit connection: Connection) =
-		DescriptionRoleFactory.getAll()
-	
-	override protected def descriptionsAccess = DbDescriptions.ofAllDescriptionRoles
-	
-	override protected def idOf(item: DescriptionRole) = item.id
-	
-	override protected def combine(item: DescriptionRole, descriptions: Set[DescriptionLink]) =
-		DescribedDescriptionRole(item, descriptions)
+	override protected def describedItems(implicit connection: Connection, languageIds: LanguageIds) =
+		DbDescriptionRoles.described
 }

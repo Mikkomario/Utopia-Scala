@@ -5,8 +5,8 @@ import utopia.access.http.Status.{BadRequest, Forbidden, InternalServerError, Un
 import utopia.access.http.error.ContentTypeException
 import utopia.citadel.database.access.id.single.DbUserId
 import utopia.citadel.database.access.many.language.DbLanguages
-import utopia.citadel.database.access.single.DbUser
 import utopia.citadel.database.access.single.organization.DbMembership
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.citadel.util.CitadelContext.connectionPool
 import utopia.citadel.util.CitadelContext._
 import utopia.exodus.database.UserDbExtensions._
@@ -20,6 +20,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.nexus.http.{Request, ServerSettings}
 import utopia.nexus.rest.Context
@@ -134,9 +135,9 @@ trait AuthorizedContext extends Context
 		// Reads languages list from the headers (if present) or from the user data
 		val languagesFromHeaders = requestedLanguages
 		if (languagesFromHeaders.nonEmpty)
-			languagesFromHeaders.map { _.id }
+			LanguageIds(languagesFromHeaders.map { _.id })
 		else
-			DbUser(userId).languages.withFamiliarityLevels.sortBy { _._2.orderIndex }.map { _._1 }
+			DbUser(userId).languageIdsList
 	}
 	
 	/**

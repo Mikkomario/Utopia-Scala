@@ -6,8 +6,9 @@ import utopia.flow.generic.ConversionReliability.DATA_LOSS
 import utopia.flow.generic.ConversionReliability.DANGEROUS
 import utopia.flow.generic.ConversionReliability.MEANING_LOSS
 import utopia.flow.datastructure.immutable.Value
-import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, ZoneId, ZonedDateTime}
 
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, ZoneId, ZonedDateTime}
 import scala.util.Try
 
 /**
@@ -18,6 +19,8 @@ import scala.util.Try
 object BasicValueCaster extends ValueCaster
 {
     // ATTRIBUTES    --------------
+    
+    private val alternativeDateFormat = DateTimeFormatter.ofPattern("dd.MM.uuuu")
     
     override lazy val conversions = HashSet(
             Conversion(AnyType, StringType, DATA_LOSS), 
@@ -81,18 +84,16 @@ object BasicValueCaster extends ValueCaster
     
     // OTHER METHODS    ---------
     
-    private def stringOf(value: Value): Option[String] = 
-    {
+    private def stringOf(value: Value): Option[String] =
         value.dataType match 
         {
             // Vectors have a special formatting like "[a, b, c, d]" 
             // This is in order to form JSON -compatible output
             case VectorType => 
-                val vector = value.vectorOr()
+                val vector = value.getVector
                 if (vector.isEmpty) Some("[]") else Some(s"[${ vector.map { _.toJson }.reduceLeft { _ + ", " + _ } }]")
             case _ => value.content.map { _.toString() }
         }
-    }
     
     private def intOf(value: Value): Option[Int] = 
     {
@@ -100,118 +101,125 @@ object BasicValueCaster extends ValueCaster
         // String needs to be parsed
         value.dataType match 
         {
-            case DoubleType => Some(value.doubleOr().intValue())
-            case LongType => Some(value.longOr().intValue())
-            case FloatType => Some(value.floatOr().intValue())
-            case BooleanType => Some(if (value.booleanOr()) 1 else 0)
-            case StringType => Try(value.stringOr("0").toDouble.toInt).toOption
+            case DoubleType => Some(value.getDouble.intValue())
+            case LongType => Some(value.getLong.intValue())
+            case FloatType => Some(value.getFloat.intValue())
+            case BooleanType => Some(if (value.getBoolean) 1 else 0)
+            case StringType => Try { value.stringOr("0").toDouble.toInt }.toOption
             case _ => None
         }
     }
     
-    private def doubleOf(value: Value): Option[Double] = 
-    {
+    private def doubleOf(value: Value): Option[Double] =
         value.dataType match 
         {
-            case IntType => Some(value.intOr().toDouble)
-            case LongType => Some(value.longOr().toDouble)
-            case FloatType => Some(value.floatOr().toDouble)
-            case StringType => value.string.map { _.replace(',', '.').trim }
-                .flatMap { s => Try { s.toDouble }.toOption }
+            case IntType => Some(value.getInt.toDouble)
+            case LongType => Some(value.getLong.toDouble)
+            case FloatType => Some(value.getFloat.toDouble)
+            case StringType =>
+                value.string.map { _.replace(',', '.').trim }
+                    .flatMap { s => Try { s.toDouble }.toOption }
             case _ => None
         }
-    }
     
-    private def floatOf(value: Value): Option[Float] = 
-    {
+    private def floatOf(value: Value): Option[Float] =
         value.dataType match 
         {
-            case IntType => Some(value.intOr().toFloat)
-            case LongType => Some(value.longOr().toFloat)
-            case DoubleType => Some(value.doubleOr().toFloat)
-            case StringType => Try(value.stringOr("0").toFloat).toOption
+            case IntType => Some(value.getInt.toFloat)
+            case LongType => Some(value.getLong.toFloat)
+            case DoubleType => Some(value.getDouble.toFloat)
+            case StringType => Try { value.stringOr("0").toFloat }.toOption
             case _ => None
         }
-    }
     
-    private def longOf(value: Value): Option[Long] = 
-    {
+    private def longOf(value: Value): Option[Long] =
         value.dataType match 
         {
-            case IntType => Some(value.intOr().toLong)
-            case DoubleType => Some(value.doubleOr().toLong)
-            case FloatType => Some(value.floatOr().toLong)
-            case InstantType => Some(value.instantOr().getEpochSecond)
-            case StringType => Try(value.stringOr("0").toDouble.toLong).toOption
+            case IntType => Some(value.getInt.toLong)
+            case DoubleType => Some(value.getDouble.toLong)
+            case FloatType => Some(value.getFloat.toLong)
+            case InstantType => Some(value.getInstant.toEpochMilli)
+            case StringType => Try { value.stringOr("0").toDouble.toLong }.toOption
             case _ => None
         }
-    }
     
-    private def booleanOf(value: Value): Option[Boolean] = 
-    {
+    private def booleanOf(value: Value): Option[Boolean] =
         value.dataType match 
         {
-            case IntType => Some(value.intOr() != 0)
-            case StringType => Some(value.stringOr().toLowerCase() == "true")
+            case IntType => Some(value.getInt != 0)
+            case StringType => Some(value.getString.toLowerCase() == "true")
             case _ => None
         }
-    }
     
-    private def instantOf(value: Value): Option[Instant] = 
-    {
+    private def instantOf(value: Value): Option[Instant] =
         value.dataType match 
         {
-            case LongType => Some(Instant.ofEpochSecond(value.getLong))
+            case LongType => Some(Instant.ofEpochMilli(value.getLong))
             case StringType =>
                 // Tries various parsing formats
                 val str = value.getString
-                Try(Instant.parse(str)).orElse(Try(ZonedDateTime.parse(str).toInstant)).orElse
-                {
-                    Try
-                    {
-                        val localDateTime = LocalDateTime.parse(str)
-                        localDateTime.toInstant(ZoneId.systemDefault().getRules.getOffset(localDateTime))
-                    }
-                    
-                }.toOption
+                Try { Instant.parse(str) }
+                    .orElse { Try(ZonedDateTime.parse(str).toInstant) }
+                    .orElse {
+                        Try {
+                            val localDateTime = LocalDateTime.parse(str)
+                            localDateTime.toInstant(ZoneId.systemDefault().getRules.getOffset(localDateTime))
+                        }
+                    }.toOption
                 
             case LocalDateTimeType =>
                 val dateTime = value.getLocalDateTime
                 Some(dateTime.toInstant(ZoneId.systemDefault().getRules.getOffset(dateTime)))
             case _ => None
         }
-    }
     
-    private def localDateOf(value: Value): Option[LocalDate] = 
-    {
+    private def localDateOf(value: Value): Option[LocalDate] =
         value.dataType match 
         {
-            case LocalDateTimeType => Some(value.localDateTimeOr().toLocalDate)
-            case StringType => Try(LocalDate.parse(value.toString())).toOption
+            case LocalDateTimeType => Some(value.getLocalDateTime.toLocalDate)
+            case StringType =>
+                val s = value.getString
+                Try { LocalDate.parse(s) }.orElse { Try { LocalDate.parse(s, alternativeDateFormat) } }.toOption
             case _ => None
         }
-    }
     
-    private def localTimeOf(value: Value): Option[LocalTime] = 
-    {
+    private def localTimeOf(value: Value): Option[LocalTime] =
         value.dataType match 
         {
-            case LocalDateTimeType => Some(value.localDateTimeOr().toLocalTime)
+            case LocalDateTimeType => Some(value.getLocalDateTime.toLocalTime)
             case StringType => Try(LocalTime.parse(value.toString())).toOption
             case _ => None
         }
-    }
     
-    private def localDateTimeOf(value: Value): Option[LocalDateTime] = 
-    {
+    private def localDateTimeOf(value: Value): Option[LocalDateTime] =
         value.dataType match 
         {
-            case InstantType => Some(LocalDateTime.ofInstant(value.instantOr(), ZoneId.systemDefault()))
-            case LocalDateType => Some(value.localDateOr().atStartOfDay())
+            case InstantType => Some(LocalDateTime.ofInstant(value.getInstant, ZoneId.systemDefault()))
+            case LocalDateType => Some(value.getLocalDate.atStartOfDay())
             case StringType => Try(LocalDateTime.parse(value.toString())).toOption
             case _ => None
         }
+    
+    private def vectorOf(value: Value) = value.dataType match
+    {
+        case StringType =>
+            val s = value.getString
+            if ((s.startsWith("[") && s.endsWith("]")) || (s.startsWith("(") && s.endsWith(")")))
+                Some(splitToValueVector(s.drop(1).dropRight(1), ','))
+            else if (s.contains(','))
+                Some(splitToValueVector(s, ','))
+            else if (s.contains(';'))
+                Some(splitToValueVector(s, ';'))
+            else
+                Some(Vector(value))
+        case _ => Some(Vector(value))
     }
     
-    private def vectorOf(value: Value) = Some(Vector(value))
+    private def splitToValueVector(s: String, separator: Char) =
+        s.split(separator).toVector.map { _.trim }.map { s =>
+            if (s.isEmpty)
+                Value.empty
+            else
+                Value(Some(s), StringType)
+        }
 }

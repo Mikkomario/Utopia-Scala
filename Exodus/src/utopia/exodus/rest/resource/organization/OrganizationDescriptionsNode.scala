@@ -3,12 +3,13 @@ package utopia.exodus.rest.resource.organization
 import utopia.access.http.Method.{Get, Put}
 import utopia.access.http.Status.NotFound
 import utopia.citadel.database.access.id.many.DbDescriptionRoleIds
-import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbDescriptions}
+import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbOrganizationDescriptions}
 import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.exodus.model.enumeration.StandardTask.DocumentOrganization
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.description.SimplyDescribed
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.metropolis.model.post.NewDescription
@@ -39,8 +40,8 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends Resource[Au
 			context.authorizedInOrganization(organizationId) { (session, _, connection) =>
 				implicit val c: Connection = connection
 				// Checks the languages the user wants to use and gathers descriptions in those languages
-				val languages = context.languageIdListFor(session.userId)
-				val descriptions = DbDescriptions.ofOrganizationWithId(organizationId).inLanguages(languages)
+				implicit val languages: LanguageIds = context.languageIdListFor(session.userId)
+				val descriptions = DbOrganizationDescriptions(organizationId).inPreferredLanguages
 				// Supports simple model style also
 				Result.Success(session.modelStyle match {
 					case Full => descriptions.map { _.toModel }
@@ -61,7 +62,7 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends Resource[Au
 					if (DbLanguage(newDescription.languageId).isDefined)
 					{
 						// Updates the organization's descriptions accordingly
-						val dbDescriptions = DbDescriptions.ofOrganizationWithId(organizationId)
+						val dbDescriptions = DbOrganizationDescriptions(organizationId)
 						val insertedDescriptions = dbDescriptions.update(newDescription, session.userId)
 						// Returns new version of organization's descriptions (in specified language)
 						val otherDescriptions =
@@ -69,7 +70,8 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends Resource[Au
 							val missingRoleIds = DbDescriptionRoleIds.all.toSet --
 								insertedDescriptions.map { _.description.roleId }.toSet
 							if (missingRoleIds.nonEmpty)
-								dbDescriptions.inLanguages(Vector(newDescription.languageId), missingRoleIds)
+								dbDescriptions.inLanguageWithId(newDescription.languageId)
+									.withRoleIds(missingRoleIds).pull
 							else
 								Vector()
 						}

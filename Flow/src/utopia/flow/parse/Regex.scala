@@ -151,6 +151,11 @@ case class Regex(string: String)
 	  */
 	def noneOrOnce = if (isEmpty || string.endsWith("?")) this else Regex(string + "?")
 	
+	/**
+	  * @return A copy of this regular expression that ignores results within quotations
+	  */
+	def ignoringQuotations = this + "(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)"
+	
 	
 	// IMPLEMENTED	----------------
 	

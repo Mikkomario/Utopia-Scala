@@ -1,0 +1,19 @@
+<component name="libraryTable">
+  <library name="itext-core">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/Imprint/lib/io-7.1.16.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Imprint/lib/kernel-7.1.16.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Imprint/lib/layout-7.1.16.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/Imprint/lib/io-7.1.16-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Imprint/lib/kernel-7.1.16-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Imprint/lib/layout-7.1.16-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/Imprint/lib/io-7.1.16-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Imprint/lib/kernel-7.1.16-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Imprint/lib/layout-7.1.16-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -34,6 +34,11 @@ trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable
 	def idColumn = table.primaryColumn.get
 	
 	/**
+	  * @return A condition that holds true for all deprecated items
+	  */
+	def deprecatedCondition = deprecationColumn.isNotNull
+	
+	/**
 	 * @return A model that has just been marked as deprecated
 	 */
 	def nowDeprecated = withDeprecatedAfter(Now)

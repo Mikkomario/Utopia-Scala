@@ -2,9 +2,10 @@ package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method.Get
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
-import utopia.citadel.database.access.single.DbUser
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
 import utopia.nexus.rest.ResourceWithChildren
@@ -32,8 +33,9 @@ object MyOrganizationsNode extends ResourceWithChildren[AuthorizedContext]
 			implicit val c: Connection = connection
 			// Reads organizations data and returns it as an array
 			// Also supports the If-Modified-Since / Not Modified use case
-			DbUser(session.userId).memberships.myOrganizations(
-				context.languageIdListFor(session.userId), context.request.headers.ifModifiedSince) match {
+			implicit val languageIds: LanguageIds = context.languageIdListFor(session.userId)
+			DbUser(session.userId).memberships
+				.myOrganizationsIfModifiedSince(context.request.headers.ifModifiedSince) match {
 				case Some(organizations) =>
 					// May use simple model style
 					Result.Success(session.modelStyle match {
