@@ -63,7 +63,7 @@ object ConsoleExtensions
 		 * @return Answer given by the user (or the default)
 		 */
 		def ask(question: String, default: => Boolean = false) =
-			readNonEmptyLine(question + " (y/n)") match
+			readNonEmptyLine(question + s" (y/n - default = ${if (default) "yes" else "no"})") match
 			{
 				case Some(answer) =>
 					val firstChar = answer.head.toLower
