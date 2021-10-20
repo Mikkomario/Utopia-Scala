@@ -12,7 +12,7 @@ import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.vault.database.Connection
 
 import java.nio.file.Path
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 /**
   * Reads descriptions from a json file
@@ -28,7 +28,7 @@ object ReadDescriptions
 	  * @param jsonParser Implicit json parser
 	  * @return Success or a failure
 	  */
-	def apply(path: Path)(implicit connection: Connection, jsonParser: JsonParser) =
+	def apply(path: Path)(implicit connection: Connection, jsonParser: JsonParser): Try[Unit] =
 	{
 		jsonParser(path).flatMap { input =>
 			// Checks whether the input consists of a single object or multiple objects
@@ -40,16 +40,27 @@ object ReadDescriptions
 			// Prints a warning if there is no data to process
 			if (targetObjects.isEmpty)
 				println(s"Warning: No descriptions to read from $path")
+			apply(targetObjects)
+		}
+	}
+	
+	/**
+	  * Imports description data from the specified target objects
+	  * @param targets Target objects, where each must contain a valid "target" property and should contain
+	  *                descriptions within them
+	  * @param connection Implicit DB Connection
+	  * @return Success or failure
+	  */
+	def apply(targets: Vector[Model[Constant]])(implicit connection: Connection) =
+	{
+		// Makes sure all targets are valid
+		targets.tryMap { m => targetFrom(m("target")).map { _ -> m } }.map { targets =>
+			// Reads required data (languages and description roles)
+			val languageIds = DbLanguages.all.map { l => l.isoCode -> l.id }.toMap
+			val descriptionRoles = DbDescriptionRoles.pull
 			
-			// Makes sure all targets are valid
-			targetObjects.tryMap { m => targetFrom(m("target")).map { _ -> m } }.map { targets =>
-				// Reads required data (languages and description roles)
-				val languageIds = DbLanguages.all.map { l => l.isoCode -> l.id }.toMap
-				val descriptionRoles = DbDescriptionRoles.pull
-				
-				// Processes the input data
-				targets.foreach { case (target, model) => handleTarget(target, model, languageIds, descriptionRoles) }
-			}
+			// Processes the input data
+			targets.foreach { case (target, model) => handleTarget(target, model, languageIds, descriptionRoles) }
 		}
 	}
 	
