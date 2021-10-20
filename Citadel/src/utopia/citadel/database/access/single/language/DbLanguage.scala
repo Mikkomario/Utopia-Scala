@@ -100,7 +100,7 @@ object DbLanguage extends SingleRowModelAccess[Language] with UnconditionalView 
 		 * @param connection Implicit DB Connection
 		 * @return The ISO-code associated with this language
 		 */
-		def isoCode(implicit connection: Connection) = pullAttribute(model.isoCodeAttName)
+		def isoCode(implicit connection: Connection) = pullAttribute(model.isoCodeAttName).string
 	}
 	
 	class DbLanguageForIsoCode(val code: String) extends UniqueModelAccess[Language] with SubView

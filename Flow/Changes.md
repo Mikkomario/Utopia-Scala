@@ -1,5 +1,12 @@
 # Utopia Flow - List of Changes
 
+## v1.13.1 (in development)
+### New Methods
+- **StdIn** (**ConsoleExtensions**)
+  - Added `.readValidOrEmpty(...)`, which interacts with the user in order to find a valid value
+### Other Changes
+- Added a double-checking option to `StdIn.readNonEmptyLine(...)` (**ConsoleExtensions**)
+
 ## v1.13 - 18.10.2021
 Updated built-in value conversions (concerning Vector and LocalDate types). Added interactive console support with 
 the new **Console** class and **ConsoleExtensions** object, as well as by working on the command arguments -system.

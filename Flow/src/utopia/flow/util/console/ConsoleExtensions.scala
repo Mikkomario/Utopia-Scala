@@ -3,6 +3,7 @@ package utopia.flow.util.console
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser
+import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 
 import scala.io.StdIn
@@ -29,9 +30,18 @@ object ConsoleExtensions
 		/**
 		 * Reads a line of text from this input
 		 * @param prompt Prompt to display before requesting input (default = empty = no prompt)
+		 * @param retryPrompt Prompt used for asking the user for another input in case they specify an empty input -
+		 *                    Will only be asked once (default = empty = no retry prompting)
 		 * @return Read line. None if user wrote an empty line.
 		 */
-		def readNonEmptyLine(prompt: String = "") = printAndReadLine(prompt).notEmpty
+		def readNonEmptyLine(prompt: String = "", retryPrompt: String = ""): Option[String] =
+		{
+			val firstResult = printAndReadLine(prompt).notEmpty
+			if (firstResult.isDefined || retryPrompt.isEmpty)
+				firstResult
+			else
+				readNonEmptyLine(retryPrompt)
+		}
 		
 		/**
 		 * Reads a value from this input
@@ -103,6 +113,31 @@ object ConsoleExtensions
 		{
 			prompt.notEmpty.foreach(println)
 			readIterator.find { _.isDefined }.get
+		}
+		
+		/**
+		 * Reads either a valid input or an empty input
+		 * @param initialPrompt Prompt shown before initial read (default = empty = no prompt)
+		 * @param validate A function that validates the input. Returns Left[String] error message /
+		 *                 instructions on failure and Right[A] valid input on success.
+		 * @tparam A Type of valid item
+		 * @return Read valid item or None if user provided an empty input
+		 */
+		def readValidOrEmpty[A](initialPrompt: String = "")(validate: Value => Either[String, A]) =
+		{
+			initialPrompt.notEmpty.foreach(println)
+			readIterator.findMap { input =>
+				if (input.isEmpty)
+					Some(None)
+				else
+					validate(input) match
+					{
+						case Right(valid) => Some(Some(valid))
+						case Left(message) =>
+							println(message)
+							None
+					}
+			}.get
 		}
 	}
 }

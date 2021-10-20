@@ -1,6 +1,7 @@
 package utopia.metropolis.model.combined.language
 
 import utopia.metropolis.model.combined.description.{DescribedFromModelFactory, DescribedWrapper, SimplyDescribed}
+import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
 import utopia.metropolis.model.stored.language.Language
 
@@ -17,7 +18,19 @@ object DescribedLanguage extends DescribedFromModelFactory[Language, DescribedLa
 case class DescribedLanguage(language: Language, descriptions: Set[DescriptionLink])
 	extends DescribedWrapper[Language] with SimplyDescribed
 {
+	// IMPLEMENTED  ---------------------------------
+	
 	override def wrapped = language
 	
 	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) = wrapped.toModel
+	
+	
+	// OTHER    -------------------------------------
+	
+	/**
+	 * @param descriptionRole Targeted description role
+	 * @return Value for that role or the ISO-code of this language
+	 */
+	def descriptionOrCode(descriptionRole: DescriptionRoleIdWrapper) =
+		apply(descriptionRole).getOrElse(language.isoCode)
 }

@@ -1,5 +1,12 @@
 # Utopia Disciple - List of changes
 
+## v1.3.1 (in development)
+### New Methods
+- **SingleIdDescribedAccess**
+  - Added a number of utility methods for accessing (partially) described instance copies
+### Bugfixes
+- **DbLanguage**/single`.isoCode` returned a **Value** previously. Now returns a string option.
+
 ## v1.3 - 18.10.2021
 This relatively big update heavily updates description-related features, making description accessing more easy and 
 readable. This update comes with some refactoring requirements, however, especially with the updates on certain 
