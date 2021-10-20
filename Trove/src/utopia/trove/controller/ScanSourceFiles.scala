@@ -1,11 +1,10 @@
 package utopia.trove.controller
 
 import java.nio.file.Path
-
-import utopia.flow.util.IterateLines
+import utopia.flow.util.{IterateLines, Version}
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.trove.model.{DatabaseStructureSource, VersionNumber}
+import utopia.trove.model.DatabaseStructureSource
 import utopia.trove.model.enumeration.SqlFileType
 import utopia.trove.model.enumeration.SqlFileType.{Changes, Full}
 
@@ -37,7 +36,7 @@ object ScanSourceFiles
 	  *         or no update files were found. Returns a failure if directory reading failed. Individual file read
 	  *         errors are ignored.
 	  */
-	def apply(directory: Path, currentDbVersion: Option[VersionNumber] = None) =
+	def apply(directory: Path, currentDbVersion: Option[Version] = None) =
 	{
 		// Starts by finding all sql files in source directory
 		directory.allRegularFileChildrenOfType("sql").map { files =>
@@ -55,8 +54,8 @@ object ScanSourceFiles
 				comments.toOption.flatMap { comments =>
 					comments.get("version").orElse(comments.get("to")).map { versionString =>
 						val fileType = comments.get("type").map(SqlFileType.forString).getOrElse(Full)
-						DatabaseStructureSource(file, fileType, VersionNumber.parse(versionString),
-							comments.get("from").orElse(comments.get("origin")).map(VersionNumber.parse))
+						DatabaseStructureSource(file, fileType, Version(versionString),
+							comments.get("from").orElse(comments.get("origin")).map(Version.apply))
 					}
 				}
 			}.sortBy { _.targetVersion }

@@ -1,6 +1,6 @@
 package utopia.trove.database
 
-import utopia.trove.model.VersionNumber
+import utopia.flow.util.Version
 import utopia.trove.model.partial.DatabaseVersionData
 import utopia.trove.model.stored.DatabaseVersion
 import utopia.vault.database.Connection
@@ -36,7 +36,7 @@ case class DbDatabaseVersions(versionTable: Table) extends ManyRowModelAccess[Da
 	  * @param connection DB Connection (implicit)
 	  * @return Newly inserted version model
 	  */
-	def insert(versionNumber: VersionNumber)(implicit connection: Connection) =
+	def insert(versionNumber: Version)(implicit connection: Connection) =
 		model.insert(DatabaseVersionData(versionNumber))
 	
 	/**

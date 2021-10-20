@@ -1,9 +1,8 @@
 package utopia.trove.database
 
 import java.time.Instant
-
 import utopia.flow.generic.ValueConversions._
-import utopia.trove.model.VersionNumber
+import utopia.flow.util.Version
 import utopia.trove.model.partial.DatabaseVersionData
 import utopia.trove.model.stored.DatabaseVersion
 import utopia.vault.database.Connection
@@ -27,7 +26,7 @@ case class DatabaseVersionModelFactory(versionFactory: DatabaseVersionFactory)
 	  * @param created Version creation time (optional)
 	  * @return A new version model
 	  */
-	def apply(id: Option[Int] = None, number: Option[VersionNumber] = None, created: Option[Instant] = None) =
+	def apply(id: Option[Int] = None, number: Option[Version] = None, created: Option[Instant] = None) =
 		DatabaseVersionModel(versionFactory, id, number, created)
 	
 	/**
@@ -59,7 +58,7 @@ case class DatabaseVersionModelFactory(versionFactory: DatabaseVersionFactory)
   * @since 28.7.2020, v1.2
   */
 case class DatabaseVersionModel(factory: DatabaseVersionFactory, id: Option[Int] = None,
-								number: Option[VersionNumber] = None, created: Option[Instant] = None)
+                                number: Option[Version] = None, created: Option[Instant] = None)
 	extends StorableWithFactory[DatabaseVersion]
 {
 	override def valueProperties = Vector("id" -> id, "version" -> number.map { _.toString }, "created" -> created)
