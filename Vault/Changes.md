@@ -1,6 +1,6 @@
 # Utopia Vault - List of Changes
 
-## v1.11 (in development)
+## v1.11 - 18.10.2021
 This update changes how **SingleIdModelAccess** works, making it a trait and easier to extend, although unfortunately 
 breaking the existing sub-classes in the process. Besides this update, there are some internal logic optimizations to 
 **Table** and **FromRowFactory** classes.

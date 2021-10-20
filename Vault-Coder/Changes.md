@@ -1,6 +1,6 @@
 # Utopia Vault Coder
 
-## v1.2 (in development)
+## v1.2 - 18.10.2021
 This major update adds a number of new important features and bugfix (see details below). The program interface is 
 also refactored, somewhat.
 ### Breaking Changes

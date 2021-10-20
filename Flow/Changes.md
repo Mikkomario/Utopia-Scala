@@ -1,6 +1,6 @@
 # Utopia Flow - List of Changes
 
-## v1.13 (in development)
+## v1.13 - 18.10.2021
 Updated built-in value conversions (concerning Vector and LocalDate types). Added interactive console support with 
 the new **Console** class and **ConsoleExtensions** object, as well as by working on the command arguments -system.
 ### Breaking Changes

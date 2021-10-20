@@ -1,6 +1,6 @@
 # Utopia Ambassador - List of Changes
 
-## v1.2.1 (in development)
+## v1.2.1 - 18.10.2021
 This small update simply supports **Citadel** v1.3 and **Vault** v1.11 changes
 
 ## v1.2 - 3.10.2021

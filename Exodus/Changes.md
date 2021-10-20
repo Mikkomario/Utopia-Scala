@@ -1,6 +1,6 @@
 # Utopia Exodus - List of Changes
 
-## v2.2 (in development)
+## v2.2 - 18.10.2021
 This update mostly reflects changes in **Citadel** and **Vault** modules, but includes one bugfix besides those 
 which may be of importance to you.
 ### Breaking Changes

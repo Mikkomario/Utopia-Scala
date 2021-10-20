@@ -1,6 +1,6 @@
 # Utopia Description Importer - List of changes
 
-## v1.0.2 (in development)
+## v1.0.2 - 18.10.2021
 This small update supports changes in **Citadel** v1.3, internally - doesn't affect program output
 
 ## v1.0.1 - 3.10.2021

@@ -1,6 +1,6 @@
 # Utopia Metropolis - List of Changes
 
-## v1.3 (in development)
+## v1.3 - 18.10.2021
 This update adds a lot of utility for description handling, unfortunately also breaking the 
 **DescribedFromModelFactory** implementations, although not badly.
 ### Breaking Changes
