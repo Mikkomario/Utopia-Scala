@@ -6,6 +6,8 @@
   - Added a number of utility methods for accessing (partially) described instance copies
 ### Bugfixes
 - **DbLanguage**/single`.isoCode` returned a **Value** previously. Now returns a string option.
+### Other Changes
+- Added some utility description access methods
 
 ## v1.3 - 18.10.2021
 This relatively big update heavily updates description-related features, making description accessing more easy and 

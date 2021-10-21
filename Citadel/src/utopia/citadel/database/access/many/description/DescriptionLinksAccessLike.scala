@@ -5,6 +5,7 @@ import utopia.citadel.database.factory.description.DescriptionLinkFactory
 import utopia.citadel.database.model.description.{DescriptionLinkModel, DescriptionModel}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
@@ -60,6 +61,13 @@ trait DescriptionLinksAccessLike extends ManyRowModelAccess[DescriptionLink]
 	  */
 	protected def descriptionFactory = factory.childFactory
 	
+	/**
+	 * @param languageIds Targeted language ids (implicit)
+	 * @return An access point to description links in all of the specified languages
+	 */
+	def inAllPreferredLanguages(implicit languageIds: LanguageIds) =
+		inLanguagesWithIds(languageIds)
+	
 	
 	// IMPLEMENTED  --------------------
 	
@@ -94,6 +102,12 @@ trait DescriptionLinksAccessLike extends ManyRowModelAccess[DescriptionLink]
 	 */
 	def inLanguageWithId(languageId: Int) =
 		subView(descriptionModel.withLanguageId(languageId).toCondition)
+	/**
+	 * @param languageIds Ids of the targeted languages
+	 * @return An access point to description links in those languages
+	 */
+	def inLanguagesWithIds(languageIds: Iterable[Int]) =
+		subView(descriptionModel.languageIdColumn in languageIds)
 	
 	/**
 	 * @param roleIds    Targeted description role ids
