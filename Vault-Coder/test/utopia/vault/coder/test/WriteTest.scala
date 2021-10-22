@@ -5,7 +5,6 @@ import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, Creati
 import utopia.flow.util.FileExtensions._
 import utopia.vault.coder.controller.writer.database.{AccessWriter, DbModelWriter, FactoryWriter, SqlWriter, TablesWriter}
 import utopia.vault.coder.controller.writer.model
-import utopia.vault.coder.controller.writer.model.ModelWriter
 import utopia.vault.coder.model.data.{Class, ProjectSetup, Property}
 
 import java.nio.file.Path
@@ -19,7 +18,8 @@ import scala.util.{Failure, Success}
 object WriteTest extends App
 {
 	val targetDirectory: Path = "Citadel-Coder/data/test-output"
-	implicit val setup: ProjectSetup = ProjectSetup("utopia.vault.test", targetDirectory)
+	implicit val setup: ProjectSetup = ProjectSetup("VaultTest", "utopia.vault.test.model",
+		"utopia.vault.test.database", targetDirectory, modelCanReferToDB = true)
 	val testClass = Class("Test", Vector(Property("name", Text(128), description = "Name of this test item"),
 		Property("creatorId", ClassReference("user"), description = "Id of the user who added this data"),
 		Property("additionalInfo", Optional(Text()), description = "Additional information about this item"),

@@ -35,9 +35,18 @@ The program will inform you if there were any problems during input file process
 
 ## Input File Structure
 The input .json file should contain a single object with following properties:
+- **"name" / "project": String (optional)** - Name of this project
+  - If left empty, the name will be based on the specified base package or database package
+  - If your project contains multiple modules, name the Vault-dependent module
 - **"author": String (optional)** - Author of this project's model structure
 - **"base_package" / "package": String (optional)** - Contains the package prefix common to all generated files 
   (e.g. "utopia.vault.coder")
+- **"model_package": String (optional)** - Package where all the model classes are written
+  - Defaults to base_package.model
+- **"database_package" / "db_package": String (optional)** - Package where all the database -related classes are written
+  - Defaults to base_package.database
+- **"models_without_vault": Boolean (optional)** - Whether model classes can't contain database references 
+  (Metropolis-style project) (default = false)
 - **"enumerations" / "enums": Object (optional)** - Contains a property for each introduced enumeration. 
   Each property should have a string array value where each item represents a possible enumeration value.
 - **"classes" / "class": Object** - Contains a property for each introduced sub-package, the value of each 

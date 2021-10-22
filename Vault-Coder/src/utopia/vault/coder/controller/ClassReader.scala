@@ -10,6 +10,7 @@ import utopia.flow.util.UncertainBoolean
 import utopia.vault.coder.model.data.{Class, CombinationData, Enum, Name, ProjectData, Property}
 import utopia.vault.coder.model.enumeration.CombinationType.{Combined, MultiCombined, PossiblyCombined}
 import utopia.vault.coder.model.enumeration.{BasicPropertyType, CombinationType, PropertyType}
+import utopia.vault.coder.model.scala.Package
 import utopia.vault.coder.util.NamingUtils
 
 import java.nio.file.Path
@@ -32,8 +33,29 @@ object ClassReader
 	def apply(path: Path) = JsonBunny(path).flatMap { v =>
 		val root = v.getModel
 		val author = root("author").getString
-		val basePackage = root("base_package", "package").getString
-		val enumPackage = s"$basePackage.model.enumeration"
+		val basePackage = Package(root("base_package", "package").getString)
+		val modelPackage = root("model_package", "package_model").string match
+		{
+			case Some(pack) => Package(pack)
+			case None => basePackage/"model"
+		}
+		val dbPackage = root("db_package", "database_package", "package_db", "package_database").string match
+		{
+			case Some(pack) => Package(pack)
+			case None => basePackage/"database"
+		}
+		val projectName = root("name", "project").stringOr {
+			basePackage.parts.lastOption match
+			{
+				case Some(lastPart) => lastPart.capitalize
+				case None =>
+					dbPackage.parent.parts.lastOption
+						.orElse { dbPackage.parts.lastOption }
+						.getOrElse { "Project" }
+						.capitalize
+			}
+		}
+		val enumPackage = modelPackage/"enumeration"
 		val enumerations = root("enumerations", "enums").getModel.attributes.map { enumAtt =>
 			Enum(enumAtt.name.capitalize, enumAtt.value.getVector.flatMap { _.string }.map { _.capitalize },
 				enumPackage, author)
@@ -92,7 +114,8 @@ object ClassReader
 					}
 				}
 			}
-			ProjectData(basePackage, enumerations, classes, combinations)
+			ProjectData(projectName, modelPackage, dbPackage, enumerations, classes, combinations,
+				root("models_without_vault").getBoolean)
 		}
 	}
 	

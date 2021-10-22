@@ -30,7 +30,6 @@ object DescriptionLinkInterfaceWriter
 		val targets = classes.flatMap { c => c.descriptionLinkClass.map { dc => (c, dc, dc.properties.head) } }
 			.sortBy { _._1.name.singular }
 		if (targets.nonEmpty) {
-			val projectPrefix = setup.projectPackage.parts.last.capitalize
 			// Contains a property for each described class
 			val modelProps = targets.map { case (parent, desc, linkProp) =>
 				ImmutableValue(parent.name.singular.uncapitalize,
@@ -43,10 +42,10 @@ object DescriptionLinkInterfaceWriter
 					})")
 			}
 			File(setup.dbModelPackage,
-				ObjectDeclaration(projectPrefix + "DescriptionLinkModel", properties = modelProps)
+				ObjectDeclaration(setup.dbModuleName + "DescriptionLinkModel", properties = modelProps)
 			).write().flatMap { modelsRef =>
 				File(setup.factoryPackage,
-					ObjectDeclaration(projectPrefix + "DescriptionLinkFactory",
+					ObjectDeclaration(setup.dbModuleName + "DescriptionLinkFactory",
 						// Contains a property matching each link model factory property
 						properties = modelProps.map { modelProp =>
 							ImmutableValue(modelProp.name, Set(modelsRef, Reference.descriptionLinkFactory))(

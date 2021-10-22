@@ -158,12 +158,14 @@ object VaultCoderApp extends App
 			println(s"Found ${jsonFilePaths.size} json file(s) from the input directory (${inputPath.fileName})")
 			jsonFilePaths.tryMap { ClassReader(_) }
 		} match {
-			// Groups read results that target the same base package
+			// Groups read results that target the same project
 			case Success(data) =>
-				val groupedData = data.groupBy { _.basePackage }.map { case (basePackage, data) =>
-					data.reduce { (a, b) => ProjectData(basePackage, a.enumerations ++ b.enumerations,
-						a.classes ++ b.classes, a.combinations ++ b.combinations) }
-				}
+				val groupedData = data.groupBy { p => (p.projectName, p.modelPackage, p.databasePackage) }
+					.map { case ((pName, modelPackage, dbPackage), data) =>
+						data.reduce { (a, b) => ProjectData(pName, modelPackage, dbPackage,
+							a.enumerations ++ b.enumerations, a.classes ++ b.classes,
+							a.combinations ++ b.combinations, a.modelCanReferToDB && b.modelCanReferToDB) }
+					}
 				filterAndWrite(groupedData)
 			case Failure(error) =>
 				error.printStackTrace()
@@ -233,11 +235,11 @@ object VaultCoderApp extends App
 				{
 					println(s"Writing ${data.classes.size} classes, ${
 						data.enumerations.size} enumerations and ${
-						data.combinations.size } combinations for project ${data.basePackage}")
-					val directory = if (data.basePackage.isEmpty) Success(rootDirectory) else
-						(rootDirectory/data.basePackage.parts.mkString("-")).asExistingDirectory
+						data.combinations.size } combinations for project ${data.projectName}")
+					val directory = (rootDirectory/data.projectName).asExistingDirectory
 					directory.flatMap { directory =>
-						implicit val setup: ProjectSetup = ProjectSetup(data.basePackage, directory)
+						implicit val setup: ProjectSetup = ProjectSetup(data.projectName, data.modelPackage,
+							data.databasePackage, directory, data.modelCanReferToDB)
 						write(data)
 					}
 				}

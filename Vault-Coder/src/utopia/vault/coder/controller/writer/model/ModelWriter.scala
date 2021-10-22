@@ -66,25 +66,37 @@ object ModelWriter
 					Parameter("id", idType, description = s"id of this ${ classToWrite.name } in the database"),
 					Parameter("data", dataClassRef, description = s"Wrapped ${ classToWrite.name } data")
 				)
-				val singleAccessRef = AccessWriter.singleIdReferenceFor(classToWrite)
-				val accessProperty = ComputedProperty("access", Set(singleAccessRef),
-					description = s"An access point to this ${ classToWrite.name } in the database")(
-					s"${ singleAccessRef.target }(id)")
+				// May provide a utility access method
+				val accessProperty = {
+					if (setup.modelCanReferToDB)
+					{
+						val singleAccessRef = AccessWriter.singleIdReferenceFor(classToWrite)
+						Some(ComputedProperty("access", Set(singleAccessRef),
+							description = s"An access point to this ${ classToWrite.name } in the database")(
+							s"${ singleAccessRef.target }(id)"))
+					}
+					else
+						None
+				}
+				
 				val description = s"Represents a ${ classToWrite.name } that has already been stored in the database"
 				// ModelConvertible extension & implementation differs based on id type
+				// Also, the Stored extension differs based on whether Vault-dependency is allowed
 				if (classToWrite.useLongId)
 					ClassDeclaration(classToWrite.name.singular, constructionParams,
 						Vector(Reference.stored(dataClassRef, idType)),
 						properties = Vector(
 							ComputedProperty("toModel", Set(Reference.valueConversions, Reference.constant),
 								isOverridden = true)("Constant(\"id\", id) + data.toModel"),
-							accessProperty
-						), description = description, isCaseClass = true)
+						) ++ accessProperty, description = description, isCaseClass = true)
 				else
-					declaration.ClassDeclaration(classToWrite.name.singular, constructionParams,
-						Vector(Reference.storedModelConvertible(dataClassRef)),
-						properties = Vector(accessProperty),
+				{
+					val parent = if (setup.modelCanReferToDB) Reference.storedModelConvertible(dataClassRef) else
+						Reference.metropolisStoredModelConvertible(dataClassRef)
+					declaration.ClassDeclaration(classToWrite.name.singular, constructionParams, Vector(parent),
+						properties = accessProperty.toVector,
 						description = description, author = classToWrite.author, isCaseClass = true)
+				}
 			}
 			File(storePackage, storedClass).write().map { _ -> dataClassRef }
 		}

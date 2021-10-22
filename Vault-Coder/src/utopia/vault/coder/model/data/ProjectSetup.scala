@@ -8,19 +8,15 @@ import java.nio.file.Path
   * Represents project specific settings used when writing documents
   * @author Mikko Hilpinen
   * @since 1.9.2021, v0.1
-  * @param projectPackage Package that is common to all files in the target project
+  * @param dbModuleName Name of this project (the database portion)
+  * @param modelPackage Package for the model and enum classes
+  * @param databasePackage Package for the database interaction classes
   * @param sourceRoot Path to the export source directory
+  * @param modelCanReferToDB Whether model classes are allowed to refer to database classes
   */
-case class ProjectSetup(projectPackage: Package, sourceRoot: Path)
+case class ProjectSetup(dbModuleName: String, modelPackage: Package, databasePackage: Package, sourceRoot: Path,
+                        modelCanReferToDB: Boolean)
 {
-	/**
-	  * Package that contains all standard project models
-	  */
-	lazy val modelPackage = projectPackage/"model"
-	/**
-	  * Package that contains all project database interactions
-	  */
-	lazy val databasePackage = projectPackage/"database"
 	/**
 	  * @return Package that contains database access points
 	  */

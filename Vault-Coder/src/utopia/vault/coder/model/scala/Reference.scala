@@ -86,6 +86,7 @@ object Reference
 	
 	// Metropolis
 	
+	lazy val metropolisStoredModelConvertible = apply(metropolisModel/"stored", "StoredModelConvertible")
 	lazy val descriptionRole = apply(description, "DescriptionRole")
 	lazy val descriptionLink = apply(description, "DescriptionLink")
 	lazy val describedWrapper = apply(combinedDescription, "DescribedWrapper")

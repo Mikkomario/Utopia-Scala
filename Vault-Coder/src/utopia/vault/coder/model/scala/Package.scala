@@ -96,6 +96,11 @@ case class Package(parts: Vector[String]) extends ScalaConvertible
 	def nonEmpty = !isEmpty
 	
 	/**
+	  * @return The parent package of this package - this package if this is the root package
+	  */
+	def parent = if (isEmpty) this else Package(parts.dropRight(1))
+	
+	/**
 	  * @param setup Implicit project-specific setup
 	  * @return A path to the directory matching this package
 	  */
