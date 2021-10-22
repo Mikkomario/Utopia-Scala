@@ -1,0 +1,188 @@
+{
+  "author": "Mikko Hilpinen",
+  "project": "Ambassador",
+  "package": "utopia.ambassador",
+  "classes": {
+    "service": [
+      {
+        "name": "AuthService",
+        "table_name": "oauth_service",
+        "doc": "Represents a service that provides an OAuth interface (e.g. Google)",
+        "props": [
+          {
+            "name": "name",
+            "length": 64,
+            "index": true,
+            "doc": "Name of this service (from the customer's perspective)"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "AuthServiceSettings",
+        "name_plural": "AuthServiceSettings",
+        "table_name": "oauth_service_settings",
+        "doc": "Specifies service-specific settings. It is recommended to have only one instance per service.",
+        "props": [
+          {
+            "name": "serviceId",
+            "ref": "oauth_service",
+            "doc": "Id of the described service"
+          },
+          {
+            "name": "clientId",
+            "length": 128,
+            "doc": "Id of this client in the referenced service"
+          },
+          {
+            "name": "clientSecret",
+            "length": 128,
+            "doc": "This application's password to the referenced service"
+          },
+          {
+            "name": "authenticationUrl",
+            "length": 128,
+            "doc": "Url to the endpoint that receives users for the OAuth process"
+          },
+          {
+            "name": "tokenUrl",
+            "length": 128,
+            "doc": "Url to the endpoint that provides refresh and session tokens"
+          },
+          {
+            "name": "redirectUrl",
+            "length": 128,
+            "doc": "Url to the endpoint in this application which receives the user after they've completed the OAuth process"
+          },
+          {
+            "name": "incompleteAuthRedirectUrl",
+            "length": 255,
+            "type": "Option[String]",
+            "doc": "Url on the client side (front) that receives the user when they arrive from an OAuth process that was not initiated in this application. None if this use case is not supported."
+          },
+          {
+            "name": "defaultCompletionRedirectUrl",
+            "length": 255,
+            "type": "Option[String]",
+            "doc": "Url on the client side (front) where the user will be redirected upon authentication completion. Used if no redirect urls were prepared by the client."
+          },
+          {
+            "name": "preparationTokenDuration",
+            "column_name": "preparation_token_duration_minutes",
+            "type": "Duration[Minute]",
+            "default": "5.minutes",
+            "doc": "Duration how long preparation tokens can be used after they're issued before they expire"
+          },
+          {
+            "name": "redirectTokenDuration",
+            "column_name": "redirect_token_duration_minutes",
+            "type": "Duration[Minute]",
+            "default": "15.minutes",
+            "doc": "Duration how long redirect tokens can be used after they're issued before they expire"
+          },
+          {
+            "name": "incompleteAuthTokenDuration",
+            "column_name": "incomplete_auth_token_duration_minutes",
+            "type": "Duration[Minute]",
+            "default": "30.minutes",
+            "doc": "Duration how long incomplete authentication tokens can be used after they're issued before they expire"
+          },
+          {
+            "name": "DefaultSessionDuration",
+            "column_name": "default_session_duration_minutes",
+            "type": "Duration[Minute]",
+            "default": "22.hours"
+          },
+          {
+            "type": "creation"
+          }
+        ]
+      }
+    ],
+    "scope": [
+      {
+        "name": "Scope",
+        "table_name": "oauth_scope",
+        "description_link": "scope_id",
+        "doc": "Scopes are like access rights which can be requested from 3rd party services. They determine what the application is allowed to do in behalf of the user.",
+        "props": [
+          {
+            "name": "serviceId",
+            "ref": "oauth_service",
+            "doc": "Id of the service this scope is part of / which uses this scope"
+          },
+          {
+            "name": "name",
+            "length": 255,
+            "index": true,
+            "doc": "Name of this scope in the 3rd party service"
+          },
+          {
+            "name": "priority",
+            "type": "Option[Int]",
+            "doc": "Priority assigned for this scope where higher values mean higher priority. Used when multiple scopes can be chosen from."
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "TaskScopeLink",
+        "table_name": "task_scope",
+        "doc": "Links tasks with the scopes that are required to perform them",
+        "props": [
+          {
+            "ref": "task",
+            "doc": "Id of the linked task"
+          },
+          {
+            "name": "scopeId",
+            "ref": "oauth_scope",
+            "doc": "Id of the scope required to perform the task"
+          },
+          {
+            "name": "isRequired",
+            "type": "boolean",
+            "doc": "True whether this scope is always required to perform the linked task. False whether this scope can be replaced with another optional scope."
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      }
+    ],
+    "process": [
+      {
+        "name": "AuthPreparation",
+        "table_name": "oauth_preparation",
+        "combo_index": ["expires", "token"],
+        "doc": "Used for preparing and authenticating an OAuth process that follows",
+        "props": [
+          {
+            "ref": "user",
+            "doc": "Id of the user who initiated this process"
+          },
+          {
+            "name": "token",
+            "length": 64,
+            "doc": "Token used for authenticating the OAuth redirect"
+          },
+          {
+            "type": "expiration",
+            "doc": "Time when this authentication (token) expires"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      }
+    ]
+  }
+}

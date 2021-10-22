@@ -335,11 +335,11 @@
             "doc": "Id of the user who sent this invitation, if still known"
           },
           {
-            "type": "creation",
-            "doc": "Time when this invitation was created / sent"
+            "type": "expiration"
           },
           {
-            "type": "expiration"
+            "type": "creation",
+            "doc": "Time when this invitation was created / sent"
           }
         ]
       },

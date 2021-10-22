@@ -73,11 +73,11 @@
             "doc": "Id of the user who claims to own this email address"
           },
           {
-            "type": "creation",
-            "index": false
+            "type": "expiration"
           },
           {
-            "type": "expiration"
+            "type": "creation",
+            "index": false
           },
           {
             "name": "completed",
