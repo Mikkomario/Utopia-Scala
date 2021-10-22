@@ -1,0 +1,479 @@
+{
+  "author": "Mikko Hilpinen",
+  "project": "Citadel",
+  "model_package": "utopia.metropolis.model",
+  "database_package": "utopia.citadel.database",
+  "models_without_vault": true,
+  "enums": {
+    "ModelStyle": ["Full", "Simple"]
+  },
+  "classes": {
+    "language": [
+      {
+        "name": "Language",
+        "described": true,
+        "doc": "Represents a language",
+        "props": [
+          {
+            "name": "isoCode",
+            "length": 2,
+            "index": true,
+            "doc": "2 letter ISO-standard code for this language"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "LanguageFamiliarity",
+        "described": true,
+        "doc": "Represents a language skill level",
+        "props": [
+          {
+            "name": "orderIndex",
+            "type": "Int",
+            "index": true,
+            "doc": "Index used for ordering between language familiarities, where lower values mean higher familiarity"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      }
+    ],
+    "user": [
+      {
+        "name": "User",
+        "doc": "Represents a program user",
+        "props": [
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "UserSettings",
+        "name_plural": "UserSettings",
+        "combo_index": ["deprecatedAfter", "created"],
+        "doc": "Versioned user-specific settings",
+        "props": [
+          {
+            "ref": "user",
+            "doc": "Id of the described user"
+          },
+          {
+            "name": "name",
+            "length": 64,
+            "index": true,
+            "doc": "Name used by this user"
+          },
+          {
+            "name": "email",
+            "name_plural": "emailAddresses",
+            "length": 128,
+            "type": "Option[String]",
+            "index": true,
+            "doc": "Email address of this user"
+          },
+          {
+            "type": "creation"
+          },
+          {
+            "type": "deprecation",
+            "doc": "Time when these settings were replaced with a more recent version (if applicable)"
+          }
+        ]
+      },
+      {
+        "name": "UserLanguage",
+        "combo": {
+          "name": "UserLanguageWithFamiliarity",
+          "child": "LanguageFamiliarity",
+          "is_always_linked": true,
+          "parent_alias": "languageLink",
+          "child_alias": "familiarity"
+        },
+        "doc": "Links user with their language familiarity levels",
+        "props": [
+          {
+            "ref": "user",
+            "doc": "Id of the user who's being described"
+          },
+          {
+            "ref": "language",
+            "doc": "Id of the language known to the user"
+          },
+          {
+            "name": "familiarityId",
+            "ref": "language_familiarity",
+            "doc": "Id of the user's familiarity level in the referenced language"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      }
+    ],
+    "description": [
+      {
+        "name": "DescriptionRole",
+        "doc": "An enumeration for different roles or purposes a description can serve",
+        "description_link": "role_id",
+        "props": [
+          {
+            "name": "jsonKeySingular",
+            "length": 32,
+            "doc": "Key used in json documents for a singular value (string) of this description role"
+          },
+          {
+            "name": "jsonKeyPlural",
+            "length": 32,
+            "doc": "Key used in json documents for multiple values (array) of this description role"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "Description",
+        "combo_index": ["deprecatedAfter", "created"],
+        "doc": "Represents some description of some item in some language",
+        "props": [
+          {
+            "name": "roleId",
+            "ref": "description_role",
+            "doc": "Id of the role of this description"
+          },
+          {
+            "ref": "language",
+            "doc": "Id of the language this description is written in"
+          },
+          {
+            "name": "text",
+            "length": 255,
+            "doc": "This description as text / written description"
+          },
+          {
+            "name": "authorId",
+            "ref": "user",
+            "type": "Option[Int]",
+            "doc": "Id of the user who wrote this description (if known and applicable)"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this description was written"
+          },
+          {
+            "type": "deprecation",
+            "doc": "Time when this description was removed or replaced with a new version"
+          }
+        ]
+      }
+    ],
+    "organization": [
+      {
+        "name": "Organization",
+        "described": true,
+        "doc": "Represents an organization or a user group",
+        "props": [
+          {
+            "name": "creatorId",
+            "ref": "user",
+            "type": "Option[Int]",
+            "doc": "Id of the user who created this organization (if still known)"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "Task",
+        "described": true,
+        "doc": "Represents a type of task a user can perform (within an organization)",
+        "props": [
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "UserRole",
+        "description_link": "role_id",
+        "doc": "An enumeration for different roles a user may have within an organization",
+        "props": [
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "UserRoleRight",
+        "doc": "Used for listing / linking, which tasks different organization membership roles allow",
+        "props": [
+          {
+            "name": "roleId",
+            "ref": "member_role",
+            "doc": "Id of the organization member role that has authorization to perform the referenced task"
+          },
+          {
+            "ref": "task",
+            "doc": "Id of the task the user's with referenced membership role are allowed to perform"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "Membership",
+        "doc": "Lists organization members, including membership history",
+        "props": [
+          {
+            "ref": "organization",
+            "doc": "Id of the organization the referenced user is/was a member of"
+          },
+          {
+            "ref": "user",
+            "doc": "Id of the user who is/was a member of the referenced organization"
+          },
+          {
+            "name": "started",
+            "name_plural": "startTimes",
+            "type": "creation",
+            "doc": "Time when this membership started"
+          },
+          {
+            "name": "ended",
+            "name_plural": "endTimes",
+            "type": "deprecation",
+            "doc": "Time when this membership ended (if applicable)"
+          }
+        ]
+      },
+      {
+        "name": "MemberRole",
+        "doc": "Links an organization membership to the roles that member has within that organization",
+        "props": [
+          {
+            "ref": "membership",
+            "doc": "Id of the membership / member that has the referenced role"
+          },
+          {
+            "name": "roleId",
+            "ref": "user_role",
+            "doc": "Id of role the referenced member has"
+          },
+          {
+            "name": "creatorId",
+            "ref": "user",
+            "type": "Option[Int]",
+            "doc": "Id of the user who added this role to the membership, if known"
+          },
+          {
+            "type": "creation",
+            "index": false,
+            "doc": "Time when this role was added for the organization member"
+          },
+          {
+            "type": "deprecation"
+          }
+        ]
+      },
+      {
+        "name": "Invitation",
+        "combo": {
+          "child": "InvitationResponse",
+          "name": "InvitationWithResponse",
+          "child_alias": "response"
+        },
+        "combo_index": ["expires", "recipientEmail"],
+        "doc": "Represents an invitation to join an organization",
+        "props": [
+          {
+            "ref": "organization",
+            "doc": "Id of the organization which the recipient is invited to join"
+          },
+          {
+            "name": "startingRoleId",
+            "ref": "user_role",
+            "doc": "The role the recipient will have in the organization initially if they join"
+          },
+          {
+            "name": "recipientId",
+            "ref": "user",
+            "type": "Option[Int]",
+            "doc": "Id of the invited user, if known"
+          },
+          {
+            "name": "recipientEmail",
+            "name_plural": "recipientEmailAddresses",
+            "length": 128,
+            "doc": "Email address of the invited user / the email address where this invitation is sent to"
+          },
+          {
+            "name": "message",
+            "length": 1028,
+            "type": "Option[String]",
+            "doc": "Message written by the sender to accompany this invitation"
+          },
+          {
+            "name": "senderId",
+            "ref": "user",
+            "type": "Option[Int]",
+            "doc": "Id of the user who sent this invitation, if still known"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this invitation was created / sent"
+          },
+          {
+            "type": "expiration"
+          }
+        ]
+      },
+      {
+        "name": "InvitationResponse",
+        "doc": "Represents a response (yes|no) to an invitation to join an organization",
+        "props": [
+          {
+            "ref": "invitation",
+            "doc": "Id of the invitation this response is for"
+          },
+          {
+            "name": "message",
+            "length": 1028,
+            "type": "Option[String]",
+            "doc": "Attached written response"
+          },
+          {
+            "name": "creatorId",
+            "ref": "user",
+            "type": "Option[Int]",
+            "doc": "Id of the user who responded to the invitation, if still known"
+          },
+          {
+            "type": "creation"
+          },
+          {
+            "name": "accepted",
+            "type": "boolean",
+            "default": false,
+            "doc": "Whether the invitation was accepted (true) or rejected (false)"
+          },
+          {
+            "name": "blocked",
+            "type": "boolean",
+            "default": false,
+            "doc": "Whether future invitations were blocked"
+          }
+        ]
+      },
+      {
+        "name": "OrganizationDeletion",
+        "combo": {
+          "children": "OrganizationDeletionCancellations",
+          "name": "OrganizationDeletionWithCancellations",
+          "parent_alias": "deletion",
+          "child_alias": "cancellations"
+        },
+        "doc": "Represents a request to delete an organization. There exists a time period between the request and its completion, during which other users may cancel the deletion.",
+        "props": [
+          {
+            "ref": "organization",
+            "doc": "Id of the organization whose deletion was requested"
+          },
+          {
+            "name": "creatorId",
+            "ref": "user",
+            "doc": "Id of the user who requested organization deletion"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this deletion was requested"
+          },
+          {
+            "name": "actualization",
+            "type": "datetime",
+            "index": true,
+            "doc": "Time when this deletion is/was scheduled to actualize"
+          }
+        ]
+      },
+      {
+        "name": "OrganizationDeletionCancellation",
+        "doc": "Records a cancellation for a pending organization deletion request",
+        "props": [
+          {
+            "name": "deletionId",
+            "ref": "organization_deletion",
+            "doc": "Id of the cancelled deletion"
+          },
+          {
+            "name": "creatorId",
+            "ref": "user",
+            "type": "Option[Int]",
+            "doc": "Id of the user who cancelled the referenced organization deletion, if still known"
+          },
+          {
+            "type": "creation"
+          }
+        ]
+      }
+    ],
+    "device": [
+      {
+        "name": "ClientDevice",
+        "description_link": "device_id",
+        "doc": "Represents a device (e.g. a browser or a computer) a user uses to interact with this service",
+        "props": [
+          {
+            "name": "creatorId",
+            "ref": "user",
+            "type": "Option[Int]",
+            "doc": "Id of the user who added this device, if known"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "ClientDeviceUser",
+        "combo_index": ["deprecatedAfter", "created"],
+        "doc": "Links users to the devices they are using",
+        "props": [
+          {
+            "name": "deviceId",
+            "ref": "client_device",
+            "doc": "Id of the device the referenced user is/was using"
+          },
+          {
+            "ref": "user",
+            "doc": "Id of the user who is/was using this device"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this link was registered (device use started)"
+          },
+          {
+            "type": "deprecation",
+            "doc": "Time when device use ended"
+          }
+        ]
+      }
+    ]
+  }
+}
