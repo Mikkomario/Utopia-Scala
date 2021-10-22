@@ -49,6 +49,8 @@ The input .json file should contain a single object with following properties:
   (Metropolis-style project) (default = false)
 - **"enumerations" / "enums": Object (optional)** - Contains a property for each introduced enumeration. 
   Each property should have a string array value where each item represents a possible enumeration value.
+- **"referenced_enumerations" / "referenced_enums": [String]** - Paths to enumerations from other projects
+  - Enumeration paths should include the full reference: E.g. "utopia.vault.coder.model.enumeration.PropertyType"
 - **"classes" / "class": Object** - Contains a property for each introduced sub-package, the value of each 
   sub-package property should be a class object or an array of **class objects** (see structure below).
 

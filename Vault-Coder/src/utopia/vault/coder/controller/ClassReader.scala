@@ -60,14 +60,21 @@ object ClassReader
 			Enum(enumAtt.name.capitalize, enumAtt.value.getVector.flatMap { _.string }.map { _.capitalize },
 				enumPackage, author)
 		}
+		val referencedEnumerations = root("referenced_enums", "referenced_enumerations").getVector
+			.flatMap { _.string }
+			.map { enumPath =>
+				val (packagePart, enumName) = enumPath.splitAtLast(".")
+				Enum(enumName, Vector(), packagePart)
+			}
+		val allEnumerations = enumerations ++ referencedEnumerations
 		val classes = root("classes", "class").getModel.attributes.tryMap { packageAtt =>
 			packageAtt.value.model match
 			{
 				case Some(classModel) =>
-					parseClassFrom(classModel, packageAtt.name, enumerations, author).map { Vector(_) }
+					parseClassFrom(classModel, packageAtt.name, allEnumerations, author).map { Vector(_) }
 				case None =>
 					packageAtt.value.getVector.flatMap { _.model }
-						.tryMap { parseClassFrom(_, packageAtt.name, enumerations, author) }
+						.tryMap { parseClassFrom(_, packageAtt.name, allEnumerations, author) }
 			}
 		}.map { _.flatten }
 		

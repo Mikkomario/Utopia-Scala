@@ -5,6 +5,7 @@
 - Property types may now specify a different plural property name when using the default name
 ### New Features
 - Added support for divided module structure (e.g. Metropolis & Citadel -case)
+- Added enumeration referencing
 ### Bugfixes
 - In many item access points, the setter property names are now in plural format to match the getter names
 ### Other Changes
