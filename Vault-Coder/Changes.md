@@ -1,5 +1,12 @@
 # Utopia Vault Coder
 
+## v1.3 (in development)
+### Bugfixes
+- In many item access points, the setter property names are now in plural format to match the getter names
+### Other Changes
+- An id-based subset view is now written even when the access point doesn't support descriptions
+- Property types may now specify a different plural property name when using the default name
+
 ## v1.2 - 18.10.2021
 This major update adds a number of new important features and bugfix (see details below). The program interface is 
 also refactored, somewhat.

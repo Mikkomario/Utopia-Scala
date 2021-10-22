@@ -1,7 +1,7 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, ProjectSetup}
+import utopia.vault.coder.model.data.{Class, Name, ProjectSetup}
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, TraitDeclaration}
@@ -69,17 +69,6 @@ object AccessWriter
 			ComputedProperty("model", Set(dbModelRef), Protected,
 				description = "Factory used for constructing database the interaction models")(dbModelRef.target)
 		)
-		// Property setters are common for both distinct access points (unique & many)
-		val propertySetters = classToWrite.properties.map { prop =>
-			val paramName = s"new${ prop.name.singular.capitalize }"
-			val paramType = prop.dataType.notNull
-			val valueConversionCode = paramType.toValueCode(paramName)
-			MethodDeclaration(s"${ prop.name }_=", valueConversionCode.references,
-				description = s"Updates the ${ prop.name } of the targeted ${ classToWrite.name } instance(s)",
-				returnDescription = s"Whether any ${ classToWrite.name } instance was affected")(
-				Parameter(paramName, paramType.toScala, description = s"A new ${ prop.name } to assign")
-					.withImplicits(connectionParam))(s"putColumn(model.${ prop.name }Column, $valueConversionCode)")
-		}.toSet
 		val pullIdCode = classToWrite.idType.nullable.fromValueCode(s"pullColumn(index)")
 		File(singleAccessPackage,
 			TraitDeclaration(uniqueAccessName,
@@ -97,7 +86,8 @@ object AccessWriter
 						pullCode.text)
 				} :+ ComputedProperty("id", pullIdCode.references, implicitParams = Vector(connectionParam))(
 					pullIdCode.text),
-				propertySetters,
+				// Contains setters for each property (singular)
+				propertySettersFor(classToWrite, connectionParam) { _.singular },
 				description = s"A common trait for access points that return individual and distinct ${
 					classToWrite.name.plural
 				}.", author = classToWrite.author
@@ -208,7 +198,8 @@ object AccessWriter
 								ComputedProperty("defaultOrdering", Set(factoryRef), Protected, isOverridden = true)(
 									if (classToWrite.recordsIndexedCreationTime) "Some(factory.defaultOrdering)" else "None")
 							) ++ manyParentProperties,
-							propertySetters ++ manyParentMethods +
+							// Contains setters for property values (plural)
+							propertySettersFor(classToWrite, connectionParam) { _.plural } ++ manyParentMethods +
 								MethodDeclaration("filter",
 									explicitOutputType = Some(ScalaType.basic(manyAccessTraitName)),
 									isOverridden = true)(
@@ -227,25 +218,36 @@ object AccessWriter
 							else
 								s"Db${ classToWrite.name.plural }"
 						}
-						// Classes that support descriptions also get a nested object for id-based multi-access
-						val manyByIdsAccess = descriptionReferences.map { case (describedRef, _, _) =>
-							val subsetClassName = s"Db${ classToWrite.name.plural }Subset"
-							ClassDeclaration(subsetClassName,
-								Parameter("ids", ScalaType.set(ScalaType.int), prefix = "override val"),
-								Vector(manyAccessTraitRef,
-									Reference.manyDescribedAccessByIds(modelRef, describedRef))
-							) -> MethodDeclaration("apply",
-								returnDescription = s"An access point to ${
-									classToWrite.name.plural
-								} with the specified ids")(
-								Parameter("ids", ScalaType.set(ScalaType.int),
-									description = s"Ids of the targeted ${ classToWrite.name.plural }"))(
-								s"new $subsetClassName(ids)")
+						// There is also a nested object for id-based multi-access, which may have description support
+						val subsetClassName = s"Db${ classToWrite.name.plural }Subset"
+						val subSetClass = descriptionReferences match
+						{
+							case Some((describedRef, _, _)) =>
+								ClassDeclaration(subsetClassName,
+									Parameter("ids", ScalaType.set(ScalaType.int), prefix = "override val"),
+									Vector(manyAccessTraitRef,
+										Reference.manyDescribedAccessByIds(modelRef, describedRef))
+								)
+							case None =>
+								ClassDeclaration(subsetClassName,
+									Parameter("targetIds", ScalaType.set(ScalaType.int)),
+									Vector(manyAccessTraitRef),
+									properties = Vector(ComputedProperty("globalCondition",
+										Set(Reference.valueConversions, Reference.sqlExtensions), isOverridden = true)(
+										"Some(index in targetIds)"))
+								)
 						}
+						val subSetClassAccessMethod = MethodDeclaration("apply",
+							returnDescription = s"An access point to ${
+								classToWrite.name.plural
+							} with the specified ids")(
+							Parameter("ids", ScalaType.set(ScalaType.int),
+								description = s"Ids of the targeted ${ classToWrite.name.plural }"))(
+							s"new $subsetClassName(ids)")
 						File(manyAccessPackage,
 							ObjectDeclaration(manyAccessName, Vector(manyAccessTraitRef, rootViewExtension),
-								methods = manyByIdsAccess.map { _._2 }.toSet,
-								nested = manyByIdsAccess.map { _._1 }.toSet,
+								methods = Set(subSetClassAccessMethod),
+								nested = Set(subSetClass),
 								description = s"The root access point when targeting multiple ${
 									classToWrite.name.plural
 								} at a time", author = classToWrite.author
@@ -258,4 +260,16 @@ object AccessWriter
 			}
 		}
 	}
+	
+	private def propertySettersFor(classToWrite: Class, connectionParam: Parameter)(nameFromPropName: Name => String) =
+		classToWrite.properties.map { prop =>
+			val paramName = s"new${ prop.name.singular.capitalize }"
+			val paramType = prop.dataType.notNull
+			val valueConversionCode = paramType.toValueCode(paramName)
+			MethodDeclaration(s"${ nameFromPropName(prop.name) }_=", valueConversionCode.references,
+				description = s"Updates the ${ prop.name } of the targeted ${ classToWrite.name } instance(s)",
+				returnDescription = s"Whether any ${ classToWrite.name } instance was affected")(
+				Parameter(paramName, paramType.toScala, description = s"A new ${ prop.name } to assign")
+					.withImplicits(connectionParam))(s"putColumn(model.${ prop.name }Column, $valueConversionCode)")
+		}.toSet
 }

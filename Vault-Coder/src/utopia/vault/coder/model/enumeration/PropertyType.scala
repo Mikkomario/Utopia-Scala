@@ -34,7 +34,7 @@ sealed trait PropertyType
 	/**
 	  * @return Property name to use for this type by default (when no name is specified elsewhere)
 	  */
-	def defaultPropertyName: String
+	def defaultPropertyName: Name
 	/**
 	  * @return Default value assigned for this type by default. Empty string if no specific default is used.
 	  */
@@ -136,7 +136,7 @@ object BasicPropertyType
 				v => v.fromValuePropName.toLowerCase == lowerName,
 				v => v.toScala.toString.toLowerCase == lowerName,
 				v => v.toSqlBase.toLowerCase == lowerName,
-				v => v.defaultPropertyName.toLowerCase == lowerName
+				v => v.defaultPropertyName.variants.exists { _.toLowerCase == lowerName }
 			))
 	}
 	
@@ -152,7 +152,7 @@ object BasicPropertyType
 		override def toScala = ScalaType.int
 		override def baseDefault = ""
 		override def fromValuePropName = "int"
-		override def defaultPropertyName = "index"
+		override def defaultPropertyName = Name("index", "indices")
 	}
 	
 	/**
@@ -296,7 +296,7 @@ object PropertyType
 		override def toScala = Reference.instant
 		override def isNullable = false
 		override def baseDefault = CodePiece("Now", Set(Reference.now))
-		override def defaultPropertyName = "created"
+		override def defaultPropertyName = Name("created", "creationTimes")
 		override def createsIndexByDefault = true
 		
 		override def notNull = this
@@ -321,7 +321,7 @@ object PropertyType
 		
 		override def isNullable = true
 		override def baseDefault = "None"
-		override def defaultPropertyName = "deprecatedAfter"
+		override def defaultPropertyName = Name("deprecatedAfter", "deprecationTimes")
 		override def createsIndexByDefault = true
 		
 		override def nullable = this
@@ -345,7 +345,7 @@ object PropertyType
 		
 		override def isNullable = false
 		override def baseDefault = ""
-		override def defaultPropertyName = "expires"
+		override def defaultPropertyName = Name("expires", "expirationTimes")
 		override def createsIndexByDefault = true
 		
 		override def nullable = Deprecation

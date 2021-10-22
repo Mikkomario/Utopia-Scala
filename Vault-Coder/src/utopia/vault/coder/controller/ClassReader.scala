@@ -205,11 +205,15 @@ object ClassReader
 				}
 		}
 		
-		val name = rawName
-			.orElse { rawColumnName.map(NamingUtils.underscoreToCamel) }
+		val name: Name = rawName.map { Name(_) }
+			.orElse { rawColumnName.map { cName => Name(NamingUtils.underscoreToCamel(cName)) } }
 			.getOrElse { actualDataType.defaultPropertyName }
-		val columnName = rawColumnName.getOrElse { NamingUtils.camelToUnderscore(name) }
-		val fullName = Name(name, propModel("name_plural", "plural_name").stringOr(name + "s"))
+		val columnName = rawColumnName.getOrElse { NamingUtils.camelToUnderscore(name.singular) }
+		val fullName = propModel("name_plural", "plural_name").string match
+		{
+			case Some(pluralName) => name.copy(plural = pluralName)
+			case None => name
+		}
 		
 		val rawDoc = propModel("doc").string.filter { _.nonEmpty }
 		val doc = rawDoc.getOrElse { actualDataType.writeDefaultDescription(className, fullName) }
