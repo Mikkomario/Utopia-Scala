@@ -61,8 +61,13 @@ object SqlWriter
 		else {
 			writer.println(idBase + ", ")
 			
-			val propertyDeclarations = classToWrite.properties
-				.map { prop => s"`${ prop.columnName }` ${ prop.dataType.toSql }" }
+			val propertyDeclarations = classToWrite.properties.map { prop =>
+				val defaultPart = prop.sqlDefault.notEmpty match {
+					case Some(default) => s" DEFAULT $default"
+					case None => ""
+				}
+				s"`${ prop.columnName }` ${ prop.dataType.toSql }$defaultPart"
+			}
 			val firstComboIndexColumns = classToWrite.comboIndexColumnNames.filter { _.size > 1 }.map { _.head }.toSet
 			val individualIndexDeclarations = classToWrite.properties
 				.filter { prop => prop.isIndexed && !firstComboIndexColumns.contains(prop.columnName) }

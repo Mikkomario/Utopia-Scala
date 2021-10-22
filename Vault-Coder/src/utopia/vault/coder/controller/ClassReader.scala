@@ -249,7 +249,8 @@ object ClassReader
 		val doc = rawDoc.getOrElse { actualDataType.writeDefaultDescription(className, fullName) }
 		
 		Property(fullName, columnName, actualDataType, doc, propModel("usage").getString,
-			propModel("default", "def").getString, propModel("indexed", "index", "is_index").boolean)
+			propModel("default", "def").getString, propModel("sql_default", "sql_def").getString,
+			propModel("indexed", "index", "is_index").boolean)
 	}
 	
 	

@@ -36,9 +36,13 @@ sealed trait PropertyType
 	  */
 	def defaultPropertyName: Name
 	/**
-	  * @return Default value assigned for this type by default. Empty string if no specific default is used.
+	  * @return Default value assigned for this type by default. Empty if no specific default is used.
 	  */
 	def baseDefault: CodePiece
+	/**
+	  * @return Default value for this type by default in the SQL document
+	  */
+	def baseSqlDefault: String
 	/**
 	  * @return Whether a database index should be created based on this property type
 	  */
@@ -151,6 +155,7 @@ object BasicPropertyType
 		override def toSqlBase = "INT"
 		override def toScala = ScalaType.int
 		override def baseDefault = ""
+		override def baseSqlDefault = ""
 		override def fromValuePropName = "int"
 		override def defaultPropertyName = Name("index", "indices")
 	}
@@ -163,6 +168,7 @@ object BasicPropertyType
 		override def toSqlBase = "BIGINT"
 		override def toScala = ScalaType.long
 		override def baseDefault = ""
+		override def baseSqlDefault = ""
 		override def fromValuePropName = "long"
 		override def defaultPropertyName = "number"
 	}
@@ -175,6 +181,7 @@ object BasicPropertyType
 		override def toSqlBase = "DOUBLE"
 		override def toScala = ScalaType.double
 		override def baseDefault = ""
+		override def baseSqlDefault = ""
 		override def fromValuePropName = "double"
 		override def defaultPropertyName = "amount"
 	}
@@ -187,6 +194,7 @@ object BasicPropertyType
 		override def toSqlBase = "BOOLEAN"
 		override def toScala = ScalaType.boolean
 		override def baseDefault = "false"
+		override def baseSqlDefault = "FALSE"
 		override def fromValuePropName = "boolean"
 		override def defaultPropertyName = "flag"
 	}
@@ -198,7 +206,8 @@ object BasicPropertyType
 	{
 		override def toSqlBase = "DATETIME"
 		override def toScala = Reference.instant
-		override def baseDefault = "Instant.now()"
+		override def baseDefault = Reference.now.targetCode
+		override def baseSqlDefault = ""
 		override def fromValuePropName = "instant"
 		override def defaultPropertyName = "timestamp"
 	}
@@ -210,7 +219,8 @@ object BasicPropertyType
 	{
 		override def toSqlBase = "DATE"
 		override def toScala = Reference.localDate
-		override def baseDefault = "LocalDate.now()"
+		override def baseDefault = Reference.today.targetCode
+		override def baseSqlDefault = ""
 		override def fromValuePropName = "localDate"
 		override def defaultPropertyName = "date"
 	}
@@ -222,7 +232,8 @@ object BasicPropertyType
 	{
 		override def toSqlBase = "TIME"
 		override def toScala = Reference.localTime
-		override def baseDefault = "LocalTime.now()"
+		override def baseDefault = Reference.now.targetCode
+		override def baseSqlDefault = ""
 		override def fromValuePropName = "localTime"
 		override def defaultPropertyName = "time"
 	}
@@ -235,6 +246,7 @@ object BasicPropertyType
 		override def toSqlBase = s"VARCHAR($length)"
 		override def toScala = ScalaType.string
 		override def baseDefault = ""
+		override def baseSqlDefault = ""
 		override def fromValuePropName = "string"
 		override def defaultPropertyName = if (length < 100) "name" else "text"
 	}
@@ -292,10 +304,11 @@ object PropertyType
 	  */
 	case object CreationTime extends PropertyType
 	{
-		override def toSql = "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+		override def toSql = "TIMESTAMP NOT NULL"
 		override def toScala = Reference.instant
 		override def isNullable = false
-		override def baseDefault = CodePiece("Now", Set(Reference.now))
+		override def baseDefault = Reference.now.targetCode
+		override def baseSqlDefault = "CURRENT_TIMESTAMP"
 		override def defaultPropertyName = Name("created", "creationTimes")
 		override def createsIndexByDefault = true
 		
@@ -321,6 +334,7 @@ object PropertyType
 		
 		override def isNullable = true
 		override def baseDefault = "None"
+		override def baseSqlDefault = ""
 		override def defaultPropertyName = Name("deprecatedAfter", "deprecationTimes")
 		override def createsIndexByDefault = true
 		
@@ -345,6 +359,7 @@ object PropertyType
 		
 		override def isNullable = false
 		override def baseDefault = ""
+		override def baseSqlDefault = ""
 		override def defaultPropertyName = Name("expires", "expirationTimes")
 		override def createsIndexByDefault = true
 		
@@ -371,7 +386,8 @@ object PropertyType
 		
 		override def defaultPropertyName = "duration"
 		
-		override def baseDefault = "Days.zero"
+		override def baseDefault = CodePiece("Days.zero", Set(Reference.days))
+		override def baseSqlDefault = "0"
 		
 		override def createsIndexByDefault = false
 		
@@ -398,6 +414,7 @@ object PropertyType
 		
 		override def defaultPropertyName = "duration"
 		override def baseDefault = "None"
+		override def baseSqlDefault = ""
 		
 		override def nullable = this
 		override def notNull = DayCount
@@ -420,6 +437,7 @@ object PropertyType
 		override def toScala = ScalaType.option(baseType.toScala)
 		override def isNullable = true
 		override def baseDefault = "None"
+		override def baseSqlDefault = ""
 		override def defaultPropertyName = baseType.defaultPropertyName
 		override def createsIndexByDefault = baseType.createsIndexByDefault
 		
@@ -459,7 +477,9 @@ object PropertyType
 		}
 		
 		override def defaultPropertyName = "duration"
-		override def baseDefault = CodePiece("Duration.Zero", Set(Reference.duration))
+		override def baseDefault =
+			if (isNullable) "None" else CodePiece("Duration.Zero", Set(Reference.duration))
+		override def baseSqlDefault = if (isNullable) "" else "0"
 		
 		override def createsIndexByDefault = false
 		
@@ -501,6 +521,7 @@ object PropertyType
 		override def toSql = if (isNullable) dataType.toSqlBase else dataType.toSql
 		
 		override def baseDefault = if (isNullable) "None" else CodePiece.empty
+		override def baseSqlDefault = ""
 		override def defaultPropertyName = NamingUtils.underscoreToCamel(referencedTableName).uncapitalize + "Id"
 		// Index is created when foreign key is generated
 		override def createsIndexByDefault = false
@@ -534,6 +555,7 @@ object PropertyType
 			if (isNullable) ScalaType.option(enumeration.reference) else enumeration.reference
 		override def toSql = if (isNullable) "INT" else "INT NOT NULL"
 		override def baseDefault = CodePiece.empty
+		override def baseSqlDefault = ""
 		override def defaultPropertyName = enumeration.name.uncapitalize
 		override def createsIndexByDefault = false
 		override def notNull = if (isNullable) copy(isNullable = false) else this

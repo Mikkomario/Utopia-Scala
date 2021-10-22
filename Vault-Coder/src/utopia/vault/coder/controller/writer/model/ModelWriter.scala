@@ -42,11 +42,7 @@ object ModelWriter
 			ClassDeclaration(dataClassName,
 				// Accepts a copy of each property. Uses default values where possible.
 				classToWrite.properties.map { prop =>
-					val defaultValueCode = prop.customDefault match {
-						case "" => prop.dataType.baseDefault
-						case defined => CodePiece(defined)
-					}
-					Parameter(prop.name.singular, prop.dataType.toScala, defaultValueCode,
+					Parameter(prop.name.singular, prop.dataType.toScala, prop.default,
 						description = prop.description)
 				},
 				// Extends ModelConvertible

@@ -5,12 +5,16 @@
 - Property types may now specify a different plural property name when using the default name
 ### New Features
 - Added support for divided module structure (e.g. Metropolis & Citadel -case)
+- Added custom sql default value support
 - Added enumeration referencing
 ### Bugfixes
 - In many item access points, the setter property names are now in plural format to match the getter names
 ### Other Changes
 - An id-based subset view is now written even when the access point doesn't support descriptions
 - Initials used in SQL indices and constraints are now unique within the project
+- Changed some property type default values without changing the meaning 
+  (e.g. default of LocalDate is Today instead of LocalDate.now())
+- Some property types now provide a sql default
 
 ## v1.2 - 18.10.2021
 This major update adds a number of new important features and bugfix (see details below). The program interface is 

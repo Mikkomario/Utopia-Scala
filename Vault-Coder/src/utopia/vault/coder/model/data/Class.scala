@@ -72,7 +72,7 @@ case class Class(name: Name, tableName: String, properties: Vector[Property], pa
 	lazy val descriptionLinkClass = descriptionLinkColumnName.notEmpty.map { linkColumnName =>
 		val props = Vector(
 			Property(NamingUtils.underscoreToCamel(linkColumnName).uncapitalize, linkColumnName,
-				ClassReference(tableName, idType), s"Id of the described $name", "", "", None),
+				ClassReference(tableName, idType), s"Id of the described $name", "", "", "", None),
 			Property("descriptionId", ClassReference("description"), "Id of the linked description"),
 			Property(CreationTime.defaultPropertyName, CreationTime, "Time when this description was added"),
 			Property(Deprecation.defaultPropertyName, Deprecation, "Time when this description was replaced or removed")

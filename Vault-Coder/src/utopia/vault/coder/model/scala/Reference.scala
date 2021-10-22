@@ -43,6 +43,7 @@ object Reference
 	lazy val modelConvertible = apply(flowGenerics, "ModelConvertible")
 	
 	lazy val now = apply(flowTime, "Now")
+	lazy val today = apply(flowTime, "Today")
 	lazy val days = apply(flowTime, "Days")
 	
 	lazy val extender = apply(flowUtils, "Extender")
