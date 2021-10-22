@@ -7,6 +7,13 @@
       {
         "name": "AuthService",
         "table_name": "oauth_service",
+        "combo": {
+          "name": "AuthServiceWithSettings",
+          "child": "AuthServiceSettings",
+          "is_always_linked": true,
+          "parent_alias": "service",
+          "child_alias": "settings"
+        },
         "doc": "Represents a service that provides an OAuth interface (e.g. Google)",
         "props": [
           {
@@ -107,6 +114,26 @@
         "name": "Scope",
         "table_name": "oauth_scope",
         "description_link": "scope_id",
+        "combos": [
+          {
+            "name": "TaskScope",
+            "child": "TaskScopeLink",
+            "is_always_linked": true,
+            "child_alias": "taskLink"
+          },
+          {
+            "name": "AuthPreparationScope",
+            "child": "AuthPreparationScopeLink",
+            "is_always_linked": true,
+            "child_alias": "preparationLink"
+          },
+          {
+            "name": "AuthTokenScope",
+            "child": "AuthTokenScopeLink",
+            "is_always_linked": true,
+            "child_alias": "tokenLink"
+          }
+        ],
         "doc": "Scopes are like access rights which can be requested from 3rd party services. They determine what the application is allowed to do in behalf of the user.",
         "props": [
           {
@@ -122,6 +149,7 @@
           },
           {
             "name": "priority",
+            "name_plural": "priorityLevels",
             "type": "Option[Int]",
             "doc": "Priority assigned for this scope where higher values mean higher priority. Used when multiple scopes can be chosen from."
           },
@@ -147,6 +175,7 @@
           },
           {
             "name": "isRequired",
+            "name_plural": "areRequired",
             "type": "boolean",
             "doc": "True whether this scope is always required to perform the linked task. False whether this scope can be replaced with another optional scope."
           },
@@ -180,6 +209,227 @@
           {
             "type": "creation",
             "index": false
+          }
+        ]
+      },
+      {
+        "name": "AuthPreparationScopeLink",
+        "table_name": "oauth_preparation_scope",
+        "combo": {
+          "name": "AuthPreparationScope",
+          "child": "Scope",
+          "is_always_linked": true,
+          "parent_alias": "preparationLink"
+        },
+        "doc": "Links a requested scope to an OAuth preparation",
+        "props": [
+          {
+            "name": "preparationId",
+            "ref": "oauth_preparation",
+            "doc": "Id of the described OAuth preparation"
+          },
+          {
+            "name": "scopeId",
+            "ref": "oauth_scope",
+            "doc": "Id of the requested scope"
+          }
+        ]
+      },
+      {
+        "name": "AuthCompletionRedirectTarget",
+        "table_name": "oauth_completion_redirect_target",
+        "combo_index": ["resultStateFilter", "isLimitedToDenials"],
+        "doc": "Used for storing client-given rules for redirecting the user after the OAuth process completion. Given during the OAuth preparation.",
+        "props": [
+          {
+            "name": "preparationId",
+            "ref": "oauth_preparation",
+            "doc": "Id of the preparation during which these targets were specified"
+          },
+          {
+            "name": "url",
+            "length": 255,
+            "doc": "Url where the user will be redirected"
+          },
+          {
+            "name": "resultStateFilter",
+            "type": "Option[Boolean]",
+            "doc": "True when only successes are accepted. False when only failures are accepted. None when both are accepted."
+          },
+          {
+            "name": "isLimitedToDenials",
+            "name_plural": "areLimitedToDenials",
+            "type": "boolean",
+            "default": false,
+            "doc": "Whether this target is only used for denial of access -cases"
+          }
+        ]
+      },
+      {
+        "name": "AuthRedirect",
+        "table_name": "oauth_redirect",
+        "doc": "Records each event when a user is directed to the 3rd party OAuth service. These close the linked preparations.",
+        "props": [
+          {
+            "name": "preparationId",
+            "ref": "oauth_preparation",
+            "doc": "Id of the preparation event for this redirection"
+          },
+          {
+            "name": "token",
+            "length": 64,
+            "index": true
+          },
+          {
+            "type": "expiration",
+            "doc": "Time when the linked redirect token expires"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "AuthRedirectResult",
+        "table_name": "oauth_redirect_result",
+        "doc": "Records the cases when the user arrives back from the 3rd party OAuth service, whether the authentication succeeded or not.",
+        "props": [
+          {
+            "name": "redirectId",
+            "ref": "oauth_redirect",
+            "doc": "Id of the redirection event this result completes"
+          },
+          {
+            "name": "didReceiveCode",
+            "type": "boolean",
+            "default": false,
+            "doc": "Whether an authentication code was included in the request (implies success)"
+          },
+          {
+            "name": "didReceiveToken",
+            "type": "boolean",
+            "default": false,
+            "doc": "Whether authentication tokens were successfully acquired"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "IncompleteAuth",
+        "table_name": "incomplete_oauth",
+        "doc": "Represents a case where a user arrives from a 3rd party service without first preparing an authentication on this side",
+        "props": [
+          {
+            "name": "serviceId",
+            "ref": "oauth_service",
+            "doc": "Id of the service from which the user arrived"
+          },
+          {
+            "name": "code",
+            "length": 255,
+            "doc": "Authentication code provided by the 3rd party service"
+          },
+          {
+            "name": "token",
+            "length": 64,
+            "index": true,
+            "doc": "Token used for authentication the completion of this authentication"
+          },
+          {
+            "type": "expiration",
+            "doc": "Time after which the generated authentication token is no longer valid"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "IncompleteAuthLogin",
+        "table_name": "incomplete_oauth_login",
+        "doc": "Records cases where incomplete authentications are completed with the user logging in",
+        "props": [
+          {
+            "name": "authId",
+            "ref": "incomplete_oauth",
+            "doc": "Id of the incomplete authentication this login completes"
+          },
+          {
+            "ref": "user",
+            "doc": "Id of the user who logged in"
+          },
+          {
+            "type": "creation",
+            "index": false
+          },
+          {
+            "name": "wasSuccess",
+            "name_plural": "wereSuccesses",
+            "type": "boolean",
+            "default": false,
+            "doc": "Whether authentication tokens were successfully acquired from the 3rd party service"
+          }
+        ]
+      }
+    ],
+    "token": [
+      {
+        "name": "AuthToken",
+        "table_name": "oauth_token",
+        "combo_index": ["deprecatedAfter", "expires", "isRefreshToken"],
+        "doc": "Tokens (both access and refresh) used for authenticating 3rd party requests",
+        "props": [
+          {
+            "ref": "user",
+            "doc": "Id of the user who owns this token / to whom this token is linked"
+          },
+          {
+            "name": "token",
+            "length": 2048,
+            "doc": "Textual representation of this token"
+          },
+          {
+            "name": "expires",
+            "name_plural": "expirationTimes",
+            "type": "Option[datetime]",
+            "doc": "Time when this token can no longer be used, if applicable"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this token was acquired / issued"
+          },
+          {
+            "type": "deprecation",
+            "doc": "Time when this token was cancelled, revoked or replaced"
+          },
+          {
+            "name": "isRefreshToken",
+            "name_plural": "areRefreshTokens",
+            "type": "boolean",
+            "default": false,
+            "doc": "Whether this is a refresh token which can be used for acquiring access tokens"
+          }
+        ]
+      },
+      {
+        "name": "AuthTokenScopeLink",
+        "table_name": "oauth_token_scope",
+        "doc": "Used for listing, which scopes are available based on which authentication token",
+        "props": [
+          {
+            "name": "tokenId",
+            "ref": "oauth_token",
+            "doc": "Id of the token that provides access to the linked scope"
+          },
+          {
+            "name": "scopeId",
+            "ref": "oauth_scope",
+            "doc": "Id of the scope that is accessible by using the linked token"
           }
         ]
       }
