@@ -28,6 +28,7 @@
       },
       {
         "name": "LanguageFamiliarity",
+        "name_plural": "LanguageFamiliarities",
         "described": true,
         "doc": "Represents a language skill level",
         "props": [
@@ -127,11 +128,13 @@
         "props": [
           {
             "name": "jsonKeySingular",
+            "name_plural": "singularJsonKeys",
             "length": 32,
             "doc": "Key used in json documents for a singular value (string) of this description role"
           },
           {
             "name": "jsonKeyPlural",
+            "name_plural": "pluralJsonKeys",
             "length": 32,
             "doc": "Key used in json documents for multiple values (array) of this description role"
           },
@@ -368,14 +371,14 @@
           },
           {
             "name": "accepted",
+            "name_plural": "wereAccepted",
             "type": "boolean",
-            "default": false,
             "doc": "Whether the invitation was accepted (true) or rejected (false)"
           },
           {
             "name": "blocked",
+            "name_plural": "wereBlocked",
             "type": "boolean",
-            "default": false,
             "doc": "Whether future invitations were blocked"
           }
         ]

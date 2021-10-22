@@ -32,6 +32,7 @@
         "props": [
           {
             "name": "nameEn",
+            "name_plural": "englishNames",
             "length": 32
           },
           {
@@ -52,6 +53,7 @@
           },
           {
             "name": "email",
+            "name_plural": "emailAddresses",
             "length": 128,
             "index": true,
             "doc": "Email address being validated"
@@ -81,6 +83,7 @@
           },
           {
             "name": "completed",
+            "name_plural": "completionTimes",
             "type": "Option[datetime]",
             "doc": "Time when this attempt was finished successfully. None while not completed."
           }
@@ -165,6 +168,7 @@
           },
           {
             "name": "loggedOut",
+            "name_plural": "logoutTimes",
             "type": "deprecation",
             "doc": "Time when this session was ended due to the user logging out. None if not logged out."
           }
@@ -181,7 +185,8 @@
             "doc": "Id of the user who owns this password"
           },
           {
-            "ref": "hash",
+            "name": "hash",
+            "name_plural": "hashes",
             "length": 128,
             "index": true,
             "doc": "User's hashed password"

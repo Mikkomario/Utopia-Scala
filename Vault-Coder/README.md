@@ -154,6 +154,10 @@ Each property object should contain following properties:
   - Omit or leave as null if you want the indexing to be determined by the data type
   - References will always create an index, regardless of this value
 - **"length": Int (optional)** - Determines maximum text length if type "text" is used
+- **"default" / "def": String (optional)** - The default value assigned for this property in the data model
+  - If empty or omitted, data type -specific default will be used, if there is one
+- **"sql_default" / "sql_def": String (optional)** - The default value assigned for this property in the database
+  - If empty or omitted, data type -specific default will be used, if there is one
 - **"doc": String (optional)** - Description of this property (used in documentation)
 - **"usage": String (optional)** - Additional description about the use of this property
 

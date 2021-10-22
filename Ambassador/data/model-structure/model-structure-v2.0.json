@@ -81,6 +81,7 @@
             "column_name": "preparation_token_duration_minutes",
             "type": "Duration[Minute]",
             "default": "5.minutes",
+            "sql_default": 5,
             "doc": "Duration how long preparation tokens can be used after they're issued before they expire"
           },
           {
@@ -88,6 +89,7 @@
             "column_name": "redirect_token_duration_minutes",
             "type": "Duration[Minute]",
             "default": "15.minutes",
+            "sql_default": 15,
             "doc": "Duration how long redirect tokens can be used after they're issued before they expire"
           },
           {
@@ -95,13 +97,15 @@
             "column_name": "incomplete_auth_token_duration_minutes",
             "type": "Duration[Minute]",
             "default": "30.minutes",
+            "sql_default": 30,
             "doc": "Duration how long incomplete authentication tokens can be used after they're issued before they expire"
           },
           {
             "name": "DefaultSessionDuration",
             "column_name": "default_session_duration_minutes",
             "type": "Duration[Minute]",
-            "default": "22.hours"
+            "default": "22.hours",
+            "sql_default": 1320
           },
           {
             "type": "creation"
@@ -207,8 +211,7 @@
             "doc": "Time when this authentication (token) expires"
           },
           {
-            "type": "creation",
-            "index": false
+            "type": "creation"
           }
         ]
       },
@@ -260,7 +263,6 @@
             "name": "isLimitedToDenials",
             "name_plural": "areLimitedToDenials",
             "type": "boolean",
-            "default": false,
             "doc": "Whether this target is only used for denial of access -cases"
           }
         ]
@@ -285,8 +287,7 @@
             "doc": "Time when the linked redirect token expires"
           },
           {
-            "type": "creation",
-            "index": false
+            "type": "creation"
           }
         ]
       },
@@ -303,18 +304,15 @@
           {
             "name": "didReceiveCode",
             "type": "boolean",
-            "default": false,
             "doc": "Whether an authentication code was included in the request (implies success)"
           },
           {
             "name": "didReceiveToken",
             "type": "boolean",
-            "default": false,
             "doc": "Whether authentication tokens were successfully acquired"
           },
           {
-            "type": "creation",
-            "index": false
+            "type": "creation"
           }
         ]
       },
@@ -344,8 +342,7 @@
             "doc": "Time after which the generated authentication token is no longer valid"
           },
           {
-            "type": "creation",
-            "index": false
+            "type": "creation"
           }
         ]
       },
@@ -364,14 +361,12 @@
             "doc": "Id of the user who logged in"
           },
           {
-            "type": "creation",
-            "index": false
+            "type": "creation"
           },
           {
             "name": "wasSuccess",
             "name_plural": "wereSuccesses",
             "type": "boolean",
-            "default": false,
             "doc": "Whether authentication tokens were successfully acquired from the 3rd party service"
           }
         ]
@@ -411,7 +406,6 @@
             "name": "isRefreshToken",
             "name_plural": "areRefreshTokens",
             "type": "boolean",
-            "default": false,
             "doc": "Whether this is a refresh token which can be used for acquiring access tokens"
           }
         ]
