@@ -1,5 +1,6 @@
 package utopia.vault.coder.controller.writer.database
 
+import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.Class
@@ -24,9 +25,19 @@ object SqlWriter
 	  * @return Target path. Failure if writing failed.
 	  */
 	def apply(classes: Seq[Class], targetPath: Path)(implicit codec: Codec) =
-		targetPath.writeUsing { writer => classes.foreach { writeClass(writer, _) } }
+	{
+		// Forms the table initials first
+		val initials = initialsFrom((classes.map { _.tableName } ++
+			classes.flatMap { _.properties.flatMap { _.dataType match
+			{
+				case ClassReference(referencedTableName, _, _) => Some(referencedTableName)
+				case _ => None
+			} } }).toSet)
+		// Writes the class declarations in order
+		targetPath.writeUsing { writer => classes.foreach { writeClass(writer, _, initials) } }
+	}
 	
-	private def writeClass(writer: PrintWriter, classToWrite: Class): Unit =
+	private def writeClass(writer: PrintWriter, classToWrite: Class, initialsMap: Map[String, String]): Unit =
 	{
 		classToWrite.description.notEmpty.foreach { desc => writer.println(s"-- $desc") }
 		// Writes property documentation
@@ -42,7 +53,7 @@ object SqlWriter
 			}
 		}
 		// Writes the table
-		val classInitials = initialsFrom(classToWrite.tableName)
+		val classInitials = initialsMap(classToWrite.tableName)
 		writer.println(s"CREATE TABLE ${ classToWrite.tableName }(")
 		val idBase = s"\tid ${ classToWrite.idType.toSql } PRIMARY KEY AUTO_INCREMENT"
 		if (classToWrite.properties.isEmpty)
@@ -63,7 +74,7 @@ object SqlWriter
 			val foreignKeyDeclarations = classToWrite.properties.flatMap { prop =>
 				prop.dataType match {
 					case ClassReference(referencedTableName, _, isNullable) =>
-						val constraintNameBase = s"${ classInitials }_${ initialsFrom(referencedTableName) }_${
+						val constraintNameBase = s"${ classInitials }_${ initialsMap(referencedTableName) }_${
 							prop.columnName.replace("_id", "")
 						}_ref"
 						Some(s"CONSTRAINT ${ constraintNameBase }_fk FOREIGN KEY ${ constraintNameBase }_idx (${
@@ -85,8 +96,30 @@ object SqlWriter
 		writer.println()
 		
 		// If the class supports descriptions, writes a link class for those also
-		classToWrite.descriptionLinkClass.foreach { writeClass(writer, _) }
+		classToWrite.descriptionLinkClass.foreach { writeClass(writer, _, initialsMap) }
 	}
 	
-	private def initialsFrom(tableName: String) = tableName.split("_").flatMap { _.headOption }.mkString
+	private def initialsFrom(tableNames: Iterable[String], charsToTake: Int = 1): Map[String, String] =
+	{
+		// Generates initials
+		val namePairs = tableNames.map { tableName => tableName -> initialsFrom(tableName, charsToTake) }
+		val nameMap = namePairs.toMap
+		// Checks for duplicates
+		val reverseMap = namePairs.map { case (tableName, initial) => initial -> tableName }.toVector.asMultiMap
+		val duplicates = reverseMap.filter { case (_, tableNames) => tableNames.size > 1 }
+			.valuesIterator.toVector.flatten
+		// Uses recursion to resolve the duplicates, if necessary
+		if (duplicates.isEmpty)
+			nameMap
+		else
+			nameMap ++ initialsFrom(duplicates, charsToTake + 1)
+	}
+	
+	private def initialsFrom(tableName: String, charsToTake: Int): String =
+	{
+		if (charsToTake >= tableName.length)
+			tableName
+		else
+			tableName.split("_").map { _.take(charsToTake) }.mkString
+	}
 }

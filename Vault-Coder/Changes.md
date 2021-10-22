@@ -10,6 +10,7 @@
 - In many item access points, the setter property names are now in plural format to match the getter names
 ### Other Changes
 - An id-based subset view is now written even when the access point doesn't support descriptions
+- Initials used in SQL indices and constraints are now unique within the project
 
 ## v1.2 - 18.10.2021
 This major update adds a number of new important features and bugfix (see details below). The program interface is 
