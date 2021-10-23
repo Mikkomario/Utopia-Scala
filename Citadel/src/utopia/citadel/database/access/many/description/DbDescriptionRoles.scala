@@ -1,27 +1,29 @@
 package utopia.citadel.database.access.many.description
 
-import utopia.citadel.database.factory.description.DescriptionRoleFactory
 import utopia.metropolis.model.combined.description.DescribedDescriptionRole
 import utopia.metropolis.model.stored.description.DescriptionRole
-import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.UnconditionalView
 
 /**
-  * Used for accessing multiple description roles at a time
+  * The root access point when targeting multiple DescriptionRoles at a time
   * @author Mikko Hilpinen
-  * @since 27.6.2021, v1.0
+  * @since 2021-10-23
   */
-object DbDescriptionRoles
-	extends ManyRowModelAccess[DescriptionRole] with ManyDescribedAccess[DescriptionRole, DescribedDescriptionRole]
+object DbDescriptionRoles extends ManyDescriptionRolesAccess with UnconditionalView
 {
-	override def factory = DescriptionRoleFactory
+	// OTHER	--------------------
 	
-	override protected def defaultOrdering = None
+	/**
+	  * @param ids Ids of the targeted DescriptionRoles
+	  * @return An access point to DescriptionRoles with the specified ids
+	  */
+	def apply(ids: Set[Int]) = new DbDescriptionRolesSubset(ids)
 	
-	override def globalCondition = None
 	
-	override protected def manyDescriptionsAccess = DbDescriptionRoleDescriptions
+	// NESTED	--------------------
 	
-	override protected def describedFactory = DescribedDescriptionRole
-	
-	override protected def idOf(item: DescriptionRole) = item.id
+	class DbDescriptionRolesSubset(override val ids: Set[Int]) 
+		extends ManyDescriptionRolesAccess 
+			with ManyDescribedAccessByIds[DescriptionRole, DescribedDescriptionRole]
 }
+

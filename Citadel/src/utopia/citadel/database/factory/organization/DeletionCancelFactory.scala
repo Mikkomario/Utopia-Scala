@@ -13,6 +13,7 @@ import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1.0
   */
+@deprecated("Replaced with OrganizationDeletionCancellationFactory", "v2.0")
 object DeletionCancelFactory extends FromValidatedRowModelFactory[DeletionCancel]
 	with FromRowFactoryWithTimestamps[DeletionCancel]
 {

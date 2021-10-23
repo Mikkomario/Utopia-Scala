@@ -122,7 +122,7 @@ object ClassReader
 				}
 			}
 			ProjectData(projectName, modelPackage, dbPackage, enumerations, classes, combinations,
-				root("models_without_vault").getBoolean)
+				!root("models_without_vault").getBoolean)
 		}
 	}
 	

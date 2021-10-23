@@ -1,7 +1,7 @@
 package utopia.citadel.database.access.many.description
 
 import utopia.metropolis.model.cached.LanguageIds
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.stored.description.DescriptionLinkOld
 import utopia.vault.database.Connection
 
 /**
@@ -9,6 +9,7 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 20.5.2020, v1.0
   */
+@deprecated("Replaced with LinkedDescriptionsForManyAccessLike", "v2.0")
 trait DescriptionLinksForManyAccessLike extends DescriptionLinksAccessLike
 {
 	// ABSTRACT	------------------------------------
@@ -64,7 +65,7 @@ trait DescriptionLinksForManyAccessLike extends DescriptionLinksAccessLike
 	  * @return Read descriptions, grouped by target id
 	  */
 	protected def findInPreferredLanguages(remainingTargetIds: Set[Int], remainingRoleIds: Set[Int])(
-		implicit connection: Connection, languageIds: LanguageIds): Map[Int, Vector[DescriptionLink]] =
+		implicit connection: Connection, languageIds: LanguageIds): Map[Int, Vector[DescriptionLinkOld]] =
 	{
 		// Reads descriptions in target languages until either all description types have been read or all language
 		// options exhausted
@@ -87,7 +88,7 @@ trait DescriptionLinksForManyAccessLike extends DescriptionLinksAccessLike
 	  */
 	@deprecated("Please use findInPreferredLanguages instead", "v1.3")
 	protected def inLanguages(remainingTargetIds: Set[Int], languageIds: Seq[Int], remainingRoleIds: Set[Int])(
-		implicit connection: Connection): Map[Int, Vector[DescriptionLink]] =
+		implicit connection: Connection): Map[Int, Vector[DescriptionLinkOld]] =
 		findInPreferredLanguages(remainingTargetIds, remainingRoleIds)(connection, LanguageIds(languageIds.toVector))
 	
 	/**
@@ -100,7 +101,7 @@ trait DescriptionLinksForManyAccessLike extends DescriptionLinksAccessLike
 	  */
 	protected def withRoleIdInPreferredLanguages(roleId: Int, remainingTargetIds: Set[Int])
 	                                            (implicit connection: Connection,
-	                                             languageIds: LanguageIds): Map[Int, DescriptionLink] =
+	                                             languageIds: LanguageIds): Map[Int, DescriptionLinkOld] =
 	{
 		// Reads descriptions in target languages until either all targets have been read or all language
 		// options exhausted
@@ -133,14 +134,14 @@ trait DescriptionLinksForManyAccessLike extends DescriptionLinksAccessLike
 	 */
 	@deprecated("Please use withRoleInPreferredLanguages instead", "v1.3")
 	protected def withRoleIdInLanguages(roleId: Int, remainingTargetIds: Set[Int], languageIds: Seq[Int])
-	                                   (implicit connection: Connection): Map[Int, DescriptionLink] =
+	                                   (implicit connection: Connection): Map[Int, DescriptionLinkOld] =
 		withRoleIdInPreferredLanguages(roleId, remainingTargetIds)(connection, LanguageIds(languageIds.toVector))
 	
 	// Continues read through recursion, if possible. Utilizes (and includes) existing read results.
 	// LanguageIds and roles should be passed as they were at the start of the last read
 	protected def readRemaining(remainingRoleIds: Set[Int], lastAccessPoint: DescriptionLinksForManyAccessLike,
-	                          lastReadResults: Map[Int, Vector[DescriptionLink]])
-	                         (implicit connection: Connection, languageIds: LanguageIds): Map[Int, Vector[DescriptionLink]] =
+	                          lastReadResults: Map[Int, Vector[DescriptionLinkOld]])
+	                         (implicit connection: Connection, languageIds: LanguageIds): Map[Int, Vector[DescriptionLinkOld]] =
 	{
 		val remainingLanguageIds = languageIds.tail
 		if (remainingLanguageIds.nonEmpty) {

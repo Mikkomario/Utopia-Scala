@@ -2,7 +2,7 @@ package utopia.exodus.database.access.single
 
 import utopia.exodus.database.factory.description.DescriptionLinkFactory
 import utopia.exodus.database.model.description.{DescriptionLinkModel, DescriptionLinkModelFactory}
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.stored.description.DescriptionLinkOld
 import utopia.vault.model.immutable.Storable
 
 /**
@@ -53,8 +53,8 @@ object DbDescription
 	
 	// NESTED	----------------------------
 	
-	case class DescriptionOfSingle(targetId: Int, factory: DescriptionLinkFactory[DescriptionLink],
-									linkModelFactory: DescriptionLinkModelFactory[Storable])
+	case class DescriptionOfSingle(targetId: Int, factory: DescriptionLinkFactory[DescriptionLinkOld],
+	                               linkModelFactory: DescriptionLinkModelFactory[Storable])
 		extends DescriptionLinkAccess
 	{
 		// IMPLEMENTED	--------------------

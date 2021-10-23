@@ -1,23 +1,30 @@
 package utopia.citadel.database.factory.organization
 
-import utopia.citadel.database.Tables
+import utopia.citadel.database.CitadelTables
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.metropolis.model.partial.organization.InvitationResponseData
 import utopia.metropolis.model.stored.organization.InvitationResponse
+import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
-  * Used for reading invitation responses from the database
+  * Used for reading InvitationResponse data from the DB
   * @author Mikko Hilpinen
-  * @since 17.6.2020, v1.0
+  * @since 2021-10-23
   */
-object InvitationResponseFactory extends FromValidatedRowModelFactory[InvitationResponse]
+object InvitationResponseFactory 
+	extends FromValidatedRowModelFactory[InvitationResponse] 
+		with FromRowFactoryWithTimestamps[InvitationResponse]
 {
-	// IMPLEMENTED	--------------------------
+	// IMPLEMENTED	--------------------
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = InvitationResponse(model("id").getInt,
-		InvitationResponseData(model("invitationId").getInt, model("wasAccepted").getBoolean,
-			model("wasBlocked").getBoolean, model("creatorId").getInt))
+	override def creationTimePropertyName = "created"
 	
-	override def table = Tables.invitationResponse
+	override def table = CitadelTables.invitationResponse
+	
+	override def fromValidatedModel(valid: Model[Constant]) = 
+		InvitationResponse(valid("id").getInt, InvitationResponseData(valid("invitationId").getInt, 
+			valid("message").string, valid("creatorId").int, valid("created").getInstant, 
+			valid("accepted").getBoolean, valid("blocked").getBoolean))
 }
+

@@ -1,13 +1,14 @@
 package utopia.citadel.database.access.many.description
 
-import utopia.citadel.database.factory.description.DescriptionLinkFactory
+import utopia.citadel.database.factory.description.CitadelLinkedDescriptionFactory
+import utopia.citadel.database.model.description.CitadelDescriptionLinkModel
 
-/**
-  * Used for accessing organization descriptions
-  * @author Mikko Hilpinen
-  * @since 13.10.2021, v1.3
-  */
-object DbOrganizationDescriptions extends DescriptionLinksAccess
+object DbOrganizationDescriptions extends LinkedDescriptionsAccess
 {
-	override def factory = DescriptionLinkFactory.organization
+	// IMPLEMENTED	--------------------
+	
+	override def factory = CitadelLinkedDescriptionFactory.organization
+	
+	override def linkModel = CitadelDescriptionLinkModel.organization
 }
+

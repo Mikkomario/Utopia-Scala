@@ -1,73 +1,29 @@
 package utopia.citadel.database.access.many.organization
 
-import utopia.citadel.database.access.id.many.DbUserRoleIds
-import utopia.citadel.database.access.many.description.DbUserRoleDescriptions
-import utopia.citadel.database.factory.organization.RoleRightFactory
-import utopia.citadel.database.model.organization.RoleRightModel
-import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.combined.organization.RoleWithRights
-import utopia.vault.database.Connection
-import utopia.vault.sql.SqlExtensions._
+import utopia.citadel.database.access.many.description.ManyDescribedAccessByIds
+import utopia.metropolis.model.combined.organization.DescribedUserRole
+import utopia.metropolis.model.stored.organization.UserRole
+import utopia.vault.nosql.view.UnconditionalView
 
 /**
-  * Used for accessing multiple user roles at once
+  * The root access point when targeting multiple UserRoles at a time
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1.0
+  * @since 2021-10-23
   */
-object DbUserRoles
+object DbUserRoles extends ManyUserRolesAccess with UnconditionalView
 {
-	// COMPUTED	----------------------------
-	
-	private def rightsFactory = RoleRightFactory
-	
-	private def rightsModel = RoleRightModel
+	// OTHER	--------------------
 	
 	/**
-	  * @param connection DB Connection (implicit)
-	  * @return All user roles, along with the allowed task types
+	  * @param ids Ids of the targeted UserRoles
+	  * @return An access point to UserRoles with the specified ids
 	  */
-	def withRights(implicit connection: Connection) =
-	{
-		// Reads all role rights
-		val rights = rightsFactory.getAll().groupBy { _.roleId }
-		// Combines roles with rights
-		DbUserRoleIds.all.map { roleId => RoleWithRights(roleId, rights.getOrElse(roleId, Set()).map { _.taskId }.toSet) }
-	}
-	
-	/**
-	  * @return An access point to descriptions concerning (all) user roles
-	  */
-	def descriptions = DbUserRoleDescriptions
+	def apply(ids: Set[Int]) = new DbUserRolesSubset(ids)
 	
 	
-	// OTHER	----------------------------
+	// NESTED	--------------------
 	
-	/**
-	  * @param roleIds Targeted role ids
-	  * @return An access point to data concerning those roles
-	  */
-	def apply(roleIds: Set[Int]) = new DbUserRolesSubgroup(roleIds)
-	
-	
-	// NESTED	----------------------------
-	
-	class DbUserRolesSubgroup(roleIds: Set[Int])
-	{
-		/**
-		  * @param connection DB connection (implicit)
-		  * @return Targeted user roles, along with allowed task ids for each
-		  */
-		def withRights(implicit connection: Connection) =
-		{
-			// Reads associated role rights
-			val rights = rightsFactory.getMany(rightsModel.roleIdColumn.in(roleIds)).groupBy { _.roleId }
-			// Attaches the rights to role ids
-			roleIds.map { roleId => RoleWithRights(roleId, rights.getOrElse(roleId, Set()).map { _.taskId }.toSet) }
-		}
-		
-		/**
-		  * @return An access point to descriptions concerning these user roles
-		  */
-		def descriptions = DbUserRoleDescriptions(roleIds)
-	}
+	class DbUserRolesSubset(override val ids: Set[Int]) 
+		extends ManyUserRolesAccess with ManyDescribedAccessByIds[UserRole, DescribedUserRole]
 }
+

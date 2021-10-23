@@ -1,32 +1,20 @@
 package utopia.metropolis.model.stored.language
 
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
-import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, ModelConvertible}
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
-import utopia.flow.util.SelfComparable
-
-object LanguageFamiliarity extends FromModelFactoryWithSchema[LanguageFamiliarity]
-{
-	override val schema = ModelDeclaration("id" -> IntType, "order_index" -> IntType)
-	
-	override protected def fromValidatedModel(model: Model[Constant]) = LanguageFamiliarity(model("id"),
-		model("order_index"))
-}
+import utopia.metropolis.model.StyledModelConvertible
+import utopia.metropolis.model.partial.language.LanguageFamiliarityData
+import utopia.metropolis.model.stored.StoredModelConvertible
 
 /**
-  * Represents a recorded language familiarity level
+  * Represents a LanguageFamiliarity that has already been stored in the database
+  * @param id id of this LanguageFamiliarity in the database
+  * @param data Wrapped LanguageFamiliarity data
   * @author Mikko Hilpinen
-  * @since 25.7.2020, v1
- *  @param id Id of this familiarity level
- *  @param orderIndex Index used to order familiarity levels (descending)
+  * @since 2021-10-23
   */
-case class LanguageFamiliarity(id: Int, orderIndex: Int)
-	extends ModelConvertible with SelfComparable[LanguageFamiliarity]
+case class LanguageFamiliarity(id: Int, data: LanguageFamiliarityData) 
+	extends StoredModelConvertible[LanguageFamiliarityData] with StyledModelConvertible
 {
-	override def toModel = Model(Vector("id" -> id, "order_index" -> orderIndex))
-	
-	override def repr = this
-	
-	override def compareTo(o: LanguageFamiliarity) = o.orderIndex - orderIndex
+	override def toSimpleModel = Model(Vector("id" -> id, "order_index" -> data.orderIndex))
 }

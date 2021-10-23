@@ -1,7 +1,7 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.metropolis.model.combined.description.{DescribedWrapper, SimplyDescribed}
-import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
+import utopia.metropolis.model.combined.description.{DescribedWrapper, LinkedDescription, SimplyDescribed}
+import utopia.metropolis.model.stored.description.DescriptionRole
 
 /**
   * Adds descriptive data to a user role
@@ -10,8 +10,9 @@ import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionR
   * @param role Wrapped role with associated rights
   * @param descriptions Various descriptions for this role
   */
-case class DescribedRole(role: RoleWithRights, override val descriptions: Set[DescriptionLink])
-	extends DescribedWrapper[RoleWithRights] with SimplyDescribed
+@deprecated("Replaced with DescribedUserRole", "v2.0")
+case class DescribedRole(role: UserRoleWithRights, override val descriptions: Set[LinkedDescription])
+	extends DescribedWrapper[UserRoleWithRights] with SimplyDescribed
 {
 	override def wrapped = role
 	

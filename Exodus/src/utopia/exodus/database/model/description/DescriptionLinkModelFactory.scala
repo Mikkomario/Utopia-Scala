@@ -3,9 +3,9 @@ package utopia.exodus.database.model.description
 import java.time.Instant
 import utopia.exodus.database.factory.description.DescriptionLinkFactory
 import utopia.flow.time.Now
-import utopia.metropolis.model.partial.description.{DescriptionData, DescriptionLinkData}
-import utopia.metropolis.model.partial.description.DescriptionLinkData.PartialDescriptionLinkData
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.partial.description.{DescriptionData, DescriptionLinkDataOld}
+import utopia.metropolis.model.partial.description.DescriptionLinkDataOld.PartialDescriptionLinkData
+import utopia.metropolis.model.stored.description.DescriptionLinkOld
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.{Storable, Table}
 
@@ -81,7 +81,7 @@ trait DescriptionLinkModelFactory[+M <: Storable]
 	  * @param connection DB Connection (implicit)
 	  * @return Newly inserted description link
 	  */
-	def insert(data: PartialDescriptionLinkData)(implicit connection: Connection): DescriptionLink = insert(
+	def insert(data: PartialDescriptionLinkData)(implicit connection: Connection): DescriptionLinkOld = insert(
 		data.targetId, data.description, data.created)
 	
 	/**
@@ -99,7 +99,7 @@ trait DescriptionLinkModelFactory[+M <: Storable]
 		val newDescription = DescriptionModel.insert(data)
 		// Inserts the link between description and target
 		val linkId = apply(None, Some(targetId), Some(newDescription.id), Some(created)).insert().getInt
-		DescriptionLink(linkId, DescriptionLinkData(targetId, newDescription, created))
+		DescriptionLinkOld(linkId, DescriptionLinkDataOld(targetId, newDescription, created))
 	}
 }
 
@@ -113,14 +113,14 @@ object DescriptionLinkModelFactory
 	  * @return A new model factory for that type of links
 	  */
 	def apply(table: Table, targetIdAttName: String): DescriptionLinkModelFactory[DescriptionLinkModel[
-		DescriptionLink, DescriptionLinkFactory[DescriptionLink]]] =
+		DescriptionLinkOld, DescriptionLinkFactory[DescriptionLinkOld]]] =
 		DescriptionLinkModelFactoryImplementation(table, targetIdAttName)
 	
 	
 	// NESTED	------------------------------
 	
 	private case class DescriptionLinkModelFactoryImplementation(table: Table, targetIdAttName: String)
-		extends DescriptionLinkModelFactory[DescriptionLinkModel[DescriptionLink, DescriptionLinkFactory[DescriptionLink]]]
+		extends DescriptionLinkModelFactory[DescriptionLinkModel[DescriptionLinkOld, DescriptionLinkFactory[DescriptionLinkOld]]]
 	{
 		// ATTRIBUTES	----------------------
 		
@@ -128,7 +128,7 @@ object DescriptionLinkModelFactory
 		
 		def apply(id: Option[Int] = None, targetId: Option[Int] = None, descriptionId: Option[Int] = None,
 				  created: Option[Instant] = None,
-				  deprecatedAfter: Option[Instant] = None): DescriptionLinkModel[DescriptionLink, DescriptionLinkFactory[DescriptionLink]] =
+				  deprecatedAfter: Option[Instant] = None): DescriptionLinkModel[DescriptionLinkOld, DescriptionLinkFactory[DescriptionLinkOld]] =
 			DescriptionLinkModelImplementation(id, targetId, descriptionId, created, deprecatedAfter)
 		
 		
@@ -138,7 +138,7 @@ object DescriptionLinkModelFactory
 															  descriptionId: Option[Int] = None,
 															  created: Option[Instant] = None,
 															  deprecatedAfter: Option[Instant] = None)
-			extends DescriptionLinkModel[DescriptionLink, DescriptionLinkFactory[DescriptionLink]]
+			extends DescriptionLinkModel[DescriptionLinkOld, DescriptionLinkFactory[DescriptionLinkOld]]
 		{
 			override def factory =
 				DescriptionLinkModelFactoryImplementation.this.factory

@@ -1,12 +1,11 @@
 package utopia.citadel.database.access.single.description
 
-import utopia.citadel.database.access.many.description.DescriptionLinksAccess
+import utopia.citadel.database.access.many.description.LinkedDescriptionsAccess
 import utopia.metropolis.model.cached.LanguageIds
-import utopia.metropolis.model.combined.description.DescribedFactory
+import utopia.metropolis.model.combined.description.{DescribedFactory, LinkedDescription}
 import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.post.NewDescription
-import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
 
@@ -23,11 +22,11 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	/**
 	  * @return An access point used for accessing individual description links for this model type
 	  */
-	protected def singleDescriptionAccess: DescriptionLinkAccess
+	protected def singleDescriptionAccess: LinkedDescriptionAccess
 	/**
 	  * @return An access point used for accessing groups of description links for this model type
 	  */
-	protected def manyDescriptionsAccess: DescriptionLinksAccess
+	protected def manyDescriptionsAccess: LinkedDescriptionsAccess
 	
 	/**
 	 * @return Factory used for creating described compies of this model type
@@ -134,6 +133,6 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	def describe(newDescription: NewDescription, authorId: Int)(implicit connection: Connection) =
 		descriptions.update(newDescription, authorId)
 	
-	private def pullDescribed(pullDescriptions: => Iterable[DescriptionLink])(implicit connection: Connection) =
+	private def pullDescribed(pullDescriptions: => Iterable[LinkedDescription])(implicit connection: Connection) =
 		pull.map { item => describedFactory(item, pullDescriptions.toSet) }
 }

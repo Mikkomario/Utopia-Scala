@@ -6,6 +6,7 @@ import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.metropolis.model.error.IllegalPostModelException
 
@@ -40,6 +41,20 @@ object NewLanguageProficiency extends FromModelFactory[NewLanguageProficiency]
   */
 case class NewLanguageProficiency(language: Either[String, Int], familiarityId: Int) extends ModelConvertible
 {
+	// COMPUTED --------------------------
+	
+	/**
+	  * @return Id of the linked language
+	  */
+	def languageId = language.toOption
+	/**
+	  * @return ISO-code of the linked language
+	  */
+	def languageCode = language.leftOption
+	
+	
+	// IMPLEMENTED  ----------------------
+	
 	override def toModel =
 	{
 		val languageValuePair: (String, Value) = language match

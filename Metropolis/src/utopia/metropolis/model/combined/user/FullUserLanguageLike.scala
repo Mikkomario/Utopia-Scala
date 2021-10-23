@@ -5,7 +5,6 @@ import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.DeepExtender
 import utopia.metropolis.model.partial.user.UserLanguageData
-import utopia.metropolis.model.stored.language.LanguageFamiliarity
 import utopia.metropolis.model.stored.user.UserLanguage
 
 /**
@@ -13,8 +12,9 @@ import utopia.metropolis.model.stored.user.UserLanguage
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1
   */
+@deprecated("It may be better to use UserLanguageWithFamiliarity instead", "v2.0")
 trait FullUserLanguageLike[+L <: ModelConvertible, +F <: ModelConvertible]
-	extends DeepExtender[UserLanguage, UserLanguageData]
+	extends DeepExtender[UserLanguage, UserLanguageData] with ModelConvertible
 {
 	// ABSTRACT	----------------------------
 	
@@ -22,11 +22,16 @@ trait FullUserLanguageLike[+L <: ModelConvertible, +F <: ModelConvertible]
 	  * @return Linked language data
 	  */
 	def language: L
-	
 	/**
 	  * @return This user's familiarity level in the specified language
 	  */
 	def familiarity: F
+	
+	
+	// IMPLEMENTED  ------------------------
+	
+	override def toModel = wrapped.toModel + Constant("language", language.toModel) +
+		Constant("familiarity", familiarity.toModel)
 	
 	
 	// OTHER	----------------------------

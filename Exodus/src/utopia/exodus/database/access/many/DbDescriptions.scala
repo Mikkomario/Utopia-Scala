@@ -6,7 +6,7 @@ import utopia.exodus.database.model.description.{DescriptionLinkModel, Descripti
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.post.NewDescription
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.stored.description.DescriptionLinkOld
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 import utopia.vault.sql.Condition
@@ -142,8 +142,8 @@ object DbDescriptions
 	
 	// NESTED	----------------------------
 	
-	case class DescriptionsOfAll(factory: DescriptionLinkFactory[DescriptionLink],
-								 linkModelFactory: DescriptionLinkModelFactory[Storable])
+	case class DescriptionsOfAll(factory: DescriptionLinkFactory[DescriptionLinkOld],
+	                             linkModelFactory: DescriptionLinkModelFactory[Storable])
 		extends DescriptionLinksForManyAccess
 	{
 		override def globalCondition = None
@@ -154,8 +154,8 @@ object DbDescriptions
 			DescriptionsOfMany(remainingTargetIds, factory, linkModelFactory)
 	}
 	
-	case class DescriptionsOfMany(targetIds: Set[Int], factory: DescriptionLinkFactory[DescriptionLink],
-								  linkModelFactory: DescriptionLinkModelFactory[Storable])
+	case class DescriptionsOfMany(targetIds: Set[Int], factory: DescriptionLinkFactory[DescriptionLinkOld],
+	                              linkModelFactory: DescriptionLinkModelFactory[Storable])
 		extends DescriptionLinksForManyAccess
 	{
 		// IMPLEMENTED	---------------------
@@ -201,7 +201,7 @@ object DbDescriptions
 		  * @return Read descriptions, grouped by target id
 		  */
 		def inLanguages(languageIds: Seq[Int], roleIds: Set[Int])
-					   (implicit connection: Connection): Map[Int, Vector[DescriptionLink]] =
+					   (implicit connection: Connection): Map[Int, Vector[DescriptionLinkOld]] =
 		{
 			if (languageIds.isEmpty || targetIds.isEmpty || roleIds.isEmpty)
 				Map()
@@ -210,8 +210,8 @@ object DbDescriptions
 		}
 	}
 	
-	case class DescriptionsOfSingle(targetId: Int, factory: DescriptionLinkFactory[DescriptionLink],
-									linkModelFactory: DescriptionLinkModelFactory[Storable])
+	case class DescriptionsOfSingle(targetId: Int, factory: DescriptionLinkFactory[DescriptionLinkOld],
+	                                linkModelFactory: DescriptionLinkModelFactory[Storable])
 		extends DescriptionLinksAccess
 	{
 		// IMPLEMENTED	--------------------
@@ -231,7 +231,7 @@ object DbDescriptions
 		  * @param connection DB Connection (implicit)
 		  * @return Newly inserted description links
 		  */
-		def update(newDescription: NewDescription, authorId: Int)(implicit connection: Connection): Vector[DescriptionLink] =
+		def update(newDescription: NewDescription, authorId: Int)(implicit connection: Connection): Vector[DescriptionLinkOld] =
 		{
 			// Updates each role + text pair separately
 			newDescription.descriptions.map { case (role, text) =>
@@ -263,7 +263,7 @@ object DbDescriptions
 		  * @return Newly inserted description
 		  */
 		def update(newDescriptionRoleId: Int, languageId: Int, authorId: Int, text: String)
-				  (implicit connection: Connection): DescriptionLink = update(DescriptionData(newDescriptionRoleId,
+				  (implicit connection: Connection): DescriptionLinkOld = update(DescriptionData(newDescriptionRoleId,
 			languageId, text, Some(authorId)))
 		
 		/**
@@ -287,7 +287,7 @@ object DbDescriptions
 		  * @return This item's descriptions in specified languages (secondary languages are used when no primary
 		  *         language description is found)
 		  */
-		def inLanguages(languageIds: Seq[Int])(implicit connection: Connection): Vector[DescriptionLink] =
+		def inLanguages(languageIds: Seq[Int])(implicit connection: Connection): Vector[DescriptionLinkOld] =
 		{
 			languageIds.headOption match
 			{
@@ -311,7 +311,7 @@ object DbDescriptions
 		  *         language description is found)
 		  */
 		def inLanguages(languageIds: Seq[Int], remainingRoleIds: Set[Int])(
-			implicit connection: Connection): Vector[DescriptionLink] =
+			implicit connection: Connection): Vector[DescriptionLinkOld] =
 		{
 			// Reads descriptions in target languages until either all description types have been read or all language
 			// options exhausted

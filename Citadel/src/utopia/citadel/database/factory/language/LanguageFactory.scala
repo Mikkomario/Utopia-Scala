@@ -1,21 +1,23 @@
 package utopia.citadel.database.factory.language
 
-import utopia.citadel.database.Tables
+import utopia.citadel.database.CitadelTables
 import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.metropolis.model.partial.language.LanguageData
 import utopia.metropolis.model.stored.language.Language
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
-  * A factory used for reading language data from the database
+  * Used for reading Language data from the DB
   * @author Mikko Hilpinen
-  * @since 17.6.2020, v1.0
+  * @since 2021-10-23
   */
 object LanguageFactory extends FromValidatedRowModelFactory[Language]
 {
-	// IMPLEMENTED	-------------------------------
+	// IMPLEMENTED	--------------------
 	
-	override def table = Tables.language
+	override def table = CitadelTables.language
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = Language(model("id").getInt,
-		model("isoCode").getString)
+	override def fromValidatedModel(valid: Model[Constant]) = 
+		Language(valid("id").getInt, LanguageData(valid("isoCode").getString, valid("created").getInstant))
 }
+

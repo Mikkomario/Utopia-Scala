@@ -28,6 +28,7 @@ object SqlWriter
 	{
 		// Forms the table initials first
 		val initials = initialsFrom((classes.map { _.tableName } ++
+			classes.flatMap { _.descriptionLinkClass.map { _.tableName } } ++
 			classes.flatMap { _.properties.flatMap { _.dataType match
 			{
 				case ClassReference(referencedTableName, _, _) => Some(referencedTableName)
@@ -54,7 +55,7 @@ object SqlWriter
 		}
 		// Writes the table
 		val classInitials = initialsMap(classToWrite.tableName)
-		writer.println(s"CREATE TABLE ${ classToWrite.tableName }(")
+		writer.println(s"CREATE TABLE `${ classToWrite.tableName }`(")
 		val idBase = s"\tid ${ classToWrite.idType.toSql } PRIMARY KEY AUTO_INCREMENT"
 		if (classToWrite.properties.isEmpty)
 			writer.println(idBase)

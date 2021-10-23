@@ -1,27 +1,27 @@
 package utopia.citadel.database.factory.organization
 
-import utopia.citadel.database.model.organization.InvitationModel
 import utopia.metropolis.model.combined.organization.InvitationWithResponse
-import utopia.vault.model.immutable.Row
-import utopia.vault.nosql.factory.row.FromRowFactory
-import utopia.vault.sql.JoinType
+import utopia.metropolis.model.stored.organization.{Invitation, InvitationResponse}
+import utopia.vault.nosql.factory.row.linked.PossiblyCombiningFactory
+import utopia.vault.nosql.template.Deprecatable
 
 /**
-  * Used for reading invitation data, including response data
+  * Used for reading InvitationWithResponses from the database
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1.0
+  * @since 2021-10-23
   */
-object InvitationWithResponseFactory extends FromRowFactory[InvitationWithResponse]
+object InvitationWithResponseFactory 
+	extends PossiblyCombiningFactory[InvitationWithResponse, Invitation, InvitationResponse] with Deprecatable
 {
-	// IMPLEMENTED	------------------------------
+	// IMPLEMENTED	--------------------
 	
-	override def apply(row: Row) = InvitationFactory(row).flatMap { invitation =>
-		InvitationResponseFactory(row).map { response => InvitationWithResponse(invitation, response) }
-	}
+	override def childFactory = InvitationResponseFactory
 	
-	override def joinType = JoinType.Inner
+	override def nonDeprecatedCondition = parentFactory.nonDeprecatedCondition
 	
-	override def table = InvitationModel.table
+	override def parentFactory = InvitationFactory
 	
-	override def joinedTables = InvitationResponseFactory.tables
+	override def apply(invitation: Invitation, response: Option[InvitationResponse]) = 
+		InvitationWithResponse(invitation, response)
 }
+

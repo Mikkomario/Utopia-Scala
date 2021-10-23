@@ -7,7 +7,7 @@ import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
-import utopia.metropolis.model.combined.organization.DescribedInvitation
+import utopia.metropolis.model.combined.organization.DetailedInvitation
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource

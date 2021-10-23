@@ -23,6 +23,7 @@ object Package
 	lazy val flow = utopia/"flow"
 	lazy val vault = utopia/"vault"
 	lazy val metropolis = utopia/"metropolis"
+	lazy val citadel = utopia/"citadel"
 	
 	// Flow
 	
@@ -57,7 +58,7 @@ object Package
 	
 	// Citadel
 	
-	lazy val citadelDatabase = utopia/"citadel.database"
+	lazy val citadelDatabase = citadel/"database"
 	lazy val citadelAccess = citadelDatabase/"access"
 	lazy val descriptionsAccess = citadelAccess/"many.description"
 	lazy val descriptionAccess = citadelAccess/"single.description"

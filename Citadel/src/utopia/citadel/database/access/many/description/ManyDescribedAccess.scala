@@ -1,8 +1,7 @@
 package utopia.citadel.database.access.many.description
 
 import utopia.metropolis.model.cached.LanguageIds
-import utopia.metropolis.model.combined.description.DescribedFactory
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.combined.description.{DescribedFactory, LinkedDescription}
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
@@ -19,7 +18,7 @@ trait ManyDescribedAccess[A, +D] extends ManyModelAccess[A] with Indexed
 	/**
 	  * @return An access point that provides access to this model type's descriptions
 	  */
-	protected def manyDescriptionsAccess: DescriptionLinksAccess
+	protected def manyDescriptionsAccess: LinkedDescriptionsAccess
 	/**
 	 * @return Factory used for creating described compies of this model type
 	 */
@@ -74,7 +73,7 @@ trait ManyDescribedAccess[A, +D] extends ManyModelAccess[A] with Indexed
 	def describedInLanguageWithId(languageId: Int)(implicit connection: Connection) =
 		pullDescribed { _.inLanguageWithId(languageId).pull.groupBy { _.targetId } }
 	
-	private def pullDescribed(pullDescriptions: DescriptionLinksAccess#DescriptionsOfMany => Map[Int, Iterable[DescriptionLink]])
+	private def pullDescribed(pullDescriptions: LinkedDescriptionsAccess#DescriptionsOfMany => Map[Int, Iterable[LinkedDescription]])
 	                         (implicit connection: Connection) =
 	{
 		val items = pull

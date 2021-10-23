@@ -2,7 +2,6 @@ package utopia.metropolis.model.combined.description
 
 import utopia.flow.util.CollectionExtensions._
 import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
-import utopia.metropolis.model.stored.description.DescriptionLink
 
 /**
   * A common trait for items with descriptions
@@ -16,7 +15,7 @@ trait Described
 	/**
 	  * @return Descriptions linked with the wrapped item
 	  */
-	def descriptions: Set[DescriptionLink]
+	def descriptions: Set[LinkedDescription]
 	
 	
 	// COMPUTED -------------------------

@@ -2,7 +2,7 @@ package utopia.exodus.database.access.single
 
 import utopia.exodus.database.factory.description.DescriptionLinkFactory
 import utopia.exodus.database.model.description.{DescriptionLinkModelFactory, DescriptionModel}
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.stored.description.DescriptionLinkOld
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 import utopia.vault.nosql.access.single.model.SingleModelAccess
@@ -13,11 +13,11 @@ import utopia.vault.nosql.access.single.model.SingleModelAccess
   * @since 17.5.2020, v1
   */
 @deprecated("Please use the Citadel version instead", "v2.0")
-trait DescriptionLinkAccess extends SingleModelAccess[DescriptionLink]
+trait DescriptionLinkAccess extends SingleModelAccess[DescriptionLinkOld]
 {
 	// ABSTRACT	-------------------------
 	
-	override def factory: DescriptionLinkFactory[DescriptionLink]
+	override def factory: DescriptionLinkFactory[DescriptionLinkOld]
 	
 	/**
 	  * @return A factory used for creating search models for description links
@@ -49,7 +49,7 @@ trait DescriptionLinkAccess extends SingleModelAccess[DescriptionLink]
 	
 	// NESTED	-------------------------
 	
-	case class DescriptionInLanguage(languageId: Int) extends SingleModelAccess[DescriptionLink]
+	case class DescriptionInLanguage(languageId: Int) extends SingleModelAccess[DescriptionLinkOld]
 	{
 		// IMPLEMENTED	-----------------
 		
@@ -66,7 +66,7 @@ trait DescriptionLinkAccess extends SingleModelAccess[DescriptionLink]
 		  * @param connection Db Connection
 		  * @return Description for that role for this item in targeted language
 		  */
-		def forRoleWithId(roleId: Int)(implicit connection: Connection): Option[DescriptionLink] =
+		def forRoleWithId(roleId: Int)(implicit connection: Connection): Option[DescriptionLinkOld] =
 			read(Some(descriptionModel.withRoleId(roleId).toCondition))
 	}
 }

@@ -1,22 +1,24 @@
 package utopia.citadel.database.factory.user
 
-import utopia.citadel.database.Tables
-import utopia.flow.datastructure.template.{Model, Property}
-import utopia.flow.generic.ValueUnwraps._
+import utopia.citadel.database.CitadelTables
+import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.metropolis.model.partial.user.UserLanguageData
 import utopia.metropolis.model.stored.user.UserLanguage
-import utopia.vault.nosql.factory.row.model.FromRowModelFactory
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
-  * Used for reading user language links from the DB
+  * Used for reading UserLanguage data from the DB
   * @author Mikko Hilpinen
-  * @since 17.5.2020, v1.0
+  * @since 2021-10-23
   */
-object UserLanguageFactory extends FromRowModelFactory[UserLanguage]
+object UserLanguageFactory extends FromValidatedRowModelFactory[UserLanguage]
 {
-	override def apply(model: Model[Property]) = table.requirementDeclaration.validate(model).toTry.map { valid =>
-		UserLanguage(valid("id"), UserLanguageData(valid("userId"), valid("languageId"), valid("familiarityId")))
-	}
+	// IMPLEMENTED	--------------------
 	
-	override def table = Tables.userLanguage
+	override def table = CitadelTables.userLanguage
+	
+	override def fromValidatedModel(valid: Model[Constant]) = 
+		UserLanguage(valid("id").getInt, UserLanguageData(valid("userId").getInt, valid("languageId").getInt, 
+			valid("familiarityId").getInt, valid("created").getInstant))
 }
+

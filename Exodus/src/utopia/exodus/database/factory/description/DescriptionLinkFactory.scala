@@ -3,8 +3,8 @@ package utopia.exodus.database.factory.description
 import java.time.Instant
 import utopia.exodus.database.model.description.{DescriptionLinkModel, DescriptionLinkModelFactory}
 import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.metropolis.model.partial.description.DescriptionLinkData
-import utopia.metropolis.model.stored.description.{Description, DescriptionLink}
+import utopia.metropolis.model.partial.description.DescriptionLinkDataOld
+import utopia.metropolis.model.stored.description.{Description, DescriptionLinkOld}
 import utopia.vault.model.immutable.{Storable, Table}
 import utopia.vault.nosql.factory.row.linked.LinkedFactory
 import utopia.vault.nosql.template.Deprecatable
@@ -98,7 +98,7 @@ object DescriptionLinkFactory
 	  * @param targetIdAttName Name of the attribute that contains the link to the described item
 	  * @return A new factory for reading description links
 	  */
-	def apply(table: Table, targetIdAttName: String): DescriptionLinkFactory[DescriptionLink] =
+	def apply(table: Table, targetIdAttName: String): DescriptionLinkFactory[DescriptionLinkOld] =
 		apply(DescriptionLinkModelFactory(table, targetIdAttName))
 	
 	/**
@@ -106,16 +106,16 @@ object DescriptionLinkFactory
 	  * @param modelFactory model to wrap
 	  * @return A new link factory
 	  */
-	def apply(modelFactory: DescriptionLinkModelFactory[Storable]): DescriptionLinkFactory[DescriptionLink] =
+	def apply(modelFactory: DescriptionLinkModelFactory[Storable]): DescriptionLinkFactory[DescriptionLinkOld] =
 		DescriptionLinkFactoryImplementation(modelFactory)
 	
 	
 	// NESTED	----------------------------------
 	
 	private case class DescriptionLinkFactoryImplementation(modelFactory: DescriptionLinkModelFactory[Storable])
-		extends DescriptionLinkFactory[DescriptionLink]
+		extends DescriptionLinkFactory[DescriptionLinkOld]
 	{
 		override protected def apply(id: Int, targetId: Int, description: Description, created: Instant) =
-			Success(DescriptionLink(id, DescriptionLinkData(targetId, description, created)))
+			Success(DescriptionLinkOld(id, DescriptionLinkDataOld(targetId, description, created)))
 	}
 }

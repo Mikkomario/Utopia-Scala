@@ -43,6 +43,11 @@ object PropertyDeclarationType
 		override def toScala = "val"
 	}
 	
+	case object LazyValue extends PropertyDeclarationType
+	{
+		override def toScala = "lazy val"
+	}
+	
 	/**
 	  * Used for defining mutable properties / variables
 	  */

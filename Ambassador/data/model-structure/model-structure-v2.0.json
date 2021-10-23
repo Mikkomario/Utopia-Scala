@@ -392,6 +392,7 @@
             "name": "expires",
             "name_plural": "expirationTimes",
             "type": "Option[datetime]",
+            "index": false,
             "doc": "Time when this token can no longer be used, if applicable"
           },
           {

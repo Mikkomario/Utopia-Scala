@@ -1,39 +1,93 @@
 package utopia.citadel.database.model.user
 
+import java.time.Instant
 import utopia.citadel.database.factory.user.UserFactory
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.partial.user.UserSettingsData
+import utopia.metropolis.model.partial.user.UserData
 import utopia.metropolis.model.stored.user.User
-import utopia.vault.database.Connection
-import utopia.vault.model.immutable.Storable
+import utopia.vault.model.immutable.StorableWithFactory
+import utopia.vault.nosql.storable.DataInserter
 
-object UserModel
+/**
+  * Used for constructing UserModel instances and for inserting Users to the database
+  * @author Mikko Hilpinen
+  * @since 2021-10-23
+  */
+object UserModel extends DataInserter[UserModel, User, UserData]
 {
-	// OTHER	-------------------------------------
+	// ATTRIBUTES	--------------------
 	
 	/**
-	  * Inserts a new user to the database
-	  * @param settings User settings
-	  * @param connection DB Connection (implicit)
-	  * @return Newly inserted user
+	  * Name of the property that contains User created
 	  */
-	def insert(settings: UserSettingsData)(implicit connection: Connection) =
-	{
-		// Inserts the user first, then links new data
-		val userId = apply().insert().getInt
-		val newSettings = UserSettingsModel.insert(userId, settings)
-		User(userId, newSettings)
-	}
+	val createdAttName = "created"
+	
+	
+	// COMPUTED	--------------------
+	
+	/**
+	  * Column that contains User created
+	  */
+	def createdColumn = table(createdAttName)
+	
+	/**
+	  * The factory object used by this model type
+	  */
+	def factory = UserFactory
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def table = factory.table
+	
+	override def apply(data: UserData) = apply(None, Some(data.created))
+	
+	override def complete(id: Value, data: UserData) = User(id.getInt, data)
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param created Time when this User was first created
+	  * @return A model containing only the specified created
+	  */
+	def withCreated(created: Instant) = apply(created = Some(created))
+	
+	/**
+	  * @param id A User id
+	  * @return A model with that id
+	  */
+	def withId(id: Int) = apply(Some(id))
 }
 
 /**
-  * Used for interacting with user data in DB
+  * Used for interacting with Users in the database
+  * @param id User database id
+  * @param created Time when this User was first created
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v1.0
+  * @since 2021-10-23
   */
-case class UserModel(id: Option[Int] = None) extends Storable
+case class UserModel(id: Option[Int] = None, created: Option[Instant] = None) 
+	extends StorableWithFactory[User]
 {
-	override def table = UserFactory.table
+	// IMPLEMENTED	--------------------
 	
-	override def valueProperties = Vector("id" -> id)
+	override def factory = UserModel.factory
+	
+	override def valueProperties = 
+	{
+		import UserModel._
+		Vector("id" -> id, createdAttName -> created)
+	}
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param created A new created
+	  * @return A new copy of this model with the specified created
+	  */
+	def withCreated(created: Instant) = copy(created = Some(created))
 }
+

@@ -1,85 +1,193 @@
 package utopia.citadel.database.model.organization
 
 import java.time.Instant
-import utopia.citadel.database.Tables
-import utopia.vault.nosql.storable.deprecation.DeprecatableAfter
+import utopia.citadel.database.factory.organization.MemberRoleFactory
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.enumeration.UserRole
-import utopia.vault.database.Connection
-import utopia.vault.model.immutable.Storable
+import utopia.metropolis.model.partial.organization.MemberRoleData
+import utopia.metropolis.model.stored.organization.MemberRole
+import utopia.vault.model.immutable.StorableWithFactory
+import utopia.vault.nosql.storable.DataInserter
+import utopia.vault.nosql.storable.deprecation.DeprecatableAfter
 
-object MemberRoleModel extends DeprecatableAfter[MemberRoleModel]
+/**
+  * Used for constructing MemberRoleModel instances and for inserting MemberRoles to the database
+  * @author Mikko Hilpinen
+  * @since 2021-10-23
+  */
+object MemberRoleModel 
+	extends DataInserter[MemberRoleModel, MemberRole, MemberRoleData] with DeprecatableAfter[MemberRoleModel]
 {
-	// ATTRIBUTES	------------------------
+	// ATTRIBUTES	--------------------
 	
 	/**
-	  * Name of the attribute that contains linked role's id
+	  * Name of the property that contains MemberRole membershipId
+	  */
+	val membershipIdAttName = "membershipId"
+	
+	/**
+	  * Name of the property that contains MemberRole roleId
 	  */
 	val roleIdAttName = "roleId"
 	
-	
-	// COMPUTED	----------------------------
+	/**
+	  * Name of the property that contains MemberRole creatorId
+	  */
+	val creatorIdAttName = "creatorId"
 	
 	/**
-	  * @return Column that contains the associated role id
+	  * Name of the property that contains MemberRole created
+	  */
+	val createdAttName = "created"
+	
+	/**
+	  * Name of the property that contains MemberRole deprecatedAfter
+	  */
+	val deprecatedAfterAttName = "deprecatedAfter"
+	
+	
+	// COMPUTED	--------------------
+	
+	/**
+	  * Column that contains MemberRole membershipId
+	  */
+	def membershipIdColumn = table(membershipIdAttName)
+	
+	/**
+	  * Column that contains MemberRole roleId
 	  */
 	def roleIdColumn = table(roleIdAttName)
 	
-	
-	// IMPLEMENTED	------------------------
-	
-	override def table = Tables.organizationMemberRole
-	
-	override def withDeprecatedAfter(deprecation: Instant) =
-		apply(deprecatedAfter = Some(deprecation))
-	
-	
-	// OTHER	----------------------------
+	/**
+	  * Column that contains MemberRole creatorId
+	  */
+	def creatorIdColumn = table(creatorIdAttName)
 	
 	/**
-	  * @param membershipId Id of targeted membership
-	  * @return A model with only membership id set
+	  * Column that contains MemberRole created
+	  */
+	def createdColumn = table(createdAttName)
+	
+	/**
+	  * Column that contains MemberRole deprecatedAfter
+	  */
+	def deprecatedAfterColumn = table(deprecatedAfterAttName)
+	
+	/**
+	  * The factory object used by this model type
+	  */
+	def factory = MemberRoleFactory
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def table = factory.table
+	
+	override def apply(data: MemberRoleData) = 
+		apply(None, Some(data.membershipId), Some(data.roleId), data.creatorId, Some(data.created), 
+			data.deprecatedAfter)
+	
+	override def complete(id: Value, data: MemberRoleData) = MemberRole(id.getInt, data)
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param created Time when this role was added for the organization member
+	  * @return A model containing only the specified created
+	  */
+	def withCreated(created: Instant) = apply(created = Some(created))
+	
+	/**
+	  * @param creatorId Id of the user who added this role to the membership, if known
+	  * @return A model containing only the specified creatorId
+	  */
+	def withCreatorId(creatorId: Int) = apply(creatorId = Some(creatorId))
+	
+	/**
+	  * @param deprecatedAfter Time when this MemberRole became deprecated. None while this MemberRole is still valid.
+	  * @return A model containing only the specified deprecatedAfter
+	  */
+	def withDeprecatedAfter(deprecatedAfter: Instant) = apply(deprecatedAfter = Some(deprecatedAfter))
+	
+	/**
+	  * @param id A MemberRole id
+	  * @return A model with that id
+	  */
+	def withId(id: Int) = apply(Some(id))
+	
+	/**
+	  * @param membershipId Id of the membership / member that has the referenced role
+	  * @return A model containing only the specified membershipId
 	  */
 	def withMembershipId(membershipId: Int) = apply(membershipId = Some(membershipId))
 	
 	/**
-	  * @param role a user role
-	  * @return A model with only role set
-	  */
-	@deprecated("Please use .withRoleId(Int) instead")
-	def withRole(role: UserRole) = withRoleId(role.id)
-	
-	/**
-	  * @param roleId Id of targeted user role
-	  * @return A model with only role id set
+	  * @param roleId Id of role the referenced member has
+	  * @return A model containing only the specified roleId
 	  */
 	def withRoleId(roleId: Int) = apply(roleId = Some(roleId))
-	
-	/**
-	  * Inserts a new membership-role -connection to the DB
-	  * @param membershipId Id of associated organization membership
-	  * @param roleId Id of the role assigned to the user in the organization
-	  * @param creatorId Id of the user who created this link
-	  * @param connection DB Connection (implicit)
-	  * @return Id of the newly inserted link
-	  */
-	def insert(membershipId: Int, roleId: Int, creatorId: Int)(implicit connection: Connection) =
-		apply(None, Some(membershipId), Some(roleId), Some(creatorId)).insert().getInt
 }
 
 /**
-  * Links organization memberships with their roles
+  * Used for interacting with MemberRoles in the database
+  * @param id MemberRole database id
+  * @param membershipId Id of the membership / member that has the referenced role
+  * @param roleId Id of role the referenced member has
+  * @param creatorId Id of the user who added this role to the membership, if known
+  * @param created Time when this role was added for the organization member
+  * @param deprecatedAfter Time when this MemberRole became deprecated. None while this MemberRole is still valid.
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1.0
+  * @since 2021-10-23
   */
-case class MemberRoleModel(id: Option[Int] = None, membershipId: Option[Int] = None,
-						   roleId: Option[Int] = None, creatorId: Option[Int] = None,
-						   deprecatedAfter: Option[Instant] = None) extends Storable
+case class MemberRoleModel(id: Option[Int] = None, membershipId: Option[Int] = None, 
+	roleId: Option[Int] = None, creatorId: Option[Int] = None, created: Option[Instant] = None, 
+	deprecatedAfter: Option[Instant] = None) 
+	extends StorableWithFactory[MemberRole]
 {
-	import MemberRoleModel._
+	// IMPLEMENTED	--------------------
 	
-	override def table = MemberRoleModel.table
+	override def factory = MemberRoleModel.factory
 	
-	override def valueProperties = Vector("id" -> id, "membershipId" -> membershipId, roleIdAttName -> roleId,
-		"creatorId" -> creatorId, "deprecatedAfter" -> deprecatedAfter)
+	override def valueProperties = 
+	{
+		import MemberRoleModel._
+		Vector("id" -> id, membershipIdAttName -> membershipId, roleIdAttName -> roleId, 
+			creatorIdAttName -> creatorId, createdAttName -> created, 
+			deprecatedAfterAttName -> deprecatedAfter)
+	}
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param created A new created
+	  * @return A new copy of this model with the specified created
+	  */
+	def withCreated(created: Instant) = copy(created = Some(created))
+	
+	/**
+	  * @param creatorId A new creatorId
+	  * @return A new copy of this model with the specified creatorId
+	  */
+	def withCreatorId(creatorId: Int) = copy(creatorId = Some(creatorId))
+	
+	/**
+	  * @param deprecatedAfter A new deprecatedAfter
+	  * @return A new copy of this model with the specified deprecatedAfter
+	  */
+	def withDeprecatedAfter(deprecatedAfter: Instant) = copy(deprecatedAfter = Some(deprecatedAfter))
+	
+	/**
+	  * @param membershipId A new membershipId
+	  * @return A new copy of this model with the specified membershipId
+	  */
+	def withMembershipId(membershipId: Int) = copy(membershipId = Some(membershipId))
+	
+	/**
+	  * @param roleId A new roleId
+	  * @return A new copy of this model with the specified roleId
+	  */
+	def withRoleId(roleId: Int) = copy(roleId = Some(roleId))
 }
+

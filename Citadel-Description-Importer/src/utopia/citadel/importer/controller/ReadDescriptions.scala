@@ -1,7 +1,7 @@
 package utopia.citadel.importer.controller
 
 import utopia.citadel.database.Tables
-import utopia.citadel.database.access.many.description.{DbDescriptionRoleDescriptions, DbDescriptionRoles, DbDeviceDescriptions, DbLanguageDescriptions, DbLanguageFamiliarityDescriptions, DbOrganizationDescriptions, DbTaskDescriptions, DbUserRoleDescriptions, DescriptionLinksAccess}
+import utopia.citadel.database.access.many.description.{DbDescriptionRoleDescriptions, DbDescriptionRoles, DbDeviceDescriptions, DbLanguageDescriptions, DbLanguageFamiliarityDescriptions, DbOrganizationDescriptions, DbTaskDescriptions, DbUserRoleDescriptions, DescriptionLinksAccessOld}
 import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.ValueConversions._
@@ -64,7 +64,7 @@ object ReadDescriptions
 		}
 	}
 	
-	private def handleTarget(access: DescriptionLinksAccess, model: Model[Constant], languageIds: Map[String, Int],
+	private def handleTarget(access: DescriptionLinksAccessOld, model: Model[Constant], languageIds: Map[String, Int],
 	                         descriptionRoles: Vector[DescriptionRole])
 	                        (implicit connection: Connection) =
 	{
@@ -139,7 +139,7 @@ object ReadDescriptions
 			case Some(model) => model("table").trySting
 				.flatMap { tableName => model("column").trySting.map { c =>
 					val table = Tables(tableName)
-					DescriptionLinksAccess(table, c)
+					DescriptionLinksAccessOld(table, c)
 				} }
 			// Otherwise expects the target to be one of specified values
 			case None =>

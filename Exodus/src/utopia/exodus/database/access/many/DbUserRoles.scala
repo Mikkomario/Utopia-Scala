@@ -4,7 +4,7 @@ import utopia.exodus.database.access.id.DbUserRoleIds
 import utopia.exodus.database.factory.organization.RoleRightFactory
 import utopia.exodus.database.model.organization.RoleRightModel
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.combined.organization.RoleWithRights
+import utopia.metropolis.model.combined.organization.UserRoleWithRights
 import utopia.vault.database.Connection
 import utopia.vault.sql.SqlExtensions._
 
@@ -31,7 +31,7 @@ object DbUserRoles
 		// Reads all role rights
 		val rights = rightsFactory.getAll().groupBy { _.roleId }
 		// Combines roles with rights
-		DbUserRoleIds.all.map { roleId => RoleWithRights(roleId, rights.getOrElse(roleId, Set()).map { _.taskId }.toSet) }
+		DbUserRoleIds.all.map { roleId => UserRoleWithRights(roleId, rights.getOrElse(roleId, Set()).map { _.taskId }.toSet) }
 	}
 	
 	/**
@@ -62,7 +62,7 @@ object DbUserRoles
 			// Reads associated role rights
 			val rights = rightsFactory.getMany(rightsModel.roleIdColumn.in(roleIds)).groupBy { _.roleId }
 			// Attaches the rights to role ids
-			roleIds.map { roleId => RoleWithRights(roleId, rights.getOrElse(roleId, Set()).map { _.taskId }.toSet) }
+			roleIds.map { roleId => UserRoleWithRights(roleId, rights.getOrElse(roleId, Set()).map { _.taskId }.toSet) }
 		}
 		
 		/**

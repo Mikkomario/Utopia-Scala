@@ -17,7 +17,7 @@ import utopia.flow.util.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.journey.model.InvitationResponseSpirit
 import utopia.journey.util.JourneyContext._
-import utopia.metropolis.model.combined.organization.{DescribedInvitation, InvitationWithResponse}
+import utopia.metropolis.model.combined.organization.{DetailedInvitation, InvitationWithResponse}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success}
@@ -34,7 +34,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 {
 	// ATTRIBUTES	---------------------------
 	
-	private val cached = VolatileList[DescribedInvitation]()
+	private val cached = VolatileList[DetailedInvitation]()
 	private val hiddenIds = VolatileList[Int]()
 	
 	// Handles persisted requests only when the same user is still logged in
@@ -80,7 +80,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 		val schrodinger = new CachedFindSchrodinger(activeCached)
 		
 		// Completes the schrödinger asynchronously
-		schrodinger.completeWith(queue.push(request)) { _.vector(DescribedInvitation).parsed } { log(_) }
+		schrodinger.completeWith(queue.push(request)) { _.vector(DetailedInvitation).parsed } { log(_) }
 		
 		schrodinger.view
 	}

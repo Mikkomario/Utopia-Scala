@@ -12,6 +12,7 @@ import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
   * @author Mikko Hilpinen
   * @since 28.6.2021, v1.0
   */
+@deprecated("Replaced with OrganizationDeletionFactory", "v2.0")
 object DeletionFactory extends FromValidatedRowModelFactory[Deletion]
 {
 	override def table = Tables.organizationDeletion

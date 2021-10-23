@@ -3,6 +3,7 @@ package utopia.citadel.database.access.id.single
 import utopia.citadel.database.factory.language.LanguageFactory
 import utopia.citadel.database.model.language.LanguageModel
 import utopia.flow.datastructure.immutable.Value
+import utopia.metropolis.model.partial.language.LanguageData
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.column.{SingleIdAccess, UniqueIdAccess}
 
@@ -51,7 +52,7 @@ object DbLanguageId extends SingleIdAccess[Int]
 		 * @return This language code id, or a new one based on an insert
 		 */
 		def getOrInsert()(implicit connection: Connection) =
-			pull.getOrElse { LanguageModel.insert(languageCode).id }
+			pull.getOrElse { LanguageModel.insert(LanguageData(languageCode)).id }
 		
 		
 		// IMPLEMENTED	-----------------------

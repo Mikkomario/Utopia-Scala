@@ -8,6 +8,7 @@ import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 import utopia.vault.sql.{Condition, Exists}
 
+@deprecated("Replaced with ClientDeviceUserModel", "v2.0")
 object UserDeviceModel extends DeprecatableAfter[UserDeviceModel]
 {
 	// ATTRIBUTES	----------------------
@@ -74,6 +75,7 @@ object UserDeviceModel extends DeprecatableAfter[UserDeviceModel]
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1.0
   */
+@deprecated("Replaced with ClientDeviceUserModel", "v2.0")
 case class UserDeviceModel(id: Option[Int] = None, userId: Option[Int] = None, deviceId: Option[Int] = None,
 						   created: Option[Instant] = None, deprecatedAfter: Option[Instant] = None) extends Storable
 {

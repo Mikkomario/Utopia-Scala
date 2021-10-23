@@ -1,27 +1,26 @@
 package utopia.metropolis.model.partial.description
 
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
-import utopia.flow.generic.{FromModelFactoryWithSchema, ModelConvertible, StringType}
+import java.time.Instant
+import utopia.flow.datastructure.immutable.Model
+import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
-
-object DescriptionRoleData extends FromModelFactoryWithSchema[DescriptionRoleData]
-{
-	override val schema = ModelDeclaration("json_key_singular" -> StringType, "json_key_plural" -> StringType)
-	
-	override protected def fromValidatedModel(model: Model[Constant]) =
-		DescriptionRoleData(model("json_key_singular"), model("json_key_plural"))
-}
+import utopia.flow.time.Now
 
 /**
-  * Contains basic information about a description role
+  * An enumeration for different roles or purposes a description can serve
+  * @param jsonKeySingular Key used in json documents for a singular value (string) of this description role
+  * @param jsonKeyPlural Key used in json documents for multiple values (array) of this description role
+  * @param created Time when this DescriptionRole was first created
   * @author Mikko Hilpinen
-  * @since 25.7.2020, v1
-  * @param jsonKeySingular Json property key used for this description role when there are possibly multiple values
-  * @param jsonKeyPlural Json property key used for this description role when there is a single defined value
+  * @since 2021-10-23
   */
-case class DescriptionRoleData(jsonKeySingular: String, jsonKeyPlural: String) extends ModelConvertible
+case class DescriptionRoleData(jsonKeySingular: String, jsonKeyPlural: String, created: Instant = Now) 
+	extends ModelConvertible
 {
-	override def toModel = Model(Vector("json_key_singular" -> jsonKeySingular,
-		"json_key_plural" -> jsonKeyPlural))
+	// IMPLEMENTED	--------------------
+	
+	override def toModel = 
+		Model(Vector("json_key_singular" -> jsonKeySingular, "json_key_plural" -> jsonKeyPlural, 
+			"created" -> created))
 }
+

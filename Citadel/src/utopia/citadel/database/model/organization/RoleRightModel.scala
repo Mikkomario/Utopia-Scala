@@ -7,6 +7,7 @@ import utopia.metropolis.model.enumeration.{TaskType, UserRole}
 import utopia.metropolis.model.stored.RoleRight
 import utopia.vault.model.immutable.StorableWithFactory
 
+@deprecated("Replaced with UserRoleRightModel", "v2.0")
 object RoleRightModel
 {
 	// ATTRIBUTES	--------------------------
@@ -74,6 +75,7 @@ object RoleRightModel
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1.0
   */
+@deprecated("Replaced with UserRoleRightModel", "v2.0")
 case class RoleRightModel(id: Option[Int] = None, roleId: Option[Int] = None, taskId: Option[Int] = None)
 	extends StorableWithFactory[RoleRight]
 {

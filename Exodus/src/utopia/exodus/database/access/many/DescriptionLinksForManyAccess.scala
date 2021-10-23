@@ -1,7 +1,7 @@
 package utopia.exodus.database.access.many
 
 import utopia.exodus.database.access.id.DbDescriptionRoleIds
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.stored.description.DescriptionLinkOld
 import utopia.vault.database.Connection
 
 /**
@@ -31,7 +31,7 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 	  * @param connection DB Connection (implicit)
 	  * @return Read descriptions, grouped by target id
 	  */
-	def inLanguages(languageIds: Seq[Int])(implicit connection: Connection): Map[Int, Vector[DescriptionLink]] =
+	def inLanguages(languageIds: Seq[Int])(implicit connection: Connection): Map[Int, Vector[DescriptionLinkOld]] =
 	{
 		languageIds.headOption match
 		{
@@ -53,7 +53,7 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 	  * @return Read descriptions, grouped by target id
 	  */
 	protected def inLanguages(remainingTargetIds: Set[Int], languageIds: Seq[Int], remainingRoleIds: Set[Int])(
-		implicit connection: Connection): Map[Int, Vector[DescriptionLink]] =
+		implicit connection: Connection): Map[Int, Vector[DescriptionLinkOld]] =
 	{
 		// Reads descriptions in target languages until either all description types have been read or all language
 		// options exhausted
@@ -71,8 +71,8 @@ trait DescriptionLinksForManyAccess extends DescriptionLinksAccess
 	// LanguageIds and roles should be passed as they were at the start of the last read
 	private def readRemaining(languageIds: Seq[Int],
 							  remainingRoleIds: Set[Int], lastAccessPoint: DescriptionLinksForManyAccess,
-							  lastReadResults: Map[Int, Vector[DescriptionLink]])
-							 (implicit connection: Connection): Map[Int, Vector[DescriptionLink]] =
+							  lastReadResults: Map[Int, Vector[DescriptionLinkOld]])
+							 (implicit connection: Connection): Map[Int, Vector[DescriptionLinkOld]] =
 	{
 		val remainingLanguageIds = languageIds.tail
 		if (remainingLanguageIds.nonEmpty)

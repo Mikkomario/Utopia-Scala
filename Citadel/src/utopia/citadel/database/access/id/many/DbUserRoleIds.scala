@@ -1,7 +1,7 @@
 package utopia.citadel.database.access.id.many
 
-import utopia.citadel.database.Tables
-import utopia.citadel.database.model.organization.RoleRightModel
+import utopia.citadel.database.CitadelTables
+import utopia.citadel.database.model.organization.UserRoleRightModel
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.column.ManyIntIdAccess
@@ -19,7 +19,7 @@ object DbUserRoleIds extends ManyIntIdAccess
 	
 	override def target = table
 	
-	override def table = Tables.userRole
+	override def table = CitadelTables.userRole
 	
 	override def globalCondition = None
 	
@@ -51,8 +51,8 @@ object DbUserRoleIds extends ManyIntIdAccess
 	def allowingOnlyTasksWithIds(taskIds: Set[Int])(implicit connection: Connection) =
 	{
 		// Only includes roles that have only tasks within "allowed tasks" list
-		val excludedRoleIds = connection(SelectDistinct(RoleRightModel.table, RoleRightModel.roleIdAttName) +
-			Where.not(RoleRightModel.taskIdColumn.in(taskIds))).rowIntValues
+		val excludedRoleIds = connection(SelectDistinct(UserRoleRightModel.table, UserRoleRightModel.roleIdAttName) +
+			Where.not(UserRoleRightModel.taskIdColumn.in(taskIds))).rowIntValues
 		
 		all.toSet -- excludedRoleIds
 	}

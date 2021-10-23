@@ -1,7 +1,7 @@
 package utopia.citadel.database.factory.user
 
 import utopia.citadel.database.factory.language.{LanguageFactory, LanguageFamiliarityFactory}
-import utopia.metropolis.model.combined.user.FullUserLanguage
+import utopia.metropolis.model.combined.user.{FullUserLanguage, UserLanguageWithFamiliarity}
 import utopia.vault.model.immutable.Row
 import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.sql.JoinType.Inner
@@ -15,18 +15,18 @@ object FullUserLanguageFactory extends FromRowFactory[FullUserLanguage]
 {
 	// IMPLEMENTED	--------------------------
 	
-	// Parses language, familiarity and user language
-	override def apply(row: Row) = UserLanguageFactory(row).flatMap { link =>
-		LanguageFactory(row).flatMap { language =>
-			LanguageFamiliarityFactory(row).map { familiarity =>
-				FullUserLanguage(link, language, familiarity)
-			}
-		}
-	}
-	
 	override def joinedTables = LanguageFactory.tables ++ LanguageFamiliarityFactory.tables
 	
 	override def joinType = Inner
 	
 	override def table = UserLanguageFactory.table
+	
+	// Parses language, familiarity and user language
+	override def apply(row: Row) = UserLanguageFactory(row).flatMap { link =>
+		LanguageFactory(row).flatMap { language =>
+			LanguageFamiliarityFactory(row).map { familiarity =>
+				FullUserLanguage(UserLanguageWithFamiliarity(link, familiarity), language)
+			}
+		}
+	}
 }

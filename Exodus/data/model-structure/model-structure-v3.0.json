@@ -147,6 +147,10 @@
             "doc": "Textual representation of this token"
           },
           {
+            "type": "expiration",
+            "doc": "Time when this token expires"
+          },
+          {
             "name": "deviceId",
             "ref": "client_device",
             "type": "Option[Int]",
@@ -161,10 +165,6 @@
           {
             "type": "creation",
             "doc": "Time when this session was started"
-          },
-          {
-            "type": "expiration",
-            "doc": "Time when this token expires"
           },
           {
             "name": "loggedOut",

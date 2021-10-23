@@ -13,7 +13,7 @@ object UserWithLinks extends FromModelFactory[UserWithLinks]
 	private val schema = ModelDeclaration(PropertyDeclaration("languages", VectorType))
 	
 	override def apply(model: Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
-		User(valid).flatMap { user =>
+		User(valid.getModel).flatMap { user =>
 			valid("languages").getVector.tryMap { v => UserLanguage(user.id, v.getModel) }.map { languages =>
 				val deviceIds = model("device_ids").getVector.flatMap { _.int }
 				UserWithLinks(user, languages, deviceIds)
@@ -38,6 +38,7 @@ case class UserWithLinks(base: User, languages: Vector[UserLanguage], deviceIds:
 	override def toModel =
 	{
 		// Adds additional data to the standard model
-		base.toModel + Constant("languages", languages.map { _.toModelWithoutUser }) + Constant("device_ids", deviceIds)
+		base.toModel + Constant("languages", languages.map { _.toModel - "user_id" }) +
+			Constant("device_ids", deviceIds)
 	}
 }

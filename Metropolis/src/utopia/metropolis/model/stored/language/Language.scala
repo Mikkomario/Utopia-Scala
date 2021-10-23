@@ -1,28 +1,17 @@
 package utopia.metropolis.model.stored.language
 
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
-import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, ModelConvertible, StringType}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
-
-object Language extends FromModelFactoryWithSchema[Language]
-{
-	// ATTRIBUTES	-------------------------
-	
-	override val schema = ModelDeclaration("id" -> IntType, "iso_code" -> StringType)
-	
-	
-	// IMPLEMENTED	------------------------
-	
-	override protected def fromValidatedModel(model: Model[Constant]) = Language(model("id"), model("iso_code"))
-}
+import utopia.metropolis.model.partial.language.LanguageData
+import utopia.metropolis.model.stored.{StoredModelConvertible, StyledStoredModelConvertible}
 
 /**
-  * Represents a language stored in DB
+  * Represents a Language that has already been stored in the database
+  * @param id id of this Language in the database
+  * @param data Wrapped Language data
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v1
+  * @since 2021-10-23
   */
-case class Language(id: Int, isoCode: String) extends ModelConvertible
+case class Language(id: Int, data: LanguageData) extends StyledStoredModelConvertible[LanguageData]
 {
-	override def toModel = Model(Vector("id" -> id, "iso_code" -> isoCode))
+	override protected def includeIdInSimpleModel = true
 }
+

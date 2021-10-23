@@ -5,7 +5,7 @@ import utopia.exodus.database.factory.description.DescriptionLinkFactory
 import utopia.exodus.database.model.description.{DescriptionLinkModelFactory, DescriptionModel}
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.enumeration.DescriptionRole
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.stored.description.DescriptionLinkOld
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
 import utopia.vault.model.immutable.Storable
@@ -18,11 +18,11 @@ import utopia.vault.sql.SqlExtensions._
   * @since 17.5.2020, v1
   */
 @deprecated("Please use the Citadel version instead", "v2.0")
-trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
+trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLinkOld]
 {
 	// ABSTRACT	-------------------------
 	
-	override def factory: DescriptionLinkFactory[DescriptionLink]
+	override def factory: DescriptionLinkFactory[DescriptionLinkOld]
 	
 	/**
 	  * @return A factory used for creating search models for description links
@@ -66,7 +66,7 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 	
 	// NESTED	-------------------------
 	
-	case class DescriptionsInLanguage(languageId: Int) extends ManyModelAccess[DescriptionLink]
+	case class DescriptionsInLanguage(languageId: Int) extends ManyModelAccess[DescriptionLinkOld]
 	{
 		// IMPLEMENTED	-----------------
 		
@@ -115,7 +115,7 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 		  * @return Description for that role for this item in targeted language
 		  */
 		@deprecated("A singular access point should be used for retrieving singular descriptions", "v1")
-		def forRoleWithId(roleId: Int)(implicit connection: Connection): Option[DescriptionLink] =
+		def forRoleWithId(roleId: Int)(implicit connection: Connection): Option[DescriptionLinkOld] =
 			read(Some(descriptionModel.withRoleId(roleId).toCondition)).headOption
 		
 		/**
@@ -124,7 +124,7 @@ trait DescriptionLinksAccess extends ManyModelAccess[DescriptionLink]
 		  * @return Description for that role for this item in targeted language
 		  */
 		@deprecated("Replaced with .forRoleWithId(Int)", "v1")
-		def apply(role: DescriptionRole)(implicit connection: Connection): Option[DescriptionLink] =
+		def apply(role: DescriptionRole)(implicit connection: Connection): Option[DescriptionLinkOld] =
 			apply(Set(role)).headOption
 		
 		/**

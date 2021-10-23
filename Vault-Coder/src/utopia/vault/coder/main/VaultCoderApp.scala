@@ -281,7 +281,8 @@ object VaultCoderApp extends App
 			}
 	}
 	
-	def write(classToWrite: Class, tablesRef: Reference, descriptionLinkObjects: Option[(Reference, Reference)])
+	def write(classToWrite: Class, tablesRef: Reference,
+	          descriptionLinkObjects: Option[(Reference, Reference, Reference)])
 	         (implicit setup: ProjectSetup): Try[(Class, ClassReferences)] =
 	{
 		ModelWriter(classToWrite).flatMap { case (modelRef, dataRef) =>
@@ -292,13 +293,13 @@ object VaultCoderApp extends App
 						(descriptionLinkObjects match
 						{
 							// Case: At least one class uses descriptions
-							case Some((linkModels, linkFactories)) =>
+							case Some((linkModels, _, linkedDescriptionFactories)) =>
 								classToWrite.descriptionLinkClass match
 								{
 									case Some(descriptionLinkClass) =>
 										DescribedModelWriter(classToWrite, modelRef).flatMap { describedRef =>
 											DbDescriptionAccessWriter(descriptionLinkClass,
-												classToWrite.name, linkModels, linkFactories)
+												classToWrite.name, linkModels, linkedDescriptionFactories)
 												.map { case (singleAccessRef, manyAccessRef) =>
 													Some(describedRef, singleAccessRef, manyAccessRef)
 												}

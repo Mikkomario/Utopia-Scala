@@ -1,21 +1,24 @@
 package utopia.citadel.database.factory.description
 
-import utopia.citadel.database.Tables
+import utopia.citadel.database.CitadelTables
 import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.flow.generic.ValueUnwraps._
 import utopia.metropolis.model.partial.description.DescriptionRoleData
 import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
-  * Used for reading description roles from the database
+  * Used for reading DescriptionRole data from the DB
   * @author Mikko Hilpinen
-  * @since 25.7.2020, v1.0
+  * @since 2021-10-23
   */
 object DescriptionRoleFactory extends FromValidatedRowModelFactory[DescriptionRole]
 {
-	override def table = Tables.descriptionRole
+	// IMPLEMENTED	--------------------
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = DescriptionRole(model("id"),
-		DescriptionRoleData(model("jsonKeySingular"), model("jsonKeyPlural")))
+	override def table = CitadelTables.descriptionRole
+	
+	override def fromValidatedModel(valid: Model[Constant]) = 
+		DescriptionRole(valid("id").getInt, DescriptionRoleData(valid("jsonKeySingular").getString, 
+			valid("jsonKeyPlural").getString, valid("created").getInstant))
 }
+

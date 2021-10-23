@@ -21,113 +21,139 @@ object Tables
 	/**
 	  * @return Table that contains descriptions of various things
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def description = apply("description")
 	/**
 	  * @return Table that contains description role enumeration values
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def descriptionRole = apply("description_role")
 	/**
 	  * @return Table that contains links between description roles and their descriptions
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def descriptionRoleDescription = apply("description_role_description")
 	
 	/**
 	  * @return Table that contains registered languages
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def language = apply("language")
 	/**
 	  * @return Table that contains links between languages and their descriptions
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def languageDescription = apply("language_description")
 	/**
 	  * @return A table that contains language familiarity levels
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def languageFamiliarity = apply("language_familiarity")
 	/**
 	  * @return A table that contains links between language familliarity levels and language familiarities
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def languageFamiliarityDescription = apply("language_familiarity_description")
 	
 	/**
 	  * @return Table that contains users
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def user = apply("user")
 	/**
 	  * @return Table for user settings
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def userSettings = apply("user_settings")
 	/**
 	  * @return Table that links users with languages
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def userLanguage = apply("user_language")
 	
 	/**
 	  * @return Table that registers the devices the clients use
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def clientDevice = apply("client_device")
 	/**
 	  * @return Table that links users with the devices they are using
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def userDevice = apply("client_device_user")
 	/**
 	  * @return A table that contains links between devices and their descriptions
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def deviceDescription = apply("client_device_description")
 	
 	/**
 	  * @return Table that contains organizations
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def organization = apply("organization")
 	/**
 	  * @return Table that contains links between organizations and their descriptions
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def organizationDescription = apply("organization_description")
 	/**
 	  * @return Contains attempted and pending organization deletions
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def organizationDeletion = apply("organization_deletion")
 	/**
 	  * @return Contains organization deletion cancellations
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def organizationDeletionCancellation = apply("organization_deletion_cancellation")
 	
 	/**
 	  * @return Table that contains organization user memberships
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def organizationMembership = apply("organization_membership")
 	/**
 	  * @return Table that lists all user roles
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def userRole = apply("organization_user_role")
 	/**
 	  * @return Table that contains links between user roles and their descriptions
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def roleDescription = apply("user_role_description")
 	/**
 	  * @return Table that contains role links for organization memberships
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def organizationMemberRole = apply("organization_member_role")
 	/**
 	  * @return Table that contains links between user roles and the tasks they have access to
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def roleRight = apply("user_role_right")
 	
 	/**
 	  * @return A table that lists all available tasks/rights
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def task = apply("task")
 	/**
 	  * @return A table that contains links between tasks and descriptions
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def taskDescription = apply("task_description")
 	
 	/**
 	  * @return Table that contains sent organization join invitations
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def organizationInvitation = apply("organization_invitation")
 	/**
 	  * @return Table that contains responses to organization join invitations
 	  */
+	@deprecated("Please use CitadelTables instead", "v2.0")
 	def invitationResponse = apply("invitation_response")
 	
 	

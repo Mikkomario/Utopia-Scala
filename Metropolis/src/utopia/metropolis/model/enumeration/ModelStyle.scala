@@ -1,5 +1,7 @@
 package utopia.metropolis.model.enumeration
 
+import java.util.NoSuchElementException
+import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 
 /**
@@ -9,41 +11,56 @@ import utopia.flow.util.StringExtensions._
   */
 sealed trait ModelStyle
 {
+	// ABSTRACT	--------------------
+	
 	/**
 	  * A string key matching this model style
 	  */
-	val key: String
+	def key: String
 	/**
-	  * An id matching this model style
+	  * Id used for this value in database / SQL
 	  */
-	val id: Int
+	def id: Int
 }
 
 object ModelStyle
 {
-	// ATTRIBUTES   -------------------------
+	// ATTRIBUTES	--------------------
 	
 	/**
-	  * Known model styles
+	  * All available values of this enumeration
 	  */
-	lazy val values = Vector[ModelStyle](Full, Simple)
+	val values: Vector[ModelStyle] = Vector(Full, Simple)
 	
 	
-	// OTHER    -----------------------------
+	// OTHER	--------------------
 	
 	/**
-	  * @param id A model style id
-	  * @return A model style matching that id (None if not found)
+	  * @param id Id representing a ModelStyle
+	  * @return ModelStyle matching that id. None if the id didn't match any ModelStyle
 	  */
-	def forId(id: Int) = values.find { _.id == id }
+	def findForId(id: Int) = values.find { _.id == id }
+	/**
+	  * @param id Id matching a ModelStyle
+	  * @return ModelStyle matching that id. Failure if no suitable value was found.
+	  */
+	def forId(id: Int) = 
+		findForId(id).toTry { new NoSuchElementException(s"No value of ModelStyle matches id '$id'") }
+	
 	/**
 	  * @param key A model style key ("full" or "simple")
 	  * @return A model style matching that key. None if none of the styles match.
 	  */
-	def forKey(key: String) = values.find { _.key ~== key }
+	def findForKey(key: String) = values.find { _.key ~== key }
+	/**
+	  * @param key Key matching a ModelStyle
+	  * @return ModelStyle matching that id. Failure if no suitable value was found.
+	  */
+	def forKey(key: String) =
+		findForKey(key).toTry { new NoSuchElementException(s"No value of ModelStyle matches key '$key'") }
 	
 	
-	// NESTED   -----------------------------
+	// NESTED	--------------------
 	
 	/**
 	  * A model style where all known data is listed.
@@ -53,6 +70,8 @@ object ModelStyle
 	  */
 	case object Full extends ModelStyle
 	{
+		// ATTRIBUTES	--------------------
+		
 		override val key = "full"
 		override val id = 1
 	}
@@ -67,7 +86,10 @@ object ModelStyle
 	  */
 	case object Simple extends ModelStyle
 	{
-		override val key = "simple"
+		// ATTRIBUTES	--------------------
+		
+		override def key = "simple"
 		override val id = 2
 	}
 }
+

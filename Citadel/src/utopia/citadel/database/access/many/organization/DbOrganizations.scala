@@ -1,79 +1,29 @@
 package utopia.citadel.database.access.many.organization
 
-import utopia.citadel.database.access.single.organization.DbOrganization
-import utopia.citadel.database.model.organization.{DeletionModel, OrganizationModel}
-import utopia.flow.generic.ValueConversions._
-import utopia.vault.database.Connection
-import utopia.vault.sql.{Delete, Where}
-import utopia.vault.sql.SqlExtensions._
+import utopia.citadel.database.access.many.description.ManyDescribedAccessByIds
+import utopia.metropolis.model.combined.organization.DescribedOrganization
+import utopia.metropolis.model.stored.organization.Organization
+import utopia.vault.nosql.view.UnconditionalView
 
 /**
-  * Used for accessing multiple organizations at a time
+  * The root access point when targeting multiple Organizations at a time
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1.0
+  * @since 2021-10-23
   */
-object DbOrganizations
+object DbOrganizations extends ManyOrganizationsAccess with UnconditionalView
 {
-	// COMPUTED	----------------------
-	
-	private def factory = OrganizationModel
-	
-	private def table = factory.table
-	
-	
-	// OTHER	-----------------------
+	// OTHER	--------------------
 	
 	/**
-	  * @param ids Organization ids
-	  * @return An access point to organizations with those ids
+	  * @param ids Ids of the targeted Organizations
+	  * @return An access point to Organizations with the specified ids
 	  */
-	def withIds(ids: Set[Int]) = new OrganizationsWithIds(ids)
-	
-	/**
-	  * Inserts a new organization to the database
-	  * @param founderId  Id of the user who created the organization
-	  * @param connection DB Connection (implicit)
-	  * @return Id of the newly inserted organization
-	  */
-	@deprecated("Please call this method from DbOrganization instead", "v1.3")
-	def insert(organizationName: String, languageId: Int, founderId: Int)(implicit connection: Connection) =
-		DbOrganization.insert(organizationName, languageId, founderId)
+	def apply(ids: Set[Int]) = new DbOrganizationsSubset(ids)
 	
 	
-	// NESTED	------------------------
+	// NESTED	--------------------
 	
-	class OrganizationsWithIds(organizationIds: Set[Int])
-	{
-		// COMPUTED	--------------------
-		
-		private def condition = DeletionModel.organizationIdColumn.in(organizationIds)
-		
-		/**
-		  * @return An access point to deletions concerning these organizations
-		  */
-		def deletions = Deletions
-		
-		
-		// OTHER    --------------------
-		
-		/**
-		  * Deletes all of the organizations accessible from this access point
-		  * @param connection Implicit DB Connection
-		  * @return The number of deleted organizations
-		  */
-		def delete()(implicit connection: Connection) =
-			connection(Delete(table) + Where(condition)).updatedRowCount
-		
-		
-		// NESTED	--------------------
-		
-		object Deletions extends OrganizationDeletionsAccess
-		{
-			// IMPLEMENTED	------------
-			
-			override def globalCondition = Some(OrganizationsWithIds.this.condition)
-			
-			override protected def defaultOrdering = None
-		}
-	}
+	class DbOrganizationsSubset(override val ids: Set[Int]) 
+		extends ManyOrganizationsAccess with ManyDescribedAccessByIds[Organization, DescribedOrganization]
 }
+

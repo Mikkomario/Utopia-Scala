@@ -14,6 +14,7 @@ import utopia.flow.generic.ValueConversions._
   * @param creatorId Id of the user who attempted deletion
   * @param actualizationTime Time when this deletion actualizes if not cancelled
   */
+@deprecated("Replaced with OrganizationDeletionData", "v2.0")
 case class DeletionData(organizationId: Int, creatorId: Int, actualizationTime: Instant) extends ModelConvertible
 {
 	// IMPLEMENTED  ----------------------------

@@ -126,7 +126,7 @@ object AccessWriter
 					// Implements the .condition property
 					properties = singleIdAccessParentProperties,
 					description = s"An access point to individual ${ classToWrite.name.plural }, based on their id",
-					isCaseClass = true
+					author = classToWrite.author, isCaseClass = true
 				)
 			).write().flatMap { singleIdAccessRef =>
 				// Writes the single model access point
