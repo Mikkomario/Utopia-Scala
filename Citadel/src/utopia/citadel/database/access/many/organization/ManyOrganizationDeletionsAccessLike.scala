@@ -2,34 +2,27 @@ package utopia.citadel.database.access.many.organization
 
 import utopia.citadel.database.model.organization.OrganizationDeletionModel
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.Condition
 import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant
-
-object ManyOrganizationDeletionsAccessLike
-{
-	private class ManyOrganizationDeletionsSubView[A](override val parent: ManyModelAccess[A],
-	                                                  override val filterCondition: Condition)
-		extends ManyOrganizationDeletionsAccessLike[A] with SubView
-	{
-		override def factory = parent.factory
-		
-		override protected def defaultOrdering = parent.defaultOrdering
-	}
-}
 
 /**
   * A common trait for access points which target multiple OrganizationDeletions or similar instances at a time
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
-trait ManyOrganizationDeletionsAccessLike[+A] extends ManyModelAccess[A] with Indexed
+trait ManyOrganizationDeletionsAccessLike[+A, +Repr <: ManyModelAccess[A]] extends ManyModelAccess[A] with Indexed
 {
+	// ABSTRACT --------------------
+	
+	protected def _filter(condition: Condition): Repr
+	
+	
 	// COMPUTED	--------------------
 	
 	/**
@@ -60,11 +53,15 @@ trait ManyOrganizationDeletionsAccessLike[+A] extends ManyModelAccess[A] with In
 	  */
 	protected def model = OrganizationDeletionModel
 	
+	/**
+	  * @return An access point to deletions that are currently ready to actualize
+	  */
+	def readyToActualize = actualizingBefore(Now)
+	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def filter(additionalCondition: Condition): ManyOrganizationDeletionsAccessLike[A] =
-		new ManyOrganizationDeletionsAccessLike.ManyOrganizationDeletionsSubView[A](this, additionalCondition)
+	override def filter(additionalCondition: Condition) = _filter(additionalCondition)
 	
 	
 	// OTHER	--------------------

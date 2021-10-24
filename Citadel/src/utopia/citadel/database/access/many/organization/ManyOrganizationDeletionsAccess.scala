@@ -22,7 +22,7 @@ object ManyOrganizationDeletionsAccess
   * @since 2021-10-23
   */
 trait ManyOrganizationDeletionsAccess
-	extends ManyOrganizationDeletionsAccessLike[OrganizationDeletion] with
+	extends ManyOrganizationDeletionsAccessLike[OrganizationDeletion, ManyOrganizationDeletionsAccess] with
 		ManyRowModelAccess[OrganizationDeletion] with Indexed
 {
 	// IMPLEMENTED	--------------------
@@ -31,7 +31,7 @@ trait ManyOrganizationDeletionsAccess
 	
 	override protected def defaultOrdering = Some(factory.defaultOrdering)
 	
-	override def filter(additionalCondition: Condition): ManyOrganizationDeletionsAccess = 
+	override def _filter(additionalCondition: Condition): ManyOrganizationDeletionsAccess =
 		new ManyOrganizationDeletionsAccess.ManyOrganizationDeletionsSubView(this, additionalCondition)
 }
 

@@ -3,34 +3,24 @@ package utopia.citadel.database.access.many.organization
 import utopia.citadel.database.model.organization.InvitationModel
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.access.many.model.{ManyModelAccess, ManyRowModelAccess}
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.Condition
 
 import java.time.Instant
-
-object ManyInvitationsAccessLike
-{
-	// NESTED	--------------------
-	
-	private class ManyInvitationsSubView[+A](override val parent: ManyRowModelAccess[A],
-	                                         override val filterCondition: Condition)
-		extends ManyInvitationsAccessLike[A] with SubView
-	{
-		override def factory = parent.factory
-		
-		override protected def defaultOrdering = parent.defaultOrdering
-	}
-}
 
 /**
   * A common trait for access points which target multiple Invitations or invitation-like instances at a time
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
-trait ManyInvitationsAccessLike[+A] extends ManyRowModelAccess[A] with Indexed
+trait ManyInvitationsAccessLike[+A, +Repr <: ManyModelAccess[A]] extends ManyRowModelAccess[A] with Indexed
 {
+	// ABSTRACT --------------------
+	
+	protected def _filter(condition: Condition): Repr
+	
+	
 	// COMPUTED	--------------------
 	
 	/**
@@ -84,8 +74,7 @@ trait ManyInvitationsAccessLike[+A] extends ManyRowModelAccess[A] with Indexed
 	
 	// IMPLEMENTED	--------------------
 	
-	override def filter(additionalCondition: Condition): ManyInvitationsAccessLike[A] =
-		new ManyInvitationsAccessLike.ManyInvitationsSubView[A](this, additionalCondition)
+	override def filter(additionalCondition: Condition): Repr = _filter(additionalCondition)
 	
 	
 	// OTHER	--------------------
