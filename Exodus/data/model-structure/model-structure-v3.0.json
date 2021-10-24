@@ -2,7 +2,7 @@
   "author": "Mikko Hilpinen",
   "project": "Exodus",
   "package": "utopia.exodus",
-  "referenced_enums": ["utopia.metropolis.enumeration.ModelStyle"],
+  "referenced_enums": ["utopia.metropolis.model.enumeration.ModelStyle"],
   "classes": {
     "auth": [
       {

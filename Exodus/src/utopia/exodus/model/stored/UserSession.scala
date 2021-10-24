@@ -8,4 +8,5 @@ import utopia.metropolis.model.stored.Stored
   * @author Mikko Hilpinen
   * @since 3.5.2020, v1
   */
+@deprecated("Replaced with SessionToken", "v3.0")
 case class UserSession(id: Int, data: UserSessionData) extends Stored[UserSessionData]

@@ -12,6 +12,7 @@ import utopia.vault.nosql.template.Deprecatable
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
+@deprecated("Replaced with DeviceTokenFactory", "v3.0")
 object DeviceKeyFactory extends FromValidatedRowModelFactory[DeviceKey] with Deprecatable
 {
 	// IMPLEMENTED	------------------------------
@@ -21,5 +22,5 @@ object DeviceKeyFactory extends FromValidatedRowModelFactory[DeviceKey] with Dep
 	override protected def fromValidatedModel(model: Model[Constant]) = DeviceKey(model("id").getInt,
 		DeviceKeyData(model("userId").getInt, model("deviceId").getInt, model("key").getString))
 	
-	override def table = ExodusTables.deviceAuthKey
+	override def table = ExodusTables.deviceToken
 }

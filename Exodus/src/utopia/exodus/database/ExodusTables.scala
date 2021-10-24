@@ -4,56 +4,53 @@ import utopia.citadel.database.Tables
 import utopia.vault.model.immutable.Table
 
 /**
-  * Used for accessing the tables introduced in the Exodus project
+  * Used for accessing the database tables introduced in this project
   * @author Mikko Hilpinen
-  * @since 26.6.2021, v2
+  * @since 2021-10-25
   */
 object ExodusTables
 {
-	// COMPUTED	--------------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	  * @return A table containing registered API-keys. This table might not be used in all applications, depending
-	  *         on their choice of authentication and access control.
+	  * Table that contains ApiKeys (Used for authenticating requests before session-based authentication is available)
 	  */
 	def apiKey = apply("api_key")
 	
 	/**
-	  * @return Contains a list of purposes for which email validation is used
+	  * Table that contains DeviceTokens (Used as a refresh token to generate device-specific session tokens on private devices)
+	  */
+	def deviceToken = apply("device_token")
+	
+	/**
+	  * Table that contains EmailValidationAttempts (Represents an attempted email validation, 
+		and the possible response / success)
+	  */
+	def emailValidationAttempt = apply("email_validation_attempt")
+	
+	/**
+	  * Table that contains EmailValidationPurposes (An enumeration for purposes an email validation may be used for)
 	  */
 	def emailValidationPurpose = apply("email_validation_purpose")
 	
 	/**
-	  * @return Contains email validation attempts / records
-	  */
-	def emailValidation = apply("email_validation")
-	
-	/**
-	  * @return Contains email validation resend attempts / records
+	  * Table that contains EmailValidationResends (Represents a time when an email validation was sent again)
 	  */
 	def emailValidationResend = apply("email_validation_resend")
 	
 	/**
-	  * @return Table for user authentication
+	  * Table that contains SessionTokens (Used for authenticating temporary user sessions)
 	  */
-	def userAuth = apply("user_authentication")
+	def sessionToken = apply("session_token")
 	
 	/**
-	  * @return Table that contains device-specific authentication keys
+	  * Table that contains UserPasswords (Represents a hashed user password)
 	  */
-	def deviceAuthKey = apply("device_authentication_key")
-	
-	/**
-	  * @return Table that contains temporary user session keys
-	  */
-	def userSession = apply("user_session")
+	def userPassword = apply("user_password")
 	
 	
-	// OTHER	-------------------------------
+	// OTHER	--------------------
 	
-	/**
-	  * @param tableName Name of targeted table
-	  * @return a cached table
-	  */
 	private def apply(tableName: String): Table = Tables(tableName)
 }
+

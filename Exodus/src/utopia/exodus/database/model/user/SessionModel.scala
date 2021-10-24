@@ -12,6 +12,7 @@ import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
+@deprecated("Replaced with SessionTokenModel", "v3.0")
 object SessionModel extends Expiring
 {
 	// ATTRIBUTES   -------------------------------
@@ -92,6 +93,7 @@ object SessionModel extends Expiring
   * @author Mikko Hilpinen
   * @since 3.5.2020, v1
   */
+@deprecated("Replaced with SessionTokenModel", "v3.0")
 case class SessionModel(id: Option[Int] = None, userId: Option[Int] = None, deviceId: Option[Int] = None,
                         key: Option[String] = None, expires: Option[Instant] = None,
                         modelStylePreference: Option[ModelStyle] = None, logoutTime: Option[Instant] = None)

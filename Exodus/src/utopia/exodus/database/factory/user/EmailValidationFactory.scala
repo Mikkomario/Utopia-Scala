@@ -16,6 +16,7 @@ import utopia.vault.nosql.template.Deprecatable
   * @author Mikko Hilpinen
   * @since 24.11.2020, v1
   */
+@deprecated("Replaced with EmailValidationAttemptFactory", "v3.0")
 object EmailValidationFactory extends FromValidatedRowModelFactory[EmailValidation] with Deprecatable
 {
 	// ATTRIBUTES	------------------------
@@ -40,7 +41,7 @@ object EmailValidationFactory extends FromValidatedRowModelFactory[EmailValidati
 		EmailValidationData(model("purposeId"), model("email"), model("key"), model("resendKey"),
 			model("expiresIn"), model("ownerId"), model("created"), model("actualizedIn")))
 	
-	override def table = ExodusTables.emailValidation
+	override def table = ExodusTables.emailValidationAttempt
 	
 	override def nonDeprecatedCondition = model.withExpiration(Now).toConditionWithOperator(Larger) &&
 		notActualizedCondition

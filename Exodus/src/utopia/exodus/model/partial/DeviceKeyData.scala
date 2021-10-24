@@ -8,4 +8,5 @@ package utopia.exodus.model.partial
   * @param deviceId Id of the device this key is tied to
   * @param key Unique key
   */
+@deprecated("Replaced with DeviceTokenData", "v3.0")
 case class DeviceKeyData(userId: Int, deviceId: Int, key: String)
