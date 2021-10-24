@@ -2,7 +2,7 @@ package utopia.citadel.database.deletion
 
 import utopia.citadel.database.Tables
 import utopia.citadel.database.factory.description.DescriptionLinkFactoryOld
-import utopia.citadel.database.model.organization.{InvitationModel, MemberRoleModel, MembershipModel}
+import utopia.citadel.database.model.organization.{InvitationModel, MemberRoleLinkModel, MembershipModel}
 import utopia.citadel.database.model.user.{UserDeviceModel, UserSettingsModel}
 import utopia.flow.time.TimeExtensions._
 import utopia.vault.nosql.storable.deprecation.TimeDeprecatable
@@ -66,7 +66,7 @@ object CitadelDataDeletionRules
 			deprecation(UserSettingsModel, userSettings),
 			deprecation(UserDeviceModel, deviceUsers),
 			deprecation(MembershipModel, memberships),
-			deprecation(MemberRoleModel, memberRole),
+			deprecation(MemberRoleLinkModel, memberRole),
 			deprecation(InvitationModel, invitation),
 		).flatten
 		description.finite match {

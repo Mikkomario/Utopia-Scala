@@ -1,10 +1,20 @@
 package utopia.metropolis.model.partial.organization
 
 import java.time.Instant
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
+import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
+import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.time.Now
+
+object InvitationResponseData extends FromModelFactoryWithSchema[InvitationResponseData]
+{
+	override val schema = ModelDeclaration("invitation_id" -> IntType)
+	
+	override protected def fromValidatedModel(model: Model[Constant]) =
+		InvitationResponseData(model("invitation_id"), model("message"), model("creator_id"), model("created"),
+			model("accepted"), model("blocked"))
+}
 
 /**
   * Represents a response (yes|no) to an invitation to join an organization

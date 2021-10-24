@@ -3,6 +3,7 @@ package utopia.citadel.database.access.many.organization
 import utopia.citadel.database.model.organization.InvitationModel
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
+import utopia.vault.model.enumeration.BasicCombineOperator.Or
 import utopia.vault.nosql.access.many.model.{ManyModelAccess, ManyRowModelAccess}
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.sql.Condition
@@ -83,8 +84,25 @@ trait ManyInvitationsAccessLike[+A, +Repr <: ManyModelAccess[A]] extends ManyRow
 	  * @param organizationId Id of the targeted organization
 	  * @return An access point to invitations into that organization
 	  */
-	def toOrganizationWithId(organizationId: Int) =
-		filter(model.withOrganizationId(organizationId).toCondition)
+	def toOrganizationWithId(organizationId: Int) = filter(model.withOrganizationId(organizationId).toCondition)
+	/**
+	  * @param recipientId Id of the targeted user
+	  * @return An access point to invitations targeting that user specifically (NB: Email links are not included)
+	  */
+	def forRecipientWithId(recipientId: Int) = filter(model.withRecipientId(recipientId).toCondition)
+	/**
+	  * @param email Targeted email address
+	  * @return An access point to invitations targeting that email address (NB: direct user links are not included)
+	  */
+	def forEmailAddress(email: String) = filter(model.withRecipientEmail(email).toCondition)
+	/**
+	  * @param recipientId Id of the targeted user
+	  * @param email Email address of the targeted user
+	  * @return An access point to invitations targeting that user
+	  */
+	def forRecipient(recipientId: Int, email: String) =
+		filter(model.withRecipientId(recipientId).withRecipientEmail(email)
+			.toConditionWithOperator(combineOperator = Or))
 	
 	/**
 	  * Updates the created of the targeted Invitation instance(s)

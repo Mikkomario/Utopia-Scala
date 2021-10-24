@@ -63,6 +63,11 @@ trait ManyUserSettingsAccess extends ManyRowModelAccess[UserSettings] with Index
 	  */
 	protected def model = UserSettingsModel
 	
+	/**
+	  * @return An access point to settings that don't specify an email address
+	  */
+	def withoutEmailAddress = filter(model.emailColumn.isNull)
+	
 	
 	// IMPLEMENTED	--------------------
 	
@@ -77,10 +82,36 @@ trait ManyUserSettingsAccess extends ManyRowModelAccess[UserSettings] with Index
 	// OTHER	--------------------
 	
 	/**
+	  * @param userName A user name
+	  * @return An access point to settings with that user name
+	  */
+	def withName(userName: String) = filter(model.withName(userName).toCondition)
+	/**
+	  * @param emailAddress An email address
+	  * @return An access point to all user settings with that email address
+	  */
+	def withEmail(emailAddress: String) = filter(model.withEmail(emailAddress).toCondition)
+	
+	/**
 	  * @param userIds Ids of the targeted users
 	  * @return An access point to those user's settings
 	  */
 	def forAnyOfUsers(userIds: Iterable[Int]) = filter(model.userIdColumn in userIds)
+	
+	/**
+	  * @param userName Searched user name
+	  * @param connection Implicit DB Connection
+	  * @return Whether these user settings refer to that user name at least once
+	  */
+	def containsName(userName: String)(implicit connection: Connection) =
+		exists(model.withName(userName).toCondition)
+	/**
+	  * @param email Searched email address
+	  * @param connection Implicit DB Connection
+	  * @return Whether these settings refer to that email address at least once
+	  */
+	def containsEmail(email: String)(implicit connection: Connection) =
+		exists(model.withEmail(email).toCondition)
 	
 	/**
 	  * Updates the created of the targeted UserSettings instance(s)

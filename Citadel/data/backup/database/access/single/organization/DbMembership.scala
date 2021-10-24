@@ -3,7 +3,7 @@ package utopia.citadel.database.access.single.organization
 import utopia.citadel.database.Tables
 import utopia.citadel.database.access.id.many.DbTaskIds
 import utopia.citadel.database.factory.organization.{MembershipFactory, RoleRightFactory}
-import utopia.citadel.database.model.organization.{MemberRoleModel, MembershipModel, RoleRightModel}
+import utopia.citadel.database.model.organization.{MemberRoleLinkModel, MembershipModel, RoleRightModel}
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
@@ -46,7 +46,7 @@ object DbMembership extends SingleModelAccess[Membership]
 	{
 		// COMPUTED	--------------------------
 		
-		private def memberRoleFactory = MemberRoleModel
+		private def memberRoleFactory = MemberRoleLinkModel
 		
 		private def rightsFactory = RoleRightFactory
 		

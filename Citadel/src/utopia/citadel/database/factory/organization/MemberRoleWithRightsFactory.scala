@@ -18,7 +18,7 @@ object MemberRoleWithRightsFactory extends FromResultFactory[MemberRoleWithRight
 {
 	// COMPUTED ---------------------------------
 	
-	private def linkFactory = MemberRoleFactory
+	private def linkFactory = MemberRoleLinkFactory
 	private def rightsFactory = UserRoleWithRightsFactory
 	private def rightLinkFactory = UserRoleRightFactory
 	

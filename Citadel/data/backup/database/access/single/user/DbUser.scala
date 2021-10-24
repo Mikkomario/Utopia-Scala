@@ -6,18 +6,18 @@ import utopia.citadel.database.access.many.description.{DbLanguageDescriptions, 
 import utopia.citadel.database.access.many.language.DbLanguageFamiliarities
 import utopia.citadel.database.access.many.organization.{DbUserRoles, InvitationsAccess}
 import utopia.citadel.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory}
-import utopia.citadel.database.factory.user.{FullUserLanguageFactory, UserFactory, UserLanguageFactory, UserSettingsFactory}
+import utopia.citadel.database.factory.user.{FullUserLanguageFactory, UserFactory, UserLanguageLinkFactory, UserSettingsFactory}
 import utopia.citadel.database.model.organization.MembershipModel
-import utopia.citadel.database.model.user.{UserDeviceModel, UserLanguageModel, UserSettingsModel}
+import utopia.citadel.database.model.user.{UserDeviceModel, UserLanguageLinkModel, UserSettingsModel}
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.language.{DescribedLanguage, DescribedLanguageFamiliarity}
 import utopia.metropolis.model.combined.user.{DetailedUserLanguage, MyOrganization}
 import utopia.metropolis.model.error.AlreadyUsedException
-import utopia.metropolis.model.partial.user.{UserLanguageData, UserSettingsData}
+import utopia.metropolis.model.partial.user.{UserLanguageLinkData, UserSettingsData}
 import utopia.metropolis.model.stored.organization.Membership
-import utopia.metropolis.model.stored.user.{User, UserLanguage, UserSettings}
+import utopia.metropolis.model.stored.user.{User, UserLanguageLink, UserSettings}
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.BasicCombineOperator.Or
 import utopia.vault.nosql.access.many.model.ManyModelAccess
@@ -78,8 +78,8 @@ object DbUser extends SingleModelAccess[User]
 		  * @param connection DB Connection
 		  * @return Ids of the languages known by this user
 		  */
-		def languageIds(implicit connection: Connection) = connection(Select(UserLanguageModel.table,
-			UserLanguageModel.languageIdAttName) + Where(UserLanguageModel.withUserId(id).toCondition)).rowIntValues
+		def languageIds(implicit connection: Connection) = connection(Select(UserLanguageLinkModel.table,
+			UserLanguageLinkModel.languageIdAttName) + Where(UserLanguageLinkModel.withUserId(id).toCondition)).rowIntValues
 		/**
 		  * @param connection Implicit DB Connection
 		  * @return An ordered language id list based on this user's language familiarities
@@ -264,11 +264,11 @@ object DbUser extends SingleModelAccess[User]
 		}
 		
 		// TODO: This should be moved under DbUserLanguages (same with the other non-user access points)
-		object DbSingleUserLanguages extends ManyModelAccess[UserLanguage]
+		object DbSingleUserLanguages extends ManyModelAccess[UserLanguageLink]
 		{
 			// IMPLEMENTED	---------------
 			
-			override def factory = UserLanguageFactory
+			override def factory = UserLanguageLinkFactory
 			
 			override def globalCondition = Some(condition)
 			
@@ -279,7 +279,7 @@ object DbUser extends SingleModelAccess[User]
 			
 			private def condition = model.withUserId(userId).toCondition
 			
-			private def model = UserLanguageModel
+			private def model = UserLanguageLinkModel
 			
 			/**
 			  * @param connection DB Connection (implicit)
@@ -340,7 +340,7 @@ object DbUser extends SingleModelAccess[User]
 			  * @return Newly inserted user langauge link
 			  */
 			def insert(languageId: Int, familiarityId: Int)(implicit connection: Connection) =
-				model.insert(UserLanguageData(userId, languageId, familiarityId))
+				model.insert(UserLanguageLinkData(userId, languageId, familiarityId))
 			
 			/**
 			  * Removes specified languages from the list of known languages

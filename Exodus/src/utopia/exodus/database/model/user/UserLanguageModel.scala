@@ -3,8 +3,8 @@ package utopia.exodus.database.model.user
 import utopia.exodus.database.Tables
 import utopia.exodus.database.factory.user.UserLanguageFactory
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.partial.user.UserLanguageData
-import utopia.metropolis.model.stored.user.UserLanguage
+import utopia.metropolis.model.partial.user.UserLanguageLinkData
+import utopia.metropolis.model.stored.user.UserLanguageLink
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
@@ -45,10 +45,10 @@ object UserLanguageModel
 	  * @param data New user language link to insert
 	  * @return Id of the newly inserted link
 	  */
-	def insert(data: UserLanguageData)(implicit connection: Connection) =
+	def insert(data: UserLanguageLinkData)(implicit connection: Connection) =
 	{
 		val newId = apply(None, Some(data.userId), Some(data.languageId), Some(data.familiarityId)).insert().getInt
-		UserLanguage(newId, data)
+		UserLanguageLink(newId, data)
 	}
 }
 
@@ -60,7 +60,7 @@ object UserLanguageModel
 @deprecated("Please use the Citadel version instead", "v2.0")
 case class UserLanguageModel(id: Option[Int] = None, userId: Option[Int] = None, languageId: Option[Int] = None,
 							 familiarityId: Option[Int] = None)
-	extends StorableWithFactory[UserLanguage]
+	extends StorableWithFactory[UserLanguageLink]
 {
 	import UserLanguageModel._
 	

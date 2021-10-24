@@ -2,7 +2,9 @@ package utopia.citadel.database.access.single.device
 
 import utopia.citadel.database.factory.device.ClientDeviceUserFactory
 import utopia.citadel.database.model.device.ClientDeviceUserModel
+import utopia.metropolis.model.partial.device.ClientDeviceUserData
 import utopia.metropolis.model.stored.device.ClientDeviceUser
+import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.{NonDeprecatedView, SubView}
@@ -48,11 +50,35 @@ object DbClientDeviceUser
 	
 	class DbUniqueClientDeviceUserLink(deviceId: Int, userId: Int) extends UniqueClientDeviceUserAccess with SubView
 	{
+		// IMPLEMENTED  -----------
+		
 		override protected def parent = DbClientDeviceUser
+		override protected def defaultOrdering = None
 		
 		override def filterCondition = model.withDeviceId(deviceId).withUserId(userId).toCondition
 		
-		override protected def defaultOrdering = None
+		
+		// OTHER    ---------------
+		
+		/**
+		  * Reads this link or creates one
+		  * @param connection Implicit DB Connection
+		  * @return Read or inserted link
+		  */
+		def getOrInsert()(implicit connection: Connection) =
+			pull.getOrElse { model.insert(ClientDeviceUserData(deviceId, userId)) }
+		/**
+		  * Creates a new link between this device and user, if there doesn't exist one already
+		  * @param connection Implicit DB Connection
+		  * @return Created link. None if there already existed a link.
+		  */
+		def createIfEmpty()(implicit connection: Connection) =
+		{
+			if (isEmpty)
+				None
+			else
+				Some(model.insert(ClientDeviceUserData(deviceId, userId)))
+		}
 	}
 }
 

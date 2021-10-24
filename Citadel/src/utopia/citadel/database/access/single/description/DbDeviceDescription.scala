@@ -7,6 +7,7 @@ import utopia.citadel.database.factory.description.DescriptionLinkFactoryOld
   * @author Mikko Hilpinen
   * @since 13.10.2021, v1.3
   */
+@deprecated("Replaced with DbClientDeviceDescription", "v2.0")
 object DbDeviceDescription extends DescriptionLinkAccessOld
 {
 	override def factory = DescriptionLinkFactoryOld.device

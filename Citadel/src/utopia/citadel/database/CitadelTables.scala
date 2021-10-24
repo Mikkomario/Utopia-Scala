@@ -90,7 +90,7 @@ object CitadelTables
 	/**
 	  * Table that contains MemberRoles (Links an organization membership to the roles that member has within that organization)
 	  */
-	def memberRole = apply("member_role")
+	def memberRoleLink = apply("member_role")
 	
 	/**
 	  * Table that contains Memberships (Lists organization members, including membership history)
@@ -126,7 +126,7 @@ object CitadelTables
 	/**
 	  * Table that contains UserLanguages (Links user with their language familiarity levels)
 	  */
-	def userLanguage = apply("user_language")
+	def userLanguageLink = apply("user_language")
 	
 	/**
 	  * Table that contains UserRoles (An enumeration for different roles a user may have within an organization)

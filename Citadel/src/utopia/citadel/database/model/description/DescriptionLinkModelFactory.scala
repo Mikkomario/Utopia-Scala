@@ -40,6 +40,9 @@ case class DescriptionLinkModelFactory(linkTable: DescriptionLinkTable)
 	
 	override def table = linkTable.wrapped
 	
+	override def apply(data: DescriptionLinkData) =
+		apply(None, Some(data.targetId), Some(data.descriptionId))
+	
 	
 	// OTHER	-----------------------------------
 	

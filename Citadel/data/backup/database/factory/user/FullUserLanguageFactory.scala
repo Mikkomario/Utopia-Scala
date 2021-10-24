@@ -16,7 +16,7 @@ object FullUserLanguageFactory extends FromRowFactory[FullUserLanguage]
 	// IMPLEMENTED	--------------------------
 	
 	// Parses language, familiarity and user language
-	override def apply(row: Row) = UserLanguageFactory(row).flatMap { link =>
+	override def apply(row: Row) = UserLanguageLinkFactory(row).flatMap { link =>
 		LanguageFactory(row).flatMap { language =>
 			LanguageFamiliarityFactory(row).map { familiarity =>
 				FullUserLanguage(link, language, familiarity)
@@ -28,5 +28,5 @@ object FullUserLanguageFactory extends FromRowFactory[FullUserLanguage]
 	
 	override def joinType = Inner
 	
-	override def table = UserLanguageFactory.table
+	override def table = UserLanguageLinkFactory.table
 }

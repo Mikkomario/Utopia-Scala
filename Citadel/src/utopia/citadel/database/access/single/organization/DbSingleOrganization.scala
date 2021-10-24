@@ -1,10 +1,11 @@
 package utopia.citadel.database.access.single.organization
 
 import utopia.citadel.database.access.many.description.DbOrganizationDescriptions
-import utopia.citadel.database.access.many.organization.{DbInvitations, DbMemberships, DbOrganizationDeletions}
+import utopia.citadel.database.access.many.organization.{DbInvitations, DbMemberships, DbMembershipsWithRoles, DbOrganizationDeletions}
 import utopia.citadel.database.access.single.description.{DbOrganizationDescription, SingleIdDescribedAccess}
 import utopia.metropolis.model.combined.organization.DescribedOrganization
 import utopia.metropolis.model.stored.organization.Organization
+import utopia.vault.database.Connection
 
 /**
   * An access point to individual Organizations, based on their id
@@ -19,6 +20,10 @@ case class DbSingleOrganization(id: Int)
 	  * @return An access point to this organization's memberships
 	  */
 	def memberships = DbMemberships.inOrganizationWithId(id)
+	/**
+	  * @return An access point to this organizations memberships, including their role links
+	  */
+	def membershipsWithRoles = DbMembershipsWithRoles.inOrganizationWithId(id)
 	/**
 	  * @return An access point to invitations into this organization
 	  */
@@ -36,5 +41,19 @@ case class DbSingleOrganization(id: Int)
 	override protected def manyDescriptionsAccess = DbOrganizationDescriptions
 	
 	override protected def singleDescriptionAccess = DbOrganizationDescription
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	  * Adds a new member to this organization
+	  * @param userId Id of the user to add
+	  * @param startingRoleId Id of the role to assign to the user
+	  * @param creatorId Id of the user who added this user to this organization
+	  * @param connection Implicit DB Connection
+	  * @return Newly started membership
+	  */
+	def addMember(userId: Int, startingRoleId: Int, creatorId: Int)(implicit connection: Connection) =
+		DbMembership.start(id, userId, startingRoleId, creatorId)
 }
 

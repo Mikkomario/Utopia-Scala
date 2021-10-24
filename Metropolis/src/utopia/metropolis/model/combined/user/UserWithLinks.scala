@@ -1,23 +1,21 @@
 package utopia.metropolis.model.combined.user
 
-import utopia.flow.datastructure.immutable.{Constant, ModelDeclaration, PropertyDeclaration}
-import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
+import utopia.flow.datastructure.template
+import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.{FromModelFactory, ModelConvertible, VectorType}
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.Extender
-import utopia.metropolis.model.stored.user.{User, UserLanguage}
+import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible, ModelType}
+import utopia.metropolis.model.stored.user.{UserLanguageLink, UserSettings}
 
 object UserWithLinks extends FromModelFactory[UserWithLinks]
 {
-	private val schema = ModelDeclaration(PropertyDeclaration("languages", VectorType))
+	private val schema = ModelDeclaration("id" -> IntType, "settings" -> ModelType)
 	
-	override def apply(model: Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
-		User(valid.getModel).flatMap { user =>
-			valid("languages").getVector.tryMap { v => UserLanguage(user.id, v.getModel) }.map { languages =>
-				val deviceIds = model("device_ids").getVector.flatMap { _.int }
-				UserWithLinks(user, languages, deviceIds)
-			}
+	override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
+		UserSettings(valid("settings").getModel).map { settings =>
+			UserWithLinks(settings,
+				valid("language_links").getVector.flatMap { _.model }.flatMap { UserLanguageLink(_).toOption },
+				valid("device_ids").getVector.flatMap { _.int })
 		}
 	}
 }
@@ -26,19 +24,24 @@ object UserWithLinks extends FromModelFactory[UserWithLinks]
   * This user model contains links to known languages and used devices
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
-  * @param base Standard user data
+  * @param settings User settings
   * @param languages Languages known to the user, with proficiency levels
   * @param deviceIds Ids of the devices known to the user
   */
-case class UserWithLinks(base: User, languages: Vector[UserLanguage], deviceIds: Vector[Int])
-	extends Extender[User] with ModelConvertible
+case class UserWithLinks(settings: UserSettings, languages: Vector[UserLanguageLink], deviceIds: Vector[Int])
+	extends ModelConvertible
 {
-	override def wrapped = base
+	// COMPUTED --------------------------
+	
+	/**
+	  * @return Id of this user
+	  */
+	def id = settings.userId
+	
+	
+	// IMPLEMENTED  ----------------------
 	
 	override def toModel =
-	{
-		// Adds additional data to the standard model
-		base.toModel + Constant("languages", languages.map { _.toModel - "user_id" }) +
-			Constant("device_ids", deviceIds)
-	}
+		Model(Vector("id" -> id, "settings" -> settings.toModel, "language_links" -> languages.map { _.toModel },
+			"device_ids" -> deviceIds))
 }

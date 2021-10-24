@@ -1,6 +1,6 @@
 package utopia.citadel.database.factory.organization
 
-import utopia.citadel.database.model.organization.MemberRoleModel
+import utopia.citadel.database.model.organization.MemberRoleLinkModel
 import utopia.metropolis.model.combined.organization.MembershipWithRoles
 import utopia.vault.model.immutable.Result
 import utopia.vault.nosql.factory.FromResultFactory
@@ -20,7 +20,7 @@ object MembershipWithRolesFactory extends FromResultFactory[MembershipWithRoles]
 	// IMPLEMENTED	----------------------------
 	
 	override def nonDeprecatedCondition = MembershipFactory.nonDeprecatedCondition &&
-		MemberRoleModel.nonDeprecatedCondition
+		MemberRoleLinkModel.nonDeprecatedCondition
 	
 	override def table = MembershipFactory.table
 	
@@ -38,7 +38,7 @@ object MembershipWithRolesFactory extends FromResultFactory[MembershipWithRoles]
 			{
 				case Success(membership) =>
 					// Adds role ids (parsed)
-					val roleIds = roleLinkRows.flatMap { _(roleLinkTable)(MemberRoleModel.roleIdAttName).int }
+					val roleIds = roleLinkRows.flatMap { _(roleLinkTable)(MemberRoleLinkModel.roleIdAttName).int }
 					Some(MembershipWithRoles(membership, roleIds.toSet))
 				case Failure(error) =>
 					ErrorHandling.modelParsePrinciple.handle(error)
@@ -50,5 +50,5 @@ object MembershipWithRolesFactory extends FromResultFactory[MembershipWithRoles]
 	
 	// COMPUTED	------------------------------
 	
-	private def roleLinkTable = MemberRoleModel.table
+	private def roleLinkTable = MemberRoleLinkModel.table
 }

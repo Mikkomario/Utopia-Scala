@@ -6,7 +6,7 @@ import utopia.citadel.database.access.many.organization.{DbUserRoles, Invitation
 import utopia.citadel.database.access.many.user.DbUsers
 import utopia.citadel.database.access.single.description.DbOrganizationDescription
 import utopia.citadel.database.factory.organization.{MembershipFactory, MembershipWithRolesFactory}
-import utopia.citadel.database.model.organization.{DeletionModel, MemberRoleModel, MembershipModel, OrganizationModel}
+import utopia.citadel.database.model.organization.{DeletionModel, MemberRoleLinkModel, MembershipModel, OrganizationModel}
 import utopia.citadel.model.enumeration.CitadelDescriptionRole.Name
 import utopia.citadel.model.enumeration.StandardUserRole.Owner
 import utopia.flow.time.Now
@@ -53,7 +53,7 @@ object DbOrganization
 		val organizationId = factory.insert(founderId)
 		// Adds the user to the organization (as owner)
 		val membership = MembershipModel.insert(MembershipData(organizationId, founderId, Some(founderId)))
-		MemberRoleModel.insert(membership.id, Owner.id, founderId)
+		MemberRoleLinkModel.insert(membership.id, Owner.id, founderId)
 		// Inserts a name for that organization
 		DbOrganizationDescriptions(organizationId).update(Name.id, languageId, founderId, organizationName)
 		// Returns organization id
@@ -111,7 +111,7 @@ object DbOrganization
 		{
 			// COMPUTED	---------------------------
 			
-			private def memberRolesFactory = MemberRoleModel
+			private def memberRolesFactory = MemberRoleLinkModel
 			
 			private def withRolesFactory = MembershipWithRolesFactory
 			

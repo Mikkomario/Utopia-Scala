@@ -42,7 +42,7 @@ case class FullDevice(describedDevice: DescribedClientDevice, userIds: Set[Int])
 	
 	override def descriptions = describedDevice.descriptions
 	
-	override def toModel = describedDevice.toModel ++ Constant("user_ids", userIds.toVector)
+	override def toModel = describedDevice.toModel + Constant("user_ids", userIds.toVector)
 	
 	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) = Model(Vector(
 		"id" -> device.id, "user_ids" -> userIds.toVector

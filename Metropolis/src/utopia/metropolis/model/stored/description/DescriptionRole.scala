@@ -1,7 +1,12 @@
 package utopia.metropolis.model.stored.description
 
 import utopia.metropolis.model.partial.description.DescriptionRoleData
-import utopia.metropolis.model.stored.StoredModelConvertible
+import utopia.metropolis.model.stored.{StoredFromModelFactory, StoredModelConvertible}
+
+object DescriptionRole extends StoredFromModelFactory[DescriptionRole, DescriptionRoleData]
+{
+	override def dataFactory = DescriptionRoleData
+}
 
 /**
   * Represents a DescriptionRole that has already been stored in the database

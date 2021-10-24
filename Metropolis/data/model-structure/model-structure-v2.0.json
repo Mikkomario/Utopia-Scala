@@ -89,14 +89,23 @@
         ]
       },
       {
-        "name": "UserLanguage",
-        "combo": {
-          "name": "UserLanguageWithFamiliarity",
-          "child": "LanguageFamiliarity",
-          "is_always_linked": true,
-          "parent_alias": "languageLink",
-          "child_alias": "familiarity"
-        },
+        "name": "UserLanguageLink",
+        "table_name": "user_language",
+        "combos": [
+          {
+            "name": "UserLanguageLinkWithFamiliarity",
+            "child": "LanguageFamiliarity",
+            "is_always_linked": true,
+            "parent_alias": "languageLink",
+            "child_alias": "familiarity"
+          },
+          {
+            "name": "UserLanguage",
+            "child": "Language",
+            "is_always_linked": true,
+            "parent_alias": "link"
+          }
+        ],
         "doc": "Links user with their language familiarity levels",
         "props": [
           {
@@ -270,7 +279,8 @@
         ]
       },
       {
-        "name": "MemberRole",
+        "name": "MemberRoleLink",
+        "table_name": "member_role",
         "doc": "Links an organization membership to the roles that member has within that organization",
         "props": [
           {

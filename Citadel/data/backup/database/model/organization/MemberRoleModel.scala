@@ -8,7 +8,7 @@ import utopia.metropolis.model.enumeration.UserRole
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 
-object MemberRoleModel extends DeprecatableAfter[MemberRoleModel]
+object MemberRoleModel extends DeprecatableAfter[MemberRoleLinkModel]
 {
 	// ATTRIBUTES	------------------------
 	
@@ -76,9 +76,9 @@ case class MemberRoleModel(id: Option[Int] = None, membershipId: Option[Int] = N
 						   roleId: Option[Int] = None, creatorId: Option[Int] = None,
 						   deprecatedAfter: Option[Instant] = None) extends Storable
 {
-	import MemberRoleModel._
+	import MemberRoleLinkModel._
 	
-	override def table = MemberRoleModel.table
+	override def table = MemberRoleLinkModel.table
 	
 	override def valueProperties = Vector("id" -> id, "membershipId" -> membershipId, roleIdAttName -> roleId,
 		"creatorId" -> creatorId, "deprecatedAfter" -> deprecatedAfter)

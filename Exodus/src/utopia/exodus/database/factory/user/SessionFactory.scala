@@ -26,7 +26,7 @@ object SessionFactory extends FromValidatedRowModelFactory[UserSession] with Dep
 	
 	override protected def fromValidatedModel(model: Model[Constant]) = UserSession(model("id").getInt,
 		UserSessionData(model("userId").getInt, model("key").getString, model("expiresIn").getInstant,
-			model("deviceId").int, model("modelStylePreference").int.flatMap(ModelStyle.forId)))
+			model("deviceId").int, model("modelStylePreference").int.flatMap(ModelStyle.findForId)))
 	
 	override def table = ExodusTables.userSession
 	

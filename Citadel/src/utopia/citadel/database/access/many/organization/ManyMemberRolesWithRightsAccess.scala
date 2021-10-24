@@ -10,8 +10,8 @@ import utopia.vault.sql.Condition
 
 object ManyMemberRolesWithRightsAccess
 {
-	private class RolesSubView(override val parent: ManyModelAccess[MemberRoleWithRights],
-	                           override val filterCondition: Condition)
+	private class RoleLinksSubView(override val parent: ManyModelAccess[MemberRoleWithRights],
+	                               override val filterCondition: Condition)
 		extends ManyMemberRolesWithRightsAccess with SubView
 }
 
@@ -21,7 +21,7 @@ object ManyMemberRolesWithRightsAccess
   * @since 24.10.2021, v2.0
   */
 trait ManyMemberRolesWithRightsAccess
-	extends ManyMemberRolesAccessLike[MemberRoleWithRights, ManyMemberRolesWithRightsAccess]
+	extends ManyMemberRoleLinksAccessLike[MemberRoleWithRights, ManyMemberRolesWithRightsAccess]
 {
 	// COMPUTED ----------------------------------
 	
@@ -44,7 +44,7 @@ trait ManyMemberRolesWithRightsAccess
 	override protected def defaultOrdering = None
 	
 	override def _filter(additionalCondition: Condition): ManyMemberRolesWithRightsAccess =
-		new ManyMemberRolesWithRightsAccess.RolesSubView(this, additionalCondition)
+		new ManyMemberRolesWithRightsAccess.RoleLinksSubView(this, additionalCondition)
 		
 	
 	// OTHER    ---------------------------------

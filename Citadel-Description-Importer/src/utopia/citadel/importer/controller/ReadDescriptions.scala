@@ -1,8 +1,10 @@
 package utopia.citadel.importer.controller
 
 import utopia.citadel.database.Tables
-import utopia.citadel.database.access.many.description.{DbDescriptionRoleDescriptions, DbDescriptionRoles, DbDeviceDescriptions, DbLanguageDescriptions, DbLanguageFamiliarityDescriptions, DbOrganizationDescriptions, DbTaskDescriptions, DbUserRoleDescriptions, DescriptionLinksAccessOld}
+import utopia.citadel.database.access.many.description.{DbClientDeviceDescriptions, DbDescriptionRoleDescriptions, DbDescriptionRoles, DbLanguageDescriptions, DbLanguageFamiliarityDescriptions, DbOrganizationDescriptions, DbTaskDescriptions, DbUserRoleDescriptions, LinkedDescriptionsAccess}
 import utopia.citadel.database.access.many.language.DbLanguages
+import utopia.citadel.database.model.description.DescriptionModel
+import utopia.citadel.model.cached.DescriptionLinkTable
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser
@@ -64,7 +66,7 @@ object ReadDescriptions
 		}
 	}
 	
-	private def handleTarget(access: DescriptionLinksAccessOld, model: Model[Constant], languageIds: Map[String, Int],
+	private def handleTarget(access: LinkedDescriptionsAccess, model: Model[Constant], languageIds: Map[String, Int],
 	                         descriptionRoles: Vector[DescriptionRole])
 	                        (implicit connection: Connection) =
 	{
@@ -96,14 +98,14 @@ object ReadDescriptions
 					val changingUpdates = updates
 						.filter { case (existing, newDescription) => existing.description.text != newDescription }
 					if (changingUpdates.nonEmpty)
-						access.linkModel.deprecateIds(changingUpdates.map { _._1.id })
+						DescriptionModel.deprecateIds(changingUpdates.map { _._1.id })
 					
 					// Inserts new / updated descriptions
 					if (newDescriptions.nonEmpty || changingUpdates.nonEmpty)
 					{
-						access.linkModel.insert(newDescriptions ++
-							changingUpdates.map { case (link, description) =>
-								link.targetId -> DescriptionData(role.id, languageId, description) })
+						access.linkModel.insertDescriptions(newDescriptions ++
+							changingUpdates.map { case (description, newDescription) =>
+								description.targetId -> DescriptionData(role.id, languageId, newDescription) })
 						
 						// Prints an update to the console
 						val targetName = model("target").getString
@@ -138,8 +140,8 @@ object ReadDescriptions
 			// Case: Target is a model => searches for "table" and "column" properties
 			case Some(model) => model("table").trySting
 				.flatMap { tableName => model("column").trySting.map { c =>
-					val table = Tables(tableName)
-					DescriptionLinksAccessOld(table, c)
+					val table = DescriptionLinkTable(Tables(tableName), c)
+					LinkedDescriptionsAccess(table)
 				} }
 			// Otherwise expects the target to be one of specified values
 			case None =>
@@ -150,7 +152,7 @@ object ReadDescriptions
 					case "organization" => Success(DbOrganizationDescriptions)
 					case "task" => Success(DbTaskDescriptions)
 					case "user_role" => Success(DbUserRoleDescriptions)
-					case "device" => Success(DbDeviceDescriptions)
+					case "device" => Success(DbClientDeviceDescriptions)
 					case s: String =>
 						Failure(new NoSuchElementException(s"No standard description factory for key: $s"))
 				}

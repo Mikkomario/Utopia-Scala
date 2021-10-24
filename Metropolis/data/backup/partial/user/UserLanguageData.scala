@@ -19,8 +19,8 @@ object UserLanguageData
 	  * @param model Model being parsed
 	  * @return Parsed user language data. Failure if some properties were missing or invalid
 	  */
-	def apply(userId: Int, model: template.Model[Property]): Try[UserLanguageData] = schema.validate(model).toTry.map { valid =>
-		UserLanguageData(userId, valid("language_id"), valid("familiarity_id"))
+	def apply(userId: Int, model: template.Model[Property]): Try[UserLanguageLinkData] = schema.validate(model).toTry.map { valid =>
+		UserLanguageLinkData(userId, valid("language_id"), valid("familiarity_id"))
 	}
 }
 

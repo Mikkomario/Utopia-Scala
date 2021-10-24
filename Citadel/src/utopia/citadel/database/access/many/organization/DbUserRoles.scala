@@ -25,5 +25,11 @@ object DbUserRoles extends ManyUserRolesAccess with UnconditionalView
 	
 	class DbUserRolesSubset(override val ids: Set[Int]) 
 		extends ManyUserRolesAccess with ManyDescribedAccessByIds[UserRole, DescribedUserRole]
+	{
+		/**
+		  * @return An access point to user role rights concerning these user roles
+		  */
+		def rights = DbUserRoleRights.withAnyOfRoles(ids)
+	}
 }
 

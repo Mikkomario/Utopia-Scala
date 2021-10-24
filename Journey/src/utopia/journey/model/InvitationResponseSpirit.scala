@@ -29,8 +29,9 @@ object InvitationResponseSpirit extends FromModelFactory[InvitationResponseSpiri
 	  * @param block Whether future invitations should be blocked (default = false)
 	  * @return A new response spirit
 	  */
+	// TODO: Add a message to the invitation response
 	def apply(invitationId: Int, accept: Boolean, block: Boolean = false): InvitationResponseSpirit =
-		InvitationResponseSpirit(invitationId, NewInvitationResponse(accept, block))
+		InvitationResponseSpirit(invitationId, NewInvitationResponse(None, accept, block))
 	
 	/**
 	  * Creates a new positive response
@@ -46,8 +47,8 @@ object InvitationResponseSpirit extends FromModelFactory[InvitationResponseSpiri
 	  *                                     automatically (default = false)
 	  * @return A new response spirit
 	  */
-	def reject(invitationId: Int, shouldBlockFutureInvitations: Boolean = false) = InvitationResponseSpirit(invitationId,
-		NewInvitationResponse(wasAccepted = false, wasBlocked = shouldBlockFutureInvitations))
+	def reject(invitationId: Int, shouldBlockFutureInvitations: Boolean = false) =
+		InvitationResponseSpirit(invitationId, NewInvitationResponse(wasBlocked = shouldBlockFutureInvitations))
 	
 	/**
 	  * Checks whether the specified model is likely to represent a valid response spirit

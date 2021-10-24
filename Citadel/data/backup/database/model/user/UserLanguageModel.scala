@@ -1,15 +1,15 @@
 package utopia.citadel.database.model.user
 
 import utopia.citadel.database.Tables
-import utopia.citadel.database.factory.user.UserLanguageFactory
+import utopia.citadel.database.factory.user.UserLanguageLinkFactory
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.partial.user.UserLanguageData
-import utopia.metropolis.model.stored.user.UserLanguage
+import utopia.metropolis.model.partial.user.UserLanguageLinkData
+import utopia.metropolis.model.stored.user.UserLanguageLink
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 
-object UserLanguageModel extends DataInserter[UserLanguageModel, UserLanguage, UserLanguageData]
+object UserLanguageModel extends DataInserter[UserLanguageLinkModel, UserLanguageLink, UserLanguageLinkData]
 {
 	// ATTRIBUTES	-------------------------
 	
@@ -34,10 +34,10 @@ object UserLanguageModel extends DataInserter[UserLanguageModel, UserLanguage, U
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def apply(data: UserLanguageData) =
+	override def apply(data: UserLanguageLinkData) =
 		apply(None, Some(data.userId), Some(data.languageId), Some(data.familiarityId))
 	
-	override protected def complete(id: Value, data: UserLanguageData) = UserLanguage(id.getInt, data)
+	override protected def complete(id: Value, data: UserLanguageLinkData) = UserLanguageLink(id.getInt, data)
 	
 	
 	// OTHER	-----------------------------
@@ -56,11 +56,11 @@ object UserLanguageModel extends DataInserter[UserLanguageModel, UserLanguage, U
   */
 case class UserLanguageModel(id: Option[Int] = None, userId: Option[Int] = None, languageId: Option[Int] = None,
 							 familiarityId: Option[Int] = None)
-	extends StorableWithFactory[UserLanguage]
+	extends StorableWithFactory[UserLanguageLink]
 {
-	import UserLanguageModel._
+	import UserLanguageLinkModel._
 	
-	override def factory = UserLanguageFactory
+	override def factory = UserLanguageLinkFactory
 	
 	override def valueProperties = Vector("id" -> id, "userId" -> userId, languageIdAttName -> languageId,
 		"familiarityId" -> familiarityId)

@@ -1,10 +1,13 @@
 package utopia.metropolis.model.combined.language
 
-import utopia.metropolis.model.combined.description.{DescribedFactory, DescribedWrapper, LinkedDescription, SimplyDescribed}
+import utopia.metropolis.model.combined.description.{DescribedFromModelFactory, DescribedWrapper, LinkedDescription, SimplyDescribed}
 import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.metropolis.model.stored.language.Language
 
-object DescribedLanguage extends DescribedFactory[Language, DescribedLanguage]
+object DescribedLanguage extends DescribedFromModelFactory[Language, DescribedLanguage]
+{
+	override protected def undescribedFactory = Language
+}
 
 /**
   * Combines Language with the linked descriptions

@@ -5,12 +5,12 @@ import utopia.flow.datastructure.template.{Model, Property}
 import utopia.flow.generic.{FromModelFactory, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.Extender
-import utopia.metropolis.model.partial.organization.MemberRoleData
-import utopia.metropolis.model.stored.organization.MemberRole
+import utopia.metropolis.model.partial.organization.MemberRoleLinkData
+import utopia.metropolis.model.stored.organization.MemberRoleLink
 
 object MemberRoleWithRights extends FromModelFactory[MemberRoleWithRights]
 {
-	override def apply(model: Model[Property]) = MemberRole(model).map { role =>
+	override def apply(model: Model[Property]) = MemberRoleLink(model).map { role =>
 		MemberRoleWithRights(role, model("task_ids").getVector.flatMap { _.int }.toSet)
 	}
 }
@@ -20,8 +20,8 @@ object MemberRoleWithRights extends FromModelFactory[MemberRoleWithRights]
   * @author Mikko Hilpinen
   * @since 24.10.2021, v2.0
   */
-case class MemberRoleWithRights(roleLink: MemberRole, taskIds: Set[Int])
-	extends Extender[MemberRoleData] with ModelConvertible
+case class MemberRoleWithRights(roleLink: MemberRoleLink, taskIds: Set[Int])
+	extends Extender[MemberRoleLinkData] with ModelConvertible
 {
 	// COMPUTED --------------------------
 	

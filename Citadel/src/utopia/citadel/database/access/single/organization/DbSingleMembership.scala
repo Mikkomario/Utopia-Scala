@@ -1,10 +1,10 @@
 package utopia.citadel.database.access.single.organization
 
-import utopia.citadel.database.access.many.organization.{DbMemberRoles, DbMemberRolesWithRights, DbUserRoleRights, ManyMemberRolesWithRightsAccess}
+import utopia.citadel.database.access.many.organization.{DbMemberRoleLinks, DbMemberRolesWithRights, DbUserRoleRights, ManyMemberRolesWithRightsAccess}
 import utopia.citadel.database.factory.organization.MembershipWithRolesFactory
-import utopia.citadel.database.model.organization.MemberRoleModel
+import utopia.citadel.database.model.organization.MemberRoleLinkModel
 import utopia.metropolis.model.combined.organization.MembershipWithRoles
-import utopia.metropolis.model.partial.organization.MemberRoleData
+import utopia.metropolis.model.partial.organization.MemberRoleLinkData
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
@@ -20,7 +20,7 @@ case class DbSingleMembership(id: Int) extends UniqueMembershipAccess with Singl
 	/**
 	  * @return An access point to this membership's role links
 	  */
-	def roleLinks = DbMemberRoles.withMembershipId(id)
+	def roleLinks = DbMemberRoleLinks.withMembershipId(id)
 	/**
 	  * @return An access point to this memberhip's role links, which include allowed task ids
 	  */
@@ -79,7 +79,7 @@ case class DbSingleMembership(id: Int) extends UniqueMembershipAccess with Singl
 	  * @return Newly assigned role link
 	  */
 	def assignRoleWithId(newRoleId: Int, creatorId: Int)(implicit connection: Connection) =
-		MemberRoleModel.insert(MemberRoleData(id, newRoleId, Some(creatorId)))
+		MemberRoleLinkModel.insert(MemberRoleLinkData(id, newRoleId, Some(creatorId)))
 	/**
 	  * Adds multiple new user roles to this membership. Please make sure only new roles are added
 	  * (no duplicates with existing roles)
@@ -89,7 +89,7 @@ case class DbSingleMembership(id: Int) extends UniqueMembershipAccess with Singl
 	  * @return Newly assigned role links
 	  */
 	def assignRolesWithIds(newRoleIds: Set[Int], creatorId: Int)(implicit connection: Connection) =
-		MemberRoleModel.insert(newRoleIds.toVector.sorted.map { roleId => MemberRoleData(id, roleId, Some(creatorId)) })
+		MemberRoleLinkModel.insert(newRoleIds.toVector.sorted.map { roleId => MemberRoleLinkData(id, roleId, Some(creatorId)) })
 	/**
 	  * Removes the specified roles from this membership
 	  * @param userRoleIds Targeted user role ids

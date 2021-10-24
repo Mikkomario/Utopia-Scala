@@ -6,7 +6,7 @@ import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.IntType
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
-import utopia.metropolis.model.partial.user.UserLanguageData
+import utopia.metropolis.model.partial.user.UserLanguageLinkData
 import utopia.metropolis.model.stored.Stored
 
 import scala.util.Try
@@ -21,9 +21,9 @@ object UserLanguage
 	  * @param model Model being parsed
 	  * @return Parsed user language data. Failure if some properties were missing or invalid
 	  */
-	def apply(userId: Int, model: template.Model[Property]): Try[UserLanguage] = idSchema.validate(model).toTry.flatMap { valid =>
-		UserLanguageData(userId, model).map { data =>
-			UserLanguage(valid("id"), data)
+	def apply(userId: Int, model: template.Model[Property]): Try[UserLanguageLink] = idSchema.validate(model).toTry.flatMap { valid =>
+		UserLanguageLinkData(userId, model).map { data =>
+			UserLanguageLink(valid("id"), data)
 		}
 	}
 }
@@ -33,7 +33,7 @@ object UserLanguage
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1
   */
-case class UserLanguage(id: Int, data: UserLanguageData) extends Stored[UserLanguageData]
+case class UserLanguage(id: Int, data: UserLanguageLinkData) extends Stored[UserLanguageLinkData]
 {
 	/**
 	  * @return This link as a model without including user id

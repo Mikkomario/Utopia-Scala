@@ -12,7 +12,7 @@ object LinkedDescriptionFactory
 	  * @param linkTable Table that contains description links
 	  * @return Factory for reading linked descriptions using that link table
 	  */
-	def apply(linkTable: DescriptionLinkTable) = apply(DescriptionLinkFactory(linkTable))
+	def apply(linkTable: DescriptionLinkTable): LinkedDescriptionFactory = apply(DescriptionLinkFactory(linkTable))
 }
 
 /**
@@ -28,4 +28,6 @@ case class LinkedDescriptionFactory(linkFactory: DescriptionLinkFactory)
 	override def childFactory = linkFactory
 	
 	override def nonDeprecatedCondition = parentFactory.nonDeprecatedCondition
+	
+	def apply(parent: Description, child: DescriptionLink) = parent + child
 }

@@ -4,8 +4,8 @@ import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.DeepExtender
-import utopia.metropolis.model.partial.user.UserLanguageData
-import utopia.metropolis.model.stored.user.UserLanguage
+import utopia.metropolis.model.partial.user.UserLanguageLinkData
+import utopia.metropolis.model.stored.user.UserLanguageLink
 
 /**
   * A common trait for extended user language models
@@ -14,7 +14,7 @@ import utopia.metropolis.model.stored.user.UserLanguage
   */
 @deprecated("It may be better to use UserLanguageWithFamiliarity instead", "v2.0")
 trait FullUserLanguageLike[+L <: ModelConvertible, +F <: ModelConvertible]
-	extends DeepExtender[UserLanguage, UserLanguageData] with ModelConvertible
+	extends DeepExtender[UserLanguageLink, UserLanguageLinkData] with ModelConvertible
 {
 	// ABSTRACT	----------------------------
 	

@@ -2,7 +2,7 @@ package utopia.citadel.database.access.many.language
 
 import utopia.citadel.database.access.many.description.{DbLanguageFamiliarityDescriptions, ManyDescribedAccess}
 import utopia.citadel.database.factory.language.LanguageFamiliarityFactory
-import utopia.citadel.database.model.user.UserLanguageModel
+import utopia.citadel.database.model.user.UserLanguageLinkModel
 import utopia.metropolis.model.combined.language.DescribedLanguageFamiliarity
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
 import utopia.vault.database.Connection
@@ -43,7 +43,7 @@ object DbLanguageFamiliarities
 	  */
 	def familiarityLevelsForUserWithId(userId: Int)(implicit connection: Connection) =
 	{
-		val linkModel = UserLanguageModel
+		val linkModel = UserLanguageLinkModel
 		val target = factory.target.join(linkModel.table)
 		val condition = linkModel.withUserId(userId)
 		

@@ -1,7 +1,12 @@
 package utopia.metropolis.model.stored.language
 
 import utopia.metropolis.model.partial.language.LanguageData
-import utopia.metropolis.model.stored.{StoredModelConvertible, StyledStoredModelConvertible}
+import utopia.metropolis.model.stored.{StoredFromModelFactory, StoredModelConvertible, StyledStoredModelConvertible}
+
+object Language extends StoredFromModelFactory[Language, LanguageData]
+{
+	override def dataFactory = LanguageData
+}
 
 /**
   * Represents a Language that has already been stored in the database

@@ -1,7 +1,12 @@
 package utopia.metropolis.model.stored.organization
 
 import utopia.metropolis.model.partial.organization.InvitationResponseData
-import utopia.metropolis.model.stored.StoredModelConvertible
+import utopia.metropolis.model.stored.{StoredFromModelFactory, StoredModelConvertible}
+
+object InvitationResponse extends StoredFromModelFactory[InvitationResponse, InvitationResponseData]
+{
+	override def dataFactory = InvitationResponseData
+}
 
 /**
   * Represents a InvitationResponse that has already been stored in the database

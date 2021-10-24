@@ -12,14 +12,6 @@ import utopia.vault.sql.SqlExtensions._
   */
 object DbInvitations extends ManyInvitationsAccess with NonDeprecatedView[Invitation]
 {
-	// COMPUTED --------------------
-	
-	/**
-	  * @return An access point to invitations with responses
-	  */
-	def withResponses = DbInvitationsWithResponses
-	
-	
 	// OTHER	--------------------
 	
 	/**

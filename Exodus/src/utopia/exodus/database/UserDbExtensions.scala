@@ -1,6 +1,6 @@
 package utopia.exodus.database
 
-import utopia.citadel.database.access.single.user.DbUser.DbSingleUser
+import utopia.citadel.database.access.single.user.DbSingleUser
 import utopia.exodus.database.model.user.UserAuthModel
 import utopia.exodus.util.PasswordHash
 import utopia.vault.database.Connection
@@ -20,10 +20,8 @@ object UserDbExtensions
 		  * @return Password hash for this user. None if no hash was found.
 		  */
 		def passwordHash(implicit connection: Connection) =
-		{
 			connection(Select(UserAuthModel.table, UserAuthModel.hashAttName) +
-				Where(UserAuthModel.withUserId(a.userId).toCondition)).firstValue.string
-		}
+				Where(UserAuthModel.withUserId(a.id).toCondition)).firstValue.string
 		
 		/**
 		  * Checks whether the specified password matches this user's current password
@@ -45,7 +43,7 @@ object UserDbExtensions
 			// Hashes the password
 			val newHash = PasswordHash.createHash(newPassword)
 			// Updates the password hash in the DB
-			UserAuthModel.withUserId(a.userId).withHash(newHash).update()
+			UserAuthModel.withUserId(a.id).withHash(newHash).update()
 		}
 	}
 }

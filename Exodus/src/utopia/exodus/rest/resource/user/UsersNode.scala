@@ -6,7 +6,7 @@ import utopia.citadel.database.access.many.device.DbDevices
 import utopia.citadel.database.access.many.user.DbUsers
 import utopia.citadel.database.access.single.device.DbDevice
 import utopia.citadel.database.access.single.language.DbLanguage
-import utopia.citadel.database.model.user.{UserDeviceModel, UserLanguageModel, UserModel}
+import utopia.citadel.database.model.user.{UserDeviceModel, UserLanguageLinkModel, UserModel}
 import utopia.exodus.database.access.single.{DbDeviceKey, DbUserSession}
 import utopia.exodus.database.model.user.UserAuthModel
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.UserCreation
@@ -19,7 +19,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._
 import utopia.metropolis.model.combined.user.{UserCreationResult, UserWithLinks}
 import utopia.metropolis.model.error.{AlreadyUsedException, IllegalPostModelException}
-import utopia.metropolis.model.partial.user.{UserLanguageData, UserSettingsData}
+import utopia.metropolis.model.partial.user.{UserLanguageLinkData, UserSettingsData}
 import utopia.metropolis.model.post.NewUser
 import utopia.nexus.http.{Path, Response}
 import utopia.nexus.rest.Resource
@@ -140,7 +140,7 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 					val user = UserModel.insert(UserSettingsData(userName, email))
 					UserAuthModel.insert(user.id, newUser.password)
 					val insertedLanguages = languages.map { case Pair(languageId, familiarity) =>
-						UserLanguageModel.insert(UserLanguageData(user.id, languageId, familiarity))
+						UserLanguageLinkModel.insert(UserLanguageData(user.id, languageId, familiarity))
 					}
 					// Links user with device (if device has been specified) (uses existing or a new device)
 					val deviceId = newUser.device.map {

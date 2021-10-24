@@ -75,6 +75,11 @@ trait ManyClientDeviceUsersAccess extends ManyRowModelAccess[ClientDeviceUser] w
 	  * @return An access point to device-user-links on that device
 	  */
 	def onDeviceWithId(deviceId: Int) = filter(model.withDeviceId(deviceId).toCondition)
+	/**
+	  * @param userId Id of the linked user
+	  * @return An access point to device links concerning that user only
+	  */
+	def withUserId(userId: Int) = filter(model.withUserId(userId).toCondition)
 	
 	/**
 	  * Updates the created of the targeted ClientDeviceUser instance(s)

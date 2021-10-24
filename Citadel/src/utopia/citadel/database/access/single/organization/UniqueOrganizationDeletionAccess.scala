@@ -26,17 +26,14 @@ trait UniqueOrganizationDeletionAccess
 	  * Id of the organization whose deletion was requested. None if no instance (or value) was found.
 	  */
 	def organizationId(implicit connection: Connection) = pullColumn(model.organizationIdColumn).int
-	
 	/**
 	  * Time when this deletion is/was scheduled to actualize. None if no instance (or value) was found.
 	  */
 	def actualization(implicit connection: Connection) = pullColumn(model.actualizationColumn).instant
-	
 	/**
 	  * Id of the user who requested organization deletion. None if no instance (or value) was found.
 	  */
 	def creatorId(implicit connection: Connection) = pullColumn(model.creatorIdColumn).int
-	
 	/**
 	  * Time when this deletion was requested. None if no instance (or value) was found.
 	  */
@@ -64,7 +61,6 @@ trait UniqueOrganizationDeletionAccess
 	  */
 	def actualization_=(newActualization: Instant)(implicit connection: Connection) = 
 		putColumn(model.actualizationColumn, newActualization)
-	
 	/**
 	  * Updates the created of the targeted OrganizationDeletion instance(s)
 	  * @param newCreated A new created to assign
@@ -72,7 +68,6 @@ trait UniqueOrganizationDeletionAccess
 	  */
 	def created_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
-	
 	/**
 	  * Updates the creatorId of the targeted OrganizationDeletion instance(s)
 	  * @param newCreatorId A new creatorId to assign
@@ -80,7 +75,6 @@ trait UniqueOrganizationDeletionAccess
 	  */
 	def creatorId_=(newCreatorId: Int)(implicit connection: Connection) = 
 		putColumn(model.creatorIdColumn, newCreatorId)
-	
 	/**
 	  * Updates the organizationId of the targeted OrganizationDeletion instance(s)
 	  * @param newOrganizationId A new organizationId to assign

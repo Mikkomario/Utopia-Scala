@@ -25,6 +25,18 @@ trait ManyOrganizationDeletionsAccess
 	extends ManyOrganizationDeletionsAccessLike[OrganizationDeletion, ManyOrganizationDeletionsAccess] with
 		ManyRowModelAccess[OrganizationDeletion] with Indexed
 {
+	// COMPUTED ------------------------
+	
+	/**
+	  * @return An access point to organization deletions including their cancellations
+	  */
+	def withCancellations = globalCondition match
+	{
+		case Some(condition) => DbOrganizationDeletionsWithCancellations.filter(condition)
+		case None => DbOrganizationDeletionsWithCancellations
+	}
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def factory = OrganizationDeletionFactory

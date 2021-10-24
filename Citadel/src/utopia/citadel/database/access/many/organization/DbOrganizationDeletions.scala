@@ -11,14 +11,6 @@ import utopia.vault.sql.SqlExtensions._
   */
 object DbOrganizationDeletions extends ManyOrganizationDeletionsAccess with UnconditionalView
 {
-	// COMPUTED --------------------
-	
-	/**
-	  * @return An access point to organization deletions including their cancellations
-	  */
-	def withCancellations = DbOrganizationDeletionsWithCancellations
-	
-	
 	// OTHER	--------------------
 	
 	/**

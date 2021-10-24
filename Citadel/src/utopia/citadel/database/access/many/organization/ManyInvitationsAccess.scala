@@ -20,6 +20,18 @@ object ManyInvitationsAccess
   */
 trait ManyInvitationsAccess extends ManyInvitationsAccessLike[Invitation, ManyInvitationsAccess]
 {
+	// COMPUTED ------------------------
+	
+	/**
+	  * @return An access point to invitations with responses
+	  */
+	def withResponses = globalCondition match
+	{
+		case Some(condition) => DbInvitationsWithResponses.filter(condition)
+		case None => DbInvitationsWithResponses
+	}
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def factory = InvitationFactory

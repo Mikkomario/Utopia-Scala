@@ -53,7 +53,7 @@ object DbLanguages extends ManyLanguagesAccess with UnconditionalView
 				// Makes sure all listed language codes are valid
 				val listedLanguageCodes = familiaritiesByLanguageCode.map { _._1 }.toSet
 				val languagesByIsoCodes = if (listedLanguageCodes.isEmpty) Vector() else
-					forIsoCodes(listedLanguageCodes)
+					withIsoCodes(listedLanguageCodes)
 				val missingIsoCodes = listedLanguageCodes -- languagesByIsoCodes.map { _.isoCode }
 				if (missingIsoCodes.nonEmpty)
 					Failure(new NoDataFoundException(s"Language codes [${

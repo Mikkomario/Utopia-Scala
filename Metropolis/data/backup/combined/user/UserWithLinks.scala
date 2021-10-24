@@ -6,7 +6,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.{FromModelFactory, ModelConvertible, VectorType}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.Extender
-import utopia.metropolis.model.stored.user.{User, UserLanguage}
+import utopia.metropolis.model.stored.user.{User, UserLanguageLink}
 
 object UserWithLinks extends FromModelFactory[UserWithLinks]
 {
@@ -14,7 +14,7 @@ object UserWithLinks extends FromModelFactory[UserWithLinks]
 	
 	override def apply(model: Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
 		User(valid).flatMap { user =>
-			valid("languages").getVector.tryMap { v => UserLanguage(user.id, v.getModel) }.map { languages =>
+			valid("languages").getVector.tryMap { v => UserLanguageLink(user.id, v.getModel) }.map { languages =>
 				val deviceIds = model("device_ids").getVector.flatMap { _.int }
 				UserWithLinks(user, languages, deviceIds)
 			}
@@ -30,7 +30,7 @@ object UserWithLinks extends FromModelFactory[UserWithLinks]
   * @param languages Languages known to the user, with proficiency levels
   * @param deviceIds Ids of the devices known to the user
   */
-case class UserWithLinks(base: User, languages: Vector[UserLanguage], deviceIds: Vector[Int])
+case class UserWithLinks(base: User, languages: Vector[UserLanguageLink], deviceIds: Vector[Int])
 	extends Extender[User] with ModelConvertible
 {
 	override def wrapped = base

@@ -74,7 +74,7 @@ trait ManyLanguagesAccess
 	  * @param connection Implicit DB Connection
 	  * @return Languages matching those iso-codes
 	  */
-	def forIsoCodes(isoCodes: Iterable[String])(implicit connection: Connection) =
+	def withIsoCodes(isoCodes: Iterable[String])(implicit connection: Connection) =
 		find(model.isoCodeColumn in isoCodes)
 	
 	/**

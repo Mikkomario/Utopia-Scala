@@ -1,10 +1,19 @@
 package utopia.metropolis.model.partial.description
 
 import java.time.Instant
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
+import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
+import utopia.flow.generic.{FromModelFactoryWithSchema, ModelConvertible, StringType}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.time.Now
+
+object DescriptionRoleData extends FromModelFactoryWithSchema[DescriptionRoleData]
+{
+	override val schema = ModelDeclaration("json_key_singular" -> StringType, "json_key_plural" -> StringType)
+	
+	override protected def fromValidatedModel(model: Model[Constant]) =
+		DescriptionRoleData(model("json_key_singular"), model("json_key_plural"), model("created"))
+}
 
 /**
   * An enumeration for different roles or purposes a description can serve

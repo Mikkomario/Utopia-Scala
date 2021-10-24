@@ -106,7 +106,7 @@ trait AuthorizedContext extends Context
 		{
 			val acceptedCodes = acceptedLanguages.keySet
 			// Maps codes to language ids (if present)
-			val languages = DbLanguages.forIsoCodes(acceptedCodes)
+			val languages = DbLanguages.withIsoCodes(acceptedCodes)
 			// Orders the languages based on assigned weight
 			languages.sortBy { l => -acceptedLanguages(l.isoCode.toLowerCase) }
 		}
@@ -117,8 +117,8 @@ trait AuthorizedContext extends Context
 	/**
 	  * @return The model style specified in this request (if specified)
 	  */
-	def modelStyle = request.headers.apply("X-Style").flatMap(ModelStyle.forKey)
-		.orElse { request.parameters("style").string.flatMap(ModelStyle.forKey) }
+	def modelStyle = request.headers.apply("X-Style").flatMap(ModelStyle.findForKey)
+		.orElse { request.parameters("style").string.flatMap(ModelStyle.findForKey) }
 	
 	
 	// OTHER	----------------------------
@@ -137,7 +137,7 @@ trait AuthorizedContext extends Context
 		if (languagesFromHeaders.nonEmpty)
 			LanguageIds(languagesFromHeaders.map { _.id })
 		else
-			DbUser(userId).languageIdsList
+			DbUser(userId).languageIds
 	}
 	
 	/**
@@ -273,9 +273,9 @@ trait AuthorizedContext extends Context
 		sessionKeyAuthorized { (session, connection) =>
 			implicit val c: Connection = connection
 			// Makes sure the user belongs to the target organization
-			DbUser(session.userId).membershipIdInOrganizationWithId(organizationId).pull match
+			DbUser(session.userId).membershipInOrganizationWithId(organizationId).pull match
 			{
-				case Some(membershipId) => f(session, membershipId, connection)
+				case Some(membership) => f(session, membership.id, connection)
 				case None => Result.Failure(Unauthorized, "You're not a member of this organization")
 			}
 		}

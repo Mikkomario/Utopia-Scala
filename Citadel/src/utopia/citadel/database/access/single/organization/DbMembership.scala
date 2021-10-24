@@ -1,5 +1,6 @@
 package utopia.citadel.database.access.single.organization
 
+import utopia.citadel.database.access.many.organization.DbMemberships
 import utopia.citadel.database.factory.organization.MembershipFactory
 import utopia.citadel.database.model.organization.MembershipModel
 import utopia.metropolis.model.combined.organization.MembershipWithRoles
@@ -8,7 +9,7 @@ import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.NonDeprecatedView
+import utopia.vault.nosql.view.{NonDeprecatedView, SubView}
 
 /**
   * Used for accessing individual Memberships
@@ -39,6 +40,14 @@ object DbMembership extends SingleRowModelAccess[Membership] with NonDeprecatedV
 	def apply(id: Int) = DbSingleMembership(id)
 	
 	/**
+	  * @param organizationId Id of the linked organization
+	  * @param userId Id of the linked user
+	  * @return An access point to the link (membership) between these two entities
+	  */
+	def betweenOrganizationAndUser(organizationId: Int, userId: Int) =
+		new DbSingleMembershipLink(organizationId, userId)
+	
+	/**
 	  * Starts a new organization membership. Please make sure the user is not a member of the specified organization
 	  * before calling this method.
 	  * @param organizationId Id of the organization where the memberhip is starting
@@ -53,6 +62,28 @@ object DbMembership extends SingleRowModelAccess[Membership] with NonDeprecatedV
 		val membership = model.insert(MembershipData(organizationId, userId, Some(creatorId)))
 		val role = apply(membership.id).assignRoleWithId(startingRoleId, creatorId)
 		MembershipWithRoles(membership, Set(role))
+	}
+	
+	
+	// NESTED   -------------------------------
+	
+	class DbSingleMembershipLink(organizationId: Int, userId: Int) extends UniqueMembershipAccess with SubView
+	{
+		// COMPUTED ---------------------------
+		
+		/**
+		  * @return An access point to this link + any possible historical links between this organization and user
+		  */
+		def withHistory =
+			DbMemberships.withHistory.betweenOrganizationAndUser(organizationId, userId)
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override protected def parent = DbMembership
+		override protected def defaultOrdering = None
+		
+		override def filterCondition = model.withOrganizationId(organizationId).withUserId(userId).toCondition
 	}
 }
 

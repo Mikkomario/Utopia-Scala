@@ -1,7 +1,7 @@
 package utopia.citadel.database.factory.organization
 
 import utopia.metropolis.model.combined.organization.MembershipWithRoles
-import utopia.metropolis.model.stored.organization.{MemberRole, Membership}
+import utopia.metropolis.model.stored.organization.{MemberRoleLink, Membership}
 import utopia.vault.nosql.factory.multi.MultiCombiningFactory
 import utopia.vault.nosql.template.Deprecatable
 
@@ -11,18 +11,18 @@ import utopia.vault.nosql.template.Deprecatable
   * @since 6.5.2020, v1.0
   */
 object MembershipWithRolesFactory
-	extends MultiCombiningFactory[MembershipWithRoles, Membership, MemberRole] with Deprecatable
+	extends MultiCombiningFactory[MembershipWithRoles, Membership, MemberRoleLink] with Deprecatable
 {
 	// IMPLEMENTED	----------------------------
 	
 	override def parentFactory = MembershipFactory
 	
-	override def childFactory = MemberRoleFactory
+	override def childFactory = MemberRoleLinkFactory
 	
 	override def nonDeprecatedCondition = parentFactory.nonDeprecatedCondition &&
 		childFactory.nonDeprecatedCondition
 	
 	override def isAlwaysLinked = false
 	
-	override def apply(parent: Membership, children: Vector[MemberRole]) = MembershipWithRoles(parent, children.toSet)
+	override def apply(parent: Membership, children: Vector[MemberRoleLink]) = MembershipWithRoles(parent, children.toSet)
 }

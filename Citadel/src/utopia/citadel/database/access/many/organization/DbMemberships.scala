@@ -1,8 +1,9 @@
 package utopia.citadel.database.access.many.organization
 
+import utopia.citadel.database.access.many.organization.DbMembershipsWithRoles.DbMembershipsWithRolesWithHistory
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.organization.Membership
-import utopia.vault.nosql.view.NonDeprecatedView
+import utopia.vault.nosql.view.{NonDeprecatedView, UnconditionalView}
 import utopia.vault.sql.SqlExtensions._
 
 /**
@@ -12,6 +13,18 @@ import utopia.vault.sql.SqlExtensions._
   */
 object DbMemberships extends ManyMembershipsAccess with NonDeprecatedView[Membership]
 {
+	// COMPUTED --------------------
+	
+	/**
+	  * @return An access point to memberships, including historical ones (those not currently active)
+	  */
+	def withHistory = DbMembershipsWithHistory
+	/**
+	  * @return An access point to memberships with their role included
+	  */
+	def withRoles = DbMembershipsWithRoles
+	
+	
 	// OTHER	--------------------
 	
 	/**
@@ -22,6 +35,14 @@ object DbMemberships extends ManyMembershipsAccess with NonDeprecatedView[Member
 	
 	
 	// NESTED	--------------------
+	
+	object DbMembershipsWithHistory extends ManyMembershipsAccess with UnconditionalView
+	{
+		/**
+		  * @return A version of this access point which includes member role assignments (both current and historical)
+		  */
+		def withRoles = DbMembershipsWithRolesWithHistory
+	}
 	
 	class DbMembershipsSubset(targetIds: Set[Int]) extends ManyMembershipsAccess
 	{

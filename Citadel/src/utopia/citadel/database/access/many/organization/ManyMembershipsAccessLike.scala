@@ -6,6 +6,7 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.sql.Condition
+import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant
 
@@ -71,6 +72,43 @@ trait ManyMembershipsAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  */
 	def inOrganizationWithId(organizationId: Int) =
 		filter(model.withOrganizationId(organizationId).toCondition)
+	/**
+	  * @param userId Id of the targeted user
+	  * @return An access point to that user's memberships
+	  */
+	def ofUserWithId(userId: Int) = filter(model.withUserId(userId).toCondition)
+	
+	/**
+	  * @param organizationIds Targeted organization ids
+	  * @return Memberships limited to those in specified organizations
+	  *         (but not necessarily including a link to all of them)
+	  */
+	def inAnyOfOrganizations(organizationIds: Iterable[Int]) =
+		filter(model.organizationIdColumn in organizationIds)
+	/**
+	  * @param organizationId An organization id
+	  * @param userId A user id
+	  * @return Current and historical links (memberships) between the specified organization and user
+	  */
+	def betweenOrganizationAndUser(organizationId: Int, userId: Int) =
+		filter(model.withOrganizationId(organizationId).withUserId(userId).toCondition)
+	
+	/**
+	  * @param threshold A time threshold (exclusive)
+	  * @param connection Implicit DB Connection
+	  * @return Whether any accessible memberships were started since the specified time threshold
+	  */
+	def anyStartedSince(threshold: Instant)(implicit connection: Connection) =
+		exists(model.startedColumn > threshold)
+	/**
+	  * Checks whether these memberships have changed since the specified time. Please call this method only
+	  * on access points which include historical information.
+	  * @param threshold A time threshold
+	  * @param connection Implicit DB Connection
+	  * @return Whether any of these memberships were started or ended since the specified time threshold
+	  */
+	def isModifiedSince(threshold: Instant)(implicit connection: Connection) =
+		exists(model.startedColumn > threshold || model.deprecationColumn > threshold)
 	
 	/**
 	  * Updates the creatorId of the targeted Membership instance(s)
