@@ -1,10 +1,20 @@
 package utopia.metropolis.model.partial.organization
 
 import java.time.Instant
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
+import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
+import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.time.Now
+
+object MemberRoleData extends FromModelFactoryWithSchema[MemberRoleData]
+{
+	override val schema = ModelDeclaration("membership_id" -> IntType, "role_id" -> IntType)
+	
+	override protected def fromValidatedModel(model: Model[Constant]) =
+		apply(model("membership_id"), model("role_id"), model("creator_id"), model("created"),
+			model("deprecated_after"))
+}
 
 /**
   * Links an organization membership to the roles that member has within that organization
@@ -26,7 +36,6 @@ case class MemberRoleData(membershipId: Int, roleId: Int, creatorId: Option[Int]
 	  * Whether this MemberRole has already been deprecated
 	  */
 	def isDeprecated = deprecatedAfter.isDefined
-	
 	/**
 	  * Whether this MemberRole is still valid (not deprecated)
 	  */

@@ -12,6 +12,14 @@ import utopia.vault.sql.SqlExtensions._
   */
 object DbMemberRoles extends ManyMemberRolesAccess with NonDeprecatedView[MemberRole]
 {
+	// COMPUTED --------------------
+	
+	/**
+	  * @return An access point to member role links including allowed task ids
+	  */
+	def withRights = DbMemberRolesWithRights
+	
+	
 	// OTHER	--------------------
 	
 	/**

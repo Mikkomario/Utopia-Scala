@@ -5,6 +5,7 @@ import utopia.citadel.database.factory.organization.MembershipFactory
 import utopia.citadel.database.model.organization.MembershipModel
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
@@ -58,6 +59,13 @@ trait UniqueMembershipAccess
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	  * Ends this membership
+	  * @param connection Implicit DB Connection
+	  * @return Whether this membership was affected
+	  */
+	def end()(implicit connection: Connection) = ended = Now
 	
 	/**
 	  * Updates the creatorId of the targeted Membership instance(s)

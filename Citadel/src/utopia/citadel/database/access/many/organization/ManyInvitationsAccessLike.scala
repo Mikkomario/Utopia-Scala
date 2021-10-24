@@ -91,6 +91,13 @@ trait ManyInvitationsAccessLike[+A] extends ManyRowModelAccess[A] with Indexed
 	// OTHER	--------------------
 	
 	/**
+	  * @param organizationId Id of the targeted organization
+	  * @return An access point to invitations into that organization
+	  */
+	def toOrganizationWithId(organizationId: Int) =
+		filter(model.withOrganizationId(organizationId).toCondition)
+	
+	/**
 	  * Updates the created of the targeted Invitation instance(s)
 	  * @param newCreated A new created to assign
 	  * @return Whether any Invitation instance was affected

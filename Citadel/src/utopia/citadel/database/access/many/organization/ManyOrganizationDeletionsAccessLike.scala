@@ -70,6 +70,12 @@ trait ManyOrganizationDeletionsAccessLike[+A] extends ManyModelAccess[A] with In
 	// OTHER	--------------------
 	
 	/**
+	  * @param organizationId Id of the targeted organization
+	  * @return An access point to deletions concerning that organization
+	  */
+	def withOrganizationId(organizationId: Int) =
+		filter(model.withOrganizationId(organizationId).toCondition)
+	/**
 	  * @param threshold A time threshold
 	  * @return An access point to these deletions that are scheduled to actualize before the specified time
 	  */

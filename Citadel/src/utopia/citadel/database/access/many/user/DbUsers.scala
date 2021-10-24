@@ -24,6 +24,14 @@ object DbUsers extends ManyUsersAccess with UnconditionalView
 	
 	class DbUsersSubset(targetIds: Set[Int]) extends ManyUsersAccess
 	{
+		// COMPUTED ------------------------
+		
+		/**
+		  * @return An access point to settings concerning these users
+		  */
+		def settings = DbManyUserSettings.forAnyOfUsers(targetIds)
+		
+		
 		// IMPLEMENTED	--------------------
 		
 		override def globalCondition = Some(index in targetIds)

@@ -10,6 +10,7 @@ import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.Condition
+import utopia.vault.sql.SqlExtensions._
 
 object ManyUserRoleRightsAccess
 {
@@ -34,13 +35,11 @@ trait ManyUserRoleRightsAccess extends ManyRowModelAccess[UserRoleRight] with In
 	  */
 	def roleIds(implicit connection: Connection) = pullColumn(model.roleIdColumn)
 		.flatMap { value => value.int }
-	
 	/**
 	  * taskIds of the accessible UserRoleRights
 	  */
 	def taskIds(implicit connection: Connection) = pullColumn(model.taskIdColumn)
 		.flatMap { value => value.int }
-	
 	/**
 	  * creationTimes of the accessible UserRoleRights
 	  */
@@ -68,20 +67,35 @@ trait ManyUserRoleRightsAccess extends ManyRowModelAccess[UserRoleRight] with In
 	// OTHER	--------------------
 	
 	/**
+	  * @param userRoleId Id of the targeted user role
+	  * @return An access point to links for that role
+	  */
+	def withRoleId(userRoleId: Int) = filter(model.withRoleId(userRoleId).toCondition)
+	/**
+	  * @param taskId Id of the targeted task id
+	  * @return An access point to links to that task
+	  */
+	def withTaskId(taskId: Int) = filter(model.withTaskId(taskId).toCondition)
+	
+	/**
+	  * @param roleIds Ids of the targeted user roles
+	  * @return An access point to role right links concerning those user roles
+	  */
+	def withAnyOfRoles(roleIds: Iterable[Int]) = filter(model.roleIdColumn in roleIds)
+	
+	/**
 	  * Updates the created of the targeted UserRoleRight instance(s)
 	  * @param newCreated A new created to assign
 	  * @return Whether any UserRoleRight instance was affected
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
-	
 	/**
 	  * Updates the roleId of the targeted UserRoleRight instance(s)
 	  * @param newRoleId A new roleId to assign
 	  * @return Whether any UserRoleRight instance was affected
 	  */
 	def roleIds_=(newRoleId: Int)(implicit connection: Connection) = putColumn(model.roleIdColumn, newRoleId)
-	
 	/**
 	  * Updates the taskId of the targeted UserRoleRight instance(s)
 	  * @param newTaskId A new taskId to assign

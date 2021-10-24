@@ -21,8 +21,8 @@ object DetailedMembership extends FromModelFactory[DetailedMembership]
 			Membership(valid).flatMap { membership =>
 				UserSettings(valid("user_data").getModel).map { settings =>
 					// Finally parses user roles data
-					val roles = valid("roles").getVector.flatMap { _.model }
-						.flatMap { UserRoleWithRights(_).toOption }.toSet
+					val roles = valid("role_links").getVector.flatMap { _.model }
+						.flatMap { MemberRoleWithRights(_).toOption }.toSet
 					// Combines parsed data
 					DetailedMembership(membership, roles, settings)
 				}
@@ -35,7 +35,7 @@ object DetailedMembership extends FromModelFactory[DetailedMembership]
   * @author Mikko Hilpinen
   * @since 1.12.2020, v1
   */
-case class DetailedMembership(membership: Membership, roles: Set[UserRoleWithRights], userData: UserSettings)
+case class DetailedMembership(membership: Membership, roleLinks: Set[MemberRoleWithRights], userData: UserSettings)
 	extends Extender[MembershipData] with StyledModelConvertible
 {
 	// COMPUTED -------------------------------
@@ -51,10 +51,10 @@ case class DetailedMembership(membership: Membership, roles: Set[UserRoleWithRig
 	override def wrapped = membership
 	
 	override def toModel = membership.toModel ++
-		Vector(Constant("roles", roles.toVector.sortBy { _.roleId }.map { _.toModel }),
+		Vector(Constant("roles_links", roleLinks.toVector.sortBy { _.roleId }.map { _.toModel }),
 			Constant("user_data", userData.toModel))
 	
 	override def toSimpleModel = userData.toSimpleModel ++ membership.toSimpleModel ++
-		Model(Vector("role_ids" -> roles.map { _.roleId }.toVector.sorted,
-			"task_ids" -> roles.flatMap { _.taskIds }.toVector.sorted))
+		Model(Vector("role_ids" -> roleLinks.map { _.roleId }.toVector.sorted,
+			"task_ids" -> roleLinks.flatMap { _.taskIds }.toVector.sorted))
 }

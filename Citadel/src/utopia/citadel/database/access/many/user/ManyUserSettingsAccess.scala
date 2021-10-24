@@ -10,6 +10,7 @@ import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.Condition
+import utopia.vault.sql.SqlExtensions._
 
 object ManyUserSettingsAccess
 {
@@ -34,25 +35,21 @@ trait ManyUserSettingsAccess extends ManyRowModelAccess[UserSettings] with Index
 	  */
 	def userIds(implicit connection: Connection) = pullColumn(model.userIdColumn)
 		.flatMap { value => value.int }
-	
 	/**
 	  * names of the accessible UserSettings
 	  */
 	def names(implicit connection: Connection) = pullColumn(model.nameColumn)
 		.flatMap { value => value.string }
-	
 	/**
 	  * emailAddresses of the accessible UserSettings
 	  */
 	def emailAddresses(implicit connection: Connection) = 
 		pullColumn(model.emailColumn).flatMap { value => value.string }
-	
 	/**
 	  * creationTimes of the accessible UserSettings
 	  */
 	def creationTimes(implicit connection: Connection) = 
 		pullColumn(model.createdColumn).flatMap { value => value.instant }
-	
 	/**
 	  * deprecationTimes of the accessible UserSettings
 	  */
@@ -80,13 +77,18 @@ trait ManyUserSettingsAccess extends ManyRowModelAccess[UserSettings] with Index
 	// OTHER	--------------------
 	
 	/**
+	  * @param userIds Ids of the targeted users
+	  * @return An access point to those user's settings
+	  */
+	def forAnyOfUsers(userIds: Iterable[Int]) = filter(model.userIdColumn in userIds)
+	
+	/**
 	  * Updates the created of the targeted UserSettings instance(s)
 	  * @param newCreated A new created to assign
 	  * @return Whether any UserSettings instance was affected
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
-	
 	/**
 	  * Updates the deprecatedAfter of the targeted UserSettings instance(s)
 	  * @param newDeprecatedAfter A new deprecatedAfter to assign
@@ -94,7 +96,6 @@ trait ManyUserSettingsAccess extends ManyRowModelAccess[UserSettings] with Index
 	  */
 	def deprecationTimes_=(newDeprecatedAfter: Instant)(implicit connection: Connection) = 
 		putColumn(model.deprecatedAfterColumn, newDeprecatedAfter)
-	
 	/**
 	  * Updates the email of the targeted UserSettings instance(s)
 	  * @param newEmail A new email to assign
@@ -102,14 +103,12 @@ trait ManyUserSettingsAccess extends ManyRowModelAccess[UserSettings] with Index
 	  */
 	def emailAddresses_=(newEmail: String)(implicit connection: Connection) = 
 		putColumn(model.emailColumn, newEmail)
-	
 	/**
 	  * Updates the name of the targeted UserSettings instance(s)
 	  * @param newName A new name to assign
 	  * @return Whether any UserSettings instance was affected
 	  */
 	def names_=(newName: String)(implicit connection: Connection) = putColumn(model.nameColumn, newName)
-	
 	/**
 	  * Updates the userId of the targeted UserSettings instance(s)
 	  * @param newUserId A new userId to assign

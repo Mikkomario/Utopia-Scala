@@ -24,6 +24,5 @@ object MembershipWithRolesFactory
 	
 	override def isAlwaysLinked = false
 	
-	override def apply(parent: Membership, children: Vector[MemberRole]) =
-		MembershipWithRoles(parent, children.map { _.roleId }.toSet)
+	override def apply(parent: Membership, children: Vector[MemberRole]) = MembershipWithRoles(parent, children.toSet)
 }
