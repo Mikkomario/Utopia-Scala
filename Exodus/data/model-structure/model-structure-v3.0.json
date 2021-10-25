@@ -71,11 +71,12 @@
             "doc": "Token used for authenticating an email resend attempt"
           },
           {
-            "ref": "user",
-            "doc": "Id of the user who claims to own this email address"
+            "type": "expiration"
           },
           {
-            "type": "expiration"
+            "ref": "user",
+            "type": "Option[Int]",
+            "doc": "Id of the user who claims to own this email address (if applicable)"
           },
           {
             "type": "creation",

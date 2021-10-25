@@ -84,6 +84,19 @@ object DbMembership extends SingleRowModelAccess[Membership] with NonDeprecatedV
 		override protected def defaultOrdering = None
 		
 		override def filterCondition = model.withOrganizationId(organizationId).withUserId(userId).toCondition
+		
+		
+		// OTHER    ---------------------------
+		
+		/**
+		  * Starts a new membership between this organization and user
+		  * @param startingRoleId Id of the user role assigned for the joining user
+		  * @param creatorId Id of the user who created / authorized this link
+		  * @param connection Implicit DB Connection
+		  * @return New membership, including role data
+		  */
+		def start(startingRoleId: Int, creatorId: Int)(implicit connection: Connection) =
+			DbMembership.start(organizationId, userId, startingRoleId, creatorId)
 	}
 }
 

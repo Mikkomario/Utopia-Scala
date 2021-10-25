@@ -115,7 +115,7 @@ object EmailValidationAttemptModel
 	
 	override def apply(data: EmailValidationAttemptData) = 
 		apply(None, Some(data.purposeId), Some(data.email), Some(data.token), Some(data.resendToken), 
-			Some(data.userId), Some(data.expires), Some(data.created), data.completed)
+			Some(data.expires), data.userId, Some(data.created), data.completed)
 	
 	override def complete(id: Value, data: EmailValidationAttemptData) = EmailValidationAttempt(id.getInt, 
 		data)
@@ -177,8 +177,8 @@ object EmailValidationAttemptModel
   * @param email Email address being validated
   * @param token Token sent with the email, which is also used for validating the email address
   * @param resendToken Token used for authenticating an email resend attempt
-  * @param userId Id of the user who claims to own this email address
   * @param expires Time when this EmailValidationAttempt expires / becomes invalid
+  * @param userId Id of the user who claims to own this email address
   * @param created Time when this EmailValidationAttempt was first created
   * @param completed Time when this attempt was finished successfully. None while not completed.
   * @author Mikko Hilpinen
@@ -186,7 +186,7 @@ object EmailValidationAttemptModel
   */
 case class EmailValidationAttemptModel(id: Option[Int] = None, purposeId: Option[Int] = None, 
 	email: Option[String] = None, token: Option[String] = None, resendToken: Option[String] = None, 
-	userId: Option[Int] = None, expires: Option[Instant] = None, created: Option[Instant] = None, 
+	expires: Option[Instant] = None, userId: Option[Int] = None, created: Option[Instant] = None,
 	completed: Option[Instant] = None) 
 	extends StorableWithFactory[EmailValidationAttempt]
 {

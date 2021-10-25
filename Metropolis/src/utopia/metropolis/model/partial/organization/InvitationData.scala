@@ -21,17 +21,6 @@ object InvitationData extends FromModelFactory[InvitationData]
 				model("recipient_id"), model("recipient_email"), model("message"), model("sender_id"),
 				model("created"))
 		}
-		/*.flatMap { valid =>
-		// Either recipient email or id is required
-		val recipientModel = valid("recipient").getModel
-		recipientModel("id").int.map { Right(_) }.orElse { recipientModel("email").string.map { Left(_) } } match
-		{
-			case Some(recipient) => Success(InvitationData(valid("organization_id"), recipient, valid("role_id"),
-				valid("expires"), valid("sender_id")))
-			case None => Failure(new ModelValidationFailedException(
-				s"Either 'id' or 'email' required in recipient. Found $recipientModel"))
-		}
-	}*/
 }
 
 /**

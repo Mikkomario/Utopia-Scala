@@ -21,12 +21,12 @@ object PasswordChange extends FromModelFactory[PasswordChange]
 	
 	override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
 		val newPassword = valid("new_password").getString
-		valid("key").string match
+		valid("token").string match
 		{
 			case Some(emailKey) => Success(emailAuthenticated(newPassword, emailKey, valid("device_id")))
 			case None =>
 				valid("old_password").string.filterNot { _.isEmpty }
-					.toTry { new ModelValidationFailedException("Either 'key' or 'old_password' required") }
+					.toTry { new ModelValidationFailedException("Either 'token' or 'old_password' required") }
 					.map { oldPassword => sessionAuthenticated(oldPassword, newPassword) }
 		}
 	}
@@ -47,12 +47,12 @@ object PasswordChange extends FromModelFactory[PasswordChange]
 	/**
 	  * Creates a new password change model for situations where user has forgot their password
 	  * @param newPassword New password for the user
-	  * @param emailKey A key the user received through a validation email
+	  * @param emailToken A token the user received through a validation email
 	  * @param deviceId Id of the device the user wants to log in to (optional)
 	  * @return A new password change model
 	  */
-	def emailAuthenticated(newPassword: String, emailKey: String, deviceId: Option[Int] = None) =
-		apply(newPassword, Left(emailKey -> deviceId))
+	def emailAuthenticated(newPassword: String, emailToken: String, deviceId: Option[Int] = None) =
+		apply(newPassword, Left(emailToken -> deviceId))
 }
 
 /**
@@ -83,7 +83,7 @@ case class PasswordChange(newPassword: String, authentication: Either[(String, O
 	/**
 	  * @return A validation key received through email (None if authenticated via active session & old password)
 	  */
-	def emailValidationKey = emailAuthentication.map { _._1 }
+	def emailValidationToken = emailAuthentication.map { _._1 }
 	
 	/**
 	  * @return Id of device to log in to (None if unspecified). Only provided in password recovery process,
@@ -96,7 +96,7 @@ case class PasswordChange(newPassword: String, authentication: Either[(String, O
 		val authParams: Vector[(String, Value)] = authentication match
 		{
 			case Right(oldPassword) => Vector("old_password" -> oldPassword)
-			case Left((emailKey, deviceId)) => Vector("key" -> emailKey, "device_id" -> deviceId)
+			case Left((emailKey, deviceId)) => Vector("token" -> emailKey, "device_id" -> deviceId)
 		}
 		Model(("new_password" -> (newPassword: Value)) +: authParams)
 	}

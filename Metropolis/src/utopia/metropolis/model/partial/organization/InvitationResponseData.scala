@@ -2,10 +2,11 @@ package utopia.metropolis.model.partial.organization
 
 import java.time.Instant
 import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
-import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, ModelConvertible}
+import utopia.flow.generic.{FromModelFactoryWithSchema, IntType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.time.Now
+import utopia.metropolis.model.StyledModelConvertible
 
 object InvitationResponseData extends FromModelFactoryWithSchema[InvitationResponseData]
 {
@@ -30,12 +31,26 @@ object InvitationResponseData extends FromModelFactoryWithSchema[InvitationRespo
 case class InvitationResponseData(invitationId: Int, message: Option[String] = None, 
 	creatorId: Option[Int] = None, created: Instant = Now, accepted: Boolean = false, 
 	blocked: Boolean = false) 
-	extends ModelConvertible
+	extends StyledModelConvertible
 {
+	// COMPUTED ------------------------
+	
+	/**
+	  * @return Whether the invitation was rejected
+	  */
+	def rejected = !accepted
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = 
 		Model(Vector("invitation_id" -> invitationId, "message" -> message, "creator_id" -> creatorId, 
 			"created" -> created, "accepted" -> accepted, "blocked" -> blocked))
+	
+	override def toSimpleModel =
+	{
+		val base = Model(Vector("accepted" -> accepted, "message" -> message))
+		if (accepted) base else base + Constant("blocked", blocked)
+	}
 }
 

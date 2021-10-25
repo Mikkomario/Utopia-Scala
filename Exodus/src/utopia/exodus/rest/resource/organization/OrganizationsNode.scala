@@ -2,10 +2,12 @@ package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{Created, NotFound}
+import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.citadel.database.access.single.organization.DbOrganization
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.metropolis.model.post.NewOrganization
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
@@ -28,15 +30,19 @@ object OrganizationsNode extends Resource[AuthorizedContext]
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionKeyAuthorized { (session, connection) =>
+		context.sessionTokenAuthorized { (session, connection) =>
 			context.handlePost(NewOrganization) { newOrganization =>
 				implicit val c: Connection = connection
 				// Checks that language id is valid, then inserts the new organization
-				if (DbLanguage(newOrganization.languageId).isDefined)
+				if (DbLanguage(newOrganization.languageId).nonEmpty)
 				{
-					val organizationId = DbOrganization.insert(newOrganization.name, newOrganization.languageId,
-						session.userId)
-					Result.Success(organizationId, Created)
+					val (organization, _) = DbOrganization.found(newOrganization.name,
+						newOrganization.languageId, session.userId)
+					Result.Success(session.modelStyle match
+					{
+						case Simple => organization.toSimpleModelUsing(DbDescriptionRoles.pull)
+						case Full => organization.toModel
+					}, Created)
 				}
 				else
 					Result.Failure(NotFound, s"There doesn't exist a language with id ${newOrganization.languageId}")

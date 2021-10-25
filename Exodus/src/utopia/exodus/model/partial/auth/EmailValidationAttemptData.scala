@@ -13,7 +13,7 @@ import utopia.flow.time.TimeExtensions._
   * @param email Email address being validated
   * @param token Token sent with the email, which is also used for validating the email address
   * @param resendToken Token used for authenticating an email resend attempt
-  * @param userId Id of the user who claims to own this email address
+  * @param userId Id of the user who claims to own this email address (if applicable)
   * @param expires Time when this EmailValidationAttempt expires / becomes invalid
   * @param created Time when this EmailValidationAttempt was first created
   * @param completed Time when this attempt was finished successfully. None while not completed.
@@ -21,7 +21,7 @@ import utopia.flow.time.TimeExtensions._
   * @since 2021-10-25
   */
 case class EmailValidationAttemptData(purposeId: Int, email: String, token: String, resendToken: String, 
-	userId: Int, expires: Instant, created: Instant = Now, completed: Option[Instant] = None) 
+	expires: Instant, userId: Option[Int] = None, created: Instant = Now, completed: Option[Instant] = None)
 	extends ModelConvertible
 {
 	// COMPUTED	--------------------

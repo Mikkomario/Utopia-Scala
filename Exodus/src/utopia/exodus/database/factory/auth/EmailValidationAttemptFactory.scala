@@ -25,7 +25,7 @@ object EmailValidationAttemptFactory
 	override def fromValidatedModel(valid: Model[Constant]) = 
 		EmailValidationAttempt(valid("id").getInt, EmailValidationAttemptData(valid("purposeId").getInt, 
 			valid("email").getString, valid("token").getString, valid("resendToken").getString, 
-			valid("userId").getInt, valid("expires").getInstant, valid("created").getInstant, 
+			valid("expires").getInstant, valid("userId").int, valid("created").getInstant,
 			valid("completed").instant))
 }
 
