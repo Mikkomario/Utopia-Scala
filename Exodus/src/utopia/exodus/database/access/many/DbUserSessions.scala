@@ -11,6 +11,7 @@ import utopia.vault.nosql.access.many.model.ManyModelAccess
   * @author Mikko Hilpinen
   * @since 3.5.2020, v1
   */
+@deprecated("Replaced with DbSessionTokens", "v3.0")
 object DbUserSessions extends ManyModelAccess[UserSession]
 {
 	// IMPLEMENTED	----------------------------

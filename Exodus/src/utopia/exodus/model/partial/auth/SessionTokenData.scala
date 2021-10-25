@@ -1,5 +1,6 @@
 package utopia.exodus.model.partial.auth
 
+import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 
 import java.time.Instant
@@ -9,6 +10,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
+import utopia.vault.database.Connection
 
 /**
   * Used for authenticating temporary user sessions
@@ -38,13 +40,23 @@ case class SessionTokenData(userId: Int, token: String, expires: Instant, device
 	def isValid = !isDeprecated
 	
 	/**
-	  * The model style to use during a request handling, based on either a header (X-Style) value,
-	  * a query parameter (style) value, session default or session type
 	  * @param context Implicit request context
-	  * @return Model style to use
+	  * @return The model style to use during a request handling, based on either a header (X-Style) value,
+	  * a query parameter (style) value, session default or session type
 	  */
 	def modelStyle(implicit context: AuthorizedContext) =
 		context.modelStyle.orElse(modelStylePreference).getOrElse { if (deviceId.isDefined) Full else Simple }
+	/**
+	  * @param context Implicit request context
+	  * @param connection Implicit database connection (used for reading language ids from DB if necessary)
+	  * @return Language id list to use during this session - from most to least preferred
+	  */
+	def languageIds(implicit context: AuthorizedContext, connection: Connection) = context.languageIds(userId)
+	
+	/**
+	  * @return An access point to this session's user's data in the DB
+	  */
+	def userAccess = DbUser(userId)
 	
 	
 	// IMPLEMENTED	--------------------

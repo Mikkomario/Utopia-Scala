@@ -2,15 +2,14 @@ package utopia.exodus.rest.resource.device
 
 import utopia.access.http.Method.{Delete, Get}
 import utopia.access.http.Status.NotFound
-import utopia.citadel.database.access.single.device.DbDevice
+import utopia.citadel.database.access.single.device.DbClientDevice
 import utopia.citadel.database.access.single.user.DbUser
-import utopia.exodus.database.access.single.DbUserSession
+import utopia.exodus.database.access.single.auth.DbSessionToken
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path
-import utopia.nexus.rest.Resource
-import utopia.nexus.rest.ResourceSearchResult.Error
+import utopia.nexus.rest.LeafResource
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -19,51 +18,44 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 3.5.2020, v1
   */
-case class SessionKeyNode(deviceId: Int) extends Resource[AuthorizedContext]
+// TODO: Rename to session token node
+case class SessionKeyNode(deviceId: Int) extends LeafResource[AuthorizedContext]
 {
 	override val name = "session-key"
-	
 	override val allowedMethods = Vector(Get, Delete)
+	
+	private lazy val deviceAccess = DbClientDevice(deviceId)
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		// GET retrieves a new temporary session key, invalidating any existing session keys for the user device -combination
+		// GET retrieves a new temporary session key,
+		// invalidating any existing session keys for the user device -combination
 		if (context.request.method == Get)
 		{
 			// Authorizes the request using either device key or basic authorization
-			context.basicOrDeviceKeyAuthorized(deviceId) { (userId, deviceKeyWasUsed, connection) =>
+			context.basicOrDeviceTokenAuthorized(deviceId) { (userId, deviceKeyWasUsed, connection) =>
 				implicit val c: Connection = connection
 				// On basic auth mode, makes sure the targeted device exists
-				val isRealDevice =
-				{
-					if (deviceKeyWasUsed)
-						true
-					else
-						DbDevice(deviceId).isDefined
-				}
-				if (isRealDevice)
+				if (deviceKeyWasUsed || deviceAccess.nonEmpty)
 				{
 					// If basic auth was used, may register a new user device -connection
 					if (!deviceKeyWasUsed)
-						DbUser(userId).linkWithDeviceWithId(deviceId)
-					val newSession = DbUserSession(userId, deviceId).start(context.modelStyle)
-					// Returns the session key
-					Result.Success(newSession.key)
+						DbUser(userId).linkToDeviceWithId(deviceId).createIfEmpty()
+					val newSession = DbSessionToken.forDeviceSession(userId, deviceId).start(context.modelStyle)
+					// Returns the session token
+					Result.Success(newSession.token)
 				}
 				else
 					Result.Failure(NotFound, s"There doesn't exist a device with id $deviceId")
 			}
 		}
-		// DELETE invalidates the session key used (authorized with a session key)
+		// DELETE invalidates the session token on this device (authorized with a session token)
 		else
 		{
-			context.sessionKeyAuthorized { (session, connection) =>
-				DbUserSession(session.userId, deviceId).end()(connection)
+			context.sessionTokenAuthorized { (session, connection) =>
+				DbSessionToken.forDeviceSession(session.userId, deviceId).logOut()(connection)
 				Result.Empty
 			}
 		}
 	}
-	
-	override def follow(path: Path)(implicit context: AuthorizedContext) = Error(
-		message = Some(s"$name doesn't have any children"))
 }

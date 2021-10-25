@@ -10,7 +10,7 @@ import utopia.metropolis.model.stored.description.DescriptionRole
   * @param role Wrapped role with associated rights
   * @param descriptions Various descriptions for this role
   */
-@deprecated("Replaced with DescribedUserRole", "v2.0")
+@deprecated("Replaced with DetailedUserRole", "v2.0")
 case class DescribedRole(role: UserRoleWithRights, override val descriptions: Set[LinkedDescription])
 	extends DescribedWrapper[UserRoleWithRights] with SimplyDescribed
 {

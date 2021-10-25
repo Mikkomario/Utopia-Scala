@@ -8,6 +8,7 @@ import utopia.vault.nosql.access.many.column.ManyIntIdAccess
   * @author Mikko Hilpinen
   * @since 25.7.2020, v1.0
   */
+// TODO: This should likely utilize caching
 object DbDescriptionRoleIds extends ManyIntIdAccess
 {
 	// COMPUTED	------------------------------

@@ -7,6 +7,7 @@ import utopia.citadel.model.enumeration.CitadelDescriptionRole.Name
 import utopia.metropolis.model.combined.device.DescribedClientDevice
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.partial.device.ClientDeviceData
+import utopia.metropolis.model.post.NewDevice
 import utopia.metropolis.model.stored.device.ClientDevice
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
@@ -58,5 +59,14 @@ object DbClientDevice extends SingleRowModelAccess[ClientDevice] with Unconditio
 			DescriptionData(Name.id, languageId, deviceName, Some(authorId)))
 		DescribedClientDevice(device, Set(description))
 	}
+	/**
+	  * Inserts a new device to the database, including its first name
+	  * @param device Device data to insert (please make sure the language id is valid)
+	  * @param creatorId Id of the user who added this device
+	  * @param connection connection DB Connection (implicit)
+	  * @return Newly inserted device
+	  */
+	def insert(device: NewDevice, creatorId: Int)(implicit connection: Connection): DescribedClientDevice =
+		insert(device.name, device.languageId, creatorId)
 }
 

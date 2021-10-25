@@ -45,6 +45,12 @@ object DbDeviceToken
 	  */
 	def apply(token: String) = new DbDeviceTokenWrapperAccess(token)
 	
+	/**
+	  * @param deviceId A device id
+	  * @return An access point to device token linked with that device
+	  */
+	def forDeviceWithId(deviceId: Int) = new DbTokenForDevice(deviceId)
+	
 	
 	// NESTED   -------------------
 	

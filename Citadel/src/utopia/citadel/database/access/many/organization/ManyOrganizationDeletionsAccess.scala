@@ -36,6 +36,11 @@ trait ManyOrganizationDeletionsAccess
 		case None => DbOrganizationDeletionsWithCancellations
 	}
 	
+	/**
+	  * @return An access point to organization deletions that haven't been cancelled yet
+	  */
+	def notCancelled = withCancellations.notCancelled
+	
 	
 	// IMPLEMENTED	--------------------
 	

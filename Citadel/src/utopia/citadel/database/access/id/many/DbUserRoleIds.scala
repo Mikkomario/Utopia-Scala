@@ -33,7 +33,7 @@ object DbUserRoleIds extends ManyIntIdAccess
 	  *         "below" this role.
 	  */
 	def belowOrEqualTo(roleId: Int)(implicit connection: Connection) =
-		allowingOnlyTasksWithIds(DbTaskIds.forRoleWithId(roleId).toSet)
+		allowingOnlyTasksWithIds(DbTaskIds.forUserRoleWithId(roleId).toSet)
 	
 	/**
 	  * @param roleIds    A set of user role ids
@@ -41,7 +41,7 @@ object DbUserRoleIds extends ManyIntIdAccess
 	  * @return List of roles that allow all of, or a subset of tasks allowed for any of the specified roles
 	  */
 	def belowOrEqualTo(roleIds: Set[Int])(implicit connection: Connection) =
-		allowingOnlyTasksWithIds(DbTaskIds.forRoleCombination(roleIds).toSet)
+		allowingOnlyTasksWithIds(DbTaskIds.forUserRoleCombination(roleIds))
 	
 	/**
 	  * @param taskIds    Ids of allowed tasks

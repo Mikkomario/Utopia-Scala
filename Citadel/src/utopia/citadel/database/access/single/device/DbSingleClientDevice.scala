@@ -4,6 +4,7 @@ import utopia.citadel.database.access.many.description.DbClientDeviceDescription
 import utopia.citadel.database.access.many.device.DbClientDeviceUsers
 import utopia.citadel.database.access.single.description.{DbClientDeviceDescription, SingleIdDescribedAccess}
 import utopia.citadel.database.model.device.ClientDeviceUserModel
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.device.DescribedClientDevice
 import utopia.metropolis.model.stored.device.ClientDevice
 import utopia.vault.database.Connection
@@ -36,6 +37,14 @@ case class DbSingleClientDevice(id: Int)
 	  * @return Ids of the users who use this device
 	  */
 	def userIds(implicit connection: Connection) = userLinks.userIds
+	
+	/**
+	  * @param connection Implicit DB Connection
+	  * @param languageIds Ids of the languages in which device descriptions are read (call-by-name, implicit)
+	  * @return A detailed copy of this client device
+	  */
+	def detailed(implicit connection: Connection, languageIds: => LanguageIds) =
+		described.map { device => device.witherUserLinks(userLinks.pull.toSet) }
 	
 	
 	// IMPLEMENTED	--------------------

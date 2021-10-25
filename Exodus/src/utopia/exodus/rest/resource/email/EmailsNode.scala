@@ -4,16 +4,15 @@ import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{BadRequest, Forbidden, NotFound, NotImplemented}
 import utopia.citadel.database.access.id.single.DbUserId
-import utopia.citadel.database.access.many.user.DbUsers
-import utopia.exodus.database.access.many.DbEmailValidations
+import utopia.citadel.database.access.many.user.DbManyUserSettings
+import utopia.exodus.database.access.single.auth.DbEmailValidationAttempt
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.{EmailChange, PasswordReset, UserCreation}
 import utopia.exodus.rest.resource.CustomAuthorizationResourceFactory
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.{EmailValidator, ExodusContext}
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.{Path, Response}
-import utopia.nexus.rest.{Resource, ResourceWithChildren}
-import utopia.nexus.rest.ResourceSearchResult.Error
+import utopia.nexus.rest.{LeafResource, ResourceWithChildren}
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -35,7 +34,6 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 	private val defaultSupportedMethods = Vector[Method](Post)
 	
 	override val name = "emails"
-	
 	override val children = Vector(EmailResendsNode, EmailChangeNode, PasswordResetNode)
 	
 	
@@ -85,17 +83,18 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 		}
 	}
 	
-	private def sendEmailValidationForNewUser(email: String)(implicit connection: Connection, validator: EmailValidator) =
+	private def sendEmailValidationForNewUser(email: String)
+	                                         (implicit connection: Connection, validator: EmailValidator) =
 	{
-		if (DbUsers.existsUserWithEmail(email))
+		if (DbManyUserSettings.containsEmail(email))
 			Result.Failure(Forbidden, "Specified email address is already in use")
 		else
 		{
 			// Sends an email validation, if possible
-			DbEmailValidations.place(email, UserCreation.id) match
+			DbEmailValidationAttempt.start(email, UserCreation.id) match
 			{
-				// On success returns the resend key
-				case Right(newValidation) => Result.Success(newValidation.resendKey)
+				// On success returns the resend token
+				case Right(newValidation) => Result.Success(newValidation.resendToken)
 				case Left((status, message)) => Result.Failure(status, message)
 			}
 		}
@@ -104,7 +103,7 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 	
 	// NESTED	-----------------------------
 	
-	private object PasswordResetNode extends Resource[AuthorizedContext]
+	private object PasswordResetNode extends LeafResource[AuthorizedContext]
 	{
 		// ATTRIBUTES	---------------------
 		
@@ -122,29 +121,26 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 			}
 		}
 		
-		override def follow(path: Path)(implicit context: AuthorizedContext) =
-			Error(message = Some(s"$name doesn't have any child nodes"))
-		
 		
 		// OTHER	-------------------------
 		
 		private def sendValidationForPasswordRecovery(email: String)
 													 (implicit connection: Connection, validator: EmailValidator) =
 		{
-			DbUserId.forEmail(email) match
-			{
+			DbUserId.forEmail(email) match {
 				case Some(userId) =>
-					DbEmailValidations.place(email, PasswordReset.id, Some(userId)) match
+					DbEmailValidationAttempt.start(email, PasswordReset.id, Some(userId)) match
 					{
-						case Right(newValidation) => Result.Success(newValidation.resendKey)
+						case Right(newValidation) => Result.Success(newValidation.resendToken)
 						case Left((status, message)) => Result.Failure(status, message)
 					}
-				case None => Result.Failure(NotFound, "There doesn't exist any user account for the specified email address")
+				case None =>
+					Result.Failure(NotFound, "There doesn't exist any user account for the specified email address")
 			}
 		}
 	}
 	
-	private object EmailChangeNode extends Resource[AuthorizedContext]
+	private object EmailChangeNode extends LeafResource[AuthorizedContext]
 	{
 		// ATTRIBUTES   -------------------
 		
@@ -158,24 +154,24 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 		override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 		{
 			// Request must be authorized with session key
-			context.sessionKeyAuthorized { (session, connection) =>
+			context.sessionTokenAuthorized { (session, connection) =>
 				ExodusContext.emailValidator match
 				{
 					case Some(validator) =>
 						implicit val c: Connection = connection
 						handleEmailUsing { email =>
 							// Makes sure the email address is not yet in use
-							if (DbUsers.existsUserWithEmail(email))
+							if (DbManyUserSettings.containsEmail(email))
 								Result.Failure(Forbidden, "Specified email address is already in use")
 							else
 							{
 								// Places a new email validation
 								implicit val v: EmailValidator = validator
-								DbEmailValidations.place(email, EmailChange.id, Some(session.userId)) match
+								DbEmailValidationAttempt.start(email, EmailChange.id, Some(session.userId)) match
 								{
 									case Right(validation) =>
-										// Returns a resend code on success
-										Result.Success(validation.resendKey)
+										// Returns a resend token on success
+										Result.Success(validation.resendToken)
 									case Left((status, message)) => Result.Failure(status, message)
 								}
 							}
@@ -184,8 +180,5 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 				}
 			}
 		}
-		
-		override def follow(path: Path)(implicit context: AuthorizedContext) =
-			Error(message = Some(s"$name doesn't have any child nodes"))
 	}
 }

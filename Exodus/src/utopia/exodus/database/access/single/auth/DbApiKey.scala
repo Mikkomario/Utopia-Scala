@@ -39,7 +39,7 @@ object DbApiKey extends SingleRowModelAccess[ApiKey] with UnconditionalView with
 	  * @param token An api key token
 	  * @return An access point to key with that token
 	  */
-	def withToken(token: String) = new DbApiKeyByToken(token)
+	def apply(token: String) = new DbApiKeyByToken(token)
 	
 	
 	// NESTED   --------------------

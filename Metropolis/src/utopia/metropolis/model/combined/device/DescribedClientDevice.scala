@@ -1,8 +1,10 @@
 package utopia.metropolis.model.combined.device
 
+import utopia.flow.datastructure.immutable.Model
+import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.description.{DescribedFromModelFactory, DescribedWrapper, LinkedDescription, SimplyDescribed}
 import utopia.metropolis.model.stored.description.DescriptionRole
-import utopia.metropolis.model.stored.device.ClientDevice
+import utopia.metropolis.model.stored.device.{ClientDevice, ClientDeviceUser}
 
 object DescribedClientDevice extends DescribedFromModelFactory[ClientDevice, DescribedClientDevice]
 {
@@ -22,6 +24,16 @@ case class DescribedClientDevice(clientDevice: ClientDevice, descriptions: Set[L
 	
 	override def wrapped = clientDevice
 	
-	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) = wrapped.toModel
+	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) =
+		Model(Vector("id" -> clientDevice.id))
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	  * @param userLinks A set of device-user-links
+	  * @return A copy of this device with those links included
+	  */
+	def witherUserLinks(userLinks: Set[ClientDeviceUser]) = DetailedClientDevice(this, userLinks)
 }
 

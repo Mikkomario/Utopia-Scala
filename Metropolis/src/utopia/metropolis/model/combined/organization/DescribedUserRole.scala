@@ -1,5 +1,7 @@
 package utopia.metropolis.model.combined.organization
 
+import utopia.flow.datastructure.immutable.Model
+import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.description.{DescribedFactory, DescribedWrapper, LinkedDescription, SimplyDescribed}
 import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.metropolis.model.stored.organization.UserRole
@@ -19,6 +21,16 @@ case class DescribedUserRole(userRole: UserRole, descriptions: Set[LinkedDescrip
 	
 	override def wrapped = userRole
 	
-	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) = wrapped.toModel
+	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) =
+		Model(Vector("id" -> userRole.id))
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	  * @param taskIds Allowed task ids
+	  * @return A copy of this role with allowed task ids included
+	  */
+	def withAllowedTaskIds(taskIds: Set[Int]) = DetailedUserRole(this, taskIds)
 }
 

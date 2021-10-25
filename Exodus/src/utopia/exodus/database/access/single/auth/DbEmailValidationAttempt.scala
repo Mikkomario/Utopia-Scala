@@ -1,9 +1,11 @@
 package utopia.exodus.database.access.single.auth
 
+import utopia.access.http.Status.Forbidden
 import utopia.exodus.database.factory.auth.EmailValidationAttemptFactory
 import utopia.exodus.database.model.auth.EmailValidationAttemptModel
 import utopia.exodus.model.error.InvalidKeyException
 import utopia.exodus.model.stored.auth.EmailValidationAttempt
+import utopia.exodus.util.EmailValidator
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
@@ -45,6 +47,38 @@ object DbEmailValidationAttempt
 	  * @return An access point to that EmailValidationAttempt
 	  */
 	def apply(id: Int) = DbSingleEmailValidationAttempt(id)
+	
+	/**
+	  * Starts a new email validation attempt
+	  * @param emailAddress Targeted email address
+	  * @param purposeId Id representing the purpose of this validation
+	  * @param ownerId Id of the user who claims to own this email (optional)
+	  * @param connection DB Connection (implicit)
+	  * @param validator An email validator implementation to use (implicit)
+	  * @return Either<br>
+	  *         Right) Recorded email validation attempt or<br>
+	  *         Left) Recommended response status and a descriptive message
+	  */
+	// TODO: Apply a limit based on origin ip address once that feature is available
+	def start(emailAddress: String, purposeId: Int, ownerId: Option[Int] = None)
+	         (implicit connection: Connection, validator: EmailValidator) =
+	{
+		// Checks whether there already exists an open validation attempt
+		open.find(emailAddress, purposeId) match
+		{
+			// Case: There already exists an open email validation attempt => attempts to send it again (may be limited)
+			case Some(existing) =>
+				apply(existing.id).tryRecordResend(validator.maximumResendsPerValidation) match
+				{
+					case Success(_) =>
+						validator.resend(existing)
+						Right(existing)
+					case Failure(error) => Left(Forbidden -> error.getMessage)
+				}
+			// Case: No attempt exists yet => starts a new one
+			case None => validator.validate(emailAddress, purposeId, ownerId).map { model.insert(_) }
+		}
+	}
 	
 	
 	// NESTED   --------------------

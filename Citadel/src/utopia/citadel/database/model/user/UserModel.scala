@@ -6,6 +6,7 @@ import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.partial.user.UserData
 import utopia.metropolis.model.stored.user.User
+import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 
@@ -49,11 +50,17 @@ object UserModel extends DataInserter[UserModel, User, UserData]
 	// OTHER	--------------------
 	
 	/**
+	  * Inserts a new user to the DB
+	  * @param connection Implicit DB Connection
+	  * @return Inserted user
+	  */
+	def insert()(implicit connection: Connection): User = insert(UserData())
+	
+	/**
 	  * @param created Time when this User was first created
 	  * @return A model containing only the specified created
 	  */
 	def withCreated(created: Instant) = apply(created = Some(created))
-	
 	/**
 	  * @param id A User id
 	  * @return A model with that id

@@ -2,7 +2,7 @@ package utopia.citadel.database.access.many.organization
 
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.stored.organization.Invitation
-import utopia.vault.nosql.view.NonDeprecatedView
+import utopia.vault.nosql.view.{NonDeprecatedView, UnconditionalView}
 import utopia.vault.sql.SqlExtensions._
 
 /**
@@ -12,6 +12,14 @@ import utopia.vault.sql.SqlExtensions._
   */
 object DbInvitations extends ManyInvitationsAccess with NonDeprecatedView[Invitation]
 {
+	// COMPUTED --------------------
+	
+	/**
+	  * @return An access point to invitations which are not limited to non-expired invitations
+	  */
+	def currentAndPast = DbCurrentAndPastInvitations
+	
+	
 	// OTHER	--------------------
 	
 	/**
@@ -22,6 +30,8 @@ object DbInvitations extends ManyInvitationsAccess with NonDeprecatedView[Invita
 	
 	
 	// NESTED	--------------------
+	
+	object DbCurrentAndPastInvitations extends ManyInvitationsAccess with UnconditionalView
 	
 	class DbInvitationsSubset(targetIds: Set[Int]) extends ManyInvitationsAccess
 	{

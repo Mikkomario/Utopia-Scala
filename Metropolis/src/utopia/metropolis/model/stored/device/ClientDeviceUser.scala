@@ -1,7 +1,12 @@
 package utopia.metropolis.model.stored.device
 
 import utopia.metropolis.model.partial.device.ClientDeviceUserData
-import utopia.metropolis.model.stored.StoredModelConvertible
+import utopia.metropolis.model.stored.{StoredFromModelFactory, StoredModelConvertible}
+
+object ClientDeviceUser extends StoredFromModelFactory[ClientDeviceUser, ClientDeviceUserData]
+{
+	override def dataFactory = ClientDeviceUserData
+}
 
 /**
   * Represents a ClientDeviceUser that has already been stored in the database

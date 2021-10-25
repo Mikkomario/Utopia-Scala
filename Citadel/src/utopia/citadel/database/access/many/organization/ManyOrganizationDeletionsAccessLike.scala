@@ -1,8 +1,9 @@
 package utopia.citadel.database.access.many.organization
 
-import utopia.citadel.database.model.organization.OrganizationDeletionModel
+import utopia.citadel.database.model.organization.{OrganizationDeletionCancellationModel, OrganizationDeletionModel}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
+import utopia.metropolis.model.partial.organization.OrganizationDeletionCancellationData
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
@@ -78,6 +79,26 @@ trait ManyOrganizationDeletionsAccessLike[+A, +Repr <: ManyModelAccess[A]] exten
 	  */
 	def actualizingBefore(threshold: Instant) =
 		filter(model.actualizationColumn < threshold)
+	
+	/**
+	  * Cancels all accessible organization deletions
+	  * @param creatorId Id of the user who's cancelling these deletions (optional)
+	  * @param connection Implicit DB Connection
+	  * @return Inserted deletion cancellations
+	  */
+	def cancel(creatorId: Option[Int] = None)(implicit connection: Connection) =
+	{
+		// Reads deletion ids and creates a new cancellation for each of them
+		OrganizationDeletionCancellationModel.insert(
+			ids.map { deletionId => OrganizationDeletionCancellationData(deletionId, creatorId) })
+	}
+	/**
+	  * Cancels all accessible organization deletions
+	  * @param userId Id of the user who's cancelling these deletions
+	  * @param connection Implicit DB Connection
+	  * @return Inserted deletion cancellations
+	  */
+	def cancelBy(userId: Int)(implicit connection: Connection) = cancel(Some(userId))
 	
 	/**
 	  * Updates the actualization of the targeted OrganizationDeletion instance(s)

@@ -10,6 +10,7 @@ import utopia.metropolis.model.combined.description.SimplyDescribed
 import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.metropolis.model.stored.device.ClientDevice
 
+@deprecated("Replaced with DetailedClientDevice", "v2.0")
 object FullDevice extends FromModelFactory[FullDevice]
 {
 	// IMPLEMENTED	----------------------
@@ -25,6 +26,7 @@ object FullDevice extends FromModelFactory[FullDevice]
   * @author Mikko Hilpinen
   * @since 19.6.2020, v1
   */
+@deprecated("Replaced with DetailedClientDevice", "v2.0")
 case class FullDevice(describedDevice: DescribedClientDevice, userIds: Set[Int])
 	extends Extender[ClientDevice] with ModelConvertible with SimplyDescribed
 {

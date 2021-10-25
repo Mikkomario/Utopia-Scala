@@ -31,7 +31,7 @@ object DbTaskIds extends ManyIntIdAccess
 	  * @param connection DB Connection (implicit)
 	  * @return All task types that are accessible for that user role
 	  */
-	def forRoleWithId(roleId: Int)(implicit connection: Connection) =
+	def forUserRoleWithId(roleId: Int)(implicit connection: Connection) =
 	{
 		// Reads task types from role rights
 		UserRoleRightFactory.getMany(UserRoleRightModel.withRoleId(roleId).toCondition).map { _.taskId }
@@ -42,13 +42,13 @@ object DbTaskIds extends ManyIntIdAccess
 	  * @param connection DB Connection
 	  * @return All task types that are accessible for any of these roles
 	  */
-	def forRoleCombination(roleIds: Set[Int])(implicit connection: Connection) =
+	def forUserRoleCombination(roleIds: Set[Int])(implicit connection: Connection) =
 	{
 		if (roleIds.isEmpty)
-			Vector()
+			Set[Int]()
 		else if (roleIds.size == 1)
-			forRoleWithId(roleIds.head)
+			forUserRoleWithId(roleIds.head).toSet
 		else
-			UserRoleRightFactory.getMany(UserRoleRightModel.roleIdColumn.in(roleIds)).map { _.taskId }
+			UserRoleRightFactory.getMany(UserRoleRightModel.roleIdColumn.in(roleIds)).map { _.taskId }.toSet
 	}
 }

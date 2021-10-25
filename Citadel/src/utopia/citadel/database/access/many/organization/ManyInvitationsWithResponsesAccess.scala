@@ -4,6 +4,7 @@ import utopia.citadel.database.access.many.organization.ManyInvitationsWithRespo
 import utopia.citadel.database.factory.organization.InvitationWithResponseFactory
 import utopia.citadel.database.model.organization.InvitationResponseModel
 import utopia.metropolis.model.combined.organization.InvitationWithResponse
+import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.Condition
@@ -37,8 +38,13 @@ trait ManyInvitationsWithResponsesAccess
 	/**
 	  * @return An access point to invitations which are open but without response
 	  */
-	def pending =
-		filter(model.nonDeprecatedCondition && factory.notLinkedCondition)
+	def notAnswered = filter(factory.notLinkedCondition)
+	
+	/**
+	  * @param connection Implicit DB Connection
+	  * @return Whether there exists an accessible response that blocks future invitations
+	  */
+	def containsBlocked(implicit connection: Connection) = exists(responseModel.blocked.toCondition)
 	
 	
 	// IMPLEMENTED  -----------------------------------

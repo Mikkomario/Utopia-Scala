@@ -9,6 +9,7 @@ import utopia.vault.nosql.access.single.column.SingleIntIdAccess
   * @author Mikko Hilpinen
   * @since 24.11.2020, v1
   */
+@deprecated("Replaced with DbEmailValidationAttempt", "v3.0")
 object DbEmailValidationId extends SingleIntIdAccess
 {
 	// IMPLEMENTED	--------------------------

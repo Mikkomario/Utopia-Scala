@@ -1,11 +1,13 @@
 package utopia.exodus.rest.resource.device
 
 import utopia.access.http.Method.Post
-import utopia.citadel.database.access.single.device.DbDevice
-import utopia.citadel.database.access.single.user.DbUser
+import utopia.access.http.Status.BadRequest
+import utopia.citadel.database.access.single.device.DbClientDevice
+import utopia.citadel.database.access.single.language.DbLanguage
+import utopia.citadel.database.model.device.ClientDeviceUserModel
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.combined.device.FullDevice
+import utopia.metropolis.model.partial.device.ClientDeviceUserData
 import utopia.metropolis.model.post.NewDevice
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
@@ -21,23 +23,26 @@ import utopia.vault.database.Connection
 object DevicesNode extends Resource[AuthorizedContext]
 {
 	override val name = "devices"
-	
 	override val allowedMethods = Vector(Post)
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
-	{
 		context.basicAuthorized { (userId, connection) =>
 			context.handlePost(NewDevice) { newDevice =>
 				implicit val c: Connection = connection
-				// Inserts a new device and links it with the authorized user
-				val descriptionLink = DbDevice.insert(newDevice.name, newDevice.languageId, userId)
-				DbUser(userId).linkWithDeviceWithId(descriptionLink.targetId)
-				
-				// Returns a "full" device model
-				Result.Success(FullDevice(descriptionLink.targetId, Set(descriptionLink), Set(userId)).toModel)
+				// Makes sure the referred language id is valid
+				if (DbLanguage(newDevice.languageId).nonEmpty)
+				{
+					// Inserts a new device and links it with the authorized user
+					val device = DbClientDevice.insert(newDevice, userId)
+					val userLink = ClientDeviceUserModel.insert(ClientDeviceUserData(device.id, userId))
+					
+					// Returns a "detailed" device model
+					Result.Success(device.witherUserLinks(Set(userLink)).toModel)
+				}
+				else
+					Result.Failure(BadRequest, s"Referred language id ${newDevice.languageId} is not valid")
 			}
 		}
-	}
 	
 	override def follow(path: Path)(implicit context: AuthorizedContext) =
 	{

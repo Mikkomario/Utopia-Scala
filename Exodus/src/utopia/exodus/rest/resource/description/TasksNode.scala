@@ -1,12 +1,11 @@
 package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
-import utopia.citadel.database.access.id.many.DbTaskIds
-import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbTaskDescriptions}
+import utopia.citadel.database.access.many.description.DbDescriptionRoles
+import utopia.citadel.database.access.many.organization.DbTasks
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
-import utopia.metropolis.model.combined.organization.DescribedTask
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
 import utopia.nexus.rest.ResourceSearchResult.{Error, Follow}
@@ -35,22 +34,18 @@ object TasksNode extends Resource[AuthorizedContext]
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionKeyAuthorized { (session, connection) =>
+		context.sessionTokenAuthorized { (session, connection) =>
 			implicit val c: Connection = connection
-			implicit val languageIds: LanguageIds = context.languageIdListFor(session.userId)
-			// Reads task descriptions
-			val taskIds = DbTaskIds.all
-			val descriptions = DbTaskDescriptions(taskIds.toSet).inPreferredLanguages
-			// Combines the descriptions with the tasks and returns them
-			val describedTasks = taskIds.map { taskId => DescribedTask(taskId,
-				descriptions.getOrElse(taskId, Set()).toSet) }
+			implicit val languageIds: LanguageIds = session.languageIds
+			// Reads described tasks
+			val tasks = DbTasks.described
 			// May use simpler model style
 			session.modelStyle match
 			{
-				case Full => Result.Success(describedTasks.map { _.toModel })
+				case Full => Result.Success(tasks.map { _.toModel })
 				case Simple =>
 					val roles = DbDescriptionRoles.all
-					Result.Success(describedTasks.map { _.toSimpleModelUsing(roles) })
+					Result.Success(tasks.map { _.toSimpleModelUsing(roles) })
 			}
 		}
 	}

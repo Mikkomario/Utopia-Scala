@@ -22,12 +22,10 @@ object UserPasswordModel extends DataInserter[UserPasswordModel, UserPassword, U
 	  * Name of the property that contains UserPassword userId
 	  */
 	val userIdAttName = "userId"
-	
 	/**
 	  * Name of the property that contains UserPassword hash
 	  */
 	val hashAttName = "hash"
-	
 	/**
 	  * Name of the property that contains UserPassword created
 	  */
@@ -40,12 +38,10 @@ object UserPasswordModel extends DataInserter[UserPasswordModel, UserPassword, U
 	  * Column that contains UserPassword userId
 	  */
 	def userIdColumn = table(userIdAttName)
-	
 	/**
 	  * Column that contains UserPassword hash
 	  */
 	def hashColumn = table(hashAttName)
-	
 	/**
 	  * Column that contains UserPassword created
 	  */
@@ -74,19 +70,16 @@ object UserPasswordModel extends DataInserter[UserPasswordModel, UserPassword, U
 	  * @return A model containing only the specified created
 	  */
 	def withCreated(created: Instant) = apply(created = Some(created))
-	
 	/**
 	  * @param hash User's hashed password
 	  * @return A model containing only the specified hash
 	  */
 	def withHash(hash: String) = apply(hash = Some(hash))
-	
 	/**
 	  * @param id A UserPassword id
 	  * @return A model with that id
 	  */
 	def withId(id: Int) = apply(Some(id))
-	
 	/**
 	  * @param userId Id of the user who owns this password
 	  * @return A model containing only the specified userId
@@ -125,13 +118,11 @@ case class UserPasswordModel(id: Option[Int] = None, userId: Option[Int] = None,
 	  * @return A new copy of this model with the specified created
 	  */
 	def withCreated(created: Instant) = copy(created = Some(created))
-	
 	/**
 	  * @param hash A new hash
 	  * @return A new copy of this model with the specified hash
 	  */
 	def withHash(hash: String) = copy(hash = Some(hash))
-	
 	/**
 	  * @param userId A new userId
 	  * @return A new copy of this model with the specified userId

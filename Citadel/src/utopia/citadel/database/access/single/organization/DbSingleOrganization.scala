@@ -1,6 +1,7 @@
 package utopia.citadel.database.access.single.organization
 
 import utopia.citadel.database.access.many.description.DbOrganizationDescriptions
+import utopia.citadel.database.access.many.organization.DbInvitations.DbCurrentAndPastInvitations
 import utopia.citadel.database.access.many.organization.{DbInvitations, DbMemberships, DbMembershipsWithRoles, DbOrganizationDeletions}
 import utopia.citadel.database.access.single.description.{DbOrganizationDescription, SingleIdDescribedAccess}
 import utopia.metropolis.model.combined.organization.DescribedOrganization
@@ -25,9 +26,13 @@ case class DbSingleOrganization(id: Int)
 	  */
 	def membershipsWithRoles = DbMembershipsWithRoles.inOrganizationWithId(id)
 	/**
-	  * @return An access point to invitations into this organization
+	  * @return An access point to active (non-expired) invitations into this organization
 	  */
-	def invitations = DbInvitations.toOrganizationWithId(id)
+	def currentInvitations = DbInvitations.toOrganizationWithId(id)
+	/**
+	  * @return An access point to both current and past invitations to this organization
+	  */
+	def currentAndPastInvitations = DbCurrentAndPastInvitations.toOrganizationWithId(id)
 	/**
 	  * @return An access point to deletions targeting this organization
 	  */

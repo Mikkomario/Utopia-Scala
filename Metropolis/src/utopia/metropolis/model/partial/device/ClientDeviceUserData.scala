@@ -1,10 +1,19 @@
 package utopia.metropolis.model.partial.device
 
 import java.time.Instant
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
+import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
+import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.time.Now
+
+object ClientDeviceUserData extends FromModelFactoryWithSchema[ClientDeviceUserData]
+{
+	override val schema = ModelDeclaration("device_id" -> IntType, "user_id" -> IntType)
+	
+	override protected def fromValidatedModel(model: Model[Constant]) =
+		apply(model("device_id"), model("user_id"), model("created"), model("deprecated_after"))
+}
 
 /**
   * Links users to the devices they are using
@@ -25,7 +34,6 @@ case class ClientDeviceUserData(deviceId: Int, userId: Int, created: Instant = N
 	  * Whether this ClientDeviceUser has already been deprecated
 	  */
 	def isDeprecated = deprecatedAfter.isDefined
-	
 	/**
 	  * Whether this ClientDeviceUser is still valid (not deprecated)
 	  */

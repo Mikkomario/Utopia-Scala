@@ -26,7 +26,6 @@ trait UniqueClientDeviceAccess
 	  * Id of the user who added this device, if known. None if no instance (or value) was found.
 	  */
 	def creatorId(implicit connection: Connection) = pullColumn(model.creatorIdColumn).int
-	
 	/**
 	  * Time when this ClientDevice was first created. None if no instance (or value) was found.
 	  */
@@ -54,7 +53,6 @@ trait UniqueClientDeviceAccess
 	  */
 	def created_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
-	
 	/**
 	  * Updates the creatorId of the targeted ClientDevice instance(s)
 	  * @param newCreatorId A new creatorId to assign
