@@ -78,7 +78,7 @@ case class DbSingleUser(id: Int) extends UniqueUserAccess with SingleIntIdModelA
 	  * @param connection Implicit DB Connection
 	  * @return Ids of the languages known by this user (ordered from most to least preferred)
 	  */
-	def languageIds(implicit connection: Connection) = LanguageIds(languageLinks.withFamiliarities.languageIds)
+	def languageIds(implicit connection: Connection) = LanguageIds { languageLinks.withFamiliarities.languageIds }
 	/**
 	  * @param connection Implicit DB Connection
 	  * @return Ids of the devices this user is currently using

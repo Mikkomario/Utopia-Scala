@@ -2,6 +2,8 @@
 
 ## v1.13.1 (in development)
 ### New Methods
+- **Model**
+  - Added a couple variants of `.without(...)` which removes multiple attributes based on their names
 - **StdIn** (**ConsoleExtensions**)
   - Added `.readValidOrEmpty(...)`, which interacts with the user in order to find a valid value
 ### Other Changes

@@ -30,6 +30,10 @@ trait ManyInvitationsAccess extends ManyInvitationsAccessLike[Invitation, ManyIn
 		case Some(condition) => DbInvitationsWithResponses.filter(condition)
 		case None => DbInvitationsWithResponses
 	}
+	/**
+	  * @return An access point to invitations that don't have a response yet (read as invitations with responses)
+	  */
+	def notAnswered = withResponses.notAnswered
 	
 	
 	// IMPLEMENTED	--------------------

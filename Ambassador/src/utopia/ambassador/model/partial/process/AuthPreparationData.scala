@@ -1,28 +1,41 @@
 package utopia.ambassador.model.partial.process
 
+import java.time.Instant
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.metropolis.model.StyledModelConvertible
 
-import java.time.Instant
-
 /**
-  * Contains infromation about an authentication preparation
+  * Used for preparing and authenticating an OAuth process that follows
+  * @param userId Id of the user who initiated this process
+  * @param token Token used for authenticating the OAuth redirect
+  * @param expires Time when this authentication (token) expires
+  * @param created Time when this AuthPreparation was first created
   * @author Mikko Hilpinen
-  * @since 18.7.2021, v1.0
-  * @param userId Id of the user for whom this authentication is prepared
-  * @param token Authentication token created during this preparation
-  * @param expiration Expiration time of this preparation token
-  * @param clientState State specified by the client service (optional)
-  * @param created Creation time of this preparation (default = now)
+  * @since 2021-10-26
   */
-case class AuthPreparationData(userId: Int, token: String, expiration: Instant, clientState: Option[String] = None,
-                               created: Instant = Now)
+case class AuthPreparationData(userId: Int, token: String, expires: Instant, created: Instant = Now) 
 	extends StyledModelConvertible
 {
-	override def toSimpleModel = Model(Vector("token" -> token, "expiration" -> expiration))
+	// COMPUTED	--------------------
 	
-	override def toModel = Model(Vector("user_id" -> userId, "token" -> token,
-		"state" -> clientState, "created" -> created, "expiration" -> expiration))
+	/**
+	  * Whether this AuthPreparation is no longer valid because it has expired
+	  */
+	def hasExpired = expires <= Now
+	/**
+	  * Whether this AuthPreparation is still valid (hasn't expired yet)
+	  */
+	def isValid = !hasExpired
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def toModel = 
+		Model(Vector("user_id" -> userId, "token" -> token, "expires" -> expires, "created" -> created))
+	
+	override def toSimpleModel = Model(Vector("token" -> token, "expiration" -> expires))
 }
+

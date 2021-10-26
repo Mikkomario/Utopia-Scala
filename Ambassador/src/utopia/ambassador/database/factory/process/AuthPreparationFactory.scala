@@ -5,29 +5,29 @@ import utopia.ambassador.database.model.process.AuthPreparationModel
 import utopia.ambassador.model.partial.process.AuthPreparationData
 import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.flow.generic.ValueUnwraps._
+import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import utopia.vault.nosql.template.Deprecatable
 
 /**
-  * Used for reading authentication preparation data from the DB
+  * Used for reading AuthPreparation data from the DB
   * @author Mikko Hilpinen
-  * @since 18.7.2021, v1.0
+  * @since 2021-10-26
   */
-object AuthPreparationFactory extends FromValidatedRowModelFactory[AuthPreparation] with Deprecatable
+object AuthPreparationFactory 
+	extends FromValidatedRowModelFactory[AuthPreparation] with FromRowFactoryWithTimestamps[AuthPreparation] 
+		with Deprecatable
 {
-	// COMPUTED ----------------------------
+	// IMPLEMENTED	--------------------
 	
-	private def model = AuthPreparationModel
+	override def creationTimePropertyName = "created"
 	
-	
-	// IMPLEMENTED  ------------------------
+	override def nonDeprecatedCondition = AuthPreparationModel.nonDeprecatedCondition
 	
 	override def table = AmbassadorTables.authPreparation
 	
-	override def nonDeprecatedCondition = model.nonDeprecatedCondition
-	
-	override protected def fromValidatedModel(model: Model[Constant]) = AuthPreparation(model("id"),
-		AuthPreparationData(model("userId"), model("token"), model("expiration"), model("clientState"),
-			model("created")))
+	override def fromValidatedModel(valid: Model[Constant]) = 
+		AuthPreparation(valid("id").getInt, AuthPreparationData(valid("userId").getInt, 
+			valid("token").getString, valid("expires").getInstant, valid("created").getInstant))
 }
+

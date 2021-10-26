@@ -3,96 +3,60 @@ package utopia.ambassador.database.access.single.process
 import utopia.ambassador.database.factory.process.AuthRedirectFactory
 import utopia.ambassador.database.model.process.AuthRedirectModel
 import utopia.ambassador.model.stored.process.AuthRedirect
-import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.access.single.model.distinct.{SingleIntIdModelAccess, UniqueModelAccess}
-import utopia.vault.nosql.view.{SubView, UnconditionalView}
+import utopia.vault.nosql.template.Indexed
+import utopia.vault.nosql.view.{NonDeprecatedView, SubView}
 
 /**
-  * Used for accessing individual authentication user redirects in the DB
+  * Used for accessing individual AuthRedirects
   * @author Mikko Hilpinen
-  * @since 18.7.2021, v1.0
+  * @since 2021-10-26
   */
-object DbAuthRedirect extends SingleRowModelAccess[AuthRedirect] with UnconditionalView
+object DbAuthRedirect 
+	extends SingleRowModelAccess[AuthRedirect] with NonDeprecatedView[AuthRedirect] with Indexed
 {
-	// COMPUTED ------------------------------
-	
-	private def model = AuthRedirectModel
+	// COMPUTED	--------------------
 	
 	/**
-	  * @return An access point to redirects that are still valid
+	  * Factory used for constructing database the interaction models
 	  */
-	def valid = DbValidRedirect
+	protected def model = AuthRedirectModel
 	
 	
-	// IMPLEMENTED  --------------------------
+	// IMPLEMENTED	--------------------
 	
 	override def factory = AuthRedirectFactory
 	
 	
-	// OTHER    ------------------------------
+	// OTHER	--------------------
 	
 	/**
-	  * @param redirectId Id of the targeted redirection
-	  * @return An access point to that redirection's data
+	  * @param id Database id of the targeted AuthRedirect instance
+	  * @return An access point to that AuthRedirect
 	  */
-	def apply(redirectId: Int) = new DbSingleRedirect(redirectId)
+	def apply(id: Int) = DbSingleAuthRedirect(id)
 	
 	/**
-	  * @param preparationId An authentication preparation id
-	  * @return An access point to the possible user redirect based on that preparation
+	  * @param preparationId Id of the linked authentication preparation
+	  * @return An access point to that redirection (even if expired)
 	  */
 	def forPreparationWithId(preparationId: Int) = new DbRedirectForPreparation(preparationId)
 	
 	
-	// NESTED   ------------------------------
+	// NESTED   --------------------
 	
-	object DbValidRedirect extends SingleRowModelAccess[AuthRedirect] with SubView
+	class DbRedirectWithToken(token: String) extends UniqueAuthRedirectAccess with SubView
 	{
-		// IMPLEMENTED  ----------------------
-		
 		override protected def parent = DbAuthRedirect
-		override def factory = parent.factory
+		override protected def defaultOrdering = Some(factory.defaultOrdering)
 		
-		override def filterCondition = model.nonDeprecatedCondition
-		
-		
-		// OTHER    --------------------------
-		
-		/**
-		  * @param token A redirect access token
-		  * @param connection Implicit DB connection
-		  * @return A redirect attempt for that access token
-		  */
-		def forToken(token: String)(implicit connection: Connection) =
-			find(model.withToken(token).toCondition)
+		override def filterCondition = model.withToken(token).toCondition
 	}
 	
-	class DbSingleRedirect(override val id: Int) extends SingleIntIdModelAccess[AuthRedirect]
+	class DbRedirectForPreparation(preparationId: Int) extends UniqueAuthRedirectAccess
 	{
-		// COMPUTED -------------------------------
-		
-		/**
-		  * @return An access point to the result of this redirection
-		  */
-		def result = DbAuthRedirectResult.forRedirectWithId(id)
-		
-		/**
-		  * @param connection Implicit DB connection
-		  * @return Whether this redirection has already been closed / responded to
-		  */
-		def isClosed(implicit connection: Connection) = result.nonEmpty
-		
-		
-		// IMPLEMENTED  ------------------------
-		
-		override def factory = DbAuthRedirect.factory
-	}
-	
-	class DbRedirectForPreparation(val preparationId: Int) extends UniqueModelAccess[AuthRedirect]
-	{
-		override def factory = DbAuthRedirect.factory
-		
-		override def condition = model.withPreparationId(preparationId).toCondition
+		override protected def defaultOrdering = Some(factory.defaultOrdering)
+		override def globalCondition = Some(model.withPreparationId(preparationId).toCondition)
 	}
 }
+

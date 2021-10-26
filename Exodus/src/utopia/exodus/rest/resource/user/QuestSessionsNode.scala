@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.user
 
 import utopia.access.http.Method.{Delete, Get}
-import utopia.exodus.database.access.single.DbUserSession
+import utopia.exodus.database.access.single.auth.DbSessionToken
 import utopia.exodus.rest.resource.NotImplementedResource
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext._
@@ -16,6 +16,7 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 8.12.2020, v1
   */
+// TODO: Rename the key node to token
 object QuestSessionsNode extends ResourceWithChildren[AuthorizedContext] with NotImplementedResource[AuthorizedContext]
 {
 	// ATTRIBUTES   ---------------------
@@ -62,14 +63,14 @@ object QuestSessionsNode extends ResourceWithChildren[AuthorizedContext] with No
 				if (context.request.method == Get)
 					context.basicAuthorized { (userId, connection) =>
 						implicit val c: Connection = connection
-						val newSessionKey = DbUserSession.deviceless(userId).start(context.modelStyle).key
+						val newSessionKey = DbSessionToken.forDevicelessSession(userId).start(context.modelStyle).token
 						Result.Success(newSessionKey)
 					}
 				// On DELETE, terminates the current deviceless session key (uses session authorization)
 				else
-					context.sessionKeyAuthorized { (session, connection) =>
+					context.sessionTokenAuthorized { (session, connection) =>
 						implicit val c: Connection = connection
-						DbUserSession.deviceless(session.userId).end()
+						DbSessionToken.forDevicelessSession(session.userId).logOut()
 						Result.Empty
 					}
 			}

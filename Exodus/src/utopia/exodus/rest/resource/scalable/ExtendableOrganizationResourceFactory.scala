@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.scalable
 
 import utopia.access.http.Method
-import utopia.exodus.model.stored.UserSession
+import utopia.exodus.model.stored.auth.SessionToken
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.rest.util.AuthorizedContext.OrganizationParams
 import utopia.flow.datastructure.immutable.Lazy
@@ -25,7 +25,7 @@ abstract class ExtendableOrganizationResourceFactory[+R <: ExtendableResource[Au
 	 *                4) database connection, 5) request context, 6) remaining request path and
 	 *                7) default implementation (lazy) and returns a result
 	 */
-	def addUseCase(method: Method)(useCase: (Int, UserSession, Int, Connection, AuthorizedContext, Option[Path],
+	def addUseCase(method: Method)(useCase: (Int, SessionToken, Int, Connection, AuthorizedContext, Option[Path],
 		Lazy[Result]) => Result): Unit =
 		addUseCase(OrganizationUseCaseImplementation
 			.factory(method) { (organizationId, session, membershipId, connection, context, path, default) =>

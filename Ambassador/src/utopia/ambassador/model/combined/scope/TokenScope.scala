@@ -9,6 +9,7 @@ import utopia.flow.util.Extender
   * @author Mikko Hilpinen
   * @since 19.7.2021, v1.0
   */
+@deprecated("Replaced with AuthTokenScope", "v2.0")
 case class TokenScope(scope: Scope, tokenId: Int, linkId: Int) extends Extender[ScopeData]
 {
 	def id = scope.id

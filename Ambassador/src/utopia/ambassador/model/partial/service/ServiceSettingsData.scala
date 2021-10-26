@@ -32,6 +32,7 @@ import scala.concurrent.duration.FiniteDuration
   *                               authentication response by the 3rd party service (default = 22 hours)
   * @param created Creation time of these settings
   */
+@deprecated("Replaced with AuthServiceSettingsData", "v2.0")
 case class ServiceSettingsData(serviceId: Int, clientId: String, clientSecret: String,
                                authenticationUrl: String, tokenUrl: String, redirectUrl: String,
                                incompleteAuthUrl: Option[String] = None, defaultCompletionUrl: Option[String] = None,

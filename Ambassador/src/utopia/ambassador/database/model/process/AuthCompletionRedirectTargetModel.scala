@@ -8,88 +8,162 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 
-object AuthCompletionRedirectTargetModel extends DataInserter[AuthCompletionRedirectTargetModel,
-	AuthCompletionRedirectTarget, AuthCompletionRedirectTargetData]
+/**
+  * Used for constructing AuthCompletionRedirectTargetModel instances and for inserting AuthCompletionRedirectTargets to the database
+  * @author Mikko Hilpinen
+  * @since 2021-10-26
+  */
+object AuthCompletionRedirectTargetModel 
+	extends DataInserter[AuthCompletionRedirectTargetModel, AuthCompletionRedirectTarget, 
+		AuthCompletionRedirectTargetData]
 {
-	// ATTRIBUTES   ------------------------
+	// ATTRIBUTES	--------------------
 	
 	/**
-	  * Name of the property that contains success (true) / failure (false) / default (None) result filter
+	  * Name of the property that contains AuthCompletionRedirectTarget preparationId
 	  */
-	val resultFilterAttName = "resultStateFilter"
-	
-	
-	// COMPUTED ----------------------------
+	val preparationIdAttName = "preparationId"
 	
 	/**
-	  * @return the factory used by this model type
+	  * Name of the property that contains AuthCompletionRedirectTarget url
+	  */
+	val urlAttName = "url"
+	
+	/**
+	  * Name of the property that contains AuthCompletionRedirectTarget resultStateFilter
+	  */
+	val resultStateFilterAttName = "resultStateFilter"
+	
+	/**
+	  * Name of the property that contains AuthCompletionRedirectTarget isLimitedToDenials
+	  */
+	val isLimitedToDenialsAttName = "isLimitedToDenials"
+	
+	
+	// COMPUTED	--------------------
+	
+	/**
+	  * Column that contains AuthCompletionRedirectTarget preparationId
+	  */
+	def preparationIdColumn = table(preparationIdAttName)
+	
+	/**
+	  * Column that contains AuthCompletionRedirectTarget url
+	  */
+	def urlColumn = table(urlAttName)
+	
+	/**
+	  * Column that contains AuthCompletionRedirectTarget resultStateFilter
+	  */
+	def resultStateFilterColumn = table(resultStateFilterAttName)
+	
+	/**
+	  * Column that contains AuthCompletionRedirectTarget isLimitedToDenials
+	  */
+	def isLimitedToDenialsColumn = table(isLimitedToDenialsAttName)
+	
+	/**
+	  * The factory object used by this model type
 	  */
 	def factory = AuthCompletionRedirectTargetFactory
 	
-	/**
-	  * Column that contains success (true) / failure (false) / default (None) result filter
-	  */
-	def resultFilterColumn = table(resultFilterAttName)
 	
-	/**
-	  * @return A model that is limited to denials of access only
-	  */
-	def limitedToDenials = withLimitedToDenials(isLimited = true)
-	/**
-	  * @return A model that is not limited to denials of access only
-	  */
-	def notLimitedToDenials = withLimitedToDenials(isLimited = false)
-	
-	/**
-	  * @return A condition that only returns denials of access
-	  */
-	def denialsOfAccessCondition = limitedToDenials.toCondition
-	/**
-	  * @return A condition that only returns cases where user allowed (didn't deny) access
-	  */
-	def accessAllowedCondition = notLimitedToDenials.toCondition
-	
-	
-	// IMPLEMENTED  -------------------------
+	// IMPLEMENTED	--------------------
 	
 	override def table = factory.table
 	
-	override def apply(data: AuthCompletionRedirectTargetData) =
-		apply(None, Some(data.preparationId), Some(data.url), data.resultFilter.successFilter,
-			Some(data.resultFilter.deniedFilter))
+	override def apply(data: AuthCompletionRedirectTargetData) = 
+		apply(None, Some(data.preparationId), Some(data.url), data.resultStateFilter, 
+			Some(data.isLimitedToDenials))
 	
-	override protected def complete(id: Value, data: AuthCompletionRedirectTargetData) =
+	override def complete(id: Value, data: AuthCompletionRedirectTargetData) = 
 		AuthCompletionRedirectTarget(id.getInt, data)
 	
 	
-	// OTHER    ------------------------------
+	// OTHER	--------------------
 	
 	/**
-	  * @param preparationId Id of the preparation for which these targets have been specified
-	  * @return A model with that preparation id
+	  * @param id A AuthCompletionRedirectTarget id
+	  * @return A model with that id
 	  */
-	def withPreparationId(preparationId: Int) =
-		apply(preparationId = Some(preparationId))
+	def withId(id: Int) = apply(Some(id))
+	
 	/**
-	  * @param isLimited Whether this target should be limited to denials of access only
-	  * @return A model with that limitation state / filter
+	  * @param isLimitedToDenials Whether this target is only used for denial of access -cases
+	  * @return A model containing only the specified isLimitedToDenials
 	  */
-	def withLimitedToDenials(isLimited: Boolean) =
-		apply(isLimitedToDenials = Some(isLimited))
+	def withIsLimitedToDenials(isLimitedToDenials: Boolean) = apply(isLimitedToDenials = Some(isLimitedToDenials))
+	
+	/**
+	  * @param preparationId Id of the preparation during which these targets were specified
+	  * @return A model containing only the specified preparationId
+	  */
+	def withPreparationId(preparationId: Int) = apply(preparationId = Some(preparationId))
+	
+	/**
+	  * @param resultStateFilter True when only successes are accepted. False when only failures are accepted. None when both are accepted.
+	  * @return A model containing only the specified resultStateFilter
+	  */
+	def withResultStateFilter(resultStateFilter: Boolean) = apply(resultStateFilter = Some(resultStateFilter))
+	
+	/**
+	  * @param url Url where the user will be redirected
+	  * @return A model containing only the specified url
+	  */
+	def withUrl(url: String) = apply(url = Some(url))
 }
 
 /**
-  * Used for interacting with prepared redirect targets in the DB
+  * Used for interacting with AuthCompletionRedirectTargets in the database
+  * @param id AuthCompletionRedirectTarget database id
+  * @param preparationId Id of the preparation during which these targets were specified
+  * @param url Url where the user will be redirected
+  * @param resultStateFilter True when only successes are accepted. False when only failures are accepted. None when both are accepted.
+  * @param isLimitedToDenials Whether this target is only used for denial of access -cases
   * @author Mikko Hilpinen
-  * @since 18.7.2021, v1.0
+  * @since 2021-10-26
   */
-case class AuthCompletionRedirectTargetModel(id: Option[Int] = None, preparationId: Option[Int] = None,
-                                             url: Option[String] = None, resultStateFilter: Option[Boolean] = None,
-                                             isLimitedToDenials: Option[Boolean] = None)
+case class AuthCompletionRedirectTargetModel(id: Option[Int] = None, preparationId: Option[Int] = None, 
+	url: Option[String] = None, resultStateFilter: Option[Boolean] = None, 
+	isLimitedToDenials: Option[Boolean] = None) 
 	extends StorableWithFactory[AuthCompletionRedirectTarget]
 {
+	// IMPLEMENTED	--------------------
+	
 	override def factory = AuthCompletionRedirectTargetModel.factory
 	
-	override def valueProperties = Vector("id" -> id, "preparationId" -> preparationId, "url" -> url,
-		"resultStateFilter" -> resultStateFilter, "isLimitedToDenials" -> isLimitedToDenials)
+	override def valueProperties = 
+	{
+		import AuthCompletionRedirectTargetModel._
+		Vector("id" -> id, preparationIdAttName -> preparationId, urlAttName -> url, 
+			resultStateFilterAttName -> resultStateFilter, isLimitedToDenialsAttName -> isLimitedToDenials)
+	}
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param isLimitedToDenials A new isLimitedToDenials
+	  * @return A new copy of this model with the specified isLimitedToDenials
+	  */
+	def withIsLimitedToDenials(isLimitedToDenials: Boolean) = copy(isLimitedToDenials = Some(isLimitedToDenials))
+	
+	/**
+	  * @param preparationId A new preparationId
+	  * @return A new copy of this model with the specified preparationId
+	  */
+	def withPreparationId(preparationId: Int) = copy(preparationId = Some(preparationId))
+	
+	/**
+	  * @param resultStateFilter A new resultStateFilter
+	  * @return A new copy of this model with the specified resultStateFilter
+	  */
+	def withResultStateFilter(resultStateFilter: Boolean) = copy(resultStateFilter = Some(resultStateFilter))
+	
+	/**
+	  * @param url A new url
+	  * @return A new copy of this model with the specified url
+	  */
+	def withUrl(url: String) = copy(url = Some(url))
 }
+

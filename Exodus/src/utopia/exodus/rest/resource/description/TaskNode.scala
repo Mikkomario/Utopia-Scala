@@ -29,7 +29,7 @@ class TaskNode(val taskId: Int) extends ExtendableSessionResource
 	private val defaultGet = SessionUseCaseImplementation.default(Get) { (session, connection, context, _) =>
 		implicit val c: Connection = connection
 		implicit val cntx: AuthorizedContext = context
-		implicit lazy val languageIds: LanguageIds = session.languageIds
+		implicit val languageIds: LanguageIds = session.languageIds
 		
 		// Reads task along with its descriptions
 		access.described match

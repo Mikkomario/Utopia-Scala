@@ -4,18 +4,26 @@ import utopia.ambassador.database.AmbassadorTables
 import utopia.ambassador.model.partial.process.IncompleteAuthLoginData
 import utopia.ambassador.model.stored.process.IncompleteAuthLogin
 import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.flow.generic.ValueUnwraps._
+import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
-  * Used for reading incomplete authentication logins from the DB
+  * Used for reading IncompleteAuthLogin data from the DB
   * @author Mikko Hilpinen
-  * @since 19.7.2021, v1.0
+  * @since 2021-10-26
   */
-object IncompleteAuthLoginFactory extends FromValidatedRowModelFactory[IncompleteAuthLogin]
+object IncompleteAuthLoginFactory 
+	extends FromValidatedRowModelFactory[IncompleteAuthLogin] 
+		with FromRowFactoryWithTimestamps[IncompleteAuthLogin]
 {
+	// IMPLEMENTED	--------------------
+	
+	override def creationTimePropertyName = "created"
+	
 	override def table = AmbassadorTables.incompleteAuthLogin
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = IncompleteAuthLogin(model("id"),
-		IncompleteAuthLoginData(model("authenticationId"), model("userId"), model("created"), model("wasSuccess")))
+	override def fromValidatedModel(valid: Model[Constant]) = 
+		IncompleteAuthLogin(valid("id").getInt, IncompleteAuthLoginData(valid("authId").getInt, 
+			valid("userId").getInt, valid("created").getInstant, valid("wasSuccess").getBoolean))
 }
+

@@ -170,8 +170,8 @@ class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeG
     /**
      * Creates a new model without the provided attributes
      */
-    def --[B >: Attribute <: Constant](attributes: Seq[B]): Model[Attribute] = new Model(
-            this.attributes.filterNot { attributes.contains(_) }, attributeGenerator)
+    def --[B >: Attribute <: Constant](attributes: Iterable[B]): Model[Attribute] = new Model(
+            this.attributes.filterNot { a => attributes.exists { _ == a } }, attributeGenerator)
     /**
      * Creates a new model without any attributes within the provided model
      */
@@ -184,7 +184,22 @@ class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeG
      * Creates a new model with the same generator but different attributes
      */
     def withAttributes[B >: Attribute <: Constant](attributes: Iterable[B]) =
-            new Model[B](attributes, attributeGenerator)
+        new Model[B](attributes, attributeGenerator)
+    /**
+      * @param keys Names of the keys to remove (case-insensitive)
+      * @return A copy of this model with the specified keys removed
+      */
+    def without(keys: Iterable[String]) =
+    {
+        val lowerKeys = keys.map { _.toLowerCase }.toSet
+        new Model[Attribute](attributes.filterNot { a => lowerKeys.contains(a.name.toLowerCase) }, attributeGenerator)
+    }
+    /**
+      * @param firstKey Name of the first key to remove (case-insensitive)
+      * @param moreKeys Names of the other keys to remove (case-insensitive)
+      * @return A copy of this model with the specified keys removed
+      */
+    def without(firstKey: String, moreKeys: String*): Model[Attribute] = without(firstKey +: moreKeys)
     
     /**
      * Creates a new model with the same attributes but a different attribute generator

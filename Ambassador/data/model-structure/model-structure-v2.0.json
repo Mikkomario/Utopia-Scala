@@ -218,12 +218,6 @@
       {
         "name": "AuthPreparationScopeLink",
         "table_name": "oauth_preparation_scope",
-        "combo": {
-          "name": "AuthPreparationScope",
-          "child": "Scope",
-          "is_always_linked": true,
-          "parent_alias": "preparationLink"
-        },
         "doc": "Links a requested scope to an OAuth preparation",
         "props": [
           {

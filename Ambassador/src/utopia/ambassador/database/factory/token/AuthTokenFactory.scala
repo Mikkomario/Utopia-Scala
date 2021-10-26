@@ -5,26 +5,30 @@ import utopia.ambassador.database.model.token.AuthTokenModel
 import utopia.ambassador.model.partial.token.AuthTokenData
 import utopia.ambassador.model.stored.token.AuthToken
 import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.flow.generic.ValueUnwraps._
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import utopia.vault.nosql.template.Deprecatable
 
 /**
-  * Used for reading authentication tokens from the DB
+  * Used for reading AuthToken data from the DB
   * @author Mikko Hilpinen
-  * @since 11.7.2021, v1.0
+  * @since 2021-10-26
   */
-object AuthTokenFactory extends FromValidatedRowModelFactory[AuthToken]
-	with FromRowFactoryWithTimestamps[AuthToken] with Deprecatable
+object AuthTokenFactory 
+	extends FromValidatedRowModelFactory[AuthToken] with FromRowFactoryWithTimestamps[AuthToken] 
+		with Deprecatable
 {
-	override val creationTimePropertyName = "created"
+	// IMPLEMENTED	--------------------
 	
-	override def table = AmbassadorTables.authToken
+	override def creationTimePropertyName = "created"
 	
 	override def nonDeprecatedCondition = AuthTokenModel.nonDeprecatedCondition
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = AuthToken(model("id"),
-		AuthTokenData(model("userId"), model("token"), model(creationTimePropertyName), model("expiration"),
-			model("deprecatedAfter"), model("isRefreshToken")))
+	override def table = AmbassadorTables.authToken
+	
+	override def fromValidatedModel(valid: Model[Constant]) = 
+		AuthToken(valid("id").getInt, AuthTokenData(valid("userId").getInt, valid("token").getString, 
+			valid("expires").instant, valid("created").getInstant, valid("deprecatedAfter").instant, 
+			valid("isRefreshToken").getBoolean))
 }
+

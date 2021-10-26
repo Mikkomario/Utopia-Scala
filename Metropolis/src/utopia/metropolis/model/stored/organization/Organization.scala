@@ -8,6 +8,15 @@ object Organization extends StoredFromModelFactory[Organization, OrganizationDat
 	// IMPLEMENTED  -------------------------------
 	
 	override def dataFactory = OrganizationData
+	
+	
+	// OTHER    -----------------------------------
+	
+	/**
+	  * @param organizationId An organization id
+	  * @return An organization wrapping that id
+	  */
+	def apply(organizationId: Int): Organization = apply(organizationId, OrganizationData())
 }
 
 /**

@@ -14,10 +14,11 @@ import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
   * @author Mikko Hilpinen
   * @since 14.7.2021, v1.0
   */
+@deprecated("Replaced with AuthServiceSettingsFactory", "v2.0")
 object ServiceSettingsFactory extends FromValidatedRowModelFactory[ServiceSettings]
 	with FromRowFactoryWithTimestamps[ServiceSettings]
 {
-	override def table = AmbassadorTables.serviceSettings
+	override def table = AmbassadorTables.authServiceSettings
 	
 	override def creationTimePropertyName = "created"
 	

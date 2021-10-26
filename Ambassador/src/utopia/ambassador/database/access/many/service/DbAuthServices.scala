@@ -1,20 +1,32 @@
 package utopia.ambassador.database.access.many.service
 
-import utopia.ambassador.database.factory.service.AuthServiceFactory
-import utopia.ambassador.model.stored.service.AuthService
 import utopia.flow.generic.ValueConversions._
-import utopia.vault.nosql.access.many.model.ManyModelAccessById
-import utopia.vault.nosql.view.RowFactoryView
+import utopia.vault.nosql.view.UnconditionalView
+import utopia.vault.sql.SqlExtensions._
 
 /**
-  * Used for accessing multiple authentication services at a time
+  * The root access point when targeting multiple AuthServices at a time
   * @author Mikko Hilpinen
-  * @since 12.7.2021, v1.0
+  * @since 2021-10-26
   */
-object DbAuthServices extends ManyModelAccessById[AuthService, Int] with RowFactoryView[AuthService]
+object DbAuthServices extends ManyAuthServicesAccess with UnconditionalView
 {
-	override def factory = AuthServiceFactory
-	override protected def defaultOrdering = None
+	// OTHER	--------------------
 	
-	override def idToValue(id: Int) = id
+	/**
+	  * @param ids Ids of the targeted AuthServices
+	  * @return An access point to AuthServices with the specified ids
+	  */
+	def apply(ids: Set[Int]) = new DbAuthServicesSubset(ids)
+	
+	
+	// NESTED	--------------------
+	
+	class DbAuthServicesSubset(targetIds: Set[Int]) extends ManyAuthServicesAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def globalCondition = Some(index in targetIds)
+	}
 }
+

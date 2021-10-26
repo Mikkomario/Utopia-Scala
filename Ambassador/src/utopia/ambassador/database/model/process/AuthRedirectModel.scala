@@ -1,70 +1,166 @@
 package utopia.ambassador.database.model.process
 
+import java.time.Instant
 import utopia.ambassador.database.factory.process.AuthRedirectFactory
 import utopia.ambassador.model.partial.process.AuthRedirectData
 import utopia.ambassador.model.stored.process.AuthRedirect
-import utopia.vault.nosql.storable.deprecation.Expiring
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
+import utopia.vault.nosql.storable.deprecation.Expiring
 
-import java.time.Instant
-
-object AuthRedirectModel extends DataInserter[AuthRedirectModel, AuthRedirect, AuthRedirectData]
-	with Expiring
+/**
+  * Used for constructing AuthRedirectModel instances and for inserting AuthRedirects to the database
+  * @author Mikko Hilpinen
+  * @since 2021-10-26
+  */
+object AuthRedirectModel extends DataInserter[AuthRedirectModel, AuthRedirect, AuthRedirectData] with Expiring
 {
-	// ATTRIBUTES   ---------------------
-	
-	override val deprecationAttName = "expiration"
-	
-	
-	// COMPUTED -------------------------
+	// ATTRIBUTES	--------------------
 	
 	/**
-	  * @return Factory used by this model type
+	  * Name of the property that contains AuthRedirect preparationId
+	  */
+	val preparationIdAttName = "preparationId"
+	
+	/**
+	  * Name of the property that contains AuthRedirect token
+	  */
+	val tokenAttName = "token"
+	
+	/**
+	  * Name of the property that contains AuthRedirect expires
+	  */
+	val expiresAttName = "expires"
+	
+	/**
+	  * Name of the property that contains AuthRedirect created
+	  */
+	val createdAttName = "created"
+	
+	override val deprecationAttName = "expires"
+	
+	
+	// COMPUTED	--------------------
+	
+	/**
+	  * Column that contains AuthRedirect preparationId
+	  */
+	def preparationIdColumn = table(preparationIdAttName)
+	
+	/**
+	  * Column that contains AuthRedirect token
+	  */
+	def tokenColumn = table(tokenAttName)
+	
+	/**
+	  * Column that contains AuthRedirect expires
+	  */
+	def expiresColumn = table(expiresAttName)
+	
+	/**
+	  * Column that contains AuthRedirect created
+	  */
+	def createdColumn = table(createdAttName)
+	
+	/**
+	  * The factory object used by this model type
 	  */
 	def factory = AuthRedirectFactory
 	
 	
-	// IMPLEMENTED  ---------------------
+	// IMPLEMENTED	--------------------
 	
 	override def table = factory.table
 	
-	override def apply(data: AuthRedirectData) =
-		apply(None, Some(data.preparationId), Some(data.token), Some(data.created), Some(data.expiration))
+	override def apply(data: AuthRedirectData) = 
+		apply(None, Some(data.preparationId), Some(data.token), Some(data.expires), Some(data.created))
 	
-	override protected def complete(id: Value, data: AuthRedirectData) = AuthRedirect(id.getInt, data)
+	override def complete(id: Value, data: AuthRedirectData) = AuthRedirect(id.getInt, data)
 	
 	
-	// OTHER    --------------------------
+	// OTHER	--------------------
 	
 	/**
-	  * @param preparationId An authentication preparation id
-	  * @return A model with that preparation id
+	  * @param created Time when this AuthRedirect was first created
+	  * @return A model containing only the specified created
+	  */
+	def withCreated(created: Instant) = apply(created = Some(created))
+	
+	/**
+	  * @param expires Time when the linked redirect token expires
+	  * @return A model containing only the specified expires
+	  */
+	def withExpires(expires: Instant) = apply(expires = Some(expires))
+	
+	/**
+	  * @param id A AuthRedirect id
+	  * @return A model with that id
+	  */
+	def withId(id: Int) = apply(Some(id))
+	
+	/**
+	  * @param preparationId Id of the preparation event for this redirection
+	  * @return A model containing only the specified preparationId
 	  */
 	def withPreparationId(preparationId: Int) = apply(preparationId = Some(preparationId))
+	
 	/**
-	  * @param token A redirect authentication token
-	  * @return A model with that redirect token
+	  * @return A model containing only the specified token
 	  */
 	def withToken(token: String) = apply(token = Some(token))
 }
 
 /**
-  * Used for interacting with authentication user redirects in the DB
+  * Used for interacting with AuthRedirects in the database
+  * @param id AuthRedirect database id
+  * @param preparationId Id of the preparation event for this redirection
+  * @param expires Time when the linked redirect token expires
+  * @param created Time when this AuthRedirect was first created
   * @author Mikko Hilpinen
-  * @since 18.7.2021, v1.0
+  * @since 2021-10-26
   */
-case class AuthRedirectModel(id: Option[Int] = None, preparationId: Option[Int] = None,
-                             token: Option[String] = None, created: Option[Instant] = None,
-                             expiration: Option[Instant] = None)
+case class AuthRedirectModel(id: Option[Int] = None, preparationId: Option[Int] = None, 
+	token: Option[String] = None, expires: Option[Instant] = None, created: Option[Instant] = None) 
 	extends StorableWithFactory[AuthRedirect]
 {
-	import AuthRedirectModel._
+	// IMPLEMENTED	--------------------
 	
 	override def factory = AuthRedirectModel.factory
 	
-	override def valueProperties = Vector("id" -> id, "preparationId" -> preparationId, "token" -> token,
-		"created" -> created, deprecationAttName -> expiration)
+	override def valueProperties = 
+	{
+		import AuthRedirectModel._
+		Vector("id" -> id, preparationIdAttName -> preparationId, tokenAttName -> token, 
+			expiresAttName -> expires, createdAttName -> created)
+	}
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param created A new created
+	  * @return A new copy of this model with the specified created
+	  */
+	def withCreated(created: Instant) = copy(created = Some(created))
+	
+	/**
+	  * @param expires A new expires
+	  * @return A new copy of this model with the specified expires
+	  */
+	def withExpires(expires: Instant) = copy(expires = Some(expires))
+	
+	/**
+	  * @param preparationId A new preparationId
+	  * @return A new copy of this model with the specified preparationId
+	  */
+	def withPreparationId(preparationId: Int) = copy(preparationId = Some(preparationId))
+	
+	/**
+	  * @param token A new token
+	  * @return A new copy of this model with the specified token
+	  */
+	def withToken(token: String) = copy(token = Some(token))
 }
+

@@ -28,7 +28,11 @@ object SqlWriter
 	{
 		// Forms the table initials first
 		val initials = initialsFrom((classes.map { _.tableName } ++
-			classes.flatMap { _.descriptionLinkClass.map { _.tableName } } ++
+			classes.flatMap { _.descriptionLinkClass.toVector
+				.flatMap { c => c.tableName +: c.properties.flatMap { _.dataType match {
+					case ClassReference(referencedTableName, _, _) => Some(referencedTableName)
+					case _ => None
+				} } } } ++
 			classes.flatMap { _.properties.flatMap { _.dataType match
 			{
 				case ClassReference(referencedTableName, _, _) => Some(referencedTableName)

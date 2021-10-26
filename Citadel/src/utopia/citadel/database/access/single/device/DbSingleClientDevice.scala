@@ -43,7 +43,7 @@ case class DbSingleClientDevice(id: Int)
 	  * @param languageIds Ids of the languages in which device descriptions are read (call-by-name, implicit)
 	  * @return A detailed copy of this client device
 	  */
-	def detailed(implicit connection: Connection, languageIds: => LanguageIds) =
+	def detailed(implicit connection: Connection, languageIds: LanguageIds) =
 		described.map { device => device.witherUserLinks(userLinks.pull.toSet) }
 	
 	

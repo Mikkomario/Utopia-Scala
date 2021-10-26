@@ -1,24 +1,38 @@
 package utopia.ambassador.model.partial.token
 
+import java.time.Instant
+import utopia.flow.datastructure.immutable.Model
+import utopia.flow.generic.ModelConvertible
+import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 
-import java.time.Instant
-
 /**
-  * Contains information about an authorization token
+  * Tokens (both access and refresh) used for authenticating 3rd party requests
+  * @param userId Id of the user who owns this token / to whom this token is linked
+  * @param token Textual representation of this token
+  * @param expires Time when this token can no longer be used, if applicable
+  * @param created Time when this token was acquired / issued
+  * @param deprecatedAfter Time when this token was cancelled, revoked or replaced
+  * @param isRefreshToken Whether this is a refresh token which can be used for acquiring access tokens
   * @author Mikko Hilpinen
-  * @since 11.7.2021, v1.0
-  * @param userId Id of the user this token is bound to
-  * @param token String value of this token
-  * @param created Creation time of this token (default = now)
-  * @param expiration Expiration time of this token, if this is a temporary token (default = None)
-  * @param deprecatedAfter Time when this token was deprecated / revoked / replaced. None if still valid (default)
-  * @param isRefreshToken Whether this token can be used to request more access tokens (default = false)
+  * @since 2021-10-26
   */
-case class AuthTokenData(userId: Int, token: String, created: Instant = Now, expiration: Option[Instant] = None,
-                         deprecatedAfter: Option[Instant] = None, isRefreshToken: Boolean = false)
+case class AuthTokenData(userId: Int, token: String, expires: Option[Instant] = None, created: Instant = Now, 
+	deprecatedAfter: Option[Instant] = None, isRefreshToken: Boolean = false) 
+	extends ModelConvertible
 {
+	// COMPUTED	--------------------
+	
+	/**
+	  * Whether this AuthToken has already been deprecated
+	  */
+	def isDeprecated = deprecatedAfter.isDefined || expires.exists { _.isInPast }
+	/**
+	  * Whether this AuthToken is still valid (not deprecated)
+	  */
+	def isValid = !isDeprecated
+	
 	/**
 	  * @return Whether this is a session / access token and not a refresh token
 	  */
@@ -27,9 +41,13 @@ case class AuthTokenData(userId: Int, token: String, created: Instant = Now, exp
 	/**
 	  * @return Whether this is a temporary token (will expire)
 	  */
-	def isTemporary = expiration.isDefined
-	/**
-	  * @return Whether this token has expired or been deprecated
-	  */
-	def hasExpired = deprecatedAfter.isDefined || expiration.exists { _.isInPast }
+	def isTemporary = expires.isDefined
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def toModel = 
+		Model(Vector("user_id" -> userId, "token" -> token, "expires" -> expires, "created" -> created, 
+			"deprecated_after" -> deprecatedAfter, "is_refresh_token" -> isRefreshToken))
 }
+

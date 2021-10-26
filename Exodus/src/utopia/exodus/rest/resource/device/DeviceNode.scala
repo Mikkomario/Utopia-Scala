@@ -43,7 +43,7 @@ case class DeviceNode(deviceId: Int) extends ResourceWithChildren[AuthorizedCont
 				// May return no content if if-modified-since header is provided and data hasn't been changed
 				if (context.request.headers.ifModifiedSince.forall { threshold => access.isModifiedSince(threshold) })
 				{
-					implicit lazy val languageIds: LanguageIds = session.languageIds
+					implicit val languageIds: LanguageIds = session.languageIds
 					access.detailed match
 					{
 						case Some(device) =>

@@ -15,6 +15,7 @@ import utopia.vault.sql.SqlExtensions._
   * @author Mikko Hilpinen
   * @since 19.7.2021, v1.0
   */
+// TODO: Refactor
 object DbAuthTokensWithScopes extends ManyModelAccess[AuthTokenWithScopes]
 	with NonDeprecatedView[AuthTokenWithScopes]
 {

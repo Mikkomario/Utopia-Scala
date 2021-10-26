@@ -81,6 +81,13 @@ trait ManyOrganizationDeletionsAccessLike[+A, +Repr <: ManyModelAccess[A]] exten
 		filter(model.actualizationColumn < threshold)
 	
 	/**
+	  * @param organizationIds Ids of the targeted organizations
+	  * @return An access point to deletions that target any of the specified organizations
+	  */
+	def forAnyOfOrganizations(organizationIds: Iterable[Int]) =
+		filter(model.organizationIdColumn in organizationIds)
+	
+	/**
 	  * Cancels all accessible organization deletions
 	  * @param creatorId Id of the user who's cancelling these deletions (optional)
 	  * @param connection Implicit DB Connection

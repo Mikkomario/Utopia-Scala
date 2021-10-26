@@ -37,7 +37,7 @@ case class OtherUserNode(userId: Int) extends Resource[AuthorizedContext]
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		// GET acquires other user's current settings (simplified)
-		context.sessionKeyAuthorized { (session, connection) =>
+		context.sessionTokenAuthorized { (session, connection) =>
 			implicit val c: Connection = connection
 			// Requires the requesting user to belong to a same organization with that user
 			if (DbUser(session.userId).sharesOrganizationWithUserWithId(userId))

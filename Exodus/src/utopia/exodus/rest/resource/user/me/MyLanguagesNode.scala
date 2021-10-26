@@ -3,13 +3,16 @@ package utopia.exodus.rest.resource.user.me
 import utopia.access.http.Method.{Delete, Get, Post, Put}
 import utopia.access.http.Status.{BadRequest, Forbidden}
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
-import utopia.citadel.database.access.single.language.DbLanguage
+import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.citadel.database.access.single.user.DbUser
+import utopia.citadel.database.model.user.UserLanguageLinkModel
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.util.CollectionExtensions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
+import utopia.metropolis.model.partial.user.UserLanguageLinkData
 import utopia.metropolis.model.post.NewLanguageProficiency
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
@@ -34,19 +37,20 @@ object MyLanguagesNode extends Resource[AuthorizedContext]
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionKeyAuthorized { (session, connection) =>
+		context.sessionTokenAuthorized { (session, connection) =>
 			implicit val c: Connection = connection
 			val method = context.request.method
-			val user = DbUser(session.userId)
+			val userAccess = DbUser(session.userId)
 			
 			// GET simply returns existing user language links (with appropriate descriptions)
-			if (method == Get) {
+			if (method == Get)
+			{
 				// Reads language descriptions from the database, uses languages in the accept-language header
-				implicit val acceptedLanguageIds: LanguageIds = context.languageIdListFor(session.userId)
-				val languages = user.languages.withDescriptions.sortBy { _.familiarity.orderIndex }
-				// Supports simple model style also
+				implicit val acceptedLanguageIds: LanguageIds = session.languageIds
+				val languages = userAccess.languageLinks.detailed.sortBy { _.familiarity.wrapped.orderIndex }
+				// Supports simple model style
 				Result.Success(session.modelStyle match {
-					case Full => languages.map { _.toModelWithoutUser }
+					case Full => languages.map { _.toModel }
 					case Simple =>
 						val roles = DbDescriptionRoles.pull
 						languages.map { _.toSimpleModelUsing(roles) }
@@ -55,86 +59,87 @@ object MyLanguagesNode extends Resource[AuthorizedContext]
 			// DELETE removes known languages
 			else if (method == Delete) {
 				context.handleArrayPost { values =>
-					val existingLanguageIds = user.languageIds.toSet
+					val existingLanguageIds = userAccess.knownLanguageIds
 					val languageIdsToDelete = values.flatMap { _.int }.toSet
 					// Makes sure at leas one language remains
 					if (existingLanguageIds.forall(languageIdsToDelete.contains))
 						Result.Failure(Forbidden, "You must keep at least one language")
-					else {
-						user.languages.remove(languageIdsToDelete)
+					else
+					{
+						userAccess.languageLinks.withAnyOfLanguages(languageIdsToDelete).delete()
 						// Returns a list of remaining language ids
-						Result.Success((existingLanguageIds -- languageIdsToDelete).toVector)
+						Result.Success((existingLanguageIds -- languageIdsToDelete).toVector.sorted)
 					}
 				}
 			}
-			else {
+			else
+			{
 				context.handleModelArrayPost(NewLanguageProficiency) { proficiencies =>
 					// Validates the proposed languages first
-					DbLanguage.validateProposedProficiencies(proficiencies) match {
+					DbLanguages.validateProposedProficiencies(proficiencies) match {
 						case Success(proficiencies) =>
 							// on POST, adds new language proficiencies (may overwrite existing)
 							// on PUT, replaces languages
 							if (proficiencies.isEmpty && method == Put)
 								Result.Failure(Forbidden, "You must keep at least one language")
-							else {
-								val existingLanguages = user.languages.withFamiliarityLevels.toMap
-								
+							else
+							{
+								val existingLanguages = userAccess.languageLinks.withFamiliarities.pull
+								val existingMap = existingLanguages.map { l => l.id -> l.familiarityId }.toMap
 								// Groups the changes
-								val changesMap = proficiencies.map { _.toTuple }.toMap
+								val changesMap = proficiencies
+									.map { case (language, familiarity) => language.id -> familiarity.id }.toMap
 								
-								val changesInExisting = existingLanguages.flatMap { case (languageId, familiarity) =>
-									changesMap.get(languageId).map { newFamiliarity =>
-										languageId -> (familiarity -> newFamiliarity)
+								val changesInExisting = existingMap.flatMap { case (languageId, familiarityId) =>
+									changesMap.get(languageId).map { newFamiliarityId =>
+										languageId -> (familiarityId -> newFamiliarityId)
 									}
 								}
-								val modifications = changesInExisting
-									.filterNot { case (_, change) => change._1.id == change._2 }
-								val duplicateLanguageIds = changesInExisting.filter { case (_, change) =>
-									change._1.id == change._2
-								}.keySet
-								val newLanguages = changesMap.filterNot { case (languageId, _) =>
-									existingLanguages.contains(languageId)
-								}
+								val (modifications, duplicates) = changesInExisting
+									.divideBy { case (_, (oldFamiliarityId, newFamiliarityId)) =>
+										oldFamiliarityId == newFamiliarityId }
+								val newLanguages = changesMap
+									.filterNot { case (languageId, _) => existingMap.contains(languageId) }
 								
 								// Removes some languages (those not listed in PUT and those being modified)
 								val languageIdsToRemove = {
 									val base = modifications.keySet
 									if (method == Put)
-										base ++ existingLanguages.filterNot { case (languageId, _) =>
-											changesMap.contains(languageId)
-										}.keySet
+										base ++ existingMap
+											.filterNot { case (languageId, _) => changesMap.contains(languageId) }
+											.keySet
 									else
 										base
 								}
-								user.languages.remove(languageIdsToRemove)
+								if (languageIdsToRemove.nonEmpty)
+									userAccess.languageLinks.withAnyOfLanguages(languageIdsToRemove).delete()
 								
-								// Adds new language links
-								val inserted = (modifications.map { case (languageId, change) =>
-									languageId -> change._2
-								} ++ newLanguages).map { case (languageId, familiarity) =>
-									user.languages.insert(languageId, familiarity)
-								}
+								// Adds new language and modified links
+								val inserted = UserLanguageLinkModel.insert(
+									(modifications.map { case (languageId, (_, newFamiliarityId)) =>
+										languageId -> newFamiliarityId } ++ newLanguages)
+									.map { case (languageId, familiarityId) =>
+										UserLanguageLinkData(session.userId, languageId, familiarityId) }
+										.toVector)
 								
 								// Returns the new languages list
-								val duplicates = existingLanguages.filter { case (languageId, _) =>
-									duplicateLanguageIds.contains(languageId)
-								}
-								val duplicateModels = duplicates.map { case (languageId, familiarity) =>
-									Model(Vector("language_id" -> languageId, "familiarity_id" -> familiarity.id))
+								val duplicateModels = duplicates.map { case (languageId, (familiarityId, _)) =>
+									Model(Vector("language_id" -> languageId, "familiarity_id" -> familiarityId))
 								}.toVector
-								val insertedModels = inserted.map { l =>
-									Model(Vector("language_id" -> l.languageId,
-										"familiarity_id" -> l.familiarityId))
-								}.toVector
+								val insertedModels = inserted
+									.map { l => Model(Vector("language_id" -> l.languageId,
+										"familiarity_id" -> l.familiarityId)) }
 								
 								if (method == Put)
 									Result.Success(duplicateModels ++ insertedModels)
-								else {
-									val previousModels = existingLanguages.filterNot { case (languageId, _) =>
-										changesMap.contains(languageId)
-									}.map { case (languageId, familiarity) =>
-										Model(Vector("language_id" -> languageId, "familiarity_id" -> familiarity.id))
-									}.toVector
+								else
+								{
+									val previousModels = existingMap
+										.filterNot { case (languageId, _) => changesMap.contains(languageId) }
+										.map { case (languageId, familiarityId) =>
+											Model(Vector("language_id" -> languageId,
+												"familiarity_id" -> familiarityId)) }
+										.toVector
 									Result.Success(previousModels ++ duplicateModels ++ insertedModels)
 								}
 							}

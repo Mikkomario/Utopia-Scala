@@ -25,5 +25,11 @@ object DbOrganizations extends ManyOrganizationsAccess with UnconditionalView
 	
 	class DbOrganizationsSubset(override val ids: Set[Int]) 
 		extends ManyOrganizationsAccess with ManyDescribedAccessByIds[Organization, DescribedOrganization]
+	{
+		/**
+		  * @return An access point to deletions concerning these organizations
+		  */
+		def deletions = DbOrganizationDeletions.forAnyOfOrganizations(ids)
+	}
 }
 

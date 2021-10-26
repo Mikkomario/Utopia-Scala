@@ -11,6 +11,7 @@ import utopia.vault.sql.JoinType.Inner
   * @author Mikko Hilpinen
   * @since 19.7.2021, v1.0
   */
+@deprecated("Replaced with AuthTokenScopeFactory", "v2.0")
 object TokenScopeFactory extends FromRowFactory[TokenScope]
 {
 	// COMPUTED -------------------------------

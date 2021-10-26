@@ -5,26 +5,27 @@ import utopia.ambassador.model.stored.scope.{Scope, TaskScopeLink}
 import utopia.flow.util.Extender
 
 /**
-  * Appends scope data to task-scope-link
+  * Combines Scope with taskLink data
   * @author Mikko Hilpinen
-  * @since 11.7.2021, v1.0
+  * @since 2021-10-26
   */
-case class TaskScope(link: TaskScopeLink, scope: Scope) extends Extender[ScopeData]
+case class TaskScope(scope: Scope, taskLink: TaskScopeLink) extends Extender[ScopeData]
 {
-	// COMPUTED -------------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	  * @return Id of this scope
+	  * Id of this Scope in the database
 	  */
 	def id = scope.id
 	
 	/**
 	  * @return Whether this scope is required for the task at hand (false if one of possible scopes)
 	  */
-	def isRequired = link.isRequired
+	def isRequired = taskLink.isRequired
 	
 	
-	// IMPLEMENTED  ---------------------------
+	// IMPLEMENTED	--------------------
 	
-	override def wrapped = scope
+	override def wrapped = scope.data
 }
+

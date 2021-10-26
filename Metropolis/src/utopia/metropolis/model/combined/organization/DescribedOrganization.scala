@@ -8,7 +8,20 @@ import utopia.metropolis.model.stored.organization.Organization
 
 object DescribedOrganization extends DescribedFromModelFactory[Organization, DescribedOrganization]
 {
+	// IMPLEMENTED  ---------------------------
+	
 	override protected def undescribedFactory = Organization
+	
+	
+	// OTHER    -------------------------------
+	
+	/**
+	  * @param organizationId A organization id
+	  * @param descriptions Descriptions of that organization
+	  * @return A described wrapper for that id
+	  */
+	def apply(organizationId: Int, descriptions: Set[LinkedDescription]): DescribedOrganization =
+		apply(Organization(organizationId), descriptions)
 }
 
 /**

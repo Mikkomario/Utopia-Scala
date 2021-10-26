@@ -8,4 +8,5 @@ import utopia.vault.model.template.Stored
   * @author Mikko Hilpinen
   * @since 14.7.2021, v1.0
   */
+@deprecated("Replaced with AuthServiceSettings", "v2.0")
 case class ServiceSettings(id: Int, data: ServiceSettingsData) extends Stored[ServiceSettingsData, Int]

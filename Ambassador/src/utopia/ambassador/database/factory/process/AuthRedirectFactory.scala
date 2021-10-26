@@ -5,28 +5,29 @@ import utopia.ambassador.database.model.process.AuthRedirectModel
 import utopia.ambassador.model.partial.process.AuthRedirectData
 import utopia.ambassador.model.stored.process.AuthRedirect
 import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.flow.generic.ValueUnwraps._
+import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import utopia.vault.nosql.template.Deprecatable
 
 /**
-  * Used for reading authentication user redirection events from the DB
+  * Used for reading AuthRedirect data from the DB
   * @author Mikko Hilpinen
-  * @since 18.7.2021, v1.0
+  * @since 2021-10-26
   */
-object AuthRedirectFactory extends FromValidatedRowModelFactory[AuthRedirect] with Deprecatable
+object AuthRedirectFactory 
+	extends FromValidatedRowModelFactory[AuthRedirect] with FromRowFactoryWithTimestamps[AuthRedirect] 
+		with Deprecatable
 {
-	// COMPUTED --------------------------------
+	// IMPLEMENTED	--------------------
 	
-	private def model = AuthRedirectModel
+	override def creationTimePropertyName = "created"
 	
-	
-	// IMPLEMENTED  ----------------------------
+	override def nonDeprecatedCondition = AuthRedirectModel.nonDeprecatedCondition
 	
 	override def table = AmbassadorTables.authRedirect
 	
-	override def nonDeprecatedCondition = model.nonDeprecatedCondition
-	
-	override protected def fromValidatedModel(model: Model[Constant]) = AuthRedirect(model("id"),
-		AuthRedirectData(model("preparationId"), model("token"), model("expiration"), model("created")))
+	override def fromValidatedModel(valid: Model[Constant]) = 
+		AuthRedirect(valid("id").getInt, AuthRedirectData(valid("preparationId").getInt, 
+			valid("token").getString, valid("expires").getInstant, valid("created").getInstant))
 }
+

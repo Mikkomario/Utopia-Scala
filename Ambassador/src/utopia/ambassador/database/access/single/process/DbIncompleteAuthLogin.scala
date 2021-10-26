@@ -3,46 +3,37 @@ package utopia.ambassador.database.access.single.process
 import utopia.ambassador.database.factory.process.IncompleteAuthLoginFactory
 import utopia.ambassador.database.model.process.IncompleteAuthLoginModel
 import utopia.ambassador.model.stored.process.IncompleteAuthLogin
-import utopia.flow.generic.ValueConversions._
-import utopia.vault.nosql.access.single.model.SingleModelAccessById
-import utopia.vault.nosql.access.single.model.distinct.UniqueModelAccess
-import utopia.vault.nosql.view.RowFactoryView
+import utopia.vault.nosql.access.single.model.SingleRowModelAccess
+import utopia.vault.nosql.template.Indexed
+import utopia.vault.nosql.view.UnconditionalView
 
 /**
-  * Used for accessing individual incomplete authentication logins at a time
+  * Used for accessing individual IncompleteAuthLogins
   * @author Mikko Hilpinen
-  * @since 19.7.2021, v1.0
+  * @since 2021-10-26
   */
-object DbIncompleteAuthLogin extends SingleModelAccessById[IncompleteAuthLogin, Int]
-	with RowFactoryView[IncompleteAuthLogin]
+object DbIncompleteAuthLogin 
+	extends SingleRowModelAccess[IncompleteAuthLogin] with UnconditionalView with Indexed
 {
-	// COMPUTED ----------------------------------
+	// COMPUTED	--------------------
 	
-	private def model = IncompleteAuthLoginModel
+	/**
+	  * Factory used for constructing database the interaction models
+	  */
+	protected def model = IncompleteAuthLoginModel
 	
 	
-	// IMPLEMENTED  ------------------------------
+	// IMPLEMENTED	--------------------
 	
 	override def factory = IncompleteAuthLoginFactory
 	
-	override def idToValue(id: Int) = id
 	
-	
-	// OTHER    ----------------------------------
+	// OTHER	--------------------
 	
 	/**
-	  * @param authId Id of the targeted incomplete authentication attempt
-	  * @return An access point to that authentication's login
+	  * @param id Database id of the targeted IncompleteAuthLogin instance
+	  * @return An access point to that IncompleteAuthLogin
 	  */
-	def forAuthenticationWithId(authId: Int) = new DbLoginForAuth(authId)
-	
-	
-	// NESTED   ----------------------------------
-	
-	class DbLoginForAuth(authenticationId: Int) extends UniqueModelAccess[IncompleteAuthLogin]
-	{
-		override def factory = DbIncompleteAuthLogin.factory
-		
-		override def condition = model.withAuthenticationId(authenticationId).toCondition
-	}
+	def apply(id: Int) = DbSingleIncompleteAuthLogin(id)
 }
+

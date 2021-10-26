@@ -66,7 +66,7 @@ object TablesWriter
 		val linkProp = c.properties.head
 		LazyValue(c.name.singular.uncapitalize, Set(Reference.descriptionLinkTable),
 			description = tablePropertyDescriptionFrom(c))(
-			s"DescriptionLinkTable(apply(${c.tableName.quoted}, ${linkProp.name.singular.quoted}))")
+			s"DescriptionLinkTable(apply(${c.tableName.quoted}), ${linkProp.name.singular.quoted})")
 	}
 	
 	private def tablePropertyDescriptionFrom(c: Class) =

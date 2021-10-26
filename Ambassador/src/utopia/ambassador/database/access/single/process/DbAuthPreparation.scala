@@ -1,94 +1,56 @@
 package utopia.ambassador.database.access.single.process
 
-import utopia.ambassador.database.access.many.process.DbAuthCompletionRedirectTargets
 import utopia.ambassador.database.factory.process.AuthPreparationFactory
-import utopia.ambassador.database.factory.scope.ScopeFactory
 import utopia.ambassador.database.model.process.AuthPreparationModel
-import utopia.ambassador.database.model.scope.{AuthPreparationScopeLinkModel, ScopeModel}
 import utopia.ambassador.model.stored.process.AuthPreparation
-import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
-import utopia.vault.nosql.view.NonDeprecatedView
-import utopia.vault.sql.{Select, Where}
+import utopia.vault.nosql.template.Indexed
+import utopia.vault.nosql.view.{NonDeprecatedView, SubView}
 
 /**
-  * Used for accessing information concerning individual authentication preparations
+  * Used for accessing individual AuthPreparations
   * @author Mikko Hilpinen
-  * @since 18.7.2021, v1.0
+  * @since 2021-10-26
   */
-object DbAuthPreparation extends SingleRowModelAccess[AuthPreparation] with NonDeprecatedView[AuthPreparation]
+object DbAuthPreparation 
+	extends SingleRowModelAccess[AuthPreparation] with NonDeprecatedView[AuthPreparation] with Indexed
 {
-	// COMPUTED ---------------------------------
+	// COMPUTED	--------------------
 	
-	private def model = AuthPreparationModel
-	private def scopeLinkModel = AuthPreparationScopeLinkModel
+	/**
+	  * Factory used for constructing database the interaction models
+	  */
+	protected def model = AuthPreparationModel
 	
 	
-	// IMPLEMENTED  -----------------------------
+	// IMPLEMENTED	--------------------
 	
 	override def factory = AuthPreparationFactory
 	
 	
-	// OTHER    ---------------------------------
+	// OTHER	--------------------
 	
 	/**
-	  * @param preparationId An authentication preparation id
-	  * @return An access point to that preparation's data
+	  * @param id Database id of the targeted AuthPreparation instance
+	  * @return An access point to that AuthPreparation
 	  */
-	def apply(preparationId: Int) = new DbSinglePreparation(preparationId)
+	def apply(id: Int) = DbSingleAuthPreparation(id)
 	
 	/**
-	  * @param token An authentication token
-	  * @param connection Implicit DB Connection
-	  * @return A non-expired (but possibly closed) preparation matching that token
+	  * @param token An auth preparation token
+	  * @return An access point to that auth preparation
 	  */
-	def forToken(token: String)(implicit connection: Connection) =
-		find(model.withToken(token).toCondition)
+	def withToken(token: String) = new DbAuthPreparationWithToken(token)
 	
 	
-	// NESTED   ----------------------------------
+	// NESTED   --------------------
 	
-	class DbSinglePreparation(override val id: Int) extends SingleIntIdModelAccess[AuthPreparation]
+	class DbAuthPreparationWithToken(token: String) extends UniqueAuthPreparationAccess with SubView
 	{
-		// COMPUTED ------------------------------
+		override protected def parent = DbAuthPreparation
+		override protected def defaultOrdering = Some(factory.defaultOrdering)
 		
-		private def scopeFactory = ScopeFactory
-		private def scopeModel = ScopeModel
-		
-		/**
-		  * @return Redirect targets specified for this authentication attempt
-		  */
-		def redirectTargets = DbAuthCompletionRedirectTargets.forPreparationWithId(id)
-		
-		/**
-		  * @param connection Implicit DB Connection
-		  * @return Whether this preparation has already been consumed with a user redirect
-		  */
-		def isClosed(implicit connection: Connection) =
-			DbAuthRedirect.forPreparationWithId(id).nonEmpty
-		
-		
-		// IMPLEMENTED  --------------------------
-		
-		override def factory = DbAuthPreparation.factory
-		
-		
-		// OTHER    ------------------------------
-		
-		/**
-		  * @param serviceId A service id
-		  * @param connection Implicit DB Connection
-		  * @return Scopes requested during this authentication preparation which are tied to the specified service
-		  */
-		def requestedScopesForServiceWithId(serviceId: Int)(implicit connection: Connection) =
-		{
-			val target = scopeFactory.target join scopeLinkModel.table
-			val preparationCondition = scopeLinkModel.withPreparationId(id).toCondition
-			val serviceCondition = scopeModel.withServiceId(serviceId).toCondition
-			
-			scopeFactory(connection(
-				Select(target, scopeFactory.table) + Where(preparationCondition && serviceCondition)))
-		}
+		override def filterCondition = model.withToken(token).toCondition
 	}
 }
+
