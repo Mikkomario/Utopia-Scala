@@ -14,7 +14,7 @@ object DescriptionData extends FromModelFactoryWithSchema[DescriptionData]
 	
 	// IMPLEMENTED	------------------------------
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = DescriptionData(model("role_id"), model("text"),
+	override protected def fromValidatedModel(model: Model) = DescriptionData(model("role_id"), model("text"),
 		model("language_id"), model("author_id"))
 }
 

@@ -15,7 +15,7 @@ object InvitationResponseData extends FromModelFactoryWithSchema[InvitationRespo
 	
 	// IMPLEMENTED	--------------------------
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = InvitationResponseData(model("invitation_id"),
+	override protected def fromValidatedModel(model: Model) = InvitationResponseData(model("invitation_id"),
 		model("was_accepted"), model("was_blocked"), model("creator_id"))
 }
 

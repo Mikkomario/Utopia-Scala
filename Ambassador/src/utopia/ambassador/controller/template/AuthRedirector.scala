@@ -37,7 +37,7 @@ trait AuthRedirector
 	  * @return Parameters to add to the default parameters
 	  */
 	def extraParametersFor(settings: AuthServiceSettings, preparation: AuthPreparation, scopes: Vector[Scope])
-	                      (implicit connection: Connection): Model[Constant]
+	                      (implicit connection: Connection): Model
 	
 	
 	// OTHER    -------------------------------

@@ -26,7 +26,7 @@ object ClientDeviceUserFactory
 	
 	override def table = CitadelTables.clientDeviceUser
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		ClientDeviceUser(valid("id").getInt, ClientDeviceUserData(valid("deviceId").getInt, 
 			valid("userId").getInt, valid("created").getInstant, valid("deprecatedAfter").instant))
 }

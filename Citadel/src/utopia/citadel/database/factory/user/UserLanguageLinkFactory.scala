@@ -17,7 +17,7 @@ object UserLanguageLinkFactory extends FromValidatedRowModelFactory[UserLanguage
 	
 	override def table = CitadelTables.userLanguageLink
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		UserLanguageLink(valid("id").getInt, UserLanguageLinkData(valid("userId").getInt, valid("languageId").getInt,
 			valid("familiarityId").getInt, valid("created").getInstant))
 }

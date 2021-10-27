@@ -17,7 +17,7 @@ object AuthServiceFactory extends FromValidatedRowModelFactory[AuthService]
 	
 	override def table = AmbassadorTables.authService
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		AuthService(valid("id").getInt, AuthServiceData(valid("name").getString, valid("created").getInstant))
 }
 

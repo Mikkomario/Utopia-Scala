@@ -23,6 +23,6 @@ object DeletionCancelFactory extends FromValidatedRowModelFactory[DeletionCancel
 	
 	override def creationTimePropertyName = "created"
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = DeletionCancel(model("id"),
+	override protected def fromValidatedModel(model: Model) = DeletionCancel(model("id"),
 		DeletionCancelData(model("deletionId"), model("creatorId"), model(creationTimePropertyName)))
 }

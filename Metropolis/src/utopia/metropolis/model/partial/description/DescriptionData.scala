@@ -1,7 +1,7 @@
 package utopia.metropolis.model.partial.description
 
 import java.time.Instant
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
+import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, ModelConvertible, StringType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
@@ -16,7 +16,7 @@ object DescriptionData extends FromModelFactoryWithSchema[DescriptionData]
 	
 	// IMPLEMENTED	------------------------------
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 		DescriptionData(model("role_id"), model("text"), model("language_id"), model("author_id"), model("created"),
 			model("deprecated_after"))
 }

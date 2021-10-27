@@ -512,7 +512,7 @@ trait AuthorizedContext extends Context
 	  * @tparam A Type of parsed item
 	  * @return Function result or failure in case of parsing failures
 	  */
-	def handleModelArrayPost[A](parser: Model[Constant] => Try[A])(f: Vector[A] => Result) = handleArrayPost { values =>
+	def handleModelArrayPost[A](parser: Model => Try[A])(f: Vector[A] => Result) = handleArrayPost { values =>
 		values.flatMap { _.model }.tryMap { parser(_) } match
 		{
 			case Success(parsed) => f(parsed)
@@ -528,7 +528,7 @@ trait AuthorizedContext extends Context
 	  * @return Function result or failure in case of parsing failures
 	  */
 	def handleModelArrayPost[A](parser: FromModelFactory[A])(f: Vector[A] => Result): Result =
-		handleModelArrayPost[A] { m: Model[Constant] => parser(m) }(f)
+		handleModelArrayPost[A] { m: Model => parser(m) }(f)
 	
 	// Finds user id and checks the password
 	private def tryAuthenticate(email: String, password: String)(implicit connection: Connection) =

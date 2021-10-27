@@ -17,6 +17,6 @@ object DescriptionRoleFactory extends FromValidatedRowModelFactory[DescriptionRo
 {
 	override def table = Tables.descriptionRole
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = DescriptionRole(model("id"),
+	override protected def fromValidatedModel(model: Model) = DescriptionRole(model("id"),
 		DescriptionRoleData(model("jsonKeySingular"), model("jsonKeyPlural")))
 }

@@ -17,7 +17,7 @@ object AuthRedirectResultFactory extends FromValidatedRowModelFactory[AuthRedire
 {
 	override def table = AmbassadorTables.authRedirectResult
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 	{
 		// Parses the grant level based on 3 parameters
 		val grantLevel = {

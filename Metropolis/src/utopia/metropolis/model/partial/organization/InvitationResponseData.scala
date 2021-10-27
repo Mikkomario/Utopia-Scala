@@ -12,7 +12,7 @@ object InvitationResponseData extends FromModelFactoryWithSchema[InvitationRespo
 {
 	override val schema = ModelDeclaration("invitation_id" -> IntType)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 		InvitationResponseData(model("invitation_id"), model("message"), model("creator_id"), model("created"),
 			model("accepted"), model("blocked"))
 }

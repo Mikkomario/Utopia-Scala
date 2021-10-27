@@ -15,6 +15,6 @@ object LanguageFamiliarityFactory extends FromValidatedRowModelFactory[LanguageF
 {
 	override def table = Tables.languageFamiliarity
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = LanguageFamiliarity(model("id"),
+	override protected def fromValidatedModel(model: Model) = LanguageFamiliarity(model("id"),
 		model("orderIndex"))
 }

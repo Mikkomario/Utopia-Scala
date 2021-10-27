@@ -17,7 +17,7 @@ object AuthTokenScopeLinkFactory extends FromValidatedRowModelFactory[AuthTokenS
 	
 	override def table = AmbassadorTables.authTokenScopeLink
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		AuthTokenScopeLink(valid("id").getInt, AuthTokenScopeLinkData(valid("tokenId").getInt, 
 			valid("scopeId").getInt))
 }

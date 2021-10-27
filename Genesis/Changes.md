@@ -1,5 +1,8 @@
 # Utopia Reflection - List of Changes
 
+## v2.6.1 (in development)
+Supports changes in Flow v1.14
+
 ## v2.6 - 3.10.2021
 In this major (refactoring) update, many of the previously used traits were deprecated and new versions were added 
 to the **Flow** module. Shape classes were also refactored to use the new **Pair** class from **Flow**. These 

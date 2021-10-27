@@ -17,7 +17,7 @@ object AuthCompletionRedirectTargetFactory extends FromValidatedRowModelFactory[
 {
 	override def table = AmbassadorTables.completionRedirectTarget
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 	{
 		// Parses the result state filter from two parameters
 		val resultStateFilter = model("resultStateFilter").boolean match

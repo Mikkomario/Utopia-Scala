@@ -30,7 +30,7 @@ object TaskScopeLinkFactory extends FromValidatedRowModelFactory[TaskScopeLink] 
 	
 	override def nonDeprecatedCondition = model.nonDeprecatedCondition
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = TaskScopeLink(model("id"),
+	override protected def fromValidatedModel(model: Model) = TaskScopeLink(model("id"),
 		TaskScopeLinkData(model("taskId"), model("scopeId"), model("created"), model("deprecatedAfter"),
 			model("isRequired")))
 }

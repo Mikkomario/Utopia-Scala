@@ -28,7 +28,7 @@ object MembershipFactory extends FromValidatedRowModelFactory[Membership]
 	
 	override def nonDeprecatedCondition = model.nonDeprecatedCondition
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = Membership(model("id").getInt,
+	override protected def fromValidatedModel(model: Model) = Membership(model("id").getInt,
 		MembershipData(model(this.model.organizationIdAttName).getInt, model("userId").getInt, model("creatorId").int,
 			model(creationTimePropertyName).getInstant, model("ended").instant))
 	

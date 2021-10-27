@@ -17,7 +17,7 @@ object UserRoleRightFactory extends FromValidatedRowModelFactory[UserRoleRight]
 	
 	override def table = CitadelTables.userRoleRight
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		UserRoleRight(valid("id").getInt, UserRoleRightData(valid("roleId").getInt, valid("taskId").getInt, 
 			valid("created").getInstant))
 }

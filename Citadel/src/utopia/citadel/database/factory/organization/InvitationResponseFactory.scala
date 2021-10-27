@@ -22,7 +22,7 @@ object InvitationResponseFactory
 	
 	override def table = CitadelTables.invitationResponse
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		InvitationResponse(valid("id").getInt, InvitationResponseData(valid("invitationId").getInt, 
 			valid("message").string, valid("creatorId").int, valid("created").getInstant, 
 			valid("accepted").getBoolean, valid("blocked").getBoolean))

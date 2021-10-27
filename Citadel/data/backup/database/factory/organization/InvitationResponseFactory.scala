@@ -15,7 +15,7 @@ object InvitationResponseFactory extends FromValidatedRowModelFactory[Invitation
 {
 	// IMPLEMENTED	--------------------------
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = InvitationResponse(model("id").getInt,
+	override protected def fromValidatedModel(model: Model) = InvitationResponse(model("id").getInt,
 		InvitationResponseData(model("invitationId").getInt, model("wasAccepted").getBoolean,
 			model("wasBlocked").getBoolean, model("creatorId").getInt))
 	

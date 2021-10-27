@@ -24,7 +24,7 @@ object Response
      * @param body the model that forms the body of the response
      * @param status the status of the response
      */
-    def fromModel(body: Model[Constant], status: Status = OK, setCookies: Seq[Cookie] = Vector()) =
+    def fromModel(body: Model, status: Status = OK, setCookies: Seq[Cookie] = Vector()) =
         fromValue(body, status, setCookies)
     
     /**

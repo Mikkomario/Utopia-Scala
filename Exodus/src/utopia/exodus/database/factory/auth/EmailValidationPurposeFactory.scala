@@ -17,7 +17,7 @@ object EmailValidationPurposeFactory extends FromValidatedRowModelFactory[EmailV
 	
 	override def table = ExodusTables.emailValidationPurpose
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		EmailValidationPurpose(valid("id").getInt, EmailValidationPurposeData(valid("nameEn").getString, 
 			valid("created").getInstant))
 }

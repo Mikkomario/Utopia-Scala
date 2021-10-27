@@ -11,7 +11,7 @@ object UserSettingsData extends FromModelFactoryWithSchema[UserSettingsData]
 {
 	override def schema = ModelDeclaration("name" -> StringType)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 		UserSettingsData(model("name").getString, model("email").string)
 }
 

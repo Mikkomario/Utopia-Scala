@@ -9,7 +9,7 @@ import utopia.flow.util.CollectionExtensions._
   * @author Mikko
   * @since 14.6.2020, v1
   */
-case class VectorContent[+A](models: Vector[Model[Constant]])(implicit parser: FromModelFactory[A])
+case class VectorContent[+A](models: Vector[Model])(implicit parser: FromModelFactory[A])
 {
 	/**
 	  * Parsed response content

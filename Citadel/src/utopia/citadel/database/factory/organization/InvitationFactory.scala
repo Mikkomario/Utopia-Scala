@@ -26,7 +26,7 @@ object InvitationFactory
 	
 	override def table = CitadelTables.invitation
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		Invitation(valid("id").getInt, InvitationData(valid("organizationId").getInt, 
 			valid("startingRoleId").getInt, valid("expires").getInstant, valid("recipientId").int, 
 			valid("recipientEmail").string, valid("message").string, valid("senderId").int, 

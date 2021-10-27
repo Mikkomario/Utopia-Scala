@@ -79,7 +79,7 @@ object ResponseParser
 	  *         If the response contained a singular model, it is wrapped in a vector.
 	  */
 	def modelsWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec) =
-		parseOrDefault(Vector[Model[Constant]]()) { (stream, headers, _) => parseValue(stream, headers, parsers).map { value =>
+		parseOrDefault(Vector[Model]()) { (stream, headers, _) => parseValue(stream, headers, parsers).map { value =>
 			if (value.isEmpty)
 				Vector()
 			else

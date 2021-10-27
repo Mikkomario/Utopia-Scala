@@ -43,7 +43,7 @@ class ExodusApi(override protected val gateway: Gateway = new Gateway(), overrid
 	override protected def makeRequestBody(bodyContent: Value) = StringBody.json(bodyContent.toJson)
 	
 	override protected def makeRequest(method: Method, path: String, timeout: Duration = Duration.Inf,
-									   body: Value = Value.empty, params: Model[Constant] = Model.empty,
+									   body: Value = Value.empty, params: Model = Model.empty,
 									   modHeaders: Headers => Headers = h => h)
 									  (implicit context: ExecutionContext): Future[Try[Response]] =
 	{

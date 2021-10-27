@@ -17,7 +17,7 @@ object TaskFactory extends FromValidatedRowModelFactory[Task]
 	
 	override def table = CitadelTables.task
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		Task(valid("id").getInt, TaskData(valid("created").getInstant))
 }
 

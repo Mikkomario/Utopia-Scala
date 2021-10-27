@@ -24,7 +24,7 @@ object AuthTokenFactory extends FromValidatedRowModelFactory[AuthToken]
 	
 	override def nonDeprecatedCondition = AuthTokenModel.nonDeprecatedCondition
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = AuthToken(model("id"),
+	override protected def fromValidatedModel(model: Model) = AuthToken(model("id"),
 		AuthTokenData(model("userId"), model("token"), model(creationTimePropertyName), model("expiration"),
 			model("deprecatedAfter"), model("isRefreshToken")))
 }

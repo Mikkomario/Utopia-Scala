@@ -26,7 +26,7 @@ object IncompleteAuthFactory
 	
 	override def table = AmbassadorTables.incompleteAuth
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		IncompleteAuth(valid("id").getInt, IncompleteAuthData(valid("serviceId").getInt, 
 			valid("code").getString, valid("token").getString, valid("expires").getInstant, 
 			valid("created").getInstant))

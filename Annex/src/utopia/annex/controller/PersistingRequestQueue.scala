@@ -71,7 +71,7 @@ trait PersistingRequestQueue extends RequestQueue
 	/**
 	  * @return A container used for holding the persisted requests
 	  */
-	protected def requestContainer: FileContainer[Vector[Model[Constant]]]
+	protected def requestContainer: FileContainer[Vector[Model]]
 	
 	
 	// IMPLEMENTED	---------------------
@@ -117,6 +117,6 @@ trait PersistingRequestQueue extends RequestQueue
 		}
 	}
 	
-	private def removePersistedRequest(request: Model[Constant]) =
+	private def removePersistedRequest(request: Model) =
 		requestContainer.pointer.update { _.filterNot { _ == request } }
 }

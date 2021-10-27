@@ -22,7 +22,7 @@ object OrganizationDeletionFactory
 	
 	override def table = CitadelTables.organizationDeletion
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		OrganizationDeletion(valid("id").getInt, OrganizationDeletionData(valid("organizationId").getInt, 
 			valid("actualization").getInstant, valid("creatorId").getInt, valid("created").getInstant))
 }

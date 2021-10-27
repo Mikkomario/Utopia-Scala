@@ -22,7 +22,7 @@ object ServiceSettingsFactory extends FromValidatedRowModelFactory[ServiceSettin
 	
 	override def creationTimePropertyName = "created"
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = ServiceSettings(model("id"),
+	override protected def fromValidatedModel(model: Model) = ServiceSettings(model("id"),
 		ServiceSettingsData(model("serviceId"), model("clientId"), model("clientSecret"),
 			model("authenticationUrl"), model("tokenUrl"), model("redirectUrl"),
 			model("incompleteAuthRedirectUrl"), model("defaultCompletionRedirectUrl"),

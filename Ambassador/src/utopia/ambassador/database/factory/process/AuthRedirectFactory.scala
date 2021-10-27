@@ -26,7 +26,7 @@ object AuthRedirectFactory
 	
 	override def table = AmbassadorTables.authRedirect
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		AuthRedirect(valid("id").getInt, AuthRedirectData(valid("preparationId").getInt, 
 			valid("token").getString, valid("expires").getInstant, valid("created").getInstant))
 }

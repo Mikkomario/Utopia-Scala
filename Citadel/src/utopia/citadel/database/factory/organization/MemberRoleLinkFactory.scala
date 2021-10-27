@@ -21,7 +21,7 @@ object MemberRoleLinkFactory extends FromValidatedRowModelFactory[MemberRoleLink
 	
 	override def table = CitadelTables.memberRoleLink
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		MemberRoleLink(valid("id").getInt, MemberRoleLinkData(valid("membershipId").getInt, valid("roleId").getInt,
 			valid("creatorId").int, valid("created").getInstant, valid("deprecatedAfter").instant))
 }

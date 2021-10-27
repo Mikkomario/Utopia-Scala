@@ -4,7 +4,6 @@ import scala.collection.immutable.HashSet
 import utopia.flow.datastructure.mutable.Tree
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.immutable.Model
-import utopia.flow.datastructure.immutable.Constant
 
 import scala.language.existentials
 
@@ -65,7 +64,7 @@ object VectorType extends DataType("Vector", classOf[Vector[Value]])
 /**
  * Model type only accepts immutable models that contain basic constants
  */
-object ModelType extends DataType("Model", classOf[Model[Constant]])
+object ModelType extends DataType("Model", classOf[Model])
 
 
 object DataType

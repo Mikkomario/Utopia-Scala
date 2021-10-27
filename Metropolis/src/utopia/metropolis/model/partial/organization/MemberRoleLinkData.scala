@@ -11,7 +11,7 @@ object MemberRoleLinkData extends FromModelFactoryWithSchema[MemberRoleLinkData]
 {
 	override val schema = ModelDeclaration("membership_id" -> IntType, "role_id" -> IntType)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 		apply(model("membership_id"), model("role_id"), model("creator_id"), model("created"),
 			model("deprecated_after"))
 }

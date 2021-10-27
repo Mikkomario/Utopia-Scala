@@ -1,6 +1,8 @@
 # Utopia Flow - List of Changes
 
-## v1.13.1 (in development)
+## v1.14 (in development)
+### Breaking Changes
+- Immutable model no longer accepts type parameters
 ### New Methods
 - **Model**
   - Added a couple variants of `.without(...)` which removes multiple attributes based on their names

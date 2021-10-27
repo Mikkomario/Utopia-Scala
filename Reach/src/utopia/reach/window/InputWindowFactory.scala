@@ -92,7 +92,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	  * @return Button blueprints + a pointer to whether the default button action (if any) can be triggered normally
 	  */
 	protected def specifyButtons(context: N,
-								 input: => Either[(String, ReachComponentLike with FocusRequestable), Model[Constant]],
+								 input: => Either[(String, ReachComponentLike with FocusRequestable), Model],
 								 warn: (String, LocalizedString) => Unit): (Vector[WindowButtonBlueprint[A]], ChangingLike[Boolean])
 	
 	/**

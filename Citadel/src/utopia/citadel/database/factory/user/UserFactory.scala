@@ -17,7 +17,7 @@ object UserFactory extends FromValidatedRowModelFactory[User]
 	
 	override def table = CitadelTables.user
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		User(valid("id").getInt, UserData(valid("created").getInstant))
 }
 

@@ -17,7 +17,7 @@ object AuthPreparationScopeLinkFactory extends FromValidatedRowModelFactory[Auth
 	
 	override def table = AmbassadorTables.authPreparationScopeLink
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		AuthPreparationScopeLink(valid("id").getInt, 
 			AuthPreparationScopeLinkData(valid("preparationId").getInt, valid("scopeId").getInt))
 }

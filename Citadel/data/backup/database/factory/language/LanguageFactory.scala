@@ -16,6 +16,6 @@ object LanguageFactory extends FromValidatedRowModelFactory[Language]
 	
 	override def table = Tables.language
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = Language(model("id").getInt,
+	override protected def fromValidatedModel(model: Model) = Language(model("id").getInt,
 		model("isoCode").getString)
 }

@@ -8,7 +8,7 @@ object NewInvitationResponse extends FromModelFactoryWithSchema[NewInvitationRes
 {
 	override val schema = ModelDeclaration(PropertyDeclaration("accepted", BooleanType))
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 		NewInvitationResponse(model("message").string.filter { _.nonEmpty }, model("accepted").getBoolean,
 			model("blocked").getBoolean)
 }

@@ -20,7 +20,7 @@ object MembershipFactory extends FromValidatedRowModelFactory[Membership] with D
 	
 	override val nonDeprecatedCondition = table("ended").isNull
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = Membership(model("id").getInt,
+	override protected def fromValidatedModel(model: Model) = Membership(model("id").getInt,
 		MembershipData(model(this.model.organizationIdAttName).getInt, model("userId").getInt, model("creatorId").int,
 			model("started").getInstant, model("ended").instant))
 	

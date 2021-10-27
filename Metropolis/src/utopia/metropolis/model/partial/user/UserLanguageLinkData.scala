@@ -22,7 +22,7 @@ object UserLanguageLinkData extends FromModelFactoryWithSchema[UserLanguageLinkD
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 		UserLanguageLinkData(model("user_id"), model("language_id"), model("familiarity_id"))
 	
 	

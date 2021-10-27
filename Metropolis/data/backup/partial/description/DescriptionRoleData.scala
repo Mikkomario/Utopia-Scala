@@ -9,7 +9,7 @@ object DescriptionRoleData extends FromModelFactoryWithSchema[DescriptionRoleDat
 {
 	override val schema = ModelDeclaration("json_key_singular" -> StringType, "json_key_plural" -> StringType)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 		DescriptionRoleData(model("json_key_singular"), model("json_key_plural"))
 }
 

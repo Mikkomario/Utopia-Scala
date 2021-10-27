@@ -22,7 +22,7 @@ object AuthRedirectResultFactory
 	
 	override def table = AmbassadorTables.authRedirectResult
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		AuthRedirectResult(valid("id").getInt, AuthRedirectResultData(valid("redirectId").getInt, 
 			valid("didReceiveCode").getBoolean, valid("didReceiveToken").getBoolean, 
 			valid("created").getInstant))

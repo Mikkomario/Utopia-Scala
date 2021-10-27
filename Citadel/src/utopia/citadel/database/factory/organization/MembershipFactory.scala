@@ -26,7 +26,7 @@ object MembershipFactory
 	
 	override def table = CitadelTables.membership
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		Membership(valid("id").getInt, MembershipData(valid("organizationId").getInt, valid("userId").getInt, 
 			valid("creatorId").int, valid("started").getInstant, valid("ended").instant))
 }

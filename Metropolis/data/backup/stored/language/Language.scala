@@ -14,7 +14,7 @@ object Language extends FromModelFactoryWithSchema[Language]
 	
 	// IMPLEMENTED	------------------------
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = Language(model("id"), model("iso_code"))
+	override protected def fromValidatedModel(model: Model) = Language(model("id"), model("iso_code"))
 }
 
 /**

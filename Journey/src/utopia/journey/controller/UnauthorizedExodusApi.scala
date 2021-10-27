@@ -15,7 +15,7 @@ import utopia.annex.model.error.{EmptyResponseException, UnauthorizedRequestExce
 import utopia.disciple.apache.Gateway
 import utopia.disciple.model.error.RequestFailedException
 import utopia.journey.model.error.NoUserDataError
-import utopia.metropolis.model.combined.device.FullDevice
+import utopia.metropolis.model.combined.device.DetailedClientDevice
 import utopia.metropolis.model.combined.user.UserCreationResult
 import utopia.metropolis.model.post.{NewDevice, NewLanguageProficiency, NewUser}
 
@@ -103,7 +103,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 	  */
 	def loginWithNewDevice(credentials: UserCredentials, device: NewDevice)(implicit exc: ExecutionContext) =
 	{
-		implicit val parser: FullDevice.type = FullDevice
+		implicit val parser: DetailedClientDevice.type = DetailedClientDevice
 		
 		post("devices", device.toModel,
 			headersMod = _.withBasicAuthorization(credentials.email, credentials.password)).tryFlatMapIfSuccess {

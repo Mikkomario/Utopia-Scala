@@ -14,7 +14,7 @@ object UserSettingsFactory extends FromValidatedRowModelFactory[UserSettings] wi
 	
 	override def table = Tables.userSettings
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = UserSettings(model("id").getInt,
+	override protected def fromValidatedModel(model: Model) = UserSettings(model("id").getInt,
 		model(UserSettingsModel.userIdAttName).getInt, UserSettingsData(model("name").getString,
 			model("email").string, model("created").getInstant))
 	

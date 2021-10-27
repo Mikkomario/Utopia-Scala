@@ -26,7 +26,7 @@ object DescriptionFactory
 	
 	override def table = CitadelTables.description
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		Description(valid("id").getInt, DescriptionData(valid("roleId").getInt, valid("languageId").getInt, 
 			valid("text").getString, valid("authorId").int, valid("created").getInstant, 
 			valid("deprecatedAfter").instant))

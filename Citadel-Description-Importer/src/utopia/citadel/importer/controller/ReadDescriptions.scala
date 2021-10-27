@@ -53,7 +53,7 @@ object ReadDescriptions
 	  * @param connection Implicit DB Connection
 	  * @return Success or failure
 	  */
-	def apply(targets: Vector[Model[Constant]])(implicit connection: Connection) =
+	def apply(targets: Vector[Model])(implicit connection: Connection) =
 	{
 		// Makes sure all targets are valid
 		targets.tryMap { m => targetFrom(m("target")).map { _ -> m } }.map { targets =>
@@ -66,7 +66,7 @@ object ReadDescriptions
 		}
 	}
 	
-	private def handleTarget(access: LinkedDescriptionsAccess, model: Model[Constant], languageIds: Map[String, Int],
+	private def handleTarget(access: LinkedDescriptionsAccess, model: Model, languageIds: Map[String, Int],
 	                         descriptionRoles: Vector[DescriptionRole])
 	                        (implicit connection: Connection) =
 	{

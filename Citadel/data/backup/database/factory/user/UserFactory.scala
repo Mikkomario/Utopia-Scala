@@ -17,7 +17,7 @@ object UserFactory extends LinkedFactory[User, UserSettings] with Deprecatable
 	
 	override def childFactory = UserSettingsFactory
 	
-	override def apply(model: Model[Constant], child: UserSettings) =
+	override def apply(model: Model, child: UserSettings) =
 		table.requirementDeclaration.validate(model).toTry.map { valid => User(valid("id").getInt, child) }
 	
 	override def nonDeprecatedCondition = UserSettingsFactory.nonDeprecatedCondition

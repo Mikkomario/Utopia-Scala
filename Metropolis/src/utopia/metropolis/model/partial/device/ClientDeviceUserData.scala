@@ -11,7 +11,7 @@ object ClientDeviceUserData extends FromModelFactoryWithSchema[ClientDeviceUserD
 {
 	override val schema = ModelDeclaration("device_id" -> IntType, "user_id" -> IntType)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 		apply(model("device_id"), model("user_id"), model("created"), model("deprecated_after"))
 }
 

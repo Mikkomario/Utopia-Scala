@@ -48,7 +48,7 @@ trait SimplyDescribed extends Described with DescribedSimpleModelConvertible
 	  * @param roles Available description roles, for reference
 	  * @return A simple model based on the wrapped item
 	  */
-	protected def simpleBaseModel(roles: Iterable[DescriptionRole]): Model[Constant]
+	protected def simpleBaseModel(roles: Iterable[DescriptionRole]): Model
 	
 	
 	// IMPLEMENTED    --------------------

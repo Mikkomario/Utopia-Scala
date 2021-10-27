@@ -17,7 +17,7 @@ object UserPasswordFactory extends FromValidatedRowModelFactory[UserPassword]
 	
 	override def table = ExodusTables.userPassword
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		UserPassword(valid("id").getInt, UserPasswordData(valid("userId").getInt, valid("hash").getString, 
 			valid("created").getInstant))
 }

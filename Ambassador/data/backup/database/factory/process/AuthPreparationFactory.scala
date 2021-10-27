@@ -27,7 +27,7 @@ object AuthPreparationFactory extends FromValidatedRowModelFactory[AuthPreparati
 	
 	override def nonDeprecatedCondition = model.nonDeprecatedCondition
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = AuthPreparation(model("id"),
+	override protected def fromValidatedModel(model: Model) = AuthPreparation(model("id"),
 		AuthPreparationData(model("userId"), model("token"), model("expiration"), model("clientState"),
 			model("created")))
 }

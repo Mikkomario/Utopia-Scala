@@ -1,5 +1,8 @@
 # Utopia Disciple - List of Changes
 
+## v1.4.3 (in development)
+Supports changes in Flow v1.14
+
 ## v1.4.2 - 4.9.2021
 This very minor update simply adds a new exception class for utility.
 ### New Features

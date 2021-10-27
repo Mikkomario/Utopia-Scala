@@ -126,7 +126,7 @@ object ClassReader
 		}
 	}
 	
-	private def parseClassFrom(classModel: Model[Constant], packageName: String, enumerations: Iterable[Enum],
+	private def parseClassFrom(classModel: Model, packageName: String, enumerations: Iterable[Enum],
 	                           defaultAuthor: String) =
 	{
 		val rawClassName = classModel("name").string.filter { _.nonEmpty }.map { _.capitalize }
@@ -189,7 +189,7 @@ object ClassReader
 		}
 	}
 	
-	private def propertyFrom(propModel: Model[Constant], enumerations: Iterable[Enum], className: Name) =
+	private def propertyFrom(propModel: Model, enumerations: Iterable[Enum], className: Name) =
 	{
 		val rawName = propModel("name").string.filter { _.nonEmpty }
 		val rawColumnName = propModel("column_name", "column", "col").string.filter { _.nonEmpty }

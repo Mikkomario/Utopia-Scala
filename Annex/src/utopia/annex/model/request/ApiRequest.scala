@@ -36,7 +36,7 @@ trait ApiRequest
 	  * @return A model that can be stored locally to replicate this request in another session. None if this
 	  *         request needn't be persisted and replicated
 	  */
-	def persistingModel: Option[Model[Constant]]
+	def persistingModel: Option[Model]
 	
 	
 	// IMPLEMENTED  -----------------------

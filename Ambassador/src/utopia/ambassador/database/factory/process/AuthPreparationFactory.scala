@@ -26,7 +26,7 @@ object AuthPreparationFactory
 	
 	override def table = AmbassadorTables.authPreparation
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		AuthPreparation(valid("id").getInt, AuthPreparationData(valid("userId").getInt, 
 			valid("token").getString, valid("expires").getInstant, valid("clientState").string,
 			valid("created").getInstant))

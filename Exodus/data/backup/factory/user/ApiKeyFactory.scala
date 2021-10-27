@@ -14,7 +14,7 @@ import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
   */
 object ApiKeyFactory extends FromValidatedRowModelFactory[ApiKey]
 {
-	override protected def fromValidatedModel(model: Model[Constant]) = ApiKey(model("id"),
+	override protected def fromValidatedModel(model: Model) = ApiKey(model("id"),
 		ApiKeyData(model("key"), model("name"), model("created")))
 	
 	override def table = ExodusTables.apiKey

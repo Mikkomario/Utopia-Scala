@@ -12,7 +12,7 @@ object MembershipData extends FromModelFactoryWithSchema[MembershipData]
 {
 	override val schema = ModelDeclaration("organization_id" -> IntType, "user_id" -> IntType)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = MembershipData(model("organization_id"),
+	override protected def fromValidatedModel(model: Model) = MembershipData(model("organization_id"),
 		model("user_id"), model("creator_id"), model("started"), model("ended"))
 }
 

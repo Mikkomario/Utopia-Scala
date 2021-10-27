@@ -16,6 +16,6 @@ object IncompleteAuthLoginFactory extends FromValidatedRowModelFactory[Incomplet
 {
 	override def table = AmbassadorTables.incompleteAuthLogin
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = IncompleteAuthLogin(model("id"),
+	override protected def fromValidatedModel(model: Model) = IncompleteAuthLogin(model("id"),
 		IncompleteAuthLoginData(model("authenticationId"), model("userId"), model("created"), model("wasSuccess")))
 }

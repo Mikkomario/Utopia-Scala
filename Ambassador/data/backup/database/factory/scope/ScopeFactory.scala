@@ -17,6 +17,6 @@ object ScopeFactory extends FromValidatedRowModelFactory[Scope] with Indexed
 {
 	override def table = AmbassadorTables.scope
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = Scope(model("id"),
+	override protected def fromValidatedModel(model: Model) = Scope(model("id"),
 		ScopeData(model("serviceId"), model("serviceSideName"), model("clientSideName"), model("priority")))
 }

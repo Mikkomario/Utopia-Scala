@@ -10,7 +10,7 @@ object LanguageFamiliarity extends FromModelFactoryWithSchema[LanguageFamiliarit
 {
 	override val schema = ModelDeclaration("id" -> IntType, "order_index" -> IntType)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = LanguageFamiliarity(model("id"),
+	override protected def fromValidatedModel(model: Model) = LanguageFamiliarity(model("id"),
 		model("order_index"))
 }
 

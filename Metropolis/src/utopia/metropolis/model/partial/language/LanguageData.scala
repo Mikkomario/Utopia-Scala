@@ -12,7 +12,7 @@ object LanguageData extends FromModelFactoryWithSchema[LanguageData]
 {
 	override val schema = ModelDeclaration("iso_code" -> StringType)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 		LanguageData(model("iso_code"), model("created"))
 }
 

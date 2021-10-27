@@ -17,7 +17,7 @@ object ScopeFactory extends FromValidatedRowModelFactory[Scope]
 	
 	override def table = AmbassadorTables.scope
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		Scope(valid("id").getInt, ScopeData(valid("serviceId").getInt, valid("name").getString, 
 			valid("priority").int, valid("created").getInstant))
 }

@@ -17,7 +17,7 @@ object ClientDeviceFactory extends FromValidatedRowModelFactory[ClientDevice]
 	
 	override def table = CitadelTables.clientDevice
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		ClientDevice(valid("id").getInt, ClientDeviceData(valid("creatorId").int, 
 			valid("created").getInstant))
 }

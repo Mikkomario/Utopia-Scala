@@ -22,7 +22,7 @@ object RoleRightFactory extends FromValidatedRowModelFactory[RoleRight]
 	  */
 	def table = Tables.roleRight
 	
-	override protected def fromValidatedModel(model: immutable.Model[Constant]) =
+	override protected def fromValidatedModel(model: immutable.Model) =
 		RoleRight(model("id"), model(this.model.roleIdAttName), model("taskId"))
 }
 

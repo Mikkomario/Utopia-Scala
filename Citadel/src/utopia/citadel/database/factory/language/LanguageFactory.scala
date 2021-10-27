@@ -17,7 +17,7 @@ object LanguageFactory extends FromValidatedRowModelFactory[Language]
 	
 	override def table = CitadelTables.language
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		Language(valid("id").getInt, LanguageData(valid("isoCode").getString, valid("created").getInstant))
 }
 

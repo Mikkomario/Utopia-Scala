@@ -17,7 +17,7 @@ object ApiKeyFactory extends FromValidatedRowModelFactory[ApiKey]
 	
 	override def table = ExodusTables.apiKey
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		ApiKey(valid("id").getInt, ApiKeyData(valid("token").getString, valid("name").getString, 
 			valid("created").getInstant))
 }

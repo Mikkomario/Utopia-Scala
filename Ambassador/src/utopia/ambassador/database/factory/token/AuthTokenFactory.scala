@@ -26,7 +26,7 @@ object AuthTokenFactory
 	
 	override def table = AmbassadorTables.authToken
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		AuthToken(valid("id").getInt, AuthTokenData(valid("userId").getInt, valid("token").getString, 
 			valid("expires").instant, valid("created").getInstant, valid("deprecatedAfter").instant, 
 			valid("isRefreshToken").getBoolean))

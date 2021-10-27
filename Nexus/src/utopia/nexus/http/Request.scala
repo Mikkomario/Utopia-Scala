@@ -25,7 +25,7 @@ import java.time.Instant
  * @param created Creation time of this request (default = Now)
  */
 class Request(val method: Method, val targetUrl: String, val path: Option[Path] = None,
-              val parameters: Model[Constant] = Model(Vector()), val headers: Headers = Headers.empty,
+              val parameters: Model = Model(Vector()), val headers: Headers = Headers.empty,
               val body: Seq[StreamedBody] = Vector(), rawCookies: Iterable[Cookie] = Vector(),
               val created: Instant = Now)
 {
@@ -71,7 +71,7 @@ class Request(val method: Method, val targetUrl: String, val path: Option[Path] 
     /**
      * @return This request with added parameters
      */
-    def ++(params: Model[Constant]) = withAddedParameters(params)
+    def ++(params: Model) = withAddedParameters(params)
     
     
     // OTHER METHODS    ------------------------
@@ -86,6 +86,6 @@ class Request(val method: Method, val targetUrl: String, val path: Option[Path] 
     /**
      * Creates a new request with some parameters added
      */
-    def withAddedParameters(params: Model[Constant]) = new Request(method, targetUrl, path, 
+    def withAddedParameters(params: Model) = new Request(method, targetUrl, path,
             parameters ++ params, headers, body, cookies.values)
 }

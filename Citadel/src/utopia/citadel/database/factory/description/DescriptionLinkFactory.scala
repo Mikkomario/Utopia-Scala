@@ -17,7 +17,7 @@ case class DescriptionLinkFactory(linkTable: DescriptionLinkTable)
 {
 	override def table = linkTable.wrapped
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 		DescriptionLink(model("id"),
 			DescriptionLinkData(model(linkTable.targetLinkAttName), model(DescriptionLinkTable.descriptionLinkAttName)))
 }

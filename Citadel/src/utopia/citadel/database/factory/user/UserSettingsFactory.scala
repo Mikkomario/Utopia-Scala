@@ -26,7 +26,7 @@ object UserSettingsFactory
 	
 	override def table = CitadelTables.userSettings
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		UserSettings(valid("id").getInt, UserSettingsData(valid("userId").getInt, valid("name").getString, 
 			valid("email").string, valid("created").getInstant, valid("deprecatedAfter").instant))
 }

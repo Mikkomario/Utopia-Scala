@@ -18,7 +18,7 @@ trait PersistedRequestHandler
 	  * @param requestModel A model
 	  * @return Whether this handler should attempt to parse the specified model
 	  */
-	def shouldHandle(requestModel: Model[Constant]): Boolean
+	def shouldHandle(requestModel: Model): Boolean
 	
 	/**
 	  * @return Factory used for parsing requests

@@ -16,6 +16,6 @@ object DeletionFactory extends FromValidatedRowModelFactory[Deletion]
 {
 	override def table = Tables.organizationDeletion
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 		Deletion(model("id"), DeletionData(model("organizationId"), model("creatorId"), model("actualization")))
 }

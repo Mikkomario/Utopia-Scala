@@ -27,6 +27,6 @@ object AuthRedirectFactory extends FromValidatedRowModelFactory[AuthRedirect] wi
 	
 	override def nonDeprecatedCondition = model.nonDeprecatedCondition
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = AuthRedirect(model("id"),
+	override protected def fromValidatedModel(model: Model) = AuthRedirect(model("id"),
 		AuthRedirectData(model("preparationId"), model("token"), model("expiration"), model("created")))
 }

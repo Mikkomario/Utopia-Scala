@@ -19,7 +19,7 @@ object DeviceKeyFactory extends FromValidatedRowModelFactory[DeviceKey] with Dep
 	
 	override val nonDeprecatedCondition = table("deprecatedAfter").isNull
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = DeviceKey(model("id").getInt,
+	override protected def fromValidatedModel(model: Model) = DeviceKey(model("id").getInt,
 		DeviceKeyData(model("userId").getInt, model("deviceId").getInt, model("key").getString))
 	
 	override def table = ExodusTables.deviceToken

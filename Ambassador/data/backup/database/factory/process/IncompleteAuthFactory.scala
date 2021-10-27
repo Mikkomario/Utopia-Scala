@@ -27,7 +27,7 @@ object IncompleteAuthFactory extends FromValidatedRowModelFactory[IncompleteAuth
 	
 	override def nonDeprecatedCondition = model.nonDeprecatedCondition
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = IncompleteAuth(model("id"),
+	override protected def fromValidatedModel(model: Model) = IncompleteAuth(model("id"),
 		IncompleteAuthData(model("serviceId"), model("code"), model("token"), model("expiration"),
 			model("created")))
 }

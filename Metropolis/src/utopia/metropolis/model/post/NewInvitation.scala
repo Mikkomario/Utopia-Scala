@@ -13,7 +13,7 @@ object NewInvitation extends FromModelFactoryWithSchema[NewInvitation]
 {
 	val schema = ModelDeclaration("recipient_email" -> StringType, "role_id" -> IntType)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 		NewInvitation(model("recipient_email"), model("role_id"), model("message"),
 			Days(model("duration_days").intOr(7)))
 }

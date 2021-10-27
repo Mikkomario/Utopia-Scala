@@ -26,7 +26,7 @@ object DeviceTokenFactory
 	
 	override def table = ExodusTables.deviceToken
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		DeviceToken(valid("id").getInt, DeviceTokenData(valid("deviceId").getInt, valid("userId").getInt, 
 			valid("token").getString, valid("created").getInstant, valid("deprecatedAfter").instant))
 }

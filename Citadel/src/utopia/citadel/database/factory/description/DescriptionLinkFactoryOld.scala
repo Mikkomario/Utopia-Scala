@@ -119,7 +119,7 @@ trait DescriptionLinkFactoryOld[+E] extends LinkedFactory[E, Description] with D
 	
 	override def childFactory = DescriptionFactory
 	
-	override def apply(model: Model[Constant], child: Description) =
+	override def apply(model: Model, child: Description) =
 		table.requirementDeclaration.validate(model).toTry.flatMap { valid =>
 			apply(valid("id").getInt, valid(this.model.targetIdAttName).getInt, child, valid("created").getInstant)
 		}

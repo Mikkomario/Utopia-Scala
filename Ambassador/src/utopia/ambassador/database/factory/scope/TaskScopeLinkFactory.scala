@@ -17,7 +17,7 @@ object TaskScopeLinkFactory extends FromValidatedRowModelFactory[TaskScopeLink]
 	
 	override def table = AmbassadorTables.taskScopeLink
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		TaskScopeLink(valid("id").getInt, TaskScopeLinkData(valid("taskId").getInt, valid("scopeId").getInt, 
 			valid("isRequired").getBoolean, valid("created").getInstant))
 }

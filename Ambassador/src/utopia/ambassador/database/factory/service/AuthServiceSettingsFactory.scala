@@ -25,7 +25,7 @@ object AuthServiceSettingsFactory
 	
 	override def table = AmbassadorTables.authServiceSettings
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		AuthServiceSettings(valid("id").getInt, AuthServiceSettingsData(valid("serviceId").getInt, 
 			valid("clientId").getString, valid("clientSecret").getString, 
 			valid("authenticationUrl").getString, valid("tokenUrl").getString, 

@@ -14,7 +14,7 @@ object RoleWithRights extends FromModelFactoryWithSchema[UserRoleWithRights]
 	
 	// IMPLEMENTED	------------------------------
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 		UserRoleWithRights(model("id"), model("task_ids").getVector.flatMap { _.int }.toSet)
 }
 

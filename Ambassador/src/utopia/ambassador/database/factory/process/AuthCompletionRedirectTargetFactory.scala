@@ -17,7 +17,7 @@ object AuthCompletionRedirectTargetFactory extends FromValidatedRowModelFactory[
 	
 	override def table = AmbassadorTables.authCompletionRedirectTarget
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		AuthCompletionRedirectTarget(valid("id").getInt, 
 			AuthCompletionRedirectTargetData(valid("preparationId").getInt, valid("url").getString, 
 			valid("resultStateFilter").boolean, valid("isLimitedToDenials").getBoolean))

@@ -26,7 +26,7 @@ object LanguageFamiliarityFactory extends FromValidatedRowModelFactory[LanguageF
 	
 	override def table = CitadelTables.languageFamiliarity
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		LanguageFamiliarity(valid("id").getInt, LanguageFamiliarityData(valid("orderIndex").getInt, 
 			valid("created").getInstant))
 }

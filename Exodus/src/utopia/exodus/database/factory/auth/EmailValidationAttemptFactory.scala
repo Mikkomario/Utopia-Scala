@@ -22,7 +22,7 @@ object EmailValidationAttemptFactory
 	
 	override def table = ExodusTables.emailValidationAttempt
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		EmailValidationAttempt(valid("id").getInt, EmailValidationAttemptData(valid("purposeId").getInt, 
 			valid("email").getString, valid("token").getString, valid("resendToken").getString, 
 			valid("expires").getInstant, valid("userId").int, valid("created").getInstant,

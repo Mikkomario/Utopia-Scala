@@ -16,5 +16,5 @@ trait DescribedSimpleModelConvertible
 	 * @param descriptionRoles Roles of the descriptions to include
 	 * @return A model
 	 */
-	def toSimpleModelUsing(descriptionRoles: Iterable[DescriptionRole]): Model[Constant]
+	def toSimpleModelUsing(descriptionRoles: Iterable[DescriptionRole]): Model
 }

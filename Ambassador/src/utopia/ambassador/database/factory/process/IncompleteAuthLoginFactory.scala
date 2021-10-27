@@ -22,7 +22,7 @@ object IncompleteAuthLoginFactory
 	
 	override def table = AmbassadorTables.incompleteAuthLogin
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		IncompleteAuthLogin(valid("id").getInt, IncompleteAuthLoginData(valid("authId").getInt, 
 			valid("userId").getInt, valid("created").getInstant, valid("wasSuccess").getBoolean))
 }

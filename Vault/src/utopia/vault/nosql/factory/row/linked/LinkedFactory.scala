@@ -1,6 +1,6 @@
 package utopia.vault.nosql.factory.row.linked
 
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.vault.model.error.NoModelDataInRowException
 import utopia.vault.model.immutable.Row
 import utopia.vault.nosql.factory.LinkedFactoryLike
@@ -25,7 +25,7 @@ trait LinkedFactory[+Parent, Child] extends FromRowFactory[Parent] with LinkedFa
 	  * @param child Parsed child
 	  * @return Parsed parent data. May fail.
 	  */
-	def apply(model: Model[Constant], child: Child): Try[Parent]
+	def apply(model: Model, child: Child): Try[Parent]
 	
 	
 	// IMPLEMENTED	-----------------

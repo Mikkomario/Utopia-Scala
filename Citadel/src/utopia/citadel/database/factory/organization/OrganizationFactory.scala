@@ -17,7 +17,7 @@ object OrganizationFactory extends FromValidatedRowModelFactory[Organization]
 	
 	override def table = CitadelTables.organization
 	
-	override def fromValidatedModel(valid: Model[Constant]) = 
+	override def fromValidatedModel(valid: Model) =
 		Organization(valid("id").getInt, OrganizationData(valid("creatorId").int, 
 			valid("created").getInstant))
 }

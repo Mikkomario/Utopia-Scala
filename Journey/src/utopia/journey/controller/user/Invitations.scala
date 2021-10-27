@@ -147,7 +147,7 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 		
 		// IMPLEMENTED	------------------------
 		
-		override def shouldHandle(requestModel: Model[Constant]) =
+		override def shouldHandle(requestModel: Model) =
 			bodyFactory.isProbablyValidModel(requestModel)
 		
 		override def handle(result: Either[RequestNotSent, Response]) =
