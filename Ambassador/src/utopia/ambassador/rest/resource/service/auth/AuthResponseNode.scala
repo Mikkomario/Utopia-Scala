@@ -4,13 +4,12 @@ import utopia.access.http.Method.Get
 import utopia.access.http.Status.{BadRequest, InternalServerError, NotFound, Unauthorized}
 import utopia.ambassador.controller.implementation.AcquireTokens
 import utopia.ambassador.database.access.single.process.{DbAuthPreparation, DbAuthRedirect}
-import utopia.ambassador.database.access.single.service.DbAuthService
 import utopia.ambassador.database.model.process.{AuthRedirectResultModel, IncompleteAuthModel}
 import utopia.ambassador.model.enumeration.GrantLevel
 import utopia.ambassador.model.enumeration.GrantLevel.{AccessDenied, AccessFailed, FullAccess, PartialAccess}
 import utopia.ambassador.model.partial.process.{AuthRedirectResultData, IncompleteAuthData}
 import utopia.ambassador.model.stored.process.{AuthPreparation, AuthRedirect}
-import utopia.ambassador.model.stored.service.ServiceSettings
+import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.ambassador.rest.util.{AuthUtils, ServiceTarget}
 import utopia.citadel.util.CitadelContext._
 import utopia.exodus.rest.util.AuthorizedContext
@@ -48,7 +47,7 @@ class AuthResponseNode(target: ServiceTarget, tokenAcquirer: AcquireTokens)
 	{
 		// Starts by reading service settings from the database
 		connectionPool.tryWith { implicit connection =>
-			target.id.flatMap { DbAuthService(_).settings.pull } match
+			target.settings match
 			{
 				case Some(settings) =>
 					// Acquires authentication code, which is present if the user provided access
@@ -61,12 +60,12 @@ class AuthResponseNode(target: ServiceTarget, tokenAcquirer: AcquireTokens)
 					{
 						// Case: Token provided, as it should be => authenticates this request with that token
 						case Some(token) =>
-							DbAuthRedirect.valid.forToken(token) match
+							DbAuthRedirect.withToken(token).pull match
 							{
 								case Some(redirect) =>
 									// Makes sure the redirection hasn't been used / cosed yet
 									// TODO: Could treat this case as a security risk
-									if (DbAuthRedirect(redirect.id).isClosed)
+									if (DbAuthRedirect(redirect.id).isCompleted)
 										Result.Failure(Unauthorized, "Authentication was closed already")
 									else
 										handleDefaultCase(settings, redirect, code, errorMessage)
@@ -77,7 +76,7 @@ class AuthResponseNode(target: ServiceTarget, tokenAcquirer: AcquireTokens)
 						// Case: No token provided => treats as an incomplete authentication
 						// (action determined by settings)
 						case None =>
-							settings.incompleteAuthUrl match
+							settings.incompleteAuthRedirectUrl match
 							{
 								// Case: Incomplete auth process is supported
 								case Some(redirectUrl) =>
@@ -101,7 +100,7 @@ class AuthResponseNode(target: ServiceTarget, tokenAcquirer: AcquireTokens)
 		}.toResponse
 	}
 	
-	private def handleDefaultCase(settings: ServiceSettings, redirect: AuthRedirect, code: Option[String],
+	private def handleDefaultCase(settings: AuthServiceSettings, redirect: AuthRedirect, code: Option[String],
 	                              errorMessage: String = "")
 	                             (implicit connection: Connection) =
 	{
@@ -122,10 +121,14 @@ class AuthResponseNode(target: ServiceTarget, tokenAcquirer: AcquireTokens)
 						{
 							// Case: Acquired access tokens => checks if acquired scope matches the request
 							case Success(tokens) =>
-								val requestedScopes = DbAuthPreparation(preparation.id)
-									.requestedScopesForServiceWithId(serviceId)
-								val grantLevel = if (tokens.exists { _.containsAll(requestedScopes) }) FullAccess else
-									PartialAccess
+								val requestedScopeIds = DbAuthPreparation(preparation.id)
+									.scopes.forServiceWithId(serviceId).ids
+								val grantLevel = {
+									if (tokens.exists { _.containsAllScopeIds(requestedScopeIds) })
+										FullAccess
+									else
+										PartialAccess
+								}
 								completeWithRedirectResult(settings, redirect.id, Some(preparation), grantLevel)
 							// Case: Failed to acquire access tokens
 							case Failure(error) =>
@@ -144,7 +147,7 @@ class AuthResponseNode(target: ServiceTarget, tokenAcquirer: AcquireTokens)
 		}
 	}
 	
-	private def handleIncompleteAuthCase(settings: ServiceSettings, code: String, redirectUrl: String)
+	private def handleIncompleteAuthCase(settings: AuthServiceSettings, code: String, redirectUrl: String)
 	                                    (implicit connection: Connection) =
 	{
 		// Opens an incomplete authentication case
@@ -157,7 +160,7 @@ class AuthResponseNode(target: ServiceTarget, tokenAcquirer: AcquireTokens)
 		Result.Redirect(finalUrl)
 	}
 	
-	private def completeWithRedirectResult(settings: ServiceSettings, redirectId: Int,
+	private def completeWithRedirectResult(settings: AuthServiceSettings, redirectId: Int,
 	                                       preparation: Option[AuthPreparation] = None,
 	                                       accessLevel: GrantLevel = FullAccess, errorMessage: String = "")
 	                                      (implicit connection: Connection) =

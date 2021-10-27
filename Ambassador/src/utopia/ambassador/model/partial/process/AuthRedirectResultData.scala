@@ -1,10 +1,23 @@
 package utopia.ambassador.model.partial.process
 
+import utopia.ambassador.model.enumeration.GrantLevel
+
 import java.time.Instant
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
+
+object AuthRedirectResultData
+{
+	/**
+	  * @param redirectId Id of the redirection event this result completes
+	  * @param grantLevel Acquired grant level
+	  * @return A redirection result data model
+	  */
+	def apply(redirectId: Int, grantLevel: GrantLevel): AuthRedirectResultData =
+		apply(redirectId, grantLevel.grantedAccess, grantLevel.enablesAccess)
+}
 
 /**
   * Records the cases when the user arrives back from the 3rd party OAuth service, 

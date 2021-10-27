@@ -22,6 +22,10 @@ case class TaskScope(scope: Scope, taskLink: TaskScopeLink) extends Extender[Sco
 	  * @return Whether this scope is required for the task at hand (false if one of possible scopes)
 	  */
 	def isRequired = taskLink.isRequired
+	/**
+	  * @return Whether this scope is optional for the task at hand (meaning, it's one of possible scopes)
+	  */
+	def isOptional = !isRequired
 	
 	
 	// IMPLEMENTED	--------------------

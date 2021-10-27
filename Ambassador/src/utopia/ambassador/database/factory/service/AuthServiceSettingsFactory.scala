@@ -8,6 +8,8 @@ import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
+import scala.concurrent.duration.FiniteDuration
+
 /**
   * Used for reading AuthServiceSettings data from the DB
   * @author Mikko Hilpinen

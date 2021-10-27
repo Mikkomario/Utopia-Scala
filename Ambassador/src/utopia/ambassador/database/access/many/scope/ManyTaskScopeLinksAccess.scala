@@ -10,6 +10,7 @@ import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.Condition
+import utopia.vault.sql.SqlExtensions._
 
 object ManyTaskScopeLinksAccess
 {
@@ -34,19 +35,16 @@ trait ManyTaskScopeLinksAccess extends ManyRowModelAccess[TaskScopeLink] with In
 	  */
 	def taskIds(implicit connection: Connection) = pullColumn(model.taskIdColumn)
 		.flatMap { value => value.int }
-	
 	/**
 	  * scopeIds of the accessible TaskScopeLinks
 	  */
 	def scopeIds(implicit connection: Connection) = pullColumn(model.scopeIdColumn)
 		.flatMap { value => value.int }
-	
 	/**
 	  * areRequired of the accessible TaskScopeLinks
 	  */
 	def areRequired(implicit connection: Connection) = 
 		pullColumn(model.isRequiredColumn).flatMap { value => value.boolean }
-	
 	/**
 	  * creationTimes of the accessible TaskScopeLinks
 	  */
@@ -59,6 +57,15 @@ trait ManyTaskScopeLinksAccess extends ManyRowModelAccess[TaskScopeLink] with In
 	  * Factory used for constructing database the interaction models
 	  */
 	protected def model = TaskScopeLinkModel
+	
+	/**
+	  * @return A copy of this access point with scope data included
+	  */
+	def withScopes = globalCondition match
+	{
+		case Some(c) => DbTaskScopes.filter(c)
+		case None => DbTaskScopes
+	}
 	
 	
 	// IMPLEMENTED	--------------------
@@ -74,13 +81,29 @@ trait ManyTaskScopeLinksAccess extends ManyRowModelAccess[TaskScopeLink] with In
 	// OTHER	--------------------
 	
 	/**
+	  * @param taskId Id of the linked task
+	  * @return An access point to scope links connected to that task
+	  */
+	def withTaskId(taskId: Int) = filter(model.withTaskId(taskId).toCondition)
+	
+	/**
+	  * @param taskIds Ids of the targeted tasks
+	  * @return An access point to links connected to any of those tasks
+	  */
+	def forAnyOfTasks(taskIds: Iterable[Int]) = filter(model.taskIdColumn in taskIds)
+	/**
+	  * @param scopeIds Ids of the targeted scopes
+	  * @return An access point to links connected to any of those scopes
+	  */
+	def forAnyOfScopes(scopeIds: Iterable[Int]) = filter(model.scopeIdColumn in scopeIds)
+	
+	/**
 	  * Updates the isRequired of the targeted TaskScopeLink instance(s)
 	  * @param newIsRequired A new isRequired to assign
 	  * @return Whether any TaskScopeLink instance was affected
 	  */
 	def areRequired_=(newIsRequired: Boolean)(implicit connection: Connection) = 
 		putColumn(model.isRequiredColumn, newIsRequired)
-	
 	/**
 	  * Updates the created of the targeted TaskScopeLink instance(s)
 	  * @param newCreated A new created to assign
@@ -88,7 +111,6 @@ trait ManyTaskScopeLinksAccess extends ManyRowModelAccess[TaskScopeLink] with In
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
-	
 	/**
 	  * Updates the scopeId of the targeted TaskScopeLink instance(s)
 	  * @param newScopeId A new scopeId to assign
@@ -96,7 +118,6 @@ trait ManyTaskScopeLinksAccess extends ManyRowModelAccess[TaskScopeLink] with In
 	  */
 	def scopeIds_=(newScopeId: Int)(implicit connection: Connection) = putColumn(model.scopeIdColumn, 
 		newScopeId)
-	
 	/**
 	  * Updates the taskId of the targeted TaskScopeLink instance(s)
 	  * @param newTaskId A new taskId to assign

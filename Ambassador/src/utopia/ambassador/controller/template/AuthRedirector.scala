@@ -2,7 +2,7 @@ package utopia.ambassador.controller.template
 
 import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.ambassador.model.stored.scope.Scope
-import utopia.ambassador.model.stored.service.ServiceSettings
+import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.exodus.util.ExodusContext.handleError
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueConversions._
@@ -36,7 +36,7 @@ trait AuthRedirector
 	  * @param connection Implicit database connection
 	  * @return Parameters to add to the default parameters
 	  */
-	def extraParametersFor(settings: ServiceSettings, preparation: AuthPreparation, scopes: Vector[Scope])
+	def extraParametersFor(settings: AuthServiceSettings, preparation: AuthPreparation, scopes: Vector[Scope])
 	                      (implicit connection: Connection): Model[Constant]
 	
 	
@@ -51,7 +51,7 @@ trait AuthRedirector
 	  * @param connection Implicit DB Connection
 	  * @return Complete redirect url
 	  */
-	def redirectionFor(state: String, settings: ServiceSettings, preparation: AuthPreparation, scopes: Vector[Scope])
+	def redirectionFor(state: String, settings: AuthServiceSettings, preparation: AuthPreparation, scopes: Vector[Scope])
 	                  (implicit connection: Connection) =
 	{
 		// Determines the parameters to include

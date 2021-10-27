@@ -101,7 +101,7 @@
             "doc": "Duration how long incomplete authentication tokens can be used after they're issued before they expire"
           },
           {
-            "name": "DefaultSessionDuration",
+            "name": "defaultSessionDuration",
             "column_name": "default_session_duration_minutes",
             "type": "Duration[Minute]",
             "default": "22.hours",
@@ -209,6 +209,12 @@
           {
             "type": "expiration",
             "doc": "Time when this authentication (token) expires"
+          },
+          {
+            "name": "clientState",
+            "length": 2048,
+            "type": "Option[String]",
+            "doc": "Custom state given by the client and sent back upon user redirect"
           },
           {
             "type": "creation"

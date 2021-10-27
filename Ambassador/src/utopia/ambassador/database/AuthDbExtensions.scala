@@ -1,8 +1,9 @@
 package utopia.ambassador.database
 
-import utopia.ambassador.database.access.many.scope.DbScopes
+import utopia.ambassador.database.access.many.scope.DbTaskScopeLinks
 import utopia.ambassador.database.access.many.token.DbAuthTokens
 import utopia.ambassador.rest.util.AuthUtils
+import utopia.citadel.database.access.many.organization.DbTasks.DbTasksSubset
 import utopia.citadel.database.access.single.organization.{DbSingleTask, DbTask}
 import utopia.citadel.database.access.single.user.DbSingleUser
 import utopia.vault.database.Connection
@@ -27,7 +28,7 @@ object AuthDbExtensions
 		  * @param connection Implicit database connection
 		  * @return Ids of the scopes that are currently available for this user without a new OAuth process
 		  */
-		def accessibleScopeIds(implicit connection: Connection) = authTokens.scopeIds
+		def accessibleScopeIds(implicit connection: Connection) = authTokens.withScopes.scopeIds
 		
 		
 		// OTHER ----------------------------
@@ -41,7 +42,6 @@ object AuthDbExtensions
 		 */
 		def isAuthorizedForTaskWithId(taskId: Int)(implicit connection: Connection) =
 			AuthUtils.testTaskAccess(DbTask(taskId).scopes.pull, accessibleScopeIds)
-		
 		/**
 		 * Checks whether this user is authorized to perform the specified task when only one service is considered
 		 * @param serviceId Id of the targeted service
@@ -56,8 +56,24 @@ object AuthDbExtensions
 	implicit class DbAuthTask(val a: DbSingleTask) extends AnyVal
 	{
 		/**
+		  * @return An access point to this task's scope links
+		  */
+		def scopeLinks = DbTaskScopeLinks.withTaskId(a.id)
+		/**
 		  * @return An access point to this task's scopes
 		  */
-		def scopes = DbScopes.forTaskWithId(a.id)
+		def scopes = scopeLinks.withScopes
+	}
+	
+	implicit class DbAuthTasks(val a: DbTasksSubset) extends AnyVal
+	{
+		/**
+		  * @return An access point to scope links concerning these tasks
+		  */
+		def scopeLinks = DbTaskScopeLinks.forAnyOfTasks(a.ids)
+		/**
+		  * @return An access point to scopes concerning these tasks
+		  */
+		def scopes = scopeLinks.withScopes
 	}
 }

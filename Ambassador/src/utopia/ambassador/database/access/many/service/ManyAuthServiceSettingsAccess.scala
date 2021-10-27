@@ -12,6 +12,8 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.Condition
 
+import java.util.concurrent.TimeUnit
+
 object ManyAuthServiceSettingsAccess
 {
 	// NESTED	--------------------
@@ -102,8 +104,8 @@ trait ManyAuthServiceSettingsAccess extends ManyRowModelAccess[AuthServiceSettin
 	/**
 	  * DefaultSessionDurations of the accessible AuthServiceSettings
 	  */
-	def DefaultSessionDurations(implicit connection: Connection) = 
-		pullColumn(model.DefaultSessionDurationColumn).flatMap { value => value.long.map { FiniteDuration(_, 
+	def defaultSessionDurations(implicit connection: Connection) =
+		pullColumn(model.defaultSessionDurationColumn).flatMap { value => value.long.map { FiniteDuration(_,
 			TimeUnit.MINUTES) } }
 	
 	/**
@@ -137,8 +139,8 @@ trait ManyAuthServiceSettingsAccess extends ManyRowModelAccess[AuthServiceSettin
 	  * @param newDefaultSessionDuration A new DefaultSessionDuration to assign
 	  * @return Whether any AuthServiceSettings instance was affected
 	  */
-	def DefaultSessionDurations_=(newDefaultSessionDuration: FiniteDuration)(implicit connection: Connection) = 
-		putColumn(model.DefaultSessionDurationColumn, newDefaultSessionDuration.toUnit(TimeUnit.MINUTES))
+	def defaultSessionDurations_=(newDefaultSessionDuration: FiniteDuration)(implicit connection: Connection) =
+		putColumn(model.defaultSessionDurationColumn, newDefaultSessionDuration.toUnit(TimeUnit.MINUTES))
 	
 	/**
 	  * Updates the authenticationUrl of the targeted AuthServiceSettings instance(s)

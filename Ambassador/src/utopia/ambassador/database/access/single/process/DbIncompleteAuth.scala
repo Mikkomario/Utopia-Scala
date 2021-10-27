@@ -5,7 +5,7 @@ import utopia.ambassador.database.model.process.IncompleteAuthModel
 import utopia.ambassador.model.stored.process.IncompleteAuth
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.NonDeprecatedView
+import utopia.vault.nosql.view.{NonDeprecatedView, SubView}
 
 /**
   * Used for accessing individual IncompleteAuths
@@ -35,5 +35,22 @@ object DbIncompleteAuth
 	  * @return An access point to that IncompleteAuth
 	  */
 	def apply(id: Int) = DbSingleIncompleteAuth(id)
+	
+	/**
+	  * @param token An incomplete authentication token
+	  * @return An access point to an authentication attempt with that token
+	  */
+	def withToken(token: String) = new DbIncompleteAuthWithToken(token)
+	
+	
+	// NESTED   --------------------
+	
+	class DbIncompleteAuthWithToken(token: String) extends UniqueIncompleteAuthAccess with SubView
+	{
+		override protected def parent = DbIncompleteAuth
+		override protected def defaultOrdering = Some(factory.defaultOrdering)
+		
+		override def filterCondition = model.withToken(token).toCondition
+	}
 }
 

@@ -20,7 +20,7 @@ case class DbSingleAuthPreparation(id: Int)
 	/**
 	  * @return An access point to redirection targets specified during this authentication preparation
 	  */
-	def redirectionTargets =
+	def redirectTargets =
 		DbAuthCompletionRedirectTargets.forPreparationWithId(id)
 	/**
 	  * @return An access point to links to this preparation's requested scopes

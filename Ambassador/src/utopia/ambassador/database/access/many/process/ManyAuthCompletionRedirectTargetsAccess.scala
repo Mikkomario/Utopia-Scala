@@ -2,6 +2,8 @@ package utopia.ambassador.database.access.many.process
 
 import utopia.ambassador.database.factory.process.AuthCompletionRedirectTargetFactory
 import utopia.ambassador.database.model.process.AuthCompletionRedirectTargetModel
+import utopia.ambassador.model.enumeration.GrantLevel
+import utopia.ambassador.model.enumeration.GrantLevel.{AccessDenied, AccessFailed, FullAccess, PartialAccess}
 import utopia.ambassador.model.stored.process.AuthCompletionRedirectTarget
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
@@ -56,6 +58,11 @@ trait ManyAuthCompletionRedirectTargetsAccess
 	  */
 	protected def model = AuthCompletionRedirectTargetModel
 	
+	/**
+	  * @return An access point to targets that apply to the full access granted -case
+	  */
+	def forFullAccess = forResult(FullAccess)
+	
 	
 	// IMPLEMENTED	--------------------
 	
@@ -76,6 +83,32 @@ trait ManyAuthCompletionRedirectTargetsAccess
 	  */
 	def forPreparationWithId(preparationId: Int) =
 		filter(model.withPreparationId(preparationId).toCondition)
+	
+	/**
+	  * @param wasSuccess A result state: Success (true) or Failure (false)
+	  * @param didDenyAccess Whether the user denied access partially or fully (default = false)
+	  * @return An access point to targets that apply to that state
+	  */
+	def forResult(wasSuccess: Boolean, didDenyAccess: Boolean = false) =
+	{
+		val resultCondition = model.withResultStateFilter(wasSuccess).toCondition
+		val finalResultCondition = if (didDenyAccess) resultCondition else
+			resultCondition && model.notLimitedToDenialsCondition
+		
+		filter(model.anyResultStateCondition || finalResultCondition)
+	}
+	/**
+	  * @param grantLevel Grant level given by the user
+	  * @return An access point to available redirect targets for that result
+	  */
+	def forResult(grantLevel: GrantLevel): ManyAuthCompletionRedirectTargetsAccess =
+		grantLevel match
+		{
+			case PartialAccess => forResult(wasSuccess = true, didDenyAccess = true)
+			case FullAccess => forResult(wasSuccess = true)
+			case AccessDenied => forResult(wasSuccess = false, didDenyAccess = true)
+			case AccessFailed => forResult(wasSuccess = false)
+		}
 	
 	/**
 	  * Updates the isLimitedToDenials of the targeted AuthCompletionRedirectTarget instance(s)

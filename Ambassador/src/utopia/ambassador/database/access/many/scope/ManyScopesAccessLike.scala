@@ -6,6 +6,7 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.sql.Condition
+import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant
 
@@ -64,6 +65,12 @@ trait ManyScopesAccessLike[+A, +Repr <: ManyModelAccess[A]] extends ManyModelAcc
 	  * @return An access point to those of these scopes which are specific to that service
 	  */
 	def forServiceWithId(serviceId: Int) = filter(model.withServiceId(serviceId).toCondition)
+	
+	/**
+	  * @param scopeNames Searched scope names
+	  * @return An access point to scopes that match the specified names (not all names may be included)
+	  */
+	def matchingAnyOfNames(scopeNames: Iterable[String]) = filter(model.nameColumn in scopeNames)
 	
 	/**
 	  * Updates the created of the targeted Scope instance(s)

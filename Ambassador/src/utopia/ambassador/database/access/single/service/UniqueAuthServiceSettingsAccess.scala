@@ -87,8 +87,8 @@ trait UniqueAuthServiceSettingsAccess
 	/**
 	  * Duration of this AuthServiceSettings. None if no instance (or value) was found.
 	  */
-	def DefaultSessionDuration(implicit connection: Connection) = 
-		pullColumn(model.DefaultSessionDurationColumn).long.map { FiniteDuration(_, TimeUnit.MINUTES) }
+	def defaultSessionDuration(implicit connection: Connection) =
+		pullColumn(model.defaultSessionDurationColumn).long.map { FiniteDuration(_, TimeUnit.MINUTES) }
 	
 	/**
 	  * Time when this AuthServiceSettings was first created. None if no instance (or value) was found.
@@ -115,8 +115,8 @@ trait UniqueAuthServiceSettingsAccess
 	  * @param newDefaultSessionDuration A new DefaultSessionDuration to assign
 	  * @return Whether any AuthServiceSettings instance was affected
 	  */
-	def DefaultSessionDuration_=(newDefaultSessionDuration: FiniteDuration)(implicit connection: Connection) = 
-		putColumn(model.DefaultSessionDurationColumn, newDefaultSessionDuration.toUnit(TimeUnit.MINUTES))
+	def defaultSessionDuration_=(newDefaultSessionDuration: FiniteDuration)(implicit connection: Connection) =
+		putColumn(model.defaultSessionDurationColumn, newDefaultSessionDuration.toUnit(TimeUnit.MINUTES))
 	
 	/**
 	  * Updates the authenticationUrl of the targeted AuthServiceSettings instance(s)

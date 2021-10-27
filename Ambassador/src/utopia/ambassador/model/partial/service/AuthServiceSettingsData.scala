@@ -23,30 +23,32 @@ import java.util.concurrent.TimeUnit
   * @param preparationTokenDuration Duration how long preparation tokens can be used after they're issued before they expire
   * @param redirectTokenDuration Duration how long redirect tokens can be used after they're issued before they expire
   * @param incompleteAuthTokenDuration Duration how long incomplete authentication tokens can be used after they're issued before they expire
-  * @param DefaultSessionDuration Duration of this AuthServiceSettings
+  * @param defaultSessionDuration Duration of this AuthServiceSettings
   * @param created Time when this AuthServiceSettings was first created
   * @author Mikko Hilpinen
   * @since 2021-10-26
   */
-case class AuthServiceSettingsData(serviceId: Int, clientId: String, clientSecret: String, 
-	authenticationUrl: String, tokenUrl: String, redirectUrl: String, 
-	incompleteAuthRedirectUrl: Option[String] = None, defaultCompletionRedirectUrl: Option[String] = None, 
-	preparationTokenDuration: FiniteDuration = 5.minutes, redirectTokenDuration: FiniteDuration = 15.minutes, 
-	incompleteAuthTokenDuration: FiniteDuration = 30.minutes, 
-	DefaultSessionDuration: FiniteDuration = 22.hours, created: Instant = Now) 
+case class AuthServiceSettingsData(serviceId: Int, clientId: String, clientSecret: String,
+                                   authenticationUrl: String, tokenUrl: String, redirectUrl: String,
+                                   incompleteAuthRedirectUrl: Option[String] = None,
+                                   defaultCompletionRedirectUrl: Option[String] = None,
+                                   preparationTokenDuration: FiniteDuration = 5.minutes,
+                                   redirectTokenDuration: FiniteDuration = 15.minutes,
+                                   incompleteAuthTokenDuration: FiniteDuration = 30.minutes,
+                                   defaultSessionDuration: FiniteDuration = 22.hours, created: Instant = Now)
 	extends ModelConvertible
 {
 	// IMPLEMENTED	--------------------
 	
-	override def toModel = 
-		Model(Vector("service_id" -> serviceId, "client_id" -> clientId, "client_secret" -> clientSecret, 
-			"authentication_url" -> authenticationUrl, "token_url" -> tokenUrl, 
-			"redirect_url" -> redirectUrl, "incomplete_auth_redirect_url" -> incompleteAuthRedirectUrl, 
-			"default_completion_redirect_url" -> defaultCompletionRedirectUrl, 
-			"preparation_token_duration" -> preparationTokenDuration.toUnit(TimeUnit.MINUTES), 
-			"redirect_token_duration" -> redirectTokenDuration.toUnit(TimeUnit.MINUTES), 
-			"incomplete_auth_token_duration" -> incompleteAuthTokenDuration.toUnit(TimeUnit.MINUTES), 
-			"default_session_duration" -> DefaultSessionDuration.toUnit(TimeUnit.MINUTES), 
+	override def toModel =
+		Model(Vector("service_id" -> serviceId, "client_id" -> clientId, "client_secret" -> clientSecret,
+			"authentication_url" -> authenticationUrl, "token_url" -> tokenUrl,
+			"redirect_url" -> redirectUrl, "incomplete_auth_redirect_url" -> incompleteAuthRedirectUrl,
+			"default_completion_redirect_url" -> defaultCompletionRedirectUrl,
+			"preparation_token_duration" -> preparationTokenDuration.toUnit(TimeUnit.MINUTES),
+			"redirect_token_duration" -> redirectTokenDuration.toUnit(TimeUnit.MINUTES),
+			"incomplete_auth_token_duration" -> incompleteAuthTokenDuration.toUnit(TimeUnit.MINUTES),
+			"default_session_duration" -> defaultSessionDuration.toUnit(TimeUnit.MINUTES),
 			"created" -> created))
 }
 

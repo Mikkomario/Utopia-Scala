@@ -24,17 +24,18 @@ object AuthPreparationModel
 	  * Name of the property that contains AuthPreparation userId
 	  */
 	val userIdAttName = "userId"
-	
 	/**
 	  * Name of the property that contains AuthPreparation token
 	  */
 	val tokenAttName = "token"
-	
 	/**
 	  * Name of the property that contains AuthPreparation expires
 	  */
 	val expiresAttName = "expires"
-	
+	/**
+	  * Name of the property that contains client-specified states
+	  */
+	val clientStateAttName = "clientState"
 	/**
 	  * Name of the property that contains AuthPreparation created
 	  */
@@ -49,17 +50,18 @@ object AuthPreparationModel
 	  * Column that contains AuthPreparation userId
 	  */
 	def userIdColumn = table(userIdAttName)
-	
 	/**
 	  * Column that contains AuthPreparation token
 	  */
 	def tokenColumn = table(tokenAttName)
-	
 	/**
 	  * Column that contains AuthPreparation expires
 	  */
 	def expiresColumn = table(expiresAttName)
-	
+	/**
+	  * @return Column that contains client-specified states
+	  */
+	def clientStateColumn = table(clientStateAttName)
 	/**
 	  * Column that contains AuthPreparation created
 	  */
@@ -76,7 +78,7 @@ object AuthPreparationModel
 	override def table = factory.table
 	
 	override def apply(data: AuthPreparationData) = 
-		apply(None, Some(data.userId), Some(data.token), Some(data.expires), Some(data.created))
+		apply(None, Some(data.userId), Some(data.token), Some(data.expires), data.clientState, Some(data.created))
 	
 	override def complete(id: Value, data: AuthPreparationData) = AuthPreparation(id.getInt, data)
 	
@@ -84,29 +86,30 @@ object AuthPreparationModel
 	// OTHER	--------------------
 	
 	/**
+	  * @param state A custom state provided by the client and sent back upon user redirect
+	  * @return A model with that client state
+	  */
+	def withClientState(state: String) = apply(clientState = Some(state))
+	/**
 	  * @param created Time when this AuthPreparation was first created
 	  * @return A model containing only the specified created
 	  */
 	def withCreated(created: Instant) = apply(created = Some(created))
-	
 	/**
 	  * @param expires Time when this authentication (token) expires
 	  * @return A model containing only the specified expires
 	  */
 	def withExpires(expires: Instant) = apply(expires = Some(expires))
-	
 	/**
 	  * @param id A AuthPreparation id
 	  * @return A model with that id
 	  */
 	def withId(id: Int) = apply(Some(id))
-	
 	/**
 	  * @param token Token used for authenticating the OAuth redirect
 	  * @return A model containing only the specified token
 	  */
 	def withToken(token: String) = apply(token = Some(token))
-	
 	/**
 	  * @param userId Id of the user who initiated this process
 	  * @return A model containing only the specified userId
@@ -120,12 +123,14 @@ object AuthPreparationModel
   * @param userId Id of the user who initiated this process
   * @param token Token used for authenticating the OAuth redirect
   * @param expires Time when this authentication (token) expires
+  * @param clientState A custom state provided by the client and sent back upon user redirect
   * @param created Time when this AuthPreparation was first created
   * @author Mikko Hilpinen
   * @since 2021-10-26
   */
-case class AuthPreparationModel(id: Option[Int] = None, userId: Option[Int] = None, 
-	token: Option[String] = None, expires: Option[Instant] = None, created: Option[Instant] = None) 
+case class AuthPreparationModel(id: Option[Int] = None, userId: Option[Int] = None,
+                                token: Option[String] = None, expires: Option[Instant] = None,
+                                clientState: Option[String] = None, created: Option[Instant] = None)
 	extends StorableWithFactory[AuthPreparation]
 {
 	// IMPLEMENTED	--------------------

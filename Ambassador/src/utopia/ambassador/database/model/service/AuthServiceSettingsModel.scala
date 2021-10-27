@@ -10,6 +10,8 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 
+import java.util.concurrent.TimeUnit
+
 /**
   * Used for constructing AuthServiceSettingsModel instances and for inserting AuthServiceSettingss to the database
   * @author Mikko Hilpinen
@@ -78,7 +80,7 @@ object AuthServiceSettingsModel
 	/**
 	  * Name of the property that contains AuthServiceSettings DefaultSessionDuration
 	  */
-	val DefaultSessionDurationAttName = "defaultSessionDurationMinutes"
+	val defaultSessionDurationAttName = "defaultSessionDurationMinutes"
 	
 	/**
 	  * Name of the property that contains AuthServiceSettings created
@@ -144,9 +146,9 @@ object AuthServiceSettingsModel
 	def incompleteAuthTokenDurationColumn = table(incompleteAuthTokenDurationAttName)
 	
 	/**
-	  * Column that contains AuthServiceSettings DefaultSessionDuration
+	  * Column that contains AuthServiceSettings defaultSessionDuration
 	  */
-	def DefaultSessionDurationColumn = table(DefaultSessionDurationAttName)
+	def defaultSessionDurationColumn = table(defaultSessionDurationAttName)
 	
 	/**
 	  * Column that contains AuthServiceSettings created
@@ -168,7 +170,7 @@ object AuthServiceSettingsModel
 			Some(data.authenticationUrl), Some(data.tokenUrl), Some(data.redirectUrl), 
 			data.incompleteAuthRedirectUrl, data.defaultCompletionRedirectUrl, 
 			Some(data.preparationTokenDuration), Some(data.redirectTokenDuration), 
-			Some(data.incompleteAuthTokenDuration), Some(data.DefaultSessionDuration), Some(data.created))
+			Some(data.incompleteAuthTokenDuration), Some(data.defaultSessionDuration), Some(data.created))
 	
 	override def complete(id: Value, data: AuthServiceSettingsData) = AuthServiceSettings(id.getInt, data)
 	
@@ -207,11 +209,11 @@ object AuthServiceSettingsModel
 		apply(defaultCompletionRedirectUrl = Some(defaultCompletionRedirectUrl))
 	
 	/**
-	  * @param DefaultSessionDuration Duration of this AuthServiceSettings
-	  * @return A model containing only the specified DefaultSessionDuration
+	  * @param defaultSessionDuration Duration of this AuthServiceSettings
+	  * @return A model containing only the specified defaultSessionDuration
 	  */
-	def withDefaultSessionDuration(DefaultSessionDuration: FiniteDuration) = 
-		apply(DefaultSessionDuration = Some(DefaultSessionDuration))
+	def withdefaultSessionDuration(defaultSessionDuration: FiniteDuration) =
+		apply(defaultSessionDuration = Some(defaultSessionDuration))
 	
 	/**
 	  * @param id A AuthServiceSettings id
@@ -280,7 +282,7 @@ object AuthServiceSettingsModel
   * @param preparationTokenDuration Duration how long preparation tokens can be used after they're issued before they expire
   * @param redirectTokenDuration Duration how long redirect tokens can be used after they're issued before they expire
   * @param incompleteAuthTokenDuration Duration how long incomplete authentication tokens can be used after they're issued before they expire
-  * @param DefaultSessionDuration Duration of this AuthServiceSettings
+  * @param defaultSessionDuration Duration of this AuthServiceSettings
   * @param created Time when this AuthServiceSettings was first created
   * @author Mikko Hilpinen
   * @since 2021-10-26
@@ -293,7 +295,7 @@ case class AuthServiceSettingsModel(id: Option[Int] = None, serviceId: Option[In
 	preparationTokenDuration: Option[FiniteDuration] = None, 
 	redirectTokenDuration: Option[FiniteDuration] = None, 
 	incompleteAuthTokenDuration: Option[FiniteDuration] = None, 
-	DefaultSessionDuration: Option[FiniteDuration] = None, created: Option[Instant] = None) 
+	defaultSessionDuration: Option[FiniteDuration] = None, created: Option[Instant] = None)
 	extends StorableWithFactory[AuthServiceSettings]
 {
 	// IMPLEMENTED	--------------------
@@ -311,7 +313,7 @@ case class AuthServiceSettingsModel(id: Option[Int] = None, serviceId: Option[In
 			preparationTokenDurationAttName -> preparationTokenDuration.map { _.toUnit(TimeUnit.MINUTES) }, 
 			redirectTokenDurationAttName -> redirectTokenDuration.map { _.toUnit(TimeUnit.MINUTES) }, 
 			incompleteAuthTokenDurationAttName -> incompleteAuthTokenDuration.map { _.toUnit(TimeUnit.MINUTES) }, 
-			DefaultSessionDurationAttName -> DefaultSessionDuration.map { _.toUnit(TimeUnit.MINUTES) }, 
+			defaultSessionDurationAttName -> defaultSessionDuration.map { _.toUnit(TimeUnit.MINUTES) },
 			createdAttName -> created)
 	}
 	
@@ -350,11 +352,11 @@ case class AuthServiceSettingsModel(id: Option[Int] = None, serviceId: Option[In
 		copy(defaultCompletionRedirectUrl = Some(defaultCompletionRedirectUrl))
 	
 	/**
-	  * @param DefaultSessionDuration A new DefaultSessionDuration
-	  * @return A new copy of this model with the specified DefaultSessionDuration
+	  * @param defaultSessionDuration A new defaultSessionDuration
+	  * @return A new copy of this model with the specified defaultSessionDuration
 	  */
-	def withDefaultSessionDuration(DefaultSessionDuration: FiniteDuration) = 
-		copy(DefaultSessionDuration = Some(DefaultSessionDuration))
+	def withDefaultSessionDuration(defaultSessionDuration: FiniteDuration) =
+		copy(defaultSessionDuration = Some(defaultSessionDuration))
 	
 	/**
 	  * @param incompleteAuthRedirectUrl A new incompleteAuthRedirectUrl

@@ -1,5 +1,7 @@
 package utopia.ambassador.model.partial.process
 
+import utopia.ambassador.model.enumeration.AuthCompletionType
+import utopia.ambassador.model.enumeration.AuthCompletionType.{Default, DenialOfAccess, PartialSuccess}
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
@@ -17,6 +19,28 @@ case class AuthCompletionRedirectTargetData(preparationId: Int, url: String,
 	resultStateFilter: Option[Boolean] = None, isLimitedToDenials: Boolean = false) 
 	extends ModelConvertible
 {
+	// ATTRIBUTES ------------------------
+	
+	/**
+	  * @return Filter to apply to accepted result states
+	  */
+	lazy val resultFilter = resultStateFilter match
+	{
+		case Some(stateFilter) =>
+			if (stateFilter)
+			{
+				if (isLimitedToDenials)
+					PartialSuccess
+				else
+					AuthCompletionType.Success
+			}
+			else if (isLimitedToDenials)
+				DenialOfAccess
+			else
+				AuthCompletionType.Failure
+		case None => Default
+	}
+	
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = 

@@ -1,7 +1,7 @@
 package utopia.ambassador.database.access.single.service
 
 import java.time.Instant
-import utopia.ambassador.database.factory.service.AuthServiceFactory
+import utopia.ambassador.database.factory.service.{AuthServiceFactory, AuthServiceWithSettingsFactory}
 import utopia.ambassador.database.model.service.AuthServiceModel
 import utopia.ambassador.model.stored.service.AuthService
 import utopia.flow.datastructure.immutable.Value
@@ -26,7 +26,6 @@ trait UniqueAuthServiceAccess
 	  * Name of this service (from the customer's perspective). None if no instance (or value) was found.
 	  */
 	def name(implicit connection: Connection) = pullColumn(model.nameColumn).string
-	
 	/**
 	  * Time when this AuthService was first created. None if no instance (or value) was found.
 	  */
@@ -38,6 +37,16 @@ trait UniqueAuthServiceAccess
 	  * Factory used for constructing database the interaction models
 	  */
 	protected def model = AuthServiceModel
+	
+	/**
+	  * @param connection Implicit DB Connection
+	  * @return This service, along with its settings
+	  */
+	def withSettings(implicit connection: Connection) = globalCondition match
+	{
+		case Some(c) => AuthServiceWithSettingsFactory.get(c)
+		case None => AuthServiceWithSettingsFactory.getAny()
+	}
 	
 	
 	// IMPLEMENTED	--------------------
@@ -54,7 +63,6 @@ trait UniqueAuthServiceAccess
 	  */
 	def created_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
-	
 	/**
 	  * Updates the name of the targeted AuthService instance(s)
 	  * @param newName A new name to assign

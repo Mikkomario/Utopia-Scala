@@ -9,7 +9,7 @@
 - Added enumeration referencing
 ### Bugfixes
 - In many item access points, the setter property names are now in plural format to match the getter names
-- TimeUnit is now properly imported in generated XData files
+- TimeUnit and FiniteDuration are now properly imported in generated XData and XFactory files
 ### Other Changes
 - An id-based subset view is now written even when the access point doesn't support descriptions
 - Initials used in SQL indices and constraints are now unique within the project

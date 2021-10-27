@@ -5,12 +5,11 @@ import utopia.access.http.Status.{InternalServerError, NotFound}
 import utopia.ambassador.controller.implementation.AcquireTokens
 import utopia.ambassador.controller.template.AuthRedirector
 import utopia.ambassador.database.access.single.process.DbAuthPreparation
-import utopia.ambassador.database.access.single.service.DbAuthService
 import utopia.ambassador.database.model.process.{AuthRedirectModel, AuthRedirectResultModel}
 import utopia.ambassador.model.enumeration.GrantLevel.FullAccess
 import utopia.ambassador.model.partial.process.{AuthRedirectData, AuthRedirectResultData}
 import utopia.ambassador.model.stored.process.{AuthPreparation, AuthRedirect}
-import utopia.ambassador.model.stored.service.ServiceSettings
+import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.ambassador.rest.util.{AuthUtils, ServiceTarget}
 import utopia.citadel.util.CitadelContext._
 import utopia.exodus.rest.util.AuthorizedContext
@@ -48,7 +47,7 @@ class AuthNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirectors:
 	{
 		connectionPool.tryWith { implicit connection =>
 			// Reads server settings
-			target.id.flatMap { DbAuthService(_).settings.pull } match
+			target.settings match
 			{
 				// Case: Settings found => processes the request
 				case Some(settings) => get(settings)
@@ -65,16 +64,16 @@ class AuthNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirectors:
 	
 	// OTHER    -----------------------------------
 	
-	private def get(settings: ServiceSettings)(implicit context: Context, connection: Connection) =
+	private def get(settings: AuthServiceSettings)(implicit context: Context, connection: Connection) =
 	{
 		// Expects a valid preparation token among the query parameters
 		context.request.parameters("token").string match
 		{
 			case Some(token) =>
-				DbAuthPreparation.forToken(token) match
+				DbAuthPreparation.withToken(token).pull match
 				{
 					case Some(preparation) =>
-						if (DbAuthPreparation(preparation.id).isClosed)
+						if (DbAuthPreparation(preparation.id).isConsumed)
 							AuthUtils.completionRedirect(settings, Some(preparation),
 								"Authentication token was already used")
 						else
@@ -93,12 +92,12 @@ class AuthNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirectors:
 		}
 	}
 	
-	private def redirect(event: AuthRedirect, settings: ServiceSettings, preparation: AuthPreparation)
+	private def redirect(event: AuthRedirect, settings: AuthServiceSettings, preparation: AuthPreparation)
 	                    (implicit connection: Connection) =
 	{
 		// Checks which scopes to request
 		val preparationAccess = DbAuthPreparation(preparation.id)
-		val scopes = preparationAccess.requestedScopesForServiceWithId(settings.serviceId)
+		val scopes = preparationAccess.scopes.forServiceWithId(settings.serviceId).pull
 		// Case: No authentication required, completes the authentication immediately
 		if (scopes.isEmpty)
 		{
@@ -108,6 +107,6 @@ class AuthNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirectors:
 		// Case: Authentication required => Redirects the user
 		else
 			Result.Redirect(redirectors(settings.serviceId)
-				.redirectionFor(event.token, settings, preparation, scopes))
+				.redirectionFor(event.token, settings, preparation, scopes.map { _.scope }))
 	}
 }

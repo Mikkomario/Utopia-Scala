@@ -5,7 +5,7 @@ import utopia.ambassador.database.model.service.AuthServiceModel
 import utopia.ambassador.model.stored.service.AuthService
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.UnconditionalView
+import utopia.vault.nosql.view.{SubView, UnconditionalView}
 
 /**
   * Used for accessing individual AuthServices
@@ -34,5 +34,22 @@ object DbAuthService extends SingleRowModelAccess[AuthService] with Unconditiona
 	  * @return An access point to that AuthService
 	  */
 	def apply(id: Int) = DbSingleAuthService(id)
+	
+	/**
+	  * @param serviceName Name of the targeted service
+	  * @return An access point to that service
+	  */
+	def withName(serviceName: String) = new DbAuthServiceWithName(serviceName)
+	
+	
+	// NESTED   --------------------
+	
+	class DbAuthServiceWithName(name: String) extends UniqueAuthServiceAccess with SubView
+	{
+		override protected def parent = DbAuthService
+		override protected def defaultOrdering = None
+		
+		override def filterCondition = model.withName(name).toCondition
+	}
 }
 

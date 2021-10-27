@@ -1,5 +1,6 @@
 package utopia.ambassador.database.access.many.token
 
+import utopia.ambassador.database.access.many.scope.DbAuthTokenScopes
 import utopia.ambassador.database.factory.token.AuthTokenScopeLinkFactory
 import utopia.ambassador.database.model.token.AuthTokenScopeLinkModel
 import utopia.ambassador.model.stored.token.AuthTokenScopeLink
@@ -33,7 +34,6 @@ trait ManyAuthTokenScopeLinksAccess extends ManyRowModelAccess[AuthTokenScopeLin
 	  */
 	def tokenIds(implicit connection: Connection) = pullColumn(model.tokenIdColumn)
 		.flatMap { value => value.int }
-	
 	/**
 	  * scopeIds of the accessible AuthTokenScopeLinks
 	  */
@@ -46,6 +46,15 @@ trait ManyAuthTokenScopeLinksAccess extends ManyRowModelAccess[AuthTokenScopeLin
 	  * Factory used for constructing database the interaction models
 	  */
 	protected def model = AuthTokenScopeLinkModel
+	
+	/**
+	  * @return A copy of this access point which includes scope data
+	  */
+	def withScopes = globalCondition match
+	{
+		case Some(c) => DbAuthTokenScopes.filter(c)
+		case None => DbAuthTokenScopes
+	}
 	
 	
 	// IMPLEMENTED	--------------------
@@ -61,13 +70,18 @@ trait ManyAuthTokenScopeLinksAccess extends ManyRowModelAccess[AuthTokenScopeLin
 	// OTHER	--------------------
 	
 	/**
+	  * @param tokenId Id of the targeted authentication token
+	  * @return An access point to that token's scope links
+	  */
+	def withTokenId(tokenId: Int) = filter(model.withTokenId(tokenId).toCondition)
+	
+	/**
 	  * Updates the scopeId of the targeted AuthTokenScopeLink instance(s)
 	  * @param newScopeId A new scopeId to assign
 	  * @return Whether any AuthTokenScopeLink instance was affected
 	  */
 	def scopeIds_=(newScopeId: Int)(implicit connection: Connection) = putColumn(model.scopeIdColumn, 
 		newScopeId)
-	
 	/**
 	  * Updates the tokenId of the targeted AuthTokenScopeLink instance(s)
 	  * @param newTokenId A new tokenId to assign

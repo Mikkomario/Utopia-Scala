@@ -3,7 +3,7 @@ package utopia.ambassador.controller.implementation
 import utopia.ambassador.controller.template.AuthRedirector
 import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.ambassador.model.stored.scope.Scope
-import utopia.ambassador.model.stored.service.ServiceSettings
+import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.flow.datastructure.immutable.Model
 import utopia.vault.database.Connection
 
@@ -17,6 +17,6 @@ object DefaultRedirector extends AuthRedirector
 {
 	override def parameterEncoding = None
 	
-	override def extraParametersFor(settings: ServiceSettings, preparation: AuthPreparation, scopes: Vector[Scope])
+	override def extraParametersFor(settings: AuthServiceSettings, preparation: AuthPreparation, scopes: Vector[Scope])
 	                               (implicit connection: Connection) = Model.empty
 }

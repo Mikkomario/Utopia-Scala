@@ -28,6 +28,7 @@ object AuthPreparationFactory
 	
 	override def fromValidatedModel(valid: Model[Constant]) = 
 		AuthPreparation(valid("id").getInt, AuthPreparationData(valid("userId").getInt, 
-			valid("token").getString, valid("expires").getInstant, valid("created").getInstant))
+			valid("token").getString, valid("expires").getInstant, valid("clientState").string,
+			valid("created").getInstant))
 }
 

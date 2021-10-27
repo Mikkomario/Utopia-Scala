@@ -495,7 +495,8 @@ object PropertyType
 				else
 					s"FiniteDuration($valueCode.getLong, TimeUnit.${unit.name})"
 			}
-			CodePiece(text, Set(Reference.timeUnit))
+			val refs = if (isNullable) Set(Reference.timeUnit, Reference.finiteDuration) else Set(Reference.timeUnit)
+			CodePiece(text, refs)
 		}
 		override def toValueCode(instanceCode: String) =
 		{

@@ -42,6 +42,12 @@ object DbAuthRedirect
 	  */
 	def forPreparationWithId(preparationId: Int) = new DbRedirectForPreparation(preparationId)
 	
+	/**
+	  * @param token An authentication redirect token
+	  * @return An access point to a valid redirect with that token
+	  */
+	def withToken(token: String) = new DbRedirectWithToken(token)
+	
 	
 	// NESTED   --------------------
 	

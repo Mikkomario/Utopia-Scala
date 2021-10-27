@@ -27,6 +27,34 @@ trait ManyScopesAccess
 	extends ManyScopesAccessLike[Scope, ManyScopesAccess] with ManyRowModelAccess[Scope]
 		with ManyDescribedAccess[Scope, DescribedScope]
 {
+	// COMPUTED ------------------------
+	
+	/**
+	  * @return A copy of this access point which includes authentication preparation linking
+	  */
+	def withAuthPreparationLinks = globalCondition match
+	{
+		case Some(c) => DbAuthPreparationScopes.filter(c)
+		case None=> DbAuthPreparationScopes
+	}
+	/**
+	  * @return A copy of this access point which includes task linking
+	  */
+	def withTaskLinks = globalCondition match
+	{
+		case Some(c) => DbTaskScopes.filter(c)
+		case None => DbTaskScopes
+	}
+	/**
+	  * @return A copy of this access point which includes authentication token linking
+	  */
+	def withTokenLinks = globalCondition match
+	{
+		case Some(c) => DbAuthTokenScopes.filter(c)
+		case None => DbAuthTokenScopes
+	}
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def factory = ScopeFactory
