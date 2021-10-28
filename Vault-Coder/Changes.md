@@ -12,6 +12,8 @@
 - TimeUnit and FiniteDuration are now properly imported in generated XData and XFactory files
 ### Other Changes
 - An id-based subset view is now written even when the access point doesn't support descriptions
+- Tables in the SQL document are now written in a specific order, making sure referenced tables are written 
+  before referencing tables
 - Initials used in SQL indices and constraints are now unique within the project
 - Changed some property type default values without changing the meaning 
   (e.g. default of LocalDate is Today instead of LocalDate.now())

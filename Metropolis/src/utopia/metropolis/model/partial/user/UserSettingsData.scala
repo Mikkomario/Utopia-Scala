@@ -1,7 +1,7 @@
 package utopia.metropolis.model.partial.user
 
 import java.time.Instant
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
+import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, StringType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now

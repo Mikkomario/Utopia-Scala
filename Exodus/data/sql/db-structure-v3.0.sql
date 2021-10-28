@@ -18,41 +18,17 @@ CREATE TABLE `email_validation_purpose`(
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
--- Represents an attempted email validation, and the possible response / success
--- purpose_id: Id of the purpose this email validation is used for
--- email: Email address being validated
--- token: Token sent with the email, which is also used for validating the email address
--- resend_token: Token used for authenticating an email resend attempt
--- user_id: Id of the user who claims to own this email address
--- expires: Time when this EmailValidationAttempt expires / becomes invalid
--- created: Time when this EmailValidationAttempt was first created
--- completed: Time when this attempt was finished successfully. None while not completed.
-CREATE TABLE `email_validation_attempt`(
+-- Represents a hashed user password
+-- user_id: Id of the user who owns this password
+-- hash: User's hashed password
+-- created: Time when this UserPassword was first created
+CREATE TABLE `user_password`(
 	id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	`purpose_id` INT NOT NULL, 
-	`email` VARCHAR(128) NOT NULL, 
-	`token` VARCHAR(64) NOT NULL, 
-	`resend_token` VARCHAR(64) NOT NULL, 
 	`user_id` INT NOT NULL, 
-	`expires` DATETIME NOT NULL, 
+	`hash` VARCHAR(128) NOT NULL, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	`completed` DATETIME, 
-	INDEX eva_email_idx (`email`), 
-	INDEX eva_token_idx (`token`), 
-	INDEX eva_resend_token_idx (`resend_token`), 
-	INDEX eva_combo_1_idx (expires, completed), 
-	CONSTRAINT eva_evp_purpose_ref_fk FOREIGN KEY eva_evp_purpose_ref_idx (purpose_id) REFERENCES `email_validation_purpose`(id) ON DELETE CASCADE, 
-	CONSTRAINT eva_u_user_ref_fk FOREIGN KEY eva_u_user_ref_idx (user_id) REFERENCES `user`(id) ON DELETE CASCADE
-)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-
--- Represents a time when an email validation was sent again
--- validation_id: Id of the email_validation_attempt linked with this EmailValidationResend
--- created: Time when this EmailValidationResend was first created
-CREATE TABLE `email_validation_resend`(
-	id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	`validation_id` INT NOT NULL, 
-	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	CONSTRAINT evr_eva_validation_ref_fk FOREIGN KEY evr_eva_validation_ref_idx (validation_id) REFERENCES `email_validation_attempt`(id) ON DELETE CASCADE
+	INDEX up_hash_idx (`hash`), 
+	CONSTRAINT up_u_user_ref_fk FOREIGN KEY up_u_user_ref_idx (user_id) REFERENCES `user`(id) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Used as a refresh token to generate device-specific session tokens on private devices
@@ -100,16 +76,40 @@ CREATE TABLE `session_token`(
 	CONSTRAINT st_cd_device_ref_fk FOREIGN KEY st_cd_device_ref_idx (device_id) REFERENCES `client_device`(id) ON DELETE SET NULL
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
--- Represents a hashed user password
--- user_id: Id of the user who owns this password
--- hash: User's hashed password
--- created: Time when this UserPassword was first created
-CREATE TABLE `user_password`(
+-- Represents an attempted email validation, and the possible response / success
+-- purpose_id: Id of the purpose this email validation is used for
+-- email: Email address being validated
+-- token: Token sent with the email, which is also used for validating the email address
+-- resend_token: Token used for authenticating an email resend attempt
+-- expires: Time when this EmailValidationAttempt expires / becomes invalid
+-- user_id: Id of the user who claims to own this email address (if applicable)
+-- created: Time when this EmailValidationAttempt was first created
+-- completed: Time when this attempt was finished successfully. None while not completed.
+CREATE TABLE `email_validation_attempt`(
 	id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	`user_id` INT NOT NULL, 
-	`hash` VARCHAR(128) NOT NULL, 
+	`purpose_id` INT NOT NULL, 
+	`email` VARCHAR(128) NOT NULL, 
+	`token` VARCHAR(64) NOT NULL, 
+	`resend_token` VARCHAR(64) NOT NULL, 
+	`expires` DATETIME NOT NULL, 
+	`user_id` INT, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	INDEX up_hash_idx (`hash`), 
-	CONSTRAINT up_u_user_ref_fk FOREIGN KEY up_u_user_ref_idx (user_id) REFERENCES `user`(id) ON DELETE CASCADE
+	`completed` DATETIME, 
+	INDEX eva_email_idx (`email`), 
+	INDEX eva_token_idx (`token`), 
+	INDEX eva_resend_token_idx (`resend_token`), 
+	INDEX eva_combo_1_idx (expires, completed), 
+	CONSTRAINT eva_evp_purpose_ref_fk FOREIGN KEY eva_evp_purpose_ref_idx (purpose_id) REFERENCES `email_validation_purpose`(id) ON DELETE CASCADE, 
+	CONSTRAINT eva_u_user_ref_fk FOREIGN KEY eva_u_user_ref_idx (user_id) REFERENCES `user`(id) ON DELETE SET NULL
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
+-- Represents a time when an email validation was sent again
+-- validation_id: Id of the email_validation_attempt linked with this EmailValidationResend
+-- created: Time when this EmailValidationResend was first created
+CREATE TABLE `email_validation_resend`(
+	id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
+	`validation_id` INT NOT NULL, 
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+	CONSTRAINT evr_eva_validation_ref_fk FOREIGN KEY evr_eva_validation_ref_idx (validation_id) REFERENCES `email_validation_attempt`(id) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 

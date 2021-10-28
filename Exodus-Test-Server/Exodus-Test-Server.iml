@@ -18,5 +18,6 @@
     <orderEntry type="module" module-name="Nexus" />
     <orderEntry type="module" module-name="NexusForTomcat" />
     <orderEntry type="module" module-name="BunnyMunch" />
+    <orderEntry type="module" module-name="Citadel" />
   </component>
 </module>

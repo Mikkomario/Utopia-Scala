@@ -77,13 +77,13 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 									// TODO: Handle better cases where device id is not returned
 									// Stores received device id, possible device key and session key
 									LocalDevice.preInitialize(deviceId, device.name, user.userId)
-									user.deviceKey.foreach { LocalDevice.key = _ }
-									val apiCredentials = user.deviceKey match
+									user.deviceToken.foreach { LocalDevice.key = _ }
+									val apiCredentials = user.deviceToken match
 									{
 										case Some(deviceKey) => Right(deviceKey)
 										case None => Left(credentials)
 									}
-									new ExodusApi(gateway, rootPath, apiCredentials, user.sessionKey)
+									new ExodusApi(gateway, rootPath, apiCredentials, user.sessionToken)
 								}
 						}
 					case Empty => Failure(new EmptyResponseException(

@@ -1,7 +1,7 @@
 --
 -- DB Structure for Utopia Citadel features
 -- Intended to be inserted after database creation
--- Supports versions v1.2 and above
+-- Supports versions v1.2 until (but not including) v2.0
 --
 
 -- Various languages

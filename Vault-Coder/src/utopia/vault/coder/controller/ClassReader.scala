@@ -3,7 +3,7 @@ package utopia.vault.coder.controller
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.vault.coder.model.enumeration.BasicPropertyType.{IntNumber, Text}
 import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, EnumValue, Optional}
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelValidationFailedException}
+import utopia.flow.datastructure.immutable.{Model, ModelValidationFailedException}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.UncertainBoolean

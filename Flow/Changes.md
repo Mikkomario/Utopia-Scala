@@ -4,6 +4,8 @@
 ### Breaking Changes
 - Immutable model no longer accepts type parameters
 ### New Methods
+- **CombinedOrdering**.type
+  - Added a new utility constructor
 - **Model**
   - Added a couple variants of `.without(...)` which removes multiple attributes based on their names
 - **StdIn** (**ConsoleExtensions**)

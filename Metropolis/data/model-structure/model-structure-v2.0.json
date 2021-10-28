@@ -233,12 +233,12 @@
         "props": [
           {
             "name": "roleId",
-            "ref": "member_role",
-            "doc": "Id of the organization member role that has authorization to perform the referenced task"
+            "ref": "user_role",
+            "doc": "Id of the organization user role that has authorization to perform the referenced task"
           },
           {
             "ref": "task",
-            "doc": "Id of the task the user's with referenced membership role are allowed to perform"
+            "doc": "Id of the task the user's with referenced user role are allowed to perform"
           },
           {
             "type": "creation",
