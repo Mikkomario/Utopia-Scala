@@ -2,6 +2,8 @@
 
 ## v1.3 (in development)
 ### Breaking Changes
+- Citadel & Metropolis features are now based on Metropolis v2.0 and Citadel v2.0 and will have compatibility 
+  problems with earlier versions
 - Property types may now specify a different plural property name when using the default name
 ### New Features
 - Added support for divided module structure (e.g. Metropolis & Citadel -case)

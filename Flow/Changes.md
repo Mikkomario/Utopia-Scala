@@ -3,6 +3,9 @@
 ## v1.14 (in development)
 ### Breaking Changes
 - Immutable model no longer accepts type parameters
+### New Features
+- Added **RefreshingLazy** that works a little like **ExpiringLazy**, expect that resets are synchronous and 
+  performed at value reads - A more useful implementation if the item is intended to be cached for most of the time
 ### New Methods
 - **CombinedOrdering**.type
   - Added a new utility constructor
