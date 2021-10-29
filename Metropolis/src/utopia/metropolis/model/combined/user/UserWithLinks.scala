@@ -4,7 +4,8 @@ import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible, ModelType}
+import utopia.flow.generic.{FromModelFactory, IntType, ModelType}
+import utopia.metropolis.model.StyledModelConvertible
 import utopia.metropolis.model.stored.user.{UserLanguageLink, UserSettings}
 
 object UserWithLinks extends FromModelFactory[UserWithLinks]
@@ -29,7 +30,7 @@ object UserWithLinks extends FromModelFactory[UserWithLinks]
   * @param deviceIds Ids of the devices known to the user
   */
 case class UserWithLinks(settings: UserSettings, languages: Vector[UserLanguageLink], deviceIds: Vector[Int])
-	extends ModelConvertible
+	extends StyledModelConvertible
 {
 	// COMPUTED --------------------------
 	
@@ -44,4 +45,7 @@ case class UserWithLinks(settings: UserSettings, languages: Vector[UserLanguageL
 	override def toModel =
 		Model(Vector("id" -> id, "settings" -> settings.toModel, "language_links" -> languages.map { _.toModel },
 			"device_ids" -> deviceIds))
+	
+	override def toSimpleModel = Model(Vector("id" -> id, "language_links" -> languages.map { _.toSimpleModel },
+		"device_ids" -> deviceIds)) ++ (settings.toSimpleModel - "user_id")
 }
