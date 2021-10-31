@@ -1,6 +1,8 @@
 package utopia.flow.parse
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.datastructure.mutable.ResettableLazy
+import utopia.flow.util.CollectionExtensions._
 
 import java.util.regex.{Matcher, Pattern}
 import scala.collection.immutable.VectorBuilder
@@ -213,12 +215,12 @@ case class Regex(string: String)
 	  * @param str A string
 	  * @return A version of the string that only contains items NOT accepted by this regex
 	  */
-	def filterNot(str: String) = str.replaceAll(string, "")
+	def filterNot(str: String) = pattern.matcher(str).replaceAll("")
 	/**
 	  * @param str A string
 	  * @return A version of the string that only contains items accepted by this regex
 	  */
-	def filter(str: String) = matchesIteratorFrom(str).reduceOption { _ + _ } getOrElse ""
+	def filter(str: String) = matchesIteratorFrom(str).mkString
 	
 	/**
 	 * Extracts the matches of this regex from the specified string, returning both the extracted results and the
@@ -278,9 +280,23 @@ case class Regex(string: String)
 	/**
 	 * Splits the specified string using this regex
 	 * @param str String to split
-	 * @return Target string splitted by this regex
+	 * @return Target string split by this regex
 	 */
-	def split(str: String) = str.split(string)
+	def split(str: String): IndexedSeq[String] =
+	{
+		val ranges = rangesFrom(str)
+		if (ranges.isEmpty)
+			Vector(str)
+		else
+		{
+			val firstPart = str.substring(0, ranges.head.start)
+			val middleParts = ranges.paired.map { case Pair(prevRange, nextRange) =>
+				str.substring(prevRange.exclusiveEnd, nextRange.start)
+			}
+			val endPart = str.substring(ranges.last.exclusiveEnd)
+			firstPart +: middleParts :+ endPart
+		}
+	}
 	/**
 	 * Splits the specified string using this regex. Works much like the standard split operation, except that
 	 * this variation doesn't remove the splitting string from the results but instead keeps them at the ends of the

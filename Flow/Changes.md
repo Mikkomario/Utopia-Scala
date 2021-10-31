@@ -11,10 +11,13 @@
   - Added a new utility constructor
 - **Model**
   - Added a couple variants of `.without(...)` which removes multiple attributes based on their names
+- **Range** (**CollectionExtensions**)
+  - Added `.exclusiveEnd`
 - **StdIn** (**ConsoleExtensions**)
   - Added `.readValidOrEmpty(...)`, which interacts with the user in order to find a valid value
 ### Other Changes
 - Added a double-checking option to `StdIn.readNonEmptyLine(...)` (**ConsoleExtensions**)
+- Refactored some **Regex** functions
 
 ## v1.13 - 18.10.2021
 Updated built-in value conversions (concerning Vector and LocalDate types). Added interactive console support with 
