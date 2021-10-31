@@ -62,7 +62,7 @@ object ClassMethodFactory
 	  * @return A method declaration
 	  */
 	def classFromValidatedModel(targetClass: Class, methodName: String = "fromValidatedModel",
-	                            param: Parameter = Parameter("valid", Reference.model(Reference.constant)))
+	                            param: Parameter = Parameter("valid", Reference.model))
 	                           (propNameInModel: Property => String)
 	                           (wrapAssignments: CodePiece => CodePiece) =
 	{

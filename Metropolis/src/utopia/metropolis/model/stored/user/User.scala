@@ -16,4 +16,3 @@ object User extends StoredFromModelFactory[User, UserData]
   * @since 2021-10-23
   */
 case class User(id: Int, data: UserData) extends StoredModelConvertible[UserData]
-

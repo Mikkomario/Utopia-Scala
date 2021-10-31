@@ -7,6 +7,7 @@ import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.util.Extender
+import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.stored.description.Description
 
 object LinkedDescription extends FromModelFactory[LinkedDescription]
@@ -35,8 +36,13 @@ object LinkedDescription extends FromModelFactory[LinkedDescription]
   * @param targetId Id of the described item
   */
 case class LinkedDescription(description: Description, linkId: Int, targetId: Int)
-	extends Extender[Description] with ModelConvertible
+	extends Extender[DescriptionData] with ModelConvertible
 {
+	/**
+	 * @return Id of this description
+	 */
+	def id = description.id
+	
 	override def wrapped = description
 	
 	override def toModel = description.toModel ++
