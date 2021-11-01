@@ -14,7 +14,11 @@
 - **Range** (**CollectionExtensions**)
   - Added `.exclusiveEnd`
 - **Regex**
-  - Added `.firstRangeFrom(String)`
+  - type
+    - Added `.noneOf(String)` which is the inverse of `.anyOf(String)`
+  - instance
+    - Added `.firstRangeFrom(String)`
+    - Added `.ignoringWithin(Char, Char)`
 - **StdIn** (**ConsoleExtensions**)
   - Added `.readValidOrEmpty(...)`, which interacts with the user in order to find a valid value
 ### Other Changes

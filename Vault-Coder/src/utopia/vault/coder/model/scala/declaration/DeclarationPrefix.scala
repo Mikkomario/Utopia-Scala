@@ -25,7 +25,7 @@ object DeclarationPrefix
 	/**
 	  * All available values of this enumeration
 	  */
-	val values = Vector[DeclarationPrefix](Case, Override, Lazy, Implicit, Sealed, Abstract)
+	val values = Vector[DeclarationPrefix](Sealed, Implicit, Abstract, Case, Override, Lazy)
 	
 	
 	// NESTED   -------------------------

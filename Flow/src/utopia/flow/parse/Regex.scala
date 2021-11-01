@@ -50,6 +50,11 @@ object Regex
 	  * @return A new regex
 	  */
 	def anyOf(chars: String) = Regex(s"[\\Q$chars\\E]")
+	/**
+	  * @param chars A group fo characters that are not allowed
+	  * @return A regular expression that accepts all except the specified characters
+	  */
+	def noneOf(chars: String) = !anyOf(chars)
 	
 	/**
 	  * @param char Character in regular expression
@@ -157,6 +162,11 @@ case class Regex(string: String)
 	  * @return A copy of this regular expression that ignores results within quotations
 	  */
 	def ignoringQuotations = this + "(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)"
+	/**
+	  * @return A copy of this regular expression that ignores results within parentheses - Doesn't handle nested
+	  *         parentheses properly, however
+	  */
+	def ignoringParentheses = ignoringWithin('(', ')')
 	
 	
 	// IMPLEMENTED	----------------
@@ -204,6 +214,24 @@ case class Regex(string: String)
 	 * @return This regex 'range' times in sequence
 	 */
 	def times(range: Range) = Regex(string + s"{${range.start},${range.end}")
+	
+	/**
+	  * Creates a regular expression that ignores results between the specified start and end characters
+	  * @param start Starting character
+	  * @param end Ending character
+	  * @return A regular expression that ignores results between those characters
+	  *         (doesn't work properly for nested structures)
+	  */
+	def ignoringWithin(start: Char, end: Char) =
+	{
+		val startRegex = Regex.escape(start)
+		val endRegex = Regex.escape(end)
+		val notStart = !startRegex
+		val notEnd = !endRegex
+		
+		this + "(?=" + (notStart.zeroOrMoreTimes + startRegex + notEnd.zeroOrMoreTimes + endRegex).withinParenthesis
+			.zeroOrMoreTimes + Regex.noneOf(start.toString + end).zeroOrMoreTimes + "$)"
+	}
 	
 	/**
 	  * @param str A string

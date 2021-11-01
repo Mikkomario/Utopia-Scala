@@ -76,6 +76,16 @@ object ScalaType
 	  */
 	def generic(name: String, firstParam: ScalaType, moreParams: ScalaType*) =
 		apply(Left(name), firstParam +: moreParams.toVector)
+	
+	/**
+	  * Creates a function scala type
+	  * @param paramTypes Accepted parameter types (default = empty)
+	  * @param resultType Resulting data type (raw)
+	  * @param typeParams Generic type arguments for the resulting data type (default = empty)
+	  * @return A functional scala type
+	  */
+	def function(paramTypes: ScalaType*)(resultType: Either[String, Reference], typeParams: ScalaType*) =
+		apply(resultType, typeParams.toVector, ScalaTypeCategory.Function(paramTypes.toVector))
 }
 
 /**
@@ -111,5 +121,20 @@ case class ScalaType(data: Either[String, Reference], typeParameters: Vector[Sca
 					parameterTypes.map { _.toScala }.reduceLeft { _.append(_, ", ") }.withinParenthesis
 				parameterList.append(withTypeParams, " => ")
 		}
+	}
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	  * @param parameterTypes A list of accepted parameter types
+	  * @return A functional data type that returns this data type
+	  */
+	def fromParameters(parameterTypes: Vector[ScalaType]) = category match
+	{
+		// Functions that return functions don't handle references properly at this time
+		case _ :ScalaTypeCategory.Function =>
+			ScalaType(Left(toScala.text), category = ScalaTypeCategory.Function(parameterTypes))
+		case _ => copy(category = ScalaTypeCategory.Function(parameterTypes))
 	}
 }
