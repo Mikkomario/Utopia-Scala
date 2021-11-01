@@ -24,6 +24,13 @@ object Code
 	// OTHER    ----------------------------------
 	
 	/**
+	  * Wraps a single line of code without references
+	  * @param line A line of code
+	  * @return That line of code wrapped
+	  */
+	def apply(line: String): Code = apply(Vector(CodeLine(line)))
+	
+	/**
 	  * @param lines Code line strings
 	  * @return A code based on those lines
 	  */
@@ -70,6 +77,17 @@ case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set()) ext
 	
 	
 	// OTHER    -------------------------------
+	
+	/**
+	  * @param line A prefix line
+	  * @return A copy of this code with the specified line prepended
+	  */
+	def +:(line: String) = copy(CodeLine(line) +: lines)
+	/**
+	  * @param line A postfix line
+	  * @return A copy of this code with the specified line added
+	  */
+	def :+(line: String) = copy(lines :+ CodeLine(line))
 	
 	/**
 	  * Combines these two codes, writing the back to back

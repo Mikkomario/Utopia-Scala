@@ -8,11 +8,11 @@ import utopia.flow.util.IterateLines
 import utopia.vault.coder.model.reader.ReadCodeBlock
 import utopia.vault.coder.model.scala.ScalaDocKeyword.Param
 import utopia.vault.coder.model.scala.ScalaTypeCategory.{CallByName, Standard}
-import utopia.vault.coder.model.scala.{Extension, Package, Parameter, Parameters, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{Extension, Package, Parameter, Parameters, Reference, ScalaDoc, ScalaDocKeyword, ScalaDocPart, ScalaType}
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected, Public}
-import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.code.{Code, CodeLine, CodePiece}
 import utopia.vault.coder.model.scala.declaration.DeclarationTypeCategory.Instance
-import utopia.vault.coder.model.scala.declaration.{DeclarationPrefix, DeclarationStart, DeclarationType, DeclarationTypeCategory}
+import utopia.vault.coder.model.scala.declaration.{DeclarationPrefix, DeclarationStart, DeclarationType, DeclarationTypeCategory, FunctionDeclarationType, InstanceDeclarationType}
 
 import java.nio.file.Path
 import scala.collection.immutable.VectorBuilder
@@ -111,6 +111,33 @@ object ScalaParser
 	{
 		// Checks what the next non-empty line looks like
 		linesIter.nextWhere { _.nonEmpty }.map { firstLine =>
+			val scalaDoc = {
+				if (scalaDocStartRegex.existsIn(firstLine))
+				{
+					if (commentEndRegex.existsIn(firstLine))
+					{
+						val scalaDoc = firstLine.afterFirst("/**").untilFirst("*/").trim
+						ScalaDoc(Vector(ScalaDocPart.description(scalaDoc)))
+					}
+					else
+					{
+						val trimmedFirstLine = firstLine.afterFirst("/**")
+						val rawLines = linesIter.collectTo(commentEndRegex.existsIn)
+						if (rawLines.isEmpty)
+							ScalaDoc(Vector(ScalaDocPart.description(trimmedFirstLine)))
+						else
+						{
+							val middleLines = rawLines.dropRight(1)
+								.map { _.dropWhile { c => c == '\t' || c == '*' || c == ' ' } }
+							val lastLine = rawLines.last.untilFirst("*/")
+								.dropWhile { c => c == '\t' || c == ' ' || c == '*' }
+							???
+						}
+					}
+				}
+				else
+					ScalaDoc.empty
+			}
 			// Case: Item is prepended by scaladoc => includes the documentation in the item
 			if (scalaDocStartRegex.existsIn(firstLine))
 			{
@@ -170,17 +197,50 @@ object ScalaParser
 								None -> afterDeclarationStart.trim.notEmpty
 						}
 						// Handles functions and instances differently
-						declarationType.category match
+						declarationType match
 						{
-							case DeclarationTypeCategory.Function =>
+							case declarationType: FunctionDeclarationType =>
+								// Checks whether explicit parameter type has been specified
+								val (explicitType, declarationEnd) = explicitTypeFrom(
+									afterParameterLists.getOrElse(""), refMap)
+								val declarationIndentLevel = declarationLine.takeWhile { _ == '\t' }.length
+								
 								// Expects an assignment operator before a body
 								// - if no operator is given, assumes that the function is abstract
-								if (afterParameterLists.exists { _.contains('=') })
-									???
-								else
-									???
+								val body = {
+									if (declarationEnd.contains('='))
+									{
+										val lineAfterAssignment = declarationEnd.afterFirst("=").trim
+										val firstBodyLine = if (lineAfterAssignment.isEmpty)
+											linesIter.nextOption().getOrElse("").dropWhile { _ == '\t' } else
+											lineAfterAssignment
+										// Case: Function body is wrapped in a block => reads the block contents
+										if (firstBodyLine.startsWith("{"))
+										{
+											val (block, _) = readBlock(firstBodyLine.drop(1), linesIter)
+											blockToCode(block, refMap, declarationIndentLevel)
+										}
+										// Case: Function is a single line function (possibly on multiple lines)
+										else
+										{
+											val moreBodyLines = linesIter
+												.collectWhile { !namedDeclarationStartRegex.existsIn(_) }
+												.dropRightWhile { _.forall { _ == '\t' } }
+											val codeLines = CodeLine(firstBodyLine) +: moreBodyLines.map { line =>
+												val indentLevel = line.takeWhile { _ == '\t' }.length -
+													declarationIndentLevel
+												CodeLine(indentLevel, line)
+											}
+											Code(codeLines, refMap.keySet.filter { target =>
+												codeLines.exists { _.code.contains(target) } }.map(refMap.apply))
+										}
+									}
+									else
+										Code.empty
+								}
+								???
 							
-							case Instance =>
+							case declarationType: InstanceDeclarationType =>
 								// Looks for extends portion
 								// The instance body is always expected to be wrapped in a block,
 								// which is processed separately
@@ -194,8 +254,59 @@ object ScalaParser
 		}
 	}
 	
+	// Expects tabulator strikes, whitespaces etc. to be removed from line beginnings
+	private def scalaDocFromLines(lines: Vector[String]) =
+	{
+		if (lines.isEmpty)
+			ScalaDoc.empty
+		else
+		{
+			val (firstKeyword, firstLine) = extractScalaDocKeyword(lines.head)
+			// TODO: Group the lines so that the ones without keyword are added to the previous
+			//  keyword as additional lines
+			???
+		}
+	}
+	
+	private def extractScalaDocKeyword(line: String) =
+	{
+		if (line.startsWith("@"))
+		{
+			val (keywordPart, afterKeyword) = line.splitAtFirst(" ")
+			ScalaDocKeyword.matching(keywordPart.drop(1)) -> afterKeyword
+		}
+		else
+			None -> line
+	}
+	
+	private def blockToCode(block: ReadCodeBlock, refMap: Map[String, Reference], startIndent: Int): Code =
+	{
+		// Case: Empty block
+		if (block.lines.isEmpty)
+			Code("{ }")
+		// Case: One-liner
+		else if (block.lines.size == 1)
+		{
+			val line = block.lines.head
+			Code(s"{ $line }").referringTo(refMap.keySet.filter(line.contains).map(refMap.apply))
+		}
+		// Case: Multiple lines of code
+		else
+		{
+			val firstLine = CodeLine("{" + block.lines.head)
+			val otherLines = block.lines.tail.map { line =>
+				val indentCount = (line.takeWhile { _ == '\t' }.length - startIndent) max 0
+				CodeLine(indentCount, line)
+			}
+			val code = Code(firstLine +: otherLines.dropRight(1) :+ (otherLines.last + "}"))
+			val references = refMap.keySet.filter { target => code.lines.exists { _.code.contains(target) } }
+				.map(refMap.apply)
+			code.referringTo(references)
+		}
+	}
+	
 	private def extensionsAndBlockFrom(openLine: Option[String], moreLinesIter: PollingIterator[String],
-	                                      refMap: Map[String, Reference]) =
+	                                   refMap: Map[String, Reference]) =
 	{
 		// Case: Instance block starts on the first line
 		if (openLine.exists { _.contains('{') })

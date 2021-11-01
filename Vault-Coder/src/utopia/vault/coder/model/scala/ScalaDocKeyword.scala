@@ -33,6 +33,14 @@ sealed trait ScalaDocKeyword extends SelfComparable[ScalaDocKeyword]
 
 object ScalaDocKeyword
 {
+	val values = Vector[ScalaDocKeyword](Param, TypeParam, Return, Author, Since)
+	
+	/**
+	  * @param keywordString Searched keyword string (not including @)
+	  * @return The keyword that matches that string
+	  */
+	def matching(keywordString: String) = values.find { _.keywordString == keywordString }
+	
 	/**
 	  * Keyword for describing function parameters
 	  */
