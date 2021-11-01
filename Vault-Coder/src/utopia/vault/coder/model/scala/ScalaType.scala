@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.scala
 
+import utopia.vault.coder.model.scala.ScalaTypeCategory.{CallByName, Standard}
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.template.ScalaConvertible
 
@@ -82,29 +83,33 @@ object ScalaType
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-case class ScalaType(data: Either[String, Reference], typeParameters: Vector[ScalaType] = Vector())
+case class ScalaType(data: Either[String, Reference], typeParameters: Vector[ScalaType] = Vector(),
+                     category: ScalaTypeCategory = Standard)
 	extends ScalaConvertible
 {
-	// COMPUTED ---------------------------------
+	// ATTRIBUTES   ------------------------------
 	
-	/*
-	  * @return Reference used by this type. None if not referring to any external type.
-	  */
-	// def references: Set[Reference] = typeParameters.flatMap { _.references }.toSet ++ data.toOption
-	
-	
-	// IMPLEMENTED  -----------------------------
-	
-	override def toScala =
+	override lazy val toScala: CodePiece =
 	{
 		val base = data match
 		{
 			case Left(basic) => CodePiece(basic)
 			case Right(reference) => CodePiece(reference.target, Set(reference))
 		}
-		if (typeParameters.isEmpty)
-			base
-		else
-			base + typeParameters.map { _.toScala }.reduceLeft { _.append(_, ", ") }.withinSquareBrackets
+		val withTypeParams = {
+			if (typeParameters.isEmpty)
+				base
+			else
+				base + typeParameters.map { _.toScala }.reduceLeft { _.append(_, ", ") }.withinSquareBrackets
+		}
+		category match
+		{
+			case Standard => withTypeParams
+			case CallByName => withTypeParams.withPrefix("=> ")
+			case ScalaTypeCategory.Function(parameterTypes) =>
+				val parameterList = if (parameterTypes.isEmpty) CodePiece("()") else
+					parameterTypes.map { _.toScala }.reduceLeft { _.append(_, ", ") }.withinParenthesis
+				parameterList.append(withTypeParams, " => ")
+		}
 	}
 }

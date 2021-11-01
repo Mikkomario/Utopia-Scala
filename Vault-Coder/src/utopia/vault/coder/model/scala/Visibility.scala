@@ -27,7 +27,6 @@ object Visibility
 			case _ => 1
 		}
 	}
-	
 	/**
 	  * Declares that an item is only visible within the class
 	  */
@@ -43,7 +42,6 @@ object Visibility
 			case _ => -1
 		}
 	}
-	
 	/**
 	  * Declares that an item is visible only within the class and its sub-classes
 	  */

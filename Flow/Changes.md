@@ -13,6 +13,8 @@
   - Added a couple variants of `.without(...)` which removes multiple attributes based on their names
 - **Range** (**CollectionExtensions**)
   - Added `.exclusiveEnd`
+- **Regex**
+  - Added `.firstRangeFrom(String)`
 - **StdIn** (**ConsoleExtensions**)
   - Added `.readValidOrEmpty(...)`, which interacts with the user in order to find a valid value
 ### Other Changes

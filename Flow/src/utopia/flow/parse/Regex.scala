@@ -276,6 +276,11 @@ case class Regex(string: String)
 	  * @return All character ranges within that string that match this regular expression
 	  */
 	def rangesFrom(str: String) = rangesIteratorIn(str).toVector
+	/**
+	  * @param str A string
+	  * @return The first range matching this regular expression in that string, if found
+	  */
+	def firstRangeFrom(str: String) = rangesIteratorIn(str).nextOption()
 	
 	/**
 	 * Splits the specified string using this regex
