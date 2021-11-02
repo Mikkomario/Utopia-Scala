@@ -46,16 +46,16 @@ object ScalaParser
 	private lazy val scalaDocStartRegex = Regex("\\/\\*\\*")
 	private lazy val commentEndRegex = Regex("\\*\\/")
 	private lazy val segmentSeparatorRegex = Regex.upperCaseLetter.oneOrMoreTimes +
-		Regex.escape('\t').oneOrMoreTimes + Regex.escape('-').oneOrMoreTimes
+		(Regex.escape('\t') || Regex.whiteSpace).withinParenthesis.oneOrMoreTimes +
+		Regex.escape('-').oneOrMoreTimes
 	
 	def apply(path: Path) =
 	{
 		IterateLines.fromPath(path) { linesIter =>
-			// TODO: Remove test prints
-			val iter = linesIter.map { line =>
+			val iter = linesIter.pollable /*linesIter.map { line =>
 				println("Reading: " + line)
 				line
-			}.pollable
+			}.pollable*/
 			
 			// Searches for package declaration first
 			val filePackageString = iter.pollToNextWhere { _.nonEmpty }.filter(packageRegex.apply) match
@@ -65,21 +65,21 @@ object ScalaParser
 					packageLine.afterFirst("package ")
 				case None => ""
 			}
-			println(s"Read package: $filePackageString")
+			// println(s"Read package: $filePackageString")
 			
 			// Next looks for import statements
 			val importStatements = iter.collectWhile { line => line.isEmpty || importRegex(line) }
 				.filter { _.nonEmpty }
 				.map { _.afterFirst("import ") }
 				.flatMap { importString =>
-					println(s"Read import: $importString")
+					// println(s"Read import: $importString")
 					if (importString.contains('{'))
 					{
 						val (basePart, endPart) = importString.splitAtFirst("{")
 						val trimmedBase = basePart.trim
 						val endItems = endPart.untilFirst("}").split(',').toVector.map { _.trim }
-						println(s"Which is split into ${endItems.size} parts after $trimmedBase (${
-							endItems.mkString(", ")})")
+						//println(s"Which is split into ${endItems.size} parts after $trimmedBase (${
+						//	endItems.mkString(", ")})")
 						endItems.map { trimmedBase + _ }
 					}
 					else
@@ -108,20 +108,22 @@ object ScalaParser
 			val referencesPerTarget = separatedImportStatements
 				.map { case (packageString, target) => target -> Reference(packagePerString(packageString), target) }
 				.toMap
-			println(s"Read ${packagePerString.size} packages and ${referencesPerTarget.size} references")
+			// println(s"Read ${packagePerString.size} packages and ${referencesPerTarget.size} references")
 			
 			// Finally, finds and processes the object and/or class statements
-			val builder = new FileBuilder(Package(filePackageString))
-			println(s"Poll before mapping: ${iter.poll}")
+			// Implicit references are included in the resulting file directly
+			val builder = new FileBuilder(Package(filePackageString),
+				referencesPerTarget.valuesIterator.filter { _.target.contains('_') }.toSet)
+			// println(s"Poll before mapping: ${iter.poll}")
 			val codeLineIterator = iter.map { line =>
 				val indentation = line.takeWhile { _ == '\t' }.length
 				CodeLine(indentation, line.drop(indentation))
 			}.pollable
-			println(s"Poll after mapping: ${codeLineIterator.poll}")
-			println("Reading the instance data...")
+			// println(s"Poll after mapping: ${codeLineIterator.poll}")
+			// println("Reading the instance data...")
 			readAllItemsFrom(codeLineIterator, referencesPerTarget, builder)
 			// Returns the parsed file
-			builder.result() -> referencesPerTarget.valuesIterator.toSet
+			builder.result()
 		}
 	}
 	
@@ -131,7 +133,7 @@ object ScalaParser
 		var continue = true
 		while (linesIter.hasNext && continue)
 		{
-			println("Continuing to read the next item...")
+			// println("Continuing to read the next item...")
 			continue = readNextItemFrom(linesIter, refMap, parentBuilder)
 		}
 	}
@@ -147,7 +149,7 @@ object ScalaParser
 		
 		// Checks what the next non-empty line looks like
 		startingLines.lastOption.exists { firstLine =>
-			println(s"Item starts from: $firstLine")
+			// println(s"Item starts from: $firstLine")
 			// Processes the scaladoc block if there is one
 			val (scalaDoc, afterScalaDocLine) = {
 				if (scalaDocStartRegex.existsIn(firstLine.code))
@@ -177,7 +179,7 @@ object ScalaParser
 				}
 				else
 					ScalaDoc.empty -> firstLine
-			}
+			}/*
 			if (scalaDoc.isEmpty)
 			{
 				println("No scaladoc read")
@@ -187,12 +189,12 @@ object ScalaParser
 			{
 				println(s"Read scaladoc with ${scalaDoc.parts.size} parts")
 				println(s"Next line: $afterScalaDocLine")
-			}
+			}*/
 			// Collects lines before the first declaration, if necessary
 			val (beforeDeclarationLines, declarationLine) = {
 				if (namedDeclarationStartRegex.existsIn(afterScalaDocLine.code))
 				{
-					println("First line was found to be a declaration")
+					// println("First line was found to be a declaration")
 					Vector() -> Some(afterScalaDocLine)
 				}
 				else
@@ -201,8 +203,8 @@ object ScalaParser
 						linesIter.collectUntil { line => namedDeclarationStartRegex.existsIn(line.code) })
 						.dropWhile { _.isEmpty }.dropRightWhile { _.isEmpty } -> linesIter.nextOption()
 			}
-			if (beforeDeclarationLines.nonEmpty)
-				println(s"Read ${beforeDeclarationLines.size} lines that were not included in a declaration")
+			// if (beforeDeclarationLines.nonEmpty)
+			// 	println(s"Read ${beforeDeclarationLines.size} lines that were not included in a declaration")
 			declarationLine match
 			{
 				// Case: Declaration found => parses it
@@ -219,11 +221,13 @@ object ScalaParser
 					val filteredComments = beforeDeclarationComments.filter { !segmentSeparatorRegex(_) }
 					parentBuilder.addFreeCode(beforeDeclarationCode
 						.dropWhile { _.isEmpty }.dropRightWhile { _.isEmpty })
+					/*
 					println(s"Read declaration line: ${declarationLine.code}")
 					if (filteredComments.nonEmpty)
 						println(s"Read ${filteredComments.size} comments before the declaration")
 					if (beforeDeclarationCode.nonEmpty)
 						println(s"Read ${beforeDeclarationLines.size} lines of code before the declaration started")
+					*/
 					// Identifies the declaration in question
 					val declarationStartRange = namedDeclarationStartRegex.firstRangeFrom(declarationLine.code).get
 					val declarationStart = declarationLine.code.slice(declarationStartRange)
@@ -243,25 +247,27 @@ object ScalaParser
 						else
 							Public
 					}
-					println(s"Interpreted: $visibility ${prefixes.mkString(" ")} ${
-						declarationType.keyword} $declarationName")
+					//println(s"Interpreted: $visibility ${prefixes.mkString(" ")} ${
+					//	declarationType.keyword} $declarationName")
 					// Parses parameter lists, if needed
 					val (parameters, afterParameterLists) = {
 						if (declarationType.acceptsParameterList && afterDeclarationStart.startsWith("(")) {
 							val (rawLists, remaining) = readRawParameterLists(afterDeclarationStart, linesIter)
-							val parameters = parametersFrom(rawLists.map { _.mkString }, refMap, scalaDoc)
+							//println(s"Reading parameter list from ${
+							//	rawLists.map { list => s"'$list'" }.mkString(" & ")} (${rawLists.size} lists) - remaining: '$remaining'")
+							val parameters = parametersFrom(rawLists, refMap, scalaDoc)
 							Some(parameters) -> remaining
 						}
 						else
 							None -> afterDeclarationStart.trim.notEmpty
 					}
-					parameters.foreach { p => println(s"Read ${p.lists.size} parameter lists and ${
-						p.implicits.size} implicit parameters") }
+					//parameters.foreach { p => println(s"Read ${p.lists.size} parameter lists and ${
+					//	p.implicits.size} implicit parameters - remaining: '${afterParameterLists.getOrElse("")}'") }
 					// Handles functions and instances differently
 					declarationType match
 					{
 						case declarationType: FunctionDeclarationType =>
-							println("Interpreted as a function declaration")
+							// println("Interpreted as a function declaration")
 							// Checks whether explicit parameter type has been specified
 							val (explicitType, declarationEnd) = explicitTypeFrom(
 								afterParameterLists.getOrElse(""), refMap)
@@ -331,7 +337,7 @@ object ScalaParser
 							}
 							true
 						case declarationType: InstanceDeclarationType =>
-							println("Interpreted as an instance declaration")
+							// println("Interpreted as an instance declaration")
 							// Looks for extends portion
 							// The instance body is always expected to be wrapped in a block,
 							// which is processed separately
@@ -442,6 +448,9 @@ object ScalaParser
 	
 	private def extensionsFrom(lines: Vector[String], refMap: Map[String, Reference]): Vector[Extension] =
 	{
+		// println("Reading extensions from:")
+		// lines.foreach(println)
+		
 		// Finds the line that contains the extends -keyword
 		lines.indexWhereOption { line => extendsRegex.existsIn(line) || line.startsWith("extends ") ||
 			line.endsWith(" extends") } match
@@ -452,9 +461,11 @@ object ScalaParser
 				// Individual extensions are separated with a " with "
 				val parts = withRegex.split((firstLineRemain +: lines.drop(firstLineIndex + 1)).mkString(" "))
 					.map { _.trim }.toVector
+				// println(s"Found following parts: ${ parts.mkString(" & ") }")
 				parts.map { partString =>
 					// Parses the parent type
 					val (parentType, afterType) = scalaTypeFrom(partString, refMap)
+					// println(s"Found $parentType from $partString - remaining: '$afterType'")
 					// Checks whether a constructor list should be included
 					if (afterType.startsWith("("))
 					{
@@ -462,6 +473,8 @@ object ScalaParser
 						val constructorAssignments = constructorLists
 							.map { commaOutsideParenthesesRegex.split(_).toVector
 								.map { addReferencesToCode(_, refMap) } }
+						// println(s"Read constructor list: ${
+						// 	constructorAssignments.map { list => s"(${list.mkString(", ")})" }.mkString }")
 						Extension(parentType, constructorAssignments)
 					}
 					else
@@ -477,13 +490,18 @@ object ScalaParser
 	
 	private def explicitTypeFrom(string: String, refMap: Map[String, Reference]) =
 	{
+		// println(s"Reading explicit type from '$string'")
 		if (string.startsWith(":"))
 		{
 			val (dataType, remaining) = scalaTypeFrom(string.drop(1).trim, refMap)
+			// println(s"Found explicit type '$dataType' - remaining: '$remaining'")
 			Some(dataType) -> remaining
 		}
 		else
+		{
+			// println("No explicit type found")
 			None -> string
+		}
 	}
 	
 	private def parametersFrom(parameterListStrings: Vector[String], refMap: Map[String, Reference],
@@ -527,7 +545,7 @@ object ScalaParser
 	
 	private def nextParameterFrom(string: String, refMap: Map[String, Reference], scalaDoc: ScalaDoc) =
 	{
-		println(s"Parsing next parameter from: '$string'")
+		// println(s"Parsing next parameter from: '$string'")
 		
 		// Parses name and data type
 		val (namePart, remaining) = string.splitAtFirst(":")
@@ -547,39 +565,43 @@ object ScalaParser
 		}
 		// Reads parameter description from the scaladoc
 		val description = scalaDoc.param(name)
-		
+		/*
 		prefix.foreach { prefix => println(s"Parsed prefix: $prefix") }
 		println(s"Parsed $name (from $trimmedNamePart)")
 		println(s"Parsed type $dataType")
-		
+		*/
 		// Case: Parameter has a default value
 		if (afterType.startsWith("="))
 			commaOutsideParenthesesRegex.startIndexIteratorIn(afterType).nextOption() match
 			{
 				// Case: There remains yet another parameter
 				case Some(nextCommaIndex) =>
-					println(s"Found default value: ${afterType.slice(1, nextCommaIndex).trim}")
-					println("Continuing to the next parameter after the comma")
+					//println(s"Found default value: ${afterType.slice(1, nextCommaIndex).trim}")
+					//println("Continuing to the next parameter after the comma")
 					Parameter(name, dataType, afterType.slice(1, nextCommaIndex).trim, prefix, description) ->
 						afterType.drop(nextCommaIndex)
 				// Case: This was the last parameter
 				case None =>
-					println(s"Read the rest (${afterType.drop(1).trim}) as the default value")
+					//println(s"Read the rest (${afterType.drop(1).trim}) as the default value")
 					Parameter(name, dataType, afterType.drop(1).trim, prefix, description) -> ""
 			}
 		// Case: No default value provided
 		else
 		{
-			println(s"No type parameter found. Leaves following code: '$afterType'")
+			//println(s"No parameter default value found. Leaves following code: '$afterType'")
 			Parameter(name, dataType, prefix = prefix, description = description) -> afterType
 		}
 	}
 	
 	private def scalaTypeFrom(string: String, refMap: Map[String, Reference]): (ScalaType, String) =
 	{
+		//println(s"Parsing scala type from: '$string'")
+		
 		// Case: Starts with parentheses => Leads to either tuple or function type
 		if (string.startsWith("("))
 		{
+			//println("Tuple type")
+			
 			val (parenthesisPart, remainingPart) = readOneLineParentheses(string.drop(1))
 			// Parses types within the parentheses
 			val (parenthesesTypes, _) = scalaTypesFrom(parenthesisPart, refMap)
@@ -603,10 +625,12 @@ object ScalaParser
 			// Checks whether this is a call-by-name type
 			val (mainPart, isCallByName) = if (string.startsWith("=>")) string.afterFirst("=>").trim -> true else
 				string -> false
+			//println(s"Type main part is '$mainPart'. Call by name: $isCallByName")
 			// Parses the type name until generic types list or some interrupting character
 			val mainPartEndIndex = mainPart.indexWhere { c => !c.isLetterOrDigit && c != '_' }
 			val (mainTypeString, remaining) = if (mainPartEndIndex < 0) mainPart -> "" else
 				mainPart.take(mainPartEndIndex) -> mainPart.drop(mainPartEndIndex)
+			//println(s"Main type is: $mainTypeString - Remaining: $remaining")
 			// Checks whether the main type is referencing a type
 			val mainType = refMap.get(mainTypeString) match
 			{
@@ -616,7 +640,9 @@ object ScalaParser
 			// Parses generic types if available
 			if (remaining.startsWith("["))
 			{
+				//println("Reading generic type parameter list...")
 				val (typesPart, afterTypes) = readOneLineBrackets(remaining.drop(1))
+				//println(s"Types part is '$typesPart' - remaining: $afterTypes")
 				val (types, _) = scalaTypesFrom(typesPart, refMap)
 				ScalaType(mainType, types, if (isCallByName) CallByName else Standard) -> afterTypes
 			}
@@ -636,7 +662,7 @@ object ScalaParser
 		var remaining = firstRemain
 		while (remaining.startsWith(","))
 		{
-			val (nextType, nextRemain) = scalaTypeFrom(remaining, refMap)
+			val (nextType, nextRemain) = scalaTypeFrom(remaining.drop(1).trim, refMap)
 			typesBuilder += nextType
 			remaining = nextRemain
 		}
@@ -645,24 +671,28 @@ object ScalaParser
 	
 	// Returns lists as lists of lines
 	private def readRawParameterLists(listStartLine: String,
-	                                  remainingLinesIter: PollingIterator[CodeLine]): (Vector[Vector[String]], Option[String]) =
+	                                  remainingLinesIter: PollingIterator[CodeLine]): (Vector[String], Option[String]) =
 	{
-		val listsBuilder = new VectorBuilder[Vector[String]]()
+		//println(s"Reading parameter list contents starting from line: '$listStartLine'")
+		
+		val listsBuilder = new VectorBuilder[String]()
 		// Code that appears after the initial parameter lists will be stored here
 		var codeAfter: Option[String] = None
 		// Checks whether the first line starts a parameter list
 		if (listStartLine.startsWith("("))
 		{
-			val (list, remainingAfter) = readBlockLike(listStartLine.drop(1), remainingLinesIter,
+			val (listLines, remainingAfter) = readBlockLike(listStartLine.drop(1), remainingLinesIter,
 				'(', ')')
-			listsBuilder += list.map { _.code }
+			//println(s"Immediately started parsing. Found: '${listLines.map { _.code }.mkString}' (${
+			//	listLines.size} lines) - remaining: $remainingAfter")
+			listsBuilder += listLines.map { _.code }.mkString
 			// Collects lists while the remaining part keeps initiating new lists
 			codeAfter = remainingAfter
 			while (codeAfter.exists { _.startsWith("(") })
 			{
-				val (list, remainingAfter) = readBlockLike(codeAfter.get.drop(1), remainingLinesIter,
+				val (listLines, remainingAfter) = readBlockLike(codeAfter.get.drop(1), remainingLinesIter,
 					'(', ')')
-				listsBuilder += list.map { _.code }
+				listsBuilder += listLines.map { _.code }.mkString
 				codeAfter = remainingAfter
 			}
 		}
@@ -677,7 +707,7 @@ object ScalaParser
 					// Case: Next line opens a new parameter list => processes that and the potential lists after
 					if (trimmedNextLine.startsWith("("))
 					{
-						remainingLinesIter.skip()
+						remainingLinesIter.skipPolled()
 						val (nextLists, remaining) = readRawParameterLists(trimmedNextLine, remainingLinesIter)
 						(listsBuilder.result() ++ nextLists) -> remaining
 					}
@@ -722,7 +752,7 @@ object ScalaParser
 				lastLine.code.count { _ == openChar } - lastLine.code.count { _ == closeChar }
 		}
 		// Handles the last line, possibly splitting it to two parts
-		val (lastLineBlockPart, afterPart) = separateBlockClosuresFrom(lastLine, -openBlockCount, closeChar)
+		val (lastLineBlockPart, afterPart) = separateBlockClosuresFrom(lastLine, openBlockCount - 1, closeChar)
 		blockLinesBuilder += lastLineBlockPart
 		// Returns all lines plus the part after the last closure
 		blockLinesBuilder.result() -> Some(afterPart.trim).filter { _.nonEmpty }
@@ -767,17 +797,19 @@ object ScalaParser
 	}
 	
 	// Returns part before the last included closure (without closing character) +
-	// part after last included closure, including 'closuresToSeparate' closing characters
-	private def separateBlockClosuresFrom(line: CodeLine, closuresToSeparate: Int, closeChar: Char) =
+	// part after last included closure
+	// ClosuresToInclude indicates the number of closing characters to include in the first part without cutting it
+	private def separateBlockClosuresFrom(line: CodeLine, closuresToInclude: Int, closeChar: Char) =
 	{
 		val splitIndex = {
-			if (closuresToSeparate <= 0)
-				line.code.lastIndexOf(closeChar)
+			if (closuresToInclude <= 0)
+				line.code.indexOf(closeChar)
 			else
 			{
-				// Closure indices from right to left
-				val closureIndices = line.code.indexOfIterator(closeChar.toString).toVector.reverse
-				closureIndices(closuresToSeparate)
+				// Closure indices from left to right
+				val closureIterator = line.code.indexOfIterator(closeChar.toString)
+				closureIterator.skip(closuresToInclude)
+				closureIterator.next()
 			}
 		}
 		val (lineCode, remainingCode) = line.code.substring(0, splitIndex) -> line.code.substring(splitIndex + 1)

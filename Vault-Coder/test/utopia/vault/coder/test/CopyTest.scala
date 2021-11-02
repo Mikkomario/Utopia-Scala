@@ -16,7 +16,7 @@ import scala.io.{Codec, StdIn}
   */
 object CopyTest extends App
 {
-	// Metropolis\src\utopia\metropolis\model\partial\description\DescriptionData.scala
+	// Metropolis\src\utopia\metropolis\model\stored\organization\Organization.scala
 	
 	DataType.setup()
 	implicit val codec: Codec = Codec.UTF8
@@ -34,7 +34,7 @@ object CopyTest extends App
 	else
 	{
 		println(s"Parsing scala code from ${path.toAbsolutePath}...")
-		val (file, imports) = ScalaParser(path).get
+		val file = ScalaParser(path).get
 		println(s"File read.")
 		println(s"Read ${file.declarations.size} instance declarations")
 		val defaultPath = path.withMappedFileName { _.untilLast(".") + "-copy.scala" }

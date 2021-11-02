@@ -1,9 +1,13 @@
 package utopia.vault.coder.model.scala.declaration
 
+import utopia.flow.util.StringExtensions._
+import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.Visibility.{Protected, Public}
 import utopia.vault.coder.model.scala.{Parameter, Parameters, ScalaType, Visibility}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+
+import scala.collection.immutable.VectorBuilder
 
 object PropertyDeclaration
 {
@@ -34,7 +38,7 @@ case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: S
                                implicitParams: Vector[Parameter] = Vector(), description: String = "",
                                headerComments: Vector[String] = Vector(),
                                isOverridden: Boolean = false)
-	extends FunctionDeclaration
+	extends FunctionDeclaration with Mergeable[PropertyDeclaration, PropertyDeclaration]
 {
 	// COMPUTED -------------------------------------------
 	
@@ -57,4 +61,29 @@ case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: S
 	
 	override protected def params =
 		if (implicitParams.nonEmpty) Some(Parameters(implicits = implicitParams)) else None
+	
+	override def mergeWith(other: PropertyDeclaration) =
+	{
+		val conflictsBuilder = new VectorBuilder[MergeConflict]()
+		// Checks whether the base declaration is the same
+		val myBase = basePart
+		val theirBase = other.basePart
+		if (myBase != theirBase)
+			conflictsBuilder += MergeConflict.line(theirBase.text, myBase.text, s"$name declarations differ")
+		// FIXME: This yields consistently wrong results
+		if (bodyCode != other.bodyCode)
+			conflictsBuilder ++= bodyCode.conflictWith(other.bodyCode, s"$name implementation differs")
+		if (explicitOutputType.exists { myType => other.explicitOutputType.exists { _ != myType } })
+			conflictsBuilder += MergeConflict.line(other.explicitOutputType.get.toString,
+				explicitOutputType.get.toString, "Implementations specify different return type")
+		
+		PropertyDeclaration(declarationType, name, bodyCode, visibility min other.visibility,
+			explicitOutputType.orElse(other.explicitOutputType),
+			implicitParams ++
+				other.implicitParams.filterNot { p => implicitParams.exists { _.dataType == p.dataType } },
+			description.notEmpty.getOrElse(other.description),
+			headerComments ++ other.headerComments.filterNot(headerComments.contains),
+			isOverridden || other.isOverridden
+		) -> conflictsBuilder.result()
+	}
 }

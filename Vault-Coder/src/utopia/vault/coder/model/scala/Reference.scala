@@ -5,6 +5,8 @@ import utopia.vault.coder.model.scala.template.ScalaConvertible
 import utopia.vault.coder.model.data.ProjectSetup
 import utopia.vault.coder.model.scala.code.CodePiece
 
+import java.nio.file.Path
+
 object Reference
 {
 	import Package._
@@ -155,16 +157,7 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	  * @param setup Implicit project setup
 	  * @return Path to the referenced file
 	  */
-	def path(implicit setup: ProjectSetup) =
-	{
-		val (packagePart, classPart) = importTarget.splitAtLast(".")
-		// Case: There are no two parts in the target => Uses the only part as the file name
-		if (classPart.isEmpty)
-			packagePath.pathTo(packagePart)
-		// Case: Target consists of multiple parts => appends the package part to the package path (directory path)
-		else
-			(packagePath/packagePart).pathTo(classPart)
-	}
+	def path(implicit setup: ProjectSetup) = pathIn(setup.sourceRoot)
 	
 	
 	// OTHER    --------------------------------
@@ -192,6 +185,21 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	  * @return A copy of this reference, relative to that package
 	  */
 	def from(packagePath: Package) = copy(packagePath = this.packagePath.fromPerspectiveOf(packagePath))
+	
+	/**
+	  * @param sourceRoot Root directory
+	  * @return Path to the referenced file
+	  */
+	def pathIn(sourceRoot: Path) =
+	{
+		val (packagePart, classPart) = importTarget.splitAtLast(".")
+		// Case: There are no two parts in the target => Uses the only part as the file name
+		if (classPart.isEmpty)
+			packagePath.pathTo(packagePart, sourceRoot)
+		// Case: Target consists of multiple parts => appends the package part to the package path (directory path)
+		else
+			(packagePath/packagePart).pathTo(classPart, sourceRoot)
+	}
 	
 	
 	// IMPLEMENTED  ----------------------------

@@ -1,5 +1,7 @@
 package utopia.vault.coder.model.scala.code
 
+import utopia.flow.util.CollectionExtensions._
+import utopia.vault.coder.model.merging.MergeConflict
 import utopia.vault.coder.model.scala.Reference
 import utopia.vault.coder.model.scala.template.{CodeConvertible, Referencing}
 
@@ -139,4 +141,20 @@ case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set()) ext
 	  * @return A prefixed copy of this code
 	  */
 	def prependAll(prefix: String) = if (prefix.isEmpty) this else mapLines { _.prepend(prefix) }
+	
+	/**
+	  * @param other Another code
+	  * @param description Conflict description
+	  * @return Merge conflict between these two codes
+	  */
+	def conflictWith(other: Code, description: => String = "") =
+	{
+		val conflictLines =
+			lines.zip(other.lines).dropWhile { case (a, b) => a.code != b.code }
+				.dropRightWhile { case (a, b) => a.code != b.code }
+		if (conflictLines.nonEmpty)
+			Some(MergeConflict(conflictLines.map { _._2 }, conflictLines.map { _._1 }, description))
+		else
+			None
+	}
 }

@@ -1,8 +1,12 @@
 package utopia.vault.coder.model.scala.declaration
 
+import utopia.flow.util.StringExtensions._
+import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.Visibility.Public
 import utopia.vault.coder.model.scala.{Parameters, Reference, ScalaType, Visibility}
+
+import scala.collection.immutable.VectorBuilder
 
 object MethodDeclaration
 {
@@ -47,9 +51,32 @@ object MethodDeclaration
 case class MethodDeclaration(visibility: Visibility, name: String, parameters: Parameters, bodyCode: Code,
                              explicitOutputType: Option[ScalaType], description: String, returnDescription: String,
                              headerComments: Vector[String], isOverridden: Boolean)
-	extends FunctionDeclaration
+	extends FunctionDeclaration with Mergeable[MethodDeclaration, MethodDeclaration]
 {
 	override def keyword = "def"
 	
 	override protected def params = Some(parameters)
+	
+	override def mergeWith(other: MethodDeclaration) =
+	{
+		val conflictsBuilder = new VectorBuilder[MergeConflict]()
+		val myBase = basePart
+		val theirBase = other.basePart
+		if (myBase != theirBase)
+			conflictsBuilder += MergeConflict.line(theirBase.text, myBase.text, s"$name declarations differ")
+		if (parameters != other.parameters)
+			conflictsBuilder += MergeConflict.line(other.parameters.toString, parameters.toString,
+				s"$name parameters differ")
+		if (bodyCode != other.bodyCode)
+			conflictsBuilder ++= bodyCode.conflictWith(other.bodyCode, s"$name implementations differ")
+		if (explicitOutputType.exists { myType => other.explicitOutputType.exists { _ != myType } })
+			conflictsBuilder += MergeConflict.line(other.explicitOutputType.get.toString,
+				explicitOutputType.get.toString, s"$name implementations specify different return types")
+		
+		MethodDeclaration(visibility min other.visibility, name, parameters, bodyCode,
+			explicitOutputType.orElse(other.explicitOutputType), description.notEmpty.getOrElse(other.description),
+			returnDescription.notEmpty.getOrElse(other.returnDescription),
+			headerComments ++ other.headerComments.filterNot(headerComments.contains),
+			isOverridden || other.isOverridden) -> conflictsBuilder.result()
+	}
 }

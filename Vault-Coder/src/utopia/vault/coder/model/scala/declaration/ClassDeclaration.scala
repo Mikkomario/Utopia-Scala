@@ -28,4 +28,11 @@ case class ClassDeclaration(name: String, constructionParams: Parameters = Param
 	}
 	
 	override protected def constructorParams = Some(constructionParams)
+	
+	override protected def makeCopy(visibility: Visibility, extensions: Vector[Extension], creationCode: Code,
+	                                properties: Vector[PropertyDeclaration], methods: Set[MethodDeclaration],
+	                                nested: Set[InstanceDeclaration], description: String, author: String,
+	                                headerComments: Vector[String]) =
+		ClassDeclaration(name, constructionParams, extensions, creationCode, properties, methods, nested, visibility,
+			description, author, headerComments)
 }

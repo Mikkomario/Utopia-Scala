@@ -34,6 +34,7 @@
         "props": [
           {
             "name": "orderIndex",
+            "name_plural": "orderIndices",
             "type": "Int",
             "index": true,
             "doc": "Index used for ordering between language familiarities, where lower values mean higher familiarity"

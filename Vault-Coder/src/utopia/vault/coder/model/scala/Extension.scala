@@ -20,6 +20,14 @@ object Extension
 case class Extension(parentType: ScalaType, constructionAssignments: Vector[Vector[CodePiece]] = Vector())
 	extends ScalaConvertible
 {
+	// COMPUTED -----------------------------------------
+	
+	/**
+	  * @return Whether this extension specifies a constructor call
+	  */
+	def hasConstructor = constructionAssignments.nonEmpty
+	
+	
 	// IMPLEMENTED  -------------------------------------
 	
 	override def toScala =

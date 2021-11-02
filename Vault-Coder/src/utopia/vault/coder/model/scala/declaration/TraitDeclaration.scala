@@ -21,4 +21,11 @@ case class TraitDeclaration(name: String, extensions: Vector[Extension] = Vector
 	override def creationCode = Code.empty
 	
 	override def keyword = if (isSealed) "sealed trait" else "trait"
+	
+	override protected def makeCopy(visibility: Visibility, extensions: Vector[Extension], creationCode: Code,
+	                                properties: Vector[PropertyDeclaration], methods: Set[MethodDeclaration],
+	                                nested: Set[InstanceDeclaration], description: String, author: String,
+	                                headerComments: Vector[String]) =
+		TraitDeclaration(name, extensions, properties, methods, nested, visibility, description, author,
+			headerComments, isSealed)
 }

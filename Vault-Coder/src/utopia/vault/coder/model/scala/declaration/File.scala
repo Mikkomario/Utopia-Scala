@@ -1,11 +1,15 @@
 package utopia.vault.coder.model.scala.declaration
 
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.FileExtensions._
 import utopia.vault.coder.controller.CodeBuilder
+import utopia.vault.coder.controller.reader.ScalaParser
 import utopia.vault.coder.model.data.ProjectSetup
+import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
 import utopia.vault.coder.model.scala.{Package, Reference}
 import utopia.vault.coder.model.scala.template.CodeConvertible
 
+import scala.collection.immutable.VectorBuilder
 import scala.io.Codec
 
 object File
@@ -19,7 +23,7 @@ object File
 	  */
 	def apply(packagePath: Package, firstDeclaration: InstanceDeclaration,
 	          moreDeclarations: InstanceDeclaration*): File =
-		apply(packagePath, firstDeclaration +: moreDeclarations.toVector)
+		apply(packagePath, firstDeclaration +: moreDeclarations.toVector, Set[Reference]())
 }
 
 /**
@@ -27,8 +31,8 @@ object File
   * @author Mikko Hilpinen
   * @since 31.8.2021, v0.1
   */
-case class File(packagePath: Package, declarations: Vector[InstanceDeclaration])
-	extends CodeConvertible
+case class File(packagePath: Package, declarations: Vector[InstanceDeclaration], extraReferences: Set[Reference])
+	extends CodeConvertible with Mergeable[File, File]
 {
 	// COMPUTED --------------------------------------
 	
@@ -60,7 +64,7 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration])
 		
 		// Writes the imports
 		// Doesn't write references that are in the same package. Also simplifies imports in nested packages
-		val referencesToWrite = mainCode.references
+		val referencesToWrite = (mainCode.references ++ extraReferences)
 			.filter { ref => ref.packagePath != packagePath || !ref.canBeGrouped }
 			.map { _.from(packagePath) }
 		// Those of the imports which can be grouped, are grouped
@@ -80,6 +84,29 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration])
 		refsBuilder.result() ++ mainCode.split
 	}
 	
+	override def mergeWith(other: File) =
+	{
+		val conflictsBuilder = new VectorBuilder[MergeConflict]()
+		
+		if (packagePath != other.packagePath)
+			conflictsBuilder += MergeConflict.line(other.packagePath.toString, packagePath.toString,
+				"Package differs")
+		
+		// Merges instances with same names
+		val newDeclarations = declarations.map { my =>
+			other.declarations.find { theirs => theirs.name == my.name && theirs.keyword == my.keyword } match {
+				case Some(otherVersion) =>
+					val (merged, conflicts) = my.mergeWith(otherVersion)
+					conflictsBuilder ++= conflicts
+					merged
+				case None => my
+			}
+		} ++ other.declarations
+			.filterNot { their => declarations.exists { my => my.name == their.name && my.keyword == their.keyword } }
+		
+		File(packagePath, newDeclarations, extraReferences ++ other.extraReferences) -> conflictsBuilder.result()
+	}
+	
 	
 	// OTHER    ----------------------------
 	
@@ -92,6 +119,18 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration])
 	def write()(implicit codec: Codec, setup: ProjectSetup) =
 	{
 		val ref = reference
-		writeTo(ref.path).map { _ => ref }
+		// Checks whether this file needs to be merged with an existing file
+		val fileToWrite = setup.mergeSourceRoots.findMap { root => Some(ref.pathIn(root)).filter { _.exists } }
+			.flatMap { ScalaParser(_).toOption } match
+		{
+			case Some(readVersion) =>
+				// Merges these two files.
+				// Records conflicts, also
+				val (newFile, conflicts) = mergeWith(readVersion)
+				setup.recordConflicts(conflicts, s"${ref.target} in $packagePath")
+				newFile
+			case None => this
+		}
+		fileToWrite.writeTo(ref.path).map { _ => ref }
 	}
 }

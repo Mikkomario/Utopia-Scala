@@ -19,4 +19,11 @@ case class ObjectDeclaration(name: String, extensions: Vector[Extension] = Vecto
 	override def keyword = if (isCaseObject) "case object" else "object"
 	
 	override protected def constructorParams = None
+	
+	override protected def makeCopy(visibility: Visibility, extensions: Vector[Extension], creationCode: Code,
+	                                properties: Vector[PropertyDeclaration], methods: Set[MethodDeclaration],
+	                                nested: Set[InstanceDeclaration], description: String, author: String,
+	                                headerComments: Vector[String]) =
+		ObjectDeclaration(name, extensions, creationCode, properties, methods, nested, visibility, description,
+			author, headerComments, isCaseObject)
 }

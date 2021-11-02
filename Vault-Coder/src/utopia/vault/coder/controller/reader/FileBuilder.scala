@@ -1,6 +1,6 @@
 package utopia.vault.coder.controller.reader
 
-import utopia.vault.coder.model.scala.Package
+import utopia.vault.coder.model.scala.{Package, Reference}
 import utopia.vault.coder.model.scala.code.CodeLine
 import utopia.vault.coder.model.scala.declaration.{File, InstanceDeclaration, MethodDeclaration, PropertyDeclaration}
 
@@ -12,7 +12,8 @@ import scala.collection.mutable
   * @author Mikko Hilpinen
   * @since 2.11.2021, v
   */
-class FileBuilder(filePackage: Package) extends mutable.Builder[InstanceDeclaration, File] with InstanceBuilderLike
+class FileBuilder(filePackage: Package, extraReferences: Set[Reference])
+	extends mutable.Builder[InstanceDeclaration, File] with InstanceBuilderLike
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -23,7 +24,7 @@ class FileBuilder(filePackage: Package) extends mutable.Builder[InstanceDeclarat
 	
 	override def clear() = instancesBuilder.clear()
 	
-	override def result() = File(filePackage, instancesBuilder.result())
+	override def result() = File(filePackage, instancesBuilder.result(), extraReferences)
 	
 	override def addOne(elem: InstanceDeclaration) =
 	{

@@ -2,6 +2,7 @@ package utopia.vault.coder.main
 
 import utopia.flow.generic.DataType
 import utopia.flow.parse.{JSONReader, JsonParser}
+import utopia.flow.time.Today
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.util.FileExtensions._
@@ -14,6 +15,7 @@ import utopia.vault.coder.model.data.{Class, ClassReferences, Filter, ProjectDat
 import utopia.vault.coder.model.scala.Reference
 
 import java.nio.file.{Path, Paths}
+import java.time.LocalTime
 import scala.io.{Codec, StdIn}
 import scala.util.{Failure, Success, Try}
 
@@ -38,9 +40,12 @@ object VaultCoderApp extends App
 		ArgumentSchema("target", "filter",
 			help = "Search filter applied to written classes and/or enums (case-insensitive)"),
 		ArgumentSchema("type", "group", help = "Specifies the group of items to write (all, class, enums or package)"),
+		ArgumentSchema("merge", help = "Source origin where merge input files are read from"),
 		ArgumentSchema.flag("all", "A", help = "Flag for selecting group 'all'"),
-		ArgumentSchema.flag("single", "S", help = "Flag for limiting filter results to exact matches")),
+		ArgumentSchema.flag("single", "S", help = "Flag for limiting filter results to exact matches"),
+		ArgumentSchema.flag("merging", "M", help = "Flag for enabling merge mode")),
 		args.toVector)
+	val startTime = LocalTime.now()
 	
 	// Writes hints and warnings
 	if (arguments.unrecognized.nonEmpty)
@@ -147,6 +152,54 @@ object VaultCoderApp extends App
 		}
 	}
 	
+	lazy val mainMergeRoot = arguments("merge").string match {
+		case Some(mergeRoot) =>
+			val mergeRootPath = path(mergeRoot)
+			if (mergeRootPath.exists)
+				Some(mergeRootPath)
+			else
+			{
+				println(s"Specified merge source root path ${mergeRootPath.toAbsolutePath} doesn't exist")
+				None
+			}
+		case None =>
+			if (arguments("merging").getBoolean)
+			{
+				println("Please specify path to the existing source root directory (src)")
+				println(s"Hint: Path may be absolute or relative to ${rootPath.getOrElse(Paths.get("")).toAbsolutePath}")
+				StdIn.readNonEmptyLine().flatMap { input =>
+					val mergeRoot = path(input)
+					if (mergeRoot.exists)
+						Some(mergeRoot)
+					else
+					{
+						println(s"Specified path ${mergeRoot.toAbsolutePath} doesn't exist")
+						None
+					}
+				}
+			}
+			else
+				None
+	}
+	lazy val alternativeMergeRoot: Option[Path] = {
+		if (mainMergeRoot.isDefined) {
+			println("If you want, please specify the alternative merge source path for the other part of the project")
+			println(s"The path may be absolute or relative to ${rootPath.getOrElse(Paths.get("")).toAbsolutePath}")
+			StdIn.readNonEmptyLine().flatMap { input =>
+				val mergeRoot = path(input)
+				if (mergeRoot.exists)
+					Some(mergeRoot)
+				else
+				{
+					println(s"Specified directory ${mergeRoot.toAbsolutePath} didn't exist")
+					None
+				}
+			}
+		}
+		else
+			None
+	}
+	
 	println()
 	println(s"Reading class data from ${inputPath.toAbsolutePath}...")
 	
@@ -225,7 +278,7 @@ object VaultCoderApp extends App
 		println()
 		println(s"Writing class and enumeration data to ${outputPath.toAbsolutePath}...")
 		
-		outputPath.asExistingDirectory.flatMap { rootDirectory =>
+		outputPath.asExistingDirectory.flatMap { directory =>
 			// Handles one project at a time
 			filteredData.tryForeach { data =>
 				// Makes sure there is something to write
@@ -236,12 +289,14 @@ object VaultCoderApp extends App
 					println(s"Writing ${data.classes.size} classes, ${
 						data.enumerations.size} enumerations and ${
 						data.combinations.size } combinations for project ${data.projectName}")
-					val directory = (rootDirectory/data.projectName).asExistingDirectory
-					directory.flatMap { directory =>
-						implicit val setup: ProjectSetup = ProjectSetup(data.projectName, data.modelPackage,
-							data.databasePackage, directory, data.modelCanReferToDB)
-						write(data)
-					}
+					implicit val setup: ProjectSetup = ProjectSetup(data.projectName, data.modelPackage,
+						data.databasePackage, directory,
+						if (data.modelCanReferToDB) mainMergeRoot.toVector else
+							Vector(mainMergeRoot, alternativeMergeRoot).flatten,
+						directory/s"${data.projectName}-merge-conflicts-${Today.toString}-${startTime.getHour}-${
+							startTime.getMinute}.txt",
+						data.modelCanReferToDB)
+					write(data)
 				}
 			}
 		} match
@@ -258,7 +313,7 @@ object VaultCoderApp extends App
 		// Writes the enumerations
 		data.enumerations.tryMap { EnumerationWriter(_) }
 			// Next writes the SQL declaration and the tables document
-			.flatMap { _ => SqlWriter(data.classes, setup.sourceRoot/"db_structure.sql") }
+			.flatMap { _ => SqlWriter(data.classes, setup.sourceRoot/s"${setup.dbModuleName}-db-structure.sql") }
 			.flatMap { _ => TablesWriter(data.classes) }
 			.flatMap { tablesRef =>
 				DescriptionLinkInterfaceWriter(data.classes, tablesRef).flatMap { descriptionLinkObjects =>
