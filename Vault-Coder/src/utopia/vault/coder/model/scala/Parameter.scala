@@ -19,7 +19,7 @@ case class Parameter(name: String, dataType: ScalaType, default: CodePiece = Cod
 	override def toScala =
 	{
 		val defaultPart = if (default.isEmpty) default else default.withPrefix(" = ")
-		val mainPart = dataType.toScala + defaultPart
+		val mainPart = dataType.toScala.withPrefix(name + ": ") + defaultPart
 		prefix match
 		{
 			case Some(prefix) => prefix.toScala.append(mainPart, " ")

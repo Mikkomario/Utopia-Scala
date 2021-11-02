@@ -45,6 +45,8 @@ object ScalaParser
 	
 	private lazy val scalaDocStartRegex = Regex("\\/\\*\\*")
 	private lazy val commentEndRegex = Regex("\\*\\/")
+	private lazy val segmentSeparatorRegex = Regex.upperCaseLetter.oneOrMoreTimes +
+		Regex.escape('\t').oneOrMoreTimes + Regex.escape('-').oneOrMoreTimes
 	
 	def apply(path: Path) =
 	{
@@ -138,8 +140,13 @@ object ScalaParser
 	private def readNextItemFrom(linesIter: PollingIterator[CodeLine], refMap: Map[String, Reference],
 	                             parentBuilder: InstanceBuilderLike): Boolean =
 	{
+		// Reads lines until there is a scaladoc start or a declaration start
+		val startingLines = linesIter.collectTo { line => scalaDocStartRegex.existsIn(line.code) ||
+			namedDeclarationStartRegex.existsIn(line.code) }.dropWhile { _.isEmpty }
+		val beforeFirstLine = startingLines.dropRight(1)
+		
 		// Checks what the next non-empty line looks like
-		linesIter.nextWhere { _.nonEmpty }.exists { firstLine =>
+		startingLines.lastOption.exists { firstLine =>
 			println(s"Item starts from: $firstLine")
 			// Processes the scaladoc block if there is one
 			val (scalaDoc, afterScalaDocLine) = {
@@ -202,16 +209,19 @@ object ScalaParser
 				case Some(declarationLine) =>
 					// Processes the "free" code before the declaration
 					// - comments will be attached to the parsed declaration
-					val (beforeDeclarationComments, beforeDeclarationCode) = beforeDeclarationLines.dividedWith { line =>
-						if (line.code.startsWith("//"))
-							Left(line.code.drop(2).trim)
-						else
-							Right(line.copy(indentation = line.indentation - declarationLine.indentation))
-					}
-					parentBuilder.addFreeCode(beforeDeclarationCode)
+					val (beforeDeclarationComments, beforeDeclarationCode) = (beforeFirstLine ++ beforeDeclarationLines)
+						.dividedWith { line =>
+							if (line.code.startsWith("//"))
+								Left(line.code.drop(2).trim)
+							else
+								Right(line.copy(indentation = line.indentation - declarationLine.indentation))
+						}
+					val filteredComments = beforeDeclarationComments.filter { !segmentSeparatorRegex(_) }
+					parentBuilder.addFreeCode(beforeDeclarationCode
+						.dropWhile { _.isEmpty }.dropRightWhile { _.isEmpty })
 					println(s"Read declaration line: ${declarationLine.code}")
-					if (beforeDeclarationComments.nonEmpty)
-						println(s"Read ${beforeDeclarationComments.size} comments before the declaration")
+					if (filteredComments.nonEmpty)
+						println(s"Read ${filteredComments.size} comments before the declaration")
 					if (beforeDeclarationCode.nonEmpty)
 						println(s"Read ${beforeDeclarationLines.size} lines of code before the declaration started")
 					// Identifies the declaration in question
@@ -301,7 +311,7 @@ object ScalaParser
 							if (declarationType == FunctionD && parameters.exists { _.containsExplicits })
 								parentBuilder.addMethod(MethodDeclaration(visibility, declarationName, parameters.get,
 									body, explicitType, scalaDoc.description, scalaDoc.returnDescription,
-									beforeDeclarationComments, prefixes.contains(Override)))
+									filteredComments, prefixes.contains(Override)))
 							else
 							{
 								val propertyType = declarationType match {
@@ -317,7 +327,7 @@ object ScalaParser
 								parentBuilder.addProperty(PropertyDeclaration(propertyType, declarationName, body,
 									visibility, explicitType, implicitParameters,
 									scalaDoc.description.notEmpty.getOrElse(scalaDoc.returnDescription),
-									beforeDeclarationComments, prefixes.contains(Override)))
+									filteredComments, prefixes.contains(Override)))
 							}
 							true
 						case declarationType: InstanceDeclarationType =>
@@ -328,7 +338,7 @@ object ScalaParser
 							val (extensions, contentBlock) = extensionsAndBlockFrom(afterParameterLists,
 								linesIter, refMap)
 							val builder = new InstanceBuilder(visibility, prefixes, declarationType, declarationName,
-								parameters, extensions, scalaDoc, beforeDeclarationComments)
+								parameters, extensions, scalaDoc, filteredComments)
 							contentBlock.foreach { block =>
 								// Reads all available items from the block
 								val blockLinesIterator = block.lines.iterator.pollable
@@ -348,13 +358,16 @@ object ScalaParser
 	// Expects tabulator strikes, whitespaces etc. to be removed from line beginnings
 	private def scalaDocFromLines(lines: Vector[String]) =
 	{
-		if (lines.isEmpty)
+		// Skips empty lines from the beginning and the end
+		val targetLines = lines.dropWhile { _.forall { c => c == ' ' || c == '\t' } }
+			.dropRightWhile { _.forall { c => c == ' ' || c == '\t' } }
+		if (targetLines.isEmpty)
 			ScalaDoc.empty
 		else
 		{
 			val builder = new MultiMapBuilder[Option[ScalaDocKeyword], String]
 			var lastKeyword: Option[ScalaDocKeyword] = None
-			lines.foreach { line =>
+			targetLines.foreach { line =>
 				val (keyword, content) = extractScalaDocKeyword(line)
 				if (keyword.nonEmpty)
 					lastKeyword = keyword
@@ -514,10 +527,14 @@ object ScalaParser
 	
 	private def nextParameterFrom(string: String, refMap: Map[String, Reference], scalaDoc: ScalaDoc) =
 	{
+		println(s"Parsing next parameter from: '$string'")
+		
 		// Parses name and data type
 		val (namePart, remaining) = string.splitAtFirst(":")
+		val trimmedNamePart = namePart.trim
 		val (dataType, afterType) = scalaTypeFrom(remaining.trim, refMap)
-		val (beforeName, name) = if (namePart.contains(' ')) namePart.splitAtLast(" ") else "" -> namePart
+		val (beforeName, name) = if (trimmedNamePart.contains(' ')) trimmedNamePart.splitAtLast(" ") else
+			"" -> trimmedNamePart
 		// Parses parameter prefix, if there is one
 		val prefix = DeclarationType.values.find { t => beforeName.contains(t.keyword) }.map { declarationType =>
 			val visibility = {
@@ -531,21 +548,31 @@ object ScalaParser
 		// Reads parameter description from the scaladoc
 		val description = scalaDoc.param(name)
 		
+		prefix.foreach { prefix => println(s"Parsed prefix: $prefix") }
+		println(s"Parsed $name (from $trimmedNamePart)")
+		println(s"Parsed type $dataType")
+		
 		// Case: Parameter has a default value
 		if (afterType.startsWith("="))
 			commaOutsideParenthesesRegex.startIndexIteratorIn(afterType).nextOption() match
 			{
 				// Case: There remains yet another parameter
 				case Some(nextCommaIndex) =>
+					println(s"Found default value: ${afterType.slice(1, nextCommaIndex).trim}")
+					println("Continuing to the next parameter after the comma")
 					Parameter(name, dataType, afterType.slice(1, nextCommaIndex).trim, prefix, description) ->
 						afterType.drop(nextCommaIndex)
 				// Case: This was the last parameter
 				case None =>
+					println(s"Read the rest (${afterType.drop(1).trim}) as the default value")
 					Parameter(name, dataType, afterType.drop(1).trim, prefix, description) -> ""
 			}
 		// Case: No default value provided
 		else
+		{
+			println(s"No type parameter found. Leaves following code: '$afterType'")
 			Parameter(name, dataType, prefix = prefix, description = description) -> afterType
+		}
 	}
 	
 	private def scalaTypeFrom(string: String, refMap: Map[String, Reference]): (ScalaType, String) =
@@ -594,7 +621,7 @@ object ScalaParser
 				ScalaType(mainType, types, if (isCallByName) CallByName else Standard) -> afterTypes
 			}
 			else
-				ScalaType(mainType, category = if (isCallByName) CallByName else Standard) -> remaining
+				ScalaType(mainType, category = if (isCallByName) CallByName else Standard) -> remaining.trim
 		}
 	}
 	

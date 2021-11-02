@@ -203,6 +203,12 @@ case class Regex(string: String)
 	}
 	
 	/**
+	  * @param multiplier A multiplier
+	  * @return This regular expression repeated that many times
+	  */
+	def *(multiplier: Int) = times(multiplier)
+	
+	/**
 	 * @param another Another regex
 	 * @return This regex followed by another regex
 	 */

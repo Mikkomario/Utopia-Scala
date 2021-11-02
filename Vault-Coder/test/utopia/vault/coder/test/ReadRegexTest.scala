@@ -19,6 +19,9 @@ object ReadRegexTest extends App
 	private val declarationStartRegex = declarationModifierRegex.zeroOrMoreTimes + declarationKeywordRegex
 	private val namedDeclarationStartRegex = declarationStartRegex + Regex.word + Regex("(\\_\\=)?")
 	val testRegex = Regex("protected |private ")
+	private lazy val segmentSeparatorRegex = (Regex.escape('/') * 2) + Regex.whiteSpace +
+		Regex.upperCaseLetter.oneOrMoreTimes + Regex.escape('\t').oneOrMoreTimes +
+		Regex.escape('-').oneOrMoreTimes
 	
 	val testData = "object DescriptionData extends FromModelFactoryWithSchema[DescriptionData]"
 	assert(!visibilityRegex.existsIn(testData))
@@ -37,6 +40,8 @@ object ReadRegexTest extends App
 	println(namedDeclarationStartRegex.string)
 	assert(namedDeclarationStartRegex.existsIn(testData))
 	assert(namedDeclarationStartRegex.existsIn("case class DescriptionData(roleId: Int, languageId: Int, text: String, authorId: Option[Int] = None, "))
+	assert(segmentSeparatorRegex.apply("// ATTRIBUTES\t--------------"))
+	assert(!segmentSeparatorRegex.apply("// Some tests"))
 	
 	println("Success!")
 }
