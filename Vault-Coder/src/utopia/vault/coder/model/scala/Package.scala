@@ -11,6 +11,8 @@ object Package
 {
 	// ATTRIBUTES   ---------------------------
 	
+	val empty = apply(Vector())
+	
 	// Java & Scala
 	
 	lazy val java = apply("java")

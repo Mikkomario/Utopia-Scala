@@ -61,6 +61,15 @@ case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Ve
 	  */
 	def nonEmpty = !isEmpty
 	
+	/**
+	  * @return Whether these parameter lists contain at least one list that is not implicit
+	  */
+	def containsExplicits = lists.nonEmpty
+	/**
+	  * @return Whether this set of parameter lists only consists of implicit parameters
+	  */
+	def isImplicitOnly = lists.isEmpty && implicits.nonEmpty
+	
 	
 	// IMPLEMENTED  -------------------------------
 	

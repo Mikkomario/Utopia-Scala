@@ -11,11 +11,10 @@ import utopia.vault.coder.model.scala.{Extension, Parameters, Visibility}
   */
 case class ClassDeclaration(name: String, constructionParams: Parameters = Parameters.empty,
                             extensions: Vector[Extension] = Vector(),
-                            creationCode: Option[Code] = None,
-                            properties: Vector[PropertyDeclaration] = Vector(),
+                            creationCode: Code = Code.empty, properties: Vector[PropertyDeclaration] = Vector(),
                             methods: Set[MethodDeclaration] = Set(), nested: Set[InstanceDeclaration] = Set(),
                             visibility: Visibility = Public, description: String = "", author: String = "",
-                            isCaseClass: Boolean = false)
+                            headerComments: Vector[String] = Vector(), isCaseClass: Boolean = false)
 	extends InstanceDeclaration
 {
 	override val keyword =

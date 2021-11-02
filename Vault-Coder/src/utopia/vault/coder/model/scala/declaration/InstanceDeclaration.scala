@@ -21,6 +21,11 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 	// ABSTRACT ------------------------------
 	
 	/**
+	  * @return Comments presented before the main declaration, but not included in the scaladoc
+	  */
+	def headerComments: Vector[String]
+	
+	/**
 	  * @return parameters accepted by this instance's constructor, if it has one.
 	  */
 	protected def constructorParams: Option[Parameters]
@@ -31,9 +36,9 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 	def extensions: Vector[Extension]
 	
 	/**
-	  * @return Code executed every time an instance is created (optional)
+	  * @return Code executed every time an instance is created
 	  */
-	def creationCode: Option[Code]
+	def creationCode: Code
 	
 	/**
 	  * @return Properties defined in this instance
@@ -86,6 +91,8 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 		
 		// Writes the scaladoc
 		builder ++= scalaDoc
+		// Writes possible comments
+		headerComments.foreach { c => builder += s"// $c" }
 		// Writes the declaration and the extensions
 		builder += basePart
 		constructorParams.foreach { builder += _.toScala }
@@ -120,7 +127,7 @@ trait InstanceDeclaration extends Declaration with CodeConvertible with ScalaDoc
 		
 		appendSegments(builder, Vector[(Iterable[CodeConvertible], String)](
 			attributes -> "ATTRIBUTES",
-			creationCode.toVector -> "INITIAL CODE",
+			creationCode.notEmpty.toVector -> "INITIAL CODE",
 			(abstractComputed.sorted(visibilityOrdering) ++
 				abstractMethods.toVector.sorted(fullOrdering)) -> "ABSTRACT",
 			newComputed.sorted(visibilityOrdering) -> "COMPUTED",

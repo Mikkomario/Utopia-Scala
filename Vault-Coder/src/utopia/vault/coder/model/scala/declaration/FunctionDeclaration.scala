@@ -21,6 +21,10 @@ trait FunctionDeclaration extends Declaration with CodeConvertible with ScalaDoc
 	  * @return Code that forms this method / property
 	  */
 	def bodyCode: Code
+	/**
+	  * @return Comments presented above this function declaration, but not included in the scaladoc
+	  */
+	def headerComments: Vector[String]
 	
 	/**
 	  * @return Whether this declaration overrides a base declaration
@@ -74,6 +78,8 @@ trait FunctionDeclaration extends Declaration with CodeConvertible with ScalaDoc
 		val builder = new CodeBuilder()
 		// Adds the documentation first
 		builder ++= scalaDoc
+		// Then possible header comments
+		headerComments.foreach { c => builder += s"// $c" }
 		// Then the header and body
 		if (isOverridden)
 			builder.appendPartial("override ")

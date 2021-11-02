@@ -64,6 +64,11 @@ case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set()) ext
 	def isSingleLine = lines.size < 2
 	
 	/**
+	  * @return None if this code is empty. Some(this) otherwise.
+	  */
+	def notEmpty = if (isEmpty) None else Some(this)
+	
+	/**
 	  * @return This code with line splitting applied
 	  */
 	def split = copy(lines = lines.flatMap { _.split })

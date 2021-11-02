@@ -7,13 +7,14 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.IterateLines
 import utopia.vault.coder.model.reader.ReadCodeBlock
-import utopia.vault.coder.model.scala.ScalaDocKeyword.Param
 import utopia.vault.coder.model.scala.ScalaTypeCategory.{CallByName, Standard}
 import utopia.vault.coder.model.scala.{Extension, Package, Parameter, Parameters, Reference, ScalaDoc, ScalaDocKeyword, ScalaDocPart, ScalaType}
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected, Public}
 import utopia.vault.coder.model.scala.code.{Code, CodeLine, CodePiece}
-import utopia.vault.coder.model.scala.declaration.DeclarationTypeCategory.Instance
-import utopia.vault.coder.model.scala.declaration.{DeclarationPrefix, DeclarationStart, DeclarationType, DeclarationTypeCategory, FunctionDeclarationType, InstanceDeclarationType}
+import utopia.vault.coder.model.scala.declaration.DeclarationPrefix.Override
+import utopia.vault.coder.model.scala.declaration.FunctionDeclarationType.{FunctionD, ValueD, VariableD}
+import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue, Variable}
+import utopia.vault.coder.model.scala.declaration.{DeclarationPrefix, DeclarationStart, DeclarationType, FunctionDeclarationType, InstanceDeclarationType, MethodDeclaration, PropertyDeclaration}
 
 import java.nio.file.Path
 import scala.collection.immutable.VectorBuilder
@@ -25,37 +26,25 @@ import scala.collection.immutable.VectorBuilder
   */
 object ScalaParser
 {
-	private val packageRegex = Regex("package ") + Regex.any
-	private val importRegex = Regex("import ") + Regex.any
+	private lazy val packageRegex = Regex("package ") + Regex.any
+	private lazy val importRegex = Regex("import ") + Regex.any
 	
-	private val objectOrClassRegex = Regex.any + (Regex("object ") || Regex("class ")).withinParenthesis + Regex.any
-	
-	private val quotesRegex = Regex.escape('"') + Regex.any + Regex.escape('"')
-	
-	private val visibilityRegex = (Regex("protected ") || Regex("private ")).withinParenthesis
-	private val declarationPrefixRegex = DeclarationPrefix.values.map { p => Regex(p.keyword + " ") }
+	private lazy val visibilityRegex = (Regex("protected ") || Regex("private ")).withinParenthesis
+	private lazy val declarationPrefixRegex = DeclarationPrefix.values.map { p => Regex(p.keyword + " ") }
 		.reduceLeft { _ || _ }.withinParenthesis
-	private val declarationModifierRegex = (visibilityRegex || declarationPrefixRegex).withinParenthesis
-	private val declarationKeywordRegex = DeclarationType.values.map { d => Regex(d.keyword + " ") }
+	private lazy val declarationModifierRegex = (visibilityRegex || declarationPrefixRegex).withinParenthesis
+	private lazy val declarationKeywordRegex = DeclarationType.values.map { d => Regex(d.keyword + " ") }
 		.reduceLeft { _ || _ }.withinParenthesis
-	private val declarationStartRegex = declarationModifierRegex.zeroOrMoreTimes + declarationKeywordRegex
-	private val namedDeclarationStartRegex = declarationStartRegex + Regex.word + Regex("\\_\\=").noneOrOnce
+	private lazy val declarationStartRegex = declarationModifierRegex.zeroOrMoreTimes + declarationKeywordRegex
+	private lazy val namedDeclarationStartRegex = declarationStartRegex + Regex.word + Regex("\\_\\=").noneOrOnce
 	
-	// private val functionArrowRegex = Regex("\\=\\> ")
+	private lazy val extendsRegex = Regex(" extends ")
+	private lazy val withRegex = Regex(" with ")
 	
-	private val parameterPartRegex = (declarationStartRegex + Regex.word + Regex.escape(':') + Regex.any)
-		.withinParenthesis
-	private val parameterListRegex = Regex.escape('(') +
-		(parameterPartRegex + Regex.escape(',') + Regex.whiteSpace.noneOrOnce).withinParenthesis.zeroOrMoreTimes +
-		parameterPartRegex.noneOrOnce + Regex.escape(')')
+	private lazy val commaOutsideParenthesesRegex = Regex.escape(',').ignoringParentheses
 	
-	private val extendsRegex = Regex(" extends ")
-	private val withRegex = Regex(" with ")
-	
-	private val commaOutsideParenthesesRegex = Regex.escape(',').ignoringParentheses
-	
-	private val scalaDocStartRegex = Regex("\\/\\*\\*")
-	private val commentEndRegex = Regex("\\*\\/")
+	private lazy val scalaDocStartRegex = Regex("\\/\\*\\*")
+	private lazy val commentEndRegex = Regex("\\*\\/")
 	
 	def apply(path: Path) =
 	{
@@ -63,11 +52,11 @@ object ScalaParser
 			val iter = linesIter.pollable
 			
 			// Searches for package declaration first
-			val filePackage = iter.pollToNextWhere { _.nonEmpty }.filter(packageRegex.apply)
-				.map { s => Package(s.afterFirst("package ")) }
+			val filePackageString = iter.pollToNextWhere { _.nonEmpty }.filter(packageRegex.apply)
+				.map { s => s.afterFirst("package ") }.getOrElse("")
 			
 			// Next looks for import statements
-			val imports = iter.collectWhile { line => line.isEmpty || importRegex(line) }.filter { _.nonEmpty }
+			val importStatements = iter.collectWhile { line => line.isEmpty || importRegex(line) }.filter { _.nonEmpty }
 				.map { _.afterFirst("import ") }
 				.flatMap { importString =>
 					if (importString.contains('{'))
@@ -80,38 +69,50 @@ object ScalaParser
 					else
 						Vector(importString.trim)
 				}
+			val separatedImportStatements = importStatements.map { importStatement =>
+				val (beginning, end) = importStatement.splitAtLast(".")
+				end.notEmpty match
+				{
+					case Some(end) =>
+						if (end == "_")
+						{
+							val (packagePart, targetPrefix) = beginning.splitAtLast(".")
+							if (targetPrefix.isEmpty)
+								filePackageString -> importStatement
+							else
+								packagePart -> s"$targetPrefix._"
+						}
+						else
+							beginning -> end
+					case None => filePackageString -> importStatement
+				}
+			}
+			val packagePerString = separatedImportStatements.map { case (packageString, _) => packageString }
+				.toSet.map { s: String => s -> Package(s) }.toMap
+			val referencesPerTarget = separatedImportStatements
+				.map { case (packageString, target) => target -> Reference(packagePerString(packageString), target) }
+				.toMap
 			
 			// Finally, finds and processes the object and/or class statements
-			val instances = iter.pollToNextWhere(objectOrClassRegex.apply) match
-			{
-				case Some(firstDeclaration) =>
-					???
-				case None => Vector()
+			val builder = new FileBuilder(Package(filePackageString))
+			val codeLineIterator = iter.map { line =>
+				val indentation = line.dropWhile { _ == '\t' }.length
+				CodeLine(indentation, line.drop(indentation))
 			}
+			while (iter.hasNext)
+			{
+				readNextItemFrom(codeLineIterator.pollable, referencesPerTarget, builder)
+			}
+			// Returns the parsed file
+			builder.result() -> referencesPerTarget.valuesIterator.toSet
 		}
 	}
 	
-	private def instanceFrom(header: String, moreLines: Vector[String]) =
-	{
-		val headerLines = header +: moreLines.takeTo { line =>
-			val quotesRemovedLine = quotesRegex.filterNot(line)
-			quotesRemovedLine.afterLast(")").notEmpty.getOrElse(line).contains('{')
-		}
-		val fullHeader = headerLines.mkString(" ")
-		val (beforeExtends, afterExtends) = fullHeader.splitAtLast("extends ")
-		val extensions = withRegex.split(afterExtends)
-		val parameterListRanges = parameterListRegex.rangesFrom(beforeExtends)
-		val beforeParameters = if (parameterListRanges.isEmpty) beforeExtends else
-			beforeExtends.substring(0, parameterListRanges.head.start)
-		
-		
-		val remainingLines = moreLines.drop(headerLines.size - 1)
-	}
-	
-	private def nextItemFrom(linesIter: PollingIterator[CodeLine], refMap: Map[String, Reference]) =
+	private def readNextItemFrom(linesIter: PollingIterator[CodeLine], refMap: Map[String, Reference],
+	                             parentBuilder: InstanceBuilderLike): Unit =
 	{
 		// Checks what the next non-empty line looks like
-		linesIter.nextWhere { _.nonEmpty }.map { firstLine =>
+		linesIter.nextWhere { _.nonEmpty }.foreach { firstLine =>
 			// Processes the scaladoc block if there is one
 			val scalaDoc = {
 				if (scalaDocStartRegex.existsIn(firstLine.code))
@@ -145,16 +146,29 @@ object ScalaParser
 				if (namedDeclarationStartRegex.existsIn(firstLine.code))
 					Vector() -> Some(firstLine)
 				else
-					(firstLine +: linesIter.collectUntil { line => namedDeclarationStartRegex.existsIn(line.code) }) ->
-						linesIter.nextOption()
+					// Skips leading and trailing empty lines
+					(firstLine +: linesIter.collectUntil { line => namedDeclarationStartRegex.existsIn(line.code) })
+						.dropWhile { _.isEmpty }.dropRightWhile { _.isEmpty } -> linesIter.nextOption()
 			}
 			declarationLine match
 			{
+				// Case: Declaration found => parses it
 				case Some(declarationLine) =>
+					// Processes the "free" code before the declaration
+					// - comments will be attached to the parsed declaration
+					val (beforeDeclarationComments, beforeDeclarationCode) = beforeDeclarationLines.dividedWith { line =>
+						if (line.code.startsWith("//"))
+							Left(line.code.drop(2).trim)
+						else
+							Right(line.copy(indentation = line.indentation - declarationLine.indentation))
+					}
+					parentBuilder.addFreeCode(beforeDeclarationCode)
 					// Identifies the declaration in question
 					val declarationStartRange = namedDeclarationStartRegex.firstRangeFrom(declarationLine.code).get
 					val declarationStart = declarationLine.code.slice(declarationStartRange)
 					val afterDeclarationStart = declarationLine.code.substring(declarationStartRange.exclusiveEnd)
+					val declarationName = if (declarationStart.contains(" ")) declarationStart.afterLast(" ") else
+						declarationStart
 					val declarationType = DeclarationType.values
 						.find { d => declarationStart.contains(d.keyword + " ") }.get
 					// Parses prefixes and visibility
@@ -169,11 +183,10 @@ object ScalaParser
 							Public
 					}
 					// Parses parameter lists, if needed
-					// TODO: Add comments to the parameters based on read scaladoc
 					val (parameters, afterParameterLists) = {
 						if (declarationType.acceptsParameterList && afterDeclarationStart.startsWith("(")) {
 							val (rawLists, remaining) = readRawParameterLists(afterDeclarationStart, linesIter)
-							val parameters = parametersFrom(rawLists.map { _.mkString }, refMap)
+							val parameters = parametersFrom(rawLists.map { _.mkString }, refMap, scalaDoc)
 							Some(parameters) -> remaining
 						}
 						else
@@ -227,17 +240,49 @@ object ScalaParser
 								else
 									Code.empty
 							}
-							???
-						
+							// Adds the parsed function (property or method) to the parent instance
+							// Case: Parsed item is a method
+							if (declarationType == FunctionD && parameters.exists { _.containsExplicits })
+								parentBuilder.addMethod(MethodDeclaration(visibility, declarationName, parameters.get,
+									body, explicitType, scalaDoc.description, scalaDoc.returnDescription,
+									beforeDeclarationComments, prefixes.contains(Override)))
+							else
+							{
+								val propertyType = declarationType match {
+									case ValueD => ImmutableValue
+									case VariableD => Variable
+									case _ => ComputedProperty
+								}
+								val implicitParameters = parameters match
+								{
+									case Some(parameters) => parameters.implicits
+									case None => Vector()
+								}
+								parentBuilder.addProperty(PropertyDeclaration(propertyType, declarationName, body,
+									visibility, explicitType, implicitParameters,
+									scalaDoc.description.notEmpty.getOrElse(scalaDoc.returnDescription),
+									beforeDeclarationComments, prefixes.contains(Override)))
+							}
 						case declarationType: InstanceDeclarationType =>
 							// Looks for extends portion
 							// The instance body is always expected to be wrapped in a block,
 							// which is processed separately
 							val (extensions, contentBlock) = extensionsAndBlockFrom(afterParameterLists,
 								linesIter, refMap)
-							???
+							val builder = new InstanceBuilder(visibility, prefixes, declarationType, declarationName,
+								parameters, extensions, scalaDoc, beforeDeclarationComments)
+							contentBlock.foreach { block =>
+								// Reads all available items from the block
+								val blockLinesIterator = block.lines.iterator.pollable
+								while (blockLinesIterator.hasNext)
+								{
+									readNextItemFrom(blockLinesIterator, refMap, builder)
+								}
+							}
+							parentBuilder.addNested(builder.result(refMap))
 					}
-				case None => ???
+				// Case: No declaration found => adds read code lines as free code
+				case None => parentBuilder.addFreeCode(beforeDeclarationLines)
 			}
 		}
 	}
@@ -370,7 +415,8 @@ object ScalaParser
 			None -> string
 	}
 	
-	private def parametersFrom(parameterListStrings: Vector[String], refMap: Map[String, Reference]) =
+	private def parametersFrom(parameterListStrings: Vector[String], refMap: Map[String, Reference],
+	                           scalaDoc: ScalaDoc) =
 	{
 		// Handles the implicit parameter list separately, which is expected to be the last list, if present
 		val (standardLists, implicitList) = {
@@ -379,28 +425,28 @@ object ScalaParser
 			else
 				parameterListStrings -> None
 		}
-		val standardParameters = standardLists.map { parameterListFrom(_, refMap) }
+		val standardParameters = standardLists.map { parameterListFrom(_, refMap, scalaDoc) }
 		val implicitParameters = implicitList match
 		{
-			case Some(listString) => parameterListFrom(listString, refMap)
+			case Some(listString) => parameterListFrom(listString, refMap, scalaDoc)
 			case None => Vector()
 		}
 		Parameters(standardParameters, implicitParameters)
 	}
 	
-	private def parameterListFrom(parameterListString: String, refMap: Map[String, Reference]) =
+	private def parameterListFrom(parameterListString: String, refMap: Map[String, Reference], scalaDoc: ScalaDoc) =
 	{
 		if (parameterListString.isEmpty)
 			Vector()
 		else
 		{
 			val paramsBuilder = new VectorBuilder[Parameter]()
-			val (firstParam, firstRemaining) = nextParameterFrom(parameterListString, refMap)
+			val (firstParam, firstRemaining) = nextParameterFrom(parameterListString, refMap, scalaDoc)
 			paramsBuilder += firstParam
 			var remaining = firstRemaining
 			while (remaining.startsWith(","))
 			{
-				val (nextParam, nextRemaining) = nextParameterFrom(remaining.drop(1), refMap)
+				val (nextParam, nextRemaining) = nextParameterFrom(remaining.drop(1), refMap, scalaDoc)
 				paramsBuilder += nextParam
 				remaining = nextRemaining
 			}
@@ -408,7 +454,7 @@ object ScalaParser
 		}
 	}
 	
-	private def nextParameterFrom(string: String, refMap: Map[String, Reference]) =
+	private def nextParameterFrom(string: String, refMap: Map[String, Reference], scalaDoc: ScalaDoc) =
 	{
 		// Parses name and data type
 		val (namePart, remaining) = string.splitAtFirst(":")
@@ -424,6 +470,8 @@ object ScalaParser
 			val prefixes = DeclarationPrefix.values.filter { p => beforeName.contains(p.keyword) }
 			DeclarationStart(declarationType, visibility, prefixes)
 		}
+		// Reads parameter description from the scaladoc
+		val description = scalaDoc.param(name)
 		
 		// Case: Parameter has a default value
 		if (afterType.startsWith("="))
@@ -431,15 +479,15 @@ object ScalaParser
 			{
 				// Case: There remains yet another parameter
 				case Some(nextCommaIndex) =>
-					Parameter(name, dataType, afterType.slice(1, nextCommaIndex).trim, prefix) ->
+					Parameter(name, dataType, afterType.slice(1, nextCommaIndex).trim, prefix, description) ->
 						afterType.drop(nextCommaIndex)
 				// Case: This was the last parameter
 				case None =>
-					Parameter(name, dataType, afterType.drop(1).trim, prefix) -> ""
+					Parameter(name, dataType, afterType.drop(1).trim, prefix, description) -> ""
 			}
 		// Case: No default value provided
 		else
-			Parameter(name, dataType, prefix = prefix) -> afterType
+			Parameter(name, dataType, prefix = prefix, description = description) -> afterType
 	}
 	
 	private def scalaTypeFrom(string: String, refMap: Map[String, Reference]): (ScalaType, String) =

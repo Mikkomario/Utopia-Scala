@@ -26,6 +26,7 @@
 ### Other Changes
 - Added a double-checking option to `StdIn.readNonEmptyLine(...)` (**ConsoleExtensions**)
 - Refactored some **Regex** functions
+- Optimized **PollingIterator** mapping
 
 ## v1.13 - 18.10.2021
 Updated built-in value conversions (concerning Vector and LocalDate types). Added interactive console support with 

@@ -14,6 +14,7 @@ object MethodDeclaration
 	  * @param explicitOutputType Data type returned by this method, when explicitly defined (optional)
 	  * @param description Description of this method (default = empty)
 	  * @param returnDescription Description of the return value of this method (default = empty)
+	  * @param headerComments Lines of comments to insert before the declaration (default = empty)
 	  * @param isOverridden Whether this method overrides a base member (default = false)
 	  * @param params Method parameters (0-n)
 	  * @param firstLine First line of code
@@ -22,10 +23,11 @@ object MethodDeclaration
 	  */
 	def apply(name: String, codeReferences: Set[Reference] = Set(), visibility: Visibility = Public,
 	          explicitOutputType: Option[ScalaType] = None, description: String = "", returnDescription: String = "",
+	          headerComments: Vector[String] = Vector(),
 	          isOverridden: Boolean = false)(params: Parameters = Parameters.empty)
 	         (firstLine: String, moreLines: String*): MethodDeclaration =
 		apply(visibility, name, params, Code.from(firstLine +: moreLines.toVector).referringTo(codeReferences),
-			explicitOutputType, description, returnDescription, isOverridden)
+			explicitOutputType, description, returnDescription, headerComments, isOverridden)
 }
 
 /**
@@ -39,11 +41,13 @@ object MethodDeclaration
   * @param explicitOutputType Data type returned by this method, when explicitly defined (optional)
   * @param description Description of this method (may be empty)
   * @param returnDescription Description of the return value of this method (may be empty)
+  * @param headerComments Lines of comments to insert before the declaration (default = empty)
   * @param isOverridden Whether this method overrides a base version
   */
 case class MethodDeclaration(visibility: Visibility, name: String, parameters: Parameters, bodyCode: Code,
                              explicitOutputType: Option[ScalaType], description: String, returnDescription: String,
-                             isOverridden: Boolean) extends FunctionDeclaration
+                             headerComments: Vector[String], isOverridden: Boolean)
+	extends FunctionDeclaration
 {
 	override def keyword = "def"
 	

@@ -1,6 +1,6 @@
 package utopia.flow.collection
 
-import utopia.flow.datastructure.mutable.ResettableLazy
+import utopia.flow.datastructure.mutable.{PollableOnce, ResettableLazy}
 
 import scala.collection.immutable.VectorBuilder
 
@@ -40,6 +40,17 @@ class PollingIterator[A](source: Iterator[A]) extends Iterator[A]
 	override def hasNext = pollCache.isInitialized || source.hasNext
 	
 	override def next() = pollCache.popCurrent().getOrElse { source.next() }
+	
+	override def map[B](f: A => B) = pollCache.current match {
+		case Some(polled) => PollableOnce(polled).map(f) ++ source.map(f)
+		case None => source.map(f)
+	}
+	
+	override def flatMap[B](f: A => IterableOnce[B]) = pollCache.current match
+	{
+		case Some(polled) => PollableOnce(polled).flatMap(f) ++ source.flatMap(f)
+		case None => source.flatMap(f)
+	}
 	
 	
 	// OTHER    -----------------------------

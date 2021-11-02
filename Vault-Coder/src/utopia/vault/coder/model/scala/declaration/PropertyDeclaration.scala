@@ -18,9 +18,10 @@ object PropertyDeclaration
 	  * @return A new property declaration
 	  */
 	def newAbstract(name: String, outputType: ScalaType, implicitParams: Vector[Parameter] = Vector(),
-	                description: String = "", isProtected: Boolean = false, isOverridden: Boolean = false) =
+	                description: String = "", headerComments: Vector[String] = Vector(),
+	                isProtected: Boolean = false, isOverridden: Boolean = false) =
 		apply(ComputedProperty, name, Code.empty, if (isProtected) Protected else Public, Some(outputType),
-			description, implicitParams, isOverridden)
+			implicitParams, description, headerComments, isOverridden)
 }
 
 /**
@@ -30,7 +31,8 @@ object PropertyDeclaration
   */
 case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: String, bodyCode: Code,
                                visibility: Visibility = Public, explicitOutputType: Option[ScalaType] = None,
-                               description: String = "", implicitParams: Vector[Parameter] = Vector(),
+                               implicitParams: Vector[Parameter] = Vector(), description: String = "",
+                               headerComments: Vector[String] = Vector(),
                                isOverridden: Boolean = false)
 	extends FunctionDeclaration
 {
