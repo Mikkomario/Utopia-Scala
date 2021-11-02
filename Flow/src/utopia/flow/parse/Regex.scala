@@ -19,9 +19,13 @@ object Regex
 	val whiteSpace = Regex("\\s")
 	val nonWhiteSpace = Regex("\\S")
 	/**
+	  * Accepts alpha-numeric (ASCII) characters and underscores
+	  */
+	val wordCharacter = Regex("\\w")
+	/**
 	  * Contains alpha-numeric (ASCII) words with underscores
 	  */
-	val word = Regex("\\w")
+	val word = wordCharacter.oneOrMoreTimes
 	val wordBoundary = Regex("\\b")
 	val newLine = Regex("\\n")
 	

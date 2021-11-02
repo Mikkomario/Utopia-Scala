@@ -22,6 +22,12 @@ case class ScalaDoc(parts: Vector[ScalaDocPart]) extends CodeConvertible
 	// COMPUTED ----------------------------------
 	
 	/**
+	  * @return Whether this documentation is empty
+	  */
+	def isEmpty = parts.isEmpty
+	def nonEmpty = !isEmpty
+	
+	/**
 	  * @return Main description in this scaladoc
 	  */
 	def description = parts.filter { _.keyword.isEmpty }.flatMap { _.content }.mkString("\n")

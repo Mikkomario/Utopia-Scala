@@ -50,5 +50,7 @@ object StringUtilsTest extends App
 	assert(Regex.parenthesis.extract("Some(more)text") == (Vector("Some", "text"), Vector("(more)")))
 	assert(Regex("a").ignoringWithin('(', ')').findAllFrom("a test (another test)").size == 1)
 	
+	assert((Regex("import ") + Regex.any)("import java.time.Instant"))
+	
 	println("Success!")
 }

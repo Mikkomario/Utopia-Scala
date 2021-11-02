@@ -3,6 +3,8 @@
 ## v1.14 (in development)
 ### Breaking Changes
 - Immutable model no longer accepts type parameters
+- `Regex.word` now matches whole words as described in the documentation. 
+  Added `Regex.wordCharacter` to replace the previous (undesired) effect.
 ### New Features
 - Added **RefreshingLazy** that works a little like **ExpiringLazy**, expect that resets are synchronous and 
   performed at value reads - A more useful implementation if the item is intended to be cached for most of the time

@@ -36,7 +36,7 @@ object ScalaParser
 	private lazy val declarationKeywordRegex = DeclarationType.values.map { d => Regex(d.keyword + " ") }
 		.reduceLeft { _ || _ }.withinParenthesis
 	private lazy val declarationStartRegex = declarationModifierRegex.zeroOrMoreTimes + declarationKeywordRegex
-	private lazy val namedDeclarationStartRegex = declarationStartRegex + Regex.word + Regex("\\_\\=").noneOrOnce
+	private lazy val namedDeclarationStartRegex = declarationStartRegex + Regex.word + Regex("(\\_\\=)?")
 	
 	private lazy val extendsRegex = Regex(" extends ")
 	private lazy val withRegex = Regex(" with ")
@@ -49,21 +49,35 @@ object ScalaParser
 	def apply(path: Path) =
 	{
 		IterateLines.fromPath(path) { linesIter =>
-			val iter = linesIter.pollable
+			// TODO: Remove test prints
+			val iter = linesIter.map { line =>
+				println("Reading: " + line)
+				line
+			}.pollable
 			
 			// Searches for package declaration first
-			val filePackageString = iter.pollToNextWhere { _.nonEmpty }.filter(packageRegex.apply)
-				.map { s => s.afterFirst("package ") }.getOrElse("")
+			val filePackageString = iter.pollToNextWhere { _.nonEmpty }.filter(packageRegex.apply) match
+			{
+				case Some(packageLine) =>
+					iter.skipPolled()
+					packageLine.afterFirst("package ")
+				case None => ""
+			}
+			println(s"Read package: $filePackageString")
 			
 			// Next looks for import statements
-			val importStatements = iter.collectWhile { line => line.isEmpty || importRegex(line) }.filter { _.nonEmpty }
+			val importStatements = iter.collectWhile { line => line.isEmpty || importRegex(line) }
+				.filter { _.nonEmpty }
 				.map { _.afterFirst("import ") }
 				.flatMap { importString =>
+					println(s"Read import: $importString")
 					if (importString.contains('{'))
 					{
 						val (basePart, endPart) = importString.splitAtFirst("{")
 						val trimmedBase = basePart.trim
 						val endItems = endPart.untilFirst("}").split(',').toVector.map { _.trim }
+						println(s"Which is split into ${endItems.size} parts after $trimmedBase (${
+							endItems.mkString(", ")})")
 						endItems.map { trimmedBase + _ }
 					}
 					else
@@ -92,64 +106,96 @@ object ScalaParser
 			val referencesPerTarget = separatedImportStatements
 				.map { case (packageString, target) => target -> Reference(packagePerString(packageString), target) }
 				.toMap
+			println(s"Read ${packagePerString.size} packages and ${referencesPerTarget.size} references")
 			
 			// Finally, finds and processes the object and/or class statements
 			val builder = new FileBuilder(Package(filePackageString))
+			println(s"Poll before mapping: ${iter.poll}")
 			val codeLineIterator = iter.map { line =>
-				val indentation = line.dropWhile { _ == '\t' }.length
+				val indentation = line.takeWhile { _ == '\t' }.length
 				CodeLine(indentation, line.drop(indentation))
-			}
-			while (iter.hasNext)
-			{
-				readNextItemFrom(codeLineIterator.pollable, referencesPerTarget, builder)
-			}
+			}.pollable
+			println(s"Poll after mapping: ${codeLineIterator.poll}")
+			println("Reading the instance data...")
+			readAllItemsFrom(codeLineIterator, referencesPerTarget, builder)
 			// Returns the parsed file
 			builder.result() -> referencesPerTarget.valuesIterator.toSet
 		}
 	}
 	
+	private def readAllItemsFrom(linesIter: PollingIterator[CodeLine], refMap: Map[String, Reference],
+	                             parentBuilder: InstanceBuilderLike) =
+	{
+		var continue = true
+		while (linesIter.hasNext && continue)
+		{
+			println("Continuing to read the next item...")
+			continue = readNextItemFrom(linesIter, refMap, parentBuilder)
+		}
+	}
+	
+	// Returns whether there may be more
 	private def readNextItemFrom(linesIter: PollingIterator[CodeLine], refMap: Map[String, Reference],
-	                             parentBuilder: InstanceBuilderLike): Unit =
+	                             parentBuilder: InstanceBuilderLike): Boolean =
 	{
 		// Checks what the next non-empty line looks like
-		linesIter.nextWhere { _.nonEmpty }.foreach { firstLine =>
+		linesIter.nextWhere { _.nonEmpty }.exists { firstLine =>
+			println(s"Item starts from: $firstLine")
 			// Processes the scaladoc block if there is one
-			val scalaDoc = {
+			val (scalaDoc, afterScalaDocLine) = {
 				if (scalaDocStartRegex.existsIn(firstLine.code))
 				{
 					if (commentEndRegex.existsIn(firstLine.code))
 					{
 						val scalaDoc = firstLine.code.afterFirst("/**").untilFirst("*/").trim
-						scalaDocFromLines(Vector(scalaDoc))
+						scalaDocFromLines(Vector(scalaDoc)) -> linesIter.nextOption().getOrElse(CodeLine.empty)
 					}
 					else
 					{
 						val trimmedFirstLine = firstLine.code.afterFirst("/**")
 						val rawLines = linesIter.collectTo { line => commentEndRegex.existsIn(line.code) }
 						if (rawLines.isEmpty)
-							scalaDocFromLines(Vector(trimmedFirstLine))
+							scalaDocFromLines(Vector(trimmedFirstLine)) ->
+								linesIter.nextOption().getOrElse(CodeLine.empty)
 						else
 						{
 							val middleLines = rawLines.dropRight(1)
 								.map { _.code.dropWhile { c => c == '\t' || c == '*' || c == ' ' } }
 							val lastLine = rawLines.last.code.untilFirst("*/")
 								.dropWhile { c => c == '\t' || c == ' ' || c == '*' }
-							scalaDocFromLines(trimmedFirstLine +: middleLines :+ lastLine)
+							scalaDocFromLines(trimmedFirstLine +: middleLines :+ lastLine) ->
+								linesIter.nextOption().getOrElse(CodeLine.empty)
 						}
 					}
 				}
 				else
-					ScalaDoc.empty
+					ScalaDoc.empty -> firstLine
+			}
+			if (scalaDoc.isEmpty)
+			{
+				println("No scaladoc read")
+				println(s"Next line: $afterScalaDocLine")
+			}
+			else
+			{
+				println(s"Read scaladoc with ${scalaDoc.parts.size} parts")
+				println(s"Next line: $afterScalaDocLine")
 			}
 			// Collects lines before the first declaration, if necessary
 			val (beforeDeclarationLines, declarationLine) = {
-				if (namedDeclarationStartRegex.existsIn(firstLine.code))
-					Vector() -> Some(firstLine)
+				if (namedDeclarationStartRegex.existsIn(afterScalaDocLine.code))
+				{
+					println("First line was found to be a declaration")
+					Vector() -> Some(afterScalaDocLine)
+				}
 				else
 					// Skips leading and trailing empty lines
-					(firstLine +: linesIter.collectUntil { line => namedDeclarationStartRegex.existsIn(line.code) })
+					(afterScalaDocLine +:
+						linesIter.collectUntil { line => namedDeclarationStartRegex.existsIn(line.code) })
 						.dropWhile { _.isEmpty }.dropRightWhile { _.isEmpty } -> linesIter.nextOption()
 			}
+			if (beforeDeclarationLines.nonEmpty)
+				println(s"Read ${beforeDeclarationLines.size} lines that were not included in a declaration")
 			declarationLine match
 			{
 				// Case: Declaration found => parses it
@@ -163,6 +209,11 @@ object ScalaParser
 							Right(line.copy(indentation = line.indentation - declarationLine.indentation))
 					}
 					parentBuilder.addFreeCode(beforeDeclarationCode)
+					println(s"Read declaration line: ${declarationLine.code}")
+					if (beforeDeclarationComments.nonEmpty)
+						println(s"Read ${beforeDeclarationComments.size} comments before the declaration")
+					if (beforeDeclarationCode.nonEmpty)
+						println(s"Read ${beforeDeclarationLines.size} lines of code before the declaration started")
 					// Identifies the declaration in question
 					val declarationStartRange = namedDeclarationStartRegex.firstRangeFrom(declarationLine.code).get
 					val declarationStart = declarationLine.code.slice(declarationStartRange)
@@ -182,6 +233,8 @@ object ScalaParser
 						else
 							Public
 					}
+					println(s"Interpreted: $visibility ${prefixes.mkString(" ")} ${
+						declarationType.keyword} $declarationName")
 					// Parses parameter lists, if needed
 					val (parameters, afterParameterLists) = {
 						if (declarationType.acceptsParameterList && afterDeclarationStart.startsWith("(")) {
@@ -192,10 +245,13 @@ object ScalaParser
 						else
 							None -> afterDeclarationStart.trim.notEmpty
 					}
+					parameters.foreach { p => println(s"Read ${p.lists.size} parameter lists and ${
+						p.implicits.size} implicit parameters") }
 					// Handles functions and instances differently
 					declarationType match
 					{
 						case declarationType: FunctionDeclarationType =>
+							println("Interpreted as a function declaration")
 							// Checks whether explicit parameter type has been specified
 							val (explicitType, declarationEnd) = explicitTypeFrom(
 								afterParameterLists.getOrElse(""), refMap)
@@ -263,7 +319,9 @@ object ScalaParser
 									scalaDoc.description.notEmpty.getOrElse(scalaDoc.returnDescription),
 									beforeDeclarationComments, prefixes.contains(Override)))
 							}
+							true
 						case declarationType: InstanceDeclarationType =>
+							println("Interpreted as an instance declaration")
 							// Looks for extends portion
 							// The instance body is always expected to be wrapped in a block,
 							// which is processed separately
@@ -274,15 +332,15 @@ object ScalaParser
 							contentBlock.foreach { block =>
 								// Reads all available items from the block
 								val blockLinesIterator = block.lines.iterator.pollable
-								while (blockLinesIterator.hasNext)
-								{
-									readNextItemFrom(blockLinesIterator, refMap, builder)
-								}
+								readAllItemsFrom(blockLinesIterator, refMap, builder)
 							}
 							parentBuilder.addNested(builder.result(refMap))
+							true
 					}
 				// Case: No declaration found => adds read code lines as free code
-				case None => parentBuilder.addFreeCode(beforeDeclarationLines)
+				case None =>
+					parentBuilder.addFreeCode(beforeDeclarationLines)
+					false
 			}
 		}
 	}
