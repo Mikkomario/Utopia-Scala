@@ -6,6 +6,8 @@
 ### New Features
 - Added **RefreshingLazy** that works a little like **ExpiringLazy**, expect that resets are synchronous and 
   performed at value reads - A more useful implementation if the item is intended to be cached for most of the time
+- Added **MultiMapBuilder** which makes it easier to build maps which contain vectors as values
+- Added **MutatingOnce** which provides one-time access to a value, mutating it after the first access
 ### New Methods
 - **CombinedOrdering**.type
   - Added a new utility constructor

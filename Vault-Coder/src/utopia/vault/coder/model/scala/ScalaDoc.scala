@@ -1,6 +1,5 @@
 package utopia.vault.coder.model.scala
 
-import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.scala.ScalaDocKeyword.{Author, Param, Return, Since}
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.template.CodeConvertible
@@ -67,10 +66,5 @@ case class ScalaDoc(parts: Vector[ScalaDocPart]) extends CodeConvertible
 	  * @param paramName Name of the targeted parameter
 	  * @return Description of that parameter
 	  */
-	def param(paramName: String) =
-		parts.find { p => p.keyword.contains(Param) && p.content.headOption.exists { _.startsWith(paramName + " ") } } match
-		{
-			case Some(part) => (part.content.head.afterFirst(paramName + " ") +: part.content.tail).mkString("\n")
-			case None => ""
-		}
+	def param(paramName: String) = apply(Param(paramName))
 }

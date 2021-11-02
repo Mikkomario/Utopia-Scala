@@ -28,7 +28,7 @@ case class Parameter(name: String, dataType: ScalaType, default: CodePiece = Cod
 	}
 	
 	override def documentation =
-		if (description.nonEmpty) Vector(ScalaDocPart(Param, s"$name $description")) else Vector()
+		if (description.nonEmpty) Vector(ScalaDocPart(Param(name), description.linesIterator.toVector)) else Vector()
 	
 	
 	// OTHER    ------------------------------
