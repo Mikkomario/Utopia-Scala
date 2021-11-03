@@ -6,6 +6,7 @@ import utopia.flow.parse.Regex
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.IterateLines
+import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.model.reader.ReadCodeBlock
 import utopia.vault.coder.model.scala.ScalaTypeCategory.{CallByName, Standard}
 import utopia.vault.coder.model.scala.{Extension, Package, Parameter, Parameters, Reference, ScalaDoc, ScalaDocKeyword, ScalaDocPart, ScalaType}
@@ -291,8 +292,30 @@ object ScalaParser
 									// Case: Function body is wrapped in a block => reads the block contents
 									if (firstBodyLine.code.startsWith("{"))
 									{
-										val (block, _) = readBlock(firstBodyLine.code.drop(1), linesIter)
+										val (block, _) = readBlock(firstBodyLine.mapCode { _.drop(1) }, linesIter)
 										block.toCodeWith(refMap)
+									}
+									// Case: Function opens without a block but the main part of the function
+									// consists of a block (e.g. abc match { ... })
+									// => Wraps the function body in a block
+									else if (firstBodyLine.code.contains('{') &&
+										!firstBodyLine.code.afterLast("{").contains('}'))
+									{
+										val (beforeBlockStart, afterBlockStart) = firstBodyLine.code
+											.splitAtLast("{")
+										val (mainBlock, remaining) = readBlock(
+											CodeLine(declarationLine.indentation, afterBlockStart), linesIter)
+										combineLineAndBlock(CodeLine(firstBodyLine.indentation, beforeBlockStart),
+											mainBlock, remaining, refMap)
+									}
+									// Case: Function opens without a block but the main part of the function
+									// consists of a block (e.g. abc match { ... })
+									// => Wraps the function body in a block
+									else if (linesIter.pollOption.exists { _.code.startsWith("{") })
+									{
+										val (block, remaining) = readBlock(linesIter.next().mapCode { _.tail },
+											linesIter)
+										combineLineAndBlock(firstBodyLine, block, remaining, refMap)
 									}
 									// Case: Function is a single line function (possibly on multiple lines)
 									// => Squashes the lines to a single code line
@@ -341,7 +364,8 @@ object ScalaParser
 							// Looks for extends portion
 							// The instance body is always expected to be wrapped in a block,
 							// which is processed separately
-							val (extensions, contentBlock) = extensionsAndBlockFrom(afterParameterLists,
+							val (extensions, contentBlock) = extensionsAndBlockFrom(
+								afterParameterLists.map { CodeLine(declarationLine.indentation, _) },
 								linesIter, refMap)
 							val builder = new InstanceBuilder(visibility, prefixes, declarationType, declarationName,
 								parameters, extensions, scalaDoc, filteredComments)
@@ -359,6 +383,27 @@ object ScalaParser
 					false
 			}
 		}
+	}
+	
+	private def combineLineAndBlock(firstLine: CodeLine, block: ReadCodeBlock, remaining: Option[String],
+	                                refMap: Map[String, Reference]) =
+	{
+		val codeBuilder = new CodeBuilder()
+		// Adds the initial part
+		codeBuilder.setIndentation(firstLine.indentation)
+		codeBuilder += firstLine.code
+		// Includes references
+		codeBuilder.addReferences(refMap.keySet.filter(firstLine.code.contains).map(refMap.apply))
+		// Adds the main part as a block of code (starting from 0 indentation)
+		codeBuilder.addBlock(block.toCodeWith(refMap))
+		// May add the remaining part separately (with indentation 1)
+		remaining.filter { _.nonEmpty }.foreach { remaining =>
+			codeBuilder.indent()
+			codeBuilder += remaining
+			codeBuilder.addReferences(
+				refMap.keySet.filter(remaining.contains).map(refMap.apply))
+		}
+		codeBuilder.result()
 	}
 	
 	// Expects tabulator strikes, whitespaces etc. to be removed from line beginnings
@@ -399,14 +444,14 @@ object ScalaParser
 			None -> line
 	}
 	
-	private def extensionsAndBlockFrom(openLine: Option[String], moreLinesIter: PollingIterator[CodeLine],
+	private def extensionsAndBlockFrom(openLine: Option[CodeLine], moreLinesIter: PollingIterator[CodeLine],
 	                                   refMap: Map[String, Reference]) =
 	{
 		// Case: Instance block starts on the first line
-		if (openLine.exists { _.contains('{') })
+		if (openLine.exists { _.code.contains('{') })
 		{
-			val (beforeBlock, afterBlockStart) = openLine.get.splitAtFirst("{")
-			val (block, _) = readBlock(afterBlockStart, moreLinesIter)
+			val (beforeBlock, afterBlockStart) = openLine.get.code.splitAtFirst("{")
+			val (block, _) = readBlock(CodeLine(openLine.get.indentation, afterBlockStart), moreLinesIter)
 			extensionsFrom(Vector(beforeBlock), refMap) -> Some(block)
 		}
 		// Case: Instance block may start on a later line (after extension lines) or there may not be a code block
@@ -415,22 +460,22 @@ object ScalaParser
 			// Looks for the block start, but terminates on a named declaration
 			// Collects the in-between lines as extension lines
 			val extensionLinesBuilder = new VectorBuilder[String]()
-			openLine.foreach { extensionLinesBuilder += _ }
-			var afterBlockPart: Option[String] = None
+			openLine.foreach { extensionLinesBuilder += _.code }
+			var afterBlockPart: Option[CodeLine] = None
 			while (afterBlockPart.isEmpty && moreLinesIter.hasNext &&
 				!namedDeclarationStartRegex.existsIn(moreLinesIter.poll.code))
 			{
 				// Case: Extension and/or block start line found
-				val line = moreLinesIter.next().code
-				line.optionIndexOf("{") match
+				val line = moreLinesIter.next()
+				line.code.optionIndexOf("{") match
 				{
 					// Case: Block starts on this line
 					case Some(blockStartIndex) =>
 						if (blockStartIndex > 0)
-							extensionLinesBuilder += line.take(blockStartIndex)
-						afterBlockPart = Some(line.drop(blockStartIndex + 1))
+							extensionLinesBuilder += line.code.take(blockStartIndex)
+						afterBlockPart = Some(line.mapCode { _.drop(blockStartIndex + 1) })
 					// Case: This line is only extensions, still
-					case None => extensionLinesBuilder += line
+					case None => extensionLinesBuilder += line.code
 				}
 			}
 			val extensions = extensionsFrom(extensionLinesBuilder.result(), refMap)
@@ -681,7 +726,9 @@ object ScalaParser
 		// Checks whether the first line starts a parameter list
 		if (listStartLine.startsWith("("))
 		{
-			val (listLines, remainingAfter) = readBlockLike(listStartLine.drop(1), remainingLinesIter,
+			// Wraps the starting lines as code lines without indentation
+			// - doesn't utilize indentation in this method
+			val (listLines, remainingAfter) = readBlockLike(CodeLine(listStartLine.drop(1)), remainingLinesIter,
 				'(', ')')
 			//println(s"Immediately started parsing. Found: '${listLines.map { _.code }.mkString}' (${
 			//	listLines.size} lines) - remaining: $remainingAfter")
@@ -690,7 +737,7 @@ object ScalaParser
 			codeAfter = remainingAfter
 			while (codeAfter.exists { _.startsWith("(") })
 			{
-				val (listLines, remainingAfter) = readBlockLike(codeAfter.get.drop(1), remainingLinesIter,
+				val (listLines, remainingAfter) = readBlockLike(CodeLine(codeAfter.get.drop(1)), remainingLinesIter,
 					'(', ')')
 				listsBuilder += listLines.map { _.code }.mkString
 				codeAfter = remainingAfter
@@ -720,7 +767,7 @@ object ScalaParser
 	}
 	
 	// Block start line must have the initiating { -char removed
-	private def readBlock(blockStartLine: String, remainingLinesIter: Iterator[CodeLine]) =
+	private def readBlock(blockStartLine: CodeLine, remainingLinesIter: Iterator[CodeLine]) =
 	{
 		val (blockLines, after) = readBlockLike(blockStartLine, remainingLinesIter, '{', '}')
 		// Removes the unnecessary indentation and possible leading and trailing empty lines
@@ -736,13 +783,14 @@ object ScalaParser
 	}
 	
 	// Block start line must have the initiating opening character removed
-	private def readBlockLike(blockStartLine: String, remainingLinesIter: Iterator[CodeLine],
+	private def readBlockLike(blockStartLine: CodeLine, remainingLinesIter: Iterator[CodeLine],
 	                          openChar: Char, closeChar: Char) =
 	{
 		val blockLinesBuilder = new VectorBuilder[CodeLine]()
 		// Opens the first line
-		var openBlockCount = 1 + blockStartLine.count { _ == openChar } - blockStartLine.count { _ == closeChar }
-		var lastLine = CodeLine(blockStartLine)
+		var openBlockCount = 1 + blockStartLine.code.count { _ == openChar } -
+			blockStartLine.code.count { _ == closeChar }
+		var lastLine = blockStartLine
 		// Adds multiple lines if necessary
 		while (openBlockCount > 0 && remainingLinesIter.hasNext)
 		{

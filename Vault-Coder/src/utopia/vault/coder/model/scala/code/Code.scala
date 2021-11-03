@@ -44,7 +44,8 @@ object Code
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set()) extends Referencing with CodeConvertible
+case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set())
+	extends Referencing with CodeConvertible
 {
 	// COMPUTED ------------------------------
 	

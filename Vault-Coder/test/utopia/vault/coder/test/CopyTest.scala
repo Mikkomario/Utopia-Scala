@@ -17,6 +17,7 @@ import scala.io.{Codec, StdIn}
 object CopyTest extends App
 {
 	// Metropolis\src\utopia\metropolis\model\stored\organization\Organization.scala
+	// Citadel\src\utopia\citadel\database\access\many\organization\ManyMemberRoleLinksAccess.scala
 	
 	DataType.setup()
 	implicit val codec: Codec = Codec.UTF8

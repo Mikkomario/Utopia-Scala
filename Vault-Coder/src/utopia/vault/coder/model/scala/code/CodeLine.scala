@@ -137,6 +137,12 @@ case class CodeLine(indentation: Int, code: String) extends Combinable[CodeLine,
 	  */
 	def prepend(prefix: String) = copy(code = prefix + code)
 	
+	/**
+	  * @param f A mapping function for the code part
+	  * @return A mapped version of this code line (indentation is kept as is)
+	  */
+	def mapCode(f: String => String) = copy(code = f(code))
+	
 	private def splitWith(regex: Regex, splitAfterRegex: Boolean = false) =
 	{
 		// Finds the possible split locations
