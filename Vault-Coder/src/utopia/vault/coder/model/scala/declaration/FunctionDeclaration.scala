@@ -1,9 +1,11 @@
 package utopia.vault.coder.model.scala.declaration
 
+import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.CodeBuilder
+import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.ScalaDocKeyword.Return
-import utopia.vault.coder.model.scala.{Parameters, ScalaDocPart, ScalaType}
+import utopia.vault.coder.model.scala.{Parameters, ScalaDocPart, ScalaType, Visibility}
 import utopia.vault.coder.model.scala.template.{CodeConvertible, ScalaDocConvertible}
 
 import scala.collection.immutable.VectorBuilder
@@ -13,7 +15,8 @@ import scala.collection.immutable.VectorBuilder
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-trait FunctionDeclaration extends Declaration with CodeConvertible with ScalaDocConvertible
+trait FunctionDeclaration[+Repr]
+	extends Declaration with CodeConvertible with ScalaDocConvertible with Mergeable[FunctionDeclaration[_], Repr]
 {
 	// ABSTRACT ------------------------------
 	
@@ -30,6 +33,10 @@ trait FunctionDeclaration extends Declaration with CodeConvertible with ScalaDoc
 	  * @return Whether this declaration overrides a base declaration
 	  */
 	def isOverridden: Boolean
+	/**
+	  * @return Whether this function implementation should be considered low priority when merging
+	  */
+	def isLowMergePriority: Boolean
 	
 	/**
 	  * @return Documentation describing this function (may be empty)
@@ -48,6 +55,22 @@ trait FunctionDeclaration extends Declaration with CodeConvertible with ScalaDoc
 	  * @return Parameters accepted by this function. None if this function is parameterless.
 	  */
 	protected def params: Option[Parameters]
+	
+	/**
+	  * Creates a modified copy of this declaration
+	  * @param visibility New visibility
+	  * @param parameters New parameters
+	  * @param bodyCode New code
+	  * @param explicitOutputType New output type
+	  * @param description New description
+	  * @param returnDescription New return description
+	  * @param headerComments New header comments
+	  * @param isOverridden Whether new version should be overridden
+	  * @return Copy of this declaration
+	  */
+	protected def makeCopy(visibility: Visibility, parameters: Option[Parameters], bodyCode: Code,
+	                       explicitOutputType: Option[ScalaType], description: String, returnDescription: String,
+	                       headerComments: Vector[String], isOverridden: Boolean): Repr
 	
 	
 	// COMPUTED ------------------------------
@@ -101,5 +124,38 @@ trait FunctionDeclaration extends Declaration with CodeConvertible with ScalaDoc
 		}
 		
 		builder.result()
+	}
+	
+	override def mergeWith(other: FunctionDeclaration[_]) =
+	{
+		val (priority, lowPriority) =
+		{
+			if (isLowMergePriority)
+			{
+				if (other.isLowMergePriority) this -> other else other -> this
+			}
+			else
+				this -> other
+		}
+		
+		val conflictsBuilder = new VectorBuilder[MergeConflict]()
+		val myBase = basePart
+		val theirBase = other.basePart
+		if (myBase != theirBase)
+			conflictsBuilder += MergeConflict.line(theirBase.text, myBase.text, s"$name declarations differ")
+		if (params.exists { !other.params.contains(_) })
+			conflictsBuilder ++= params.get.conflictWith(other.params.get, s"$name parameters differ")
+		if (bodyCode.conflictsWith(other.bodyCode))
+			conflictsBuilder ++= bodyCode.conflictWith(other.bodyCode, s"$name implementations differ")
+		if (explicitOutputType.exists { myType => other.explicitOutputType.exists { _ != myType } })
+			conflictsBuilder += MergeConflict.line(other.explicitOutputType.get.toString,
+				explicitOutputType.get.toString, s"$name implementations specify different return types")
+		
+		makeCopy(visibility min other.visibility, priority.params, priority.bodyCode,
+			priority.explicitOutputType.orElse(lowPriority.explicitOutputType),
+			priority.description.notEmpty.getOrElse(lowPriority.description),
+			priority.returnDescription.notEmpty.getOrElse(lowPriority.returnDescription),
+			other.headerComments.filterNot(headerComments.contains) ++ headerComments,
+			isOverridden || other.isOverridden) -> conflictsBuilder.result()
 	}
 }

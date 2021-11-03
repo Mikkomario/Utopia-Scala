@@ -50,8 +50,9 @@ object TablesWriter
 					}
 				},
 				// Defines a private apply method but leaves the implementation open
-				methods = Set(MethodDeclaration("apply", applyReferences, Private, Some(Reference.table))(
-					Parameter("tableName", ScalaType.string))(applyImplementation.head, applyImplementation.tail: _*)),
+				methods = Set(MethodDeclaration("apply", applyReferences, Private, Some(Reference.table),
+					isLowMergePriority = true)(Parameter("tableName", ScalaType.string))(
+					applyImplementation.head, applyImplementation.tail: _*)),
 				description = "Used for accessing the database tables introduced in this project",
 				author = classes.map { _.author }.toSet.filter { _.nonEmpty }.mkString(", ")
 			)

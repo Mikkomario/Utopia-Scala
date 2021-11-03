@@ -12,9 +12,9 @@ import utopia.vault.coder.model.scala.ScalaTypeCategory.{CallByName, Standard}
 import utopia.vault.coder.model.scala.{Extension, Package, Parameter, Parameters, Reference, ScalaDoc, ScalaDocKeyword, ScalaDocPart, ScalaType}
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected, Public}
 import utopia.vault.coder.model.scala.code.{Code, CodeLine, CodePiece}
-import utopia.vault.coder.model.scala.declaration.DeclarationPrefix.Override
+import utopia.vault.coder.model.scala.declaration.DeclarationPrefix.{Lazy, Override}
 import utopia.vault.coder.model.scala.declaration.FunctionDeclarationType.{FunctionD, ValueD, VariableD}
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue, Variable}
+import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue, LazyValue, Variable}
 import utopia.vault.coder.model.scala.declaration.{DeclarationPrefix, DeclarationStart, DeclarationType, FunctionDeclarationType, InstanceDeclarationType, MethodDeclaration, PropertyDeclaration}
 
 import java.nio.file.Path
@@ -46,6 +46,8 @@ object ScalaParser
 	
 	private lazy val scalaDocStartRegex = Regex("\\/\\*\\*")
 	private lazy val commentEndRegex = Regex("\\*\\/")
+	private lazy val emptyScalaDocLineRegex = (Regex.newLine || Regex.whiteSpace || Regex.escape('\t') ||
+		Regex.escape('*')).withinParenthesis.zeroOrMoreTimes
 	private lazy val segmentSeparatorRegex = Regex.upperCaseLetter.oneOrMoreTimes +
 		(Regex.escape('\t') || Regex.whiteSpace).withinParenthesis.oneOrMoreTimes +
 		Regex.escape('-').oneOrMoreTimes
@@ -340,11 +342,12 @@ object ScalaParser
 							if (declarationType == FunctionD && parameters.exists { _.containsExplicits })
 								parentBuilder.addMethod(MethodDeclaration(visibility, declarationName, parameters.get,
 									body, explicitType, scalaDoc.description, scalaDoc.returnDescription,
-									filteredComments, prefixes.contains(Override)))
+									filteredComments, prefixes.contains(Override), isLowMergePriority = false))
+							// Case: Parsed item is a property
 							else
 							{
 								val propertyType = declarationType match {
-									case ValueD => ImmutableValue
+									case ValueD => if (prefixes.contains(Lazy)) LazyValue else ImmutableValue
 									case VariableD => Variable
 									case _ => ComputedProperty
 								}
@@ -410,8 +413,7 @@ object ScalaParser
 	private def scalaDocFromLines(lines: Vector[String]) =
 	{
 		// Skips empty lines from the beginning and the end
-		val targetLines = lines.dropWhile { _.forall { c => c == ' ' || c == '\t' } }
-			.dropRightWhile { _.forall { c => c == ' ' || c == '\t' } }
+		val targetLines = lines.filterNot(emptyScalaDocLineRegex.apply)
 		if (targetLines.isEmpty)
 			ScalaDoc.empty
 		else
@@ -422,7 +424,7 @@ object ScalaParser
 				val (keyword, content) = extractScalaDocKeyword(line)
 				if (keyword.nonEmpty)
 					lastKeyword = keyword
-				builder += lastKeyword -> content
+				builder += lastKeyword -> content.dropWhile { c => c == '\n' || c == '\r' }
 			}
 			ScalaDoc(builder.result().map { case (keyword, lines) => ScalaDocPart(lines, keyword) }
 				.toVector.sortBy { _.keyword })
@@ -803,7 +805,7 @@ object ScalaParser
 		val (lastLineBlockPart, afterPart) = separateBlockClosuresFrom(lastLine, openBlockCount - 1, closeChar)
 		blockLinesBuilder += lastLineBlockPart
 		// Returns all lines plus the part after the last closure
-		blockLinesBuilder.result() -> Some(afterPart.trim).filter { _.nonEmpty }
+		blockLinesBuilder.result() -> Some(afterPart.dropWhile { _ == ' ' }).filter { _.nonEmpty }
 	}
 	
 	private def readOneLineRawParameterLists(line: String) =

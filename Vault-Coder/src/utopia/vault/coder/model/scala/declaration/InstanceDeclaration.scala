@@ -180,7 +180,7 @@ trait InstanceDeclaration
 						merged
 					case None => declaration
 				}
-			} ++ their.filterNot { prop => properties.exists { _.name == prop.name } }
+			} ++ their.filterNot { theirDeclaration => my.exists { _.name == theirDeclaration.name } }
 		}
 		
 		val newProperties = _mergeDeclarations(properties, other.properties)

@@ -50,8 +50,9 @@ object DescribedModelWriter
 						description = s"Descriptions concerning the wrapped ${classToWrite.name}")),
 				Vector(Reference.describedWrapper(modelRef), Reference.simplyDescribed),
 				properties = Vector(ComputedProperty("wrapped", isOverridden = true)(modelParamName)),
-				methods = Set(MethodDeclaration("simpleBaseModel", visibility = Protected, isOverridden = true)(
-					Parameter("roles", ScalaType.iterable(Reference.descriptionRole)))("wrapped.toModel")),
+				methods = Set(MethodDeclaration("simpleBaseModel", visibility = Protected, isOverridden = true,
+					isLowMergePriority = true)(Parameter("roles", ScalaType.iterable(Reference.descriptionRole)))(
+					"wrapped.toModel")),
 				description = s"Combines ${ classToWrite.name } with the linked descriptions",
 				isCaseClass = true
 			)

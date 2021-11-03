@@ -1,13 +1,11 @@
 package utopia.vault.coder.model.scala.declaration
 
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
+import utopia.vault.coder.model.merging.Mergeable
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.Visibility.{Protected, Public}
 import utopia.vault.coder.model.scala.{Parameter, Parameters, ScalaType, Visibility}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-
-import scala.collection.immutable.VectorBuilder
 
 object PropertyDeclaration
 {
@@ -19,13 +17,15 @@ object PropertyDeclaration
 	  * @param description Description of this property (default = empty)
 	  * @param isProtected Whether this property should be protected instead of public (default = false)
 	  * @param isOverridden Whether this property overrides a base member (default = false)
+	  * @param isLowMergePriority Whether this declaration should be considered the lower priority
+	  *                           implementation when merging with another version
 	  * @return A new property declaration
 	  */
 	def newAbstract(name: String, outputType: ScalaType, implicitParams: Vector[Parameter] = Vector(),
 	                description: String = "", headerComments: Vector[String] = Vector(),
-	                isProtected: Boolean = false, isOverridden: Boolean = false) =
+	                isProtected: Boolean = false, isOverridden: Boolean = false, isLowMergePriority: Boolean = false) =
 		apply(ComputedProperty, name, Code.empty, if (isProtected) Protected else Public, Some(outputType),
-			implicitParams, description, headerComments, isOverridden)
+			implicitParams, description, headerComments, isOverridden, isLowMergePriority)
 }
 
 /**
@@ -37,8 +37,8 @@ case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: S
                                visibility: Visibility = Public, explicitOutputType: Option[ScalaType] = None,
                                implicitParams: Vector[Parameter] = Vector(), description: String = "",
                                headerComments: Vector[String] = Vector(),
-                               isOverridden: Boolean = false)
-	extends FunctionDeclaration with Mergeable[PropertyDeclaration, PropertyDeclaration]
+                               isOverridden: Boolean = false, isLowMergePriority: Boolean = false)
+	extends FunctionDeclaration[PropertyDeclaration] with Mergeable[PropertyDeclaration, PropertyDeclaration]
 {
 	// COMPUTED -------------------------------------------
 	
@@ -62,28 +62,11 @@ case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: S
 	override protected def params =
 		if (implicitParams.nonEmpty) Some(Parameters(implicits = implicitParams)) else None
 	
-	override def mergeWith(other: PropertyDeclaration) =
-	{
-		val conflictsBuilder = new VectorBuilder[MergeConflict]()
-		// Checks whether the base declaration is the same
-		val myBase = basePart
-		val theirBase = other.basePart
-		if (myBase != theirBase)
-			conflictsBuilder += MergeConflict.line(theirBase.text, myBase.text, s"$name declarations differ")
-		// FIXME: This yields consistently wrong results
-		if (bodyCode != other.bodyCode)
-			conflictsBuilder ++= bodyCode.conflictWith(other.bodyCode, s"$name implementation differs")
-		if (explicitOutputType.exists { myType => other.explicitOutputType.exists { _ != myType } })
-			conflictsBuilder += MergeConflict.line(other.explicitOutputType.get.toString,
-				explicitOutputType.get.toString, "Implementations specify different return type")
-		
-		PropertyDeclaration(declarationType, name, bodyCode, visibility min other.visibility,
-			explicitOutputType.orElse(other.explicitOutputType),
-			implicitParams ++
-				other.implicitParams.filterNot { p => implicitParams.exists { _.dataType == p.dataType } },
-			description.notEmpty.getOrElse(other.description),
-			headerComments ++ other.headerComments.filterNot(headerComments.contains),
-			isOverridden || other.isOverridden
-		) -> conflictsBuilder.result()
-	}
+	override protected def makeCopy(visibility: Visibility, parameters: Option[Parameters], bodyCode: Code,
+	                                explicitOutputType: Option[ScalaType], description: String,
+	                                returnDescription: String, headerComments: Vector[String],
+	                                isOverridden: Boolean) =
+		PropertyDeclaration(declarationType, name, bodyCode, visibility, explicitOutputType,
+			parameters.map { _.implicits }.getOrElse(implicitParams),
+			description.notEmpty.getOrElse(returnDescription), headerComments, isOverridden, isLowMergePriority)
 }

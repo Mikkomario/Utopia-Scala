@@ -27,7 +27,7 @@ object Regex
 	  */
 	val word = wordCharacter.oneOrMoreTimes
 	val wordBoundary = Regex("\\b")
-	val newLine = Regex("\\n")
+	val newLine = Regex("\\R")
 	
 	val lowerCaseLetter = Regex("[a-zåäö]")
 	val upperCaseLetter = Regex("[A-ZÅÄÖ]")

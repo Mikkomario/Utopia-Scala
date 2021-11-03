@@ -27,6 +27,7 @@
   - Added `.readValidOrEmpty(...)`, which interacts with the user in order to find a valid value
 ### Other Changes
 - Added a double-checking option to `StdIn.readNonEmptyLine(...)` (**ConsoleExtensions**)
+- `Regex.newLine` is now `\R` and not `\n`, capturing a wider range of newline characters
 - Refactored some **Regex** functions
 - Optimized **PollingIterator** mapping
 

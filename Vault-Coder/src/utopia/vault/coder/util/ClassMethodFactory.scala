@@ -46,7 +46,7 @@ object ClassMethodFactory
 		else
 			new MethodDeclaration(Public, methodName, param,
 				enumAwareApplyCode(targetClass, validatedModelCode)(propNameInModel)(wrapAssignments), None,
-				"", "", Vector(), isOverridden = true)
+				"", "", Vector(), isOverridden = true, isLowMergePriority = false)
 	}
 	
 	/**

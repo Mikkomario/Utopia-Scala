@@ -6,6 +6,7 @@
   problems with earlier versions
 - Property types may now specify a different plural property name when using the default name
 ### New Features
+- Added merging feature
 - Added support for divided module structure (e.g. Metropolis & Citadel -case)
 - Added custom sql default value support
 - Added enumeration referencing

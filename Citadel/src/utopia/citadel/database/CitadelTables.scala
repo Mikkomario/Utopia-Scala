@@ -47,8 +47,8 @@ object CitadelTables
 	// COMPUTED	--------------------
 	
 	/**
-	  * Table that contains ClientDevices (Represents a device (e.g. a browser or a computer) a user uses to interact 
-		with this service)
+	  * Table that contains ClientDevices (Represents a device (e.g. a browser or a computer) a user uses to interact
+	  * with this service)
 	  */
 	def clientDevice = apply("client_device")
 	
@@ -103,8 +103,9 @@ object CitadelTables
 	def organization = apply("organization")
 	
 	/**
-	  * Table that contains OrganizationDeletions (Represents a request to delete an organization. There exists a time period between the request and its completion, 
-		during which other users may cancel the deletion.)
+	  * Table that contains OrganizationDeletions (Represents a request to delete an organization.
+	  * There exists a time period between the request and its completion,
+	  * during which other users may cancel the deletion.)
 	  */
 	def organizationDeletion = apply("organization_deletion")
 	

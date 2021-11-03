@@ -145,14 +145,21 @@ case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set())
 	
 	/**
 	  * @param other Another code
+	  * @return Whether this code is meaningfully different from the other code
+	  */
+	def conflictsWith(other: Code) = lines.map { _.code }.mkString != other.lines.map { _.code }.mkString
+	
+	/**
+	  * @param other Another code
 	  * @param description Conflict description
 	  * @return Merge conflict between these two codes
 	  */
 	def conflictWith(other: Code, description: => String = "") =
 	{
 		val conflictLines =
-			lines.zip(other.lines).dropWhile { case (a, b) => a.code != b.code }
-				.dropRightWhile { case (a, b) => a.code != b.code }
+			lines.padTo(other.lines.size, CodeLine.empty).zip(other.lines.padTo(lines.size, CodeLine.empty))
+				.dropWhile { case (a, b) => a.code == b.code }
+				.dropRightWhile { case (a, b) => a.code == b.code }
 		if (conflictLines.nonEmpty)
 			Some(MergeConflict(conflictLines.map { _._2 }, conflictLines.map { _._1 }, description))
 		else

@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.scala
 
+import utopia.vault.coder.model.merging.MergeConflict
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.template.{ScalaConvertible, ScalaDocConvertible}
 
@@ -108,6 +109,21 @@ case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Ve
 	  */
 	def withImplicits(firstParam: Parameter, moreParams: Parameter*) =
 		copy(implicits = firstParam +: moreParams.toVector)
+	
+	/**
+	  * @param other Another set of parameters
+	  * @param description Description to attach to the conflict, if one is found
+	  * @return A possible conflict between these parameter sets
+	  */
+	def conflictWith(other: Parameters, description: => String = "") =
+	{
+		val my = toString
+		val their = other.toString
+		if (my == their)
+			None
+		else
+			Some(MergeConflict.line(their, my, description))
+	}
 	
 	private def parameterListFrom(list: Seq[Parameter]) =
 	{
