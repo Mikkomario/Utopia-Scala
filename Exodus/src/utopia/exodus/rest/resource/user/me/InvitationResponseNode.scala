@@ -2,11 +2,14 @@ package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{Forbidden, NotFound, Unauthorized}
-import utopia.citadel.database.access.single.organization.{DbInvitation, DbOrganization}
-import utopia.citadel.database.access.single.user.DbUser
+import utopia.citadel.database.access.single.organization.DbInvitation
+import utopia.citadel.database.access.single.user.{DbUser, DbUserSettings}
+import utopia.citadel.database.model.organization.InvitationResponseModel
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.combined.organization.InvitationWithResponse
+import utopia.metropolis.model.partial.organization.InvitationResponseData
 import utopia.metropolis.model.post.NewInvitationResponse
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
@@ -29,42 +32,57 @@ case class InvitationResponseNode(invitationId: Int) extends Resource[Authorized
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionKeyAuthorized { (session, connection) =>
-			// Parses the response
+		context.sessionTokenAuthorized { (session, connection) =>
+			// Parses the invitation response
 			context.handlePost(NewInvitationResponse) { newResponse =>
 				// Makes sure the invitation exists, hasn't been answered or expired yet and is targeted for this user
 				implicit val c: Connection = connection
-				val accessInvitation = DbInvitation(invitationId)
-				accessInvitation.pull match {
+				val userId = session.userId
+				val invitationAccess = DbInvitation(invitationId)
+				invitationAccess.pull match
+				{
 					case Some(invitation) =>
-						val isForThisUser = invitation.recipient match {
-							case Right(recipientId) => recipientId == session.userId
-							case Left(recipientEmail) =>
-								val myEmail = DbUser(session.userId).settings.map { _.email }
-								myEmail.contains(recipientEmail)
-						}
-						if (isForThisUser) {
+						// Tests whether the invitation is for this user
+						if (invitation.recipientId.contains(userId) || invitation.recipientEmail
+							.exists { email => DbUserSettings.forUserWithId(userId).email.contains(email) })
+						{
 							if (invitation.hasExpired)
 								Result.Failure(Forbidden, "This invitation has already expired")
-							else {
-								accessInvitation.response.pull match {
+							else
+							{
+								invitationAccess.response.pull match
+								{
 									case Some(earlierResponse) =>
 										// If there was a response, will not create a new one
-										if (earlierResponse.wasAccepted == newResponse.wasAccepted &&
-											earlierResponse.wasBlocked == newResponse.wasBlocked)
-											Result.Success(InvitationWithResponse(invitation, earlierResponse).toModel)
+										if (earlierResponse.accepted == newResponse.wasAccepted &&
+											earlierResponse.blocked == newResponse.wasBlocked &&
+											earlierResponse.message == newResponse.message)
+											Result.Success(
+												InvitationWithResponse(invitation, Some(earlierResponse)).toModel)
 										else
 											Result.Failure(Forbidden, "You've already responded to this invitation")
 									case None =>
 										// Saves the new response to DB
-										val savedResponse = accessInvitation.response.insert(newResponse, session.userId)
+										val response = InvitationResponseModel.insert(
+											InvitationResponseData(invitation.id,
+												newResponse.message.map { _.trim }.filter { _.nonEmpty },
+												Some(userId), accepted = newResponse.wasAccepted,
+												blocked = newResponse.wasBlocked))
+										val invitationWithResponse = invitation + response
+										val style = session.modelStyle
 										// Adds this user to the organization (if the invitation was accepted)
-										if (savedResponse.wasAccepted)
-											DbOrganization(invitation.organizationId).memberships.insert(
-												session.userId, invitation.startingRoleId,
-												invitation.creatorId.getOrElse(session.userId))
+										if (response.accepted)
+										{
+											val membership = DbUser(userId)
+												.membershipInOrganizationWithId(invitation.organizationId)
+												.start(invitation.startingRoleId, invitation.senderId.getOrElse(userId))
+											Result.Success(Model(Vector(
+												"invitation" -> invitationWithResponse.toModelWith(style),
+												"membership" -> membership.toModelWith(style))))
+										}
 										// Returns the original invitation, along with the posted response
-										Result.Success(InvitationWithResponse(invitation, savedResponse).toModel)
+										else
+											Result.Success(invitationWithResponse.toModelWith(style))
 								}
 							}
 						}

@@ -84,6 +84,16 @@ class CodeBuilder(startIndentation: Int = 0) extends mutable.Builder[String, Cod
 	}
 	
 	/**
+	  * Updates the indentation used for the following lines
+	  * @param indentation Indentation to use from now on
+	  */
+	def setIndentation(indentation: Int) = currentIndent = indentation
+	/**
+	  * Resets the current indentation back to 0
+	  */
+	def resetIndentation() = setIndentation(0)
+	
+	/**
 	  * Adds a reference to this builder
 	  * @param reference A reference to include
 	  * @return This builder

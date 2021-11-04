@@ -1,9 +1,9 @@
 package utopia.trove.model.partial
 
 import utopia.flow.time.Now
+import utopia.flow.util.Version
 
 import java.time.Instant
-import utopia.trove.model.VersionNumber
 
 /**
   * Contains basic information about a database version
@@ -12,4 +12,4 @@ import utopia.trove.model.VersionNumber
   * @param number Database version number
   * @param created Creation time of this version
   */
-case class DatabaseVersionData(number: VersionNumber, created: Instant = Now)
+case class DatabaseVersionData(number: Version, created: Instant = Now)

@@ -156,7 +156,10 @@ object LocalDatabase
 							}
 							// If there wasn't any target database before, creates one
 							else
-								connection.createDatabase(dbName)
+							{
+								connection.dropDatabase(dbName)
+								connection.createDatabase(dbName, checkIfExists = false)
+							}
 							
 							// Imports the source files in order
 							// Keeps track of the version(s) during the loop in order to record the final version

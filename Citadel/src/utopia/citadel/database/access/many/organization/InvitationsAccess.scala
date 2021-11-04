@@ -14,6 +14,7 @@ import utopia.vault.sql.{JoinType, Select, Where}
   * @author Mikko Hilpinen
   * @since 6.5.2020, v1.0
   */
+@deprecated("Replaced with ManyInvitationsAccess", "v2.0")
 trait InvitationsAccess extends ManyModelAccess[Invitation]
 {
 	// IMPLEMENTED	------------------------
@@ -46,7 +47,7 @@ trait InvitationsAccess extends ManyModelAccess[Invitation]
 	{
 		// Pending invitations must not be joined to a response and not be expired
 		val noResponseCondition = InvitationResponseFactory.table.primaryColumn.get.isNull
-		val pendingCondition = InvitationModel.withExpireTime(Now).toConditionWithOperator(Larger)
+		val pendingCondition = InvitationModel.withExpires(Now).toConditionWithOperator(Larger)
 		// Has to join invitation response table for the condition to work
 		connection(Select(InvitationFactory.target.join(InvitationResponseFactory.table, JoinType.Left), InvitationModel.table) +
 			Where(mergeCondition(noResponseCondition && pendingCondition))).parse(factory)

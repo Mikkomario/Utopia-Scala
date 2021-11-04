@@ -1,55 +1,57 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.datastructure.immutable.{Constant, ModelDeclaration, PropertyDeclaration}
+import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.datastructure.template.{Model, Property}
-import utopia.flow.generic.{FromModelFactory, ModelConvertible, ModelType}
+import utopia.flow.generic.FromModelFactory
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.Extender
+import utopia.metropolis.model.StyledModelConvertible
+import utopia.metropolis.model.partial.organization.InvitationData
 import utopia.metropolis.model.stored.organization.{Invitation, InvitationResponse}
+
+import scala.util.Success
 
 object InvitationWithResponse extends FromModelFactory[InvitationWithResponse]
 {
-	// ATTRIBUTES	------------------------------
-	
-	private val schema = ModelDeclaration(PropertyDeclaration("response", ModelType))
-	
-	
-	// IMPLEMENTED	------------------------------
-	
-	override def apply(model: Model[Property]) = Invitation(model).flatMap { invitation =>
-		schema.validate(model).toTry.flatMap { valid =>
-			InvitationResponse(valid("response").getModel).map { response =>
-				InvitationWithResponse(invitation, response)
+	override def apply(model: Model[Property]) =
+		Invitation(model).flatMap { invitation =>
+			model("response").model match
+			{
+				case Some(responseModel) => InvitationResponse(responseModel).map { invitation + _ }
+				case None => Success(invitation + None)
 			}
+		}
+}
+
+/**
+  * Combines Invitation with response data
+  * @author Mikko Hilpinen
+  * @since 2021-10-23
+  */
+case class InvitationWithResponse(invitation: Invitation, response: Option[InvitationResponse]) 
+	extends Extender[InvitationData] with StyledModelConvertible
+{
+	// COMPUTED	--------------------
+	
+	/**
+	  * Id of this Invitation in the database
+	  */
+	def id = invitation.id
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def wrapped = invitation.data
+	
+	override def toModel = invitation.toModel + Constant("response", response.map { _.toModel })
+	
+	override def toSimpleModel =
+	{
+		val base = invitation.toModel
+		response match {
+			case Some(response) => base + Constant("response", response.toSimpleModel)
+			case None => base
 		}
 	}
 }
 
-/**
-  * An extender to standard invitation model that also contains the response to that invitation (if present)
-  * @author Mikko Hilpinen
-  * @since 4.5.2020, v1
-  */
-case class InvitationWithResponse(invitation: Invitation, response: InvitationResponse) extends Extender[Invitation]
-	with ModelConvertible
-{
-	// COMPUTED	----------------------------------
-	
-	/**
-	  * @return Id of the user who received this invitation
-	  */
-	def recipientId = response.creatorId
-	
-	
-	// IMPLEMENTED	------------------------------
-	
-	override def wrapped = invitation
-	
-	override def toModel =
-	{
-		// Includes the response model
-		val base = wrapped.toModel
-		val responseModel = response.toModel
-		base + Constant("response", responseModel)
-	}
-}

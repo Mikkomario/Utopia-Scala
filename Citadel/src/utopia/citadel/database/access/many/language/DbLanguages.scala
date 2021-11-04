@@ -1,82 +1,92 @@
 package utopia.citadel.database.access.many.language
 
-import utopia.citadel.database.access.many.description.{DbLanguageDescriptions, ManyDescribedAccess, ManyDescribedAccessByIds}
-import utopia.citadel.database.factory.language.LanguageFactory
-import utopia.citadel.database.model.language.LanguageModel
-import utopia.flow.generic.ValueConversions._
+import utopia.citadel.database.access.many.description.ManyDescribedAccessByIds
+import utopia.flow.util.CollectionExtensions._
 import utopia.metropolis.model.combined.language.DescribedLanguage
-import utopia.metropolis.model.stored.language.Language
+import utopia.metropolis.model.error.NoDataFoundException
+import utopia.metropolis.model.post.NewLanguageProficiency
+import utopia.metropolis.model.stored.language.{Language, LanguageFamiliarity}
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.{RowFactoryView, UnconditionalView}
-import utopia.vault.sql.SqlExtensions._
+import utopia.vault.nosql.view.UnconditionalView
+
+import scala.util.{Failure, Success, Try}
 
 /**
-  * Used for accessing multiple languages at a time
+  * The root access point when targeting multiple Languages at a time
   * @author Mikko Hilpinen
-  * @since 10.5.2020, v1.0
+  * @since 2021-10-23
   */
-object DbLanguages
-	extends ManyRowModelAccess[Language] with ManyDescribedAccess[Language, DescribedLanguage] with UnconditionalView
+object DbLanguages extends ManyLanguagesAccess with UnconditionalView
 {
-	// IMPLEMENTED	----------------------------
-	
-	override def factory = LanguageFactory
-	
-	override protected def defaultOrdering = None
-	
-	override protected def manyDescriptionsAccess = DbLanguageDescriptions
-	
-	override protected def describedFactory = DescribedLanguage
-
-	override protected def idOf(item: Language) = item.id
-	
-	
-	// COMPUTED	--------------------------------
-	
-	private def model = LanguageModel
-	
-	
-	// OTHER	--------------------------------
+	// OTHER	--------------------
 	
 	/**
-	 * @param ids A set of language ids
-	 * @return An access point to those languages
-	 */
-	def apply(ids: Set[Int]) = new DbLanguagesWithIds(ids)
-	
-	/**
-	  * @param codes      ISO-standard language codes
-	  * @param connection DB Connection (implicit)
-	  * @return Languages that match those codes
+	  * @param ids Ids of the targeted Languages
+	  * @return An access point to Languages with the specified ids
 	  */
-	def forIsoCodes(codes: Set[String])(implicit connection: Connection) = read(Some(
-		model.isoCodeColumn.in(codes)))
+	def apply(ids: Set[Int]) = new DbLanguagesSubset(ids)
 	
-	
-	// NESTED   --------------------------------
-	
-	class DbLanguagesWithIds(override val ids: Set[Int])
-		extends ManyDescribedAccessByIds[Language, DescribedLanguage] with RowFactoryView[Language]
+	/**
+	  * Validates the proposed language proficiencies, making sure all language ids and codes are valid
+	  * @param proficiencies Proposed proficiencies
+	  * @param connection    DB Connection (implicit)
+	  * @return List of language -> familiarity pairs. Failure if some of the ids or codes were invalid
+	  */
+	def validateProposedProficiencies(proficiencies: Vector[NewLanguageProficiency])
+	                                 (implicit connection: Connection): Try[Vector[(Language, LanguageFamiliarity)]] =
 	{
-		// COMPUTED ----------------------------
-		
-		/**
-		 * @param connection Implicit DB Connection
-		 * @return ISO-codes of these languages
-		 */
-		def isoCodes(implicit connection: Connection) =
-			pullAttribute(model.isoCodeAttName).flatMap { _.string }
-		
-		
-		// IMPLEMENTED  ------------------------
-		
-		override def factory = DbLanguages.factory
-		override protected def defaultOrdering = None
-		
-		override protected def manyDescriptionsAccess = DbLanguageDescriptions
-		override protected def describedFactory = DescribedLanguage
-		
-		override protected def idOf(item: Language) = item.id
+		if (proficiencies.isEmpty)
+			Success(Vector())
+		else
+		{
+			// Divides into groups so that checks can be made in bulks
+			val (familiaritiesByLanguageCode, familiaritiesByLanguageId) = proficiencies
+				.dividedWith { p => p.language.mapBoth { _ -> p.familiarityId } { _ -> p.familiarityId } }
+			// Makes sure all listed language ids are valid
+			val listedLanguageIds = familiaritiesByLanguageId.map { _._1 }.toSet
+			val languagesByIds = if (listedLanguageIds.isEmpty) Vector() else apply(listedLanguageIds).pull
+			val missingLanguageIds = listedLanguageIds -- languagesByIds.map { _.id }
+			if (missingLanguageIds.nonEmpty)
+				Failure(new NoDataFoundException(s"Language ids [${missingLanguageIds.mkString(", ")}] are not valid"))
+			else
+			{
+				// Makes sure all listed language codes are valid
+				val listedLanguageCodes = familiaritiesByLanguageCode.map { _._1 }.toSet
+				val languagesByIsoCodes = if (listedLanguageCodes.isEmpty) Vector() else
+					withIsoCodes(listedLanguageCodes)
+				val missingIsoCodes = listedLanguageCodes -- languagesByIsoCodes.map { _.isoCode }
+				if (missingIsoCodes.nonEmpty)
+					Failure(new NoDataFoundException(s"Language codes [${
+						missingIsoCodes.mkString(", ")}] are not valid"))
+				else
+				{
+					// Finally makes sure all the familiarity levels are valid also
+					val listedFamiliarityIds = proficiencies.map { _.familiarityId }.toSet
+					val familiarities = DbLanguageFamiliarities(listedFamiliarityIds).pull
+					val missingFamiliarityIds = listedFamiliarityIds -- familiarities.map { _.id }
+					if (missingFamiliarityIds.nonEmpty)
+						Failure(new NoDataFoundException(s"Language familiarity ids [${
+							missingFamiliarityIds.mkString(", ")}] are not valid"))
+					else
+					{
+						// Combines the validated data together
+						val languagesById = languagesByIds.map { l => l.id -> l }.toMap
+						val languagesByIsoCode = languagesByIsoCodes.map { l => l.isoCode -> l }.toMap
+						val familiaritiesById = familiarities.map { f => f.id -> f }.toMap
+						Success(familiaritiesByLanguageId.map { case (languageId, familiarityId) =>
+							languagesById(languageId) -> familiaritiesById(familiarityId) } ++
+							familiaritiesByLanguageCode.map { case (languageCode, familiarityId) =>
+								languagesByIsoCode(languageCode) -> familiaritiesById(familiarityId) })
+					}
+				}
+			}
+		}
 	}
+	
+	
+	// NESTED	--------------------
+	
+	class DbLanguagesSubset(override val ids: Set[Int]) 
+		extends ManyLanguagesAccess with ManyDescribedAccessByIds[Language, DescribedLanguage]
 }
+

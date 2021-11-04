@@ -1,13 +1,14 @@
 package utopia.citadel.database.access.single.description
 
-import utopia.citadel.database.factory.description.DescriptionLinkFactory
+import utopia.citadel.database.factory.description.CitadelLinkedDescriptionFactory
+import utopia.citadel.database.model.description.CitadelDescriptionLinkModel
 
-/**
-  * Used for accessing individual language familiarity descriptions
-  * @author Mikko Hilpinen
-  * @since 13.10.2021, v1.3
-  */
-object DbLanguageFamiliarityDescription extends DescriptionLinkAccess
+object DbLanguageFamiliarityDescription extends LinkedDescriptionAccess
 {
-	override def factory = DescriptionLinkFactory.languageFamiliarity
+	// IMPLEMENTED	--------------------
+	
+	override def factory = CitadelLinkedDescriptionFactory.languageFamiliarity
+	
+	override def linkModel = CitadelDescriptionLinkModel.languageFamiliarity
 }
+

@@ -7,13 +7,16 @@ import utopia.vault.coder.model.scala.Package
   * Contains project classes, enumerations etc.
   * @author Mikko Hilpinen
   * @since 14.10.2021, v1.2
-  * @param basePackage Package that holds all project data
+  * @param projectName Name of this project (db part if has two names)
+  * @param modelPackage Package that contains the models and enumerations for this project
+  * @param databasePackage Package that contains the database interactions for this project
   * @param enumerations Enumerations in this project
   * @param classes Classes in this project
   * @param combinations Combinations in this project
+  * @param modelCanReferToDB Whether model classes are allowed to refer to database classes
   */
-case class ProjectData(basePackage: Package, enumerations: Vector[Enum], classes: Vector[Class],
-                       combinations: Vector[CombinationData])
+case class ProjectData(projectName: String, modelPackage: Package, databasePackage: Package, enumerations: Vector[Enum],
+                       classes: Vector[Class], combinations: Vector[CombinationData], modelCanReferToDB: Boolean)
 {
 	// COMPUTED ------------------------------
 	

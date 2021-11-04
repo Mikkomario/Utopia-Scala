@@ -14,6 +14,7 @@ import utopia.vault.nosql.access.single.model.distinct.{SingleIntIdModelAccess, 
   * @author Mikko Hilpinen
   * @since 3.5.2020, v1
   */
+@deprecated("Replaced with DeviceToken", "v3.0")
 object DbDeviceKey extends SingleRowModelAccess[DeviceKey]
 {
 	// IMPLEMENTED	------------------------------------

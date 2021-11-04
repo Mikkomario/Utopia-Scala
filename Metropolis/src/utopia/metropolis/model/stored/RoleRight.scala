@@ -8,4 +8,5 @@ package utopia.metropolis.model.stored
   * @param roleId Id of the role associated with this link
   * @param taskId Id of the task associated with this link
   */
+@deprecated("Replaced with UserRoleRight", "v2.0")
 case class RoleRight(id: Int, roleId: Int, taskId: Int)

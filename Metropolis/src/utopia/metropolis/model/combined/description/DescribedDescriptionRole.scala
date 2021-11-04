@@ -1,6 +1,6 @@
 package utopia.metropolis.model.combined.description
 
-import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
+import utopia.metropolis.model.stored.description.DescriptionRole
 
 object DescribedDescriptionRole extends DescribedFromModelFactory[DescriptionRole, DescribedDescriptionRole]
 {
@@ -8,12 +8,18 @@ object DescribedDescriptionRole extends DescribedFromModelFactory[DescriptionRol
 }
 
 /**
-  * Combines a description role with some descriptions
-  * @author Mikko Hilpinen
-  * @since 20.5.2020, v1
+  * Combines DescriptionRole with the linked descriptions
+  * @param descriptionRole DescriptionRole to wrap
+  * @param descriptions Descriptions concerning the wrapped DescriptionRole
+  * @since 2021-10-23
   */
-case class DescribedDescriptionRole(wrapped: DescriptionRole, descriptions: Set[DescriptionLink])
+case class DescribedDescriptionRole(descriptionRole: DescriptionRole, descriptions: Set[LinkedDescription])
 	extends DescribedWrapper[DescriptionRole] with SimplyDescribed
 {
+	// IMPLEMENTED	--------------------
+	
+	override def wrapped = descriptionRole
+	
 	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) = wrapped.toModel
 }
+

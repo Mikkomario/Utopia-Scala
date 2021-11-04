@@ -1,6 +1,6 @@
 package utopia.vault.nosql.factory.multi
 
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.vault.nosql.factory.CombiningFactoryLike
 
 /**
@@ -26,6 +26,6 @@ trait MultiCombiningFactory[+Combined, Parent, Child]
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def apply(id: Value, model: Model[Constant], children: Vector[Child]) =
+	override def apply(id: Value, model: Model, children: Vector[Child]) =
 		parentFactory(model).map { p => apply(p, children) }
 }

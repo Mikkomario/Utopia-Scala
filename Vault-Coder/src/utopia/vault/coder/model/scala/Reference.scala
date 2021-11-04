@@ -5,6 +5,8 @@ import utopia.vault.coder.model.scala.template.ScalaConvertible
 import utopia.vault.coder.model.data.ProjectSetup
 import utopia.vault.coder.model.scala.code.CodePiece
 
+import java.nio.file.Path
+
 object Reference
 {
 	import Package._
@@ -43,6 +45,7 @@ object Reference
 	lazy val modelConvertible = apply(flowGenerics, "ModelConvertible")
 	
 	lazy val now = apply(flowTime, "Now")
+	lazy val today = apply(flowTime, "Today")
 	lazy val days = apply(flowTime, "Days")
 	
 	lazy val extender = apply(flowUtils, "Extender")
@@ -86,18 +89,25 @@ object Reference
 	
 	// Metropolis
 	
+	lazy val metropolisStoredModelConvertible = apply(metropolisModel/"stored", "StoredModelConvertible")
 	lazy val descriptionRole = apply(description, "DescriptionRole")
-	lazy val descriptionLink = apply(description, "DescriptionLink")
+	lazy val linkedDescription = apply(combinedDescription, "LinkedDescription")
 	lazy val describedWrapper = apply(combinedDescription, "DescribedWrapper")
 	lazy val simplyDescribed = apply(combinedDescription, "SimplyDescribed")
 	lazy val describedFactory = apply(combinedDescription, "DescribedFactory")
 	
 	// Citadel
 	
+	lazy val descriptionLinkTable = apply(citadel/"model.cached", "DescriptionLinkTable")
 	lazy val citadelTables = apply(citadelDatabase, "Tables")
 	lazy val descriptionLinkModelFactory = apply(citadelDatabase/"model.description", "DescriptionLinkModelFactory")
 	lazy val descriptionLinkFactory = apply(citadelDatabase/"factory.description", "DescriptionLinkFactory")
+	lazy val linkedDescriptionFactory = apply(citadelDatabase/"factory.description", "LinkedDescriptionFactory")
+	lazy val linkedDescriptionAccess = apply(descriptionAccess, "LinkedDescriptionAccess")
+	lazy val linkedDescriptionsAccess = apply(descriptionsAccess, "LinkedDescriptionsAccess")
+	@deprecated("Replaced with linkedDescriptionAccess", "v2.0")
 	lazy val descriptionLinkAccess = apply(descriptionAccess, "DescriptionLinkAccess")
+	@deprecated("Replaced with linkedDescriptionsAccess", "v2.0")
 	lazy val descriptionLinksAccess = apply(descriptionsAccess, "DescriptionLinksAccess")
 	lazy val singleIdDescribedAccess = apply(descriptionAccess, "SingleIdDescribedAccess")
 	lazy val manyDescribedAccess = apply(descriptionsAccess, "ManyDescribedAccess")
@@ -147,16 +157,7 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	  * @param setup Implicit project setup
 	  * @return Path to the referenced file
 	  */
-	def path(implicit setup: ProjectSetup) =
-	{
-		val (packagePart, classPart) = importTarget.splitAtLast(".")
-		// Case: There are no two parts in the target => Uses the only part as the file name
-		if (classPart.isEmpty)
-			packagePath.pathTo(packagePart)
-		// Case: Target consists of multiple parts => appends the package part to the package path (directory path)
-		else
-			(packagePath/packagePart).pathTo(classPart)
-	}
+	def path(implicit setup: ProjectSetup) = pathIn(setup.sourceRoot)
 	
 	
 	// OTHER    --------------------------------
@@ -184,6 +185,21 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	  * @return A copy of this reference, relative to that package
 	  */
 	def from(packagePath: Package) = copy(packagePath = this.packagePath.fromPerspectiveOf(packagePath))
+	
+	/**
+	  * @param sourceRoot Root directory
+	  * @return Path to the referenced file
+	  */
+	def pathIn(sourceRoot: Path) =
+	{
+		val (packagePart, classPart) = importTarget.splitAtLast(".")
+		// Case: There are no two parts in the target => Uses the only part as the file name
+		if (classPart.isEmpty)
+			packagePath.pathTo(packagePart, sourceRoot)
+		// Case: Target consists of multiple parts => appends the package part to the package path (directory path)
+		else
+			(packagePath/packagePart).pathTo(classPart, sourceRoot)
+	}
 	
 	
 	// IMPLEMENTED  ----------------------------

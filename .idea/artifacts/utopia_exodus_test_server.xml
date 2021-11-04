@@ -13,6 +13,7 @@
           <element id="module-output" name="Nexus" />
           <element id="module-output" name="NexusForTomcat" />
           <element id="module-output" name="Vault" />
+          <element id="module-output" name="Citadel" />
         </element>
         <element id="directory" name="lib">
           <element id="library" level="application" name="scala-sdk-2.13.3" />

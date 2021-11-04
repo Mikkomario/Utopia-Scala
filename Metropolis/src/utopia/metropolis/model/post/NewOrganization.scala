@@ -8,7 +8,7 @@ object NewOrganization extends FromModelFactoryWithSchema[NewOrganization]
 {
 	override val schema = ModelDeclaration("name" -> StringType, "language_id" -> IntType)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = NewOrganization(model("name").getString,
+	override protected def fromValidatedModel(model: Model) = NewOrganization(model("name").getString,
 		model("language_id").getInt)
 }
 

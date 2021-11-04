@@ -1,5 +1,8 @@
 # Utopia Reach - List of Changes
 
+## v0.3.1 - 04.11.2021
+Supports changes in Flow v1.14
+
 ## v0.3 (alpha) - 3.10.2021
 This update simply reflects changes in the **Flow**, **Genesis** and **Reflection** modules, utilizing the new 
 traits and classes.

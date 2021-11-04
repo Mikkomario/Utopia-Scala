@@ -83,7 +83,7 @@ object XmlElement extends FromModelFactory[XmlElement]
       * @param fill A function that adds child elements to the provided buffer
       * @return A new xml element
       */
-    def build(name: String, attributes: Model[Constant] = Model(Vector()))(fill: VectorBuilder[XmlElement] => Unit) =
+    def build(name: String, attributes: Model = Model.empty)(fill: VectorBuilder[XmlElement] => Unit) =
     {
         val buffer = new VectorBuilder[XmlElement]()
         fill(buffer)
@@ -96,7 +96,7 @@ object XmlElement extends FromModelFactory[XmlElement]
  * @author Mikko Hilpinen
  * @since 13.1.2017 (v1.3)
  */
-case class XmlElement(name: String, value: Value = Value.emptyWithType(StringType), attributes: Model[Constant] = Model(Vector()),
+case class XmlElement(name: String, value: Value = Value.emptyWithType(StringType), attributes: Model = Model.empty,
                       override val children: Vector[XmlElement] = Vector())
     extends TreeLike[String, XmlElement] with ModelConvertible
 {
@@ -106,7 +106,7 @@ case class XmlElement(name: String, value: Value = Value.emptyWithType(StringTyp
      * The text inside this xml element. None if the element doesn't contain any text
      */
     def text = value.string
-    override def toModel: Model[Constant] = 
+    override def toModel: Model =
     {
         val atts = new VectorBuilder[(String, Value)]
         atts += ("name" -> name)
@@ -289,13 +289,13 @@ case class XmlElement(name: String, value: Value = Value.emptyWithType(StringTyp
       * @param attributes New set of attributes for this element
       * @return A copy of this element with those attributes
       */
-    def withAttributes(attributes: Model[Constant]) = copy(attributes = attributes)
+    def withAttributes(attributes: Model) = copy(attributes = attributes)
     
     /**
       * @param newAttributes Additional attributes for this element
       * @return A copy of this element with those attributes added
       */
-    def withAttributesAdded(newAttributes: Model[Constant]) = withAttributes(attributes ++ newAttributes)
+    def withAttributesAdded(newAttributes: Model) = withAttributes(attributes ++ newAttributes)
     
     /**
       * @param attribute A new attribute for this element

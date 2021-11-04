@@ -3,7 +3,7 @@ package utopia.flow.container
 import java.nio.file.Path
 
 import utopia.flow.container.SaveTiming.Immediate
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.DataTypeException
 import utopia.flow.parse.JsonParser
 import utopia.flow.generic.ValueConversions._
@@ -22,7 +22,7 @@ import scala.concurrent.ExecutionContext
   */
 class ModelsFileContainer(fileLocation: Path, saveLogic: SaveTiming = Immediate)
 						 (implicit jsonParser: JsonParser, exc: ExecutionContext)
-	extends MultiFileContainer[Model[Constant]](fileLocation)
+	extends MultiFileContainer[Model](fileLocation)
 {
 	// INITIAL CODE	-----------------------
 	
@@ -31,7 +31,7 @@ class ModelsFileContainer(fileLocation: Path, saveLogic: SaveTiming = Immediate)
 	
 	// IMPLEMENTED	-----------------------
 	
-	override protected def itemToValue(item: Model[Constant]) = item
+	override protected def itemToValue(item: Model) = item
 	
 	override protected def itemFromValue(value: Value) = value.model.toTry {
 		DataTypeException(s"Can't parse ${value.description} to model") }

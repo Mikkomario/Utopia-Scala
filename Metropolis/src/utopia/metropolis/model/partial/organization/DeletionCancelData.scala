@@ -14,6 +14,7 @@ import java.time.Instant
   * @param deletionId Id of the cancelled deletion
   * @param creatorId Id of the user who cancelled the deletion (if known)
   */
+@deprecated("Replaced with OrganizationDeletionCancellationData", "v2.0")
 case class DeletionCancelData(deletionId: Int, creatorId: Option[Int] = None, created: Instant = Now)
 	extends ModelConvertible
 {

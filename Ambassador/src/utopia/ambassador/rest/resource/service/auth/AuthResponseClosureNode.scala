@@ -6,10 +6,10 @@ import utopia.ambassador.controller.implementation.AcquireTokens
 import utopia.ambassador.database.access.single.process.DbIncompleteAuth
 import utopia.ambassador.database.access.single.service.DbAuthService
 import utopia.ambassador.model.stored.process.IncompleteAuth
-import utopia.ambassador.model.stored.service.ServiceSettings
+import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.ambassador.rest.util.ServiceTarget
 import utopia.citadel.util.CitadelContext._
-import utopia.exodus.model.stored.UserSession
+import utopia.exodus.model.stored.auth.SessionToken
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.generic.ValueConversions._
@@ -38,7 +38,7 @@ class AuthResponseClosureNode(target: ServiceTarget, tokenAcquirer: AcquireToken
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionKeyAuthorized { (session, connection) =>
+		context.sessionTokenAuthorized { (session, connection) =>
 			implicit val c: Connection = connection
 			target.validId match
 			{
@@ -49,10 +49,10 @@ class AuthResponseClosureNode(target: ServiceTarget, tokenAcquirer: AcquireToken
 						{
 							case Some(token) =>
 								// Makes sure the token is valid and the case still open
-								DbIncompleteAuth.forToken(token) match
+								DbIncompleteAuth.withToken(token).pull match
 								{
 									case Some(authCase) =>
-										if (DbIncompleteAuth(authCase.id).isClosed)
+										if (DbIncompleteAuth(authCase.id).isCompleted)
 											Result.Failure(Unauthorized, "This case is already closed")
 										else
 											// Reads the service settings next
@@ -78,7 +78,7 @@ class AuthResponseClosureNode(target: ServiceTarget, tokenAcquirer: AcquireToken
 	
 	// OTHER    ----------------------------------
 	
-	private def closeAuthCase(settings: ServiceSettings, authCase: IncompleteAuth, session: UserSession)
+	private def closeAuthCase(settings: AuthServiceSettings, authCase: IncompleteAuth, session: SessionToken)
 	                         (implicit context: AuthorizedContext, connection: Connection) =
 	{
 		// Swaps the authentication code for access token(s). Blocks.

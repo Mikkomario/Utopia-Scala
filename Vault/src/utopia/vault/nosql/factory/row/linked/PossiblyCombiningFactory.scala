@@ -1,6 +1,6 @@
 package utopia.vault.nosql.factory.row.linked
 
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.vault.nosql.factory.CombiningFactoryLike
 
 /**
@@ -25,6 +25,6 @@ trait PossiblyCombiningFactory[+Combined, Parent, Child]
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override def apply(model: Model[Constant], child: Option[Child]) =
+	override def apply(model: Model, child: Option[Child]) =
 		parentFactory(model).map { apply(_, child) }
 }

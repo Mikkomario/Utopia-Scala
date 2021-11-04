@@ -16,12 +16,10 @@ trait Declaration
 	  * @return Visibility of this declaration
 	  */
 	def visibility: Visibility
-	
 	/**
 	  * @return Keyword for this declaration (E.g. "def" or "val")
 	  */
 	def keyword: CodePiece
-	
 	/**
 	  * @return Name of this method / property
 	  */

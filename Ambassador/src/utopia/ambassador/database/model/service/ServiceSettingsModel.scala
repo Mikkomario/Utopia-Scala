@@ -11,6 +11,7 @@ import utopia.vault.nosql.storable.DataInserter
 import java.time.Instant
 import scala.concurrent.duration.FiniteDuration
 
+@deprecated("Replaced with AuthServiceSettingsModel", "v2.0")
 object ServiceSettingsModel extends DataInserter[ServiceSettingsModel, ServiceSettings, ServiceSettingsData]
 {
 	// ATTRIBUTES   -----------------------
@@ -58,6 +59,7 @@ object ServiceSettingsModel extends DataInserter[ServiceSettingsModel, ServiceSe
   * @author Mikko Hilpinen
   * @since 14.7.2021, v1.0
   */
+@deprecated("Replaced with AuthServiceSettingsModel", "v2.0")
 case class ServiceSettingsModel(id: Option[Int] = None, serviceId: Option[Int] = None, clientId: Option[String] = None,
                                 clientSecret: Option[String] = None, authenticationUrl: Option[String] = None,
                                 tokenUrl: Option[String] = None, redirectUrl: Option[String] = None,

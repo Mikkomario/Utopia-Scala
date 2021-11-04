@@ -1,21 +1,26 @@
 package utopia.metropolis.model.combined.language
 
-import utopia.metropolis.model.combined.description.{DescribedFromModelFactory, DescribedWrapper, SimplyDescribed}
-import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
+import utopia.metropolis.model.combined.description.{DescribedFactory, DescribedWrapper, LinkedDescription, SimplyDescribed}
+import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
 
-object DescribedLanguageFamiliarity extends DescribedFromModelFactory[LanguageFamiliarity, DescribedLanguageFamiliarity]
-{
-	override protected def undescribedFactory = LanguageFamiliarity
-}
+object DescribedLanguageFamiliarity 
+	extends DescribedFactory[LanguageFamiliarity, DescribedLanguageFamiliarity]
 
 /**
-  * Combines a language familiarity level with its descriptions
-  * @author Mikko Hilpinen
-  * @since 25.7.2020, v1
+  * Combines LanguageFamiliarity with the linked descriptions
+  * @param languageFamiliarity LanguageFamiliarity to wrap
+  * @param descriptions Descriptions concerning the wrapped LanguageFamiliarity
+  * @since 2021-10-23
   */
-case class DescribedLanguageFamiliarity(wrapped: LanguageFamiliarity, descriptions: Set[DescriptionLink])
+case class DescribedLanguageFamiliarity(languageFamiliarity: LanguageFamiliarity, 
+	descriptions: Set[LinkedDescription])
 	extends DescribedWrapper[LanguageFamiliarity] with SimplyDescribed
 {
+	// IMPLEMENTED	--------------------
+	
+	override def wrapped = languageFamiliarity
+	
 	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) = wrapped.toModel
 }
+

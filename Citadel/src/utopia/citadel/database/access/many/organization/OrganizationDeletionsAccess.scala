@@ -17,6 +17,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1.0
   */
+@deprecated("Replaced with DbOrganizationDeletions", "v2.0")
 trait OrganizationDeletionsAccess extends ManyModelAccess[DeletionWithCancellations]
 {
 	// COMPUTED	--------------------------

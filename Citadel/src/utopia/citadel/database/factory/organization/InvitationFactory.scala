@@ -1,36 +1,35 @@
 package utopia.citadel.database.factory.organization
 
-import utopia.citadel.database.Tables
-import utopia.flow.datastructure.template.{Model, Property}
-import utopia.metropolis.model.error.NoDataFoundException
+import utopia.citadel.database.CitadelTables
+import utopia.citadel.database.model.organization.InvitationModel
+import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.metropolis.model.partial.organization.InvitationData
 import utopia.metropolis.model.stored.organization.Invitation
-import utopia.vault.nosql.factory.row.model.FromRowModelFactory
-
-import scala.util.{Failure, Success}
+import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
+import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
+import utopia.vault.nosql.template.Deprecatable
 
 /**
-  * Used for reading organization invitations from the DB
+  * Used for reading Invitation data from the DB
   * @author Mikko Hilpinen
-  * @since 17.6.2020, v1.0
+  * @since 2021-10-23
   */
-object InvitationFactory extends FromRowModelFactory[Invitation]
+object InvitationFactory 
+	extends FromValidatedRowModelFactory[Invitation] with FromRowFactoryWithTimestamps[Invitation] 
+		with Deprecatable
 {
-	// IMPLEMENTED	---------------------------
+	// IMPLEMENTED	--------------------
 	
-	override def table = Tables.organizationInvitation
+	override def creationTimePropertyName = "created"
 	
-	override def apply(model: Model[Property]) = table.requirementDeclaration.validate(model).toTry.flatMap { valid =>
-		// Either recipient id or recipient email must be provided
-		val recipient =
-		{
-			valid("recipientId").int.map { id => Success(Right(id)) }.orElse { valid("recipientEmail").string.map {
-				email => Success(Left(email)) } }.getOrElse(Failure(new NoDataFoundException(
-				s"Didn't find recipientId or recipientEmail from $valid")))
-		}
-		recipient.map { recipient =>
-			Invitation(valid("id").getInt, InvitationData(valid("organizationId").getInt, recipient,
-				valid("startingRoleId").getInt, valid("expiresIn").getInstant, valid("creatorId").int))
-		}
-	}
+	override def nonDeprecatedCondition = InvitationModel.nonDeprecatedCondition
+	
+	override def table = CitadelTables.invitation
+	
+	override def fromValidatedModel(valid: Model) =
+		Invitation(valid("id").getInt, InvitationData(valid("organizationId").getInt, 
+			valid("startingRoleId").getInt, valid("expires").getInstant, valid("recipientId").int, 
+			valid("recipientEmail").string, valid("message").string, valid("senderId").int, 
+			valid("created").getInstant))
 }
+

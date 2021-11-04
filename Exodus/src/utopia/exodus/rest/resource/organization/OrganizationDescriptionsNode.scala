@@ -40,7 +40,7 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends Resource[Au
 			context.authorizedInOrganization(organizationId) { (session, _, connection) =>
 				implicit val c: Connection = connection
 				// Checks the languages the user wants to use and gathers descriptions in those languages
-				implicit val languages: LanguageIds = context.languageIdListFor(session.userId)
+				implicit val languages: LanguageIds = session.languageIds
 				val descriptions = DbOrganizationDescriptions(organizationId).inPreferredLanguages
 				// Supports simple model style also
 				Result.Success(session.modelStyle match {

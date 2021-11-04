@@ -7,15 +7,15 @@ import utopia.ambassador.database.access.single.service.DbAuthService
 import utopia.ambassador.database.access.single.token.DbAuthToken
 import utopia.ambassador.database.AuthDbExtensions._
 import utopia.ambassador.database.model.scope.ScopeModel
-import utopia.ambassador.database.model.token.{AuthTokenModel, TokenScopeLinkModel}
+import utopia.ambassador.database.model.token.{AuthTokenModel, AuthTokenScopeLinkModel}
 import utopia.ambassador.model.cached.TokenInterfaceConfiguration
 import utopia.ambassador.model.combined.scope.TaskScope
 import utopia.ambassador.model.combined.token.AuthTokenWithScopes
 import utopia.ambassador.model.error.{NoTokenException, SettingsNotFoundException}
 import utopia.ambassador.model.partial.scope.ScopeData
-import utopia.ambassador.model.partial.token.AuthTokenData
+import utopia.ambassador.model.partial.token.{AuthTokenData, AuthTokenScopeLinkData}
 import utopia.ambassador.model.stored.scope.Scope
-import utopia.ambassador.model.stored.service.ServiceSettings
+import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.citadel.database.access.single.organization.DbTask
 import utopia.disciple.http.request.{Request, StringBody}
 import utopia.disciple.model.error.RequestFailedException
@@ -110,11 +110,11 @@ class AcquireTokens(configurations: MapLike[Int, TokenInterfaceConfiguration])
 		// Prepares one service at a time
 		val preparationResults = taskScopes.groupBy { _.serviceId }.toVector.tryMap { case (serviceId, scopes) =>
 			// Checks for existing tokens
-			val tokens = DbAuthTokens.forUserWithId(userId).withScopes.forServiceWithId(serviceId)
+			val tokens = DbAuthTokens.forUserWithId(userId).withScopes.forServiceWithId(serviceId).pull
 			// Checks which of the scopes fulfill the set requirements
 			val (alternativeScopes, requiredScopes) = scopes.divideBy { _.isRequired }
-			val validTokens = tokens.filter { token => token.containsAll(requiredScopes.map { _.scope }) &&
-				(alternativeScopes.isEmpty || token.containsAnyOf(alternativeScopes.map { _.scope })) }
+			val validTokens = tokens.filter { token => token.containsAllScopeIds(requiredScopes.map { _.scope.id }) &&
+				(alternativeScopes.isEmpty || token.containsAnyOfScopeIds(alternativeScopes.map { _.scope.id })) }
 			
 			validTokens.find { _.isSessionToken } match
 			{
@@ -183,7 +183,7 @@ class AcquireTokens(configurations: MapLike[Int, TokenInterfaceConfiguration])
 	  * @param connectionPool Implicit connection pool
 	  * @return Acquired scopes. Failure if something went wrong. The result is asynchronous (Future).
 	  */
-	def forCode(userId: Int, code: String, settings: ServiceSettings)
+	def forCode(userId: Int, code: String, settings: AuthServiceSettings)
 	           (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
 		val config = configurations(settings.serviceId)
@@ -194,7 +194,7 @@ class AcquireTokens(configurations: MapLike[Int, TokenInterfaceConfiguration])
 		requestWith(config, tokenRequest, settings.serviceId, userId, None, settings.defaultSessionDuration)
 	}
 	
-	private def createRequest(settings: ServiceSettings, grantType: String,
+	private def createRequest(settings: AuthServiceSettings, grantType: String,
 	                          authParamName: String, authParamValue: String, useAuthorizationHeader: Boolean) =
 	{
 		// Puts the client id and client secret either to the basic auth header or to the body
@@ -263,7 +263,8 @@ class AcquireTokens(configurations: MapLike[Int, TokenInterfaceConfiguration])
 										val newScopes = scopes
 											.filterNot { scope => existingToken.scopes.exists { _.id == scope.id } }
 										if (newScopes.nonEmpty)
-											TokenScopeLinkModel.insert(newScopes.map { existingToken.id -> _.id })
+											AuthTokenScopeLinkModel.insert(
+												newScopes.map { s => AuthTokenScopeLinkData(existingToken.id, s.id) })
 										existingToken
 									}
 									// Case: New token is different => overwrites the previous token
@@ -298,9 +299,9 @@ class AcquireTokens(configurations: MapLike[Int, TokenInterfaceConfiguration])
 	private def processScopes(serviceId: Int, scopes: Vector[String])(implicit connection: Connection) =
 	{
 		// Matches with existing scopes
-		val existingScopes = DbAuthService(serviceId).scopes.matchingAnyOf(scopes)
+		val existingScopes = DbAuthService(serviceId).scopes.matchingAnyOfNames(scopes).pull
 		// Checks if there were new scopes introduced and saves those to the DB if necessary
-		val newScopes = scopes.filterNot { scopeName => existingScopes.exists { _.officialName == scopeName } }
+		val newScopes = scopes.filterNot { scopeName => existingScopes.exists { _.name == scopeName } }
 		if (newScopes.nonEmpty)
 		{
 			val insertedScopes = ScopeModel.insert(newScopes.map { ScopeData(serviceId, _) })
@@ -314,10 +315,10 @@ class AcquireTokens(configurations: MapLike[Int, TokenInterfaceConfiguration])
 	                        isRefreshToken: Boolean = false)(implicit connection: Connection) =
 	{
 		// Inserts the token first
-		val insertedToken = AuthTokenModel.insert(AuthTokenData(userId, token, expiration = expiration,
+		val insertedToken = AuthTokenModel.insert(AuthTokenData(userId, token, expires = expiration,
 			isRefreshToken = isRefreshToken))
 		// Then inserts the scopes for the token
-		TokenScopeLinkModel.insert(scopes.map { insertedToken.id -> _.id })
+		AuthTokenScopeLinkModel.insert(scopes.map { s => AuthTokenScopeLinkData(insertedToken.id, s.id) })
 		insertedToken.withScopes(scopes.toSet)
 	}
 }

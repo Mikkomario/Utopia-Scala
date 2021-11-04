@@ -1,5 +1,7 @@
 package utopia.vault.coder.controller.writer.database
 
+import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.CombinedOrdering
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.Class
@@ -7,6 +9,7 @@ import utopia.vault.coder.model.enumeration.PropertyType.ClassReference
 
 import java.io.PrintWriter
 import java.nio.file.Path
+import scala.annotation.tailrec
 import scala.io.Codec
 
 /**
@@ -16,6 +19,10 @@ import scala.io.Codec
   */
 object SqlWriter
 {
+	private lazy val classOrdering = CombinedOrdering[(Class, Int)](
+		Ordering.by[(Class, Int), Int] { _._2 }, Ordering.by[(Class, Int), String] { _._1.name.singular }
+	)
+	
 	/**
 	  * Writes the SQL document for the specified classes
 	  * @param classes    Classes to write
@@ -24,9 +31,52 @@ object SqlWriter
 	  * @return Target path. Failure if writing failed.
 	  */
 	def apply(classes: Seq[Class], targetPath: Path)(implicit codec: Codec) =
-		targetPath.writeUsing { writer => classes.foreach { writeClass(writer, _) } }
+	{
+		// Writes the table declarations in an order that attempts to make sure foreign keys are respected
+		// (referenced tables are written before referencing tables)
+		val allClasses = classes ++ classes.flatMap { _.descriptionLinkClass }
+		val classesByTableName = allClasses.map { c => c.tableName -> c }.toMap
+		val references = allClasses.map { c =>
+			val refs = c.properties.flatMap { _.dataType match {
+				case ClassReference(referencedTableName, _, _) => Some(referencedTableName)
+				case _ => None
+			} }
+			c.tableName -> refs.toSet
+		}.toMap
+		// Forms the table initials, also
+		val initials = initialsFrom(references.flatMap { case (tableName, refs) => refs + tableName }.toSet)
+		// Writes the class declarations in order
+		targetPath.writeUsing { writer => writeClasses(writer, initials, classesByTableName, references) }
+	}
 	
-	private def writeClass(writer: PrintWriter, classToWrite: Class): Unit =
+	@tailrec
+	private def writeClasses(writer: PrintWriter, initialsMap: Map[String, String],
+	                         classesByTableName: Map[String, Class], references: Map[String, Set[String]]): Unit =
+	{
+		// Finds the classes which don't make any references to other remaining classes
+		val remainingTableNames = classesByTableName.keySet
+		val notReferencingTableNames = remainingTableNames
+			.filterNot { tableName => references(tableName)
+				.exists { referencedTableName => remainingTableNames.contains(referencedTableName) } }
+		// Case: All classes are referenced at least once (indicates a cyclic loop) => Writes them in alphabetical order
+		if (notReferencingTableNames.isEmpty)
+			classesByTableName.valuesIterator.toVector.sortBy { _.name.singular }
+				.foreach { writeClass(writer, _, initialsMap) }
+		// Case: There are some classes which don't reference remaining classes => writes those
+		else
+		{
+			// Writes the classes in reference count + alphabetical order
+			notReferencingTableNames.toVector
+				.map { table => classesByTableName(table) -> references(table).size }.sorted(classOrdering)
+				.foreach { case (classToWrite, _) => writeClass(writer, classToWrite, initialsMap) }
+			// Continues recursively as long as classes remain
+			val remainingClassesByTableName = classesByTableName -- notReferencingTableNames
+			if (remainingClassesByTableName.nonEmpty)
+				writeClasses(writer, initialsMap, remainingClassesByTableName, references)
+		}
+	}
+	
+	private def writeClass(writer: PrintWriter, classToWrite: Class, initialsMap: Map[String, String]): Unit =
 	{
 		classToWrite.description.notEmpty.foreach { desc => writer.println(s"-- $desc") }
 		// Writes property documentation
@@ -42,16 +92,21 @@ object SqlWriter
 			}
 		}
 		// Writes the table
-		val classInitials = initialsFrom(classToWrite.tableName)
-		writer.println(s"CREATE TABLE ${ classToWrite.tableName }(")
+		val classInitials = initialsMap(classToWrite.tableName)
+		writer.println(s"CREATE TABLE `${ classToWrite.tableName }`(")
 		val idBase = s"\tid ${ classToWrite.idType.toSql } PRIMARY KEY AUTO_INCREMENT"
 		if (classToWrite.properties.isEmpty)
 			writer.println(idBase)
 		else {
 			writer.println(idBase + ", ")
 			
-			val propertyDeclarations = classToWrite.properties
-				.map { prop => s"`${ prop.columnName }` ${ prop.dataType.toSql }" }
+			val propertyDeclarations = classToWrite.properties.map { prop =>
+				val defaultPart = prop.sqlDefault.notEmpty match {
+					case Some(default) => s" DEFAULT $default"
+					case None => ""
+				}
+				s"`${ prop.columnName }` ${ prop.dataType.toSql }$defaultPart"
+			}
 			val firstComboIndexColumns = classToWrite.comboIndexColumnNames.filter { _.size > 1 }.map { _.head }.toSet
 			val individualIndexDeclarations = classToWrite.properties
 				.filter { prop => prop.isIndexed && !firstComboIndexColumns.contains(prop.columnName) }
@@ -63,7 +118,7 @@ object SqlWriter
 			val foreignKeyDeclarations = classToWrite.properties.flatMap { prop =>
 				prop.dataType match {
 					case ClassReference(referencedTableName, _, isNullable) =>
-						val constraintNameBase = s"${ classInitials }_${ initialsFrom(referencedTableName) }_${
+						val constraintNameBase = s"${ classInitials }_${ initialsMap(referencedTableName) }_${
 							prop.columnName.replace("_id", "")
 						}_ref"
 						Some(s"CONSTRAINT ${ constraintNameBase }_fk FOREIGN KEY ${ constraintNameBase }_idx (${
@@ -83,10 +138,29 @@ object SqlWriter
 		
 		writer.println(")Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;")
 		writer.println()
-		
-		// If the class supports descriptions, writes a link class for those also
-		classToWrite.descriptionLinkClass.foreach { writeClass(writer, _) }
 	}
 	
-	private def initialsFrom(tableName: String) = tableName.split("_").flatMap { _.headOption }.mkString
+	private def initialsFrom(tableNames: Iterable[String], charsToTake: Int = 1): Map[String, String] =
+	{
+		// Generates initials
+		val namePairs = tableNames.map { tableName => tableName -> initialsFrom(tableName, charsToTake) }
+		val nameMap = namePairs.toMap
+		// Checks for duplicates
+		val reverseMap = namePairs.map { case (tableName, initial) => initial -> tableName }.toVector.asMultiMap
+		val duplicates = reverseMap.filter { case (_, tableNames) => tableNames.size > 1 }
+			.valuesIterator.toVector.flatten
+		// Uses recursion to resolve the duplicates, if necessary
+		if (duplicates.isEmpty)
+			nameMap
+		else
+			nameMap ++ initialsFrom(duplicates, charsToTake + 1)
+	}
+	
+	private def initialsFrom(tableName: String, charsToTake: Int): String =
+	{
+		if (charsToTake >= tableName.length)
+			tableName
+		else
+			tableName.split("_").map { _.take(charsToTake) }.mkString
+	}
 }

@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.scala.template
 
 import utopia.vault.coder.controller.CodeBuilder
-import utopia.vault.coder.model.scala.code.Code
+import utopia.vault.coder.model.scala.code.{Code, CodeLine}
 import utopia.vault.coder.model.scala.ScalaDocPart
 
 /**
@@ -28,11 +28,12 @@ trait ScalaDocConvertible
 	{
 		// Adds the documentation first
 		val documentationCode = documentation.map { _.toCode }.filter { _.nonEmpty }
+			.map { _.split.mapLines { line => CodeLine("  * " + line.code) } }
 		if (documentationCode.nonEmpty)
 		{
 			val builder = new CodeBuilder()
 			builder += "/**"
-			documentationCode.foreach { builder ++= _.prependAll("  * ") }
+			documentationCode.foreach { builder ++= _ }
 			builder += "  */"
 			builder.result()
 		}

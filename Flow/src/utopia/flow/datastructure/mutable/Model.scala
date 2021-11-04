@@ -47,7 +47,8 @@ object Model
  * @tparam Attribute The type of attribute stored within this model
  * @param attributeGenerator The variable generator used for generating new values on this model
  */
-class Model[Attribute <: Variable](val attributeGenerator: PropertyGenerator[Attribute]) extends template.Model[Attribute]
+class Model[Attribute <: Variable](val attributeGenerator: PropertyGenerator[Attribute])
+    extends template.Model[Attribute]
 {
     // ATTRIBUTES    --------------
     
@@ -190,13 +191,8 @@ class Model[Attribute <: Variable](val attributeGenerator: PropertyGenerator[Att
      * @param generator The attribute generator used by the new model. Default is a simple constant 
      * generator that generates instances of Constant
      */
-    def immutableCopy[T <: Constant](generator: PropertyGenerator[T]) =
+    def immutableCopy(generator: PropertyGenerator[Constant] = new SimpleConstantGenerator()) =
         new immutable.Model(attributes.map { att => generator(att.name, Some(att.value)) }, generator)
-    
-    /**
-      * Creates an immutable version of this model by using the provided attribute generator
-      */
-    def immutableCopy(): immutable.Model[Constant] = immutableCopy(new SimpleConstantGenerator())
     
     protected def generateAttribute(attName: String, value: Option[Value]) = 
     {

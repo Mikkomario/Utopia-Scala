@@ -8,8 +8,9 @@ object NewInvitationResponse extends FromModelFactoryWithSchema[NewInvitationRes
 {
 	override val schema = ModelDeclaration(PropertyDeclaration("accepted", BooleanType))
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = NewInvitationResponse(
-		model("accepted").getBoolean, model("blocked").getBoolean)
+	override protected def fromValidatedModel(model: Model) =
+		NewInvitationResponse(model("message").string.filter { _.nonEmpty }, model("accepted").getBoolean,
+			model("blocked").getBoolean)
 }
 
 /**
@@ -19,14 +20,10 @@ object NewInvitationResponse extends FromModelFactoryWithSchema[NewInvitationRes
   * @param wasAccepted Whether the invitation was accepted
   * @param wasBlocked Whether future invitations were blocked (default = false)
   */
-case class NewInvitationResponse(wasAccepted: Boolean, wasBlocked: Boolean = false) extends ModelConvertible
+case class NewInvitationResponse(message: Option[String] = None, wasAccepted: Boolean = false,
+                                 wasBlocked: Boolean = false)
+	extends ModelConvertible
 {
 	override def toModel =
-	{
-		val base = Model(Vector("accepted" -> wasAccepted))
-		if (!wasAccepted)
-			base + Constant("blocked", wasBlocked)
-		else
-			base
-	}
+		Model(Vector("message" -> message, "accepted" -> wasAccepted, "blocked" -> wasBlocked))
 }

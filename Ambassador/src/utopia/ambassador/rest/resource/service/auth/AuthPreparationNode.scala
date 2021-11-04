@@ -2,23 +2,20 @@ package utopia.ambassador.rest.resource.service.auth
 
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{BadRequest, NotFound}
-import utopia.ambassador.database.access.single.service.DbAuthService
 import utopia.ambassador.database.AuthDbExtensions._
-import utopia.ambassador.database.model.process.{AuthCompletionRedirectTargetModel, AuthPreparationModel}
-import utopia.ambassador.database.model.scope.AuthPreparationScopeLinkModel
+import utopia.ambassador.database.model.process.{AuthCompletionRedirectTargetModel, AuthPreparationModel, AuthPreparationScopeLinkModel}
 import utopia.ambassador.model.enumeration.AuthCompletionType.Default
-import utopia.ambassador.model.partial.process.{AuthCompletionRedirectTargetData, AuthPreparationData}
+import utopia.ambassador.model.partial.process.{AuthCompletionRedirectTargetData, AuthPreparationData, AuthPreparationScopeLinkData}
 import utopia.ambassador.model.post.NewAuthPreparation
 import AuthPreparationNode.maxStateLength
+import utopia.ambassador.model.combined.scope.TaskScope
 import utopia.ambassador.rest.util.ServiceTarget
-import utopia.citadel.database.access.single.organization.DbTask
-import utopia.citadel.database.access.single.user.DbUser
+import utopia.citadel.database.access.many.organization.DbTasks
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
-import utopia.flow.util.StringExtensions._
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
 import utopia.nexus.rest.LeafResource
@@ -32,7 +29,7 @@ object AuthPreparationNode
 	/**
 	  * Maximum length of the state attribute
 	  */
-	val maxStateLength = 2000
+	val maxStateLength = 2048
 }
 
 /**
@@ -52,40 +49,39 @@ class AuthPreparationNode(target: ServiceTarget) extends LeafResource[Authorized
 	// TODO: Add information about a possible previous authentication attempt
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionKeyAuthorized { (session, connection) =>
+		context.sessionTokenAuthorized { (session, connection) =>
 			implicit val c: Connection = connection
 			// Parses the post model
 			context.handlePost(NewAuthPreparation) { preparation =>
 				// Makes sure service settings are available
-				target.id.flatMap { DbAuthService(_).settings.pull } match
+				target.settings match
 				{
 					case Some(settings) =>
 						// Checks if all completion types (Success & Failure) have been covered by the redirect targets
 						// Case: There are proper redirect targets => Prepares the authentication
-						if (preparation.coversAllCompletionCases || settings.defaultCompletionUrl.isDefined)
+						if (preparation.coversAllCompletionCases || settings.defaultCompletionRedirectUrl.isDefined)
 						{
+							val state = preparation.state.string.filter { _.nonEmpty }
 							// Makes sure the specified state is not too long
-							if (preparation.state.length <= maxStateLength)
+							if (state.forall { _.length <= maxStateLength })
 							{
 								// Reads the scopes required by the task and those available to the user
-								val taskScopes = preparation.taskIds
-									.map { taskId => DbTask(taskId).scopes.forServiceWithId(settings.serviceId).toSet }
+								val taskScopes = DbTasks(preparation.taskIds).scopes
+									.forServiceWithId(settings.serviceId).pull
 								// Scopes that must be present
-								val requiredScopes = taskScopes.flatMap { _.filter { _.isRequired } }
+								val requiredScopes = taskScopes.filter { _.isRequired }
 								// Scope groups where it is enough that one of the scopes is present
-								val alternativeGroups = taskScopes.map { _.filterNot { _.isRequired } }
-									.filter { _.nonEmpty }
+								val alternativesByTaskId = taskScopes.filter { _.isOptional }
+									.groupBy { _.taskLink.taskId }
 								
-								val existingScopeIds = DbUser(session.userId).accessibleScopeIds
+								val existingScopeIds = session.userAccess.accessibleScopeIds
 								// Required scopes that must still be filled
 								val missingRequiredScopes = requiredScopes
 									.filterNot { scope => existingScopeIds.contains(scope.id) }
 								// Alternative scope groups that must still be filled
 								// (in addition to the required scopes)
-								val missingAlternativeGroups = alternativeGroups.filterNot { group =>
-									group.exists { scope => existingScopeIds.contains(scope.id) } ||
-										group.exists { scope => missingRequiredScopes.exists { _.scope.id == scope.id } }
-								}
+								val missingAlternativeGroups = alternativesByTaskId.filter { case (_, scopes) =>
+									scopes.forall { s => !existingScopeIds.contains(s.id) } }
 								
 								val alternativesAreCovered = missingAlternativeGroups.isEmpty
 								val isAlreadyAuthorized = alternativesAreCovered && missingRequiredScopes.isEmpty
@@ -93,7 +89,7 @@ class AuthPreparationNode(target: ServiceTarget) extends LeafResource[Authorized
 								// Inserts the preparation to the database
 								val insertedPreparation = AuthPreparationModel.insert(
 									AuthPreparationData(session.userId, uuidGenerator.next(),
-										Now + settings.preparationTokenDuration, preparation.state.notEmpty))
+										Now + settings.preparationTokenDuration, state))
 								// Determines the scopes to request
 								val linkedScopes =
 								{
@@ -103,27 +99,31 @@ class AuthPreparationNode(target: ServiceTarget) extends LeafResource[Authorized
 									{
 										// If alternative scopes are required,
 										// selects the ones with the highest priority and overlap
-										val allOptions = alternativeGroups.flatten
-										val optionsByCount = allOptions.groupBy { scope =>
-											alternativeGroups.count { _.exists { _.scope.id == scope.id } }
-										}
-										val orderedOptions = optionsByCount.keys.toVector.sortBy { -_ }
-											.flatMap { count => optionsByCount(count).toVector
-												.sortBy { -_.scope.priority.getOrElse(-1) } }
-										alternativeGroups.flatMap { group => orderedOptions
-											.find { scope => group.exists { _.scope.id == scope.id } }
-										}
+										// Scope id => number of occurrences
+										val scopeCounts = alternativesByTaskId.valuesIterator.flatten.toSet
+											.map { scope: TaskScope =>
+												scope.id -> (missingRequiredScopes.count { _.id == scope.id } +
+												alternativesByTaskId
+													.map { case (_, scopes) => scopes.count { _.id == scope.id } }.sum)
+											}.toMap
+										alternativesByTaskId.valuesIterator
+											.map { options =>
+												val optionsByCount = options.groupBy { s => scopeCounts(s.id) }
+												optionsByCount.maxBy { _._1 }._2.maxBy { _.priority.getOrElse(-1) }
+											}
+											.toSet
 									}
 								}
 								// Records the requested scopes (in order)
 								if (linkedScopes.nonEmpty)
 									AuthPreparationScopeLinkModel.insert(linkedScopes.toVector.map { _.scope.id }
-										.sorted.map { insertedPreparation.id -> _ })
+										.sorted.map { AuthPreparationScopeLinkData(insertedPreparation.id, _) })
 								// Inserts the redirect urls (if specified)
 								if (preparation.redirectUrls.nonEmpty)
 									AuthCompletionRedirectTargetModel.insert(
 										preparation.redirectUrls.map { case (filter, url) =>
-											AuthCompletionRedirectTargetData(insertedPreparation.id, url, filter) }
+											AuthCompletionRedirectTargetData(insertedPreparation.id, url,
+												filter.successFilter, filter.deniedFilter) }
 											.toVector.sortBy { _.resultFilter.priorityIndex })
 								
 								// Returns a summary for the client.
@@ -145,7 +145,7 @@ class AuthPreparationNode(target: ServiceTarget) extends LeafResource[Authorized
 											if (preparation.coversAllCompletionCases)
 												baseRedirectsModel
 											else
-												baseRedirectsModel ++ settings.defaultCompletionUrl
+												baseRedirectsModel ++ settings.defaultCompletionRedirectUrl
 													.map { url => Constant(Default.keyName, url) }
 										}
 										Vector(scopesConstant, Constant("redirect_urls", redirectsModel))
@@ -160,7 +160,7 @@ class AuthPreparationNode(target: ServiceTarget) extends LeafResource[Authorized
 							else
 								Result.Failure(BadRequest,
 									s"Maximum length of the state property is $maxStateLength characters. Request proposed a state of ${
-										preparation.state.length} characters.")
+										state.get.length} characters.")
 						}
 						// Case: There are no proper redirect targets => Fails
 						else

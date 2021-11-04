@@ -1,7 +1,8 @@
 package utopia.trove.model
 
-import java.nio.file.Path
+import utopia.flow.util.Version
 
+import java.nio.file.Path
 import utopia.trove.model.enumeration.SqlFileType
 import utopia.trove.model.enumeration.SqlFileType.{Changes, Full}
 
@@ -10,8 +11,8 @@ import utopia.trove.model.enumeration.SqlFileType.{Changes, Full}
   * @author Mikko Hilpinen
   * @since 19.9.2020, v1
   */
-case class DatabaseStructureSource(path: Path, fileType: SqlFileType, targetVersion: VersionNumber,
-								   originVersion: Option[VersionNumber] = None)
+case class DatabaseStructureSource(path: Path, fileType: SqlFileType, targetVersion: Version,
+                                   originVersion: Option[Version] = None)
 {
 	override def toString = fileType match
 	{

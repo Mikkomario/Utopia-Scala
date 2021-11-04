@@ -17,7 +17,7 @@ object Person extends FromValidatedRowModelFactory[Person]
     
     // IMPLEMENTED METHODS    -------
     
-    override protected def fromValidatedModel(model: immutable.Model[Constant]) = new Person(model("name").getString,
+    override protected def fromValidatedModel(model: immutable.Model) = new Person(model("name").getString,
         model("age").int, model("isAdmin").getBoolean, model("created").getInstant, model("rowId").int)
 }
 

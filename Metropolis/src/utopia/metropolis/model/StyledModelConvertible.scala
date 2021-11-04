@@ -1,6 +1,6 @@
 package utopia.metropolis.model
 
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ModelConvertible
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
@@ -17,7 +17,7 @@ trait StyledModelConvertible extends ModelConvertible
 	/**
 	  * @return This instance as a simpler model
 	  */
-	def toSimpleModel: Model[Constant]
+	def toSimpleModel: Model
 	
 	
 	// OTHER    ----------------------------

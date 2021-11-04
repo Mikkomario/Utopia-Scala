@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.scalable
 
 import utopia.access.http.Method
-import utopia.exodus.model.stored.UserSession
+import utopia.exodus.model.stored.auth.SessionToken
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.rest.util.AuthorizedContext.OrganizationParams
 import utopia.flow.datastructure.immutable.Lazy
@@ -27,7 +27,7 @@ object OrganizationUseCaseImplementation
 	 * @return A function for generating new use case implementations based on organization id
 	 */
 	def apply(method: Method)
-	           (f: (UserSession, Int, Connection, AuthorizedContext, Option[Path], Lazy[Result]) => Result) =
+	           (f: (SessionToken, Int, Connection, AuthorizedContext, Option[Path], Lazy[Result]) => Result) =
 		UseCaseImplementation.usingContext[AuthorizedContext, OrganizationParams](method) {
 			(context, params, path, default) => f(params._1, params._2, params._3, context, path, default)
 		}
@@ -39,7 +39,7 @@ object OrganizationUseCaseImplementation
 	 *          3) database connection, 4) request context, 5) remaining request path
 	 * @return A function for generating new use case implementations based on organization id
 	 */
-	def default(method: Method)(f: (UserSession, Int, Connection, AuthorizedContext, Option[Path]) => Result) =
+	def default(method: Method)(f: (SessionToken, Int, Connection, AuthorizedContext, Option[Path]) => Result) =
 		apply(method) { (session, membershipId, connection, context, path, _) =>
 			f(session, membershipId, connection, context, path)
 		}
@@ -53,7 +53,7 @@ object OrganizationUseCaseImplementation
 	 * @return A function for generating new use case implementations based on organization id
 	 */
 	def factory(method: Method)
-	         (f: (Int, UserSession, Int, Connection, AuthorizedContext, Option[Path], Lazy[Result]) => Result) =
+	         (f: (Int, SessionToken, Int, Connection, AuthorizedContext, Option[Path], Lazy[Result]) => Result) =
 	{
 		organizationId: Int => UseCaseImplementation.usingContext[AuthorizedContext, OrganizationParams](method) {
 			(context, params, path, default) =>

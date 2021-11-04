@@ -17,6 +17,7 @@ import java.time.Instant
   *                 device (browser quest mode) (default)
   * @param preferredModelStyle Model style preferred by this user during this session (optional)
   */
+@deprecated("Replaced with SessionTokenData", "v3.0")
 case class UserSessionData(userId: Int, key: String, expires: Instant, deviceId: Option[Int] = None,
                            preferredModelStyle: Option[ModelStyle] = None)
 {

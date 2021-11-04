@@ -3,49 +3,36 @@ package utopia.ambassador.database.access.single.token
 import utopia.ambassador.database.factory.token.AuthTokenFactory
 import utopia.ambassador.database.model.token.AuthTokenModel
 import utopia.ambassador.model.stored.token.AuthToken
-import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
+import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.NonDeprecatedView
 
 /**
-  * Used for accessing individual authentication tokens
+  * Used for accessing individual AuthTokens
   * @author Mikko Hilpinen
-  * @since 11.7.2021, v1.0
+  * @since 2021-10-26
   */
-object DbAuthToken extends SingleRowModelAccess[AuthToken] with NonDeprecatedView[AuthToken]
+object DbAuthToken extends SingleRowModelAccess[AuthToken] with NonDeprecatedView[AuthToken] with Indexed
 {
-	// COMPUTED -----------------------------------
+	// COMPUTED	--------------------
 	
-	private def model = AuthTokenModel
+	/**
+	  * Factory used for constructing database the interaction models
+	  */
+	protected def model = AuthTokenModel
 	
 	
-	// IMPLEMENTED  -------------------------------
+	// IMPLEMENTED	--------------------
 	
 	override def factory = AuthTokenFactory
 	
 	
-	// OTHER    -----------------------------------
+	// OTHER	--------------------
 	
 	/**
-	  * @param tokenId A token id
-	  * @return An access point to that token's data
+	  * @param id Database id of the targeted AuthToken instance
+	  * @return An access point to that AuthToken
 	  */
-	def apply(tokenId: Int) = new DbSingleAuthToken(tokenId)
-	
-	
-	// NESTED   -----------------------------------
-	
-	class DbSingleAuthToken(override val id: Int) extends SingleIntIdModelAccess[AuthToken]
-	{
-		override def factory = DbAuthToken.factory
-		
-		/**
-		  * Deprecates this authentication token
-		  * @param connection Implicit DB Connection
-		  * @return Whether a token was changed
-		  */
-		def deprecate()(implicit connection: Connection) =
-			model.nowDeprecated.updateWhere(condition && model.deprecationColumn.isNull) > 0
-	}
+	def apply(id: Int) = DbSingleAuthToken(id)
 }
+

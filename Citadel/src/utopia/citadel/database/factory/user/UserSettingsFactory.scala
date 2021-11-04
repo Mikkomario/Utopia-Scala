@@ -1,24 +1,32 @@
 package utopia.citadel.database.factory.user
 
-import utopia.citadel.database.Tables
+import utopia.citadel.database.CitadelTables
 import utopia.citadel.database.model.user.UserSettingsModel
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.stored.user.UserSettings
+import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import utopia.vault.nosql.template.Deprecatable
 
-object UserSettingsFactory extends FromValidatedRowModelFactory[UserSettings] with Deprecatable
+/**
+  * Used for reading UserSettings data from the DB
+  * @author Mikko Hilpinen
+  * @since 2021-10-23
+  */
+object UserSettingsFactory 
+	extends FromValidatedRowModelFactory[UserSettings] with FromRowFactoryWithTimestamps[UserSettings] 
+		with Deprecatable
 {
-	// IMPLEMENTED	----------------------------------
+	// IMPLEMENTED	--------------------
 	
-	override def table = Tables.userSettings
+	override def creationTimePropertyName = "created"
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = UserSettings(model("id").getInt,
-		model(UserSettingsModel.userIdAttName).getInt, UserSettingsData(model("name").getString,
-			model("email").string, model("created").getInstant))
+	override def nonDeprecatedCondition = UserSettingsModel.nonDeprecatedCondition
 	
-	override val nonDeprecatedCondition = table("deprecatedAfter").isNull
+	override def table = CitadelTables.userSettings
+	
+	override def fromValidatedModel(valid: Model) =
+		UserSettings(valid("id").getInt, UserSettingsData(valid("userId").getInt, valid("name").getString, 
+			valid("email").string, valid("created").getInstant, valid("deprecatedAfter").instant))
 }
-
-

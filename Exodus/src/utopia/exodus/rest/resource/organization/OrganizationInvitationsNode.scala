@@ -1,21 +1,22 @@
 package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.Post
-import utopia.access.http.Status.{BadRequest, Forbidden, NotImplemented}
+import utopia.access.http.Status.{BadRequest, Forbidden}
 import utopia.citadel.database.access.id.single.DbUserId
 import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
 import utopia.citadel.database.access.single.user.DbUser
+import utopia.citadel.database.model.organization.InvitationModel
 import utopia.exodus.model.enumeration.StandardTask.InviteMembers
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.flow.util.StringExtensions._
-import utopia.flow.time.TimeExtensions._
+import utopia.metropolis.model.partial.organization.InvitationData
 import utopia.metropolis.model.post.NewInvitation
 import utopia.metropolis.model.stored.organization.Invitation
 import utopia.nexus.http.Path
-import utopia.nexus.rest.Resource
-import utopia.nexus.rest.ResourceSearchResult.Error
+import utopia.nexus.rest.LeafResource
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -26,7 +27,7 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 5.5.2020, v1
   */
-case class OrganizationInvitationsNode(organizationId: Int) extends Resource[AuthorizedContext]
+case class OrganizationInvitationsNode(organizationId: Int) extends LeafResource[AuthorizedContext]
 {
 	override val name = "invitations"
 	
@@ -51,49 +52,54 @@ case class OrganizationInvitationsNode(organizationId: Int) extends Resource[Aut
 							
 							// Checks whether the user already is a member of this organization
 							if (recipientUserId.exists { userId =>
-								DbUser(userId).isMemberInOrganizationWithId(organizationId) })
+								DbUser(userId).isMemberOfOrganizationWithId(organizationId) })
 								Result.Success(invitationSendResultModel(wasInvitationSend = false,
 									description = "The user was already a member of this organization"))
 							else
 							{
 								// Makes sure the user hasn't blocked this organization from sending invites
-								// And that there are no pending invitations for this user
-								val accessInvitations = DbOrganization(organizationId).invitations
-								val blockedInvitations = accessInvitations.blocked
-								val isBlocked = blockedInvitations.exists { i =>
+								val historicalInvitationsAccess =
+								{
+									val base = DbOrganization(organizationId).currentAndPastInvitations.withResponses
 									recipientUserId match
 									{
-										case Some(userId) => i.recipientId == userId
-										case None => i.wrapped.recipientEmail.contains(recipientEmail)
+										case Some(recipientId) => base.forRecipient(recipientId, recipientEmail)
+										case None => base.forEmailAddress(recipientEmail)
 									}
 								}
-								if (isBlocked)
+								if (historicalInvitationsAccess.containsBlocked)
 									Result.Failure(Forbidden,
 										"The recipient has blocked you from sending further invitations")
 								else
 								{
-									accessInvitations.pending.find { i =>
-										i.recipient match
+									// Checks whether there is already a pending non-deprecated invitation without
+									// an answer
+									val activeInvitationsAccess =
+									{
+										val base = DbOrganization(organizationId).currentInvitations.withResponses
+										recipientUserId match
 										{
-											case Right(userId) => recipientUserId.contains(userId)
-											case Left(email) => email ~== recipientEmail
+											case Some(recipientId) => base.forRecipient(recipientId, recipientEmail)
+											case None => base.forEmailAddress(recipientEmail)
 										}
-									} match
+									}
+									activeInvitationsAccess.notAnswered.pull.headOption match
 									{
 										case Some(pending) =>
 											// If there was a pending invitation, won't send another but
 											// registers this as a success
 											Result.Success(invitationSendResultModel(
-												wasInvitationSend = false, Some(pending),
+												wasInvitationSend = false, Some(pending.invitation),
 												"There already existed a pending invitation for that user"))
 										case None =>
 											// Creates a new invitation and saves it
-											val invitation = accessInvitations.send(
-												recipientUserId.map { Right(_) }.getOrElse(Left(recipientEmail)),
-												validInvitation.startingRoleId, session.userId,
-												validInvitation.durationDays.days)
-											Result.Success(invitationSendResultModel(wasInvitationSend = true,
-												Some(invitation)))
+											// TODO: Should actually send the invitation as an email validation attempt
+											val invitation = InvitationModel.insert(InvitationData(organizationId,
+												newInvitation.startingRoleId, Now + newInvitation.duration,
+												recipientUserId, Some(recipientEmail), newInvitation.message.notEmpty,
+												Some(session.userId)))
+											Result.Success(invitationSendResultModel(
+												wasInvitationSend = true, Some(invitation)))
 									}
 								}
 							}
@@ -107,15 +113,11 @@ case class OrganizationInvitationsNode(organizationId: Int) extends Resource[Aut
 		}
 	}
 	
-	override def follow(path: Path)(implicit context: AuthorizedContext) = Error(NotImplemented,
-		Some("Invitation access is not implemented yet"))
-	
 	
 	// OTHER	---------------------------
 	
-	private def invitationSendResultModel(wasInvitationSend: Boolean, invitation: Option[Invitation] = None, description: String = "") =
-	{
+	private def invitationSendResultModel(wasInvitationSend: Boolean, invitation: Option[Invitation] = None,
+	                                      description: String = "") =
 		Model(Vector("was_sent" -> wasInvitationSend, "invitation" -> invitation.map { _.toModel },
 			"description" -> description.notEmpty))
-	}
 }

@@ -56,7 +56,7 @@ object RestResourceTest extends App
     
     def responseToModel(response: Response) = responseToString(response).flatMap(stringToModel)
     
-    def makeRequest(method: Method, path: Path, parameters: Model[Constant] = Model(Vector())) = 
+    def makeRequest(method: Method, path: Path, parameters: Model = Model(Vector())) =
     {
         new Request(method, path.toServerUrl, Some(path), parameters)
     }
@@ -101,7 +101,7 @@ object RestResourceTest extends App
         assert(response.status == OK)
     }
     
-    def testPostModel(path: Path, model: Model[Constant]) = 
+    def testPostModel(path: Path, model: Model) =
     {
         val response = handler(makeRequest(Post, path, model))
         assert(response.status == Created)

@@ -29,7 +29,8 @@ private object TestRestResource
  * @author Mikko Hilpinen
  * @since 10.10.2017
  */
-class TestRestResource(val name: String, initialValues: template.Model[Constant] = Model(Vector())) extends Resource[Context]
+class TestRestResource(val name: String, initialValues: template.Model[Constant] = Model.empty)
+    extends Resource[Context]
 {
     // ATTRIBUTES    -----------------
     
@@ -111,7 +112,7 @@ class TestRestResource(val name: String, initialValues: template.Model[Constant]
         Response.empty()
     }
     
-    private def handlePut(parameters: template.Model[Constant]) = 
+    private def handlePut(parameters: template.Model[Constant]) =
     {
         // Cannot delete any existing children with PUT
         if (children.exists(child => parameters.findExisting(child.name).isDefined))

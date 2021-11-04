@@ -1,7 +1,6 @@
 package utopia.flow.generic
 
 import utopia.flow.datastructure.immutable.Model
-import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.parse.JsonConvertible
 
 /**
@@ -16,7 +15,7 @@ trait ModelConvertible extends JsonConvertible
     /**
      * A model representation of this instance
      */
-    def toModel: Model[Constant]
+    def toModel: Model
     
     
     // IMPLEMENTED    ---------------------------

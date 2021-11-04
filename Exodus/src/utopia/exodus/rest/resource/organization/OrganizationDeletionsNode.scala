@@ -6,8 +6,7 @@ import utopia.exodus.model.enumeration.StandardTask.CancelOrganizationDeletion
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path
-import utopia.nexus.rest.Resource
-import utopia.nexus.rest.ResourceSearchResult.Error
+import utopia.nexus.rest.LeafResource
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -16,22 +15,17 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1
   */
-case class OrganizationDeletionsNode(organizationId: Int) extends Resource[AuthorizedContext]
+case class OrganizationDeletionsNode(organizationId: Int) extends LeafResource[AuthorizedContext]
 {
 	override val name = "deletions"
 	
 	override val allowedMethods = Vector(Delete)
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
-	{
 		context.authorizedForTask(organizationId, CancelOrganizationDeletion.id) { (session, _, connection) =>
 			implicit val c: Connection = connection
 			// Cancels all deletions targeted towards this organization
-			val updatedDeletions = DbOrganization(organizationId).deletions.pending.cancel(session.userId)
-			Result.Success(updatedDeletions.map { _.toModel })
+			val createdCancellations = DbOrganization(organizationId).deletions.notCancelled.cancelBy(session.userId)
+			Result.Success(createdCancellations.map { _.toModel })
 		}
-	}
-	
-	override def follow(path: Path)(implicit context: AuthorizedContext) = Error(
-		message = Some("Deletions currently has no sub-nodes"))
 }

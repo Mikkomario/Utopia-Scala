@@ -13,6 +13,7 @@ import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1.0
   */
+@deprecated("Replaced with OrganizationDeletionCancellationFactory", "v2.0")
 object DeletionCancelFactory extends FromValidatedRowModelFactory[DeletionCancel]
 	with FromRowFactoryWithTimestamps[DeletionCancel]
 {
@@ -22,6 +23,6 @@ object DeletionCancelFactory extends FromValidatedRowModelFactory[DeletionCancel
 	
 	override def creationTimePropertyName = "created"
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = DeletionCancel(model("id"),
+	override protected def fromValidatedModel(model: Model) = DeletionCancel(model("id"),
 		DeletionCancelData(model("deletionId"), model("creatorId"), model(creationTimePropertyName)))
 }

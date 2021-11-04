@@ -1,13 +1,14 @@
 package utopia.citadel.database.access.single.description
 
-import utopia.citadel.database.factory.description.DescriptionLinkFactory
+import utopia.citadel.database.factory.description.CitadelLinkedDescriptionFactory
+import utopia.citadel.database.model.description.CitadelDescriptionLinkModel
 
-/**
-  * Used for accessing individual task descriptions
-  * @author Mikko Hilpinen
-  * @since 13.10.2021, v1.3
-  */
-object DbTaskDescription extends DescriptionLinkAccess
+object DbTaskDescription extends LinkedDescriptionAccess
 {
-	override def factory = DescriptionLinkFactory.task
+	// IMPLEMENTED	--------------------
+	
+	override def factory = CitadelLinkedDescriptionFactory.task
+	
+	override def linkModel = CitadelDescriptionLinkModel.task
 }
+

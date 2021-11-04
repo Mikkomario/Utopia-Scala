@@ -8,6 +8,7 @@ import utopia.flow.generic.ValueUnwraps._
 import utopia.metropolis.model.stored.RoleRight
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
+@deprecated("Replaced with UserRoleRightFactory", "v2.0")
 object RoleRightFactory extends FromValidatedRowModelFactory[RoleRight]
 {
 	// COMPUTED	------------------------------
@@ -22,7 +23,7 @@ object RoleRightFactory extends FromValidatedRowModelFactory[RoleRight]
 	  */
 	def table = Tables.roleRight
 	
-	override protected def fromValidatedModel(model: immutable.Model[Constant]) =
+	override protected def fromValidatedModel(model: immutable.Model) =
 		RoleRight(model("id"), model(this.model.roleIdAttName), model("taskId"))
 }
 

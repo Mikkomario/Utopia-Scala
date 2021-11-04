@@ -2,7 +2,6 @@ package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method.Get
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
-import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
@@ -29,23 +28,25 @@ object MyOrganizationsNode extends ResourceWithChildren[AuthorizedContext]
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionKeyAuthorized { (session, connection) =>
+		context.sessionTokenAuthorized { (session, connection) =>
 			implicit val c: Connection = connection
 			// Reads organizations data and returns it as an array
 			// Also supports the If-Modified-Since / Not Modified use case
-			implicit val languageIds: LanguageIds = context.languageIdListFor(session.userId)
-			DbUser(session.userId).memberships
-				.myOrganizationsIfModifiedSince(context.request.headers.ifModifiedSince) match {
-				case Some(organizations) =>
-					// May use simple model style
-					Result.Success(session.modelStyle match {
-						case Full => organizations.map { _.toModel }
-						case Simple =>
-							val descriptionRoles = DbDescriptionRoles.all
-							organizations.map { _.toSimpleModelUsing(descriptionRoles) }
-					})
-				case None => Result.NotModified
+			if (context.request.headers.ifModifiedSince
+				.forall { t => session.userAccess.myOrganizationsAreModifiedSince(t) })
+			{
+				implicit val languageIds: LanguageIds = session.languageIds
+				val myOrganizations = session.userAccess.myOrganizations
+				// May use simple model style
+				Result.Success(session.modelStyle match {
+					case Full => myOrganizations.map { _.toModel }
+					case Simple =>
+						val descriptionRoles = DbDescriptionRoles.all
+						myOrganizations.map { _.toSimpleModelUsing(descriptionRoles) }
+				})
 			}
+			else
+				Result.NotModified
 		}
 	}
 }

@@ -1,33 +1,39 @@
 package utopia.citadel.database.access.single.language
 
-import utopia.citadel.database.access.many.description.DbLanguageFamiliarityDescriptions
-import utopia.citadel.database.access.single.description.{DbLanguageFamiliarityDescription, SingleIdDescribedAccess}
 import utopia.citadel.database.factory.language.LanguageFamiliarityFactory
-import utopia.metropolis.model.combined.language.DescribedLanguageFamiliarity
+import utopia.citadel.database.model.language.LanguageFamiliarityModel
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
+import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 
 /**
-  * Used for accessing individual familiarity levels
+  * Used for accessing individual LanguageFamiliarities
   * @author Mikko Hilpinen
-  * @since 25.7.2020, v1.0
+  * @since 2021-10-23
   */
-object DbLanguageFamiliarity extends SingleRowModelAccess[LanguageFamiliarity] with UnconditionalView
+object DbLanguageFamiliarity 
+	extends SingleRowModelAccess[LanguageFamiliarity] with UnconditionalView with Indexed
 {
+	// COMPUTED	--------------------
+	
+	/**
+	  * Factory used for constructing database the interaction models
+	  */
+	protected def model = LanguageFamiliarityModel
+	
+	
+	// IMPLEMENTED	--------------------
+	
 	override def factory = LanguageFamiliarityFactory
 	
-	def apply(familiarityId: Int) = DbSingleLanguageFamiliarity(familiarityId)
 	
-	case class DbSingleLanguageFamiliarity(id: Int)
-		extends SingleIdDescribedAccess[LanguageFamiliarity, DescribedLanguageFamiliarity]
-	{
-		override protected def singleDescriptionAccess =
-			DbLanguageFamiliarityDescription
-		override protected def manyDescriptionsAccess =
-			DbLanguageFamiliarityDescriptions
-		override protected def describedFactory = DescribedLanguageFamiliarity
-		
-		override def factory = DbLanguageFamiliarity.factory
-	}
+	// OTHER	--------------------
+	
+	/**
+	  * @param id Database id of the targeted LanguageFamiliarity instance
+	  * @return An access point to that LanguageFamiliarity
+	  */
+	def apply(id: Int) = DbSingleLanguageFamiliarity(id)
 }
+

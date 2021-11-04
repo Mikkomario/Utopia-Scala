@@ -89,7 +89,6 @@ object FactoryWriter
 	
 	private def methodsFor(classToWrite: Class, modelRef: Reference, dataRef: Reference) =
 	{
-		
 		def _modelFromAssignments(assignments: CodePiece) =
 			modelRef.targetCode +
 				classToWrite.idType.fromValueCode("valid(\"id\")")
@@ -107,5 +106,5 @@ object FactoryWriter
 		Set(fromModelMethod)
 	}
 	
-	private def propNameInModel(prop: Property) = NamingUtils.underscoreToCamel(prop.columnName)
+	private def propNameInModel(prop: Property) = NamingUtils.underscoreToCamel(prop.columnName).uncapitalize
 }

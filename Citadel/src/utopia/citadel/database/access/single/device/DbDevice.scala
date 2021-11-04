@@ -1,6 +1,6 @@
 package utopia.citadel.database.access.single.device
 
-import utopia.citadel.database.access.many.description.DbDeviceDescriptions
+import utopia.citadel.database.access.many.description.DbClientDeviceDescriptions
 import utopia.citadel.database.access.single.description.DbDeviceDescription
 import utopia.citadel.database.model.device.ClientDeviceModel
 import utopia.citadel.database.model.user.UserDeviceModel
@@ -17,6 +17,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1.0
   */
+@deprecated("Replaced with DbClientDevice", "v2.0")
 object DbDevice
 {
 	// COMPUTED	---------------------------------
@@ -32,25 +33,10 @@ object DbDevice
 	  */
 	def apply(id: Int) = new SingleDevice(id)
 	
-	/**
-	 * Inserts data for a new device
-	 * @param deviceName Name of the device
-	 * @param languageId Id of the language the name is written in
-	 * @param authorId   Id of the user who added this device
-	 * @param connection DB Connection (implicit)
-	 * @return Newly inserted device description, containing new device id
-	 */
-	def insert(deviceName: String, languageId: Int, authorId: Int)(implicit connection: Connection) =
-	{
-		// Inserts a new device first
-		val newDeviceId = factory.insert(authorId)
-		// Then inserts a description for the device
-		DbDeviceDescriptions(newDeviceId).update(Name.id, languageId, authorId, deviceName)
-	}
-	
 	
 	// NESTED	---------------------------------
 	
+	@deprecated("Replaced with DbSingleClientDevice", "v2.0")
 	class SingleDevice(deviceId: Int)
 	{
 		// COMPUTED	-----------------------------
@@ -75,7 +61,7 @@ object DbDevice
 		/**
 		  * @return An access point to descriptions of this device
 		  */
-		def descriptions = DbDeviceDescriptions(deviceId)
+		def descriptions = DbClientDeviceDescriptions(deviceId)
 		
 		/**
 		  * @param connection Database connection (implicit)

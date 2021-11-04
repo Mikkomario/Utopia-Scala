@@ -8,4 +8,4 @@ CREATE TABLE database_version
     INDEX dv_version_idx (version),
     INDEX dv_creation_idx (created)
 
-)Engine=InnoDB DEFAULT CHARSET=latin1;
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;

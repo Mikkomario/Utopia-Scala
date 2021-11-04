@@ -206,7 +206,7 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectio
 		responseFor(request)(ResponseParser.xml)
     
     // Adds parameters and body to the request base. No headers are added at this point
-	private def makeRequestBase(method: Method, baseUri: String, params: Model[Constant] = Model.empty,
+	private def makeRequestBase(method: Method, baseUri: String, params: Model = Model.empty,
 	                            body: Option[HttpEntity]) =
 	{
 	    if (method == Get || method == Delete)
@@ -238,7 +238,7 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectio
 	}
 	
 	// Adds parameter values in JSON format to request uri, returns combined uri
-	private def makeUriWithParams(baseUri: String, params: Model[Constant]) =
+	private def makeUriWithParams(baseUri: String, params: Model) =
 	{
 	    val builder = new URIBuilder(baseUri)
 		// May encode parameter values
@@ -257,7 +257,7 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectio
 		}
 	}
 	
-	private def makeParametersEntity(params: Model[Constant]) = 
+	private def makeParametersEntity(params: Model) =
 	{
 	    if (params.isEmpty)
 	        None

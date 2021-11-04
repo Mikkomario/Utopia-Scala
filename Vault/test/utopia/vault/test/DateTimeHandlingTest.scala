@@ -77,7 +77,7 @@ private object DTFactory extends FromValidatedRowModelFactory[DT]
 {
 	override def table = TestTables.dateTimeTest
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
+	override protected def fromValidatedModel(model: Model) =
 		DT(model("id"), DTData(model("timestamp"), model("datetime")))
 }
 private object DTModel

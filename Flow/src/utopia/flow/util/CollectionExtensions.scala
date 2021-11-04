@@ -1248,6 +1248,15 @@ object CollectionExtensions
     implicit class RichRange(val range: Range) extends AnyVal
     {
         /**
+          * @return The first index that is outside of this range
+          */
+        def exclusiveEnd = range match
+        {
+            case r: Range.Exclusive => r.end
+            case r: Range.Inclusive => if (r.step > 0) r.end + 1 else r.end - 1
+        }
+        
+        /**
          * This function works like foldLeft, except that it stores each step (including the start) into a vector
          * @param start The starting step
          * @param map A function for calculating the next step, takes the previous result + the next item in this range

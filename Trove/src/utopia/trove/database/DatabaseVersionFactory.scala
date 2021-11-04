@@ -2,7 +2,7 @@ package utopia.trove.database
 
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueUnwraps._
-import utopia.trove.model.VersionNumber
+import utopia.flow.util.Version
 import utopia.trove.model.partial.DatabaseVersionData
 import utopia.trove.model.stored.DatabaseVersion
 import utopia.vault.model.immutable.Table
@@ -19,7 +19,7 @@ case class DatabaseVersionFactory(table: Table) extends FromValidatedRowModelFac
 {
 	override def creationTimePropertyName = "created"
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = DatabaseVersion(model("id"),
-		DatabaseVersionData(VersionNumber.parse(model("version")), model(creationTimePropertyName)))
+	override protected def fromValidatedModel(model: Model) = DatabaseVersion(model("id"),
+		DatabaseVersionData(Version(model("version").getString), model(creationTimePropertyName)))
 }
 

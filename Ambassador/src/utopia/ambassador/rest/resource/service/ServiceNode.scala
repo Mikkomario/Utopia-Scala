@@ -4,7 +4,8 @@ import utopia.access.http.Method.Get
 import utopia.access.http.Status.NotFound
 import utopia.ambassador.controller.implementation.AcquireTokens
 import utopia.ambassador.controller.template.AuthRedirector
-import utopia.ambassador.database.access.many.scope.DbScopeDescriptions
+import utopia.ambassador.database.access.many.description.DbScopeDescriptions
+import utopia.ambassador.database.access.many.scope.DbTaskScopeLinks
 import utopia.ambassador.database.access.single.service.DbAuthService
 import utopia.ambassador.model.combined.scope.DescribedScope
 import utopia.ambassador.rest.resource.service.auth.AuthNode
@@ -42,20 +43,21 @@ class ServiceNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirecto
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionKeyAuthorized { (session, connection) =>
+		context.sessionTokenAuthorized { (session, connection) =>
 			implicit val c: Connection = connection
 			// Reads the service data from the DB
-			target.id.flatMap { DbAuthService(_).pull } match
+			target.access.pull match
 			{
 				case Some(service) =>
 					// Reads scopes and task ids
 					val scopes = DbAuthService(service.id).scopes.pull
-					implicit val languageIds: LanguageIds = context.languageIdListFor { session.userId }
-					val scopeDescriptions = DbScopeDescriptions(scopes.map { _.id }.toSet).inPreferredLanguages
+					val scopeIds = scopes.map { _.id }.toSet
+					implicit val languageIds: LanguageIds = session.languageIds
+					val scopeDescriptions = DbScopeDescriptions(scopeIds).inPreferredLanguages
 					val describedScopes = scopes.map { scope =>
 						DescribedScope(scope, scopeDescriptions.getOrElse(scope.id, Vector()).toSet)
 					}
-					val taskIds = DbAuthService(service.id).taskIds.toVector.sorted
+					val taskIds = DbTaskScopeLinks.forAnyOfScopes(scopeIds).taskIds.distinct.sorted
 					
 					// Forms a model to send back
 					val style = session.modelStyle

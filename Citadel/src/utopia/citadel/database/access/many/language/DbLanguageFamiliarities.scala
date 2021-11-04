@@ -1,55 +1,30 @@
 package utopia.citadel.database.access.many.language
 
-import utopia.citadel.database.access.many.description.{DbLanguageFamiliarityDescriptions, ManyDescribedAccess}
-import utopia.citadel.database.factory.language.LanguageFamiliarityFactory
-import utopia.citadel.database.model.user.UserLanguageModel
+import utopia.citadel.database.access.many.description.ManyDescribedAccessByIds
 import utopia.metropolis.model.combined.language.DescribedLanguageFamiliarity
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
-import utopia.vault.database.Connection
-import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.UnconditionalView
-import utopia.vault.sql.{SelectAll, Where}
 
 /**
-  * Used for accessing multiple language familiarity levels at once
+  * The root access point when targeting multiple LanguageFamiliarities at a time
   * @author Mikko Hilpinen
-  * @since 25.7.2020, v1.0
+  * @since 2021-10-23
   */
-// TODO: Add default ordering based on order index
-object DbLanguageFamiliarities
-	extends ManyRowModelAccess[LanguageFamiliarity]
-		with ManyDescribedAccess[LanguageFamiliarity, DescribedLanguageFamiliarity] with UnconditionalView
+object DbLanguageFamiliarities extends ManyLanguageFamiliaritiesAccess with UnconditionalView
 {
-	// IMPLEMENTED	------------------------
-	
-	override def factory = LanguageFamiliarityFactory
-	
-	override protected def defaultOrdering = None
-	
-	override protected def manyDescriptionsAccess =
-		DbLanguageFamiliarityDescriptions
-	override protected def describedFactory =
-		DescribedLanguageFamiliarity
-	
-	override protected def idOf(item: LanguageFamiliarity) = item.id
-	
-	
-	// OTHER	----------------------------
+	// OTHER	--------------------
 	
 	/**
-	  * @param userId     Id of the targeted user
-	  * @param connection DB Connection (implicit)
-	  * @return Language ids known to the targeted user, each paired with the user's familiarity level in that language
+	  * @param ids Ids of the targeted LanguageFamiliarities
+	  * @return An access point to LanguageFamiliarities with the specified ids
 	  */
-	def familiarityLevelsForUserWithId(userId: Int)(implicit connection: Connection) =
-	{
-		val linkModel = UserLanguageModel
-		val target = factory.target.join(linkModel.table)
-		val condition = linkModel.withUserId(userId)
-		
-		connection(SelectAll(target) + Where(condition)).rows.flatMap { row =>
-			// Collects both language id and language familiarity
-			factory.parseIfPresent(row).map { row(linkModel.table)(linkModel.languageIdAttName).getInt -> _ }
-		}
-	}
+	def apply(ids: Set[Int]) = new DbLanguageFamiliaritiesSubset(ids)
+	
+	
+	// NESTED	--------------------
+	
+	class DbLanguageFamiliaritiesSubset(override val ids: Set[Int]) 
+		extends ManyLanguageFamiliaritiesAccess 
+			with ManyDescribedAccessByIds[LanguageFamiliarity, DescribedLanguageFamiliarity]
 }
+

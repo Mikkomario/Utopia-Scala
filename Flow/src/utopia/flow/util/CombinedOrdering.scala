@@ -2,6 +2,21 @@ package utopia.flow.util
 
 import utopia.flow.util.CollectionExtensions._
 
+object CombinedOrdering
+{
+	/**
+	  * Creates a new combined ordering
+	  * @param firstOrdering Primary ordering
+	  * @param secondOrdering Secondary ordering
+	  * @param moreOrderings Additional orderings
+	  * @tparam A Type of ordered item
+	  * @return An ordering that combines the specified orderings, using additional orderings to handle cases
+	  *         where former orderings return an identical value
+	  */
+	def apply[A](firstOrdering: Ordering[_ >: A], secondOrdering: Ordering[_ >: A], moreOrderings: Ordering[_ >: A]*) =
+		new CombinedOrdering[A](Vector(firstOrdering, secondOrdering) ++ moreOrderings)
+}
+
 /**
  * This ordering uses multiple other orderings. If one ordering returns 0, the next one will be used instead.
  * @author Mikko Hilpinen

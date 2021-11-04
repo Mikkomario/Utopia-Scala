@@ -7,7 +7,7 @@ First, you need to prepare a .json file describing the model structure you want 
 See the required document structure below.  
 
 Once you have created a specification document, run the application using the following command line command: 
-`java -jar Vault-Coder.jar <root> <input> <output> <filter> <group>`
+`java -jar Vault-Coder.jar <root> <input> <output> <filter> <group> <merge>`
 - `<root>` argument specifies the path (beginning) that is common for both the input and the output
   - This argument is optional
 - `<input>` (`in`) points towards your specification .json file or to a directory that holds such files
@@ -30,16 +30,33 @@ Once you have created a specification document, run the application using the fo
   - Allowed values are `class`, `enum`, `package` and `all`
   - If `<filter>` is specified and this value is not, the application asks for this value from the user
   - You can use `-A` flag to specify group `all`
+- `<merge>` Specifies location of the existing source root (src) directory which is compared and merged into 
+  the generated output
+  - This argument is optional. No merging will occur if this is left empty
+  - You may also specify this value during program use if you pass `-M` as a command line argument
+  - NB: When merging data in projects where the database and the model implementations are separated to different 
+    modules, the application will request another (optional) source directory for the other module
 
 The program will inform you if there were any problems during input file processing or during output write operations.
 
 ## Input File Structure
 The input .json file should contain a single object with following properties:
+- **"name" / "project": String (optional)** - Name of this project
+  - If left empty, the name will be based on the specified base package or database package
+  - If your project contains multiple modules, name the Vault-dependent module
 - **"author": String (optional)** - Author of this project's model structure
 - **"base_package" / "package": String (optional)** - Contains the package prefix common to all generated files 
   (e.g. "utopia.vault.coder")
+- **"model_package": String (optional)** - Package where all the model classes are written
+  - Defaults to base_package.model
+- **"database_package" / "db_package": String (optional)** - Package where all the database -related classes are written
+  - Defaults to base_package.database
+- **"models_without_vault": Boolean (optional)** - Whether model classes can't contain database references 
+  (Metropolis-style project) (default = false)
 - **"enumerations" / "enums": Object (optional)** - Contains a property for each introduced enumeration. 
   Each property should have a string array value where each item represents a possible enumeration value.
+- **"referenced_enumerations" / "referenced_enums": [String]** - Paths to enumerations from other projects
+  - Enumeration paths should include the full reference: E.g. "utopia.vault.coder.model.enumeration.PropertyType"
 - **"classes" / "class": Object** - Contains a property for each introduced sub-package, the value of each 
   sub-package property should be a class object or an array of **class objects** (see structure below).
 
@@ -143,50 +160,55 @@ Each property object should contain following properties:
   - Omit or leave as null if you want the indexing to be determined by the data type
   - References will always create an index, regardless of this value
 - **"length": Int (optional)** - Determines maximum text length if type "text" is used
+- **"default" / "def": String (optional)** - The default value assigned for this property in the data model
+  - If empty or omitted, data type -specific default will be used, if there is one
+- **"sql_default" / "sql_def": String (optional)** - The default value assigned for this property in the database
+  - If empty or omitted, data type -specific default will be used, if there is one
 - **"doc": String (optional)** - Description of this property (used in documentation)
 - **"usage": String (optional)** - Additional description about the use of this property
 
 ## Output Format
 This application will produce the following documents 
-(where **X** is replaced by class name, **P** by class-related package name 
-and **S** is replaced with last project package name):
-- **database_structure.sql** -document that contains create table sql statements
-- model
-  - combined
-    - **P**
-      - **DescribedX.scala** - A version of the class which includes descriptions 
-      (only for classes with description support)
-  - enumeration
-    - **E.scala** where **E** goes through each introduced enumeration
-  - partial
-    - **P**
-      - **XData.scala** - The data model containing basic model information
-  - stored
-    - **P**
-      - **X.scala** - A stored variant of the class model
-- database
-  - **STables.scala** - An object containing a reference to all tables listed in the **database_structure.sql** document
-  - factory
-    - **SDescriptionLinkFactory.scala** - An object that contains description link factories for described classes
-    - **P**
-      - **XFactory.scala** - A factory object used for reading models from database
+(where **X** is replaced by class name, **P** by class-related package name and **S** is replaced with project name):
+- **S-database-structure.sql** -document that contains create table sql statements
+- **S-merge-conflicts-yyyy-mm-dd-hh-mm.txt** -document that lists merge conflicts that occurred (if there were any)
+- project root package
   - model
-    - **SDescriptionLinkModel.scala** - An object that contains description link model factories for described classes
-    - **P**
-      - **XModel.scala** - Database interaction model class + the associated companion object used for forming queries etc.
-  - access
-    - single
+    - combined
       - **P**
-        - **UniqueXAccess.scala** - A trait common to distinct single access points that return instances of **X**
-        - **DbSingleX.scala** - A class that accesses individual instances of **X** based on their id
-        - **DbX.scala** - The root access point for individual instances of **X**
-      - description
-        - **DbXDescription.scala** - The root access point for individual descriptions targeting instances of **X**
-          - Only generated for classes which support descriptions
-    - many
+        - **DescribedX.scala** - A version of the class which includes descriptions 
+        (only for classes with description support)
+    - enumeration
+      - **E.scala** where **E** goes through each introduced enumeration
+    - partial
       - **P**
-        - **ManyXsAccess.scala** - A trait common to access points that return multiple instances of **X** at a time
-        - **DbXs.scala** - The root access point for multiple instances of **X**
-      - description
-        - **DbXDescriptions.scala** - The root access point for accessing multiple **X**-descriptions at once
-          - Only generated for classes which support descriptions
+        - **XData.scala** - The data model containing basic model information
+    - stored
+      - **P**
+        - **X.scala** - A stored variant of the class model
+  - database
+    - **STables.scala** - An object containing a reference to all tables listed in the **database_structure.sql** document
+    - factory
+      - **SDescriptionLinkFactory.scala** - An object that contains description link factories for described classes
+      - **P**
+        - **XFactory.scala** - A factory object used for reading models from database
+    - model
+      - **SDescriptionLinkModel.scala** - An object that contains description link model factories for described classes
+      - **P**
+        - **XModel.scala** - Database interaction model class + the associated companion object used for forming queries etc.
+    - access
+      - single
+        - **P**
+          - **UniqueXAccess.scala** - A trait common to distinct single access points that return instances of **X**
+          - **DbSingleX.scala** - A class that accesses individual instances of **X** based on their id
+          - **DbX.scala** - The root access point for individual instances of **X**
+        - description
+          - **DbXDescription.scala** - The root access point for individual descriptions targeting instances of **X**
+            - Only generated for classes which support descriptions
+      - many
+        - **P**
+          - **ManyXsAccess.scala** - A trait common to access points that return multiple instances of **X** at a time
+          - **DbXs.scala** - The root access point for multiple instances of **X**
+        - description
+          - **DbXDescriptions.scala** - The root access point for accessing multiple **X**-descriptions at once
+            - Only generated for classes which support descriptions

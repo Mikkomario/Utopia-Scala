@@ -1,7 +1,8 @@
 package utopia.trove.event
 
+import utopia.flow.util.Version
 import utopia.trove.model.stored.DatabaseVersion
-import utopia.trove.model.{DatabaseStructureSource, VersionNumber}
+import utopia.trove.model.DatabaseStructureSource
 
 import scala.util.{Failure, Success}
 
@@ -90,7 +91,7 @@ object DatabaseSetupEvent
 	  * @param update The update that failed to complete
 	  * @param currentVersion Current database structure version (None if no structure has been initialized yet)
 	  */
-	case class UpdateFailed(error: Throwable, update: DatabaseStructureSource, currentVersion: Option[VersionNumber])
+	case class UpdateFailed(error: Throwable, update: DatabaseStructureSource, currentVersion: Option[Version])
 		extends DatabaseSetupCompletionEvent
 	{
 		override def failure = Some(error)

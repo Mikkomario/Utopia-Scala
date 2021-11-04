@@ -1,12 +1,13 @@
 package utopia.citadel.database.access.many.description
 
 import utopia.citadel.database.access.many.description.DescriptionLinksAccessLike.DescriptionLinksSubView
-import utopia.citadel.database.factory.description.DescriptionLinkFactory
-import utopia.citadel.database.model.description.{DescriptionLinkModel, DescriptionModel}
+import utopia.citadel.database.factory.description.DescriptionLinkFactoryOld
+import utopia.citadel.database.model.description.{DescriptionLinkModelOld, DescriptionModel}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.stored.description.DescriptionLinkOld
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
@@ -16,6 +17,7 @@ import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant
 
+@deprecated("Replaced with LinkedDescriptionsAccessLike", "v2.0")
 object DescriptionLinksAccessLike
 {
 	// NESTED   --------------------------------
@@ -37,11 +39,12 @@ object DescriptionLinksAccessLike
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1.0
   */
-trait DescriptionLinksAccessLike extends ManyRowModelAccess[DescriptionLink]
+@deprecated("Replaced with LinkedDescriptionsAccessLike", "v2.0")
+trait DescriptionLinksAccessLike extends ManyRowModelAccess[DescriptionLinkOld]
 {
 	// ABSTRACT	-------------------------
 	
-	override def factory: DescriptionLinkFactory[DescriptionLink]
+	override def factory: DescriptionLinkFactoryOld[DescriptionLinkOld]
 	
 	
 	// COMPUTED	------------------------
@@ -59,6 +62,13 @@ trait DescriptionLinksAccessLike extends ManyRowModelAccess[DescriptionLink]
 	  * @return A model factory used for constructing description search models
 	  */
 	protected def descriptionFactory = factory.childFactory
+	
+	/**
+	 * @param languageIds Targeted language ids (implicit)
+	 * @return An access point to description links in all of the specified languages
+	 */
+	def inAllPreferredLanguages(implicit languageIds: LanguageIds) =
+		inLanguagesWithIds(languageIds)
 	
 	
 	// IMPLEMENTED  --------------------
@@ -86,7 +96,7 @@ trait DescriptionLinksAccessLike extends ManyRowModelAccess[DescriptionLink]
 	 * @return Whether any row was updated
 	 */
 	def deprecate()(implicit connection: Connection) =
-		putAttribute(DescriptionLinkModel.deprecationAttName, Now)
+		putAttribute(DescriptionLinkModelOld.deprecationAttName, Now)
 	
 	/**
 	 * @param languageId Id of targeted language
@@ -94,6 +104,12 @@ trait DescriptionLinksAccessLike extends ManyRowModelAccess[DescriptionLink]
 	 */
 	def inLanguageWithId(languageId: Int) =
 		subView(descriptionModel.withLanguageId(languageId).toCondition)
+	/**
+	 * @param languageIds Ids of the targeted languages
+	 * @return An access point to description links in those languages
+	 */
+	def inLanguagesWithIds(languageIds: Iterable[Int]) =
+		subView(descriptionModel.languageIdColumn in languageIds)
 	
 	/**
 	 * @param roleIds    Targeted description role ids

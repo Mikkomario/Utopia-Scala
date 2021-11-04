@@ -1,5 +1,7 @@
 package utopia.vault.coder.model.scala.code
 
+import utopia.flow.util.CollectionExtensions._
+import utopia.vault.coder.model.merging.MergeConflict
 import utopia.vault.coder.model.scala.Reference
 import utopia.vault.coder.model.scala.template.{CodeConvertible, Referencing}
 
@@ -24,6 +26,13 @@ object Code
 	// OTHER    ----------------------------------
 	
 	/**
+	  * Wraps a single line of code without references
+	  * @param line A line of code
+	  * @return That line of code wrapped
+	  */
+	def apply(line: String): Code = apply(Vector(CodeLine(line)))
+	
+	/**
 	  * @param lines Code line strings
 	  * @return A code based on those lines
 	  */
@@ -35,7 +44,8 @@ object Code
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set()) extends Referencing with CodeConvertible
+case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set())
+	extends Referencing with CodeConvertible
 {
 	// COMPUTED ------------------------------
 	
@@ -57,6 +67,11 @@ case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set()) ext
 	def isSingleLine = lines.size < 2
 	
 	/**
+	  * @return None if this code is empty. Some(this) otherwise.
+	  */
+	def notEmpty = if (isEmpty) None else Some(this)
+	
+	/**
 	  * @return This code with line splitting applied
 	  */
 	def split = copy(lines = lines.flatMap { _.split })
@@ -70,6 +85,17 @@ case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set()) ext
 	
 	
 	// OTHER    -------------------------------
+	
+	/**
+	  * @param line A prefix line
+	  * @return A copy of this code with the specified line prepended
+	  */
+	def +:(line: String) = copy(CodeLine(line) +: lines)
+	/**
+	  * @param line A postfix line
+	  * @return A copy of this code with the specified line added
+	  */
+	def :+(line: String) = copy(lines :+ CodeLine(line))
 	
 	/**
 	  * Combines these two codes, writing the back to back
@@ -116,4 +142,27 @@ case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set()) ext
 	  * @return A prefixed copy of this code
 	  */
 	def prependAll(prefix: String) = if (prefix.isEmpty) this else mapLines { _.prepend(prefix) }
+	
+	/**
+	  * @param other Another code
+	  * @return Whether this code is meaningfully different from the other code
+	  */
+	def conflictsWith(other: Code) = lines.map { _.code }.mkString != other.lines.map { _.code }.mkString
+	
+	/**
+	  * @param other Another code
+	  * @param description Conflict description
+	  * @return Merge conflict between these two codes
+	  */
+	def conflictWith(other: Code, description: => String = "") =
+	{
+		val conflictLines =
+			lines.padTo(other.lines.size, CodeLine.empty).zip(other.lines.padTo(lines.size, CodeLine.empty))
+				.dropWhile { case (a, b) => a.code == b.code }
+				.dropRightWhile { case (a, b) => a.code == b.code }
+		if (conflictLines.nonEmpty)
+			Some(MergeConflict(conflictLines.map { _._2 }, conflictLines.map { _._1 }, description))
+		else
+			None
+	}
 }

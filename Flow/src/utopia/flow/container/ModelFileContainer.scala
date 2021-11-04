@@ -20,7 +20,7 @@ import scala.concurrent.ExecutionContext
   */
 class ModelFileContainer(fileLocation: Path, saveLogic: SaveTiming = Immediate)
 						(implicit jsonParser: JsonParser, exc: ExecutionContext)
-	extends FileContainer[Model[Constant]](fileLocation)
+	extends FileContainer[Model](fileLocation)
 {
 	// INITIAL CODE	-------------------------------
 	
@@ -29,7 +29,7 @@ class ModelFileContainer(fileLocation: Path, saveLogic: SaveTiming = Immediate)
 	
 	// IMPLEMENTED	-------------------------------
 	
-	override protected def toValue(item: Model[Constant]) = item
+	override protected def toValue(item: Model) = item
 	
 	override protected def fromValue(value: Value) = value.getModel
 	

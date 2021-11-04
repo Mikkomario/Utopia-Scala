@@ -186,7 +186,7 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
     /**
      * The model value of this value or None if the value can't be casted
      */
-    def model = objectValue(ModelType).map { _.asInstanceOf[Model[Constant]]}
+    def model = objectValue(ModelType).map { _.asInstanceOf[Model]}
     
     /**
      * The contents of this value casted to a string, or if that fails, the default value
@@ -238,7 +238,7 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
      * The contents of this value casted to a model, or if that fails, the default value (empty
      * model)
      */
-    def modelOr(default: => Model[Constant] = Model.empty) = model.getOrElse(default)
+    def modelOr(default: => Model = Model.empty) = model.getOrElse(default)
     
     /**
       * The contents of this value casted to a string, or if that fails, an empty string

@@ -3,13 +3,14 @@ package utopia.vault.coder.controller
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.vault.coder.model.enumeration.BasicPropertyType.{IntNumber, Text}
 import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, EnumValue, Optional}
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelValidationFailedException}
+import utopia.flow.datastructure.immutable.{Model, ModelValidationFailedException}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.UncertainBoolean
 import utopia.vault.coder.model.data.{Class, CombinationData, Enum, Name, ProjectData, Property}
 import utopia.vault.coder.model.enumeration.CombinationType.{Combined, MultiCombined, PossiblyCombined}
 import utopia.vault.coder.model.enumeration.{BasicPropertyType, CombinationType, PropertyType}
+import utopia.vault.coder.model.scala.Package
 import utopia.vault.coder.util.NamingUtils
 
 import java.nio.file.Path
@@ -32,20 +33,48 @@ object ClassReader
 	def apply(path: Path) = JsonBunny(path).flatMap { v =>
 		val root = v.getModel
 		val author = root("author").getString
-		val basePackage = root("base_package", "package").getString
-		val enumPackage = s"$basePackage.model.enumeration"
+		val basePackage = Package(root("base_package", "package").getString)
+		val modelPackage = root("model_package", "package_model").string match
+		{
+			case Some(pack) => Package(pack)
+			case None => basePackage/"model"
+		}
+		val dbPackage = root("db_package", "database_package", "package_db", "package_database").string match
+		{
+			case Some(pack) => Package(pack)
+			case None => basePackage/"database"
+		}
+		val projectName = root("name", "project").stringOr {
+			basePackage.parts.lastOption match
+			{
+				case Some(lastPart) => lastPart.capitalize
+				case None =>
+					dbPackage.parent.parts.lastOption
+						.orElse { dbPackage.parts.lastOption }
+						.getOrElse { "Project" }
+						.capitalize
+			}
+		}
+		val enumPackage = modelPackage/"enumeration"
 		val enumerations = root("enumerations", "enums").getModel.attributes.map { enumAtt =>
 			Enum(enumAtt.name.capitalize, enumAtt.value.getVector.flatMap { _.string }.map { _.capitalize },
 				enumPackage, author)
 		}
+		val referencedEnumerations = root("referenced_enums", "referenced_enumerations").getVector
+			.flatMap { _.string }
+			.map { enumPath =>
+				val (packagePart, enumName) = enumPath.splitAtLast(".")
+				Enum(enumName, Vector(), packagePart)
+			}
+		val allEnumerations = enumerations ++ referencedEnumerations
 		val classes = root("classes", "class").getModel.attributes.tryMap { packageAtt =>
 			packageAtt.value.model match
 			{
 				case Some(classModel) =>
-					parseClassFrom(classModel, packageAtt.name, enumerations, author).map { Vector(_) }
+					parseClassFrom(classModel, packageAtt.name, allEnumerations, author).map { Vector(_) }
 				case None =>
 					packageAtt.value.getVector.flatMap { _.model }
-						.tryMap { parseClassFrom(_, packageAtt.name, enumerations, author) }
+						.tryMap { parseClassFrom(_, packageAtt.name, allEnumerations, author) }
 			}
 		}.map { _.flatten }
 		
@@ -92,11 +121,12 @@ object ClassReader
 					}
 				}
 			}
-			ProjectData(basePackage, enumerations, classes, combinations)
+			ProjectData(projectName, modelPackage, dbPackage, enumerations, classes, combinations,
+				!root("models_without_vault").getBoolean)
 		}
 	}
 	
-	private def parseClassFrom(classModel: Model[Constant], packageName: String, enumerations: Iterable[Enum],
+	private def parseClassFrom(classModel: Model, packageName: String, enumerations: Iterable[Enum],
 	                           defaultAuthor: String) =
 	{
 		val rawClassName = classModel("name").string.filter { _.nonEmpty }.map { _.capitalize }
@@ -159,7 +189,7 @@ object ClassReader
 		}
 	}
 	
-	private def propertyFrom(propModel: Model[Constant], enumerations: Iterable[Enum], className: Name) =
+	private def propertyFrom(propModel: Model, enumerations: Iterable[Enum], className: Name) =
 	{
 		val rawName = propModel("name").string.filter { _.nonEmpty }
 		val rawColumnName = propModel("column_name", "column", "col").string.filter { _.nonEmpty }
@@ -205,17 +235,22 @@ object ClassReader
 				}
 		}
 		
-		val name = rawName
-			.orElse { rawColumnName.map(NamingUtils.underscoreToCamel) }
+		val name: Name = rawName.map { Name(_) }
+			.orElse { rawColumnName.map { cName => Name(NamingUtils.underscoreToCamel(cName)) } }
 			.getOrElse { actualDataType.defaultPropertyName }
-		val columnName = rawColumnName.getOrElse { NamingUtils.camelToUnderscore(name) }
-		val fullName = Name(name, propModel("name_plural", "plural_name").stringOr(name + "s"))
+		val columnName = rawColumnName.getOrElse { NamingUtils.camelToUnderscore(name.singular) }
+		val fullName = propModel("name_plural", "plural_name").string match
+		{
+			case Some(pluralName) => name.copy(plural = pluralName)
+			case None => name
+		}
 		
 		val rawDoc = propModel("doc").string.filter { _.nonEmpty }
 		val doc = rawDoc.getOrElse { actualDataType.writeDefaultDescription(className, fullName) }
 		
 		Property(fullName, columnName, actualDataType, doc, propModel("usage").getString,
-			propModel("default", "def").getString, propModel("indexed", "index", "is_index").boolean)
+			propModel("default", "def").getString, propModel("sql_default", "sql_def").getString,
+			propModel("indexed", "index", "is_index").boolean)
 	}
 	
 	

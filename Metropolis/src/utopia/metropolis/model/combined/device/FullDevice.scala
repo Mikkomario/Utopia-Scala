@@ -1,29 +1,24 @@
 package utopia.metropolis.model.combined.device
 
-import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, PropertyDeclaration}
+import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible}
+import utopia.flow.generic.{FromModelFactory, ModelConvertible}
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.Extender
 import utopia.metropolis.model.combined.description.SimplyDescribed
-import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
+import utopia.metropolis.model.stored.description.DescriptionRole
+import utopia.metropolis.model.stored.device.ClientDevice
 
+@deprecated("Replaced with DetailedClientDevice", "v2.0")
 object FullDevice extends FromModelFactory[FullDevice]
 {
-	// ATTRIBUTES	----------------------
-	
-	private val schema = ModelDeclaration(PropertyDeclaration("id", IntType))
-	
-	
 	// IMPLEMENTED	----------------------
 	
-	override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
-		valid("descriptions").getVector.tryMap { v => DescriptionLink(v.getModel) }.map { descriptions =>
-			val userIds = valid("user_ids").getVector.flatMap { _.int }.toSet
-			FullDevice(valid("id").getInt, descriptions.toSet, userIds)
+	override def apply(model: template.Model[Property]) =
+		DescribedClientDevice(model).map { device =>
+			FullDevice(device, model("user_ids").getVector.flatMap { _.int }.toSet)
 		}
-	}
 }
 
 /**
@@ -31,15 +26,27 @@ object FullDevice extends FromModelFactory[FullDevice]
   * @author Mikko Hilpinen
   * @since 19.6.2020, v1
   */
-case class FullDevice(id: Int, descriptions: Set[DescriptionLink], userIds: Set[Int])
-	extends ModelConvertible with SimplyDescribed
+@deprecated("Replaced with DetailedClientDevice", "v2.0")
+case class FullDevice(describedDevice: DescribedClientDevice, userIds: Set[Int])
+	extends Extender[ClientDevice] with ModelConvertible with SimplyDescribed
 {
+	// COMPUTED -----------------------------
+	
+	/**
+	  * @return The wrapped device
+	  */
+	def device = describedDevice.wrapped
+	
+	
 	// IMPLEMENTED	-------------------------
 	
-	override def toModel = Model(Vector("id" -> id,
-		"descriptions" -> descriptions.map { _.toModel }.toVector, "user_ids" -> userIds.toVector))
+	override def wrapped = describedDevice.wrapped
+	
+	override def descriptions = describedDevice.descriptions
+	
+	override def toModel = describedDevice.toModel + Constant("user_ids", userIds.toVector)
 	
 	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) = Model(Vector(
-		"id" -> id, "user_ids" -> userIds.toVector
+		"id" -> device.id, "user_ids" -> userIds.toVector
 	))
 }

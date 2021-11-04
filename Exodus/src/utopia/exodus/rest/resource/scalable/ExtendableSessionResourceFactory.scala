@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.scalable
 
 import utopia.access.http.Method
-import utopia.exodus.model.stored.UserSession
+import utopia.exodus.model.stored.auth.SessionToken
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.rest.util.AuthorizedContext.SessionParams
 import utopia.flow.datastructure.immutable.Lazy
@@ -27,7 +27,7 @@ abstract class ExtendableSessionResourceFactory[A, +R <: ExtendableResource[Auth
 	 *                3) database connection, 4) request context, 5) remaining request path and
 	 *                6) default implementation (lazy) and returns a result
 	 */
-	def addUseCase(method: Method)(useCase: (A, UserSession, Connection, AuthorizedContext, Option[Path],
+	def addUseCase(method: Method)(useCase: (A, SessionToken, Connection, AuthorizedContext, Option[Path],
 		Lazy[Result]) => Result): Unit =
 		addUseCase(SessionUseCaseImplementation
 			.factory[A](method) { (organizationId, session, connection, context, path, default) =>

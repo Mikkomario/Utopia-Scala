@@ -1,5 +1,8 @@
 # Utopia Nexus - List of Changes
 
+## v1.6.1 - 04.11.2021
+Supports changes in Flow v1.14
+
 ## v1.6 - 13.7.2021
 This is a major upgrade on the **Nexus** module. Most importantly, the **RequestHandler** now supports 
 versioning. Secondly, this update adds support for extendable resources, which is utilized in the 

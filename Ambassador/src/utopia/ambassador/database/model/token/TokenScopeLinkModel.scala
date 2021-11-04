@@ -7,6 +7,7 @@ import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 import utopia.vault.sql.Insert
 
+@deprecated("Replaced with AuthTokenScopeLinkModel", "v2.0")
 object TokenScopeLinkModel
 {
 	// ATTRIBUTES   ----------------------
@@ -26,7 +27,7 @@ object TokenScopeLinkModel
 	/**
 	  * @return The table used by this model / class
 	  */
-	def table = AmbassadorTables.authTokenScope
+	def table = AmbassadorTables.authTokenScopeLink
 	
 	/**
 	  * Column that refers to linked scope
@@ -76,6 +77,7 @@ object TokenScopeLinkModel
   * @author Mikko Hilpinen
   * @since 11.7.2021, v1.0
   */
+@deprecated("Replaced with AuthTokenScopeLinkModel", "v2.0")
 case class TokenScopeLinkModel(id: Option[Int] = None, tokenId: Option[Int] = None, scopeId: Option[Int] = None)
 	extends Storable
 {

@@ -3,11 +3,14 @@ package utopia.exodus.rest.resource.organization
 import utopia.access.http.Method.Delete
 import utopia.access.http.Status.Forbidden
 import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
+import utopia.citadel.database.model.organization.OrganizationDeletionModel
 import utopia.citadel.model.enumeration.StandardUserRole.Owner
 import utopia.exodus.model.enumeration.StandardTask.DeleteOrganization
 import utopia.exodus.rest.resource.scalable.{ExtendableOrganizationResource, ExtendableOrganizationResourceFactory, OrganizationUseCaseImplementation}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.metropolis.model.partial.organization.OrganizationDeletionData
 import utopia.nexus.rest.scalable.FollowImplementation
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
@@ -39,8 +42,8 @@ class OrganizationNode(organizationId: Int) extends ExtendableOrganizationResour
 			if (DbMembership(membershipId).allowsTaskWithId(DeleteOrganization.id))
 			{
 				// Checks whether there already exists a pending deletion
-				val organization = DbOrganization(organizationId)
-				val existingDeletions = organization.deletions.pending.all
+				val organizationAccess = DbOrganization(organizationId)
+				val existingDeletions = organizationAccess.deletions.notCancelled.pull
 				val deletion =
 				{
 					if (existingDeletions.nonEmpty)
@@ -49,13 +52,15 @@ class OrganizationNode(organizationId: Int) extends ExtendableOrganizationResour
 					{
 						// Calculates the deletion period (how long this action can be cancelled) based on the number of
 						// organization owners and users
-						val numberOfOwners = organization.memberships.withRole(Owner.id).size
-						val organizationSize = organization.memberships.size
+						val numberOfOwners = organizationAccess.membershipsWithRoles
+							.limitedToRoleWithId(Owner.id).ids.size
+						val organizationSize = organizationAccess.memberships.size
 						// Owners (other than requester) delay deletion by a week, normal users by a day
 						// Maximum wait duration is 30 days, however
 						val waitDays = ((numberOfOwners - 1) * 7 + (organizationSize - numberOfOwners + 1)) min 30
 						// Inserts a new deletion
-						organization.deletions.insert(session.userId, waitDays.days)
+						OrganizationDeletionModel
+							.insert(OrganizationDeletionData(organizationId, Now + waitDays.days, session.userId))
 					}
 				}
 				Result.Success(deletion.toModel)

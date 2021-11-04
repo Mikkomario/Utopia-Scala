@@ -5,6 +5,7 @@ import utopia.flow.util.StringExtensions._
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 
+@deprecated("Replaced with Version (Flow)", "v1.1")
 object VersionNumber
 {
 	/**
@@ -32,6 +33,7 @@ object VersionNumber
   * @param numbers Numbers that form this version number
   * @param suffix Suffix added to the end of this version number (Eg. "beta") (Optional)
   */
+@deprecated("Replaced with Version (Flow)", "v1.1")
 case class VersionNumber(numbers: Vector[Int], suffix: String = "") extends SelfComparable[VersionNumber]
 {
 	// COMPUTED	------------------------

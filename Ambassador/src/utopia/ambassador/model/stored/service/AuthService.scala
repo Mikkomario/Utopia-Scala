@@ -1,17 +1,23 @@
 package utopia.ambassador.model.stored.service
 
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
-
-import java.time.Instant
+import utopia.ambassador.database.access.single.service.DbSingleAuthService
+import utopia.ambassador.model.partial.service.AuthServiceData
+import utopia.vault.model.template.StoredModelConvertible
 
 /**
-  * Represents a 3rd party service towards which OAuth process is targeted
+  * Represents a AuthService that has already been stored in the database
+  * @param id id of this AuthService in the database
+  * @param data Wrapped AuthService data
   * @author Mikko Hilpinen
-  * @since 12.7.2021, v1.0
+  * @since 2021-10-26
   */
-case class AuthService(id: Int, name: String, created: Instant) extends ModelConvertible
+case class AuthService(id: Int, data: AuthServiceData) extends StoredModelConvertible[AuthServiceData]
 {
-	override def toModel = Model(Vector("id" -> id, "name" -> name, "created" -> created))
+	// COMPUTED	--------------------
+	
+	/**
+	  * An access point to this AuthService in the database
+	  */
+	def access = DbSingleAuthService(id)
 }
+

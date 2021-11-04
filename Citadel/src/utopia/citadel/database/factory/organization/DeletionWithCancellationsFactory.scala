@@ -9,6 +9,7 @@ import utopia.vault.nosql.factory.multi.MultiCombiningFactory
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1.0
   */
+@deprecated("Replaced with OrganizationDeletionWithCancellationsFactory", "v2.0")
 object DeletionWithCancellationsFactory
 	extends MultiCombiningFactory[DeletionWithCancellations, Deletion, DeletionCancel]
 {

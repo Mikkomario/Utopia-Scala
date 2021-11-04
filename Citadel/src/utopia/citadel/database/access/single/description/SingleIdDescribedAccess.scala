@@ -1,11 +1,11 @@
 package utopia.citadel.database.access.single.description
 
-import utopia.citadel.database.access.many.description.DescriptionLinksAccess
+import utopia.citadel.database.access.many.description.LinkedDescriptionsAccess
 import utopia.metropolis.model.cached.LanguageIds
-import utopia.metropolis.model.combined.description.DescribedFactory
+import utopia.metropolis.model.combined.description.{DescribedFactory, LinkedDescription}
+import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.post.NewDescription
-import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
 
@@ -22,11 +22,11 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	/**
 	  * @return An access point used for accessing individual description links for this model type
 	  */
-	protected def singleDescriptionAccess: DescriptionLinkAccess
+	protected def singleDescriptionAccess: LinkedDescriptionAccess
 	/**
 	  * @return An access point used for accessing groups of description links for this model type
 	  */
-	protected def manyDescriptionsAccess: DescriptionLinksAccess
+	protected def manyDescriptionsAccess: LinkedDescriptionsAccess
 	
 	/**
 	 * @return Factory used for creating described compies of this model type
@@ -50,7 +50,7 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	 * @return A fully described copy of this instance which includes all available descriptions
 	 *         in all available languages
 	 */
-	def fullyDescribed(implicit connection: Connection) = pullDescribed(descriptions)
+	def fullyDescribed(implicit connection: Connection) = pullDescribed { descriptions }
 	/**
 	  * @param connection Implicit DB Connection
 	  * @param languageIds Ids of the accepted languages, from most preferred to least preferred
@@ -58,7 +58,7 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	  *         Uses the most preferred available language.
 	  */
 	def described(implicit connection: Connection, languageIds: LanguageIds) =
-		pullDescribed(descriptions.inPreferredLanguages)
+		pullDescribed { descriptions.inPreferredLanguages }
 	
 	
 	// OTHER    ------------------------------
@@ -81,6 +81,42 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 		described(connection, LanguageIds(languageIds.toVector))
 	
 	/**
+	 * @param roleIds Ids of the targeted description roles
+	 * @param connection Implicit DB Connection
+	 * @param languageIds Accepted language ids
+	 * @return A described copy of this instance, containing 0-1 descriptions per role.
+	 */
+	def describedWithRoleIds(roleIds: Set[Int])(implicit connection: Connection, languageIds: LanguageIds) =
+		pullDescribed { descriptions.withRolesInPreferredLanguages(roleIds) }
+	/**
+	 * @param roles Targeted description roles
+	 * @param connection Implicit DB Connection
+	 * @param languageIds Accepted language ids
+	 * @return A described copy of this instance, containing 0-1 descriptions per role.
+	 */
+	def describedWith(roles: Set[DescriptionRoleIdWrapper])
+	                 (implicit connection: Connection, languageIds: LanguageIds) =
+		describedWithRoleIds(roles.map { _.id })
+	/**
+	 * @param connection Implicit DB Connection
+	 * @param languageIds Accepted language ids
+	 * @return A described copy of this instance, containing 0-1 descriptions per role.
+	 */
+	def describedWith(firstRole: DescriptionRoleIdWrapper, secondRole: DescriptionRoleIdWrapper,
+	                  moreRoles: DescriptionRoleIdWrapper*)
+	                 (implicit connection: Connection, languageIds: LanguageIds): Option[D] =
+		describedWith(Set(firstRole, secondRole) ++ moreRoles)
+	
+	/**
+	 * @param role Targeted description role
+	 * @param connection Implicit DB Connection
+	 * @param languageIds Accepted language ids
+	 * @return A described copy of this instance, containing a description for the specified role, if available
+	 */
+	def withDescription(role: DescriptionRoleIdWrapper)(implicit connection: Connection, languageIds: LanguageIds) =
+		pullDescribed { description.withRole(role).inPreferredLanguage }
+	
+	/**
 	  * Inserts a new description for this item, replacing the existing description
 	  * @param newDescription New description to apply
 	  * @param connection Implicit Connection
@@ -98,6 +134,6 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	def describe(newDescription: NewDescription, authorId: Int)(implicit connection: Connection) =
 		descriptions.update(newDescription, authorId)
 	
-	private def pullDescribed(pullDescriptions: => Iterable[DescriptionLink])(implicit connection: Connection) =
+	private def pullDescribed(pullDescriptions: => Iterable[LinkedDescription])(implicit connection: Connection) =
 		pull.map { item => describedFactory(item, pullDescriptions.toSet) }
 }

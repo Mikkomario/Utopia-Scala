@@ -1,3 +1,7 @@
 out/
+Metropolis/data/coder-build
+Exodus/data/coder-build
+Ambassador/data/coder-build
+Vault-Coder/data/test-output
 .idea/workspace.xml
 .idea/shelf

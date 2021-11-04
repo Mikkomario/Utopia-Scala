@@ -2,20 +2,21 @@ package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method
 import utopia.access.http.Method.Put
-import utopia.access.http.Status.{BadRequest, InternalServerError, NotFound, Unauthorized}
+import utopia.access.http.Status.{BadRequest, InternalServerError, Unauthorized}
 import utopia.citadel.database.access.id.single.DbUserId
-import utopia.citadel.database.access.single.device.DbDevice
+import utopia.citadel.database.access.single.device.DbClientDevice
 import utopia.citadel.database.access.single.user.DbUser
-import utopia.exodus.database.access.single.{DbEmailValidation, DbUserSession}
+import utopia.citadel.util.CitadelContext._
 import utopia.exodus.database.UserDbExtensions._
+import utopia.exodus.database.access.single.auth.{DbEmailValidationAttempt, DbSessionToken}
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.PasswordReset
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.handleError
+import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.post.PasswordChange
 import utopia.nexus.http.Path
-import utopia.nexus.rest.Resource
-import utopia.nexus.rest.ResourceSearchResult.Error
+import utopia.nexus.rest.LeafResource
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -26,11 +27,8 @@ import scala.util.{Failure, Success}
  * @author Mikko Hilpinen
  * @since 3.12.2020, v1
  */
-object MyPasswordNode extends Resource[AuthorizedContext]
+object MyPasswordNode extends LeafResource[AuthorizedContext]
 {
-	import utopia.exodus.util.ExodusContext.uuidGenerator
-	import utopia.citadel.util.CitadelContext._
-	
 	// ATTRIBUTES	-----------------------
 	
 	override val name = "password"
@@ -45,16 +43,17 @@ object MyPasswordNode extends Resource[AuthorizedContext]
 		// If session (token) authorization is used, changes the password for the logged user.
 		// Requires the old password.
 		if (context.isTokenAuthorized)
-			context.sessionKeyAuthorized { (session, connection) =>
+			context.sessionTokenAuthorized { (session, connection) =>
 				context.handlePost(PasswordChange) { change =>
 					change.oldPassword match {
 						case Some(oldPassword) =>
 							implicit val c: Connection = connection
 							// Checks the old password
-							val userAccess = DbUser(session.userId)
-							if (userAccess.checkPassword(oldPassword)) {
+							val passwordAccess = DbUser(session.userId).password
+							if (passwordAccess.test(oldPassword))
+							{
 								// Changes the password
-								userAccess.changePassword(change.newPassword)
+								passwordAccess.update(change.newPassword)
 								// Returns an empty response on success
 								Result.Empty
 							}
@@ -68,26 +67,21 @@ object MyPasswordNode extends Resource[AuthorizedContext]
 		else
 			context.handlePost(PasswordChange) { change =>
 				change.emailAuthentication match {
-					case Some((emailKey, deviceId)) =>
+					case Some((emailToken, deviceId)) =>
 						connectionPool.tryWith { implicit connection =>
-							// Checks (and possibly closes) the email validation key
-							DbEmailValidation.activateWithKey(emailKey, PasswordReset.id) { validation =>
+							// Checks (and possibly closes) the email validation token
+							DbEmailValidationAttempt.open.completeWithToken(emailToken, PasswordReset.id) { validation =>
 								// User id is expected to be provided in the validation. Uses email as a backup.
-								validation.ownerId.orElse(DbUserId.forEmail(validation.email)) match {
+								// Also makes sure the user id is still valid
+								validation.userId.filter { DbUser(_).nonEmpty }
+									.orElse(DbUserId.forEmail(validation.email)) match {
 									case Some(userId) =>
 										// Updates the user's password in the DB
-										if (DbUser(userId).changePassword(change.newPassword)) {
-											// If device id was provided correctly, starts a user session on that device
-											deviceId.filter { DbDevice(_).isDefined } match {
-												case Some(deviceId) =>
-													val sessionKey = DbUserSession(userId, deviceId)
-														.start(context.modelStyle).key
-													true -> Result.Success(sessionKey)
-												case None => true -> Result.Empty
-											}
-										}
-										else
-											true -> Result.Failure(NotFound, "User data couldn't be found anymore")
+										DbUser(userId).password = change.newPassword
+										// Starts a new session, either on the specified device or without a device
+										val validDeviceId = deviceId.filter { DbClientDevice(_).nonEmpty }
+										true -> Result.Success(
+											DbSessionToken.forSession(userId, validDeviceId).start().token)
 									case None => true -> Result.Failure(InternalServerError,
 										"Email validation wasn't connected to any user account")
 								}
@@ -102,11 +96,8 @@ object MyPasswordNode extends Resource[AuthorizedContext]
 								Result.Failure(InternalServerError, error.getMessage)
 						}
 					case None => Result.Failure(Unauthorized,
-						"Please specify either a session key in headers or 'key' property in request body")
+						"Please specify either a session key in headers or 'token' property in request body")
 				}
 			}.toResponse
 	}
-	
-	override def follow(path: Path)(implicit context: AuthorizedContext) =
-		Error(message = Some(s"$name doesn't have any child nodes"))
 }

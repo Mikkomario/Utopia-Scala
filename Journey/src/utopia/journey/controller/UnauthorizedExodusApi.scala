@@ -15,9 +15,8 @@ import utopia.annex.model.error.{EmptyResponseException, UnauthorizedRequestExce
 import utopia.disciple.apache.Gateway
 import utopia.disciple.model.error.RequestFailedException
 import utopia.journey.model.error.NoUserDataError
-import utopia.metropolis.model.combined.device.FullDevice
+import utopia.metropolis.model.combined.device.DetailedClientDevice
 import utopia.metropolis.model.combined.user.UserCreationResult
-import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.post.{NewDevice, NewLanguageProficiency, NewUser}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -57,8 +56,8 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 		
 		// TODO: Add support for email validation (current implementation expects email validation to not be used)
 		// TODO: Also support optional email (current implementation requires one)
-		val newUser = NewUser(Right(UserSettingsData(userName, Some(credentials.email))), credentials.password, languages,
-			Some(Left(device)), credentials.allowDeviceKeyUse)
+		val newUser = NewUser(userName, credentials.password, languages, Some(Left(device)),
+			Some(credentials.email), credentials.allowDeviceKeyUse)
 		
 		// Posts new user data to the server
 		post("users", newUser.toModel).tryMapIfSuccess
@@ -78,13 +77,13 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 									// TODO: Handle better cases where device id is not returned
 									// Stores received device id, possible device key and session key
 									LocalDevice.preInitialize(deviceId, device.name, user.userId)
-									user.deviceKey.foreach { LocalDevice.key = _ }
-									val apiCredentials = user.deviceKey match
+									user.deviceToken.foreach { LocalDevice.key = _ }
+									val apiCredentials = user.deviceToken match
 									{
 										case Some(deviceKey) => Right(deviceKey)
 										case None => Left(credentials)
 									}
-									new ExodusApi(gateway, rootPath, apiCredentials, user.sessionKey)
+									new ExodusApi(gateway, rootPath, apiCredentials, user.sessionToken)
 								}
 						}
 					case Empty => Failure(new EmptyResponseException(
@@ -104,7 +103,7 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 	  */
 	def loginWithNewDevice(credentials: UserCredentials, device: NewDevice)(implicit exc: ExecutionContext) =
 	{
-		implicit val parser: FullDevice.type = FullDevice
+		implicit val parser: DetailedClientDevice.type = DetailedClientDevice
 		
 		post("devices", device.toModel,
 			headersMod = _.withBasicAuthorization(credentials.email, credentials.password)).tryFlatMapIfSuccess {

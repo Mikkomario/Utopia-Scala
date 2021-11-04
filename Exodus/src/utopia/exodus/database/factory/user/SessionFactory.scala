@@ -16,6 +16,7 @@ import utopia.vault.nosql.template.Deprecatable
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
+@deprecated("Replaced with SessionTokenFactory", "v3.0")
 object SessionFactory extends FromValidatedRowModelFactory[UserSession] with Deprecatable
 {
 	// IMPLEMENTED	-------------------------------
@@ -24,11 +25,11 @@ object SessionFactory extends FromValidatedRowModelFactory[UserSession] with Dep
 	override def nonDeprecatedCondition = table("logoutTime").isNull &&
 		model.expiringIn(Now).toConditionWithOperator(Larger)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = UserSession(model("id").getInt,
+	override protected def fromValidatedModel(model: Model) = UserSession(model("id").getInt,
 		UserSessionData(model("userId").getInt, model("key").getString, model("expiresIn").getInstant,
-			model("deviceId").int, model("modelStylePreference").int.flatMap(ModelStyle.forId)))
+			model("deviceId").int, model("modelStylePreference").int.flatMap(ModelStyle.findForId)))
 	
-	override def table = ExodusTables.userSession
+	override def table = ExodusTables.sessionToken
 	
 	
 	// COMPUTED	-----------------------------------

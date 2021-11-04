@@ -1,18 +1,15 @@
 package utopia.citadel.database.access.single.description
 
-import utopia.citadel.database.factory.description.DescriptionLinkFactory
+import utopia.citadel.database.factory.description.CitadelLinkedDescriptionFactory
+import utopia.citadel.database.model.description.CitadelDescriptionLinkModel
 import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 
-/**
-  * Used for accessing individual description role descriptions
-  * @author Mikko Hilpinen
-  * @since 13.10.2021, v1.3
-  */
-object DbDescriptionRoleDescription extends DescriptionLinkAccess
+object DbDescriptionRoleDescription extends LinkedDescriptionAccess
 {
-	// IMPLEMENTED  -------------------------------
+	// IMPLEMENTED	--------------------
 	
-	override def factory = DescriptionLinkFactory.descriptionRole
+	override def factory = CitadelLinkedDescriptionFactory.descriptionRole
+	override def linkModel = CitadelDescriptionLinkModel.descriptionRole
 	
 	
 	// OTHER    -----------------------------------
@@ -23,3 +20,4 @@ object DbDescriptionRoleDescription extends DescriptionLinkAccess
 	  */
 	def apply(role: DescriptionRoleIdWrapper): SingleTargetDescription = apply(role.id)
 }
+

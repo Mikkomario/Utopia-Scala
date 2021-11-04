@@ -35,7 +35,7 @@ object Model
      * @param generator The attribute generator that will generate the attributes
      * @return The newly generated model
      */
-    def apply[Attribute <: Constant](content: Iterable[(String, Value)], generator: PropertyGenerator[Attribute]) =
+    def apply(content: Iterable[(String, Value)], generator: PropertyGenerator[Constant]) =
             new Model(content.map { case (name, value) => generator(name, Some(value)) }, generator)
     
     /**
@@ -43,21 +43,21 @@ object Model
       * @param content A list of name-value pairs that will be used as attributes
       * @return A new model with specified attributes
       */
-    def apply(content: Iterable[(String, Value)]): Model[Constant] = apply(content, new SimpleConstantGenerator())
+    def apply(content: Iterable[(String, Value)]): Model = apply(content, new SimpleConstantGenerator())
     
     /**
       * @param attName Attribute name
       * @param value Attribute value
       * @return Creates a new model with only single attribute
       */
-    def apply(attName: String, value: Value): Model[Constant] = apply(Vector(attName -> value))
+    def apply(attName: String, value: Value): Model = apply(Vector(attName -> value))
     
     /**
       * @param attName Attribute name
       * @param value Attribute value (will be converted)
       * @return Creates a new model with only single attribute
       */
-    def apply(attName: String, value: ValueConvertible): Model[Constant] = apply(attName, value.toValue)
+    def apply(attName: String, value: ValueConvertible): Model = apply(attName, value.toValue)
     
     /**
       * @param first First name-value pair
@@ -65,7 +65,8 @@ object Model
       * @param more More name-value pairs
       * @return A new model with all specified name-value pairs as attributes
       */
-    def apply(first: (String, Value), second: (String, Value), more: (String, Value)*): Model[Constant] = apply(Vector(first, second) ++ more)
+    def apply(first: (String, Value), second: (String, Value), more: (String, Value)*): Model =
+        apply(Vector(first, second) ++ more)
     
     /**
      * Converts a map of valueConvertible elements into a model format. The generator the model 
@@ -75,17 +76,9 @@ object Model
      * (simple constant generator used by default)
      * @return The newly generated model
      */
-    def fromMap[Attribute <: Constant, C1](content: Map[String, C1], 
-            generator: PropertyGenerator[Attribute])(implicit f: C1 => ValueConvertible) =
+    def fromMap[C1](content: Map[String, C1], generator: PropertyGenerator[Constant] = new SimpleConstantGenerator())
+                   (implicit f: C1 => ValueConvertible) =
             new Model(content.map { case (name, value) => generator(name, Some(value.toValue)) }, generator)
-    
-    /**
-      * Converts a map of valueConvertible elements into a model format.
-      * @param content The map that is converted to model attributes
-      * @return The newly generated model
-      */
-    def fromMap[C1](content: Map[String, C1])(implicit f: C1 => ValueConvertible): Model[Constant] =
-        fromMap(content, new SimpleConstantGenerator())
 }
 
 /**
@@ -94,14 +87,13 @@ object Model
  * @author Mikko Hilpinen
  * @since 29.11.2016
  */
-class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeGenerator: PropertyGenerator[Attribute])
-    extends template.Model[Attribute] with Equatable with ValueConvertible
+class Model(content: Iterable[Constant], val attributeGenerator: PropertyGenerator[Constant])
+    extends template.Model[Constant] with Equatable with ValueConvertible
 {
     // ATTRIBUTES    --------------
     
     // Filters out duplicates (case-insensitive) (if there are duplicates, last instance is used)
     val attributeMap = content.groupBy { _.name.toLowerCase() }.map { case (name, atts) => name -> atts.last }
-    
     protected val attributeOrder = content.map { _.name.toLowerCase }.toVector.distinct
     
     
@@ -127,40 +119,37 @@ class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeG
     /**
      * Creates a new model with the provided attribute added
      */
-    def +[B >: Attribute <: Constant](attribute: B) = withAttributes(attributes :+ attribute)
+    def +(attribute: Constant) = withAttributes(attributes :+ attribute)
     /**
       * @param attribute A new attribute (key + value pair)
       * @return A copy of this model with that attribute
       */
-    def +(attribute: (String, Value)): Model[Attribute] = this + attributeGenerator(attribute._1, Some(attribute._2))
+    def +(attribute: (String, Value)): Model = this + attributeGenerator(attribute._1, Some(attribute._2))
     /**
      * @param attribute An attribute
-     * @tparam B Type of the new attribute
      * @return A copy of this model with that attribute added (prepended)
      */
-    def +:[B >: Attribute <: Constant](attribute: B) = withAttributes(attribute +: attributes)
+    def +:(attribute: Constant) = withAttributes(attribute +: attributes)
     /**
       * @param attribute An attribute (key + value)
       * @return A copy of this model with that attribute added (prepended)
       */
-    def +:(attribute: (String, Value)): Model[Attribute] = attributeGenerator(attribute._1, Some(attribute._2)) +: this
+    def +:(attribute: (String, Value)): Model = attributeGenerator(attribute._1, Some(attribute._2)) +: this
     
     /**
      * Creates a new model with the provided attributes added
      */
-    def ++[B >: Attribute <: Constant](attributes: IterableOnce[B]) =
-        withAttributes(this.attributes ++ attributes)
+    def ++(attributes: IterableOnce[Constant]) = withAttributes(this.attributes ++ attributes)
     /**
      * Creates a new model that contains the attributes from both of the models. The new model 
      * will still use this model's attribute generator
      */
-    def ++[B >: Attribute <: Constant](other: template.Model[B]): Model[B] = this ++ other.attributes
+    def ++(other: template.Model[Constant]): Model = this ++ other.attributes
     
     /**
      * Creates a new model without the provided attribute
      */
-    def -[B >: Attribute <: Constant](attribute: B) =
-        new Model(attributes.filterNot { _ == attribute }, attributeGenerator)
+    def -(attribute: Constant) = new Model(attributes.filterNot { _ == attribute }, attributeGenerator)
     /**
      * Creates a new model without an attribute with the provided name (case-insensitive)
      */
@@ -170,12 +159,12 @@ class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeG
     /**
      * Creates a new model without the provided attributes
      */
-    def --[B >: Attribute <: Constant](attributes: Seq[B]): Model[Attribute] = new Model(
-            this.attributes.filterNot { attributes.contains(_) }, attributeGenerator)
+    def --(attributes: Iterable[Constant]): Model = new Model(
+            this.attributes.filterNot { a => attributes.exists { _ == a } }, attributeGenerator)
     /**
      * Creates a new model without any attributes within the provided model
      */
-    def --[B >: Attribute <: Constant](other: template.Model[B]): Model[B] = this -- other.attributes
+    def --(other: template.Model[Constant]): Model = this -- other.attributes
     
     
     // OTHER METHODS    ------
@@ -183,24 +172,37 @@ class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeG
     /**
      * Creates a new model with the same generator but different attributes
      */
-    def withAttributes[B >: Attribute <: Constant](attributes: Iterable[B]) =
-            new Model[B](attributes, attributeGenerator)
+    def withAttributes(attributes: Iterable[Constant]) = new Model(attributes, attributeGenerator)
+    /**
+      * @param keys Names of the keys to remove (case-insensitive)
+      * @return A copy of this model with the specified keys removed
+      */
+    def without(keys: Iterable[String]) =
+    {
+        val lowerKeys = keys.map { _.toLowerCase }.toSet
+        new Model(attributes.filterNot { a => lowerKeys.contains(a.name.toLowerCase) }, attributeGenerator)
+    }
+    /**
+      * @param firstKey Name of the first key to remove (case-insensitive)
+      * @param moreKeys Names of the other keys to remove (case-insensitive)
+      * @return A copy of this model with the specified keys removed
+      */
+    def without(firstKey: String, moreKeys: String*): Model = without(firstKey +: moreKeys)
     
     /**
      * Creates a new model with the same attributes but a different attribute generator
      */
-    def withGenerator[B >: Attribute <: Constant](generator: PropertyGenerator[B]) = 
-            new Model[B](attributes, generator)
+    def withGenerator(generator: PropertyGenerator[Constant]) = new Model(attributes, generator)
     
     /**
      * Creates a copy of this model with filtered attributes
      */
-    def filter(f: Attribute => Boolean) = withAttributes(attributes.filter(f))
+    def filter(f: Constant => Boolean) = withAttributes(attributes.filter(f))
     /**
      * Creates a copy of this model with filtered attributes. The result model only contains 
      * attributes not included by the filter
      */
-    def filterNot(f: Attribute => Boolean) = withAttributes(attributes.filterNot(f))
+    def filterNot(f: Constant => Boolean) = withAttributes(attributes.filterNot(f))
     
     /**
       * Renames multiple attiributes in this model
@@ -214,7 +216,7 @@ class Model[+Attribute <: Constant](content: Iterable[Attribute], val attributeG
       * @param newName New attribute name
       * @return A copy of this model with that one attribute renamed
       */
-    def renamed(oldName: String, newName: String): Model[Constant] = renamed(Vector(oldName -> newName))
+    def renamed(oldName: String, newName: String): Model = renamed(Vector(oldName -> newName))
     
     /**
      * Creates a mutable copy of this model
