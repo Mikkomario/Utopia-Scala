@@ -18,10 +18,9 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 3.5.2020, v1
   */
-// TODO: Rename to session token node
-case class SessionKeyNode(deviceId: Int) extends LeafResource[AuthorizedContext]
+case class SessionTokenNode(deviceId: Int) extends LeafResource[AuthorizedContext]
 {
-	override val name = "session-key"
+	override val name = "session-token"
 	override val allowedMethods = Vector(Get, Delete)
 	
 	private lazy val deviceAccess = DbClientDevice(deviceId)

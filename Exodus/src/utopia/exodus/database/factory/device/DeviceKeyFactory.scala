@@ -1,6 +1,6 @@
 package utopia.exodus.database.factory.device
 
-import utopia.exodus.database.{ExodusTables, Tables}
+import utopia.exodus.database.ExodusTables
 import utopia.exodus.model.partial.DeviceKeyData
 import utopia.exodus.model.stored.DeviceKey
 import utopia.flow.datastructure.immutable.{Constant, Model}

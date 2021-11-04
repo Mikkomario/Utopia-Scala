@@ -31,7 +31,7 @@ case class DeviceNode(deviceId: Int) extends ResourceWithChildren[AuthorizedCont
 	
 	override def allowedMethods = Vector(Get)
 	
-	override def children = Vector(DeviceKeyNode(deviceId), SessionKeyNode(deviceId))
+	override def children = Vector(DeviceTokenNode(deviceId), SessionTokenNode(deviceId))
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{

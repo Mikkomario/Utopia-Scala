@@ -1,6 +1,6 @@
 package utopia.citadel.database.access.single.device
 
-import utopia.citadel.database.access.many.description.DbDeviceDescriptions
+import utopia.citadel.database.access.many.description.DbClientDeviceDescriptions
 import utopia.citadel.database.access.single.description.DbDeviceDescription
 import utopia.citadel.database.model.device.ClientDeviceModel
 import utopia.citadel.database.model.user.UserDeviceModel
@@ -61,7 +61,7 @@ object DbDevice
 		/**
 		  * @return An access point to descriptions of this device
 		  */
-		def descriptions = DbDeviceDescriptions(deviceId)
+		def descriptions = DbClientDeviceDescriptions(deviceId)
 		
 		/**
 		  * @param connection Database connection (implicit)

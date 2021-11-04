@@ -19,12 +19,11 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 3.5.2020, v1
   */
-// TODO: Rename as device token node
-case class DeviceKeyNode(deviceId: Int) extends LeafResource[AuthorizedContext]
+case class DeviceTokenNode(deviceId: Int) extends LeafResource[AuthorizedContext]
 {
 	// ATTRIBUTES   -------------------------------
 	
-	override val name = "device-key"
+	override val name = "device-token"
 	override val allowedMethods = Vector(Get, Delete)
 	
 	private lazy val deviceAccess = DbClientDevice(deviceId)

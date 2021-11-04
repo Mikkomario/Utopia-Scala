@@ -1,6 +1,8 @@
 # Utopia Description Importer - List of changes
 
 ## v1.0.3 (in development)
+This version is compatible with the latest **Metropolis** (v2.0) and **Citadel** (v2.0) versions, 
+and includes support for the **Trove** use-case.
 ### New Methods
 - **ReadDescriptions**
   - Added a new variant of `.apply` that accepts parsed models - This is to support the **Trove** use case where 
