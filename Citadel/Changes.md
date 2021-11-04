@@ -1,6 +1,6 @@
 # Utopia Disciple - List of changes
 
-## v2.0 (in development)
+## v2.0 - 04.11.2021
 This update involves a complete overhaul of the database interfaces and especially the description-related interfaces. 
 All database interaction objects were rewritten using the **Vault-Coder**.  
 

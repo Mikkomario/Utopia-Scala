@@ -1,6 +1,6 @@
 # Utopia Metropolis - List of Changes
 
-## v2.0 (in development)
+## v2.0 - 04.11.2021
 This update completely rewrites the model structure in this project. 
 This obviously includes a number of breaking changes.
 ### Breaking Changes

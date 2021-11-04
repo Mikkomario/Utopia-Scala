@@ -1,6 +1,6 @@
 # Utopia Disciple - List of Changes
 
-## v1.4.3 (in development)
+## v1.4.3 - 04.11.2021
 Supports changes in Flow v1.14
 
 ## v1.4.2 - 4.9.2021

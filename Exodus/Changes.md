@@ -1,6 +1,6 @@
 # Utopia Exodus - List of Changes
 
-## v3.0 (in development)
+## v3.0 - 04.11.2021
 This update **Exodus**' models and database interfaces were completely rewritten by utilizing the **Vault-Coder**. 
 This will most surely require changes in the dependent modules and applications as well.
 ### Breaking Changes

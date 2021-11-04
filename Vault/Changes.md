@@ -1,6 +1,6 @@
 # Utopia Vault - List of Changes
 
-## v1.11.1 (in development)
+## v1.11.1 - 04.11.2021
 Supports changes in Flow v1.14
 
 ## v1.11 - 18.10.2021

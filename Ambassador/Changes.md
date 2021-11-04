@@ -1,6 +1,6 @@
 # Utopia Ambassador - List of Changes
 
-## v2.0 (in development)
+## v2.0 - 04.11.2021
 This update refactored the inner database interaction classes by utilizing the **Vault-Coder**. 
 There are a number of breaking changes involved, although the functionality / the external interface 
 should remain the same.

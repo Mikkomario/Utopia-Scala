@@ -1,6 +1,6 @@
 # Utopia Flow - List of Changes
 
-## v1.14 (in development)
+## v1.14 - 04.11.2021
 Beside the obviously breaking change of removing generic type parameters from the immutable **Model**, 
 this update mainly adds utility functions and features.
 ### Breaking Changes

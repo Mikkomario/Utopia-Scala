@@ -1,6 +1,9 @@
 # Utopia Vault Coder
 
-## v1.3 (in development)
+## v1.3 - 04.11.2021
+This major update adds a number of new quite important features.  
+Also, this version is compatible with the latest **Metropolis** (v2.0) and **Citadel** (v2.0) versions, 
+when it comes to description handling.
 ### Breaking Changes
 - **Citadel** & **Metropolis** features are now based on **Metropolis** v2.0 and **Citadel** v2.0 and will have 
   compatibility problems with earlier versions

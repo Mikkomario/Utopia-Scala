@@ -1,6 +1,6 @@
 # Utopia Nexus - List of Changes
 
-## v1.6.1 (in development)
+## v1.6.1 - 04.11.2021
 Supports changes in Flow v1.14
 
 ## v1.6 - 13.7.2021
