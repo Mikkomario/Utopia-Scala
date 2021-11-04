@@ -1,6 +1,6 @@
 package utopia.vault.nosql.factory.multi
 
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.model.immutable.Result
 import utopia.vault.nosql.factory.LinkedFactoryLike
@@ -25,7 +25,7 @@ trait MultiLinkedFactory[+Parent, Child] extends LinkedFactoryLike[Parent, Child
 	  * @param children Parsed children (contains only successful results)
 	  * @return Model parse results
 	  */
-	def apply(id: Value, model: Model[Constant], children: Vector[Child]): Try[Parent]
+	def apply(id: Value, model: Model, children: Vector[Child]): Try[Parent]
 	
 	
 	// IMPLEMENTED	----------------

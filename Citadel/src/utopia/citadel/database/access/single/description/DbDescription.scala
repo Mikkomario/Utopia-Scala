@@ -1,55 +1,39 @@
 package utopia.citadel.database.access.single.description
 
-import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
+import utopia.citadel.database.factory.description.DescriptionFactory
+import utopia.citadel.database.model.description.DescriptionModel
+import utopia.metropolis.model.stored.description.Description
+import utopia.vault.nosql.access.single.model.SingleRowModelAccess
+import utopia.vault.nosql.template.Indexed
+import utopia.vault.nosql.view.NonDeprecatedView
 
-@deprecated("This object will be replaced with a description access object", "v1.3")
-object DbDescription
+/**
+  * Used for accessing individual Descriptions
+  * @author Mikko Hilpinen
+  * @since 2021-10-23
+  */
+object DbDescription 
+	extends SingleRowModelAccess[Description] with NonDeprecatedView[Description] with Indexed
 {
-	/**
-	 * @param organizationId Organization id
-	 * @return An access point to that organization's individual descriptions
-	 */
-	@deprecated("Please use DbOrganizationDescription instead", "v1.3")
-	def ofOrganizationWithId(organizationId: Int) = DbOrganizationDescription(organizationId)
+	// COMPUTED	--------------------
 	
 	/**
-	 * @param deviceId Device id
-	 * @return An access point to that device's individual descriptions
-	 */
-	@deprecated("Please use DbDeviceDescription instead", "v1.3")
-	def ofDeviceWithId(deviceId: Int) = DbDeviceDescription(deviceId)
-	
-	/**
-	 * @param taskId Task id
-	 * @return An access point to individual descriptions of that task type
-	 */
-	@deprecated("Please use DbTaskDescription instead", "v1.3")
-	def ofTaskWithId(taskId: Int) = DbTaskDescription(taskId)
-	
-	/**
-	 * @param roleId User role id
-	 * @return An access point to individual descriptions of that user role
-	 */
-	@deprecated("Please use DbUserRoleDescription instead", "v1.3")
-	def ofUserRoleWithId(roleId: Int) = DbUserRoleDescription(roleId)
-	
-	/**
-	 * @param languageId Language id
-	 * @return An access point to that language's individual descriptions
-	 */
-	@deprecated("Please use DbLanguageDescription instead", "v1.3")
-	def ofLanguageWithId(languageId: Int) = DbLanguageDescription(languageId)
-	
-	/**
-	 * @param roleId Id of the targeted description role
-	 * @return An access point to that description role's individual descriptions
-	 */
-	@deprecated("Please use DbDescriptionRoleDescription instead", "v1.3")
-	def ofDescriptionRoleWithId(roleId: Int) = DbDescriptionRoleDescription(roleId)
-	/**
-	  * @param descriptionRole A description role
-	  * @return An access point to that description role's individual descriptions
+	  * Factory used for constructing database the interaction models
 	  */
-	@deprecated("Please use DbDescriptionRoleDescription instead", "v1.3")
-	def of(descriptionRole: DescriptionRoleIdWrapper) = ofDescriptionRoleWithId(descriptionRole.id)
+	protected def model = DescriptionModel
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def factory = DescriptionFactory
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param id Database id of the targeted Description instance
+	  * @return An access point to that Description
+	  */
+	def apply(id: Int) = DbSingleDescription(id)
 }
+

@@ -1,12 +1,24 @@
 package utopia.ambassador.model.stored.process
 
+import utopia.ambassador.database.access.single.process.DbSingleAuthCompletionRedirectTarget
 import utopia.ambassador.model.partial.process.AuthCompletionRedirectTargetData
-import utopia.vault.model.template.Stored
+import utopia.vault.model.template.StoredModelConvertible
 
 /**
-  * Represents a client-specified redirection target that has been stored to the DB
+  * Represents a AuthCompletionRedirectTarget that has already been stored in the database
+  * @param id id of this AuthCompletionRedirectTarget in the database
+  * @param data Wrapped AuthCompletionRedirectTarget data
   * @author Mikko Hilpinen
-  * @since 18.7.2021, v1.0
+  * @since 2021-10-26
   */
-case class AuthCompletionRedirectTarget(id: Int, data: AuthCompletionRedirectTargetData)
-	extends Stored[AuthCompletionRedirectTargetData, Int]
+case class AuthCompletionRedirectTarget(id: Int, data: AuthCompletionRedirectTargetData) 
+	extends StoredModelConvertible[AuthCompletionRedirectTargetData]
+{
+	// COMPUTED	--------------------
+	
+	/**
+	  * An access point to this AuthCompletionRedirectTarget in the database
+	  */
+	def access = DbSingleAuthCompletionRedirectTarget(id)
+}
+

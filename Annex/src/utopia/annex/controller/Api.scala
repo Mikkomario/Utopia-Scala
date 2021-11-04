@@ -57,7 +57,7 @@ trait Api
 	  * @param context Execution context
 	  * @return Response from server (asynchronous)
 	  */
-	def get(path: String, timeout: Duration = Duration.Inf, params: Model[Constant] = Model.empty,
+	def get(path: String, timeout: Duration = Duration.Inf, params: Model = Model.empty,
 			   headersMod: Headers => Headers = h => h)(implicit context: ExecutionContext) =
 		makeRequest(Get, path, timeout, params = params, modHeaders = headersMod)
 	
@@ -104,7 +104,7 @@ trait Api
 	  * @return Asynchronous server result
 	  */
 	protected def makeRequest(method: Method, path: String, timeout: Duration = Duration.Inf,
-							  body: Value = Value.empty, params: Model[Constant] = Model.empty,
+							  body: Value = Value.empty, params: Model = Model.empty,
 							  modHeaders: Headers => Headers = h => h)(implicit context: ExecutionContext) =
 	{
 		// Timeout is generated from the specified single duration

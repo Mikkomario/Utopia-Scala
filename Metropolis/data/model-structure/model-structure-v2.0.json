@@ -29,11 +29,12 @@
       {
         "name": "LanguageFamiliarity",
         "name_plural": "LanguageFamiliarities",
-        "described": true,
+        "description_link": "familiarity_id",
         "doc": "Represents a language skill level",
         "props": [
           {
             "name": "orderIndex",
+            "name_plural": "orderIndices",
             "type": "Int",
             "index": true,
             "doc": "Index used for ordering between language familiarities, where lower values mean higher familiarity"
@@ -59,7 +60,6 @@
       {
         "name": "UserSettings",
         "name_plural": "UserSettings",
-        "combo_index": ["deprecatedAfter", "created"],
         "doc": "Versioned user-specific settings",
         "props": [
           {
@@ -90,14 +90,23 @@
         ]
       },
       {
-        "name": "UserLanguage",
-        "combo": {
-          "name": "UserLanguageWithFamiliarity",
-          "child": "LanguageFamiliarity",
-          "is_always_linked": true,
-          "parent_alias": "languageLink",
-          "child_alias": "familiarity"
-        },
+        "name": "UserLanguageLink",
+        "table_name": "user_language",
+        "combos": [
+          {
+            "name": "UserLanguageLinkWithFamiliarity",
+            "child": "LanguageFamiliarity",
+            "is_always_linked": true,
+            "parent_alias": "languageLink",
+            "child_alias": "familiarity"
+          },
+          {
+            "name": "UserLanguage",
+            "child": "Language",
+            "is_always_linked": true,
+            "parent_alias": "link"
+          }
+        ],
         "doc": "Links user with their language familiarity levels",
         "props": [
           {
@@ -146,7 +155,6 @@
       },
       {
         "name": "Description",
-        "combo_index": ["deprecatedAfter", "created"],
         "doc": "Represents some description of some item in some language",
         "props": [
           {
@@ -226,12 +234,12 @@
         "props": [
           {
             "name": "roleId",
-            "ref": "member_role",
-            "doc": "Id of the organization member role that has authorization to perform the referenced task"
+            "ref": "user_role",
+            "doc": "Id of the organization user role that has authorization to perform the referenced task"
           },
           {
             "ref": "task",
-            "doc": "Id of the task the user's with referenced membership role are allowed to perform"
+            "doc": "Id of the task the user's with referenced user role are allowed to perform"
           },
           {
             "type": "creation",
@@ -252,6 +260,12 @@
             "doc": "Id of the user who is/was a member of the referenced organization"
           },
           {
+            "name": "creatorId",
+            "ref": "user",
+            "type": "Option[Int]",
+            "doc": "Id of the user who created/started this membership"
+          },
+          {
             "name": "started",
             "name_plural": "startTimes",
             "type": "creation",
@@ -266,7 +280,8 @@
         ]
       },
       {
-        "name": "MemberRole",
+        "name": "MemberRoleLink",
+        "table_name": "member_role",
         "doc": "Links an organization membership to the roles that member has within that organization",
         "props": [
           {
@@ -314,6 +329,9 @@
             "doc": "The role the recipient will have in the organization initially if they join"
           },
           {
+            "type": "expiration"
+          },
+          {
             "name": "recipientId",
             "ref": "user",
             "type": "Option[Int]",
@@ -323,6 +341,7 @@
             "name": "recipientEmail",
             "name_plural": "recipientEmailAddresses",
             "length": 128,
+            "type": "Option[String]",
             "doc": "Email address of the invited user / the email address where this invitation is sent to"
           },
           {
@@ -336,9 +355,6 @@
             "ref": "user",
             "type": "Option[Int]",
             "doc": "Id of the user who sent this invitation, if still known"
-          },
-          {
-            "type": "expiration"
           },
           {
             "type": "creation",
@@ -398,6 +414,12 @@
             "doc": "Id of the organization whose deletion was requested"
           },
           {
+            "name": "actualization",
+            "type": "datetime",
+            "index": true,
+            "doc": "Time when this deletion is/was scheduled to actualize"
+          },
+          {
             "name": "creatorId",
             "ref": "user",
             "doc": "Id of the user who requested organization deletion"
@@ -405,12 +427,6 @@
           {
             "type": "creation",
             "doc": "Time when this deletion was requested"
-          },
-          {
-            "name": "actualization",
-            "type": "datetime",
-            "index": true,
-            "doc": "Time when this deletion is/was scheduled to actualize"
           }
         ]
       },
@@ -455,7 +471,6 @@
       },
       {
         "name": "ClientDeviceUser",
-        "combo_index": ["deprecatedAfter", "created"],
         "doc": "Links users to the devices they are using",
         "props": [
           {

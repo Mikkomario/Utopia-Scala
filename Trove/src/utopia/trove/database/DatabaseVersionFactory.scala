@@ -19,7 +19,7 @@ case class DatabaseVersionFactory(table: Table) extends FromValidatedRowModelFac
 {
 	override def creationTimePropertyName = "created"
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = DatabaseVersion(model("id"),
+	override protected def fromValidatedModel(model: Model) = DatabaseVersion(model("id"),
 		DatabaseVersionData(Version(model("version").getString), model(creationTimePropertyName)))
 }
 

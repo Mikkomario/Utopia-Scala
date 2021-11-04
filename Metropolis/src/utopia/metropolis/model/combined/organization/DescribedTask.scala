@@ -1,25 +1,24 @@
 package utopia.metropolis.model.combined.organization
 
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
-import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.combined.description.SimplyDescribed
-import utopia.metropolis.model.stored.description.{DescriptionLink, DescriptionRole}
+import utopia.metropolis.model.combined.description.{DescribedFactory, DescribedWrapper, LinkedDescription, SimplyDescribed}
+import utopia.metropolis.model.stored.description.DescriptionRole
+import utopia.metropolis.model.stored.organization.Task
+
+object DescribedTask extends DescribedFactory[Task, DescribedTask]
 
 /**
-  * Combines task type with some or all of its descriptions
-  * @author Mikko Hilpinen
-  * @since 6.5.2020, v1
-  * @param taskId Wrapped task's id
-  * @param descriptions Various descriptions for this task
+  * Combines Task with the linked descriptions
+  * @param task Task to wrap
+  * @param descriptions Descriptions concerning the wrapped Task
+  * @since 2021-10-23
   */
-case class DescribedTask(taskId: Int, override val descriptions: Set[DescriptionLink])
-	extends ModelConvertible with SimplyDescribed
+case class DescribedTask(task: Task, descriptions: Set[LinkedDescription])
+	extends DescribedWrapper[Task] with SimplyDescribed
 {
-	// IMPLEMENTED  -----------------------------
+	// IMPLEMENTED	--------------------
 	
-	override def toModel = Model(Vector("id" -> taskId,
-		"descriptions" -> descriptions.map { _.toModel }.toVector))
+	override def wrapped = task
 	
-	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) = Model("id", taskId)
+	override protected def simpleBaseModel(roles: Iterable[DescriptionRole]) = wrapped.toModel
 }
+

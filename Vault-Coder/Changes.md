@@ -1,19 +1,28 @@
 # Utopia Vault Coder
 
-## v1.3 (in development)
+## v1.3 - 04.11.2021
+This major update adds a number of new quite important features.  
+Also, this version is compatible with the latest **Metropolis** (v2.0) and **Citadel** (v2.0) versions, 
+when it comes to description handling.
 ### Breaking Changes
+- **Citadel** & **Metropolis** features are now based on **Metropolis** v2.0 and **Citadel** v2.0 and will have 
+  compatibility problems with earlier versions
 - Property types may now specify a different plural property name when using the default name
 ### New Features
-- Added support for divided module structure (e.g. Metropolis & Citadel -case)
-- Added custom sql default value support
-- Added enumeration referencing
+- Added merging feature (see README for details)
+- Added support for divided module structure (e.g. **Metropolis** & **Citadel** -case)
+- Added custom sql default value support (see README for details)
+- Added enumeration referencing (see README for details)
 ### Bugfixes
 - In many item access points, the setter property names are now in plural format to match the getter names
+- **TimeUnit** and **FiniteDuration** are now properly imported in generated XData and XFactory files
 ### Other Changes
 - An id-based subset view is now written even when the access point doesn't support descriptions
+- Tables in the SQL document are now written in a specific order, making sure referenced tables are written 
+  before referencing tables
 - Initials used in SQL indices and constraints are now unique within the project
 - Changed some property type default values without changing the meaning 
-  (e.g. default of LocalDate is Today instead of LocalDate.now())
+  (e.g. default of **LocalDate** is `Today` instead of `LocalDate.now()`)
 - Some property types now provide a sql default
 
 ## v1.2 - 18.10.2021

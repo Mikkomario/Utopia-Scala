@@ -3,65 +3,54 @@ package utopia.ambassador.database.access.single.process
 import utopia.ambassador.database.factory.process.IncompleteAuthFactory
 import utopia.ambassador.database.model.process.IncompleteAuthModel
 import utopia.ambassador.model.stored.process.IncompleteAuth
-import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
-import utopia.vault.nosql.view.NonDeprecatedView
+import utopia.vault.nosql.template.Indexed
+import utopia.vault.nosql.view.{NonDeprecatedView, SubView}
 
 /**
-  * Used for accessing individual incomplete authentications in the DB
+  * Used for accessing individual IncompleteAuths
   * @author Mikko Hilpinen
-  * @since 19.7.2021, v1.0
+  * @since 2021-10-26
   */
-object DbIncompleteAuth extends SingleRowModelAccess[IncompleteAuth] with NonDeprecatedView[IncompleteAuth]
+object DbIncompleteAuth 
+	extends SingleRowModelAccess[IncompleteAuth] with NonDeprecatedView[IncompleteAuth] with Indexed
 {
-	// COMPUTED --------------------------------
+	// COMPUTED	--------------------
 	
-	private def model = IncompleteAuthModel
+	/**
+	  * Factory used for constructing database the interaction models
+	  */
+	protected def model = IncompleteAuthModel
 	
 	
-	// IMPLEMENTED  ----------------------------
+	// IMPLEMENTED	--------------------
 	
 	override def factory = IncompleteAuthFactory
 	
 	
-	// OTHER    --------------------------------
+	// OTHER	--------------------
 	
 	/**
-	  * @param authId An authentication id
-	  * @return An access point to that authentication's data
+	  * @param id Database id of the targeted IncompleteAuth instance
+	  * @return An access point to that IncompleteAuth
 	  */
-	def apply(authId: Int) = new DbSingleIncompleteAuth(authId)
+	def apply(id: Int) = DbSingleIncompleteAuth(id)
 	
 	/**
-	  * @param incompleteAuthToken An authentication token
-	  * @param connection Implicit DB Connection
-	  * @return An open incomplete auth case with that token
+	  * @param token An incomplete authentication token
+	  * @return An access point to an authentication attempt with that token
 	  */
-	def forToken(incompleteAuthToken: String)(implicit connection: Connection) =
-		find(model.withToken(incompleteAuthToken).toCondition)
+	def withToken(token: String) = new DbIncompleteAuthWithToken(token)
 	
 	
-	// NESTED   ---------------------------------
+	// NESTED   --------------------
 	
-	class DbSingleIncompleteAuth(override val id: Int) extends SingleIntIdModelAccess[IncompleteAuth]
+	class DbIncompleteAuthWithToken(token: String) extends UniqueIncompleteAuthAccess with SubView
 	{
-		// COMPUTED -----------------------------
+		override protected def parent = DbIncompleteAuth
+		override protected def defaultOrdering = Some(factory.defaultOrdering)
 		
-		/**
-		  * @return An access point to this authentication's login
-		  */
-		def login = DbIncompleteAuthLogin.forAuthenticationWithId(id)
-		
-		/**
-		  * @param connection Implicit DB connection
-		  * @return Whether this authentication attempt has been completed already
-		  */
-		def isClosed(implicit connection: Connection) = login.nonEmpty
-		
-		
-		// IMPLEMENTED  -----------------------
-		
-		override def factory = DbIncompleteAuth.factory
+		override def filterCondition = model.withToken(token).toCondition
 	}
 }
+

@@ -4,7 +4,7 @@ import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.Visibility.Private
-import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
+import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, LazyValue}
 import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration}
 import utopia.vault.coder.model.scala.{Parameter, Reference, ScalaType}
 
@@ -45,13 +45,14 @@ object TablesWriter
 				properties = classes.toVector.sortBy { _.name }.flatMap { c =>
 					c.descriptionLinkClass match {
 						case Some(descriptionLinkClass) =>
-							Pair(tablePropertyFrom(c), tablePropertyFrom(descriptionLinkClass))
+							Pair(tablePropertyFrom(c), descriptionLinkTablePropertyFrom(descriptionLinkClass))
 						case None => Vector(tablePropertyFrom(c))
 					}
 				},
 				// Defines a private apply method but leaves the implementation open
-				methods = Set(MethodDeclaration("apply", applyReferences, Private, Some(Reference.table))(
-					Parameter("tableName", ScalaType.string))(applyImplementation.head, applyImplementation.tail: _*)),
+				methods = Set(MethodDeclaration("apply", applyReferences, Private, Some(Reference.table),
+					isLowMergePriority = true)(Parameter("tableName", ScalaType.string))(
+					applyImplementation.head, applyImplementation.tail: _*)),
 				description = "Used for accessing the database tables introduced in this project",
 				author = classes.map { _.author }.toSet.filter { _.nonEmpty }.mkString(", ")
 			)
@@ -59,11 +60,22 @@ object TablesWriter
 	}
 	
 	private def tablePropertyFrom(c: Class) =
+		ComputedProperty(c.name.singular.uncapitalize, description = tablePropertyDescriptionFrom(c))(
+			s"apply(${ c.tableName.quoted })")
+	private def descriptionLinkTablePropertyFrom(c: Class) =
+	{
+		val linkProp = c.properties.head
+		LazyValue(c.name.singular.uncapitalize, Set(Reference.descriptionLinkTable),
+			description = tablePropertyDescriptionFrom(c))(
+			s"DescriptionLinkTable(apply(${c.tableName.quoted}), ${linkProp.name.singular.quoted})")
+	}
+	
+	private def tablePropertyDescriptionFrom(c: Class) =
 	{
 		val baseDescription = s"Table that contains ${ c.name.plural }"
-		val completeDescription = if (c.description.isEmpty) baseDescription else
+		if (c.description.isEmpty)
+			baseDescription
+		else
 			s"$baseDescription (${ c.description })"
-		ComputedProperty(c.name.singular.uncapitalize, description = completeDescription)(
-			s"apply(${ c.tableName.quoted })")
 	}
 }

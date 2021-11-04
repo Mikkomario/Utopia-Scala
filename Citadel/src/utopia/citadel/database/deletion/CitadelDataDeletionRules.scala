@@ -1,9 +1,10 @@
 package utopia.citadel.database.deletion
 
-import utopia.citadel.database.Tables
-import utopia.citadel.database.factory.description.DescriptionLinkFactory
-import utopia.citadel.database.model.organization.{InvitationModel, MemberRoleModel, MembershipModel}
-import utopia.citadel.database.model.user.{UserDeviceModel, UserSettingsModel}
+import utopia.citadel.database.CitadelTables
+import utopia.citadel.database.model.description.DescriptionModel
+import utopia.citadel.database.model.device.ClientDeviceUserModel
+import utopia.citadel.database.model.organization.{InvitationModel, MemberRoleLinkModel, MembershipModel}
+import utopia.citadel.database.model.user.UserSettingsModel
 import utopia.flow.time.TimeExtensions._
 import utopia.vault.nosql.storable.deprecation.TimeDeprecatable
 
@@ -28,9 +29,9 @@ object CitadelDataDeletionRules
 	
 	/**
 	  * @return Tables that should be targeted with the "clear unreferenced data" -operation,
-	  *         namely: description and client device
+	  *         namely: client device
 	  */
-	def unreferencedDeletionTables = Vector(Tables.description, Tables.clientDevice)
+	def unreferencedDeletionTables = Vector(CitadelTables.clientDevice)
 	
 	/**
 	  * @return A set of deletion rules where all expired / deprecated items are deleted after 30 days
@@ -62,19 +63,14 @@ object CitadelDataDeletionRules
 	           invitation: Duration = defaultHistoryDuration,
 	           description: Duration = defaultHistoryDuration) =
 	{
-		val base = Vector(
+		Vector(
 			deprecation(UserSettingsModel, userSettings),
-			deprecation(UserDeviceModel, deviceUsers),
+			deprecation(ClientDeviceUserModel, deviceUsers),
 			deprecation(MembershipModel, memberships),
-			deprecation(MemberRoleModel, memberRole),
+			deprecation(MemberRoleLinkModel, memberRole),
 			deprecation(InvitationModel, invitation),
+			deprecation(DescriptionModel, description)
 		).flatten
-		description.finite match {
-			case Some(descriptionHistoryDuration) =>
-				base ++ DescriptionLinkFactory.defaultImplementations
-					.map { _.model.deletionAfterDeprecation(descriptionHistoryDuration) }
-			case None => base
-		}
 	}
 	
 	/**

@@ -1,6 +1,6 @@
 package utopia.exodus.rest.resource.scalable
 
-import utopia.exodus.model.stored.UserSession
+import utopia.exodus.model.stored.auth.SessionToken
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.rest.util.AuthorizedContext.OrganizationParams
 import utopia.nexus.rest.scalable.ExtendableResource
@@ -17,7 +17,7 @@ import utopia.vault.database.Connection
 abstract class ExtendableOrganizationResource(val organizationId: Int)
 	extends ExtendableResource[AuthorizedContext, OrganizationParams]
 {
-	override protected def wrap(implementation: ((UserSession, Int, Connection)) => Result)
+	override protected def wrap(implementation: ((SessionToken, Int, Connection)) => Result)
 	                           (implicit context: AuthorizedContext) =
 		context.authorizedInOrganization(organizationId) { (session, membershipId, connection) =>
 			implementation(session, membershipId, connection)

@@ -3,14 +3,13 @@ package utopia.exodus.rest.resource.user.me
 import utopia.access.http.Method.{Get, Patch, Put}
 import utopia.access.http.Status.{BadRequest, Forbidden, NotFound, Unauthorized}
 import utopia.citadel.database.access.single.user.DbUser
-import utopia.exodus.database.access.single.DbEmailValidation
+import utopia.exodus.database.access.single.auth.DbEmailValidationAttempt
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.EmailChange
 import utopia.exodus.model.error.InvalidKeyException
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, SessionUseCaseImplementation}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.model.post.UserSettingsUpdate
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
@@ -29,7 +28,7 @@ object MySettingsNode extends ExtendableSessionResource
 	private val defaultGet = SessionUseCaseImplementation.default(Get) { (session, connection, context, _) =>
 		implicit val c: Connection = connection
 		implicit val ctx: AuthorizedContext = context
-		DbUser(session.userId).settings.pull match {
+		session.userAccess.settings.pull match {
 			// Supports simple styling also
 			case Some(readSettings) => Result.Success(readSettings.toModelWith(session.modelStyle))
 			case None => Result.Failure(NotFound, "No current settings found")
@@ -61,10 +60,9 @@ object MySettingsNode extends ExtendableSessionResource
 	private def update(userId: Int, requireAll: Boolean = false)
 	                  (implicit context: AuthorizedContext, connection: Connection) =
 	{
-		def settings = DbUser(userId).settings
-		
 		context.handlePost(UserSettingsUpdate) { update =>
-			val oldSettings = settings.pull
+			val settingsAccess = DbUser(userId).settings
+			val oldSettings = settingsAccess.pull
 			if (oldSettings.forall { update.isPotentiallyDifferentFrom(_) }) {
 				// Makes sure name property is provided correctly (if required)
 				(if (requireAll) update.name else update.name.orElse { oldSettings.map { _.name } }) match {
@@ -74,19 +72,20 @@ object MySettingsNode extends ExtendableSessionResource
 						val proposedEmail = {
 							if (oldSettings.forall { old => update.definesPotentiallyDifferentEmailThan(old.email) }) {
 								if (ExodusContext.isEmailValidationSupported)
-									update.emailValidationKey match {
-										case Some(key) =>
-											DbEmailValidation.activateWithKey(key, EmailChange.id) { validation =>
-												// Makes sure this user owns the validation
-												if (validation.ownerId.forall { _ == userId })
-													true -> Success(validation.email)
-												else
-													false -> Failure(new InvalidKeyException(
-														"Provided email validation key doesn't belong to you"))
-											}.flatten match {
-												case Success(email) => Right(Some(email))
-												case Failure(error) => Left(Unauthorized -> error.getMessage)
-											}
+									update.emailValidationToken match {
+										case Some(token) =>
+											DbEmailValidationAttempt.open
+												.completeWithToken(token, EmailChange.id) { validation =>
+													// Makes sure this user owns the validation
+													if (validation.userId.forall { _ == userId })
+														true -> Success(validation.email)
+													else
+														false -> Failure(new InvalidKeyException(
+															"Provided email validation key doesn't belong to you"))
+												}.flatten match {
+													case Success(email) => Right(Some(email))
+													case Failure(error) => Left(Unauthorized -> error.getMessage)
+												}
 										case None => Right(None)
 									}
 								else
@@ -101,12 +100,12 @@ object MySettingsNode extends ExtendableSessionResource
 								// On PATCH requests, backs up with existing settings.
 								if (requireAll && ExodusContext.userEmailIsRequired && email.isEmpty)
 									Result.Failure(BadRequest, if (ExodusContext.isEmailValidationSupported)
-										"'email_key' is required" else "'email' is required")
+										"'email_token' is required" else "'email' is required")
 								else
 								{
 									val newEmail = if (requireAll) email else
 										email.orElse { oldSettings.flatMap { _.email } }
-									settings.update(UserSettingsData(newName, newEmail),
+									settingsAccess.tryUpdate(newName, newEmail,
 										ExodusContext.uniqueUserNamesAreRequired) match
 									{
 										case Success(inserted) => Result.Success(inserted.toModel)

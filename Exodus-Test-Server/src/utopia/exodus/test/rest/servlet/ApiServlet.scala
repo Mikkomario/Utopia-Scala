@@ -49,7 +49,7 @@ class ApiServlet extends HttpServlet
 	val dbSettings = JsonBunny.munchPath("settings/exodus-db-settings.json").map { _.getModel }
 	
 	ExodusContext.setup(exc, connectionPool,
-		dbSettings.toOption.flatMap { _("db_name").string }.getOrElse("exodus-test")) { (error, message) =>
+		dbSettings.toOption.flatMap { _("db_name").string }.getOrElse("exodus_db")) { (error, message) =>
 		println(message)
 		error.printStackTrace()
 	}

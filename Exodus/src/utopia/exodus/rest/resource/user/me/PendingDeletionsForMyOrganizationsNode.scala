@@ -2,7 +2,6 @@ package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method.Get
 import utopia.citadel.database.access.many.organization.DbOrganizations
-import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path
@@ -24,11 +23,11 @@ object PendingDeletionsForMyOrganizationsNode extends Resource[AuthorizedContext
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionKeyAuthorized { (session, connection) =>
+		context.sessionTokenAuthorized { (session, connection) =>
 			implicit val c: Connection = connection
 			// Reads all user organization ids and pending deletions targeted towards those ids
-			val organizationIds = DbUser(session.userId).memberships.organizationIds
-			val pendingDeletions = DbOrganizations.withIds(organizationIds.toSet).deletions.pending.all
+			val organizationIds = session.userAccess.memberships.organizationIds
+			val pendingDeletions = DbOrganizations(organizationIds.toSet).deletions.notCancelled.pull
 			Result.Success(pendingDeletions.map { _.toModel })
 		}
 	}

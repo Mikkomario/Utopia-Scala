@@ -18,6 +18,7 @@ import utopia.vault.nosql.access.single.model.distinct.UniqueModelAccess
   * @author Mikko Hilpinen
   * @since 3.5.2020, v1
   */
+@deprecated("Replaced with DbSessionToken", "v3.0")
 object DbUserSession extends SingleModelAccess[UserSession]
 {
 	// IMPLEMENTED	-----------------------------

@@ -3,22 +3,20 @@ package utopia.ambassador.database.factory.scope
 import utopia.ambassador.model.combined.scope.TaskScope
 import utopia.ambassador.model.stored.scope.{Scope, TaskScopeLink}
 import utopia.vault.nosql.factory.row.linked.CombiningFactory
-import utopia.vault.nosql.template.Deprecatable
 
 /**
-  * Used for accessing a task's scope information
+  * Used for reading TaskScopes from the database
   * @author Mikko Hilpinen
-  * @since 11.7.2021, v1.0
+  * @since 2021-10-26
   */
-object TaskScopeFactory extends CombiningFactory[TaskScope, TaskScopeLink, Scope] with Deprecatable
+object TaskScopeFactory extends CombiningFactory[TaskScope, Scope, TaskScopeLink]
 {
-	// IMPLEMENTED  ---------------------------------
+	// IMPLEMENTED	--------------------
 	
-	override def parentFactory = TaskScopeLinkFactory
+	override def childFactory = TaskScopeLinkFactory
 	
-	override def childFactory = ScopeFactory
+	override def parentFactory = ScopeFactory
 	
-	override def nonDeprecatedCondition = parentFactory.nonDeprecatedCondition
-	
-	override def apply(parent: TaskScopeLink, child: Scope) = TaskScope(parent, child)
+	override def apply(scope: Scope, taskLink: TaskScopeLink) = TaskScope(scope, taskLink)
 }
+

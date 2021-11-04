@@ -66,8 +66,8 @@ trait PublicDescriptionsNode[Item, +Combined <: ModelConvertible with SimplyDesc
 					get(context.modelStyle.getOrElse(defaultModelStyle))
 				}.toResponse
 			else if (context.request.headers.containsAuthorization)
-				context.sessionKeyAuthorized { (session, _) =>
-					implicit val userLanguages: LanguageIds = DbUser(session.userId).languageIdsList
+				context.sessionTokenAuthorized { (session, _) =>
+					implicit val userLanguages: LanguageIds = DbUser(session.userId).languageIds
 					get(session.modelStyle)
 				}
 			else

@@ -4,7 +4,7 @@ import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.operator.Combinable
 import utopia.flow.parse.Regex
 import utopia.flow.util.CollectionExtensions._
-import utopia.vault.coder.model.scala.code.CodeLine.{commaRegex, functionalSplitRegex, maxLineLength, tabWidth, withRegex}
+import utopia.vault.coder.model.scala.code.CodeLine.{maxLineLength, oneTimeRegexes, repeatableRegexes, tabWidth}
 
 object CodeLine
 {
@@ -18,19 +18,18 @@ object CodeLine
 	  * How many characters (spaces) a single tab represents
 	  */
 	val tabWidth = 4
-	/**
-	  * A regular expression that searches for ".xxx {" function calls like .map { and so on.
-	  */
-	val functionalSplitRegex = Regex.escape('.') + Regex.alpha.oneOrMoreTimes +
-		Regex.whiteSpace.noneOrOnce + Regex.escape('{')
-	/**
-	  * A regular expression that searches for commas
-	  */
-	val commaRegex = Regex.escape(',') + Regex.whiteSpace.noneOrOnce
-	/**
-	  * A regular expression for searching "with " -text
-	  */
-	val withRegex = Regex("with ")
+	
+	private lazy val repeatableRegexes = Vector(
+		Regex("with ") -> false,
+		(Regex.escape(',') + Regex.whiteSpace.noneOrOnce).withinParenthesis.ignoringQuotations -> true,
+		Regex.escape('\"') + (!Regex.escape('\"')).zeroOrMoreTimes + Regex.escape('\"') -> false,
+		(Regex.anyOf("+-*/").oneOrMoreTimes + Regex.whiteSpace) -> true,
+		(Regex.whiteSpace + Regex.word + Regex.whiteSpace) -> true
+	)
+	private lazy val oneTimeRegexes = Vector(
+		Regex.escape('.') + Regex.alpha.oneOrMoreTimes + Regex.whiteSpace.noneOrOnce + Regex.escape('{'),
+		Regex.escape('.') + Regex.alpha.oneOrMoreTimes
+	)
 	
 	/**
 	  * An empty code line
@@ -97,22 +96,27 @@ case class CodeLine(indentation: Int, code: String) extends Combinable[CodeLine,
 		// Case: Already of the correct length
 		if (length <= maxLineLength)
 			Vector(this)
-		else if (code.contains("with "))
-			splitWith(withRegex)
-		// Case: Should be split => attempts comma -based splitting
-		// and if that doesn't work, function based splitting (once)
-		else if (code.contains(','))
-			splitWith(commaRegex, splitAfterRegex = true)
+		// Case: Would benefit from splitting
 		else
-			functionalSplitRegex.startIndexIteratorIn(code).nextOption() match
-			{
-				case Some(splitIndex) =>
-					Vector(
-						copy(code = code.substring(0, splitIndex)),
-						CodeLine(indentation + 1, code.substring(splitIndex))
-					)
-				case None => Vector(this)
+		{
+			// Attempts to use repeatable splitters first
+			repeatableRegexes.find { _._1.existsIn(code) } match {
+				// Case: Repeatable splitter found => uses that
+				case Some((regex, splitAfter)) => splitWith(regex, splitAfter)
+				// Case: No repeatable splitter found => uses a one-time splitter
+				case None =>
+					oneTimeRegexes.findMap { _.startIndexIteratorIn(code).nextOption() } match {
+						// Case: Splitter found => splits with that one
+						case Some(splitIndex) =>
+							Vector(
+								copy(code = code.substring(0, splitIndex)),
+								CodeLine(indentation + 1, code.substring(splitIndex))
+							)
+						// Case: No splitter found => Keeps as is
+						case None => Vector(this)
+					}
 			}
+		}
 	}
 	
 	
@@ -137,6 +141,13 @@ case class CodeLine(indentation: Int, code: String) extends Combinable[CodeLine,
 	  */
 	def prepend(prefix: String) = copy(code = prefix + code)
 	
+	/**
+	  * @param f A mapping function for the code part
+	  * @return A mapped version of this code line (indentation is kept as is)
+	  */
+	def mapCode(f: String => String) = copy(code = f(code))
+	
+	// Split after regex determines whether the splitting part should be included on the original line
 	private def splitWith(regex: Regex, splitAfterRegex: Boolean = false) =
 	{
 		// Finds the possible split locations

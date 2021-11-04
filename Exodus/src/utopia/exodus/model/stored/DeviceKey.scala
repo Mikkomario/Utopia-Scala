@@ -8,4 +8,5 @@ import utopia.metropolis.model.stored.Stored
   * @author Mikko Hilpinen
   * @since 3.5.2020, v1
   */
+@deprecated("Replaced with DeviceToken", "v3.0")
 case class DeviceKey(id: Int, data: DeviceKeyData) extends Stored[DeviceKeyData]

@@ -41,7 +41,7 @@ class ServicesNode(tokenAcquirer: AcquireTokens, redirectors: MapLike[Int, AuthR
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionKeyAuthorized { (_, connection) =>
+		context.sessionTokenAuthorized { (_, connection) =>
 			implicit val c: Connection = connection
 			// Returns simple service data
 			Result.Success(DbAuthServices.pull.map { _.toModel })

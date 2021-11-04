@@ -11,7 +11,7 @@ object NewDevice extends FromModelFactoryWithSchema[NewDevice]
 	
 	override val schema = ModelDeclaration("name" -> StringType, "language_id" -> IntType)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = NewDevice(model("name"), model("language_id"))
+	override protected def fromValidatedModel(model: Model) = NewDevice(model("name"), model("language_id"))
 }
 
 /**

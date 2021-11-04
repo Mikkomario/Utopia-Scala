@@ -1,6 +1,41 @@
 # Utopia Metropolis - List of Changes
 
-## v1.3.1 (in development)
+## v2.0 - 04.11.2021
+This update completely rewrites the model structure in this project. 
+This obviously includes a number of breaking changes.
+### Breaking Changes
+- All models were rewritten using the **Vault-Coder**, resulting in various changes, including model name changes, 
+  property name changes and property ordering changes.
+- Updated **Description** and **DescriptionLink** models so that creation and deprecation are handled in the 
+  **Description** and not in the **DescriptionLink**.
+  - It is also notable that **DescriptionLink** model now only contains the link portion. 
+    The previous link + description combination is now accessible as **LinkedDescription**.
+- Some model name changes:
+  - **Deletion** is now **OrganizationDeletion**
+  - **DeletionCancel** is now **OrganizationDeletionCancellation**
+  - **RoleRight** is now **UserRoleRight**
+  - **UserDevice** is now **ClientDeviceUser**
+  - **UserLanguage** is now **UserLanguageLink**
+- Some functional changes within models:
+  - **User** model no longer includes settings
+  - **UserSettingsData** now includes userId -property
+- Moved **UserRole** from `user` package to `organization` package.
+- Moved **LanguageIds** to package `cached`
+- Deleted some previously deprecated enumerations
+### Deprecations
+- Deprecated some model classes in favor of new implementations
+  - I highly recommend you to update your code to use the non-deprecated classes only. 
+    The deprecated models will be removed in a future release.
+  - This includes the following models:
+    - **Deletion** (now **OrganizationDeletion**)
+    - **DeletionCancel** (now **OrganizationDeletionCancellation**)
+    - **DeletionWithCancellations** (now **OrganizationDeletionWithCancellations**)
+    - **RoleRight** (now **UserRoleRight**)
+    - **UserDevice** (now **ClientDeviceUser**)
+- Deprecated some combined model classes in favor of new implementations:
+  - **DeletionWithCancellations** is replaced with **OrganizationDeletionWithCancellations**
+  - **DescribedRole** is replaced with **DetailedUserRole**
+  - **FullDevice** is replaced with **DetailedClientDevice**
 ### New Methods
 - **DescribedLanguage**
   - Added `.descriptionOrCode(...)`

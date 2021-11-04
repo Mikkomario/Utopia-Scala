@@ -2,7 +2,7 @@
   "author": "Mikko Hilpinen",
   "project": "Exodus",
   "package": "utopia.exodus",
-  "referenced_enums": ["utopia.metropolis.enumeration.ModelStyle"],
+  "referenced_enums": ["utopia.metropolis.model.enumeration.ModelStyle"],
   "classes": {
     "auth": [
       {
@@ -71,11 +71,12 @@
             "doc": "Token used for authenticating an email resend attempt"
           },
           {
-            "ref": "user",
-            "doc": "Id of the user who claims to own this email address"
+            "type": "expiration"
           },
           {
-            "type": "expiration"
+            "ref": "user",
+            "type": "Option[Int]",
+            "doc": "Id of the user who claims to own this email address (if applicable)"
           },
           {
             "type": "creation",
@@ -147,6 +148,10 @@
             "doc": "Textual representation of this token"
           },
           {
+            "type": "expiration",
+            "doc": "Time when this token expires"
+          },
+          {
             "name": "deviceId",
             "ref": "client_device",
             "type": "Option[Int]",
@@ -161,10 +166,6 @@
           {
             "type": "creation",
             "doc": "Time when this session was started"
-          },
-          {
-            "type": "expiration",
-            "doc": "Time when this token expires"
           },
           {
             "name": "loggedOut",

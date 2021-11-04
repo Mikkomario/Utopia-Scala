@@ -17,7 +17,7 @@ object UserSettingsUpdate extends FromModelFactory[UserSettingsUpdate]
 	override def apply(model: template.Model[Property]) =
 	{
 		val name = model("name").string
-		Success(model("email_key").string match
+		Success(model("email_token").string match
 		{
 			case Some(key) => UserSettingsUpdate(name, Some(Right(key)))
 			case None => UserSettingsUpdate(name, model("email").string.map { Left(_) })
@@ -44,10 +44,10 @@ case class UserSettingsUpdate(name: Option[String] = None, email: Option[Either[
 	def newEmailAddress = email.flatMap { _.leftOption }
 	
 	/**
-	  * @return Email validation key matching previously reserved email address. None if unspecified or when email
+	  * @return Email validation token matching previously reserved email address. None if unspecified or when email
 	  *         validation is not used.
 	  */
-	def emailValidationKey = email.flatMap { _.rightOption }
+	def emailValidationToken = email.flatMap { _.rightOption }
 	
 	/*
 	/**
@@ -74,7 +74,7 @@ case class UserSettingsUpdate(name: Option[String] = None, email: Option[Either[
 	{
 		val emailProperty = email.map
 		{
-			case Right(key) => "email_key" -> (key: Value)
+			case Right(key) => "email_token" -> (key: Value)
 			case Left(email) => "email" -> (email: Value)
 		}
 		Model(Vector("name" -> (name: Value)) ++ emailProperty)
@@ -87,7 +87,8 @@ case class UserSettingsUpdate(name: Option[String] = None, email: Option[Either[
 	  * @param existingData Existing user data
 	  * @return Whether this user settings update is potentially different from the specified data
 	  */
-	def isPotentiallyDifferentFrom(existingData: UserSettingsData) = name.exists { _ != existingData.name } || email.exists
+	def isPotentiallyDifferentFrom(existingData: UserSettingsData) =
+		name.exists { _ != existingData.name } || email.exists
 	{
 		case Right(_) => true
 		case Left(email) => !existingData.email.contains(email)

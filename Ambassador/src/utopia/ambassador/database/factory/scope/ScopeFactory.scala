@@ -4,19 +4,21 @@ import utopia.ambassador.database.AmbassadorTables
 import utopia.ambassador.model.partial.scope.ScopeData
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.flow.datastructure.immutable.{Constant, Model}
-import utopia.flow.generic.ValueUnwraps._
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
-import utopia.vault.nosql.template.Indexed
 
 /**
-  * Used for reading scope data from the DB
+  * Used for reading Scope data from the DB
   * @author Mikko Hilpinen
-  * @since 11.7.2021, v1.0
+  * @since 2021-10-26
   */
-object ScopeFactory extends FromValidatedRowModelFactory[Scope] with Indexed
+object ScopeFactory extends FromValidatedRowModelFactory[Scope]
 {
+	// IMPLEMENTED	--------------------
+	
 	override def table = AmbassadorTables.scope
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = Scope(model("id"),
-		ScopeData(model("serviceId"), model("serviceSideName"), model("clientSideName"), model("priority")))
+	override def fromValidatedModel(valid: Model) =
+		Scope(valid("id").getInt, ScopeData(valid("serviceId").getInt, valid("name").getString, 
+			valid("priority").int, valid("created").getInstant))
 }
+

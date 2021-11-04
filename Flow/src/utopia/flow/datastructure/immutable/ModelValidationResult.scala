@@ -29,7 +29,7 @@ object ModelValidationResult
 	  * @param validated Successfully validated model
 	  * @return A result for successful validation
 	  */
-	def success(original: template.Model[Property], validated: Model[Constant]) =
+	def success(original: template.Model[Property], validated: Model) =
 		ModelValidationResult(original, success = Some(validated))
 }
 
@@ -41,7 +41,7 @@ object ModelValidationResult
   * @param missingProperties The properties that were missing from the model
   * @param invalidConversions Properties that failed to convert to desired data type
   */
-case class ModelValidationResult private(original: template.Model[Property], success: Option[Model[Constant]] = None,
+case class ModelValidationResult private(original: template.Model[Property], success: Option[Model] = None,
                                          missingProperties: Set[PropertyDeclaration] = Set(),
                                          invalidConversions: Set[(Constant, DataType)] = Set())
 {

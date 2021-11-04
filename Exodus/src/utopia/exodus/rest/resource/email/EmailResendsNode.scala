@@ -3,12 +3,12 @@ package utopia.exodus.rest.resource.email
 import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{InternalServerError, NotImplemented, Unauthorized}
-import utopia.exodus.database.access.single.DbEmailValidation
+import utopia.citadel.util.CitadelContext._
+import utopia.exodus.database.access.single.auth.DbEmailValidationAttempt
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.{EmailValidator, ExodusContext}
 import utopia.nexus.http.Path
-import utopia.nexus.rest.Resource
-import utopia.nexus.rest.ResourceSearchResult.Error
+import utopia.nexus.rest.LeafResource
 import utopia.nexus.result.Result
 
 import scala.util.{Failure, Success}
@@ -18,11 +18,10 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 3.12.2020, v1
   */
-object EmailResendsNode extends Resource[AuthorizedContext]
+object EmailResendsNode extends LeafResource[AuthorizedContext]
 {
 	// ATTRIBUTES	-----------------------
 	
-	import utopia.citadel.util.CitadelContext._
 	import ExodusContext.isEmailValidationSupported
 	import ExodusContext.emailValidator
 	import ExodusContext.handleError
@@ -48,7 +47,7 @@ object EmailResendsNode extends Resource[AuthorizedContext]
 					case Some(resendToken) =>
 						connectionPool.tryWith { implicit connection =>
 							implicit val v: EmailValidator = validator
-							DbEmailValidation.resendWith(resendToken) match
+							DbEmailValidationAttempt.open.withResendToken(resendToken).resend() match
 							{
 								// Doesn't send any data on success
 								case Right(_) => Result.Empty
@@ -67,7 +66,4 @@ object EmailResendsNode extends Resource[AuthorizedContext]
 			case None => Result.Failure(NotImplemented, "Email validation features are not implemented").toResponse
 		}
 	}
-	
-	override def follow(path: Path)(implicit context: AuthorizedContext) =
-		Error(message = Some(s"$name doesn't have any child nodes"))
 }

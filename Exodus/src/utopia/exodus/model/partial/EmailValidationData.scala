@@ -9,6 +9,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 24.11.2020, v1
   */
+@deprecated("Replaced with EmailValidationAttemptData", "v3.0")
 case class EmailValidationData(purposeId: Int, email: String, key: String, resendKey: String, expiration: Instant,
 							   ownerId: Option[Int] = None, created: Instant = Now,
 							   actualized: Option[Instant] = None)

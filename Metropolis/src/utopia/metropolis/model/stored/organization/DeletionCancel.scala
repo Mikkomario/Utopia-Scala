@@ -8,4 +8,5 @@ import utopia.metropolis.model.stored.StoredModelConvertible
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1
   */
+@deprecated("Replaced with OrganizationDeletionCancellation", "v2.0")
 case class DeletionCancel(id: Int, data: DeletionCancelData) extends StoredModelConvertible[DeletionCancelData]

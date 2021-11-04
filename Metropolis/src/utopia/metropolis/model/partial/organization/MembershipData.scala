@@ -2,7 +2,7 @@ package utopia.metropolis.model.partial.organization
 
 import java.time.Instant
 import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
-import utopia.flow.generic.{FromModelFactoryWithSchema, InstantType, IntType}
+import utopia.flow.generic.{FromModelFactoryWithSchema, IntType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.time.Now
@@ -10,31 +10,47 @@ import utopia.metropolis.model.StyledModelConvertible
 
 object MembershipData extends FromModelFactoryWithSchema[MembershipData]
 {
-	override val schema = ModelDeclaration("organization_id" -> IntType, "user_id" -> IntType,
-		"started" -> InstantType)
+	override val schema = ModelDeclaration("organization_id" -> IntType, "user_id" -> IntType)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = MembershipData(model("organization_id"),
-		model("user_id"), model("inviter_id"), model("started"), model("ended"))
+	override protected def fromValidatedModel(model: Model) = MembershipData(model("organization_id"),
+		model("user_id"), model("creator_id"), model("started"), model("ended"))
 }
 
 /**
-  * Contains basic data about an organization membership
+  * Lists organization members, including membership history
+  * @param organizationId Id of the organization the referenced user is/was a member of
+  * @param userId Id of the user who is/was a member of the referenced organization
+  * @param creatorId Id of the user who created/started this membership
+  * @param started Time when this membership started
+  * @param ended Time when this membership ended (if applicable)
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1
-  * @param organizationId Id of the organization the user belongs to
-  * @param userId Id of the user who belongs to the organization
-  * @param creatorId Id of the user who created this membership
-  * @param started Timestamp when the membership started (default = current time)
-  * @param ended Timestamp when the membership ended. None if not ended (default).
+  * @since 2021-10-23
   */
-case class MembershipData(organizationId: Int, userId: Int, creatorId: Option[Int] = None,
-						  started: Instant = Now, ended: Option[Instant] = None)
+case class MembershipData(organizationId: Int, userId: Int, creatorId: Option[Int] = None, 
+	started: Instant = Now, ended: Option[Instant] = None) 
 	extends StyledModelConvertible
 {
-	override def toModel = Model(Vector("organization_id" -> organizationId, "user_id" -> userId,
-		"inviter_id" -> creatorId, "started" -> started, "ended" -> ended))
+	// COMPUTED	--------------------
+	
+	/**
+	  * Whether this Membership has already been deprecated
+	  */
+	def isDeprecated = ended.isDefined
+	
+	/**
+	  * Whether this Membership is still valid (not deprecated)
+	  */
+	def isValid = !isDeprecated
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def toModel = 
+		Model(Vector("organization_id" -> organizationId, "user_id" -> userId, "creator_id" -> creatorId, 
+			"started" -> started, "ended" -> ended))
 	
 	// The simple model version expects organization and user ids to be available elsewhere and the membership
 	// status to be always known also
 	override def toSimpleModel = Model(Vector("inviter_id" -> creatorId, "started" -> started))
 }
+

@@ -19,21 +19,19 @@ object ActualizeOrganizationDeletions
 	  * @param cancelledDeletionHistoryDuration Duration how long to keep cancelled deletions in the database
 	  *                                         (default = infinite = never delete deletions)
 	  * @param connection Implicit DB Connection
-	  * @return Number of deleted organizations
 	  */
 	def apply(cancelledDeletionHistoryDuration: Duration = Duration.Inf)(implicit connection: Connection) =
 	{
 		// Checks if there are some cancelled deletions that need to be deleted
 		cancelledDeletionHistoryDuration.finite.foreach { historyDuration =>
-			DbOrganizationDeletions.deleteIfCancelledBefore(Now - historyDuration)
+			DbOrganizationDeletions.withCancellations.cancelledBefore(Now - historyDuration).delete()
 		}
 		
 		// Checks if there are pending deletions
-		val ready = DbOrganizationDeletions.pending.readyToActualize
+		val targetOrganizationIds = DbOrganizationDeletions.withCancellations.notCancelled.readyToActualize
+			.organizationIds.toSet
 		// Actualizes the deletions
-		if (ready.nonEmpty)
-			DbOrganizations.withIds(ready.map { _.organizationId }.toSet).delete()
-		else
-			0
+		if (targetOrganizationIds.nonEmpty)
+			DbOrganizations(targetOrganizationIds).delete()
 	}
 }

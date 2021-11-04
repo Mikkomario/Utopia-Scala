@@ -11,6 +11,7 @@ import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
+@deprecated("Replaced with EmailValidationAttemptModel", "v3.0")
 object EmailValidationModel extends Expiring
 {
 	// ATTRIBUTES   ------------------------
@@ -82,6 +83,7 @@ object EmailValidationModel extends Expiring
   * @author Mikko Hilpinen
   * @since 24.11.2020, v1
   */
+@deprecated("Replaced with EmailValidationAttemptModel", "v3.0")
 case class EmailValidationModel(id: Option[Int] = None, purposeId: Option[Int] = None, email: Option[String] = None,
 								key: Option[String] = None, resendKey: Option[String] = None,
 								ownerId: Option[Int] = None, created: Option[Instant] = None,

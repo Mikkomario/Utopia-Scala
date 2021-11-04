@@ -12,6 +12,7 @@ import utopia.metropolis.model.stored.organization.{Deletion, DeletionCancel}
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1
   */
+@deprecated("Replaced with OrganizationDeletionWithCancellations", "v2.0")
 case class DeletionWithCancellations(deletion: Deletion, cancellations: Vector[DeletionCancel])
 	extends DeepExtender[Deletion, DeletionData] with ModelConvertible
 {

@@ -1,7 +1,7 @@
 package utopia.metropolis.model.stored.organization
 
 import utopia.metropolis.model.partial.organization.InvitationResponseData
-import utopia.metropolis.model.stored.{StoredFromModelFactory, StoredModelConvertible}
+import utopia.metropolis.model.stored.{StoredFromModelFactory, StoredModelConvertible, StyledStoredModelConvertible}
 
 object InvitationResponse extends StoredFromModelFactory[InvitationResponse, InvitationResponseData]
 {
@@ -9,9 +9,15 @@ object InvitationResponse extends StoredFromModelFactory[InvitationResponse, Inv
 }
 
 /**
-  * Represents an invitation response that has been stored to DB
+  * Represents a InvitationResponse that has already been stored in the database
+  * @param id id of this InvitationResponse in the database
+  * @param data Wrapped InvitationResponse data
   * @author Mikko Hilpinen
-  * @since 4.5.2020, v1
+  * @since 2021-10-23
   */
-case class InvitationResponse(id: Int, data: InvitationResponseData)
-	extends StoredModelConvertible[InvitationResponseData]
+case class InvitationResponse(id: Int, data: InvitationResponseData) 
+	extends StyledStoredModelConvertible[InvitationResponseData]
+{
+	override protected def includeIdInSimpleModel = false
+}
+

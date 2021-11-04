@@ -495,13 +495,14 @@ object PropertyType
 				else
 					s"FiniteDuration($valueCode.getLong, TimeUnit.${unit.name})"
 			}
-			CodePiece(text, Set(Reference.timeUnit))
+			val refs = if (isNullable) Set(Reference.timeUnit, Reference.finiteDuration) else Set(Reference.timeUnit)
+			CodePiece(text, refs)
 		}
 		override def toValueCode(instanceCode: String) =
 		{
 			val conversion = s".toUnit(TimeUnit.${unit.name})"
 			val end = if (isNullable) s".map { _$conversion }" else conversion
-			CodePiece(instanceCode + end, Set(Reference.valueConversions))
+			CodePiece(instanceCode + end, Set(Reference.valueConversions, Reference.timeUnit))
 		}
 		
 		override def writeDefaultDescription(className: Name, propName: Name) = s"Duration of this $className"

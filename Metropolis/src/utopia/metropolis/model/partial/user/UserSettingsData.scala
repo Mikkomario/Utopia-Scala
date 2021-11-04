@@ -1,39 +1,59 @@
 package utopia.metropolis.model.partial.user
 
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
-import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.{FromModelFactoryWithSchema, ModelConvertible, StringType}
-import utopia.flow.time.Now
-
 import java.time.Instant
+import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
+import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, StringType}
+import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.Now
+import utopia.metropolis.model.StyledModelConvertible
 
 object UserSettingsData extends FromModelFactoryWithSchema[UserSettingsData]
 {
-	override def schema = ModelDeclaration("name" -> StringType)
+	override def schema = ModelDeclaration("user_id" -> IntType, "name" -> StringType)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) =
-		UserSettingsData(model("name").getString, model("email").string)
+	override protected def fromValidatedModel(model: Model) =
+		UserSettingsData(model("user_id").getInt, model("name").getString, model("email").string,
+			model("created").getInstant)
 }
 
 /**
-  * Contains basic data about a user
+  * Versioned user-specific settings
+  * @param userId Id of the described user
+  * @param name Name used by this user
+  * @param email Email address of this user
+  * @param created Time when this UserSettings was first created
+  * @param deprecatedAfter Time when these settings were replaced with a more recent version (if applicable)
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v1
-  * @param name user-name
-  * @param email User's email address (if specified)
- *  @param created Creation time of this settings version
+  * @since 2021-10-23
   */
-case class UserSettingsData(name: String, email: Option[String] = None, created: Instant = Now) extends ModelConvertible
+case class UserSettingsData(userId: Int, name: String, email: Option[String] = None, created: Instant = Now, 
+	deprecatedAfter: Option[Instant] = None) 
+	extends StyledModelConvertible
 {
-	// COMPUTED -------------------------------------
+	// COMPUTED	--------------------
 	
 	/**
 	  * @return Whether this data contains an email address
 	  */
 	def specifiesEmail = email.nonEmpty
 	
+	/**
+	  * Whether this UserSettings has already been deprecated
+	  */
+	def isDeprecated = deprecatedAfter.isDefined
+	/**
+	  * Whether this UserSettings is still valid (not deprecated)
+	  */
+	def isValid = !isDeprecated
 	
-	// IMPLEMENTED  ---------------------------------
 	
-	override def toModel = Model(Vector("name" -> name, "email" -> email, "created" -> created))
+	// IMPLEMENTED	--------------------
+	
+	override def toSimpleModel = Model(Vector("user_id" -> userId, "name" -> name,
+		"email" -> email, "last_updated" -> created))
+	
+	override def toModel =
+		Model(Vector("user_id" -> userId, "name" -> name, "email" -> email, "created" -> created, 
+			"deprecated_after" -> deprecatedAfter))
 }
+

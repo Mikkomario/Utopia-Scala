@@ -10,7 +10,7 @@ object IndexStorable extends FromValidatedRowModelFactory[IndexStorable]
 {
 	override def table = TestTables.indexTest
 	
-	override protected def fromValidatedModel(model: immutable.Model[Constant]) = IndexStorable(model("id").int, model("text").string)
+	override protected def fromValidatedModel(model: immutable.Model) = IndexStorable(model("id").int, model("text").string)
 	
 	def apply(id: Int, text: String): IndexStorable = IndexStorable(Some(id), Some(text))
 }

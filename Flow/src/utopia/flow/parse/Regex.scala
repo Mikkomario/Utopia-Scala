@@ -1,6 +1,8 @@
 package utopia.flow.parse
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.datastructure.mutable.ResettableLazy
+import utopia.flow.util.CollectionExtensions._
 
 import java.util.regex.{Matcher, Pattern}
 import scala.collection.immutable.VectorBuilder
@@ -17,11 +19,15 @@ object Regex
 	val whiteSpace = Regex("\\s")
 	val nonWhiteSpace = Regex("\\S")
 	/**
+	  * Accepts alpha-numeric (ASCII) characters and underscores
+	  */
+	val wordCharacter = Regex("\\w")
+	/**
 	  * Contains alpha-numeric (ASCII) words with underscores
 	  */
-	val word = Regex("\\w")
+	val word = wordCharacter.oneOrMoreTimes
 	val wordBoundary = Regex("\\b")
-	val newLine = Regex("\\n")
+	val newLine = Regex("\\R")
 	
 	val lowerCaseLetter = Regex("[a-zåäö]")
 	val upperCaseLetter = Regex("[A-ZÅÄÖ]")
@@ -48,6 +54,11 @@ object Regex
 	  * @return A new regex
 	  */
 	def anyOf(chars: String) = Regex(s"[\\Q$chars\\E]")
+	/**
+	  * @param chars A group fo characters that are not allowed
+	  * @return A regular expression that accepts all except the specified characters
+	  */
+	def noneOf(chars: String) = !anyOf(chars)
 	
 	/**
 	  * @param char Character in regular expression
@@ -155,6 +166,11 @@ case class Regex(string: String)
 	  * @return A copy of this regular expression that ignores results within quotations
 	  */
 	def ignoringQuotations = this + "(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)"
+	/**
+	  * @return A copy of this regular expression that ignores results within parentheses - Doesn't handle nested
+	  *         parentheses properly, however
+	  */
+	def ignoringParentheses = ignoringWithin('(', ')')
 	
 	
 	// IMPLEMENTED	----------------
@@ -187,6 +203,12 @@ case class Regex(string: String)
 	}
 	
 	/**
+	  * @param multiplier A multiplier
+	  * @return This regular expression repeated that many times
+	  */
+	def *(multiplier: Int) = times(multiplier)
+	
+	/**
 	 * @param another Another regex
 	 * @return This regex followed by another regex
 	 */
@@ -204,6 +226,24 @@ case class Regex(string: String)
 	def times(range: Range) = Regex(string + s"{${range.start},${range.end}")
 	
 	/**
+	  * Creates a regular expression that ignores results between the specified start and end characters
+	  * @param start Starting character
+	  * @param end Ending character
+	  * @return A regular expression that ignores results between those characters
+	  *         (doesn't work properly for nested structures)
+	  */
+	def ignoringWithin(start: Char, end: Char) =
+	{
+		val startRegex = Regex.escape(start)
+		val endRegex = Regex.escape(end)
+		val notStart = !startRegex
+		val notEnd = !endRegex
+		
+		this + "(?=" + (notStart.zeroOrMoreTimes + startRegex + notEnd.zeroOrMoreTimes + endRegex).withinParenthesis
+			.zeroOrMoreTimes + Regex.noneOf(start.toString + end).zeroOrMoreTimes + "$)"
+	}
+	
+	/**
 	  * @param str A string
 	  * @return Whether the string matches this regex
 	  */
@@ -213,12 +253,12 @@ case class Regex(string: String)
 	  * @param str A string
 	  * @return A version of the string that only contains items NOT accepted by this regex
 	  */
-	def filterNot(str: String) = str.replaceAll(string, "")
+	def filterNot(str: String) = pattern.matcher(str).replaceAll("")
 	/**
 	  * @param str A string
 	  * @return A version of the string that only contains items accepted by this regex
 	  */
-	def filter(str: String) = matchesIteratorFrom(str).reduceOption { _ + _ } getOrElse ""
+	def filter(str: String) = matchesIteratorFrom(str).mkString
 	
 	/**
 	 * Extracts the matches of this regex from the specified string, returning both the extracted results and the
@@ -274,13 +314,32 @@ case class Regex(string: String)
 	  * @return All character ranges within that string that match this regular expression
 	  */
 	def rangesFrom(str: String) = rangesIteratorIn(str).toVector
+	/**
+	  * @param str A string
+	  * @return The first range matching this regular expression in that string, if found
+	  */
+	def firstRangeFrom(str: String) = rangesIteratorIn(str).nextOption()
 	
 	/**
 	 * Splits the specified string using this regex
 	 * @param str String to split
-	 * @return Target string splitted by this regex
+	 * @return Target string split by this regex
 	 */
-	def split(str: String) = str.split(string)
+	def split(str: String): IndexedSeq[String] =
+	{
+		val ranges = rangesFrom(str)
+		if (ranges.isEmpty)
+			Vector(str)
+		else
+		{
+			val firstPart = str.substring(0, ranges.head.start)
+			val middleParts = ranges.paired.map { case Pair(prevRange, nextRange) =>
+				str.substring(prevRange.exclusiveEnd, nextRange.start)
+			}
+			val endPart = str.substring(ranges.last.exclusiveEnd)
+			firstPart +: middleParts :+ endPart
+		}
+	}
 	/**
 	 * Splits the specified string using this regex. Works much like the standard split operation, except that
 	 * this variation doesn't remove the splitting string from the results but instead keeps them at the ends of the

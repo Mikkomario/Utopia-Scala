@@ -2,13 +2,12 @@ package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.NotFound
-import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbTaskDescriptions}
+import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.single.organization.DbTask
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, ExtendableSessionResourceFactory, SessionUseCaseImplementation}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
-import utopia.metropolis.model.combined.organization.DescribedTask
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
@@ -30,24 +29,26 @@ class TaskNode(val taskId: Int) extends ExtendableSessionResource
 	private val defaultGet = SessionUseCaseImplementation.default(Get) { (session, connection, context, _) =>
 		implicit val c: Connection = connection
 		implicit val cntx: AuthorizedContext = context
+		implicit val languageIds: LanguageIds = session.languageIds
 		
-		// Makes sure this task id is valid
-		if (DbTask(taskId).nonEmpty)
+		// Reads task along with its descriptions
+		access.described match
 		{
-			// Reads the descriptions of this task
-			implicit val languageIds: LanguageIds = context.languageIdListFor(session.userId)
-			val descriptions = DbTaskDescriptions(taskId).inPreferredLanguages
-			val task = DescribedTask(taskId, descriptions.toSet)
-			// Forms a response based on this described task
-			Result.Success(session.modelStyle match
-			{
-				case Simple => task.toSimpleModelUsing(DbDescriptionRoles.pull)
-				case Full => task.toModel
-			})
+			case Some(task) =>
+				// Forms a response based on this described task
+				Result.Success(session.modelStyle match
+				{
+					case Simple => task.toSimpleModelUsing(DbDescriptionRoles.pull)
+					case Full => task.toModel
+				})
+			case None => Result.Failure(NotFound, s"$taskId is not a valid task id")
 		}
-		else
-			Result.Failure(NotFound, s"$taskId is not a valid task id")
 	}
+	
+	
+	// COMPUTED ----------------------------------
+	
+	private def access = DbTask(taskId)
 	
 	
 	// IMPLEMENTED  ------------------------------

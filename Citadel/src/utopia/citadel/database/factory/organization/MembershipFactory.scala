@@ -1,6 +1,6 @@
 package utopia.citadel.database.factory.organization
 
-import utopia.citadel.database.Tables
+import utopia.citadel.database.CitadelTables
 import utopia.citadel.database.model.organization.MembershipModel
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.metropolis.model.partial.organization.MembershipData
@@ -10,33 +10,24 @@ import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import utopia.vault.nosql.template.Deprecatable
 
 /**
-  * Used for reading organization memberships from the database
+  * Used for reading Membership data from the DB
   * @author Mikko Hilpinen
-  * @since 17.6.2020, v1.0
+  * @since 2021-10-23
   */
-object MembershipFactory extends FromValidatedRowModelFactory[Membership]
-	with FromRowFactoryWithTimestamps[Membership] with Deprecatable
+object MembershipFactory 
+	extends FromValidatedRowModelFactory[Membership] with FromRowFactoryWithTimestamps[Membership] 
+		with Deprecatable
 {
-	// ATTRIBUTES   --------------------------
+	// IMPLEMENTED	--------------------
 	
-	override val creationTimePropertyName = "started"
+	override def creationTimePropertyName = "started"
 	
+	override def nonDeprecatedCondition = MembershipModel.nonDeprecatedCondition
 	
-	// IMPLEMENTED	--------------------------
+	override def table = CitadelTables.membership
 	
-	override def table = Tables.organizationMembership
-	
-	override def nonDeprecatedCondition = model.nonDeprecatedCondition
-	
-	override protected def fromValidatedModel(model: Model[Constant]) = Membership(model("id").getInt,
-		MembershipData(model(this.model.organizationIdAttName).getInt, model("userId").getInt, model("creatorId").int,
-			model(creationTimePropertyName).getInstant, model("ended").instant))
-	
-	
-	// COMPUTED	-------------------------------
-	
-	/**
-	  * @return Model referenced by this factory
-	  */
-	def model = MembershipModel
+	override def fromValidatedModel(valid: Model) =
+		Membership(valid("id").getInt, MembershipData(valid("organizationId").getInt, valid("userId").getInt, 
+			valid("creatorId").int, valid("started").getInstant, valid("ended").instant))
 }
+

@@ -1,55 +1,38 @@
 package utopia.citadel.database.access.single.organization
 
-import utopia.citadel.database.Tables
-import utopia.citadel.database.access.many.description.DbTaskDescriptions
-import utopia.citadel.database.access.single.description.DbTaskDescription
-import utopia.flow.generic.ValueConversions._
+import utopia.citadel.database.factory.organization.TaskFactory
+import utopia.citadel.database.model.organization.TaskModel
+import utopia.metropolis.model.stored.organization.Task
+import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{SubView, UnconditionalView}
+import utopia.vault.nosql.view.UnconditionalView
 
 /**
-  * Used for accessing individual tasks' data in the DB
+  * Used for accessing individual Tasks
   * @author Mikko Hilpinen
-  * @since 11.7.2021, v1.0.1
+  * @since 2021-10-23
   */
-object DbTask extends UnconditionalView with Indexed
+object DbTask extends SingleRowModelAccess[Task] with UnconditionalView with Indexed
 {
-	// IMPLEMENTED  ------------------------
-	
-	override def table = Tables.task
-	
-	override def target = table
-	
-	
-	// OTHER    ----------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	  * @param taskId A task id
-	  * @return An access point to that task's data
+	  * Factory used for constructing database the interaction models
 	  */
-	def apply(taskId: Int) = new DbSingleTask(taskId)
+	protected def model = TaskModel
 	
 	
-	// NESTED   ----------------------------
+	// IMPLEMENTED	--------------------
 	
-	class DbSingleTask(val taskId: Int) extends SubView
-	{
-		// COMPUTED -------------------------
-		
-		/**
-		  * @return An access point to this task's individual descriptions
-		  */
-		def description = DbTaskDescription(taskId)
-		/**
-		  * @return An access point to this task's descriptions
-		  */
-		def descriptions = DbTaskDescriptions(taskId)
-		
-		
-		// IMPLEMENTED  --------------------
-		
-		override protected def parent = DbTask
-		
-		override def filterCondition = index <=> taskId
-	}
+	override def factory = TaskFactory
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param id Database id of the targeted Task instance
+	  * @return An access point to that Task
+	  */
+	def apply(id: Int) = DbSingleTask(id)
 }
+

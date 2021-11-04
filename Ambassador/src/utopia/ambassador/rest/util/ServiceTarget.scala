@@ -1,6 +1,6 @@
 package utopia.ambassador.rest.util
 
-import utopia.ambassador.database.access.single.service.{DbAuthService, DbServiceId}
+import utopia.ambassador.database.access.single.service.{DbAuthService, DbAuthServiceSettings, DbServiceId}
 import utopia.vault.database.Connection
 
 object ServiceTarget
@@ -37,7 +37,6 @@ case class ServiceTarget(target: Either[String, Int])
 		case Left(name) => idForName(name)
 		case Right(id) => Some(id)
 	}
-	
 	/**
 	  * @param connection Implicit DB connection
 	  * @return Id of this service. None if this is not a valid service.
@@ -47,6 +46,30 @@ case class ServiceTarget(target: Either[String, Int])
 		case Left(name) => idForName(name)
 		case Right(id) => if (DbAuthService(id).nonEmpty) Some(id) else None
 	}
+	
+	/**
+	  * @return An access point to this service's data in the DB
+	  */
+	def access = target match
+	{
+		case Left(name) => DbAuthService.withName(name)
+		case Right(id) => DbAuthService(id)
+	}
+	
+	/**
+	  * @param connection Implicit DB Connection
+	  * @return Settings of this authentication service
+	  */
+	def settings(implicit connection: Connection) = target match
+	{
+		case Left(name) => DbAuthService.withName(name).withSettings.map { _.settings }
+		case Right(id) => DbAuthServiceSettings.forServiceWithId(id).pull
+	}
+	/**
+	  * @param connection Implicit DB Connection
+	  * @return This service's data, along with related settings
+	  */
+	def withSettings(implicit connection: Connection) = access.withSettings
 	
 	
 	// IMPLEMENTED  --------------------

@@ -4,12 +4,15 @@ import utopia.flow.util.FileExtensions._
 import utopia.vault.coder.model.data.ProjectSetup
 import utopia.vault.coder.model.scala.template.ScalaConvertible
 
+import java.nio.file.Path
 import scala.collection.StringOps
 import scala.language.implicitConversions
 
 object Package
 {
 	// ATTRIBUTES   ---------------------------
+	
+	val empty = apply(Vector())
 	
 	// Java & Scala
 	
@@ -23,6 +26,7 @@ object Package
 	lazy val flow = utopia/"flow"
 	lazy val vault = utopia/"vault"
 	lazy val metropolis = utopia/"metropolis"
+	lazy val citadel = utopia/"citadel"
 	
 	// Flow
 	
@@ -57,7 +61,7 @@ object Package
 	
 	// Citadel
 	
-	lazy val citadelDatabase = utopia/"citadel.database"
+	lazy val citadelDatabase = citadel/"database"
 	lazy val citadelAccess = citadelDatabase/"access"
 	lazy val descriptionsAccess = citadelAccess/"many.description"
 	lazy val descriptionAccess = citadelAccess/"single.description"
@@ -104,7 +108,7 @@ case class Package(parts: Vector[String]) extends ScalaConvertible
 	  * @param setup Implicit project-specific setup
 	  * @return A path to the directory matching this package
 	  */
-	def toPath(implicit setup: ProjectSetup) = parts.foldLeft(setup.sourceRoot) { _ / _ }
+	def toPath(implicit setup: ProjectSetup) = toPathIn(setup.sourceRoot)
 	
 	
 	// IMPLEMENTED  -----------------------
@@ -121,14 +125,26 @@ case class Package(parts: Vector[String]) extends ScalaConvertible
 	def /(more: String) = Package(parts ++ more.split('.').filter { _.nonEmpty })
 	
 	/**
+	  * @param sourceRoot Source root directory
+	  * @return A path to the directory matching this package
+	  */
+	def toPathIn(sourceRoot: Path) = parts.foldLeft(sourceRoot) { _ / _ }
+	
+	/**
 	  * @param fileName Name of the targeted file (no .scala required)
 	  * @param setup Implicit project setup
 	  * @return Path to the specified file within this package (directory)
 	  */
-	def pathTo(fileName: String)(implicit setup: ProjectSetup) =
+	def pathTo(fileName: String)(implicit setup: ProjectSetup): Path = pathTo(fileName, setup.sourceRoot)
+	/**
+	  * @param fileName Name of the targeted file (no .scala required)
+	  * @param inSourceRoot Source root directory
+	  * @return Path to the specified file within this package (directory)
+	  */
+	def pathTo(fileName: String, inSourceRoot: Path) =
 	{
 		val fullFileName = if (fileName.contains('.')) fileName else s"$fileName.scala"
-		toPath/fullFileName
+		toPathIn(inSourceRoot)/fullFileName
 	}
 	
 	/**

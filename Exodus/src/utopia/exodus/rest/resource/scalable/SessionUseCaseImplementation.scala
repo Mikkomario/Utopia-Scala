@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.scalable
 
 import utopia.access.http.Method
-import utopia.exodus.model.stored.UserSession
+import utopia.exodus.model.stored.auth.SessionToken
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.rest.util.AuthorizedContext.SessionParams
 import utopia.flow.datastructure.immutable.Lazy
@@ -24,7 +24,7 @@ object SessionUseCaseImplementation
 	 *          4) remaining request path and 5) Lazy default result and produces a result
 	 * @return A new use case implementation
 	 */
-	def apply(method: Method)(f: (UserSession, Connection, AuthorizedContext, Option[Path], Lazy[Result]) => Result) =
+	def apply(method: Method)(f: (SessionToken, Connection, AuthorizedContext, Option[Path], Lazy[Result]) => Result) =
 		UseCaseImplementation.usingContext[AuthorizedContext, SessionParams](method) { (context, params, path, default) =>
 			f(params._1, params._2, context, path, default)
 		}
@@ -36,7 +36,7 @@ object SessionUseCaseImplementation
 	 *          4) remaining request path and produces a result
 	 * @return A new use case implementation
 	 */
-	def default(method: Method)(f: (UserSession, Connection, AuthorizedContext, Option[Path]) => Result) =
+	def default(method: Method)(f: (SessionToken, Connection, AuthorizedContext, Option[Path]) => Result) =
 		apply(method) { (session, connection, context, path, _) => f(session, connection, context, path) }
 	
 	/**
@@ -48,7 +48,7 @@ object SessionUseCaseImplementation
 	  * @return A function for generating new use case implementations based on external parameters
 	  */
 	def factory[A](method: Method)
-	           (f: (A, UserSession, Connection, AuthorizedContext, Option[Path], Lazy[Result]) => Result) =
+	           (f: (A, SessionToken, Connection, AuthorizedContext, Option[Path], Lazy[Result]) => Result) =
 	{
 		parameter: A => UseCaseImplementation.usingContext[AuthorizedContext, SessionParams](method) {
 			(context, params, path, default) =>

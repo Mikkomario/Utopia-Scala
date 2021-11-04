@@ -18,19 +18,22 @@ sealed trait PropertyDeclarationType extends ScalaConvertible
 	  * @param references References made within the code (default = empty)
 	  * @param visibility Visibility of this property (default = public)
 	  * @param explicitOutputType Data type returned by this function when explicitly defined (optional)
-	  * @param description Documentation for this property
 	  * @param implicitParams Implicit parameters accepted by this (computed) property
+	  * @param description Documentation for this property
 	  * @param isOverridden Whether this property overrides a base member (default = false)
+	  * @param isLowMergePriority Whether this declaration should be considered the lower priority
+	  *                           implementation when merging with another version
 	  * @param line1 First line of code
 	  * @param moreLines More lines of code
 	  * @return A new property declaration
 	  */
 	def apply(name: String, references: Set[Reference] = Set(), visibility: Visibility = Public,
-	          explicitOutputType: Option[ScalaType] = None, description: String = "",
-	          implicitParams: Vector[Parameter] = Vector(), isOverridden: Boolean = false)
+	          explicitOutputType: Option[ScalaType] = None,
+	          implicitParams: Vector[Parameter] = Vector(), description: String = "", isOverridden: Boolean = false,
+	          isLowMergePriority: Boolean = false)
 	         (line1: String, moreLines: String*) =
 		PropertyDeclaration(this, name, Code.from(line1 +: moreLines.toVector).referringTo(references), visibility,
-			explicitOutputType, description, implicitParams, isOverridden)
+			explicitOutputType, implicitParams, description, Vector(), isOverridden, isLowMergePriority)
 }
 
 object PropertyDeclarationType
@@ -41,6 +44,11 @@ object PropertyDeclarationType
 	case object ImmutableValue extends PropertyDeclarationType
 	{
 		override def toScala = "val"
+	}
+	
+	case object LazyValue extends PropertyDeclarationType
+	{
+		override def toScala = "lazy val"
 	}
 	
 	/**

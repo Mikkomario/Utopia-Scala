@@ -1,86 +1,40 @@
 package utopia.citadel.database.access.many.user
 
-import utopia.citadel.database.factory.user.{UserFactory, UserSettingsFactory}
-import utopia.citadel.database.model.user.UserSettingsModel
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.stored.user.User
-import utopia.vault.database.Connection
-import utopia.vault.nosql.access.many.model.ManyModelAccess
+import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.SqlExtensions._
 
 /**
-  * Used for accessing multiple user's data at once
+  * The root access point when targeting multiple Users at a time
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v1.0
+  * @since 2021-10-23
   */
-object DbUsers extends ManyModelAccess[User]
+object DbUsers extends ManyUsersAccess with UnconditionalView
 {
-	// IMPLEMENTED	--------------------------
-	
-	override def factory = UserFactory
-	
-	override def globalCondition = Some(factory.nonDeprecatedCondition)
-	
-	override protected def defaultOrdering = None
-	
-	
-	// COMPUTED	------------------------------
-	
-	private def settingsModel = UserSettingsModel
-	
-	private def settingsFactory = UserSettingsFactory
-	
-	
-	// OTHER	-------------------------------
+	// OTHER	--------------------
 	
 	/**
-	  * @param userIds Targeted user ids
-	  * @return An access point to those users' data
+	  * @param ids Ids of the targeted Users
+	  * @return An access point to Users with the specified ids
 	  */
-	def apply(userIds: Set[Int]) = new DbUsersSubgroup(userIds)
+	def apply(ids: Set[Int]) = new DbUsersSubset(ids)
 	
-	/**
-	  * Checks whether a user name is currently in use
-	  * @param userName   Tested user name
-	  * @param connection DB Connection (implicit)
-	  * @return Whether specified user name is currently in use
-	  */
-	def existsUserWithName(userName: String)(implicit connection: Connection) =
-		settingsFactory.exists(settingsModel.withName(userName).toCondition && settingsFactory.nonDeprecatedCondition)
 	
-	/**
-	  * Checks whether a user email is currently in use
-	  * @param email      Tested user email
-	  * @param connection DB Connection (implicit)
-	  * @return Whether specified email address is currently in use
-	  */
-	def existsUserWithEmail(email: String)(implicit connection: Connection) =
+	// NESTED	--------------------
+	
+	class DbUsersSubset(targetIds: Set[Int]) extends ManyUsersAccess
 	{
-		settingsFactory.exists(settingsModel.withEmail(email).toCondition && settingsFactory.nonDeprecatedCondition)
-	}
-	
-	
-	// NESTED	--------------------------------
-	
-	class DbUsersSubgroup(userIds: Set[Int]) extends ManyModelAccess[User]
-	{
-		// IMPLEMENTED	------------------------
-		
-		override def factory = DbUsers.factory
-		
-		override def globalCondition =
-			Some(DbUsers.mergeCondition(factory.table.primaryColumn.get.in(userIds)))
-		
-		override protected def defaultOrdering = None
-		
-		
-		// COMPUTED	----------------------------
+		// COMPUTED ------------------------
 		
 		/**
-		  * @param connection Database connection (implicit)
-		  * @return Current settings for users with these ids
+		  * @return An access point to settings concerning these users
 		  */
-		def settings(implicit connection: Connection) = settingsFactory.getMany(
-			settingsFactory.nonDeprecatedCondition && settingsModel.userIdColumn.in(userIds))
+		def settings = DbManyUserSettings.forAnyOfUsers(targetIds)
+		
+		
+		// IMPLEMENTED	--------------------
+		
+		override def globalCondition = Some(index in targetIds)
 	}
 }
+

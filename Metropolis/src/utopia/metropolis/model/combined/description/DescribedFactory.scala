@@ -1,14 +1,12 @@
 package utopia.metropolis.model.combined.description
 
-import utopia.metropolis.model.stored.description.DescriptionLink
-
 import scala.language.implicitConversions
 
 object DescribedFactory
 {
 	// IMPLICIT ------------------------------
 	
-	implicit def functionToFactory[A, D](f: (A, Set[DescriptionLink]) => D): DescribedFactory[A, D] = apply(f)
+	implicit def functionToFactory[A, D](f: (A, Set[LinkedDescription]) => D): DescribedFactory[A, D] = apply(f)
 	
 	
 	// OTHER    ------------------------------
@@ -19,14 +17,14 @@ object DescribedFactory
 	 * @tparam D Type of described item (output)
 	 * @return That function as a DescribedFactory
 	 */
-	def apply[A, D](f: (A, Set[DescriptionLink]) => D): DescribedFactory[A, D] = new DescribedFactoryFunction[A, D](f)
+	def apply[A, D](f: (A, Set[LinkedDescription]) => D): DescribedFactory[A, D] = new DescribedFactoryFunction[A, D](f)
 	
 	
 	// NESTED   ------------------------------
 	
-	private class DescribedFactoryFunction[-A, +D](f: (A, Set[DescriptionLink]) => D) extends DescribedFactory[A, D]
+	private class DescribedFactoryFunction[-A, +D](f: (A, Set[LinkedDescription]) => D) extends DescribedFactory[A, D]
 	{
-		override def apply(wrapped: A, descriptions: Set[DescriptionLink]) = f(wrapped, descriptions)
+		override def apply(wrapped: A, descriptions: Set[LinkedDescription]) = f(wrapped, descriptions)
 	}
 }
 
@@ -47,5 +45,5 @@ trait DescribedFactory[-A, +D]
 	 * @param descriptions Descriptions concerning that item
 	 * @return A described copy of that item
 	 */
-	def apply(wrapped: A, descriptions: Set[DescriptionLink]): D
+	def apply(wrapped: A, descriptions: Set[LinkedDescription]): D
 }

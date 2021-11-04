@@ -9,6 +9,7 @@ import utopia.vault.model.immutable.StorableWithFactory
 
 import java.time.Instant
 
+@deprecated("Replaced with OrganizationDeletionCancellationModel", "v2.0")
 object DeletionCancelModel
 {
 	// COMPUTED	-----------------------------
@@ -43,6 +44,7 @@ object DeletionCancelModel
   * @author Mikko Hilpinen
   * @since 16.5.2020, v1.0
   */
+@deprecated("Replaced with OrganizationDeletionCancellationModel", "v2.0")
 case class DeletionCancelModel(id: Option[Int] = None, deletionId: Option[Int] = None,
                                creatorId: Option[Int] = None, created: Option[Instant] = None)
 	extends StorableWithFactory[DeletionCancel]

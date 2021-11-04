@@ -1,5 +1,13 @@
 # Utopia Ambassador - List of Changes
 
+## v2.0 - 04.11.2021
+This update refactored the inner database interaction classes by utilizing the **Vault-Coder**. 
+There are a number of breaking changes involved, although the functionality / the external interface 
+should remain the same.
+
+If you notice any issues with this release, please let me (Mikko) know. 
+As it stands, this module hasn't been properly tested / been used in production yet.
+
 ## v1.2.1 - 18.10.2021
 This small update simply supports **Citadel** v1.3 and **Vault** v1.11 changes
 

@@ -1,6 +1,6 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Value}
 
 /**
  * A row represents a single row in a query result set. A row can contain columns from multiple
@@ -11,7 +11,7 @@ import utopia.flow.datastructure.immutable.{Constant, Model, Value}
  * model for each table. The table's name is used as a key in this map.
   * @param otherData Data outside of any included table in model format. Default = empty model.
  */
-case class Row(columnData: Map[Table, Model[Constant]], otherData: Model[Constant] = Model.empty)
+case class Row(columnData: Map[Table, Model], otherData: Model = Model.empty)
 {
     // ATTRIBUTES   ---------------------------
     

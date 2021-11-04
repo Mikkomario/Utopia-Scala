@@ -44,7 +44,7 @@ object CsvReader
 	  * @return Failure if file handling failed. function result otherwise.
 	  */
 	def iterateLinesIn[A](path: Path, separator: String = ";", ignoreEmptyStringValues: Boolean = false)
-	                     (f: Iterator[Model[Constant]] => A)(implicit codec: Codec) =
+	                     (f: Iterator[Model] => A)(implicit codec: Codec) =
 	{
 		// Iterates all lines from the target path
 		IterateLines.fromPath(path) { linesIter =>
@@ -82,7 +82,7 @@ object CsvReader
 	  * @return Failure if file handling failed. Success otherwise.
 	  */
 	def foreachLine(path: Path, separator: String = ";", ignoreEmptyStringValues: Boolean = false)
-	               (f: Model[Constant] => Unit)(implicit codec: Codec) =
+	               (f: Model => Unit)(implicit codec: Codec) =
 		iterateLinesIn(path, separator, ignoreEmptyStringValues) { _.foreach(f) }
 	
 	private def processValue(original: String) =

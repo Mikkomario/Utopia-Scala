@@ -1,13 +1,13 @@
 package utopia.citadel.database.access.many.description
 
 import utopia.citadel.database.access.many.description.DescriptionLinksAccessLike.DescriptionLinksSubView
-import utopia.citadel.database.factory.description.DescriptionLinkFactory
-import utopia.citadel.database.model.description.{DescriptionLinkModel, DescriptionModel}
+import utopia.citadel.database.factory.description.DescriptionLinkFactoryOld
+import utopia.citadel.database.model.description.{DescriptionLinkModelOld, DescriptionModel}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
-import utopia.metropolis.model.stored.description.DescriptionLink
+import utopia.metropolis.model.stored.description.DescriptionLinkOld
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
@@ -17,6 +17,7 @@ import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant
 
+@deprecated("Replaced with LinkedDescriptionsAccessLike", "v2.0")
 object DescriptionLinksAccessLike
 {
 	// NESTED   --------------------------------
@@ -38,11 +39,12 @@ object DescriptionLinksAccessLike
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1.0
   */
-trait DescriptionLinksAccessLike extends ManyRowModelAccess[DescriptionLink]
+@deprecated("Replaced with LinkedDescriptionsAccessLike", "v2.0")
+trait DescriptionLinksAccessLike extends ManyRowModelAccess[DescriptionLinkOld]
 {
 	// ABSTRACT	-------------------------
 	
-	override def factory: DescriptionLinkFactory[DescriptionLink]
+	override def factory: DescriptionLinkFactoryOld[DescriptionLinkOld]
 	
 	
 	// COMPUTED	------------------------
@@ -94,7 +96,7 @@ trait DescriptionLinksAccessLike extends ManyRowModelAccess[DescriptionLink]
 	 * @return Whether any row was updated
 	 */
 	def deprecate()(implicit connection: Connection) =
-		putAttribute(DescriptionLinkModel.deprecationAttName, Now)
+		putAttribute(DescriptionLinkModelOld.deprecationAttName, Now)
 	
 	/**
 	 * @param languageId Id of targeted language

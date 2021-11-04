@@ -1,7 +1,7 @@
 package utopia.journey.controller
 
 import utopia.flow.container.OptionObjectFileContainer
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration, ModelValidationFailedException, Value}
+import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, ModelValidationFailedException, Value}
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, FromModelFactoryWithSchema, IntType, ModelConvertible, StringType}
@@ -9,7 +9,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
-import utopia.metropolis.model.combined.device.FullDevice
+import utopia.metropolis.model.combined.device.DetailedClientDevice
 import utopia.journey.util.JourneyContext._
 
 /**
@@ -72,7 +72,7 @@ object LocalDevice
 	  * Sets up device status
 	  * @param data Device data
 	  */
-	def initialize(data: FullDevice) = container.current = Some(DeviceStatus(Right(data), key))
+	def initialize(data: DetailedClientDevice) = container.current = Some(DeviceStatus(Right(data), key))
 	
 	
 	// NESTED	---------------------------------
@@ -85,7 +85,7 @@ object LocalDevice
 			
 			model("full").model match
 			{
-				case Some(fullModel) => FullDevice(fullModel).map { d => DeviceStatus(Right(d), key) }
+				case Some(fullModel) => DetailedClientDevice(fullModel).map { d => DeviceStatus(Right(d), key) }
 				case None =>
 					model("partial").model
 						.toTry { new ModelValidationFailedException(s"Either 'full' or 'partial' required. Provided: $model") }
@@ -95,7 +95,7 @@ object LocalDevice
 		}
 	}
 	
-	private case class DeviceStatus(data: Either[PartialDeviceData, FullDevice], key: Option[String] = None)
+	private case class DeviceStatus(data: Either[PartialDeviceData, DetailedClientDevice], key: Option[String] = None)
 		extends ModelConvertible
 	{
 		override def toModel =
@@ -113,7 +113,7 @@ object LocalDevice
 	{
 		override val schema = ModelDeclaration("id" -> IntType, "name" -> StringType, "user_id" -> StringType)
 		
-		override protected def fromValidatedModel(model: Model[Constant]) =
+		override protected def fromValidatedModel(model: Model) =
 			PartialDeviceData(model("id"), model("name"), model("user_id"))
 	}
 	

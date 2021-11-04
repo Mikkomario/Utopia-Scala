@@ -10,6 +10,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
+@deprecated("Replaced with DeviceTokenModel", "v3.0")
 object DeviceKeyModel extends DeprecatableAfter[DeviceKeyModel]
 {
 	// COMPUTED ----------------------------------
@@ -65,6 +66,7 @@ object DeviceKeyModel extends DeprecatableAfter[DeviceKeyModel]
   * @author Mikko Hilpinen
   * @since 3.5.2020, v1
   */
+@deprecated("Replaced with DeviceTokenModel", "v3.0")
 case class DeviceKeyModel(id: Option[Int] = None, userId: Option[Int] = None, deviceId: Option[Int] = None,
 						  key: Option[String] = None, deprecatedAfter: Option[Instant] = None)
 	extends StorableWithFactory[DeviceKey]

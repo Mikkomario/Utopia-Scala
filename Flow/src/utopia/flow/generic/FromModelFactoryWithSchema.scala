@@ -1,6 +1,6 @@
 package utopia.flow.generic
 
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
+import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 
@@ -23,7 +23,7 @@ trait FromModelFactoryWithSchema[+A] extends FromModelFactory[A]
 	 * @param model Model that has already been validated using 'schema'
 	 * @return Parsed item
 	 */
-	protected def fromValidatedModel(model: Model[Constant]): A
+	protected def fromValidatedModel(model: Model): A
 	
 	
 	// IMPLEMENTED	------------------

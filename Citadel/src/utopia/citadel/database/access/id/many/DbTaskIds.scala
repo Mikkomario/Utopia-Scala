@@ -1,8 +1,8 @@
 package utopia.citadel.database.access.id.many
 
-import utopia.citadel.database.Tables
-import utopia.citadel.database.factory.organization.RoleRightFactory
-import utopia.citadel.database.model.organization.RoleRightModel
+import utopia.citadel.database.CitadelTables
+import utopia.citadel.database.factory.organization.UserRoleRightFactory
+import utopia.citadel.database.model.organization.UserRoleRightModel
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.column.ManyIntIdAccess
@@ -19,7 +19,7 @@ object DbTaskIds extends ManyIntIdAccess
 	
 	override def target = table
 	
-	override def table = Tables.task
+	override def table = CitadelTables.task
 	
 	override def globalCondition = None
 	
@@ -31,10 +31,10 @@ object DbTaskIds extends ManyIntIdAccess
 	  * @param connection DB Connection (implicit)
 	  * @return All task types that are accessible for that user role
 	  */
-	def forRoleWithId(roleId: Int)(implicit connection: Connection) =
+	def forUserRoleWithId(roleId: Int)(implicit connection: Connection) =
 	{
 		// Reads task types from role rights
-		RoleRightFactory.getMany(RoleRightModel.withRoleId(roleId).toCondition).map { _.taskId }
+		UserRoleRightFactory.getMany(UserRoleRightModel.withRoleId(roleId).toCondition).map { _.taskId }
 	}
 	
 	/**
@@ -42,13 +42,13 @@ object DbTaskIds extends ManyIntIdAccess
 	  * @param connection DB Connection
 	  * @return All task types that are accessible for any of these roles
 	  */
-	def forRoleCombination(roleIds: Set[Int])(implicit connection: Connection) =
+	def forUserRoleCombination(roleIds: Set[Int])(implicit connection: Connection) =
 	{
 		if (roleIds.isEmpty)
-			Vector()
+			Set[Int]()
 		else if (roleIds.size == 1)
-			forRoleWithId(roleIds.head)
+			forUserRoleWithId(roleIds.head).toSet
 		else
-			RoleRightFactory.getMany(RoleRightModel.roleIdColumn.in(roleIds)).map { _.taskId }
+			UserRoleRightFactory.getMany(UserRoleRightModel.roleIdColumn.in(roleIds)).map { _.taskId }.toSet
 	}
 }

@@ -1,5 +1,30 @@
 # Utopia Exodus - List of Changes
 
+## v3.0 - 04.11.2021
+This update **Exodus**' models and database interfaces were completely rewritten by utilizing the **Vault-Coder**. 
+This will most surely require changes in the dependent modules and applications as well.
+### Breaking Changes
+- There are some changes in various REST nodes concerning some basic features like user- or organization creation
+  - It is also noteworthy that, since description model structure changed, 
+    all responses containing descriptions were also affected
+- All models and database interaction interfaces were rewritten using the **Vault-Coder**
+  - This involves changes in property naming and property ordering, as well as some functional changes
+- Wherever session-, device- or email validation keys were referenced, they are now called **tokens**
+  - This includes REST interface routing (e.g. `device-token` instead of `device-key`)
+- Packaging was updated so that all models and database interaction interfaces are stored in sub-packages
+  - I.e. **DeviceKey** (now **ClientDeviceToken**), **EmailValidation** (now **EmailValidationAttempt**) and 
+    **UserSession** (now **SessionToken**) were moved to sub-package auth
+- Renamed a number of models and database interaction interfaces
+  - **DeviceKey** is now **ClientDeviceToken**
+  - **EmailValidation** is now **EmailValidationAttempt**
+  - **UserAuth** is now **UserPassword**
+  - **UserSession** is now **SessionToken**
+- Removed some previously deprecated models and database interaction classes
+### Deprecations
+- Previous model versions that were renamed in the new build are now deprecated
+  - I highly encourage you to update the references when migrating to this version. These model versions are 
+    unlikely to work with the new database structure, and they will be removed in a future release.
+
 ## v2.2 - 18.10.2021
 This update mostly reflects changes in **Citadel** and **Vault** modules, but includes one bugfix besides those 
 which may be of importance to you.

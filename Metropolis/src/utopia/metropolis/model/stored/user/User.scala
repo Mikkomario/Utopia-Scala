@@ -1,28 +1,18 @@
 package utopia.metropolis.model.stored.user
 
-import utopia.flow.datastructure.template.{Model, Property}
-import utopia.flow.generic.{FromModelFactory, ModelConvertible}
-import utopia.flow.util.Extender
+import utopia.metropolis.model.partial.user.UserData
+import utopia.metropolis.model.stored.{StoredFromModelFactory, StoredModelConvertible}
 
-object User extends FromModelFactory[User]
+object User extends StoredFromModelFactory[User, UserData]
 {
-	override def apply(model: Model[Property]) =
-	{
-		// Parses the settings and retrieves user id from those
-		UserSettings(model).map { settings => User(settings.userId, settings) }
-	}
+	override def dataFactory = UserData
 }
 
 /**
-  * Represents a user registered in the database
+  * Represents a User that has already been stored in the database
+  * @param id id of this User in the database
+  * @param data Wrapped User data
   * @author Mikko Hilpinen
-  * @since 2.5.2020, v1
-  * @param id This user's id in DB
-  * @param settings This user's current settings
+  * @since 2021-10-23
   */
-case class User(id: Int, settings: UserSettings) extends Extender[UserSettings] with ModelConvertible
-{
-	override def wrapped = settings
-	
-	override def toModel = settings.toModel
-}
+case class User(id: Int, data: UserData) extends StoredModelConvertible[UserData]

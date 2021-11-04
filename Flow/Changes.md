@@ -1,11 +1,37 @@
 # Utopia Flow - List of Changes
 
-## v1.13.1 (in development)
+## v1.14 - 04.11.2021
+Beside the obviously breaking change of removing generic type parameters from the immutable **Model**, 
+this update mainly adds utility functions and features.
+### Breaking Changes
+- Immutable model no longer accepts type parameters
+- `Regex.word` now matches whole words as described in the documentation. 
+  Added `Regex.wordCharacter` to replace the previous (undesired) effect.
+### New Features
+- Added **RefreshingLazy** that works a little like **ExpiringLazy**, expect that resets are synchronous and 
+  performed at value reads - A more useful implementation if the item is intended to be cached for most of the time
+- Added **MultiMapBuilder** which makes it easier to build maps which contain vectors as values
+- Added **MutatingOnce** which provides one-time access to a value, mutating it after the first access
 ### New Methods
+- **CombinedOrdering**.type
+  - Added a new utility constructor
+- **Model**
+  - Added a couple variants of `.without(...)` which removes multiple attributes based on their names
+- **Range** (**CollectionExtensions**)
+  - Added `.exclusiveEnd`
+- **Regex**
+  - type
+    - Added `.noneOf(String)` which is the inverse of `.anyOf(String)`
+  - instance
+    - Added `.firstRangeFrom(String)`
+    - Added `.ignoringWithin(Char, Char)`
 - **StdIn** (**ConsoleExtensions**)
   - Added `.readValidOrEmpty(...)`, which interacts with the user in order to find a valid value
 ### Other Changes
 - Added a double-checking option to `StdIn.readNonEmptyLine(...)` (**ConsoleExtensions**)
+- `Regex.newLine` is now `\R` and not `\n`, capturing a wider range of newline characters
+- Refactored some **Regex** functions
+- Optimized **PollingIterator** mapping
 
 ## v1.13 - 18.10.2021
 Updated built-in value conversions (concerning Vector and LocalDate types). Added interactive console support with 

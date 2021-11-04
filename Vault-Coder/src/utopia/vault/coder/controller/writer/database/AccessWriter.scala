@@ -4,7 +4,7 @@ import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, Name, ProjectSetup}
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
-import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, TraitDeclaration}
+import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, DeclarationStart, File, MethodDeclaration, ObjectDeclaration, TraitDeclaration}
 import utopia.vault.coder.model.scala.{Extension, Parameter, Parameters, Reference, ScalaType}
 
 import scala.io.Codec
@@ -126,7 +126,7 @@ object AccessWriter
 					// Implements the .condition property
 					properties = singleIdAccessParentProperties,
 					description = s"An access point to individual ${ classToWrite.name.plural }, based on their id",
-					isCaseClass = true
+					author = classToWrite.author, isCaseClass = true
 				)
 			).write().flatMap { singleIdAccessRef =>
 				// Writes the single model access point
@@ -174,8 +174,10 @@ object AccessWriter
 						ObjectDeclaration(manyAccessTraitName, nested = Set(
 							ClassDeclaration(subViewName,
 								Parameters(
-									Parameter("parent", Reference.manyRowModelAccess(modelRef), prefix = "override val"),
-									Parameter("filterCondition", Reference.condition, prefix = "override val")),
+									Parameter("parent", Reference.manyRowModelAccess(modelRef),
+										prefix = Some(DeclarationStart.overrideVal)),
+									Parameter("filterCondition", Reference.condition,
+										prefix = Some(DeclarationStart.overrideVal))),
 								Vector(traitType, Reference.subView),
 								visibility = Private
 							)
@@ -224,7 +226,8 @@ object AccessWriter
 						{
 							case Some((describedRef, _, _)) =>
 								ClassDeclaration(subsetClassName,
-									Parameter("ids", ScalaType.set(ScalaType.int), prefix = "override val"),
+									Parameter("ids", ScalaType.set(ScalaType.int),
+										prefix = Some(DeclarationStart.overrideVal)),
 									Vector(manyAccessTraitRef,
 										Reference.manyDescribedAccessByIds(modelRef, describedRef))
 								)

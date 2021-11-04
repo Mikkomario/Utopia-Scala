@@ -34,23 +34,25 @@ sealed trait ScalaDocKeyword extends SelfComparable[ScalaDocKeyword]
 object ScalaDocKeyword
 {
 	/**
-	  * Keyword for describing function parameters
+	  * Values of this enumeration which don't take any parameters
 	  */
-	case object Param extends ScalaDocKeyword
-	{
-		override protected def keywordString = "param"
-		
-		override protected def orderIndex = 7
-	}
+	val staticValues = Vector[ScalaDocKeyword](Return, Author, Since)
 	
 	/**
-	  * Keyword for describing generic type parameters
+	  * @param keywordString Searched keyword string (not including @)
+	  * @return The keyword that matches that string
 	  */
-	case object TypeParam extends ScalaDocKeyword
+	def matching(keywordString: String, paramPart: => String) =
 	{
-		override protected def keywordString = "tparam"
-		
-		override protected def orderIndex = 8
+		staticValues.find { _.keywordString == keywordString }
+			.orElse {
+				keywordString match
+				{
+					case "param" => Some(Param(paramPart))
+					case "tparam" => Some(TypeParam(paramPart))
+					case _ => None
+				}
+			}
 	}
 	
 	/**
@@ -59,7 +61,6 @@ object ScalaDocKeyword
 	case object Return extends ScalaDocKeyword
 	{
 		override protected def keywordString = "return"
-		
 		override protected def orderIndex = 10
 	}
 	
@@ -69,7 +70,6 @@ object ScalaDocKeyword
 	case object Author extends ScalaDocKeyword
 	{
 		override protected def keywordString = "author"
-		
 		override protected def orderIndex = 12
 	}
 	
@@ -79,7 +79,28 @@ object ScalaDocKeyword
 	case object Since extends ScalaDocKeyword
 	{
 		override protected def keywordString = "since"
-		
 		override protected def orderIndex = 13
+	}
+	
+	/**
+	  * Keyword for describing function parameters
+	  */
+	case class Param(paramName: String) extends ScalaDocKeyword
+	{
+		override protected def keywordString = "param"
+		override protected def orderIndex = 7
+		
+		override def toString = s"${super.toString} $paramName"
+	}
+	
+	/**
+	  * Keyword for describing generic type parameters
+	  */
+	case class TypeParam(paramName: String) extends ScalaDocKeyword
+	{
+		override protected def keywordString = "tparam"
+		override protected def orderIndex = 8
+		
+		override def toString = s"${super.toString} $paramName"
 	}
 }

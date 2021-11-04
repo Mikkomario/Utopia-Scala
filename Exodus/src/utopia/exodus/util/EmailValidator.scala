@@ -1,8 +1,8 @@
 package utopia.exodus.util
 
 import utopia.access.http.Status
-import utopia.exodus.model.partial.EmailValidationData
-import utopia.exodus.model.stored.EmailValidation
+import utopia.exodus.model.partial.auth.EmailValidationAttemptData
+import utopia.exodus.model.stored.auth.EmailValidationAttempt
 import utopia.vault.database.Connection
 
 /**
@@ -29,12 +29,12 @@ trait EmailValidator
 	  *         Left) Response (failure) status and message / description
 	  */
 	def validate(email: String, purposeId: Int, ownerId: Option[Int] = None)
-				(implicit connection: Connection): Either[(Status, String), EmailValidationData]
+				(implicit connection: Connection): Either[(Status, String), EmailValidationAttemptData]
 	
 	/**
 	  * Reattempts the validation procedure
 	  * @param previous Previously attempted email validation
 	  * @param connection DB Connection (implicit)
 	  */
-	def resend(previous: EmailValidation)(implicit connection: Connection): Unit
+	def resend(previous: EmailValidationAttempt)(implicit connection: Connection): Unit
 }

@@ -2,6 +2,7 @@ package utopia.vault.coder.model.scala
 
 import utopia.vault.coder.model.scala.ScalaDocKeyword.Param
 import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.declaration.DeclarationStart
 import utopia.vault.coder.model.scala.template.{ScalaConvertible, ScalaDocConvertible}
 
 /**
@@ -9,21 +10,25 @@ import utopia.vault.coder.model.scala.template.{ScalaConvertible, ScalaDocConver
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   */
-case class Parameter(name: String, dataType: ScalaType, default: CodePiece = CodePiece.empty, prefix: String = "",
-                     description: String = "")
+case class Parameter(name: String, dataType: ScalaType, default: CodePiece = CodePiece.empty,
+                     prefix: Option[DeclarationStart] = None, description: String = "")
 	extends ScalaConvertible with ScalaDocConvertible
 {
 	// IMPLEMENTED  ---------------------------
 	
 	override def toScala =
 	{
-		val prefixString = if (prefix.isEmpty) "" else s"$prefix "
 		val defaultPart = if (default.isEmpty) default else default.withPrefix(" = ")
-		(dataType.toScala + defaultPart).withPrefix(s"$prefixString$name: ")
+		val mainPart = dataType.toScala.withPrefix(name + ": ") + defaultPart
+		prefix match
+		{
+			case Some(prefix) => prefix.toScala.append(mainPart, " ")
+			case None => mainPart
+		}
 	}
 	
 	override def documentation =
-		if (description.nonEmpty) Vector(ScalaDocPart(Param, s"$name $description")) else Vector()
+		if (description.nonEmpty) Vector(ScalaDocPart(Param(name), description.linesIterator.toVector)) else Vector()
 	
 	
 	// OTHER    ------------------------------

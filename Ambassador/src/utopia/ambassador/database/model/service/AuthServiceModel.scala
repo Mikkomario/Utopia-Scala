@@ -1,59 +1,117 @@
 package utopia.ambassador.database.model.service
 
+import java.time.Instant
 import utopia.ambassador.database.factory.service.AuthServiceFactory
+import utopia.ambassador.model.partial.service.AuthServiceData
 import utopia.ambassador.model.stored.service.AuthService
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.model.immutable.StorableWithFactory
+import utopia.vault.nosql.storable.DataInserter
 
-import java.time.Instant
-
-object AuthServiceModel
+/**
+  * Used for constructing AuthServiceModel instances and for inserting AuthServices to the database
+  * @author Mikko Hilpinen
+  * @since 2021-10-26
+  */
+object AuthServiceModel extends DataInserter[AuthServiceModel, AuthService, AuthServiceData]
 {
-	// ATTRIBUTES   ---------------------------
+	// ATTRIBUTES	--------------------
 	
 	/**
-	  * Name of the property that contains service name
+	  * Name of the property that contains AuthService name
 	  */
 	val nameAttName = "name"
 	
-	
-	// COMPUTED -------------------------------
-	
 	/**
-	  * @return The factory used by this model type
+	  * Name of the property that contains AuthService created
 	  */
-	def factory = AuthServiceFactory
-	/**
-	  * @return The table used by this model type
-	  */
-	def table = factory.table
+	val createdAttName = "created"
+	
+	
+	// COMPUTED	--------------------
 	
 	/**
-	  * @return The column that contains service name
+	  * Column that contains AuthService name
 	  */
 	def nameColumn = table(nameAttName)
 	
-	
-	// OTHER    -------------------------------
+	/**
+	  * Column that contains AuthService created
+	  */
+	def createdColumn = table(createdAttName)
 	
 	/**
-	  * @param serviceName A service name
-	  * @return a model with that name
+	  * The factory object used by this model type
 	  */
-	def withName(serviceName: String) = apply(name = Some(serviceName))
+	def factory = AuthServiceFactory
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def table = factory.table
+	
+	override def apply(data: AuthServiceData) = apply(None, Some(data.name), Some(data.created))
+	
+	override def complete(id: Value, data: AuthServiceData) = AuthService(id.getInt, data)
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param created Time when this AuthService was first created
+	  * @return A model containing only the specified created
+	  */
+	def withCreated(created: Instant) = apply(created = Some(created))
+	
+	/**
+	  * @param id A AuthService id
+	  * @return A model with that id
+	  */
+	def withId(id: Int) = apply(Some(id))
+	
+	/**
+	  * @param name Name of this service (from the customer's perspective)
+	  * @return A model containing only the specified name
+	  */
+	def withName(name: String) = apply(name = Some(name))
 }
 
 /**
-  * Used for interacting with 3rd party authentication services in the DB
+  * Used for interacting with AuthServices in the database
+  * @param id AuthService database id
+  * @param name Name of this service (from the customer's perspective)
+  * @param created Time when this AuthService was first created
   * @author Mikko Hilpinen
-  * @since 19.7.2021, v1.0
+  * @since 2021-10-26
   */
-case class AuthServiceModel(id: Option[Int] = None, name: Option[String] = None, created: Option[Instant] = None)
+case class AuthServiceModel(id: Option[Int] = None, name: Option[String] = None, 
+	created: Option[Instant] = None) 
 	extends StorableWithFactory[AuthService]
 {
-	import AuthServiceModel._
+	// IMPLEMENTED	--------------------
 	
 	override def factory = AuthServiceModel.factory
 	
-	override def valueProperties = Vector("id" -> id, nameAttName -> name, "created" -> created)
+	override def valueProperties = 
+	{
+		import AuthServiceModel._
+		Vector("id" -> id, nameAttName -> name, createdAttName -> created)
+	}
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param created A new created
+	  * @return A new copy of this model with the specified created
+	  */
+	def withCreated(created: Instant) = copy(created = Some(created))
+	
+	/**
+	  * @param name A new name
+	  * @return A new copy of this model with the specified name
+	  */
+	def withName(name: String) = copy(name = Some(name))
 }
+

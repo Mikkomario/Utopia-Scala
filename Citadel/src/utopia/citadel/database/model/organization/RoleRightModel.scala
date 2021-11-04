@@ -3,10 +3,11 @@ package utopia.citadel.database.model.organization
 import utopia.citadel.database.Tables
 import utopia.citadel.database.factory.organization.RoleRightFactory
 import utopia.flow.generic.ValueConversions._
-import utopia.metropolis.model.enumeration.{TaskType, UserRole}
+import utopia.metropolis.model.enumeration.TaskType
 import utopia.metropolis.model.stored.RoleRight
 import utopia.vault.model.immutable.StorableWithFactory
 
+@deprecated("Replaced with UserRoleRightModel", "v2.0")
 object RoleRightModel
 {
 	// ATTRIBUTES	--------------------------
@@ -43,13 +44,6 @@ object RoleRightModel
 	// OTHER	------------------------------
 	
 	/**
-	  * @param role A user role
-	  * @return A model with only that role set
-	  */
-	@deprecated("Please use .withRoleId(Int) instead", "v1.0")
-	def withRole(role: UserRole) = withRoleId(role.id)
-	
-	/**
 	  * @param roleId Id of a user role
 	  * @return A model with only role id set
 	  */
@@ -74,6 +68,7 @@ object RoleRightModel
   * @author Mikko Hilpinen
   * @since 4.5.2020, v1.0
   */
+@deprecated("Replaced with UserRoleRightModel", "v2.0")
 case class RoleRightModel(id: Option[Int] = None, roleId: Option[Int] = None, taskId: Option[Int] = None)
 	extends StorableWithFactory[RoleRight]
 {

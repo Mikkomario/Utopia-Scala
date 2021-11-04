@@ -1,5 +1,8 @@
 # Utopia Access - List of Changes
 
+### v1.4.2 - 04.11.2021
+New build / supports changes in **Flow** v1.14
+
 ## v1.4.1 - 3.10.2021
 This minor update reflects some additions made to the **Flow** module. Namely, adding **Pair** support to **Headers**.
 ### New Methods

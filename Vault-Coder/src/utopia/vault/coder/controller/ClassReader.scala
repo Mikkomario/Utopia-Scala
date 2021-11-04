@@ -3,7 +3,7 @@ package utopia.vault.coder.controller
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.vault.coder.model.enumeration.BasicPropertyType.{IntNumber, Text}
 import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, EnumValue, Optional}
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelValidationFailedException}
+import utopia.flow.datastructure.immutable.{Model, ModelValidationFailedException}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.UncertainBoolean
@@ -122,11 +122,11 @@ object ClassReader
 				}
 			}
 			ProjectData(projectName, modelPackage, dbPackage, enumerations, classes, combinations,
-				root("models_without_vault").getBoolean)
+				!root("models_without_vault").getBoolean)
 		}
 	}
 	
-	private def parseClassFrom(classModel: Model[Constant], packageName: String, enumerations: Iterable[Enum],
+	private def parseClassFrom(classModel: Model, packageName: String, enumerations: Iterable[Enum],
 	                           defaultAuthor: String) =
 	{
 		val rawClassName = classModel("name").string.filter { _.nonEmpty }.map { _.capitalize }
@@ -189,7 +189,7 @@ object ClassReader
 		}
 	}
 	
-	private def propertyFrom(propModel: Model[Constant], enumerations: Iterable[Enum], className: Name) =
+	private def propertyFrom(propModel: Model, enumerations: Iterable[Enum], className: Name) =
 	{
 		val rawName = propModel("name").string.filter { _.nonEmpty }
 		val rawColumnName = propModel("column_name", "column", "col").string.filter { _.nonEmpty }

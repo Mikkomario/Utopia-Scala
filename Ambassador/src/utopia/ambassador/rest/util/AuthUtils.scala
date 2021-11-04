@@ -5,7 +5,7 @@ import utopia.ambassador.database.access.single.process.DbAuthPreparation
 import utopia.ambassador.model.combined.scope.TaskScope
 import utopia.ambassador.model.enumeration.AuthCompletionType.Default
 import utopia.ambassador.model.stored.process.AuthPreparation
-import utopia.ambassador.model.stored.service.ServiceSettings
+import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
@@ -49,9 +49,9 @@ object AuthUtils
 	  * @param connection Implicit database connection
 	  * @return Result to send
 	  */
-	def completionRedirect(settings: ServiceSettings, preparation: Option[AuthPreparation] = None,
-	                               errorMessage: String = "", deniedAccess: Boolean = false)
-	                              (implicit connection: Connection) =
+	def completionRedirect(settings: AuthServiceSettings, preparation: Option[AuthPreparation] = None,
+	                       errorMessage: String = "", deniedAccess: Boolean = false)
+	                      (implicit connection: Connection) =
 	{
 		// Reads the redirection target from the preparation, if possible
 		preparation
@@ -61,7 +61,7 @@ object AuthUtils
 					.map { target => target.resultFilter -> target.url }
 			}
 			// Alternatively uses service settings default, if available
-			.orElse { settings.defaultCompletionUrl.map { Default -> _ } } match
+			.orElse { settings.defaultCompletionRedirectUrl.map { Default -> _ } } match
 		{
 			// Case: Redirect url found
 			case Some((urlFilter, baseUrl)) =>
@@ -81,6 +81,7 @@ object AuthUtils
 					}
 				}
 				// Appends possible error and state parameters
+				// State is added as a json value if it can be parsed
 				val allParams = Model.withConstants(stateParams) ++
 					preparation.flatMap { _.clientState }.map { Constant("state", _) } ++
 					errorMessage.notEmpty.map { Constant("error", _) }

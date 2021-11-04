@@ -48,7 +48,7 @@ object InputWindowTest extends App
 	val selectedBoxIcon = new SingleColorIcon(Image.readFrom("Reach/test-images/check-box-selected.png").get)
 	val unselectedBoxIcon = new SingleColorIcon(Image.readFrom("Reach/test-images/check-box-empty.png").get)
 	
-	object TestWindows extends InputWindowFactory[Model[Constant], Unit]
+	object TestWindows extends InputWindowFactory[Model, Unit]
 	{
 		// ATTRIBUTES	-------------------------
 		
@@ -145,10 +145,10 @@ object InputWindowTest extends App
 		}
 		
 		override protected def specifyButtons(context: Unit,
-											  input: => Either[(String, ReachComponentLike with FocusRequestable), Model[Constant]],
+											  input: => Either[(String, ReachComponentLike with FocusRequestable), Model],
 											  warn: (String, LocalizedString) => Unit) =
 		{
-			val okButton = WindowButtonBlueprint[Model[Constant]]("OK", role = Secondary, isDefault = true) { promise =>
+			val okButton = WindowButtonBlueprint[Model]("OK", role = Secondary, isDefault = true) { promise =>
 				input.toOption.foreach(promise.trySuccess)
 			}
 			Vector(okButton) -> AlwaysTrue

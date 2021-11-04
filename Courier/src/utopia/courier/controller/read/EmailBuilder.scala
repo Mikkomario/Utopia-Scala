@@ -37,7 +37,7 @@ class EmailBuilder(headers: EmailHeaders, attachmentsStoreDirectory: Option[Path
 	override def append(message: String) =
 	{
 		bodyBuilder ++= message
-		Success()
+		Success(())
 	}
 	
 	override def appendFrom(stream: InputStream) = StringFrom.stream(stream).map { bodyBuilder ++= _ }

@@ -1,6 +1,6 @@
 package utopia.vault.model.mutable
 
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.vault.database.Connection
@@ -59,7 +59,7 @@ trait Readable extends Storable
 	 * Updates data in this object, then updates the database as well. Only works when this object
 	 * has an index
 	 */
-	def setAndUpdate(data: Model[Constant])(implicit connection: Connection) =
+	def setAndUpdate(data: template.Model[Property])(implicit connection: Connection) =
 	{
 	    set(data)
 	    updateProperties(data.attributeNames)

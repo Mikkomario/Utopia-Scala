@@ -6,7 +6,6 @@ import utopia.citadel.database.access.many.organization.DbUserRoles
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
-import utopia.metropolis.model.combined.organization.DescribedRole
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.nexus.http.Path
 import utopia.nexus.rest.Resource
@@ -27,22 +26,18 @@ object RolesNode extends Resource[AuthorizedContext]
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionKeyAuthorized { (session, connection) =>
+		context.sessionTokenAuthorized { (session, connection) =>
 			implicit val c: Connection = connection
-			implicit val languageIds: LanguageIds = context.languageIdListFor(session.userId)
+			implicit val languageIds: LanguageIds = session.languageIds
 			// Reads all user roles and their allowed tasks
-			val roles = DbUserRoles.withRights
-			// Reads role descriptions and combines them with roles
-			val descriptions = DbUserRoles(roles.map { _.id }.toSet).descriptions.inPreferredLanguages
-			val rolesWithDescriptions = roles.map { role =>
-				DescribedRole(role, descriptions.getOrElse(role.roleId, Set()).toSet) }
+			val roles = DbUserRoles.detailed
 			// Supports simple model style if needed
 			session.modelStyle match
 			{
-				case Full => Result.Success(rolesWithDescriptions.map { _.toModel })
+				case Full => Result.Success(roles.map { _.toModel })
 				case Simple =>
-					val roles = DbDescriptionRoles.all
-					Result.Success(rolesWithDescriptions.map { _.toSimpleModelUsing(roles) })
+					val descriptionRoles = DbDescriptionRoles.all
+					Result.Success(roles.map { _.toSimpleModelUsing(descriptionRoles) })
 			}
 		}
 	}

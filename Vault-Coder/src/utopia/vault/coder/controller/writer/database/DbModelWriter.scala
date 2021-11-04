@@ -45,7 +45,7 @@ object DbModelWriter
 					Vector(
 						ImmutableValue(s"${ prop.name }AttName",
 							description = s"Name of the property that contains ${ classToWrite.name } ${ prop.name }")(
-							NamingUtils.underscoreToCamel(prop.columnName).quoted),
+							NamingUtils.underscoreToCamel(prop.columnName).uncapitalize.quoted),
 						ComputedProperty(s"${ prop.name }Column",
 							description = s"Column that contains ${ classToWrite.name } ${ prop.name }")(
 							s"table(${ prop.name }AttName)")

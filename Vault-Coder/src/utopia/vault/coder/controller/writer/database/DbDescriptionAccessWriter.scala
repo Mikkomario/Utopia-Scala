@@ -20,32 +20,35 @@ object DbDescriptionAccessWriter
 	  * @param descriptionLinkClass Description link class based on which the objects are generated
 	  * @param baseClassName        Name of the class to which the descriptions belong
 	  * @param linkModelsRef        Reference to description link model factory access object
-	  * @param linkFactoriesRef     Reference to description link factory access object
+	  * @param descriptionFactoriesRef     Reference to linked description factory access object
 	  * @param setup                Implicit project setup
 	  * @param codec                Implicit codec used when writing files
 	  * @return Single description access point reference + many descriptions access point reference.
 	  *         Failure if file writing failed at some point.
 	  */
-	def apply(descriptionLinkClass: Class, baseClassName: Name, linkModelsRef: Reference, linkFactoriesRef: Reference)
+	def apply(descriptionLinkClass: Class, baseClassName: Name, linkModelsRef: Reference,
+	          descriptionFactoriesRef: Reference)
 	         (implicit setup: ProjectSetup, codec: Codec) =
 	{
 		val linkClassName = descriptionLinkClass.name.singular
 		val factoryPropertyName = baseClassName.singular.uncapitalize
 		
 		val baseAccessProperties = Vector(
-			ComputedProperty("factory", Set(linkFactoriesRef), isOverridden = true)(
-				s"${ linkFactoriesRef.target }.$factoryPropertyName")
+			ComputedProperty("factory", Set(descriptionFactoriesRef), isOverridden = true)(
+				s"${ descriptionFactoriesRef.target }.$factoryPropertyName"),
+			ComputedProperty("linkModel", Set(linkModelsRef), isOverridden = true)(
+				s"${ linkModelsRef.target }.$factoryPropertyName")
 		)
 		// Next writes the individual description access point
 		File(setup.singleAccessPackage / descriptionLinkClass.packageName,
-			ObjectDeclaration(s"Db$linkClassName", Vector(Reference.descriptionLinkAccess),
+			ObjectDeclaration(s"Db$linkClassName", Vector(Reference.linkedDescriptionAccess),
 				properties = baseAccessProperties
 			)
 		).write().flatMap { singleDescriptionAccessRef =>
 			// Finally writes the multiple descriptions access point
 			File(setup.manyAccessPackage / descriptionLinkClass.packageName,
 				ObjectDeclaration(s"Db${ descriptionLinkClass.name.plural }",
-					Vector(Reference.descriptionLinksAccess), properties = baseAccessProperties
+					Vector(Reference.linkedDescriptionsAccess), properties = baseAccessProperties
 				)
 			).write().map { singleDescriptionAccessRef -> _ }
 		}

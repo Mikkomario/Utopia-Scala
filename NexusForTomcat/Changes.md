@@ -1,5 +1,8 @@
 # Utopia Nexus for Tomcat - List of changes
 
+## v1.2.2 - 04.11.2021
+New build / supports changes in **Flow** v1.14
+
 ## v1.2.1 - 4.9.2021
 This update didn't change the code, but required a rebuild in order to support changes in the higher modules.
 
