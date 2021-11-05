@@ -125,9 +125,10 @@ object BasicPropertyType
 	/**
 	  * @param typeName A property type name / string
 	  * @param length Associated property length, if specified (optional)
+	  * @param propertyName Name specified for the property (optional)
 	  * @return Basic property type matching that specification. None if no match was found.
 	  */
-	def interpret(typeName: String, length: Option[Int] = None) =
+	def interpret(typeName: String, length: Option[Int] = None, propertyName: Option[String] = None) =
 	{
 		val lowerName = typeName
 		def _findWith(searches: Iterable[BasicPropertyType => Boolean]) =
@@ -141,7 +142,16 @@ object BasicPropertyType
 				v => v.toScala.toString.toLowerCase == lowerName,
 				v => v.toSqlBase.toLowerCase == lowerName,
 				v => v.defaultPropertyName.variants.exists { _.toLowerCase == lowerName }
-			))
+			)).orElse {
+				// Attempts to find with property name also
+				propertyName.map { _.toLowerCase }.flatMap { lowerName =>
+					if (lowerName.contains("name"))
+						Some(Text(length.getOrElse(255)))
+					else
+						objectValues.filter { _.defaultPropertyName.variants.exists(_.contains(lowerName)) }
+							.maxByOption { _.defaultPropertyName.singular.length }
+				}
+			}
 	}
 	
 	
@@ -154,7 +164,7 @@ object BasicPropertyType
 	{
 		override def toSqlBase = "INT"
 		override def toScala = ScalaType.int
-		override def baseDefault = ""
+		override def baseDefault = CodePiece.empty
 		override def baseSqlDefault = ""
 		override def fromValuePropName = "int"
 		override def defaultPropertyName = Name("index", "indices")
@@ -167,7 +177,7 @@ object BasicPropertyType
 	{
 		override def toSqlBase = "BIGINT"
 		override def toScala = ScalaType.long
-		override def baseDefault = ""
+		override def baseDefault = CodePiece.empty
 		override def baseSqlDefault = ""
 		override def fromValuePropName = "long"
 		override def defaultPropertyName = "number"
@@ -180,7 +190,7 @@ object BasicPropertyType
 	{
 		override def toSqlBase = "DOUBLE"
 		override def toScala = ScalaType.double
-		override def baseDefault = ""
+		override def baseDefault = CodePiece.empty
 		override def baseSqlDefault = ""
 		override def fromValuePropName = "double"
 		override def defaultPropertyName = "amount"
@@ -245,7 +255,7 @@ object BasicPropertyType
 	case class Text(length: Int = 255) extends BasicPropertyType {
 		override def toSqlBase = s"VARCHAR($length)"
 		override def toScala = ScalaType.string
-		override def baseDefault = ""
+		override def baseDefault = CodePiece.empty
 		override def baseSqlDefault = ""
 		override def fromValuePropName = "string"
 		override def defaultPropertyName = if (length < 100) "name" else "text"
@@ -259,22 +269,25 @@ object PropertyType
 	/**
 	  * @param typeName A property type name / string (case-insensitive)
 	  * @param length Associated property length (optional)
+	  * @param propertyName Name specified for the property in question (optional)
 	  * @return A property type matching that specification. None if no match was found.
 	  */
-	def interpret(typeName: String, length: Option[Int] = None) =
+	def interpret(typeName: String, length: Option[Int] = None, propertyName: Option[String] = None) =
 		typeName.toLowerCase match
 		{
 			case "creation" | "created" => Some(CreationTime)
 			case "deprecation" | "deprecated" => Some(Deprecation)
 			case "expiration" | "expired" => Some(Expiration)
+			case "value" => Some(GenericValue(length.getOrElse(255)))
 			case other =>
 				if (other.contains("option"))
-					_interpret(other.afterFirst("[").untilLast("]"), length, isNullable = true)
+					_interpret(other.afterFirst("[").untilLast("]"), length, propertyName, isNullable = true)
 				else
-					_interpret(other, length, isNullable = false)
+					_interpret(other, length, propertyName, isNullable = false)
 		}
 	
-	private def _interpret(typeName: String, length: Option[Int], isNullable: Boolean): Option[PropertyType] =
+	private def _interpret(typeName: String, length: Option[Int], propertyName: Option[String],
+	                       isNullable: Boolean): Option[PropertyType] =
 		typeName match
 		{
 			case "days" => Some(if (isNullable) OptionalDayCount else DayCount)
@@ -291,9 +304,19 @@ object PropertyType
 					Some(if (isNullable) notNull.nullable else notNull)
 				}
 				else
-					BasicPropertyType.interpret(other, length).map { base =>
-						if (isNullable) Optional(base) else base
-					}
+					BasicPropertyType.interpret(other, length, propertyName)
+						.map { base => if (isNullable) Optional(base) else base }
+						.orElse {
+							// If nothing else works, attempts to find the match with the specified property name
+							propertyName.map { _.toLowerCase }.flatMap { lowerName =>
+								val options = Vector(CreationTime, Deprecation, Expiration,
+									GenericValue(length.getOrElse(255)), OptionalDayCount, DayCount) ++ TimeDuration.values
+								options.filter { _.defaultPropertyName.variants.exists { _.contains(lowerName) } }
+									.bestMatch { Vector(_.isNullable == isNullable) }
+									.maxByOption { _.defaultPropertyName.singular.length }
+									.map { dataType => if (isNullable) dataType.nullable else dataType }
+							}
+						}
 		}
 	
 	
@@ -358,7 +381,7 @@ object PropertyType
 		override def toSql = "DATETIME NOT NULL"
 		
 		override def isNullable = false
-		override def baseDefault = ""
+		override def baseDefault = CodePiece.empty
 		override def baseSqlDefault = ""
 		override def defaultPropertyName = Name("expires", "expirationTimes")
 		override def createsIndexByDefault = true
@@ -450,14 +473,38 @@ object PropertyType
 		override def writeDefaultDescription(className: Name, propName: Name) = ""
 	}
 	
+	case class GenericValue(length: Int = 255) extends PropertyType
+	{
+		override def toScala = Reference.value
+		override def toSql = s"VARCHAR($length)"
+		
+		// Values are at the same time nullable (have an empty value) and not nullable (aren't wrapped in option)
+		override def isNullable = true
+		
+		override def defaultPropertyName = "value"
+		override def baseDefault = CodePiece("Value.empty", Set(Reference.value))
+		override def baseSqlDefault = ""
+		override def createsIndexByDefault = false
+		
+		override def nullable = this
+		override def notNull = this
+		
+		override def fromValueCode(valueCode: String) = valueCode
+		override def toValueCode(instanceCode: String) =
+			CodePiece(instanceCode, Set(Reference.valueConversions))
+		
+		override def writeDefaultDescription(className: Name, propName: Name) = s"Generic $propName of this $className"
+	}
+	
 	object TimeDuration
 	{
 		val millis = apply(TimeUnit.MILLISECONDS)
 		val seconds = apply(TimeUnit.SECONDS)
 		val minutes = apply(TimeUnit.MINUTES)
 		val hours = apply(TimeUnit.HOURS)
+		
+		def values = Vector(millis, seconds, minutes, hours)
 	}
-	
 	/**
 	  * Represents a duration of time
 	  * @param unit Unit used when storing this duration to the database
@@ -555,7 +602,7 @@ object PropertyType
 		override def toScala =
 			if (isNullable) ScalaType.option(enumeration.reference) else enumeration.reference
 		override def toSql = if (isNullable) "INT" else "INT NOT NULL"
-		override def baseDefault = CodePiece.empty
+		override def baseDefault = if (isNullable) CodePiece("None") else CodePiece.empty
 		override def baseSqlDefault = ""
 		override def defaultPropertyName = enumeration.name.uncapitalize
 		override def createsIndexByDefault = false

@@ -3,6 +3,7 @@ package utopia.vault.coder.controller.writer.database
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala
+import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
 import utopia.vault.coder.model.scala.{Extension, Parameter, Reference, ScalaType}
@@ -86,8 +87,9 @@ object DbModelWriter
 				Parameter("id", classToWrite.idType.nullable.toScala, "None",
 					description = s"${ classToWrite.name } database id") +:
 					classToWrite.properties.map { prop =>
-						Parameter(prop.name.singular, prop.dataType.nullable.toScala,
-							"None", description = prop.description)
+						val inputType = prop.dataType.nullable
+						val defaultValue = inputType.baseDefault.notEmpty.getOrElse(CodePiece("None"))
+						Parameter(prop.name.singular, inputType.toScala, defaultValue, description = prop.description)
 					},
 				// Extends StorableWithFactory[A]
 				Vector(Reference.storableWithFactory(modelRef)),

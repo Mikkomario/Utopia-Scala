@@ -214,7 +214,7 @@ object ClassReader
 			enumType match
 			{
 				case Some(enumType) => Some(EnumValue(enumType, lowerTypeName.contains("option")))
-				case None => PropertyType.interpret(typeName, length)
+				case None => PropertyType.interpret(typeName, length, rawName)
 			}
 		}
 		val actualDataType = referencedTableName match

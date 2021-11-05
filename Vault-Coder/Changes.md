@@ -1,5 +1,13 @@
 # Utopia Vault Coder
 
+## v1.3.1 (in development)
+### New Features
+- Added **Value** data type
+### Bugfixes
+- Optional enumeration properties now have the default value of None, like other optional properties
+### Other Changes
+- Property name is now used when interpreting property data type
+
 ## v1.3 - 04.11.2021
 This major update adds a number of new quite important features.  
 Also, this version is compatible with the latest **Metropolis** (v2.0) and **Citadel** (v2.0) versions, 
