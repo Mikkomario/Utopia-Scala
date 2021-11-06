@@ -192,7 +192,7 @@ trait InstanceDeclaration
 		val newNested = _mergeDeclarations(nested.toVector, other.nested.toVector).toSet
 		
 		val (comparableExtensions, addedExtensions) = other.extensions.dividedWith { ext =>
-			extensions.find { _.parentType.data.toString == ext.parentType.data.toString } match {
+			extensions.find { _.parentType.isSimilarTo(ext.parentType)} match {
 				case Some(myVersion) => Left(myVersion -> ext)
 				case None => Right(ext)
 			}

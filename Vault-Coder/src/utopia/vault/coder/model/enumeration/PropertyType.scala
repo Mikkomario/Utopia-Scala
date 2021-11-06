@@ -152,7 +152,9 @@ object BasicPropertyType
 			)).orElse {
 				// Attempts to find with property name also
 				propertyName.map { _.toLowerCase }.flatMap { lowerName =>
-					if (lowerName.contains("name"))
+					if (lowerName.startsWith("is") || lowerName.startsWith("was"))
+						Some(Bool)
+					else if (lowerName.contains("name"))
 						Some(Text(length.getOrElse(255)))
 					else
 						objectValues.filter { _.defaultPropertyName.variants.exists(_.contains(lowerName)) }
