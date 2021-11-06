@@ -223,23 +223,25 @@ trait InstanceDeclaration
 			.map { case (code, header) => code.map { _.toCode } -> header }
 			.filter { _._1.nonEmpty }
 		if (segmentsToWrite.nonEmpty)
-			builder.block { builder =>
-				segmentsToWrite.dropRight(1).foreach { case (codes, header) =>
-					builder += s"// $header\t--------------------"
-					builder.addEmptyLine()
-					codes.foreach { code =>
-						builder ++= code
-						builder.addEmptyLine()
-					}
-					builder.addEmptyLine()
-				}
-				// Writes the last portion separately because the separators are different at the end
-				val (lastCodes, lastHeader) = segmentsToWrite.last
-				builder += s"// $lastHeader\t--------------------"
-				lastCodes.foreach { code =>
-					builder.addEmptyLine()
+		{
+			builder.openBlock(forceNewLine = true)
+			segmentsToWrite.dropRight(1).foreach { case (codes, header) =>
+				builder += s"// $header\t--------------------"
+				builder.addEmptyLine()
+				codes.foreach { code =>
 					builder ++= code
+					builder.addEmptyLine()
 				}
+				builder.addEmptyLine()
 			}
+			// Writes the last portion separately because the separators are different at the end
+			val (lastCodes, lastHeader) = segmentsToWrite.last
+			builder += s"// $lastHeader\t--------------------"
+			lastCodes.foreach { code =>
+				builder.addEmptyLine()
+				builder ++= code
+			}
+			builder.closeBlock()
+		}
 	}
 }
