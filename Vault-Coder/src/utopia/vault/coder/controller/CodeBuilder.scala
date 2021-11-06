@@ -193,7 +193,8 @@ class CodeBuilder(startIndentation: Int = 0) extends mutable.Builder[String, Cod
 	  */
 	def openBlock() =
 	{
-		this += "{"
+		appendPartial("{", " ", allowLineSplit = true)
+		closeOpenLine()
 		indent()
 	}
 	/**

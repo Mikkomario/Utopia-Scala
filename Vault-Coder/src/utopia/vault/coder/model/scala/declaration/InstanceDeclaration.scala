@@ -7,10 +7,9 @@ import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
 import utopia.vault.coder.model.scala.code.Code
-import utopia.vault.coder.model.scala.{Extension, Parameters, ScalaDocPart, Visibility}
+import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Parameters, ScalaDocPart, Visibility}
 import utopia.vault.coder.model.scala.template.{CodeConvertible, ScalaDocConvertible}
 
-import java.time.LocalDate
 import scala.collection.immutable.VectorBuilder
 
 /**
@@ -60,6 +59,10 @@ trait InstanceDeclaration
 	  * @return Author that wrote this declaration (may be empty)
 	  */
 	def author: String
+	/**
+	  * @return Date when this declaration was made
+	  */
+	def since: DeclarationDate
 	
 	/**
 	  * Creates a copy of this instance, with altered information
@@ -77,7 +80,7 @@ trait InstanceDeclaration
 	protected def makeCopy(visibility: Visibility, extensions: Vector[Extension], creationCode: Code,
 	                       properties: Vector[PropertyDeclaration], methods: Set[MethodDeclaration],
 	                       nested: Set[InstanceDeclaration], description: String, author: String,
-	                       headerComments: Vector[String]): InstanceDeclaration
+	                       headerComments: Vector[String], since: DeclarationDate): InstanceDeclaration
 	
 	
 	// IMPLEMENTED  --------------------------
@@ -90,11 +93,12 @@ trait InstanceDeclaration
 			builder += ScalaDocPart.description(desc)
 		constructorParams.foreach { builder ++= _.documentation }
 		// If there are other scaladocs, adds author and since -tags
+		val since = this.since
 		if (description.nonEmpty)
 		{
 			if (author.nonEmpty)
 				builder += ScalaDocPart(Author, author)
-			builder += ScalaDocPart(Since, LocalDate.now().toString)
+			builder += ScalaDocPart(Since, since.toString)
 		}
 		builder.result()
 	}
@@ -188,13 +192,13 @@ trait InstanceDeclaration
 		val newNested = _mergeDeclarations(nested.toVector, other.nested.toVector).toSet
 		
 		val (comparableExtensions, addedExtensions) = other.extensions.dividedWith { ext =>
-			extensions.find { _.parentType.data == ext.parentType.data } match {
+			extensions.find { _.parentType.data.toString == ext.parentType.data.toString } match {
 				case Some(myVersion) => Left(myVersion -> ext)
 				case None => Right(ext)
 			}
 		}
 		comparableExtensions.foreach { case (my, their) =>
-			if (my != their)
+			if (my.toString != their.toString)
 				conflictsBuilder += MergeConflict.line(their.toString, my.toString,
 					s"$name extension differs")
 		}
@@ -206,7 +210,8 @@ trait InstanceDeclaration
 				other.creationCode.references),
 			newProperties, newMethods, newNested, description.notEmpty.getOrElse(other.description),
 			author.notEmpty.getOrElse(other.author),
-			headerComments ++ other.headerComments.filterNot(headerComments.contains)) -> conflictsBuilder.result()
+			headerComments ++ other.headerComments.filterNot(headerComments.contains), since min other.since) ->
+			conflictsBuilder.result()
 	}
 	
 	

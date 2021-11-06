@@ -17,7 +17,10 @@ object ReadRegexTest extends App
 	private val declarationKeywordRegex = DeclarationType.values.map { d => Regex(d.keyword + " ") }
 		.reduceLeft { _ || _ }.withinParenthesis
 	private val declarationStartRegex = declarationModifierRegex.zeroOrMoreTimes + declarationKeywordRegex
-	private val namedDeclarationStartRegex = declarationStartRegex + Regex.word + Regex("(\\_\\=)?")
+	private val namedDeclarationStartRegex = declarationStartRegex +
+		((Regex.escape('_') + Regex.alphaNumeric).withinParenthesis || Regex.alpha).withinParenthesis +
+		(Regex.word + Regex.alphaNumeric).withinParenthesis.noneOrOnce +
+		(Regex.escape('_') + Regex.escape('=')).withinParenthesis.noneOrOnce
 	val testRegex = Regex("protected |private ")
 	private lazy val segmentSeparatorRegex = (Regex.escape('/') * 2) + Regex.whiteSpace +
 		Regex.upperCaseLetter.oneOrMoreTimes + Regex.escape('\t').oneOrMoreTimes +
@@ -42,6 +45,18 @@ object ReadRegexTest extends App
 	assert(namedDeclarationStartRegex.existsIn("case class DescriptionData(roleId: Int, languageId: Int, text: String, authorId: Option[Int] = None, "))
 	assert(segmentSeparatorRegex.apply("// ATTRIBUTES\t--------------"))
 	assert(!segmentSeparatorRegex.apply("// Some tests"))
+	
+	assert(namedDeclarationStartRegex.findFirstFrom("def value_=(newValue: Value) = _value = newValue").get ==
+		"def value_=")
+	val test = ((Regex.escape('_') + Regex.alphaNumeric).withinParenthesis || Regex.alpha).withinParenthesis
+	println((Regex.escape('_') + Regex.alphaNumeric).withinParenthesis)
+	println(namedDeclarationStartRegex.findFirstFrom("val _a = 3").get)
+	println(test.findFirstFrom("_a = 3").get)
+	println((declarationStartRegex + test).findFirstFrom("val _a = 3").get)
+	println((Regex.escape('_') + Regex.alphaNumeric).findFirstFrom("val _a = 3").get)
+	assert(namedDeclarationStartRegex.findFirstFrom("val _a = 3").get == "val _a")
+	assert(namedDeclarationStartRegex.findFirstFrom("val _1 = 3").get == "val _1")
+	assert(namedDeclarationStartRegex.findFirstFrom("val asd = 3").get == "val asd")
 	
 	println("Success!")
 }

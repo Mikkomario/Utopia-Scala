@@ -215,9 +215,19 @@ object VaultCoderApp extends App
 			case Success(data) =>
 				val groupedData = data.groupBy { p => (p.projectName, p.modelPackage, p.databasePackage) }
 					.map { case ((pName, modelPackage, dbPackage), data) =>
-						data.reduce { (a, b) => ProjectData(pName, modelPackage, dbPackage,
-							a.enumerations ++ b.enumerations, a.classes ++ b.classes,
-							a.combinations ++ b.combinations, a.modelCanReferToDB && b.modelCanReferToDB) }
+						data.reduce { (a, b) =>
+							val version = a.version match {
+								case Some(aV) =>
+									b.version match {
+										case Some(bV) => Some(aV max bV)
+										case None => Some(aV)
+									}
+								case None => b.version
+							}
+							ProjectData(pName, modelPackage, dbPackage,
+								a.enumerations ++ b.enumerations, a.classes ++ b.classes,
+								a.combinations ++ b.combinations, version, a.modelCanReferToDB && b.modelCanReferToDB)
+						}
 					}
 				filterAndWrite(groupedData)
 			case Failure(error) =>
@@ -295,7 +305,7 @@ object VaultCoderApp extends App
 							Vector(mainMergeRoot, alternativeMergeRoot).flatten,
 						directory/s"${data.projectName}-merge-conflicts-${Today.toString}-${startTime.getHour}-${
 							startTime.getMinute}.txt",
-						data.modelCanReferToDB)
+						data.version, data.modelCanReferToDB)
 					write(data)
 				}
 			}

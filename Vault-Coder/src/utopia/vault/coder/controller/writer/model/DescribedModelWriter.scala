@@ -5,7 +5,7 @@ import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.Visibility.Protected
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration}
-import utopia.vault.coder.model.scala.{Parameter, Parameters, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, Parameters, Reference, ScalaType}
 
 import scala.io.Codec
 
@@ -54,7 +54,7 @@ object DescribedModelWriter
 					isLowMergePriority = true)(Parameter("roles", ScalaType.iterable(Reference.descriptionRole)))(
 					"wrapped.toModel")),
 				description = s"Combines ${ classToWrite.name } with the linked descriptions",
-				isCaseClass = true
+				author = classToWrite.author, since = DeclarationDate.versionedToday, isCaseClass = true
 			)
 		).write()
 	}

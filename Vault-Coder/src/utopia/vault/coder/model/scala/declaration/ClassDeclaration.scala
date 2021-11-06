@@ -2,7 +2,7 @@ package utopia.vault.coder.model.scala.declaration
 
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.Visibility.Public
-import utopia.vault.coder.model.scala.{Extension, Parameters, Visibility}
+import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Parameters, Visibility}
 
 /**
   * Used for declaring scala classes
@@ -14,7 +14,8 @@ case class ClassDeclaration(name: String, constructionParams: Parameters = Param
                             creationCode: Code = Code.empty, properties: Vector[PropertyDeclaration] = Vector(),
                             methods: Set[MethodDeclaration] = Set(), nested: Set[InstanceDeclaration] = Set(),
                             visibility: Visibility = Public, description: String = "", author: String = "",
-                            headerComments: Vector[String] = Vector(), isCaseClass: Boolean = false)
+                            headerComments: Vector[String] = Vector(), since: DeclarationDate = DeclarationDate.today,
+                            isCaseClass: Boolean = false)
 	extends InstanceDeclaration
 {
 	override val keyword =
@@ -32,7 +33,7 @@ case class ClassDeclaration(name: String, constructionParams: Parameters = Param
 	override protected def makeCopy(visibility: Visibility, extensions: Vector[Extension], creationCode: Code,
 	                                properties: Vector[PropertyDeclaration], methods: Set[MethodDeclaration],
 	                                nested: Set[InstanceDeclaration], description: String, author: String,
-	                                headerComments: Vector[String]) =
+	                                headerComments: Vector[String], since: DeclarationDate) =
 		ClassDeclaration(name, constructionParams, extensions, creationCode, properties, methods, nested, visibility,
-			description, author, headerComments)
+			description, author, headerComments, since, isCaseClass)
 }

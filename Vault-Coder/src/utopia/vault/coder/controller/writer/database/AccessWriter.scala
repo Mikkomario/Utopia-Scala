@@ -1,11 +1,12 @@
 package utopia.vault.coder.controller.writer.database
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, Name, ProjectSetup}
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, DeclarationStart, File, MethodDeclaration, ObjectDeclaration, TraitDeclaration}
-import utopia.vault.coder.model.scala.{Extension, Parameter, Parameters, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Parameter, Parameters, Reference, ScalaType}
 
 import scala.io.Codec
 
@@ -70,6 +71,15 @@ object AccessWriter
 				description = "Factory used for constructing database the interaction models")(dbModelRef.target)
 		)
 		val pullIdCode = classToWrite.idType.nullable.fromValueCode(s"pullColumn(index)")
+		// For classes that support deprecation, deprecate() -method is added for all traits
+		// (implementation varies, however)
+		// Option[Pair[method]], where first method is for individual access and second for many access
+		val deprecationMethods = classToWrite.deprecationProperty.map { prop =>
+			Pair(prop.name.singular, prop.name.plural).map { propName =>
+				MethodDeclaration("deprecate", Set(Reference.now, Reference.valueConversions))(connectionParam)(
+					s"$propName = Now")
+			}
+		}
 		File(singleAccessPackage,
 			TraitDeclaration(uniqueAccessName,
 				// Extends SingleRowModelAccess, DistinctModelAccess and Indexed
@@ -87,7 +97,7 @@ object AccessWriter
 				} :+ ComputedProperty("id", pullIdCode.references, implicitParams = Vector(connectionParam))(
 					pullIdCode.text),
 				// Contains setters for each property (singular)
-				propertySettersFor(classToWrite, connectionParam) { _.singular },
+				propertySettersFor(classToWrite, connectionParam) { _.singular } ++ deprecationMethods.map { _.first },
 				description = s"A common trait for access points that return individual and distinct ${
 					classToWrite.name.plural
 				}.", author = classToWrite.author
@@ -126,7 +136,7 @@ object AccessWriter
 					// Implements the .condition property
 					properties = singleIdAccessParentProperties,
 					description = s"An access point to individual ${ classToWrite.name.plural }, based on their id",
-					author = classToWrite.author, isCaseClass = true
+					author = classToWrite.author, since = DeclarationDate.versionedToday, isCaseClass = true
 				)
 			).write().flatMap { singleIdAccessRef =>
 				// Writes the single model access point
@@ -186,12 +196,11 @@ object AccessWriter
 							Vector(Reference.manyRowModelAccess(modelRef), manyTraitParent),
 							// Contains computed properties to access class properties
 							baseProperties ++ classToWrite.properties.map { prop =>
-								ComputedProperty(prop.name.plural,
+								val pullCode = prop.dataType
+									.fromValuesCode(s"pullColumn(model.${ prop.name }Column)")
+								ComputedProperty(prop.name.plural, pullCode.references,
 									description = s"${ prop.name.plural } of the accessible ${ classToWrite.name.plural }",
-									implicitParams = Vector(connectionParam))(
-									s"pullColumn(model.${ prop.name }Column).flatMap { value => ${
-										prop.dataType.nullable.fromValueCode("value")
-									} }")
+									implicitParams = Vector(connectionParam))(pullCode.text)
 							} ++ Vector(
 								ComputedProperty("ids", implicitParams = Vector(connectionParam))(
 									s"pullColumn(index).flatMap { id => ${
@@ -201,7 +210,8 @@ object AccessWriter
 									if (classToWrite.recordsIndexedCreationTime) "Some(factory.defaultOrdering)" else "None")
 							) ++ manyParentProperties,
 							// Contains setters for property values (plural)
-							propertySettersFor(classToWrite, connectionParam) { _.plural } ++ manyParentMethods +
+							propertySettersFor(classToWrite, connectionParam) { _.plural } ++ manyParentMethods ++
+								deprecationMethods.map { _.second } +
 								MethodDeclaration("filter",
 									explicitOutputType = Some(ScalaType.basic(manyAccessTraitName)),
 									isOverridden = true)(

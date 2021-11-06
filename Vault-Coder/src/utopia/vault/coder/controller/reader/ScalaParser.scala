@@ -37,7 +37,10 @@ object ScalaParser
 	private lazy val declarationKeywordRegex = DeclarationType.values.map { d => Regex(d.keyword + " ") }
 		.reduceLeft { _ || _ }.withinParenthesis
 	private lazy val declarationStartRegex = declarationModifierRegex.zeroOrMoreTimes + declarationKeywordRegex
-	private lazy val namedDeclarationStartRegex = declarationStartRegex + Regex.word + Regex("(\\_\\=)?")
+	private val namedDeclarationStartRegex = declarationStartRegex +
+		((Regex.escape('_') + Regex.alphaNumeric).withinParenthesis || Regex.alpha).withinParenthesis +
+		(Regex.word + Regex.alphaNumeric).withinParenthesis.noneOrOnce +
+		(Regex.escape('_') + Regex.escape('=')).withinParenthesis.noneOrOnce
 	
 	private lazy val extendsRegex = Regex(" extends ")
 	private lazy val withRegex = Regex(" with ")
@@ -674,7 +677,7 @@ object ScalaParser
 				string -> false
 			//println(s"Type main part is '$mainPart'. Call by name: $isCallByName")
 			// Parses the type name until generic types list or some interrupting character
-			val mainPartEndIndex = mainPart.indexWhere { c => !c.isLetterOrDigit && c != '_' }
+			val mainPartEndIndex = mainPart.indexWhere { c => !c.isLetterOrDigit && c != '_' && c != '.' }
 			val (mainTypeString, remaining) = if (mainPartEndIndex < 0) mainPart -> "" else
 				mainPart.take(mainPartEndIndex) -> mainPart.drop(mainPartEndIndex)
 			//println(s"Main type is: $mainTypeString - Remaining: $remaining")

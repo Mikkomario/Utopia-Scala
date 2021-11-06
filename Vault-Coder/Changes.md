@@ -1,12 +1,21 @@
 # Utopia Vault Coder
 
-## v1.3.1 (in development)
+## v1.4 (in development)
 ### New Features
 - Added **Value** data type
+- Added `.deprecate()` -function to access points that support deprecation
+- Added support for `version` -property in model document (will be added to `@since` scaladoc tag)
 ### Bugfixes
+- A number of bugfixes to the merging process
 - Optional enumeration properties now have the default value of None, like other optional properties
+- Fixed an issue where **FiniteDuration** was not always properly imported when reading durations from values
 ### Other Changes
+- Classes that use both deprecation and expiration now have a custom deprecation implementation
+- Merge conflicts document now shows if the conflict appears in a low-priority function
+- Code blocks may now be written in a more concise manner
 - Property name is now used when interpreting property data type
+- `@since` scaladoc tag is now formatted differently
+- **Value** vectors are now converted to processed values using different code
 
 ## v1.3 - 04.11.2021
 This major update adds a number of new quite important features.  

@@ -1,5 +1,9 @@
 # Utopia Flow - List of Changes
 
+## v1.14.1 (in development)
+### Bugfixes
+- `||` -method in **Regex** combined some regular expressions incorrectly. The current version is more careful.
+
 ## v1.14 - 04.11.2021
 Beside the obviously breaking change of removing generic type parameters from the immutable **Model**, 
 this update mainly adds utility functions and features.

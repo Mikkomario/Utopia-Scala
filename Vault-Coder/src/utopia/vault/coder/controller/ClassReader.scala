@@ -6,7 +6,7 @@ import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, EnumVa
 import utopia.flow.datastructure.immutable.{Model, ModelValidationFailedException}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.UncertainBoolean
+import utopia.flow.util.{UncertainBoolean, Version}
 import utopia.vault.coder.model.data.{Class, CombinationData, Enum, Name, ProjectData, Property}
 import utopia.vault.coder.model.enumeration.CombinationType.{Combined, MultiCombined, PossiblyCombined}
 import utopia.vault.coder.model.enumeration.{BasicPropertyType, CombinationType, PropertyType}
@@ -122,7 +122,7 @@ object ClassReader
 				}
 			}
 			ProjectData(projectName, modelPackage, dbPackage, enumerations, classes, combinations,
-				!root("models_without_vault").getBoolean)
+				root("version").string.map { Version(_) }, !root("models_without_vault").getBoolean)
 		}
 	}
 	

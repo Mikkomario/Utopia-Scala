@@ -139,17 +139,21 @@ trait FunctionDeclaration[+Repr]
 		}
 		
 		val conflictsBuilder = new VectorBuilder[MergeConflict]()
+		lazy val prioString = if (isLowMergePriority) " (low priority)" else ""
 		val myBase = basePart
 		val theirBase = other.basePart
 		if (myBase != theirBase)
 			conflictsBuilder += MergeConflict.line(theirBase.text, myBase.text, s"$name declarations differ")
 		if (params.exists { !other.params.contains(_) })
-			conflictsBuilder ++= params.get.conflictWith(other.params.get, s"$name parameters differ")
+			conflictsBuilder ++= params.get.conflictWith(other.params.get,
+				s"$name parameters differ$prioString")
 		if (bodyCode.conflictsWith(other.bodyCode))
-			conflictsBuilder ++= bodyCode.conflictWith(other.bodyCode, s"$name implementations differ")
+			conflictsBuilder ++= bodyCode.conflictWith(other.bodyCode,
+				s"$name implementations differ$prioString")
 		if (explicitOutputType.exists { myType => other.explicitOutputType.exists { _ != myType } })
 			conflictsBuilder += MergeConflict.line(other.explicitOutputType.get.toString,
-				explicitOutputType.get.toString, s"$name implementations specify different return types")
+				explicitOutputType.get.toString,
+				s"$name implementations specify different return types$prioString")
 		
 		makeCopy(visibility min other.visibility, priority.params, priority.bodyCode,
 			priority.explicitOutputType.orElse(lowPriority.explicitOutputType),

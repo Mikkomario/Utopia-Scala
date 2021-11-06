@@ -10,7 +10,6 @@ import utopia.vault.coder.model.scala.{Reference, ScalaType}
 import utopia.vault.coder.util.NamingUtils
 
 import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.TimeUnit
 
 /**
   * An enumeration for different types a class property may have
@@ -64,6 +63,12 @@ sealed trait PropertyType
 	  */
 	def fromValueCode(valueCode: String): CodePiece
 	/**
+	  * Writes a code that reads a collection of these properties from a vector of values
+	  * @param valuesCode Code that returns a vector of values
+	  * @return Code for accessing the specified values and converting them to a collection of this type in Scala
+	  */
+	def fromValuesCode(valuesCode: String): CodePiece
+	/**
 	  * Writes a code that converts this property to a value.
 	  * @param instanceCode Code for referring to 'this' instance
 	  * @return A code that returns a value based on this instance
@@ -108,6 +113,8 @@ sealed trait BasicPropertyType extends PropertyType
 	override def nullable = Optional(this)
 	
 	override def fromValueCode(valueCode: String) = CodePiece(s"$valueCode.get${fromValuePropName.capitalize}")
+	override def fromValuesCode(valuesCode: String) =
+		CodePiece(s"$valuesCode.map { v => ${fromValueCode("v")} }")
 	override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(Reference.valueConversions))
 	
 	override def writeDefaultDescription(className: Name, propName: Name) = ""
@@ -341,6 +348,7 @@ object PropertyType
 		override def fromValueCode(valueCode: String) = CodePiece(s"$valueCode.getInstant")
 		override def toValueCode(instanceCode: String) =
 			CodePiece(instanceCode, Set(Reference.valueConversions))
+		override def fromValuesCode(valuesCode: String) = CodePiece(s"$valuesCode.map { _.getInstant }")
 		
 		override def writeDefaultDescription(className: Name, propName: Name) =
 			s"Time when this $className was first created"
@@ -365,6 +373,7 @@ object PropertyType
 		override def notNull = Expiration
 		
 		override def fromValueCode(valueCode: String) = CodePiece(s"$valueCode.instant")
+		override def fromValuesCode(valuesCode: String) = CodePiece(s"$valuesCode.flatMap { _.instant }")
 		override def toValueCode(instanceCode: String) =
 			CodePiece(instanceCode, Set(Reference.valueConversions))
 		
@@ -390,6 +399,7 @@ object PropertyType
 		override def notNull = this
 		
 		override def fromValueCode(valueCode: String) = s"$valueCode.getInstant"
+		override def fromValuesCode(valuesCode: String) = s"$valuesCode.map { _.getInstant }"
 		override def toValueCode(instanceCode: String) =
 			CodePiece(instanceCode, Set(Reference.valueConversions))
 		
@@ -418,6 +428,8 @@ object PropertyType
 		override def notNull = this
 		
 		override def fromValueCode(valueCode: String) = CodePiece(s"Days($valueCode.getInt)", Set(Reference.days))
+		override def fromValuesCode(valuesCode: String) =
+			CodePiece(s"$valuesCode.map { v => Days(v.getInt) }", Set(Reference.days))
 		override def toValueCode(instanceCode: String) =
 			CodePiece(s"$instanceCode.length", Set(Reference.valueConversions))
 		
@@ -444,6 +456,8 @@ object PropertyType
 		
 		override def fromValueCode(valueCode: String) =
 			CodePiece(s"$valueCode.int.map { Days(_) }", Set(Reference.days))
+		override def fromValuesCode(valuesCode: String) =
+			CodePiece(s"$valuesCode.flatMap { _.int }.map(Days.apply)", Set(Reference.days))
 		override def toValueCode(instanceCode: String) =
 			CodePiece(s"$instanceCode.map { _.length }", Set(Reference.valueConversions))
 		
@@ -468,6 +482,8 @@ object PropertyType
 		override def nullable = this
 		
 		override def fromValueCode(valueCode: String) = s"$valueCode.${baseType.fromValuePropName}"
+		override def fromValuesCode(valuesCode: String) =
+			CodePiece(s"$valuesCode.flatMap { _.${baseType.fromValuePropName} }")
 		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(Reference.valueConversions))
 		
 		override def writeDefaultDescription(className: Name, propName: Name) = ""
@@ -490,6 +506,7 @@ object PropertyType
 		override def notNull = this
 		
 		override def fromValueCode(valueCode: String) = valueCode
+		override def fromValuesCode(valuesCode: String) = valuesCode
 		override def toValueCode(instanceCode: String) =
 			CodePiece(instanceCode, Set(Reference.valueConversions))
 		
@@ -542,8 +559,17 @@ object PropertyType
 				else
 					s"FiniteDuration($valueCode.getLong, TimeUnit.${unit.name})"
 			}
-			val refs = if (isNullable) Set(Reference.timeUnit, Reference.finiteDuration) else Set(Reference.timeUnit)
-			CodePiece(text, refs)
+			CodePiece(text, Set(Reference.timeUnit, Reference.finiteDuration))
+		}
+		override def fromValuesCode(valuesCode: String) =
+		{
+			val text = {
+				if (isNullable)
+					s"$valuesCode.flatMap { _.long }.map { FiniteDuration(_, TimeUnit.${unit.name}) }"
+				else
+					s"$valuesCode.map { v => FiniteDuration(v.getLong, TimeUnit.${unit.name}) }"
+			}
+			CodePiece(text, Set(Reference.timeUnit, Reference.finiteDuration))
 		}
 		override def toValueCode(instanceCode: String) =
 		{
@@ -584,6 +610,16 @@ object PropertyType
 			else
 				dataType.fromValueCode(valueCode)
 		}
+		override def fromValuesCode(valuesCode: String) =
+		{
+			if (isNullable)
+				CodePiece(s"$valuesCode.flatMap { _.${dataType.fromValuePropName} }")
+			else
+			{
+				val raw = dataType.fromValueCode("v")
+				CodePiece(s"$valuesCode.map { v => $raw }", raw.references)
+			}
+		}
 		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(Reference.valueConversions))
 		
 		override def writeDefaultDescription(className: Name, propName: Name) =
@@ -620,6 +656,9 @@ object PropertyType
 			}
 			CodePiece(text, Set(enumeration.reference))
 		}
+		override def fromValuesCode(valuesCode: String) =
+			CodePiece(s"$valuesCode.flatMap { _.int }.flatMap(${enumeration.name}.findForId)",
+				Set(enumeration.reference))
 		override def toValueCode(instanceCode: String) =
 			CodePiece(if (isNullable) s"$instanceCode.map { _.id }" else s"$instanceCode.id",
 				Set(Reference.valueConversions))

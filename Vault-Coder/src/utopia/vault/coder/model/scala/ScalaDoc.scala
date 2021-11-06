@@ -36,9 +36,10 @@ case class ScalaDoc(parts: Vector[ScalaDocPart]) extends CodeConvertible
 	  */
 	def returnDescription = apply(Return)
 	/**
-	  * @return Since description
+	  * @return Parsed since value, if available
 	  */
-	def since = apply(Since)
+	def since = parts.find { _.keyword.contains(Since) }.flatMap { _.content.headOption }
+		.flatMap { DeclarationDate(_).toOption }
 	/**
 	  * @return Described item's author
 	  */

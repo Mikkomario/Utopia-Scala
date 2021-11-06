@@ -6,7 +6,7 @@ import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File}
-import utopia.vault.coder.model.scala.{Parameter, Reference, declaration}
+import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, Reference, declaration}
 import utopia.vault.coder.util.NamingUtils
 
 import scala.io.Codec
@@ -51,7 +51,7 @@ object ModelWriter
 				properties = deprecationPropertiesFor(classToWrite) :+
 					ComputedProperty("toModel", propWriteCode.references, isOverridden = true)(propWriteCode.text),
 				description = classToWrite.description, author = classToWrite.author,
-				isCaseClass = true)
+				since = DeclarationDate.versionedToday, isCaseClass = true)
 		).write().flatMap { dataClassRef =>
 			val storePackage = setup.modelPackage / s"stored.${ classToWrite.packageName }"
 			// Writes the stored model next
@@ -91,7 +91,8 @@ object ModelWriter
 						Reference.metropolisStoredModelConvertible(dataClassRef)
 					declaration.ClassDeclaration(classToWrite.name.singular, constructionParams, Vector(parent),
 						properties = accessProperty.toVector,
-						description = description, author = classToWrite.author, isCaseClass = true)
+						description = description, author = classToWrite.author, since = DeclarationDate.versionedToday,
+						isCaseClass = true)
 				}
 			}
 			File(storePackage, storedClass).write().map { _ -> dataClassRef }

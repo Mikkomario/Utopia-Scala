@@ -6,7 +6,7 @@ import utopia.vault.coder.model.scala
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
-import utopia.vault.coder.model.scala.{Extension, Parameter, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Parameter, Reference, ScalaType}
 import utopia.vault.coder.util.NamingUtils
 
 import _root_.scala.io.Codec
@@ -107,7 +107,7 @@ object DbModelWriter
 						s"copy(${ prop.name } = Some(${ prop.name }))")
 				}.toSet,
 				description = s"Used for interacting with ${ classToWrite.name.plural } in the database",
-				author = classToWrite.author, isCaseClass = true)
+				author = classToWrite.author, since = DeclarationDate.versionedToday, isCaseClass = true)
 		).write()
 	}
 	
@@ -157,7 +157,14 @@ object DbModelWriter
 	private object DeprecationStyle
 	{
 		def of(c: Class) =
-			c.deprecationProperty.map { prop => NullDeprecates(prop.name.singular) }
+			c.deprecationProperty
+				.map { deprecationProp =>
+					c.expirationProperty match {
+						case Some(expirationProp) =>
+							CombinedDeprecation(expirationProp.name.singular, deprecationProp.name.singular)
+						case None => NullDeprecates(deprecationProp.name.singular)
+					}
+				}
 				.orElse { c.expirationProperty.map { prop => Expires(prop.name.singular) } }
 	}
 	
@@ -172,12 +179,11 @@ object DbModelWriter
 		// IMPLEMENTED  -----------------------------
 		
 		override def extensionFor(dbModelClass: ScalaType) =
-			(if (isDefault) Reference.deprecatableAfter else Reference.nullDeprecatable) (dbModelClass)
+			(if (isDefault) Reference.deprecatableAfter else Reference.nullDeprecatable)(dbModelClass)
 		
 		override def properties = if (isDefault) Vector() else Vector(
 			ImmutableValue("deprecationAttName", isOverridden = true)(propertyName.quoted)
 		)
-		
 		// withDeprecatedAfter(...) must be provided separately for custom property names
 		override def methods = if (isDefault) Set() else Set(
 			MethodDeclaration("withDeprecatedAfter", isOverridden = true)(
@@ -190,7 +196,19 @@ object DbModelWriter
 		override def extensionFor(dbModelClass: ScalaType) = Reference.expiring
 		
 		override def properties = Vector(ImmutableValue("deprecationAttName", isOverridden = true)(propertyName.quoted))
+		override def methods = Set()
+	}
+	
+	private case class CombinedDeprecation(expirationPropName: String, deprecationPropName: String)
+		extends DeprecationStyle
+	{
+		override def extensionFor(dbModelClass: ScalaType) = Reference.deprecatable
 		
+		override def properties = Vector(
+			ComputedProperty("nonDeprecatedCondition", Set(Reference.valueConversions, Reference.sqlExtensions),
+				isOverridden = true)(
+				s"${deprecationPropName}Column.isNull && ${expirationPropName}Column > Now")
+		)
 		override def methods = Set()
 	}
 }
