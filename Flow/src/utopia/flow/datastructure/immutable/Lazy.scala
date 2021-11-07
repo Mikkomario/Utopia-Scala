@@ -18,7 +18,6 @@ object Lazy
 	  * @return A new lazy container that supports events
 	  */
 	def listenable[A](make: => A) = ListenableLazy(make)
-	
 	/**
 	  * @param make A function for creating an item when it is requested
 	  * @tparam A Type of the item in this wrapper
@@ -26,6 +25,14 @@ object Lazy
 	  *         generated item. A new item may be generated if the previous one is collected.
 	  */
 	def weak[A <: AnyRef](make: => A) = WeakLazy(make)
+	/**
+	  * @param make A function for creating an item when it is requested
+	  * @param test A function that returns whether a generated value (accepted as a parameter) should be stored (true)
+	  *             or whether a new value should be generated on the next call (false)
+	  * @tparam A Type of stored / generated value
+	  * @return A lazy container that only caches the value if it fulfills the specified test function
+	  */
+	def conditional[A](make: => A)(test: A => Boolean) = ConditionalLazy(make)(test)
 }
 
 /**

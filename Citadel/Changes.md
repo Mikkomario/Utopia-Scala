@@ -1,8 +1,10 @@
 # Utopia Disciple - List of changes
 
 ## v2.0.1 (in development)
-## Bugfixes
+### Bugfixes
 - **DbDescriptionRoles** previously caused a StackOverFlowException when used - now fixed
+### Other Changes
+- Description properties with _null_ value are omitted when generating simply described models
 
 ## v2.0 - 04.11.2021
 This update involves a complete overhaul of the database interfaces and especially the description-related interfaces. 

@@ -1,6 +1,6 @@
 package utopia.metropolis.model.combined.description
 
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.metropolis.model.partial.description.DescriptionData
@@ -12,25 +12,20 @@ object SimplyDescribed
 	  * Converts a set of descriptions into a set of properties
 	  * @param descriptions A set of descriptions
 	  * @param roles Description roles to use
-	  * @return A set of constants based on the roles + descriptions
+	  * @return A set of constants based on the roles + descriptions (empty descriptions are not included)
 	  */
 	def descriptionPropertiesFrom(descriptions: Iterable[DescriptionData], roles: Iterable[DescriptionRole]) =
-	{
-		roles.map { role =>
+		roles.flatMap { role =>
 			val roleDescriptions = descriptions.filter { _.roleId == role.id }
 			// Case: There are multiple descriptions for a single role => Lists values and languages
 			if (roleDescriptions.size > 1)
-				Constant(role.jsonKeyPlural, roleDescriptions.map { description =>
+				Some(Constant(role.jsonKeyPlural, roleDescriptions.map { description =>
 					Model(Vector("text" -> description.text, "language_id" -> description.languageId))
-				}.toVector)
+				}.toVector))
 			// Case: There is only a single description => uses a simple string value
 			else
-				Constant(role.jsonKeySingular, roleDescriptions.headOption match {
-					case Some(description) => description.text
-					case None => Value.empty
-				})
+				roleDescriptions.headOption.map { description => Constant(role.jsonKeySingular, description.text) }
 		}
-	}
 }
 
 /**

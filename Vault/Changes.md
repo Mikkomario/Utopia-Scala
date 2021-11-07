@@ -1,5 +1,9 @@
 # Utopia Vault - List of Changes
 
+## v1.11.2 (in development)
+### Bugfixes
+- `.nonDeprecatedCondition` in **Expiring** was the complete opposite of what it should have been - now fixed
+
 ## v1.11.1 - 04.11.2021
 Supports changes in Flow v1.14
 

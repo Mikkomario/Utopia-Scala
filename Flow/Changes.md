@@ -1,6 +1,8 @@
 # Utopia Flow - List of Changes
 
 ## v1.14.1 (in development)
+### New Features
+- Added **ConditionalLazy**, which is a variant of **Lazy** that only caches the value if it fulfills a condition
 ### Bugfixes
 - `||` -method in **Regex** combined some regular expressions incorrectly. The current version is more careful.
 

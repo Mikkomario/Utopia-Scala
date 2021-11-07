@@ -48,6 +48,7 @@ object ScalaParser
 	private lazy val commaOutsideParenthesesRegex = Regex.escape(',').ignoringParentheses
 	
 	private lazy val scalaDocStartRegex = Regex("\\/\\*\\*")
+	private lazy val commentStartRegex = Regex("\\/\\*")
 	private lazy val commentEndRegex = Regex("\\*\\/")
 	private lazy val emptyScalaDocLineRegex = (Regex.newLine || Regex.whiteSpace || Regex.escape('\t') ||
 		Regex.escape('*')).withinParenthesis.zeroOrMoreTimes
@@ -462,13 +463,15 @@ object ScalaParser
 		// Case: Instance block may start on a later line (after extension lines) or there may not be a code block
 		else
 		{
-			// Looks for the block start, but terminates on a named declaration
+			// Looks for the block start, but terminates on a named declaration, comment or scaladoc
 			// Collects the in-between lines as extension lines
 			val extensionLinesBuilder = new VectorBuilder[String]()
 			openLine.foreach { extensionLinesBuilder += _.code }
 			var afterBlockPart: Option[CodeLine] = None
-			while (afterBlockPart.isEmpty && moreLinesIter.hasNext &&
-				!namedDeclarationStartRegex.existsIn(moreLinesIter.poll.code))
+			while (afterBlockPart.isEmpty && moreLinesIter.pollOption.exists { line =>
+				!line.code.startsWith("//") && !commentStartRegex.existsIn(line.code) &&
+					!namedDeclarationStartRegex.existsIn(line.code)
+			})
 			{
 				// Case: Extension and/or block start line found
 				val line = moreLinesIter.next()
@@ -498,9 +501,7 @@ object ScalaParser
 	
 	private def extensionsFrom(lines: Vector[String], refMap: Map[String, Reference]): Vector[Extension] =
 	{
-		// println("Reading extensions from:")
-		// lines.foreach(println)
-		
+		//println(s"Reading extensions from: ${lines.map { line => s"'$line'" }.mkString(" + ") }")
 		// Finds the line that contains the extends -keyword
 		lines.indexWhereOption { line => extendsRegex.existsIn(line) || line.startsWith("extends ") ||
 			line.endsWith(" extends") } match
@@ -523,8 +524,8 @@ object ScalaParser
 						val constructorAssignments = constructorLists
 							.map { commaOutsideParenthesesRegex.split(_).toVector
 								.map { addReferencesToCode(_, refMap) } }
-						// println(s"Read constructor list: ${
-						// 	constructorAssignments.map { list => s"(${list.mkString(", ")})" }.mkString }")
+						/*println(s"Read constructor list: ${
+							constructorAssignments.map { list => s"(${list.mkString(", ")})" }.mkString }")*/
 						Extension(parentType, constructorAssignments)
 					}
 					else

@@ -3,6 +3,8 @@ package utopia.exodus.util
 import utopia.access.http.Status
 import utopia.citadel.util.CitadelContext
 import utopia.flow.generic.EnvironmentNotSetupException
+import utopia.metropolis.model.enumeration.ModelStyle
+import utopia.metropolis.model.enumeration.ModelStyle.Full
 import utopia.vault.database.ConnectionPool
 
 import scala.concurrent.ExecutionContext
@@ -54,6 +56,12 @@ object ExodusContext
 	def databaseName = CitadelContext.databaseName
 	
 	/**
+	  * @return Model style to use by default on this project
+	  */
+	@throws[EnvironmentNotSetupException](".setup(...) hasn't been called yet")
+	def defaultModelStyle = get.defaultModelStyle
+	
+	/**
 	  * @return Email validation implementation to use. None if no implementation has been provided.
 	  */
 	def emailValidator = data.flatMap { _.emailValidator }
@@ -87,6 +95,8 @@ object ExodusContext
 	  * @param executionContext Execution context used
 	  * @param connectionPool Database connection pool used
 	  * @param databaseName Name of the primary database where user data is stored
+	  * @param defaultModelStyle Model style used for the responses when no model style is specified in session
+	  *                          opening or the request itself (default = Full)
 	  * @param uuidGenerator A generator which produce new unique user ids (default = Java's random UUID)
 	  * @param emailValidator Email validation implementation, if enabled (optional)
 	  * @param requireUserEmail Whether all users should be required to register (and keep) email addresses
@@ -95,13 +105,13 @@ object ExodusContext
 	  * @param handleErrors A function for handling thrown errors
 	  */
 	def setup(executionContext: ExecutionContext, connectionPool: ConnectionPool, databaseName: String,
-			  uuidGenerator: UuidGenerator = UuidGenerator.default, emailValidator: Option[EmailValidator] = None,
-			  requireUserEmail: Boolean = false)
+	          defaultModelStyle: ModelStyle = Full, uuidGenerator: UuidGenerator = UuidGenerator.default,
+	          emailValidator: Option[EmailValidator] = None, requireUserEmail: Boolean = false)
 			 (handleErrors: (Throwable, String) => Unit) =
 	{
 		CitadelContext.setup(executionContext, connectionPool, databaseName)
 		Status.setup()
-		data = Some(Data(uuidGenerator, emailValidator, handleErrors, requireUserEmail))
+		data = Some(Data(defaultModelStyle, uuidGenerator, emailValidator, handleErrors, requireUserEmail))
 	}
 	
 	/**
@@ -114,6 +124,7 @@ object ExodusContext
 	
 	// NESTED	--------------------------------------
 	
-	private case class Data(uuidGenerator: UuidGenerator, emailValidator: Option[EmailValidator],
-							errorHandler: (Throwable, String) => Unit, userEmailIsRequired: Boolean)
+	private case class Data(defaultModelStyle: ModelStyle, uuidGenerator: UuidGenerator,
+	                        emailValidator: Option[EmailValidator],
+	                        errorHandler: (Throwable, String) => Unit, userEmailIsRequired: Boolean)
 }

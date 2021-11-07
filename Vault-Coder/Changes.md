@@ -12,6 +12,7 @@
 ### Other Changes
 - Classes that use both deprecation and expiration now have a custom deprecation implementation
 - Merge conflicts document now shows if the conflict appears in a low-priority function
+- Writes a merge conflict in case new extensions are added, since those may cause unexpected side effects
 - Code blocks may now be written in a more concise manner
 - Property name is now used when interpreting property data type
 - `@since` scaladoc tag is now formatted differently

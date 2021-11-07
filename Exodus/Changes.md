@@ -1,5 +1,15 @@
 # Utopia Exodus - List of Changes
 
+## v3.1 (in development)
+### Breaking Changes
+- Added `defaultModelStyle: ModelStyle` as the fourth parameter to `ExodusContext.setup(...)`. 
+  This has a chance to cause build errors initially, but is not difficult or cumbersome to fix.
+### New Features
+- Default model style is now specified in `ExodusContext.setup(...)`. The value is **Full** by default, 
+  attempting to match the previous versions.
+  - This means that deviceless sessions no longer use **Simple** model style by default, but it also means that 
+    all sessions may now receive default style of **Simple** if it is specified in `ExodusContext.setup(...)`
+
 ## v3.0 - 04.11.2021
 This update **Exodus**' models and database interfaces were completely rewritten by utilizing the **Vault-Coder**. 
 This will most surely require changes in the dependent modules and applications as well.

@@ -19,6 +19,7 @@ object CopyTest extends App
 	// Metropolis\src\utopia\metropolis\model\stored\organization\Organization.scala
 	// Citadel\src\utopia\citadel\database\access\many\organization\ManyMemberRoleLinksAccess.scala
 	// Citadel\src\utopia\citadel\database\CitadelTables.scala
+	// vf.escout.model.combined.questionnaire DescribedAnswerOption
 	
 	DataType.setup()
 	implicit val codec: Codec = Codec.UTF8

@@ -13,5 +13,5 @@ trait Expiring extends TimeDeprecatable
 {
 	// IMPLEMENTED  ----------------------------
 	
-	override def nonDeprecatedCondition = deprecationColumn <= Now.toValue
+	override def nonDeprecatedCondition = deprecationColumn > Now.toValue
 }

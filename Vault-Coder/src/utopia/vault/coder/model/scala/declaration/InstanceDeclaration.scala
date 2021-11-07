@@ -202,6 +202,9 @@ trait InstanceDeclaration
 				conflictsBuilder += MergeConflict.line(their.toString, my.toString,
 					s"$name extension differs")
 		}
+		if (addedExtensions.nonEmpty)
+			conflictsBuilder += MergeConflict.line(other.extensions.mkString(" with "), extensions.mkString(" with "),
+				"Merging introduces new extensions")
 		val newExtensions = mySuperConstructor.orElse(theirSuperConstructor).toVector ++
 			extensions.filterNot { _.hasConstructor } ++ addedExtensions.filterNot { _.hasConstructor }
 		
