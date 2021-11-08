@@ -15,8 +15,10 @@
 - Writes a merge conflict in case new extensions are added, since those may cause unexpected side effects
 - Code blocks may now be written in a more concise manner
 - Property name is now used when interpreting property data type
-- `@since` scaladoc tag is now formatted differently
 - **Value** vectors are now converted to processed values using different code
+- `@since` scaladoc tag is now formatted differently
+- Written sql document now contains a header
+- Slightly modified property documentation styling in sql document writing
 
 ## v1.3 - 04.11.2021
 This major update adds a number of new quite important features.  

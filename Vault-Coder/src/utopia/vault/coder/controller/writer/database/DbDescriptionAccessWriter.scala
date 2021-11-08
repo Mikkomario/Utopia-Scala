@@ -2,7 +2,7 @@ package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, Name, ProjectSetup}
-import utopia.vault.coder.model.scala.Reference
+import utopia.vault.coder.model.scala.{DeclarationDate, Reference}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration}
 
@@ -42,13 +42,18 @@ object DbDescriptionAccessWriter
 		// Next writes the individual description access point
 		File(setup.singleAccessPackage / descriptionLinkClass.packageName,
 			ObjectDeclaration(s"Db$linkClassName", Vector(Reference.linkedDescriptionAccess),
-				properties = baseAccessProperties
+				properties = baseAccessProperties, author = descriptionLinkClass.author,
+				description = s"Used for accessing individual $baseClassName descriptions",
+				since = DeclarationDate.versionedToday
 			)
 		).write().flatMap { singleDescriptionAccessRef =>
 			// Finally writes the multiple descriptions access point
 			File(setup.manyAccessPackage / descriptionLinkClass.packageName,
 				ObjectDeclaration(s"Db${ descriptionLinkClass.name.plural }",
-					Vector(Reference.linkedDescriptionsAccess), properties = baseAccessProperties
+					Vector(Reference.linkedDescriptionsAccess), properties = baseAccessProperties,
+					author = descriptionLinkClass.author,
+					description = s"Used for accessing multiple $baseClassName descriptions at a time",
+					since = DeclarationDate.versionedToday
 				)
 			).write().map { singleDescriptionAccessRef -> _ }
 		}

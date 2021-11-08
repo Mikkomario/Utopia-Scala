@@ -80,7 +80,7 @@ object DbModelWriter
 				} ++ deprecation.iterator.flatMap { _.methods },
 				description = s"Used for constructing $className instances and for inserting ${
 					classToWrite.name
-				}s to the database", author = classToWrite.author
+				}s to the database", author = classToWrite.author, since = DeclarationDate.versionedToday
 			),
 			ClassDeclaration(className,
 				// Accepts a copy of all properties where each is wrapped in option (unless already an option)

@@ -1,10 +1,11 @@
 package utopia.vault.coder.controller.writer.database
 
+import utopia.flow.time.Today
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.CombinedOrdering
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.Class
+import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.enumeration.PropertyType.ClassReference
 
 import java.io.PrintWriter
@@ -30,7 +31,7 @@ object SqlWriter
 	  * @param codec      Implicit codec used when writing
 	  * @return Target path. Failure if writing failed.
 	  */
-	def apply(classes: Seq[Class], targetPath: Path)(implicit codec: Codec) =
+	def apply(classes: Seq[Class], targetPath: Path)(implicit codec: Codec, setup: ProjectSetup) =
 	{
 		// Writes the table declarations in an order that attempts to make sure foreign keys are respected
 		// (referenced tables are written before referencing tables)
@@ -45,8 +46,18 @@ object SqlWriter
 		}.toMap
 		// Forms the table initials, also
 		val initials = initialsFrom(references.flatMap { case (tableName, refs) => refs + tableName }.toSet)
-		// Writes the class declarations in order
-		targetPath.writeUsing { writer => writeClasses(writer, initials, classesByTableName, references) }
+		targetPath.writeUsing { writer =>
+			// Writes the header
+			writer.println("-- ")
+			writer.println(s"-- Database structure for ${setup.dbModuleName} models")
+			setup.version.foreach { v => writer.println(s"-- Version: $v") }
+			writer.println(s"-- Last generated: ${Today.toString}")
+			writer.println("--")
+			writer.println()
+			
+			// Writes the class declarations in order
+			writeClasses(writer, initials, classesByTableName, references)
+		}
 	}
 	
 	@tailrec
@@ -80,15 +91,17 @@ object SqlWriter
 	{
 		classToWrite.description.notEmpty.foreach { desc => writer.println(s"-- $desc") }
 		// Writes property documentation
+		val maxPropNameLength = classToWrite.properties.map { _.name.singular.length }.maxOption.getOrElse(0)
 		classToWrite.properties.foreach { prop =>
 			if (prop.description.nonEmpty || prop.useDescription.nonEmpty) {
+				val propIntroduction = (prop.columnName + ":").padTo(maxPropNameLength + 1, ' ')
 				if (prop.description.nonEmpty) {
-					writer.println(s"-- ${ prop.columnName }: ${ prop.description }")
+					writer.println(s"-- $propIntroduction ${ prop.description }")
 					if (prop.useDescription.nonEmpty)
 						writer.println(s"-- \t${ prop.useDescription }")
 				}
 				else
-					writer.println(s"-- ${ prop.columnName }: ${ prop.useDescription }")
+					writer.println(s"-- $propIntroduction ${ prop.useDescription }")
 			}
 		}
 		// Writes the table

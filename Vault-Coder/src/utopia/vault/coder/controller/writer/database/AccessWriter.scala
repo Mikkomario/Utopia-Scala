@@ -100,7 +100,7 @@ object AccessWriter
 				propertySettersFor(classToWrite, connectionParam) { _.singular } ++ deprecationMethods.map { _.first },
 				description = s"A common trait for access points that return individual and distinct ${
 					classToWrite.name.plural
-				}.", author = classToWrite.author
+				}.", author = classToWrite.author, since = DeclarationDate.versionedToday
 			)
 		).write().flatMap { uniqueAccessRef =>
 			// Writes the single model by id access point
@@ -159,7 +159,7 @@ object AccessWriter
 								description = s"Database id of the targeted ${ classToWrite.name } instance"))(
 							s"${ singleIdAccessRef.target }(id)")),
 						description = s"Used for accessing individual ${ classToWrite.name.plural }",
-						author = classToWrite.author
+						author = classToWrite.author, since = DeclarationDate.versionedToday
 					)
 				).write().flatMap { singleAccessRef =>
 					// Writes a trait common for the many model access points
@@ -219,7 +219,7 @@ object AccessWriter
 									s"new $manyAccessTraitName.$subViewName(this, additionalCondition)"),
 							description = s"A common trait for access points which target multiple ${
 								classToWrite.name.plural
-							} at a time", author = classToWrite.author
+							} at a time", author = classToWrite.author, since = DeclarationDate.versionedToday
 						)
 					).write().flatMap { manyAccessTraitRef =>
 						// Writes the many model access point
@@ -263,7 +263,7 @@ object AccessWriter
 								nested = Set(subSetClass),
 								description = s"The root access point when targeting multiple ${
 									classToWrite.name.plural
-								} at a time", author = classToWrite.author
+								} at a time", author = classToWrite.author, since = DeclarationDate.versionedToday
 							)
 						).write().map { manyAccessRef =>
 							(uniqueAccessRef, singleAccessRef, manyAccessTraitRef, manyAccessRef)

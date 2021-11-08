@@ -6,7 +6,7 @@ import utopia.vault.coder.model.data.{Class, ProjectSetup}
 import utopia.vault.coder.model.scala.Visibility.Private
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, LazyValue}
 import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration}
-import utopia.vault.coder.model.scala.{Parameter, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, Reference, ScalaType}
 
 import scala.io.Codec
 
@@ -54,7 +54,8 @@ object TablesWriter
 					isLowMergePriority = true)(Parameter("tableName", ScalaType.string))(
 					applyImplementation.head, applyImplementation.tail: _*)),
 				description = "Used for accessing the database tables introduced in this project",
-				author = classes.map { _.author }.toSet.filter { _.nonEmpty }.mkString(", ")
+				author = classes.map { _.author }.toSet.filter { _.nonEmpty }.mkString(", "),
+				since = DeclarationDate.versionedToday
 			)
 		).write()
 	}

@@ -2,7 +2,7 @@ package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, ProjectSetup}
-import utopia.vault.coder.model.scala.Reference
+import utopia.vault.coder.model.scala.{DeclarationDate, Reference}
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.LazyValue
 import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration}
@@ -40,7 +40,11 @@ object DescriptionLinkInterfaceWriter
 					s"Database interaction model factory for ${ base.name.singular } description links")
 			}
 			File(setup.dbModelPackage/"description",
-				ObjectDeclaration(setup.dbModuleName + "DescriptionLinkModel", properties = modelProps)
+				ObjectDeclaration(setup.dbModuleName + "DescriptionLinkModel",
+					properties = modelProps,
+					description = s"Used for interacting with description links for models in ${setup.dbModuleName}",
+					since = DeclarationDate.versionedToday
+				)
 			).write().flatMap { modelsRef =>
 				// Next writes the description link factories object
 				val linkFactoryProps = targets.map { case (base, desc) =>
@@ -48,7 +52,11 @@ object DescriptionLinkInterfaceWriter
 						s"Factory for reading ${base.name} description links")
 				}
 				File(setup.factoryPackage/"description",
-					ObjectDeclaration(setup.dbModuleName + "DescriptionLinkFactory", properties = linkFactoryProps)
+					ObjectDeclaration(setup.dbModuleName + "DescriptionLinkFactory",
+						properties = linkFactoryProps,
+						description = s"Used for accessing description link factories for the models in ${
+							setup.dbModuleName}", since = DeclarationDate.versionedToday
+					)
 				).write().flatMap { linksRef =>
 					// Finally writes the linked description factories object
 					val descriptionFactoryProps = targets.zip(linkFactoryProps)
@@ -59,7 +67,10 @@ object DescriptionLinkInterfaceWriter
 						}
 					File(setup.factoryPackage/"description",
 						ObjectDeclaration(setup.dbModuleName + "LinkedDescriptionFactory",
-							properties = descriptionFactoryProps)
+							properties = descriptionFactoryProps,
+							description = s"Used for reading linked descriptions for models in ${setup.dbModuleName}",
+							since = DeclarationDate.versionedToday
+						)
 					).write().map { descriptionsRef => Some((modelsRef, linksRef, descriptionsRef)) }
 				}
 			}

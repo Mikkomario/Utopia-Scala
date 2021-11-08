@@ -4,7 +4,7 @@ import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Enum, ProjectSetup}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ImmutableValue
 import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
-import utopia.vault.coder.model.scala.{Extension, Parameter, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Parameter, Reference, ScalaType}
 
 import scala.io.Codec
 
@@ -34,7 +34,7 @@ object EnumerationWriter
 				properties = Vector(PropertyDeclaration.newAbstract("id", ScalaType.int,
 					description = "Id used for this value in database / SQL")),
 				description = s"Common trait for all ${ enum.name } values", author = enum.author,
-				isSealed = true
+				since = DeclarationDate.versionedToday, isSealed = true
 			),
 			// Enumeration values are nested within a companion object
 			ObjectDeclaration(enum.name,

@@ -5,7 +5,7 @@ import utopia.vault.coder.model.data.{Class, ProjectSetup, Property}
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration, PropertyDeclaration}
-import utopia.vault.coder.model.scala.{Extension, Reference}
+import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Reference}
 import utopia.vault.coder.util.{ClassMethodFactory, NamingUtils}
 
 import scala.collection.immutable.VectorBuilder
@@ -37,7 +37,8 @@ object FactoryWriter
 			ObjectDeclaration(objectName, extensionsFor(classToWrite, modelRef),
 				properties = propertiesFor(classToWrite, tablesRef),
 				methods = methodsFor(classToWrite, modelRef, dataRef),
-				description = s"Used for reading ${ classToWrite.name } data from the DB", author = classToWrite.author
+				description = s"Used for reading ${ classToWrite.name } data from the DB",
+				author = classToWrite.author, since = DeclarationDate.versionedToday
 			)
 		).write()
 	}

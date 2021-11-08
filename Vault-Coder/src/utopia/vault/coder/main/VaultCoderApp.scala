@@ -298,7 +298,10 @@ object VaultCoderApp extends App
 				{
 					println(s"Writing ${data.classes.size} classes, ${
 						data.enumerations.size} enumerations and ${
-						data.combinations.size } combinations for project ${data.projectName}")
+						data.combinations.size } combinations for project ${data.projectName}${data.version match {
+						case Some(version) => s" $version"
+						case None => ""
+					}}")
 					implicit val setup: ProjectSetup = ProjectSetup(data.projectName, data.modelPackage,
 						data.databasePackage, directory,
 						if (data.modelCanReferToDB) mainMergeRoot.toVector else
