@@ -1,7 +1,7 @@
 package utopia.flow.time
 
 import scala.language.implicitConversions
-import utopia.flow.util.{RichComparable, SelfComparable}
+import utopia.flow.util.SelfComparable
 import utopia.flow.time.WeekDay.Monday
 
 import java.time.format.DateTimeFormatter
@@ -67,7 +67,7 @@ object TimeExtensions
 		def max(other: A) = if (this >= other) repr else other
 	}*/
 	
-	implicit class ExtendedInstant(val i: Instant) extends AnyVal with RichComparable[Instant]
+	implicit class ExtendedInstant(val i: Instant) extends AnyVal with SelfComparable[Instant]
 	{
 		// COMPUTED --------------------------
 		
@@ -91,6 +91,8 @@ object TimeExtensions
 		
 		
 		// IMPLEMENTED  ----------------------
+		
+		override def repr = i
 		
 		override def compareTo(o: Instant) = i.compareTo(o)
 		

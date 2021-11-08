@@ -5,6 +5,8 @@
 - Added **ConditionalLazy**, which is a variant of **Lazy** that only caches the value if it fulfills a condition
 ### Bugfixes
 - `||` -method in **Regex** combined some regular expressions incorrectly. The current version is more careful.
+### Other Changes
+- **Instant** now gains **SelfComparable** instead of **RichComparable** when importing **TimeExtensions**
 
 ## v1.14 - 04.11.2021
 Beside the obviously breaking change of removing generic type parameters from the immutable **Model**, 

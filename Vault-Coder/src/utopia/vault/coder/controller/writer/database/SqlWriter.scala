@@ -94,7 +94,7 @@ object SqlWriter
 		val maxPropNameLength = classToWrite.properties.map { _.name.singular.length }.maxOption.getOrElse(0)
 		classToWrite.properties.foreach { prop =>
 			if (prop.description.nonEmpty || prop.useDescription.nonEmpty) {
-				val propIntroduction = (prop.columnName + ":").padTo(maxPropNameLength + 1, ' ')
+				val propIntroduction = (prop.columnName + ":").padTo(maxPropNameLength + 2, ' ')
 				if (prop.description.nonEmpty) {
 					writer.println(s"-- $propIntroduction ${ prop.description }")
 					if (prop.useDescription.nonEmpty)
