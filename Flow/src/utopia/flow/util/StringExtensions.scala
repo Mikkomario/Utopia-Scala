@@ -308,6 +308,7 @@ object StringExtensions
 		 * @return Whether this string equals the other string when case is ignored
 		 */
 		def ~==(another: String) = s.equalsIgnoreCase(another)
+		def !~==(another: String) = !(this ~== another)
 	}
 	
 	private class StringIndexOfIterator(val string: String, val searched: String) extends Iterator[Int]

@@ -5,10 +5,13 @@
 - Replaced `.dividedWith(...)` in **CollectionExtensions** by `.divideWith(...)` 
   - The former is still available, but deprecated
 ### New Features
+- **ModelDeclaration** now supports child model declarations
 - Added **ConditionalLazy**, which is a variant of **Lazy** that only caches the value if it fulfills a condition
 ### New Methods
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.flatDivideWith(...)` & `splitFlatMap(...)`
+- String (StringExtensions)
+  - Added `!~==` - case-insensitive inequality operator
 ### Bugfixes
 - `||` -method in **Regex** combined some regular expressions incorrectly. The current version is more careful.
 ### Other Changes
