@@ -433,12 +433,25 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     /**
       * Creates a new database
       * @param databaseName Name of the new database
+     *  @param defaultCharset Default character set to use in this database (optional, as a string)
+     *  @param defaultCollate Default collate to assign to this database (optional, as a string)
       * @param checkIfExists Whether database should only be created if one doesn't exist yet (default = true)
       * @param useNewDb Whether connection should switch to target the new database afterwards (default = true)
       */
-    def createDatabase(databaseName: String, checkIfExists: Boolean = true, useNewDb: Boolean = true) =
+    def createDatabase(databaseName: String, defaultCharset: Option[String] = None,
+                       defaultCollate: Option[String] = None, checkIfExists: Boolean = true,
+                       useNewDb: Boolean = true) =
     {
-        execute(s"CREATE DATABASE${if (checkIfExists) " IF NOT EXISTS " else " "}$databaseName")
+        val ifExistsStr = if (checkIfExists) " IF EXISTS " else ""
+        val charsetStr = defaultCharset match {
+            case Some(charset) => " DEFAULT CHARSET " + charset
+            case None => ""
+        }
+        val collateStr = defaultCollate match {
+            case Some(collate) => " DEFAULT COLLATE " + collate
+            case None => ""
+        }
+        execute(s"CREATE DATABASE$ifExistsStr$databaseName$charsetStr$collateStr")
         if (useNewDb)
             dbName = databaseName
     }

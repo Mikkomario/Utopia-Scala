@@ -1,5 +1,11 @@
 # Utopia Trove - List of Changes
 
+## v1.1.1 (in development)
+### Other Changes
+- `LocalDatabase.setup(...)` and `.setupWithListener(...)(...)` now accept optional `defaultCharset` and 
+  `defaultCollate` -parameters
+  - This affects database creation, as well as the settings used in database connections
+
 ## v1.1 - 04.11.2021
 This update includes an important bugfix concerning the initial database setup. 
 If you're using **Trove**, I highly recommend you to get this update (even though it does involve a breaking change).

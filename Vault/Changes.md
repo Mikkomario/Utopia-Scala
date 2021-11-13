@@ -3,6 +3,8 @@
 ## v1.11.2 (in development)
 ### Bugfixes
 - `.nonDeprecatedCondition` in **Expiring** was the complete opposite of what it should have been - now fixed
+### Other Changes
+- `.createDatabase(...)` in **Connection** now accepts optional default character set and default collate -parameters
 
 ## v1.11.1 - 04.11.2021
 Supports changes in Flow v1.14

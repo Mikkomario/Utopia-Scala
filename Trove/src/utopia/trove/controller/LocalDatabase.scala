@@ -77,15 +77,19 @@ object LocalDatabase
 	  * @param dbName Name of the managed database
 	  * @param versionTableName Name of the table that contains version data
 	  * @param versionTable Version table (call by name)
+	  * @param defaultCharset Default character set to add to the created database (optional)
+	  * @param defaultCollate Default collate to set to the created database (optional)
 	  * @param listener Listener to be informed of database setup events
 	  * @param exc Implicit execution context
 	  * @param connectionPool A connection pool for forming database connections
 	  * @return Database setup completion event
 	  */
 	def setupWithListener(updateDirectory: Path, dbName: String, versionTableName: String,
-						  versionTable: => Table)(listener: DatabaseSetupListener)
+						  versionTable: => Table, defaultCharset: Option[String] = None,
+						  defaultCollate: Option[String] = None)
+	                     (listener: DatabaseSetupListener)
 						 (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
-		setup(updateDirectory, dbName, versionTableName, versionTable, Some(listener))
+		setup(updateDirectory, dbName, versionTableName, versionTable, Some(listener), defaultCharset, defaultCollate)
 	
 	/**
 	  * Sets up the local database
@@ -94,12 +98,15 @@ object LocalDatabase
 	  * @param versionTableName Name of the table that contains version data
 	  * @param versionTable Version table (call by name)
 	  * @param listener Listener to be informed of database setup events (optional)
+	  * @param defaultCharset Default character set to add to the created database (optional)
+	  * @param defaultCollate Default collate to set to the created database (optional)
 	  * @param exc Implicit execution context
 	  * @param connectionPool A connection pool for forming database connections
 	  * @return Database setup completion event
 	  */
 	def setup(updateDirectory: Path, dbName: String, versionTableName: String, versionTable: => Table,
-			  listener: Option[DatabaseSetupListener] = None)
+			  listener: Option[DatabaseSetupListener] = None, defaultCharset: Option[String] = None,
+			  defaultCollate: Option[String] = None)
 			 (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
 		// Table is cached once it has been used once
@@ -107,7 +114,7 @@ object LocalDatabase
 		
 		def fireEvent(event: => DatabaseSetupEvent) = listener.foreach { _.onDatabaseSetupEvent(event) }
 		
-		val result = start(listener).flatMap { _ =>
+		val result = start(defaultCharset, defaultCollate, listener).flatMap { _ =>
 			// Checks current database version, and whether database has been configured at all
 			connectionPool.tryWith { implicit connection =>
 				if (connection.existsTable(dbName, versionTableName))
@@ -122,7 +129,8 @@ object LocalDatabase
 						// May create the target database first, however
 						Success(
 							if (currentDbVersion.isEmpty)
-								connectionPool.tryWith { _.createDatabase(dbName) } match
+								connectionPool.tryWith { _.createDatabase(dbName, defaultCharset,
+									defaultCollate) } match
 								{
 									case Success(_) => SetupSucceeded(None)
 									case Failure(error) => SetupFailed(error)
@@ -147,7 +155,8 @@ object LocalDatabase
 									val versionsAccess = DbDatabaseVersions(table)
 									val versions = versionsAccess.all
 									connection.dropDatabase(dbName, checkIfExists = false)
-									connection.createDatabase(dbName, checkIfExists = false)
+									connection.createDatabase(dbName, defaultCharset, defaultCollate,
+										checkIfExists = false)
 									versionsAccess.insert(versions.map { _.data })
 								}
 								// In case there is an update and db exists already, uses it
@@ -158,7 +167,8 @@ object LocalDatabase
 							else
 							{
 								connection.dropDatabase(dbName)
-								connection.createDatabase(dbName, checkIfExists = false)
+								connection.createDatabase(dbName, defaultCharset, defaultCollate,
+									checkIfExists = false)
 							}
 							
 							// Imports the source files in order
@@ -256,7 +266,9 @@ object LocalDatabase
 			_statusPointer.futureWhere { _.isCompleted }.waitFor()
 	}
 	
-	private def start(listener: Option[DatabaseSetupListener] = None)(implicit exc: ExecutionContext) =
+	private def start(charsetName: Option[String] = None, collateName: Option[String] = None,
+	                  listener: Option[DatabaseSetupListener] = None)
+	                 (implicit exc: ExecutionContext) =
 	{
 		Try {
 			// If currently processing another request, waits for that to complete first
@@ -273,9 +285,11 @@ object LocalDatabase
 				dbPointer.setOne(database)
 				
 				// Updates Vault connection settings
+				// TODO: Set charset and collate
 				Connection.modifySettings { _.copy(
 					connectionTarget = configBuilder.getURL(""),
-					defaultDBName = Some("test")) }
+					defaultDBName = Some("test"), charsetName = charsetName.getOrElse(""),
+					charsetCollationName = collateName.getOrElse("")) }
 				
 				listener.foreach { _.onDatabaseSetupEvent(DatabaseConfigured) }
 				

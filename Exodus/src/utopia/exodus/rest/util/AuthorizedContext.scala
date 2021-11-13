@@ -14,7 +14,7 @@ import utopia.exodus.database.access.single.{DbDeviceKey, DbUserSession}
 import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, EmailValidationAttempt, SessionToken}
 import utopia.exodus.model.stored.{DeviceKey, UserSession}
 import utopia.exodus.util.ExodusContext.handleError
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser
@@ -133,12 +133,19 @@ trait AuthorizedContext extends Context
 	  */
 	def languageIds(userId: => Int)(implicit connection: Connection) =
 	{
-		// Reads languages list from the headers (if present) or from the user data
-		val languagesFromHeaders = requestedLanguages
-		if (languagesFromHeaders.nonEmpty)
-			LanguageIds(languagesFromHeaders.map { _.id })
+		// Checks whether X-Accepted-Language-Ids is provided
+		val acceptedIds = request.headers.commaSeparatedValues("X-Accept-Language-Ids").flatMap { _.int }
+		if (acceptedIds.nonEmpty)
+			acceptedIds
 		else
-			DbUser(userId).languageIds
+		{
+			// Reads languages list from the headers (if present) or from the user data
+			val languagesFromHeaders = requestedLanguages
+			if (languagesFromHeaders.nonEmpty)
+				LanguageIds(languagesFromHeaders.map { _.id })
+			else
+				DbUser(userId).languageIds
+		}
 	}
 	/**
 	  * Reads preferred language ids list either from the Accept-Language header or from the user data
