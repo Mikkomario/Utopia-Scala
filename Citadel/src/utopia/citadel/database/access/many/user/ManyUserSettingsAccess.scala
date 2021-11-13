@@ -93,6 +93,12 @@ trait ManyUserSettingsAccess extends ManyRowModelAccess[UserSettings] with Index
 	def withEmail(emailAddress: String) = filter(model.withEmail(emailAddress).toCondition)
 	
 	/**
+	 * @param names A collection of user names
+	 * @return User settings that use any of those names (may not cover all of them)
+	 */
+	def withAnyOfNames(names: Iterable[String]) = filter(model.nameColumn in names)
+	
+	/**
 	  * @param userIds Ids of the targeted users
 	  * @return An access point to those user's settings
 	  */

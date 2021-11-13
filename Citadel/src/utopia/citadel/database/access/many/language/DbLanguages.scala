@@ -41,7 +41,7 @@ object DbLanguages extends ManyLanguagesAccess with UnconditionalView
 		{
 			// Divides into groups so that checks can be made in bulks
 			val (familiaritiesByLanguageCode, familiaritiesByLanguageId) = proficiencies
-				.dividedWith { p => p.language.mapBoth { _ -> p.familiarityId } { _ -> p.familiarityId } }
+				.divideWith { p => p.language.mapBoth { _ -> p.familiarityId } { _ -> p.familiarityId } }
 			// Makes sure all listed language ids are valid
 			val listedLanguageIds = familiaritiesByLanguageId.map { _._1 }.toSet
 			val languagesByIds = if (listedLanguageIds.isEmpty) Vector() else apply(listedLanguageIds).pull

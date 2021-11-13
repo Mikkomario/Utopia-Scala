@@ -1,8 +1,14 @@
 # Utopia Flow - List of Changes
 
 ## v1.14.1 (in development)
+### Deprecations
+- Replaced `.dividedWith(...)` in **CollectionExtensions** by `.divideWith(...)` 
+  - The former is still available, but deprecated
 ### New Features
 - Added **ConditionalLazy**, which is a variant of **Lazy** that only caches the value if it fulfills a condition
+### New Methods
+- **IterableOnce** (**CollectionExtensions**)
+  - Added `.flatDivideWith(...)` & `splitFlatMap(...)`
 ### Bugfixes
 - `||` -method in **Regex** combined some regular expressions incorrectly. The current version is more careful.
 ### Other Changes

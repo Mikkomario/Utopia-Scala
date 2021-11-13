@@ -37,7 +37,7 @@ object Insert
             // Generates an error based on attributes that don't fit into the table, but leaves the error
             // handling to the ErrorHandling object
             val usedPropertyNames = rows.flatMap { _.attributesWithValue.map { _.name } }.toSet
-            val (nonMatchingProperties, matchingProperties) = usedPropertyNames.dividedWith { propertyName =>
+            val (nonMatchingProperties, matchingProperties) = usedPropertyNames.divideWith { propertyName =>
                 table.find(propertyName) match
                 {
                     case Some(column) => Right(propertyName -> column)
