@@ -86,6 +86,11 @@ trait ManyMembershipsAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	def inAnyOfOrganizations(organizationIds: Iterable[Int]) =
 		filter(model.organizationIdColumn in organizationIds)
 	/**
+	 * @param userIds Ids of targeted users
+	 * @return An access point to memberships concerning any of those users
+	 */
+	def ofAnyOfUsers(userIds: Iterable[Int]) = filter(model.userIdColumn in userIds)
+	/**
 	  * @param organizationId An organization id
 	  * @param userId A user id
 	  * @return Current and historical links (memberships) between the specified organization and user
