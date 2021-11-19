@@ -12,6 +12,7 @@ import java.io.PrintWriter
 import java.nio.file.Path
 import scala.annotation.tailrec
 import scala.io.Codec
+import scala.util.Success
 
 /**
   * Used for converting class data into SQL
@@ -20,8 +21,11 @@ import scala.io.Codec
   */
 object SqlWriter
 {
+	// Package name > reference count > class name
 	private lazy val classOrdering = CombinedOrdering[(Class, Int)](
-		Ordering.by[(Class, Int), Int] { _._2 }, Ordering.by[(Class, Int), String] { _._1.name.singular }
+		Ordering.by[(Class, Int), String] { _._1.packageName },
+		Ordering.by[(Class, Int), Int] { _._2 },
+		Ordering.by[(Class, Int), String] { _._1.name.singular }
 	)
 	
 	/**
@@ -33,31 +37,36 @@ object SqlWriter
 	  */
 	def apply(classes: Seq[Class], targetPath: Path)(implicit codec: Codec, setup: ProjectSetup) =
 	{
-		// Writes the table declarations in an order that attempts to make sure foreign keys are respected
-		// (referenced tables are written before referencing tables)
-		val allClasses = classes ++ classes.flatMap { _.descriptionLinkClass }
-		val classesByTableName = allClasses.map { c => c.tableName -> c }.toMap
-		val references = allClasses.map { c =>
-			val refs = c.properties.flatMap { _.dataType match {
-				case ClassReference(referencedTableName, _, _) => Some(referencedTableName)
-				case _ => None
-			} }
-			c.tableName -> refs.toSet
-		}.toMap
-		// Forms the table initials, also
-		val initials = initialsFrom(references.flatMap { case (tableName, refs) => refs + tableName }.toSet)
-		targetPath.writeUsing { writer =>
-			// Writes the header
-			writer.println("-- ")
-			writer.println(s"-- Database structure for ${setup.dbModuleName} models")
-			setup.version.foreach { v => writer.println(s"-- Version: $v") }
-			writer.println(s"-- Last generated: ${Today.toString}")
-			writer.println("--")
-			writer.println()
-			
-			// Writes the class declarations in order
-			writeClasses(writer, initials, classesByTableName, references)
+		// Doesn't write anything if no classes are included
+		if (classes.nonEmpty) {
+			// Writes the table declarations in an order that attempts to make sure foreign keys are respected
+			// (referenced tables are written before referencing tables)
+			val allClasses = classes ++ classes.flatMap { _.descriptionLinkClass }
+			val classesByTableName = allClasses.map { c => c.tableName -> c }.toMap
+			val references = allClasses.map { c =>
+				val refs = c.properties.flatMap { _.dataType match {
+					case ClassReference(referencedTableName, _, _) => Some(referencedTableName)
+					case _ => None
+				} }
+				c.tableName -> refs.toSet
+			}.toMap
+			// Forms the table initials, also
+			val initials = initialsFrom(references.flatMap { case (tableName, refs) => refs + tableName }.toSet)
+			targetPath.writeUsing { writer =>
+				// Writes the header
+				writer.println("-- ")
+				writer.println(s"-- Database structure for ${setup.dbModuleName} models")
+				setup.version.foreach { v => writer.println(s"-- Version: $v") }
+				writer.println(s"-- Last generated: ${Today.toString}")
+				writer.println("--")
+				writer.println()
+				
+				// Writes the class declarations in order
+				writeClasses(writer, initials, classesByTableName, references)
+			}
 		}
+		else
+			Success(targetPath)
 	}
 	
 	@tailrec
@@ -76,7 +85,7 @@ object SqlWriter
 		// Case: There are some classes which don't reference remaining classes => writes those
 		else
 		{
-			// Writes the classes in reference count + alphabetical order
+			// Writes the classes in order of package name > reference count > alphabetical order
 			notReferencingTableNames.toVector
 				.map { table => classesByTableName(table) -> references(table).size }.sorted(classOrdering)
 				.foreach { case (classToWrite, _) => writeClass(writer, classToWrite, initialsMap) }

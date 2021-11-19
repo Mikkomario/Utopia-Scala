@@ -76,7 +76,9 @@ object AccessWriter
 		// Option[Pair[method]], where first method is for individual access and second for many access
 		val deprecationMethods = classToWrite.deprecationProperty.map { prop =>
 			Pair(prop.name.singular, prop.name.plural).map { propName =>
-				MethodDeclaration("deprecate", Set(Reference.now, Reference.valueConversions))(
+				MethodDeclaration("deprecate", Set(Reference.now, Reference.valueConversions),
+					description = s"Deprecates all accessible ${classToWrite.name.plural}",
+					returnDescription = "Whether any row was targeted")(
 					Parameters(Vector(Vector()), Vector(connectionParam)))(s"$propName = Now")
 			}
 		}

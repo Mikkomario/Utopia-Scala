@@ -114,7 +114,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
      * Creates a new declaration without any declarations from the provided model
      */
     def --(other: ModelDeclaration): ModelDeclaration =
-        new ModelDeclaration(declarations -- other.declarations, childDeclarations -- other.childDeclarations)
+        new ModelDeclaration(declarations -- other.declarations, childDeclarations -- other.childDeclarations.keys)
     
     
     // OTHER METHODS    -------
@@ -252,7 +252,8 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
                             val childProp = model.get(childName)
                             val result = childProp.value.model match {
                                 case Some(childModel) => childDeclaration.validate(childModel)
-                                case None => ModelValidationResult.castFailed(model, Set(childProp, ModelType))
+                                case None => ModelValidationResult.castFailed(model,
+                                    Set(Constant(childProp.name, childProp.value) -> ModelType))
                             }
                             childName -> result
                         }.collectTo { _._2.isFailure }

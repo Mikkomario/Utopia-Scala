@@ -371,7 +371,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	// Traverses same container components in sequence before jumping to the container's sibling
 	private def sortComponents(components: Vector[(Vector[ReachComponentLike], Focusable)]): Vector[Focusable] =
 	{
-		val (directTargets, deepTargets) = components.dividedWith { case (hierarchy, target) =>
+		val (directTargets, deepTargets) = components.divideWith { case (hierarchy, target) =>
 			if (hierarchy.isEmpty)
 				Left(target)
 			else

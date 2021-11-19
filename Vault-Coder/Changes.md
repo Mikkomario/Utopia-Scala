@@ -3,6 +3,7 @@
 ## v1.4 (in development)
 ### New Features
 - Added **Value** data type
+- Added support for root path aliases, which can be stored to config.json file in application directory
 - Added `.deprecate()` -function to access points that support deprecation
 - Added support for `version` -property in model document (will be added to `@since` scaladoc tag)
 ### Bugfixes
@@ -13,11 +14,12 @@
 - Classes that use both deprecation and expiration now have a custom deprecation implementation
 - Merge conflicts document now shows if the conflict appears in a low-priority function
 - Writes a merge conflict in case new extensions are added, since those may cause unexpected side effects
-- Code blocks may now be written in a more concise manner
 - Property name is now used when interpreting property data type
+- Code blocks may now be written in a more concise manner
 - **Value** vectors are now converted to processed values using different code
 - `@since` scaladoc tag is now formatted differently
 - Written sql document now contains a header
+- Classes are now ordered by package name in written sql document (still respecting references, however)
 - Slightly modified property documentation styling in sql document writing
 
 ## v1.3 - 04.11.2021

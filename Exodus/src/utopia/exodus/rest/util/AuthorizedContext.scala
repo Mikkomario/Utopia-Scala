@@ -131,12 +131,12 @@ trait AuthorizedContext extends Context
 	  * @return Ids of the requested languages in order from most to least preferred. Empty only if the user doesn't
 	  *         exist or has no linked languages
 	  */
-	def languageIds(userId: => Int)(implicit connection: Connection) =
+	def languageIds(userId: => Int)(implicit connection: Connection): LanguageIds =
 	{
 		// Checks whether X-Accepted-Language-Ids is provided
 		val acceptedIds = request.headers.commaSeparatedValues("X-Accept-Language-Ids").flatMap { _.int }
 		if (acceptedIds.nonEmpty)
-			acceptedIds
+			LanguageIds(acceptedIds)
 		else
 		{
 			// Reads languages list from the headers (if present) or from the user data

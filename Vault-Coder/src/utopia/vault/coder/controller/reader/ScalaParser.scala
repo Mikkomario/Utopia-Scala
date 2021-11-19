@@ -39,7 +39,7 @@ object ScalaParser
 	private lazy val declarationStartRegex = declarationModifierRegex.zeroOrMoreTimes + declarationKeywordRegex
 	private val namedDeclarationStartRegex = declarationStartRegex +
 		((Regex.escape('_') + Regex.alphaNumeric).withinParenthesis || Regex.alpha).withinParenthesis +
-		(Regex.word + Regex.alphaNumeric).withinParenthesis.noneOrOnce +
+		(Regex.wordCharacter.zeroOrMoreTimes + Regex.alphaNumeric).withinParenthesis.noneOrOnce +
 		(Regex.escape('_') + Regex.escape('=')).withinParenthesis.noneOrOnce
 	
 	private lazy val extendsRegex = Regex(" extends ")
@@ -219,7 +219,7 @@ object ScalaParser
 					// Processes the "free" code before the declaration
 					// - comments will be attached to the parsed declaration
 					val (beforeDeclarationComments, beforeDeclarationCode) = (beforeFirstLine ++ beforeDeclarationLines)
-						.dividedWith { line =>
+						.divideWith { line =>
 							if (line.code.startsWith("//"))
 								Left(line.code.drop(2).trim)
 							else

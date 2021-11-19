@@ -191,7 +191,7 @@ trait InstanceDeclaration
 		val newMethods = _mergeDeclarations(methods.toVector, other.methods.toVector).toSet
 		val newNested = _mergeDeclarations(nested.toVector, other.nested.toVector).toSet
 		
-		val (comparableExtensions, addedExtensions) = other.extensions.dividedWith { ext =>
+		val (comparableExtensions, addedExtensions) = other.extensions.divideWith { ext =>
 			extensions.find { _.parentType.isSimilarTo(ext.parentType)} match {
 				case Some(myVersion) => Left(myVersion -> ext)
 				case None => Right(ext)

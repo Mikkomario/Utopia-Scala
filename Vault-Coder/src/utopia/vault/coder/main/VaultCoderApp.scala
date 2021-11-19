@@ -57,7 +57,8 @@ object VaultCoderApp extends App
 		println()
 	}
 	
-	val rootPath = arguments("root").string.map[Path] { s => s }
+	// Checks if the specified root path is an alias
+	val rootPath = arguments("root").string.map { s => Roots(s).getOrElse { s: Path } }
 	rootPath.filter { _.notExists }.foreach { p =>
 		println(s"Specified root path (${p.toAbsolutePath}) doesn't exist. Please try again.")
 		System.exit(0)
