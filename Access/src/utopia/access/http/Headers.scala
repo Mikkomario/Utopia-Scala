@@ -408,6 +408,11 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
      */
     def withAcceptedTypes(types: Seq[ContentType]) = withHeader("Accept", types.map { _.toString })
     /**
+      * @param contentType The only acceptable content type
+      * @return A copy of these headers that only accepts that content type
+      */
+    def withAcceptedType(contentType: ContentType) = withHeader("Accept", contentType.toString)
+    /**
      * Adds a new content type to the list of content types accepted by the client
      */
     def withTypeAccepted(contentType: ContentType) = withHeaderAdded("Accept", contentType.toString)

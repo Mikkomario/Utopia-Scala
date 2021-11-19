@@ -13,7 +13,7 @@ import utopia.access.http.{Headers, Method, Status}
 import utopia.disciple.http.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.disciple.http.response.{ResponseParser, StreamedResponse}
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.parse.{JSONReader, JsonParser}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.AutoClose._
@@ -25,7 +25,6 @@ import scala.io.Codec
 import scala.jdk.CollectionConverters._
 import scala.language.{implicitConversions, postfixOps}
 import scala.util.{Failure, Success, Try}
-
 
 /**
 * Gateways are used for making http requests. Each instance may have its own settings and uses its own apache http
