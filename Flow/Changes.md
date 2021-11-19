@@ -10,8 +10,10 @@
 ### New Methods
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.flatDivideWith(...)` & `splitFlatMap(...)`
-- String (StringExtensions)
+- **String** (**StringExtensions**)
   - Added `!~==` - case-insensitive inequality operator
+- **UncertainBoolean**
+  - Added `.mayBeFalse` and `.mayBeTrue`
 ### Bugfixes
 - `||` -method in **Regex** combined some regular expressions incorrectly. The current version is more careful.
 ### Other Changes

@@ -25,7 +25,6 @@ sealed trait UncertainBoolean
 	 * @return True if this boolean value is known
 	 */
 	def isDefined = value.isDefined
-	
 	/**
 	 * @return True if this boolean value is unknown / undefined
 	 */
@@ -35,11 +34,18 @@ sealed trait UncertainBoolean
 	 * @return Whether this boolean is known to be true
 	 */
 	def isTrue = value.contains(true)
-	
 	/**
 	 * @return Whether this boolean is known to be false
 	 */
 	def isFalse = value.contains(false)
+	/**
+	  * @return If this boolean is not known to be true
+	  */
+	def mayBeFalse = !isTrue
+	/**
+	  * @return If this boolean is not known to be false
+	  */
+	def mayBeTrue = !isFalse
 	
 	/**
 	 * @return The known value of this boolean or false
@@ -76,7 +82,6 @@ sealed trait UncertainBoolean
 		else
 			Certain(false)
 	}
-	
 	/**
 	 * @param other Another boolean value
 	 * @return AND of these two values (known if either of these is known to be false or if both are known)
@@ -98,7 +103,6 @@ sealed trait UncertainBoolean
 		else
 			this
 	}
-	
 	/**
 	 * @param other Another boolean value
 	 * @return OR of these two values (known if either of these is known to be true or if both are known)
