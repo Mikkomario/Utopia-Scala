@@ -1,5 +1,9 @@
 # Utopia Disciple - List of Changes
 
+## v1.4.4 (in development)
+### New Features
+- Added **RequestRateLimiter** class that limits the number of simultaneous or consecutive actions
+
 ## v1.4.3 - 04.11.2021
 Supports changes in Flow v1.14
 
