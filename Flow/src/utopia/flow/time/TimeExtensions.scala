@@ -76,6 +76,10 @@ object TimeExtensions
 		  */
 		def toLocalDateTime = i.atZone(ZoneId.systemDefault()).toLocalDateTime
 		/**
+		 * @return The date value of this instant in the local time zone
+		 */
+		def toLocalDate = toLocalDateTime.toLocalDate
+		/**
 		  * The date time value of this instant in the UTC 'zulu' time zone
 		  */
 		def toUTCDateTime = i.atZone(ZoneId.of("Z")).toLocalDateTime
@@ -590,6 +594,15 @@ object TimeExtensions
 		// COMPUTED ----------------------
 		
 		/**
+		 * @return First day of this month
+		 */
+		def firstDay = apply(1)
+		/**
+		 * @return The quarter where this month belongs
+		 */
+		def quarter = Quarter.containing(m)
+		
+		/**
 		  * @return The month after this one
 		  */
 		def next = this + 1
@@ -801,6 +814,10 @@ object TimeExtensions
 	{
 		// COMPUTED ----------------------
 		
+		/**
+		 * @return Quarter to which this day belongs
+		 */
+		def quarter = month.quarter
 		/**
 		  * @return Month portion of this month day
 		  */

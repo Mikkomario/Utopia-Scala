@@ -869,6 +869,13 @@ object CollectionExtensions
         }
     
         /**
+         * @param item An item to prepend
+         * @tparam B Type of that item
+         * @return A copy of this iterator with that item prepended. This iterator is invalidated.
+         */
+        def +:[B >: A](item: B) = Iterator.single(item) ++ i
+        
+        /**
           * Checks whether there exists 'count' instances in this iterator that satisfy the specified predicate.
           * Consumes items within this iterator until the required amount of matches has been found. If not enough
           * matches were found, consumes this whole iterator.

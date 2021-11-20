@@ -7,9 +7,12 @@
 ### New Features
 - **ModelDeclaration** now supports child model declarations
 - Added **ConditionalLazy**, which is a variant of **Lazy** that only caches the value if it fulfills a condition
+- Added **Quarter** (1/4th of a year) enumeration, which is also supported by **TimeExtensions**
 ### New Methods
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.flatDivideWith(...)` & `splitFlatMap(...)`
+- **Iterator** (**CollectionExtensions**)
+  - Added `+:` (prepend one)
 - **String** (**StringExtensions**)
   - Added `!~==` - case-insensitive inequality operator
 - **UncertainBoolean**
