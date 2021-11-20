@@ -97,7 +97,6 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
             // Performs a database change, if necessary
             if (isOpen && !_dbName.contains(databaseName))
                 execute(s"USE $databaseName")
-            
             _dbName = Some(databaseName)
         }
     }
@@ -324,19 +323,20 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
             if (dbName.isEmpty)
                 throw NoConnectionException("Database name hasn't been specified")
             
-            Try
-            {
+            Try {
+                val settings = Connection.settings
                 // Sets up the driver
-                if (Connection.settings.driver.isDefined && Connection.driver.isEmpty)
-                {
-                    Connection.driver = Some(
-                        Class.forName(Connection.settings.driver.get).newInstance())
+                settings.driver.foreach { driver =>
+                    if (Connection.driver.isEmpty)
+                        Connection.driver = Some(Class.forName(driver).newInstance())
                 }
-    
                 // Instantiates the connection
                 _connection = Some(DriverManager.getConnection(
-                    Connection.settings.connectionTarget + dbName.get + Connection.settings.charsetString,
-                    Connection.settings.user, Connection.settings.password))
+                    settings.connectionTarget + dbName.get + settings.charsetString,
+                    settings.user, settings.password))
+                // Specifies the database to use
+                execute(s"USE ${dbName.get}")
+                
             }.failure.foreach { e => throw NoConnectionException(
                 s"Failed to open a database connection with settings ${Connection.settings} and database '$dbName'", e) }
         }
@@ -442,7 +442,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                        defaultCollate: Option[String] = None, checkIfExists: Boolean = true,
                        useNewDb: Boolean = true) =
     {
-        val ifExistsStr = if (checkIfExists) " IF EXISTS " else ""
+        val ifExistsStr = if (checkIfExists) " IF EXISTS" else ""
         val charsetStr = defaultCharset match {
             case Some(charset) => " DEFAULT CHARSET " + charset
             case None => ""
@@ -451,7 +451,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
             case Some(collate) => " DEFAULT COLLATE " + collate
             case None => ""
         }
-        execute(s"CREATE DATABASE$ifExistsStr$databaseName$charsetStr$collateStr")
+        execute(s"CREATE DATABASE$ifExistsStr $databaseName$charsetStr$collateStr")
         if (useNewDb)
             dbName = databaseName
     }

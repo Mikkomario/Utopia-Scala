@@ -3,8 +3,11 @@
 ## v1.11.2 (in development)
 ### Bugfixes
 - `.nonDeprecatedCondition` in **Expiring** was the complete opposite of what it should have been - now fixed
+- `USE <databaseName>;` -statement was missing from database connection opening - added
 ### Other Changes
 - `.createDatabase(...)` in **Connection** now accepts optional default character set and default collate -parameters
+- ConnectionSettings scaladoc was misleading in terms of proposed character set. 
+  Now correctly proposes `utf8` and not `UTF-8`
 
 ## v1.11.1 - 04.11.2021
 Supports changes in Flow v1.14

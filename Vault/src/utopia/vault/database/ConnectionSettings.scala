@@ -12,7 +12,7 @@ package utopia.vault.database
  * The mariaDB driver is used by default if nothing else is provided
  * @param debugPrintsEnabled Whether connection debug printing should be enabled
  * @param maximumAmountOfRowsCached The maximum number of rows requested on queries that map or operate on multiple rows
- * @param charsetName Name of the charset used when reading from DB (E.g. "UTF-8").
+ * @param charsetName Name of the charset used when reading from DB (E.g. "utf8").
  *                    Please refer to MySql character set names in
  *                    https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-charsets.html
  * @param charsetCollationName Character set collation option. E.g. "utf8_general_ci"

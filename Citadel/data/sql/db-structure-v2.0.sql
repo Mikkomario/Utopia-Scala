@@ -1,3 +1,9 @@
+--
+-- DB Structure for Utopia Citadel features
+-- Intended to be inserted after database creation
+-- Supports versions v2.0 and above
+--
+
 -- An enumeration for different roles or purposes a description can serve
 -- json_key_singular: Key used in json documents for a singular value (string) of this description role
 -- json_key_plural: Key used in json documents for multiple values (array) of this description role

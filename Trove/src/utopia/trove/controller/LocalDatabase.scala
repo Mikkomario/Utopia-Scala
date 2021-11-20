@@ -1,7 +1,6 @@
 package utopia.trove.controller
 
 import java.nio.file.Path
-
 import ch.vorburger.mariadb4j.{DB, DBConfigurationBuilder}
 import utopia.flow.async.{CloseHook, Volatile, VolatileOption}
 import utopia.flow.async.AsyncExtensions._
@@ -13,6 +12,7 @@ import utopia.trove.event.{DatabaseSetupEvent, DatabaseSetupListener}
 import utopia.trove.model.enumeration.DatabaseStatus
 import utopia.trove.model.enumeration.DatabaseStatus.{NotStarted, Setup, Started, Starting, Stopping, Updating}
 import utopia.trove.model.enumeration.SqlFileType.Full
+import utopia.trove.model.stored.DatabaseVersion
 import utopia.vault.database.{Connection, ConnectionPool}
 import utopia.vault.model.immutable.Table
 
@@ -124,51 +124,51 @@ object LocalDatabase
 			}.flatMap { currentDbVersion =>
 				ScanSourceFiles(updateDirectory, currentDbVersion.map { _.number }).flatMap { sources =>
 					// If no update files were available, completes
-					if (sources.isEmpty)
-					{
+					if (sources.isEmpty) {
 						// May create the target database first, however
-						Success(
+						Success {
 							if (currentDbVersion.isEmpty)
-								connectionPool.tryWith { _.createDatabase(dbName, defaultCharset,
-									defaultCollate) } match
+								connectionPool.tryWith { _.createDatabase(dbName, defaultCharset, defaultCollate) } match
 								{
 									case Success(_) => SetupSucceeded(None)
 									case Failure(error) => SetupFailed(error)
 								}
 							else
 								SetupSucceeded(currentDbVersion)
-						)
+						}
 					}
 					else
 					{
 						fireEvent(UpdatesFound(sources, currentDbVersion))
 						
 						connectionPool.tryWith { implicit connection =>
-							// Creates, recreates and/or uses the targeted database if necessary
-							if (currentDbVersion.isDefined)
-							{
-								// If a full update will be introduced and there already exists a database version,
-								// drops it and recreates it first
-								if (sources.exists { _.fileType == Full })
-								{
-									// Backs up version data and inserts it to the new database version
-									val versionsAccess = DbDatabaseVersions(table)
-									val versions = versionsAccess.all
-									connection.dropDatabase(dbName, checkIfExists = false)
+							val versionsBackup: Vector[DatabaseVersion] = {
+								// Creates, recreates and/or uses the targeted database if necessary
+								if (currentDbVersion.isDefined) {
+									// If a full update will be introduced and there already exists a database version,
+									// drops it and recreates it first
+									if (sources.exists { _.fileType == Full }) {
+										// Backs up version data and inserts it to the new database version
+										val versionsAccess = DbDatabaseVersions(table)
+										val versions = versionsAccess.all
+										connection.dropDatabase(dbName, checkIfExists = false)
+										connection.createDatabase(dbName, defaultCharset, defaultCollate,
+											checkIfExists = false)
+										versions
+									}
+									// In case there is an update and db exists already, uses it
+									else {
+										connection.dbName = dbName
+										Vector()
+									}
+								}
+								// If there wasn't any target database before, creates one
+								else {
+									connection.dropDatabase(dbName)
 									connection.createDatabase(dbName, defaultCharset, defaultCollate,
 										checkIfExists = false)
-									versionsAccess.insert(versions.map { _.data })
+									Vector()
 								}
-								// In case there is an update and db exists already, uses it
-								else
-									connection.dbName = dbName
-							}
-							// If there wasn't any target database before, creates one
-							else
-							{
-								connection.dropDatabase(dbName)
-								connection.createDatabase(dbName, defaultCharset, defaultCollate,
-									checkIfExists = false)
 							}
 							
 							// Imports the source files in order
@@ -177,8 +177,7 @@ object LocalDatabase
 							val updateFailure = sources.zipWithIndex.view.map { case (source, index) =>
 								val result = connection.executeStatementsFrom(source.path)
 								// Fires an event the update succeeded
-								result match
-								{
+								result match {
 									case Success(_) =>
 										version = Some(source.targetVersion)
 										fireEvent(UpdateApplied(source, sources.drop(index + 1)))
@@ -187,15 +186,16 @@ object LocalDatabase
 								}
 							}.findMap { _.leftOption }
 							
-							// Records new database version
-							val newVersion = version.map { v => DbDatabaseVersions(table).insert(v) }
-							
 							// Sets up the default database name
 							Connection.modifySettings { _.copy(defaultDBName = Some(dbName)) }
 							
+							// Restores possible backup versions and records the new database version
+							if (versionsBackup.nonEmpty)
+								DbDatabaseVersions(table).insert(versionsBackup.map { _.data })
+							val newVersion = version.map { v => DbDatabaseVersions(table).insert(v) }
+							
 							// Returns the completion event (without firing it)
-							updateFailure match
-							{
+							updateFailure match {
 								case Some(failure) => failure
 								case None => SetupSucceeded(newVersion)
 							}

@@ -1,6 +1,8 @@
 # Utopia Trove - List of Changes
 
 ## v1.1.1 (in development)
+### Bugfixes
+- Previous implementation attempted to restore backed up database versions before a versions table even existed
 ### Other Changes
 - `LocalDatabase.setup(...)` and `.setupWithListener(...)(...)` now accept optional `defaultCharset` and 
   `defaultCollate` -parameters
