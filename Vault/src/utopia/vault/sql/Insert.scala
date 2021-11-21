@@ -32,6 +32,8 @@ object Insert
             Result.empty
         else
         {
+            // TODO: Modify column lengths if necessary & allowed (new feature)
+            
             // Finds the inserted properties that are applicable to this table
             // Only properties matching columns (that are not auto-increment) are included
             // Generates an error based on attributes that don't fit into the table, but leaves the error

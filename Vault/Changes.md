@@ -1,6 +1,8 @@
 # Utopia Vault - List of Changes
 
-## v1.11.2 (in development)
+## v1.12 (in development)
+### Breaking Changes
+- Changed constructor parameter ordering in **Column**. Also added new optional parameter **LengthLimit**. 
 ### Bugfixes
 - `.nonDeprecatedCondition` in **Expiring** was the complete opposite of what it should have been - now fixed
 - `USE <databaseName>;` -statement was missing from database connection opening - added

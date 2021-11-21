@@ -30,6 +30,8 @@ object Update
             target.toSqlSegment.prepend("SELECT NULL FROM")
         else
         {
+            // TODO: Modify column lengths if required & allowed (new feature)
+            
             val orderedSet = set.toVector
             target.toSqlSegment.prepend("UPDATE") + SqlSegment("SET " +
                 orderedSet.view.map { case (column, _) => column.columnNameWithTable + " = ?" }.mkString(", "),
