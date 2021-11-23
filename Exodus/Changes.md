@@ -2,6 +2,7 @@
 
 ## v3.1 (in development)
 ### Breaking Changes
+- `GET organizations/<organizationId>/users` now omits the requesting user
 - Added `defaultModelStyle: ModelStyle` as the fourth parameter to `ExodusContext.setup(...)`. 
   This has a chance to cause build errors initially, but is not difficult or cumbersome to fix.
 ### New Features

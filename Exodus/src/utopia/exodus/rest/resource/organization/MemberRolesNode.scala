@@ -127,6 +127,7 @@ case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends Lea
 								case None => Result.Failure(NotFound,
 									s"The organization doesn't have a member with user id $targetUserId")
 							}
+						// TODO: Should be able to lower own role (except if the only owner)
 						case None => Result.Failure(Forbidden, "You cannot edit your own roles")
 					}
 				}

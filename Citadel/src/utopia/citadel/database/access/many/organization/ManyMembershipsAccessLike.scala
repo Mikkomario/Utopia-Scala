@@ -77,6 +77,11 @@ trait ManyMembershipsAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  * @return An access point to that user's memberships
 	  */
 	def ofUserWithId(userId: Int) = filter(model.withUserId(userId).toCondition)
+	/**
+	  * @param userId Id of the user to omit
+	  * @return A copy of this access point with that user's data excluded
+	  */
+	def notOfUserWithId(userId: Int) = filter(model.userIdColumn <> userId)
 	
 	/**
 	  * @param organizationIds Targeted organization ids

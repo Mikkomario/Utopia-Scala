@@ -1,6 +1,8 @@
 # Utopia Disciple - List of changes
 
 ## v2.0.1 (in development)
+### New Methods
+- Added new membership access methods
 ### Bugfixes
 - **DbDescriptionRoles** previously caused a StackOverFlowException when used - now fixed
 ### Other Changes
