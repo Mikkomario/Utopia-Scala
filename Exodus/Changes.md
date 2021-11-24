@@ -5,11 +5,19 @@
 - `GET organizations/<organizationId>/users` now omits the requesting user
 - Added `defaultModelStyle: ModelStyle` as the fourth parameter to `ExodusContext.setup(...)`. 
   This has a chance to cause build errors initially, but is not difficult or cumbersome to fix.
+### Functional Changes
+- Organization member roles may now be modified by a same level user, provided the targeted user isn't 
+  an organization owner. The same applies to removing organization members.
+  - The reasoning behind this is that the situation may always be rectified by a higher level organization member, 
+    in case the action was performed accidentally or with wrong intents.
 ### New Features
 - Default model style is now specified in `ExodusContext.setup(...)`. The value is **Full** by default, 
   attempting to match the previous versions.
   - This means that deviceless sessions no longer use **Simple** model style by default, but it also means that 
     all sessions may now receive default style of **Simple** if it is specified in `ExodusContext.setup(...)`
+- An organization member is now allowed to yield some of their roles
+  - An exception to this is the situation where an organization owner would yield their ownership without leaving 
+    another owner behind.
 
 ## v3.0 - 04.11.2021
 This update **Exodus**' models and database interfaces were completely rewritten by utilizing the **Vault-Coder**. 

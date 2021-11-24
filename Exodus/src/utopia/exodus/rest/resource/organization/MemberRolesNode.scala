@@ -3,8 +3,9 @@ package utopia.exodus.rest.resource.organization
 import utopia.access.http.Method.{Delete, Post, Put}
 import utopia.access.http.Status.{BadRequest, Forbidden, NotFound}
 import utopia.citadel.database.access.id.many.DbUserRoleIds
-import utopia.citadel.database.access.single.organization.DbMembership
+import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
 import utopia.citadel.database.access.single.user.DbUser
+import utopia.citadel.model.enumeration.StandardUserRole.Owner
 import utopia.exodus.model.enumeration.StandardTask.ChangeRoles
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
@@ -23,9 +24,11 @@ import utopia.vault.database.Connection
 case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends LeafResource[AuthorizedContext]
 {
 	override val name = "roles"
-	
 	override val allowedMethods = Vector(Post, Put, Delete)
 	
+	private def organizationAccess = DbOrganization(organizationId)
+	
+	// TODO: Editing rights should be checked based on allowed task ids, not role ids
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		// All methods require proper task-authorization
@@ -38,6 +41,9 @@ case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends Lea
 					Result.Failure(BadRequest, "Please specify one or more valid user role ids in the request json body")
 				else
 				{
+					val method = context.request.method
+					val activeUserRoleIds = DbMembership(membershipId).roleIds.toSet
+					
 					// Checks whether self or another user was targeted
 					userId.filterNot { _ == session.userId } match
 					{
@@ -45,9 +51,9 @@ case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends Lea
 							DbUser(targetUserId).membershipInOrganizationWithId(organizationId).id match
 							{
 								case Some(targetMembershipId) =>
-									// Can only modify the roles of a user that has a lower role
+									// Can only modify the roles of a user that has same or lower role
+									// (Except for the owner role, who can't edit another owner's roles)
 									// Also, can only add or delete those roles that the active user has themselves
-									val activeUserRoleIds = DbMembership(membershipId).roleIds.toSet
 									val illegalRoleModifications = roleIds -- activeUserRoleIds
 									if (illegalRoleModifications.nonEmpty)
 										Result.Failure(Forbidden, s"You cannot modify following user roles: [${
@@ -56,9 +62,12 @@ case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends Lea
 									{
 										val targetMembershipAccess = DbMembership(targetMembershipId)
 										val targetUserRoleIds = targetMembershipAccess.roleIds.toSet
-										if (activeUserRoleIds.forall(targetUserRoleIds.contains))
+										if (targetUserRoleIds.exists { !activeUserRoleIds.contains(_) })
 											Result.Failure(Forbidden,
-												s"User $targetUserId has same or higher role as you do")
+												s"User $targetUserId has higher role than you do")
+										else if (targetUserRoleIds == activeUserRoleIds &&
+											targetUserRoleIds.contains(Owner.id))
+											Result.Failure(Forbidden, "You can't edit another owner's roles")
 										else
 										{
 											val managedRoleIds = DbUserRoleIds.belowOrEqualTo(activeUserRoleIds)
@@ -69,7 +78,6 @@ case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends Lea
 												case None =>
 													// Performs the actual changes to the roles, according to method
 													// and listed roles
-													val method = context.request.method
 													// Case: POST => Adds new roles
 													if (method == Post)
 													{
@@ -127,8 +135,35 @@ case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends Lea
 								case None => Result.Failure(NotFound,
 									s"The organization doesn't have a member with user id $targetUserId")
 							}
-						// TODO: Should be able to lower own role (except if the only owner)
-						case None => Result.Failure(Forbidden, "You cannot edit your own roles")
+						// Case: Targeting self => Only allows DELETE, with some limitations
+						// (Not allowed to delete all own roles,
+						// not allowed to delete ownership without leaving another owner)
+						case None =>
+							if (method == Delete) {
+								val roleIdsToRemove = activeUserRoleIds & roleIds
+								// Case: User didn't have any of the specified roles => Returns OK
+								// Because from the client's perspective, those roles are as good as removed
+								if (roleIdsToRemove.isEmpty)
+									Result.Success(activeUserRoleIds.toVector.sorted)
+								// Case: Yielding ownership without leaving another owner behind => fails
+								else if (roleIdsToRemove.contains(Owner.id) &&
+									organizationAccess.ownerMemberships.ids.forall { _ == membershipId })
+									Result.Failure(Forbidden,
+										"You must specify another organization owner before leaving the owner role")
+								// Case: Attempting to remove every role => fails
+								else if (roleIdsToRemove.size == activeUserRoleIds.size)
+									Result.Failure(Forbidden, "You must leave at least one role")
+								// Case: Valid request => fulfills it
+								else {
+									// Removes the roles and returns remaining role ids
+									DbMembership(membershipId).removeRolesWithIds(roleIdsToRemove)
+									Result.Success((activeUserRoleIds -- roleIdsToRemove).toVector.sorted)
+								}
+							}
+							// TODO: A member should be allowed to replace their role with a lower role using PUT
+							else
+								Result.Failure(Forbidden,
+									"You cannot edit your own roles (you can only remove some of them)")
 					}
 				}
 			}
