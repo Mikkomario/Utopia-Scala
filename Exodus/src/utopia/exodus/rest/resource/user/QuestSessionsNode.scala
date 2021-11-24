@@ -16,7 +16,6 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 8.12.2020, v1
   */
-// TODO: Rename the key node to token
 object QuestSessionsNode extends ResourceWithChildren[AuthorizedContext] with NotImplementedResource[AuthorizedContext]
 {
 	// ATTRIBUTES   ---------------------
@@ -41,17 +40,16 @@ object QuestSessionsNode extends ResourceWithChildren[AuthorizedContext] with No
 		
 		// IMPLEMENTED  -----------------
 		
-		override def children = Vector(MyQuestSessionKeyNode)
+		override def children = Vector(MyQuestSessionTokenNode)
 		
 		
 		// NESTED   ---------------------
 		
-		object MyQuestSessionKeyNode extends LeafResource[AuthorizedContext]
+		object MyQuestSessionTokenNode extends LeafResource[AuthorizedContext]
 		{
 			// ATTRIBUTES   -------------
 			
-			override val name = "session-key"
-			
+			override val name = "session-token"
 			override val allowedMethods = Vector(Get, Delete)
 			
 			

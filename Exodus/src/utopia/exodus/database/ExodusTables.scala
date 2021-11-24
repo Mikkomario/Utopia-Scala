@@ -39,6 +39,12 @@ object ExodusTables
 	def emailValidationResend = apply("email_validation_resend")
 	
 	/**
+	  * Table that contains EmailValidatedSessions (Used for creating a temporary and limited session based on an
+	  *  authenticated email validation attempt)
+	  */
+	def emailValidatedSession = apply("email_validated_session")
+	
+	/**
 	  * Table that contains SessionTokens (Used for authenticating temporary user sessions)
 	  */
 	def sessionToken = apply("session_token")

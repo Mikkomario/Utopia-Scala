@@ -2,7 +2,13 @@
 
 ## v3.1 (in development)
 ### Breaking Changes
+- Replaced path `quests/me/session-key` with `quests/me/session-token`
 - `GET organizations/<organizationId>/users` now omits the requesting user
+- Email validations may now be switched to temporary email session tokens which function just like the original 
+  email validation tokens.
+  - This allows the client to validate (and possibly extend) the authentication before 
+    requesting user for additional data.
+  - This is a breaking change because it requires SQL changes
 - Added `defaultModelStyle: ModelStyle` as the fourth parameter to `ExodusContext.setup(...)`. 
   This has a chance to cause build errors initially, but is not difficult or cumbersome to fix.
 ### Functional Changes

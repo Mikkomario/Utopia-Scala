@@ -387,7 +387,8 @@ trait AuthorizedContext extends Context
 	}
 	
 	/**
-	  * Authorizes this request using an email activation token from the bearer token authorization header
+	  * Authorizes this request using an email activation token from the bearer token authorization header.
+	  * A temporary email session token may also be used.
 	  * @param emailPurposeId Id of the purpose the email is used for (must match the purpose id the validation
 	  *                       attempt was first registered with)
 	  * @param f A function that is performed if the specified token was valid.
@@ -397,8 +398,7 @@ trait AuthorizedContext extends Context
 	  * @return A response based on the function result if authorization was successful. A failure response otherwise.
 	  */
 	def emailAuthorized(emailPurposeId: Int)(f: (EmailValidationAttempt, Connection) => (Boolean, Result)) =
-		request.headers.bearerAuthorization match
-		{
+		request.headers.bearerAuthorization match {
 			case Some(token) =>
 				connectionPool.tryWith { implicit connection =>
 					DbEmailValidationAttempt.open.completeWithToken(token, emailPurposeId) { f(_, connection) }
