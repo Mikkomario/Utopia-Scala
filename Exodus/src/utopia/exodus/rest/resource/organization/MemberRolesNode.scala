@@ -2,7 +2,7 @@ package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.{Delete, Post, Put}
 import utopia.access.http.Status.{BadRequest, Forbidden, NotFound}
-import utopia.citadel.database.access.id.many.DbUserRoleIds
+import utopia.citadel.database.access.many.organization.DbUserRoleRights
 import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.citadel.model.enumeration.StandardUserRole.Owner
@@ -42,7 +42,10 @@ case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends Lea
 				else
 				{
 					val method = context.request.method
-					val activeUserRoleIds = DbMembership(membershipId).roleIds.toSet
+					val membershipAccess = DbMembership(membershipId)
+					val activeUserRoleIds = membershipAccess.roleIds.toSet
+					val activeUserTaskIds = DbUserRoleRights.withAnyOfRoles(activeUserRoleIds).taskIds.toSet
+					val forbiddenRoleIds = DbUserRoleRights.outsideTasks(activeUserTaskIds).roleIds.toSet
 					
 					// Checks whether self or another user was targeted
 					userId.filterNot { _ == session.userId } match
@@ -54,7 +57,7 @@ case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends Lea
 									// Can only modify the roles of a user that has same or lower role
 									// (Except for the owner role, who can't edit another owner's roles)
 									// Also, can only add or delete those roles that the active user has themselves
-									val illegalRoleModifications = roleIds -- activeUserRoleIds
+									val illegalRoleModifications = roleIds & forbiddenRoleIds
 									if (illegalRoleModifications.nonEmpty)
 										Result.Failure(Forbidden, s"You cannot modify following user roles: [${
 											illegalRoleModifications.toVector.sorted.mkString(", ")}]")
@@ -62,82 +65,75 @@ case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends Lea
 									{
 										val targetMembershipAccess = DbMembership(targetMembershipId)
 										val targetUserRoleIds = targetMembershipAccess.roleIds.toSet
-										if (targetUserRoleIds.exists { !activeUserRoleIds.contains(_) })
+										val targetUserTaskIds = DbUserRoleRights.withAnyOfRoles(targetUserRoleIds)
+											.taskIds.toSet
+										if (targetUserTaskIds.exists { !activeUserTaskIds.contains(_) })
 											Result.Failure(Forbidden,
 												s"User $targetUserId has higher role than you do")
-										else if (targetUserRoleIds == activeUserRoleIds &&
-											targetUserRoleIds.contains(Owner.id))
+										else if (targetUserRoleIds.contains(Owner.id))
 											Result.Failure(Forbidden, "You can't edit another owner's roles")
 										else
 										{
-											val managedRoleIds = DbUserRoleIds.belowOrEqualTo(activeUserRoleIds)
-											targetUserRoleIds.find { !managedRoleIds.contains(_) } match
+											// Performs the actual changes to the roles, according to method
+											// and listed roles
+											// Case: POST => Adds new roles
+											if (method == Post)
 											{
-												case Some(conflictingRole) => Result.Failure(Forbidden,
-													s"You don't have the right to adjust the roles of users with role $conflictingRole")
-												case None =>
-													// Performs the actual changes to the roles, according to method
-													// and listed roles
-													// Case: POST => Adds new roles
-													if (method == Post)
-													{
-														val newRoleIds = roleIds -- targetUserRoleIds
-														if (newRoleIds.isEmpty)
-															Result.Success(targetUserRoleIds.toVector.sorted)
-														else
-														{
-															// Adds new roles to the targeted user
-															targetMembershipAccess
-																.assignRolesWithIds(newRoleIds, session.userId)
-															Result.Success((targetUserRoleIds ++ newRoleIds)
-																.toVector.sorted)
-														}
-													}
-													// Case: DELETE => Removes roles
-													else if (method == Delete)
-													{
-														// The target user must be left with at least 1 role
-														val rolesToRemove = targetUserRoleIds & roleIds
-														if (rolesToRemove.size == targetUserRoleIds.size)
-															Result.Failure(Forbidden,
-																"The targeted user must be left with at least 1 role")
-														else
-														{
-															// Removes the roles
-															DbMembership(targetMembershipId)
-																.removeRolesWithIds(rolesToRemove)
-															Result.Success((targetUserRoleIds -- rolesToRemove)
-																.toVector.sorted)
-														}
-													}
-													// CASE: PUT => Replaces roles
-													else
-													{
-														if (targetUserRoleIds == roleIds)
-															Result.Success(targetUserRoleIds.toVector.sorted)
-														else
-														{
-															// Adds & Removes roles to match the posted list
-															val rolesToAssign = roleIds -- targetUserRoleIds
-															val rolesToRemove = targetUserRoleIds -- roleIds
-															if (rolesToRemove.nonEmpty)
-																DbMembership(targetMembershipId)
-																	.removeRolesWithIds(rolesToRemove)
-															if (rolesToAssign.nonEmpty)
-																DbMembership(targetMembershipId)
-																	.assignRolesWithIds(rolesToAssign, session.userId)
-															Result.Success(roleIds.toVector.sorted)
-														}
-													}
+												val newRoleIds = roleIds -- targetUserRoleIds
+												if (newRoleIds.isEmpty)
+													Result.Success(targetUserRoleIds.toVector.sorted)
+												else
+												{
+													// Adds new roles to the targeted user
+													targetMembershipAccess
+														.assignRolesWithIds(newRoleIds, session.userId)
+													Result.Success((targetUserRoleIds ++ newRoleIds).toVector.sorted)
+												}
+											}
+											// Case: DELETE => Removes roles
+											else if (method == Delete)
+											{
+												// The target user must be left with at least 1 role
+												val rolesToRemove = targetUserRoleIds & roleIds
+												if (rolesToRemove.size == targetUserRoleIds.size)
+													Result.Failure(Forbidden,
+														"The targeted user must be left with at least 1 role")
+												else
+												{
+													// Removes the roles
+													DbMembership(targetMembershipId)
+														.removeRolesWithIds(rolesToRemove)
+													Result.Success((targetUserRoleIds -- rolesToRemove)
+														.toVector.sorted)
+												}
+											}
+											// CASE: PUT => Replaces roles
+											else
+											{
+												if (targetUserRoleIds == roleIds)
+													Result.Success(targetUserRoleIds.toVector.sorted)
+												else
+												{
+													// Adds & Removes roles to match the posted list
+													val rolesToAssign = roleIds -- targetUserRoleIds
+													val rolesToRemove = targetUserRoleIds -- roleIds
+													if (rolesToRemove.nonEmpty)
+														DbMembership(targetMembershipId)
+															.removeRolesWithIds(rolesToRemove)
+													if (rolesToAssign.nonEmpty)
+														DbMembership(targetMembershipId)
+															.assignRolesWithIds(rolesToAssign, session.userId)
+													Result.Success(roleIds.toVector.sorted)
+												}
 											}
 										}
 									}
 								case None => Result.Failure(NotFound,
 									s"The organization doesn't have a member with user id $targetUserId")
 							}
-						// Case: Targeting self => Only allows DELETE, with some limitations
+						// Case: Targeting self => Only allows DELETE and PUT, with some limitations
 						// (Not allowed to delete all own roles,
-						// not allowed to delete ownership without leaving another owner)
+						// not allowed to delete ownership without leaving another owner, not allowed to promote self)
 						case None =>
 							if (method == Delete) {
 								val roleIdsToRemove = activeUserRoleIds & roleIds
@@ -160,7 +156,34 @@ case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends Lea
 									Result.Success((activeUserRoleIds -- roleIdsToRemove).toVector.sorted)
 								}
 							}
-							// TODO: A member should be allowed to replace their role with a lower role using PUT
+							else if (method == Put) {
+								// Makes sure not trying to add any forbidden role
+								val forbiddenAssignments = forbiddenRoleIds & roleIds
+								if (forbiddenAssignments.nonEmpty)
+									Result.Failure(Forbidden, s"You can't add following roles: [${
+										forbiddenAssignments.toVector.sorted}]")
+								// Makes sure not removing all roles
+								else if (roleIds.isEmpty)
+									Result.Failure(Forbidden, "You must leave at least one role")
+								// Checks if trying to yield ownership without leaving another owner behind
+								else if (activeUserRoleIds.contains(Owner.id) && !roleIds.contains(Owner.id) &&
+									organizationAccess.ownerMemberships.ids.forall { _ == membershipId })
+									Result.Failure(Forbidden,
+										"You must assign another owner before leaving the owner role")
+								// Checks if already has targeted roles
+								else if (activeUserRoleIds == roleIds)
+									Result.Success(activeUserRoleIds.toVector.sorted)
+								else {
+									// Adds & Removes roles to match the posted list
+									val rolesToAssign = roleIds -- activeUserRoleIds
+									val rolesToRemove = activeUserRoleIds -- roleIds
+									if (rolesToRemove.nonEmpty)
+										membershipAccess.removeRolesWithIds(rolesToRemove)
+									if (rolesToAssign.nonEmpty)
+										membershipAccess.assignRolesWithIds(rolesToAssign, session.userId)
+									Result.Success(roleIds.toVector.sorted)
+								}
+							}
 							else
 								Result.Failure(Forbidden,
 									"You cannot edit your own roles (you can only remove some of them)")

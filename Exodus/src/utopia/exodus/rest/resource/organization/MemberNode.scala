@@ -45,6 +45,7 @@ case class MemberNode(organizationId: Int, userId: Option[Int]) extends Resource
 					// Finds targeted membership id
 					DbUser(targetUserId).membershipInOrganizationWithId(organizationId).id match
 					{
+						// Case: Member of this organization
 						case Some(targetMembershipId) =>
 							val targetMembershipAccess = DbMembership(targetMembershipId)
 							// Checks the roles of the active and targeted user.
@@ -56,22 +57,18 @@ case class MemberNode(organizationId: Int, userId: Option[Int]) extends Resource
 								Result.Failure(Forbidden, "Owners can't be removed, they can only leave")
 							else {
 								val activeUserRoleIds = ownMembershipAccess.roleIds.toSet
-								if (targetUserRoleIds.exists { !activeUserRoleIds.contains(_) })
+								val managedRoleIds = DbUserRoleIds.belowOrEqualTo(activeUserRoleIds)
+								
+								if (targetUserRoleIds.exists { !managedRoleIds.contains(_) })
 									Result.Failure(Forbidden, s"User $targetUserId has higher role than you do")
 								else
 								{
-									val managedRoleIds = DbUserRoleIds.belowOrEqualTo(activeUserRoleIds)
-									targetUserRoleIds.find { !managedRoleIds.contains(_) } match
-									{
-										case Some(conflictingRoleId) => Result.Failure(Forbidden,
-											s"You don't have the right to remove members of role $conflictingRoleId")
-										case None =>
-											// If rights are OK, ends the targeted membership
-											targetMembershipAccess.end()
-											Result.Empty
-									}
+									// If rights are OK, ends the targeted membership
+									targetMembershipAccess.end()
+									Result.Empty
 								}
 							}
+						// Case: Not a member of this organization => acts as if the user was removed
 						case None => Result.Empty
 					}
 				case None =>

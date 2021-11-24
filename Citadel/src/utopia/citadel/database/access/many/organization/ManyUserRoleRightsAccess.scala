@@ -82,6 +82,11 @@ trait ManyUserRoleRightsAccess extends ManyRowModelAccess[UserRoleRight] with In
 	  * @return An access point to role right links concerning those user roles
 	  */
 	def withAnyOfRoles(roleIds: Iterable[Int]) = filter(model.roleIdColumn in roleIds)
+	/**
+	  * @param taskIds Ids of excluded tasks
+	  * @return An access point to rights excluding those tasks
+	  */
+	def outsideTasks(taskIds: Iterable[Int]) = filter(!model.taskIdColumn.in(taskIds))
 	
 	/**
 	  * Updates the created of the targeted UserRoleRight instance(s)

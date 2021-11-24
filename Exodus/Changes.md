@@ -16,6 +16,7 @@
   an organization owner. The same applies to removing organization members.
   - The reasoning behind this is that the situation may always be rectified by a higher level organization member, 
     in case the action was performed accidentally or with wrong intents.
+  - Also, the user level is not checked by user role but by user access rights
 ### New Features
 - Default model style is now specified in `ExodusContext.setup(...)`. The value is **Full** by default, 
   attempting to match the previous versions.
