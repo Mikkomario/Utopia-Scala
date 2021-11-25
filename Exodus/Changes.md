@@ -4,6 +4,9 @@
 ### Breaking Changes
 - Replaced path `quests/me/session-key` with `quests/me/session-token`
 - `GET organizations/<organizationId>/users` now omits the requesting user
+- Added email validation to organization invitations
+  - This includes a new email validation purpose
+  - Also added invitation responding using an email validation token (see Postman documentation for details)
 - Email validations may now be switched to temporary email session tokens which function just like the original 
   email validation tokens.
   - This allows the client to validate (and possibly extend) the authentication before 
@@ -25,6 +28,7 @@
 - An organization member is now allowed to yield some of their roles or to replace them with lower roles
   - An exception to this is the situation where an organization owner would yield their ownership without leaving 
     another owner behind.
+- **OrganizationInvitationsNode** now supports extensions
 ### Bugfixes
 - Unique username requirement is now enforced in user creation when so specified in **ExodusContext**
 

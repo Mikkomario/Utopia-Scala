@@ -46,7 +46,6 @@ object MySettingsNode extends ExtendableSessionResource
 	}
 	
 	override val name = "settings"
-	
 	override protected val defaultUseCaseImplementations = Vector(defaultGet, defaultPatch, defaultPut)
 	
 	
