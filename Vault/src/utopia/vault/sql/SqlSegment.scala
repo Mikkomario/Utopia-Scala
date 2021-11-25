@@ -4,7 +4,7 @@ import utopia.flow.datastructure.immutable.Value
 
 import scala.collection.immutable.HashSet
 import utopia.vault.database.Connection
-import utopia.vault.model.immutable.Table
+import utopia.vault.model.immutable.{Result, Table, TableUpdateEvent}
 
 object SqlSegment
 {
@@ -27,9 +27,18 @@ object SqlSegment
         {
             val sql = segments.view.map { _.sql }.reduceLeft(sqlReduce)
             val databaseName = segments.view.flatMap { _.databaseName }.headOption
+            val eventFunctions = segments.flatMap { _.events }
+            val eventsFunction = {
+                if (eventFunctions.isEmpty)
+                    None
+                else if (eventFunctions.size == 1)
+                    Some(eventFunctions.head)
+                else
+                    Some({ result: Result => eventFunctions.flatMap { _(result) } })
+            }
             
             SqlSegment(sql, segments.flatMap { _.values }, databaseName, 
-                    segments.flatMap { _.targetTables }.toSet, segments.exists { _.isSelect }, 
+                    segments.flatMap { _.targetTables }.toSet, eventsFunction, segments.exists { _.isSelect },
                     segments.exists { _.generatesKeys })
         }
     }
@@ -47,11 +56,14 @@ object SqlSegment
  * be replaced with a single value. Empty values will be interpreted as NULL.
   * @param databaseName The name of the targeted database
   * @param targetTables The tables data is <b>read</b> from
+  * @param events A function for generating table update events once this segment has been executed.
+  *               None if no events need to be generated.
   * @param isSelect Whether this segment represents a select query
   * @param generatesKeys Whether this statement will generate new keys (= rows with auto-increment index) to the database
  */
 case class SqlSegment(sql: String, values: Seq[Value] = Vector(), databaseName: Option[String] = None,
-                      targetTables: Set[Table] = HashSet(), isSelect: Boolean = false, generatesKeys: Boolean = false)
+                      targetTables: Set[Table] = HashSet(), events: Option[Result => Seq[TableUpdateEvent]] = None,
+                      isSelect: Boolean = false, generatesKeys: Boolean = false)
 {
     // COMPUTED PROPERTIES    -----------
     
@@ -82,9 +94,20 @@ case class SqlSegment(sql: String, values: Seq[Value] = Vector(), databaseName: 
         else if (isEmpty)
             other
         else
+        {
+            val eventFunction = events match {
+                case Some(myFunction) =>
+                    other.events match {
+                        case Some(theirFunction) =>
+                            Some({ result: Result => myFunction(result) ++ theirFunction(result) })
+                        case None => Some(myFunction)
+                    }
+                case None => other.events
+            }
             SqlSegment(sql + " " + other.sql, values ++ other.values,
-                databaseName orElse other.databaseName, targetTables ++ other.targetTables,
+                databaseName orElse other.databaseName, targetTables ++ other.targetTables, eventFunction,
                 isSelect || other.isSelect, generatesKeys || other.generatesKeys)
+        }
     }
     
     /**

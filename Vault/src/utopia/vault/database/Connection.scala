@@ -126,7 +126,13 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         
         // Changes database if necessary
         statement.databaseName.foreach { dbName = _ }
+        // Executes the query
         val result = apply(statement.sql, statement.values, selectedTables, statement.generatesKeys, statement.isSelect)
+        
+        // Fires database triggers / events, if necessary
+        dbName.foreach { databaseName =>
+            statement.events.foreach { _(result).foreach { event => Triggers.deliver(databaseName, event) } }
+        }
         
         printIfDebugging(s"Received result: $result")
         result
@@ -155,53 +161,48 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         // Empty statements are not executed
         if (sql.isEmpty)
             Result.empty
-        else 
-        {
-            Try
-            {
+        else {
+            Try {
                 // Creates the statement
                 connection.prepareStatement(sql,
-                    if (returnGeneratedKeys) Statement.RETURN_GENERATED_KEYS else Statement.NO_GENERATED_KEYS).consume { statement =>
-        
-                    // Inserts provided values
-                    setValues(statement, values)
-        
-                    // Executes the statement and retrieves the result (if available)
-                    val foundResult = statement.execute()
-                    // Case: Expecting generated keys
-                    if (returnGeneratedKeys)
-                        Result(Vector(), generatedKeysFromResult(statement, selectedTables))
-                    else
-                    {
-                        // Collects the result rows or update count from the first result
-                        var rows =
-                        {
-                            if (foundResult)
-                                statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
-                            else
-                                Vector()
-                        }
-                        var updateCount = if (foundResult) 0 else statement.getUpdateCount
-                        // Handles possible additional results
-                        var expectsMore = foundResult || updateCount >= 0
-                        while (expectsMore)
-                        {
-                            // Case: Additional result with more rows
-                            if (statement.getMoreResults)
-                                rows ++= statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
-                            else
-                            {
-                                val newUpdateCount = statement.getUpdateCount
-                                // Case: No more results
-                                if (newUpdateCount < 0)
-                                    expectsMore = false
-                                // Case: Update count
+                    if (returnGeneratedKeys) Statement.RETURN_GENERATED_KEYS else Statement.NO_GENERATED_KEYS)
+                    .consume { statement =>
+                        // Inserts provided values
+                        setValues(statement, values)
+                        // Executes the statement and retrieves the result (if available)
+                        val foundResult = statement.execute()
+                        // Case: Expecting generated keys
+                        if (returnGeneratedKeys)
+                            Result(Vector(), generatedKeysFromResult(statement, selectedTables))
+                        else {
+                            // Collects the result rows or update count from the first result
+                            var rows = {
+                                if (foundResult)
+                                    statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
                                 else
-                                    updateCount += newUpdateCount
+                                    Vector()
                             }
+                            var updateCount = if (foundResult) 0 else statement.getUpdateCount
+                            // Handles possible additional results
+                            var expectsMore = foundResult || updateCount >= 0
+                            while (expectsMore)
+                            {
+                                // Case: Additional result with more rows
+                                if (statement.getMoreResults)
+                                    rows ++= statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
+                                else
+                                {
+                                    val newUpdateCount = statement.getUpdateCount
+                                    // Case: No more results
+                                    if (newUpdateCount < 0)
+                                        expectsMore = false
+                                    // Case: Update count
+                                    else
+                                        updateCount += newUpdateCount
+                                }
+                            }
+                            Result(rows, updatedRowCount = updateCount max 0)
                         }
-                        Result(rows, updatedRowCount = updateCount max 0)
-                    }
                 }
             } match
             {

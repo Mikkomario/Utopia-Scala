@@ -2,7 +2,7 @@ package utopia.vault.model.immutable
 
 import utopia.flow.datastructure.immutable.{ModelDeclaration, Value}
 import utopia.flow.datastructure.template.{Model, Property}
-import utopia.vault.database.Connection
+import utopia.vault.database.{Connection, TableUpdateListener, Triggers}
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 import utopia.vault.sql.{Condition, Exists, JoinType, Limit, Select, SqlSegment, SqlTarget, Where}
 
@@ -139,7 +139,13 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
      * reference to another table
      */
     def joinFrom(propertyName: String, joinType: JoinType): SqlTarget = joinFrom(apply(propertyName), joinType)
-
+    
+    /**
+      * Adds a listener to this table so that it will be informed whenever this table is updated (see Triggers)
+      * @param listener A listener to add
+      */
+    def addUpdateListener(listener: TableUpdateListener) = Triggers.addTableListener(this)(listener)
+    
     /**
       * Finds the first index from this table where specified condition is met
       * @param where A search condition

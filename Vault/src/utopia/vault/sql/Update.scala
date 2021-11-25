@@ -4,6 +4,7 @@ import utopia.flow.datastructure.template.Model
 import utopia.flow.datastructure.template.Property
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.immutable
+import utopia.vault.model.immutable.TableUpdateEvent.RowsUpdated
 import utopia.vault.model.immutable.{Column, Table}
 
 import scala.collection.immutable.HashMap
@@ -31,11 +32,14 @@ object Update
         else
         {
             // TODO: Modify column lengths if required & allowed (new feature)
-            
             val orderedSet = set.toVector
-            target.toSqlSegment.prepend("UPDATE") + SqlSegment("SET " +
-                orderedSet.view.map { case (column, _) => column.columnNameWithTable + " = ?" }.mkString(", "),
-                orderedSet.map { _._2 })
+            target.toSqlSegment.prepend("UPDATE") +
+                SqlSegment("SET " +
+                    orderedSet.view.map { case (column, _) => column.columnNameWithTable + " = ?" }.mkString(", "),
+                    orderedSet.map { _._2 },
+                    // Generates update events for all affected tables
+                    events = Some(result => set.keySet.map { _.tableName }.toVector
+                        .map { tableName => RowsUpdated(tableName, result.updatedRowCount) }))
         }
     }
     

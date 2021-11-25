@@ -11,7 +11,7 @@ import scala.util.Try
   * @author Mikko Hilpinen
   * @since 22.5.2019, v1.4.1+
   */
-class ActionQueue(val maxWidth: Int = 1)(implicit private val context: ExecutionContext)
+class ActionQueue(val maxWidth: Int = 1)(implicit context: ExecutionContext)
 {
 	// ATTRIBUTES	------------------
 	

@@ -3,6 +3,10 @@
 ## v1.12 (in development)
 ### Breaking Changes
 - Changed constructor parameter ordering in **Column**. Also added new optional parameter **LengthLimit**. 
+- Added a new constructor parameter to **SqlSegment**
+### New Features
+- Added database update events (on data insertions, updates and deletions)
+  - See **Triggers** for more information
 ### Bugfixes
 - `.nonDeprecatedCondition` in **Expiring** was the complete opposite of what it should have been - now fixed
 - `USE <databaseName>;` -statement was missing from database connection opening - added

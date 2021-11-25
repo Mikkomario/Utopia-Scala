@@ -3,8 +3,9 @@ package utopia.vault.sql
 import utopia.flow.datastructure.template.Model
 import utopia.flow.datastructure.template.Property
 import utopia.flow.util.CollectionExtensions._
-import utopia.vault.database.Connection
+import utopia.vault.database.{Connection, Triggers}
 import utopia.vault.model.error.ColumnNotFoundException
+import utopia.vault.model.immutable.TableUpdateEvent.DataInserted
 import utopia.vault.model.immutable.{Result, Table}
 import utopia.vault.util.ErrorHandling
 
@@ -68,8 +69,11 @@ object Insert
     
             val segment = SqlSegment(s"INSERT INTO ${table.sqlName} ($columnNames) VALUES $valuesSql", values,
                 Some(table.databaseName), HashSet(table), generatesKeys = table.usesAutoIncrement)
-    
-            connection(segment)
+            
+            val result = connection(segment)
+            // Generates a table update event, also
+            Triggers.deliver(table.databaseName, DataInserted(table, rows, result.generatedKeys))
+            result
         }
     }
     
