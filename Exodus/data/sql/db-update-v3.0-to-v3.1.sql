@@ -26,3 +26,5 @@ CREATE TABLE `email_validated_session`(
 	CONSTRAINT evs_eva_validation_ref_fk FOREIGN KEY evs_eva_validation_ref_idx (validation_id) REFERENCES `email_validation_attempt`(id) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
+-- New email validation purpose added
+INSERT INTO email_validation_purpose(id, name_en) VALUES (4, 'Invitation');

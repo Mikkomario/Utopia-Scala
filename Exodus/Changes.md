@@ -22,7 +22,7 @@
   attempting to match the previous versions.
   - This means that deviceless sessions no longer use **Simple** model style by default, but it also means that 
     all sessions may now receive default style of **Simple** if it is specified in `ExodusContext.setup(...)`
-- An organization member is now allowed to yield some of their roles
+- An organization member is now allowed to yield some of their roles or to replace them with lower roles
   - An exception to this is the situation where an organization owner would yield their ownership without leaving 
     another owner behind.
 

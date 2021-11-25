@@ -6,8 +6,11 @@ import utopia.citadel.database.access.id.single.DbUserId
 import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.citadel.database.model.organization.InvitationModel
+import utopia.exodus.database.access.single.auth.DbEmailValidationAttempt
+import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.OrganizationInvitation
 import utopia.exodus.model.enumeration.StandardTask.InviteMembers
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.exodus.util.ExodusContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
@@ -30,7 +33,6 @@ import scala.util.{Failure, Success}
 case class OrganizationInvitationsNode(organizationId: Int) extends LeafResource[AuthorizedContext]
 {
 	override val name = "invitations"
-	
 	override val allowedMethods = Vector(Post)
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
@@ -93,11 +95,17 @@ case class OrganizationInvitationsNode(organizationId: Int) extends LeafResource
 												"There already existed a pending invitation for that user"))
 										case None =>
 											// Creates a new invitation and saves it
-											// TODO: Should actually send the invitation as an email validation attempt
 											val invitation = InvitationModel.insert(InvitationData(organizationId,
 												newInvitation.startingRoleId, Now + newInvitation.duration,
 												recipientUserId, Some(recipientEmail), newInvitation.message.notEmpty,
 												Some(session.userId)))
+											// Records a new email validation attempt based on the invitation,
+											// if possible
+											ExodusContext.emailValidator.foreach { implicit validator =>
+												DbEmailValidationAttempt.start(newInvitation.recipientEmail,
+													OrganizationInvitation.id, invitation.recipientId)
+											}
+											// Returns the new invitation
 											Result.Success(invitationSendResultModel(
 												wasInvitationSend = true, Some(invitation)))
 									}
