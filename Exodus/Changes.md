@@ -25,6 +25,8 @@
 - An organization member is now allowed to yield some of their roles or to replace them with lower roles
   - An exception to this is the situation where an organization owner would yield their ownership without leaving 
     another owner behind.
+### Bugfixes
+- Unique username requirement is now enforced in user creation when so specified in **ExodusContext**
 
 ## v3.0 - 04.11.2021
 This update **Exodus**' models and database interfaces were completely rewritten by utilizing the **Vault-Coder**. 

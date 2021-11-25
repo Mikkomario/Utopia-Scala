@@ -26,9 +26,8 @@ case class InvitationResponseNode(invitationId: Int) extends Resource[Authorized
 {
 	// IMPLEMENTED	--------------------------
 	
-	override val name = "response"
-	
-	override val allowedMethods = Vector(Post)
+	override def name = "response"
+	override def allowedMethods = Vector(Post)
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{

@@ -20,7 +20,6 @@ import utopia.vault.database.Connection
 object MyInvitationsNode extends Resource[AuthorizedContext]
 {
 	override val name = "invitations"
-	
 	override val allowedMethods = Vector(Get)
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =

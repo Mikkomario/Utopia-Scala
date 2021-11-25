@@ -2,7 +2,7 @@ package utopia.exodus.rest.resource
 
 import utopia.exodus.rest.resource.description.{DescriptionRolesNode, LanguageFamiliaritiesNode, LanguagesNode, RolesNode, TasksNode}
 import utopia.exodus.rest.resource.device.DevicesNode
-import utopia.exodus.rest.resource.organization.OrganizationsNode
+import utopia.exodus.rest.resource.organization.{InvitationsNode, OrganizationsNode}
 import utopia.exodus.rest.resource.user.{QuestSessionsNode, UsersNode}
 
 /**
@@ -25,7 +25,7 @@ object ExodusResources
 	/**
 	  * All resources that require authorization for at least some features
 	  */
-	val authorized = Vector(DevicesNode, OrganizationsNode, RolesNode, TasksNode, QuestSessionsNode)
+	val authorized = Vector(DevicesNode, OrganizationsNode, RolesNode, TasksNode, QuestSessionsNode, InvitationsNode)
 	
 	
 	// COMPUTED	---------------------------------
