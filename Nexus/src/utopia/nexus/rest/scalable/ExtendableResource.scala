@@ -1,6 +1,6 @@
 package utopia.nexus.rest.scalable
 
-import utopia.nexus.rest.Context
+import utopia.nexus.rest.{Context, Resource}
 
 /**
  * An abstract implementation of the ModularResource trait that allows outside extensions
@@ -51,4 +51,10 @@ abstract class ExtendableResource[C <: Context, P] extends ModularResource[C, P]
 	 */
 	def extendWith(followImplementation: FollowImplementation[C]) =
 		customFollowImplementations = followImplementation +: customFollowImplementations
+	
+	/**
+	  * Adds a child resource under this resource
+	  * @param childResource A child resource to add
+	  */
+	def addChild(childResource: => Resource[C]) = extendWith(FollowImplementation.withChild(childResource))
 }

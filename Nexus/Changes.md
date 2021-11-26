@@ -1,5 +1,10 @@
 # Utopia Nexus - List of Changes
 
+## v1.6.2 (in development)
+### New Methods
+- **ExtendableResource**
+  - Added `.addChild(=> Resource)`, which is a utility variation of `.extendWith(FollowImplementation)`
+
 ## v1.6.1 - 04.11.2021
 Supports changes in Flow v1.14
 
