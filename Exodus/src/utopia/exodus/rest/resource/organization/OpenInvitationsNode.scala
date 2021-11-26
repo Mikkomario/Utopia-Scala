@@ -1,8 +1,9 @@
 package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.{Get, Post}
+import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.many.organization.DbInvitations
-import utopia.citadel.database.access.single.user.DbUser
+import utopia.citadel.database.access.single.user.{DbUser, DbUserSettings}
 import utopia.citadel.database.model.organization.InvitationResponseModel
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.OrganizationInvitation
 import utopia.exodus.rest.resource.user.UsersNode
@@ -10,6 +11,8 @@ import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.cached.LanguageIds
+import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.metropolis.model.partial.organization.InvitationResponseData
 import utopia.metropolis.model.post.NewInvitationResponse
 import utopia.nexus.http.Path
@@ -42,19 +45,33 @@ object OpenInvitationsNode
 	{
 		context.emailAuthorized(OrganizationInvitation.id) { (attempt, connection) =>
 			implicit val c: Connection = connection
-			// Returns the currently open invitations
-			val invitations = openInvitationsForEmail(attempt.email)
+			val requestedLanguages = context.requestedLanguages
+			val languageIds = if (requestedLanguages.isEmpty) None else
+				Some(LanguageIds(requestedLanguages.map { _.id }))
+			// Returns the currently open invitations with contextual information
+			val invitations = openInvitationsForEmailAccess(attempt.email).detailedInLanguages(languageIds)
 			val modelStyle = context.modelStyle.getOrElse(ExodusContext.defaultModelStyle)
+			val invitationModels = modelStyle match {
+				case Simple =>
+					val descriptionRoles = DbDescriptionRoles.pull
+					invitations.map { _.toSimpleModelUsing(descriptionRoles) }
+				case Full => invitations.map { _.toModel }
+			}
+			// Includes a boolean indicating whether the user already has an account
+			// (since it affects how they should respond)
+			val hasAccount = attempt.userId.isDefined || DbUserSettings.withEmail(attempt.email).nonEmpty
 			// Doesn't close the email validation
-			false -> Result.Success(invitations.map { _.toModelWith(modelStyle) })
+			false -> Result.Success(Model(Vector(
+				"exists_account" -> hasAccount,
+				"invitations" -> invitationModels)))
 		}
 	}
 	
 	
 	// OTHER    --------------------------------
 	
-	private def openInvitationsForEmail(emailAddress: String)(implicit connection: Connection) =
-		DbInvitations.withResponses.notAnswered.forEmailAddress(emailAddress).pull
+	private def openInvitationsForEmailAccess(emailAddress: String)(implicit connection: Connection) =
+		DbInvitations.withResponses.notAnswered.forEmailAddress(emailAddress)
 	
 	
 	// NESTED   --------------------------------
@@ -75,7 +92,7 @@ object OpenInvitationsNode
 			context.emailAuthorized(OrganizationInvitation.id) { (validation, connection) =>
 				implicit val c: Connection = connection
 				
-				lazy val invitations = openInvitationsForEmail(validation.email)
+				lazy val invitations = openInvitationsForEmailAccess(validation.email).pull
 				lazy val modelStyle = context.modelStyle.getOrElse(ExodusContext.defaultModelStyle)
 				
 				def _joinAll(userId: Int) = invitations.map { invitation =>
@@ -84,7 +101,7 @@ object OpenInvitationsNode
 				}
 				
 				// Checks whether the invitation is linked to an existing user, which greatly affects request handling
-				validation.userId match {
+				validation.userId.orElse { DbUserSettings.withEmail(validation.email).userId } match {
 					// Case: Is linked with an existing user => Answers that user's invitation(s)
 					case Some(userId) =>
 						val responseResult = context.handlePost(NewInvitationResponse) { newResponse =>
