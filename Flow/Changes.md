@@ -9,6 +9,8 @@
 - Added **ConditionalLazy**, which is a variant of **Lazy** that only caches the value if it fulfills a condition
 - Added **Quarter** (1/4th of a year) enumeration, which is also supported by **TimeExtensions**
 ### New Methods
+- **Instant** (**TimeExtensions**)
+  - Added `.toLocalDate` and `.toLocalTime`
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.flatDivideWith(...)` & `splitFlatMap(...)`
 - **Iterator** (**CollectionExtensions**)

@@ -80,6 +80,10 @@ object TimeExtensions
 		 */
 		def toLocalDate = toLocalDateTime.toLocalDate
 		/**
+		  * @return Time portion of this instant in local time zone
+		  */
+		def toLocalTime = toLocalDateTime.toLocalTime
+		/**
 		  * The date time value of this instant in the UTC 'zulu' time zone
 		  */
 		def toUTCDateTime = i.atZone(ZoneId.of("Z")).toLocalDateTime

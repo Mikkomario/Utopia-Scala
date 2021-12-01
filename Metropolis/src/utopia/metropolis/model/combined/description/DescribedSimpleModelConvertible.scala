@@ -1,6 +1,6 @@
 package utopia.metropolis.model.combined.description
 
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.metropolis.model.stored.description.DescriptionRole
 
 /**
