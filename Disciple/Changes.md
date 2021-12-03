@@ -1,8 +1,14 @@
 # Utopia Disciple - List of Changes
 
-## v1.4.4 (in development)
+## v1.5 (in development)
+### Breaking Changes
+- Introduced two new constructor parameters to **Gateway**
+  - These should cause only minor errors, if any
 ### New Features
 - Added **RequestRateLimiter** class that limits the number of simultaneous or consecutive actions
+- Added support to SSL certificate configuration in **Gateway**
+  - Pass the `keyStoreSettings` constructor property to use it
+- **Gateway** now supports http client customization
 
 ## v1.4.3 - 04.11.2021
 Supports changes in Flow v1.14

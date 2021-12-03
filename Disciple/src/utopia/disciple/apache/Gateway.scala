@@ -5,26 +5,102 @@ import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpDelete, HttpGet, HttpPatch, HttpPost, HttpPut}
 import org.apache.http.client.utils.URIBuilder
-import org.apache.http.impl.client.HttpClients
+import org.apache.http.impl.client.{HttpClientBuilder, HttpClients}
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.{BasicHeader, BasicNameValuePair}
+import org.apache.http.ssl.SSLContexts
 import utopia.access.http.Method._
 import utopia.access.http.{Headers, Method, Status}
 import utopia.disciple.http.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.disciple.http.response.{ResponseParser, StreamedResponse}
+import utopia.disciple.model.KeyStoreSettings
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.parse.{JSONReader, JsonParser}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.AutoClose._
+import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.FileExtensions._
 
 import java.io.OutputStream
 import java.net.URLEncoder
+import java.security.KeyStore
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Codec
 import scala.jdk.CollectionConverters._
 import scala.language.{implicitConversions, postfixOps}
 import scala.util.{Failure, Success, Try}
+
+object Gateway
+{
+	/**
+	  * Creates a new gateway instance
+	  * @param jsonParsers Json parsers to use when content encoding matches parser default.
+	  *                    Specify your own parser/parsers to override default functionality (JSONReader).
+	  *                    It is highly recommended to set this parameter to something else than the default.
+	  *                    A recommended option (when the server is using UTF-8 encoding) is to use JsonBunny from
+	  *                    the Utopia BunnyMunch module.
+	  * @param maxConnectionsPerRoute The maximum number of simultaneous connections to a single route (default = 2)
+	  * @param maxConnectionsTotal The maximum number of simultaneous connections in total (default = 10)
+	  * @param maximumTimeout Maximum timeouts for a single request (default = 5 minutes connection, 5 minutes read,
+	  *                       infinite queuing timeout).
+	  * @param parameterEncoding Encoding option used for query (uri) parameters.
+	  *                          None if no encoding should be used (default).
+	  * @param defaultResponseEncoding Default character encoding used when parsing response data
+	  *                                (used when no character encoding is specified in response headers) (default = UTF-8)
+	  * @param keyStoreSettings Settings to use when interacting with the keystore (SSL certificates) (optional)
+	  * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
+	  *                            Use false if you wish to force parameters to uri parameters.
+	  * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to json values before
+	  *                                 applying them. False if you want the parameters to be added "as is"
+	  *                                 (using .toString). This mostly affects string values, whether they should be
+	  *                                 wrapped in quotation marks or not. (default = true = use json value format)
+	  * @return
+	  */
+	def apply(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectionsPerRoute: Int = 2,
+	          maxConnectionsTotal: Int = 10,
+	          maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
+	          parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
+	          keyStoreSettings: Option[KeyStoreSettings] = None,
+	          allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true) =
+		new Gateway(jsonParsers, maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
+			defaultResponseEncoding, keyStoreSettings, b => b, allowBodyParameters, allowJsonInUriParameters)
+	
+	/**
+	  * Creates a new gateway instance
+	  * @param jsonParsers Json parsers to use when content encoding matches parser default.
+	  *                    Specify your own parser/parsers to override default functionality (JSONReader).
+	  *                    It is highly recommended to set this parameter to something else than the default.
+	  *                    A recommended option (when the server is using UTF-8 encoding) is to use JsonBunny from
+	  *                    the Utopia BunnyMunch module.
+	  * @param maxConnectionsPerRoute The maximum number of simultaneous connections to a single route (default = 2)
+	  * @param maxConnectionsTotal The maximum number of simultaneous connections in total (default = 10)
+	  * @param maximumTimeout Maximum timeouts for a single request (default = 5 minutes connection, 5 minutes read,
+	  *                       infinite queuing timeout).
+	  * @param parameterEncoding Encoding option used for query (uri) parameters.
+	  *                          None if no encoding should be used (default).
+	  * @param defaultResponseEncoding Default character encoding used when parsing response data
+	  *                                (used when no character encoding is specified in response headers) (default = UTF-8)
+	  * @param keyStoreSettings Settings to use when interacting with the keystore (SSL certificates) (optional)
+	  * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
+	  *                            Use false if you wish to force parameters to uri parameters.
+	  * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to json values before
+	  *                                 applying them. False if you want the parameters to be added "as is"
+	  *                                 (using .toString). This mostly affects string values, whether they should be
+	  *                                 wrapped in quotation marks or not. (default = true = use json value format)
+	  * @param customizeClient A function for customizing the http client when it is first created
+	  * @return
+	  */
+	def custom(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectionsPerRoute: Int = 2,
+	           maxConnectionsTotal: Int = 10,
+	           maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
+	           parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
+	           keyStoreSettings: Option[KeyStoreSettings] = None,
+	           allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true)
+	          (customizeClient: HttpClientBuilder => HttpClientBuilder) =
+		new Gateway(jsonParsers, maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
+			defaultResponseEncoding, keyStoreSettings, customizeClient, allowBodyParameters, allowJsonInUriParameters)
+}
 
 /**
 * Gateways are used for making http requests. Each instance may have its own settings and uses its own apache http
@@ -44,6 +120,8 @@ import scala.util.{Failure, Success, Try}
   *                          None if no encoding should be used (default).
   * @param defaultResponseEncoding Default character encoding used when parsing response data
   *                                (used when no character encoding is specified in response headers) (default = UTF-8)
+  * @param keyStoreSettings Settings to use when interacting with the keystore (SSL certificates) (optional)
+  * @param customizeClient A function for customizing the http client when it is first created (default = identity)
   * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
   *                            Use false if you wish to force parameters to uri parameters.
   * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to json values before
@@ -54,9 +132,10 @@ import scala.util.{Failure, Success, Try}
 class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectionsPerRoute: Int = 2,
               maxConnectionsTotal: Int = 10,
               maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
-              parameterEncoding: Option[Codec] = None,
-              defaultResponseEncoding: Codec = Codec.UTF8, allowBodyParameters: Boolean = true,
-              allowJsonInUriParameters: Boolean = true)
+              parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
+              keyStoreSettings: Option[KeyStoreSettings] = None,
+              customizeClient: HttpClientBuilder => HttpClientBuilder = b => b,
+              allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true)
 {
     // ATTRIBUTES    -------------------------
 	
@@ -66,13 +145,38 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectio
 	  */
 	private implicit val _defaultResponseEncoding: Codec = defaultResponseEncoding
 	
-    private val connectionManager = new PoolingHttpClientConnectionManager()
+    private lazy val connectionManager = new PoolingHttpClientConnectionManager()
 	connectionManager.setDefaultMaxPerRoute(maxConnectionsPerRoute)
 	connectionManager.setMaxTotal(maxConnectionsTotal)
 	
 	// TODO: Add customizable timeouts (see https://www.baeldung.com/httpclient-timeout)
-    private val client = HttpClients.custom().setConnectionManager(connectionManager)
-	    .setConnectionManagerShared(true).build()
+    private lazy val client = {
+	    // Configures the key store, if necessary
+	    val sslContext = keyStoreSettings.flatMap { settings =>
+		    val attempt = settings.storePath.readWith { fileStream =>
+			    // Loads the keystore
+			    val store = KeyStore.getInstance(settings.storeType.getOrElse { KeyStore.getDefaultType })
+			    store.load(fileStream, settings.storePassword.map { _.toCharArray }.orNull)
+			    // Creates the SSL context
+			    SSLContexts.custom().loadKeyMaterial(store, settings.keyPassword.map { _.toCharArray }.orNull).build()
+		    }
+		    // Handles the failure according to settings
+		    attempt.failure.foreach { error =>
+			    if (settings.throwErrors)
+				    throw error
+			    else
+			        error.printStackTrace()
+		    }
+		    attempt.toOption
+	    }
+	    val baseClient = HttpClients.custom().setConnectionManager(connectionManager).setConnectionManagerShared(true)
+	    val sslConfiguredClient = sslContext match {
+		    case Some(context) => baseClient.setSSLContext(context)
+		    case None => baseClient
+	    }
+	    // Adds customization according to construction parameters
+	    customizeClient(sslConfiguredClient).build()
+    }
     
     
     // OTHER METHODS    ----------------------
