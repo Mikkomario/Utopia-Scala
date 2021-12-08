@@ -138,6 +138,7 @@ object Gateway
   *                                 (using .toString). This mostly affects string values, whether they should be
   *                                 wrapped in quotation marks or not. (default = true = use json value format)
 **/
+// FIXME: SSL stuff simply doesn't work (doesn't affect anything)
 class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectionsPerRoute: Int = 2,
               maxConnectionsTotal: Int = 10,
               maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),

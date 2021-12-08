@@ -1,6 +1,8 @@
 # Utopia Disciple - List of changes
 
 ## v2.0.1 (in development)
+### Deprecations
+- Deprecated `CitadelDataDeletionRules.unreferencedDeletionTables` in favor of `.unreferencedRules`
 ### New Methods
 - Added new membership access methods
 ### Bugfixes

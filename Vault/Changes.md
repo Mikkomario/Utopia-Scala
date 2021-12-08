@@ -4,9 +4,15 @@
 ### Breaking Changes
 - Changed constructor parameter ordering in **Column**. Also added new optional parameter **LengthLimit**. 
 - Added a new constructor parameter to **SqlSegment**
+- Changed **ClearUnreferencedData** constructor
 ### New Features
 - Added database update events (on data insertions, updates and deletions)
   - See **Triggers** for more information
+- **ClearUnreferencedData** now accepts a set of tables to ignore when checking for references, which is useful for 
+  more customized use-cases
+### New Methods
+- **ConditionElement**
+  - Added `.notIn(Iterable)`
 ### Bugfixes
 - `.nonDeprecatedCondition` in **Expiring** was the complete opposite of what it should have been - now fixed
 - `USE <databaseName>;` -statement was missing from database connection opening - added

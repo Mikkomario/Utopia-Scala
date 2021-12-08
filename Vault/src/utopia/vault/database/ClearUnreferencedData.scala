@@ -16,9 +16,12 @@ object ClearUnreferencedData
 	  * @param connection Implicit DB Connection
 	  * @return Number of deleted items in total
 	  */
-	def onceFrom(tables: Set[Table])(implicit connection: Connection) = new ClearUnreferencedData(tables)()
+	def onceFrom(tables: Set[Table])(implicit connection: Connection) =
+		new ClearUnreferencedData(tables.map { _ -> Set() })()
 	
-	def onceFrom(table: Table)(implicit connection: Connection) = new ClearUnreferencedData(Set(table))()
+	def onceFrom(table: Table, ignoringReferencesFrom: Set[Table] = Set())
+	            (implicit connection: Connection) =
+		new ClearUnreferencedData(Set(table -> ignoringReferencesFrom))()
 	
 	def onceFrom(first: Table, second: Table, more: Table*)(implicit connection: Connection): Int =
 		onceFrom(Set(first, second) ++ more)
@@ -27,7 +30,7 @@ object ClearUnreferencedData
 	                  onError: Throwable => Unit = _.printStackTrace())
 	                 (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
-		val deleter = new ClearUnreferencedData(tables)
+		val deleter = new ClearUnreferencedData(tables.map { _ -> Set() })
 		DailyTask(at) {
 			connectionPool.tryWith { implicit c => deleter()  }.failure.foreach(onError)
 		}
@@ -38,18 +41,18 @@ object ClearUnreferencedData
   * This class clears unreferenced data from targeted tables on demand
   * @author Mikko Hilpinen
   * @since 28.6.2021, v1.8
-  * @param targetTables The tables targeted by this deletion.
-  *                     Please note that if you include any tables with no other table referencing them, all rows
-  *                     will be deleted on each iteration
+  * @param targets The tables targeted by this deletion, along with a set of tables that are NOT considered as valid
+  *                reference origins. Please note that if you include any tables with no other table referencing them,
+  *                all rows will be deleted on each iteration
   */
-class ClearUnreferencedData(targetTables: Set[Table])
+class ClearUnreferencedData(targets: Set[(Table, Set[Table])])
 {
 	// ATTRIBUTES   --------------------------
 	
 	// Orders the deletions so that the possibly referencing tables are cleared first
-	private lazy val deletionTargets = orderTargets(targetTables.toVector.map { table =>
-		// Searches for the references towards that table
-		DeletionTarget(table, References.to(table).toVector)
+	private lazy val deletionTargets = orderTargets(targets.toVector.map { case (table, ignored) =>
+		// Searches for the references towards that table, but ignores specified tables
+		DeletionTarget(table, References.to(table).filterNot { ref => ignored.contains(ref.from.table) }.toVector)
 	})
 	
 	

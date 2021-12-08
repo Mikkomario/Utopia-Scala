@@ -91,6 +91,35 @@ trait ConditionElement
     def in[V](elements: Iterable[V])(implicit transform: V => ConditionElement): Condition = in(elements.map(transform))
     
     /**
+      * Creates an in condition that returns true if NONE of the provided element values matches
+      * this element's value
+      */
+    def notIn(elements: Iterable[ConditionElement]) =
+    {
+        // Uses simpler conditions if they are more suitable
+        if (elements.isEmpty)
+            Condition.alwaysTrue
+        else if (elements.size == 1)
+            this <> elements.head
+        else
+        {
+            val rangeSegment = SqlSegment.combine(elements.map { _.toSqlSegment }.toSeq, { _ + ", " + _ })
+            val inSegment = rangeSegment.copy(sql = "(" + rangeSegment.sql + ")")
+            
+            Condition(toSqlSegment + "NOT IN" + inSegment)
+        }
+    }
+    
+    /**
+      * @param elements Values not accepted for this element
+      * @param transform An implicit transformation between provided values and condition elements
+      * @tparam V Type of value
+      * @return A condition that accepts NONE of the provided value in this condition element
+      */
+    def notIn[V](elements: Iterable[V])(implicit transform: V => ConditionElement): Condition =
+        notIn(elements.map(transform))
+    
+    /**
       * @param matchString A string match where % is a placeholder for any string.
       * @return A condition where this element must match the specified expression
       */
