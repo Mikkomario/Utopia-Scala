@@ -22,6 +22,7 @@
 ### Bugfixes
 - `||` -method in **Regex** combined some regular expressions incorrectly. The current version is more careful.
 ### Other Changes
+- **Value**`.toJson` now escapes newline characters and uses `\"` instead of `'` as quotation replacement
 - **Instant** now gains **SelfComparable** instead of **RichComparable** when importing **TimeExtensions**
 
 ## v1.14 - 04.11.2021
