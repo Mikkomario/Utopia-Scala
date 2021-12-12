@@ -17,6 +17,7 @@
       <module fileurl="file://$PROJECT_DIR$/Genesis/Genesis.iml" filepath="$PROJECT_DIR$/Genesis/Genesis.iml" />
       <module fileurl="file://$PROJECT_DIR$/Inception/Inception.iml" filepath="$PROJECT_DIR$/Inception/Inception.iml" />
       <module fileurl="file://$PROJECT_DIR$/Journey/Journey.iml" filepath="$PROJECT_DIR$/Journey/Journey.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Keep/Keep.iml" filepath="$PROJECT_DIR$/Keep/Keep.iml" />
       <module fileurl="file://$PROJECT_DIR$/Metropolis/Metropolis.iml" filepath="$PROJECT_DIR$/Metropolis/Metropolis.iml" />
       <module fileurl="file://$PROJECT_DIR$/Nexus/Nexus.iml" filepath="$PROJECT_DIR$/Nexus/Nexus.iml" />
       <module fileurl="file://$PROJECT_DIR$/NexusForTomcat/NexusForTomcat.iml" filepath="$PROJECT_DIR$/NexusForTomcat/NexusForTomcat.iml" />
