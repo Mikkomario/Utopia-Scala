@@ -1,13 +1,14 @@
 # Utopia Disciple - List of Changes
 
 ## v1.5 (in development)
+### Dependency Changes
+- This project now uses Apache HttpClient v5.1.2 instead of v4.x.
+  - This should only affect library dependencies, the interface remains the same
 ### Breaking Changes
 - Introduced three new constructor parameters to **Gateway**
   - These should cause only minor errors, if any
 ### New Features
 - Added **RequestRateLimiter** class that limits the number of simultaneous or consecutive actions
-- Added support to SSL certificate configuration in **Gateway**
-  - Pass the `keyStoreSettings` and/or `trustStoreSettings` constructor property to use it
 - **Gateway** now supports http client customization
 
 ## v1.4.3 - 04.11.2021

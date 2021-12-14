@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="httpcore-4">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore-4.4.13.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
