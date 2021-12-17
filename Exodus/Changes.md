@@ -12,6 +12,8 @@
   - This allows the client to validate (and possibly extend) the authentication before 
     requesting user for additional data.
   - This is a breaking change because it requires SQL changes
+- **AuthorizedContext** is now an abstract class instead of a trait, which may require changes in its subclasses
+  - This is to avoid reading request body twice (see **Functional Changes**)
 - Added `defaultModelStyle: ModelStyle` as the fourth parameter to `ExodusContext.setup(...)`. 
   This has a chance to cause build errors initially, but is not difficult or cumbersome to fix.
 ### Functional Changes
@@ -20,6 +22,8 @@
   - The reasoning behind this is that the situation may always be rectified by a higher level organization member, 
     in case the action was performed accidentally or with wrong intents.
   - Also, the user level is not checked by user role but by user access rights
+- **AuthorizedContext** now caches request body value after it has been parsed. This enables subsequent / multiple 
+  calls of handlePossibleValuePost / handleValuePost etc.
 ### New Features
 - Default model style is now specified in `ExodusContext.setup(...)`. The value is **Full** by default, 
   attempting to match the previous versions.

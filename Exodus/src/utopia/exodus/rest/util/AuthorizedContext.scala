@@ -10,9 +10,7 @@ import utopia.citadel.util.CitadelContext.connectionPool
 import utopia.citadel.util.CitadelContext._
 import utopia.exodus.database.access.single.auth.{DbApiKey, DbDeviceToken, DbEmailValidationAttempt, DbSessionToken}
 import utopia.exodus.database.access.single.user.DbUserPassword
-import utopia.exodus.database.access.single.{DbDeviceKey, DbUserSession}
 import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, EmailValidationAttempt, SessionToken}
-import utopia.exodus.model.stored.{DeviceKey, UserSession}
 import utopia.exodus.util.ExodusContext.handleError
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.FromModelFactory
@@ -77,8 +75,36 @@ object AuthorizedContext
   * @author Mikko Hilpinen
   * @since 3.5.2020, v1.0
   */
-trait AuthorizedContext extends Context
+abstract class AuthorizedContext extends Context
 {
+	// ATTRIBUTES   ------------------------
+	
+	// Request body is cached, since streamed request bodies can only be read once
+	// Either[Failure, Value]
+	private lazy val parsedRequestBody = {
+		request.body.headOption match {
+			case Some(body) =>
+				// Accepts json, xml and text content types
+				val value = body.contentType.subType.toLowerCase match {
+					case "json" => body.bufferedJson(jsonParser).contents
+					case "xml" => body.bufferedXml.contents.map[Value] { _.toSimpleModel }
+					case _ =>
+						body.contentType.category match {
+							case Text => body.bufferedToString.contents.map[Value] { s => s }
+							case _ => Failure(ContentTypeException.notAccepted(body.contentType,
+								Vector(Application.json, Application.xml, Text.plain)))
+						}
+				}
+				value match {
+					case Success(value) => Right(value)
+					case Failure(error) => Left(Result.Failure(BadRequest, error.getMessage))
+				}
+			// Case: No request body specified => Uses an empty value
+			case None => Right(Value.empty)
+		}
+	}
+	
+	
 	// ABSTRACT ----------------------------
 	
 	/**
@@ -196,18 +222,6 @@ trait AuthorizedContext extends Context
 			DbDeviceToken(token).pull(connection)
 		}(f)
 	}
-	/**
-	  * Perform the specified function if the request can be authorized using a device authentication key
-	  * @param f A function called when request is authorized. Accepts device key + database connection. Produces an http result.
-	  * @return Function result or a result indicating that the request was unauthorized. Wrapped as a response.
-	  */
-	@deprecated("Replaced with DeviceTokenAuthorized", "v3.0")
-	def deviceKeyAuthorized(f: (DeviceKey, Connection) => Result) =
-	{
-		tokenAuthorized("device authentication key") { (token, connection) =>
-			DbDeviceKey.matching(token)(connection)
-		}(f)
-	}
 	
 	/**
 	  * Perform the specified function if the request can be authorized using a session token
@@ -220,16 +234,6 @@ trait AuthorizedContext extends Context
 		tokenAuthorized("session token") { (token, connection) =>
 			DbSessionToken(token).pull(connection)
 		}(f)
-	}
-	/**
-	  * Perform the specified function if the request can be authorized using a session key
-	  * @param f A function called when request is authorized. Accepts user session + database connection. Produces an http result.
-	  * @return Function result or a result indicating that the request was unauthorized. Wrapped as a response.
-	  */
-	@deprecated("Please use sessionTokenAuthorized instead", "v3.0")
-	def sessionKeyAuthorized(f: (UserSession, Connection) => Result) =
-	{
-		tokenAuthorized("session key") { (token, connection) => DbUserSession.matching(token)(connection) }(f)
 	}
 	
 	/**
@@ -427,34 +431,7 @@ trait AuthorizedContext extends Context
 	  *          Accepts the read value, which may be empty. Returns a http result.
 	  * @return Function result
 	  */
-	def handlePossibleValuePost(f: Value => Result) =
-	{
-		// Parses the post body first
-		request.body.headOption match
-		{
-			case Some(body) =>
-				// Accepts json, xml and text content types
-				val value = body.contentType.subType.toLowerCase match
-				{
-					case "json" => body.bufferedJson(jsonParser).contents
-					case "xml" => body.bufferedXml.contents.map[Value] { _.toSimpleModel }
-					case _ =>
-						body.contentType.category match
-						{
-							case Text => body.bufferedToString.contents.map[Value] { s => s }
-							case _ => Failure(ContentTypeException.notAccepted(body.contentType,
-								Vector(Application.json, Application.xml, Text.plain)))
-						}
-				}
-				value match
-				{
-					case Success(value) => f(value)
-					case Failure(error) => Result.Failure(BadRequest, error.getMessage)
-				}
-			// Case: No request body specified => Uses an empty value
-			case None => f(Value.empty)
-		}
-	}
+	def handlePossibleValuePost(f: Value => Result) = parsedRequestBody.leftOrMap(f)
 	/**
 	  * Parses a value from the request body and uses it to produce a response
 	  * @param f Function that will be called if the value was successfully read and not empty.
@@ -478,14 +455,11 @@ trait AuthorizedContext extends Context
 	  * @tparam A Type of parsed model
 	  * @return Function result or a failure result if no model could be parsed.
 	  */
-	def handlePost[A](parser: FromModelFactory[A])(f: A => Result): Result =
-	{
+	def handlePost[A](parser: FromModelFactory[A])(f: A => Result): Result = {
 		handleValuePost { value =>
-			value.model match
-			{
+			value.model match {
 				case Some(model) =>
-					parser(model) match
-					{
+					parser(model) match {
 						// Gives the parsed model to specified function
 						case Success(parsed) => f(parsed)
 						case Failure(error) => Result.Failure(BadRequest, error.getMessage)

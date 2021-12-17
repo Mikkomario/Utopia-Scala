@@ -31,7 +31,8 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
       * @tparam T The type of buffered result
       * @return A buffered body from the parsing results
       */
-    def buffered[T](f: BufferedReader => T) = BufferedBody(f(reader), contentType, contentLength, headers, name)
+    def buffered[T](f: BufferedReader => T) =
+        BufferedBody(f(reader), contentType, contentLength, headers, name)
     
     /**
       * @return A buffered version of this body where the stream is read into a string
@@ -42,7 +43,8 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
     /**
       * @return A buffered version of this body where contents are parsed from a JSON into a value
       */
-    def bufferedJson(implicit parser: JsonParser) = bufferedToString.map { _.flatMap { parser(_) } }
+    def bufferedJson(implicit parser: JsonParser) =
+        bufferedToString.map { _.flatMap { parser(_) } }
     
     /**
       * @return A buffered version of this body where contents are parsed from a JSON into a value
@@ -58,12 +60,13 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
     /**
       * @return A buffered version of this body where contents are parsed from a JSON array into a vector of values
       */
-    def bufferedJsonArray = bufferedToString.map { _.flatMap { JSONReader(_) }.flatMap { v =>
-        if (v.isEmpty)
-            Success(Vector())
-        else
-            v.vector.toTry { DataTypeException(s"${v.description} can't be converted to a vector") }
-    } }
+    def bufferedJsonArray =
+        bufferedToString.map { _.flatMap { JSONReader(_) }.flatMap { v =>
+            if (v.isEmpty)
+                Success(Vector())
+            else
+                v.vector.toTry { DataTypeException(s"${v.description} can't be converted to a vector") }
+        } }
     
     /**
       * @return A buffered version of this body where contents are parsed from a JSON into a value
