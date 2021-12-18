@@ -33,6 +33,7 @@
   - An exception to this is the situation where an organization owner would yield their ownership without leaving 
     another owner behind.
 - **OrganizationInvitationsNode** now supports extensions
+- **AuthorizedContext** now supports **X-Accept-Language-Ids** -header as a replacement for **Accept-Language**
 ### Bugfixes
 - Unique username requirement is now enforced in user creation when so specified in **ExodusContext**
 

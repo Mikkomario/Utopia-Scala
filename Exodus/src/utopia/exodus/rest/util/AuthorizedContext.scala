@@ -11,6 +11,7 @@ import utopia.citadel.util.CitadelContext._
 import utopia.exodus.database.access.single.auth.{DbApiKey, DbDeviceToken, DbEmailValidationAttempt, DbSessionToken}
 import utopia.exodus.database.access.single.user.DbUserPassword
 import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, EmailValidationAttempt, SessionToken}
+import utopia.exodus.rest.util.AuthorizedContext.acceptLanguageIdsHeaderName
 import utopia.exodus.util.ExodusContext.handleError
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.FromModelFactory
@@ -29,6 +30,14 @@ import scala.util.{Failure, Success, Try}
 
 object AuthorizedContext
 {
+	// ATTRIBUTES   -----------------------------
+	
+	/**
+	  * Name of the header that may be used for specifying accepted language ids
+	  */
+	val acceptLanguageIdsHeaderName = "X-Accept-Language-Ids"
+	
+	
 	// TYPES    ---------------------------------
 	
 	/**
@@ -122,23 +131,31 @@ abstract class AuthorizedContext extends Context
 	
 	/**
 	  * @param connection DB Connection (implicit)
-	  * @return Languages that were requested in the Accept-Language header. The languages are listed from most to
-	  *         least preferred. May be empty.
+	  * @return Languages that were requested in the Accept-Language header (or the X-Accept-Language-Ids -header).
+	  *         The languages are listed from most to least preferred. May be empty.
 	  */
 	def requestedLanguages(implicit connection: Connection) =
 	{
-		val acceptedLanguages = request.headers.acceptedLanguages
-			.map { case (code, weight) => code.toLowerCase -> weight }
-		if (acceptedLanguages.nonEmpty)
-		{
-			val acceptedCodes = acceptedLanguages.keySet
-			// Maps codes to language ids (if present)
-			val languages = DbLanguages.withIsoCodes(acceptedCodes)
-			// Orders the languages based on assigned weight
-			languages.sortBy { l => -acceptedLanguages(l.isoCode.toLowerCase) }
+		val acceptedLanguageIds = request.headers.commaSeparatedValues(acceptLanguageIdsHeaderName).flatMap { _.int }
+		if (acceptedLanguageIds.nonEmpty) {
+			val languageById = DbLanguages(acceptedLanguageIds.toSet).pull.map { l => l.id -> l }.toMap
+			// Returns languages in the same order as in the request headers
+			acceptedLanguageIds.flatMap { id => languageById.get(id) }
 		}
-		else
-			Vector()
+		else {
+			val acceptedLanguages = request.headers.acceptedLanguages
+				.map { case (code, weight) => code.toLowerCase -> weight }
+			if (acceptedLanguages.nonEmpty)
+			{
+				val acceptedCodes = acceptedLanguages.keySet
+				// Maps codes to language ids (if present)
+				val languages = DbLanguages.withIsoCodes(acceptedCodes)
+				// Orders the languages based on assigned weight
+				languages.sortBy { l => -acceptedLanguages(l.isoCode.toLowerCase) }
+			}
+			else
+				Vector()
+		}
 	}
 	
 	/**
@@ -160,7 +177,7 @@ abstract class AuthorizedContext extends Context
 	def languageIds(userId: => Int)(implicit connection: Connection): LanguageIds =
 	{
 		// Checks whether X-Accepted-Language-Ids is provided
-		val acceptedIds = request.headers.commaSeparatedValues("X-Accept-Language-Ids").flatMap { _.int }
+		val acceptedIds = request.headers.commaSeparatedValues(acceptLanguageIdsHeaderName).flatMap { _.int }
 		if (acceptedIds.nonEmpty)
 			LanguageIds(acceptedIds)
 		else
