@@ -35,6 +35,8 @@
 - **OrganizationInvitationsNode** now supports extensions
 - **AuthorizedContext** now supports **X-Accept-Language-Ids** -header as a replacement for **Accept-Language**
 ### Bugfixes
+- `users/me/languages` **POST** and **PUT** request handling fixed
+  - Previous versions would generate duplicates because of invalid id matching
 - Unique username requirement is now enforced in user creation when so specified in **ExodusContext**
 
 ## v3.0 - 04.11.2021
