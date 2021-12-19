@@ -2,7 +2,6 @@ package utopia.vault.nosql.access.template.model
 
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
-import utopia.vault.sql.OrderBy
 
 import scala.language.implicitConversions
 
@@ -24,21 +23,13 @@ object DistinctReadModelAccess
  */
 trait DistinctReadModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 {
-	// ABSTRACT -----------------------------
-	
-	/**
-	 * @return The ordering used in this access point by default
-	 */
-	protected def defaultOrdering: Option[OrderBy]
-	
-	
 	// COMPUTED -----------------------------
 	
 	/**
 	 * @param connection Implicit database connection
 	 * @return The unique item accessed through this access point. None if no item was found.
 	 */
-	def pull(implicit connection: Connection) = read(globalCondition, defaultOrdering)
+	def pull(implicit connection: Connection) = read(globalCondition, factory.defaultOrdering)
 	
 	/**
 	 * Reads all accessible values of a column
@@ -46,7 +37,8 @@ trait DistinctReadModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 	 * @param connection DB Connection (implicit)
 	 * @return All accessible values of that column. May contain empty values.
 	 */
-	def pullColumn(column: Column)(implicit connection: Connection) = readColumn(column, order = defaultOrdering)
+	def pullColumn(column: Column)(implicit connection: Connection) =
+		readColumn(column, order = factory.defaultOrdering)
 	/**
 	 * Reads all accessible values of a column / attribute
 	 * @param attributeName Name of the targeted attribute
