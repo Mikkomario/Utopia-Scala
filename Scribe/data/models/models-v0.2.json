@@ -1,0 +1,141 @@
+{
+  "author": "Mikko Hilpinen",
+  "project": "Scribe",
+  "package": "utopia.scribe",
+  "version": "v0.2",
+  "enums": {
+    "Severity": ["Debug", "Warning", "Problem", "Error", "Critical"]
+  },
+  "classes": {
+    "logging": [
+      {
+        "name": "Problem",
+        "combo_index": ["severity", "context"],
+        "doc": "Represents a type of problem that may occur during a program's run",
+        "props": [
+          {
+            "name": "context",
+            "length": 96,
+            "doc": "Program context where this problem occurred or was logged. Should be unique."
+          },
+          {
+            "name": "severity",
+            "name_plural": "severities",
+            "type": "Enum[Severity]",
+            "doc": "Severity of this problem"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this problem first occurred"
+          }
+        ]
+      },
+      {
+        "name": "ProblemCase",
+        "doc": "Represents a specific setting where a problem occurred",
+        "props": [
+          {
+            "ref": "problem",
+            "doc": "Id of the problem that occurred"
+          },
+          {
+            "name": "details",
+            "type": "Option[String]",
+            "length": 320,
+            "doc": "Details about this problem case, like the error message, for example"
+          },
+          {
+            "name": "stack",
+            "type": "Option[String]",
+            "length": 10000
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this case first occurred"
+          }
+        ]
+      },
+      {
+        "name": "ProblemRepeat",
+        "doc": "Represents a case where a previously occurred problem repeats again",
+        "props": [
+          {
+            "name": "caseId",
+            "ref": "problem_case",
+            "doc": "Id of the problem case that repeated"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when that case repeated itself"
+          }
+        ]
+      }
+    ],
+    "settings": [
+      {
+        "name": "SettingField",
+        "combos": [
+          {
+            "name": "AssignedSetting",
+            "child": "SettingValue",
+            "is_always_linked": true,
+            "parent_alias": "field",
+            "child_alias": "assignment"
+          },
+          {
+            "name": "SettingWithValues",
+            "children": "SettingValues",
+            "parent_alias": "field",
+            "child_alias": "assignments"
+          }
+        ],
+        "combo_index": ["category", "name"],
+        "doc": "Represents a field that specifies some program functionality",
+        "props": [
+          {
+            "name": "category",
+            "length": 64,
+            "doc": "Name of the broader category where this field belongs"
+          },
+          {
+            "name": "name",
+            "length": 64
+          },
+          {
+            "name": "description",
+            "type": "Option[String]",
+            "length": 255
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this field was introduced"
+          }
+        ]
+      },
+      {
+        "name": "SettingValue",
+        "doc": "Represents a single setting value assignment",
+        "props": [
+          {
+            "name": "fieldId",
+            "ref": "setting_field",
+            "doc": "Id of the field this value is for"
+          },
+          {
+            "name": "value",
+            "type": "Value",
+            "doc": "Value assigned for this field"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this value was specified"
+          },
+          {
+            "type": "deprecation",
+            "doc": "Time when this value was replaced with another"
+          }
+        ]
+      }
+    ]
+  }
+}

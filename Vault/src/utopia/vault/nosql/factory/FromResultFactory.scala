@@ -21,6 +21,8 @@ trait FromResultFactory[+A]
 	  */
 	def table: Table
 	
+	// def defaultOrdering: Option[OrderBy]
+	
 	/**
 	  * @return The tables that are joined for complete results
 	  */
