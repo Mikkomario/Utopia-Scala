@@ -167,7 +167,6 @@ trait FromResultFactory[+A]
 	 *  @param order Order applied to the search (optional)
 	  * @see #getMany(Condition)
 	  */
-	@deprecated("Please use .all instead")
 	def getAll(order: Option[OrderBy] = None)(implicit connection: Connection) =
 		apply(connection(SelectAll(target) + order.orElse(defaultOrdering)))
 	

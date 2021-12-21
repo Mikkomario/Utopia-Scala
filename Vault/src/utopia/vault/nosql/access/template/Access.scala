@@ -1,8 +1,10 @@
 package utopia.vault.nosql.access.template
 
 import utopia.vault.database.Connection
+import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.view.View
-import utopia.vault.sql.{Condition, OrderBy}
+import utopia.vault.sql.JoinType.Inner
+import utopia.vault.sql.{Condition, JoinType, OrderBy}
 
 /**
   * A common trait for all DB access points that provide data reading
@@ -18,10 +20,14 @@ trait Access[+A] extends View
 	  * Performs the actual data read + possible wrapping
 	  * @param condition  Final search condition used when reading data (None if no condition should be applied)
 	  * @param order      The ordering applied to the data read (None if no ordering)
+	  * @param joins Targets to join to the query (not selected, however)
+	  * @param joinType Join type to use (default = inner)
 	  * @param connection Database connection used (implicit)
 	  * @return Read data
 	  */
-	protected def read(condition: Option[Condition], order: Option[OrderBy] = None)(implicit connection: Connection): A
+	protected def read(condition: Option[Condition] = None, order: Option[OrderBy] = None,
+	                   joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	                  (implicit connection: Connection): A
 	
 	
 	// OTHER    ----------------------------------

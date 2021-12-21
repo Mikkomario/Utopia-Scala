@@ -3,49 +3,10 @@ package utopia.vault.nosql.access.many.model
 import utopia.flow.datastructure.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
+import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.access.many.ManyAccess
-import utopia.vault.nosql.access.many.model.ManyModelAccess.FactoryWrapper
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
-import utopia.vault.nosql.factory.FromResultFactory
-import utopia.vault.nosql.view.FilterableView
-import utopia.vault.sql.{Condition, OrderBy, Select, Where}
-
-object ManyModelAccess
-{
-	// OTHER	--------------------------
-	
-	/**
-	 * Wraps a model factory
-	 * @param factory A model factory
-	 * @param order Order by used in the queries by default (optional)
-	 * @tparam A Type of model read from DB
-	 * @return An access point
-	 */
-	def apply[A](factory: FromResultFactory[A], order: Option[OrderBy] = None): ManyModelAccess[A] =
-		new FactoryWrapper(factory, None, order)
-	
-	/**
-	 * Wraps a model factory
-	 * @param factory A model factory
-	 * @param condition A search condition used
-	 * @param order Order by used in the queries by default (optional)
-	 * @tparam A Type of model read from DB
-	 * @return An access point
-	 */
-	def conditional[A](factory: FromResultFactory[A], condition: Condition,
-	                   order: Option[OrderBy] = None): ManyModelAccess[A] =
-		new FactoryWrapper(factory, Some(condition), order)
-	
-	
-	// NESTED	--------------------------
-	
-	private class FactoryWrapper[A](override val factory: FromResultFactory[A], condition: Option[Condition],
-	                                override val defaultOrdering: Option[OrderBy])
-		extends ManyModelAccess[A]
-	{
-		override def globalCondition = condition
-	}
-}
+import utopia.vault.sql.{Condition, JoinType, OrderBy, Select, Where}
 
 /**
  * Used for accessing multiple models at a time from DB
@@ -53,7 +14,7 @@ object ManyModelAccess
  * @since 30.1.2020, v1.4
  */
 trait ManyModelAccess[+A] extends ManyAccess[A]
-	with DistinctModelAccess[A, Vector[A], Vector[Value]] with FilterableView[ManyModelAccess[A]]
+	with DistinctModelAccess[A, Vector[A], Vector[Value]]
 {
 	// COMPUTED --------------------------------
 	
@@ -67,14 +28,14 @@ trait ManyModelAccess[+A] extends ManyAccess[A]
 	
 	// IMPLEMENTED  ----------------------------
 	
-	override protected def read(condition: Option[Condition], order: Option[OrderBy])(implicit connection: Connection) = condition match
+	override protected def read(condition: Option[Condition], order: Option[OrderBy], joins: Seq[Joinable],
+	                            joinType: JoinType)(implicit connection: Connection) =
 	{
-		case Some(condition) => factory.getMany(condition, order)
-		case None => factory.getAll(order)
+		condition match {
+			case Some(condition) => factory.findMany(condition, order, joins, joinType)
+			case None => factory.getAll(order)
+		}
 	}
-	
-	override def filter(additionalCondition: Condition): ManyModelAccess[A] = new FactoryWrapper[A](factory,
-		Some(mergeCondition(additionalCondition)), defaultOrdering)
 	
 	/**
 	 * Reads the values of an individual column

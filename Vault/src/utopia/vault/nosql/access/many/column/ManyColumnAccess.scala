@@ -1,9 +1,10 @@
 package utopia.vault.nosql.access.many.column
 
 import utopia.vault.database.Connection
+import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.access.many.ManyAccess
 import utopia.vault.nosql.access.template.column.ColumnAccess
-import utopia.vault.sql.{Condition, OrderBy, Select, Where}
+import utopia.vault.sql.{Condition, JoinType, OrderBy, Select, Where}
 
 /**
  * Used for accessing multiple values of a single column at a time
@@ -26,9 +27,11 @@ trait ManyColumnAccess[+V] extends ColumnAccess[V, Vector[V]] with ManyAccess[V]
 	
 	// IMPLEMENTED	-----------------------
 	
-	override protected def read(condition: Option[Condition], order: Option[OrderBy])(implicit connection: Connection) =
+	override protected def read(condition: Option[Condition], order: Option[OrderBy],
+	                            joins: Seq[Joinable], joinType: JoinType)(implicit connection: Connection) =
 	{
-		val statement = Select.index(target, table) + condition.map { Where(_) } + order
+		val statement = Select(joins.foldLeft(target) { _.join(_, joinType) }, column) +
+			condition.map { Where(_) } + order
 		connection(statement).rowValues.map(parseValue).distinct
 	}
 }
