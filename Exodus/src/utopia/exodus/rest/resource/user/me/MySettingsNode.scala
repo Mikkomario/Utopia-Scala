@@ -69,8 +69,12 @@ object MySettingsNode extends ExtendableSessionResource
 						// Settings definition regarding email address works differently based on server
 						// implementation (whether email validation is used)
 						val proposedEmail = {
+							// Checks whether email is being changed
+							// Case: Is being changed
 							if (oldSettings.forall { old => update.definesPotentiallyDifferentEmailThan(old.email) }) {
+								// Case: Email validation is used => expects an email validation token in request body
 								if (ExodusContext.isEmailValidationSupported)
+									// Case: Email token found => completes the validation attempt, if possible
 									update.emailValidationToken match {
 										case Some(token) =>
 											DbEmailValidationAttempt.open
@@ -87,11 +91,13 @@ object MySettingsNode extends ExtendableSessionResource
 												}
 										case None => Right(None)
 									}
+								// Case: No email validation is used => uses email from the request body
 								else
 									Right(update.newEmailAddress)
 							}
+							// Case: Email is not being changed => keeps old email address
 							else
-								Right(None)
+								Right(oldSettings.get.email)
 						}
 						proposedEmail match {
 							case Right(email) =>

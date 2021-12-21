@@ -4,6 +4,9 @@
 ### New Methods
 - **ExtendableResource**
   - Added `.addChild(=> Resource)`, which is a utility variation of `.extendWith(FollowImplementation)`
+### Bugfixes
+- **Important**: There was a logic error in **ModularResource** which applied the first implementation 
+  regardless of its method. Current version properly filters by method used.
 
 ## v1.6.1 - 04.11.2021
 Supports changes in Flow v1.14

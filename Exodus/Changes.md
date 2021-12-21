@@ -37,6 +37,8 @@
 ### Bugfixes
 - `users/me/languages` **POST** and **PUT** request handling fixed
   - Previous versions would generate duplicates because of invalid id matching
+- `users/me/settings` **PUT** request handling fixed
+  - Previous versions would remove email address if it wasn't updated
 - Unique username requirement is now enforced in user creation when so specified in **ExodusContext**
 
 ## v3.0 - 04.11.2021
