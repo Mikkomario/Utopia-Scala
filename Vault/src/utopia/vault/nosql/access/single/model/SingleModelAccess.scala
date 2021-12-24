@@ -37,35 +37,15 @@ trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A
 		}
 	}
 	
-	/**
-	 * Reads the value of an individual column
-	 * @param column Column to read
-	 * @param additionalCondition Additional search condition to apply (optional)
-	 * @param order Ordering to use (optional)
-	 * @param connection DB Connection (implicit)
-	 * @return Value of that column (may be empty)
-	 */
 	override protected def readColumn(column: Column, additionalCondition: Option[Condition] = None,
 	                                  order: Option[OrderBy] = None, joins: Seq[Joinable] = Vector(),
 	                                  joinType: JoinType = Inner)
 	                                 (implicit connection: Connection) =
 	{
-		// TODO: Add pullColumn method to Factory and use it here
-		val statement = Select(joins.foldLeft(factory.target))
-		
 		// Forms the query first
-		val baseQuery = Select(factory.target, column)
-		val conditionedQuery = mergeCondition(additionalCondition) match
-		{
-			case Some(condition) => baseQuery + Where(condition)
-			case None => baseQuery
-		}
-		val query = (order match
-		{
-			case Some(order) => conditionedQuery + order
-			case None => conditionedQuery
-		}) + Limit(1)
+		val statement = Select(joins.foldLeft(factory.target) { _.join(_, joinType) }, column) +
+			additionalCondition.map { Where(_) } + order + Limit(1)
 		// Applies the query and parses results
-		connection(query).firstValue
+		connection(statement).firstValue
 	}
 }

@@ -16,9 +16,4 @@ trait LatestModelAccess[+A] extends SingleRowModelAccess[A] with DistinctReadMod
 	
 	// This access point requires a timestamp-based factory
 	override def factory: FromRowFactoryWithTimestamps[A]
-	
-	
-	// IMPLEMENTED  ------------------------
-	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
 }

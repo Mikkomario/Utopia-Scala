@@ -26,8 +26,6 @@ trait ManyUserLanguageLinksWithFamiliaritiesAccess
 {
 	override def factory = UserLanguageLinkWithFamiliarityFactory
 	
-	override protected def defaultOrdering = Some(factory.defaultOrder)
-	
 	override protected def _filter(condition: Condition): ManyUserLanguageLinksWithFamiliaritiesAccess =
 		new SubAccess(this, condition)
 }

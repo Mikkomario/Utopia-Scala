@@ -52,8 +52,6 @@ object DbInvitationResponse
 	{
 		// IMPLEMENTED  ------------
 		
-		override protected def defaultOrdering = None
-		
 		override def globalCondition = Some(model.withInvitationId(invitationId).toCondition)
 		
 		

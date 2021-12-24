@@ -39,8 +39,6 @@ trait ManyAuthTokensAccess
 	
 	override def factory = AuthTokenFactory
 	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
-	
 	override def _filter(additionalCondition: Condition): ManyAuthTokensAccess =
 		new ManyAuthTokensAccess.ManyAuthTokensSubView(this, additionalCondition)
 }

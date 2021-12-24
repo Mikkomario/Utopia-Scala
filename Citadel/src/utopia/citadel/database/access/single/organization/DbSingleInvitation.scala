@@ -25,5 +25,5 @@ case class DbSingleInvitation(id: Int) extends UniqueInvitationAccess with Singl
 	  * @return This invitation, including the possible response
 	  */
 	def withResponse(implicit connection: Connection) =
-		withResponseFactory.get(condition)
+		withResponseFactory.find(condition)
 }

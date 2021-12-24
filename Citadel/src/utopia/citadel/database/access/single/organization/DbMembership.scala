@@ -81,7 +81,6 @@ object DbMembership extends SingleRowModelAccess[Membership] with NonDeprecatedV
 		// IMPLEMENTED  -----------------------
 		
 		override protected def parent = DbMembership
-		override protected def defaultOrdering = None
 		
 		override def filterCondition = model.withOrganizationId(organizationId).withUserId(userId).toCondition
 		

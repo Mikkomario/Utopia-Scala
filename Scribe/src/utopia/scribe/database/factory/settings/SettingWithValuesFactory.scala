@@ -23,7 +23,7 @@ object SettingWithValuesFactory
 	
 	override def parentFactory = SettingFieldFactory
 	
-	override def apply(field: SettingField, assignments: Vector[SettingValue]) = 
+	override def apply(field: SettingField, assignments: Vector[SettingValue]) =
 		SettingWithValues(field, assignments)
 }
 

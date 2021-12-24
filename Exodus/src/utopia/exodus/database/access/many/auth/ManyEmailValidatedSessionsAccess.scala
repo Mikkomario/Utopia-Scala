@@ -70,8 +70,6 @@ trait ManyEmailValidatedSessionsAccess extends ManyRowModelAccess[EmailValidated
 	
 	override def factory = EmailValidatedSessionFactory
 	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
-	
 	override def filter(additionalCondition: Condition): ManyEmailValidatedSessionsAccess = 
 		new ManyEmailValidatedSessionsAccess.ManyEmailValidatedSessionsSubView(this, additionalCondition)
 	

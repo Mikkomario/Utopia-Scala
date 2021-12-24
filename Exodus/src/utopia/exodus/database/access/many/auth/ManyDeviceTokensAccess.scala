@@ -67,8 +67,6 @@ trait ManyDeviceTokensAccess extends ManyRowModelAccess[DeviceToken] with Indexe
 	
 	override def factory = DeviceTokenFactory
 	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
-	
 	override def filter(additionalCondition: Condition): ManyDeviceTokensAccess = 
 		new ManyDeviceTokensAccess.ManyDeviceTokensSubView(this, additionalCondition)
 	

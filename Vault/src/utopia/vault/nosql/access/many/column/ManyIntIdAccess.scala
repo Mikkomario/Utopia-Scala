@@ -9,5 +9,5 @@ import utopia.flow.datastructure.immutable.Value
   */
 trait ManyIntIdAccess extends ManyIdAccess[Int]
 {
-	override def valueToId(value: Value) = value.int
+	override def parseValue(value: Value) = value.getInt
 }

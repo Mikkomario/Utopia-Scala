@@ -17,6 +17,8 @@ object DescriptionRoleFactory extends FromValidatedRowModelFactory[DescriptionRo
 	
 	override def table = CitadelTables.descriptionRole
 	
+	override def defaultOrdering = None
+	
 	override def fromValidatedModel(valid: Model) =
 		DescriptionRole(valid("id").getInt, DescriptionRoleData(valid("jsonKeySingular").getString, 
 			valid("jsonKeyPlural").getString, valid("created").getInstant))

@@ -65,8 +65,6 @@ trait ManyAuthRedirectsAccess extends ManyRowModelAccess[AuthRedirect] with Inde
 	
 	override def factory = AuthRedirectFactory
 	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
-	
 	override def filter(additionalCondition: Condition): ManyAuthRedirectsAccess = 
 		new ManyAuthRedirectsAccess.ManyAuthRedirectsSubView(this, additionalCondition)
 	

@@ -71,8 +71,6 @@ trait ManyIncompleteAuthsAccess extends ManyRowModelAccess[IncompleteAuth] with 
 	
 	override def factory = IncompleteAuthFactory
 	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
-	
 	override def filter(additionalCondition: Condition): ManyIncompleteAuthsAccess = 
 		new ManyIncompleteAuthsAccess.ManyIncompleteAuthsSubView(this, additionalCondition)
 	

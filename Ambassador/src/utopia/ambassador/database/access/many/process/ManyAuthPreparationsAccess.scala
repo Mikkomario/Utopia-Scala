@@ -65,8 +65,6 @@ trait ManyAuthPreparationsAccess extends ManyRowModelAccess[AuthPreparation] wit
 	
 	override def factory = AuthPreparationFactory
 	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
-	
 	override def filter(additionalCondition: Condition): ManyAuthPreparationsAccess = 
 		new ManyAuthPreparationsAccess.ManyAuthPreparationsSubView(this, additionalCondition)
 	

@@ -8,6 +8,7 @@ import utopia.metropolis.model.stored.description.DescriptionLink
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 import utopia.vault.sql.SqlExtensions._
 
@@ -46,7 +47,8 @@ object DescriptionLinksAccess
   * @author Mikko Hilpinen
   * @since 23.10.2021, v2.0
   */
-trait DescriptionLinksAccess extends ManyRowModelAccess[DescriptionLink] with Indexed
+trait DescriptionLinksAccess
+	extends ManyRowModelAccess[DescriptionLink] with Indexed with FilterableView[DescriptionLinksAccess]
 {
 	// ABSTRACT -----------------------------------
 	
@@ -80,8 +82,6 @@ trait DescriptionLinksAccess extends ManyRowModelAccess[DescriptionLink] with In
 	
 	
 	// IMPLEMENTED  -------------------------------
-	
-	override protected def defaultOrdering = None
 	
 	override def filter(additionalCondition: Condition): DescriptionLinksAccess =
 		DescriptionLinksAccess(factory, linkModel, Some(mergeCondition(additionalCondition)))

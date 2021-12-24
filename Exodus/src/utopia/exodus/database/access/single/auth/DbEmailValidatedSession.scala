@@ -50,7 +50,6 @@ object DbEmailValidatedSession
 	{
 		override protected def parent = DbEmailValidatedSession
 		override def filterCondition = model.withToken(token).toCondition
-		override protected def defaultOrdering = Some(factory.defaultOrdering)
 	}
 }
 

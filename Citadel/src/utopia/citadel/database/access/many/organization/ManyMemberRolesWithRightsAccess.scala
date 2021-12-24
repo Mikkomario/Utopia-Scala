@@ -41,7 +41,6 @@ trait ManyMemberRolesWithRightsAccess
 	// IMPLEMENTED  ------------------------------
 	
 	override def factory = MemberRoleWithRightsFactory
-	override protected def defaultOrdering = None
 	
 	override def _filter(additionalCondition: Condition): ManyMemberRolesWithRightsAccess =
 		new ManyMemberRolesWithRightsAccess.RoleLinksSubView(this, additionalCondition)

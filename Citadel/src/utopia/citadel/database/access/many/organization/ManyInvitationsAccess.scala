@@ -40,8 +40,6 @@ trait ManyInvitationsAccess extends ManyInvitationsAccessLike[Invitation, ManyIn
 	
 	override def factory = InvitationFactory
 	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
-	
 	override protected def _filter(condition: Condition): ManyInvitationsAccess = new SubAccess(this, condition)
 }
 

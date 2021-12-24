@@ -5,20 +5,18 @@ import utopia.citadel.database.model.language.LanguageModel
 import utopia.flow.datastructure.immutable.Value
 import utopia.metropolis.model.partial.language.LanguageData
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.single.column.{SingleIdAccess, UniqueIdAccess}
+import utopia.vault.nosql.access.single.column.{SingleIntIdAccess, UniqueIdAccess}
 
 /**
   * Used for accessing individual language ids
   * @author Mikko Hilpinen
   * @since 17.5.2020, v1.0
   */
-object DbLanguageId extends SingleIdAccess[Int]
+object DbLanguageId extends SingleIntIdAccess
 {
 	// IMPLEMENTED	---------------------------
 	
 	override def target = factory.target
-	
-	override def valueToId(value: Value) = value.int
 	
 	override def table = factory.table
 	
@@ -61,8 +59,8 @@ object DbLanguageId extends SingleIdAccess[Int]
 		
 		override def target = DbLanguageId.target
 		
-		override def valueToId(value: Value) = value.int
-		
 		override def table = DbLanguageId.table
+		
+		override def parseValue(value: Value) = value.int
 	}
 }

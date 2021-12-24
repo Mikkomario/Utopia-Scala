@@ -9,7 +9,7 @@ import utopia.metropolis.model.combined.device.DescribedClientDevice
 import utopia.metropolis.model.stored.device.ClientDevice
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyClientDevicesAccess
@@ -28,6 +28,7 @@ object ManyClientDevicesAccess
   */
 trait ManyClientDevicesAccess 
 	extends ManyRowModelAccess[ClientDevice] with ManyDescribedAccess[ClientDevice, DescribedClientDevice]
+		with FilterableView[ManyClientDevicesAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -54,8 +55,6 @@ trait ManyClientDevicesAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = ClientDeviceFactory
-	
-	override protected def defaultOrdering = None
 	
 	override protected def describedFactory = DescribedClientDevice
 	

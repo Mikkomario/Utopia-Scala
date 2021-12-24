@@ -6,6 +6,7 @@ import utopia.vault.model.immutable.Column
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.access.many.ManyAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
+import utopia.vault.sql.JoinType.Inner
 import utopia.vault.sql.{Condition, JoinType, OrderBy, Select, Where}
 
 /**
@@ -37,31 +38,15 @@ trait ManyModelAccess[+A] extends ManyAccess[A]
 		}
 	}
 	
-	/**
-	 * Reads the values of an individual column
-	 * @param column Column to read
-	 * @param additionalCondition Additional search condition to apply (optional)
-	 * @param order Ordering to use (optional)
-	 * @param connection DB Connection (implicit)
-	 * @return Values of that column (may be empty and may contain empty values)
-	 */
 	override protected def readColumn(column: Column, additionalCondition: Option[Condition] = None,
-	                                  order: Option[OrderBy] = None)(implicit connection: Connection) =
+	                                  order: Option[OrderBy] = None, joins: Seq[Joinable] = Vector(),
+	                                  joinType: JoinType = Inner)(implicit connection: Connection) =
 	{
 		// Forms the query first
-		val baseQuery = Select(factory.target, column)
-		val conditionedQuery = mergeCondition(additionalCondition) match
-		{
-			case Some(condition) => baseQuery + Where(condition)
-			case None => baseQuery
-		}
-		val query = order match
-		{
-			case Some(order) => conditionedQuery + order
-			case None => conditionedQuery
-		}
+		val statement = Select(joins.foldLeft(target) { _.join(_, joinType) }, column) +
+			additionalCondition.map { Where(_) } + order
 		// Applies the query and parses results
-		connection(query).rowValues
+		connection(statement).rowValues
 	}
 	
 	

@@ -80,8 +80,6 @@ trait ManySessionTokensAccess extends ManyRowModelAccess[SessionToken] with Inde
 	
 	override def factory = SessionTokenFactory
 	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
-	
 	override def filter(additionalCondition: Condition): ManySessionTokensAccess = 
 		new ManySessionTokensAccess.ManySessionTokensSubView(this, additionalCondition)
 	

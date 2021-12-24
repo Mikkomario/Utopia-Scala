@@ -126,8 +126,6 @@ trait ManyAuthServiceSettingsAccess extends ManyRowModelAccess[AuthServiceSettin
 	
 	override def factory = AuthServiceSettingsFactory
 	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
-	
 	override def filter(additionalCondition: Condition): ManyAuthServiceSettingsAccess = 
 		new ManyAuthServiceSettingsAccess.ManyAuthServiceSettingsSubView(this, additionalCondition)
 	

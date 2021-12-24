@@ -8,7 +8,7 @@ import utopia.metropolis.model.combined.description.DescribedDescriptionRole
 import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyDescriptionRolesAccess
@@ -28,6 +28,7 @@ object ManyDescriptionRolesAccess
 trait ManyDescriptionRolesAccess 
 	extends ManyRowModelAccess[DescriptionRole] 
 		with ManyDescribedAccess[DescriptionRole, DescribedDescriptionRole]
+		with FilterableView[ManyDescriptionRolesAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -60,8 +61,6 @@ trait ManyDescriptionRolesAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = DescriptionRoleFactory
-	
-	override protected def defaultOrdering = None
 	
 	override protected def describedFactory = DescribedDescriptionRole
 	

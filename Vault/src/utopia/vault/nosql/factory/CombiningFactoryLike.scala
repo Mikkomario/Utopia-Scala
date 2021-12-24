@@ -19,5 +19,14 @@ trait CombiningFactoryLike[+Combined, +Parent, +Child] extends LinkedFactoryLike
 	
 	// IMPLEMENTED  -------------------------
 	
+	override def defaultOrdering = parentFactory.defaultOrdering match {
+		case Some(primary) =>
+			childFactory.defaultOrdering match {
+				case Some(secondary) => Some(primary ++ secondary)
+				case None => Some(primary)
+			}
+		case None => childFactory.defaultOrdering
+	}
+	
 	override def table = parentFactory.table
 }

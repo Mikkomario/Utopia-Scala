@@ -11,7 +11,7 @@ import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 import utopia.vault.sql.SqlExtensions._
 
@@ -27,8 +27,6 @@ object LinkedDescriptionsAccessLike
 	{
 		override def factory = parent.factory
 		
-		override protected def defaultOrdering = parent.defaultOrdering
-		
 		override def linkModel = parent.linkModel
 	}
 }
@@ -38,7 +36,8 @@ object LinkedDescriptionsAccessLike
   * @author Mikko Hilpinen
   * @since 23.10.2021, v2.0
   */
-trait LinkedDescriptionsAccessLike extends ManyRowModelAccess[LinkedDescription]
+trait LinkedDescriptionsAccessLike
+	extends ManyRowModelAccess[LinkedDescription] with FilterableView[LinkedDescriptionsAccessLike]
 {
 	// ABSTRACT	-------------------------
 	
@@ -72,8 +71,6 @@ trait LinkedDescriptionsAccessLike extends ManyRowModelAccess[LinkedDescription]
 	
 	override def filter(additionalCondition: Condition): LinkedDescriptionsAccessLike =
 		new LinkedDescriptionsSubView(this, additionalCondition)
-	
-	override protected def defaultOrdering = None
 	
 	
 	// OTHER	------------------------

@@ -8,7 +8,7 @@ import utopia.metropolis.model.stored.user.User
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyUsersAccess
@@ -25,7 +25,7 @@ object ManyUsersAccess
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
-trait ManyUsersAccess extends ManyRowModelAccess[User] with Indexed
+trait ManyUsersAccess extends ManyRowModelAccess[User] with Indexed with FilterableView[ManyUsersAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -46,8 +46,6 @@ trait ManyUsersAccess extends ManyRowModelAccess[User] with Indexed
 	// IMPLEMENTED	--------------------
 	
 	override def factory = UserFactory
-	
-	override protected def defaultOrdering = None
 	
 	override def filter(additionalCondition: Condition): ManyUsersAccess = 
 		new ManyUsersAccess.ManyUsersSubView(this, additionalCondition)

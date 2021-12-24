@@ -9,7 +9,7 @@ import utopia.scribe.model.stored.logging.Problem
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyProblemsAccess
@@ -26,7 +26,7 @@ object ManyProblemsAccess
   * @author Mikko Hilpinen
   * @since 12.12.2021, v0.2
   */
-trait ManyProblemsAccess extends ManyRowModelAccess[Problem] with Indexed
+trait ManyProblemsAccess extends ManyRowModelAccess[Problem] with Indexed with FilterableView[ManyProblemsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -57,8 +57,6 @@ trait ManyProblemsAccess extends ManyRowModelAccess[Problem] with Indexed
 	// IMPLEMENTED	--------------------
 	
 	override def factory = ProblemFactory
-	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
 	
 	override def filter(additionalCondition: Condition): ManyProblemsAccess = 
 		new ManyProblemsAccess.ManyProblemsSubView(this, additionalCondition)

@@ -9,7 +9,7 @@ import utopia.metropolis.model.combined.language.DescribedLanguageFamiliarity
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyLanguageFamiliaritiesAccess
@@ -29,6 +29,7 @@ object ManyLanguageFamiliaritiesAccess
 trait ManyLanguageFamiliaritiesAccess 
 	extends ManyRowModelAccess[LanguageFamiliarity] 
 		with ManyDescribedAccess[LanguageFamiliarity, DescribedLanguageFamiliarity]
+		with FilterableView[ManyLanguageFamiliaritiesAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -55,8 +56,6 @@ trait ManyLanguageFamiliaritiesAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = LanguageFamiliarityFactory
-	
-	override protected def defaultOrdering = None
 	
 	override protected def describedFactory = DescribedLanguageFamiliarity
 	

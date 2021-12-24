@@ -64,7 +64,6 @@ trait ManyMembershipsWithRolesAccess
 	// IMPLEMENTED  --------------------------
 	
 	override def factory = MembershipWithRolesFactory
-	override protected def defaultOrdering = Some(factory.parentFactory.defaultOrdering)
 	
 	override protected def _filter(condition: Condition): ManyMembershipsWithRolesAccess =
 		new SubAcccess(this, condition)
