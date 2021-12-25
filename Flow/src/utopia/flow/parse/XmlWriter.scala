@@ -104,7 +104,6 @@ object XmlWriter
  * @author Mikko Hilpinen
  * @since 17.1.2018 (v1.3)
  */
-@throws(classOf[XMLStreamException])
 class XmlWriter(stream: OutputStream, val charset: Charset = StandardCharsets.UTF_8) extends AutoCloseable
 {
     // ATTRIBUTES    --------------------------
