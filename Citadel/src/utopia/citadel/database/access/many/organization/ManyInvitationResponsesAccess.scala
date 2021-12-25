@@ -8,7 +8,7 @@ import utopia.metropolis.model.stored.organization.InvitationResponse
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyInvitationResponsesAccess
@@ -26,6 +26,7 @@ object ManyInvitationResponsesAccess
   * @since 2021-10-23
   */
 trait ManyInvitationResponsesAccess extends ManyRowModelAccess[InvitationResponse] with Indexed
+	with FilterableView[ManyInvitationResponsesAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -76,8 +77,6 @@ trait ManyInvitationResponsesAccess extends ManyRowModelAccess[InvitationRespons
 	// IMPLEMENTED	--------------------
 	
 	override def factory = InvitationResponseFactory
-	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
 	
 	override def filter(additionalCondition: Condition): ManyInvitationResponsesAccess = 
 		new ManyInvitationResponsesAccess.ManyInvitationResponsesSubView(this, additionalCondition)

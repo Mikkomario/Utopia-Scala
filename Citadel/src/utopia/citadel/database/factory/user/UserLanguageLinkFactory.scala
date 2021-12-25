@@ -1,7 +1,7 @@
 package utopia.citadel.database.factory.user
 
 import utopia.citadel.database.CitadelTables
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.metropolis.model.partial.user.UserLanguageLinkData
 import utopia.metropolis.model.stored.user.UserLanguageLink
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
@@ -16,6 +16,8 @@ object UserLanguageLinkFactory extends FromValidatedRowModelFactory[UserLanguage
 	// IMPLEMENTED	--------------------
 	
 	override def table = CitadelTables.userLanguageLink
+	
+	override def defaultOrdering = None
 	
 	override def fromValidatedModel(valid: Model) =
 		UserLanguageLink(valid("id").getInt, UserLanguageLinkData(valid("userId").getInt, valid("languageId").getInt,

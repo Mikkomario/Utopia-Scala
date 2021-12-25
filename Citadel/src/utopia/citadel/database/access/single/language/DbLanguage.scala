@@ -50,8 +50,6 @@ object DbLanguage extends SingleRowModelAccess[Language] with UnconditionalView 
 	{
 		// IMPLEMENTED  -------------
 		
-		override protected def defaultOrdering = None
-		
 		override def globalCondition = Some(model.withIsoCode(isoCode).toCondition)
 		
 		

@@ -187,7 +187,6 @@ object DbEmailValidationAttempt
 		class DbResendableEmailValidation(resendToken: String) extends UniqueEmailValidationAttemptAccess with SubView
 		{
 			override protected def parent = DbOpenEmailValidationAttempt
-			override protected def defaultOrdering = None
 			
 			override def filterCondition = model.withResendToken(resendToken).toCondition
 		}

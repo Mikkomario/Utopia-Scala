@@ -44,8 +44,8 @@ trait UniqueAuthServiceAccess
 	  */
 	def withSettings(implicit connection: Connection) = globalCondition match
 	{
-		case Some(c) => AuthServiceWithSettingsFactory.get(c)
-		case None => AuthServiceWithSettingsFactory.getAny()
+		case Some(c) => AuthServiceWithSettingsFactory.find(c)
+		case None => AuthServiceWithSettingsFactory.any
 	}
 	
 	

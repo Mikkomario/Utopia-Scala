@@ -41,8 +41,6 @@ trait ManyAuthPreparationScopeLinksAccess
 	
 	override def factory = AuthPreparationScopeLinkFactory
 	
-	override protected def defaultOrdering = None
-	
 	override def _filter(additionalCondition: Condition): ManyAuthPreparationScopeLinksAccess =
 		new ManyAuthPreparationScopeLinksAccess.ManyAuthPreparationScopeLinksSubView(this,
 			additionalCondition)

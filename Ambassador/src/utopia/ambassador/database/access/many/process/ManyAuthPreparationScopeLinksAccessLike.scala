@@ -5,6 +5,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
 /**
@@ -13,7 +14,7 @@ import utopia.vault.sql.Condition
   * @since 2021-10-26
   */
 trait ManyAuthPreparationScopeLinksAccessLike[+A, +Repr <: ManyModelAccess[A]]
-	extends ManyModelAccess[A] with Indexed
+	extends ManyModelAccess[A] with Indexed with FilterableView[Repr]
 {
 	// ABSTRACT --------------------
 	

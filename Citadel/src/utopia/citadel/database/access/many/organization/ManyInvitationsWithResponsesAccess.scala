@@ -61,7 +61,6 @@ trait ManyInvitationsWithResponsesAccess
 	// IMPLEMENTED  -----------------------------------
 	
 	override def factory = InvitationWithResponseFactory
-	override protected def defaultOrdering = None
 	
 	override protected def _filter(condition: Condition): ManyInvitationsWithResponsesAccess =
 		new SubAccess(this, condition)

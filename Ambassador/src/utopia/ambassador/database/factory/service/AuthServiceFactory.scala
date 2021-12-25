@@ -3,7 +3,7 @@ package utopia.ambassador.database.factory.service
 import utopia.ambassador.database.AmbassadorTables
 import utopia.ambassador.model.partial.service.AuthServiceData
 import utopia.ambassador.model.stored.service.AuthService
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
@@ -16,6 +16,8 @@ object AuthServiceFactory extends FromValidatedRowModelFactory[AuthService]
 	// IMPLEMENTED	--------------------
 	
 	override def table = AmbassadorTables.authService
+	
+	override def defaultOrdering = None
 	
 	override def fromValidatedModel(valid: Model) =
 		AuthService(valid("id").getInt, AuthServiceData(valid("name").getString, valid("created").getInstant))

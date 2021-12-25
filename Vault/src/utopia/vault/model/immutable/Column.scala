@@ -2,7 +2,12 @@ package utopia.vault.model.immutable
 
 import utopia.flow.datastructure.immutable.{PropertyDeclaration, Value}
 import utopia.flow.generic.DataType
-import utopia.vault.sql.{Condition, ConditionElement, SqlSegment}
+import utopia.vault.database.References
+import utopia.vault.model.error.{ColumnNotFoundException, NoReferenceFoundException}
+import utopia.vault.model.template.Joinable
+import utopia.vault.sql.{Condition, ConditionElement, Join, JoinType, SqlSegment}
+
+import scala.util.{Failure, Success}
 
 /**
  * Columns represent database columns and can be used as templates for different properties
@@ -21,7 +26,7 @@ import utopia.vault.sql.{Condition, ConditionElement, SqlSegment}
 case class Column(propertyName: String, columnName: String, tableName: String, override val dataType: DataType,
                   lengthLimit: Option[ColumnLengthLimit] = None, override val defaultValue: Option[Value] = None,
                   allowsNull: Boolean = true, isPrimary: Boolean = false, usesAutoIncrement: Boolean = false)
-        extends PropertyDeclaration with ConditionElement
+        extends PropertyDeclaration with ConditionElement with Joinable
 {
     // COMPUTED PROPERTIES    ------------------
     
@@ -57,6 +62,19 @@ case class Column(propertyName: String, columnName: String, tableName: String, o
         if (usesAutoIncrement) "AUTO_INCREMENT " else ""}"
     
     override def toSqlSegment = SqlSegment(columnNameWithTable)
+    
+    override def toJoinFrom(originTables: Vector[Table], joinType: JoinType) = {
+        originTables.find { _.contains(this) } match {
+            case Some(table) =>
+                References.from(table, this) match {
+                    case Some(target) => Success(Join(this, target.table, target.column, joinType))
+                    case None => Failure(new NoReferenceFoundException(
+                        s"$columnNameWithTable doesn't refer to any table"))
+                }
+            case None => Failure(new ColumnNotFoundException(s"None of tables ${
+                originTables.map { _.name }.mkString(", ") } contains column $columnNameWithTable"))
+        }
+    }
     
     
     // OPERATORS    ----------------------------

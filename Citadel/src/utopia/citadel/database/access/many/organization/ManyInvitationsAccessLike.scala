@@ -6,6 +6,7 @@ import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.BasicCombineOperator.Or
 import utopia.vault.nosql.access.many.model.{ManyModelAccess, ManyRowModelAccess}
 import utopia.vault.nosql.template.Indexed
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
 import java.time.Instant
@@ -16,6 +17,7 @@ import java.time.Instant
   * @since 2021-10-23
   */
 trait ManyInvitationsAccessLike[+A, +Repr <: ManyModelAccess[A]] extends ManyRowModelAccess[A] with Indexed
+	with FilterableView[Repr]
 {
 	// ABSTRACT --------------------
 	

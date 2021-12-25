@@ -8,7 +8,7 @@ import utopia.metropolis.model.stored.device.ClientDeviceUser
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyClientDeviceUsersAccess
@@ -25,7 +25,8 @@ object ManyClientDeviceUsersAccess
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
-trait ManyClientDeviceUsersAccess extends ManyRowModelAccess[ClientDeviceUser] with Indexed
+trait ManyClientDeviceUsersAccess
+	extends ManyRowModelAccess[ClientDeviceUser] with Indexed with FilterableView[ManyClientDeviceUsersAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -62,9 +63,7 @@ trait ManyClientDeviceUsersAccess extends ManyRowModelAccess[ClientDeviceUser] w
 	
 	override def factory = ClientDeviceUserFactory
 	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
-	
-	override def filter(additionalCondition: Condition): ManyClientDeviceUsersAccess = 
+	override def filter(additionalCondition: Condition): ManyClientDeviceUsersAccess =
 		new ManyClientDeviceUsersAccess.ManyClientDeviceUsersSubView(this, additionalCondition)
 	
 	

@@ -8,7 +8,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyAuthTokenScopeLinksAccess
@@ -25,7 +25,8 @@ object ManyAuthTokenScopeLinksAccess
   * @author Mikko Hilpinen
   * @since 2021-10-26
   */
-trait ManyAuthTokenScopeLinksAccess extends ManyRowModelAccess[AuthTokenScopeLink] with Indexed
+trait ManyAuthTokenScopeLinksAccess
+	extends ManyRowModelAccess[AuthTokenScopeLink] with Indexed with FilterableView[ManyAuthTokenScopeLinksAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -60,8 +61,6 @@ trait ManyAuthTokenScopeLinksAccess extends ManyRowModelAccess[AuthTokenScopeLin
 	// IMPLEMENTED	--------------------
 	
 	override def factory = AuthTokenScopeLinkFactory
-	
-	override protected def defaultOrdering = None
 	
 	override def filter(additionalCondition: Condition): ManyAuthTokenScopeLinksAccess = 
 		new ManyAuthTokenScopeLinksAccess.ManyAuthTokenScopeLinksSubView(this, additionalCondition)

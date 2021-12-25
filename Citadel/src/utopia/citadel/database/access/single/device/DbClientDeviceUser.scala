@@ -53,7 +53,6 @@ object DbClientDeviceUser
 		// IMPLEMENTED  -----------
 		
 		override protected def parent = DbClientDeviceUser
-		override protected def defaultOrdering = None
 		
 		override def filterCondition = model.withDeviceId(deviceId).withUserId(userId).toCondition
 		

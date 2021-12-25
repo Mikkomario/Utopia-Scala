@@ -27,8 +27,6 @@ trait ManyMembershipsAccess
 	
 	override def factory = MembershipFactory
 	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
-	
 	override def _filter(additionalCondition: Condition): ManyMembershipsAccess =
 		new ManyMembershipsAccess.ManyMembershipsSubView(this, additionalCondition)
 }

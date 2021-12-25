@@ -48,7 +48,6 @@ object DbAuthRedirectResult
 	class DbResultForRedirect(redirectId: Int) extends UniqueAuthRedirectResultAccess with SubView
 	{
 		override protected def parent = DbAuthRedirectResult
-		override protected def defaultOrdering = Some(factory.defaultOrdering)
 		
 		override def filterCondition = model.withRedirectId(redirectId).toCondition
 	}

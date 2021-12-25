@@ -54,14 +54,12 @@ object DbAuthRedirect
 	class DbRedirectWithToken(token: String) extends UniqueAuthRedirectAccess with SubView
 	{
 		override protected def parent = DbAuthRedirect
-		override protected def defaultOrdering = Some(factory.defaultOrdering)
 		
 		override def filterCondition = model.withToken(token).toCondition
 	}
 	
 	class DbRedirectForPreparation(preparationId: Int) extends UniqueAuthRedirectAccess
 	{
-		override protected def defaultOrdering = Some(factory.defaultOrdering)
 		override def globalCondition = Some(model.withPreparationId(preparationId).toCondition)
 	}
 }

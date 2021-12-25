@@ -70,8 +70,6 @@ trait ManyUserLanguageLinksAccess
 	
 	override def factory = UserLanguageLinkFactory
 	
-	override protected def defaultOrdering = None
-	
 	override def _filter(additionalCondition: Condition): ManyUserLanguageLinksAccess =
 		new ManyUserLanguageLinksAccess.ManyUserLanguageLinksSubView(this, additionalCondition)
 }

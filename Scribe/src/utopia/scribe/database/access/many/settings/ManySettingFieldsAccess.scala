@@ -8,7 +8,7 @@ import utopia.scribe.model.stored.settings.SettingField
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManySettingFieldsAccess
@@ -25,7 +25,8 @@ object ManySettingFieldsAccess
   * @author Mikko Hilpinen
   * @since 12.12.2021, v0.2
   */
-trait ManySettingFieldsAccess extends ManyRowModelAccess[SettingField] with Indexed
+trait ManySettingFieldsAccess
+	extends ManyRowModelAccess[SettingField] with Indexed with FilterableView[ManySettingFieldsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -61,8 +62,6 @@ trait ManySettingFieldsAccess extends ManyRowModelAccess[SettingField] with Inde
 	// IMPLEMENTED	--------------------
 	
 	override def factory = SettingFieldFactory
-	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
 	
 	override def filter(additionalCondition: Condition): ManySettingFieldsAccess = 
 		new ManySettingFieldsAccess.ManySettingFieldsSubView(this, additionalCondition)

@@ -9,7 +9,7 @@ import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyEmailValidatedSessionsAccess
@@ -26,7 +26,8 @@ object ManyEmailValidatedSessionsAccess
   * @author Mikko Hilpinen
   * @since 24.11.2021, v3.1
   */
-trait ManyEmailValidatedSessionsAccess extends ManyRowModelAccess[EmailValidatedSession] with Indexed
+trait ManyEmailValidatedSessionsAccess
+	extends ManyRowModelAccess[EmailValidatedSession] with Indexed with FilterableView[ManyEmailValidatedSessionsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -69,8 +70,6 @@ trait ManyEmailValidatedSessionsAccess extends ManyRowModelAccess[EmailValidated
 	// IMPLEMENTED	--------------------
 	
 	override def factory = EmailValidatedSessionFactory
-	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
 	
 	override def filter(additionalCondition: Condition): ManyEmailValidatedSessionsAccess = 
 		new ManyEmailValidatedSessionsAccess.ManyEmailValidatedSessionsSubView(this, additionalCondition)

@@ -47,7 +47,6 @@ object DbApiKey extends SingleRowModelAccess[ApiKey] with UnconditionalView with
 	class DbApiKeyByToken(token: String) extends UniqueApiKeyAccess with SubView
 	{
 		override protected def parent = DbApiKey
-		override protected def defaultOrdering = None
 		
 		override def filterCondition = model.withToken(token).toCondition
 	}

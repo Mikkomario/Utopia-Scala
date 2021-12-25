@@ -74,7 +74,6 @@ object DbSettingField extends SingleRowModelAccess[SettingField] with Unconditio
 			
 			override protected def parent = DbCategorySettingField.this
 			override def filterCondition = model.withName(fieldName).toCondition
-			override protected def defaultOrdering = Some(factory.defaultOrdering)
 		}
 	}
 }

@@ -1,7 +1,7 @@
 package utopia.citadel.database.factory.language
 
 import utopia.citadel.database.CitadelTables
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.metropolis.model.partial.language.LanguageData
 import utopia.metropolis.model.stored.language.Language
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
@@ -16,6 +16,8 @@ object LanguageFactory extends FromValidatedRowModelFactory[Language]
 	// IMPLEMENTED	--------------------
 	
 	override def table = CitadelTables.language
+	
+	override def defaultOrdering = None
 	
 	override def fromValidatedModel(valid: Model) =
 		Language(valid("id").getInt, LanguageData(valid("isoCode").getString, valid("created").getInstant))

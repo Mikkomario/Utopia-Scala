@@ -52,7 +52,6 @@ object DbUserPassword extends SingleRowModelAccess[UserPassword] with Unconditio
 		// IMPLEMENTED  -------------
 		
 		override protected def parent = DbUserPassword
-		override protected def defaultOrdering = None
 		
 		override def filterCondition = model.withUserId(userId).toCondition
 		

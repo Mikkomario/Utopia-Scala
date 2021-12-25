@@ -1,12 +1,12 @@
 package utopia.vault.model.mutable
 
-import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.datastructure.mutable.{Model, Variable}
-import utopia.flow.datastructure.{immutable, template}
+import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.DeclarationVariableGenerator
 import utopia.vault.model.immutable.{Storable, Table}
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
+import utopia.vault.sql.OrderBy
 
 import scala.util.Success
 
@@ -46,7 +46,8 @@ class DBModel(override val table: Table) extends Model[Variable](
 /**
  * These factories are used for constructing storable models from table data
  */
-class DBModelFactory(val table: Table) extends FromRowModelFactory[DBModel]
+class DBModelFactory(override val table: Table, override val defaultOrdering: Option[OrderBy] = None)
+    extends FromRowModelFactory[DBModel]
 {
     override def apply(model: template.Model[Property]) =
     {

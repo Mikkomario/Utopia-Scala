@@ -51,7 +51,6 @@ object DbSettingValue
 		
 		override protected def parent = DbSettingValue
 		override def filterCondition = model.withFieldId(fieldId).toCondition
-		override protected def defaultOrdering = Some(factory.defaultOrdering)
 	}
 }
 

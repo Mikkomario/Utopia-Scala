@@ -4,6 +4,9 @@ import utopia.vault.sql.JoinType._
 
 import scala.collection.immutable.HashSet
 import utopia.vault.model.immutable.{Column, ReferencePoint, Table}
+import utopia.vault.model.template.Joinable
+
+import scala.util.Success
 
 object Join
 {
@@ -34,6 +37,7 @@ object Join
   * @param joinType The type of join used (default = Inner)
  */
 case class Join(leftColumn: Column, rightTable: Table, rightColumn: Column, joinType: JoinType = Inner)
+    extends Joinable
 {
     // COMPUTED PROPERTIES    ----------------
     
@@ -51,4 +55,18 @@ case class Join(leftColumn: Column, rightTable: Table, rightColumn: Column, join
      * The point targeted / included by this join
      */
     def targetPoint = ReferencePoint(rightTable, rightColumn)
+    
+    
+    // IMPLEMENTED  ----------------------
+    
+    override def toJoinFrom(originTables: Vector[Table], joinType: JoinType = joinType) = Success(this)
+    
+    
+    // OTHER    --------------------------
+    
+    /**
+      * @param joinType Join type to use
+      * @return A copy of this join with that join type applied
+      */
+    def withType(joinType: JoinType) = if (this.joinType == joinType) this else copy(joinType = joinType)
 }

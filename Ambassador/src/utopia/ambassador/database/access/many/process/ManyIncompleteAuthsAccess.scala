@@ -8,7 +8,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyIncompleteAuthsAccess
@@ -26,6 +26,7 @@ object ManyIncompleteAuthsAccess
   * @since 2021-10-26
   */
 trait ManyIncompleteAuthsAccess extends ManyRowModelAccess[IncompleteAuth] with Indexed
+	with FilterableView[ManyIncompleteAuthsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -70,8 +71,6 @@ trait ManyIncompleteAuthsAccess extends ManyRowModelAccess[IncompleteAuth] with 
 	// IMPLEMENTED	--------------------
 	
 	override def factory = IncompleteAuthFactory
-	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
 	
 	override def filter(additionalCondition: Condition): ManyIncompleteAuthsAccess = 
 		new ManyIncompleteAuthsAccess.ManyIncompleteAuthsSubView(this, additionalCondition)

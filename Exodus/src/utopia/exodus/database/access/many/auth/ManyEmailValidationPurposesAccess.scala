@@ -8,7 +8,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyEmailValidationPurposesAccess
@@ -25,7 +25,9 @@ object ManyEmailValidationPurposesAccess
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
-trait ManyEmailValidationPurposesAccess extends ManyRowModelAccess[EmailValidationPurpose] with Indexed
+trait ManyEmailValidationPurposesAccess
+	extends ManyRowModelAccess[EmailValidationPurpose] with Indexed
+		with FilterableView[ManyEmailValidationPurposesAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -52,8 +54,6 @@ trait ManyEmailValidationPurposesAccess extends ManyRowModelAccess[EmailValidati
 	// IMPLEMENTED	--------------------
 	
 	override def factory = EmailValidationPurposeFactory
-	
-	override protected def defaultOrdering = None
 	
 	override def filter(additionalCondition: Condition): ManyEmailValidationPurposesAccess = 
 		new ManyEmailValidationPurposesAccess.ManyEmailValidationPurposesSubView(this, additionalCondition)

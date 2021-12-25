@@ -8,7 +8,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 import utopia.vault.sql.SqlExtensions._
 
@@ -27,6 +27,7 @@ object ManyTaskScopeLinksAccess
   * @since 2021-10-26
   */
 trait ManyTaskScopeLinksAccess extends ManyRowModelAccess[TaskScopeLink] with Indexed
+	with FilterableView[ManyTaskScopeLinksAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -71,8 +72,6 @@ trait ManyTaskScopeLinksAccess extends ManyRowModelAccess[TaskScopeLink] with In
 	// IMPLEMENTED	--------------------
 	
 	override def factory = TaskScopeLinkFactory
-	
-	override protected def defaultOrdering = None
 	
 	override def filter(additionalCondition: Condition): ManyTaskScopeLinksAccess = 
 		new ManyTaskScopeLinksAccess.ManyTaskScopeLinksSubView(this, additionalCondition)

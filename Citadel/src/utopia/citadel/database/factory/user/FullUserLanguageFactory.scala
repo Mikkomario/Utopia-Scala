@@ -29,6 +29,8 @@ object FullUserLanguageFactory extends FromRowFactory[FullUserLanguage]
 	
 	override def table = UserLanguageLinkFactory.table
 	
+	override def defaultOrdering = LanguageFamiliarityFactory.defaultOrdering
+	
 	// Parses language, familiarity and user language
 	override def apply(row: Row) = UserLanguageLinkFactory(row).flatMap { link =>
 		LanguageFactory(row).flatMap { language =>

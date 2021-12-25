@@ -24,7 +24,6 @@ trait ManyFullUserLanguagesAccess extends ManyUserLanguageLinksAccessLike[FullUs
 	// IMPLEMENTED  ----------------------------
 	
 	override def factory = FullUserLanguageFactory
-	override protected def defaultOrdering = Some(factory.defaultOrder)
 	
 	override protected def _filter(condition: Condition): ManyFullUserLanguagesAccess =
 		new SubAccess(this, condition)

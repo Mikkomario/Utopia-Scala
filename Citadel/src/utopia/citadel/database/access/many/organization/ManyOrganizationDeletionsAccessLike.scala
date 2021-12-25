@@ -7,6 +7,7 @@ import utopia.metropolis.model.partial.organization.OrganizationDeletionCancella
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 import utopia.vault.sql.SqlExtensions._
 
@@ -17,7 +18,8 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
-trait ManyOrganizationDeletionsAccessLike[+A, +Repr <: ManyModelAccess[A]] extends ManyModelAccess[A] with Indexed
+trait ManyOrganizationDeletionsAccessLike[+A, +Repr <: ManyModelAccess[A]]
+	extends ManyModelAccess[A] with Indexed with FilterableView[Repr]
 {
 	// ABSTRACT --------------------
 	

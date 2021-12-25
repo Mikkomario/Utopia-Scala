@@ -23,7 +23,6 @@ trait ManyAuthTokenScopesAccess
 	extends ManyScopesAccessLike[AuthTokenScope, ManyAuthTokenScopesAccess] with ManyRowModelAccess[AuthTokenScope]
 {
 	override def factory = AuthTokenScopeFactory
-	override protected def defaultOrdering = None
 	
 	override protected def _filter(condition: Condition): ManyAuthTokenScopesAccess =
 		new SubAccess(this, condition)

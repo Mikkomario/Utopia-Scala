@@ -94,6 +94,7 @@
         "props": [
           {
             "name": "category",
+            "name_plural": "categories",
             "length": 64,
             "doc": "Name of the broader category where this field belongs"
           },

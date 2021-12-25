@@ -47,8 +47,6 @@ trait ManyOrganizationDeletionsWithCancellationsAccess
 	
 	override def factory = OrganizationDeletionWithCancellationsFactory
 	
-	override protected def defaultOrdering = Some(factory.parentFactory.defaultOrdering)
-	
 	override protected def _filter(condition: Condition): ManyOrganizationDeletionsWithCancellationsAccess =
 		new SubAccess(this, condition)
 	
