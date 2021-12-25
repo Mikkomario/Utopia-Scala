@@ -1,4 +1,4 @@
-package utopia.vault.util
+package utopia.vault.database.columnlength
 
 /**
   * An object used for managing cases where column maximum length is exceeded, as there are many ways to proceed

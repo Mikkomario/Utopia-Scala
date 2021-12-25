@@ -1,7 +1,7 @@
 package utopia.vault.database
 
 import utopia.flow.generic.DataType
-import utopia.vault.model.immutable.ColumnLengthLimit
+import utopia.vault.database.columnlength.ColumnLengthLimit
 
 /**
  * These interpreters are used for converting string type descriptions (found from database data) 

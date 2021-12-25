@@ -1,4 +1,4 @@
-package utopia.vault.model.immutable
+package utopia.vault.database.columnlength
 
 import utopia.flow.datastructure.immutable.Value
 
@@ -16,7 +16,7 @@ trait ColumnLengthLimit
 	
 	/**
 	  * Tests a value, whether it fits into this limit
-	  * @param input Input value
+	  * @param input     Input value
 	  * @param allowCrop Whether it is allowed to crop the value to fit within this length (default = false)
 	  * @return Either Left: A column length required to fit the specified value or
 	  *         None if such length couldn't be determined. Or Right: A value which fits into this length limit.

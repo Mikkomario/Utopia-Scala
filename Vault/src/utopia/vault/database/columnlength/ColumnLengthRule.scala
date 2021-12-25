@@ -1,4 +1,4 @@
-package utopia.vault.util
+package utopia.vault.database.columnlength
 
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.StringType
@@ -28,6 +28,9 @@ trait ColumnLengthRule
 
 object ColumnLengthRule
 {
+	/**
+	  * A rule which throws an error whenever column maximum length is exceeded
+	  */
 	object Throw extends ColumnLengthRule
 	{
 		override def apply(column: Column, proposedValue: Value) =
@@ -40,6 +43,9 @@ object ColumnLengthRule
 			}
 	}
 	
+	/**
+	  * A rule which attempts to crop the input value to fit the mximum column length
+	  */
 	object TryCrop extends ColumnLengthRule
 	{
 		override def apply(column: Column, proposedValue: Value) = column.lengthLimit match {
@@ -51,6 +57,12 @@ object ColumnLengthRule
 		}
 	}
 	
+	/**
+	  * A rule which attempts to expand the column maximum limit to fit the new value
+	  * @param exc Implicit Execution context
+	  * @param connectionPool Implicit Connection pool
+	  */
+	// TODO: Add maximum expand limit support
 	case class TryExpand()(implicit exc: ExecutionContext, connectionPool: ConnectionPool) extends ColumnLengthRule
 	{
 		override def apply(column: Column, proposedValue: Value) = column.lengthLimit match

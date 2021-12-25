@@ -10,8 +10,8 @@ import utopia.flow.generic.DoubleType
 import utopia.flow.generic.LocalDateType
 import utopia.flow.generic.LocalTimeType
 import utopia.flow.util.StringExtensions._
-import utopia.vault.model.immutable.ColumnNumberLimit.{BigIntLimit, IntLimit, MediumIntLimit, SmallIntLimit, TinyIntLimit}
-import utopia.vault.model.immutable.ColumnTextLimit.{LongTextLimit, MediumTextLimit, TextLimit, TinyTextLimit, VarcharLimit}
+import utopia.vault.database.columnlength.ColumnNumberLimit.{BigIntLimit, IntLimit, MediumIntLimit, SmallIntLimit, TinyIntLimit}
+import utopia.vault.database.columnlength.ColumnTextLimit.{LongTextLimit, MediumTextLimit, TextLimit, TinyTextLimit, VarcharLimit}
 
 import scala.util.Try
 

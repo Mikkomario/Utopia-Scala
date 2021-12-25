@@ -41,6 +41,7 @@ object DatabaseTableReader
             val defaultValue = if (defaultString.toLowerCase == "null") None else defaultString.castTo(dataType)
             // Used to have:  || defaultString.toLowerCase == "current_timestamp"
             
+            // TODO: Register the length limit globally, not in column
             Column(columnNameToPropertyName(columnName), columnName, tableName, dataType,
                 lengthLimit, defaultValue, nullAllowed, isPrimary, usesAutoIncrement)
         }
