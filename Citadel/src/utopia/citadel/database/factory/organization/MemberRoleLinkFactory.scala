@@ -2,7 +2,7 @@ package utopia.citadel.database.factory.organization
 
 import utopia.citadel.database.CitadelTables
 import utopia.citadel.database.model.organization.MemberRoleLinkModel
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.metropolis.model.partial.organization.MemberRoleLinkData
 import utopia.metropolis.model.stored.organization.MemberRoleLink
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
@@ -18,6 +18,8 @@ object MemberRoleLinkFactory extends FromValidatedRowModelFactory[MemberRoleLink
 	// IMPLEMENTED	--------------------
 	
 	override def nonDeprecatedCondition = MemberRoleLinkModel.nonDeprecatedCondition
+	
+	override def defaultOrdering = None
 	
 	override def table = CitadelTables.memberRoleLink
 	

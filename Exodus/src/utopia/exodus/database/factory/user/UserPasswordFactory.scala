@@ -3,7 +3,7 @@ package utopia.exodus.database.factory.user
 import utopia.exodus.database.ExodusTables
 import utopia.exodus.model.partial.user.UserPasswordData
 import utopia.exodus.model.stored.user.UserPassword
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
@@ -16,6 +16,8 @@ object UserPasswordFactory extends FromValidatedRowModelFactory[UserPassword]
 	// IMPLEMENTED	--------------------
 	
 	override def table = ExodusTables.userPassword
+	
+	override def defaultOrdering = None
 	
 	override def fromValidatedModel(valid: Model) =
 		UserPassword(valid("id").getInt, UserPasswordData(valid("userId").getInt, valid("hash").getString, 

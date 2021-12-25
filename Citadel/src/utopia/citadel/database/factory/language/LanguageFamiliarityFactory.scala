@@ -26,7 +26,7 @@ object LanguageFamiliarityFactory extends FromValidatedRowModelFactory[LanguageF
 	
 	override def table = CitadelTables.languageFamiliarity
 	
-	override def defaultOrdering = None
+	override def defaultOrdering = Some(defaultOrder)
 	
 	override def fromValidatedModel(valid: Model) =
 		LanguageFamiliarity(valid("id").getInt, LanguageFamiliarityData(valid("orderIndex").getInt, 

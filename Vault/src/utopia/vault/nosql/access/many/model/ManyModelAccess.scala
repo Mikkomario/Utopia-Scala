@@ -44,7 +44,7 @@ trait ManyModelAccess[+A] extends ManyAccess[A]
 	{
 		// Forms the query first
 		val statement = Select(joins.foldLeft(target) { _.join(_, joinType) }, column) +
-			additionalCondition.map { Where(_) } + order
+			additionalCondition.map { Where(_) } + order.orElse(factory.defaultOrdering)
 		// Applies the query and parses results
 		connection(statement).rowValues
 	}

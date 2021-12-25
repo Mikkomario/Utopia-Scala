@@ -9,7 +9,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyAuthCompletionRedirectTargetsAccess
@@ -28,6 +28,7 @@ object ManyAuthCompletionRedirectTargetsAccess
   */
 trait ManyAuthCompletionRedirectTargetsAccess 
 	extends ManyRowModelAccess[AuthCompletionRedirectTarget] with Indexed
+		with FilterableView[ManyAuthCompletionRedirectTargetsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -67,8 +68,6 @@ trait ManyAuthCompletionRedirectTargetsAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = AuthCompletionRedirectTargetFactory
-	
-	override protected def defaultOrdering = None
 	
 	override def filter(additionalCondition: Condition): ManyAuthCompletionRedirectTargetsAccess = 
 		new ManyAuthCompletionRedirectTargetsAccess.ManyAuthCompletionRedirectTargetsSubView(this, 

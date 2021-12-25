@@ -8,7 +8,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyApiKeysAccess
@@ -25,7 +25,7 @@ object ManyApiKeysAccess
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
-trait ManyApiKeysAccess extends ManyRowModelAccess[ApiKey] with Indexed
+trait ManyApiKeysAccess extends ManyRowModelAccess[ApiKey] with Indexed with FilterableView[ManyApiKeysAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -58,8 +58,6 @@ trait ManyApiKeysAccess extends ManyRowModelAccess[ApiKey] with Indexed
 	// IMPLEMENTED	--------------------
 	
 	override def factory = ApiKeyFactory
-	
-	override protected def defaultOrdering = None
 	
 	override def filter(additionalCondition: Condition): ManyApiKeysAccess = 
 		new ManyApiKeysAccess.ManyApiKeysSubView(this, additionalCondition)

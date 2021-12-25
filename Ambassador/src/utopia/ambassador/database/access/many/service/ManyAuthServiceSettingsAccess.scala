@@ -9,7 +9,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 import java.util.concurrent.TimeUnit
@@ -28,7 +28,8 @@ object ManyAuthServiceSettingsAccess
   * @author Mikko Hilpinen
   * @since 2021-10-26
   */
-trait ManyAuthServiceSettingsAccess extends ManyRowModelAccess[AuthServiceSettings] with Indexed
+trait ManyAuthServiceSettingsAccess
+	extends ManyRowModelAccess[AuthServiceSettings] with Indexed with FilterableView[ManyAuthServiceSettingsAccess]
 {
 	// COMPUTED	--------------------
 	

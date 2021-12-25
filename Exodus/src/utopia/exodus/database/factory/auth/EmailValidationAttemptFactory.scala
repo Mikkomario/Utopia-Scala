@@ -4,7 +4,7 @@ import utopia.exodus.database.ExodusTables
 import utopia.exodus.database.model.auth.EmailValidationAttemptModel
 import utopia.exodus.model.partial.auth.EmailValidationAttemptData
 import utopia.exodus.model.stored.auth.EmailValidationAttempt
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import utopia.vault.nosql.template.Deprecatable
 
@@ -19,6 +19,8 @@ object EmailValidationAttemptFactory
 	// IMPLEMENTED	--------------------
 	
 	override def nonDeprecatedCondition = EmailValidationAttemptModel.nonDeprecatedCondition
+	
+	override def defaultOrdering = None
 	
 	override def table = ExodusTables.emailValidationAttempt
 	

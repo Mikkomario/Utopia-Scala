@@ -8,7 +8,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyDeviceTokensAccess
@@ -25,7 +25,8 @@ object ManyDeviceTokensAccess
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
-trait ManyDeviceTokensAccess extends ManyRowModelAccess[DeviceToken] with Indexed
+trait ManyDeviceTokensAccess
+	extends ManyRowModelAccess[DeviceToken] with Indexed with FilterableView[ManyDeviceTokensAccess]
 {
 	// COMPUTED	--------------------
 	

@@ -64,7 +64,6 @@ object DbDeviceToken
 		// IMPLEMENTED  ----------
 		
 		override protected def parent = DbDeviceToken
-		override protected def defaultOrdering = None
 		
 		
 		// OTHER    --------------
@@ -113,7 +112,6 @@ object DbDeviceToken
 	class DbDeviceTokenWrapperAccess(token: String) extends UniqueDeviceTokenAccess with SubView
 	{
 		override protected def parent = DbDeviceToken
-		override protected def defaultOrdering = None
 		
 		override def filterCondition = model.withToken(token).toCondition
 	}

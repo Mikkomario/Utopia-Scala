@@ -3,7 +3,7 @@ package utopia.ambassador.database.factory.process
 import utopia.ambassador.database.AmbassadorTables
 import utopia.ambassador.model.partial.process.AuthCompletionRedirectTargetData
 import utopia.ambassador.model.stored.process.AuthCompletionRedirectTarget
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
@@ -16,6 +16,8 @@ object AuthCompletionRedirectTargetFactory extends FromValidatedRowModelFactory[
 	// IMPLEMENTED	--------------------
 	
 	override def table = AmbassadorTables.authCompletionRedirectTarget
+	
+	override def defaultOrdering = None
 	
 	override def fromValidatedModel(valid: Model) =
 		AuthCompletionRedirectTarget(valid("id").getInt, 

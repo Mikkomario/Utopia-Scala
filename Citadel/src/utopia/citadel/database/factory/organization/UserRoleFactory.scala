@@ -1,7 +1,7 @@
 package utopia.citadel.database.factory.organization
 
 import utopia.citadel.database.CitadelTables
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.metropolis.model.partial.organization.UserRoleData
 import utopia.metropolis.model.stored.organization.UserRole
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
@@ -16,6 +16,8 @@ object UserRoleFactory extends FromValidatedRowModelFactory[UserRole]
 	// IMPLEMENTED	--------------------
 	
 	override def table = CitadelTables.userRole
+	
+	override def defaultOrdering = None
 	
 	override def fromValidatedModel(valid: Model) =
 		UserRole(valid("id").getInt, UserRoleData(valid("created").getInstant))
