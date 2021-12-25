@@ -62,9 +62,8 @@ object AccessWriter
 		// Writes a trait common for unique model access points
 		val singleAccessPackage = singleAccessPackageFor(classToWrite)
 		val uniqueAccessName = s"Unique${ classToWrite.name }Access"
-		// Standard access point properties (factory, model & defaultOrdering)
+		// Standard access point properties (factory, model)
 		// are the same for both single and many model access points
-		// (except that defaultOrdering is missing from non-distinct access points)
 		val baseProperties = Vector(
 			ComputedProperty("factory", Set(factoryRef), isOverridden = true)(factoryRef.target),
 			ComputedProperty("model", Set(dbModelRef), Protected,
@@ -167,6 +166,7 @@ object AccessWriter
 					// Writes a trait common for the many model access points
 					val manyAccessPackage = setup.manyAccessPackage / classToWrite.packageName
 					val manyAccessTraitName = s"Many${ classToWrite.name.plural }Access"
+					val manyAccessTraitType = ScalaType.basic(manyAccessTraitName)
 					val subViewName = s"Many${ classToWrite.name.plural }SubView"
 					val traitType = ScalaType.basic(manyAccessTraitName)
 					
@@ -195,7 +195,8 @@ object AccessWriter
 							)
 						)),
 						TraitDeclaration(manyAccessTraitName,
-							Vector(Reference.manyRowModelAccess(modelRef), manyTraitParent),
+							Vector(Reference.manyRowModelAccess(modelRef), manyTraitParent,
+								Reference.filterableView(manyAccessTraitType)),
 							// Contains computed properties to access class properties
 							baseProperties ++ classToWrite.properties.map { prop =>
 								val pullCode = prop.dataType
@@ -207,15 +208,13 @@ object AccessWriter
 								ComputedProperty("ids", implicitParams = Vector(connectionParam))(
 									s"pullColumn(index).flatMap { id => ${
 										classToWrite.idType.nullable.fromValueCode("id")
-									} }"),
-								ComputedProperty("defaultOrdering", Set(factoryRef), Protected, isOverridden = true)(
-									if (classToWrite.recordsIndexedCreationTime) "Some(factory.defaultOrdering)" else "None")
+									} }")
 							) ++ manyParentProperties,
 							// Contains setters for property values (plural)
 							propertySettersFor(classToWrite, connectionParam) { _.plural } ++ manyParentMethods ++
 								deprecationMethods.map { _.second } +
 								MethodDeclaration("filter",
-									explicitOutputType = Some(ScalaType.basic(manyAccessTraitName)),
+									explicitOutputType = Some(manyAccessTraitType),
 									isOverridden = true)(
 									Parameter("additionalCondition", Reference.condition))(
 									s"new $manyAccessTraitName.$subViewName(this, additionalCondition)"),

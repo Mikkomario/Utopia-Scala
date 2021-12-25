@@ -294,7 +294,7 @@ trait Storable extends ModelConvertible
       * @tparam B Type of resulting object
       * @return An object from the database, if one could be found
       */
-    def search[B](factory: FromRowFactory[B])(implicit connection: Connection) = factory.get(toCondition)
+    def search[B](factory: FromRowFactory[B])(implicit connection: Connection) = factory.find(toCondition)
     
     /**
       * Searches for multiple rows using this storable instance as the search condition
@@ -303,7 +303,7 @@ trait Storable extends ModelConvertible
       * @tparam B Type of resulting object
       * @return Objects from the database matching this condition
       */
-    def searchMany[B](factory: FromRowFactory[B])(implicit connection: Connection) = factory.getMany(toCondition)
+    def searchMany[B](factory: FromRowFactory[B])(implicit connection: Connection) = factory.findMany(toCondition)
     
     // NB: Throws if there were no specified attributes
     private def makeCondition(makePart: (Column, Value) => Condition, combineOperator: BasicCombineOperator = And) =

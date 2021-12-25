@@ -2,9 +2,16 @@
 
 ## v1.12 (in development)
 ### Breaking Changes
+- **DistinctModelAccess** no longer requires property `defaultOrdering`. 
+  - This property is now read from the associated **Factory** (new property).
+- **Access**`.read(...)` now accepts two more parameters (`joins` and `joinType`)
+  - This also applies to `readColumn` in **ModelAccess**
 - Changed constructor parameter ordering in **Column**. Also added new optional parameter **LengthLimit**. 
 - Added a new constructor parameter to **SqlSegment**
 - Changed **ClearUnreferencedData** constructor
+### Deprecations
+- Deprecated multiple **FromResultFactory** and **FromRowFactory** methods in favor of renamed, and sometimes extended, 
+  versions.
 ### New Features
 - Added database update events (on data insertions, updates and deletions)
   - See **Triggers** for more information

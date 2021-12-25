@@ -77,6 +77,9 @@ object FactoryWriter
 				builder += ComputedProperty("creationTimePropertyName", isOverridden = true)(
 					createdProp.name.singular.quoted)
 			}
+		// Non-timestamp-based factories need to specify default ordering
+		else
+			builder += ComputedProperty("defaultOrdering", isOverridden = true, isLowMergePriority = true)("None")
 		// Deprecatable factories specify the deprecation condition (read from the database model)
 		if (classToWrite.isDeprecatable) {
 			val dbModelName = s"${ classToWrite.name }Model"

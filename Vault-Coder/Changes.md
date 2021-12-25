@@ -11,6 +11,7 @@
 - Optional enumeration properties now have the default value of None, like other optional properties
 - Fixed an issue where **FiniteDuration** was not always properly imported when reading durations from values
 ### Other Changes
+- Supports **Vault** v1.12
 - Classes that use both deprecation and expiration now have a custom deprecation implementation
 - Merge conflicts document now shows if the conflict appears in a low-priority function
 - Writes a merge conflict in case new extensions are added, since those may cause unexpected side effects
