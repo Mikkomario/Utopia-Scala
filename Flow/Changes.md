@@ -1,10 +1,13 @@
 # Utopia Flow - List of Changes
 
 ## v1.14.1 (in development)
+### Scala
+This module now uses Scala v2.13.7
 ### Deprecations
 - Replaced `.dividedWith(...)` in **CollectionExtensions** by `.divideWith(...)` 
   - The former is still available, but deprecated
 ### New Features
+- Added **DeepMap** data structure, which resembles a map containing other maps and uses paths as keys
 - **ModelDeclaration** now supports child model declarations
 - Added **ConditionalLazy**, which is a variant of **Lazy** that only caches the value if it fulfills a condition
 - Added **Quarter** (1/4th of a year) enumeration, which is also supported by **TimeExtensions**

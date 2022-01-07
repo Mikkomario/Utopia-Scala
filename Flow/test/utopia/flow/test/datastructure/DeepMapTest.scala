@@ -16,7 +16,6 @@ object DeepMapTest extends App
 		Vector(1, 1) -> "d",
 		Vector(100) -> "e")
 	
-	/*
 	assert(m1(1, 2, 3) == "a")
 	assert(m1(1, 2, 4) == "b")
 	assert(m1(1, 3, 3) == "c")
@@ -43,7 +42,7 @@ object DeepMapTest extends App
 	val m5 = m1 ++ m4
 	
 	assert(m5(1) == "x")
-	assert(m5.get(1, 2, 3).isEmpty)
+	assert(m5(1, 2, 3) == "x")
 	assert(m5(3) == "z")
 	assert(m5(100) == "e")
 	
@@ -67,6 +66,5 @@ object DeepMapTest extends App
 	assert(m9.get(1, 2, 3).isEmpty)
 	assert(m9(1, 2, 4) == "b")
 	
-	 */
 	println("Done!")
 }

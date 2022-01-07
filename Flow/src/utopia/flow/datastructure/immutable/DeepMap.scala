@@ -168,26 +168,8 @@ case class DeepMap[K, +V] private(private val wrapped: Map[K, Either[DeepMap[K, 
 	
 	// OTHER    -------------------------------
 	
-	/* FIXME: Uncommenting this method will cause a runtime error during program start (duplicate method)
-	/**
-	  * @param key A key
-	  * @return A direct value matching that key
-	  * @throws NoSuchElementException If there is no direct value for that key
-	  */
-	@throws[NoSuchElementException]("If there is no direct value for that key")
-	def apply(key: K) = wrapped(key) match {
-		case Right(v) => v
-		case Left(_) => throw new NoSuchElementException(s"No value for $key")
-	}*/
-	/**
-	  * @param key1 First key
-	  * @param key2 Second level key
-	  * @param more More keys
-	  * @throws NoSuchElementException If there is no value on that path
-	  * @return A value from that path of keys
-	  */
 	@throws[NoSuchElementException]("If there is no value on that path")
-	def apply(key1: K, key2: K, more: K*): V = apply(Vector(key1, key2) ++ more)
+	def apply(keys: K*): V = apply(keys)
 	
 	/**
 	  * @param path A path to look up
