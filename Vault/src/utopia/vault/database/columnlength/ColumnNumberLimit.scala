@@ -38,8 +38,16 @@ trait ColumnNumberLimit extends ColumnLengthLimit
 		}
 }
 
+/**
+  * A column length limit that limits column numeric values to a certain specific value
+  * @param maxValue Maximum numeric value allowed
+  * @param sqlType SQL type used (e.g. "INT" or "TINYINT")
+  */
 case class SpecificNumberLimit(maxValue: Long, sqlType: String) extends ColumnNumberLimit
 
+/**
+  * A common trait for more general (type-based) number limits, which may then be specified further
+  */
 trait GeneralColumnNumberLimit
 {
 	// ABSTRACT ----------------------------

@@ -18,12 +18,14 @@ trait ColumnLengthRule
 	/**
 	  * Tests a case where updating or inserting a column value.
 	  * Testing doesn't have to be limited to length-exceeding cases.
+	  * @param databaseName Name of the targeted database
 	  * @param column Column whose value is being updated or inserted
+	  * @param lengthLimit Length limit to apply to that column
 	  * @param proposedValue The proposed value
 	  * @return Value to insert / update - May be modified or may be the same
 	  * @throws Exception May throw an exception if the value is not accepted
 	  */
-	def apply(column: Column, proposedValue: Value): Value
+	def apply(databaseName: String, column: Column, lengthLimit: ColumnLengthLimit, proposedValue: Value): Value
 }
 
 object ColumnLengthRule
@@ -33,14 +35,10 @@ object ColumnLengthRule
 	  */
 	object Throw extends ColumnLengthRule
 	{
-		override def apply(column: Column, proposedValue: Value) =
-			column.lengthLimit match {
-				case Some(limit) =>
-					limit.test(proposedValue).toOption
-						.getOrElse { throw new MaxLengthExceededException(
-							s"${column.columnNameWithTable}'s maximum length is exceeded by: $proposedValue") }
-				case None => proposedValue
-			}
+		override def apply(databaseName: String, column: Column, lengthLimit: ColumnLengthLimit, proposedValue: Value) =
+			lengthLimit.test(proposedValue).toOption
+				.getOrElse { throw new MaxLengthExceededException(
+					s"${column.columnNameWithTable}'s maximum length is exceeded by: $proposedValue") }
 	}
 	
 	/**
@@ -48,12 +46,11 @@ object ColumnLengthRule
 	  */
 	object TryCrop extends ColumnLengthRule
 	{
-		override def apply(column: Column, proposedValue: Value) = column.lengthLimit match {
-			case Some(limit) =>
-				limit.test(proposedValue, allowCrop = true).toOption
-					.getOrElse { throw new MaxLengthExceededException(
-						s"${column.columnNameWithTable}'s maximum length is exceeded by: $proposedValue") }
-			case None => proposedValue
+		override def apply(databaseName: String, column: Column, lengthLimit: ColumnLengthLimit, proposedValue: Value) =
+		{
+			lengthLimit.test(proposedValue, allowCrop = true).toOption
+				.getOrElse { throw new MaxLengthExceededException(
+					s"${column.columnNameWithTable}'s maximum length is exceeded by: $proposedValue") }
 		}
 	}
 	
@@ -65,36 +62,39 @@ object ColumnLengthRule
 	// TODO: Add maximum expand limit support
 	case class TryExpand()(implicit exc: ExecutionContext, connectionPool: ConnectionPool) extends ColumnLengthRule
 	{
-		override def apply(column: Column, proposedValue: Value) = column.lengthLimit match
+		override def apply(databaseName: String, column: Column, lengthLimit: ColumnLengthLimit, proposedValue: Value) =
 		{
-			case Some(limit) =>
-				limit.test(proposedValue) match {
-					case Right(value) => value
-					case Left(largerLimit) =>
-						largerLimit match {
-							case Some(largerLimit) =>
-								// Applies the larger length limit immediately
-								val nullStr = if (column.allowsNull) "" else " NOT NULL"
-								val incrementStr = if (column.usesAutoIncrement) " AUTO_INCREMENT" else ""
-								val defaultStr = column.defaultValue match {
-									case Some(defaultValue) =>
-										defaultValue.dataType match {
-											case StringType => s" '$defaultValue'"
-											case _ => defaultValue.toString
-										}
-									case None => ""
-								}
-								// TODO: Should affect the current table column
-								connectionPool { _.execute(
-									s"ALTER TABLE ${column.tableName} MODIFY ${column.columnName} ${
-										largerLimit.sqlType}$nullStr$incrementStr$defaultStr") }
-								proposedValue
-								
-							case None => throw new MaxLengthExceededException(
-								s"${column.columnNameWithTable} can't fit $proposedValue and can't be expanded")
-						}
-				}
-			case None => proposedValue
+			lengthLimit.test(proposedValue) match {
+				case Right(value) => value
+				case Left(largerLimit) =>
+					largerLimit match {
+						case Some(largerLimit) =>
+							// Applies the larger length limit immediately
+							val nullStr = if (column.allowsNull) "" else " NOT NULL"
+							val incrementStr = if (column.usesAutoIncrement) " AUTO_INCREMENT" else ""
+							val defaultStr = column.defaultValue match {
+								case Some(defaultValue) =>
+									defaultValue.dataType match {
+										case StringType => s" '$defaultValue'"
+										case _ => defaultValue.toString
+									}
+								case None => ""
+							}
+							connectionPool { implicit connection =>
+								connection.dbName = databaseName
+								connection.execute(
+									s"ALTER TABLE ${ column.tableName } MODIFY ${ column.columnName } ${
+										largerLimit.sqlType
+									}$nullStr$incrementStr$defaultStr")
+							}
+							// Remembers the extended length limit
+							ColumnLengthLimits((databaseName, column.tableName, column.name)) = largerLimit
+							proposedValue
+						
+						case None => throw new MaxLengthExceededException(
+							s"${ column.columnNameWithTable } can't fit $proposedValue and can't be expanded")
+					}
+			}
 		}
 	}
 }

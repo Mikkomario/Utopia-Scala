@@ -8,7 +8,6 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 13.7.2019, v1.3
   */
-// TODO: There should be some way of modifying tables after they have been read
 class Tables(connectionPool: ConnectionPool)(implicit exc: ExecutionContext)
 {
 	// ATTRIBUTES	---------------------

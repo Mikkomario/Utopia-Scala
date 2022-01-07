@@ -3,6 +3,7 @@ package utopia.vault.database
 import utopia.flow.generic.AnyType
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.Regex
+import utopia.vault.database.columnlength.ColumnLengthLimits
 import utopia.vault.model.immutable.{Column, Table}
 
 /**
@@ -29,7 +30,8 @@ object DatabaseTableReader
         // Reads the column data from the database
         connection.dbName = databaseName
         val columnData = connection.executeQuery(s"DESCRIBE `$tableName`")
-        val columns = columnData.map { data =>
+        // [Column -> Option[LengthLimit]]
+        val readColumns = columnData.map { data =>
             val columnName = data.getOrElse("COLUMN_NAME", data("Field"))
             val isPrimary = "pri" == data.getOrElse("COLUMN_KEY", data("Key")).toLowerCase
             val usesAutoIncrement = "auto_increment" == data.getOrElse("EXTRA", data("Extra")).toLowerCase
@@ -41,12 +43,14 @@ object DatabaseTableReader
             val defaultValue = if (defaultString.toLowerCase == "null") None else defaultString.castTo(dataType)
             // Used to have:  || defaultString.toLowerCase == "current_timestamp"
             
-            // TODO: Register the length limit globally, not in column
             Column(columnNameToPropertyName(columnName), columnName, tableName, dataType,
-                lengthLimit, defaultValue, nullAllowed, isPrimary, usesAutoIncrement)
+                defaultValue, nullAllowed, isPrimary, usesAutoIncrement) -> lengthLimit
         }
+        // Registers read column length limits
+        ColumnLengthLimits.update(databaseName, tableName,
+            readColumns.flatMap { case (col, limit) => limit.map { col.columnName -> _ } })
         
-        Table(tableName, databaseName, columns)
+        Table(tableName, databaseName, readColumns.map { _._1 })
     }
     
     // Converts underscrore naming style strings to camelcase naming style strings

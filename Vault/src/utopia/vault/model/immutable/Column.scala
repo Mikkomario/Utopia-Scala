@@ -3,7 +3,6 @@ package utopia.vault.model.immutable
 import utopia.flow.datastructure.immutable.{PropertyDeclaration, Value}
 import utopia.flow.generic.DataType
 import utopia.vault.database.References
-import utopia.vault.database.columnlength.ColumnLengthLimit
 import utopia.vault.model.error.{ColumnNotFoundException, NoReferenceFoundException}
 import utopia.vault.model.template.Joinable
 import utopia.vault.sql.{Condition, ConditionElement, Join, JoinType, SqlSegment}
@@ -18,15 +17,13 @@ import scala.util.{Failure, Success}
   * @param columnName Name of this column as it appears in the database
   * @param tableName Name of the table where this column belongs
   * @param dataType Data type accepted by this column
-  * @param lengthLimit A length limit applied to this column, if applicable
   * @param defaultValue Default value of this column, if applicable
   * @param allowsNull Whether this column allows a null value (default = true)
   * @param isPrimary Whether this column represents a primary key
   * @param usesAutoIncrement Whether this column uses auto-increment
  */
-// TODO: Move lengthLimit to a separate, mutable global collection
 case class Column(propertyName: String, columnName: String, tableName: String, override val dataType: DataType,
-                  lengthLimit: Option[ColumnLengthLimit] = None, override val defaultValue: Option[Value] = None,
+                  override val defaultValue: Option[Value] = None,
                   allowsNull: Boolean = true, isPrimary: Boolean = false, usesAutoIncrement: Boolean = false)
         extends PropertyDeclaration with ConditionElement with Joinable
 {

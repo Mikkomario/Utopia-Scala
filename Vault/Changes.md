@@ -1,6 +1,8 @@
 # Utopia Vault - List of Changes
 
 ## v1.12 (in development)
+### Scala
+This module now uses Scala v2.13.7
 ### Breaking Changes
 - **DistinctModelAccess** no longer requires property `defaultOrdering`. 
   - This property is now read from the associated **Factory** (new property).
