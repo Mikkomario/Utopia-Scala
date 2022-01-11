@@ -15,6 +15,8 @@ trait ColumnTextLimit extends ColumnLengthLimit
 	  */
 	def maxLength: Int
 	
+	override def maxValue: Long = maxLength
+	
 	override def test(input: Value, allowCrop: Boolean = false) =
 		input.string match {
 			case Some(string) =>
@@ -91,6 +93,7 @@ object ColumnTextLimit
 	{
 		// Long text allows larger strings, but current testing method only supports integers
 		override def maxLength = Int.MaxValue
+		override def maxValue = 4294967295L
 		override def sqlType = "LONGTEXT"
 	}
 }

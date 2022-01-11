@@ -42,7 +42,7 @@ object ColumnLengthRule
 	}
 	
 	/**
-	  * A rule which attempts to crop the input value to fit the mximum column length
+	  * A rule which attempts to crop the input value to fit the maximum column length
 	  */
 	object TryCrop extends ColumnLengthRule
 	{
@@ -54,13 +54,32 @@ object ColumnLengthRule
 		}
 	}
 	
+	object TryExpand
+	{
+		/**
+		  * @param exc Implicit execution context
+		  * @param connectionPool Implicit connection pool
+		  * @return A rule which expands the applicable column as far as possible, if necessary
+		  */
+		def infinitely(implicit exc: ExecutionContext, connectionPool: ConnectionPool) = TryExpand()
+		/**
+		  * @param limit Maximum expanded length allowed
+		  * @param exc Implicit execution context
+		  * @param connectionPool Implicit connection pool
+		  * @return A rule which expands the applicable column up to a certain maximum threshold
+		  */
+		def upTo(limit: Long)(implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
+			TryExpand(Some(limit))
+	}
+	
 	/**
 	  * A rule which attempts to expand the column maximum limit to fit the new value
 	  * @param exc Implicit Execution context
 	  * @param connectionPool Implicit Connection pool
 	  */
-	// TODO: Add maximum expand limit support
-	case class TryExpand()(implicit exc: ExecutionContext, connectionPool: ConnectionPool) extends ColumnLengthRule
+	case class TryExpand(maximum: Option[Long] = None)
+	                    (implicit exc: ExecutionContext, connectionPool: ConnectionPool)
+		extends ColumnLengthRule
 	{
 		override def apply(databaseName: String, column: Column, lengthLimit: ColumnLengthLimit, proposedValue: Value) =
 		{
@@ -69,28 +88,35 @@ object ColumnLengthRule
 				case Left(largerLimit) =>
 					largerLimit match {
 						case Some(largerLimit) =>
-							// Applies the larger length limit immediately
-							val nullStr = if (column.allowsNull) "" else " NOT NULL"
-							val incrementStr = if (column.usesAutoIncrement) " AUTO_INCREMENT" else ""
-							val defaultStr = column.defaultValue match {
-								case Some(defaultValue) =>
-									defaultValue.dataType match {
-										case StringType => s" '$defaultValue'"
-										case _ => defaultValue.toString
-									}
-								case None => ""
+							// Checks whether the larger limit meets the maximum defined in this rule
+							// Case: New limit is OK
+							if (maximum.forall { _ >= largerLimit.maxValue }) {
+								// Applies the larger length limit immediately
+								val nullStr = if (column.allowsNull) "" else " NOT NULL"
+								val incrementStr = if (column.usesAutoIncrement) " AUTO_INCREMENT" else ""
+								val defaultStr = column.defaultValue match {
+									case Some(defaultValue) =>
+										defaultValue.dataType match {
+											case StringType => s" '$defaultValue'"
+											case _ => defaultValue.toString
+										}
+									case None => ""
+								}
+								connectionPool { implicit connection =>
+									connection.dbName = databaseName
+									connection.execute(
+										s"ALTER TABLE ${ column.tableName } MODIFY ${ column.columnName } ${
+											largerLimit.sqlType
+										}$nullStr$incrementStr$defaultStr")
+								}
+								// Remembers the extended length limit
+								ColumnLengthLimits((databaseName, column.tableName, column.name)) = largerLimit
+								proposedValue
 							}
-							connectionPool { implicit connection =>
-								connection.dbName = databaseName
-								connection.execute(
-									s"ALTER TABLE ${ column.tableName } MODIFY ${ column.columnName } ${
-										largerLimit.sqlType
-									}$nullStr$incrementStr$defaultStr")
-							}
-							// Remembers the extended length limit
-							ColumnLengthLimits((databaseName, column.tableName, column.name)) = largerLimit
-							proposedValue
-						
+							// Case: Required limit is too high => fails
+							else
+								throw new MaxLengthExceededException(
+									s"${ column.columnNameWithTable } can't be extended to required length")
 						case None => throw new MaxLengthExceededException(
 							s"${ column.columnNameWithTable } can't fit $proposedValue and can't be expanded")
 					}

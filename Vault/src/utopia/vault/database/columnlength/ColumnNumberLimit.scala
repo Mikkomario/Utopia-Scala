@@ -16,7 +16,7 @@ trait ColumnNumberLimit extends ColumnLengthLimit
 	/**
 	  * @return The maximum value allowed by this specific limit (inclusive). May be smaller than type max value.
 	  */
-	def maxValue: Long
+	override def maxValue: Long
 	
 	
 	// IMPLEMENTED  ----------------------
