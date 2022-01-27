@@ -18,6 +18,11 @@ trait SqlTarget
     def toSqlSegment: SqlSegment
     
     /**
+      * @return Name of the targeted database
+      */
+    def databaseName: String
+    
+    /**
       * @return Tables contained within this target
       */
     def tables: Vector[Table]
@@ -28,7 +33,8 @@ trait SqlTarget
     /**
      * Joins another table to this target using by appending an already complete join
      */
-    def +(join: Join): SqlTarget = SqlTargetWrapper(toSqlSegment + join.toSqlSegment, tables :+ join.rightTable)
+    def +(join: Join): SqlTarget =
+        SqlTargetWrapper(toSqlSegment + join.toSqlSegment, databaseName, tables :+ join.rightTable)
     
     
     // OTHER METHODS    ------------------------

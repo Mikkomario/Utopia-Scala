@@ -1,6 +1,9 @@
 # Utopia Trove - List of Changes
 
 ## v1.1.1 (in development)
+Important bugfixes and additions
+### Scala
+This module now uses Scala v2.13.7
 ### Bugfixes
 - Previous implementation attempted to restore backed up database versions before a versions table even existed
 ### Other Changes

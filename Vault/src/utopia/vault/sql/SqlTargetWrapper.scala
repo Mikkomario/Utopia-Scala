@@ -8,7 +8,8 @@ import utopia.vault.model.immutable.Table
  * @author Mikko Hilpinen
  * @since 1.6.2017
  */
-case class SqlTargetWrapper(private val segment: SqlSegment, tables: Vector[Table]) extends SqlTarget
+case class SqlTargetWrapper(private val segment: SqlSegment, databaseName: String, tables: Vector[Table])
+    extends SqlTarget
 {
     // IMPLEMENTED METHODS    --------------
     

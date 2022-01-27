@@ -1,6 +1,9 @@
 # Utopia Disciple - List of Changes
 
 ## v1.5 (in development)
+Updated Apache HttpClient dependency and added request rate limiting support
+### Scala
+This module now uses Scala v2.13.7
 ### Dependency Changes
 - This project now uses Apache HttpClient v5.1.2 instead of v4.x.
   - This should only affect library dependencies, the interface remains the same

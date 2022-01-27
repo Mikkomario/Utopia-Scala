@@ -6,6 +6,7 @@ import utopia.flow.parse.JsonParser
 import utopia.flow.util.StringExtensions._
 import utopia.vault.database.ConnectionPool
 import utopia.vault.database.columnlength.ColumnLengthRule.{Throw, TryCrop, TryExpand}
+import utopia.vault.model.immutable.{Column, Table}
 
 import java.nio.file.Path
 import scala.concurrent.ExecutionContext
@@ -39,6 +40,33 @@ object ColumnLengthRules
 	  */
 	def apply(databaseName: String, tableName: String, propertyName: String) =
 		specifics.get(databaseName, tableName, propertyName).getOrElse(default)
+	/**
+	  * @param databaseName Name of targeted database
+	  * @param column Targeted column
+	  * @return A length rule to apply to that column, if specified
+	  */
+	def apply(databaseName: String, column: Column): ColumnLengthRule =
+		apply(databaseName, column.tableName, column.name)
+	/**
+	  * @param table Targeted table
+	  * @param propertyName Name of the targeted property within that table
+	  * @return A length rule to apply to that column / property, if applicable
+	  */
+	def apply(table: Table, propertyName: String): ColumnLengthRule =
+		apply(table.databaseName, table.name, propertyName)
+	
+	/**
+	  * @param databaseName Name of the targeted database
+	  * @param tableName name of the targeted table
+	  * @return A map containing all specific column length rules and including the default column length rule
+	  */
+	def apply(databaseName: String, tableName: String) =
+		specifics.nested(databaseName, tableName).flat.withDefault { _ => default }
+	/**
+	  * @param table Targeted table
+	  * @return Column length rules to apply to that table
+	  */
+	def apply(table: Table): Map[String, ColumnLengthRule] = apply(table.databaseName, table.name)
 	
 	/**
 	  * Applies a new rule to a column

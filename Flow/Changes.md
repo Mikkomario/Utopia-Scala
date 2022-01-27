@@ -1,6 +1,8 @@
 # Utopia Flow - List of Changes
 
 ## v1.14.1 (in development)
+This update introduces a number of quality-of-life improvements, and also some important fixes to json writing and 
+regular expressions.
 ### Scala
 This module now uses Scala v2.13.7
 ### Deprecations

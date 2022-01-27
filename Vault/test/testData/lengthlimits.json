@@ -1,0 +1,8 @@
+{
+  "vault_test": {
+    "person": {
+      "name": "expand to 96",
+      "age": "crop"
+    }
+  }
+}

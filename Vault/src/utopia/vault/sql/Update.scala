@@ -4,6 +4,7 @@ import utopia.flow.datastructure.template.Model
 import utopia.flow.datastructure.template.Property
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.immutable
+import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
 import utopia.vault.model.immutable.TableUpdateEvent.RowsUpdated
 import utopia.vault.model.immutable.{Column, Table}
 
@@ -31,8 +32,15 @@ object Update
             target.toSqlSegment.prepend("SELECT NULL FROM")
         else
         {
-            // TODO: Modify column lengths if required & allowed (new feature)
-            val orderedSet = set.toVector
+            // Makes sure the specified values conform to the applicable column length limits
+            val dbName = target.databaseName
+            val orderedSet = set.toVector.map { case (column, rawValue) =>
+                val modifiedValue = ColumnLengthLimits(dbName, column) match {
+                    case Some(limit) => ColumnLengthRules(dbName, column)(dbName, column, limit, rawValue)
+                    case None => rawValue
+                }
+                column -> modifiedValue
+            }
             target.toSqlSegment.prepend("UPDATE") +
                 SqlSegment("SET " +
                     orderedSet.view.map { case (column, _) => column.columnNameWithTable + " = ?" }.mkString(", "),

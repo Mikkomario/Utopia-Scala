@@ -1,6 +1,10 @@
 # Utopia Vault Coder
 
 ## v1.4 (in development)
+This update contains a number of additions in various levels. Perhaps most importantly, this version of the Vault Coder 
+supports Vault v1.12, which previous versions don't do.
+### Scala
+This module now uses Scala v2.13.7
 ### New Features
 - Added **Value** data type
 - Added support for root path aliases, which can be stored to config.json file in application directory

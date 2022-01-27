@@ -1,6 +1,9 @@
 # Utopia Access - List of Changes
 
 ## v1.4.3 (in development)
+Minor update to Headers
+### Scala
+This module now uses Scala v2.13.7
 ### New Methods
 - **Headers**
   - Added `.withAcceptedType(ContentType)`

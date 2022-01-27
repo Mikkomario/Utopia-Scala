@@ -1,6 +1,8 @@
 # Utopia Vault - List of Changes
 
 ## v1.12 (in development)
+This update contains a major refactoring of the factory and access traits, as well as some important fixes. 
+New important features include database events (triggers).
 ### Scala
 This module now uses Scala v2.13.7
 ### Breaking Changes
@@ -10,6 +12,7 @@ This module now uses Scala v2.13.7
   - This also applies to `readColumn` in **ModelAccess**
 - Changed constructor parameter ordering in **Column**. Also added new optional parameter **LengthLimit**. 
 - Added a new constructor parameter to **SqlSegment**
+- SqlTarget trait now requires properties `.databaseName` and `.tables`
 - Changed **ClearUnreferencedData** constructor
 ### Deprecations
 - Deprecated multiple **FromResultFactory** and **FromRowFactory** methods in favor of renamed, and sometimes extended, 

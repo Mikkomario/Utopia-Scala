@@ -1,6 +1,9 @@
 # Utopia Disciple - List of changes
 
 ## v2.0.1 (in development)
+Important bugfix and some minor changes
+### Scala
+This module now uses Scala v2.13.7
 ### Deprecations
 - Deprecated `CitadelDataDeletionRules.unreferencedDeletionTables` in favor of `.unreferencedRules`
 ### New Methods

@@ -28,7 +28,6 @@ case class MemberRolesNode(organizationId: Int, userId: Option[Int]) extends Lea
 	
 	private def organizationAccess = DbOrganization(organizationId)
 	
-	// TODO: Editing rights should be checked based on allowed task ids, not role ids
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		// All methods require proper task-authorization

@@ -285,7 +285,6 @@ object LocalDatabase
 				dbPointer.setOne(database)
 				
 				// Updates Vault connection settings
-				// TODO: Set charset and collate
 				Connection.modifySettings { _.copy(
 					connectionTarget = configBuilder.getURL(""),
 					defaultDBName = Some("test"), charsetName = charsetName.getOrElse(""),

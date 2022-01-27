@@ -39,4 +39,7 @@ case class ConnectionSettings(connectionTarget: String = "jdbc:mysql://localhost
 			s"?useUnicode=true$charsetPart$collationPart"
 		}
 	}
+	
+	override def toString = s"Connecting to $connectionTarget with user $user ${
+		if (password.nonEmpty) "using a password" else "without a password"} ($charsetString)"
 }

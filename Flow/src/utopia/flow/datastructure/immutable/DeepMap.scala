@@ -172,6 +172,24 @@ case class DeepMap[K, +V] private(private val wrapped: Map[K, Either[DeepMap[K, 
 	def apply(keys: K*): V = apply(keys)
 	
 	/**
+	  * @param path Targeted path
+	  * @return A nested map at the end of that path (or an empty map)
+	  */
+	def nested(path: IterableOnce[K]) = getNested(path).getOrElse(DeepMap.empty)
+	/**
+	  * @param key A key
+	  * @return A nested map behind that key (or an empty map)
+	  */
+	def nested(key: K) = getNested(key).getOrElse(DeepMap.empty)
+	/**
+	  * @param first First path part
+	  * @param second Second path part
+	  * @param more More path parts
+	  * @return A nested map at the end of that path (or an empty map)
+	  */
+	def nested(first: K, second: K, more: K*): DeepMap[K, V] = nested(Vector(first, second) ++ more)
+	
+	/**
 	  * @param path A path to look up
 	  * @return Value found with that path. None if no value was found.
 	  */
@@ -207,6 +225,18 @@ case class DeepMap[K, +V] private(private val wrapped: Map[K, Either[DeepMap[K, 
 	  * @return Nested map for that key. None if there was no nested map for that key.
 	  */
 	def getNested(key: K): Option[DeepMap[K, V]] = wrapped.get(key).flatMap { _.leftOption }
+	/**
+	  * @param path Path to target
+	  * @return A nested map at the end of that path. None if that path didn't point to a nested map
+	  */
+	def getNested(path: IterableOnce[K]): Option[DeepMap[K, V]] = _getNested(path.iterator)
+	/**
+	  * @param first First path part
+	  * @param second Second path part
+	  * @param more More path parts
+	  * @return A nested map at the end of that path. None if that path didn't point to a nested map
+	  */
+	def getNested(first: K, second: K, more: K*): Option[DeepMap[K, V]] = getNested(Vector(first, second) ++ more)
 	
 	/**
 	  * @param key A key
@@ -301,6 +331,12 @@ case class DeepMap[K, +V] private(private val wrapped: Map[K, Either[DeepMap[K, 
 			// Delegates the search to the nested map, if necessary
 			case Left(map) => map._apply(iter)
 		}
+	}
+	private def _getNested(iter: Iterator[K]): Option[DeepMap[K, V]] = {
+		if (iter.hasNext)
+			getNested(iter.next()).flatMap { _._getNested(iter) }
+		else
+			Some(this)
 	}
 	private def _contains(iter: Iterator[K]): Boolean = {
 		if (iter.hasNext) {

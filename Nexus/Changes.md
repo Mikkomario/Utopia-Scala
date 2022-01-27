@@ -1,6 +1,9 @@
 # Utopia Nexus - List of Changes
 
 ## v1.6.2 (in development)
+This update introduces an important bugfix concerning modular resources
+### Scala
+This module now uses Scala v2.13.7
 ### New Methods
 - **ExtendableResource**
   - Added `.addChild(=> Resource)`, which is a utility variation of `.extendWith(FollowImplementation)`

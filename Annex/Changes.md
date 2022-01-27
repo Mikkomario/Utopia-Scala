@@ -2,6 +2,8 @@
 
 ## v1.0.4 (in development)
 Dependency changes, according to Disciple update v1.5
+### Scala
+This module now uses Scala v2.13.7
 
 ## v1.0.3 - 04.11.2021
 Supports changes in Flow v1.14

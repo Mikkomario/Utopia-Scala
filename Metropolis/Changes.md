@@ -1,6 +1,9 @@
 # Utopia Metropolis - List of Changes
 
 ## v2.0.1 (in development)
+A minor style update, plus a scala version update
+### Scala
+This module now uses Scala v2.13.7
 ### Other Changes
 - *Null* description properties are omitted in **SimplyDescribed**`.toSimpleModelUsing(...)`
 
