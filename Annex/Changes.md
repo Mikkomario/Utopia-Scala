@@ -1,6 +1,6 @@
 # Utopia Annex - List of Changes
 
-## v1.0.4 (in development)
+## v1.0.4 - 27.01.2022
 Dependency changes, according to Disciple update v1.5
 ### Scala
 This module now uses Scala v2.13.7

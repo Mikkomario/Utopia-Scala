@@ -1,6 +1,6 @@
 # Utopia Metropolis - List of Changes
 
-## v2.0.1 (in development)
+## v2.0.1 - 27.01.2022
 A minor style update, plus a scala version update
 ### Scala
 This module now uses Scala v2.13.7

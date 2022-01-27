@@ -1,6 +1,6 @@
 # Utopia Exodus - List of Changes
 
-## v3.1 (in development)
+## v3.1 - 27.01.2022
 An update that introduces multiple fixes and functional changes to the user management interface, 
 but unfortunately also a number of breaking changes.
 ### Scala

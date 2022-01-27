@@ -1,6 +1,6 @@
 # Utopia Disciple - List of Changes
 
-## v1.5 (in development)
+## v1.5 - 27.01.2022
 Updated Apache HttpClient dependency and added request rate limiting support
 ### Scala
 This module now uses Scala v2.13.7

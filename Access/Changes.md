@@ -1,6 +1,6 @@
 # Utopia Access - List of Changes
 
-## v1.4.3 (in development)
+## v1.4.3 - 27.01.2022
 Minor update to Headers
 ### Scala
 This module now uses Scala v2.13.7

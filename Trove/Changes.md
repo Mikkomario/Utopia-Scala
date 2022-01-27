@@ -1,6 +1,6 @@
 # Utopia Trove - List of Changes
 
-## v1.1.1 (in development)
+## v1.1.1 - 27.01.2022
 Important bugfixes and additions
 ### Scala
 This module now uses Scala v2.13.7

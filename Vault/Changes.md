@@ -1,6 +1,6 @@
 # Utopia Vault - List of Changes
 
-## v1.12 (in development)
+## v1.12 - 27.01.2022
 This update contains a major refactoring of the factory and access traits, as well as some important fixes. 
 New important features include database events (triggers).
 ### Scala

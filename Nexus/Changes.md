@@ -1,6 +1,6 @@
 # Utopia Nexus - List of Changes
 
-## v1.6.2 (in development)
+## v1.6.2 - 27.01.2022
 This update introduces an important bugfix concerning modular resources
 ### Scala
 This module now uses Scala v2.13.7

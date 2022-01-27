@@ -1,6 +1,6 @@
 # Utopia Vault Coder
 
-## v1.4 (in development)
+## v1.4 - 27.01.2022
 This update contains a number of additions in various levels. Perhaps most importantly, this version of the Vault Coder 
 supports Vault v1.12, which previous versions don't do.
 ### Scala
