@@ -1,6 +1,7 @@
 package utopia.vault.database
 
 import utopia.flow.generic.DataType
+import utopia.vault.database.columnlength.ColumnLengthLimit
 
 /**
  * These interpreters are used for converting string type descriptions (found from database data) 
@@ -12,9 +13,10 @@ import utopia.flow.generic.DataType
 trait SqlTypeInterpreter
 {
     /**
-     * Interpretes an sql type string into an actual data type, if possible.
+     * Interprets an sql type string into an actual data type, if possible.
      * @param typeString The sql type string. For example: 'int(11)', 'varchar(32)' or 'timestamp'
-     * @return the interpreted data type or none if the type couldn't be recognised
+     * @return the interpreted data type and encountered maximum length limit. One or both may be none if the type
+      *         or length couldn't be recognised
      */
-    def apply(typeString: String): Option[DataType]
+    def apply(typeString: String): (Option[DataType], Option[ColumnLengthLimit])
 }

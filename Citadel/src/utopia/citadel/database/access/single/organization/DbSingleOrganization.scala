@@ -4,6 +4,7 @@ import utopia.citadel.database.access.many.description.DbOrganizationDescription
 import utopia.citadel.database.access.many.organization.DbInvitations.DbCurrentAndPastInvitations
 import utopia.citadel.database.access.many.organization.{DbInvitations, DbMemberships, DbMembershipsWithRoles, DbOrganizationDeletions}
 import utopia.citadel.database.access.single.description.{DbOrganizationDescription, SingleIdDescribedAccess}
+import utopia.citadel.model.enumeration.StandardUserRole.Owner
 import utopia.metropolis.model.combined.organization.DescribedOrganization
 import utopia.metropolis.model.stored.organization.Organization
 import utopia.vault.database.Connection
@@ -25,6 +26,10 @@ case class DbSingleOrganization(id: Int)
 	  * @return An access point to this organizations memberships, including their role links
 	  */
 	def membershipsWithRoles = DbMembershipsWithRoles.inOrganizationWithId(id)
+	/**
+	  * @return An access point to this organization's owner's memberships
+	  */
+	def ownerMemberships = membershipsWithRoles.limitedToRoleWithId(Owner.id)
 	/**
 	  * @return An access point to active (non-expired) invitations into this organization
 	  */

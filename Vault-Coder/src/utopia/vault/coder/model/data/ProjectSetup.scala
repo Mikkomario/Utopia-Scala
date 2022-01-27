@@ -3,6 +3,7 @@ package utopia.vault.coder.model.data
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.Version
 import utopia.vault.coder.model.merging.MergeConflict
 import utopia.vault.coder.model.scala.Package
 
@@ -17,10 +18,12 @@ import java.nio.file.Path
   * @param databasePackage Package for the database interaction classes
   * @param sourceRoot Path to the export source directory
   * @param mergeSourceRoots Paths to the source roots where existing versions are read from and merged (optional)
+  * @param version Current project version
   * @param modelCanReferToDB Whether model classes are allowed to refer to database classes
   */
 case class ProjectSetup(dbModuleName: String, modelPackage: Package, databasePackage: Package, sourceRoot: Path,
-                        mergeSourceRoots: Vector[Path], mergeConflictsFilePath: Path, modelCanReferToDB: Boolean)
+                        mergeSourceRoots: Vector[Path], mergeConflictsFilePath: Path, version: Option[Version],
+                        modelCanReferToDB: Boolean)
 {
 	// ATTRIBUTES   ------------------------
 	

@@ -29,6 +29,8 @@ object MemberRoleWithRightsFactory extends FromResultFactory[MemberRoleWithRight
 	override def joinedTables = rightsFactory.tables
 	override def joinType = JoinType.Left
 	
+	override def defaultOrdering = rightsFactory.defaultOrdering
+	
 	override def nonDeprecatedCondition = linkFactory.nonDeprecatedCondition
 	
 	override def apply(result: Result) =

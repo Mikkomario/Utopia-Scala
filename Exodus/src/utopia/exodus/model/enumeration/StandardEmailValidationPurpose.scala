@@ -39,4 +39,12 @@ object StandardEmailValidationPurpose
 	{
 		override val id = 3
 	}
+	
+	/**
+	  * Represents an email validation that is sent along with an organization invitation
+	  */
+	case object OrganizationInvitation extends StandardEmailValidationPurpose
+	{
+		override val id = 4
+	}
 }

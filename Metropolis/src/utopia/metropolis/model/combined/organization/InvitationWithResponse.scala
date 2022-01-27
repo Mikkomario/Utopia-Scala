@@ -44,7 +44,6 @@ case class InvitationWithResponse(invitation: Invitation, response: Option[Invit
 	override def wrapped = invitation.data
 	
 	override def toModel = invitation.toModel + Constant("response", response.map { _.toModel })
-	
 	override def toSimpleModel =
 	{
 		val base = invitation.toModel
@@ -53,5 +52,14 @@ case class InvitationWithResponse(invitation: Invitation, response: Option[Invit
 			case None => base
 		}
 	}
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	  * @param response An invitation response
+	  * @return A copy of this invitation with that response
+	  */
+	def +(response: InvitationResponse) = copy(response = Some(response))
 }
 

@@ -21,7 +21,7 @@ trait SingleAccess[-I, +A] extends Access[I, A]
 	 * @param connection Database connection (implicit)
 	 * @return Search results
 	 */
-	def find(condition: Condition)(implicit connection: Connection) = factory.get(condition)
+	def find(condition: Condition)(implicit connection: Connection) = factory.find(condition)
 	
 	/**
 	 * Accesses a single item

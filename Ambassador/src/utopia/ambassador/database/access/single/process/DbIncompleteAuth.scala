@@ -48,7 +48,6 @@ object DbIncompleteAuth
 	class DbIncompleteAuthWithToken(token: String) extends UniqueIncompleteAuthAccess with SubView
 	{
 		override protected def parent = DbIncompleteAuth
-		override protected def defaultOrdering = Some(factory.defaultOrdering)
 		
 		override def filterCondition = model.withToken(token).toCondition
 	}

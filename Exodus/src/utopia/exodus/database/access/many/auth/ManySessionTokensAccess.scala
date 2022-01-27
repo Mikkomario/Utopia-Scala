@@ -10,7 +10,7 @@ import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManySessionTokensAccess
@@ -27,7 +27,8 @@ object ManySessionTokensAccess
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
-trait ManySessionTokensAccess extends ManyRowModelAccess[SessionToken] with Indexed
+trait ManySessionTokensAccess
+	extends ManyRowModelAccess[SessionToken] with Indexed with FilterableView[ManySessionTokensAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -79,8 +80,6 @@ trait ManySessionTokensAccess extends ManyRowModelAccess[SessionToken] with Inde
 	// IMPLEMENTED	--------------------
 	
 	override def factory = SessionTokenFactory
-	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
 	
 	override def filter(additionalCondition: Condition): ManySessionTokensAccess = 
 		new ManySessionTokensAccess.ManySessionTokensSubView(this, additionalCondition)

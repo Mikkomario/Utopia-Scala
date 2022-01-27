@@ -8,7 +8,7 @@ import utopia.metropolis.model.stored.user.UserSettings
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 import utopia.vault.sql.SqlExtensions._
 
@@ -26,7 +26,8 @@ object ManyUserSettingsAccess
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
-trait ManyUserSettingsAccess extends ManyRowModelAccess[UserSettings] with Indexed
+trait ManyUserSettingsAccess
+	extends ManyRowModelAccess[UserSettings] with Indexed with FilterableView[ManyUserSettingsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -73,8 +74,6 @@ trait ManyUserSettingsAccess extends ManyRowModelAccess[UserSettings] with Index
 	
 	override def factory = UserSettingsFactory
 	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
-	
 	override def filter(additionalCondition: Condition): ManyUserSettingsAccess = 
 		new ManyUserSettingsAccess.ManyUserSettingsSubView(this, additionalCondition)
 	
@@ -91,6 +90,12 @@ trait ManyUserSettingsAccess extends ManyRowModelAccess[UserSettings] with Index
 	  * @return An access point to all user settings with that email address
 	  */
 	def withEmail(emailAddress: String) = filter(model.withEmail(emailAddress).toCondition)
+	
+	/**
+	 * @param names A collection of user names
+	 * @return User settings that use any of those names (may not cover all of them)
+	 */
+	def withAnyOfNames(names: Iterable[String]) = filter(model.nameColumn in names)
 	
 	/**
 	  * @param userIds Ids of the targeted users

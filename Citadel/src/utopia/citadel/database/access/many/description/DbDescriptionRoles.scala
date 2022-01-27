@@ -33,7 +33,7 @@ object DbDescriptionRoles extends ManyDescriptionRolesAccess with UnconditionalV
 			import CitadelContext.executionContext
 			import CitadelContext.connectionPool
 			
-			def _readValues = connectionPool.tryWith { implicit c => pull }
+			def _readValues = connectionPool.tryWith { implicit c => super.pull }
 				.getOrMap { error =>
 					ErrorHandling.defaultPrinciple.handle(error)
 					Vector()

@@ -8,7 +8,7 @@ import utopia.metropolis.model.stored.organization.OrganizationDeletionCancellat
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyOrganizationDeletionCancellationsAccess
@@ -27,6 +27,7 @@ object ManyOrganizationDeletionCancellationsAccess
   */
 trait ManyOrganizationDeletionCancellationsAccess 
 	extends ManyRowModelAccess[OrganizationDeletionCancellation] with Indexed
+		with FilterableView[ManyOrganizationDeletionCancellationsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -59,8 +60,6 @@ trait ManyOrganizationDeletionCancellationsAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = OrganizationDeletionCancellationFactory
-	
-	override protected def defaultOrdering = Some(factory.defaultOrdering)
 	
 	override def filter(additionalCondition: Condition): ManyOrganizationDeletionCancellationsAccess = 
 		new ManyOrganizationDeletionCancellationsAccess.ManyOrganizationDeletionCancellationsSubView(this, 

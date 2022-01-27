@@ -25,6 +25,7 @@ object FromRowModelFactory
     private case class TableModelFactory(override val table: Table) extends FromRowModelFactory[Storable]
     {
         override def apply(model: Model[Property]) = Success(Storable(table, model))
+        override def defaultOrdering = None
     }
 }
 

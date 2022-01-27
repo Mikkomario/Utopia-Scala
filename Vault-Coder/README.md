@@ -10,6 +10,7 @@ Once you have created a specification document, run the application using the fo
 `java -jar Vault-Coder.jar <root> <input> <output> <filter> <group> <merge>`
 - `<root>` argument specifies the path (beginning) that is common for both the input and the output
   - This argument is optional
+  - You may also pass a **root path alias** here. See more details about this below.
 - `<input>` (`in`) points towards your specification .json file or to a directory that holds such files
   - This argument is optional, but if `<root>` is not specified, this value is requested during application use
   - If `<root>` is specified, this path should be relative to it
@@ -166,6 +167,16 @@ Each property object should contain following properties:
   - If empty or omitted, data type -specific default will be used, if there is one
 - **"doc": String (optional)** - Description of this property (used in documentation)
 - **"usage": String (optional)** - Additional description about the use of this property
+
+## Root Path Aliases
+In case you're using certain root paths often, you may ease application use by aliasing those paths.  
+You may do this by adding a `config.json` file to the application directory (where `Vault-Coder.jar` resides) 
+with following properties in it:
+- **"roots": Object**
+  - "`<root alias 1>`" = "`<root path 1>`"
+  - "`<root alias 2>`" = "`<root path 2>`"
+  - ...
+You may then refer to a root alias instead of the full root path when using the application.
 
 ## Output Format
 This application will produce the following documents 

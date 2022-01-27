@@ -1,9 +1,10 @@
 package utopia.vault.nosql.access.single.column
 
 import utopia.vault.database.Connection
+import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.access.single.SingleAccess
 import utopia.vault.nosql.access.template.column.ColumnAccess
-import utopia.vault.sql.{Condition, Limit, OrderBy, Select, Where}
+import utopia.vault.sql.{Condition, JoinType, Limit, OrderBy, Select, Where}
 
 /**
   * Used for accessing individual column values in a table
@@ -20,7 +21,6 @@ trait SingleColumnAccess[+V]
 	  * @return The smallest available row id
 	  */
 	def min(implicit connection: Connection) = first(OrderBy.ascending(column))
-	
 	/**
 	  * @param connection Database connection (implicit)
 	  * @return The largest available row id
@@ -30,10 +30,12 @@ trait SingleColumnAccess[+V]
 	
 	// IMPLEMENTED	---------------------------
 	
-	override protected def read(condition: Option[Condition], order: Option[OrderBy])
+	override protected def read(condition: Option[Condition], order: Option[OrderBy], joins: Seq[Joinable],
+	                            joinType: JoinType)
 	                           (implicit connection: Connection) =
 	{
-		val statement = Select.index(target, table) + condition.map { Where(_) } + order + Limit(1)
+		val statement = Select(joins.foldLeft(target) { _.join(_, joinType) }, column) +
+			condition.map { Where(_) } + order + Limit(1)
 		parseValue(connection(statement).firstValue)
 	}
 }

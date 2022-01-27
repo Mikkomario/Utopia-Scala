@@ -161,7 +161,8 @@ case class Code(lines: Vector[CodeLine], references: Set[Reference] = Set())
 				.dropWhile { case (a, b) => a.code == b.code }
 				.dropRightWhile { case (a, b) => a.code == b.code }
 		if (conflictLines.nonEmpty)
-			Some(MergeConflict(conflictLines.map { _._2 }, conflictLines.map { _._1 }, description))
+			Some(MergeConflict(conflictLines.map { _._2 }.dropRightWhile { _.isEmpty },
+				conflictLines.map { _._1 }.dropRightWhile { _.isEmpty }, description))
 		else
 			None
 	}

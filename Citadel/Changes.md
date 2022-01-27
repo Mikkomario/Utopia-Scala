@@ -1,5 +1,18 @@
 # Utopia Disciple - List of changes
 
+## v2.0.1 - 27.01.2022
+Important bugfix and some minor changes
+### Scala
+This module now uses Scala v2.13.7
+### Deprecations
+- Deprecated `CitadelDataDeletionRules.unreferencedDeletionTables` in favor of `.unreferencedRules`
+### New Methods
+- Added new membership access methods
+### Bugfixes
+- **DbDescriptionRoles** previously caused a StackOverFlowException when used - now fixed
+### Other Changes
+- Description properties with _null_ value are omitted when generating simply described models
+
 ## v2.0 - 04.11.2021
 This update involves a complete overhaul of the database interfaces and especially the description-related interfaces. 
 All database interaction objects were rewritten using the **Vault-Coder**.  

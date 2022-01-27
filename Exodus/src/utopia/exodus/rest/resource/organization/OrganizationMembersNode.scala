@@ -28,7 +28,9 @@ case class OrganizationMembersNode(organizationId: Int) extends Resource[Authori
 		context.authorizedInOrganization(organizationId) { (session, _, connection) =>
 			implicit val c: Connection = connection
 			// Retrieves all memberships, associated task ids and user settings
-			val memberships = DbOrganization(organizationId).membershipsWithRoles.detailed
+			// Omits the requesting user
+			val memberships = DbOrganization(organizationId).membershipsWithRoles
+				.notOfUserWithId(session.userId).detailed
 			// Produces a response based on the read data
 			// Supports styling options
 			val style = session.modelStyle

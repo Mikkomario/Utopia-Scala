@@ -59,8 +59,6 @@ trait ManyScopesAccess
 	
 	override def factory = ScopeFactory
 	
-	override protected def defaultOrdering = None
-	
 	override protected def describedFactory = DescribedScope
 	
 	override protected def manyDescriptionsAccess = DbScopeDescriptions

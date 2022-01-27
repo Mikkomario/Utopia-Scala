@@ -97,7 +97,6 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
             // Performs a database change, if necessary
             if (isOpen && !_dbName.contains(databaseName))
                 execute(s"USE $databaseName")
-            
             _dbName = Some(databaseName)
         }
     }
@@ -127,7 +126,13 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         
         // Changes database if necessary
         statement.databaseName.foreach { dbName = _ }
+        // Executes the query
         val result = apply(statement.sql, statement.values, selectedTables, statement.generatesKeys, statement.isSelect)
+        
+        // Fires database triggers / events, if necessary
+        dbName.foreach { databaseName =>
+            statement.events.foreach { _(result).foreach { event => Triggers.deliver(databaseName, event) } }
+        }
         
         printIfDebugging(s"Received result: $result")
         result
@@ -156,53 +161,48 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         // Empty statements are not executed
         if (sql.isEmpty)
             Result.empty
-        else 
-        {
-            Try
-            {
+        else {
+            Try {
                 // Creates the statement
                 connection.prepareStatement(sql,
-                    if (returnGeneratedKeys) Statement.RETURN_GENERATED_KEYS else Statement.NO_GENERATED_KEYS).consume { statement =>
-        
-                    // Inserts provided values
-                    setValues(statement, values)
-        
-                    // Executes the statement and retrieves the result (if available)
-                    val foundResult = statement.execute()
-                    // Case: Expecting generated keys
-                    if (returnGeneratedKeys)
-                        Result(Vector(), generatedKeysFromResult(statement, selectedTables))
-                    else
-                    {
-                        // Collects the result rows or update count from the first result
-                        var rows =
-                        {
-                            if (foundResult)
-                                statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
-                            else
-                                Vector()
-                        }
-                        var updateCount = if (foundResult) 0 else statement.getUpdateCount
-                        // Handles possible additional results
-                        var expectsMore = foundResult || updateCount >= 0
-                        while (expectsMore)
-                        {
-                            // Case: Additional result with more rows
-                            if (statement.getMoreResults)
-                                rows ++= statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
-                            else
-                            {
-                                val newUpdateCount = statement.getUpdateCount
-                                // Case: No more results
-                                if (newUpdateCount < 0)
-                                    expectsMore = false
-                                // Case: Update count
+                    if (returnGeneratedKeys) Statement.RETURN_GENERATED_KEYS else Statement.NO_GENERATED_KEYS)
+                    .consume { statement =>
+                        // Inserts provided values
+                        setValues(statement, values)
+                        // Executes the statement and retrieves the result (if available)
+                        val foundResult = statement.execute()
+                        // Case: Expecting generated keys
+                        if (returnGeneratedKeys)
+                            Result(Vector(), generatedKeysFromResult(statement, selectedTables))
+                        else {
+                            // Collects the result rows or update count from the first result
+                            var rows = {
+                                if (foundResult)
+                                    statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
                                 else
-                                    updateCount += newUpdateCount
+                                    Vector()
                             }
+                            var updateCount = if (foundResult) 0 else statement.getUpdateCount
+                            // Handles possible additional results
+                            var expectsMore = foundResult || updateCount >= 0
+                            while (expectsMore)
+                            {
+                                // Case: Additional result with more rows
+                                if (statement.getMoreResults)
+                                    rows ++= statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
+                                else
+                                {
+                                    val newUpdateCount = statement.getUpdateCount
+                                    // Case: No more results
+                                    if (newUpdateCount < 0)
+                                        expectsMore = false
+                                    // Case: Update count
+                                    else
+                                        updateCount += newUpdateCount
+                                }
+                            }
+                            Result(rows, updatedRowCount = updateCount max 0)
                         }
-                        Result(rows, updatedRowCount = updateCount max 0)
-                    }
                 }
             } match
             {
@@ -324,19 +324,20 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
             if (dbName.isEmpty)
                 throw NoConnectionException("Database name hasn't been specified")
             
-            Try
-            {
+            Try {
+                val settings = Connection.settings
                 // Sets up the driver
-                if (Connection.settings.driver.isDefined && Connection.driver.isEmpty)
-                {
-                    Connection.driver = Some(
-                        Class.forName(Connection.settings.driver.get).newInstance())
+                settings.driver.foreach { driver =>
+                    if (Connection.driver.isEmpty)
+                        Connection.driver = Some(Class.forName(driver).newInstance())
                 }
-    
                 // Instantiates the connection
                 _connection = Some(DriverManager.getConnection(
-                    Connection.settings.connectionTarget + dbName.get + Connection.settings.charsetString,
-                    Connection.settings.user, Connection.settings.password))
+                    settings.connectionTarget + dbName.get + settings.charsetString,
+                    settings.user, settings.password))
+                // Specifies the database to use
+                execute(s"USE ${dbName.get}")
+                
             }.failure.foreach { e => throw NoConnectionException(
                 s"Failed to open a database connection with settings ${Connection.settings} and database '$dbName'", e) }
         }
@@ -433,12 +434,25 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     /**
       * Creates a new database
       * @param databaseName Name of the new database
+     *  @param defaultCharset Default character set to use in this database (optional, as a string)
+     *  @param defaultCollate Default collate to assign to this database (optional, as a string)
       * @param checkIfExists Whether database should only be created if one doesn't exist yet (default = true)
       * @param useNewDb Whether connection should switch to target the new database afterwards (default = true)
       */
-    def createDatabase(databaseName: String, checkIfExists: Boolean = true, useNewDb: Boolean = true) =
+    def createDatabase(databaseName: String, defaultCharset: Option[String] = None,
+                       defaultCollate: Option[String] = None, checkIfExists: Boolean = true,
+                       useNewDb: Boolean = true) =
     {
-        execute(s"CREATE DATABASE${if (checkIfExists) " IF NOT EXISTS " else " "}$databaseName")
+        val ifExistsStr = if (checkIfExists) " IF EXISTS" else ""
+        val charsetStr = defaultCharset match {
+            case Some(charset) => " DEFAULT CHARSET " + charset
+            case None => ""
+        }
+        val collateStr = defaultCollate match {
+            case Some(collate) => " DEFAULT COLLATE " + collate
+            case None => ""
+        }
+        execute(s"CREATE DATABASE$ifExistsStr $databaseName$charsetStr$collateStr")
         if (useNewDb)
             dbName = databaseName
     }

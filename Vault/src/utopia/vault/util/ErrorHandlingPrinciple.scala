@@ -30,5 +30,6 @@ object ErrorHandlingPrinciple
 	  * Handles all errors with a specific function. May be used for logging, for example.
 	  * @param handler A handling function that will receive caught Throwables
 	  */
-	case class Custom(handler: Throwable => Unit) extends ErrorHandlingPrinciple { def handle(error: Throwable) = handler(error) }
+	case class Custom(handler: Throwable => Unit)
+		extends ErrorHandlingPrinciple { def handle(error: Throwable) = handler(error) }
 }

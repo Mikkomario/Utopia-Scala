@@ -30,6 +30,8 @@ import scala.util.{Failure, Success, Try}
 
 object UsersNode extends CustomAuthorizationResourceFactory[UsersNode]
 {
+	import ExodusContext.uuidGenerator
+	
 	// IMPLEMENTED	------------------------------
 	
 	// NB: Uses email validation authorization when that is available.
@@ -41,45 +43,27 @@ object UsersNode extends CustomAuthorizationResourceFactory[UsersNode]
 		else
 			new NoEmailValidationUsersNode(ExodusContext.userEmailIsRequired)(authorize)
 	}
-}
-
-sealed trait UsersNode extends Resource[AuthorizedContext]
-{
-	import ExodusContext.uuidGenerator
-	
-	// IMPLEMENTED	---------------------------
-	
-	override val name = "users"
-	
-	override val allowedMethods = Vector(Post)
-	
-	// Expects /me or /{userId}
-	override def follow(path: Path)(implicit context: AuthorizedContext) =
-	{
-		if (path.head ~== "me")
-			Follow(MeNode, path.tail)
-		else
-			path.head.int match
-			{
-				case Some(userId) => Follow(OtherUserNode(userId), path.tail)
-				case None => Error(message = Some(s"Targeted user id (now '${path.head}') must be an integer"))
-			}
-	}
 	
 	
-	// OTHER	-------------------------------
+	// OTHER    ----------------------------------
 	
-	// Specified function can return Success(None) if email isn't required
-	protected def insertUser(validatePost: NewUser => Try[NewUser])
-							(implicit context: AuthorizedContext, connection: Connection) =
+	/**
+	  * Inserts a new user to the database using a post model from the request
+	  * @param validatePost A function for validating the proposed post model. May modify the model by, for example,
+	  *                     inserting a correct email address.
+	  * @param context Implicit request context
+	  * @param connection Implicit database connection
+	  * @return Result to give back to the user. On success, user and session data are sent.
+	  */
+	def insertUser(validatePost: NewUser => Try[NewUser] = u => Success(u))
+	              (wrapSuccess: UserCreationResult => Result = body => Result.Success(body.toModel, Created))
+	              (implicit context: AuthorizedContext, connection: Connection) =
 	{
 		context.handlePost(NewUser) { newUser =>
-			validatePost(newUser) match
-			{
+			validatePost(newUser) match {
 				case Success(newUser) =>
 					// Saves the new user data to DB
-					tryInsert(newUser) match
-					{
+					tryInsert(newUser) match {
 						case Success(user) =>
 							// Returns a summary of the new data, along with a session key and a possible device key
 							val deviceId = user.deviceIds.headOption
@@ -93,7 +77,7 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 							val sessionToken = acquireSessionToken(userId, deviceId)
 							val creationResult = UserCreationResult(userId, user, sessionToken, deviceId,
 								deviceToken)
-							Result.Success(creationResult.toModel, Created)
+							wrapSuccess(creationResult)
 						case Failure(error) =>
 							error match
 							{
@@ -125,7 +109,8 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 			Failure(new IllegalPostModelException("User name must not be empty"))
 		else if (email.exists { DbUserSettings.withEmail(_).nonEmpty })
 			Failure(new AlreadyUsedException("Email is already in use"))
-		else if (email.isEmpty && DbManyUserSettings.withName(userName).nonEmpty)
+		else if ((email.isEmpty || ExodusContext.uniqueUserNamesAreRequired) &&
+			DbManyUserSettings.withName(userName).nonEmpty)
 			Failure(new AlreadyUsedException("User name is already in use"))
 		else
 		{
@@ -154,6 +139,27 @@ sealed trait UsersNode extends Resource[AuthorizedContext]
 	}
 }
 
+sealed trait UsersNode extends Resource[AuthorizedContext]
+{
+	// IMPLEMENTED	---------------------------
+	
+	override val name = "users"
+	override val allowedMethods = Vector(Post)
+	
+	// Expects /me or /{userId}
+	override def follow(path: Path)(implicit context: AuthorizedContext) =
+	{
+		if (path.head ~== "me")
+			Follow(MeNode, path.tail)
+		else
+			path.head.int match
+			{
+				case Some(userId) => Follow(OtherUserNode(userId), path.tail)
+				case None => Error(message = Some(s"Targeted user id (now '${path.head}') must be an integer"))
+			}
+	}
+}
+
 private class NoEmailValidationUsersNode(isEmailRequired: Boolean)
                                         (authorize: (AuthorizedContext, Connection => Result) => Response)
 	extends UsersNode
@@ -173,12 +179,12 @@ private class NoEmailValidationUsersNode(isEmailRequired: Boolean)
 	private def postUser()(implicit context: AuthorizedContext, connection: Connection) =
 	{
 		// May require email to be specified in the request body, based on settings used
-		insertUser { newUser =>
+		UsersNode.insertUser { newUser =>
 			if (isEmailRequired && newUser.email.forall { _.forall { _ == ' ' } })
 				Failure(new IllegalPostModelException("'email' must be specified in the request body"))
 			else
 				Success(newUser)
-		}
+		}()
 	}
 }
 
@@ -191,7 +197,7 @@ private class EmailValidatingUsersNode extends UsersNode
 		context.emailAuthorized(UserCreation.id) { (validationAttempt, connection) =>
 			implicit val c: Connection = connection
 			// Uses the email that was specified in the validation message
-			val result = insertUser { user => Success(user.copy( email = Some(validationAttempt.email) )) }
+			val result = UsersNode.insertUser { user => Success(user.copy( email = Some(validationAttempt.email) )) }()
 			// Closes the email validation if the operation succeeded
 			result.isSuccess -> result
 		}

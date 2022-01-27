@@ -37,7 +37,10 @@ object ScalaParser
 	private lazy val declarationKeywordRegex = DeclarationType.values.map { d => Regex(d.keyword + " ") }
 		.reduceLeft { _ || _ }.withinParenthesis
 	private lazy val declarationStartRegex = declarationModifierRegex.zeroOrMoreTimes + declarationKeywordRegex
-	private lazy val namedDeclarationStartRegex = declarationStartRegex + Regex.word + Regex("(\\_\\=)?")
+	private val namedDeclarationStartRegex = declarationStartRegex +
+		((Regex.escape('_') + Regex.alphaNumeric).withinParenthesis || Regex.alpha).withinParenthesis +
+		(Regex.wordCharacter.zeroOrMoreTimes + Regex.alphaNumeric).withinParenthesis.noneOrOnce +
+		(Regex.escape('_') + Regex.escape('=')).withinParenthesis.noneOrOnce
 	
 	private lazy val extendsRegex = Regex(" extends ")
 	private lazy val withRegex = Regex(" with ")
@@ -45,6 +48,7 @@ object ScalaParser
 	private lazy val commaOutsideParenthesesRegex = Regex.escape(',').ignoringParentheses
 	
 	private lazy val scalaDocStartRegex = Regex("\\/\\*\\*")
+	private lazy val commentStartRegex = Regex("\\/\\*")
 	private lazy val commentEndRegex = Regex("\\*\\/")
 	private lazy val emptyScalaDocLineRegex = (Regex.newLine || Regex.whiteSpace || Regex.escape('\t') ||
 		Regex.escape('*')).withinParenthesis.zeroOrMoreTimes
@@ -215,7 +219,7 @@ object ScalaParser
 					// Processes the "free" code before the declaration
 					// - comments will be attached to the parsed declaration
 					val (beforeDeclarationComments, beforeDeclarationCode) = (beforeFirstLine ++ beforeDeclarationLines)
-						.dividedWith { line =>
+						.divideWith { line =>
 							if (line.code.startsWith("//"))
 								Left(line.code.drop(2).trim)
 							else
@@ -459,13 +463,15 @@ object ScalaParser
 		// Case: Instance block may start on a later line (after extension lines) or there may not be a code block
 		else
 		{
-			// Looks for the block start, but terminates on a named declaration
+			// Looks for the block start, but terminates on a named declaration, comment or scaladoc
 			// Collects the in-between lines as extension lines
 			val extensionLinesBuilder = new VectorBuilder[String]()
 			openLine.foreach { extensionLinesBuilder += _.code }
 			var afterBlockPart: Option[CodeLine] = None
-			while (afterBlockPart.isEmpty && moreLinesIter.hasNext &&
-				!namedDeclarationStartRegex.existsIn(moreLinesIter.poll.code))
+			while (afterBlockPart.isEmpty && moreLinesIter.pollOption.exists { line =>
+				!line.code.startsWith("//") && !commentStartRegex.existsIn(line.code) &&
+					!namedDeclarationStartRegex.existsIn(line.code)
+			})
 			{
 				// Case: Extension and/or block start line found
 				val line = moreLinesIter.next()
@@ -495,9 +501,7 @@ object ScalaParser
 	
 	private def extensionsFrom(lines: Vector[String], refMap: Map[String, Reference]): Vector[Extension] =
 	{
-		// println("Reading extensions from:")
-		// lines.foreach(println)
-		
+		//println(s"Reading extensions from: ${lines.map { line => s"'$line'" }.mkString(" + ") }")
 		// Finds the line that contains the extends -keyword
 		lines.indexWhereOption { line => extendsRegex.existsIn(line) || line.startsWith("extends ") ||
 			line.endsWith(" extends") } match
@@ -520,8 +524,8 @@ object ScalaParser
 						val constructorAssignments = constructorLists
 							.map { commaOutsideParenthesesRegex.split(_).toVector
 								.map { addReferencesToCode(_, refMap) } }
-						// println(s"Read constructor list: ${
-						// 	constructorAssignments.map { list => s"(${list.mkString(", ")})" }.mkString }")
+						/*println(s"Read constructor list: ${
+							constructorAssignments.map { list => s"(${list.mkString(", ")})" }.mkString }")*/
 						Extension(parentType, constructorAssignments)
 					}
 					else
@@ -674,7 +678,7 @@ object ScalaParser
 				string -> false
 			//println(s"Type main part is '$mainPart'. Call by name: $isCallByName")
 			// Parses the type name until generic types list or some interrupting character
-			val mainPartEndIndex = mainPart.indexWhere { c => !c.isLetterOrDigit && c != '_' }
+			val mainPartEndIndex = mainPart.indexWhere { c => !c.isLetterOrDigit && c != '_' && c != '.' }
 			val (mainTypeString, remaining) = if (mainPartEndIndex < 0) mainPart -> "" else
 				mainPart.take(mainPartEndIndex) -> mainPart.drop(mainPartEndIndex)
 			//println(s"Main type is: $mainTypeString - Remaining: $remaining")

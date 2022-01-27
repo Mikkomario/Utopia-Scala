@@ -3,6 +3,7 @@ package utopia.flow.parse
 import scala.collection.immutable.HashSet
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.{BooleanType, DataType, DoubleType, FloatType, InstantType, IntType, LocalDateType, LongType, ModelType, StringType, VectorType}
+import utopia.flow.util.StringExtensions._
 
 /**
  * This json value writer is able to write instances of basic data types into json
@@ -18,8 +19,10 @@ object BasicJsonValueConverter extends ValueConverter[String]
     {
         dataType match 
         {
-            case StringType => "\"" + value.getString.replace("\"", "'")
-                .replace("\\", "\\\\") + "\""
+            case StringType =>
+                "\"" + value.getString.replace("\"", "\\\"")
+                    .replace("\n", "\\n") + "\""
+                /*.replace("\\", "\\\\")*/
             case VectorType => s"[${value.getVector.map { _.toJson }.mkString(", ")}]"
             case ModelType => value.getModel.toJson
             // Handles instant type separately to format it correctly

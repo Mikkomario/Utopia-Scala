@@ -34,7 +34,7 @@ object Regex
 	val alpha = Regex("[a-zA-ZåäöÅÄÖ]")
 	val numericPositive = digit.oneOrMoreTimes
 	val numeric = Regex("\\-").noneOrOnce + numericPositive
-	val alphaNumeric = alpha || digit
+	val alphaNumeric = (alpha || digit).withinParenthesis
 	val decimalPositive = digit.oneOrMoreTimes + (Regex("[.,]") + digit.oneOrMoreTimes).withinParenthesis.noneOrOnce
 	val decimal = Regex("\\-").noneOrOnce + decimalPositive
 	
@@ -196,7 +196,7 @@ case class Regex(string: String)
 			this
 		else if (isEmpty)
 			more
-		else if (hasBrackets || more.hasBrackets)
+		else if (hasBrackets && more.hasBrackets)
 			(withoutBrackets + more.withoutBrackets).withBraces
 		else
 			Regex(string + "|" + more.string)

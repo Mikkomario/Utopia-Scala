@@ -206,11 +206,38 @@ object CollectionExtensions
           * @tparam R Type of right group items
           * @return Left group and right group
           */
-        def dividedWith[L, R](f: A => Either[L, R]) =
+        def divideWith[L, R](f: A => Either[L, R]) =
         {
             val lBuilder = new VectorBuilder[L]
             val rBuilder = new VectorBuilder[R]
             i.iterator.map(f).foreach {
+                case Left(l) => lBuilder += l
+                case Right(r) => rBuilder += r
+            }
+            lBuilder.result() -> rBuilder.result()
+        }
+        /**
+         * Divides / maps the items in this collection to two groups
+         * @param f A function for separating / mapping the items
+         * @tparam L Type of left group items
+         * @tparam R Type of right group items
+         * @return Left group and right group
+         */
+        @deprecated("Please use .divideWith(...) instead", "v1.4.1")
+        def dividedWith[L, R](f: A => Either[L, R]) = divideWith[L, R](f)
+        /**
+         * Divides the contents of this collection into two groups. Each item may represent 0-n items in the
+         * resulting group(s)
+         * @param f A function that accepts an item in this collection and returns 0-n grouped items
+         *          (Left(x) for a left group item x and Right(y) for a right group item y)
+         * @tparam L Type of left group items
+         * @tparam R Type of right group items
+         * @return Collected left group items and collected right group items as two separate vectors
+         */
+        def flatDivideWith[L, R](f: A => IterableOnce[Either[L, R]]) = {
+            val lBuilder = new VectorBuilder[L]()
+            val rBuilder = new VectorBuilder[R]()
+            i.iterator.flatMap(f).foreach {
                 case Left(l) => lBuilder += l
                 case Right(r) => rBuilder += r
             }
@@ -231,6 +258,26 @@ object CollectionExtensions
             i.iterator.map(f).foreach { case (l, r) =>
                 lBuilder += l
                 rBuilder += r
+            }
+            lBuilder.result() -> rBuilder.result()
+        }
+        /**
+         * Maps items in this collection into two groups, where an item maps to
+         * x left group items and y right group items
+         * @param f A function that accepts an item in this collection and returns a tuple of collections where the
+         *          first item is collection of left side map results and the second item is a collection of
+         *          right side map results
+         * @tparam L Type of left side map results
+         * @tparam R Type of right side map results
+         * @return Left side map results, collected together + right side map results, collected together (tuple)
+         */
+        def splitFlatMap[L, R](f: A => (IterableOnce[L], IterableOnce[R])) =
+        {
+            val lBuilder = new VectorBuilder[L]()
+            val rBuilder = new VectorBuilder[R]()
+            i.iterator.map(f).foreach { case (lefts, rights) =>
+                lBuilder ++= lefts
+                rBuilder ++= rights
             }
             lBuilder.result() -> rBuilder.result()
         }
@@ -822,6 +869,13 @@ object CollectionExtensions
         }
     
         /**
+         * @param item An item to prepend
+         * @tparam B Type of that item
+         * @return A copy of this iterator with that item prepended. This iterator is invalidated.
+         */
+        def +:[B >: A](item: B) = Iterator.single(item) ++ i
+        
+        /**
           * Checks whether there exists 'count' instances in this iterator that satisfy the specified predicate.
           * Consumes items within this iterator until the required amount of matches has been found. If not enough
           * matches were found, consumes this whole iterator.
@@ -1231,7 +1285,7 @@ object CollectionExtensions
          * Divides this collection to two separate collections, one for failures and one for successes
          * @return Failures + successes
          */
-        def divided = i.dividedWith { _.toEither }
+        def divided = i.divideWith { _.toEither }
     }
     
     /**

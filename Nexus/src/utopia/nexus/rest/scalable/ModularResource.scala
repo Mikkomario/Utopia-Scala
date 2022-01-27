@@ -43,7 +43,8 @@ trait ModularResource[-C <: Context, P] extends Resource[C]
 	override def toResponse(remainingPath: Option[Path])(implicit context: C) =
 	{
 		wrap { param =>
-			val useCaseIterator = useCaseImplementations.iterator
+			val method = context.request.method
+			val useCaseIterator = useCaseImplementations.iterator.filter { _.method == method }
 			def nextResult(): Result = useCaseIterator.nextOption() match
 			{
 				case Some(implementation) => implementation(remainingPath, param) { nextResult() }

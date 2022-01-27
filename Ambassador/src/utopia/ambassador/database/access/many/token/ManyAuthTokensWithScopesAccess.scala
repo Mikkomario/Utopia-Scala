@@ -43,7 +43,6 @@ trait ManyAuthTokensWithScopesAccess
 	// IMPLEMENTED  -----------------------------
 	
 	override def factory = AuthTokenWithScopesFactory
-	override protected def defaultOrdering = None
 	
 	override protected def _filter(condition: Condition): ManyAuthTokensWithScopesAccess =
 		new SubAccess(this, condition)

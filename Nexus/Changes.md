@@ -1,5 +1,16 @@
 # Utopia Nexus - List of Changes
 
+## v1.6.2 - 27.01.2022
+This update introduces an important bugfix concerning modular resources
+### Scala
+This module now uses Scala v2.13.7
+### New Methods
+- **ExtendableResource**
+  - Added `.addChild(=> Resource)`, which is a utility variation of `.extendWith(FollowImplementation)`
+### Bugfixes
+- **Important**: There was a logic error in **ModularResource** which applied the first implementation 
+  regardless of its method. Current version properly filters by method used.
+
 ## v1.6.1 - 04.11.2021
 Supports changes in Flow v1.14
 

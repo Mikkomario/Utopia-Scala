@@ -16,8 +16,7 @@ import utopia.nexus.result.Result
 case class InvitationNode(invitationId: Int) extends Resource[AuthorizedContext]
 {
 	override def name = invitationId.toString
-	
-	override val allowedMethods = Vector()
+	override def allowedMethods = Vector()
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) = Result.Failure(
 		NotImplemented, "Invitation data access hasn't been implemented yet").toResponse

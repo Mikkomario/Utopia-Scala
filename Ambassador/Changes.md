@@ -1,5 +1,10 @@
 # Utopia Ambassador - List of Changes
 
+## v2.0.1 - 27.01.2022
+Scala version update
+### Scala
+This module now uses Scala v2.13.7
+
 ## v2.0 - 04.11.2021
 This update refactored the inner database interaction classes by utilizing the **Vault-Coder**. 
 There are a number of breaking changes involved, although the functionality / the external interface 

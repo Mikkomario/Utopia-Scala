@@ -1,6 +1,6 @@
 package utopia.vault.coder.controller.reader
 
-import utopia.vault.coder.model.scala.{Extension, Parameters, Reference, ScalaDoc, Visibility}
+import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Parameters, Reference, ScalaDoc, Visibility}
 import utopia.vault.coder.model.scala.code.{Code, CodeLine}
 import utopia.vault.coder.model.scala.declaration.DeclarationPrefix.{Case, Sealed}
 import utopia.vault.coder.model.scala.declaration.InstanceDeclarationType.{ClassD, ObjectD, TraitD}
@@ -60,17 +60,19 @@ class InstanceBuilder(visibility: Visibility, prefixes: Set[DeclarationPrefix], 
 		val freeCodeLines = freeCodeBuilder.result()
 		val freeCode = Code(freeCodeLines, refMap.keySet
 			.filter { target => freeCodeLines.exists { _.code.contains(target) } }.map(refMap.apply))
+		val since = scalaDoc.since.getOrElse(DeclarationDate.today)
 		
+		// TODO: WET WET
 		instanceType match {
 			case ObjectD => ObjectDeclaration(name, extensions, freeCode, propertiesBuilder.result(),
 				methodsBuilder.result().toSet, nestedBuilder.result().toSet, visibility, scalaDoc.description,
-				scalaDoc.author, commentsBefore, prefixes.contains(Case))
+				scalaDoc.author, commentsBefore, since, prefixes.contains(Case))
 			case ClassD => ClassDeclaration(name, parameters.getOrElse(Parameters.empty), extensions, freeCode,
 				propertiesBuilder.result(), methodsBuilder.result().toSet, nestedBuilder.result().toSet, visibility,
-				scalaDoc.description, scalaDoc.author, commentsBefore, prefixes.contains(Case))
+				scalaDoc.description, scalaDoc.author, commentsBefore, since, prefixes.contains(Case))
 			case TraitD => TraitDeclaration(name, extensions, propertiesBuilder.result(),
 				methodsBuilder.result().toSet, nestedBuilder.result().toSet, visibility, scalaDoc.description,
-				scalaDoc.author, commentsBefore, prefixes.contains(Sealed))
+				scalaDoc.author, commentsBefore, since, prefixes.contains(Sealed))
 		}
 	}
 }

@@ -10,6 +10,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="mariadb-java-client-1" level="project" />
     <orderEntry type="module" module-name="Flow" />
-    <orderEntry type="library" name="scala-sdk-2.13.3" level="application" />
+    <orderEntry type="library" name="scala-sdk-2.13.7" level="application" />
   </component>
 </module>

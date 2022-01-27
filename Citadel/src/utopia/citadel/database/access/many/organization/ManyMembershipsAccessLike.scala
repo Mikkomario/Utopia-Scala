@@ -5,6 +5,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 import utopia.vault.sql.SqlExtensions._
 
@@ -16,7 +17,7 @@ import java.time.Instant
   * @since 2021-10-23
   */
 trait ManyMembershipsAccessLike[+A, +Repr <: ManyModelAccess[A]]
-	extends ManyModelAccess[A] with Indexed
+	extends ManyModelAccess[A] with Indexed with FilterableView[Repr]
 {
 	// ABSTRACT --------------------
 	
@@ -77,6 +78,11 @@ trait ManyMembershipsAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  * @return An access point to that user's memberships
 	  */
 	def ofUserWithId(userId: Int) = filter(model.withUserId(userId).toCondition)
+	/**
+	  * @param userId Id of the user to omit
+	  * @return A copy of this access point with that user's data excluded
+	  */
+	def notOfUserWithId(userId: Int) = filter(model.userIdColumn <> userId)
 	
 	/**
 	  * @param organizationIds Targeted organization ids
@@ -85,6 +91,11 @@ trait ManyMembershipsAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  */
 	def inAnyOfOrganizations(organizationIds: Iterable[Int]) =
 		filter(model.organizationIdColumn in organizationIds)
+	/**
+	 * @param userIds Ids of targeted users
+	 * @return An access point to memberships concerning any of those users
+	 */
+	def ofAnyOfUsers(userIds: Iterable[Int]) = filter(model.userIdColumn in userIds)
 	/**
 	  * @param organizationId An organization id
 	  * @param userId A user id

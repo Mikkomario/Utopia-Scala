@@ -1,4 +1,9 @@
 # Utopia BunnyMunch - List of Changes
 
+## v1.0.1 - 27.01.2022
+Scala version update
+### Scala
+This module now uses Scala v2.13.7
+
 ## v1.0 - 30.8.2020
 Initial release

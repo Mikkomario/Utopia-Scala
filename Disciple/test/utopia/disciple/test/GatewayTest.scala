@@ -7,6 +7,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.generic.DataType
 import utopia.access.http.Method._
+import utopia.access.http.Status
 import utopia.disciple.apache.Gateway
 import utopia.flow.datastructure.immutable.Model
 
@@ -20,6 +21,7 @@ import utopia.disciple.http.request.{FileBody, Request}
  */
 object GatewayTest extends App
 {
+    Status.setup()
     DataType.setup()
     val gateway = new Gateway(maxConnectionsPerRoute = 10, maxConnectionsTotal = 70)
     

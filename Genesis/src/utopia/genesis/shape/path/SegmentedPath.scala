@@ -8,7 +8,6 @@ package utopia.genesis.shape.path
   * @param values Values that are returned by this path
   * @throws IllegalArgumentException If length of values is smaller than 2
   */
-@throws[IllegalArgumentException]
 case class SegmentedPath[+A](values: Seq[A]) extends Path[A]
 {
 	// ATTRIBUTES   -------------------------

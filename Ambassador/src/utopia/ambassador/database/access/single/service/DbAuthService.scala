@@ -47,7 +47,6 @@ object DbAuthService extends SingleRowModelAccess[AuthService] with Unconditiona
 	class DbAuthServiceWithName(name: String) extends UniqueAuthServiceAccess with SubView
 	{
 		override protected def parent = DbAuthService
-		override protected def defaultOrdering = None
 		
 		override def filterCondition = model.withName(name).toCondition
 	}

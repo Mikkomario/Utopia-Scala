@@ -1,8 +1,7 @@
 package utopia.disciple.http.request
 
-import org.apache.http.client.utils.URLEncodedUtils
-import org.apache.http.message.BasicNameValuePair
-import org.apache.http.protocol.HTTP
+import org.apache.hc.core5.http.message.BasicNameValuePair
+import org.apache.hc.core5.net.URLEncodedUtils
 
 import java.io.ByteArrayInputStream
 import java.nio.charset.{Charset, StandardCharsets}
@@ -34,11 +33,17 @@ object StringBody
 	  * @param charset Charset to use (default = http client default = ISO-8859-1)
 	  * @return A string body wrapping the content as a url-encoded form
 	  */
-	def urlEncodedForm(content: Model[Property], charset: Charset = HTTP.DEF_CONTENT_CHARSET) =
+	def urlEncodedForm(content: Model[Property], charset: Charset = StandardCharsets.ISO_8859_1) =
 	{
 		// Produces the url-encoded string
 		val parameters = content.attributes.map { c => new BasicNameValuePair(c.name, c.value.getString) }
 		// Wraps the string in a body
+		/*
+		val builder = new URIBuilder()
+		content.attributes.foreach { c => builder.addParameter(c.name, c.value.getString) }
+		builder.setCharset(charset)
+		 */
+		// TODO: Fix this (above implementation, although it didn't work)
 		new StringBody(URLEncodedUtils.format(parameters.asJava, charset), charset, Application/"x-www-form-urlencoded")
 	}
 }

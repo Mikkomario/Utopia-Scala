@@ -1,12 +1,13 @@
 package utopia.flow.time
 
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.RichComparable._
 
 import java.time.{LocalDate, MonthDay, Year}
 
 object YearlyDateRange
 {
+	// OTHER    ------------------------------
+	
 	/**
 	  * @param start The first date included in this range
 	  * @param end The exclusive end date of this range

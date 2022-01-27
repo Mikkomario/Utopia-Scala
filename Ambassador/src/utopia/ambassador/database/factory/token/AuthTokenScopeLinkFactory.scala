@@ -3,7 +3,7 @@ package utopia.ambassador.database.factory.token
 import utopia.ambassador.database.AmbassadorTables
 import utopia.ambassador.model.partial.token.AuthTokenScopeLinkData
 import utopia.ambassador.model.stored.token.AuthTokenScopeLink
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
@@ -16,6 +16,8 @@ object AuthTokenScopeLinkFactory extends FromValidatedRowModelFactory[AuthTokenS
 	// IMPLEMENTED	--------------------
 	
 	override def table = AmbassadorTables.authTokenScopeLink
+	
+	override def defaultOrdering = None
 	
 	override def fromValidatedModel(valid: Model) =
 		AuthTokenScopeLink(valid("id").getInt, AuthTokenScopeLinkData(valid("tokenId").getInt, 

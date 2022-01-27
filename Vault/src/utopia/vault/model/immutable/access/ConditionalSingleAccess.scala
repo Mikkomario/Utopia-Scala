@@ -15,5 +15,5 @@ trait ConditionalSingleAccess[+A] extends ConditionalAccess[A]
 	 * @param connection Database connection (implicit)
 	 * @return Model read for this id
 	 */
-	def get(implicit connection: Connection) = factory.get(condition)
+	def get(implicit connection: Connection) = factory.find(condition)
 }

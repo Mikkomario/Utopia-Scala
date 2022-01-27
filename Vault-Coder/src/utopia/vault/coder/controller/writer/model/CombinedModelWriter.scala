@@ -2,7 +2,7 @@ package utopia.vault.coder.controller.writer.model
 
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{CombinationData, CombinationReferences, ProjectSetup}
-import utopia.vault.coder.model.scala.Reference
+import utopia.vault.coder.model.scala.{DeclarationDate, Reference}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File}
 
@@ -39,7 +39,7 @@ object CombinedModelWriter
 						s"${data.parentName.uncapitalize}.id"),
 					ComputedProperty("wrapped", isOverridden = true)(s"${data.parentName.uncapitalize}.data")
 				), description = s"Combines ${data.parentName} with ${data.childName} data", author = data.author,
-				isCaseClass = true
+				since = DeclarationDate.versionedToday, isCaseClass = true
 			)
 		).write().map { comboRef => CombinationReferences(parentRef, childRef, comboRef) }
 	}

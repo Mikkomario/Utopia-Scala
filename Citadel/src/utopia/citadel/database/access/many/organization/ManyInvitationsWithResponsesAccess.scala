@@ -55,6 +55,25 @@ trait ManyInvitationsWithResponsesAccess
 	  * @return Detailed copies of accessible invitations
 	  */
 	def detailed(implicit connection: Connection, languageIds: LanguageIds) =
+		detailedInLanguages(Some(languageIds))
+	
+	
+	// IMPLEMENTED  -----------------------------------
+	
+	override def factory = InvitationWithResponseFactory
+	
+	override protected def _filter(condition: Condition): ManyInvitationsWithResponsesAccess =
+		new SubAccess(this, condition)
+		
+	
+	// OTHER    ----------------------------------------
+	
+	/**
+	  * @param connection Implicit DB connection
+	  * @param languageIds Language ids to use when reading organization descriptions
+	  * @return Detailed copies of accessible invitations
+	  */
+	def detailedInLanguages(languageIds: Option[LanguageIds])(implicit connection: Connection) =
 	{
 		// Reads invitation data, then attaches organization and user data
 		val invitations = pull
@@ -63,7 +82,15 @@ trait ManyInvitationsWithResponsesAccess
 		else
 		{
 			val organizationIds = invitations.map { _.organizationId }.toSet
-			val organizationsById = DbOrganizations(organizationIds).described.map { o => o.id -> o }.toMap
+			val organizationsAccess = DbOrganizations(organizationIds)
+			// Organization descriptions may be read in requested languages, or in all languages
+			val organizations = languageIds match {
+				case Some(languageIds) =>
+					implicit val l: LanguageIds = languageIds
+					organizationsAccess.described
+				case None => organizationsAccess.fullyDescribed
+			}
+			val organizationsById = organizations.map { o => o.id -> o }.toMap
 			val senderIds = invitations.flatMap { _.senderId }.toSet
 			val senderDataByUserId: Map[Int, UserSettings] = if (senderIds.isEmpty) Map() else
 				DbManyUserSettings.forAnyOfUsers(senderIds).pull.map { s => s.userId -> s }.toMap
@@ -73,13 +100,4 @@ trait ManyInvitationsWithResponsesAccess
 			}
 		}
 	}
-	
-	
-	// IMPLEMENTED  -----------------------------------
-	
-	override def factory = InvitationWithResponseFactory
-	override protected def defaultOrdering = None
-	
-	override protected def _filter(condition: Condition): ManyInvitationsWithResponsesAccess =
-		new SubAccess(this, condition)
 }

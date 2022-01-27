@@ -48,7 +48,6 @@ object DbAuthPreparation
 	class DbAuthPreparationWithToken(token: String) extends UniqueAuthPreparationAccess with SubView
 	{
 		override protected def parent = DbAuthPreparation
-		override protected def defaultOrdering = Some(factory.defaultOrdering)
 		
 		override def filterCondition = model.withToken(token).toCondition
 	}

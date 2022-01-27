@@ -61,7 +61,6 @@ object DbUserSettings
 		// IMPLEMENTED  -------------
 		
 		override protected def parent = DbUserSettings
-		override protected def defaultOrdering = None
 		
 		override def filterCondition = model.withUserId(userId).toCondition
 		
@@ -116,7 +115,6 @@ object DbUserSettings
 		// IMPLEMENTED  ----------------------------
 		
 		override protected def parent = DbUserSettings
-		override protected def defaultOrdering = None
 		
 		override def filterCondition = model.withEmail(email).toCondition
 	}

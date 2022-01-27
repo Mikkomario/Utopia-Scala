@@ -52,5 +52,12 @@ object StringUtilsTest extends App
 	
 	assert((Regex("import ") + Regex.any)("import java.time.Instant"))
 	
+	val control = "\"This is a test \nstring\""
+	
+	println(control)
+	println(control.stripControlCharacters)
+	
+	assert(control.stripControlCharacters == "\"This is a test string\"")
+	
 	println("Success!")
 }

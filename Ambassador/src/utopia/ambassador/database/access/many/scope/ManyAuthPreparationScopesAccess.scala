@@ -27,6 +27,5 @@ trait ManyAuthPreparationScopesAccess
 	
 	override protected def _filter(condition: Condition): ManyAuthPreparationScopesAccess =
 		new SubAccess(this, condition)
-	override protected def defaultOrdering = None
 	override def factory = AuthPreparationScopeFactory
 }

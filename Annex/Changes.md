@@ -1,5 +1,10 @@
 # Utopia Annex - List of Changes
 
+## v1.0.4 - 27.01.2022
+Dependency changes, according to Disciple update v1.5
+### Scala
+This module now uses Scala v2.13.7
+
 ## v1.0.3 - 04.11.2021
 Supports changes in Flow v1.14
 

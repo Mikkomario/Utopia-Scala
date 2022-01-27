@@ -189,11 +189,18 @@ class CodeBuilder(startIndentation: Int = 0) extends mutable.Builder[String, Cod
 	
 	/**
 	  * Opens a new { block } of code
+	  * @param forceNewLine Whether the block start character should be set on a new line (default = false)
 	  * @return This builder
 	  */
-	def openBlock() =
+	def openBlock(forceNewLine: Boolean = false) =
 	{
-		this += "{"
+		if (forceNewLine)
+			this += "{"
+		else
+		{
+			appendPartial("{")
+			closeOpenLine()
+		}
 		indent()
 	}
 	/**

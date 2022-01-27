@@ -1,11 +1,12 @@
 package utopia.vault.coder.controller.writer.database
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, Name, ProjectSetup}
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, DeclarationStart, File, MethodDeclaration, ObjectDeclaration, TraitDeclaration}
-import utopia.vault.coder.model.scala.{Extension, Parameter, Parameters, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Parameter, Parameters, Reference, ScalaType}
 
 import scala.io.Codec
 
@@ -61,15 +62,25 @@ object AccessWriter
 		// Writes a trait common for unique model access points
 		val singleAccessPackage = singleAccessPackageFor(classToWrite)
 		val uniqueAccessName = s"Unique${ classToWrite.name }Access"
-		// Standard access point properties (factory, model & defaultOrdering)
+		// Standard access point properties (factory, model)
 		// are the same for both single and many model access points
-		// (except that defaultOrdering is missing from non-distinct access points)
 		val baseProperties = Vector(
 			ComputedProperty("factory", Set(factoryRef), isOverridden = true)(factoryRef.target),
 			ComputedProperty("model", Set(dbModelRef), Protected,
 				description = "Factory used for constructing database the interaction models")(dbModelRef.target)
 		)
 		val pullIdCode = classToWrite.idType.nullable.fromValueCode(s"pullColumn(index)")
+		// For classes that support deprecation, deprecate() -method is added for all traits
+		// (implementation varies, however)
+		// Option[Pair[method]], where first method is for individual access and second for many access
+		val deprecationMethods = classToWrite.deprecationProperty.map { prop =>
+			Pair(prop.name.singular, prop.name.plural).map { propName =>
+				MethodDeclaration("deprecate", Set(Reference.now, Reference.valueConversions),
+					description = s"Deprecates all accessible ${classToWrite.name.plural}",
+					returnDescription = "Whether any row was targeted")(
+					Parameters(Vector(Vector()), Vector(connectionParam)))(s"$propName = Now")
+			}
+		}
 		File(singleAccessPackage,
 			TraitDeclaration(uniqueAccessName,
 				// Extends SingleRowModelAccess, DistinctModelAccess and Indexed
@@ -87,10 +98,10 @@ object AccessWriter
 				} :+ ComputedProperty("id", pullIdCode.references, implicitParams = Vector(connectionParam))(
 					pullIdCode.text),
 				// Contains setters for each property (singular)
-				propertySettersFor(classToWrite, connectionParam) { _.singular },
+				propertySettersFor(classToWrite, connectionParam) { _.singular } ++ deprecationMethods.map { _.first },
 				description = s"A common trait for access points that return individual and distinct ${
 					classToWrite.name.plural
-				}.", author = classToWrite.author
+				}.", author = classToWrite.author, since = DeclarationDate.versionedToday
 			)
 		).write().flatMap { uniqueAccessRef =>
 			// Writes the single model by id access point
@@ -126,7 +137,7 @@ object AccessWriter
 					// Implements the .condition property
 					properties = singleIdAccessParentProperties,
 					description = s"An access point to individual ${ classToWrite.name.plural }, based on their id",
-					author = classToWrite.author, isCaseClass = true
+					author = classToWrite.author, since = DeclarationDate.versionedToday, isCaseClass = true
 				)
 			).write().flatMap { singleIdAccessRef =>
 				// Writes the single model access point
@@ -149,12 +160,13 @@ object AccessWriter
 								description = s"Database id of the targeted ${ classToWrite.name } instance"))(
 							s"${ singleIdAccessRef.target }(id)")),
 						description = s"Used for accessing individual ${ classToWrite.name.plural }",
-						author = classToWrite.author
+						author = classToWrite.author, since = DeclarationDate.versionedToday
 					)
 				).write().flatMap { singleAccessRef =>
 					// Writes a trait common for the many model access points
 					val manyAccessPackage = setup.manyAccessPackage / classToWrite.packageName
 					val manyAccessTraitName = s"Many${ classToWrite.name.plural }Access"
+					val manyAccessTraitType = ScalaType.basic(manyAccessTraitName)
 					val subViewName = s"Many${ classToWrite.name.plural }SubView"
 					val traitType = ScalaType.basic(manyAccessTraitName)
 					
@@ -183,33 +195,32 @@ object AccessWriter
 							)
 						)),
 						TraitDeclaration(manyAccessTraitName,
-							Vector(Reference.manyRowModelAccess(modelRef), manyTraitParent),
+							Vector(Reference.manyRowModelAccess(modelRef), manyTraitParent,
+								Reference.filterableView(manyAccessTraitType)),
 							// Contains computed properties to access class properties
 							baseProperties ++ classToWrite.properties.map { prop =>
-								ComputedProperty(prop.name.plural,
+								val pullCode = prop.dataType
+									.fromValuesCode(s"pullColumn(model.${ prop.name }Column)")
+								ComputedProperty(prop.name.plural, pullCode.references,
 									description = s"${ prop.name.plural } of the accessible ${ classToWrite.name.plural }",
-									implicitParams = Vector(connectionParam))(
-									s"pullColumn(model.${ prop.name }Column).flatMap { value => ${
-										prop.dataType.nullable.fromValueCode("value")
-									} }")
+									implicitParams = Vector(connectionParam))(pullCode.text)
 							} ++ Vector(
 								ComputedProperty("ids", implicitParams = Vector(connectionParam))(
 									s"pullColumn(index).flatMap { id => ${
 										classToWrite.idType.nullable.fromValueCode("id")
-									} }"),
-								ComputedProperty("defaultOrdering", Set(factoryRef), Protected, isOverridden = true)(
-									if (classToWrite.recordsIndexedCreationTime) "Some(factory.defaultOrdering)" else "None")
+									} }")
 							) ++ manyParentProperties,
 							// Contains setters for property values (plural)
-							propertySettersFor(classToWrite, connectionParam) { _.plural } ++ manyParentMethods +
+							propertySettersFor(classToWrite, connectionParam) { _.plural } ++ manyParentMethods ++
+								deprecationMethods.map { _.second } +
 								MethodDeclaration("filter",
-									explicitOutputType = Some(ScalaType.basic(manyAccessTraitName)),
+									explicitOutputType = Some(manyAccessTraitType),
 									isOverridden = true)(
 									Parameter("additionalCondition", Reference.condition))(
 									s"new $manyAccessTraitName.$subViewName(this, additionalCondition)"),
 							description = s"A common trait for access points which target multiple ${
 								classToWrite.name.plural
-							} at a time", author = classToWrite.author
+							} at a time", author = classToWrite.author, since = DeclarationDate.versionedToday
 						)
 					).write().flatMap { manyAccessTraitRef =>
 						// Writes the many model access point
@@ -253,7 +264,7 @@ object AccessWriter
 								nested = Set(subSetClass),
 								description = s"The root access point when targeting multiple ${
 									classToWrite.name.plural
-								} at a time", author = classToWrite.author
+								} at a time", author = classToWrite.author, since = DeclarationDate.versionedToday
 							)
 						).write().map { manyAccessRef =>
 							(uniqueAccessRef, singleAccessRef, manyAccessTraitRef, manyAccessRef)

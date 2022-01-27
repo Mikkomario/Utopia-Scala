@@ -57,7 +57,8 @@ object VaultCoderApp extends App
 		println()
 	}
 	
-	val rootPath = arguments("root").string.map[Path] { s => s }
+	// Checks if the specified root path is an alias
+	val rootPath = arguments("root").string.map { s => Roots(s).getOrElse { s: Path } }
 	rootPath.filter { _.notExists }.foreach { p =>
 		println(s"Specified root path (${p.toAbsolutePath}) doesn't exist. Please try again.")
 		System.exit(0)
@@ -215,9 +216,19 @@ object VaultCoderApp extends App
 			case Success(data) =>
 				val groupedData = data.groupBy { p => (p.projectName, p.modelPackage, p.databasePackage) }
 					.map { case ((pName, modelPackage, dbPackage), data) =>
-						data.reduce { (a, b) => ProjectData(pName, modelPackage, dbPackage,
-							a.enumerations ++ b.enumerations, a.classes ++ b.classes,
-							a.combinations ++ b.combinations, a.modelCanReferToDB && b.modelCanReferToDB) }
+						data.reduce { (a, b) =>
+							val version = a.version match {
+								case Some(aV) =>
+									b.version match {
+										case Some(bV) => Some(aV max bV)
+										case None => Some(aV)
+									}
+								case None => b.version
+							}
+							ProjectData(pName, modelPackage, dbPackage,
+								a.enumerations ++ b.enumerations, a.classes ++ b.classes,
+								a.combinations ++ b.combinations, version, a.modelCanReferToDB && b.modelCanReferToDB)
+						}
 					}
 				filterAndWrite(groupedData)
 			case Failure(error) =>
@@ -288,14 +299,17 @@ object VaultCoderApp extends App
 				{
 					println(s"Writing ${data.classes.size} classes, ${
 						data.enumerations.size} enumerations and ${
-						data.combinations.size } combinations for project ${data.projectName}")
+						data.combinations.size } combinations for project ${data.projectName}${data.version match {
+						case Some(version) => s" $version"
+						case None => ""
+					}}")
 					implicit val setup: ProjectSetup = ProjectSetup(data.projectName, data.modelPackage,
 						data.databasePackage, directory,
 						if (data.modelCanReferToDB) mainMergeRoot.toVector else
 							Vector(mainMergeRoot, alternativeMergeRoot).flatten,
 						directory/s"${data.projectName}-merge-conflicts-${Today.toString}-${startTime.getHour}-${
 							startTime.getMinute}.txt",
-						data.modelCanReferToDB)
+						data.version, data.modelCanReferToDB)
 					write(data)
 				}
 			}

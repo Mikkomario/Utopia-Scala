@@ -1,5 +1,50 @@
 # Utopia Exodus - List of Changes
 
+## v3.1 - 27.01.2022
+An update that introduces multiple fixes and functional changes to the user management interface, 
+but unfortunately also a number of breaking changes.
+### Scala
+This module now uses Scala v2.13.7
+### Breaking Changes
+- Replaced path `quests/me/session-key` with `quests/me/session-token`
+- `GET organizations/<organizationId>/users` now omits the requesting user
+- Added email validation to organization invitations
+  - This includes a new email validation purpose
+  - Also added invitation responding using an email validation token (see Postman documentation for details)
+- Email validations may now be switched to temporary email session tokens which function just like the original 
+  email validation tokens.
+  - This allows the client to validate (and possibly extend) the authentication before 
+    requesting user for additional data.
+  - This is a breaking change because it requires SQL changes
+- **AuthorizedContext** is now an abstract class instead of a trait, which may require changes in its subclasses
+  - This is to avoid reading request body twice (see **Functional Changes**)
+- Added `defaultModelStyle: ModelStyle` as the fourth parameter to `ExodusContext.setup(...)`. 
+  This has a chance to cause build errors initially, but is not difficult or cumbersome to fix.
+### Functional Changes
+- Organization member roles may now be modified by a same level user, provided the targeted user isn't 
+  an organization owner. The same applies to removing organization members.
+  - The reasoning behind this is that the situation may always be rectified by a higher level organization member, 
+    in case the action was performed accidentally or with wrong intents.
+  - Also, the user level is not checked by user role but by user access rights
+- **AuthorizedContext** now caches request body value after it has been parsed. This enables subsequent / multiple 
+  calls of handlePossibleValuePost / handleValuePost etc.
+### New Features
+- Default model style is now specified in `ExodusContext.setup(...)`. The value is **Full** by default, 
+  attempting to match the previous versions.
+  - This means that deviceless sessions no longer use **Simple** model style by default, but it also means that 
+    all sessions may now receive default style of **Simple** if it is specified in `ExodusContext.setup(...)`
+- An organization member is now allowed to yield some of their roles or to replace them with lower roles
+  - An exception to this is the situation where an organization owner would yield their ownership without leaving 
+    another owner behind.
+- **OrganizationInvitationsNode** now supports extensions
+- **AuthorizedContext** now supports **X-Accept-Language-Ids** -header as a replacement for **Accept-Language**
+### Bugfixes
+- `users/me/languages` **POST** and **PUT** request handling fixed
+  - Previous versions would generate duplicates because of invalid id matching
+- `users/me/settings` **PUT** request handling fixed
+  - Previous versions would remove email address if it wasn't updated
+- Unique username requirement is now enforced in user creation when so specified in **ExodusContext**
+
 ## v3.0 - 04.11.2021
 This update **Exodus**' models and database interfaces were completely rewritten by utilizing the **Vault-Coder**. 
 This will most surely require changes in the dependent modules and applications as well.

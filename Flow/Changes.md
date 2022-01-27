@@ -1,5 +1,35 @@
 # Utopia Flow - List of Changes
 
+## v1.14.1 - 27.01.2022
+This update introduces a number of quality-of-life improvements, and also some important fixes to json writing and 
+regular expressions.
+### Scala
+This module now uses Scala v2.13.7
+### Deprecations
+- Replaced `.dividedWith(...)` in **CollectionExtensions** by `.divideWith(...)` 
+  - The former is still available, but deprecated
+### New Features
+- Added **DeepMap** data structure, which resembles a map containing other maps and uses paths as keys
+- **ModelDeclaration** now supports child model declarations
+- Added **ConditionalLazy**, which is a variant of **Lazy** that only caches the value if it fulfills a condition
+- Added **Quarter** (1/4th of a year) enumeration, which is also supported by **TimeExtensions**
+### New Methods
+- **Instant** (**TimeExtensions**)
+  - Added `.toLocalDate` and `.toLocalTime`
+- **IterableOnce** (**CollectionExtensions**)
+  - Added `.flatDivideWith(...)` & `splitFlatMap(...)`
+- **Iterator** (**CollectionExtensions**)
+  - Added `+:` (prepend one)
+- **String** (**StringExtensions**)
+  - Added `!~==` - case-insensitive inequality operator
+- **UncertainBoolean**
+  - Added `.mayBeFalse` and `.mayBeTrue`
+### Bugfixes
+- `||` -method in **Regex** combined some regular expressions incorrectly. The current version is more careful.
+### Other Changes
+- **Value**`.toJson` now escapes newline characters and uses `\"` instead of `'` as quotation replacement
+- **Instant** now gains **SelfComparable** instead of **RichComparable** when importing **TimeExtensions**
+
 ## v1.14 - 04.11.2021
 Beside the obviously breaking change of removing generic type parameters from the immutable **Model**, 
 this update mainly adds utility functions and features.

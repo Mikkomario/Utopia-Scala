@@ -1,7 +1,7 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.vault.coder.model.data.{CombinationData, CombinationReferences, ProjectSetup}
-import utopia.vault.coder.model.scala.{Extension, Reference}
+import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Reference}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration}
 
@@ -71,7 +71,8 @@ object CombinedFactoryWriter
 					ComputedProperty("childFactory", Set(childFactoryRef), isOverridden = true)(childFactoryRef.target)
 				) ++ linkingProperty ++ deprecation.map { _._2 },
 				methods = Set(data.combinationType.factoryApplyMethodWith(data.parentName, data.childName, references)),
-				description = s"Used for reading ${data.name.plural} from the database", author = data.author
+				description = s"Used for reading ${data.name.plural} from the database", author = data.author,
+				since = DeclarationDate.versionedToday
 			)
 		).write()
 	}

@@ -10,11 +10,10 @@ import utopia.citadel.util.CitadelContext.connectionPool
 import utopia.citadel.util.CitadelContext._
 import utopia.exodus.database.access.single.auth.{DbApiKey, DbDeviceToken, DbEmailValidationAttempt, DbSessionToken}
 import utopia.exodus.database.access.single.user.DbUserPassword
-import utopia.exodus.database.access.single.{DbDeviceKey, DbUserSession}
 import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, EmailValidationAttempt, SessionToken}
-import utopia.exodus.model.stored.{DeviceKey, UserSession}
+import utopia.exodus.rest.util.AuthorizedContext.acceptLanguageIdsHeaderName
 import utopia.exodus.util.ExodusContext.handleError
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser
@@ -31,6 +30,14 @@ import scala.util.{Failure, Success, Try}
 
 object AuthorizedContext
 {
+	// ATTRIBUTES   -----------------------------
+	
+	/**
+	  * Name of the header that may be used for specifying accepted language ids
+	  */
+	val acceptLanguageIdsHeaderName = "X-Accept-Language-Ids"
+	
+	
 	// TYPES    ---------------------------------
 	
 	/**
@@ -77,8 +84,36 @@ object AuthorizedContext
   * @author Mikko Hilpinen
   * @since 3.5.2020, v1.0
   */
-trait AuthorizedContext extends Context
+abstract class AuthorizedContext extends Context
 {
+	// ATTRIBUTES   ------------------------
+	
+	// Request body is cached, since streamed request bodies can only be read once
+	// Either[Failure, Value]
+	private lazy val parsedRequestBody = {
+		request.body.headOption match {
+			case Some(body) =>
+				// Accepts json, xml and text content types
+				val value = body.contentType.subType.toLowerCase match {
+					case "json" => body.bufferedJson(jsonParser).contents
+					case "xml" => body.bufferedXml.contents.map[Value] { _.toSimpleModel }
+					case _ =>
+						body.contentType.category match {
+							case Text => body.bufferedToString.contents.map[Value] { s => s }
+							case _ => Failure(ContentTypeException.notAccepted(body.contentType,
+								Vector(Application.json, Application.xml, Text.plain)))
+						}
+				}
+				value match {
+					case Success(value) => Right(value)
+					case Failure(error) => Left(Result.Failure(BadRequest, error.getMessage))
+				}
+			// Case: No request body specified => Uses an empty value
+			case None => Right(Value.empty)
+		}
+	}
+	
+	
 	// ABSTRACT ----------------------------
 	
 	/**
@@ -96,23 +131,31 @@ trait AuthorizedContext extends Context
 	
 	/**
 	  * @param connection DB Connection (implicit)
-	  * @return Languages that were requested in the Accept-Language header. The languages are listed from most to
-	  *         least preferred. May be empty.
+	  * @return Languages that were requested in the Accept-Language header (or the X-Accept-Language-Ids -header).
+	  *         The languages are listed from most to least preferred. May be empty.
 	  */
 	def requestedLanguages(implicit connection: Connection) =
 	{
-		val acceptedLanguages = request.headers.acceptedLanguages
-			.map { case (code, weight) => code.toLowerCase -> weight }
-		if (acceptedLanguages.nonEmpty)
-		{
-			val acceptedCodes = acceptedLanguages.keySet
-			// Maps codes to language ids (if present)
-			val languages = DbLanguages.withIsoCodes(acceptedCodes)
-			// Orders the languages based on assigned weight
-			languages.sortBy { l => -acceptedLanguages(l.isoCode.toLowerCase) }
+		val acceptedLanguageIds = request.headers.commaSeparatedValues(acceptLanguageIdsHeaderName).flatMap { _.int }
+		if (acceptedLanguageIds.nonEmpty) {
+			val languageById = DbLanguages(acceptedLanguageIds.toSet).pull.map { l => l.id -> l }.toMap
+			// Returns languages in the same order as in the request headers
+			acceptedLanguageIds.flatMap { id => languageById.get(id) }
 		}
-		else
-			Vector()
+		else {
+			val acceptedLanguages = request.headers.acceptedLanguages
+				.map { case (code, weight) => code.toLowerCase -> weight }
+			if (acceptedLanguages.nonEmpty)
+			{
+				val acceptedCodes = acceptedLanguages.keySet
+				// Maps codes to language ids (if present)
+				val languages = DbLanguages.withIsoCodes(acceptedCodes)
+				// Orders the languages based on assigned weight
+				languages.sortBy { l => -acceptedLanguages(l.isoCode.toLowerCase) }
+			}
+			else
+				Vector()
+		}
 	}
 	
 	/**
@@ -131,14 +174,21 @@ trait AuthorizedContext extends Context
 	  * @return Ids of the requested languages in order from most to least preferred. Empty only if the user doesn't
 	  *         exist or has no linked languages
 	  */
-	def languageIds(userId: => Int)(implicit connection: Connection) =
+	def languageIds(userId: => Int)(implicit connection: Connection): LanguageIds =
 	{
-		// Reads languages list from the headers (if present) or from the user data
-		val languagesFromHeaders = requestedLanguages
-		if (languagesFromHeaders.nonEmpty)
-			LanguageIds(languagesFromHeaders.map { _.id })
+		// Checks whether X-Accepted-Language-Ids is provided
+		val acceptedIds = request.headers.commaSeparatedValues(acceptLanguageIdsHeaderName).flatMap { _.int }
+		if (acceptedIds.nonEmpty)
+			LanguageIds(acceptedIds)
 		else
-			DbUser(userId).languageIds
+		{
+			// Reads languages list from the headers (if present) or from the user data
+			val languagesFromHeaders = requestedLanguages
+			if (languagesFromHeaders.nonEmpty)
+				LanguageIds(languagesFromHeaders.map { _.id })
+			else
+				DbUser(userId).languageIds
+		}
 	}
 	/**
 	  * Reads preferred language ids list either from the Accept-Language header or from the user data
@@ -189,18 +239,6 @@ trait AuthorizedContext extends Context
 			DbDeviceToken(token).pull(connection)
 		}(f)
 	}
-	/**
-	  * Perform the specified function if the request can be authorized using a device authentication key
-	  * @param f A function called when request is authorized. Accepts device key + database connection. Produces an http result.
-	  * @return Function result or a result indicating that the request was unauthorized. Wrapped as a response.
-	  */
-	@deprecated("Replaced with DeviceTokenAuthorized", "v3.0")
-	def deviceKeyAuthorized(f: (DeviceKey, Connection) => Result) =
-	{
-		tokenAuthorized("device authentication key") { (token, connection) =>
-			DbDeviceKey.matching(token)(connection)
-		}(f)
-	}
 	
 	/**
 	  * Perform the specified function if the request can be authorized using a session token
@@ -213,16 +251,6 @@ trait AuthorizedContext extends Context
 		tokenAuthorized("session token") { (token, connection) =>
 			DbSessionToken(token).pull(connection)
 		}(f)
-	}
-	/**
-	  * Perform the specified function if the request can be authorized using a session key
-	  * @param f A function called when request is authorized. Accepts user session + database connection. Produces an http result.
-	  * @return Function result or a result indicating that the request was unauthorized. Wrapped as a response.
-	  */
-	@deprecated("Please use sessionTokenAuthorized instead", "v3.0")
-	def sessionKeyAuthorized(f: (UserSession, Connection) => Result) =
-	{
-		tokenAuthorized("session key") { (token, connection) => DbUserSession.matching(token)(connection) }(f)
 	}
 	
 	/**
@@ -380,7 +408,8 @@ trait AuthorizedContext extends Context
 	}
 	
 	/**
-	  * Authorizes this request using an email activation token from the bearer token authorization header
+	  * Authorizes this request using an email activation token from the bearer token authorization header.
+	  * A temporary email session token may also be used.
 	  * @param emailPurposeId Id of the purpose the email is used for (must match the purpose id the validation
 	  *                       attempt was first registered with)
 	  * @param f A function that is performed if the specified token was valid.
@@ -390,8 +419,7 @@ trait AuthorizedContext extends Context
 	  * @return A response based on the function result if authorization was successful. A failure response otherwise.
 	  */
 	def emailAuthorized(emailPurposeId: Int)(f: (EmailValidationAttempt, Connection) => (Boolean, Result)) =
-		request.headers.bearerAuthorization match
-		{
+		request.headers.bearerAuthorization match {
 			case Some(token) =>
 				connectionPool.tryWith { implicit connection =>
 					DbEmailValidationAttempt.open.completeWithToken(token, emailPurposeId) { f(_, connection) }
@@ -420,34 +448,7 @@ trait AuthorizedContext extends Context
 	  *          Accepts the read value, which may be empty. Returns a http result.
 	  * @return Function result
 	  */
-	def handlePossibleValuePost(f: Value => Result) =
-	{
-		// Parses the post body first
-		request.body.headOption match
-		{
-			case Some(body) =>
-				// Accepts json, xml and text content types
-				val value = body.contentType.subType.toLowerCase match
-				{
-					case "json" => body.bufferedJson(jsonParser).contents
-					case "xml" => body.bufferedXml.contents.map[Value] { _.toSimpleModel }
-					case _ =>
-						body.contentType.category match
-						{
-							case Text => body.bufferedToString.contents.map[Value] { s => s }
-							case _ => Failure(ContentTypeException.notAccepted(body.contentType,
-								Vector(Application.json, Application.xml, Text.plain)))
-						}
-				}
-				value match
-				{
-					case Success(value) => f(value)
-					case Failure(error) => Result.Failure(BadRequest, error.getMessage)
-				}
-			// Case: No request body specified => Uses an empty value
-			case None => f(Value.empty)
-		}
-	}
+	def handlePossibleValuePost(f: Value => Result) = parsedRequestBody.leftOrMap(f)
 	/**
 	  * Parses a value from the request body and uses it to produce a response
 	  * @param f Function that will be called if the value was successfully read and not empty.
@@ -471,14 +472,11 @@ trait AuthorizedContext extends Context
 	  * @tparam A Type of parsed model
 	  * @return Function result or a failure result if no model could be parsed.
 	  */
-	def handlePost[A](parser: FromModelFactory[A])(f: A => Result): Result =
-	{
+	def handlePost[A](parser: FromModelFactory[A])(f: A => Result): Result = {
 		handleValuePost { value =>
-			value.model match
-			{
+			value.model match {
 				case Some(model) =>
-					parser(model) match
-					{
+					parser(model) match {
 						// Gives the parsed model to specified function
 						case Success(parsed) => f(parsed)
 						case Failure(error) => Result.Failure(BadRequest, error.getMessage)

@@ -1,5 +1,10 @@
 # Utopia Reflection - List of Changes
 
+## v2.0-alpha-6 - 27.01.2022
+Scala version update
+### Scala
+This module now uses Scala v2.13.7
+
 ## v2.0-alpha-5 - 04.11.2021
 New build / supports changes in **Flow** v1.14
 

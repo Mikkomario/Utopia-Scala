@@ -9,6 +9,11 @@ import utopia.flow.generic.FloatType
 import utopia.flow.generic.DoubleType
 import utopia.flow.generic.LocalDateType
 import utopia.flow.generic.LocalTimeType
+import utopia.flow.util.StringExtensions._
+import utopia.vault.database.columnlength.ColumnNumberLimit.{BigIntLimit, IntLimit, MediumIntLimit, SmallIntLimit, TinyIntLimit}
+import utopia.vault.database.columnlength.ColumnTextLimit.{LongTextLimit, MediumTextLimit, TextLimit, TinyTextLimit, VarcharLimit}
+
+import scala.util.Try
 
 /**
  * This interpreter is able to interpret the basic sql type cases into the basic data types 
@@ -19,23 +24,39 @@ import utopia.flow.generic.LocalTimeType
  */
 object BasicSqlTypeInterpreter extends SqlTypeInterpreter
 {
-    def apply(typeString: String) = 
+    // See type maximum lengths at:
+    // https://dev.mysql.com/doc/refman/8.0/en/storage-requirements.html#data-types-storage-reqs-strings
+    // Int types: https://dev.mysql.com/doc/refman/5.7/en/integer-types.html
+    def apply(typeString: String) =
     {   
         // TODO: Unsigned int should be read as long since it can have double as large a value
-        // Doesn't include the text in parentheses '()'
-        typeString.toLowerCase.span { _ != '(' }._1 match 
+        // Doesn't include the text in parentheses '()', except in maximum length
+        val (mainPart, parenthesisPart) = typeString.splitAtFirst("(")
+        val maxLength = parenthesisPart.untilFirst(")").notEmpty.flatMap { s => Try { s.toInt }.toOption }
+        mainPart.toLowerCase match
         {
-            case "int" | "smallint" | "mediumint" => Some(IntType)
-            case "bigint" => Some(LongType)
-            case "float" => Some(FloatType)
-            case "double" | "decimal" => Some(DoubleType)
-            case "varchar" | "char" | "character" => Some(StringType)
-            case "tinyint" => Some(if (typeString.endsWith("(1)") || typeString.toLowerCase == "tinyint") BooleanType else IntType)
-            case "timestamp" | "datetime" => Some(InstantType)
-            case "date" => Some(LocalDateType)
-            case "time" => Some(LocalTimeType)
-            case s if s.endsWith("text") || s.endsWith("blob") => Some(StringType)
-            case _ => None
+            case "int" => Some(IntType) -> Some(IntLimit(maxLength))
+            case "smallint" => Some(IntType) -> Some(SmallIntLimit(maxLength))
+            case "mediumint" => Some(IntType) -> Some(MediumIntLimit(maxLength))
+            case "bigint" => Some(LongType) -> Some(BigIntLimit(maxLength))
+            case "float" => Some(FloatType) -> None
+            case "double" | "decimal" => Some(DoubleType) -> None
+            case "varchar" => Some(StringType) -> maxLength.map { VarcharLimit(_) }
+            case "char" | "character" => Some(StringType) -> None
+            case "tinyint" =>
+                if (typeString.endsWith("(1)") || typeString.toLowerCase == "tinyint")
+                    Some(BooleanType) -> None
+                else
+                    Some(IntType) -> Some(TinyIntLimit(maxLength))
+            case "timestamp" | "datetime" => Some(InstantType) -> None
+            case "date" => Some(LocalDateType) -> None
+            case "time" => Some(LocalTimeType) -> None
+            case "tinytext" => Some(StringType) -> Some(TinyTextLimit)
+            case "text" => Some(StringType) -> Some(TextLimit)
+            case "mediumtext" => Some(StringType) -> Some(MediumTextLimit)
+            case "longtext" => Some(StringType) -> Some(LongTextLimit)
+            case s if s.endsWith("text") || s.endsWith("blob") => Some(StringType) -> None
+            case _ => None -> None
         }
     }
 }

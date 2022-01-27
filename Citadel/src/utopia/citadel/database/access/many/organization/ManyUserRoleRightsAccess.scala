@@ -8,7 +8,7 @@ import utopia.metropolis.model.stored.organization.UserRoleRight
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 import utopia.vault.sql.SqlExtensions._
 
@@ -26,7 +26,8 @@ object ManyUserRoleRightsAccess
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
-trait ManyUserRoleRightsAccess extends ManyRowModelAccess[UserRoleRight] with Indexed
+trait ManyUserRoleRightsAccess
+	extends ManyRowModelAccess[UserRoleRight] with Indexed with FilterableView[ManyUserRoleRightsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -58,8 +59,6 @@ trait ManyUserRoleRightsAccess extends ManyRowModelAccess[UserRoleRight] with In
 	
 	override def factory = UserRoleRightFactory
 	
-	override protected def defaultOrdering = None
-	
 	override def filter(additionalCondition: Condition): ManyUserRoleRightsAccess = 
 		new ManyUserRoleRightsAccess.ManyUserRoleRightsSubView(this, additionalCondition)
 	
@@ -82,6 +81,11 @@ trait ManyUserRoleRightsAccess extends ManyRowModelAccess[UserRoleRight] with In
 	  * @return An access point to role right links concerning those user roles
 	  */
 	def withAnyOfRoles(roleIds: Iterable[Int]) = filter(model.roleIdColumn in roleIds)
+	/**
+	  * @param taskIds Ids of excluded tasks
+	  * @return An access point to rights excluding those tasks
+	  */
+	def outsideTasks(taskIds: Iterable[Int]) = filter(!model.taskIdColumn.in(taskIds))
 	
 	/**
 	  * Updates the created of the targeted UserRoleRight instance(s)

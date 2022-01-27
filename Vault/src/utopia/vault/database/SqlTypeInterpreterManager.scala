@@ -1,7 +1,5 @@
 package utopia.vault.database
 
-import utopia.flow.generic.DataType
-
 /**
  * This global object is used for converting sql type strings into data types. This manager uses 
  * various sql type interpreters that have been introduced to it. All but the basic implementation 
@@ -19,10 +17,11 @@ object SqlTypeInterpreterManager
     // OPERATORS    --------------------
     
     /**
-     * Interprets a type string into a data type using the introduced interpreters
+     * Interprets a type string into a data type using the introduced interpreters.
+      * Also returns found column length limitation.
      */
-    def apply(typeString: String) = interpreters.foldRight(None: Option[DataType]) { 
-            case (interpreter, result) => result.orElse(interpreter(typeString)) }
+    def apply(typeString: String) =
+        interpreters.reverseIterator.map { _(typeString) }.find { _._1.isDefined }.getOrElse { None -> None }
     
     
     // OTHER METHODS    ----------------

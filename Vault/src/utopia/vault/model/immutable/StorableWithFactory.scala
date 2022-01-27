@@ -30,26 +30,26 @@ trait StorableWithFactory[+Repr] extends Storable
 	  * @param connection A database connection (implicit)
 	  * @return An object from the database, if one could be found
 	  */
-	def search()(implicit connection: Connection) = factory.get(toCondition)
+	def search()(implicit connection: Connection) = factory.find(toCondition)
 	
 	/**
 	  * Searches for multiple rows using this storable instance as the search condition
 	  * @param connection A database connection (implicit)
 	  * @return Objects from the database matching this condition
 	  */
-	def searchMany()(implicit connection: Connection) = factory.getMany(toCondition)
+	def searchMany()(implicit connection: Connection) = factory.findMany(toCondition)
 	
 	/**
 	  * Returns the 'maximum' row based on the provided order property
 	  * @param orderPropertyName Name of property on which ordering is based
 	  * @param connection Database connection
 	  */
-	def searchMax(orderPropertyName: String)(implicit connection: Connection) = factory.getMax(orderPropertyName)
+	def searchMax(orderPropertyName: String)(implicit connection: Connection) = factory.maxBy(orderPropertyName)
 	
 	/**
 	  * Returns the 'minimum' row based on the provided order property
 	  * @param orderPropertyName Name of property on which ordering is based
 	  * @param connection Database connection
 	  */
-	def searchMin(orderPropertyName: String)(implicit connection: Connection) = factory.getMin(orderPropertyName)
+	def searchMin(orderPropertyName: String)(implicit connection: Connection) = factory.minBy(orderPropertyName)
 }

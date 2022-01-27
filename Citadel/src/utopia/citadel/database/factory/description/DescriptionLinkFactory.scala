@@ -1,7 +1,7 @@
 package utopia.citadel.database.factory.description
 
 import utopia.citadel.model.cached.DescriptionLinkTable
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueUnwraps._
 import utopia.metropolis.model.partial.description.DescriptionLinkData
 import utopia.metropolis.model.stored.description.DescriptionLink
@@ -16,6 +16,8 @@ case class DescriptionLinkFactory(linkTable: DescriptionLinkTable)
 	extends FromValidatedRowModelFactory[DescriptionLink]
 {
 	override def table = linkTable.wrapped
+	
+	override def defaultOrdering = None
 	
 	override protected def fromValidatedModel(model: Model) =
 		DescriptionLink(model("id"),

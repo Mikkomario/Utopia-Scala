@@ -137,4 +137,20 @@ case class ScalaType(data: Either[String, Reference], typeParameters: Vector[Sca
 			ScalaType(Left(toScala.text), category = ScalaTypeCategory.Function(parameterTypes))
 		case _ => copy(category = ScalaTypeCategory.Function(parameterTypes))
 	}
+	
+	/**
+	  * @param other Another type
+	  * @return Whether these types are similar, when considering their base types
+	  */
+	def isSimilarTo(other: ScalaType) = {
+		val myPart = data match {
+			case Right(ref) => ref.target
+			case Left(str) => str
+		}
+		val theirPart = other.data match {
+			case Right(ref) => ref.target
+			case Left(str) => str
+		}
+		myPart == theirPart
+	}
 }

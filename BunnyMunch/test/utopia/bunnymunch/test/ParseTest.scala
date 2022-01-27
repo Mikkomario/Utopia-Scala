@@ -19,9 +19,11 @@ object ParseTest extends App
 	implicit val facade: ValueFacade.type = ValueFacade
 	
 	val subModel = Model(Vector("name" -> "Öykkäri", "age" -> 44, "length" -> 187.2))
-	val model = Model(Vector("tester" -> subModel, "test_description" -> "Testing BunnyMunch", "empty" -> Value.empty,
+	val model = Model(Vector("tester" -> subModel,
+		"test_description" -> "Testing \"BunnyMunch\"\nSecond line \uD83D\uDE00", "empty" -> Value.empty,
 		"json" -> "{[1, 2, 3]}"))
 	val json = model.toJson
+	println(json)
 	
 	Parser.parseFromString(json) match
 	{

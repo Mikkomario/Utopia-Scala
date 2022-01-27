@@ -36,6 +36,10 @@ case class CodePiece(text: String, references: Set[Reference] = Set())
 	  * @return Whether this code piece contains text
 	  */
 	def nonEmpty = !isEmpty
+	/**
+	  * @return This piece of code, if not empty (None if empty).
+	  */
+	def notEmpty = if (isEmpty) None else Some(this)
 	
 	/**
 	  * @return A copy of this code piece wrapped in (parentheses)

@@ -39,7 +39,7 @@ object StorableTest extends App
         assert(readArttu.isAdmin == arttu.isAdmin)
         assert(readArttu.age == arttu.age)
         
-        val readArttu2 = Person.get(arttu.toConditionWith("name").get)
+        val readArttu2 = Person.find(arttu.toConditionWith("name").get)
         
         assert(readArttu2.isDefined)
         assert(readArttu2.get == readArttu)

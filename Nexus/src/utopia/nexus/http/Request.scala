@@ -1,7 +1,6 @@
 package utopia.nexus.http
 
 import utopia.flow.datastructure.immutable.Model
-import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.datastructure.immutable.Value
 import utopia.access.http.Method
 import utopia.access.http.Cookie

@@ -1,7 +1,7 @@
 package utopia.vault.test
 
 import utopia.flow.async.ThreadPool
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.DataType
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
@@ -38,16 +38,16 @@ object DateTimeHandlingTest extends App
 		def test(hourDiff: Int, expectedResults: Int) =
 		{
 			println(s"Querying <= $hourDiff difference. Expects $expectedResults rows")
-			val timestampRows = DTFactory.getMany(DTModel.withTimestamp(baseTime + hourDiff.hours)
+			val timestampRows = DTFactory.findMany(DTModel.withTimestamp(baseTime + hourDiff.hours)
 				.toConditionWithOperator(SmallerOrEqual)).size
-			val dateTimeRows = DTFactory.getMany(DTModel.withDatetime(baseTime + hourDiff.hours)
+			val dateTimeRows = DTFactory.findMany(DTModel.withDatetime(baseTime + hourDiff.hours)
 				.toConditionWithOperator(SmallerOrEqual)).size
 			println(s"Timestamp: $timestampRows (${if (timestampRows == expectedResults) "ok" else "FAILURE"})")
 			println(s"Datetime: $dateTimeRows (${if (dateTimeRows == expectedResults) "ok" else "FAILURE"})")
 		}
 		hourDiffs.zipWithIndex.foreach { case (diff, index) => test(diff, index + 1) }
 		// Tests whether row update affects timestamp column
-		DTFactory.get(DTModel.withTimestamp(baseTime + 7.hours - 1.minutes).toConditionWithOperator(LargerOrEqual)).foreach { target =>
+		DTFactory.find(DTModel.withTimestamp(baseTime + 7.hours - 1.minutes).toConditionWithOperator(LargerOrEqual)).foreach { target =>
 			println("Waits a moment to ensure different update time...")
 			WaitUtils.wait(1.1.seconds, new AnyRef)
 			println(s"Updating +7 hour version (id=${target.id})")
@@ -76,6 +76,8 @@ private case class DT(id: Int, data: DTData) extends Stored[DTData, Int]
 private object DTFactory extends FromValidatedRowModelFactory[DT]
 {
 	override def table = TestTables.dateTimeTest
+	
+	override def defaultOrdering = None
 	
 	override protected def fromValidatedModel(model: Model) =
 		DT(model("id"), DTData(model("timestamp"), model("datetime")))

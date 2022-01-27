@@ -3,7 +3,7 @@ package utopia.exodus.database.factory.auth
 import utopia.exodus.database.ExodusTables
 import utopia.exodus.model.partial.auth.ApiKeyData
 import utopia.exodus.model.stored.auth.ApiKey
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
@@ -16,6 +16,8 @@ object ApiKeyFactory extends FromValidatedRowModelFactory[ApiKey]
 	// IMPLEMENTED	--------------------
 	
 	override def table = ExodusTables.apiKey
+	
+	override def defaultOrdering = None
 	
 	override def fromValidatedModel(valid: Model) =
 		ApiKey(valid("id").getInt, ApiKeyData(valid("token").getString, valid("name").getString, 

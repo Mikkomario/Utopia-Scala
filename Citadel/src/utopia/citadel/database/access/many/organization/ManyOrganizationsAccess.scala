@@ -9,7 +9,7 @@ import utopia.metropolis.model.combined.organization.DescribedOrganization
 import utopia.metropolis.model.stored.organization.Organization
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyOrganizationsAccess
@@ -28,6 +28,7 @@ object ManyOrganizationsAccess
   */
 trait ManyOrganizationsAccess 
 	extends ManyRowModelAccess[Organization] with ManyDescribedAccess[Organization, DescribedOrganization]
+		with FilterableView[ManyOrganizationsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -54,8 +55,6 @@ trait ManyOrganizationsAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = OrganizationFactory
-	
-	override protected def defaultOrdering = None
 	
 	override protected def describedFactory = DescribedOrganization
 	

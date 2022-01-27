@@ -22,9 +22,11 @@ object CodeLine
 	private lazy val repeatableRegexes = Vector(
 		Regex("with ") -> false,
 		(Regex.escape(',') + Regex.whiteSpace.noneOrOnce).withinParenthesis.ignoringQuotations -> true,
-		Regex.escape('\"') + (!Regex.escape('\"')).zeroOrMoreTimes + Regex.escape('\"') -> false,
+		Regex("s").noneOrOnce + Regex.escape('\"') + (!Regex.escape('\"')).zeroOrMoreTimes +
+			Regex.escape('\"') -> false,
 		(Regex.anyOf("+-*/").oneOrMoreTimes + Regex.whiteSpace) -> true,
-		(Regex.whiteSpace + Regex.word + Regex.whiteSpace) -> true
+		(Regex.whiteSpace + Regex.word + Regex.whiteSpace) +
+			!(Regex.escape('=') + Regex.escape('>')).withinParenthesis -> false
 	)
 	private lazy val oneTimeRegexes = Vector(
 		Regex.escape('.') + Regex.alpha.oneOrMoreTimes + Regex.whiteSpace.noneOrOnce + Regex.escape('{'),

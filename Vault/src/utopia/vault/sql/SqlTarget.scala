@@ -1,9 +1,7 @@
 package utopia.vault.sql
 
-import utopia.flow.datastructure.immutable.Pair
-import utopia.flow.util.CollectionExtensions._
-import utopia.vault.database.References
 import utopia.vault.model.immutable.{Column, Table}
+import utopia.vault.model.template.Joinable
 import utopia.vault.sql.JoinType._
 
 /**
@@ -19,46 +17,43 @@ trait SqlTarget
      */
     def toSqlSegment: SqlSegment
     
+    /**
+      * @return Name of the targeted database
+      */
+    def databaseName: String
+    
+    /**
+      * @return Tables contained within this target
+      */
+    def tables: Vector[Table]
+    
     
     // OPERATORS    ----------------------------
     
     /**
      * Joins another table to this target using by appending an already complete join
      */
-    def +(join: Join): SqlTarget = SqlTargetWrapper(toSqlSegment + join.toSqlSegment)
+    def +(join: Join): SqlTarget =
+        SqlTargetWrapper(toSqlSegment + join.toSqlSegment, databaseName, tables :+ join.rightTable)
     
     
     // OTHER METHODS    ------------------------
     
     /**
-     * Joins another table into this sql target, if possible. The implementation searches for 
-     * references between the tables and creates a join for the first find
-     */
-    def join(table: Table, joinType: JoinType = Inner) = 
-    {
-        // Finds the first table referencing (or being referenced by) the provided table and uses 
-        // that for a join
-        val tables = toSqlSegment.targetTables
-        tables.findMap { left => References.connectionBetween(left, table) } match
-        {
-            case Some(Pair(leftColumn, rightColumn)) => this + Join(leftColumn, table, rightColumn, joinType)
-            case None =>
-                throw new CannotJoinTableException(
-                    s"Cannot find a reference between $toSqlSegment and $table. Only found references: [${
-                        (tables + table).flatMap(References.from).mkString(", ")}]")
-        }
-    }
+      * @param target A target which may be joined unto this sql target
+      * @param joinType Type of joining to use (default = inner)
+      * @return An extended copy of this target with the specified element joined
+      * @throws Exception If joining is impossible
+      */
+    @throws[Exception]("If joining is impossible")
+    def join(target: Joinable, joinType: JoinType = Inner) = this + target.toJoinFrom(tables, joinType).get
     
     /**
      * Joins another table into this sql target based on a reference in the provided column. 
      * This will only work if the column belongs to one of the already targeted tables and 
      * the column references another column
      */
-    def joinFrom(column: Column, joinType: JoinType = Inner) =
-        toSqlSegment.targetTables.find { _.contains(column) }
-            .flatMap { References.from(_, column) }
-            .map { target => this + Join(column, target.table, target.column, joinType) }
-            .getOrElse(this)
+    def joinFrom(column: Column, joinType: JoinType = Inner) = join(column, joinType)
 }
 
 private class CannotJoinTableException(message: String) extends RuntimeException(message)

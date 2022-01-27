@@ -1,31 +1,101 @@
 package utopia.disciple.apache
 
-import org.apache.http.{Consts, HttpEntity}
-import org.apache.http.client.config.RequestConfig
-import org.apache.http.client.entity.UrlEncodedFormEntity
-import org.apache.http.client.methods.{CloseableHttpResponse, HttpDelete, HttpGet, HttpPatch, HttpPost, HttpPut}
-import org.apache.http.client.utils.URIBuilder
-import org.apache.http.impl.client.HttpClients
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
-import org.apache.http.message.{BasicHeader, BasicNameValuePair}
+import org.apache.hc.client5.http.classic.methods.{HttpDelete, HttpGet, HttpPatch, HttpPost, HttpPut}
+import org.apache.hc.client5.http.config.RequestConfig
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity
+import org.apache.hc.client5.http.impl.classic.{CloseableHttpResponse, HttpClientBuilder, HttpClients}
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager
+import org.apache.hc.core5.http.{Header, HttpEntity}
+import org.apache.hc.core5.http.message.BasicNameValuePair
+import org.apache.hc.core5.net.URIBuilder
 import utopia.access.http.Method._
 import utopia.access.http.{Headers, Method, Status}
 import utopia.disciple.http.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.disciple.http.response.{ResponseParser, StreamedResponse}
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.parse.{JSONReader, JsonParser}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.AutoClose._
 
 import java.io.OutputStream
 import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+import java.util
+import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Codec
 import scala.jdk.CollectionConverters._
 import scala.language.{implicitConversions, postfixOps}
 import scala.util.{Failure, Success, Try}
 
+object Gateway
+{
+	/**
+	  * Creates a new gateway instance
+	  * @param jsonParsers Json parsers to use when content encoding matches parser default.
+	  *                    Specify your own parser/parsers to override default functionality (JSONReader).
+	  *                    It is highly recommended to set this parameter to something else than the default.
+	  *                    A recommended option (when the server is using UTF-8 encoding) is to use JsonBunny from
+	  *                    the Utopia BunnyMunch module.
+	  * @param maxConnectionsPerRoute The maximum number of simultaneous connections to a single route (default = 2)
+	  * @param maxConnectionsTotal The maximum number of simultaneous connections in total (default = 10)
+	  * @param maximumTimeout Maximum timeouts for a single request (default = 5 minutes connection, 5 minutes read,
+	  *                       infinite queuing timeout).
+	  * @param parameterEncoding Encoding option used for query (uri) parameters.
+	  *                          None if no encoding should be used (default).
+	  * @param defaultResponseEncoding Default character encoding used when parsing response data
+	  *                                (used when no character encoding is specified in response headers) (default = UTF-8)
+	  * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
+	  *                            Use false if you wish to force parameters to uri parameters.
+	  * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to json values before
+	  *                                 applying them. False if you want the parameters to be added "as is"
+	  *                                 (using .toString). This mostly affects string values, whether they should be
+	  *                                 wrapped in quotation marks or not. (default = true = use json value format)
+	  * @return
+	  */
+	def apply(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectionsPerRoute: Int = 2,
+	          maxConnectionsTotal: Int = 10,
+	          maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
+	          parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
+	          allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true) =
+		new Gateway(jsonParsers, maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
+			defaultResponseEncoding, b => b, allowBodyParameters, allowJsonInUriParameters)
+	
+	/**
+	  * Creates a new gateway instance
+	  * @param jsonParsers Json parsers to use when content encoding matches parser default.
+	  *                    Specify your own parser/parsers to override default functionality (JSONReader).
+	  *                    It is highly recommended to set this parameter to something else than the default.
+	  *                    A recommended option (when the server is using UTF-8 encoding) is to use JsonBunny from
+	  *                    the Utopia BunnyMunch module.
+	  * @param maxConnectionsPerRoute The maximum number of simultaneous connections to a single route (default = 2)
+	  * @param maxConnectionsTotal The maximum number of simultaneous connections in total (default = 10)
+	  * @param maximumTimeout Maximum timeouts for a single request (default = 5 minutes connection, 5 minutes read,
+	  *                       infinite queuing timeout).
+	  * @param parameterEncoding Encoding option used for query (uri) parameters.
+	  *                          None if no encoding should be used (default).
+	  * @param defaultResponseEncoding Default character encoding used when parsing response data
+	  *                                (used when no character encoding is specified in response headers) (default = UTF-8)
+	  * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
+	  *                            Use false if you wish to force parameters to uri parameters.
+	  * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to json values before
+	  *                                 applying them. False if you want the parameters to be added "as is"
+	  *                                 (using .toString). This mostly affects string values, whether they should be
+	  *                                 wrapped in quotation marks or not. (default = true = use json value format)
+	  * @param customizeClient A function for customizing the http client when it is first created
+	  * @return
+	  */
+	def custom(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectionsPerRoute: Int = 2,
+	           maxConnectionsTotal: Int = 10,
+	           maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
+	           parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
+	           allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true)
+	          (customizeClient: HttpClientBuilder => HttpClientBuilder) =
+		new Gateway(jsonParsers, maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
+			defaultResponseEncoding, customizeClient, allowBodyParameters,
+			allowJsonInUriParameters)
+}
 
 /**
 * Gateways are used for making http requests. Each instance may have its own settings and uses its own apache http
@@ -45,6 +115,7 @@ import scala.util.{Failure, Success, Try}
   *                          None if no encoding should be used (default).
   * @param defaultResponseEncoding Default character encoding used when parsing response data
   *                                (used when no character encoding is specified in response headers) (default = UTF-8)
+  * @param customizeClient A function for customizing the http client when it is first created (default = identity)
   * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
   *                            Use false if you wish to force parameters to uri parameters.
   * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to json values before
@@ -55,9 +126,9 @@ import scala.util.{Failure, Success, Try}
 class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectionsPerRoute: Int = 2,
               maxConnectionsTotal: Int = 10,
               maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
-              parameterEncoding: Option[Codec] = None,
-              defaultResponseEncoding: Codec = Codec.UTF8, allowBodyParameters: Boolean = true,
-              allowJsonInUriParameters: Boolean = true)
+              parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
+              customizeClient: HttpClientBuilder => HttpClientBuilder = b => b,
+              allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true)
 {
     // ATTRIBUTES    -------------------------
 	
@@ -67,14 +138,13 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectio
 	  */
 	private implicit val _defaultResponseEncoding: Codec = defaultResponseEncoding
 	
-    private val connectionManager = new PoolingHttpClientConnectionManager()
+    private lazy val connectionManager = new PoolingHttpClientConnectionManager()
 	connectionManager.setDefaultMaxPerRoute(maxConnectionsPerRoute)
 	connectionManager.setMaxTotal(maxConnectionsTotal)
 	
 	// TODO: Add customizable timeouts (see https://www.baeldung.com/httpclient-timeout)
-    private val client = HttpClients.custom().setConnectionManager(connectionManager)
-	    .setConnectionManagerShared(true).build()
-    
+    private lazy val client = customizeClient(
+	    HttpClients.custom().setConnectionManager(connectionManager).setConnectionManagerShared(true)).build()
     
     // OTHER METHODS    ----------------------
     
@@ -103,14 +173,15 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectio
 			val config =
 			{
 				val builder = RequestConfig.custom()
-				(request.timeout min maximumTimeout).thresholds.view.mapValues { _.toMillis.toInt }.foreach { case (timeoutType, millis) =>
-					timeoutType match
-					{
-						case ConnectionTimeout => builder.setConnectTimeout(millis)
-						case ReadTimeout => builder.setSocketTimeout(millis)
-						case ManagerTimeout => builder.setConnectionRequestTimeout(millis)
+				(request.timeout min maximumTimeout).thresholds.view.mapValues { _.toMillis.toInt }
+					.foreach { case (timeoutType, millis) =>
+						timeoutType match
+						{
+							case ConnectionTimeout => builder.setConnectTimeout(millis, TimeUnit.MILLISECONDS)
+							case ReadTimeout => builder.setResponseTimeout(millis, TimeUnit.MILLISECONDS)
+							case ManagerTimeout => builder.setConnectionRequestTimeout(millis, TimeUnit.MILLISECONDS)
+						}
 					}
-				}
 				builder.build()
 			}
 			base.setConfig(config)
@@ -264,15 +335,15 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectio
 	    else
 	    {
 	        val paramsList = params.attributes.map { c => new BasicNameValuePair(c.name, c.value.getString) }
-	        Some(new UrlEncodedFormEntity(paramsList.asJava, Consts.UTF_8))
+	        Some(new UrlEncodedFormEntity(paramsList.asJava, StandardCharsets.UTF_8))
 	    }
 	}
 	
 	private def wrapResponse(response: CloseableHttpResponse) = 
 	{
-	    val status = statusForCode(response.getStatusLine.getStatusCode)
-	    val headers = Headers(response.getAllHeaders.map(h => (h.getName, h.getValue)).toMap)
-	    
+	    val status = statusForCode(response.getCode)
+	    val headers = Headers(response.getHeaders.map(h => (h.getName, h.getValue)).toMap)
+		
 	    new StreamedResponse(status, headers)({ Option(response.getEntity).map { _.getContent } })
 	}
 	
@@ -289,18 +360,32 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectio
 	{
 		// Inspection is suppressed because this is an implemented function from another library
 		
-		//noinspection ScalaDeprecation
+		/*
 		override def consumeContent() =
 	    {
 	        b.stream.foreach { input =>
     	        val bytes = new Array[Byte](1024) //1024 bytes - Buffer size
                 Iterator.continually (input.read(bytes)).takeWhile (-1 !=).foreach { _ => }
 	        }
-	    }
-	    
-        override def getContent() = b.stream.getOrElse(null)
+	    }*/
+		
+		
+		override def getTrailers = () => new util.ArrayList[Header]()
+		
+		override def close() = {
+			// Consumes and closes the input stream
+			b.stream.foreach { input =>
+				val bytes = new Array[Byte](1024) //1024 bytes - Buffer size
+				Iterator.continually (input.read(bytes)).takeWhile (-1 !=).foreach { _ => }
+				input.close()
+			}
+		}
+		
+		override def getTrailerNames = new util.HashSet[String]()
+		
+		override def getContent() = b.stream.getOrElse(null)
         
-        override def getContentEncoding() = b.contentEncoding.map(new BasicHeader("Content-Encoding", _)).orNull
+        override def getContentEncoding() = b.contentEncoding.orNull
 		
 		override def getContentLength() = b.contentLength.getOrElse(-1)
 		
@@ -314,7 +399,7 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectio
 				case Some(charset) => s"; charset=${charset.name()}"
 				case None => ""
 			}
-			new BasicHeader("Content-Type", s"${b.contentType}$charsetPart")
+			s"${b.contentType}$charsetPart"
 		}
 		
 		override def isChunked() = b.chunked

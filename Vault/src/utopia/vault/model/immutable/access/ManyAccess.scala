@@ -31,7 +31,7 @@ trait ManyAccess[-I, +A] extends Access[I, A]
 	 * @param connection Database connection (implicit)
 	 * @return Read item(s)
 	 */
-	protected def find(condition: Condition)(implicit connection: Connection) = factory.getMany(condition)
+	protected def find(condition: Condition)(implicit connection: Connection) = factory.findMany(condition)
 	
 	/**
 	 * Provides access into a limited group of items based on a search condition
@@ -52,6 +52,6 @@ trait ManyAccess[-I, +A] extends Access[I, A]
 		if (ids.isEmpty)
 			Vector()
 		else
-			factory.getMany(index in ids.map { idValue(_): ConditionElement })
+			factory.findMany(index in ids.map { idValue(_): ConditionElement })
 	}
 }

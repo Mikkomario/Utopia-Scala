@@ -6,7 +6,7 @@ import scala.concurrent.ExecutionContext
 /**
   * Keeps track & setups of all database tables and their references by reading data directly from the database.
   * @author Mikko Hilpinen
-  * @since 13.7.2019, v1.3+
+  * @since 13.7.2019, v1.3
   */
 class Tables(connectionPool: ConnectionPool)(implicit exc: ExecutionContext)
 {
@@ -78,18 +78,13 @@ class Tables(connectionPool: ConnectionPool)(implicit exc: ExecutionContext)
 	{
 		// ATTRIBUTES	-------------------
 		
-		val tables =
-		{
+		val tables = {
 			connectionPool { implicit connection =>
-				
 				connection.dbName = dbName
-				
 				// First finds out table names using "show tables"
 				val tableNames = connection.executeQuery("show tables").flatMap { _.values.headOption }
-				
 				// Reads data for each table
 				val tables = tableNames.map { DatabaseTableReader(dbName, _, columnNameConversion) }
-				
 				// Sets up references between the tables
 				DatabaseReferenceReader.setupReferences(tables.toSet)
 				
@@ -98,7 +93,7 @@ class Tables(connectionPool: ConnectionPool)(implicit exc: ExecutionContext)
 		}
 		
 		
-		// OPERATORS	-------------------
+		// OTHER	-------------------
 		
 		def apply(tableName: String) =
 		{

@@ -3,8 +3,10 @@ package utopia.vault.sql
 import utopia.flow.datastructure.template.Model
 import utopia.flow.datastructure.template.Property
 import utopia.flow.util.CollectionExtensions._
-import utopia.vault.database.Connection
+import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
+import utopia.vault.database.{Connection, Triggers}
 import utopia.vault.model.error.ColumnNotFoundException
+import utopia.vault.model.immutable.TableUpdateEvent.DataInserted
 import utopia.vault.model.immutable.{Result, Table}
 import utopia.vault.util.ErrorHandling
 
@@ -37,7 +39,7 @@ object Insert
             // Generates an error based on attributes that don't fit into the table, but leaves the error
             // handling to the ErrorHandling object
             val usedPropertyNames = rows.flatMap { _.attributesWithValue.map { _.name } }.toSet
-            val (nonMatchingProperties, matchingProperties) = usedPropertyNames.dividedWith { propertyName =>
+            val (nonMatchingProperties, matchingProperties) = usedPropertyNames.divideWith { propertyName =>
                 table.find(propertyName) match
                 {
                     case Some(column) => Right(propertyName -> column)
@@ -49,8 +51,9 @@ object Insert
                     s"No matching column in table ${table.name} for properties: [${
                         nonMatchingProperties.sorted.mkString(", ")}]. Correct property names are: [${
                         table.columns.map { _.propertyName }.sorted.mkString(", ")}]"))
+            // [ Property name -> Column ]
             val propertiesToInsert = matchingProperties.filterNot { _._2.usesAutoIncrement }
-    
+            
             val columnNames = propertiesToInsert.map { _._2.sqlColumnName }.mkString(", ")
             val singleRowValuesSql =
             {
@@ -60,14 +63,26 @@ object Insert
                     "()"
             }
             val valuesSql = singleRowValuesSql + (", " + singleRowValuesSql) * (rows.size - 1)
+            // Makes sure the inserted values conform to the applicable column length rules
+            val dbName = table.databaseName
+            val lengthRules = ColumnLengthRules(table)
             val values = rows.flatMap { model =>
-                propertiesToInsert.map { case (propertyName, _) => model(propertyName) }
+                propertiesToInsert.map { case (propertyName, column) =>
+                    val rawValue = model(propertyName)
+                    ColumnLengthLimits(table, propertyName) match {
+                        case Some(limit) => lengthRules(propertyName)(dbName, column, limit, rawValue)
+                        case None => rawValue
+                    }
+                }
             }
     
             val segment = SqlSegment(s"INSERT INTO ${table.sqlName} ($columnNames) VALUES $valuesSql", values,
                 Some(table.databaseName), HashSet(table), generatesKeys = table.usesAutoIncrement)
-    
-            connection(segment)
+            
+            val result = connection(segment)
+            // Generates a table update event, also
+            Triggers.deliver(table.databaseName, DataInserted(table, rows, result.generatedKeys))
+            result
         }
     }
     

@@ -1,5 +1,5 @@
 --
--- Inserts initial data to the database
+-- Inserts initial Citadel data to the database
 -- Intended to follow the main database structure document import
 -- Should be followed by description import using the Citadel Description Importer
 -- Applicable to versions v2.0 and above

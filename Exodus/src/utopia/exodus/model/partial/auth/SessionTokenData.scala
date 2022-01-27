@@ -2,6 +2,7 @@ package utopia.exodus.model.partial.auth
 
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.exodus.util.ExodusContext
 
 import java.time.Instant
 import utopia.flow.datastructure.immutable.Model
@@ -9,7 +10,6 @@ import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.metropolis.model.enumeration.ModelStyle
-import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.vault.database.Connection
 
 /**
@@ -45,7 +45,7 @@ case class SessionTokenData(userId: Int, token: String, expires: Instant, device
 	  * a query parameter (style) value, session default or session type
 	  */
 	def modelStyle(implicit context: AuthorizedContext) =
-		context.modelStyle.orElse(modelStylePreference).getOrElse { if (deviceId.isDefined) Full else Simple }
+		context.modelStyle.orElse(modelStylePreference).getOrElse { ExodusContext.defaultModelStyle }
 	/**
 	  * @param context Implicit request context
 	  * @param connection Implicit database connection (used for reading language ids from DB if necessary)

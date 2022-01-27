@@ -8,7 +8,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyUserPasswordsAccess
@@ -25,7 +25,8 @@ object ManyUserPasswordsAccess
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
-trait ManyUserPasswordsAccess extends ManyRowModelAccess[UserPassword] with Indexed
+trait ManyUserPasswordsAccess
+	extends ManyRowModelAccess[UserPassword] with Indexed with FilterableView[ManyUserPasswordsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -58,8 +59,6 @@ trait ManyUserPasswordsAccess extends ManyRowModelAccess[UserPassword] with Inde
 	// IMPLEMENTED	--------------------
 	
 	override def factory = UserPasswordFactory
-	
-	override protected def defaultOrdering = None
 	
 	override def filter(additionalCondition: Condition): ManyUserPasswordsAccess = 
 		new ManyUserPasswordsAccess.ManyUserPasswordsSubView(this, additionalCondition)

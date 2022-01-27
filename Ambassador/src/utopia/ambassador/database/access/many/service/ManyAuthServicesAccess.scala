@@ -8,7 +8,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.{FilterableView, SubView}
 import utopia.vault.sql.Condition
 
 object ManyAuthServicesAccess
@@ -25,7 +25,8 @@ object ManyAuthServicesAccess
   * @author Mikko Hilpinen
   * @since 2021-10-26
   */
-trait ManyAuthServicesAccess extends ManyRowModelAccess[AuthService] with Indexed
+trait ManyAuthServicesAccess
+	extends ManyRowModelAccess[AuthService] with Indexed with FilterableView[ManyAuthServicesAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -52,8 +53,6 @@ trait ManyAuthServicesAccess extends ManyRowModelAccess[AuthService] with Indexe
 	// IMPLEMENTED	--------------------
 	
 	override def factory = AuthServiceFactory
-	
-	override protected def defaultOrdering = None
 	
 	override def filter(additionalCondition: Condition): ManyAuthServicesAccess = 
 		new ManyAuthServicesAccess.ManyAuthServicesSubView(this, additionalCondition)

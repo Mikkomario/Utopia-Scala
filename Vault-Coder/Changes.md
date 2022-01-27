@@ -1,5 +1,32 @@
 # Utopia Vault Coder
 
+## v1.4 - 27.01.2022
+This update contains a number of additions in various levels. Perhaps most importantly, this version of the Vault Coder 
+supports Vault v1.12, which previous versions don't do.
+### Scala
+This module now uses Scala v2.13.7
+### New Features
+- Added **Value** data type
+- Added support for root path aliases, which can be stored to config.json file in application directory
+- Added `.deprecate()` -function to access points that support deprecation
+- Added support for `version` -property in model document (will be added to `@since` scaladoc tag)
+### Bugfixes
+- A number of bugfixes to the merging process
+- Optional enumeration properties now have the default value of None, like other optional properties
+- Fixed an issue where **FiniteDuration** was not always properly imported when reading durations from values
+### Other Changes
+- Supports **Vault** v1.12
+- Classes that use both deprecation and expiration now have a custom deprecation implementation
+- Merge conflicts document now shows if the conflict appears in a low-priority function
+- Writes a merge conflict in case new extensions are added, since those may cause unexpected side effects
+- Property name is now used when interpreting property data type
+- Code blocks may now be written in a more concise manner
+- **Value** vectors are now converted to processed values using different code
+- `@since` scaladoc tag is now formatted differently
+- Written sql document now contains a header
+- Classes are now ordered by package name in written sql document (still respecting references, however)
+- Slightly modified property documentation styling in sql document writing
+
 ## v1.3 - 04.11.2021
 This major update adds a number of new quite important features.  
 Also, this version is compatible with the latest **Metropolis** (v2.0) and **Citadel** (v2.0) versions, 

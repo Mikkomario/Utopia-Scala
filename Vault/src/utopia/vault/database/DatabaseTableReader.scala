@@ -2,6 +2,8 @@ package utopia.vault.database
 
 import utopia.flow.generic.AnyType
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.parse.Regex
+import utopia.vault.database.columnlength.ColumnLengthLimits
 import utopia.vault.model.immutable.{Column, Table}
 
 /**
@@ -11,6 +13,8 @@ import utopia.vault.model.immutable.{Column, Table}
  */
 object DatabaseTableReader
 {
+    private lazy val splitterRegex = Regex.escape('_') || Regex.whiteSpace
+    
     /**
      * Reads table data from the database
      * @param databaseName the name of the database the table is read from
@@ -26,13 +30,13 @@ object DatabaseTableReader
         // Reads the column data from the database
         connection.dbName = databaseName
         val columnData = connection.executeQuery(s"DESCRIBE `$tableName`")
-        
-        val columns = columnData.map( data => 
-        {
+        // [Column -> Option[LengthLimit]]
+        val readColumns = columnData.map { data =>
             val columnName = data.getOrElse("COLUMN_NAME", data("Field"))
             val isPrimary = "pri" == data.getOrElse("COLUMN_KEY", data("Key")).toLowerCase
             val usesAutoIncrement = "auto_increment" == data.getOrElse("EXTRA", data("Extra")).toLowerCase
-            val dataType = SqlTypeInterpreterManager(data.getOrElse("COLUMN_TYPE", data("Type"))).getOrElse(AnyType)
+            val (foundType, lengthLimit) = SqlTypeInterpreterManager(data.getOrElse("COLUMN_TYPE", data("Type")))
+            val dataType = foundType.getOrElse(AnyType)
             val nullAllowed = "yes" == data.getOrElse("IS_NULLABLE", data("Null")).toLowerCase
             
             val defaultString = data.getOrElse("COLUMN_DEFAULT", data.getOrElse("Default", "null"))
@@ -40,10 +44,13 @@ object DatabaseTableReader
             // Used to have:  || defaultString.toLowerCase == "current_timestamp"
             
             Column(columnNameToPropertyName(columnName), columnName, tableName, dataType,
-                    nullAllowed, defaultValue, isPrimary, usesAutoIncrement)
-        } )
+                defaultValue, nullAllowed, isPrimary, usesAutoIncrement) -> lengthLimit
+        }
+        // Registers read column length limits
+        ColumnLengthLimits.update(databaseName, tableName,
+            readColumns.flatMap { case (col, limit) => limit.map { col.columnName -> _ } })
         
-        Table(tableName, databaseName, columns)
+        Table(tableName, databaseName, readColumns.map { _._1 })
     }
     
     // Converts underscrore naming style strings to camelcase naming style strings
@@ -51,7 +58,7 @@ object DatabaseTableReader
     def underlineToCamelCase(original: String) =
     {
         // whitespaces are considered equal to underscrores, in case someone would use them
-        val splits = original.split(" ").flatMap { _.split("_") }
-        splits.tail.foldLeft(splits.head){ _ + _.capitalize }
+        val splits = splitterRegex.split(original)
+        splits.tail.foldLeft(splits.head) { _ + _.capitalize }
     }
 }

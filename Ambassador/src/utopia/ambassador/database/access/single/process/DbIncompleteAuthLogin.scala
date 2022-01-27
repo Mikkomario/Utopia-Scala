@@ -48,7 +48,6 @@ object DbIncompleteAuthLogin
 	class DbLoginForIncompleteAuth(incompleteAuthId: Int) extends UniqueIncompleteAuthLoginAccess with SubView
 	{
 		override protected def parent = DbIncompleteAuthLogin
-		override protected def defaultOrdering = Some(factory.defaultOrdering)
 		
 		override def filterCondition = model.withAuthId(incompleteAuthId).toCondition
 	}

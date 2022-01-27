@@ -45,28 +45,30 @@ case class MemberNode(organizationId: Int, userId: Option[Int]) extends Resource
 					// Finds targeted membership id
 					DbUser(targetUserId).membershipInOrganizationWithId(organizationId).id match
 					{
+						// Case: Member of this organization
 						case Some(targetMembershipId) =>
 							val targetMembershipAccess = DbMembership(targetMembershipId)
 							// Checks the roles of the active and targeted user.
 							// Targeted user can only be removed if they
-							// have a role lower than the active user's
-							val activeUserRoleIds = ownMembershipAccess.roleIds.toSet
+							// have a role lower or equal than the active user's
+							// Special case: Owner's can't be removed except by themselves
 							val targetUserRoleIds = targetMembershipAccess.roleIds.toSet
-							if (activeUserRoleIds.forall(targetUserRoleIds.contains))
-								Result.Failure(Forbidden, s"User $targetUserId has same or higher role as you do")
-							else
-							{
+							if (targetUserRoleIds.contains(Owner.id))
+								Result.Failure(Forbidden, "Owners can't be removed, they can only leave")
+							else {
+								val activeUserRoleIds = ownMembershipAccess.roleIds.toSet
 								val managedRoleIds = DbUserRoleIds.belowOrEqualTo(activeUserRoleIds)
-								targetUserRoleIds.find { !managedRoleIds.contains(_) } match
+								
+								if (targetUserRoleIds.exists { !managedRoleIds.contains(_) })
+									Result.Failure(Forbidden, s"User $targetUserId has higher role than you do")
+								else
 								{
-									case Some(conflictingRoleId) => Result.Failure(Forbidden,
-										s"You don't have the right to remove members of role $conflictingRoleId")
-									case None =>
-										// If rights are OK, ends the targeted membership
-										targetMembershipAccess.end()
-										Result.Empty
+									// If rights are OK, ends the targeted membership
+									targetMembershipAccess.end()
+									Result.Empty
 								}
 							}
+						// Case: Not a member of this organization => acts as if the user was removed
 						case None => Result.Empty
 					}
 				case None =>
@@ -74,8 +76,7 @@ case class MemberNode(organizationId: Int, userId: Option[Int]) extends Resource
 					// except that the owner must leave another owner behind
 					if (DbMembership(membershipId).hasRoleWithId(Owner.id))
 					{
-						if (DbOrganization(organizationId).membershipsWithRoles.limitedToRoleWithId(Owner.id).ids
-							.forall { _ == membershipId })
+						if (DbOrganization(organizationId).ownerMemberships.ids.forall { _ == membershipId })
 							Result.Failure(Forbidden,
 								"You must assign another user as organization owner before you leave.")
 						else

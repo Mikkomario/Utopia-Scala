@@ -17,7 +17,7 @@ trait ConditionalManyAccess[+A] extends ConditionalAccess[A]
 	 * @param connection DB Connection
 	 * @return all items accessed from this sub group
 	 */
-	def get(implicit connection: Connection) = factory.getMany(condition)
+	def get(implicit connection: Connection) = factory.findMany(condition)
 	
 	/**
 	 * Finds certain items based on an additional search condition
@@ -25,7 +25,7 @@ trait ConditionalManyAccess[+A] extends ConditionalAccess[A]
 	 * @param connection DB Connection
 	 * @return Items that fulfill both current and additional search conditions
 	 */
-	def find(additionalCondition: Condition)(implicit connection: Connection) = factory.getMany(
+	def find(additionalCondition: Condition)(implicit connection: Connection) = factory.findMany(
 		condition && additionalCondition)
 	
 	/**

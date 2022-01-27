@@ -36,7 +36,7 @@ trait InvitationsAccess extends ManyModelAccess[Invitation]
 	def blocked(implicit connection: Connection) =
 	{
 		val additionalCondition = InvitationResponseModel.blocked.toCondition
-		InvitationWithResponseFactory.getMany(mergeCondition(additionalCondition))
+		InvitationWithResponseFactory.findMany(mergeCondition(additionalCondition))
 	}
 	
 	/**

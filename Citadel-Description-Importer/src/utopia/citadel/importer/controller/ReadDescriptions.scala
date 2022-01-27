@@ -5,7 +5,7 @@ import utopia.citadel.database.access.many.description.{DbClientDeviceDescriptio
 import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.citadel.database.model.description.DescriptionModel
 import utopia.citadel.model.cached.DescriptionLinkTable
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.CollectionExtensions._
@@ -86,7 +86,7 @@ object ReadDescriptions
 					val (newDescriptions, updates) = descriptionsModel.attributesWithValue
 						.flatMap { att => att.name.int.flatMap { targetId =>
 							att.value.string.filter { _.nonEmpty }.map { targetId -> _ } } }
-						.dividedWith { case (targetId, description) =>
+						.divideWith { case (targetId, description) =>
 							existingDescriptions.get(targetId) match
 							{
 								case Some(existing) => Right(existing -> description)

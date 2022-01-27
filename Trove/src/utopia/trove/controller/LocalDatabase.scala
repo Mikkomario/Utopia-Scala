@@ -1,7 +1,6 @@
 package utopia.trove.controller
 
 import java.nio.file.Path
-
 import ch.vorburger.mariadb4j.{DB, DBConfigurationBuilder}
 import utopia.flow.async.{CloseHook, Volatile, VolatileOption}
 import utopia.flow.async.AsyncExtensions._
@@ -13,6 +12,7 @@ import utopia.trove.event.{DatabaseSetupEvent, DatabaseSetupListener}
 import utopia.trove.model.enumeration.DatabaseStatus
 import utopia.trove.model.enumeration.DatabaseStatus.{NotStarted, Setup, Started, Starting, Stopping, Updating}
 import utopia.trove.model.enumeration.SqlFileType.Full
+import utopia.trove.model.stored.DatabaseVersion
 import utopia.vault.database.{Connection, ConnectionPool}
 import utopia.vault.model.immutable.Table
 
@@ -77,15 +77,19 @@ object LocalDatabase
 	  * @param dbName Name of the managed database
 	  * @param versionTableName Name of the table that contains version data
 	  * @param versionTable Version table (call by name)
+	  * @param defaultCharset Default character set to add to the created database (optional)
+	  * @param defaultCollate Default collate to set to the created database (optional)
 	  * @param listener Listener to be informed of database setup events
 	  * @param exc Implicit execution context
 	  * @param connectionPool A connection pool for forming database connections
 	  * @return Database setup completion event
 	  */
 	def setupWithListener(updateDirectory: Path, dbName: String, versionTableName: String,
-						  versionTable: => Table)(listener: DatabaseSetupListener)
+						  versionTable: => Table, defaultCharset: Option[String] = None,
+						  defaultCollate: Option[String] = None)
+	                     (listener: DatabaseSetupListener)
 						 (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
-		setup(updateDirectory, dbName, versionTableName, versionTable, Some(listener))
+		setup(updateDirectory, dbName, versionTableName, versionTable, Some(listener), defaultCharset, defaultCollate)
 	
 	/**
 	  * Sets up the local database
@@ -94,12 +98,15 @@ object LocalDatabase
 	  * @param versionTableName Name of the table that contains version data
 	  * @param versionTable Version table (call by name)
 	  * @param listener Listener to be informed of database setup events (optional)
+	  * @param defaultCharset Default character set to add to the created database (optional)
+	  * @param defaultCollate Default collate to set to the created database (optional)
 	  * @param exc Implicit execution context
 	  * @param connectionPool A connection pool for forming database connections
 	  * @return Database setup completion event
 	  */
 	def setup(updateDirectory: Path, dbName: String, versionTableName: String, versionTable: => Table,
-			  listener: Option[DatabaseSetupListener] = None)
+			  listener: Option[DatabaseSetupListener] = None, defaultCharset: Option[String] = None,
+			  defaultCollate: Option[String] = None)
 			 (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
 		// Table is cached once it has been used once
@@ -107,7 +114,7 @@ object LocalDatabase
 		
 		def fireEvent(event: => DatabaseSetupEvent) = listener.foreach { _.onDatabaseSetupEvent(event) }
 		
-		val result = start(listener).flatMap { _ =>
+		val result = start(defaultCharset, defaultCollate, listener).flatMap { _ =>
 			// Checks current database version, and whether database has been configured at all
 			connectionPool.tryWith { implicit connection =>
 				if (connection.existsTable(dbName, versionTableName))
@@ -117,48 +124,51 @@ object LocalDatabase
 			}.flatMap { currentDbVersion =>
 				ScanSourceFiles(updateDirectory, currentDbVersion.map { _.number }).flatMap { sources =>
 					// If no update files were available, completes
-					if (sources.isEmpty)
-					{
+					if (sources.isEmpty) {
 						// May create the target database first, however
-						Success(
+						Success {
 							if (currentDbVersion.isEmpty)
-								connectionPool.tryWith { _.createDatabase(dbName) } match
+								connectionPool.tryWith { _.createDatabase(dbName, defaultCharset, defaultCollate) } match
 								{
 									case Success(_) => SetupSucceeded(None)
 									case Failure(error) => SetupFailed(error)
 								}
 							else
 								SetupSucceeded(currentDbVersion)
-						)
+						}
 					}
 					else
 					{
 						fireEvent(UpdatesFound(sources, currentDbVersion))
 						
 						connectionPool.tryWith { implicit connection =>
-							// Creates, recreates and/or uses the targeted database if necessary
-							if (currentDbVersion.isDefined)
-							{
-								// If a full update will be introduced and there already exists a database version,
-								// drops it and recreates it first
-								if (sources.exists { _.fileType == Full })
-								{
-									// Backs up version data and inserts it to the new database version
-									val versionsAccess = DbDatabaseVersions(table)
-									val versions = versionsAccess.all
-									connection.dropDatabase(dbName, checkIfExists = false)
-									connection.createDatabase(dbName, checkIfExists = false)
-									versionsAccess.insert(versions.map { _.data })
+							val versionsBackup: Vector[DatabaseVersion] = {
+								// Creates, recreates and/or uses the targeted database if necessary
+								if (currentDbVersion.isDefined) {
+									// If a full update will be introduced and there already exists a database version,
+									// drops it and recreates it first
+									if (sources.exists { _.fileType == Full }) {
+										// Backs up version data and inserts it to the new database version
+										val versionsAccess = DbDatabaseVersions(table)
+										val versions = versionsAccess.all
+										connection.dropDatabase(dbName, checkIfExists = false)
+										connection.createDatabase(dbName, defaultCharset, defaultCollate,
+											checkIfExists = false)
+										versions
+									}
+									// In case there is an update and db exists already, uses it
+									else {
+										connection.dbName = dbName
+										Vector()
+									}
 								}
-								// In case there is an update and db exists already, uses it
-								else
-									connection.dbName = dbName
-							}
-							// If there wasn't any target database before, creates one
-							else
-							{
-								connection.dropDatabase(dbName)
-								connection.createDatabase(dbName, checkIfExists = false)
+								// If there wasn't any target database before, creates one
+								else {
+									connection.dropDatabase(dbName)
+									connection.createDatabase(dbName, defaultCharset, defaultCollate,
+										checkIfExists = false)
+									Vector()
+								}
 							}
 							
 							// Imports the source files in order
@@ -167,8 +177,7 @@ object LocalDatabase
 							val updateFailure = sources.zipWithIndex.view.map { case (source, index) =>
 								val result = connection.executeStatementsFrom(source.path)
 								// Fires an event the update succeeded
-								result match
-								{
+								result match {
 									case Success(_) =>
 										version = Some(source.targetVersion)
 										fireEvent(UpdateApplied(source, sources.drop(index + 1)))
@@ -177,15 +186,16 @@ object LocalDatabase
 								}
 							}.findMap { _.leftOption }
 							
-							// Records new database version
-							val newVersion = version.map { v => DbDatabaseVersions(table).insert(v) }
-							
 							// Sets up the default database name
 							Connection.modifySettings { _.copy(defaultDBName = Some(dbName)) }
 							
+							// Restores possible backup versions and records the new database version
+							if (versionsBackup.nonEmpty)
+								DbDatabaseVersions(table).insert(versionsBackup.map { _.data })
+							val newVersion = version.map { v => DbDatabaseVersions(table).insert(v) }
+							
 							// Returns the completion event (without firing it)
-							updateFailure match
-							{
+							updateFailure match {
 								case Some(failure) => failure
 								case None => SetupSucceeded(newVersion)
 							}
@@ -256,7 +266,9 @@ object LocalDatabase
 			_statusPointer.futureWhere { _.isCompleted }.waitFor()
 	}
 	
-	private def start(listener: Option[DatabaseSetupListener] = None)(implicit exc: ExecutionContext) =
+	private def start(charsetName: Option[String] = None, collateName: Option[String] = None,
+	                  listener: Option[DatabaseSetupListener] = None)
+	                 (implicit exc: ExecutionContext) =
 	{
 		Try {
 			// If currently processing another request, waits for that to complete first
@@ -275,7 +287,8 @@ object LocalDatabase
 				// Updates Vault connection settings
 				Connection.modifySettings { _.copy(
 					connectionTarget = configBuilder.getURL(""),
-					defaultDBName = Some("test")) }
+					defaultDBName = Some("test"), charsetName = charsetName.getOrElse(""),
+					charsetCollationName = collateName.getOrElse("")) }
 				
 				listener.foreach { _.onDatabaseSetupEvent(DatabaseConfigured) }
 				

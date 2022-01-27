@@ -1,5 +1,38 @@
 # Utopia Vault - List of Changes
 
+## v1.12 - 27.01.2022
+This update contains a major refactoring of the factory and access traits, as well as some important fixes. 
+New important features include database events (triggers).
+### Scala
+This module now uses Scala v2.13.7
+### Breaking Changes
+- **DistinctModelAccess** no longer requires property `defaultOrdering`. 
+  - This property is now read from the associated **Factory** (new property).
+- **Access**`.read(...)` now accepts two more parameters (`joins` and `joinType`)
+  - This also applies to `readColumn` in **ModelAccess**
+- Changed constructor parameter ordering in **Column**. Also added new optional parameter **LengthLimit**. 
+- Added a new constructor parameter to **SqlSegment**
+- SqlTarget trait now requires properties `.databaseName` and `.tables`
+- Changed **ClearUnreferencedData** constructor
+### Deprecations
+- Deprecated multiple **FromResultFactory** and **FromRowFactory** methods in favor of renamed, and sometimes extended, 
+  versions.
+### New Features
+- Added database update events (on data insertions, updates and deletions)
+  - See **Triggers** for more information
+- **ClearUnreferencedData** now accepts a set of tables to ignore when checking for references, which is useful for 
+  more customized use-cases
+### New Methods
+- **ConditionElement**
+  - Added `.notIn(Iterable)`
+### Bugfixes
+- `.nonDeprecatedCondition` in **Expiring** was the complete opposite of what it should have been - now fixed
+- `USE <databaseName>;` -statement was missing from database connection opening - added
+### Other Changes
+- `.createDatabase(...)` in **Connection** now accepts optional default character set and default collate -parameters
+- ConnectionSettings scaladoc was misleading in terms of proposed character set. 
+  Now correctly proposes `utf8` and not `UTF-8`
+
 ## v1.11.1 - 04.11.2021
 Supports changes in Flow v1.14
 

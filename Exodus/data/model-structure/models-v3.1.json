@@ -1,0 +1,232 @@
+{
+  "author": "Mikko Hilpinen",
+  "project": "Exodus",
+  "version": "v3.1",
+  "package": "utopia.exodus",
+  "referenced_enums": ["utopia.metropolis.model.enumeration.ModelStyle"],
+  "classes": {
+    "auth": [
+      {
+        "name": "ApiKey",
+        "doc": "Used for authenticating requests before session-based authentication is available",
+        "props": [
+          {
+            "name": "token",
+            "length": 64,
+            "index": true,
+            "doc": "The textual representation of this api key"
+          },
+          {
+            "name": "name",
+            "length": 64,
+            "doc": "Name given to identify this api key"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "EmailValidationPurpose",
+        "doc": "An enumeration for purposes an email validation may be used for",
+        "props": [
+          {
+            "name": "nameEn",
+            "name_plural": "englishNames",
+            "length": 32
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "EmailValidationAttempt",
+        "combo_index": ["expires", "completed"],
+        "doc": "Represents an attempted email validation, and the possible response / success",
+        "props": [
+          {
+            "name": "purposeId",
+            "ref": "email_validation_purpose",
+            "doc": "Id of the purpose this email validation is used for"
+          },
+          {
+            "name": "email",
+            "name_plural": "emailAddresses",
+            "length": 128,
+            "index": true,
+            "doc": "Email address being validated"
+          },
+          {
+            "name": "token",
+            "length": 64,
+            "index": true,
+            "doc": "Token sent with the email, which is also used for validating the email address"
+          },
+          {
+            "name": "resendToken",
+            "length": 64,
+            "index": true,
+            "doc": "Token used for authenticating an email resend attempt"
+          },
+          {
+            "type": "expiration"
+          },
+          {
+            "ref": "user",
+            "type": "Option[Int]",
+            "doc": "Id of the user who claims to own this email address (if applicable)"
+          },
+          {
+            "type": "creation",
+            "index": false
+          },
+          {
+            "name": "completed",
+            "name_plural": "completionTimes",
+            "type": "Option[datetime]",
+            "doc": "Time when this attempt was finished successfully. None while not completed."
+          }
+        ]
+      },
+      {
+        "name": "EmailValidationResend",
+        "doc": "Represents a time when an email validation was sent again",
+        "props": [
+          {
+            "name": "validationId",
+            "ref": "email_validation_attempt"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "EmailValidatedSession",
+        "doc": "Used for creating a temporary and limited session based on an authenticated email validation attempt",
+        "props": [
+          {
+            "name": "validationId",
+            "ref": "email_validation_attempt",
+            "doc": "Reference to the email validation used as the basis for this session"
+          },
+          {
+            "name": "token",
+            "length": 48,
+            "index": true,
+            "doc": "Token used to authenticate against this session"
+          },
+          {
+            "type": "expiration"
+          },
+          {
+            "type": "creation"
+          },
+          {
+            "name": "closedAfter",
+            "type": "deprecation",
+            "doc": "Time after which this session was manually closed"
+          }
+        ]
+      },
+      {
+        "name": "DeviceToken",
+        "doc": "Used as a refresh token to generate device-specific session tokens on private devices",
+        "props": [
+          {
+            "name": "deviceId",
+            "ref": "client_device",
+            "doc": "Id of the device this token provides access to"
+          },
+          {
+            "ref": "user",
+            "doc": "Id of the user who owns this token and presumably the linked device, also"
+          },
+          {
+            "name": "token",
+            "length": 64,
+            "index": true,
+            "doc": "Textual representation of this token"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this device use was started / authenticated"
+          },
+          {
+            "type": "deprecation",
+            "doc": "Time when this token was invalidated, if applicable"
+          }
+        ]
+      },
+      {
+        "name": "SessionToken",
+        "doc": "Used for authenticating temporary user sessions",
+        "props": [
+          {
+            "ref": "user",
+            "doc": "Id of the user who owns this token"
+          },
+          {
+            "name": "token",
+            "length": 64,
+            "index": true,
+            "doc": "Textual representation of this token"
+          },
+          {
+            "type": "expiration",
+            "doc": "Time when this token expires"
+          },
+          {
+            "name": "deviceId",
+            "ref": "client_device",
+            "type": "Option[Int]",
+            "doc": "Id of the device on which this session is, if applicable"
+          },
+          {
+            "name": "modelStylePreference",
+            "column_name": "model_style_id",
+            "type": "Option[Enum[ModelStyle]]",
+            "doc": "Model style preferred during this session"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this session was started"
+          },
+          {
+            "name": "loggedOut",
+            "name_plural": "logoutTimes",
+            "type": "deprecation",
+            "doc": "Time when this session was ended due to the user logging out. None if not logged out."
+          }
+        ]
+      }
+    ],
+    "user": [
+      {
+        "name": "UserPassword",
+        "doc": "Represents a hashed user password",
+        "props": [
+          {
+            "ref": "user",
+            "doc": "Id of the user who owns this password"
+          },
+          {
+            "name": "hash",
+            "name_plural": "hashes",
+            "length": 128,
+            "index": true,
+            "doc": "User's hashed password"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      }
+    ]
+  }
+}

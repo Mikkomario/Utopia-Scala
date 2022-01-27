@@ -75,7 +75,6 @@ object DbSessionToken
 	class DbSessionTokenWrapperAccess(token: String) extends UniqueSessionTokenAccess with SubView
 	{
 		override protected def parent = DbSessionToken
-		override protected def defaultOrdering = Some(factory.defaultOrdering)
 		
 		override def filterCondition = model.withToken(token).toCondition
 	}
@@ -98,7 +97,6 @@ object DbSessionToken
 		// IMPLEMENTED  ------------
 		
 		override protected def parent = DbSessionToken
-		override protected def defaultOrdering = Some(factory.defaultOrdering)
 		
 		
 		// OTHER    ----------------

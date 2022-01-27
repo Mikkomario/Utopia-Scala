@@ -72,8 +72,8 @@ object MyLanguagesNode extends Resource[AuthorizedContext]
 					}
 				}
 			}
-			else
-			{
+			// PUT and POST expect a request body with a language proficiency array
+			else {
 				context.handleModelArrayPost(NewLanguageProficiency) { proficiencies =>
 					// Validates the proposed languages first
 					DbLanguages.validateProposedProficiencies(proficiencies) match {
@@ -82,14 +82,14 @@ object MyLanguagesNode extends Resource[AuthorizedContext]
 							// on PUT, replaces languages
 							if (proficiencies.isEmpty && method == Put)
 								Result.Failure(Forbidden, "You must keep at least one language")
-							else
-							{
+							else {
 								val existingLanguages = userAccess.languageLinks.withFamiliarities.pull
-								val existingMap = existingLanguages.map { l => l.id -> l.familiarityId }.toMap
+								// Language id -> Familiarity id
+								val existingMap = existingLanguages.map { l => l.languageId -> l.familiarityId }.toMap
 								// Groups the changes
+								// Language id -> Familiarity id
 								val changesMap = proficiencies
 									.map { case (language, familiarity) => language.id -> familiarity.id }.toMap
-								
 								val changesInExisting = existingMap.flatMap { case (languageId, familiarityId) =>
 									changesMap.get(languageId).map { newFamiliarityId =>
 										languageId -> (familiarityId -> newFamiliarityId)
