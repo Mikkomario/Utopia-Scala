@@ -44,15 +44,8 @@ class RootGraphicsContext(newGraphics: => ClosingGraphics) extends GraphicsConte
 	
 	// OTHER    ---------------------------------
 	
-	private def _openGraphics =
-	{
-		val default = graphicsPointer.value
-		if (default.isOpen)
-			default
-		else
-		{
-			graphicsPointer.reset()
-			graphicsPointer.value
-		}
+	private def _openGraphics = {
+		graphicsPointer.filter { _.isOpen }
+		graphicsPointer.value
 	}
 }

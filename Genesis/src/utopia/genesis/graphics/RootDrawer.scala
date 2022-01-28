@@ -1,6 +1,6 @@
 package utopia.genesis.graphics
 
-import utopia.genesis.shape.shape2D.{Bounds, Matrix2D}
+import utopia.genesis.shape.shape2D.{Bounds, Matrix2D, Polygonic}
 import utopia.genesis.shape.shape3D.Matrix3D
 
 /**
@@ -21,4 +21,7 @@ class RootDrawer(override protected val graphics: ClosingGraphics) extends Drawe
 		new DerivedDrawer((graphics, Some(transformation), Vector()), clipBounds -> transformation.inverse)
 	
 	override def transformedWith(transformation: Matrix2D): DerivedDrawer = transformedWith(transformation.to3D)
+	
+	override def withClip(clippingArea: Polygonic) =
+		new DerivedDrawer((graphics, None, Vector()), clippingArea -> None)
 }

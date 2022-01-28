@@ -33,6 +33,12 @@ object Lazy
 	  * @return A lazy container that only caches the value if it fulfills the specified test function
 	  */
 	def conditional[A](make: => A)(test: A => Boolean) = ConditionalLazy(make)(test)
+	/**
+	  * @param value A pre-calculated value
+	  * @tparam A Type of that value
+	  * @return That value wrapped as a lazy
+	  */
+	def wrap[A](value: A) = LazyWrapper(value)
 }
 
 /**

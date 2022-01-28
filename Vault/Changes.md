@@ -20,6 +20,7 @@ This module now uses Scala v2.13.7
 ### New Features
 - Added database update events (on data insertions, updates and deletions)
   - See **Triggers** for more information
+- Added column length limit management to **Insert** and **Update** (See **ColumnLengthRules**)
 - **ClearUnreferencedData** now accepts a set of tables to ignore when checking for references, which is useful for 
   more customized use-cases
 ### New Methods

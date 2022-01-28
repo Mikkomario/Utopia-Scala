@@ -1,5 +1,12 @@
 # Utopia Flow - List of Changes
 
+## v1.14.2 (in development)
+### New Methods
+- **Lazy** (object)
+  - Added `.wrap(...)`, which calls `LazyWrapper.apply(...)`
+- **ResettableLazy**
+  - Added `.filter(...)` and `.filterNot(...)`, which are kind of conditional resets
+
 ## v1.14.1 - 27.01.2022
 This update introduces a number of quality-of-life improvements, and also some important fixes to json writing and 
 regular expressions.

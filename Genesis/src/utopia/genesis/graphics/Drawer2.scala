@@ -1,6 +1,6 @@
 package utopia.genesis.graphics
 
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.genesis.shape.shape2D.{Bounds, Polygonic}
 import utopia.genesis.shape.shape2D.transform.{AffineTransformable, LinearTransformable}
 
 /**
@@ -18,11 +18,17 @@ trait Drawer2 extends LinearTransformable[Drawer2] with AffineTransformable[Draw
 	protected def graphics: ClosingGraphics
 	
 	/**
-	  * @return Clipping bounds used in this drawer
+	  * @return Clipping bounds used in this drawer. The bounds are relative to this drawer's transformation system.
 	  */
 	def clipBounds: Bounds
 	
-	// def clippedTo
+	/**
+	  * @param clippingArea A new clipping area to apply (overwriting the existing clipping area, if possible).
+	  *                     The clipping area should be relative
+	  *                     to this drawer's current transformation.
+	  * @return A copy of this drawer that uses the specified clipping area.
+	  */
+	def withClip(clippingArea: Polygonic): Drawer2
 	
 	
 	// TODO: Add draw functions

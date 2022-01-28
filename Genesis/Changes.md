@@ -1,6 +1,6 @@
 # Utopia Reflection - List of Changes
 
-## v.2.6.2 - 27.01.2022
+## v2.6.2 - 27.01.2022
 Scala version update
 ### Scala
 This module now uses Scala v2.13.7

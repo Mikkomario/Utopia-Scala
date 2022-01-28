@@ -8,12 +8,19 @@ import utopia.genesis.shape.shape3D.Matrix3D
   * A drawer that relies on the state of the drawer above it
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
+  * @param parentGraphics Available (raw / parent) graphics instance +
+  *                       a transformation to apply before that graphics instance is valid in this context +
+  *                       mutations to apply before that graphics instance is valid in this context
+  * @param parentClip Clipping area in the original coordinate system +
+  *                   a transformation to apply so that that clipping area appears in the relative
+  *                   (current) coordinate system
   */
 class DerivedDrawer(parentGraphics: => (ClosingGraphics, Option[Matrix3D], Seq[ClosingGraphics => Unit]),
                     parentClip: => (Polygonic, Option[Matrix3D])) extends Drawer2
 {
 	// ATTRIBUTES   -------------------------------
 	
+	// TODO: Remember to apply to clipping bounds at some point
 	private val graphicsPointer = Lazy {
 		val (base, transformation, mutators) = parentGraphics
 		transformation match
@@ -87,6 +94,11 @@ class DerivedDrawer(parentGraphics: => (ClosingGraphics, Option[Matrix3D], Seq[C
 							})
 						case None => firstTransformation
 					}
-					base ->  clippingTransformation
+					base -> clippingTransformation
 			})
+	
+	override def withClip(clippingArea: Polygonic) = graphicsPointer.current match {
+		case Some(graphics) => ???
+		case None => ???
+	}
 }

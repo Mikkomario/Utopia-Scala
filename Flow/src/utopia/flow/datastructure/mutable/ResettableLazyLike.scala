@@ -52,4 +52,18 @@ trait ResettableLazyLike[+A] extends LazyLike[A]
 		reset()
 		value
 	}
+	
+	/**
+	  * Keeps the current value only if it fulfills the specified condition
+	  * @param keepCondition A condition for the currently cached value to keep
+	  */
+	def filter(keepCondition: A => Boolean) = filterNot { c => !keepCondition(c) }
+	/**
+	  * Clears the current value if it matches the specified condition
+	  * @param resetCondition A condition on which the cached item is cleared
+	  */
+	def filterNot(resetCondition: A => Boolean) = {
+		if (current.exists(resetCondition))
+			reset()
+	}
 }
