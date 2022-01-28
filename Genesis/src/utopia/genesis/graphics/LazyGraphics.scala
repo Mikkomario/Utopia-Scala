@@ -19,10 +19,18 @@ object LazyGraphics
   * A graphics instance wrapper that applies predefined changes (transformation, custom mutations, clipping) lazily
   * @author Mikko Hilpinen
   * @since 28.1.2022, v2.6.3
+  * @param parent The parent graphics instance. Either Left: A simple graphics object (lazy)
+  *               or Right: A LazyGraphics instance.
+  * @param newTransformation Transformation to apply over the parent's transformation state.
+  *                       None if no transformation is necessary.
+  * @param mutation A custom mutation to apply to the generated graphics instance. None if no mutation is necessary.
+  * @param newClipping A clipping to overwrite parent clipping with (lazy). None if no custom clipping is required.
+  * @param isClippingDisabled Whether parent clipping should be ignored, i.e. not inherited (default = false)
   */
 class LazyGraphics(parent: Either[LazyLike[ClosingGraphics], LazyGraphics],
-                   transformation: Option[LazyLike[Matrix3D]] = None,
-                   mutation: Option[ClosingGraphics => Unit] = None, newClipping: Option[LazyClip] = None)
+                   newTransformation: Option[LazyLike[Matrix3D]] = None,
+                   mutation: Option[ClosingGraphics => Unit] = None, newClipping: Option[LazyClip] = None,
+                   isClippingDisabled: Boolean = false)
 	extends AutoCloseable with LazyLike[ClosingGraphics]
 		with LinearTransformable[LazyGraphics] with AffineTransformable[LazyGraphics]
 {
@@ -30,7 +38,7 @@ class LazyGraphics(parent: Either[LazyLike[ClosingGraphics], LazyGraphics],
 	
 	// Calculates the graphic instance only when necessary
 	private val baseCache: Lazy[ClosingGraphics] = Lazy {
-		val myTransformation = transformation.map { _.value }
+		val myTransformation = newTransformation.map { _.value }
 		// Acquires a parent graphics instance and checks which transformations and mutations to apply to it
 		val (graphics, fullTransformation, allMutations) = parent match {
 			// Case: Parent is a graphics instance => uses that
@@ -80,6 +88,20 @@ class LazyGraphics(parent: Either[LazyLike[ClosingGraphics], LazyGraphics],
 		}
 	}
 	
+	// Sequence of transformations leading to this graphics state
+	private lazy val transformationSequence: LazyTransformationSequence = newTransformation match {
+		case Some(transformation) =>
+			parent match {
+				case Left(_) => LazyTransformationSequence.root(transformation.value)
+				case Right(parent) => parent.transformationSequence.transformedWith(transformation.value)
+			}
+		case None =>
+			parent match {
+				case Left(_) => LazyTransformationSequence.origin
+				case Right(parent) => parent.transformationSequence
+			}
+	}
+	
 	/**
 	  * Clipping area applied to this graphics instance.
 	  * The area is specified within this instance's transformation context.
@@ -94,8 +116,25 @@ class LazyGraphics(parent: Either[LazyLike[ClosingGraphics], LazyGraphics],
 	
 	// COMPUTED -------------------------------
 	
+	/**
+	  * @return The current transformation of this graphics instance
+	  */
+	def transformation = transformationSequence.value
+	
+	/**
+	  * @return A copy of this graphics instance without any clipping applied
+	  */
+	def withoutClipping = {
+		if (!isClippingDisabled || newClipping.isDefined)
+			new LazyGraphics(Right(this), isClippingDisabled = true)
+		else
+			this
+	}
+	
 	// The clipping area to apply when using this graphics instance. None if there is no clipping.
-	private def _clipping: Option[LazyClip] = newClipping.orElse { parent.toOption.flatMap { _._clipping } }
+	private def _clipping: Option[LazyClip] = newClipping.orElse {
+		if (isClippingDisabled) None else parent.toOption.flatMap { _._clipping }
+	}
 	
 	// Materials used when constructing this (or dependent) graphics context
 	// Either:
@@ -111,16 +150,16 @@ class LazyGraphics(parent: Either[LazyLike[ClosingGraphics], LazyGraphics],
 			case None =>
 				parent match {
 					// Case: Parent is a pre-calculated graphics object => uses that as the base
-					case Left(graphics) => Left((graphics.value, transformation, mutation.toVector))
+					case Left(graphics) => Left((graphics.value, newTransformation, mutation.toVector))
 					// Case: Parent is lazily calculated => Uses available data
 					case Right(parent) =>
 						parent.materials match {
 							// Case: Parent has pre-calculated graphics => Uses those as the base
-							case Right(graphics) => Left((graphics, transformation, mutation.toVector))
+							case Right(graphics) => Left((graphics, newTransformation, mutation.toVector))
 							// Case: Parent is yet to calculate their own graphics version => combines changes
 							case Left((graphics, firstTransformation, firstMutations)) =>
 								// Calculates the full transformation to apply (lazy)
-								val completeTransformation = transformation match {
+								val completeTransformation = newTransformation match {
 									case Some(lastTransformation) =>
 										firstTransformation match {
 											case Some(firstTransformation) =>
@@ -142,7 +181,7 @@ class LazyGraphics(parent: Either[LazyLike[ClosingGraphics], LazyGraphics],
 	
 	override def transformedWith(transformation: Matrix2D): LazyGraphics = transformedWith(transformation.to3D)
 	override def transformedWith(transformation: Matrix3D) =
-		new LazyGraphics(Right(this), transformation = Some(Lazy.wrap(transformation)),
+		new LazyGraphics(Right(this), newTransformation = Some(Lazy.wrap(transformation)),
 			newClipping = _clipping.map { clip => clip.transformedWith(transformation) })
 	
 	override def close() = baseCache.current.foreach { _.close() }

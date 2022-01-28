@@ -8,6 +8,7 @@ import utopia.genesis.shape.shape2D.transform.{AffineTransformable, LinearTransf
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
   */
+// TODO: Consider changing this trait into a wrapper class for LazyGraphics instance. Also include GraphicsContext features.
 trait Drawer2 extends LinearTransformable[Drawer2] with AffineTransformable[Drawer2] with AutoCloseable
 {
 	// ABSTRACT -------------------------------
