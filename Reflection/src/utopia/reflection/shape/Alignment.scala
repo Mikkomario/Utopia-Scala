@@ -451,6 +451,8 @@ sealed trait Alignment
 	  */
 	def y(elementHeight: Double, areaHeight: Double) = positionAlong(Y, elementHeight, areaHeight)
 	
+	// TODO: Move the positioning functions to Genesis Alignment extensions
+	
 	/**
 	  * Positions the specified area within a set of bounds so that it follows this alignment
 	  * @param areaToPosition Size of the area/element to position (Eg. content size)

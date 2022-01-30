@@ -2,9 +2,13 @@ package utopia.genesis.graphics
 
 import utopia.flow.datastructure.immutable.Lazy
 import utopia.flow.datastructure.template.LazyLike
+import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.{Bounds, Matrix2D, Polygonic, Size}
 import utopia.genesis.shape.shape2D.transform.{AffineTransformable, LinearTransformable}
 import utopia.genesis.shape.shape3D.Matrix3D
+
+import java.awt.{Font, Toolkit}
+import scala.util.Try
 
 object LazyGraphics
 {
@@ -113,6 +117,11 @@ class LazyGraphics(parent: Either[LazyLike[ClosingGraphics], LazyGraphics],
 	  */
 	lazy val clippingBounds = clipping.map { _.bounds }
 	
+	/**
+	  * @return The font metrics instance associated with this graphics instance, with the current font
+	  */
+	lazy val fontMetrics = FontMetricsWrapper(value.getFontMetrics)
+	
 	
 	// COMPUTED -------------------------------
 	
@@ -219,5 +228,18 @@ class LazyGraphics(parent: Either[LazyLike[ClosingGraphics], LazyGraphics],
 				clippingBounds.within(existingBounds).getOrElse(clippingBounds.withSize(Size.zero))
 			case None => clippingBounds
 		}
+	}
+	
+	/**
+	  * @param font Font to use when drawing text
+	  * @param textColor Color to use when drawing text
+	  * @return A copy of this graphics instance that is prepared for drawing text
+	  */
+	def forTextDrawing(font: Font, textColor: Color = Color.textBlack) = mutatedWith { g =>
+		g.setColor(textColor.toAwt)
+		g.setFont(font)
+		// Sets rendering hints based on desktop settings
+		Try { Option(Toolkit.getDefaultToolkit.getDesktopProperty("awt.font.desktophints"))
+			.map { _.asInstanceOf[java.util.Map[_, _]] }.foreach(g.setRenderingHints) }
 	}
 }

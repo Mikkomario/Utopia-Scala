@@ -35,6 +35,11 @@ trait GraphicsContextLike[+Repr] extends LinearTransformable[Repr] with AffineTr
 	def transformation = graphics.transformation
 	
 	/**
+	  * @return Font metrics specified within this context (intended for contexts which have defined a font)
+	  */
+	def fontMetrics = graphics.fontMetrics
+	
+	/**
 	  * @return A copy of this context without any clipping applied
 	  */
 	def withoutClipping = withGraphics(graphics.withoutClipping)
@@ -43,8 +48,7 @@ trait GraphicsContextLike[+Repr] extends LinearTransformable[Repr] with AffineTr
 	// IMPLEMENTED  ---------------------------
 	
 	override def transformedWith(transformation: Matrix2D): Repr = transformedWith(transformation.to3D)
-	override def transformedWith(transformation: Matrix3D) =
-		withGraphics(graphics.transformedWith(transformation))
+	override def transformedWith(transformation: Matrix3D) = mapGraphics { _.transformedWith(transformation) }
 	
 	
 	// OTHER    -------------------------------
@@ -53,18 +57,29 @@ trait GraphicsContextLike[+Repr] extends LinearTransformable[Repr] with AffineTr
 	  * @param font A font
 	  * @return Font metrics to use with that font
 	  */
-	def fontMetricsWith(font: Font) = graphics.value.getFontMetrics(font)
+	def fontMetricsWith(font: Font) = FontMetricsWrapper(graphics.value.getFontMetrics(font))
+	
+	/**
+	  * @param f A mapping function for the graphics context
+	  * @return A copy of this context with the modified graphics instance
+	  */
+	def mapGraphics(f: LazyGraphics => LazyGraphics) = withGraphics(f(graphics))
+	/**
+	  * @param f A mutator function for a graphics instance
+	  * @return A mutated copy of this context
+	  */
+	def withMutatedGraphics(f: ClosingGraphics => Unit) = mapGraphics { _.mutatedWith(f) }
 	
 	/**
 	  * @param clipping A new clipping area to apply (lazy).
 	  *                 The area should be within this graphics's transformation context.
 	  * @return A copy of this graphics context, clipped to that area (overwrites any current clipping)
 	  */
-	def withClip(clipping: => Polygonic): Repr = withGraphics(graphics.withClip(clipping))
+	def withClip(clipping: => Polygonic): Repr = mapGraphics { _.withClip(clipping) }
 	/**
 	  * @param clippingBounds A new set of clipping bounds. Should be set within this instance's transformation context.
 	  * @return A copy of this context where clipping is reduced to the specified bounds.
 	  *         Applies current clipping area bounds (not necessarily shape) as well.
 	  */
-	def reducedToBounds(clippingBounds: Bounds) = withGraphics(graphics.reducedToBounds(clippingBounds))
+	def reducedToBounds(clippingBounds: Bounds) = mapGraphics { _.reducedToBounds(clippingBounds) }
 }

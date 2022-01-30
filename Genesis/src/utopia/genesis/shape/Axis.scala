@@ -108,7 +108,6 @@ sealed trait Axis2D extends Axis
       * @return Forward (positive) direction on this axis
       */
     def forward = toDirection(Positive)
-    
     /**
       * @return Backward (negative) direction on this axis
       */
@@ -129,4 +128,9 @@ sealed trait Axis2D extends Axis
       * @return A direction along this axis with specified sign
       */
     def toDirection(sign: Sign) = Direction2D(this, sign)
+    /**
+      * @param sign Sign of the resulting direction
+      * @return A direction along this axis with the specified sign
+      */
+    def apply(sign: Sign) = toDirection(sign)
 }
