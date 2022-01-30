@@ -1,8 +1,9 @@
 package utopia.genesis.graphics
 
-import utopia.genesis.shape.shape2D.ShapeConvertible
+import utopia.genesis.color.Color
+import utopia.genesis.shape.shape2D.{Bounds, MultiDimensional, Point, ShapeConvertible}
 
-import java.awt.Shape
+import java.awt.{Font, RenderingHints, Shape}
 
 /**
   * A graphics object wrapper used for performing drawing operations
@@ -19,6 +20,14 @@ class Drawer3(protected override val graphics: LazyGraphics) extends GraphicsCon
 	
 	
 	// OTHER    ------------------------------
+	
+	/**
+	  * @param font Font to use
+	  * @param color Color to use when drawing text
+	  * @return A copy of this drawer for text drawing
+	  */
+	def forTextDrawing(font: Font, color: Color = Color.textBlack) =
+		new TextDrawer(graphics.forTextDrawing(font, color), color)
 	
 	/**
 	  * Draws a shape
@@ -43,4 +52,30 @@ class Drawer3(protected override val graphics: LazyGraphics) extends GraphicsCon
 	  * @param settings Settings to use when drawing that shape (implicit)
 	  */
 	def draw(shape: ShapeConvertible)(implicit settings: DrawSettings): Unit = draw(shape.toShape)
+	
+	/**
+	  * Draws an image
+	  * @param image Image to draw
+	  * @param position Position of the top left corner of that image
+	  * @return True if the drawing has already completed
+	  */
+	def drawAwtImage(image: java.awt.Image, position: Point = Point.origin) = {
+		graphics.value.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+		graphics.value.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
+		graphics.value.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
+		
+		graphics.value.drawImage(image, position.x.round.toInt, position.y.round.toInt, null)
+	}
+	
+	/**
+	  * Copies a region of the drawn area to another location
+	  * @param area Area that is copied
+	  * @param translation The amount of translation applied to the area
+	  */
+	def copyArea(area: Bounds, translation: MultiDimensional[Double]) = {
+		if (translation.dimensions2D.exists { _ != 0 })
+			graphics.value.copyArea(
+				area.x.round.toInt, area.y.round.toInt, area.width.round.toInt, area.height.round.toInt,
+				translation.x.round.toInt, translation.y.round.toInt)
+	}
 }

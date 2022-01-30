@@ -7,6 +7,7 @@ import utopia.flow.event.ChangingLike
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
   */
+// TODO: Remove this class
 trait GraphicsContextAccess
 {
 	// ABSTRACT ---------------------------

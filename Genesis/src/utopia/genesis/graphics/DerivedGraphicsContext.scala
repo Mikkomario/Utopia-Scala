@@ -10,6 +10,7 @@ import utopia.genesis.shape.shape3D.Matrix3D
   * @since 15.5.2021, v2.5.1
   */
 // ParentState contains a graphics instance + possible transformation
+// TODO: Remove this class (Replaced with GraphicsContext2)
 class DerivedGraphicsContext(lastTransformation: Matrix3D, parentTransformation: Matrix3D,
                              parentState: => (ClosingGraphics, Option[Matrix3D]))
 	extends GraphicsContext

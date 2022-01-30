@@ -19,7 +19,7 @@ import scala.collection.immutable.VectorBuilder
   * @param text Wrapped text
   * @param context Text measurement context used
   * @param alignment Alignment used when placing text on multiple lines and when drawing text (default = top left)
-  * @param heightSettings Settings used when interpreting text height
+  * @param heightSettings Settings used when interpreting text height (default = use standard line height)
   * @param allowLineBreaks Whether line breaks should be applied (default = true)
   */
 case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Alignment = Alignment.TopLeft,

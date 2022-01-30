@@ -8,6 +8,7 @@ import utopia.genesis.shape.shape3D.Matrix3D
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
   */
+// TODO: Remove this class
 class RootDrawer(override protected val graphics: ClosingGraphics) extends Drawer2 with AutoCloseable
 {
 	// ATTRIBUTES   --------------------------

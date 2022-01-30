@@ -4,7 +4,7 @@ import utopia.genesis.shape.shape2D.{Bounds, Matrix2D, Polygonic}
 import utopia.genesis.shape.shape2D.transform.{AffineTransformable, LinearTransformable}
 import utopia.genesis.shape.shape3D.Matrix3D
 
-import java.awt.Font
+import java.awt.{AlphaComposite, Font}
 
 /**
   * Provides read access to graphics related settings
@@ -82,4 +82,12 @@ trait GraphicsContextLike[+Repr] extends LinearTransformable[Repr] with AffineTr
 	  *         Applies current clipping area bounds (not necessarily shape) as well.
 	  */
 	def reducedToBounds(clippingBounds: Bounds) = mapGraphics { _.reducedToBounds(clippingBounds) }
+	
+	/**
+	  * @param alpha An alpha value, between 0 and 1 where 0 means fully transparent and 1 means fully visible.
+	  * @return A copy of this drawer with the specified alpha modifier.
+	  */
+	def withAlpha(alpha: Double) = withMutatedGraphics {
+		_.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha.toFloat))
+	}
 }
