@@ -7,6 +7,7 @@ import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.AutoCloseWrapper
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.StringExtensions._
 
 import java.io.InputStream
 import java.nio.file.Path
@@ -296,7 +297,8 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 									// Handles attachments or other part content
 									val disposition = part.getDisposition
 									// Case: Attachment => Attaches it using the builder
-									if (disposition != null && (disposition == Part.ATTACHMENT || disposition == Part.INLINE))
+									if (disposition != null &&
+										((disposition ~== Part.ATTACHMENT) || (disposition ~== Part.INLINE)))
 									{
 										// Doesn't know the stream encoding, unfortunately
 										part.getInputStream.consume { stream =>

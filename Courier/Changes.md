@@ -1,5 +1,9 @@
 # Utopia Courier - List of Changes
 
+## v1.0.3 (in development)
+### Bugfixes
+- Attachments were not always recognized because of a case-related problem (fixed)
+
 ## v1.0.2 - 27.01.2022
 Scala version update
 ### Scala
