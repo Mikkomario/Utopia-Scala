@@ -179,8 +179,7 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 								val folderSize = folder.getMessageCount
 								val maxReadIndex = if (maxMessageCount < 0) folderSize else
 									(skipMessageCount + maxMessageCount) min folderSize
-								val sourceIterator =
-								{
+								val sourceIterator = {
 									if (skipMessageCount >= folderSize)
 										Iterator.empty
 									else
@@ -213,13 +212,12 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 	
 	// NESTED   -------------------------------------
 	
-	private class MessageIterator(rawSource: RawMessageIterator) extends Iterator[Try[A]]
+	private class MessageIterator(source: RawMessageIterator) extends Iterator[Try[A]]
 	{
 		// ATTRIBUTES   ---------------------------
 		
-		private val source = rawSource.pollable
 		private val nextMaterials = ResettableLazy {
-			source.pollToNextWhere {
+			source.nextWhere {
 				case Success(msg) => msg.isDefined
 				case Failure(_) => true
 			}.map { _.map { _.get } }
@@ -272,7 +270,7 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 		// OTHER    --------------------------------
 		
 		def popMessages() = {
-			val (skipped, rawFailed) = rawSource.popMessages()
+			val (skipped, rawFailed) = source.popMessages()
 			val failed = processFailedMessage.orElse(rawFailed)
 			processFailedMessage = None
 			(processedMessagesBuilder.result(), skipped, failed)
