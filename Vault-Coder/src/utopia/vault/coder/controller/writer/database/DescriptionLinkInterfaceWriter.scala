@@ -1,7 +1,6 @@
 package utopia.vault.coder.controller.writer.database
 
-import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, ProjectSetup}
+import utopia.vault.coder.model.data.{Class, NamingRules, ProjectSetup}
 import utopia.vault.coder.model.scala.{DeclarationDate, Reference}
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.LazyValue
@@ -28,16 +27,18 @@ object DescriptionLinkInterfaceWriter
 	  *         None if there weren't any classes that used descriptions.
 	  */
 	def apply(classes: Vector[Class], tablesRef: Reference)
-	         (implicit setup: ProjectSetup, codec: Codec): Try[Option[(Reference, Reference, Reference)]] =
+	         (implicit setup: ProjectSetup, codec: Codec,
+	          naming: NamingRules): Try[Option[(Reference, Reference, Reference)]] =
 	{
-		val targets = classes.flatMap { c => c.descriptionLinkClass.map { dc => (c, dc) } }.sortBy { _._1.name.singular }
+		val targets = classes.flatMap { c => c.descriptionLinkClass.map { dc => (c, dc) } }
+			.sortBy { _._1.name.singular }
 		if (targets.nonEmpty)
 		{
 			// Each file contains a property for each described class
 			// First writes database models object
 			val modelProps = targets.map { case (base, desc) =>
 				tableWrappingPropertyFor(base, desc, tablesRef, Reference.descriptionLinkModelFactory,
-					s"Database interaction model factory for ${ base.name.singular } description links")
+					s"Database interaction model factory for ${ base.name } description links")
 			}
 			File(setup.dbModelPackage/"description",
 				ObjectDeclaration(setup.dbModuleName + "DescriptionLinkModel",
@@ -63,7 +64,7 @@ object DescriptionLinkInterfaceWriter
 						.map { case ((base, _), linkFactoryProp) =>
 							propertyFor(base, Reference.linkedDescriptionFactory,
 								CodePiece(s"${linksRef.target}.${linkFactoryProp.name}", Set(linksRef)),
-								s"Factory for reading descriptions linked with ${base.name.plural}")
+								s"Factory for reading descriptions linked with ${base.name.pluralText}")
 						}
 					File(setup.factoryPackage/"description",
 						ObjectDeclaration(setup.dbModuleName + "LinkedDescriptionFactory",
@@ -80,12 +81,14 @@ object DescriptionLinkInterfaceWriter
 	}
 	
 	private def tableWrappingPropertyFor(baseClass: Class, descriptionClass: Class, tablesRef: Reference,
-	                                     wrapperRef: Reference, description: String) =
+	                                     wrapperRef: Reference, description: String)
+	                                    (implicit naming: NamingRules) =
 		propertyFor(baseClass, wrapperRef,
-			CodePiece(s"${ tablesRef.target }.${ descriptionClass.name.singular.uncapitalize }", Set(tablesRef)),
+			CodePiece(s"${ tablesRef.target }.${ descriptionClass.name.propName }", Set(tablesRef)),
 			description)
 	
-	private def propertyFor(baseClass: Class, wrapperRef: Reference, wrappedCode: CodePiece, description: String) =
-		LazyValue(baseClass.name.singular.uncapitalize, wrappedCode.references + wrapperRef,
+	private def propertyFor(baseClass: Class, wrapperRef: Reference, wrappedCode: CodePiece, description: String)
+	                       (implicit naming: NamingRules) =
+		LazyValue(baseClass.name.propName, wrappedCode.references + wrapperRef,
 			description = description)(s"${wrapperRef.target}(${wrappedCode.text})")
 }

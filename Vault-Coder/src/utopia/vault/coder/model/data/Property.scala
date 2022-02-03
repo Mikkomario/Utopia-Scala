@@ -3,7 +3,6 @@ package utopia.vault.coder.model.data
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.enumeration.PropertyType
 import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.util.NamingUtils
 
 object Property
 {
@@ -22,8 +21,7 @@ object Property
 	def apply(name: Name, dataType: PropertyType, description: String = "", useDescription: String = "",
 	          customDefault: String = "", customSqlDefault: String = "",
 	          customIndexing: Option[Boolean] = None): Property =
-		apply(name, NamingUtils.camelToUnderscore(name.singular), dataType, description, useDescription,
-			customDefault, customSqlDefault, customIndexing)
+		apply(name, None, dataType, description, useDescription, customDefault, customSqlDefault, customIndexing)
 }
 
 /**
@@ -31,7 +29,7 @@ object Property
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   * @param name Name of this property
-  * @param columnName Name of the column linked with this property
+  * @param customColumnName Overridden column name to apply to this property
   * @param dataType Type of this property
   * @param description Description of this property (may be empty)
   * @param useDescription Description on how this property is used (may be empty)
@@ -40,7 +38,7 @@ object Property
   * @param customIndexing User-specified setting whether this property should be indexed.
   *                       None if user didn't specify, which results in data type -based indexing
   */
-case class Property(name: Name, columnName: String, dataType: PropertyType, description: String,
+case class Property(name: Name, customColumnName: Option[String], dataType: PropertyType, description: String,
                     useDescription: String, customDefault: String, customSqlDefault: String,
                     customIndexing: Option[Boolean])
 {
@@ -73,4 +71,15 @@ case class Property(name: Name, columnName: String, dataType: PropertyType, desc
 	  * @return A nullable copy of this property
 	  */
 	def nullable = if (dataType.isNullable) this else copy(dataType = dataType.nullable)
+	
+	/**
+	  * @param naming Implicit naming rules
+	  * @return Column name to use for this property
+	  */
+	def columnName(implicit naming: NamingRules) = customColumnName.getOrElse { name.columnName }
+	/**
+	  * @param naming Implicit naming rules
+	  * @return Name to use for this property in database model string literals
+	  */
+	def dbModelPropName(implicit naming: NamingRules) = naming.dbModelProp.convert(columnName, naming.column)
 }

@@ -14,12 +14,14 @@ import utopia.vault.coder.model.scala.Package
   * @param enumerations Enumerations in this project
   * @param classes Classes in this project
   * @param combinations Combinations in this project
+  * @param namingRules Naming rules to use in this project
   * @param version Project version
   * @param modelCanReferToDB Whether model classes are allowed to refer to database classes
+  * @param prefixColumnNames Whether column names should have a prefix
   */
 case class ProjectData(projectName: String, modelPackage: Package, databasePackage: Package, enumerations: Vector[Enum],
-                       classes: Vector[Class], combinations: Vector[CombinationData], version: Option[Version],
-                       modelCanReferToDB: Boolean)
+                       classes: Vector[Class], combinations: Vector[CombinationData], namingRules: NamingRules,
+                       version: Option[Version], modelCanReferToDB: Boolean, prefixColumnNames: Boolean)
 {
 	// COMPUTED ------------------------------
 	

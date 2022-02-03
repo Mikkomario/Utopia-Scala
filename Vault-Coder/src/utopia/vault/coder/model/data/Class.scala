@@ -1,26 +1,32 @@
 package utopia.vault.coder.model.data
 
-import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.enumeration.BasicPropertyType.{IntNumber, LongNumber}
+import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, CreationTime, Deprecation, EnumValue, Expiration}
-import utopia.vault.coder.util.NamingUtils
 
 object Class
 {
+	/**
+	  * Id / index name to use by default
+	  */
+	val defaultIdName = Name("id", "ids", CamelCase.lower)
+	
 	/**
 	  * Creates a new class with automatic table-naming
 	  * @param name Name of this class (in code)
 	  * @param properties Properties in this class
 	  * @param packageName Name of the package in which to wrap this class (default = empty)
+	  * @param idName Name of this class' id property (default = id)
 	  * @param description A description of this class (default = empty)
 	  * @param author Author who wrote this class (may be empty)
 	  * @param useLongId Whether to use long instead of int in the id property (default = false)
 	  * @return A new class
 	  */
+	// TODO: Make sure this method is called correctly (idName added)
 	def apply(name: Name, properties: Vector[Property], packageName: String = "",
-	          comboIndexColumnNames: Vector[Vector[String]] = Vector(), description: String = "",
-	          author: String = "", useLongId: Boolean = false): Class =
-		apply(name, NamingUtils.camelToUnderscore(name.singular), properties, packageName, comboIndexColumnNames, "",
+	          comboIndexColumnNames: Vector[Vector[String]] = Vector(), idName: Name = defaultIdName,
+	          description: String = "", author: String = "", useLongId: Boolean = false): Class =
+		apply(name, None, idName, properties, packageName, comboIndexColumnNames, None,
 			description, author, useLongId)
 	
 	/**
@@ -28,6 +34,7 @@ object Class
 	  * @param name Name of this class (in code)
 	  * @param properties Properties in this class
 	  * @param packageName Name of the package in which to wrap this class (default = empty)
+	  * @param idName Name of this class' id property (default = id)
 	  * @param description A description of this class (default = empty)
 	  * @param author Author who wrote this class (may be empty)
 	  * @param descriptionLinkColumnName Name of the column that refers to this class from description links
@@ -36,12 +43,13 @@ object Class
 	  * @return A new class
 	  */
 	def described(name: Name, properties: Vector[Property], packageName: String = "",
-	              comboIndexColumnNames: Vector[Vector[String]] = Vector(), description: String = "",
-	              author: String = "", descriptionLinkColumnName: String = "", useLongId: Boolean = false): Class =
+	              comboIndexColumnNames: Vector[Vector[String]] = Vector(), idName: Name = defaultIdName,
+	              description: String = "",
+	              author: String = "", descriptionLinkColumnName: Option[Name] = None,
+	              useLongId: Boolean = false): Class =
 	{
-		val tableName = NamingUtils.camelToUnderscore(name.singular)
-		apply(name, tableName, properties, packageName, comboIndexColumnNames,
-			descriptionLinkColumnName.notEmpty.getOrElse { tableName + "_id" }, description, author, useLongId)
+		apply(name, None, idName, properties, packageName, comboIndexColumnNames,
+			Some[Name](descriptionLinkColumnName.getOrElse { name + "id" }), description, author, useLongId)
 	}
 }
 
@@ -50,34 +58,37 @@ object Class
   * @author Mikko Hilpinen
   * @since 30.8.2021, v0.1
   * @param name Name of this class (in code)
-  * @param tableName Name of this class' table
+  * @param customTableName Overridden name of this class' table (optional)
+  * @param idName Name of this class' id (index) property
   * @param properties Properties in this class
   * @param packageName Name of the package in which to wrap this class (may be empty)
   * @param comboIndexColumnNames Combo-indices for this class. Each item (vector) represents a single combo-index.
   *                              The items (strings) in combo-indices represent column names.
   * @param descriptionLinkColumnName Name of the column that refers to this class from a description link
-  *                                  (empty if no descriptions are used)
+  *                                  (optional)
   * @param description A description of this class
   * @param useLongId Whether to use long instead of int in the id property
   */
-case class Class(name: Name, tableName: String, properties: Vector[Property], packageName: String,
-                 comboIndexColumnNames: Vector[Vector[String]], descriptionLinkColumnName: String,
-                 description: String, author: String, useLongId: Boolean)
+case class Class(name: Name, customTableName: Option[String], idName: Name, properties: Vector[Property],
+                 packageName: String, comboIndexColumnNames: Vector[Vector[String]],
+                 descriptionLinkColumnName: Option[Name], description: String, author: String, useLongId: Boolean)
 {
 	// ATTRIBUTES   ---------------------------------
 	
 	/**
 	  * @return Class that links descriptions with instances of this class. None if not applicable to this class.
 	  */
-	lazy val descriptionLinkClass = descriptionLinkColumnName.notEmpty.map { linkColumnName =>
+	lazy val descriptionLinkClass = descriptionLinkColumnName.map { linkColumnName =>
+		val idName = Name("descriptionId", CamelCase.lower)
+		val tableName = customTableName match {
+			case Some(n) => n: Name
+			case None => name
+		}
 		val props = Vector(
-			Property(NamingUtils.underscoreToCamel(linkColumnName).uncapitalize, linkColumnName,
-				ClassReference(tableName, idType), s"Id of the described $name", "", "", "", None),
-			Property("descriptionId", ClassReference("description"), "Id of the linked description")/*,
-			Property(CreationTime.defaultPropertyName, CreationTime, "Time when this description was added"),
-			Property(Deprecation.defaultPropertyName, Deprecation, "Time when this description was replaced or removed")*/
+			Property(linkColumnName, ClassReference(tableName, idType), s"Id of the described $name"),
+			Property(idName, ClassReference("description"), "Id of the linked description")
 		)
-		Class(Name(name.singular + "Description"), props, "description",
+		Class(name + "description", props, "description",
 			description = s"Links ${name.plural} with their descriptions", author = author)
 	}
 	
@@ -146,4 +157,15 @@ case class Class(name: Name, tableName: String, properties: Vector[Property], pa
 		case Expiration => true
 		case _ => false
 	} }
+	
+	/**
+	  * @param naming Implicit naming rules
+	  * @return Table name used for this class
+	  */
+	def tableName(implicit naming: NamingRules) = customTableName.getOrElse { name.tableName }
+	/**
+	  * @param naming Implicit naming rules
+	  * @return Name used for this class' id property in database model string literals
+	  */
+	def idDatabasePropName(implicit naming: NamingRules) = naming.dbModelProp.convert(idName.columnName, naming.column)
 }

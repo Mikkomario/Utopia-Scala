@@ -7,11 +7,10 @@ import utopia.flow.datastructure.immutable.{Model, ModelValidationFailedExceptio
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.{UncertainBoolean, Version}
-import utopia.vault.coder.model.data.{Class, CombinationData, Enum, Name, ProjectData, Property}
+import utopia.vault.coder.model.data.{Class, CombinationData, Enum, Name, NamingRules, ProjectData, Property}
 import utopia.vault.coder.model.enumeration.CombinationType.{Combined, MultiCombined, PossiblyCombined}
-import utopia.vault.coder.model.enumeration.{BasicPropertyType, CombinationType, PropertyType}
+import utopia.vault.coder.model.enumeration.{BasicPropertyType, CombinationType, NamingConvention, PropertyType}
 import utopia.vault.coder.model.scala.Package
-import utopia.vault.coder.util.NamingUtils
 
 import java.nio.file.Path
 import scala.util.{Failure, Success}
@@ -55,6 +54,9 @@ object ClassReader
 						.capitalize
 			}
 		}
+		
+		implicit val namingRules: NamingRules = NamingRules(root("naming").getModel).value
+		
 		val enumPackage = modelPackage/"enumeration"
 		val enumerations = root("enumerations", "enums").getModel.attributes.map { enumAtt =>
 			Enum(enumAtt.name.capitalize, enumAtt.value.getVector.flatMap { _.string }.map { _.capitalize },
@@ -99,74 +101,92 @@ object ClassReader
 									PossiblyCombined
 							}
 						// Determines combination name
-						val comboNameSingular = combo.name.notEmpty.getOrElse {
-							s"${parentClass.name}With${combo.childAlias.notEmpty.getOrElse {
-								combinationType match
-								{
-									case MultiCombined => childClass.name.plural
-									case _ => childClass.name.singular
-								}
-							}}"
+						val childAlias = combo.childAlias.notEmpty.map { alias =>
+							if (combinationType.isOneToMany)
+								Name(alias, alias, NamingConvention.of(alias, namingRules.className))
+							else
+								Name.interpret(alias, namingRules.className)
 						}
-						val comboName = Name(comboNameSingular,
-							combo.namePlural.notEmpty.getOrElse(comboNameSingular + "s"))
+						val parentAlias = combo.parentAlias.notEmpty
+							.map { alias => Name.interpret(alias, namingRules.className) }
+						val comboName = combo.name.notEmpty match {
+							case Some(n) => Name.interpret(n, namingRules.className)
+							case None =>
+								val childPart = childAlias.getOrElse(childClass.name)
+								val base = parentClass.name + "with"
+								if (combinationType.isOneToMany)
+									base + childPart.plural
+								else
+									base + childPart
+						}
 						val isAlwaysLinked = combo.alwaysLinked.getOrElse {
 							combinationType match {
 								case Combined => true
 								case _ => false
 							}
 						}
-						CombinationData(combinationType, comboName, parentClass, childClass, combo.parentAlias,
-							combo.childAlias, isAlwaysLinked)
+						CombinationData(combinationType, comboName, parentClass, childClass, parentAlias,
+							childAlias, isAlwaysLinked)
 					}
 				}
 			}
-			ProjectData(projectName, modelPackage, dbPackage, enumerations, classes, combinations,
-				root("version").string.map { Version(_) }, !root("models_without_vault").getBoolean)
+			ProjectData(projectName, modelPackage, dbPackage, enumerations, classes, combinations, namingRules,
+				root("version").string.map { Version(_) }, !root("models_without_vault").getBoolean,
+				root("prefix_columns").getBoolean)
 		}
 	}
 	
 	private def parseClassFrom(classModel: Model, packageName: String, enumerations: Iterable[Enum],
-	                           defaultAuthor: String) =
+	                           defaultAuthor: String)(implicit naming: NamingRules) =
 	{
-		val rawClassName = classModel("name").string.filter { _.nonEmpty }.map { _.capitalize }
-		val rawTableName = classModel("table_name", "table").string.filter { _.nonEmpty }
+		val rawClassName = classModel("name").string.filter { _.nonEmpty }.map { Name.interpret(_, naming.className) }
+		val tableName = classModel("table_name", "table").string.filter { _.nonEmpty }
+			.map { Name.interpret(_, naming.table) }
 		
-		if (rawClassName.isEmpty && rawTableName.isEmpty )
+		if (rawClassName.isEmpty && tableName.isEmpty )
 			Failure(new ModelValidationFailedException("'name', 'table_name' or 'table' is required in a class model"))
 		else
 		{
 			// Determines class name
-			val className = rawClassName.getOrElse { NamingUtils.underscoreToCamel(rawTableName.get) }
-			val tableName = rawTableName.getOrElse { NamingUtils.camelToUnderscore(className) }
-			val fullName = Name(className,
-				classModel("name_plural", "plural_name").string.map { _.capitalize }.getOrElse(className + "s"))
+			val className = rawClassName.getOrElse { tableName.get }
+			val fullName = classModel("name_plural", "plural_name").string match {
+				case Some(plural) => className.copy(plural = plural)
+				case None => className
+			}
 			
 			// Reads properties
 			val properties = classModel("properties", "props").getVector.flatMap { _.model }
 				.map { propertyFrom(_, enumerations, fullName) }
+			val idName = classModel("id", "index").string.map { Name.interpret(_, naming.classProp) }
 			
 			// Finds the combo indices
 			// The indices in the document are given as property names, but here they are converted to column names
 			val comboIndexColumnNames: Vector[Vector[String]] = classModel("index", "combo_index")
-				.vector.map[Vector[Vector[String]]] { v => Vector(v.flatMap { _.string }) }
+				.vector.map[Vector[Vector[Name]]] { v =>
+					Vector(v.flatMap { _.string }.map { s => Name.interpret(s, naming.classProp) })
+				}
 				.orElse {
 					classModel("indices", "combo_indices").vector
-						.map { vectors => vectors.map[Vector[String]] { vector => vector.getVector.flatMap { _.string } } }
+						.map { vectors => vectors.map[Vector[Name]] { vector =>
+							vector.getVector.flatMap { _.string }.map { s => Name.interpret(s, naming.classProp) } }
+						}
 				}
 				.getOrElse(Vector())
 				.map { combo => combo.flatMap { propName =>
-					properties.find { _.name.variants.exists { _ ~== propName } }.map { _.columnName } } }
+					properties.find { _.name ~== propName }.map { _.columnName } } }
 				.filter { _.nonEmpty }
 			
 			// Checks whether descriptions are supported for this class
-			val descriptionLinkColumnName = classModel("description_link_column", "description_link", "desc_link")
-				.stringOr {
-					if (classModel("described", "is_described").getBoolean)
-						tableName + "_id"
-					else
-						""
-				}
+			val descriptionLinkColumnName: Option[Name] =
+				classModel("description_link", "desc_link", "description_link_column")
+					.string match {
+						case Some(n) => Some(Name.interpret(n, naming.classProp))
+						case None =>
+							if (classModel("described", "is_described").getBoolean)
+								Some(tableName + "id")
+							else
+								None
+					}
 			
 			// Reads combination-related information
 			val comboInfo = (classModel("combination", "combo").model match
@@ -183,13 +203,15 @@ object ClassReader
 				}
 			}
 			
-			Success(Class(fullName, tableName, properties, packageName, comboIndexColumnNames,
-				descriptionLinkColumnName, classModel("doc").getString, classModel("author").stringOr(defaultAuthor),
+			Success(new Class(fullName, tableName.map { _.tableName }, idName.getOrElse(Class.defaultIdName),
+				properties, packageName, comboIndexColumnNames, descriptionLinkColumnName,
+				classModel("doc").getString, classModel("author").stringOr(defaultAuthor),
 				classModel("use_long_id").getBoolean) -> comboInfo)
 		}
 	}
 	
-	private def propertyFrom(propModel: Model, enumerations: Iterable[Enum], className: Name) =
+	private def propertyFrom(propModel: Model, enumerations: Iterable[Enum], className: Name)
+	                        (implicit naming: NamingRules) =
 	{
 		val rawName = propModel("name").string.filter { _.nonEmpty }
 		val rawColumnName = propModel("column_name", "column", "col").string.filter { _.nonEmpty }
@@ -235,10 +257,10 @@ object ClassReader
 				}
 		}
 		
-		val name: Name = rawName.map { Name(_) }
-			.orElse { rawColumnName.map { cName => Name(NamingUtils.underscoreToCamel(cName)) } }
+		val columnName = rawColumnName.map { Name.interpret(_, naming.column) }
+		val name: Name = rawName.map { Name.interpret(_, naming.classProp) }
+			.orElse { columnName }
 			.getOrElse { actualDataType.defaultPropertyName }
-		val columnName = rawColumnName.getOrElse { NamingUtils.camelToUnderscore(name.singular) }
 		val fullName = propModel("name_plural", "plural_name").string match
 		{
 			case Some(pluralName) => name.copy(plural = pluralName)
@@ -248,7 +270,7 @@ object ClassReader
 		val rawDoc = propModel("doc").string.filter { _.nonEmpty }
 		val doc = rawDoc.getOrElse { actualDataType.writeDefaultDescription(className, fullName) }
 		
-		Property(fullName, columnName, actualDataType, doc, propModel("usage").getString,
+		Property(fullName, columnName.map { _.columnName }, actualDataType, doc, propModel("usage").getString,
 			propModel("default", "def").getString, propModel("sql_default", "sql_def").getString,
 			propModel("indexed", "index", "is_index").boolean)
 	}

@@ -11,7 +11,7 @@ import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.ClassReader
 import utopia.vault.coder.controller.writer.database.{AccessWriter, CombinedFactoryWriter, DbDescriptionAccessWriter, DbModelWriter, DescriptionLinkInterfaceWriter, FactoryWriter, SqlWriter, TablesWriter}
 import utopia.vault.coder.controller.writer.model.{CombinedModelWriter, DescribedModelWriter, EnumerationWriter, ModelWriter}
-import utopia.vault.coder.model.data.{Class, ClassReferences, Filter, ProjectData, ProjectSetup}
+import utopia.vault.coder.model.data.{Class, ClassReferences, Filter, NamingRules, ProjectData, ProjectSetup}
 import utopia.vault.coder.model.scala.Reference
 
 import java.nio.file.{Path, Paths}
@@ -227,7 +227,8 @@ object VaultCoderApp extends App
 							}
 							ProjectData(pName, modelPackage, dbPackage,
 								a.enumerations ++ b.enumerations, a.classes ++ b.classes,
-								a.combinations ++ b.combinations, version, a.modelCanReferToDB && b.modelCanReferToDB)
+								a.combinations ++ b.combinations, a.namingRules, version,
+								a.modelCanReferToDB && b.modelCanReferToDB, a.prefixColumnNames && b.prefixColumnNames)
 						}
 					}
 				filterAndWrite(groupedData)
@@ -309,7 +310,8 @@ object VaultCoderApp extends App
 							Vector(mainMergeRoot, alternativeMergeRoot).flatten,
 						directory/s"${data.projectName}-merge-conflicts-${Today.toString}-${startTime.getHour}-${
 							startTime.getMinute}.txt",
-						data.version, data.modelCanReferToDB)
+						data.version, data.modelCanReferToDB, data.prefixColumnNames)
+					implicit val naming: NamingRules = data.namingRules
 					write(data)
 				}
 			}
@@ -322,7 +324,7 @@ object VaultCoderApp extends App
 		}
 	}
 	
-	def write(data: ProjectData)(implicit setup: ProjectSetup): Try[Unit] =
+	def write(data: ProjectData)(implicit setup: ProjectSetup, naming: NamingRules): Try[Unit] =
 	{
 		// Writes the enumerations
 		data.enumerations.tryMap { EnumerationWriter(_) }
@@ -352,7 +354,7 @@ object VaultCoderApp extends App
 	
 	def write(classToWrite: Class, tablesRef: Reference,
 	          descriptionLinkObjects: Option[(Reference, Reference, Reference)])
-	         (implicit setup: ProjectSetup): Try[(Class, ClassReferences)] =
+	         (implicit setup: ProjectSetup, naming: NamingRules): Try[(Class, ClassReferences)] =
 	{
 		ModelWriter(classToWrite).flatMap { case (modelRef, dataRef) =>
 			FactoryWriter(classToWrite, tablesRef, modelRef, dataRef).flatMap { factoryRef =>

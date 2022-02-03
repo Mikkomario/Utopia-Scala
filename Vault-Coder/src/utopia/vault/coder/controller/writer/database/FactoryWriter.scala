@@ -1,12 +1,13 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, ProjectSetup, Property}
+import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup}
+import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration, PropertyDeclaration}
 import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Reference}
-import utopia.vault.coder.util.{ClassMethodFactory, NamingUtils}
+import utopia.vault.coder.util.ClassMethodFactory
 
 import scala.collection.immutable.VectorBuilder
 import scala.io.Codec
@@ -19,6 +20,11 @@ import scala.io.Codec
 object FactoryWriter
 {
 	/**
+	  * A suffix added to class names in order to make them factory class names
+	  */
+	val classNameSuffix = Name("Factory", "Factories", CamelCase.capitalized)
+	
+	/**
 	  * Writes a factory used for processing database object data
 	  * @param classToWrite Class data based on which the factory is created
 	  * @param tablesRef    Reference to the tables object
@@ -29,10 +35,10 @@ object FactoryWriter
 	  * @return Reference to the new written factory object. Failure if writing failed.
 	  */
 	def apply(classToWrite: Class, tablesRef: Reference, modelRef: Reference, dataRef: Reference)
-	         (implicit codec: Codec, setup: ProjectSetup) =
+	         (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
 	{
 		val parentPackage = setup.factoryPackage / classToWrite.packageName
-		val objectName = s"${ classToWrite.name }Factory"
+		val objectName = (classToWrite.name + classNameSuffix).className
 		File(parentPackage,
 			ObjectDeclaration(objectName, extensionsFor(classToWrite, modelRef),
 				properties = propertiesFor(classToWrite, tablesRef),
@@ -64,25 +70,26 @@ object FactoryWriter
 		builder.result()
 	}
 	
-	private def propertiesFor(classToWrite: Class, tablesRef: Reference)(implicit setup: ProjectSetup) =
+	private def propertiesFor(classToWrite: Class, tablesRef: Reference)
+	                         (implicit setup: ProjectSetup, naming: NamingRules) =
 	{
 		val builder = new VectorBuilder[PropertyDeclaration]()
 		
 		// All objects define the table property (implemented)
 		builder += ComputedProperty("table", Set(tablesRef), isOverridden = true)(
-			s"${ tablesRef.target }.${ classToWrite.name.singular.uncapitalize }")
+			s"${ tablesRef.target }.${ classToWrite.name.propName }")
 		// Timestamp-based factories also specify a creation time property name
 		if (classToWrite.recordsIndexedCreationTime)
 			classToWrite.creationTimeProperty.foreach { createdProp =>
 				builder += ComputedProperty("creationTimePropertyName", isOverridden = true)(
-					createdProp.name.singular.quoted)
+					createdProp.dbModelPropName.quoted)
 			}
 		// Non-timestamp-based factories need to specify default ordering
 		else
 			builder += ComputedProperty("defaultOrdering", isOverridden = true, isLowMergePriority = true)("None")
 		// Deprecatable factories specify the deprecation condition (read from the database model)
 		if (classToWrite.isDeprecatable) {
-			val dbModelName = s"${ classToWrite.name }Model"
+			val dbModelName = (classToWrite.name + DbModelWriter.classNameSuffix).className
 			val dbModelRef = Reference(setup.dbModelPackage / classToWrite.packageName, dbModelName)
 			builder += ComputedProperty("nonDeprecatedCondition", Set(dbModelRef), isOverridden = true)(
 				s"$dbModelName.nonDeprecatedCondition")
@@ -91,24 +98,23 @@ object FactoryWriter
 		builder.result()
 	}
 	
-	private def methodsFor(classToWrite: Class, modelRef: Reference, dataRef: Reference) =
+	private def methodsFor(classToWrite: Class, modelRef: Reference, dataRef: Reference)
+	                      (implicit naming: NamingRules) =
 	{
 		def _modelFromAssignments(assignments: CodePiece) =
 			modelRef.targetCode +
-				classToWrite.idType.fromValueCode("valid(\"id\")")
+				classToWrite.idType.fromValueCode(s"valid(${ classToWrite.idDatabasePropName.quoted })")
 					.append(dataRef.targetCode + assignments.withinParenthesis, ", ")
 					.withinParenthesis
 		
 		val fromModelMethod = {
 			if (classToWrite.refersToEnumerations)
-				ClassMethodFactory.classFromModel(classToWrite, "table.validate(model)")(
-					propNameInModel)(_modelFromAssignments)
+				ClassMethodFactory.classFromModel(classToWrite, "table.validate(model)"){
+					_.dbModelPropName }(_modelFromAssignments)
 			else
-				ClassMethodFactory.classFromValidatedModel(classToWrite)(propNameInModel)(_modelFromAssignments)
+				ClassMethodFactory.classFromValidatedModel(classToWrite){ _.dbModelPropName }(_modelFromAssignments)
 		}
 		
 		Set(fromModelMethod)
 	}
-	
-	private def propNameInModel(prop: Property) = NamingUtils.underscoreToCamel(prop.columnName).uncapitalize
 }

@@ -1,6 +1,6 @@
 package utopia.vault.coder.controller.writer.database
 
-import utopia.vault.coder.model.data.{CombinationData, CombinationReferences, ProjectSetup}
+import utopia.vault.coder.model.data.{CombinationData, CombinationReferences, NamingRules, ProjectSetup}
 import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Reference}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration}
@@ -26,11 +26,10 @@ object CombinedFactoryWriter
 	  */
 	def apply(data: CombinationData, references: CombinationReferences,
 	          parentFactoryRef: Reference, childFactoryRef: Reference)
-	         (implicit setup: ProjectSetup, codec: Codec) =
+	         (implicit setup: ProjectSetup, codec: Codec, naming: NamingRules) =
 	{
 		// Some factory implementations require the isAlwaysLinked -property
-		val linkingProperty =
-		{
+		val linkingProperty = {
 			if (data.combinationType.shouldSpecifyWhetherAlwaysLinked)
 				Some(ComputedProperty("isAlwaysLinked", isOverridden = true)(data.isAlwaysLinked.toString))
 			else
@@ -39,14 +38,10 @@ object CombinedFactoryWriter
 		val parentDeprecates = data.parentClass.isDeprecatable
 		val childDeprecates = data.childClass.isDeprecatable
 		// If either parent or child type supports deprecation, so does this factory
-		val deprecation =
-		{
-			if (parentDeprecates || childDeprecates)
-			{
-				val condition =
-				{
-					if (parentDeprecates)
-					{
+		val deprecation = {
+			if (parentDeprecates || childDeprecates) {
+				val condition = {
+					if (parentDeprecates) {
 						if (childDeprecates)
 							"parentFactory.nonDeprecatedCondition && childFactory.nonDeprecatedCondition"
 						else
@@ -63,7 +58,7 @@ object CombinedFactoryWriter
 		}
 		
 		File(setup.factoryPackage/data.packageName,
-			ObjectDeclaration(s"${data.name.singular}Factory",
+			ObjectDeclaration((data.name + FactoryWriter.classNameSuffix).className,
 				Vector(data.combinationType.extensionWith(references)) ++ deprecation.map { _._1 },
 				properties = Vector(
 					ComputedProperty("parentFactory", Set(parentFactoryRef), isOverridden = true)(
@@ -71,7 +66,7 @@ object CombinedFactoryWriter
 					ComputedProperty("childFactory", Set(childFactoryRef), isOverridden = true)(childFactoryRef.target)
 				) ++ linkingProperty ++ deprecation.map { _._2 },
 				methods = Set(data.combinationType.factoryApplyMethodWith(data.parentName, data.childName, references)),
-				description = s"Used for reading ${data.name.plural} from the database", author = data.author,
+				description = s"Used for reading ${data.name.pluralText} from the database", author = data.author,
 				since = DeclarationDate.versionedToday
 			)
 		).write()

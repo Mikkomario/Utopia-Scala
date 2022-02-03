@@ -4,10 +4,10 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Enum, Name}
 import utopia.vault.coder.model.enumeration.BasicPropertyType.DateTime
+import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.enumeration.PropertyType.Optional
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.{Reference, ScalaType}
-import utopia.vault.coder.util.NamingUtils
 
 import java.util.concurrent.TimeUnit
 
@@ -176,7 +176,7 @@ object BasicPropertyType
 		override def baseDefault = CodePiece.empty
 		override def baseSqlDefault = ""
 		override def fromValuePropName = "int"
-		override def defaultPropertyName = Name("index", "indices")
+		override def defaultPropertyName = Name("index", "indices", CamelCase.lower)
 	}
 	
 	/**
@@ -341,7 +341,7 @@ object PropertyType
 		override def isNullable = false
 		override def baseDefault = Reference.now.targetCode
 		override def baseSqlDefault = "CURRENT_TIMESTAMP"
-		override def defaultPropertyName = Name("created", "creationTimes")
+		override def defaultPropertyName = Name("created", "creationTimes", CamelCase.lower)
 		override def createsIndexByDefault = true
 		
 		override def notNull = this
@@ -368,7 +368,7 @@ object PropertyType
 		override def isNullable = true
 		override def baseDefault = "None"
 		override def baseSqlDefault = ""
-		override def defaultPropertyName = Name("deprecatedAfter", "deprecationTimes")
+		override def defaultPropertyName = Name("deprecatedAfter", "deprecationTimes", CamelCase.lower)
 		override def createsIndexByDefault = true
 		
 		override def nullable = this
@@ -394,7 +394,7 @@ object PropertyType
 		override def isNullable = false
 		override def baseDefault = CodePiece.empty
 		override def baseSqlDefault = ""
-		override def defaultPropertyName = Name("expires", "expirationTimes")
+		override def defaultPropertyName = Name("expires", "expirationTimes", CamelCase.lower)
 		override def createsIndexByDefault = true
 		
 		override def nullable = Deprecation
@@ -589,7 +589,8 @@ object PropertyType
 	  * @param dataType Data type used in the reference
 	  * @param isNullable Whether property values should be optional
 	  */
-	case class ClassReference(referencedTableName: String, dataType: BasicPropertyType = BasicPropertyType.IntNumber,
+	// TODO: referenced id column name should be customizable (for foreign key writing)
+	case class ClassReference(referencedTableName: Name, dataType: BasicPropertyType = BasicPropertyType.IntNumber,
 	                          isNullable: Boolean = false)
 		extends PropertyType
 	{
@@ -598,7 +599,7 @@ object PropertyType
 		
 		override def baseDefault = if (isNullable) "None" else CodePiece.empty
 		override def baseSqlDefault = ""
-		override def defaultPropertyName = NamingUtils.underscoreToCamel(referencedTableName).uncapitalize + "Id"
+		override def defaultPropertyName: Name = referencedTableName + "id"
 		// Index is created when foreign key is generated
 		override def createsIndexByDefault = false
 		
@@ -625,7 +626,7 @@ object PropertyType
 		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(Reference.valueConversions))
 		
 		override def writeDefaultDescription(className: Name, propName: Name) =
-			s"Id of the ${NamingUtils.camelToUnderscore(referencedTableName)} linked with this $className"
+			s"Id of the $referencedTableName linked with this $className"
 	}
 	
 	/**
