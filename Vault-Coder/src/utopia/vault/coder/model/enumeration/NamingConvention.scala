@@ -109,7 +109,7 @@ object NamingConvention
 				// Case: Name starts with >1 uppercase letters but is not fully uppercase
 				// => separates the two parts
 				if (upperCaseRanges.head.size > 1 && upperCaseRanges.head.size < camelName.length)
-					Vector(camelName.slice(upperCaseRanges.head).toLowerCase, camelName.drop(upperCaseRanges.head.size))
+					Vector(camelName.slice(upperCaseRanges.head), camelName.drop(upperCaseRanges.head.size))
 				// Case: 1 Uppercase character or all-caps => lower-cases the name
 				else
 					Vector(camelName.toLowerCase)
@@ -120,18 +120,35 @@ object NamingConvention
 				// separates at the end as well (unless at the end of the string)
 				val builder = new VectorBuilder[String]()
 				// Adds the portion before the first uppercase letter
-				if (appliedRanges.head.start > 0)
-					builder += camelName.substring(0, appliedRanges.head.start).toLowerCase
-				// Adds the first uppercase sequence
-				builder += camelName.slice(appliedRanges.head).toLowerCase
-				// Adds the in-between portions and remaining uppercase sequences
-				appliedRanges.paired.foreach { case Pair(prevRange, nextRange) =>
-					builder += camelName.slice(prevRange.last + 1, nextRange.start)
-					builder += camelName.slice(nextRange).toLowerCase
+				if (appliedRanges.head.start > 0) {
+					val firstPortion = camelName.substring(0, appliedRanges.head.start)
+					if (firstPortion.length > 1)
+						builder += firstPortion
+					else
+						builder += firstPortion.toLowerCase
 				}
-				// Adds the part after the last uppercase sequence
-				if (appliedRanges.last.last < camelName.length - 1)
-					builder += camelName.drop(appliedRanges.last.last + 1)
+				// Adds the parts until the last uppercase sequence
+				appliedRanges.paired.foreach { case Pair(upperStart, nextUpper) =>
+					// Case: There are multiple upper-case characters in sequence => separates that part
+					if (upperStart.size > 1) {
+						builder += camelName.slice(upperStart)
+						builder += camelName.slice(upperStart.last + 1, nextUpper.start)
+					}
+					// Case: Only one upper-case character => combines it with the rest of the string
+					else
+						builder += camelName.slice(upperStart.start, nextUpper.start).uncapitalize
+				}
+				// Adds the last upper-case sequence and the remaining string
+				val lastUpper = appliedRanges.last
+				// Case: Last sequence is multiple characters => separate
+				if (lastUpper.size > 1) {
+					builder += camelName.slice(lastUpper)
+					if (lastUpper.last < camelName.length - 1)
+						builder += camelName.drop(lastUpper.last + 1)
+				}
+				// Case: Last sequence is a single character => combines with the rest of the string
+				else
+					builder += camelName.drop(lastUpper.start).uncapitalize
 				
 				builder.result()
 			}
@@ -169,7 +186,12 @@ object NamingConvention
 		
 		override def convert(string: String, originalStyle: NamingConvention) = originalStyle match {
 			case UnderScore => fromParts(underscoreRegex.split(string))
-			case Text(_, _) => fromParts(Regex.whiteSpace.split(string))
+			case Text(firstCapitalized, _) =>
+				val base = fromParts(Regex.whiteSpace.split(string))
+				if (firstCapitalized == capitalized)
+					base
+				else
+					base.uncapitalize
 			case CamelCase(wasCapitalized) =>
 				if (wasCapitalized == capitalized)
 					string
@@ -204,7 +226,7 @@ object NamingConvention
 			!Regex.whiteSpace.existsIn(name) && name.forall { c => !c.isLetter || !c.isUpper }
 		
 		override def convert(string: String, originalStyle: NamingConvention) = originalStyle match {
-			case CamelCase(_) => camelParts(string).mkString("_")
+			case CamelCase(_) => camelParts(string).map { _.toLowerCase }.mkString("_")
 			case Text(_, _) => Regex.whiteSpace.split(string).map { _.toLowerCase }.mkString("_")
 			case _ => string
 		}
@@ -299,7 +321,7 @@ object NamingConvention
 						parts.map { _.capitalize }
 				}
 				else
-					parts
+					parts.map { _.toLowerCase }
 			}
 			casedParts.mkString(" ")
 		}

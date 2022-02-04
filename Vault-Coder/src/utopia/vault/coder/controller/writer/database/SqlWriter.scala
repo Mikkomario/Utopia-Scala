@@ -5,7 +5,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.CombinedOrdering
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, NamingRules, ProjectSetup}
+import utopia.vault.coder.model.data.{Class, NamingRules, ProjectSetup, Property}
 import utopia.vault.coder.model.enumeration.PropertyType.ClassReference
 
 import java.io.PrintWriter
@@ -45,7 +45,7 @@ object SqlWriter
 			val classesByTableName = allClasses.map { c => c.tableName -> c }.toMap
 			val references = allClasses.map { c =>
 				val refs = c.properties.flatMap { _.dataType match {
-					case ClassReference(referencedTableName, _, _) => Some(referencedTableName.tableName)
+					case ClassReference(referencedTableName, _, _, _) => Some(referencedTableName.tableName)
 					case _ => None
 				} }
 				c.tableName -> refs.toSet
@@ -102,21 +102,29 @@ object SqlWriter
 	{
 		val tableName = classToWrite.tableName
 		lazy val classInitials = initialsMap(tableName)
-		def prefixColumn(colName: String) = {
-			if (setup.prefixSqlProperties)
-				classInitials + "_" + colName
+		def prefixColumn(column: Property): String = prefixColumnName(column.columnName, column.dataType match {
+			case ClassReference(table, _, _, _) => Some(table.tableName)
+			case _ => None
+		})
+		def prefixColumnName(colName: String, referredTableName: => Option[String] = None): String = {
+			if (setup.prefixSqlProperties) {
+				referredTableName.flatMap(initialsMap.get) match {
+					case Some(refInitials) => s"${classInitials}_${refInitials}_$colName"
+					case None => classInitials + "_" + colName
+				}
+			}
 			else
 				colName
 		}
-		val idName = prefixColumn(classToWrite.idName.columnName)
-		val namedProps = classToWrite.properties.map { prop => prop -> prefixColumn(prop.columnName) }
+		val idName = prefixColumnName(classToWrite.idName.columnName)
+		val namedProps = classToWrite.properties.map { prop => prop -> prefixColumn(prop) }
 		
 		classToWrite.description.notEmpty.foreach { desc => writer.println(s"-- $desc") }
 		// Writes property documentation
 		val maxPropNameLength = namedProps.map { _._2.length }.maxOption.getOrElse(0)
 		namedProps.foreach { case (prop, name) =>
 			if (prop.description.nonEmpty || prop.useDescription.nonEmpty) {
-				val propIntroduction = (name + ":").padTo(maxPropNameLength + 2, ' ')
+				val propIntroduction = (name + ":").padTo(maxPropNameLength + 1, ' ')
 				if (prop.description.nonEmpty) {
 					writer.println(s"-- $propIntroduction ${ prop.description }")
 					if (prop.useDescription.nonEmpty)
@@ -141,7 +149,7 @@ object SqlWriter
 				}
 				s"`$name` ${ prop.dataType.toSql }$defaultPart"
 			}
-			val comboIndexColumnNames = classToWrite.comboIndexColumnNames.map { _.map(prefixColumn) }
+			val comboIndexColumnNames = classToWrite.comboIndexColumnNames.map { _.map { prefixColumnName(_) } }
 			val firstComboIndexColumns = comboIndexColumnNames.filter { _.size > 1 }.map { _.head }.toSet
 			val individualIndexDeclarations = namedProps
 				.filter { case (prop, name) => prop.isIndexed && !firstComboIndexColumns.contains(name) }
@@ -152,12 +160,20 @@ object SqlWriter
 			}
 			val foreignKeyDeclarations = namedProps.flatMap { case (prop, name) =>
 				prop.dataType match {
-					case ClassReference(rawReferencedTableName, _, isNullable) =>
+					case ClassReference(rawReferencedTableName, rawColumnName, _, isNullable) =>
 						val refTableName = rawReferencedTableName.tableName
-						val constraintNameBase = s"${ classInitials }_${ initialsMap(refTableName) }_${
+						val refInitials = initialsMap(refTableName)
+						val refColumnName = {
+							val base = rawColumnName.columnName
+							if (setup.prefixSqlProperties)
+								refInitials + "_" + base
+							else
+								base
+						}
+						val constraintNameBase = s"${ classInitials }_${ refInitials }_${
 							name.replace("_id", "") }_ref"
 						Some(s"CONSTRAINT ${ constraintNameBase }_fk FOREIGN KEY ${
-							constraintNameBase }_idx ($name) REFERENCES `$refTableName`(id) ON DELETE ${
+							constraintNameBase }_idx ($name) REFERENCES `$refTableName`(`$refColumnName`) ON DELETE ${
 							if (isNullable) "SET NULL" else "CASCADE"
 						}")
 					case _ => None

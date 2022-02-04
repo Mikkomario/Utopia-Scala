@@ -1,5 +1,18 @@
 # Utopia Vault Coder
 
+## v1.5 (in development)
+### Breaking Changes
+- `"description_link"` in the model structure document is now considered to refer to a class property and not a column
+  - This may cause different results in cases where custom table names were used alongside the `"described"` property
+### New Features
+- You can now customize column, table, property, etc. naming rules in the model declaration document 
+  (see README for more details)
+- You can now customize id column name
+- You can now customize the name of the referenced column in the `ref` / `reference` property
+### Other Changes
+- Class and property names within the documentation now follow standard writing style. 
+  E.g. "word of life" instead of "wordOfLife"
+
 ## v1.4 - 27.01.2022
 This update contains a number of additions in various levels. Perhaps most importantly, this version of the Vault Coder 
 supports Vault v1.12, which previous versions don't do.

@@ -22,7 +22,6 @@ object Class
 	  * @param useLongId Whether to use long instead of int in the id property (default = false)
 	  * @return A new class
 	  */
-	// TODO: Make sure this method is called correctly (idName added)
 	def apply(name: Name, properties: Vector[Property], packageName: String = "",
 	          comboIndexColumnNames: Vector[Vector[String]] = Vector(), idName: Name = defaultIdName,
 	          description: String = "", author: String = "", useLongId: Boolean = false): Class =
@@ -69,6 +68,7 @@ object Class
   * @param description A description of this class
   * @param useLongId Whether to use long instead of int in the id property
   */
+// TODO: Rename description link column into description link (property)
 case class Class(name: Name, customTableName: Option[String], idName: Name, properties: Vector[Property],
                  packageName: String, comboIndexColumnNames: Vector[Vector[String]],
                  descriptionLinkColumnName: Option[Name], description: String, author: String, useLongId: Boolean)
@@ -85,7 +85,7 @@ case class Class(name: Name, customTableName: Option[String], idName: Name, prop
 			case None => name
 		}
 		val props = Vector(
-			Property(linkColumnName, ClassReference(tableName, idType), s"Id of the described $name"),
+			Property(linkColumnName, ClassReference(tableName, idName, idType), s"Id of the described $name"),
 			Property(idName, ClassReference("description"), "Id of the linked description")
 		)
 		Class(name + "description", props, "description",

@@ -2,7 +2,7 @@ package utopia.vault.coder.model.enumeration
 
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Enum, Name}
+import utopia.vault.coder.model.data.{Class, Enum, Name}
 import utopia.vault.coder.model.enumeration.BasicPropertyType.DateTime
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.enumeration.PropertyType.Optional
@@ -586,11 +586,12 @@ object PropertyType
 	/**
 	  * Property that refers another class / table
 	  * @param referencedTableName Name of the referenced table
+	  * @param referencedColumnName Name of the column being referred to (default = id)
 	  * @param dataType Data type used in the reference
 	  * @param isNullable Whether property values should be optional
 	  */
-	// TODO: referenced id column name should be customizable (for foreign key writing)
-	case class ClassReference(referencedTableName: Name, dataType: BasicPropertyType = BasicPropertyType.IntNumber,
+	case class ClassReference(referencedTableName: Name, referencedColumnName: Name = Class.defaultIdName,
+	                          dataType: BasicPropertyType = BasicPropertyType.IntNumber,
 	                          isNullable: Boolean = false)
 		extends PropertyType
 	{

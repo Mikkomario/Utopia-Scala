@@ -157,7 +157,7 @@ object ClassReader
 			// Reads properties
 			val properties = classModel("properties", "props").getVector.flatMap { _.model }
 				.map { propertyFrom(_, enumerations, fullName) }
-			val idName = classModel("id", "index").string.map { Name.interpret(_, naming.classProp) }
+			val idName = classModel("id").string.map { Name.interpret(_, naming.classProp) }
 			
 			// Finds the combo indices
 			// The indices in the document are given as property names, but here they are converted to column names
@@ -183,7 +183,7 @@ object ClassReader
 						case Some(n) => Some(Name.interpret(n, naming.classProp))
 						case None =>
 							if (classModel("described", "is_described").getBoolean)
-								Some(tableName + "id")
+								Some(className + "id")
 							else
 								None
 					}
@@ -218,7 +218,10 @@ object ClassReader
 		
 		// val name = propModel("name").getString
 		// val columnName = propModel("column_name").stringOr(NamingUtils.camelToUnderscore(name))
-		val referencedTableName = propModel("references", "ref").string
+		val tableReference = propModel("references", "ref").string.map { ref =>
+			val (tablePart, columnPart) = ref.splitAtFirst("(")
+			tablePart -> columnPart.untilLast(")").notEmpty.map { Name.interpret(_, naming.column) }
+		}
 		val length = propModel("length", "len").int
 		val baseDataType = propModel("type").string.flatMap { typeName =>
 			val lowerTypeName = typeName.toLowerCase
@@ -239,10 +242,10 @@ object ClassReader
 				case None => PropertyType.interpret(typeName, length, rawName)
 			}
 		}
-		val actualDataType = referencedTableName match
+		val actualDataType = tableReference match
 		{
-			case Some(tableName) =>
-				ClassReference(tableName, baseDataType.findMap {
+			case Some((tableName, columnName)) =>
+				ClassReference(tableName, columnName.getOrElse(Class.defaultIdName), baseDataType.findMap {
 					case b: BasicPropertyType => Some(b)
 					case Optional(wrapped) => Some(wrapped)
 					case _ => None
