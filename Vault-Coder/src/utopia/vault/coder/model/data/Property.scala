@@ -65,7 +65,7 @@ case class Property(name: Name, customColumnName: Option[String], dataType: Prop
 	/**
 	  * @return Code for this property converted to a value. Expects ValueConversions to be imported.
 	  */
-	def toValueCode: CodePiece = dataType.toValueCode(name.singular)
+	def toValueCode(implicit naming: NamingRules): CodePiece = dataType.toValueCode(name.propName)
 	
 	/**
 	  * @return A nullable copy of this property

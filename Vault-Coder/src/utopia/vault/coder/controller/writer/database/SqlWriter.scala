@@ -170,8 +170,16 @@ object SqlWriter
 							else
 								base
 						}
-						val constraintNameBase = s"${ classInitials }_${ refInitials }_${
-							name.replace("_id", "") }_ref"
+						val constraintNameBase = {
+							val nameWithoutId = name.replace("_id", "")
+							val base = {
+								if (setup.prefixSqlProperties)
+									nameWithoutId
+								else
+									s"${ classInitials }_${ refInitials }_$nameWithoutId"
+							}
+							base + "_ref"
+						}
 						Some(s"CONSTRAINT ${ constraintNameBase }_fk FOREIGN KEY ${
 							constraintNameBase }_idx ($name) REFERENCES `$refTableName`(`$refColumnName`) ON DELETE ${
 							if (isNullable) "SET NULL" else "CASCADE"

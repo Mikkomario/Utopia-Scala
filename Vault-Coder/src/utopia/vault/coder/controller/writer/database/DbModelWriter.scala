@@ -90,7 +90,7 @@ object DbModelWriter
 					Vector(
 						ImmutableValue(attName,
 							description = s"Name of the property that contains ${ classToWrite.name } ${ prop.name }")(
-							prop.dbModelPropName),
+							prop.dbModelPropName.quoted),
 						ComputedProperty(columnNameFrom(prop),
 							description = s"Column that contains ${ classToWrite.name } ${ prop.name }")(
 							s"table($attName)")
