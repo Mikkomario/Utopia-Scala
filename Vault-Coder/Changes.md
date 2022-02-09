@@ -9,6 +9,8 @@
   (see README for more details)
 - You can now customize id column name
 - You can now customize the name of the referenced column in the `ref` / `reference` property
+- You can now customize String and Int type maximum length / size by writing it into parentheses after the type name
+  - See README for more details
 ### Other Changes
 - Class and property names within the documentation now follow standard writing style. 
   E.g. "word of life" instead of "wordOfLife"

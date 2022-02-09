@@ -1,6 +1,7 @@
 package utopia.vault.coder.model.data
 
 import utopia.vault.coder.model.enumeration.BasicPropertyType.{IntNumber, LongNumber}
+import utopia.vault.coder.model.enumeration.IntSize.Default
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, CreationTime, Deprecation, EnumValue, Expiration}
 
@@ -103,7 +104,7 @@ case class Class(name: Name, customTableName: Option[String], idName: Name, prop
 	/**
 	  * @return Type of the ids used in this class
 	  */
-	def idType =  if (useLongId) LongNumber else IntNumber
+	def idType =  if (useLongId) LongNumber else IntNumber(Default)
 	
 	/**
 	  * @return Whether this class supports description linking

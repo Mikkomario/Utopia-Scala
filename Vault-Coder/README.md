@@ -134,7 +134,11 @@ Each property object should contain following properties:
     - If column prefixing is used, a prefix will automatically be added to the referenced column name
 - **"type": String (optional)** - The data type of this property. The following options are accepted:
   - **"text" / "string" / "varchar"** - Results in a `String` / Varchar type (default name: `"name"` / `"text"`)
+    - You may specify the maximum string length in either parentheses at the end of the type (e.g. `"String(32)"`) or 
+      via the `"length"` property (optional feature).
   - **"int"** - Results in `Int` numeric type (default name: `"index"`)
+    - You may specify the maximum allowed value in either parentheses at the end of the type 
+      (e.g. `"Int(tiny)"` OR `"Int(100)"`) (optional feature)
   - **"long" / "bigint" / "number"** - Results in `Long` numeric type (default name: `"number"`)
   - **"double"** - Results in `Double` numeric type (default name: `"amount"`)
   - **"boolean" / "flag"** - Results in `Boolean` type (true / false) (default name: `"flag"`)
@@ -170,6 +174,7 @@ Each property object should contain following properties:
   - Omit or leave as null if you want the indexing to be determined by the data type
   - References will always create an index, regardless of this value
 - **"length": Int (optional)** - Determines maximum text length if `String` type is used
+  - Also applies to `Int` type, in which case this property limits the number of digits in an integer
 - **"default" / "def": String (optional)** - The default value assigned for this property in the data model
   - If empty or omitted, data type -specific default will be used, if there is one
 - **"sql_default" / "sql_def": String (optional)** - The default value assigned for this property in the database

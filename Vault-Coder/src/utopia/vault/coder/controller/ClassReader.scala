@@ -9,6 +9,7 @@ import utopia.flow.util.StringExtensions._
 import utopia.flow.util.{UncertainBoolean, Version}
 import utopia.vault.coder.model.data.{Class, CombinationData, Enum, Name, NamingRules, ProjectData, Property}
 import utopia.vault.coder.model.enumeration.CombinationType.{Combined, MultiCombined, PossiblyCombined}
+import utopia.vault.coder.model.enumeration.IntSize.Default
 import utopia.vault.coder.model.enumeration.{BasicPropertyType, CombinationType, NamingConvention, PropertyType}
 import utopia.vault.coder.model.scala.Package
 
@@ -249,13 +250,13 @@ object ClassReader
 					case b: BasicPropertyType => Some(b)
 					case Optional(wrapped) => Some(wrapped)
 					case _ => None
-				}.getOrElse(IntNumber), isNullable = baseDataType.exists { _.isNullable })
+				}.getOrElse(IntNumber(Default)), isNullable = baseDataType.exists { _.isNullable })
 			case None =>
 				baseDataType.getOrElse {
 					length match
 					{
 						case Some(length) => Text(length)
-						case None => IntNumber
+						case None => IntNumber(Default)
 					}
 				}
 		}

@@ -1,9 +1,11 @@
 package utopia.vault.coder.model.enumeration
 
+import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, Enum, Name}
 import utopia.vault.coder.model.enumeration.BasicPropertyType.DateTime
+import utopia.vault.coder.model.enumeration.IntSize.Default
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.enumeration.PropertyType.Optional
 import utopia.vault.coder.model.scala.code.CodePiece
@@ -124,25 +126,67 @@ object BasicPropertyType
 {
 	// COMPUTED -----------------------
 	
-	private def objectValues = Vector(IntNumber, LongNumber, DoubleNumber, Bool, DateTime, Date, Time)
+	private def objectValues = Vector(LongNumber, DoubleNumber, Bool, DateTime, Date, Time)
 	
 	
 	// OTHER    -----------------------
 	
 	/**
 	  * @param typeName A property type name / string
-	  * @param length Associated property length, if specified (optional)
+	  * @param specifiedLength Associated property length, if specified (optional)
 	  * @param propertyName Name specified for the property (optional)
 	  * @return Basic property type matching that specification. None if no match was found.
 	  */
-	def interpret(typeName: String, length: Option[Int] = None, propertyName: Option[String] = None) =
+	def interpret(typeName: String, specifiedLength: Option[Int] = None, propertyName: Option[String] = None) =
 	{
 		val lowerName = typeName
 		def _findWith(searches: Iterable[BasicPropertyType => Boolean]) =
 			searches.findMap { search => objectValues.find(search) }
 		
-		if (lowerName == "text" || lowerName == "string" || lowerName == "varchar")
-			Some(Text(length.getOrElse(255)))
+		if (lowerName.startsWith("text") || lowerName.startsWith("string") || lowerName.startsWith("varchar")) {
+			// Text length may be specified within parentheses after the type (E.g. "String(3)")
+			val length = lowerName.afterFirst("(").untilFirst(")").int.orElse(specifiedLength).getOrElse(255)
+			Some(Text(length))
+		}
+		else if (lowerName.contains("int")) {
+			// Int size may be specified in parentheses after the type name
+			// E.g. "Int(Tiny)" => TINYINT or "INT(320)" => SMALLINT
+			val lengthPart = lowerName.afterFirst("(").untilFirst(")").notEmpty
+			val (size, maxValue) = lengthPart match {
+				case Some(s) =>
+					IntSize.values.find { size => (size.toString ~== s) || (size.toSql ~== s) } match {
+						// Case: Size is specified by name
+						case Some(size) => size -> None
+						case None =>
+							s.int match {
+								// Case: Size is specified by maximum value
+								case Some(maxValue) =>
+									IntSize.values.find { _.maxValue >= maxValue } match {
+										case Some(size) => size -> Some(maxValue)
+										case None => Default -> None
+									}
+								// Case: Size can't be parsed
+								case None => Default -> None
+							}
+					}
+				case None =>
+					// If parentheses are not used, checks the "length" property as well,
+					// comparing it to integer maximum length (characters-wise)
+					specifiedLength match {
+						case Some(maxLength) =>
+							IntSize.values.find { _.maxLength >= maxLength } match {
+								// Case: Max length is specified and fits into an integer
+								case Some(size) =>
+									size -> Vector.fill(maxLength)('9').mkString.int.filter { _ < size.maxValue }
+								// Case: Max length is specified but is too large
+								case None => Default -> None
+							}
+						// Case: No size or length is specified
+						case None => Default -> None
+					}
+			}
+			Some(IntNumber(size, maxValue))
+		}
 		else
 			_findWith(Vector(
 				v => v.fromValuePropName.toLowerCase == lowerName,
@@ -155,7 +199,8 @@ object BasicPropertyType
 					if (lowerName.startsWith("is") || lowerName.startsWith("was"))
 						Some(Bool)
 					else if (lowerName.contains("name"))
-						Some(Text(length.getOrElse(255)))
+						Some(Text(lowerName.afterFirst("(").untilFirst(")").int
+							.orElse(specifiedLength).getOrElse(255)))
 					else
 						objectValues.filter { _.defaultPropertyName.variants.exists(_.contains(lowerName)) }
 							.maxByOption { _.defaultPropertyName.singular.length }
@@ -165,19 +210,6 @@ object BasicPropertyType
 	
 	
 	// NESTED   -----------------------------
-	
-	/**
-	  * Standard integer property type
-	  */
-	case object IntNumber extends BasicPropertyType
-	{
-		override def toSqlBase = "INT"
-		override def toScala = ScalaType.int
-		override def baseDefault = CodePiece.empty
-		override def baseSqlDefault = ""
-		override def fromValuePropName = "int"
-		override def defaultPropertyName = Name("index", "indices", CamelCase.lower)
-	}
 	
 	/**
 	  * Long / Bigint property type
@@ -268,6 +300,22 @@ object BasicPropertyType
 		override def baseSqlDefault = ""
 		override def fromValuePropName = "string"
 		override def defaultPropertyName = if (length < 100) "name" else "text"
+	}
+	
+	/**
+	  * Standard integer property type
+	  */
+	case class IntNumber(size: IntSize = Default, maxValue: Option[Int] = None) extends BasicPropertyType
+	{
+		override def toSqlBase = maxValue match {
+			case Some(max) => s"${size.toSql}(${max.toString.length})"
+			case None => size.toSql
+		}
+		override def toScala = ScalaType.int
+		override def baseDefault = CodePiece.empty
+		override def baseSqlDefault = ""
+		override def fromValuePropName = "int"
+		override def defaultPropertyName = Name("index", "indices", CamelCase.lower)
 	}
 }
 
@@ -591,7 +639,7 @@ object PropertyType
 	  * @param isNullable Whether property values should be optional
 	  */
 	case class ClassReference(referencedTableName: Name, referencedColumnName: Name = Class.defaultIdName,
-	                          dataType: BasicPropertyType = BasicPropertyType.IntNumber,
+	                          dataType: BasicPropertyType = BasicPropertyType.IntNumber(Default),
 	                          isNullable: Boolean = false)
 		extends PropertyType
 	{
