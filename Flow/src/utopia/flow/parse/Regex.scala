@@ -268,27 +268,7 @@ case class Regex(string: String)
 	 *         (each separated part is returned as a separate string) + matches of this regex that were found from
 	 *         the string.
 	 */
-	def extract(str: String) =
-	{
-		val matcher = pattern.matcher(str)
-		val matchesBuilder = new VectorBuilder[String]()
-		val remainingBuilder = new VectorBuilder[String]()
-		
-		var lastEndIndex = 0
-		while (matcher.find())
-		{
-			val startIndex = matcher.start()
-			val endIndex = matcher.end()
-			if (startIndex > lastEndIndex)
-				remainingBuilder += str.substring(lastEndIndex, startIndex)
-			matchesBuilder += str.substring(startIndex, endIndex)
-			lastEndIndex = endIndex
-		}
-		if (str.length > lastEndIndex)
-			remainingBuilder += str.substring(lastEndIndex)
-		
-		remainingBuilder.result() -> matchesBuilder.result()
-	}
+	def extract(str: String) = divide(str).divided
 	
 	/**
 	 * @param str A target string
@@ -340,6 +320,35 @@ case class Regex(string: String)
 			firstPart +: middleParts :+ endPart
 		}
 	}
+	
+	/**
+	  * Divides the specified string into matches and non-matches. Keeps the natural ordering.
+	  * All of the specified string will be covered in the result.<br>
+	  * For example, dividing "AxBxC" by "x" would yield [L("A"), R("x"), L("B"), R("x"), L("C")]
+	  * @param str A string to divide
+	  * @return Parts of that string as a Vector.
+	  *         Each part is either: Left: A non-matched string part (outside match results) or Right: A match result
+	  */
+	def divide(str: String) = {
+		val matcher = pattern.matcher(str)
+		val builder = new VectorBuilder[Either[String, String]]()
+		
+		var lastEndIndex = 0
+		while (matcher.find())
+		{
+			val startIndex = matcher.start()
+			val endIndex = matcher.end()
+			if (startIndex > lastEndIndex)
+				builder += Left(str.substring(lastEndIndex, startIndex))
+			builder += Right(str.substring(startIndex, endIndex))
+			lastEndIndex = endIndex
+		}
+		if (str.length > lastEndIndex)
+			builder += Left(str.substring(lastEndIndex))
+		
+		builder.result()
+	}
+	
 	/**
 	 * Splits the specified string using this regex. Works much like the standard split operation, except that
 	 * this variation doesn't remove the splitting string from the results but instead keeps them at the ends of the
@@ -347,7 +356,7 @@ case class Regex(string: String)
 	 * @param str A string to split
 	 * @return Divided parts of the string
 	 */
-	def divide(str: String) =
+	def separate(str: String) =
 	{
 		val matcher = pattern.matcher(str)
 		val builder = new VectorBuilder[String]()

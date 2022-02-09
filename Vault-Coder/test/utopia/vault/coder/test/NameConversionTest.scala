@@ -10,23 +10,23 @@ import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Text, U
   */
 object NameConversionTest extends App
 {
-	val n1 = Name("test")
-	val n2 = Name("test2", UnderScore)
-	val n3 = Name.interpret("test3", UnderScore)
+	val n1 = Name.interpret("test", UnderScore)
+	val n2 = Name("test2")
 	val n4 = Name("anotherTest")
 	val n5 = Name("more_test")
 	val n6 = Name("Test Header")
 	val n7 = Name("convertRGB")
 	val n8 = Name("TestClass")
+	val n9 = Name("VolvoV6")
 	
-	assert(n1.style == CamelCase.lower)
-	assert(n2.style == UnderScore)
-	assert(n3.style == UnderScore)
+	assert(n1.style == UnderScore)
+	assert(n2.style == CamelCase.lower)
 	assert(n4.style == CamelCase.lower)
 	assert(n5.style == UnderScore)
 	assert(n6.style == Text.allCapitalized)
 	assert(n7.style == CamelCase.lower)
 	assert(n8.style == CamelCase.capitalized)
+	assert(n9.style == CamelCase.capitalized)
 	
 	def test(source: Name, camelLow: String, camelHigh: String, underScore: String, textLow: String, textHigh: String) =
 	{
@@ -45,7 +45,7 @@ object NameConversionTest extends App
 	}
 	
 	test(n1, "test", "Test", "test", "test", "Test")
-	test(n2, "test2", "Test2", "test2", "test2", "Test2")
+	test(n2, "test2", "Test2", "test_2", "test 2", "Test 2")
 	test(n4, "anotherTest", "AnotherTest", "another_test", "another test",
 		"Another Test")
 	test(n5, "moreTest", "MoreTest", "more_test", "more test",
@@ -56,6 +56,7 @@ object NameConversionTest extends App
 		"Convert RGB")
 	test(n8, "testClass", "TestClass", "test_class", "test class",
 		"Test Class")
+	test(n9, "volvoV6", "VolvoV6", "volvo_v6", "volvo v6", "Volvo V6")
 	
 	println("Success!")
 }

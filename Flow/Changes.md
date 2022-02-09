@@ -1,6 +1,9 @@
 # Utopia Flow - List of Changes
 
-## v1.14.2 (in development)
+## v1.15 (in development)
+### Breaking Changes
+- `.divide(String)` in **Regex** now returns `Vector[Either[String, String]]` instead of `Vector[String]`
+  - The previous implementation is now named `.separate(String)`
 ### New Methods
 - **Lazy** (object)
   - Added `.wrap(...)`, which calls `LazyWrapper.apply(...)`

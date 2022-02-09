@@ -35,12 +35,20 @@ sealed trait NamingConvention
 	  * @return Combination of these parts under this convention
 	  */
 	def combine(beginning: String, end: String): String
+	
+	/**
+	  * @param string A string to split into parts. Expected to be of this naming convention.
+	  * @return Parts of that string, according to this naming convention.
+	  */
+	def split(string: String): Seq[String]
 }
 
 object NamingConvention
 {
 	// ATTRIBUTES   ------------------------
 	
+	private lazy val upperCaseRangeRegex = Regex.upperCaseLetter.oneOrMoreTimes
+	private lazy val digitRangeRegex = Regex.digit.oneOrMoreTimes
 	private lazy val underscoreRegex = Regex.escape('_')
 	
 	
@@ -93,68 +101,6 @@ object NamingConvention
 		}
 	}
 	
-	// All parts are in lower-case letters
-	private def camelParts(camelName: String) = {
-		val upperCaseRanges = Regex.upperCaseLetter.oneOrMoreTimes.rangesFrom(camelName)
-		// Case: Name consists of lower case characters only => Returns as is
-		if (upperCaseRanges.isEmpty)
-			Vector(camelName)
-		else
-		{
-			// Ignores the first uppercase letter if it is at the beginning of the string
-			val appliedRanges = if (upperCaseRanges.head.start == 0) upperCaseRanges.tail else upperCaseRanges
-			// Case: Contains uppercase letters only at the beginning
-			if (appliedRanges.isEmpty)
-			{
-				// Case: Name starts with >1 uppercase letters but is not fully uppercase
-				// => separates the two parts
-				if (upperCaseRanges.head.size > 1 && upperCaseRanges.head.size < camelName.length)
-					Vector(camelName.slice(upperCaseRanges.head), camelName.drop(upperCaseRanges.head.size))
-				// Case: 1 Uppercase character or all-caps => lower-cases the name
-				else
-					Vector(camelName.toLowerCase)
-			}
-			else
-			{
-				// Separates before uppercase letters. For multiple sequential uppercase letters,
-				// separates at the end as well (unless at the end of the string)
-				val builder = new VectorBuilder[String]()
-				// Adds the portion before the first uppercase letter
-				if (appliedRanges.head.start > 0) {
-					val firstPortion = camelName.substring(0, appliedRanges.head.start)
-					if (firstPortion.length > 1)
-						builder += firstPortion
-					else
-						builder += firstPortion.toLowerCase
-				}
-				// Adds the parts until the last uppercase sequence
-				appliedRanges.paired.foreach { case Pair(upperStart, nextUpper) =>
-					// Case: There are multiple upper-case characters in sequence => separates that part
-					if (upperStart.size > 1) {
-						builder += camelName.slice(upperStart)
-						builder += camelName.slice(upperStart.last + 1, nextUpper.start)
-					}
-					// Case: Only one upper-case character => combines it with the rest of the string
-					else
-						builder += camelName.slice(upperStart.start, nextUpper.start).uncapitalize
-				}
-				// Adds the last upper-case sequence and the remaining string
-				val lastUpper = appliedRanges.last
-				// Case: Last sequence is multiple characters => separate
-				if (lastUpper.size > 1) {
-					builder += camelName.slice(lastUpper)
-					if (lastUpper.last < camelName.length - 1)
-						builder += camelName.drop(lastUpper.last + 1)
-				}
-				// Case: Last sequence is a single character => combines with the rest of the string
-				else
-					builder += camelName.drop(lastUpper.start).uncapitalize
-				
-				builder.result()
-			}
-		}
-	}
-	
 	
 	// NESTED   ----------------------------
 	
@@ -184,24 +130,107 @@ object NamingConvention
 				name.headOption.exists { c => !c.isLetter || c.isUpper == capitalized }
 		}
 		
-		override def convert(string: String, originalStyle: NamingConvention) = originalStyle match {
-			case UnderScore => fromParts(underscoreRegex.split(string))
-			case Text(firstCapitalized, _) =>
-				val base = fromParts(Regex.whiteSpace.split(string))
-				if (firstCapitalized == capitalized)
-					base
-				else
-					base.uncapitalize
-			case CamelCase(wasCapitalized) =>
-				if (wasCapitalized == capitalized)
-					string
-				else if (capitalized)
-					string.capitalize
-				else
-					string.uncapitalize
+		override def convert(string: String, originalStyle: NamingConvention) =
+		{
+			lazy val parts = originalStyle.split(string)
+			originalStyle match {
+				case UnderScore => fromParts(parts)
+				case Text(firstCapitalized, _) =>
+					val base = fromParts(parts)
+					if (firstCapitalized == capitalized)
+						base
+					else
+						base.uncapitalize
+				case CamelCase(wasCapitalized) =>
+					if (wasCapitalized == capitalized)
+						string
+					else if (capitalized)
+						string.capitalize
+					else
+						string.uncapitalize
+			}
 		}
 		
 		override def combine(beginning: String, end: String) = beginning + end.capitalize
+		
+		override def split(camelName: String) =
+		{
+			// Performs the default splitting based on upper- and lower-case letters
+			val baseParts = {
+				val upperCaseRanges = upperCaseRangeRegex.rangesFrom(camelName)
+				// Case: Name consists of lower case characters only => Returns as is
+				if (upperCaseRanges.isEmpty)
+					Vector(camelName)
+				else
+				{
+					// Ignores the first uppercase letter if it is at the beginning of the string
+					val appliedRanges = if (upperCaseRanges.head.start == 0) upperCaseRanges.tail else upperCaseRanges
+					// Case: Contains uppercase letters only at the beginning
+					if (appliedRanges.isEmpty)
+					{
+						// Case: Name starts with >1 uppercase letters but is not fully uppercase
+						// => separates the two parts
+						if (upperCaseRanges.head.size > 1 && upperCaseRanges.head.size < camelName.length)
+							Vector(camelName.slice(upperCaseRanges.head), camelName.drop(upperCaseRanges.head.size))
+						// Case: 1 Uppercase character or all-caps => lower-cases the name
+						else
+							Vector(camelName.toLowerCase)
+					}
+					else
+					{
+						// Separates before uppercase letters. For multiple sequential uppercase letters,
+						// separates at the end as well (unless at the end of the string)
+						val builder = new VectorBuilder[String]()
+						// Adds the portion before the first uppercase letter
+						if (appliedRanges.head.start > 0) {
+							val firstPortion = camelName.substring(0, appliedRanges.head.start)
+							if (firstPortion.length > 1)
+								builder += firstPortion
+							else
+								builder += firstPortion.toLowerCase
+						}
+						// Adds the parts until the last uppercase sequence
+						appliedRanges.paired.foreach { case Pair(upperStart, nextUpper) =>
+							// Case: There are multiple upper-case characters in sequence => separates that part
+							if (upperStart.size > 1) {
+								builder += camelName.slice(upperStart)
+								builder += camelName.slice(upperStart.last + 1, nextUpper.start)
+							}
+							// Case: Only one upper-case character => combines it with the rest of the string
+							else
+								builder += camelName.slice(upperStart.start, nextUpper.start).uncapitalize
+						}
+						// Adds the last upper-case sequence and the remaining string
+						val lastUpper = appliedRanges.last
+						// Case: Last sequence is multiple characters => separate
+						if (lastUpper.size > 1) {
+							builder += camelName.slice(lastUpper)
+							if (lastUpper.last < camelName.length - 1)
+								builder += camelName.drop(lastUpper.last + 1)
+						}
+						// Case: Last sequence is a single character => combines with the rest of the string
+						else
+							builder += camelName.drop(lastUpper.start).uncapitalize
+						
+						builder.result()
+					}
+				}
+			}
+			// Separates digits from the other parts
+			baseParts.flatMap { part =>
+				val subParts = digitRangeRegex.divide(part)
+				if (subParts.size == 1)
+					Vector(part)
+				// Exception: If the first part is a single letter, combines it with the digits (E.g. "v23" or "A4")
+				else if (subParts.size == 2 && subParts(1).isRight && subParts.head.leftOption.exists { _.length == 1 })
+					Vector(part)
+				else
+					subParts.map {
+						case Left(s) => s
+						case Right(s) => s
+					}
+			}
+		}
 		
 		
 		// OTHER    -----------------------------
@@ -225,13 +254,15 @@ object NamingConvention
 		override def accepts(name: String) =
 			!Regex.whiteSpace.existsIn(name) && name.forall { c => !c.isLetter || !c.isUpper }
 		
-		override def convert(string: String, originalStyle: NamingConvention) = originalStyle match {
-			case CamelCase(_) => camelParts(string).map { _.toLowerCase }.mkString("_")
-			case Text(_, _) => Regex.whiteSpace.split(string).map { _.toLowerCase }.mkString("_")
-			case _ => string
-		}
+		override def convert(string: String, originalStyle: NamingConvention) =
+			originalStyle match {
+				case UnderScore => string
+				case _ => originalStyle.split(string).map { _.toLowerCase }.mkString("_")
+			}
 		
 		override def combine(beginning: String, end: String) = beginning + "_" + end
+		
+		override def split(string: String) = underscoreRegex.split(string)
 	}
 	
 	object Text
@@ -286,26 +317,31 @@ object NamingConvention
 			}
 		}
 		
-		override def convert(string: String, originalStyle: NamingConvention) = originalStyle match {
-			case CamelCase(_) => fromParts(camelParts(string))
-			case UnderScore => fromParts(underscoreRegex.split(string))
-			case Text(first, more) =>
-				if (first == capitalizeFirst && more == capitalizeMore)
-					string
-				else if (more == capitalizeMore) {
-					if (capitalizeFirst)
-						string.capitalize
+		override def convert(string: String, originalStyle: NamingConvention) =
+		{
+			lazy val parts = originalStyle.split(string)
+			originalStyle match {
+				case Text(first, more) =>
+					if (first == capitalizeFirst && more == capitalizeMore)
+						string
+					else if (more == capitalizeMore) {
+						if (capitalizeFirst)
+							string.capitalize
+						else
+							string.uncapitalize
+					}
 					else
-						string.uncapitalize
-				}
-				else
-					fromParts(Regex.whiteSpace.split(string))
+						fromParts(parts)
+				case _ => fromParts(parts)
+			}
 		}
 		
 		override def combine(beginning: String, end: String) = {
 			val casedEnd = if (capitalizeMore) end.capitalize else end.uncapitalize
 			beginning + " " + casedEnd
 		}
+		
+		override def split(string: String) = Regex.whiteSpace.split(string)
 		
 		
 		// OTHER    -----------------------
