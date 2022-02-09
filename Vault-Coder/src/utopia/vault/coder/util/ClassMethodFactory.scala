@@ -3,7 +3,7 @@ package utopia.vault.coder.util
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.CodeBuilder
-import utopia.vault.coder.model.data.{Class, Property}
+import utopia.vault.coder.model.data.{Class, NamingRules, Property}
 import utopia.vault.coder.model.enumeration.PropertyType.EnumValue
 import utopia.vault.coder.model.scala.Visibility.Public
 import utopia.vault.coder.model.scala.{Parameter, Reference}
@@ -34,7 +34,8 @@ object ClassMethodFactory
 	                   methodName: String = "apply",
 	                   param: Parameter = Parameter("model", Reference.templateModel(Reference.property)))
 	                  (propNameInModel: Property => String)
-	                  (wrapAssignments: CodePiece => CodePiece) =
+	                  (wrapAssignments: CodePiece => CodePiece)
+	                  (implicit naming: NamingRules) =
 	{
 		// Case: Class contains no properties
 		if (targetClass.properties.isEmpty)
@@ -86,7 +87,8 @@ object ClassMethodFactory
 	
 	private def enumAwareApplyCode(classToWrite: Class, validatedModelCode: CodePiece)
 	                              (propNameInModel: Property => String)
-	                              (wrapAssignments: CodePiece => CodePiece) =
+	                              (wrapAssignments: CodePiece => CodePiece)
+	                              (implicit naming: NamingRules) =
 	{
 		// Divides the class properties into enumeration-based values and standard values
 		val dividedProperties = classToWrite.properties.map { prop => prop.dataType match
@@ -111,14 +113,16 @@ object ClassMethodFactory
 		
 		// Stores nullable enum values to increase readability
 		enumProperties.filter { _._2.isNullable }.foreach { case (prop, enumVal) =>
-			builder += s"val ${prop.name} = valid(${propNameInModel(prop).quoted}).int.flatMap(${
+			builder += s"val ${prop.name.propName} = valid(${propNameInModel(prop).quoted}).int.flatMap(${
 				enumVal.enumeration.name}.findForId)"
 			builder.addReference(enumVal.enumeration.reference)
 		}
 		
 		// Writes the instance creation now that the enum-based properties have been declared
 		val assignments = dividedProperties.map {
-			case Left((prop, _)) => CodePiece(prop.name.singular)
+			// Case: Enum-based property => refers to the previously defined value
+			case Left((prop, _)) => CodePiece(prop.name.propName)
+			// Case: Standard property => reads directly from the model
 			case Right(prop) => prop.dataType.fromValueCode(s"valid(${propNameInModel(prop).quoted})")
 		}.reduceLeft { _.append(_, ", ") }
 		builder += wrapAssignments(assignments)
@@ -132,10 +136,11 @@ object ClassMethodFactory
 	
 	// NB: Indents for each declared enumeration
 	private def declareEnumerations(builder: CodeBuilder, enumProps: Iterable[(Property, EnumValue)],
-	                                mapMethod: String)(propNameInModel: Property => String) =
+	                                mapMethod: String)(propNameInModel: Property => String)
+	                               (implicit naming: NamingRules) =
 		enumProps.foreach { case (prop, enumVal) =>
 			builder += s"${enumVal.enumeration.name}.forId(valid(${
-				propNameInModel(prop).quoted}).getInt).$mapMethod { ${prop.name} => "
+				propNameInModel(prop).quoted}).getInt).$mapMethod { ${prop.name.propName} => "
 			builder.addReference(enumVal.enumeration.reference)
 			builder.indent()
 		}
