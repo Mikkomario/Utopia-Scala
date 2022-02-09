@@ -3,7 +3,16 @@ package utopia.genesis.graphics
 import utopia.genesis.color.Color
 import utopia.genesis.shape.shape2D.{Bounds, MultiDimensional, Point, ShapeConvertible}
 
-import java.awt.{Font, RenderingHints, Shape}
+import java.awt.{Font, Graphics2D, RenderingHints, Shape}
+
+object Drawer3
+{
+	/**
+	  * @param graphics A (root level) graphics instance to wrap (lazily called)
+	  * @return A new drawer instance based on that graphics instance
+	  */
+	def apply(graphics: => Graphics2D) = new Drawer3(LazyGraphics.wrap(graphics))
+}
 
 /**
   * A graphics object wrapper used for performing drawing operations
@@ -28,6 +37,15 @@ class Drawer3(protected override val graphics: LazyGraphics) extends GraphicsCon
 	  */
 	def forTextDrawing(font: Font, color: Color = Color.textBlack) =
 		new TextDrawer(graphics.forTextDrawing(font, color), color)
+	
+	/**
+	  * Clears a visible area from previous drawings
+	  * @param area Area to clear
+	  */
+	def clear(area: Bounds) = {
+		val a = area.round
+		graphics.value.clearRect(a.x.toInt, a.y.toInt, a.width.toInt, a.height.toInt)
+	}
 	
 	/**
 	  * Draws a shape

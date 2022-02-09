@@ -1,5 +1,12 @@
 # Utopia Reflection - List of Changes
 
+## v2.6.3 (in development)
+### New Features
+- Added **Alignment** and **LinearAlignment** classes, based on existing **Reflection** solutions
+### New Methods
+- **Bounds**.type
+  - Added a new constructor variant
+
 ## v2.6.2 - 27.01.2022
 Scala version update
 ### Scala

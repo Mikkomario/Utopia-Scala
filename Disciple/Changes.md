@@ -1,5 +1,10 @@
 # Utopia Disciple - List of Changes
 
+## v1.5.1 (in development)
+### New Methods
+- **Timeout**.type
+  - Added `.uniform(FiniteDuration)` -method (utility constructor)
+
 ## v1.5 - 27.01.2022
 Updated Apache HttpClient dependency and added request rate limiting support
 ### Scala

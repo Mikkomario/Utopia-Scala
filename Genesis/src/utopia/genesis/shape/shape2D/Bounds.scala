@@ -42,6 +42,16 @@ object Bounds extends FromModelFactory[Bounds]
     override def apply(model: template.Model[Property]) =
         Success(Bounds(model("position").getPoint, model("size").getSize))
     
+    /**
+      * Creates a new set of bounds
+      * @param x Top-left x-coordinate
+      * @param y Top-left y-coordinate
+      * @param width Area width
+      * @param height Area height
+      * @return A new set of bounds
+      */
+    def apply(x: Double, y: Double, width: Double, height: Double): Bounds = apply(Point(x, y), Size(width, height))
+    
     
     // OTHER METHODS    -------------------
     

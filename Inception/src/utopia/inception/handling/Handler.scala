@@ -28,7 +28,7 @@ object Handler
   * @author Mikko Hilpinen
   * @since 5.4.2019, v2+
   */
-trait Handler[A <: Handleable] extends Iterable[A]
+trait Handler[+A <: Handleable] extends Iterable[A]
 {
 	// ABSTRACT	---------------------
 	
@@ -92,7 +92,8 @@ trait Handler[A <: Handleable] extends Iterable[A]
 	  * @param allowSkip Whether target element's desire to not be handled should be respected
 	  * @return A view of target elements (or all elements if allowSkip = false)
 	  */
-	def handleView(allowSkip: Boolean = true) = if (allowSkip) aliveElements.view.filter(allowsHandling) else aliveElements
+	def handleView(allowSkip: Boolean = true) =
+		if (allowSkip) aliveElements.view.filter(allowsHandling) else aliveElements
 	
 	/**
 	  * Performs a certain operation for all target elements

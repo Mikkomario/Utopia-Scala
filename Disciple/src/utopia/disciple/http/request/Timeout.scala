@@ -55,6 +55,13 @@ object Timeout
 	  * @return A timeout with only manager timeout set
 	  */
 	def forManager(managerTimeout: FiniteDuration) = apply(ManagerTimeout, managerTimeout)
+	
+	/**
+	  * @param generalTimeout Timeout to apply to all types of situations (connect, read, manager)
+	  * @return A new timeout
+	  */
+	def uniform(generalTimeout: FiniteDuration) =
+		apply(TimeoutType.values.map { t => t -> generalTimeout }.toMap)
 }
 
 /**

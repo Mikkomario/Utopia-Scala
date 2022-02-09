@@ -1,12 +1,21 @@
 package utopia.genesis.graphics
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.event.ChangingLike
+import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.flow.util.Extender
 import utopia.genesis.shape.shape2D.JavaAffineTransformConvertible
 
 import java.awt.Graphics2D
 import scala.concurrent.ExecutionContext
+
+object ClosingGraphics
+{
+	/**
+	  * @param g A (root level) graphics instance to wrap
+	  * @return A ClosingGraphics instance wrapping that graphics instance
+	  */
+	def apply(g: Graphics2D) = new ClosingGraphics(g, Fixed(false))
+}
 
 /**
   * Wraps a graphics instance and contains a future of the eventual closing event, also

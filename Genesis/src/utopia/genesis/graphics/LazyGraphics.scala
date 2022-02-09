@@ -7,7 +7,7 @@ import utopia.genesis.shape.shape2D.{Bounds, Matrix2D, Polygonic, Size}
 import utopia.genesis.shape.shape2D.transform.{AffineTransformable, LinearTransformable}
 import utopia.genesis.shape.shape3D.Matrix3D
 
-import java.awt.{Font, Toolkit}
+import java.awt.{Font, Graphics2D, Toolkit}
 import scala.util.Try
 
 object LazyGraphics
@@ -17,6 +17,12 @@ object LazyGraphics
 	  * @return A lazy graphics instance
 	  */
 	def apply(graphics: => ClosingGraphics) = new LazyGraphics(Left(Lazy(graphics)))
+	
+	/**
+	  * @param graphics a (root level) graphics instance to wrap (called lazily)
+	  * @return A lazy graphics instance
+	  */
+	def wrap(graphics: => Graphics2D): LazyGraphics = apply(ClosingGraphics(graphics))
 }
 
 /**
