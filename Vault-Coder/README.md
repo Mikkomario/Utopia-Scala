@@ -52,6 +52,7 @@ The input .json file should contain a single object with following properties:
   - Defaults to base_package.model
 - **"database_package" / "db_package": String (optional)** - Package where all the database -related classes are written
   - Defaults to base_package.database
+- **"database_name" / "db_name" / "database" / "db": String (optional)** - Name of the target database
 - **"models_without_vault": Boolean (optional)** - Whether model classes can't contain database references 
   (Metropolis-style project) (default = `false`)
 - **"prefix_columns": Boolean (optional)** - Whether sql column names should have a table-name -based prefix 
@@ -175,6 +176,14 @@ Each property object should contain following properties:
   - References will always create an index, regardless of this value
 - **"length": Int (optional)** - Determines maximum text length if `String` type is used
   - Also applies to `Int` type, in which case this property limits the number of digits in an integer
+- **"length_rule" / "limit" / "max_length" / "max": String (optional)** - Rule to apply to situations where the current 
+  column maximum length would be exceeded.
+  - Available options are:
+    - `"throw"` - Throws a runtime error
+    - `"crop"` - Limits the input so that it fits to the column maximum length
+    - `"expand"` - Expands the column maximum length indefinitely
+    - `"expand to X"` / `"to X"` - Expands the column maximum length until the specified limit `X`
+  - These are only applicable to `String` and `Int` types
 - **"default" / "def": String (optional)** - The default value assigned for this property in the data model
   - If empty or omitted, data type -specific default will be used, if there is one
 - **"sql_default" / "sql_def": String (optional)** - The default value assigned for this property in the database
@@ -193,6 +202,8 @@ Naming rules are interpreted as follows:
 - `"Text"` => capitalized words separated with a whitespace. E.g. "Word Of Life"
 
 Below are listed the properties which you may customize:
+- `"database_name"` / `"database"` / `"db_name"` / `"db"` / `"sql"` => database name
+  - Default is `"underscore"`
 - `"table"` / `"sql"` / `"db"` => sql table naming
   - Default is `"underscore"`
 - `"column"` / `"col"` / `"sql"` / `"db"` => sql column naming
@@ -208,11 +219,11 @@ Below are listed the properties which you may customize:
   - Default is `"camelCase"`
   - Changing this is not recommended
 
-Please note that if you specify a generic property such as "db", the rule may be applied to multiple targets, 
+Please note that if you specify a generic property such as `"db"`, the rule may be applied to multiple targets, 
 unless overridden by a more specific property elsewhere.
 
 Please also note that not all styles are suitable for all use cases.
-E.g. Using text style within code will result in build errors.
+E.g. Using `"text"` style within code will result in build errors.
 
 ## Root Path Aliases
 In case you're using certain root paths often, you may ease application use by aliasing those paths.  
@@ -228,6 +239,8 @@ You may then refer to a root alias instead of the full root path when using the 
 This application will produce the following documents 
 (where **X** is replaced by class name, **P** by class-related package name and **S** is replaced with project name):
 - **S-database-structure.sql** -document that contains create table sql statements
+- **S-length-rules.json** -document that contains all listed column length rules
+  - Use `ColumnLengthRules.loadFrom(...)` in **Vault** in your code to apply this file to your project
 - **S-merge-conflicts-yyyy-mm-dd-hh-mm.txt** -document that lists merge conflicts that occurred (if there were any)
 - project root package
   - model

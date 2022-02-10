@@ -20,6 +20,8 @@ object NamingRules extends FromModelFactory[NamingRules]
 		def rule(default: => NamingConvention, propNames: String*) =
 			propNames.findMap { model(_).string.flatMap(NamingConvention.forName) }.getOrElse(default)
 		Success(NamingRules(
+			// Database name
+			rule(UnderScore, "database_name", "database", "db_name", "db", "sql"),
 			// Table names
 			rule(UnderScore, "table", "sql", "db"),
 			// Column names
@@ -41,7 +43,8 @@ object NamingRules extends FromModelFactory[NamingRules]
   * @author Mikko Hilpinen
   * @since 3.2.2022, v1.4.1
   */
-case class NamingRules(table: NamingConvention = UnderScore, column: NamingConvention = UnderScore,
+case class NamingRules(database: NamingConvention = UnderScore, table: NamingConvention = UnderScore,
+                       column: NamingConvention = UnderScore,
                        className: NamingConvention = CamelCase.capitalized,
                        classProp: NamingConvention = CamelCase.lower, jsonProp: NamingConvention = UnderScore,
                        dbModelProp: NamingConvention = CamelCase.lower)

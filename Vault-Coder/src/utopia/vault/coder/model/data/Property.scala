@@ -14,14 +14,17 @@ object Property
 	  * @param useDescription Description on how this property is used (Default = empty)
 	  * @param customDefault Default value passed for this property (empty if no default (default))
 	  * @param customSqlDefault Default value passed for this property in the SQL table creation (empty if no default)
+	  * @param lengthRule String that represents the rule applied to this property when it comes to length limit handling.
+	  *                   Empty if no specific rule is used.
 	  * @param customIndexing User-specified setting whether this property should be indexed.
 	  *                       None if user didn't specify, which results in data type -based indexing (default)
 	  * @return A new property
 	  */
 	def apply(name: Name, dataType: PropertyType, description: String = "", useDescription: String = "",
-	          customDefault: String = "", customSqlDefault: String = "",
+	          customDefault: String = "", customSqlDefault: String = "", lengthRule: String = "",
 	          customIndexing: Option[Boolean] = None): Property =
-		apply(name, None, dataType, description, useDescription, customDefault, customSqlDefault, customIndexing)
+		apply(name, None, dataType, description, useDescription, customDefault, customSqlDefault, lengthRule,
+			customIndexing)
 }
 
 /**
@@ -35,11 +38,13 @@ object Property
   * @param useDescription Description on how this property is used (may be empty)
   * @param customDefault Default value passed for this property (empty if no default)
   * @param customSqlDefault Default value passed for this property in the SQL table creation (empty if no default)
+  * @param lengthRule String that represents the rule applied to this property when it comes to length limit handling.
+  *                   Empty if no specific rule is used.
   * @param customIndexing User-specified setting whether this property should be indexed.
   *                       None if user didn't specify, which results in data type -based indexing
   */
 case class Property(name: Name, customColumnName: Option[String], dataType: PropertyType, description: String,
-                    useDescription: String, customDefault: String, customSqlDefault: String,
+                    useDescription: String, customDefault: String, customSqlDefault: String, lengthRule: String,
                     customIndexing: Option[Boolean])
 {
 	// COMPUTED ----------------------------

@@ -61,7 +61,7 @@ sure that class is included in the classpath.
 
 If you want to log errors or make all parsing errors fatal, please change `ErrorHandling.defaultPrinciple`.
 
-If you want to manage column length limits, I'd recommend calling `ColumnLengthRules.load(Path)`, which reads 
+If you want to manage column length limits, I'd recommend calling `ColumnLengthRules.loadFrom(Path)`, which reads 
 column length management settings from a .json file.
 
 ### Extensions you should be aware of

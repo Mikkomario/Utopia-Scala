@@ -30,12 +30,14 @@ object SqlWriter
 	
 	/**
 	  * Writes the SQL document for the specified classes
+	  * @param dbName Name of the database to use (optional)
 	  * @param classes    Classes to write
 	  * @param targetPath Path to which write the sql document
 	  * @param codec      Implicit codec used when writing
 	  * @return Target path. Failure if writing failed.
 	  */
-	def apply(classes: Seq[Class], targetPath: Path)(implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
+	def apply(dbName: Option[String], classes: Seq[Class], targetPath: Path)
+	         (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
 	{
 		// Doesn't write anything if no classes are included
 		if (classes.nonEmpty) {
@@ -60,6 +62,14 @@ object SqlWriter
 				writer.println(s"-- Last generated: ${Today.toString}")
 				writer.println("--")
 				writer.println()
+				
+				// Writes the database introduction, if needed
+				dbName.foreach { dbName =>
+					writer.println(s"CREATE DATABASE IF NOT EXISTS `$dbName` ")
+					writer.println("\tDEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;")
+					writer.println(s"USE `$dbName`;")
+					writer.println()
+				}
 				
 				// Writes the class declarations in order
 				writeClasses(writer, initials, classesByTableName, references)

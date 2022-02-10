@@ -58,6 +58,10 @@ object ClassReader
 		
 		implicit val namingRules: NamingRules = NamingRules(root("naming").getModel).value
 		
+		val databaseName = root("database_name", "database", "db_name", "db").string
+			.map { rawDbName => namingRules.database.convert(rawDbName,
+				NamingConvention.of(rawDbName, namingRules.database)) }
+			.filter { _.nonEmpty }
 		val enumPackage = modelPackage/"enumeration"
 		val enumerations = root("enumerations", "enums").getModel.attributes.map { enumAtt =>
 			Enum(enumAtt.name.capitalize, enumAtt.value.getVector.flatMap { _.string }.map { _.capitalize },
@@ -131,8 +135,8 @@ object ClassReader
 					}
 				}
 			}
-			ProjectData(projectName, modelPackage, dbPackage, enumerations, classes, combinations, namingRules,
-				root("version").string.map { Version(_) }, !root("models_without_vault").getBoolean,
+			ProjectData(projectName, modelPackage, dbPackage, databaseName, enumerations, classes, combinations,
+				namingRules, root("version").string.map { Version(_) }, !root("models_without_vault").getBoolean,
 				root("prefix_columns").getBoolean)
 		}
 	}
@@ -276,6 +280,7 @@ object ClassReader
 		
 		Property(fullName, columnName.map { _.columnName }, actualDataType, doc, propModel("usage").getString,
 			propModel("default", "def").getString, propModel("sql_default", "sql_def").getString,
+			propModel("length_rule", "length_limit", "limit", "max_length", "length_max", "max").getString,
 			propModel("indexed", "index", "is_index").boolean)
 	}
 	

@@ -9,7 +9,7 @@ import utopia.flow.util.FileExtensions._
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments}
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.ClassReader
-import utopia.vault.coder.controller.writer.database.{AccessWriter, CombinedFactoryWriter, DbDescriptionAccessWriter, DbModelWriter, DescriptionLinkInterfaceWriter, FactoryWriter, SqlWriter, TablesWriter}
+import utopia.vault.coder.controller.writer.database.{AccessWriter, ColumnLengthRulesWriter, CombinedFactoryWriter, DbDescriptionAccessWriter, DbModelWriter, DescriptionLinkInterfaceWriter, FactoryWriter, SqlWriter, TablesWriter}
 import utopia.vault.coder.controller.writer.model.{CombinedModelWriter, DescribedModelWriter, EnumerationWriter, ModelWriter}
 import utopia.vault.coder.model.data.{Class, ClassReferences, Filter, NamingRules, ProjectData, ProjectSetup}
 import utopia.vault.coder.model.scala.Reference
@@ -225,7 +225,7 @@ object VaultCoderApp extends App
 									}
 								case None => b.version
 							}
-							ProjectData(pName, modelPackage, dbPackage,
+							ProjectData(pName, modelPackage, dbPackage, a.databaseName.orElse { b.databaseName },
 								a.enumerations ++ b.enumerations, a.classes ++ b.classes,
 								a.combinations ++ b.combinations, a.namingRules, version,
 								a.modelCanReferToDB && b.modelCanReferToDB, a.prefixColumnNames && b.prefixColumnNames)
@@ -328,8 +328,13 @@ object VaultCoderApp extends App
 	{
 		// Writes the enumerations
 		data.enumerations.tryMap { EnumerationWriter(_) }
-			// Next writes the SQL declaration and the tables document
-			.flatMap { _ => SqlWriter(data.classes, setup.sourceRoot/s"${setup.dbModuleName}-db-structure.sql") }
+			// Writes the SQL declaration
+			.flatMap { _ => SqlWriter(data.databaseName, data.classes,
+				setup.sourceRoot/s"${setup.dbModuleName}-db-structure.sql") }
+			// Writes column length rules
+			.flatMap { _ => ColumnLengthRulesWriter(data.databaseName, data.classes,
+				setup.sourceRoot/s"${setup.dbModuleName}-length-rules.json") }
+			// Writes the tables document, which is referred to later, also
 			.flatMap { _ => TablesWriter(data.classes) }
 			.flatMap { tablesRef =>
 				DescriptionLinkInterfaceWriter(data.classes, tablesRef).flatMap { descriptionLinkObjects =>

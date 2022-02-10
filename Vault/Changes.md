@@ -1,5 +1,10 @@
 # Utopia Vault - List of Changes
 
+## v1.12.1 (in development)
+### New Features
+- You may now customize column maximum length handling logic via `ColumnLengthRules.loadFrom(...)`
+  - (Added a new variation of the `.loadFrom(...)` method)
+
 ## v1.12 - 27.01.2022
 This update contains a major refactoring of the factory and access traits, as well as some important fixes. 
 New important features include database events (triggers).
