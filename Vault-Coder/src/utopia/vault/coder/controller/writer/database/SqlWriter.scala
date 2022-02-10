@@ -5,7 +5,8 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.CombinedOrdering
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, NamingRules, ProjectSetup, Property}
+import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup, Property}
+import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Text}
 import utopia.vault.coder.model.enumeration.PropertyType.ClassReference
 
 import java.io.PrintWriter
@@ -23,7 +24,7 @@ object SqlWriter
 {
 	// Package name > reference count > class name
 	private lazy val classOrdering = CombinedOrdering[(Class, Int)](
-		Ordering.by[(Class, Int), String] { _._1.packageName },
+		// Ordering.by[(Class, Int), String] { _._1.packageName },
 		Ordering.by[(Class, Int), Int] { _._2 },
 		Ordering.by[(Class, Int), String] { _._1.name.singular }
 	)
@@ -90,16 +91,25 @@ object SqlWriter
 			.filterNot { tableName => references(tableName)
 				.exists { referencedTableName => remainingTableNames.contains(referencedTableName) } }
 		// Case: All classes are referenced at least once (indicates a cyclic loop) => Writes them in alphabetical order
-		if (notReferencingTableNames.isEmpty)
+		if (notReferencingTableNames.isEmpty) {
+			writer.println("\n-- WARNING: Following classes contain a cyclic loop\n")
 			classesByTableName.valuesIterator.toVector.sortBy { _.name.singular }
 				.foreach { writeClass(writer, _, initialsMap) }
+		}
 		// Case: There are some classes which don't reference remaining classes => writes those
-		else
-		{
+		else {
 			// Writes the classes in order of package name > reference count > alphabetical order
 			notReferencingTableNames.toVector
-				.map { table => classesByTableName(table) -> references(table).size }.sorted(classOrdering)
-				.foreach { case (classToWrite, _) => writeClass(writer, classToWrite, initialsMap) }
+				.map { table => classesByTableName(table) -> references(table).size }
+				// Writes each package in a named group
+				.groupBy { case (classToWrite, _) =>
+					Name.interpret(classToWrite.packageName, CamelCase.lower).to(Text.allCapitalized).singular }
+				.toVector.sortBy { _._1 }
+				.foreach { case (packageName, classData) =>
+					writer.println(s"--\t$packageName\t${"-" * 10}\n")
+					classData.sorted(classOrdering)
+						.foreach { case (classToWrite, _) => writeClass(writer, classToWrite, initialsMap) }
+				}
 			// Continues recursively as long as classes remain
 			val remainingClassesByTableName = classesByTableName -- notReferencingTableNames
 			if (remainingClassesByTableName.nonEmpty)
