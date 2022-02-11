@@ -1,9 +1,9 @@
 package utopia.genesis.image
 
-import java.awt.image.{BufferedImage, BufferedImageOp}
-
 import utopia.flow.datastructure.mutable.MutableLazy
+import utopia.flow.util.AutoClose._
 import utopia.genesis.color.Color
+import utopia.genesis.graphics.Drawer3
 import utopia.genesis.image.transform.{Blur, HueAdjust, ImageTransform, IncreaseContrast, Invert, Sharpen, Threshold}
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
@@ -11,6 +11,8 @@ import utopia.genesis.shape.shape1D.{Angle, Rotation}
 import utopia.genesis.shape.shape2D.{Area2D, Bounds, Point, Size, Vector2D}
 import utopia.genesis.shape.template.Dimensional
 import utopia.genesis.util.Drawer
+
+import java.awt.image.{BufferedImage, BufferedImageOp}
 
 object MutableImage
 {
@@ -386,4 +388,11 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	def paintOver(paint: Drawer => Unit) = source.foreach { target => Drawer.use(target.createGraphics())(paint)
 		// { d => paint(d.clippedTo(Bounds(Point.origin, sourceResolution))) }
 	}
+	
+	/**
+	  * Applies a paint function over this image
+	  * @param paint A function that will paint over this image. The provided drawer is clipped to this image's area.
+	  */
+	def paintOver2[U](paint: Drawer3 => U) =
+		source.foreach { target => Drawer3(target.createGraphics()).consume(paint) }
 }

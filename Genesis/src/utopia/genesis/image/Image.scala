@@ -1,18 +1,13 @@
 package utopia.genesis.image
 
-import scala.math.Ordering.Double.TotalOrdering
-import java.awt.image.{BufferedImage, BufferedImageOp}
-import java.io.FileNotFoundException
-import java.nio.file.{Files, Path}
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.NullSafe._
-
-import javax.imageio.ImageIO
 import utopia.flow.datastructure.immutable.{Lazy, LazyWrapper}
 import utopia.flow.datastructure.template.LazyLike
 import utopia.flow.operator.LinearScalable
 import utopia.genesis.color.Color
+import utopia.genesis.graphics.Drawer3
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
 import utopia.genesis.shape.Axis.{X, Y}
 import utopia.genesis.shape.Axis2D
@@ -21,7 +16,13 @@ import utopia.genesis.shape.shape2D.{Area2D, Bounds, Direction2D, Insets, Matrix
 import utopia.genesis.shape.template.{Dimensional, VectorLike}
 import utopia.genesis.util.Drawer
 
+import scala.math.Ordering.Double.TotalOrdering
 import scala.util.{Failure, Success, Try}
+
+import java.awt.image.{BufferedImage, BufferedImageOp}
+import java.io.FileNotFoundException
+import java.nio.file.{Files, Path}
+import javax.imageio.ImageIO
 
 object Image
 {
@@ -125,6 +126,30 @@ object Image
 			val buffer = new BufferedImage(size.width.round.toInt, size.height.round.toInt, BufferedImage.TYPE_INT_ARGB)
 			// Draws on the image
 			Drawer.use(buffer.createGraphics()) { draw(_) }
+			// Wraps the buffer image
+			Image(buffer)
+		}
+		else
+			empty
+	}
+	
+	/**
+	  * Creates a new image by drawing
+	  * @param size Size of the image
+	  * @param draw A function that will draw the image contents. The drawer is clipped to image bounds and
+	  *             (0,0) is at the image top left corner.
+	  * @tparam U Arbitrary result type
+	  * @return Drawn image
+	  */
+	def paint2[U](size: Size)(draw: Drawer3 => U) =
+	{
+		// If some of the dimensions were 0, simply creates an empty image
+		if (size.isPositive)
+		{
+			// Creates the new buffer image
+			val buffer = new BufferedImage(size.width.round.toInt, size.height.round.toInt, BufferedImage.TYPE_INT_ARGB)
+			// Draws on the image
+			Drawer3(buffer.createGraphics()).consume(draw)
 			// Wraps the buffer image
 			Image(buffer)
 		}
@@ -409,7 +434,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 		val subImageWidth = (width - marginBetweenParts * (numberOfParts - 1)) / numberOfParts
 		val subImageSize = Size(subImageWidth, height)
 		Strip((0 until numberOfParts).map {
-			index => subImage(Bounds(Point(index * (subImageWidth + marginBetweenParts), 0), subImageSize)) }.toVector)
+			index => subImage(Bounds(Point(index * (subImageWidth + marginBetweenParts)), subImageSize)) }.toVector)
 	}
 	
 	/**
@@ -679,6 +704,23 @@ case class Image private(override protected val source: Option[BufferedImage], o
 			case Some(buffer) =>
 				// Paints into created buffer
 				Drawer.use(buffer.createGraphics()) { d => paint(d.clippedTo(Bounds(Point.origin, sourceResolution))) }
+				Image(buffer, scaling, alpha, specifiedOrigin)
+			case None => this
+		}
+	}
+	
+	/**
+	  * @param paint A function for painting over this image. Accepts a drawer that is clipped to this image's area
+	  *              ((0,0) is at the top left corner if this image).
+	  * @return A copy of this image with the paint operation applied
+	  */
+	def paintedOver2[U](paint: Drawer3 => U) =
+	{
+		toAwt match {
+			case Some(buffer) =>
+				// Paints into created buffer
+				Drawer3(buffer.createGraphics())
+					.consume { d => paint(d.withClip(Bounds(Point.origin, sourceResolution))) }
 				Image(buffer, scaling, alpha, specifiedOrigin)
 			case None => this
 		}

@@ -5,6 +5,7 @@ import utopia.flow.operator.Sign.{Negative, Positive}
 import java.awt.image.BufferedImage
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.color.Color
+import utopia.genesis.graphics.Drawer3
 import utopia.genesis.shape.shape2D.{Bounds, Direction2D, JavaAffineTransformConvertible, Matrix2D, Point, Size, Vector2D}
 import utopia.genesis.shape.shape3D.Matrix3D
 import utopia.genesis.util.Drawer
@@ -265,6 +266,59 @@ trait ImageLike
 					drawer.withAlpha(alpha).transformed(finalTransform)
 			}
 			transformedDrawer.drawImage(s)
+		}
+	}
+	
+	/**
+	  * Draws this image using a specific drawer
+	  * @param drawer A drawer
+	  * @param position The position where this image's origin is drawn (default = (0, 0))
+	  * @param transformation An additional linear transformation to apply (optional)
+	  * @return Whether this image was fully drawn
+	  */
+	def drawWith2(drawer: Drawer3, position: Point = Point.origin, transformation: Option[Matrix2D] = None) =
+	{
+		source.forall { s =>
+			// Uses transformations in following order:
+			// 1) Translates so that image origin is at (0,0)
+			// 2) Performs scaling
+			// 3) Performs additional transformation
+			// 4) Positions correctly
+			val baseTransform = specifiedOrigin match {
+				case Some(origin) =>
+					val originTransform = Matrix3D.translation(-origin)
+					Right(if (scaling.isIdentity) originTransform else originTransform.scaled(scaling))
+				case None => Left(if (scaling.isIdentity) None else Some(Matrix2D.scaling(scaling)))
+			}
+			val transformed = transformation match {
+				case Some(t) =>
+					baseTransform.mapBoth {
+						case Some(b) => Some(b * t)
+						case None => Some(t)
+					} { _ * t }
+				case None => baseTransform
+			}
+			val finalTransform = {
+				if (position.isZero)
+					transformed.rightOrMap {
+						case Some(m) => m.to3D
+						case None => Matrix3D.identity
+					}
+				else
+					transformed.mapToSingle {
+						case Some(t) => t.translated(position)
+						case None => Matrix3D.translation(position)
+					} { _.translated(position) }
+			}
+			
+			// Performs the actual drawing
+			val transformedDrawer = {
+				if (alpha == 1)
+					drawer * finalTransform
+				else
+					drawer.withAlpha(alpha) * finalTransform
+			}
+			transformedDrawer.drawAwtImage(s)
 		}
 	}
 }
