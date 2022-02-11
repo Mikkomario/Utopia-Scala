@@ -35,8 +35,7 @@ class LazyTransformationSequence(val parent: Option[LazyTransformationSequence],
 	
 	private val cache = Lazy {
 		parent match {
-			// TODO: Make sure this is in right order
-			case Some(parent) => transformation(parent.value)
+			case Some(parent) => parent.value(transformation)
 			case None => transformation
 		}
 	}

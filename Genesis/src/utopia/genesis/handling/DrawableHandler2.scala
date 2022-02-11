@@ -15,5 +15,5 @@ trait DrawableHandler2 extends Handler[Drawable2] with Drawable2
 	/**
 	  * @return The type of this handler
 	  */
-	override def handlerType = DrawableHandlerType
+	override def handlerType = DrawableHandlerType2
 }

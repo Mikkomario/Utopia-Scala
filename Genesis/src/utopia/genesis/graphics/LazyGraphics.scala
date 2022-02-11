@@ -64,8 +64,7 @@ class LazyGraphics(parent: Either[LazyLike[ClosingGraphics], LazyGraphics],
 						val combinedTransformation = firstTransformation match {
 							case Some(first) =>
 								myTransformation match {
-									// TODO: Make sure transformations are in the correct order
-									case Some(last) => Some(last(first.value))
+									case Some(last) => Some(first.value(last))
 									case None => Some(first.value)
 								}
 							case None => myTransformation
