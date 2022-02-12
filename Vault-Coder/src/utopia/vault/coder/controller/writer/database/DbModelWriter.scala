@@ -5,9 +5,10 @@ import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup, Pr
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.scala
 import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.datatype.{Extension, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
-import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Parameter, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{DeclarationDate, Parameter}
 
 import _root_.scala.io.Codec
 

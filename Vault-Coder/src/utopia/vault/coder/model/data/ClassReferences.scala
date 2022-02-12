@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.data
 
-import utopia.vault.coder.model.scala.Reference
+import utopia.vault.coder.model.scala.datatype.Reference
 
 /**
   * Contains references concerning a single class

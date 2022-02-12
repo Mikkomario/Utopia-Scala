@@ -1,13 +1,15 @@
 package utopia.vault.coder.model.scala.declaration
 
-import utopia.vault.coder.model.scala.ScalaDocKeyword.{Author, Since}
+import utopia.vault.coder.model.scala.doc.ScalaDocKeyword.{Author, Since}
 import utopia.flow.util.CombinedOrdering
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
 import utopia.vault.coder.model.scala.code.Code
-import utopia.vault.coder.model.scala.{DeclarationDate, Extension, GenericType, Parameters, ScalaDocPart, Visibility}
+import utopia.vault.coder.model.scala.datatype.{Extension, GenericType}
+import utopia.vault.coder.model.scala.doc.ScalaDocPart
+import utopia.vault.coder.model.scala.{DeclarationDate, Parameters, Visibility}
 import utopia.vault.coder.model.scala.template.{CodeConvertible, ScalaDocConvertible}
 
 import scala.collection.immutable.VectorBuilder

@@ -5,9 +5,10 @@ import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup}
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected}
+import utopia.vault.coder.model.scala.datatype.{Extension, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, DeclarationStart, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
-import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Package, Parameter, Parameters, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{DeclarationDate, Package, Parameter, Parameters}
 
 import scala.io.Codec
 

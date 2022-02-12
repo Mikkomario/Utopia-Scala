@@ -1,8 +1,10 @@
 package utopia.vault.coder.model.scala
 
-import utopia.vault.coder.model.scala.ScalaDocKeyword.Param
+import utopia.vault.coder.model.scala.doc.ScalaDocKeyword.Param
 import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.datatype.ScalaType
 import utopia.vault.coder.model.scala.declaration.DeclarationStart
+import utopia.vault.coder.model.scala.doc.ScalaDocPart
 import utopia.vault.coder.model.scala.template.{ScalaConvertible, ScalaDocConvertible}
 
 /**

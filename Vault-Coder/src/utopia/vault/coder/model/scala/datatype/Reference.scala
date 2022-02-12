@@ -1,9 +1,10 @@
-package utopia.vault.coder.model.scala
+package utopia.vault.coder.model.scala.datatype
 
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.scala.template.ScalaConvertible
 import utopia.vault.coder.model.data.ProjectSetup
+import utopia.vault.coder.model.scala.Package
 import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.template.ScalaConvertible
 
 import java.nio.file.Path
 

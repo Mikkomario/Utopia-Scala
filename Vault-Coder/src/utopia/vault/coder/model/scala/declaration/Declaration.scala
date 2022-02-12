@@ -1,7 +1,8 @@
 package utopia.vault.coder.model.scala.declaration
 
-import utopia.vault.coder.model.scala.{GenericType, Visibility}
+import utopia.vault.coder.model.scala.Visibility
 import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.datatype.GenericType
 
 /**
   * Declares a scala item of some sort

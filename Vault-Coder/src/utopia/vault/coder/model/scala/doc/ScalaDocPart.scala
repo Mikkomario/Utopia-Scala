@@ -1,4 +1,4 @@
-package utopia.vault.coder.model.scala
+package utopia.vault.coder.model.scala.doc
 
 import utopia.flow.parse.Regex
 import utopia.vault.coder.model.scala.code.Code

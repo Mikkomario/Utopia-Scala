@@ -6,7 +6,8 @@ import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration, PropertyDeclaration}
-import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Reference}
+import utopia.vault.coder.model.scala.{DeclarationDate, datatype}
+import utopia.vault.coder.model.scala.datatype.{Extension, Reference}
 import utopia.vault.coder.util.ClassMethodFactory
 
 import scala.collection.immutable.VectorBuilder
@@ -90,7 +91,7 @@ object FactoryWriter
 		// Deprecatable factories specify the deprecation condition (read from the database model)
 		if (classToWrite.isDeprecatable) {
 			val dbModelName = (classToWrite.name + DbModelWriter.classNameSuffix).className
-			val dbModelRef = Reference(setup.dbModelPackage / classToWrite.packageName, dbModelName)
+			val dbModelRef = datatype.Reference(setup.dbModelPackage / classToWrite.packageName, dbModelName)
 			builder += ComputedProperty("nonDeprecatedCondition", Set(dbModelRef), isOverridden = true)(
 				s"$dbModelName.nonDeprecatedCondition")
 		}

@@ -3,8 +3,8 @@ package utopia.vault.coder.controller
 import utopia.flow.datastructure.mutable.{Pointer, ResettableLazy}
 import utopia.vault.coder.model.scala.code
 import utopia.vault.coder.model.scala.code.{Code, CodeLine, CodePiece}
+import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.template.Referencing
-import utopia.vault.coder.model.scala.Reference
 
 import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable

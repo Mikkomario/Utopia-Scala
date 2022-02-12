@@ -5,9 +5,10 @@ import utopia.vault.coder.controller.writer.database.AccessWriter
 import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup}
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File}
-import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, Reference, declaration}
+import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, declaration}
 
 import scala.io.Codec
 

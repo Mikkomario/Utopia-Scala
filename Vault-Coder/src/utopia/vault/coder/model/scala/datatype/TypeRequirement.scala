@@ -1,6 +1,6 @@
-package utopia.vault.coder.model.scala
+package utopia.vault.coder.model.scala.datatype
 
-import utopia.vault.coder.model.scala.InheritanceLimitType.{RequiredChild, RequiredParent}
+import utopia.vault.coder.model.scala.datatype.InheritanceLimitType.{RequiredChild, RequiredParent}
 import utopia.vault.coder.model.scala.template.ScalaConvertible
 
 object TypeRequirement

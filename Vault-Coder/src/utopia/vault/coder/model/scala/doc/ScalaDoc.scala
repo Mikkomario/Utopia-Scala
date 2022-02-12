@@ -1,7 +1,8 @@
-package utopia.vault.coder.model.scala
+package utopia.vault.coder.model.scala.doc
 
-import utopia.vault.coder.model.scala.ScalaDocKeyword.{Author, Param, Return, Since}
+import utopia.vault.coder.model.scala.DeclarationDate
 import utopia.vault.coder.model.scala.code.Code
+import utopia.vault.coder.model.scala.doc.ScalaDocKeyword.{Author, Param, Return, Since}
 import utopia.vault.coder.model.scala.template.CodeConvertible
 
 object ScalaDoc

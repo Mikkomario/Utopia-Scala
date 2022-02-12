@@ -6,7 +6,8 @@ import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.controller.reader.ScalaParser
 import utopia.vault.coder.model.data.ProjectSetup
 import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
-import utopia.vault.coder.model.scala.{Package, Reference}
+import utopia.vault.coder.model.scala.{Package, datatype}
+import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.template.CodeConvertible
 
 import scala.collection.immutable.VectorBuilder
@@ -39,7 +40,7 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration],
 	/**
 	  * @return A reference to this file / primary instance in this file
 	  */
-	def reference = Reference(packagePath, declarations.head.name)
+	def reference = datatype.Reference(packagePath, declarations.head.name)
 	
 	
 	// IMPLEMENTED  ----------------------------------

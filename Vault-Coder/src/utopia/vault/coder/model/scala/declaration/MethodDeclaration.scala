@@ -3,7 +3,8 @@ package utopia.vault.coder.model.scala.declaration
 import utopia.vault.coder.model.merging.Mergeable
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.Visibility.Public
-import utopia.vault.coder.model.scala.{GenericType, Parameters, Reference, ScalaType, Visibility}
+import utopia.vault.coder.model.scala.datatype.{GenericType, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{Parameters, Visibility}
 
 object MethodDeclaration
 {

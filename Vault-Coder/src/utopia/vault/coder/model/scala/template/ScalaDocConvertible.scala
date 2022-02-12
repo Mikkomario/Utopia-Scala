@@ -2,7 +2,7 @@ package utopia.vault.coder.model.scala.template
 
 import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.model.scala.code.{Code, CodeLine}
-import utopia.vault.coder.model.scala.ScalaDocPart
+import utopia.vault.coder.model.scala.doc.ScalaDocPart
 
 /**
   * Common trait for instances that can be converted to scaladoc lines

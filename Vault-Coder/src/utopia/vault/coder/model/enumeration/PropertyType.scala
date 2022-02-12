@@ -9,7 +9,7 @@ import utopia.vault.coder.model.enumeration.IntSize.Default
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.enumeration.PropertyType.Optional
 import utopia.vault.coder.model.scala.code.CodePiece
-import utopia.vault.coder.model.scala.{Reference, ScalaType}
+import utopia.vault.coder.model.scala.datatype.{Reference, ScalaType}
 
 import java.util.concurrent.TimeUnit
 

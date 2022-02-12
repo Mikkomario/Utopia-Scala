@@ -4,8 +4,10 @@ import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
 import utopia.vault.coder.model.scala.code.Code
-import utopia.vault.coder.model.scala.ScalaDocKeyword.Return
-import utopia.vault.coder.model.scala.{GenericType, Parameters, ScalaDocPart, ScalaType, Visibility}
+import utopia.vault.coder.model.scala.doc.ScalaDocKeyword.Return
+import utopia.vault.coder.model.scala.datatype.{GenericType, ScalaType}
+import utopia.vault.coder.model.scala.doc.ScalaDocPart
+import utopia.vault.coder.model.scala.{Parameters, Visibility}
 import utopia.vault.coder.model.scala.template.{CodeConvertible, ScalaDocConvertible}
 
 import scala.collection.immutable.VectorBuilder

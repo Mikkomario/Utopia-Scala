@@ -6,8 +6,9 @@ import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.model.data.{Class, NamingRules, Property}
 import utopia.vault.coder.model.enumeration.PropertyType.EnumValue
 import utopia.vault.coder.model.scala.Visibility.Public
-import utopia.vault.coder.model.scala.{Parameter, Reference}
+import utopia.vault.coder.model.scala.Parameter
 import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.declaration.MethodDeclaration
 
 /**

@@ -1,4 +1,4 @@
-package utopia.vault.coder.model.scala
+package utopia.vault.coder.model.scala.datatype
 
 /**
   * An enumeration for different data type categories

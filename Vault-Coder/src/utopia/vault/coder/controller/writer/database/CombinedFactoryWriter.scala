@@ -1,7 +1,8 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.vault.coder.model.data.{CombinationData, CombinationReferences, NamingRules, ProjectSetup}
-import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Reference}
+import utopia.vault.coder.model.scala.DeclarationDate
+import utopia.vault.coder.model.scala.datatype.{Extension, Reference}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration}
 

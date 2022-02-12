@@ -1,10 +1,12 @@
 package utopia.vault.coder.controller.reader
 
-import utopia.vault.coder.model.scala.{DeclarationDate, Extension, GenericType, Parameters, Reference, ScalaDoc, Visibility}
+import utopia.vault.coder.model.scala.{DeclarationDate, Parameters, Visibility}
 import utopia.vault.coder.model.scala.code.{Code, CodeLine}
+import utopia.vault.coder.model.scala.datatype.{Extension, GenericType, Reference}
 import utopia.vault.coder.model.scala.declaration.DeclarationPrefix.{Case, Sealed}
 import utopia.vault.coder.model.scala.declaration.InstanceDeclarationType.{ClassD, ObjectD, TraitD}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, DeclarationPrefix, InstanceDeclaration, InstanceDeclarationType, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
+import utopia.vault.coder.model.scala.doc.ScalaDoc
 
 import scala.collection.immutable.VectorBuilder
 

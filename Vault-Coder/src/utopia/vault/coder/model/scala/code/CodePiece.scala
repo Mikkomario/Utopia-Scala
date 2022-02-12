@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.scala.code
 
 import utopia.flow.operator.Combinable
-import utopia.vault.coder.model.scala.Reference
+import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.template.Referencing
 
 import scala.language.implicitConversions

@@ -2,7 +2,8 @@ package utopia.vault.coder.model.scala.declaration
 
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.Visibility.Public
-import utopia.vault.coder.model.scala.{DeclarationDate, Extension, GenericType, Visibility}
+import utopia.vault.coder.model.scala.datatype.{Extension, GenericType}
+import utopia.vault.coder.model.scala.{DeclarationDate, Visibility}
 
 /**
   * Used for declaring objects in scala files

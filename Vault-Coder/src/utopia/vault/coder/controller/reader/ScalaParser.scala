@@ -8,15 +8,17 @@ import utopia.flow.util.StringExtensions._
 import utopia.flow.util.IterateLines
 import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.model.reader.ReadCodeBlock
-import utopia.vault.coder.model.scala.ScalaTypeCategory.{CallByName, Standard}
-import utopia.vault.coder.model.scala.TypeVariance.Invariance
-import utopia.vault.coder.model.scala.{Extension, GenericType, InheritanceLimitType, Package, Parameter, Parameters, Reference, ScalaDoc, ScalaDocKeyword, ScalaDocPart, ScalaType, TypeRequirement, TypeVariance}
+import utopia.vault.coder.model.scala.datatype.ScalaTypeCategory.{CallByName, Standard}
+import utopia.vault.coder.model.scala.datatype.TypeVariance.Invariance
+import utopia.vault.coder.model.scala.{Package, Parameter, Parameters}
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected, Public}
 import utopia.vault.coder.model.scala.code.{Code, CodeLine, CodePiece}
+import utopia.vault.coder.model.scala.datatype.{Extension, GenericType, InheritanceLimitType, Reference, ScalaType, TypeRequirement, TypeVariance}
 import utopia.vault.coder.model.scala.declaration.DeclarationPrefix.{Lazy, Override}
 import utopia.vault.coder.model.scala.declaration.FunctionDeclarationType.{FunctionD, ValueD, VariableD}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue, LazyValue, Variable}
 import utopia.vault.coder.model.scala.declaration.{DeclarationPrefix, DeclarationStart, DeclarationType, FunctionDeclarationType, InstanceDeclarationType, MethodDeclaration, PropertyDeclaration}
+import utopia.vault.coder.model.scala.doc.{ScalaDoc, ScalaDocKeyword, ScalaDocPart}
 
 import java.nio.file.Path
 import scala.collection.immutable.VectorBuilder

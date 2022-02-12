@@ -4,7 +4,8 @@ import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.merging.Mergeable
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.Visibility.{Protected, Public}
-import utopia.vault.coder.model.scala.{GenericType, Parameter, Parameters, ScalaType, Visibility}
+import utopia.vault.coder.model.scala.datatype.{GenericType, ScalaType}
+import utopia.vault.coder.model.scala.{Parameter, Parameters, Visibility}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 
 object PropertyDeclaration

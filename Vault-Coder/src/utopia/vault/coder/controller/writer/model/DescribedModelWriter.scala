@@ -3,9 +3,10 @@ package utopia.vault.coder.controller.writer.model
 import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup}
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.scala.Visibility.Protected
+import utopia.vault.coder.model.scala.datatype.{Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration}
-import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, Parameters, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, Parameters}
 
 import scala.io.Codec
 

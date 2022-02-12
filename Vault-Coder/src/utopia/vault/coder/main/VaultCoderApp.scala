@@ -12,7 +12,7 @@ import utopia.vault.coder.controller.ClassReader
 import utopia.vault.coder.controller.writer.database.{AccessWriter, ColumnLengthRulesWriter, CombinedFactoryWriter, DbDescriptionAccessWriter, DbModelWriter, DescriptionLinkInterfaceWriter, FactoryWriter, SqlWriter, TablesWriter}
 import utopia.vault.coder.controller.writer.model.{CombinedModelWriter, DescribedModelWriter, EnumerationWriter, ModelWriter}
 import utopia.vault.coder.model.data.{Class, ClassReferences, Filter, NamingRules, ProjectData, ProjectSetup}
-import utopia.vault.coder.model.scala.Reference
+import utopia.vault.coder.model.scala.datatype.Reference
 
 import java.nio.file.{Path, Paths}
 import java.time.LocalTime

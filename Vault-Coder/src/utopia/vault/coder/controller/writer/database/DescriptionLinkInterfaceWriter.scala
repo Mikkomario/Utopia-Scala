@@ -1,8 +1,9 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.vault.coder.model.data.{Class, NamingRules, ProjectSetup}
-import utopia.vault.coder.model.scala.{DeclarationDate, Reference}
+import utopia.vault.coder.model.scala.DeclarationDate
 import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.LazyValue
 import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration}
 

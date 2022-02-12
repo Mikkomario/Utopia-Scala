@@ -1,4 +1,4 @@
-package utopia.vault.coder.model.scala
+package utopia.vault.coder.model.scala.datatype
 
 /**
   * An enumeration describing generic type variance options. Variance determines whether a subclass may be used
