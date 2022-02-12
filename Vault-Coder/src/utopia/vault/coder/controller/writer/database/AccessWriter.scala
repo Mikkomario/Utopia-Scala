@@ -5,12 +5,14 @@ import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup}
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected}
-import utopia.vault.coder.model.scala.datatype.{Extension, Reference, ScalaType}
+import utopia.vault.coder.model.scala.datatype.TypeVariance.Covariance
+import utopia.vault.coder.model.scala.datatype.{Extension, GenericType, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, DeclarationStart, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
 import utopia.vault.coder.model.scala.{DeclarationDate, Package, Parameter, Parameters}
 
 import scala.io.Codec
+import scala.util.Success
 
 /**
   * Used for writing database access templates
@@ -27,6 +29,7 @@ object AccessWriter
 	private val manyPrefix = Name("Many", "Many", CamelCase.capitalized)
 	
 	private val accessTraitSuffix = Name("Access", "Access", CamelCase.capitalized)
+	private val genericAccessSuffix = Name("Like", "Like", CamelCase.capitalized)
 	private val subViewSuffix = Name("SubView", "SubView", CamelCase.capitalized)
 	private val uniqueAccessPrefix = Name("Unique", "Unique", CamelCase.capitalized)
 	
@@ -258,73 +261,114 @@ object AccessWriter
 	}
 	
 	// Writes a trait common for the many model access points
-	// TODO: Write -Like trait as well, if needed
 	private def writeManyAccessTrait(classToWrite: Class, modelRef: Reference,
 	                                 descriptionReferences: Option[(Reference, Reference, Reference)],
 	                                 manyAccessPackage: Package, baseProperties: Vector[PropertyDeclaration],
 	                                 deprecationMethod: Option[MethodDeclaration])
 	                                (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
 	{
-		val manyAccessTraitName = ((manyPrefix +: classToWrite.name) + accessTraitSuffix).pluralClassName
-		val manyAccessTraitType = ScalaType.basic(manyAccessTraitName)
-		// TODO: Technically only the class name portion is meant to be plural
-		val subViewName = ((manyPrefix +: classToWrite.name) + subViewSuffix).pluralClassName
+		// Common part for all written trait names
+		val traitNameBase = (manyPrefix +: classToWrite.name) + accessTraitSuffix
 		
-		// Trait parent type depends on whether descriptions are used or not
-		val (manyTraitParent, manyParentProperties, manyParentMethods) = descriptionReferences match {
-			case Some((describedRef, _, manyDescsRef)) =>
-				(Extension(Reference.manyDescribedAccess(modelRef, describedRef)), Vector(
-					ComputedProperty("manyDescriptionsAccess", Set(manyDescsRef), Protected,
-						isOverridden = true)(manyDescsRef.target),
-					ComputedProperty("describedFactory", Set(describedRef), Protected,
-						isOverridden = true)(describedRef.target)
-				), Set(MethodDeclaration("idOf", isOverridden = true)(Parameter("item", modelRef))(
-					"item.id")))
-			case None => (Extension(Reference.indexed), Vector(), Set[MethodDeclaration]())
+		// Properties and methods that will be written to the highest trait (which may vary)
+		val highestTraitProperties = baseProperties ++
+			classToWrite.properties.map { prop =>
+				val pullCode = prop.dataType
+					.fromValuesCode(s"pullColumn(model.${ DbModelWriter.columnNameFrom(prop) })")
+				ComputedProperty(prop.name.pluralPropName, pullCode.references,
+					description = s"${ prop.name.pluralText } of the accessible ${
+						classToWrite.name.pluralText }",
+					implicitParams = Vector(connectionParam))(pullCode.text)
+			} :+
+			ComputedProperty("ids", implicitParams = Vector(connectionParam))(
+				s"pullColumn(index).flatMap { id => ${ classToWrite.idType.nullable.fromValueCode("id") } }")
+		val highestTraitMethods = propertySettersFor(classToWrite, connectionParam) { _.pluralPropName } ++ deprecationMethod
+		
+		// Writes the more generic trait version (-Like) first, if one is requested
+		val parentRef = {
+			if (classToWrite.writeGenericAccess) {
+				val item = GenericType.covariant("A")
+				val repr = GenericType.childOf("Repr", Reference.manyModelAccess(item.toScalaType), Covariance)
+				
+				File(manyAccessPackage,
+					TraitDeclaration(
+						(traitNameBase + genericAccessSuffix).pluralClassName, Vector(item, repr),
+						// Extends ManyModelAccess instead of ManyRowModel access because sub-traits may vary
+						Vector(Reference.manyModelAccess(item.toScalaType), Reference.indexed,
+							Reference.filterableView(repr.toScalaType)),
+						highestTraitProperties, highestTraitMethods,
+						description = s"A common trait for access points which target multiple ${
+							classToWrite.name.pluralText} or similar instances at a time",
+						author = classToWrite.author, since = DeclarationDate.versionedToday))
+					.write().map { Some(_) }
+			}
+			else
+				Success(None)
 		}
-		File(manyAccessPackage,
-			ObjectDeclaration(manyAccessTraitName, nested = Set(
-				ClassDeclaration(subViewName,
-					constructionParams = Parameters(
-						Parameter("parent", Reference.manyRowModelAccess(modelRef),
-							prefix = Some(DeclarationStart.overrideVal)),
-						Parameter("filterCondition", Reference.condition,
-							prefix = Some(DeclarationStart.overrideVal))),
-					extensions = Vector(manyAccessTraitType, Reference.subView),
-					visibility = Private
+		
+		// Writes the actual access trait
+		parentRef.flatMap { parentRef =>
+			val traitName = traitNameBase.pluralClassName
+			val traitType = ScalaType.basic(traitName)
+			// TODO: Technically only the class name portion is meant to be plural
+			val subViewName = ((manyPrefix +: classToWrite.name) + subViewSuffix).pluralClassName
+			
+			// Trait parent type depends on whether descriptions are used or not
+			val (accessParent, inheritanceProperties, inheritanceMethods) = descriptionReferences match {
+				case Some((describedRef, _, manyDescsRef)) =>
+					val parent = Extension(Reference.manyDescribedAccess(modelRef, describedRef))
+					val props = Vector(
+						ComputedProperty("manyDescriptionsAccess", Set(manyDescsRef), Protected,
+							isOverridden = true)(manyDescsRef.target),
+						ComputedProperty("describedFactory", Set(describedRef), Protected,
+							isOverridden = true)(describedRef.target)
+					)
+					val methods = Set(MethodDeclaration("idOf", isOverridden = true)(
+						Parameter("item", modelRef))("item.id"))
+					(Some(parent), props, methods)
+				case None =>
+					val parent = if (parentRef.isDefined) None else Some(Extension(Reference.indexed))
+					(parent, Vector(), Set[MethodDeclaration]())
+			}
+			val parents = (parentRef match {
+				case Some(parent) =>
+					Vector[Extension](parent(modelRef, traitType), Reference.manyRowModelAccess(modelRef))
+				case None =>
+					Vector[Extension](Reference.manyRowModelAccess(modelRef),
+						Reference.filterableView(traitType))
+			}) ++ accessParent
+			
+			File(manyAccessPackage,
+				ObjectDeclaration(traitName, nested = Set(
+					ClassDeclaration(subViewName,
+						constructionParams = Parameters(
+							Parameter("parent", Reference.manyRowModelAccess(modelRef),
+								prefix = Some(DeclarationStart.overrideVal)),
+							Parameter("filterCondition", Reference.condition,
+								prefix = Some(DeclarationStart.overrideVal))),
+						extensions = Vector(traitType, Reference.subView),
+						visibility = Private
+					)
+				)),
+				TraitDeclaration(traitName,
+					extensions = parents,
+					// Contains computed properties to access class properties
+					properties = if (parentRef.isDefined) inheritanceProperties else
+						highestTraitProperties ++ inheritanceProperties,
+					// Contains setters for property values (plural)
+					methods = (if (parentRef.isDefined) Set[MethodDeclaration]() else highestTraitMethods) ++
+						inheritanceMethods +
+						MethodDeclaration("filter",
+							explicitOutputType = Some(traitType),
+							isOverridden = true)(
+							Parameter("additionalCondition", Reference.condition))(
+							s"new $traitName.$subViewName(this, additionalCondition)"),
+					description = s"A common trait for access points which target multiple ${
+						classToWrite.name.pluralText } at a time",
+					author = classToWrite.author, since = DeclarationDate.versionedToday
 				)
-			)),
-			TraitDeclaration(manyAccessTraitName,
-				extensions = Vector(Reference.manyRowModelAccess(modelRef), manyTraitParent,
-					Reference.filterableView(manyAccessTraitType)),
-				// Contains computed properties to access class properties
-				properties = baseProperties ++ classToWrite.properties.map { prop =>
-					val pullCode = prop.dataType
-						.fromValuesCode(s"pullColumn(model.${ DbModelWriter.columnNameFrom(prop) })")
-					ComputedProperty(prop.name.pluralPropName, pullCode.references,
-						description = s"${ prop.name.pluralText } of the accessible ${
-							classToWrite.name.pluralText }",
-						implicitParams = Vector(connectionParam))(pullCode.text)
-				} ++ Vector(
-					ComputedProperty("ids", implicitParams = Vector(connectionParam))(
-						s"pullColumn(index).flatMap { id => ${
-							classToWrite.idType.nullable.fromValueCode("id")
-						} }")
-				) ++ manyParentProperties,
-				// Contains setters for property values (plural)
-				methods = propertySettersFor(classToWrite, connectionParam) { _.pluralPropName } ++
-					manyParentMethods ++
-					deprecationMethod +
-					MethodDeclaration("filter",
-						explicitOutputType = Some(manyAccessTraitType),
-						isOverridden = true)(
-						Parameter("additionalCondition", Reference.condition))(
-						s"new $manyAccessTraitName.$subViewName(this, additionalCondition)"),
-				description = s"A common trait for access points which target multiple ${
-					classToWrite.name.pluralText } at a time",
-				author = classToWrite.author, since = DeclarationDate.versionedToday
-			)
-		).write()
+			).write()
+		}
 	}
 	
 	private def writeManyRootAccess(classToWrite: Class, modelRef: Reference, manyAccessTraitRef: Reference,

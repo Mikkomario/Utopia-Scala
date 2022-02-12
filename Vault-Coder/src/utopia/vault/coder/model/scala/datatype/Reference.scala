@@ -82,7 +82,8 @@ object Reference
 	lazy val filterableView = apply(viewAccess, "FilterableView")
 	
 	lazy val singleRowModelAccess = apply(singleModelAccess, "SingleRowModelAccess")
-	lazy val manyRowModelAccess = apply(manyModelAccess, "ManyRowModelAccess")
+	lazy val manyModelAccess = apply(Package.manyModelAccess, "ManyModelAccess")
+	lazy val manyRowModelAccess = apply(Package.manyModelAccess, "ManyRowModelAccess")
 	lazy val distinctModelAccess = apply(access/"template.model", "DistinctModelAccess")
 	lazy val uniqueModelAccess = apply(singleModelAccess/"distinct", "UniqueModelAccess")
 	lazy val singleIdModelAccess = apply(singleModelAccess/"distinct", "SingleIdModelAccess")

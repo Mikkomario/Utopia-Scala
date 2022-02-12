@@ -211,7 +211,10 @@ object ClassReader
 			Success(new Class(fullName, tableName.map { _.tableName }, idName.getOrElse(Class.defaultIdName),
 				properties, packageName, comboIndexColumnNames, descriptionLinkColumnName,
 				classModel("doc").getString, classModel("author").stringOr(defaultAuthor),
-				classModel("use_long_id").getBoolean) -> comboInfo)
+				classModel("use_long_id").getBoolean,
+				// Writes generic access point if this class has combinations, or if explicitly specified
+				classModel("has_combos", "generic_access", "tree_inheritance").booleanOr(comboInfo.nonEmpty)) ->
+				comboInfo)
 		}
 	}
 	

@@ -84,6 +84,9 @@ Class objects should contain following properties:
 - **"combinations" / "combos": [Object]** - An array of **combination objects** for this class (see structure below)
   - Alternatively, you can specify a **"combination"** or **"combo"** -property with only a single 
     **combination object** as a value. Please don't specify both, however. 
+- **"has_combos" / "generic_access" / "tree_inheritance": Boolean (optional)** - Determines whether a more generic 
+  access point (**ManyXAccessLike**) will be written for this class
+  - If omitted or *null*, a more generic access point will be written if this declaration includes any combo classes 
 - **"description_link" / "desc_link": String (optional)** - Specifies the name of 
   the property in a description link table that refers to this class (e.g. `"testClassId"`)
   - Please note that if you specify this value, localized description support is added for this class
@@ -277,6 +280,9 @@ This application will produce the following documents
             - Only generated for classes which support descriptions
       - many
         - **P**
+          - **ManyXsAccessLike.scala** - A trait common to access points that return multiple instances 
+            of **X** or its variations at a time
+            - Only generated for classes with combinations or when explicitly requested
           - **ManyXsAccess.scala** - A trait common to access points that return multiple instances of **X** at a time
           - **DbXs.scala** - The root access point for multiple instances of **X**
         - description
