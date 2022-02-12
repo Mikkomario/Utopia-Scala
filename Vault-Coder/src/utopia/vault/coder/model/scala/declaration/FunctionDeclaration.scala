@@ -5,7 +5,7 @@ import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.ScalaDocKeyword.Return
-import utopia.vault.coder.model.scala.{Parameters, ScalaDocPart, ScalaType, Visibility}
+import utopia.vault.coder.model.scala.{GenericType, Parameters, ScalaDocPart, ScalaType, Visibility}
 import utopia.vault.coder.model.scala.template.{CodeConvertible, ScalaDocConvertible}
 
 import scala.collection.immutable.VectorBuilder
@@ -59,6 +59,7 @@ trait FunctionDeclaration[+Repr]
 	/**
 	  * Creates a modified copy of this declaration
 	  * @param visibility New visibility
+	  * @param genericTypes New generic type declarations
 	  * @param parameters New parameters
 	  * @param bodyCode New code
 	  * @param explicitOutputType New output type
@@ -68,9 +69,9 @@ trait FunctionDeclaration[+Repr]
 	  * @param isOverridden Whether new version should be overridden
 	  * @return Copy of this declaration
 	  */
-	protected def makeCopy(visibility: Visibility, parameters: Option[Parameters], bodyCode: Code,
-	                       explicitOutputType: Option[ScalaType], description: String, returnDescription: String,
-	                       headerComments: Vector[String], isOverridden: Boolean): Repr
+	protected def makeCopy(visibility: Visibility, genericTypes: Seq[GenericType], parameters: Option[Parameters],
+	                       bodyCode: Code, explicitOutputType: Option[ScalaType], description: String,
+	                       returnDescription: String, headerComments: Vector[String], isOverridden: Boolean): Repr
 	
 	
 	// COMPUTED ------------------------------
@@ -93,6 +94,7 @@ trait FunctionDeclaration[+Repr]
 		params.foreach { resultBuilder ++= _.documentation }
 		if (returnDesc.nonEmpty)
 			resultBuilder += ScalaDocPart(Return, returnDesc)
+		genericTypes.foreach { resultBuilder ++= _.documentation }
 		resultBuilder.result()
 	}
 	
@@ -155,8 +157,10 @@ trait FunctionDeclaration[+Repr]
 				explicitOutputType.get.toString,
 				s"$name implementations specify different return types$prioString")
 		
-		makeCopy(visibility min other.visibility, priority.params, priority.bodyCode,
-			priority.explicitOutputType.orElse(lowPriority.explicitOutputType),
+		makeCopy(visibility min other.visibility,
+			priority.genericTypes ++
+				lowPriority.genericTypes.filterNot { t => priority.genericTypes.exists { _.name == t.name } },
+			priority.params, priority.bodyCode, priority.explicitOutputType.orElse(lowPriority.explicitOutputType),
 			priority.description.notEmpty.getOrElse(lowPriority.description),
 			priority.returnDescription.notEmpty.getOrElse(lowPriority.returnDescription),
 			other.headerComments.filterNot(headerComments.contains) ++ headerComments,

@@ -9,7 +9,8 @@ import utopia.flow.util.IterateLines
 import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.model.reader.ReadCodeBlock
 import utopia.vault.coder.model.scala.ScalaTypeCategory.{CallByName, Standard}
-import utopia.vault.coder.model.scala.{Extension, Package, Parameter, Parameters, Reference, ScalaDoc, ScalaDocKeyword, ScalaDocPart, ScalaType}
+import utopia.vault.coder.model.scala.TypeVariance.Invariance
+import utopia.vault.coder.model.scala.{Extension, GenericType, InheritanceLimitType, Package, Parameter, Parameters, Reference, ScalaDoc, ScalaDocKeyword, ScalaDocPart, ScalaType, TypeRequirement, TypeVariance}
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected, Public}
 import utopia.vault.coder.model.scala.code.{Code, CodeLine, CodePiece}
 import utopia.vault.coder.model.scala.declaration.DeclarationPrefix.{Lazy, Override}
@@ -256,17 +257,28 @@ object ScalaParser
 					}
 					//println(s"Interpreted: $visibility ${prefixes.mkString(" ")} ${
 					//	declarationType.keyword} $declarationName")
+					// Parses generic types list, if needed
+					val (genericTypes, afterGenericTypes) = {
+						if (declarationType.acceptsGenericTypes && afterDeclarationStart.startsWith("[")) {
+							// TODO: Current version expects the type list to fit within the same line.
+							//  Create a better version if necessary
+							val (typesPart, afterTypes) = readOneLineBrackets(afterDeclarationStart)
+							genericTypesFrom(typesPart, refMap)._1 -> afterTypes
+						}
+						else
+							Vector() -> afterDeclarationStart
+					}
 					// Parses parameter lists, if needed
 					val (parameters, afterParameterLists) = {
-						if (declarationType.acceptsParameterList && afterDeclarationStart.startsWith("(")) {
-							val (rawLists, remaining) = readRawParameterLists(afterDeclarationStart, linesIter)
+						if (declarationType.acceptsParameterList && afterGenericTypes.startsWith("(")) {
+							val (rawLists, remaining) = readRawParameterLists(afterGenericTypes, linesIter)
 							//println(s"Reading parameter list from ${
 							//	rawLists.map { list => s"'$list'" }.mkString(" & ")} (${rawLists.size} lists) - remaining: '$remaining'")
 							val parameters = parametersFrom(rawLists, refMap, scalaDoc)
 							Some(parameters) -> remaining
 						}
 						else
-							None -> afterDeclarationStart.trim.notEmpty
+							None -> afterGenericTypes.trim.notEmpty
 					}
 					//parameters.foreach { p => println(s"Read ${p.lists.size} parameter lists and ${
 					//	p.implicits.size} implicit parameters - remaining: '${afterParameterLists.getOrElse("")}'") }
@@ -344,12 +356,11 @@ object ScalaParser
 							// Adds the parsed function (property or method) to the parent instance
 							// Case: Parsed item is a method
 							if (declarationType == FunctionD && parameters.exists { _.containsExplicits })
-								parentBuilder.addMethod(MethodDeclaration(visibility, declarationName, parameters.get,
-									body, explicitType, scalaDoc.description, scalaDoc.returnDescription,
+								parentBuilder.addMethod(MethodDeclaration(visibility, declarationName, genericTypes,
+									parameters.get, body, explicitType, scalaDoc.description, scalaDoc.returnDescription,
 									filteredComments, prefixes.contains(Override), isLowMergePriority = false))
 							// Case: Parsed item is a property
-							else
-							{
+							else {
 								val propertyType = declarationType match {
 									case ValueD => if (prefixes.contains(Lazy)) LazyValue else ImmutableValue
 									case VariableD => Variable
@@ -375,7 +386,7 @@ object ScalaParser
 								afterParameterLists.map { CodeLine(declarationLine.indentation, _) },
 								linesIter, refMap)
 							val builder = new InstanceBuilder(visibility, prefixes, declarationType, declarationName,
-								parameters, extensions, scalaDoc, filteredComments)
+								genericTypes, parameters, extensions, scalaDoc, filteredComments)
 							contentBlock.foreach { block =>
 								// Reads all available items from the block
 								val blockLinesIterator = block.lines.iterator.pollable
@@ -644,6 +655,7 @@ object ScalaParser
 		}
 	}
 	
+	// Returns parsed type + remaining string
 	private def scalaTypeFrom(string: String, refMap: Map[String, Reference]): (ScalaType, String) =
 	{
 		//println(s"Parsing scala type from: '$string'")
@@ -703,17 +715,52 @@ object ScalaParser
 	}
 	
 	private def scalaTypesFrom(string: String, refMap: Map[String, Reference]): (Vector[ScalaType], String) =
+		typeListFrom(string) { scalaTypeFrom(_, refMap) }
+	
+	// Returns parsed type + remaining string
+	private def genericTypeFrom(string: String, refMap: Map[String, Reference]): (GenericType, String) =
+	{
+		// Checks type parameter variance
+		val (mainPart, variance) = TypeVariance.explicitValues.findMap { variance =>
+			if (string.startsWith(variance.typePrefix))
+				Some(string.drop(variance.typePrefix.length) -> variance)
+			else
+				None
+		}.getOrElse(string -> Invariance)
+		
+		// Parses the type name until some interrupting character
+		val mainPartEndIndex = mainPart.indexWhere { c => !c.isLetterOrDigit && c != '_' && c != '.' }
+		val (typeName, remaining) = if (mainPartEndIndex < 0) mainPart -> "" else
+			mainPart.take(mainPartEndIndex) -> mainPart.drop(mainPartEndIndex).trim
+		
+		// Checks whether a type limit is applied
+		val (typeRequirement, afterType) = InheritanceLimitType.values
+			.find { limitType => remaining.startsWith(limitType.toString) } match
+		{
+			case Some(limitType) =>
+				val (limitingType, afterType) = scalaTypeFrom(remaining.drop(limitType.toString.length).trim, refMap)
+				Some(TypeRequirement(limitingType, limitType)) -> afterType
+			case None => None -> remaining
+		}
+		
+		GenericType(typeName, typeRequirement, variance) -> afterType
+	}
+	
+	private def genericTypesFrom(string: String, refMap: Map[String, Reference]) =
+		typeListFrom(string) { genericTypeFrom(_, refMap) }
+	
+	private def typeListFrom[A](string: String)(readType: String => (A, String)): (Vector[A], String) =
 	{
 		// Parses types as long as there are some remaining
 		// Expects them to be separated by a comma
-		val (firstType, firstRemain) = scalaTypeFrom(string, refMap)
-		val typesBuilder = new VectorBuilder[ScalaType]()
+		val (firstType, firstRemain) = readType(string)
+		val typesBuilder = new VectorBuilder[A]()
 		typesBuilder += firstType
 		
 		var remaining = firstRemain
 		while (remaining.startsWith(","))
 		{
-			val (nextType, nextRemain) = scalaTypeFrom(remaining.drop(1).trim, refMap)
+			val (nextType, nextRemain) = readType(remaining.drop(1).trim)
 			typesBuilder += nextType
 			remaining = nextRemain
 		}
@@ -827,7 +874,8 @@ object ScalaParser
 		resultsBuilder.result() -> remaining
 	}
 	
-	private def readOneLineBrackets(line: String) = readOneLineBlockLike(line, '[', ']')
+	private def readOneLineBrackets(line: String) =
+		readOneLineBlockLike(line, '[', ']')
 	
 	private def readOneLineParentheses(line: String) =
 		readOneLineBlockLike(line, '(', ')')

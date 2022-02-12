@@ -76,8 +76,12 @@ case class CodePiece(text: String, references: Set[Reference] = Set())
 	  * @param separator A separator added between these pieces (default = empty)
 	  * @return A combination of these pieces
 	  */
-	def append(other: CodePiece, separator: String = "") =
-		copy(text + separator + other.text, references ++ other.references)
+	def append(other: CodePiece, separator: => String = "") = {
+		// Only adds the separator if the other piece is non-empty
+		val newText = if (other.isEmpty) text else if (isEmpty) other.text else text + separator + other.text
+		copy(newText, references ++ other.references)
+	}
+	
 	/**
 	  * @param prefix A prefix
 	  * @return A copy of this code piece with that prefix in the beginning

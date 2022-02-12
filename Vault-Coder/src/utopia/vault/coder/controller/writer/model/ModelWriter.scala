@@ -44,12 +44,12 @@ object ModelWriter
 		File(dataClassPackage,
 			ClassDeclaration(dataClassName,
 				// Accepts a copy of each property. Uses default values where possible.
-				classToWrite.properties.map { prop =>
+				constructionParams = classToWrite.properties.map { prop =>
 					Parameter(prop.name.propName, prop.dataType.toScala, prop.default,
 						description = prop.description)
 				},
 				// Extends ModelConvertible
-				Vector(Reference.modelConvertible),
+				extensions = Vector(Reference.modelConvertible),
 				// Implements the toModel -property
 				properties = deprecationPropertiesFor(classToWrite) :+
 					ComputedProperty("toModel", propWriteCode.references, isOverridden = true)(propWriteCode.text),
@@ -81,8 +81,8 @@ object ModelWriter
 				// ModelConvertible extension & implementation differs based on id type
 				// Also, the Stored extension differs based on whether Vault-dependency is allowed
 				if (classToWrite.useLongId)
-					ClassDeclaration(classToWrite.name.className, constructionParams,
-						Vector(Reference.stored(dataClassRef, idType)),
+					ClassDeclaration(classToWrite.name.className, constructionParams = constructionParams,
+						extensions = Vector(Reference.stored(dataClassRef, idType)),
 						properties = Vector(
 							ComputedProperty("toModel", Set(Reference.valueConversions, Reference.constant),
 								isOverridden = true)("Constant(\"id\", id) + data.toModel"),
@@ -91,8 +91,8 @@ object ModelWriter
 				{
 					val parent = if (setup.modelCanReferToDB) Reference.storedModelConvertible(dataClassRef) else
 						Reference.metropolisStoredModelConvertible(dataClassRef)
-					declaration.ClassDeclaration(classToWrite.name.className, constructionParams, Vector(parent),
-						properties = accessProperty.toVector,
+					declaration.ClassDeclaration(classToWrite.name.className, constructionParams = constructionParams,
+						extensions = Vector(parent), properties = accessProperty.toVector,
 						description = description, author = classToWrite.author, since = DeclarationDate.versionedToday,
 						isCaseClass = true)
 				}

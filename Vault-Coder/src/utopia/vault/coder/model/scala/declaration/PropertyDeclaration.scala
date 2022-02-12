@@ -4,7 +4,7 @@ import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.merging.Mergeable
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.Visibility.{Protected, Public}
-import utopia.vault.coder.model.scala.{Parameter, Parameters, ScalaType, Visibility}
+import utopia.vault.coder.model.scala.{GenericType, Parameter, Parameters, ScalaType, Visibility}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 
 object PropertyDeclaration
@@ -59,10 +59,14 @@ case class PropertyDeclaration(declarationType: PropertyDeclarationType, name: S
 	
 	override def returnDescription = ""
 	
+	// Properties don't support generic types at this time
+	override def genericTypes = Vector()
+	
 	override protected def params =
 		if (implicitParams.nonEmpty) Some(Parameters(implicits = implicitParams)) else None
 	
-	override protected def makeCopy(visibility: Visibility, parameters: Option[Parameters], bodyCode: Code,
+	override protected def makeCopy(visibility: Visibility, genericTypes: Seq[GenericType],
+	                                parameters: Option[Parameters], bodyCode: Code,
 	                                explicitOutputType: Option[ScalaType], description: String,
 	                                returnDescription: String, headerComments: Vector[String],
 	                                isOverridden: Boolean) =

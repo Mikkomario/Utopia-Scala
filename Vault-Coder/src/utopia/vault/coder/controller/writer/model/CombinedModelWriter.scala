@@ -30,9 +30,9 @@ object CombinedModelWriter
 		val constructorParams = data.combinationType.applyParamsWith(data.parentName, data.childName,
 			parentRef, childRef)
 		File(setup.combinedModelPackage/data.packageName,
-			ClassDeclaration(data.name.className, constructorParams,
+			ClassDeclaration(data.name.className, constructionParams = constructorParams,
 				// Provides implicit access to the data model (because that's where most of the properties are)
-				Vector(Reference.extender(parentDataRef)),
+				extensions = Vector(Reference.extender(parentDataRef)),
 				properties = Vector(
 					// Provides direct access to parent.id
 					ComputedProperty("id", description = s"Id of this ${data.parentName} in the database")(

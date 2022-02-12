@@ -23,6 +23,10 @@ sealed trait DeclarationType
 	  */
 	def acceptsParameterList: Boolean
 	/**
+	  * @return Whether this declaration type allows generic types to be used
+	  */
+	def acceptsGenericTypes: Boolean
+	/**
 	  * @return Category where this declaration belongs
 	  */
 	def category: DeclarationTypeCategory
@@ -73,6 +77,7 @@ object InstanceDeclarationType
 		override val keyword = "class"
 		override val availablePrefixes = Set(Case, Implicit, Abstract)
 		override val acceptsParameterList = true
+		override val acceptsGenericTypes = true
 	}
 	/**
 	  * Used for declaring singular instances / objects
@@ -82,6 +87,7 @@ object InstanceDeclarationType
 		override val keyword = "object"
 		override val availablePrefixes = Set(Case, Implicit)
 		override val acceptsParameterList = false
+		override val acceptsGenericTypes = false
 	}
 	/**
 	  * Used for declaring abstract traits
@@ -91,6 +97,7 @@ object InstanceDeclarationType
 		override val keyword = "trait"
 		override val availablePrefixes = Set(Sealed)
 		override val acceptsParameterList = false
+		override val acceptsGenericTypes = true
 	}
 }
 
@@ -114,6 +121,7 @@ object FunctionDeclarationType
 		override val keyword = "def"
 		override val availablePrefixes = Set(Override, Implicit)
 		override val acceptsParameterList = true
+		override val acceptsGenericTypes = true
 	}
 	/**
 	  * Used for declaring immutable values
@@ -123,6 +131,7 @@ object FunctionDeclarationType
 		override val keyword = "val"
 		override val availablePrefixes = Set(Override, Implicit, Lazy)
 		override val acceptsParameterList = false
+		override val acceptsGenericTypes = false
 	}
 	/**
 	  * Used for declaring mutable variables
@@ -132,5 +141,6 @@ object FunctionDeclarationType
 		override val keyword = "var"
 		override val availablePrefixes = Set(Override)
 		override val acceptsParameterList = false
+		override val acceptsGenericTypes = false
 	}
 }

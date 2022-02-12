@@ -131,7 +131,7 @@ object DbModelWriter
 			),
 			ClassDeclaration(className,
 				// Accepts a copy of all properties where each is wrapped in option (unless already an option)
-				Parameter("id", classToWrite.idType.nullable.toScala, "None",
+				constructionParams = Parameter("id", classToWrite.idType.nullable.toScala, "None",
 					description = s"${ classToWrite.name } database id") +:
 					classToWrite.properties.map { prop =>
 						val inputType = prop.dataType.nullable
@@ -139,7 +139,7 @@ object DbModelWriter
 						Parameter(prop.name.propName, inputType.toScala, defaultValue, description = prop.description)
 					},
 				// Extends StorableWithFactory[A]
-				Vector(Reference.storableWithFactory(modelRef)),
+				extensions = Vector(Reference.storableWithFactory(modelRef)),
 				// Implements the required properties: factory & valueProperties
 				properties = Vector(
 					ComputedProperty("factory", isOverridden = true)(s"$className.factory"),

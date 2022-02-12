@@ -148,11 +148,11 @@ object AccessWriter
 		File(singleAccessPackage,
 			TraitDeclaration(uniqueAccessName,
 				// Extends SingleRowModelAccess, DistinctModelAccess and Indexed
-				Vector(Reference.singleRowModelAccess(modelRef),
+				extensions = Vector(Reference.singleRowModelAccess(modelRef),
 					Reference.distinctModelAccess(modelRef, ScalaType.option(modelRef), Reference.value),
 					Reference.indexed),
 				// Provides computed accessors for individual properties
-				baseProperties ++ classToWrite.properties.map { prop =>
+				properties = baseProperties ++ classToWrite.properties.map { prop =>
 					val pullCode = prop.dataType.nullable
 						.fromValueCode(s"pullColumn(model.${ DbModelWriter.columnNameFrom(prop) })")
 					ComputedProperty(prop.name.propName, pullCode.references,
@@ -162,7 +162,7 @@ object AccessWriter
 				} :+ ComputedProperty("id", pullIdCode.references, implicitParams = Vector(connectionParam))(
 					pullIdCode.text),
 				// Contains setters for each property (singular)
-				propertySettersFor(classToWrite, connectionParam) { _.propName } ++ deprecationMethod,
+				methods = propertySettersFor(classToWrite, connectionParam) { _.propName } ++ deprecationMethod,
 				description = s"A common trait for access points that return individual and distinct ${
 					classToWrite.name.pluralText
 				}.", author = classToWrite.author, since = DeclarationDate.versionedToday
@@ -203,8 +203,8 @@ object AccessWriter
 		}
 		File(singleAccessPackage,
 			ClassDeclaration(singleIdAccessNameFor(classToWrite),
-				Vector(Parameter("id", classToWrite.idType.toScala)),
-				Vector(uniqueAccessRef, singleIdAccessParent),
+				constructionParams = Vector(Parameter("id", classToWrite.idType.toScala)),
+				extensions = Vector(uniqueAccessRef, singleIdAccessParent),
 				// Implements the .condition property
 				properties = singleIdAccessParentProperties,
 				description = s"An access point to individual ${
@@ -284,20 +284,20 @@ object AccessWriter
 		File(manyAccessPackage,
 			ObjectDeclaration(manyAccessTraitName, nested = Set(
 				ClassDeclaration(subViewName,
-					Parameters(
+					constructionParams = Parameters(
 						Parameter("parent", Reference.manyRowModelAccess(modelRef),
 							prefix = Some(DeclarationStart.overrideVal)),
 						Parameter("filterCondition", Reference.condition,
 							prefix = Some(DeclarationStart.overrideVal))),
-					Vector(manyAccessTraitType, Reference.subView),
+					extensions = Vector(manyAccessTraitType, Reference.subView),
 					visibility = Private
 				)
 			)),
 			TraitDeclaration(manyAccessTraitName,
-				Vector(Reference.manyRowModelAccess(modelRef), manyTraitParent,
+				extensions = Vector(Reference.manyRowModelAccess(modelRef), manyTraitParent,
 					Reference.filterableView(manyAccessTraitType)),
 				// Contains computed properties to access class properties
-				baseProperties ++ classToWrite.properties.map { prop =>
+				properties = baseProperties ++ classToWrite.properties.map { prop =>
 					val pullCode = prop.dataType
 						.fromValuesCode(s"pullColumn(model.${ DbModelWriter.columnNameFrom(prop) })")
 					ComputedProperty(prop.name.pluralPropName, pullCode.references,
@@ -311,7 +311,7 @@ object AccessWriter
 						} }")
 				) ++ manyParentProperties,
 				// Contains setters for property values (plural)
-				propertySettersFor(classToWrite, connectionParam) { _.pluralPropName } ++
+				methods = propertySettersFor(classToWrite, connectionParam) { _.pluralPropName } ++
 					manyParentMethods ++
 					deprecationMethod +
 					MethodDeclaration("filter",
@@ -345,15 +345,15 @@ object AccessWriter
 		{
 			case Some((describedRef, _, _)) =>
 				ClassDeclaration(subsetClassName,
-					Parameter("ids", ScalaType.set(ScalaType.int),
+					constructionParams = Parameter("ids", ScalaType.set(ScalaType.int),
 						prefix = Some(DeclarationStart.overrideVal)),
-					Vector(manyAccessTraitRef,
+					extensions = Vector(manyAccessTraitRef,
 						Reference.manyDescribedAccessByIds(modelRef, describedRef))
 				)
 			case None =>
 				ClassDeclaration(subsetClassName,
-					Parameter("targetIds", ScalaType.set(ScalaType.int)),
-					Vector(manyAccessTraitRef),
+					constructionParams = Parameter("targetIds", ScalaType.set(ScalaType.int)),
+					extensions = Vector(manyAccessTraitRef),
 					properties = Vector(ComputedProperty("globalCondition",
 						Set(Reference.valueConversions, Reference.sqlExtensions), isOverridden = true)(
 						"Some(index in targetIds)"))

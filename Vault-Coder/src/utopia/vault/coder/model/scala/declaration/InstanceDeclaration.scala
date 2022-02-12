@@ -7,7 +7,7 @@ import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
 import utopia.vault.coder.model.scala.code.Code
-import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Parameters, ScalaDocPart, Visibility}
+import utopia.vault.coder.model.scala.{DeclarationDate, Extension, GenericType, Parameters, ScalaDocPart, Visibility}
 import utopia.vault.coder.model.scala.template.{CodeConvertible, ScalaDocConvertible}
 
 import scala.collection.immutable.VectorBuilder
@@ -67,6 +67,7 @@ trait InstanceDeclaration
 	/**
 	  * Creates a copy of this instance, with altered information
 	  * @param visibility New visibility
+	  * @param genericTypes Generic types to introduce / use within this declaration
 	  * @param extensions New extensions
 	  * @param creationCode New creation code
 	  * @param properties New properties
@@ -77,8 +78,8 @@ trait InstanceDeclaration
 	  * @param headerComments New header comments
 	  * @return A modified copy of this instance
 	  */
-	protected def makeCopy(visibility: Visibility, extensions: Vector[Extension], creationCode: Code,
-	                       properties: Vector[PropertyDeclaration], methods: Set[MethodDeclaration],
+	protected def makeCopy(visibility: Visibility, genericTypes: Seq[GenericType], extensions: Vector[Extension],
+	                       creationCode: Code, properties: Vector[PropertyDeclaration], methods: Set[MethodDeclaration],
 	                       nested: Set[InstanceDeclaration], description: String, author: String,
 	                       headerComments: Vector[String], since: DeclarationDate): InstanceDeclaration
 	
@@ -92,6 +93,7 @@ trait InstanceDeclaration
 		if (desc.nonEmpty)
 			builder += ScalaDocPart.description(desc)
 		constructorParams.foreach { builder ++= _.documentation }
+		genericTypes.foreach { builder ++= _.documentation }
 		// If there are other scaladocs, adds author and since -tags
 		val since = this.since
 		if (description.nonEmpty)
@@ -208,7 +210,9 @@ trait InstanceDeclaration
 		val newExtensions = mySuperConstructor.orElse(theirSuperConstructor).toVector ++
 			extensions.filterNot { _.hasConstructor } ++ addedExtensions.filterNot { _.hasConstructor }
 		
-		makeCopy(visibility min other.visibility, newExtensions,
+		makeCopy(visibility min other.visibility,
+			genericTypes ++ other.genericTypes.filterNot { t => genericTypes.exists { _.name == t.name } },
+			newExtensions,
 			creationCode ++ Code(other.creationCode.lines.filterNot(creationCode.lines.contains),
 				other.creationCode.references),
 			newProperties, newMethods, newNested, description.notEmpty.getOrElse(other.description),

@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.scala.declaration
 
-import utopia.vault.coder.model.scala.Visibility
+import utopia.vault.coder.model.scala.{GenericType, Visibility}
 import utopia.vault.coder.model.scala.code.CodePiece
 
 /**
@@ -13,17 +13,21 @@ trait Declaration
 	// ABSTRACT ------------------------------
 	
 	/**
-	  * @return Visibility of this declaration
+	  * @return Visibility of the declared item
 	  */
 	def visibility: Visibility
 	/**
-	  * @return Keyword for this declaration (E.g. "def" or "val")
+	  * @return Keyword for this declaration (E.g. "def", "class" or "val")
 	  */
 	def keyword: CodePiece
 	/**
-	  * @return Name of this method / property
+	  * @return Name of the declared item
 	  */
 	def name: String
+	/**
+	  * @return Generic types used within this declaration
+	  */
+	def genericTypes: Seq[GenericType]
 	
 	
 	// COMPUTED ------------------------------
@@ -34,10 +38,13 @@ trait Declaration
 	protected def basePart =
 	{
 		val visibilityPart = visibility.toScala
-		val otherPart = keyword + s" $name"
-		if (visibilityPart.isEmpty)
-			otherPart
-		else
-			visibility.toScala + otherPart.withPrefix(" ")
+		val mainPart = keyword + s" $name"
+		val genericPart = {
+			if (genericTypes.isEmpty)
+				CodePiece.empty
+			else
+				genericTypes.map { _.toScala }.reduceLeft { _.append(_, ", ") }.withinSquareBrackets
+		}
+		visibilityPart.append(mainPart, " ") + genericPart
 	}
 }

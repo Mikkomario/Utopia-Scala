@@ -47,10 +47,11 @@ object DescribedModelWriter
 			),*/
 			// Class combines the model with its descriptions
 			ClassDeclaration(className,
-				Parameters(Parameter(modelParamName, modelRef, description = s"${classToWrite.name} to wrap"),
+				constructionParams = Parameters(Parameter(modelParamName, modelRef,
+					description = s"${classToWrite.name} to wrap"),
 					Parameter("descriptions", ScalaType.set(Reference.linkedDescription),
 						description = s"Descriptions concerning the wrapped ${classToWrite.name}")),
-				Vector(Reference.describedWrapper(modelRef), Reference.simplyDescribed),
+				extensions = Vector(Reference.describedWrapper(modelRef), Reference.simplyDescribed),
 				properties = Vector(ComputedProperty("wrapped", isOverridden = true)(modelParamName)),
 				methods = Set(MethodDeclaration("simpleBaseModel", visibility = Protected, isOverridden = true,
 					isLowMergePriority = true)(Parameter("roles", ScalaType.iterable(Reference.descriptionRole)))(
