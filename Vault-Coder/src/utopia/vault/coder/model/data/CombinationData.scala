@@ -13,10 +13,11 @@ import utopia.vault.coder.model.enumeration.CombinationType
   * @param childClass Child part class
   * @param parentAlias Alias used for the parent class instances (optional)
   * @param childAlias Alias used for the child class instances (optional)
+  * @param description Documentation for this combination
   * @param isAlwaysLinked Whether this combination is always linked (default = false)
   */
 case class CombinationData(combinationType: CombinationType, name: Name, parentClass: Class, childClass: Class,
-                           parentAlias: Option[Name] = None, childAlias: Option[Name] = None,
+                           parentAlias: Option[Name] = None, childAlias: Option[Name] = None, description: String = "",
                            isAlwaysLinked: Boolean = false)
 {
 	/**

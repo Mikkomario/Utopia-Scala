@@ -81,7 +81,13 @@ case class Property(name: Name, customColumnName: Option[String], dataType: Prop
 	  * @param naming Implicit naming rules
 	  * @return Column name to use for this property
 	  */
-	def columnName(implicit naming: NamingRules) = customColumnName.getOrElse { name.columnName }
+	def columnName(implicit naming: NamingRules) = customColumnName
+		.getOrElse {
+			(dataType.columnNameSuffix match {
+				case Some(suffix) => name + suffix
+				case None => name
+			}).columnName
+		}
 	/**
 	  * @param naming Implicit naming rules
 	  * @return Name to use for this property in database model string literals

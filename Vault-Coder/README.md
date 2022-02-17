@@ -123,6 +123,7 @@ Each combination object should contains following properties:
   - Also affects combination naming if `"name"` is not specified
 - **"child_alias" / "alias_child": String (optional)** - Name to use for the child / children in the combined class
   - Also affects combination naming if `"name"` is not specified
+- **"doc": String (optional)** - A description of this combined model (used in documentation)
 
 #### Property Object Structure
 Each property object should contain following properties:

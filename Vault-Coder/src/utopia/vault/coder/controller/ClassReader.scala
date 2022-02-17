@@ -131,7 +131,7 @@ object ClassReader
 							}
 						}
 						CombinationData(combinationType, comboName, parentClass, childClass, parentAlias,
-							childAlias, isAlwaysLinked)
+							childAlias, combo.doc, isAlwaysLinked)
 					}
 				}
 			}
@@ -203,7 +203,7 @@ object ClassReader
 					RawCombinationData(childName, comboModel("parent_alias", "alias_parent").getString,
 						comboModel("child_alias", "alias_child").getString, comboModel("type").getString,
 						comboModel("name").getString.capitalize, comboModel("name_plural").getString.capitalize,
-						comboModel("always_linked", "is_always_linked").boolean,
+						comboModel("doc").getString, comboModel("always_linked", "is_always_linked").boolean,
 						comboModel.containsNonEmpty("children"))
 				}
 			}
@@ -291,7 +291,7 @@ object ClassReader
 	// NESTED   --------------------------------------
 	
 	private case class RawCombinationData(childName: String, parentAlias: String, childAlias: String,
-	                                      comboTypeName: String, name: String, namePlural: String,
+	                                      comboTypeName: String, name: String, namePlural: String, doc: String,
 	                                      alwaysLinked: UncertainBoolean,
 	                                      childrenDefinedAsPlural: Boolean)
 }

@@ -2,7 +2,6 @@ package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.time.Today
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.CombinedOrdering
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup, Property}
@@ -22,13 +21,6 @@ import scala.util.Success
   */
 object SqlWriter
 {
-	// Package name > reference count > class name
-	private lazy val classOrdering = CombinedOrdering[(Class, Int)](
-		// Ordering.by[(Class, Int), String] { _._1.packageName },
-		Ordering.by[(Class, Int), Int] { _._2 },
-		Ordering.by[(Class, Int), String] { _._1.name.singular }
-	)
-	
 	/**
 	  * Writes the SQL document for the specified classes
 	  * @param dbName Name of the database to use (optional)
@@ -46,13 +38,15 @@ object SqlWriter
 			// (referenced tables are written before referencing tables)
 			val allClasses = classes ++ classes.flatMap { _.descriptionLinkClass }
 			val classesByTableName = allClasses.map { c => c.tableName -> c }.toMap
-			val references = allClasses.map { c =>
+			val references = classesByTableName.map { case (tableName, c) =>
 				val refs = c.properties.flatMap { _.dataType match {
-					case ClassReference(referencedTableName, _, _, _) => Some(referencedTableName.tableName)
+					case ClassReference(referencedTableName, _, _, _) =>
+						// References to the class' own table are ignored
+						Some(referencedTableName.tableName).filterNot { _ == tableName }
 					case _ => None
 				} }
 				c.tableName -> refs.toSet
-			}.toMap
+			}
 			// Forms the table initials, also
 			val initials = initialsFrom(references.flatMap { case (tableName, refs) => refs + tableName }.toSet)
 			targetPath.writeUsing { writer =>
@@ -72,48 +66,88 @@ object SqlWriter
 					writer.println()
 				}
 				
-				// Writes the class declarations in order
-				writeClasses(writer, initials, classesByTableName, references)
+				// Groups the classes by package and writes them
+				writeClasses2(writer, initials, classesByTableName.groupBy { _._2.packageName }, references)
 			}
 		}
 		else
 			Success(targetPath)
 	}
 	
+	// classesByPackageAndTableName: first key is package name (header) and second key is table name
+	// references: Keys and values are both table names
 	@tailrec
-	private def writeClasses(writer: PrintWriter, initialsMap: Map[String, String],
-	                         classesByTableName: Map[String, Class], references: Map[String, Set[String]])
+	private def writeClasses2(writer: PrintWriter, initialsMap: Map[String, String],
+	                          classesByPackageAndTableName: Map[String, Map[String, Class]],
+	                          references: Map[String, Set[String]])
 	                        (implicit setup: ProjectSetup, naming: NamingRules): Unit =
+	{
+		// Finds the classes which don't make any references to other remaining classes
+		val remainingTableNames = classesByPackageAndTableName.flatMap { _._2.keys }.toSet
+		val notReferencingTableNames = remainingTableNames
+			.filterNot { tableName =>
+				references(tableName)
+					.exists { referencedTableName => remainingTableNames.contains(referencedTableName) }
+			}
+		// Case: All classes are referenced at least once (indicates a cyclic loop) => Writes them in alphabetical order
+		if (notReferencingTableNames.isEmpty) {
+			writer.println("\n-- WARNING: Following classes contain a cyclic loop\n")
+			classesByPackageAndTableName.valuesIterator.flatMap { _.valuesIterator }.toVector.sortBy { _.name.singular }
+				.foreach { writeClass(writer, _, initialsMap) }
+		}
+		// Case: There are some classes which don't reference remaining classes => writes those
+		else {
+			// Writes a single package, including as many classes as possible
+			// Prefers packages which can be finished off, also preferring larger class sets
+			// Package name -> (class map, writeable classes count, package may be finished)
+			val packagesWithInfo = classesByPackageAndTableName.map { case (packageName, classesByTableName) =>
+				val writeableClassCount = classesByTableName
+					.count { case (tableName, _) => notReferencingTableNames.contains(tableName) }
+				packageName -> (classesByTableName, writeableClassCount,
+					writeableClassCount == classesByPackageAndTableName.size)
+			}
+			// Finds the next package to target and starts writing classes within that package
+			val (packageName, (classesByTableName, _, _)) = packagesWithInfo
+				.bestMatch(Vector(_._2._3)).maxBy { _._2._2 }
+			val packageHeader = Name.interpret(packageName, CamelCase.lower).to(Text.allCapitalized).singular
+			writer.println(s"--\t$packageHeader\t${"-" * 10}\n")
+			val remainingPackageClasses = writePossibleClasses(writer, initialsMap, classesByTableName, references)
+			// Prepares the next recursive iteration
+			val remainingClasses = {
+				if (remainingPackageClasses.isEmpty)
+					classesByPackageAndTableName - packageName
+				else
+					classesByPackageAndTableName + (packageName -> remainingPackageClasses)
+			}
+			if (remainingClasses.nonEmpty)
+				writeClasses2(writer, initialsMap, remainingClasses, references)
+		}
+	}
+	
+	@tailrec
+	private def writePossibleClasses(writer: PrintWriter, initialsMap: Map[String, String],
+	                                 classesByTableName: Map[String, Class], references: Map[String, Set[String]])
+	                                (implicit setup: ProjectSetup, naming: NamingRules): Map[String, Class] =
 	{
 		// Finds the classes which don't make any references to other remaining classes
 		val remainingTableNames = classesByTableName.keySet
 		val notReferencingTableNames = remainingTableNames
 			.filterNot { tableName => references(tableName)
 				.exists { referencedTableName => remainingTableNames.contains(referencedTableName) } }
-		// Case: All classes are referenced at least once (indicates a cyclic loop) => Writes them in alphabetical order
-		if (notReferencingTableNames.isEmpty) {
-			writer.println("\n-- WARNING: Following classes contain a cyclic loop\n")
-			classesByTableName.valuesIterator.toVector.sortBy { _.name.singular }
-				.foreach { writeClass(writer, _, initialsMap) }
-		}
+		// Case: All classes make at least once reference => sends them back to the original method caller
+		if (notReferencingTableNames.isEmpty)
+			classesByTableName
 		// Case: There are some classes which don't reference remaining classes => writes those
 		else {
-			// Writes the classes in order of package name > reference count > alphabetical order
-			notReferencingTableNames.toVector
-				.map { table => classesByTableName(table) -> references(table).size }
-				// Writes each package in a named group
-				.groupBy { case (classToWrite, _) =>
-					Name.interpret(classToWrite.packageName, CamelCase.lower).to(Text.allCapitalized).singular }
-				.toVector.sortBy { _._1 }
-				.foreach { case (packageName, classData) =>
-					writer.println(s"--\t$packageName\t${"-" * 10}\n")
-					classData.sorted(classOrdering)
-						.foreach { case (classToWrite, _) => writeClass(writer, classToWrite, initialsMap) }
-				}
-			// Continues recursively as long as classes remain
+			// Writes the classes in alphabetical order
+			notReferencingTableNames.toVector.sorted
+				.foreach { table => writeClass(writer, classesByTableName(table), initialsMap) }
+			// Continues recursively. Returns the final group of remaining classes.
 			val remainingClassesByTableName = classesByTableName -- notReferencingTableNames
 			if (remainingClassesByTableName.nonEmpty)
-				writeClasses(writer, initialsMap, remainingClassesByTableName, references)
+				writePossibleClasses(writer, initialsMap, remainingClassesByTableName, references)
+			else
+				remainingClassesByTableName
 		}
 	}
 	
@@ -156,7 +190,7 @@ object SqlWriter
 		}
 		// Writes the table
 		writer.println(s"CREATE TABLE `$tableName`(")
-		val idBase = s"\t$idName ${ classToWrite.idType.toSql } PRIMARY KEY AUTO_INCREMENT"
+		val idBase = s"\t`$idName` ${ classToWrite.idType.toSql } PRIMARY KEY AUTO_INCREMENT"
 		if (namedProps.isEmpty)
 			writer.println(idBase)
 		else {

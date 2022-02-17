@@ -37,6 +37,11 @@ sealed trait PropertyType
 	  */
 	def defaultPropertyName: Name
 	/**
+	  * @return Suffix to add to generated column names for this type. Only contains the end portion, not the
+	  *         separator (e.g. '_'). None if no suffix should be added.
+	  */
+	def columnNameSuffix: Option[String]
+	/**
 	  * @return Default value assigned for this type by default. Empty if no specific default is used.
 	  */
 	def baseDefault: CodePiece
@@ -107,6 +112,8 @@ sealed trait BasicPropertyType extends PropertyType
 	// IMPLEMENTED  --------------------------
 	
 	override def toSql = toSqlBase + " NOT NULL"
+	
+	override def columnNameSuffix = None
 	
 	override def isNullable = false
 	override def createsIndexByDefault = false
@@ -390,6 +397,7 @@ object PropertyType
 		override def baseDefault = Reference.now.targetCode
 		override def baseSqlDefault = "CURRENT_TIMESTAMP"
 		override def defaultPropertyName = Name("created", "creationTimes", CamelCase.lower)
+		override def columnNameSuffix = None
 		override def createsIndexByDefault = true
 		
 		override def notNull = this
@@ -417,6 +425,7 @@ object PropertyType
 		override def baseDefault = "None"
 		override def baseSqlDefault = ""
 		override def defaultPropertyName = Name("deprecatedAfter", "deprecationTimes", CamelCase.lower)
+		override def columnNameSuffix = None
 		override def createsIndexByDefault = true
 		
 		override def nullable = this
@@ -443,6 +452,7 @@ object PropertyType
 		override def baseDefault = CodePiece.empty
 		override def baseSqlDefault = ""
 		override def defaultPropertyName = Name("expires", "expirationTimes", CamelCase.lower)
+		override def columnNameSuffix = None
 		override def createsIndexByDefault = true
 		
 		override def nullable = Deprecation
@@ -468,7 +478,7 @@ object PropertyType
 		override def toSql = "INT NOT NULL"
 		
 		override def defaultPropertyName = "duration"
-		
+		override def columnNameSuffix = Some("days")
 		override def baseDefault = CodePiece("Days.zero", Set(Reference.days))
 		override def baseSqlDefault = "0"
 		
@@ -498,6 +508,7 @@ object PropertyType
 		override def createsIndexByDefault = false
 		
 		override def defaultPropertyName = "duration"
+		override def columnNameSuffix = Some("days")
 		override def baseDefault = "None"
 		override def baseSqlDefault = ""
 		
@@ -526,6 +537,7 @@ object PropertyType
 		override def baseDefault = "None"
 		override def baseSqlDefault = ""
 		override def defaultPropertyName = baseType.defaultPropertyName
+		override def columnNameSuffix = baseType.columnNameSuffix
 		override def createsIndexByDefault = baseType.createsIndexByDefault
 		
 		override def notNull = baseType
@@ -548,6 +560,7 @@ object PropertyType
 		override def isNullable = true
 		
 		override def defaultPropertyName = "value"
+		override def columnNameSuffix = None
 		override def baseDefault = CodePiece("Value.empty", Set(Reference.value))
 		override def baseSqlDefault = ""
 		override def createsIndexByDefault = false
@@ -591,6 +604,16 @@ object PropertyType
 		}
 		
 		override def defaultPropertyName = "duration"
+		override def columnNameSuffix = Some(unit match {
+			case TimeUnit.NANOSECONDS => "nanos"
+			case TimeUnit.MICROSECONDS => "microseconds"
+			case TimeUnit.MILLISECONDS => "millis"
+			case TimeUnit.SECONDS => "seconds"
+			case TimeUnit.MINUTES => "minutes"
+			case TimeUnit.HOURS => "hours"
+			case TimeUnit.DAYS => "days"
+			case _ => unit.toString.toLowerCase
+		})
 		override def baseDefault =
 			if (isNullable) "None" else CodePiece("Duration.Zero", Set(Reference.duration))
 		override def baseSqlDefault = if (isNullable) "" else "0"
@@ -649,6 +672,7 @@ object PropertyType
 		override def baseDefault = if (isNullable) "None" else CodePiece.empty
 		override def baseSqlDefault = ""
 		override def defaultPropertyName: Name = referencedTableName + "id"
+		override def columnNameSuffix = None
 		// Index is created when foreign key is generated
 		override def createsIndexByDefault = false
 		
@@ -693,14 +717,13 @@ object PropertyType
 		override def baseDefault = if (isNullable) CodePiece("None") else CodePiece.empty
 		override def baseSqlDefault = ""
 		override def defaultPropertyName = enumeration.name.uncapitalize
+		override def columnNameSuffix = Some("id")
 		override def createsIndexByDefault = false
 		override def notNull = if (isNullable) copy(isNullable = false) else this
 		override def nullable = if (isNullable) this else copy(isNullable = true)
 		
-		override def fromValueCode(valueCode: String) =
-		{
-			val text =
-			{
+		override def fromValueCode(valueCode: String) = {
+			val text = {
 				if (isNullable)
 					s"$valueCode.int.flatMap(${enumeration.name}.findForId)"
 				else
