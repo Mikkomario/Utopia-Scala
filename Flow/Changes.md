@@ -5,6 +5,8 @@
 - `.divide(String)` in **Regex** now returns `Vector[Either[String, String]]` instead of `Vector[String]`
   - The previous implementation is now named `.separate(String)`
 - **Loop** is now an abstract class instead of a trait. This is because the trait contains attributes.
+### New Features
+- Added **Sha256Hasher** utility tool
 ### New Methods
 - **Lazy** (object)
   - Added `.wrap(...)`, which calls `LazyWrapper.apply(...)`

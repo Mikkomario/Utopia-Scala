@@ -1,0 +1,252 @@
+{
+  "author": "Mikko Hilpinen",
+  "project": "Exodus",
+  "version": "v4.0",
+  "package": "utopia.exodus",
+  "referenced_enums": ["utopia.metropolis.model.enumeration.ModelStyle"],
+  "classes": {
+    "auth": [
+      {
+        "name": "TokenType",
+        "doc": "An enumeration for different types of authentication tokens available",
+        "props": [
+          {
+            "name": "name",
+            "length": 32,
+            "limit": "up to 128",
+            "doc": "Name of this token type for identification. Not localized."
+          },
+          {
+            "name": "parentTypeId",
+            "type": "Option[Int]",
+            "ref": "token_type",
+            "doc": "Id of the type of token used to acquire this token, if applicable"
+          },
+          {
+            "name": "duration",
+            "type": "Option[Duration[minutes]]",
+            "doc": "Duration that determines how long these tokens remain valid after issuing. None if these tokens don't expire automatically."
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ],
+        "instances": [
+          {
+            "id": 1,
+            "name": "Api Key"
+          },
+          {
+            "id": 2,
+            "name": "Refresh Token",
+            "parent_id": 1
+          },
+          {
+            "id": 3,
+            "name": "Session Token",
+            "parent_id": 2
+          },
+          {
+            "id": 4,
+            "name": "Email Validation Token"
+          }
+        ]
+      },
+      {
+        "name": "Token",
+        "doc": "Tokens used for authenticating requests",
+        "combo_index": ["deprecatedAfter", "expires"],
+        "combos": [
+          {
+            "name": "ScopedToken",
+            "children": "TokenScopeLink",
+            "child_alias": "scopeLink",
+            "doc": "Includes available scope links (ids) to an access token"
+          },
+          {
+            "name": "EmailValidationToken",
+            "child": "EmailValidationAttempt",
+            "is_always_linked": true,
+            "child_alias": "validation",
+            "doc": "A token with email validation information included"
+          }
+        ],
+        "props": [
+          {
+            "name": "typeId",
+            "ref": "token_type",
+            "doc": "Id of the token type applicable to this token"
+          },
+          {
+            "name": "hash",
+            "name_plural": "hashes",
+            "length": 96,
+            "doc": "A hashed version of this token"
+          },
+          {
+            "name": "ownerId",
+            "type": "Option[Int]",
+            "ref": "user",
+            "doc": "Id of the user who owns this token, if applicable"
+          },
+          {
+            "name": "deviceId",
+            "type": "Option[Int]",
+            "ref": "client_device",
+            "doc": "Id of the device this token is tied to, if applicable"
+          },
+          {
+            "name": "modelStylePreference",
+            "column": "model_style_id",
+            "type": "Option[Enum[ModelStyle]]",
+            "doc": "Model style preferred during this session"
+          },
+          {
+            "name": "expires",
+            "name_plural": "expirationTimes",
+            "type": "Option[Instant]",
+            "index": true,
+            "doc": "Time when this token expires, if applicable"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this token was issued"
+          },
+          {
+            "type": "deprecation",
+            "doc": "Time when this token was revoked or replaced"
+          }
+        ]
+      },
+      {
+        "name": "Scope",
+        "doc": "Represents an access right requirement and/or category.",
+        "props": [
+          {
+            "name": "name",
+            "length": 32,
+            "limit": "up to 96",
+            "doc": "Technical name or identifier of this scope"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ],
+        "instances": [
+          {
+            "id": 1,
+            "name": "General Data Read"
+          },
+          {
+            "id": 2,
+            "name": "User Creation"
+          },
+          {
+            "id": 3,
+            "name": "Personal Data Read"
+          },
+          {
+            "id": 4,
+            "name": "Personal Actions"
+          },
+          {
+            "id": 5,
+            "name": "Organization Data Read"
+          },
+          {
+            "id": 6,
+            "name": "Organization Actions"
+          },
+          {
+            "id": 7,
+            "name": "Password Reset"
+          },
+          {
+            "id": 8,
+            "name": "Email Change"
+          },
+          {
+            "id": 9,
+            "name": "Account Deletion"
+          }
+        ]
+      },
+      {
+        "name": "TokenScopeLink",
+        "doc": "Used for linking scopes to tokens using many-to-many connections, describing what actions each token enables",
+        "props": [
+          {
+            "ref": "token",
+            "doc": "Id of the linked token"
+          },
+          {
+            "ref": "scope",
+            "doc": "Id of the enabled scope"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "EmailValidationAttempt",
+        "doc": "Represents an attempted email validation. Provides additional information to an authentication token.",
+        "props": [
+          {
+            "ref": "token",
+            "doc": "Id of the token sent via email"
+          },
+          {
+            "name": "emailAddress",
+            "name_plural": "emailAddresses",
+            "length": 64,
+            "limit": "up to 160",
+            "index": true,
+            "doc": "Address to which the validation email was sent"
+          },
+          {
+            "name": "resendTokenHash",
+            "name_plural": "resendTokenHashes",
+            "type": "Option[String]",
+            "length": 96,
+            "index": true,
+            "doc": "Hashed token which may be used to send a copy of this email validation. None if resend is disabled."
+          },
+          {
+            "name": "sendCount",
+            "type": "Int",
+            "default": 1,
+            "sql_default": 1,
+            "doc": "Number of times a validation email has been sent for this specific purpose up to this point."
+          }
+        ]
+      }
+    ],
+    "user": [
+      {
+        "name": "UserPassword",
+        "doc": "Represents a hashed user password",
+        "props": [
+          {
+            "ref": "user",
+            "doc": "Id of the user who owns this password"
+          },
+          {
+            "name": "hash",
+            "name_plural": "hashes",
+            "length": 96,
+            "index": true,
+            "doc": "User's hashed password, including salt"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      }
+    ]
+  }
+}
