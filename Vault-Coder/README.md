@@ -146,7 +146,7 @@ Each property object should contain following properties:
   - **"long" / "bigint" / "number"** - Results in `Long` numeric type (default name: `"number"`)
   - **"double"** - Results in `Double` numeric type (default name: `"amount"`)
   - **"boolean" / "flag"** - Results in `Boolean` type (true / false) (default name: `"flag"`)
-  - **"datetime" / "timestamp"** - Results in `Instant` / Datetime type (default name: `"timestamp"`)
+  - **"datetime" / "timestamp" / "instant"** - Results in `Instant` / Datetime type (default name: `"timestamp"`)
   - **"date" / "LocalDate"** - Results in `LocalDate` / Date type (default name: `"date"`)
   - **"time" / "LocalTime"** - Results in `LocalTime` / Time type (default name: `"time"`)
   - **"days"** - Results in `Days` type (default name: `"duration"`)

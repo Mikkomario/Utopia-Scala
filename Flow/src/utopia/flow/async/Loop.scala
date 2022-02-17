@@ -2,12 +2,11 @@ package utopia.flow.async
 
 import utopia.flow.time.{WaitTarget, WaitUtils}
 
-import scala.concurrent.Promise
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import utopia.flow.time.WaitTarget.WaitDuration
 import utopia.flow.util.CollectionExtensions._
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Try
 
 object Loop
@@ -20,6 +19,14 @@ object Loop
      * @param operation the operation that is looped
      */
     def apply(wait: Duration)(operation: => Unit): Loop = new SimpleLoop(WaitDuration(wait), () => operation)
+    
+    
+    // NESTED   -----------------------------
+    
+    private class SimpleLoop(val nextWaitTarget: WaitTarget, val operation: () => Unit) extends Loop
+    {
+        def runOnce() = operation()
+    }
 }
 
 /**
@@ -29,7 +36,8 @@ object Loop
 * @author Mikko Hilpinen
 * @since 31.3.2019
 **/
-trait Loop extends Runnable with Breakable
+// TODO: Add delayed start function
+abstract class Loop extends Runnable with Breakable
 {
     // ATTRIBUTES    ---------------
     
@@ -78,7 +86,10 @@ trait Loop extends Runnable with Breakable
     
     def run(): Unit = run(waitFirst = false)
     
-    def run(waitFirst: Boolean) =
+    /**
+      * @param waitFirst Whether operation should be delayed according to this loop's wait time
+      */
+    def run(waitFirst: Boolean): Unit =
     {
         startedFlag.set()
         
@@ -115,14 +126,29 @@ trait Loop extends Runnable with Breakable
     /**
      * Starts this loop in an asynchronous context
      */
-    def startAsync()(implicit context: ExecutionContext) =
-    {
+    def startAsync()(implicit context: ExecutionContext) = {
         if (!hasStarted)
             context.execute(this)
     }
-}
-
-private class SimpleLoop(val nextWaitTarget: WaitTarget, val operation: () => Unit) extends Loop
-{
-    def runOnce() = operation()
+    
+    /**
+      * Starts this loop after an initial delay. Takes into consideration the possibility of this loop being
+      * broken during the delay, in which case won't start this loop.
+      * @param delay Delay before starting this loop
+      * @param context Implicit execution context
+      * @return Future that resolves when this loop has started (or not started due to being stopped first)
+      */
+    def startAsyncAfter(delay: FiniteDuration)(implicit context: ExecutionContext) = {
+        if (delay <= Duration.Zero) {
+            startAsync()
+            Future.successful(())
+        }
+        else if (!hasStarted)
+            WaitUtils.delayed(delay) {
+                if (!isBroken)
+                    startAsync()
+            }
+        else
+            Future.successful(())
+    }
 }

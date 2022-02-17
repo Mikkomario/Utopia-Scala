@@ -29,12 +29,14 @@ object AsyncExtensions
      */
 	implicit class RichFuture[A](val f: Future[A]) extends AnyVal
 	{
+		// TODO: Add interruptible waiting
+		
 	    /**
 	     * Waits for the result of this future (blocks) and returns it once it's ready
 	     * @param timeout the maximum wait duration. If timeout is reached, a failure will be returned
 	     * @return The result of the future. A failure if this future failed or if timeout was reached
 	     */
-	    def waitFor(timeout: Duration = Duration.Inf) = Try(Await.ready(f, timeout).value.get).flatten
+	    def waitFor(timeout: Duration = Duration.Inf) = Try { Await.ready(f, timeout).value.get }.flatten
 		
 		/**
 		  * Creates a copy of this future that will either succeed or fail before the specified timeout duration
@@ -44,7 +46,8 @@ object AsyncExtensions
 		  * @return A future that contains the result of the original future or a failure if timeout was passed
 		  *         before receiving a result.
 		  */
-		def withTimeout(timeout: FiniteDuration)(implicit exc: ExecutionContext) = Future { waitFor(timeout) }
+		def withTimeout(timeout: FiniteDuration)(implicit exc: ExecutionContext) =
+			Future { waitFor(timeout) }
 		
 		/**
 		 * @return Whether this future is still "empty" (not completed)
