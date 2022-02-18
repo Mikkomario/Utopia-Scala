@@ -24,6 +24,7 @@
 - Class and property names within the documentation now follow standard writing style. 
   E.g. "word of life" instead of "wordOfLife"
 - Sql documents now contain group headers based on class package names
+- Generated non-Scala documents now contain a version number in their file name (if version has been specified)
 
 ## v1.4 - 27.01.2022
 This update contains a number of additions in various levels. Perhaps most importantly, this version of the Vault Coder 

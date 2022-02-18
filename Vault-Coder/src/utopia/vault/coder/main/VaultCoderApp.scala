@@ -327,17 +327,21 @@ object VaultCoderApp extends App
 	def write(data: ProjectData)(implicit setup: ProjectSetup, naming: NamingRules): Try[Unit] =
 	{
 		val dbFileNamePart = setup.dbModuleName.toLowerCase
+		val versionPart = setup.version match {
+			case Some(version) => "-" + version
+			case None => ""
+		}
 		// Writes the enumerations
 		data.enumerations.tryMap { EnumerationWriter(_) }
 			// Writes the SQL declaration
 			.flatMap { _ => SqlWriter(data.databaseName, data.classes,
-				setup.sourceRoot/s"$dbFileNamePart-db-structure.sql") }
+				setup.sourceRoot/s"$dbFileNamePart-db-structure$versionPart.sql") }
 			// Writes initial database inserts document
 			.flatMap { _ => InsertsWriter(data.databaseName, data.instances,
-				setup.sourceRoot/s"$dbFileNamePart-initial-inserts.sql") }
+				setup.sourceRoot/s"$dbFileNamePart-initial-inserts$versionPart.sql") }
 			// Writes column length rules
 			.flatMap { _ => ColumnLengthRulesWriter(data.databaseName, data.classes,
-				setup.sourceRoot/s"$dbFileNamePart-length-rules.json") }
+				setup.sourceRoot/s"$dbFileNamePart-length-rules$versionPart.json") }
 			// Writes the tables document, which is referred to later, also
 			.flatMap { _ => TablesWriter(data.classes) }
 			.flatMap { tablesRef =>
