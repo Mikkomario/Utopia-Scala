@@ -2,6 +2,8 @@
 
 ## v1.12.1 (in development)
 ### New Features
+- Added **ChronoRowFactoryView** and **SingleChronoRowModelAccess** traits which wrap a **FromRowFactoryWithTimestamp** 
+  factory and provide utility functions accordingly
 - You may now customize column maximum length handling logic via `ColumnLengthRules.loadFrom(...)`
   - (Added a new variation of the `.loadFrom(...)` method)
 
