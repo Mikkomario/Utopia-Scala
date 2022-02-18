@@ -106,3 +106,24 @@ CREATE TABLE `token_scope_link`(
 	CONSTRAINT tsl_t_token_ref_fk FOREIGN KEY tsl_t_token_ref_idx (token_id) REFERENCES `token`(`id`) ON DELETE CASCADE, 
 	CONSTRAINT tsl_s_scope_ref_fk FOREIGN KEY tsl_s_scope_ref_idx (scope_id) REFERENCES `scope`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
+-- Inserts initial data
+
+-- Inserts 9 scopes
+INSERT INTO `scope` (id, name) VALUES
+	(1, 'General Data Read'),
+	(2, 'User Creation'),
+	(3, 'Personal Data Read'),
+	(4, 'Personal Actions'),
+	(5, 'Organization Data Read'),
+	(6, 'Organization Actions'),
+	(7, 'Password Reset'),
+	(8, 'Email Change'),
+	(9, 'Account Deletion');
+
+-- Inserts 4 token types
+INSERT INTO `token_type` (id, name) VALUES
+	(1, 'Api Key'),
+	(2, 'Refresh Token'),
+	(3, 'Session Token'),
+	(4, 'Email Validation Token');
