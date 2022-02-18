@@ -80,6 +80,7 @@ object Reference
 	lazy val unconditionalView = apply(viewAccess, "UnconditionalView")
 	lazy val nonDeprecatedView = apply(viewAccess, "NonDeprecatedView")
 	lazy val filterableView = apply(viewAccess, "FilterableView")
+	lazy val chronoRowFactoryView = apply(viewAccess, "ChronoRowFactoryView")
 	
 	lazy val singleRowModelAccess = apply(singleModelAccess, "SingleRowModelAccess")
 	lazy val manyModelAccess = apply(Package.manyModelAccess, "ManyModelAccess")

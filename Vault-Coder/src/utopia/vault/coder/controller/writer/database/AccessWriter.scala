@@ -330,13 +330,22 @@ object AccessWriter
 					val parent = if (parentRef.isDefined) None else Some(Extension(Reference.indexed))
 					(parent, Vector(), Set[MethodDeclaration]())
 			}
-			val parents = (parentRef match {
-				case Some(parent) =>
-					Vector[Extension](parent(modelRef, traitType), Reference.manyRowModelAccess(modelRef))
-				case None =>
-					Vector[Extension](Reference.manyRowModelAccess(modelRef),
-						Reference.filterableView(traitType))
-			}) ++ accessParent
+			val parents = {
+				val creationTimeParent: Option[Extension] = {
+					if (classToWrite.recordsIndexedCreationTime)
+						Some(Reference.chronoRowFactoryView(modelRef, traitType))
+					else
+						None
+				}
+				val rowModelAccess = Reference.manyRowModelAccess(modelRef)
+				(parentRef match {
+					case Some(parent) =>
+						Vector[Extension](parent(modelRef, traitType), rowModelAccess) ++ creationTimeParent
+					case None =>
+						Vector[Extension](rowModelAccess,
+							creationTimeParent.getOrElse(Reference.filterableView(traitType)))
+				}) ++ accessParent
+			}
 			
 			File(manyAccessPackage,
 				ObjectDeclaration(traitName, nested = Set(
