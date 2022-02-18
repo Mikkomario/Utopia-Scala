@@ -3,7 +3,7 @@ package utopia.exodus.rest.resource.user
 import utopia.access.http.Method.{Delete, Get}
 import utopia.access.http.Status.{InternalServerError, Unauthorized}
 import utopia.citadel.util.CitadelContext._
-import utopia.exodus.database.access.single.auth.{DbEmailValidationAttempt, DbSessionToken}
+import utopia.exodus.database.access.single.auth.{DbEmailValidationAttemptOld, DbSessionToken}
 import utopia.exodus.rest.resource.NotImplementedResource
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
@@ -70,7 +70,7 @@ object QuestSessionsNode extends ResourceWithChildren[AuthorizedContext] with No
 						// Case: Using an email token to open an email-validated session
 						case Some(emailToken) =>
 							connectionPool.tryWith { implicit connection =>
-								DbEmailValidationAttempt.open.tokenToSession(emailToken) match {
+								DbEmailValidationAttemptOld.open.tokenToSession(emailToken) match {
 									case Success(session) => Result.Success(session.token).toResponse
 									case Failure(error) => Result.Failure(Unauthorized, error.getMessage).toResponse
 								}

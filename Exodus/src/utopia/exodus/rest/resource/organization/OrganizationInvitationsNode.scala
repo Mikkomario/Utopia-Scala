@@ -6,7 +6,7 @@ import utopia.citadel.database.access.id.single.DbUserId
 import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.citadel.database.model.organization.InvitationModel
-import utopia.exodus.database.access.single.auth.DbEmailValidationAttempt
+import utopia.exodus.database.access.single.auth.DbEmailValidationAttemptOld
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.OrganizationInvitation
 import utopia.exodus.model.enumeration.StandardTask.InviteMembers
 import utopia.exodus.rest.resource.scalable.{ExtendableOrganizationResource, ExtendableOrganizationResourceFactory, OrganizationUseCaseImplementation}
@@ -105,7 +105,7 @@ class OrganizationInvitationsNode(organizationId: Int) extends ExtendableOrganiz
 												// Records a new email validation attempt based on the invitation,
 												// if possible
 												ExodusContext.emailValidator.foreach { implicit validator =>
-													DbEmailValidationAttempt.start(newInvitation.recipientEmail,
+													DbEmailValidationAttemptOld.start(newInvitation.recipientEmail,
 														OrganizationInvitation.id, invitation.recipientId)
 												}
 												// Returns the new invitation

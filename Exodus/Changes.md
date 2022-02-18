@@ -1,5 +1,16 @@
 # Utopia Exodus - List of Changes
 
+## v4.0 (in development)
+### Breaking Changes
+- Overhauled the authorization system:
+  - Replaced **SessionToken**, **DeviceToken**, **ApiKey**, **EmailValidatedSession** and **EmailValidationAttempt** 
+    (partially) with **Token**
+  - New token system supports authentication scopes
+  - The difference between "public" and session-authenticated resources was removed. All resources are now authorized 
+    using access tokens. Only the required scopes differ.
+  - The **AuthorizedContext** interface is also different now
+- Replaced **PublicDescriptionsNode** with new **GeneralDataNode**
+
 ## v3.1 - 27.01.2022
 An update that introduces multiple fixes and functional changes to the user management interface, 
 but unfortunately also a number of breaking changes.

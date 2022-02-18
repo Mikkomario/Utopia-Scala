@@ -1,11 +1,15 @@
 # Utopia Vault - List of Changes
 
 ## v1.12.1 (in development)
+### Deprecations
+- Deprecated **NullDeprecatable**`.idColumn` in favor of `.index`
 ### New Features
 - Added **ChronoRowFactoryView** and **SingleChronoRowModelAccess** traits which wrap a **FromRowFactoryWithTimestamp** 
   factory and provide utility functions accordingly
 - You may now customize column maximum length handling logic via `ColumnLengthRules.loadFrom(...)`
   - (Added a new variation of the `.loadFrom(...)` method)
+### Other Changes
+- **NullDeprecatable** now extends **Indexed**
 
 ## v1.12 - 27.01.2022
 This update contains a major refactoring of the factory and access traits, as well as some important fixes. 

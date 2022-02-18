@@ -9,6 +9,7 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 24.11.2020, v1
   */
+@deprecated("This trait will be removed in a future release", "v4.0")
 trait PublicDescriptionsNodeFactory[+A]
 {
 	// ABSTRACT	------------------------------

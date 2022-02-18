@@ -15,6 +15,7 @@ import utopia.vault.nosql.storable.deprecation.DeprecatableAfter
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 object DeviceTokenModel 
 	extends DataInserter[DeviceTokenModel, DeviceToken, DeviceTokenData] 
 		with DeprecatableAfter[DeviceTokenModel]
@@ -141,6 +142,7 @@ object DeviceTokenModel
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 case class DeviceTokenModel(id: Option[Int] = None, deviceId: Option[Int] = None, userId: Option[Int] = None, 
 	token: Option[String] = None, created: Option[Instant] = None, deprecatedAfter: Option[Instant] = None) 
 	extends StorableWithFactory[DeviceToken]

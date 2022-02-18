@@ -1,6 +1,5 @@
 package utopia.exodus.database.access.many.auth
 
-import java.time.Instant
 import utopia.exodus.database.factory.auth.EmailValidationAttemptFactory
 import utopia.exodus.database.model.auth.EmailValidationAttemptModel
 import utopia.exodus.model.stored.auth.EmailValidationAttempt
@@ -21,63 +20,37 @@ object ManyEmailValidationAttemptsAccess
 }
 
 /**
-  * A common trait for access points which target multiple EmailValidationAttempts at a time
+  * A common trait for access points which target multiple email validation attempts at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-25
+  * @since 18.02.2022, v4.0
   */
-trait ManyEmailValidationAttemptsAccess
-	extends ManyRowModelAccess[EmailValidationAttempt] with Indexed
-		with FilterableView[ManyEmailValidationAttemptsAccess]
+trait ManyEmailValidationAttemptsAccess 
+	extends ManyRowModelAccess[EmailValidationAttempt] with FilterableView[ManyEmailValidationAttemptsAccess] 
+		with Indexed
 {
 	// COMPUTED	--------------------
 	
 	/**
-	  * purposeIds of the accessible EmailValidationAttempts
+	  * tokens ids of the accessible email validation attempts
 	  */
-	def purposeIds(implicit connection: Connection) = 
-		pullColumn(model.purposeIdColumn).flatMap { value => value.int }
+	def tokensIds(implicit connection: Connection) = pullColumn(model.tokenIdColumn).map { v => v.getInt }
 	
 	/**
-	  * emailAddresses of the accessible EmailValidationAttempts
+	  * email addresses of the accessible email validation attempts
 	  */
 	def emailAddresses(implicit connection: Connection) = 
-		pullColumn(model.emailColumn).flatMap { value => value.string }
+		pullColumn(model.emailAddressColumn).map { v => v.getString }
 	
 	/**
-	  * tokens of the accessible EmailValidationAttempts
+	  * resend token hashes of the accessible email validation attempts
 	  */
-	def tokens(implicit connection: Connection) = pullColumn(model.tokenColumn)
-		.flatMap { value => value.string }
+	def resendTokenHashes(implicit connection: Connection) = 
+		pullColumn(model.resendTokenHashColumn).flatMap { _.string }
 	
 	/**
-	  * resendTokens of the accessible EmailValidationAttempts
+	  * send counts of the accessible email validation attempts
 	  */
-	def resendTokens(implicit connection: Connection) = 
-		pullColumn(model.resendTokenColumn).flatMap { value => value.string }
-	
-	/**
-	  * userIds of the accessible EmailValidationAttempts
-	  */
-	def userIds(implicit connection: Connection) = pullColumn(model.userIdColumn)
-		.flatMap { value => value.int }
-	
-	/**
-	  * expirationTimes of the accessible EmailValidationAttempts
-	  */
-	def expirationTimes(implicit connection: Connection) = 
-		pullColumn(model.expiresColumn).flatMap { value => value.instant }
-	
-	/**
-	  * creationTimes of the accessible EmailValidationAttempts
-	  */
-	def creationTimes(implicit connection: Connection) = 
-		pullColumn(model.createdColumn).flatMap { value => value.instant }
-	
-	/**
-	  * completionTimes of the accessible EmailValidationAttempts
-	  */
-	def completionTimes(implicit connection: Connection) = 
-		pullColumn(model.completedColumn).flatMap { value => value.instant }
+	def sendCounts(implicit connection: Connection) = pullColumn(model.sendCountColumn).map { v => v.getInt }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).flatMap { id => id.int }
 	
@@ -98,65 +71,35 @@ trait ManyEmailValidationAttemptsAccess
 	// OTHER	--------------------
 	
 	/**
-	  * Updates the completed of the targeted EmailValidationAttempt instance(s)
-	  * @param newCompleted A new completed to assign
-	  * @return Whether any EmailValidationAttempt instance was affected
+	  * Updates the email addresses of the targeted email validation attempts
+	  * @param newEmailAddress A new email address to assign
+	  * @return Whether any email validation attempt was affected
 	  */
-	def completionTimes_=(newCompleted: Instant)(implicit connection: Connection) = 
-		putColumn(model.completedColumn, newCompleted)
+	def emailAddresses_=(newEmailAddress: String)(implicit connection: Connection) = 
+		putColumn(model.emailAddressColumn, newEmailAddress)
 	
 	/**
-	  * Updates the created of the targeted EmailValidationAttempt instance(s)
-	  * @param newCreated A new created to assign
-	  * @return Whether any EmailValidationAttempt instance was affected
+	  * Updates the resend token hashes of the targeted email validation attempts
+	  * @param newResendTokenHash A new resend token hash to assign
+	  * @return Whether any email validation attempt was affected
 	  */
-	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
-		putColumn(model.createdColumn, newCreated)
+	def resendTokenHashes_=(newResendTokenHash: String)(implicit connection: Connection) = 
+		putColumn(model.resendTokenHashColumn, newResendTokenHash)
 	
 	/**
-	  * Updates the email of the targeted EmailValidationAttempt instance(s)
-	  * @param newEmail A new email to assign
-	  * @return Whether any EmailValidationAttempt instance was affected
+	  * Updates the send counts of the targeted email validation attempts
+	  * @param newSendCount A new send count to assign
+	  * @return Whether any email validation attempt was affected
 	  */
-	def emailAddresses_=(newEmail: String)(implicit connection: Connection) = 
-		putColumn(model.emailColumn, newEmail)
+	def sendCounts_=(newSendCount: Int)(implicit connection: Connection) = 
+		putColumn(model.sendCountColumn, newSendCount)
 	
 	/**
-	  * Updates the expires of the targeted EmailValidationAttempt instance(s)
-	  * @param newExpires A new expires to assign
-	  * @return Whether any EmailValidationAttempt instance was affected
+	  * Updates the tokens ids of the targeted email validation attempts
+	  * @param newTokenId A new token id to assign
+	  * @return Whether any email validation attempt was affected
 	  */
-	def expirationTimes_=(newExpires: Instant)(implicit connection: Connection) = 
-		putColumn(model.expiresColumn, newExpires)
-	
-	/**
-	  * Updates the purposeId of the targeted EmailValidationAttempt instance(s)
-	  * @param newPurposeId A new purposeId to assign
-	  * @return Whether any EmailValidationAttempt instance was affected
-	  */
-	def purposeIds_=(newPurposeId: Int)(implicit connection: Connection) = 
-		putColumn(model.purposeIdColumn, newPurposeId)
-	
-	/**
-	  * Updates the resendToken of the targeted EmailValidationAttempt instance(s)
-	  * @param newResendToken A new resendToken to assign
-	  * @return Whether any EmailValidationAttempt instance was affected
-	  */
-	def resendTokens_=(newResendToken: String)(implicit connection: Connection) = 
-		putColumn(model.resendTokenColumn, newResendToken)
-	
-	/**
-	  * Updates the token of the targeted EmailValidationAttempt instance(s)
-	  * @param newToken A new token to assign
-	  * @return Whether any EmailValidationAttempt instance was affected
-	  */
-	def tokens_=(newToken: String)(implicit connection: Connection) = putColumn(model.tokenColumn, newToken)
-	
-	/**
-	  * Updates the userId of the targeted EmailValidationAttempt instance(s)
-	  * @param newUserId A new userId to assign
-	  * @return Whether any EmailValidationAttempt instance was affected
-	  */
-	def userIds_=(newUserId: Int)(implicit connection: Connection) = putColumn(model.userIdColumn, newUserId)
+	def tokensIds_=(newTokenId: Int)(implicit connection: Connection) = putColumn(model.tokenIdColumn, 
+		newTokenId)
 }
 

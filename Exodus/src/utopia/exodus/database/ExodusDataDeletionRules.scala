@@ -3,7 +3,7 @@ package utopia.exodus.database
 import utopia.citadel.database.deletion.CitadelDataDeletionRules
 import CitadelDataDeletionRules.defaultHistoryDuration
 import CitadelDataDeletionRules.deprecation
-import utopia.exodus.database.model.auth.{DeviceTokenModel, EmailValidationAttemptModel, SessionTokenModel}
+import utopia.exodus.database.model.auth.{DeviceTokenModel, EmailValidationAttemptModelOld, SessionTokenModel}
 import utopia.flow.time.TimeExtensions._
 import utopia.vault.model.immutable.DataDeletionRule
 
@@ -44,7 +44,7 @@ object ExodusDataDeletionRules
 			session.finite.map { duration => DataDeletionRule(SessionTokenModel.table,
 				SessionTokenModel.expiresAttName, duration) },
 			deprecation(DeviceTokenModel, deviceKey),
-			deprecation(EmailValidationAttemptModel, emailValidation)).flatten
+			deprecation(EmailValidationAttemptModelOld, emailValidation)).flatten
 	
 	/**
 	  * Uses the same history duration for all of the tables

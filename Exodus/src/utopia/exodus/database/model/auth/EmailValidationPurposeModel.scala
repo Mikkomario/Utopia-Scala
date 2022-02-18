@@ -14,6 +14,7 @@ import utopia.vault.nosql.storable.DataInserter
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 object EmailValidationPurposeModel 
 	extends DataInserter[EmailValidationPurposeModel, EmailValidationPurpose, EmailValidationPurposeData]
 {
@@ -85,6 +86,7 @@ object EmailValidationPurposeModel
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 case class EmailValidationPurposeModel(id: Option[Int] = None, nameEn: Option[String] = None, 
 	created: Option[Instant] = None) 
 	extends StorableWithFactory[EmailValidationPurpose]

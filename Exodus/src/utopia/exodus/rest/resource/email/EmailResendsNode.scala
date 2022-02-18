@@ -4,7 +4,7 @@ import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.access.http.Status.{InternalServerError, NotImplemented, Unauthorized}
 import utopia.citadel.util.CitadelContext._
-import utopia.exodus.database.access.single.auth.DbEmailValidationAttempt
+import utopia.exodus.database.access.single.auth.DbEmailValidationAttemptOld
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.{EmailValidator, ExodusContext}
 import utopia.nexus.http.Path
@@ -47,7 +47,7 @@ object EmailResendsNode extends LeafResource[AuthorizedContext]
 					case Some(resendToken) =>
 						connectionPool.tryWith { implicit connection =>
 							implicit val v: EmailValidator = validator
-							DbEmailValidationAttempt.open.withResendToken(resendToken).resend() match
+							DbEmailValidationAttemptOld.open.withResendToken(resendToken).resend() match
 							{
 								// Doesn't send any data on success
 								case Right(_) => Result.Empty

@@ -26,6 +26,7 @@ object ManyEmailValidatedSessionsAccess
   * @author Mikko Hilpinen
   * @since 24.11.2021, v3.1
   */
+@deprecated("Will be removed in a future release", "v4.0")
 trait ManyEmailValidatedSessionsAccess
 	extends ManyRowModelAccess[EmailValidatedSession] with Indexed with FilterableView[ManyEmailValidatedSessionsAccess]
 {

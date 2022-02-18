@@ -7,6 +7,7 @@ import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
   * An access point to individual DeviceTokens, based on their id
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 case class DbSingleDeviceToken(id: Int) 
 	extends UniqueDeviceTokenAccess with SingleIntIdModelAccess[DeviceToken]
 

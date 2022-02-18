@@ -8,7 +8,7 @@ import utopia.citadel.database.access.single.device.DbClientDevice
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.citadel.util.CitadelContext._
 import utopia.exodus.database.UserDbExtensions._
-import utopia.exodus.database.access.single.auth.{DbEmailValidationAttempt, DbSessionToken}
+import utopia.exodus.database.access.single.auth.{DbEmailValidationAttemptOld, DbSessionToken}
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.PasswordReset
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.handleError
@@ -70,7 +70,7 @@ object MyPasswordNode extends LeafResource[AuthorizedContext]
 					case Some((emailToken, deviceId)) =>
 						connectionPool.tryWith { implicit connection =>
 							// Checks (and possibly closes) the email validation token
-							DbEmailValidationAttempt.open.completeWithToken(emailToken, PasswordReset.id) { validation =>
+							DbEmailValidationAttemptOld.open.completeWithToken(emailToken, PasswordReset.id) { validation =>
 								// User id is expected to be provided in the validation. Uses email as a backup.
 								// Also makes sure the user id is still valid
 								validation.userId.filter { DbUser(_).nonEmpty }

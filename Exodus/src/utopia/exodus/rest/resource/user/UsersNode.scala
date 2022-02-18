@@ -28,10 +28,10 @@ import utopia.vault.database.Connection
 
 import scala.util.{Failure, Success, Try}
 
+import ExodusContext.uuidGenerator
+
 object UsersNode extends CustomAuthorizationResourceFactory[UsersNode]
 {
-	import ExodusContext.uuidGenerator
-	
 	// IMPLEMENTED	------------------------------
 	
 	// NB: Uses email validation authorization when that is available.

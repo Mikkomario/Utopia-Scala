@@ -17,6 +17,7 @@ import utopia.vault.nosql.template.Indexed
   * @author Mikko Hilpinen
   * @since 24.11.2021, v3.1
   */
+@deprecated("Will be removed in a future release", "v4.0")
 trait UniqueEmailValidatedSessionAccess 
 	extends SingleRowModelAccess[EmailValidatedSession] 
 		with DistinctModelAccess[EmailValidatedSession, Option[EmailValidatedSession], Value] with Indexed

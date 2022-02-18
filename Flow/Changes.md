@@ -16,6 +16,9 @@
   - Added `.filter(...)` and `.filterNot(...)`, which are kind of conditional resets
 - **Value**
   - Added `.nonEmpty`, which has the same function as `.isDefined`
+### Other Changes
+- Changed **Map**`.mergedWith(Map, ...)` to `.mergeWith(Map)(...)` (in **CollectionExtensions**)
+  - Previous version was deprecated
 
 ## v1.14.1 - 27.01.2022
 This update introduces a number of quality-of-life improvements, and also some important fixes to json writing and 

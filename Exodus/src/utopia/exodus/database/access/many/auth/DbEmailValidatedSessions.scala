@@ -10,6 +10,7 @@ import utopia.vault.sql.SqlExtensions._
   * @author Mikko Hilpinen
   * @since 24.11.2021, v3.1
   */
+@deprecated("Will be removed in a future release", "v4.0")
 object DbEmailValidatedSessions 
 	extends ManyEmailValidatedSessionsAccess with NonDeprecatedView[EmailValidatedSession]
 {

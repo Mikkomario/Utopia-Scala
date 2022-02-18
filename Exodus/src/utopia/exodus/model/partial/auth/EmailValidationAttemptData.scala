@@ -1,51 +1,28 @@
 package utopia.exodus.model.partial.auth
 
-import java.time.Instant
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.time.Now
-import utopia.flow.time.TimeExtensions._
 
 /**
-  * Represents an attempted email validation, and the possible response / success
-  * @param purposeId Id of the purpose this email validation is used for
-  * @param email Email address being validated
-  * @param token Token sent with the email, which is also used for validating the email address
-  * @param resendToken Token used for authenticating an email resend attempt
-  * @param userId Id of the user who claims to own this email address (if applicable)
-  * @param expires Time when this EmailValidationAttempt expires / becomes invalid
-  * @param created Time when this EmailValidationAttempt was first created
-  * @param completed Time when this attempt was finished successfully. None while not completed.
+  * Represents an attempted email validation. Provides additional information to an authentication token.
+  * @param tokenId Id of the token sent via email
+  * @param emailAddress Address to which the validation email was sent
+  * @param resendTokenHash Hashed token which may be used to send a copy of this email validation. None if
+  *  resend is disabled.
+  * 
+	@param sendCount Number of times a validation email has been sent for this specific purpose up to this point.
   * @author Mikko Hilpinen
-  * @since 2021-10-25
+  * @since 18.02.2022, v4.0
   */
-case class EmailValidationAttemptData(purposeId: Int, email: String, token: String, resendToken: String, 
-	expires: Instant, userId: Option[Int] = None, created: Instant = Now, completed: Option[Instant] = None)
+case class EmailValidationAttemptData(tokenId: Int, emailAddress: String, 
+	resendTokenHash: Option[String] = None, sendCount: Int = 1) 
 	extends ModelConvertible
 {
-	// COMPUTED	--------------------
-	
-	/**
-	  * Whether this EmailValidationAttempt is no longer valid because it has expired
-	  */
-	def hasExpired = expires <= Now
-	/**
-	  * Whether this EmailValidationAttempt is still valid (hasn't expired yet)
-	  */
-	def isValid = !hasExpired
-	
-	/**
-	  * @return Whether this validation was actually answered
-	  */
-	def wasCompleted = completed.nonEmpty
-	
-	
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = 
-		Model(Vector("purpose_id" -> purposeId, "email" -> email, "token" -> token, 
-			"resend_token" -> resendToken, "user_id" -> userId, "expires" -> expires, "created" -> created, 
-			"completed" -> completed))
+		Model(Vector("token_id" -> tokenId, "email_address" -> emailAddress, 
+			"resend_token_hash" -> resendTokenHash, "send_count" -> sendCount))
 }
 

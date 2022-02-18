@@ -5,7 +5,7 @@ import utopia.access.http.Method.Post
 import utopia.access.http.Status.{BadRequest, Forbidden, NotFound, NotImplemented}
 import utopia.citadel.database.access.id.single.DbUserId
 import utopia.citadel.database.access.many.user.DbManyUserSettings
-import utopia.exodus.database.access.single.auth.DbEmailValidationAttempt
+import utopia.exodus.database.access.single.auth.DbEmailValidationAttemptOld
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.{EmailChange, PasswordReset, UserCreation}
 import utopia.exodus.rest.resource.CustomAuthorizationResourceFactory
 import utopia.exodus.rest.util.AuthorizedContext
@@ -91,7 +91,7 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 		else
 		{
 			// Sends an email validation, if possible
-			DbEmailValidationAttempt.start(email, UserCreation.id) match
+			DbEmailValidationAttemptOld.start(email, UserCreation.id) match
 			{
 				// On success returns the resend token
 				case Right(newValidation) => Result.Success(newValidation.resendToken)
@@ -129,7 +129,7 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 		{
 			DbUserId.forEmail(email) match {
 				case Some(userId) =>
-					DbEmailValidationAttempt.start(email, PasswordReset.id, Some(userId)) match
+					DbEmailValidationAttemptOld.start(email, PasswordReset.id, Some(userId)) match
 					{
 						case Right(newValidation) => Result.Success(newValidation.resendToken)
 						case Left((status, message)) => Result.Failure(status, message)
@@ -167,7 +167,7 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 							{
 								// Places a new email validation
 								implicit val v: EmailValidator = validator
-								DbEmailValidationAttempt.start(email, EmailChange.id, Some(session.userId)) match
+								DbEmailValidationAttemptOld.start(email, EmailChange.id, Some(session.userId)) match
 								{
 									case Right(validation) =>
 										// Returns a resend token on success

@@ -1,5 +1,12 @@
 # Utopia Nexus - List of Changes
 
+## v1.7 (in development)
+### Breaking Changes
+- Modular resources were updated so that use case implementations no longer specify methods. Instead, use cases within 
+  the modular resources are now stored in Maps.
+### New Features
+- Added **NotImplementedResource** trait (from **Exodus**)
+
 ## v1.6.2 - 27.01.2022
 This update introduces an important bugfix concerning modular resources
 ### Scala

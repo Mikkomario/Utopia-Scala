@@ -18,6 +18,7 @@ import utopia.vault.sql.SqlExtensions._
   * @author Mikko Hilpinen
   * @since 24.11.2021, v3.1
   */
+@deprecated("Will be removed in a future release", "v4.0")
 object EmailValidatedSessionModel 
 	extends DataInserter[EmailValidatedSessionModel, EmailValidatedSession, EmailValidatedSessionData] 
 		with Deprecatable
@@ -146,6 +147,7 @@ object EmailValidatedSessionModel
   * @author Mikko Hilpinen
   * @since 24.11.2021, v3.1
   */
+@deprecated("Will be removed in a future release", "v4.0")
 case class EmailValidatedSessionModel(id: Option[Int] = None, validationId: Option[Int] = None, 
 	token: Option[String] = None, expires: Option[Instant] = None, created: Option[Instant] = None, 
 	closedAfter: Option[Instant] = None) 

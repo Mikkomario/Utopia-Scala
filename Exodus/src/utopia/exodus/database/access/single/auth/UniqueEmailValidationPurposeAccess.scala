@@ -16,6 +16,7 @@ import utopia.vault.nosql.template.Indexed
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 trait UniqueEmailValidationPurposeAccess 
 	extends SingleRowModelAccess[EmailValidationPurpose] 
 		with DistinctModelAccess[EmailValidationPurpose, Option[EmailValidationPurpose], Value] with Indexed

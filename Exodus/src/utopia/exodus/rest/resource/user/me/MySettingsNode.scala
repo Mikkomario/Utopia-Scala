@@ -3,7 +3,7 @@ package utopia.exodus.rest.resource.user.me
 import utopia.access.http.Method.{Get, Patch, Put}
 import utopia.access.http.Status.{BadRequest, Forbidden, NotFound, Unauthorized}
 import utopia.citadel.database.access.single.user.DbUser
-import utopia.exodus.database.access.single.auth.DbEmailValidationAttempt
+import utopia.exodus.database.access.single.auth.DbEmailValidationAttemptOld
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.EmailChange
 import utopia.exodus.model.error.InvalidKeyException
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, SessionUseCaseImplementation}
@@ -77,7 +77,7 @@ object MySettingsNode extends ExtendableSessionResource
 									// Case: Email token found => completes the validation attempt, if possible
 									update.emailValidationToken match {
 										case Some(token) =>
-											DbEmailValidationAttempt.open
+											DbEmailValidationAttemptOld.open
 												.completeWithToken(token, EmailChange.id) { validation =>
 													// Makes sure this user owns the validation
 													if (validation.userId.forall { _ == userId })

@@ -1,9 +1,10 @@
 package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
-import utopia.access.http.Status.NotFound
+import utopia.access.http.Status.{NotFound, Unauthorized}
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.single.organization.DbTask
+import utopia.exodus.model.enumeration.ExodusScope.GeneralDataRead
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, ExtendableSessionResourceFactory, SessionUseCaseImplementation}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
@@ -26,23 +27,25 @@ class TaskNode(val taskId: Int) extends ExtendableSessionResource
 {
 	// ATTRIBUTES   ------------------------------
 	
-	private val defaultGet = SessionUseCaseImplementation.default(Get) { (session, connection, context, _) =>
+	private val defaultGet = SessionUseCaseImplementation.default { (session, connection, context, _) =>
 		implicit val c: Connection = connection
 		implicit val cntx: AuthorizedContext = context
 		implicit val languageIds: LanguageIds = session.languageIds
 		
-		// Reads task along with its descriptions
-		access.described match
-		{
-			case Some(task) =>
-				// Forms a response based on this described task
-				Result.Success(session.modelStyle match
-				{
-					case Simple => task.toSimpleModelUsing(DbDescriptionRoles.pull)
-					case Full => task.toModel
-				})
-			case None => Result.Failure(NotFound, s"$taskId is not a valid task id")
-		}
+		// Makes sure the request is authorized for this scope
+		if (session.access.hasScope(GeneralDataRead))
+			// Reads task along with its descriptions
+			access.described match {
+				case Some(task) =>
+					// Forms a response based on this described task
+					Result.Success(session.modelStyle match {
+						case Simple => task.toSimpleModelUsing(DbDescriptionRoles.pull)
+						case Full => task.toModel
+					})
+				case None => Result.Failure(NotFound, s"$taskId is not a valid task id")
+			}
+		else
+			Result.Failure(Unauthorized, "You're not authorized to read task data")
 	}
 	
 	
@@ -55,7 +58,6 @@ class TaskNode(val taskId: Int) extends ExtendableSessionResource
 	
 	override def name = taskId.toString
 	
-	override protected def defaultUseCaseImplementations = Vector(defaultGet)
-	
+	override protected def defaultUseCaseImplementations = Map(Get -> defaultGet)
 	override protected def defaultFollowImplementations = Vector()
 }
