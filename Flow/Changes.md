@@ -14,6 +14,8 @@
   - Added `.startAsyncAfter(FiniteDuration)`, a delayed version of `.startAsync()`
 - **ResettableLazy**
   - Added `.filter(...)` and `.filterNot(...)`, which are kind of conditional resets
+- **Value**
+  - Added `.nonEmpty`, which has the same function as `.isDefined`
 
 ## v1.14.1 - 27.01.2022
 This update introduces a number of quality-of-life improvements, and also some important fixes to json writing and 

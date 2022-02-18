@@ -9,7 +9,7 @@ import utopia.flow.util.FileExtensions._
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments}
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.ClassReader
-import utopia.vault.coder.controller.writer.database.{AccessWriter, ColumnLengthRulesWriter, CombinedFactoryWriter, DbDescriptionAccessWriter, DbModelWriter, DescriptionLinkInterfaceWriter, FactoryWriter, SqlWriter, TablesWriter}
+import utopia.vault.coder.controller.writer.database.{AccessWriter, ColumnLengthRulesWriter, CombinedFactoryWriter, DbDescriptionAccessWriter, DbModelWriter, DescriptionLinkInterfaceWriter, FactoryWriter, InsertsWriter, SqlWriter, TablesWriter}
 import utopia.vault.coder.controller.writer.model.{CombinedModelWriter, DescribedModelWriter, EnumerationWriter, ModelWriter}
 import utopia.vault.coder.model.data.{Class, ClassReferences, Filter, NamingRules, ProjectData, ProjectSetup}
 import utopia.vault.coder.model.scala.datatype.Reference
@@ -227,7 +227,7 @@ object VaultCoderApp extends App
 							}
 							ProjectData(pName, modelPackage, dbPackage, a.databaseName.orElse { b.databaseName },
 								a.enumerations ++ b.enumerations, a.classes ++ b.classes,
-								a.combinations ++ b.combinations, a.namingRules, version,
+								a.combinations ++ b.combinations, a.instances ++ b.instances, a.namingRules, version,
 								a.modelCanReferToDB && b.modelCanReferToDB, a.prefixColumnNames && b.prefixColumnNames)
 						}
 					}
@@ -326,14 +326,18 @@ object VaultCoderApp extends App
 	
 	def write(data: ProjectData)(implicit setup: ProjectSetup, naming: NamingRules): Try[Unit] =
 	{
+		val dbFileNamePart = setup.dbModuleName.toLowerCase
 		// Writes the enumerations
 		data.enumerations.tryMap { EnumerationWriter(_) }
 			// Writes the SQL declaration
 			.flatMap { _ => SqlWriter(data.databaseName, data.classes,
-				setup.sourceRoot/s"${setup.dbModuleName}-db-structure.sql") }
+				setup.sourceRoot/s"$dbFileNamePart-db-structure.sql") }
+			// Writes initial database inserts document
+			.flatMap { _ => InsertsWriter(data.databaseName, data.instances,
+				setup.sourceRoot/s"$dbFileNamePart-initial-inserts.sql") }
 			// Writes column length rules
 			.flatMap { _ => ColumnLengthRulesWriter(data.databaseName, data.classes,
-				setup.sourceRoot/s"${setup.dbModuleName}-length-rules.json") }
+				setup.sourceRoot/s"$dbFileNamePart-length-rules.json") }
 			// Writes the tables document, which is referred to later, also
 			.flatMap { _ => TablesWriter(data.classes) }
 			.flatMap { tablesRef =>

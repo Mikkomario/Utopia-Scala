@@ -45,12 +45,16 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
     /**
      * The description of this value, describing both content and data type
      */
-    def description = s"'${stringOr()}' ($dataType)"
+    def description = s"'$getString' ($dataType)"
     
+    /**
+      * @return Whether this value has a real (not null) object value associated with it
+      */
+    def nonEmpty = content.isDefined
     /**
      * Whether this value has a real object value associated with it
      */
-    def isDefined = content.isDefined
+    def isDefined = nonEmpty
     
     /**
      * Whether this value doesn't have a real object value associated with it

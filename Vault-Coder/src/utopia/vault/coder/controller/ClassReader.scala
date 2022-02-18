@@ -7,7 +7,7 @@ import utopia.flow.datastructure.immutable.{Model, ModelValidationFailedExceptio
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.{UncertainBoolean, Version}
-import utopia.vault.coder.model.data.{Class, CombinationData, Enum, Name, NamingRules, ProjectData, Property}
+import utopia.vault.coder.model.data.{Class, CombinationData, Enum, Instance, Name, NamingRules, ProjectData, Property}
 import utopia.vault.coder.model.enumeration.CombinationType.{Combined, MultiCombined, PossiblyCombined}
 import utopia.vault.coder.model.enumeration.IntSize.Default
 import utopia.vault.coder.model.enumeration.{BasicPropertyType, CombinationType, NamingConvention, PropertyType}
@@ -78,17 +78,17 @@ object ClassReader
 			packageAtt.value.model match
 			{
 				case Some(classModel) =>
-					parseClassFrom(classModel, packageAtt.name, allEnumerations, author).map { Vector(_) }
+					classFrom(classModel, packageAtt.name, allEnumerations, author).map { Vector(_) }
 				case None =>
 					packageAtt.value.getVector.flatMap { _.model }
-						.tryMap { parseClassFrom(_, packageAtt.name, allEnumerations, author) }
+						.tryMap { classFrom(_, packageAtt.name, allEnumerations, author) }
 			}
 		}.map { _.flatten }
 		
 		classes.map { classData =>
 			val classes = classData.map { _._1 }
 			// Processes the proposed combinations
-			val combinations = classData.flatMap { case (parentClass, combos) =>
+			val combinations = classData.flatMap { case (parentClass, combos, _) =>
 				combos.flatMap { combo =>
 					// Finds the child class (child name match)
 					classes.find { c => c.name.variants.exists { _ ~== combo.childName } }.map { childClass =>
@@ -135,14 +135,16 @@ object ClassReader
 					}
 				}
 			}
+			// Returns class instances, also
+			val instances = classData.flatMap { _._3 }
 			ProjectData(projectName, modelPackage, dbPackage, databaseName, enumerations, classes, combinations,
-				namingRules, root("version").string.map { Version(_) }, !root("models_without_vault").getBoolean,
-				root("prefix_columns").getBoolean)
+				instances, namingRules, root("version").string.map { Version(_) },
+				!root("models_without_vault").getBoolean, root("prefix_columns").getBoolean)
 		}
 	}
 	
-	private def parseClassFrom(classModel: Model, packageName: String, enumerations: Iterable[Enum],
-	                           defaultAuthor: String)(implicit naming: NamingRules) =
+	private def classFrom(classModel: Model, packageName: String, enumerations: Iterable[Enum],
+	                      defaultAuthor: String)(implicit naming: NamingRules) =
 	{
 		val rawClassName = classModel("name").string.filter { _.nonEmpty }.map { Name.interpret(_, naming.className) }
 		val tableName = classModel("table_name", "table").string.filter { _.nonEmpty }
@@ -208,13 +210,20 @@ object ClassReader
 				}
 			}
 			
-			Success(new Class(fullName, tableName.map { _.tableName }, idName.getOrElse(Class.defaultIdName),
+			val readClass = new Class(fullName, tableName.map { _.tableName }, idName.getOrElse(Class.defaultIdName),
 				properties, packageName, comboIndexColumnNames, descriptionLinkColumnName,
 				classModel("doc").getString, classModel("author").stringOr(defaultAuthor),
 				classModel("use_long_id").getBoolean,
 				// Writes generic access point if this class has combinations, or if explicitly specified
-				classModel("has_combos", "generic_access", "tree_inheritance").booleanOr(comboInfo.nonEmpty)) ->
-				comboInfo)
+				classModel("has_combos", "generic_access", "tree_inheritance").booleanOr(comboInfo.nonEmpty))
+			
+			// Also parses class instances if they are present
+			val instances = classModel("instance").model match {
+				case Some(instanceModel) => Vector(instanceFrom(instanceModel, readClass))
+				case None => classModel("instances").getVector.flatMap { _.model }.map { instanceFrom(_, readClass) }
+			}
+			
+			Success((readClass, comboInfo, instances))
 		}
 	}
 	
@@ -285,6 +294,16 @@ object ClassReader
 			propModel("default", "def").getString, propModel("sql_default", "sql_def").getString,
 			propModel("length_rule", "length_limit", "limit", "max_length", "length_max", "max").getString,
 			propModel("indexed", "index", "is_index").boolean)
+	}
+	
+	private def instanceFrom(model: Model, parentClass: Class)(implicit naming: NamingRules) = {
+		// Matches model properties against class properties
+		val properties = model.attributesWithValue.flatMap { att =>
+			val attName = Name.interpret(att.name, naming.classProp)
+			parentClass.properties.find { _.name ~== attName }
+				.map { _ -> att.value }
+		}.toMap
+		Instance(parentClass, properties, model("id"))
 	}
 	
 	

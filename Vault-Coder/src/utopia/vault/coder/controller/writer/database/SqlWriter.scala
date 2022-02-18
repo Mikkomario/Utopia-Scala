@@ -56,14 +56,13 @@ object SqlWriter
 				setup.version.foreach { v => writer.println(s"-- Version: $v") }
 				writer.println(s"-- Last generated: ${Today.toString}")
 				writer.println("--")
-				writer.println()
 				
 				// Writes the database introduction, if needed
 				dbName.foreach { dbName =>
+					writer.println()
 					writer.println(s"CREATE DATABASE IF NOT EXISTS `$dbName` ")
 					writer.println("\tDEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;")
 					writer.println(s"USE `$dbName`;")
-					writer.println()
 				}
 				
 				// Groups the classes by package and writes them
@@ -110,7 +109,7 @@ object SqlWriter
 			val (packageName, (classesByTableName, _, _)) = packagesWithInfo
 				.bestMatch(Vector(_._2._3)).maxBy { _._2._2 }
 			val packageHeader = Name.interpret(packageName, CamelCase.lower).to(Text.allCapitalized).singular
-			writer.println(s"--\t$packageHeader\t${"-" * 10}\n")
+			writer.println(s"\n--\t$packageHeader\t${"-" * 10}\n")
 			val remainingPackageClasses = writePossibleClasses(writer, initialsMap, classesByTableName, references)
 			// Prepares the next recursive iteration
 			val remainingClasses = {

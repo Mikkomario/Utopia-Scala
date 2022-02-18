@@ -8,6 +8,7 @@
   - This may cause different results in cases where custom table names were used alongside the `"described"` property
 ### New Features
 - Added **ManyXAccessLike** -trait writing in cases where a class contains combinations and when specifically requested
+- You can now list initially inserted instances in the model structure document (see README for details)
 - You can now write property length limit rules, which will be collected to a separate document (see README for details)
 - You can now customize column, table, property, etc. naming rules in the model declaration document 
   (see README for more details)

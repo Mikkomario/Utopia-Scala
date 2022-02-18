@@ -15,6 +15,7 @@ import utopia.vault.coder.model.scala.Package
   * @param enumerations Enumerations in this project
   * @param classes Classes in this project
   * @param combinations Combinations in this project
+  * @param instances Introduced class instances in this project
   * @param namingRules Naming rules to use in this project
   * @param version Project version
   * @param modelCanReferToDB Whether model classes are allowed to refer to database classes
@@ -22,8 +23,9 @@ import utopia.vault.coder.model.scala.Package
   */
 case class ProjectData(projectName: String, modelPackage: Package, databasePackage: Package,
                        databaseName: Option[String], enumerations: Vector[Enum],
-                       classes: Vector[Class], combinations: Vector[CombinationData], namingRules: NamingRules,
-                       version: Option[Version], modelCanReferToDB: Boolean, prefixColumnNames: Boolean)
+                       classes: Vector[Class], combinations: Vector[CombinationData], instances: Vector[Instance],
+                       namingRules: NamingRules, version: Option[Version], modelCanReferToDB: Boolean,
+                       prefixColumnNames: Boolean)
 {
 	// COMPUTED ------------------------------
 	
