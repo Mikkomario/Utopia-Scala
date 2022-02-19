@@ -16,6 +16,7 @@ import java.time.Instant
   * An access point to individual ClientDevices, based on their id
   * @since 2021-10-23
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 case class DbSingleClientDevice(id: Int) 
 	extends UniqueClientDeviceAccess with SingleIdDescribedAccess[ClientDevice, DescribedClientDevice]
 {

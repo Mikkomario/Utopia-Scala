@@ -43,11 +43,6 @@ object TokenModel extends DataInserter[TokenModel, Token, TokenData] with Deprec
 	val ownerIdAttName = "ownerId"
 	
 	/**
-	  * Name of the property that contains token device id
-	  */
-	val deviceIdAttName = "deviceId"
-	
-	/**
 	  * Name of the property that contains token model style preference
 	  */
 	val modelStylePreferenceAttName = "modelStyleId"
@@ -96,11 +91,6 @@ object TokenModel extends DataInserter[TokenModel, Token, TokenData] with Deprec
 	def ownerIdColumn = table(ownerIdAttName)
 	
 	/**
-	  * Column that contains token device id
-	  */
-	def deviceIdColumn = table(deviceIdAttName)
-	
-	/**
 	  * Column that contains token model style preference
 	  */
 	def modelStylePreferenceColumn = table(modelStylePreferenceAttName)
@@ -142,7 +132,7 @@ object TokenModel extends DataInserter[TokenModel, Token, TokenData] with Deprec
 	override def table = factory.table
 	
 	override def apply(data: TokenData) = 
-		apply(None, Some(data.typeId), Some(data.hash), data.parentTokenId, data.ownerId, data.deviceId, 
+		apply(None, Some(data.typeId), Some(data.hash), data.parentTokenId, data.ownerId,
 			data.modelStylePreference, data.expires, Some(data.created), data.deprecatedAfter, 
 			Some(data.isSingleUseOnly))
 	
@@ -162,12 +152,6 @@ object TokenModel extends DataInserter[TokenModel, Token, TokenData] with Deprec
 	  * @return A model containing only the specified deprecated after
 	  */
 	def withDeprecatedAfter(deprecatedAfter: Instant) = apply(deprecatedAfter = Some(deprecatedAfter))
-	
-	/**
-	  * @param deviceId Id of the device this token is tied to, if applicable
-	  * @return A model containing only the specified device id
-	  */
-	def withDeviceId(deviceId: Int) = apply(deviceId = Some(deviceId))
 	
 	/**
 	  * @param expires Time when this token expires, if applicable
@@ -226,7 +210,6 @@ object TokenModel extends DataInserter[TokenModel, Token, TokenData] with Deprec
   * @param hash A hashed version of this token
   * @param parentTokenId Id of the token that was used to acquire this token, if applicable & still known
   * @param ownerId Id of the user who owns this token, if applicable
-  * @param deviceId Id of the device this token is tied to, if applicable
   * @param modelStylePreference Model style preferred during this session
   * @param expires Time when this token expires, if applicable
   * @param created Time when this token was issued
@@ -236,7 +219,7 @@ object TokenModel extends DataInserter[TokenModel, Token, TokenData] with Deprec
   * @since 18.02.2022, v4.0
   */
 case class TokenModel(id: Option[Int] = None, typeId: Option[Int] = None, hash: Option[String] = None, 
-	parentTokenId: Option[Int] = None, ownerId: Option[Int] = None, deviceId: Option[Int] = None, 
+	parentTokenId: Option[Int] = None, ownerId: Option[Int] = None,
 	modelStylePreference: Option[ModelStyle] = None, expires: Option[Instant] = None, 
 	created: Option[Instant] = None, deprecatedAfter: Option[Instant] = None, 
 	isSingleUseOnly: Option[Boolean] = None) 
@@ -249,7 +232,7 @@ case class TokenModel(id: Option[Int] = None, typeId: Option[Int] = None, hash: 
 	override def valueProperties = {
 		import TokenModel._
 		Vector("id" -> id, typeIdAttName -> typeId, hashAttName -> hash, 
-			parentTokenIdAttName -> parentTokenId, ownerIdAttName -> ownerId, deviceIdAttName -> deviceId, 
+			parentTokenIdAttName -> parentTokenId, ownerIdAttName -> ownerId,
 			modelStylePreferenceAttName -> modelStylePreference.map { _.id }, expiresAttName -> expires, 
 			createdAttName -> created, deprecatedAfterAttName -> deprecatedAfter, 
 			isSingleUseOnlyAttName -> isSingleUseOnly)
@@ -269,12 +252,6 @@ case class TokenModel(id: Option[Int] = None, typeId: Option[Int] = None, hash: 
 	  * @return A new copy of this model with the specified deprecated after
 	  */
 	def withDeprecatedAfter(deprecatedAfter: Instant) = copy(deprecatedAfter = Some(deprecatedAfter))
-	
-	/**
-	  * @param deviceId A new device id
-	  * @return A new copy of this model with the specified device id
-	  */
-	def withDeviceId(deviceId: Int) = copy(deviceId = Some(deviceId))
 	
 	/**
 	  * @param expires A new expires

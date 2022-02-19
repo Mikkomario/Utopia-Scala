@@ -498,6 +498,7 @@ abstract class AuthorizedContext extends Context
 		result.toResponse(this)
 	}
 	
+	// TODO: Reject the token if it can only be used as a refresh token
 	private def _tokenAuthorized(pullToken: (DbTokenMatch, Connection) => Option[Token])
 	                            (f: (Token, Connection) => Result) = {
 		tokenAuthorized("token") { (token, connection) =>

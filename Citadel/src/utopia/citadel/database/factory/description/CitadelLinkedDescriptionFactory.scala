@@ -7,6 +7,7 @@ package utopia.citadel.database.factory.description
   */
 object CitadelLinkedDescriptionFactory
 {
+	@deprecated("This class will be removed in a future release", "v2.1")
 	lazy val clientDevice = LinkedDescriptionFactory(CitadelDescriptionLinkFactory.clientDevice)
 	lazy val descriptionRole = LinkedDescriptionFactory(CitadelDescriptionLinkFactory.descriptionRole)
 	lazy val language = LinkedDescriptionFactory(CitadelDescriptionLinkFactory.language)

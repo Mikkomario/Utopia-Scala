@@ -47,11 +47,6 @@ trait UniqueTokenAccess
 	def ownerId(implicit connection: Connection) = pullColumn(model.ownerIdColumn).int
 	
 	/**
-	  * Id of the device this token is tied to, if applicable. None if no instance (or value) was found.
-	  */
-	def deviceId(implicit connection: Connection) = pullColumn(model.deviceIdColumn).int
-	
-	/**
 	  * Model style preferred during this session. None if no instance (or value) was found.
 	  */
 	def modelStylePreference(implicit connection: Connection) = 
@@ -123,14 +118,6 @@ trait UniqueTokenAccess
 	  */
 	def deprecatedAfter_=(newDeprecatedAfter: Instant)(implicit connection: Connection) = 
 		putColumn(model.deprecatedAfterColumn, newDeprecatedAfter)
-	
-	/**
-	  * Updates the device ids of the targeted tokens
-	  * @param newDeviceId A new device id to assign
-	  * @return Whether any token was affected
-	  */
-	def deviceId_=(newDeviceId: Int)(implicit connection: Connection) = 
-		putColumn(model.deviceIdColumn, newDeviceId)
 	
 	/**
 	  * Updates the expiration times of the targeted tokens

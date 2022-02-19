@@ -6,7 +6,6 @@ import utopia.exodus.database.access.single.auth.DbTokenType
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
 import utopia.flow.datastructure.immutable.Model
-import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
 import utopia.metropolis.model.enumeration.ModelStyle
@@ -18,7 +17,6 @@ import utopia.vault.database.Connection
   * @param hash A hashed version of this token
   * @param parentTokenId Id of the token that was used to acquire this token, if applicable & still known
   * @param ownerId Id of the user who owns this token, if applicable
-  * @param deviceId Id of the device this token is tied to, if applicable
   * @param modelStylePreference Model style preferred during this session
   * @param expires Time when this token expires, if applicable
   * @param created Time when this token was issued
@@ -27,10 +25,9 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 18.02.2022, v4.0
   */
-case class TokenData(typeId: Int, hash: String, parentTokenId: Option[Int] = None, 
-	ownerId: Option[Int] = None, deviceId: Option[Int] = None, 
-	modelStylePreference: Option[ModelStyle] = None, expires: Option[Instant] = None, created: Instant = Now, 
-	deprecatedAfter: Option[Instant] = None, isSingleUseOnly: Boolean = false)
+case class TokenData(typeId: Int, hash: String, parentTokenId: Option[Int] = None, ownerId: Option[Int] = None,
+                     modelStylePreference: Option[ModelStyle] = None, expires: Option[Instant] = None,
+	                 created: Instant = Now, deprecatedAfter: Option[Instant] = None, isSingleUseOnly: Boolean = false)
 {
 	// COMPUTED	--------------------
 	
@@ -83,7 +80,7 @@ case class TokenData(typeId: Int, hash: String, parentTokenId: Option[Int] = Non
 	  * @return A model based on this token's information, including the specified non-hashed token
 	  */
 	def toModelWith(tokenString: String) =
-		Model(Vector("token" -> tokenString, "created" -> created, "expires" -> expires, "device_id" -> deviceId,
+		Model(Vector("token" -> tokenString, "created" -> created, "expires" -> expires,
 			"is_single_use_only" -> isSingleUseOnly))
 }
 

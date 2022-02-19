@@ -1,5 +1,11 @@
 # Utopia Disciple - List of changes
 
+## v2.1 (in development)
+### Breaking Changes
+- DbUser.insert(...) now accepts different parameters and returns a DetailedUser, not UserWithLinks
+### Deprecations
+- Deprecated all client device -related classes and functions
+
 ## v2.0.1 - 27.01.2022
 Important bugfix and some minor changes
 ### Scala

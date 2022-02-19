@@ -7,6 +7,7 @@ import utopia.flow.generic.{ModelConvertible, SureFromModelFactory}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.time.TimeExtensions._
+import utopia.metropolis.model.enumeration.ModelStyle
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -23,7 +24,8 @@ object NewSessionRequest extends SureFromModelFactory[NewSessionRequest]
 	// IMPLEMENTED  ------------------------------
 	
 	override def parseFrom(model: template.Model[Property]) =
-		NewSessionRequest(model("device_id"), model("duration_minutes", "duration").int.map { _.minutes },
+		NewSessionRequest(model("model_style", "style").string.flatMap(ModelStyle.findForKey),
+			model("duration_minutes", "duration").int.map { _.minutes },
 			model("request_refresh_token"), model("revoke_previous"))
 }
 
@@ -32,11 +34,11 @@ object NewSessionRequest extends SureFromModelFactory[NewSessionRequest]
   * @author Mikko Hilpinen
   * @since 19.2.2022, v2.0.2
   */
-case class NewSessionRequest(deviceId: Option[Int] = None, customDuration: Option[FiniteDuration] = None,
+case class NewSessionRequest(modelStyle: Option[ModelStyle] = None, customDuration: Option[FiniteDuration] = None,
                              requestRefreshToken: Boolean = false, revokePrevious: Boolean = false)
 	extends ModelConvertible
 {
-	override def toModel = Model(Vector("device_id" -> deviceId,
-		"duration_minutes" -> customDuration.map { _.toMinutes }, "request_refresh_token" -> requestRefreshToken,
-		"revoke_previous" -> revokePrevious))
+	override def toModel = Model(Vector("model_style" -> modelStyle.map { _.key },
+		"duration_minutes" -> customDuration.map { _.toMinutes },
+		"request_refresh_token" -> requestRefreshToken, "revoke_previous" -> revokePrevious))
 }

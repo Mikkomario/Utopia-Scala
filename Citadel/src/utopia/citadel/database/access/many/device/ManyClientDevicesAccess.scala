@@ -26,6 +26,7 @@ object ManyClientDevicesAccess
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 trait ManyClientDevicesAccess 
 	extends ManyRowModelAccess[ClientDevice] with ManyDescribedAccess[ClientDevice, DescribedClientDevice]
 		with FilterableView[ManyClientDevicesAccess]

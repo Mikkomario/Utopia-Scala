@@ -7,6 +7,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.time.Now
 
+@deprecated("This class will be removed in a future release", "v2.1")
 object ClientDeviceUserData extends FromModelFactoryWithSchema[ClientDeviceUserData]
 {
 	override val schema = ModelDeclaration("device_id" -> IntType, "user_id" -> IntType)
@@ -24,6 +25,7 @@ object ClientDeviceUserData extends FromModelFactoryWithSchema[ClientDeviceUserD
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 case class ClientDeviceUserData(deviceId: Int, userId: Int, created: Instant = Now, 
 	deprecatedAfter: Option[Instant] = None) 
 	extends ModelConvertible

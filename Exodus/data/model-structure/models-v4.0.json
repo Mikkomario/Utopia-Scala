@@ -117,12 +117,6 @@
             "doc": "Id of the user who owns this token, if applicable"
           },
           {
-            "name": "deviceId",
-            "type": "Option[Int]",
-            "ref": "client_device",
-            "doc": "Id of the device this token is tied to, if applicable"
-          },
-          {
             "name": "modelStylePreference",
             "column": "model_style_id",
             "type": "Option[Enum[ModelStyle]]",

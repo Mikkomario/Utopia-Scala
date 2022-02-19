@@ -1,7 +1,6 @@
 package utopia.exodus.database.access.many.auth
 
 import java.time.Instant
-import utopia.exodus.database.factory.auth.TokenFactory
 import utopia.exodus.database.model.auth.TokenModel
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
@@ -41,11 +40,6 @@ trait ManyTokensAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  * owner ids of the accessible tokens
 	  */
 	def ownerIds(implicit connection: Connection) = pullColumn(model.ownerIdColumn).flatMap { _.int }
-	
-	/**
-	  * device ids of the accessible tokens
-	  */
-	def deviceIds(implicit connection: Connection) = pullColumn(model.deviceIdColumn).flatMap { _.int }
 	
 	/**
 	  * model style preferences of the accessible tokens
@@ -115,14 +109,6 @@ trait ManyTokensAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  */
 	def deprecationTimes_=(newDeprecatedAfter: Instant)(implicit connection: Connection) = 
 		putColumn(model.deprecatedAfterColumn, newDeprecatedAfter)
-	
-	/**
-	  * Updates the device ids of the targeted tokens
-	  * @param newDeviceId A new device id to assign
-	  * @return Whether any token was affected
-	  */
-	def deviceIds_=(newDeviceId: Int)(implicit connection: Connection) = 
-		putColumn(model.deviceIdColumn, newDeviceId)
 	
 	/**
 	  * Updates the expiration times of the targeted tokens

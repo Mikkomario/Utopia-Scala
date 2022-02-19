@@ -10,6 +10,7 @@ import utopia.metropolis.model.combined.description.DescribedSimpleModelConverti
 import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.metropolis.model.stored.device.ClientDeviceUser
 
+@deprecated("This class will be removed in a future release", "v2.1")
 object DetailedClientDevice extends FromModelFactory[DetailedClientDevice]
 {
 	// IMPLEMENTED	----------------------
@@ -26,6 +27,7 @@ object DetailedClientDevice extends FromModelFactory[DetailedClientDevice]
   * @author Mikko Hilpinen
   * @since 19.6.2020, v1
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 case class DetailedClientDevice(describedDevice: DescribedClientDevice, userLinks: Set[ClientDeviceUser])
 	extends Extender[DescribedClientDevice] with ModelConvertible with DescribedSimpleModelConvertible
 {

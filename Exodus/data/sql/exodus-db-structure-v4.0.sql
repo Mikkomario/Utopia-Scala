@@ -36,7 +36,6 @@ CREATE TABLE `token_type`(
 -- hash:               A hashed version of this token
 -- parent_token_id:    Id of the token that was used to acquire this token, if applicable & still known
 -- owner_id:           Id of the user who owns this token, if applicable
--- device_id:          Id of the device this token is tied to, if applicable
 -- model_style_id:     Model style preferred during this session
 -- expires:            Time when this token expires, if applicable
 -- created:            Time when this token was issued
@@ -48,7 +47,6 @@ CREATE TABLE `token`(
 	`hash` VARCHAR(96) NOT NULL,
 	`parent_token_id` INT,
 	`owner_id` INT,
-	`device_id` INT,
 	`model_style_id` INT,
 	`expires` DATETIME,
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -58,8 +56,7 @@ CREATE TABLE `token`(
 	INDEX t_combo_1_idx (deprecated_after, expires, hash),
 	CONSTRAINT t_tt_type_ref_fk FOREIGN KEY t_tt_type_ref_idx (type_id) REFERENCES `token_type`(`id`) ON DELETE CASCADE,
 	CONSTRAINT t_t_parent_token_ref_fk FOREIGN KEY t_t_parent_token_ref_idx (parent_token_id) REFERENCES `token`(`id`) ON DELETE SET NULL,
-	CONSTRAINT t_u_owner_ref_fk FOREIGN KEY t_u_owner_ref_idx (owner_id) REFERENCES `user`(`id`) ON DELETE SET NULL, 
-	CONSTRAINT t_cd_device_ref_fk FOREIGN KEY t_cd_device_ref_idx (device_id) REFERENCES `client_device`(`id`) ON DELETE SET NULL
+	CONSTRAINT t_u_owner_ref_fk FOREIGN KEY t_u_owner_ref_idx (owner_id) REFERENCES `user`(`id`) ON DELETE SET NULL
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents an attempted email validation. Provides additional information to an authentication token.

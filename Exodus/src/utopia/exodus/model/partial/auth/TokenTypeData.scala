@@ -24,6 +24,14 @@ case class TokenTypeData(name: String, duration: Option[FiniteDuration] = None,
 	refreshedTypeId: Option[Int] = None, created: Instant = Now, isSingleUseOnly: Boolean = false) 
 	extends ModelConvertible
 {
+	// COMPUTED ------------------------
+	
+	/**
+	  * @return Whether this token may be used as a refresh token
+	  */
+	def isRefreshToken = refreshedTypeId.isDefined
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = 

@@ -10,6 +10,7 @@ import utopia.flow.time.Now
 
 import scala.util.Success
 
+@deprecated("This class will be removed in a future release", "v2.1")
 object ClientDeviceData extends FromModelFactory[ClientDeviceData]
 {
 	override def apply(model: template.Model[Property]) =
@@ -23,6 +24,7 @@ object ClientDeviceData extends FromModelFactory[ClientDeviceData]
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 case class ClientDeviceData(creatorId: Option[Int] = None, created: Instant = Now) extends ModelConvertible
 {
 	// IMPLEMENTED	--------------------

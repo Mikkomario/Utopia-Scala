@@ -1,9 +1,14 @@
 # Utopia Metropolis - List of Changes
 
-## v2.0.2 (in development)
+## v2.1 (in development)
+### Breaking Changes
+- **NewUser** no longer accepts device -related parameters
 ### Deprecations
+- Deprecated all client device -related models
+- Deprecated **UserWithLinks** in favor of **DetailedUser**
 - Deprecated **UserCreationResult**, as it is no longer valid since **Exodus** v4.0
 ### Other Changes
+- Changed `.toSimpleModel` implementation in **FullUserLanguage**
 - **NewUser**`.toModel` now contains property `request_refresh_token` instead of `remember_me`. `remember_me` is still 
   supported in **Exodus** v4.0, however.
 

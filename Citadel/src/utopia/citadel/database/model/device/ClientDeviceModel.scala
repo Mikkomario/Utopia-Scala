@@ -14,6 +14,7 @@ import utopia.vault.nosql.storable.DataInserter
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 object ClientDeviceModel extends DataInserter[ClientDeviceModel, ClientDevice, ClientDeviceData]
 {
 	// ATTRIBUTES	--------------------
@@ -85,6 +86,7 @@ object ClientDeviceModel extends DataInserter[ClientDeviceModel, ClientDevice, C
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 case class ClientDeviceModel(id: Option[Int] = None, creatorId: Option[Int] = None, 
 	created: Option[Instant] = None) 
 	extends StorableWithFactory[ClientDevice]

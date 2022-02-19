@@ -4,8 +4,6 @@ import utopia.access.http.Method.Post
 import utopia.access.http.Status._
 import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.citadel.database.access.many.user.DbManyUserSettings
-import utopia.citadel.database.access.single.device.DbClientDevice
-import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.citadel.database.access.single.user.{DbUser, DbUserSettings}
 import utopia.exodus.database.access.many.auth.DbScopes
 import utopia.exodus.database.access.single.auth.DbToken
@@ -21,7 +19,7 @@ import utopia.exodus.util.{ExodusContext, PasswordHash}
 import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.StringExtensions._
-import utopia.metropolis.model.combined.user.UserWithLinks
+import utopia.metropolis.model.combined.user.DetailedUser
 import utopia.metropolis.model.error.{AlreadyUsedException, IllegalPostModelException}
 import utopia.metropolis.model.post.NewUser
 import utopia.nexus.http.Path
@@ -76,11 +74,10 @@ object UsersNode extends Resource[AuthorizedContext]
 						case Success(user) =>
 							// Generates a new refresh token, if requested
 							val scopedToken = token.withScopeLinksPulled
-							val deviceId = user.deviceIds.headOption
 							val modelStylePreference = context.modelStyle
 							val refreshToken = {
 								if (completeUserData.requestRefreshToken) {
-									Some(DbToken.refreshUsing(scopedToken, RefreshToken.id, Some(user.id), deviceId,
+									Some(DbToken.refreshUsing(scopedToken, RefreshToken.id, Some(user.id),
 										ExodusContext.defaultUserScopeIds, modelStylePreference))
 								}
 								else
@@ -92,7 +89,7 @@ object UsersNode extends Resource[AuthorizedContext]
 								case None => scopedToken -> scopedToken.typeAccess.refreshedTypeId
 							}
 							val (newSessionToken, sessionTokenString) = DbToken.refreshUsing(parentToken,
-								refreshedTokenTypeId.getOrElse { SessionToken.id }, Some(user.id), deviceId,
+								refreshedTokenTypeId.getOrElse { SessionToken.id }, Some(user.id),
 								ExodusContext.defaultUserScopeIds, modelStylePreference)
 							// Attaches scope information to acquired tokens, so that all necessary information may
 							// be returned
@@ -128,7 +125,7 @@ object UsersNode extends Resource[AuthorizedContext]
 	
 	// OTHER    --------------------------
 	
-	private def tryInsert(newUser: NewUser)(implicit connection: Connection): Try[UserWithLinks] =
+	private def tryInsert(newUser: NewUser)(implicit connection: Connection): Try[DetailedUser] =
 	{
 		// Checks whether the proposed email already exist
 		val userName = newUser.name.trim
@@ -145,27 +142,15 @@ object UsersNode extends Resource[AuthorizedContext]
 			Failure(new AlreadyUsedException("User name is already in use"))
 		else
 		{
-			// Makes sure provided device id or language id matches data in the DB
-			val idsAreValid = newUser.device.forall {
-				case Right(deviceId) => DbClientDevice(deviceId).nonEmpty
-				case Left(newDevice) => DbLanguage(newDevice.languageId).nonEmpty
+			// Makes sure all the specified languages are valid
+			DbLanguages.validateProposedProficiencies(newUser.languages).flatMap { languages =>
+				// Inserts new user data
+				val user = DbUser.insert(newUser.name, email, languages)
+				// Inserts the new password
+				UserPasswordModel.insert(UserPasswordData(user.id, PasswordHash.createHash(newUser.password)))
+				// Returns inserted user
+				Success(user)
 			}
-			if (idsAreValid)
-			{
-				// Makes sure all the specified languages are also valid
-				DbLanguages.validateProposedProficiencies(newUser.languages).flatMap { languages =>
-					// Inserts new user data
-					val user = DbUser.insert(newUser.name, email,
-						languages.map { case (language, familiarity) => language.id -> familiarity.id }.toMap,
-						newUser.device)
-					// Inserts the new password
-					UserPasswordModel.insert(UserPasswordData(user.id, PasswordHash.createHash(newUser.password)))
-					// Returns inserted user
-					Success(user)
-				}
-			}
-			else
-				Failure(new IllegalPostModelException("device_id and language_id must point to existing data"))
 		}
 	}
 }

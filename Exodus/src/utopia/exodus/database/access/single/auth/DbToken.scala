@@ -52,7 +52,6 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	  * @param typeId Id of the type of this token
 	  * @param parentId Id of the token that was used to authorize this token's creation (if applicable)
 	  * @param ownerId Id of the owner of this token (if applicable)
-	  * @param deviceId Id of the device this token is tied to (if applicable)
 	  * @param scopeIds Ids of the scopes accessible using this token (default = empty)
 	  * @param duration Duration indicating how long this token is valid, if limited (default = None = not limited)
 	  * @param modelStylePreference Preferred model style to use during this session (optional)
@@ -62,7 +61,7 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	  * @return A new token, along with the non-hashed token string
 	  */
 	def insertCustom(typeId: Int, parentId: Option[Int] = None, ownerId: Option[Int] = None,
-	                 deviceId: Option[Int] = None, duration: Option[FiniteDuration] = None, scopeIds: Set[Int] = Set(),
+	                 duration: Option[FiniteDuration] = None, scopeIds: Set[Int] = Set(),
 	                 modelStylePreference: Option[ModelStyle] = None, isSingleUseOnly: Boolean = false)
 	                (implicit connection: Connection, uuidGenerator: UuidGenerator) =
 	{
@@ -70,7 +69,7 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 		val tokenString = uuidGenerator.next()
 		// Stores the token into the database
 		val insertedToken = model.insert(TokenData(typeId, Sha256Hasher(tokenString), parentId, ownerId,
-			deviceId, modelStylePreference, duration.map { Now + _ }, isSingleUseOnly = isSingleUseOnly))
+			modelStylePreference, duration.map { Now + _ }, isSingleUseOnly = isSingleUseOnly))
 		// Grants scopes (according to parent token scopes & custom extra scopes)
 		val scopeLinks = TokenScopeLinkModel.insert(
 			scopeIds.toVector.sorted.map { scopeId => TokenScopeLinkData(insertedToken.id, scopeId) })
@@ -84,7 +83,6 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	  * @param typeId Id of the type of this token
 	  * @param parentId Id of the token that was used to authorize this token's creation (if applicable)
 	  * @param ownerId Id of the owner of this token (if applicable)
-	  * @param deviceId Id of the device this token is tied to (if applicable)
 	  * @param scopeIds Ids of the scopes accessible using this token (default = empty)
 	  * @param modelStylePreference Preferred model style to use during this session (optional)
 	  * @param customDuration Duration to overwrite the default duration with (optional)
@@ -94,7 +92,7 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	  * @param uuidGenerator Implicit UUID generator
 	  * @return A new token, along with the non-hashed token string
 	  */
-	def insert(typeId: Int, parentId: Option[Int] = None, ownerId: Option[Int] = None, deviceId: Option[Int] = None,
+	def insert(typeId: Int, parentId: Option[Int] = None, ownerId: Option[Int] = None,
 	           scopeIds: Set[Int] = Set(), modelStylePreference: Option[ModelStyle] = None,
 	           customDuration: Option[Duration] = None, limitToDefaultDuration: Boolean = false)
 	          (implicit connection: Connection, uuidGenerator: UuidGenerator) =
@@ -111,7 +109,7 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 			case None => tokenType.duration
 		}
 		// Inserts the new token
-		val (token, tokenString) = insertCustom(typeId, parentId, ownerId, deviceId, duration, scopeIds,
+		val (token, tokenString) = insertCustom(typeId, parentId, ownerId, duration, scopeIds,
 			modelStylePreference, tokenType.isSingleUseOnly)
 		// Returns the token in a detailed form. Also includes the non-hashed token string.
 		token.withTypeInfo(tokenType) -> tokenString
@@ -122,7 +120,6 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	  * @param parentToken Parent token (i.e. token used to authorize this token's creation)
 	  * @param newTypeId Id of this new token's type
 	  * @param ownerIdLimit Id of the new owner of this token, if different from the parent token's owner
-	  * @param deviceIdLimit Id of the device this token is linked with, if different from the parent token's linking
 	  * @param additionalScopeIds Scopes to grant in addition to those granted by the parent token (default = empty)
 	  * @param customModelStylePreference Model style preference to overwrite that of the parent token (optional)
 	  * @param customDuration Duration to overwrite the default duration with (optional)
@@ -133,12 +130,12 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	  * @return The generated token, along with the new non-hashed token string
 	  */
 	def refreshUsing(parentToken: ScopedTokenLike, newTypeId: Int, ownerIdLimit: Option[Int] = None,
-	                 deviceIdLimit: Option[Int] = None, additionalScopeIds: Set[Int] = Set(),
+	                 additionalScopeIds: Set[Int] = Set(),
 	                 customModelStylePreference: Option[ModelStyle] = None,
 	                 customDuration: Option[Duration] = None, limitToDefaultDuration: Boolean = false)
 	                (implicit connection: Connection, uuidGenerator: UuidGenerator) =
 		insert(newTypeId, Some(parentToken.id), ownerIdLimit.orElse { parentToken.ownerId },
-			deviceIdLimit.orElse { parentToken.deviceId }, parentToken.scopeIds ++ additionalScopeIds,
+			parentToken.scopeIds ++ additionalScopeIds,
 			customModelStylePreference.orElse { parentToken.modelStylePreference }, customDuration,
 			limitToDefaultDuration)
 	
