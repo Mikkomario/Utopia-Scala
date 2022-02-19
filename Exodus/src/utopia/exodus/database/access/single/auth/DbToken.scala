@@ -76,7 +76,7 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 			scopeIds.toVector.sorted.map { scopeId => TokenScopeLinkData(insertedToken.id, scopeId) })
 		
 		// Returns the token in a detailed form. Also includes the non-hashed token string.
-		insertedToken.withScopes(scopeLinks) -> tokenString
+		insertedToken.withScopeLinks(scopeLinks) -> tokenString
 	}
 	
 	/**

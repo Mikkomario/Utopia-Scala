@@ -26,7 +26,7 @@ case class Token(id: Int, data: TokenData) extends Stored[TokenData, Int]
 	  * @param connection Implicit DB Connection
 	  * @return A copy of this token which includes scope link information (from DB)
 	  */
-	def withScopesPulled(implicit connection: Connection) = withScopes(access.scopeLinks.pull)
+	def withScopeLinksPulled(implicit connection: Connection) = withScopeLinks(access.scopeLinks.pull)
 	
 	
 	// OTHER    ---------------------
@@ -35,6 +35,6 @@ case class Token(id: Int, data: TokenData) extends Stored[TokenData, Int]
 	  * @param scopeLinks Scope links to attach to this token
 	  * @return A copy of this token which includes the specified token scope links
 	  */
-	def withScopes(scopeLinks: Vector[TokenScopeLink]) = ScopedToken(this, scopeLinks)
+	def withScopeLinks(scopeLinks: Vector[TokenScopeLink]) = ScopedToken(this, scopeLinks)
 }
 

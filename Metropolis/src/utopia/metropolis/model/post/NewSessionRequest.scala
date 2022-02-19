@@ -1,0 +1,42 @@
+package utopia.metropolis.model.post
+
+import utopia.flow.datastructure.immutable.Model
+import utopia.flow.datastructure.template
+import utopia.flow.datastructure.template.Property
+import utopia.flow.generic.{ModelConvertible, SureFromModelFactory}
+import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.time.TimeExtensions._
+
+import scala.concurrent.duration.FiniteDuration
+
+object NewSessionRequest extends SureFromModelFactory[NewSessionRequest]
+{
+	// ATTRIBUTES   ------------------------------
+	
+	/**
+	  * The default new session request instance
+	  */
+	lazy val default = apply()
+	
+	
+	// IMPLEMENTED  ------------------------------
+	
+	override def parseFrom(model: template.Model[Property]) =
+		NewSessionRequest(model("device_id"), model("duration_minutes", "duration").int.map { _.minutes },
+			model("request_refresh_token"), model("revoke_previous"))
+}
+
+/**
+  * Used for requesting / opening new sessions
+  * @author Mikko Hilpinen
+  * @since 19.2.2022, v2.0.2
+  */
+case class NewSessionRequest(deviceId: Option[Int] = None, customDuration: Option[FiniteDuration] = None,
+                             requestRefreshToken: Boolean = false, revokePrevious: Boolean = false)
+	extends ModelConvertible
+{
+	override def toModel = Model(Vector("device_id" -> deviceId,
+		"duration_minutes" -> customDuration.map { _.toMinutes }, "request_refresh_token" -> requestRefreshToken,
+		"revoke_previous" -> revokePrevious))
+}

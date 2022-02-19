@@ -3,6 +3,7 @@ package utopia.exodus.rest.resource.user
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.{Forbidden, NotFound}
 import utopia.citadel.database.access.single.user.DbUser
+import utopia.exodus.model.enumeration.ExodusScope.{OrganizationDataRead, PersonalDataRead}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.TimeExtensions._
@@ -26,8 +27,7 @@ case class OtherUserNode(userId: Int) extends Resource[AuthorizedContext]
 	override def allowedMethods = Vector(Get)
 	
 	// Handles this path and the /settings -path using the same logic
-	override def follow(path: Path)(implicit context: AuthorizedContext) =
-	{
+	override def follow(path: Path)(implicit context: AuthorizedContext) = {
 		if (path.head ~== "settings")
 			Ready(this)
 		else
@@ -37,18 +37,15 @@ case class OtherUserNode(userId: Int) extends Resource[AuthorizedContext]
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		// GET acquires other user's current settings (simplified)
-		context.sessionTokenAuthorized { (session, connection) =>
+		context.authorizedForScopes(OrganizationDataRead, PersonalDataRead) { (session, connection) =>
 			implicit val c: Connection = connection
 			// Requires the requesting user to belong to a same organization with that user
-			if (DbUser(session.userId).sharesOrganizationWithUserWithId(userId))
-			{
+			if (session.userAccess.forall { _.sharesOrganizationWithUserWithId(userId) }) {
 				// Reads the user's settings
-				DbUser(userId).settings.pull match
-				{
+				DbUser(userId).settings.pull match {
 					case Some(settings) =>
 						// Supports If-Modified-Since
-						if (context.request.headers.ifModifiedSince.forall { _ < settings.created })
-						{
+						if (context.request.headers.ifModifiedSince.forall { _ < settings.created }) {
 							// If /settings was targeted, may use full model style
 							if (remainingPath.isEmpty || session.modelStyle == Simple)
 								Result.Success(settings.toSimpleModel)

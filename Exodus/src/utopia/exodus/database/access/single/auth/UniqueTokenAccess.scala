@@ -13,7 +13,7 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.sql.Exists
+import utopia.vault.sql.{Exists, Select, Where}
 
 /**
   * A common trait for access points that return individual and distinct tokens.
@@ -85,6 +85,14 @@ trait UniqueTokenAccess
 	protected def model = TokenModel
 	
 	protected def scopeLinkModel = TokenScopeLinkModel
+	
+	/**
+	  * @param connection Implicit DB Connection
+	  * @return Ids of the scopes accessible with this token
+	  */
+	def scopeIds(implicit connection: Connection) =
+		connection(Select(target join scopeLinkModel.table, scopeLinkModel.scopeIdColumn) +
+			globalCondition.map { Where(_) } + factory.defaultOrdering).rowIntValues.toSet
 	
 	
 	// IMPLEMENTED	--------------------

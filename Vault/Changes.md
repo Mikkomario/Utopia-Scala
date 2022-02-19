@@ -9,6 +9,7 @@
 - You may now customize column maximum length handling logic via `ColumnLengthRules.loadFrom(...)`
   - (Added a new variation of the `.loadFrom(...)` method)
 ### Other Changes
+- You can now apply joins to `.pullColumn(Column)` in **DistinctReadModelAccess**
 - **NullDeprecatable** now extends **Indexed**
 
 ## v1.12 - 27.01.2022

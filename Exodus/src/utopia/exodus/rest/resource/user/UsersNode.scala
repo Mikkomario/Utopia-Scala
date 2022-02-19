@@ -75,7 +75,7 @@ object UsersNode extends Resource[AuthorizedContext]
 					tryInsert(completeUserData) match {
 						case Success(user) =>
 							// Generates a new refresh token, if requested
-							val scopedToken = token.withScopesPulled
+							val scopedToken = token.withScopeLinksPulled
 							val deviceId = user.deviceIds.headOption
 							val modelStylePreference = context.modelStyle
 							val refreshToken = {

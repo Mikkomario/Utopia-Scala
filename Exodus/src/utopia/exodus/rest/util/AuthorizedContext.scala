@@ -10,6 +10,7 @@ import utopia.citadel.util.CitadelContext._
 import utopia.exodus.database.access.single.auth.DbToken.DbTokenMatch
 import utopia.exodus.database.access.single.auth.{DbApiKey, DbDeviceToken, DbEmailValidationAttemptOld, DbSessionToken, DbToken}
 import utopia.exodus.database.access.single.user.DbUserPassword
+import utopia.exodus.model.combined.auth.ScopedToken
 import utopia.exodus.model.enumeration.ExodusScope.{OrganizationActions, OrganizationDataRead}
 import utopia.exodus.model.enumeration.ScopeIdWrapper
 import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, EmailValidationAttemptOld, SessionToken, Token}
@@ -23,7 +24,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle
-import utopia.nexus.http.{Request, ServerSettings}
+import utopia.nexus.http.{Request, Response, ServerSettings}
 import utopia.nexus.rest.Context
 import utopia.nexus.result.{Result, ResultParser, UseRawJSON}
 import utopia.vault.database.Connection
@@ -352,18 +353,16 @@ abstract class AuthorizedContext extends Context
 	  * (where default is organization data read access)
 	  * @param organizationId Id of the organization the user is supposed to be a member of
 	  * @param scopeId Id of the targeted scope (default = organization data read access)
-	  * @param tokenTypeName Name of the applicable token type. Used in error messages (default = "token")
 	  * @param f              Function called when the user is fully authorized.
 	  *                       Takes user session, membership id and database
 	  *                       connection as parameters. Returns operation result.
 	  * @return An http response based either on the function result or authorization failure.
 	  */
-	def authorizedInOrganization(organizationId: Int, scopeId: Int = OrganizationDataRead.id,
-	                             tokenTypeName: => String = "token")
+	def authorizedInOrganization(organizationId: Int, scopeId: Int = OrganizationDataRead.id)
 	                            (f: (Token, Int, Connection) => Result) =
 	{
 		// Validates the token and checks scope
-		authorizedForScopeWithId(scopeId, tokenTypeName) { (token, connection) =>
+		authorizedForScopeWithId(scopeId) { (token, connection) =>
 			implicit val c: Connection = connection
 			// Makes sure the user belongs to the target organization
 			token.userAccess.flatMap { _.membershipInOrganizationWithId(organizationId).id } match {
@@ -386,12 +385,11 @@ abstract class AuthorizedContext extends Context
 	  *          connection as parameters. Returns operation result.
 	  * @return An http response based either on the function result or authorization failure (401 or 403).
 	  */
-	def authorizedForTask(organizationId: Int, taskId: Int, scopeId: Int = OrganizationActions.id,
-	                      tokenTypeName: => String = "token")
+	def authorizedForTask(organizationId: Int, taskId: Int, scopeId: Int = OrganizationActions.id)
 	                     (f: (Token, Int, Connection) => Result) =
 	{
 		// Makes sure the user belongs to the organization and that they have a valid session key authorization
-		authorizedInOrganization(organizationId, scopeId, tokenTypeName) { (session, membershipId, connection) =>
+		authorizedInOrganization(organizationId, scopeId) { (session, membershipId, connection) =>
 			implicit val c: Connection = connection
 			// Makes sure the user has a right to perform the required task
 			if (DbMembership(membershipId).allowsTaskWithId(taskId))
@@ -405,23 +403,59 @@ abstract class AuthorizedContext extends Context
 	/**
 	  * Searches the bearer token authorization header for a valid token that may access the specified scope
 	  * @param scopeId Id of the scope being accessed
-	  * @param tokenTypeName Name of the type of token expected. Used in error messages. (default = "token")
 	  * @param f A function called if the token was valid. Accepts the matching token and a database connection.
 	  * @return Function response if the request was authorized. Failure response otherwise.
 	  */
-	def authorizedForScopeWithId(scopeId: Int, tokenTypeName: => String = "token")
-	                            (f: (Token, Connection) => Result) =
+	def authorizedForScopeWithId(scopeId: Int)(f: (Token, Connection) => Result) =
 		_tokenAuthorized { _.havingScopeWithId(scopeId)(_) }(f)
 	/**
 	  * Searches the bearer token authorization header for a valid token that may access the specified scope
 	  * @param scope The scope being accessed
-	  * @param tokenTypeName Name of the type of token expected. Used in error messages. (default = "token")
 	  * @param f A function called if the token was valid. Accepts the matching token and a database connection.
 	  * @return Function response if the request was authorized. Failure response otherwise.
 	  */
-	def authorizedForScope(scope: ScopeIdWrapper, tokenTypeName: => String = "token")
-	                      (f: (Token, Connection) => Result) =
-		authorizedForScopeWithId(scope.id, tokenTypeName)(f)
+	def authorizedForScope(scope: ScopeIdWrapper)(f: (Token, Connection) => Result) =
+		authorizedForScopeWithId(scope.id)(f)
+	
+	/**
+	  * Searches the bearer token authorization header for a valid token that may access the specified scopes
+	  * @param scopeIds Ids of the targeted scopes
+	  * @param f A function called if the token is valid. Accepts the matching token and a database connection.
+	  * @return Function response if the request was authorized. Failure response otherwise.
+	  */
+	def authorizedForScopesWithIds(scopeIds: Set[Int])(f: (ScopedToken, Connection) => Result) =
+		authorizedWithoutScope { (token, connection) =>
+			implicit val c: Connection = connection
+			val scoped = token.withScopeLinksPulled
+			val missingScopes = scopeIds -- scoped.scopeIds
+			if (missingScopes.isEmpty)
+				f(scoped, connection)
+			else
+				Result.Failure(Unauthorized,
+					s"You lack access to following scopes: [${missingScopes.toVector.sorted.mkString(", ")}]")
+		}
+	/**
+	  * Searches the bearer token authorization header for a valid token that may access the specified scopes
+	  * @param firstScopeId Id of the targeted scope
+	  * @param secondScopeId Id of another targeted scope
+	  * @param moreScopeIds Ids of additional targeted scopes
+	  * @param f A function called if the token is valid. Accepts the matching token and a database connection.
+	  * @return Function response if the request was authorized. Failure response otherwise.
+	  */
+	def authorizedForScopesWithIds(firstScopeId: Int, secondScopeId: Int, moreScopeIds: Int*)
+	                              (f: (ScopedToken, Connection) => Result): Response =
+		authorizedForScopesWithIds(moreScopeIds.toSet + firstScopeId + secondScopeId)(f)
+	/**
+	  * Searches the bearer token authorization header for a valid token that may access the specified scopes
+	  * @param firstScope A targeted scope
+	  * @param secondScope Another targeted scope
+	  * @param moreScopes Additional targeted scopes
+	  * @param f A function called if the token is valid. Accepts the matching token and a database connection.
+	  * @return Function response if the request was authorized. Failure response otherwise.
+	  */
+	def authorizedForScopes(firstScope: ScopeIdWrapper, secondScope: ScopeIdWrapper, moreScopes: ScopeIdWrapper*)
+	                       (f: (ScopedToken, Connection) => Result): Response =
+		authorizedForScopesWithIds((Vector(firstScope, secondScope) ++ moreScopes).map { _.id }.toSet)(f)
 	
 	/**
 	  * Searches the bearer token authorization header for a valid token

@@ -7,6 +7,7 @@
 - **Loop** is now an abstract class instead of a trait. This is because the trait contains attributes.
 ### New Features
 - Added **Sha256Hasher** utility tool
+- Added **SureFromModelFactory** trait
 ### New Methods
 - **Lazy** (object)
   - Added `.wrap(...)`, which calls `LazyWrapper.apply(...)`

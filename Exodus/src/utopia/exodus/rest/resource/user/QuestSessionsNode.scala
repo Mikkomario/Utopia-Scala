@@ -22,6 +22,7 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 8.12.2020, v1
   */
+@deprecated("Replaced with users/me/sessions", "v4.0")
 object QuestSessionsNode extends ResourceWithChildren[AuthorizedContext] with NotImplementedResource[AuthorizedContext]
 {
 	// ATTRIBUTES   ---------------------
