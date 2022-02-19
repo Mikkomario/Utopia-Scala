@@ -82,12 +82,10 @@ object AccessWriter
 	         (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
 	{
 		// Standard access point properties (factory, model)
-		// are the same for both single and many model access points
-		val baseProperties = Vector(
-			ComputedProperty("factory", Set(factoryRef), isOverridden = true)(factoryRef.target),
-			ComputedProperty("model", Set(dbModelRef), Protected,
-				description = "Factory used for constructing database the interaction models")(dbModelRef.target)
-		)
+		// are present in both single and many model access points
+		val factoryProperty = ComputedProperty("factory", Set(factoryRef), isOverridden = true)(factoryRef.target)
+		val modelProperty = ComputedProperty("model", Set(dbModelRef), Protected,
+			description = "Factory used for constructing database the interaction models")(dbModelRef.target)
 		// For classes that support deprecation, deprecate() -method is added for all traits
 		// (implementation varies, however)
 		// Option[Pair[method]], where first method is for individual access and second for many access
@@ -108,10 +106,10 @@ object AccessWriter
 				Reference.unconditionalView
 		}
 		
-		writeSingleAccesses(classToWrite, modelRef, descriptionReferences, baseProperties,
+		writeSingleAccesses(classToWrite, modelRef, descriptionReferences, Vector(factoryProperty, modelProperty),
 			deprecationMethods.map { _.first }, rootViewExtension)
 			.flatMap { case (singleAccessRef, uniqueAccessRef, _) =>
-				writeManyAccesses(classToWrite, modelRef, descriptionReferences, baseProperties,
+				writeManyAccesses(classToWrite, modelRef, descriptionReferences, modelProperty, factoryProperty,
 					deprecationMethods.map { _.second }, rootViewExtension)
 					.map { case (manyAccessRef, manyAccessTraitRef) =>
 						(uniqueAccessRef, singleAccessRef, manyAccessTraitRef, manyAccessRef)
@@ -246,13 +244,13 @@ object AccessWriter
 	// Returns Try[(ManyRootAccessRef, ManyAccessTraitRef)]
 	private def writeManyAccesses(classToWrite: Class, modelRef: Reference,
 	                              descriptionReferences: Option[(Reference, Reference, Reference)],
-	                              baseProperties: Vector[PropertyDeclaration],
+	                              modelProperty: PropertyDeclaration, factoryProperty: PropertyDeclaration,
 	                              deprecationMethod: Option[MethodDeclaration], rootViewExtension: Extension)
 	                             (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
 	{
 		val manyAccessPackage = setup.manyAccessPackage / classToWrite.packageName
-		writeManyAccessTrait(classToWrite, modelRef, descriptionReferences, manyAccessPackage, baseProperties,
-			deprecationMethod)
+		writeManyAccessTrait(classToWrite, modelRef, descriptionReferences, manyAccessPackage, modelProperty,
+			factoryProperty, deprecationMethod)
 			.flatMap { manyAccessTraitRef =>
 				writeManyRootAccess(classToWrite, modelRef, manyAccessTraitRef, descriptionReferences,
 					manyAccessPackage, rootViewExtension)
@@ -263,7 +261,8 @@ object AccessWriter
 	// Writes a trait common for the many model access points
 	private def writeManyAccessTrait(classToWrite: Class, modelRef: Reference,
 	                                 descriptionReferences: Option[(Reference, Reference, Reference)],
-	                                 manyAccessPackage: Package, baseProperties: Vector[PropertyDeclaration],
+	                                 manyAccessPackage: Package, modelProperty: PropertyDeclaration,
+	                                 factoryProperty: PropertyDeclaration,
 	                                 deprecationMethod: Option[MethodDeclaration])
 	                                (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
 	{
@@ -271,7 +270,7 @@ object AccessWriter
 		val traitNameBase = (manyPrefix +: classToWrite.name) + accessTraitSuffix
 		
 		// Properties and methods that will be written to the highest trait (which may vary)
-		val highestTraitProperties = baseProperties ++
+		val highestTraitProperties = modelProperty +:
 			classToWrite.properties.map { prop =>
 				val pullCode = prop.dataType
 					.fromValuesCode(s"pullColumn(model.${ DbModelWriter.columnNameFrom(prop) })")
@@ -362,8 +361,8 @@ object AccessWriter
 				TraitDeclaration(traitName,
 					extensions = parents,
 					// Contains computed properties to access class properties
-					properties = if (parentRef.isDefined) inheritanceProperties else
-						highestTraitProperties ++ inheritanceProperties,
+					properties = (factoryProperty +: inheritanceProperties) ++
+						(if (parentRef.isDefined) Vector() else highestTraitProperties),
 					// Contains setters for property values (plural)
 					methods = (if (parentRef.isDefined) Set[MethodDeclaration]() else highestTraitMethods) ++
 						inheritanceMethods +
