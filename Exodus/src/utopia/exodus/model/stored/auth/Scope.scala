@@ -2,7 +2,7 @@ package utopia.exodus.model.stored.auth
 
 import utopia.exodus.database.access.single.auth.DbSingleScope
 import utopia.exodus.model.partial.auth.ScopeData
-import utopia.vault.model.template.StoredModelConvertible
+import utopia.metropolis.model.stored.StyledStoredModelConvertible
 
 /**
   * Represents a scope that has already been stored in the database
@@ -11,7 +11,7 @@ import utopia.vault.model.template.StoredModelConvertible
   * @author Mikko Hilpinen
   * @since 18.02.2022, v4.0
   */
-case class Scope(id: Int, data: ScopeData) extends StoredModelConvertible[ScopeData]
+case class Scope(id: Int, data: ScopeData) extends StyledStoredModelConvertible[ScopeData]
 {
 	// COMPUTED	--------------------
 	
@@ -19,5 +19,10 @@ case class Scope(id: Int, data: ScopeData) extends StoredModelConvertible[ScopeD
 	  * An access point to this scope in the database
 	  */
 	def access = DbSingleScope(id)
+	
+	
+	// IMPLEMENTED  ---------------
+	
+	override protected def includeIdInSimpleModel = true
 }
 

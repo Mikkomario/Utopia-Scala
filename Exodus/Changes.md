@@ -8,8 +8,17 @@
   - New token system supports authentication scopes
   - The difference between "public" and session-authenticated resources was removed. All resources are now authorized 
     using access tokens. Only the required scopes differ.
+    - This includes all rest resources within the `description` package
   - The **AuthorizedContext** interface is also different now
+- Rewrote user creation (POST users)
+  - Response styling is now different and supports styling
+  - Authentication is based on scopes (only)
+- **ExodusContext** now requires a new parameter in `.setup(...)`, which lists the scopes granted to all users by 
+  default
+  - This is applied during login, user creation and refresh token acquisition
 - Replaced **PublicDescriptionsNode** with new **GeneralDataNode**
+### Other Changes
+- Access tokens are now hashed in the database (using SHA256), so that they can no longer be read and used
 
 ## v3.1 - 27.01.2022
 An update that introduces multiple fixes and functional changes to the user management interface, 

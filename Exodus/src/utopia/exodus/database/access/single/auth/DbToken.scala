@@ -2,7 +2,7 @@ package utopia.exodus.database.access.single.auth
 
 import utopia.exodus.database.factory.auth.TokenFactory
 import utopia.exodus.database.model.auth.{TokenModel, TokenScopeLinkModel}
-import utopia.exodus.model.combined.auth.ScopedToken
+import utopia.exodus.model.combined.auth.ScopedTokenLike
 import utopia.exodus.model.partial.auth.{TokenData, TokenScopeLinkData}
 import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.util.UuidGenerator
@@ -132,7 +132,7 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	  * @param uuidGenerator Implicit UUID generator
 	  * @return The generated token, along with the new non-hashed token string
 	  */
-	def refreshUsing(parentToken: ScopedToken, newTypeId: Int, ownerIdLimit: Option[Int] = None,
+	def refreshUsing(parentToken: ScopedTokenLike, newTypeId: Int, ownerIdLimit: Option[Int] = None,
 	                 deviceIdLimit: Option[Int] = None, additionalScopeIds: Set[Int] = Set(),
 	                 customModelStylePreference: Option[ModelStyle] = None,
 	                 customDuration: Option[Duration] = None, limitToDefaultDuration: Boolean = false)
