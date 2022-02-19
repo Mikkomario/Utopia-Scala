@@ -26,7 +26,7 @@ trait ManyTokensAccess extends ManyTokensAccessLike[Token, ManyTokensAccess] wit
 	
 	override def factory = TokenFactory
 	
-	override def filter(additionalCondition: Condition): ManyTokensAccess =
+	override def filter(additionalCondition: Condition): ManyTokensAccess = 
 		new ManyTokensAccess.ManyTokensSubView(this, additionalCondition)
 }
 

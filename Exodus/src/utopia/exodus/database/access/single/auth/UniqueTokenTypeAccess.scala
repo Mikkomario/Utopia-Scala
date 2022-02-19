@@ -30,12 +30,6 @@ trait UniqueTokenTypeAccess
 	def name(implicit connection: Connection) = pullColumn(model.nameColumn).string
 	
 	/**
-	  * Id of the type of token used to acquire this token, 
-		if applicable. None if no instance (or value) was found.
-	  */
-	def parentTypeId(implicit connection: Connection) = pullColumn(model.parentTypeIdColumn).int
-	
-	/**
 	  * Duration that determines how long these tokens remain valid after issuing. None if these tokens don't
 	  *  expire automatically.. None if no instance (or value) was found.
 	  */
@@ -43,9 +37,21 @@ trait UniqueTokenTypeAccess
 		pullColumn(model.durationColumn).long.map { FiniteDuration(_, TimeUnit.MINUTES) }
 	
 	/**
+	  * Id of the type of token that may be acquired by using this token type as a refresh token, 
+	  * if applicable. None if no instance (or value) was found.
+	  */
+	def refreshedTypeId(implicit connection: Connection) = pullColumn(model.refreshedTypeIdColumn).int
+	
+	/**
 	  * Time when this token type was first created. None if no instance (or value) was found.
 	  */
 	def created(implicit connection: Connection) = pullColumn(model.createdColumn).instant
+	
+	/**
+	  * 
+		Whether tokens of this type may only be used once (successfully). None if no instance (or value) was found.
+	  */
+	def isSingleUseOnly(implicit connection: Connection) = pullColumn(model.isSingleUseOnlyColumn).boolean
 	
 	def id(implicit connection: Connection) = pullColumn(index).int
 	
@@ -79,6 +85,14 @@ trait UniqueTokenTypeAccess
 		putColumn(model.durationColumn, newDuration.toUnit(TimeUnit.MINUTES))
 	
 	/**
+	  * Updates the are single use only of the targeted token types
+	  * @param newIsSingleUseOnly A new is single use only to assign
+	  * @return Whether any token type was affected
+	  */
+	def isSingleUseOnly_=(newIsSingleUseOnly: Boolean)(implicit connection: Connection) = 
+		putColumn(model.isSingleUseOnlyColumn, newIsSingleUseOnly)
+	
+	/**
 	  * Updates the names of the targeted token types
 	  * @param newName A new name to assign
 	  * @return Whether any token type was affected
@@ -86,11 +100,11 @@ trait UniqueTokenTypeAccess
 	def name_=(newName: String)(implicit connection: Connection) = putColumn(model.nameColumn, newName)
 	
 	/**
-	  * Updates the parent type ids of the targeted token types
-	  * @param newParentTypeId A new parent type id to assign
+	  * Updates the refreshed type ids of the targeted token types
+	  * @param newRefreshedTypeId A new refreshed type id to assign
 	  * @return Whether any token type was affected
 	  */
-	def parentTypeId_=(newParentTypeId: Int)(implicit connection: Connection) = 
-		putColumn(model.parentTypeIdColumn, newParentTypeId)
+	def refreshedTypeId_=(newRefreshedTypeId: Int)(implicit connection: Connection) = 
+		putColumn(model.refreshedTypeIdColumn, newRefreshedTypeId)
 }
 

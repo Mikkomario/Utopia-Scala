@@ -17,47 +17,67 @@
             "doc": "Name of this token type for identification. Not localized."
           },
           {
-            "name": "parentTypeId",
-            "type": "Option[Int]",
-            "ref": "token_type",
-            "doc": "Id of the type of token used to acquire this token, if applicable"
-          },
-          {
             "name": "duration",
             "type": "Option[Duration[minutes]]",
             "doc": "Duration that determines how long these tokens remain valid after issuing. None if these tokens don't expire automatically."
           },
           {
+            "name": "refreshedTypeId",
+            "type": "Option[Int]",
+            "ref": "token_type",
+            "doc": "Id of the type of token that may be acquired by using this token type as a refresh token, if applicable"
+          },
+          {
             "type": "creation",
             "index": false
+          },
+          {
+            "name": "isSingleUseOnly",
+            "name_plural": "areSingleUseOnly",
+            "type": "Boolean",
+            "doc": "Whether tokens of this type may only be used once (successfully)"
           }
         ],
         "instances": [
           {
             "id": 1,
-            "name": "Api Key"
+            "name": "api-key"
           },
           {
             "id": 2,
-            "name": "Refresh Token",
-            "parent_id": 1
+            "name": "session-token",
+            "duration": 1320
           },
           {
             "id": 3,
-            "name": "Session Token",
-            "parent_id": 2
+            "name": "refresh-token",
+            "refreshed_type_id": 2
           },
           {
             "id": 4,
-            "name": "Email Validation Token"
+            "name": "email-validated-session",
+            "duration": 15
+          },
+          {
+            "id": 5,
+            "name": "email-validation-token",
+            "duration": 4320,
+            "refreshed_type_id": 4,
+            "is_single_use_only": true
           }
         ]
       },
       {
         "name": "Token",
         "doc": "Tokens used for authenticating requests",
-        "combo_index": ["deprecatedAfter", "expires"],
+        "combo_index": ["deprecatedAfter", "expires", "hash"],
         "combos": [
+          {
+            "name": "TypedToken",
+            "child": "TokenType",
+            "is_always_linked": true,
+            "doc": "Adds type information to a token"
+          },
           {
             "name": "ScopedToken",
             "children": "TokenScopeLink",
@@ -85,6 +105,12 @@
             "doc": "A hashed version of this token"
           },
           {
+            "name": "parentTokenId",
+            "ref": "token",
+            "type": "Option[Int]",
+            "doc": "Id of the token that was used to acquire this token, if applicable & still known"
+          },
+          {
             "name": "ownerId",
             "type": "Option[Int]",
             "ref": "user",
@@ -106,7 +132,6 @@
             "name": "expires",
             "name_plural": "expirationTimes",
             "type": "Option[Instant]",
-            "index": true,
             "doc": "Time when this token expires, if applicable"
           },
           {
@@ -116,12 +141,25 @@
           {
             "type": "deprecation",
             "doc": "Time when this token was revoked or replaced"
+          },
+          {
+            "name": "isSingleUseOnly",
+            "name_plural": "areSingleUseOnly",
+            "type": "Boolean",
+            "doc": "Whether this token may only be used once (successfully)"
           }
         ]
       },
       {
         "name": "Scope",
         "doc": "Represents an access right requirement and/or category.",
+        "combo": {
+          "name": "TokenScope",
+          "child": "TokenScopeLink",
+          "is_always_linked": true,
+          "child_alias": "tokenLink",
+          "doc": "An access scope that is tied to a specific access token"
+        },
         "props": [
           {
             "name": "name",
@@ -137,39 +175,39 @@
         "instances": [
           {
             "id": 1,
-            "name": "General Data Read"
+            "name": "read-general-data"
           },
           {
             "id": 2,
-            "name": "User Creation"
+            "name": "create-user"
           },
           {
             "id": 3,
-            "name": "Personal Data Read"
+            "name": "read-personal-data"
           },
           {
             "id": 4,
-            "name": "Personal Actions"
+            "name": "personal-actions"
           },
           {
             "id": 5,
-            "name": "Organization Data Read"
+            "name": "read-organization-data"
           },
           {
             "id": 6,
-            "name": "Organization Actions"
+            "name": "organization-actions"
           },
           {
             "id": 7,
-            "name": "Password Reset"
+            "name": "reset-password"
           },
           {
             "id": 8,
-            "name": "Email Change"
+            "name": "change-email"
           },
           {
             "id": 9,
-            "name": "Account Deletion"
+            "name": "delete-account"
           }
         ]
       },

@@ -36,6 +36,12 @@ trait UniqueTokenAccess
 	def hash(implicit connection: Connection) = pullColumn(model.hashColumn).string
 	
 	/**
+	  * Id of the token that was used to acquire this token, 
+	  * if applicable & still known. None if no instance (or value) was found.
+	  */
+	def parentTokenId(implicit connection: Connection) = pullColumn(model.parentTokenIdColumn).int
+	
+	/**
 	  * Id of the user who owns this token, if applicable. None if no instance (or value) was found.
 	  */
 	def ownerId(implicit connection: Connection) = pullColumn(model.ownerIdColumn).int
@@ -66,6 +72,11 @@ trait UniqueTokenAccess
 	  */
 	def deprecatedAfter(implicit connection: Connection) = pullColumn(model.deprecatedAfterColumn).instant
 	
+	/**
+	  * Whether this token may only be used once (successfully). None if no instance (or value) was found.
+	  */
+	def isSingleUseOnly(implicit connection: Connection) = pullColumn(model.isSingleUseOnlyColumn).boolean
+	
 	def id(implicit connection: Connection) = pullColumn(index).int
 	
 	/**
@@ -74,41 +85,6 @@ trait UniqueTokenAccess
 	protected def model = TokenModel
 	
 	protected def scopeLinkModel = TokenScopeLinkModel
-	
-	/**
-	  * Tests whether this token may access the specified scope
-	  * @param scopeId Id of the targeted scope
-	  * @param connection Implicit DB Connection
-	  * @return Whether this token may access that scope
-	  */
-	def hasScopeWithId(scopeId: Int)(implicit connection: Connection) =
-		Exists(target join scopeLinkModel.table, mergeCondition(scopeLinkModel.withScopeId(scopeId).toCondition))
-	/**
-	  * Tests whether this token may access the specified scope
-	  * @param scope Targeted scope
-	  * @param connection Implicit DB Connection
-	  * @return Whether this token may access that scope
-	  */
-	def hasScope(scope: ScopeIdWrapper)(implicit connection: Connection) = hasScopeWithId(scope.id)
-	
-	/**
-	  * Pulls this token from the DB, but only if it allows access to the specified scope
-	  * @param scopeId Id of the targeted scope
-	  * @param connection Implicit DB Connection
-	  * @return Read token. None if no matching token was found or the token doesn't grant access to the
-	  *         specified scope.
-	  */
-	def havingScopeWithId(scopeId: Int)(implicit connection: Connection) =
-		factory.findLinked(scopeLinkModel.table, mergeCondition(scopeLinkModel.withScopeId(scopeId).toCondition))
-	/**
-	  * Pulls this token from the DB, but only if it allows access to the specified scope
-	  * @param scope Targeted scope
-	  * @param connection Implicit DB Connection
-	  * @return Read token. None if no matching token was found or the token doesn't grant access to the
-	  *         specified scope.
-	  */
-	def havingScope(scope: ScopeIdWrapper)(implicit connection: Connection) =
-		havingScopeWithId(scope.id)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -157,11 +133,57 @@ trait UniqueTokenAccess
 		putColumn(model.expiresColumn, newExpires)
 	
 	/**
+	  * Tests whether this token may access the specified scope
+	  * @param scope Targeted scope
+	  * @param connection Implicit DB Connection
+	  * @return Whether this token may access that scope
+	  */
+	def hasScope(scope: ScopeIdWrapper)(implicit connection: Connection) = hasScopeWithId(scope.id)
+	
+	/**
+	  * Tests whether this token may access the specified scope
+	  * @param scopeId Id of the targeted scope
+	  * @param connection Implicit DB Connection
+	  * @return Whether this token may access that scope
+	  */
+	def hasScopeWithId(scopeId: Int)(implicit connection: Connection) = 
+		Exists(target join scopeLinkModel.table, 
+			mergeCondition(scopeLinkModel.withScopeId(scopeId).toCondition))
+	
+	/**
 	  * Updates the hashes of the targeted tokens
 	  * @param newHash A new hash to assign
 	  * @return Whether any token was affected
 	  */
 	def hash_=(newHash: String)(implicit connection: Connection) = putColumn(model.hashColumn, newHash)
+	
+	/**
+	  * Pulls this token from the DB, but only if it allows access to the specified scope
+	  * @param scope Targeted scope
+	  * @param connection Implicit DB Connection
+	  * @return Read token. None if no matching token was found or the token doesn't grant access to the
+	  * specified scope.
+	  */
+	def havingScope(scope: ScopeIdWrapper)(implicit connection: Connection) = havingScopeWithId(scope.id)
+	
+	/**
+	  * Pulls this token from the DB, but only if it allows access to the specified scope
+	  * @param scopeId Id of the targeted scope
+	  * @param connection Implicit DB Connection
+	  * @return Read token. None if no matching token was found or the token doesn't grant access to the
+	  * specified scope.
+	  */
+	def havingScopeWithId(scopeId: Int)(implicit connection: Connection) = 
+		factory.findLinked(scopeLinkModel.table, 
+			mergeCondition(scopeLinkModel.withScopeId(scopeId).toCondition))
+	
+	/**
+	  * Updates the are single use only of the targeted tokens
+	  * @param newIsSingleUseOnly A new is single use only to assign
+	  * @return Whether any token was affected
+	  */
+	def isSingleUseOnly_=(newIsSingleUseOnly: Boolean)(implicit connection: Connection) = 
+		putColumn(model.isSingleUseOnlyColumn, newIsSingleUseOnly)
 	
 	/**
 	  * Updates the model style preferences of the targeted tokens
@@ -178,6 +200,14 @@ trait UniqueTokenAccess
 	  */
 	def ownerId_=(newOwnerId: Int)(implicit connection: Connection) = putColumn(model.ownerIdColumn, 
 		newOwnerId)
+	
+	/**
+	  * Updates the parent token ids of the targeted tokens
+	  * @param newParentTokenId A new parent token id to assign
+	  * @return Whether any token was affected
+	  */
+	def parentTokenId_=(newParentTokenId: Int)(implicit connection: Connection) = 
+		putColumn(model.parentTokenIdColumn, newParentTokenId)
 	
 	/**
 	  * Updates the type ids of the targeted tokens

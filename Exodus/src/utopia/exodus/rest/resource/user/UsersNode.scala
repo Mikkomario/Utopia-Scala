@@ -8,8 +8,7 @@ import utopia.citadel.database.access.single.device.DbClientDevice
 import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.citadel.database.access.single.user.{DbUser, DbUserSettings}
 import utopia.exodus.database.model.user.UserPasswordModel
-import utopia.exodus.database.access.single.auth.{DbDeviceToken, DbSessionToken}
-import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.UserCreation
+import utopia.exodus.database.access.single.auth.{DbDeviceToken, DbSessionToken, DbToken}
 import utopia.exodus.model.partial.user.UserPasswordData
 import utopia.exodus.rest.resource.CustomAuthorizationResourceFactory
 import utopia.exodus.rest.resource.user.me.MeNode
@@ -27,8 +26,12 @@ import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
 import scala.util.{Failure, Success, Try}
-
 import ExodusContext.uuidGenerator
+import utopia.exodus.model.combined.auth.DetailedToken
+import utopia.exodus.model.enumeration.ExodusScope.UserCreation
+import utopia.exodus.model.enumeration.ExodusTokenType
+import utopia.exodus.model.enumeration.ExodusTokenType.{RefreshToken, SessionToken}
+import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 
 object UsersNode extends CustomAuthorizationResourceFactory[UsersNode]
 {
@@ -69,7 +72,7 @@ object UsersNode extends CustomAuthorizationResourceFactory[UsersNode]
 							val deviceId = user.deviceIds.headOption
 							val userId = user.id
 							val deviceToken = deviceId.flatMap { deviceId =>
-								if (newUser.rememberOnDevice)
+								if (newUser.requestRefreshToken)
 									Some(acquireDeviceToken(userId, deviceId))
 								else
 									None
@@ -86,6 +89,67 @@ object UsersNode extends CustomAuthorizationResourceFactory[UsersNode]
 							}
 					}
 				case Failure(error) => Result.Failure(BadRequest, error.getMessage)
+			}
+		}
+	}
+	
+	private def handleRequest()(implicit context: AuthorizedContext) =
+	{
+		context.authorizedForScope(UserCreation) { (token, connection) =>
+			implicit val c: Connection = connection
+			// Reads user data from the post body
+			context.handlePost(NewUser) { userData =>
+				// Looks whether user email information has been stored
+				// TODO: Require an email validation attempt if email validation is enabled
+				val preparedEmail = token.access.emailValidationAttempt.emailAddress
+				val completeUserData = preparedEmail match {
+					case Some(email) => userData.withEmailAddress(email)
+					case None => userData
+				}
+				// Checks whether a required email address is missing
+				if (!completeUserData.specifiesEmail && ExodusContext.userEmailIsRequired)
+					Result.Failure(BadRequest, "'email' property is missing from the request body")
+				else
+					// Saves the new user data to DB
+					tryInsert(completeUserData) match {
+						case Success(user) =>
+							// Generates a new refresh token, if requested
+							val scopedToken = token.withScopesPulled
+							val deviceId = user.deviceIds.headOption
+							val modelStylePreference = context.modelStyle
+							val refreshToken = {
+								if (completeUserData.requestRefreshToken) {
+									Some(DbToken.refreshUsing(scopedToken, RefreshToken.id, Some(user.id), deviceId,
+										ExodusContext.defaultUserScopeIds, modelStylePreference))
+								}
+								else
+									None
+							}
+							// Generates a new session token (or other such token)
+							val (parentToken, refreshedTokenTypeId) = refreshToken match {
+								case Some((token, _)) => token.asScopedToken -> token.tokenType.refreshedTypeId
+								case None => scopedToken -> scopedToken.typeAccess.refreshedTypeId
+							}
+							val (newSessionToken, sessionTokenString) = DbToken.refreshUsing(parentToken,
+								refreshedTokenTypeId.getOrElse { SessionToken.id }, Some(user.id), deviceId,
+								ExodusContext.defaultUserScopeIds, modelStylePreference)
+							
+							// Returns generated user information, along with the new session (and refresh) token
+							// (respecting requested styling)
+							
+							token.modelStyle match {
+								case Full =>
+								case Simple =>
+							}
+							
+							???
+						case Failure(error) =>
+							error match
+							{
+								case a: AlreadyUsedException => Result.Failure(Forbidden, a.getMessage)
+								case _ => Result.Failure(BadRequest, error.getMessage)
+							}
+					}
 			}
 		}
 	}

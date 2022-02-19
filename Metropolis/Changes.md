@@ -1,5 +1,12 @@
 # Utopia Metropolis - List of Changes
 
+## v2.0.2 (in development)
+### Deprecations
+- Deprecated **UserCreationResult**, as it is no longer valid since **Exodus** v4.0
+### Other Changes
+- **NewUser**`.toModel` now contains property `request_refresh_token` instead of `remember_me`. `remember_me` is still 
+  supported in **Exodus** v4.0, however.
+
 ## v2.0.1 - 27.01.2022
 A minor style update, plus a scala version update
 ### Scala

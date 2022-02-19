@@ -33,6 +33,11 @@ object TokenModel extends DataInserter[TokenModel, Token, TokenData] with Deprec
 	val hashAttName = "hash"
 	
 	/**
+	  * Name of the property that contains token parent token id
+	  */
+	val parentTokenIdAttName = "parentTokenId"
+	
+	/**
 	  * Name of the property that contains token owner id
 	  */
 	val ownerIdAttName = "ownerId"
@@ -62,6 +67,11 @@ object TokenModel extends DataInserter[TokenModel, Token, TokenData] with Deprec
 	  */
 	val deprecatedAfterAttName = "deprecatedAfter"
 	
+	/**
+	  * Name of the property that contains token is single use only
+	  */
+	val isSingleUseOnlyAttName = "isSingleUseOnly"
+	
 	
 	// COMPUTED	--------------------
 	
@@ -74,6 +84,11 @@ object TokenModel extends DataInserter[TokenModel, Token, TokenData] with Deprec
 	  * Column that contains token hash
 	  */
 	def hashColumn = table(hashAttName)
+	
+	/**
+	  * Column that contains token parent token id
+	  */
+	def parentTokenIdColumn = table(parentTokenIdAttName)
 	
 	/**
 	  * Column that contains token owner id
@@ -106,6 +121,11 @@ object TokenModel extends DataInserter[TokenModel, Token, TokenData] with Deprec
 	def deprecatedAfterColumn = table(deprecatedAfterAttName)
 	
 	/**
+	  * Column that contains token is single use only
+	  */
+	def isSingleUseOnlyColumn = table(isSingleUseOnlyAttName)
+	
+	/**
 	  * The factory object used by this model type
 	  */
 	def factory = TokenFactory
@@ -113,19 +133,20 @@ object TokenModel extends DataInserter[TokenModel, Token, TokenData] with Deprec
 	
 	// IMPLEMENTED	--------------------
 	
-	override def table = factory.table
-	
-	override def apply(data: TokenData) = 
-		apply(None, Some(data.typeId), Some(data.hash), data.ownerId, data.deviceId, 
-			data.modelStylePreference, data.expires, Some(data.created), data.deprecatedAfter)
-	
-	override def complete(id: Value, data: TokenData) = Token(id.getInt, data)
-	
 	// Also requires the token not to be expired
 	override def nonDeprecatedCondition = {
 		val expCol = expiresColumn
 		super.nonDeprecatedCondition && (expCol.isNull || expiresColumn > Now)
 	}
+	
+	override def table = factory.table
+	
+	override def apply(data: TokenData) = 
+		apply(None, Some(data.typeId), Some(data.hash), data.parentTokenId, data.ownerId, data.deviceId, 
+			data.modelStylePreference, data.expires, Some(data.created), data.deprecatedAfter, 
+			Some(data.isSingleUseOnly))
+	
+	override def complete(id: Value, data: TokenData) = Token(id.getInt, data)
 	
 	
 	// OTHER	--------------------
@@ -167,6 +188,12 @@ object TokenModel extends DataInserter[TokenModel, Token, TokenData] with Deprec
 	def withId(id: Int) = apply(Some(id))
 	
 	/**
+	  * @param isSingleUseOnly Whether this token may only be used once (successfully)
+	  * @return A model containing only the specified is single use only
+	  */
+	def withIsSingleUseOnly(isSingleUseOnly: Boolean) = apply(isSingleUseOnly = Some(isSingleUseOnly))
+	
+	/**
 	  * @param modelStylePreference Model style preferred during this session
 	  * @return A model containing only the specified model style preference
 	  */
@@ -180,6 +207,12 @@ object TokenModel extends DataInserter[TokenModel, Token, TokenData] with Deprec
 	def withOwnerId(ownerId: Int) = apply(ownerId = Some(ownerId))
 	
 	/**
+	  * @param parentTokenId Id of the token that was used to acquire this token, if applicable & still known
+	  * @return A model containing only the specified parent token id
+	  */
+	def withParentTokenId(parentTokenId: Int) = apply(parentTokenId = Some(parentTokenId))
+	
+	/**
 	  * @param typeId Id of the token type applicable to this token
 	  * @return A model containing only the specified type id
 	  */
@@ -191,19 +224,22 @@ object TokenModel extends DataInserter[TokenModel, Token, TokenData] with Deprec
   * @param id token database id
   * @param typeId Id of the token type applicable to this token
   * @param hash A hashed version of this token
+  * @param parentTokenId Id of the token that was used to acquire this token, if applicable & still known
   * @param ownerId Id of the user who owns this token, if applicable
   * @param deviceId Id of the device this token is tied to, if applicable
   * @param modelStylePreference Model style preferred during this session
   * @param expires Time when this token expires, if applicable
   * @param created Time when this token was issued
   * @param deprecatedAfter Time when this token was revoked or replaced
+  * @param isSingleUseOnly Whether this token may only be used once (successfully)
   * @author Mikko Hilpinen
   * @since 18.02.2022, v4.0
   */
 case class TokenModel(id: Option[Int] = None, typeId: Option[Int] = None, hash: Option[String] = None, 
-	ownerId: Option[Int] = None, deviceId: Option[Int] = None, 
+	parentTokenId: Option[Int] = None, ownerId: Option[Int] = None, deviceId: Option[Int] = None, 
 	modelStylePreference: Option[ModelStyle] = None, expires: Option[Instant] = None, 
-	created: Option[Instant] = None, deprecatedAfter: Option[Instant] = None) 
+	created: Option[Instant] = None, deprecatedAfter: Option[Instant] = None, 
+	isSingleUseOnly: Option[Boolean] = None) 
 	extends StorableWithFactory[Token]
 {
 	// IMPLEMENTED	--------------------
@@ -212,9 +248,11 @@ case class TokenModel(id: Option[Int] = None, typeId: Option[Int] = None, hash: 
 	
 	override def valueProperties = {
 		import TokenModel._
-		Vector("id" -> id, typeIdAttName -> typeId, hashAttName -> hash, ownerIdAttName -> ownerId, 
-			deviceIdAttName -> deviceId, modelStylePreferenceAttName -> modelStylePreference.map { _.id }, 
-			expiresAttName -> expires, createdAttName -> created, deprecatedAfterAttName -> deprecatedAfter)
+		Vector("id" -> id, typeIdAttName -> typeId, hashAttName -> hash, 
+			parentTokenIdAttName -> parentTokenId, ownerIdAttName -> ownerId, deviceIdAttName -> deviceId, 
+			modelStylePreferenceAttName -> modelStylePreference.map { _.id }, expiresAttName -> expires, 
+			createdAttName -> created, deprecatedAfterAttName -> deprecatedAfter, 
+			isSingleUseOnlyAttName -> isSingleUseOnly)
 	}
 	
 	
@@ -251,6 +289,12 @@ case class TokenModel(id: Option[Int] = None, typeId: Option[Int] = None, hash: 
 	def withHash(hash: String) = copy(hash = Some(hash))
 	
 	/**
+	  * @param isSingleUseOnly A new is single use only
+	  * @return A new copy of this model with the specified is single use only
+	  */
+	def withIsSingleUseOnly(isSingleUseOnly: Boolean) = copy(isSingleUseOnly = Some(isSingleUseOnly))
+	
+	/**
 	  * @param modelStylePreference A new model style preference
 	  * @return A new copy of this model with the specified model style preference
 	  */
@@ -262,6 +306,12 @@ case class TokenModel(id: Option[Int] = None, typeId: Option[Int] = None, hash: 
 	  * @return A new copy of this model with the specified owner id
 	  */
 	def withOwnerId(ownerId: Int) = copy(ownerId = Some(ownerId))
+	
+	/**
+	  * @param parentTokenId A new parent token id
+	  * @return A new copy of this model with the specified parent token id
+	  */
+	def withParentTokenId(parentTokenId: Int) = copy(parentTokenId = Some(parentTokenId))
 	
 	/**
 	  * @param typeId A new type id

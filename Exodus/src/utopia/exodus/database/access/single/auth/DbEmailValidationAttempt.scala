@@ -5,7 +5,7 @@ import utopia.exodus.database.model.auth.EmailValidationAttemptModel
 import utopia.exodus.model.stored.auth.EmailValidationAttempt
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.UnconditionalView
+import utopia.vault.nosql.view.{SubView, UnconditionalView}
 
 /**
   * Used for accessing individual email validation attempts
@@ -35,5 +35,24 @@ object DbEmailValidationAttempt
 	  * @return An access point to that email validation attempt
 	  */
 	def apply(id: Int) = DbSingleEmailValidationAttempt(id)
+	
+	/**
+	  * @param tokenId Id of an access token
+	  * @return An access point to an email validation attempt where that token was sent
+	  */
+	def usingTokenWithId(tokenId: Int) = new DbEmailValidationAttemptWithToken(tokenId)
+	
+	
+	// NESTED	--------------------
+	
+	class DbEmailValidationAttemptWithToken(tokenId: Int) extends UniqueEmailValidationAttemptAccess 
+		with SubView
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def filterCondition = model.withTokenId(tokenId).toCondition
+		
+		override protected def parent = DbEmailValidationAttempt
+	}
 }
 

@@ -7,6 +7,7 @@ import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.citadel.database.access.single.organization.DbMembership
 import utopia.citadel.database.access.single.user.{DbUser, DbUserSettings}
 import utopia.citadel.util.CitadelContext._
+import utopia.exodus.database.access.single.auth.DbToken.DbTokenMatch
 import utopia.exodus.database.access.single.auth.{DbApiKey, DbDeviceToken, DbEmailValidationAttemptOld, DbSessionToken, DbToken}
 import utopia.exodus.database.access.single.user.DbUserPassword
 import utopia.exodus.model.enumeration.ExodusScope.{OrganizationActions, OrganizationDataRead}
@@ -409,12 +410,8 @@ abstract class AuthorizedContext extends Context
 	  * @return Function response if the request was authorized. Failure response otherwise.
 	  */
 	def authorizedForScopeWithId(scopeId: Int, tokenTypeName: => String = "token")
-	                            (f: (Token, Connection) => Result) = {
-		tokenAuthorized(tokenTypeName) { (token, connection) =>
-			implicit val c: Connection = connection
-			DbToken.matching(token).havingScopeWithId(scopeId)
-		}(f)
-	}
+	                            (f: (Token, Connection) => Result) =
+		_tokenAuthorized { _.havingScopeWithId(scopeId)(_) }(f)
 	/**
 	  * Searches the bearer token authorization header for a valid token that may access the specified scope
 	  * @param scope The scope being accessed
@@ -431,12 +428,7 @@ abstract class AuthorizedContext extends Context
 	  * @param f A function called if the token was valid. Accepts the matching token and a database connection.
 	  * @return Function response if the request was authorized. Failure response otherwise.
 	  */
-	def authorizedWithoutScope(f: (Token, Connection) => Result) = {
-		tokenAuthorized("token") { (token, connection) =>
-			implicit val c: Connection = connection
-			DbToken.matching(token)
-		}(f)
-	}
+	def authorizedWithoutScope(f: (Token, Connection) => Result) = _tokenAuthorized { _.pull(_) }(f)
 	
 	/**
 	  * Authorizes a request using bearer token authorization
@@ -470,6 +462,21 @@ abstract class AuthorizedContext extends Context
 			case None => Result.Failure(Unauthorized, s"Please provided a bearer auth hearer with a $tokenTypeName")
 		}
 		result.toResponse(this)
+	}
+	
+	private def _tokenAuthorized(pullToken: (DbTokenMatch, Connection) => Option[Token])
+	                            (f: (Token, Connection) => Result) = {
+		tokenAuthorized("token") { (token, connection) =>
+			pullToken(DbToken.matching(token), connection)
+		} { (token, connection) =>
+			val result = f(token, connection)
+			// Closes a single-use token on success
+			if (token.isSingleUseOnly && result.isSuccess) {
+				implicit val c: Connection = connection
+				token.access.deprecate()
+			}
+			result
+		}
 	}
 	
 	/**

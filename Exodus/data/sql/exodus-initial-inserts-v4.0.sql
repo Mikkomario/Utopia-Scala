@@ -24,5 +24,6 @@ INSERT INTO `token_type` (id, name) VALUES
 	(1, 'Api Key'), 
 	(2, 'Refresh Token'), 
 	(3, 'Session Token'), 
-	(4, 'Email Validation Token');
+	(4, 'Email Validation Token'),
+	(5, 'Email-Validated Session');
 

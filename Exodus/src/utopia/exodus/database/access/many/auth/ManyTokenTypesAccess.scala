@@ -38,21 +38,27 @@ trait ManyTokenTypesAccess
 	def names(implicit connection: Connection) = pullColumn(model.nameColumn).map { v => v.getString }
 	
 	/**
-	  * parent type ids of the accessible token types
-	  */
-	def parentTypeIds(implicit connection: Connection) = pullColumn(model.parentTypeIdColumn)
-		.flatMap { _.int }
-	
-	/**
 	  * durations of the accessible token types
 	  */
 	def durations(implicit connection: Connection) = 
 		pullColumn(model.durationColumn).flatMap { _.long }.map { FiniteDuration(_, TimeUnit.MINUTES) }
 	
 	/**
+	  * refreshed type ids of the accessible token types
+	  */
+	def refreshedTypeIds(implicit connection: Connection) = 
+		pullColumn(model.refreshedTypeIdColumn).flatMap { _.int }
+	
+	/**
 	  * creation times of the accessible token types
 	  */
 	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map { _.getInstant }
+	
+	/**
+	  * are single use only of the accessible token types
+	  */
+	def areSingleUseOnly(implicit connection: Connection) = 
+		pullColumn(model.isSingleUseOnlyColumn).map { v => v.getBoolean }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).flatMap { id => id.int }
 	
@@ -71,6 +77,14 @@ trait ManyTokenTypesAccess
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	  * Updates the are single use only of the targeted token types
+	  * @param newIsSingleUseOnly A new is single use only to assign
+	  * @return Whether any token type was affected
+	  */
+	def areSingleUseOnly_=(newIsSingleUseOnly: Boolean)(implicit connection: Connection) = 
+		putColumn(model.isSingleUseOnlyColumn, newIsSingleUseOnly)
 	
 	/**
 	  * Updates the creation times of the targeted token types
@@ -96,11 +110,11 @@ trait ManyTokenTypesAccess
 	def names_=(newName: String)(implicit connection: Connection) = putColumn(model.nameColumn, newName)
 	
 	/**
-	  * Updates the parent type ids of the targeted token types
-	  * @param newParentTypeId A new parent type id to assign
+	  * Updates the refreshed type ids of the targeted token types
+	  * @param newRefreshedTypeId A new refreshed type id to assign
 	  * @return Whether any token type was affected
 	  */
-	def parentTypeIds_=(newParentTypeId: Int)(implicit connection: Connection) = 
-		putColumn(model.parentTypeIdColumn, newParentTypeId)
+	def refreshedTypeIds_=(newRefreshedTypeId: Int)(implicit connection: Connection) = 
+		putColumn(model.refreshedTypeIdColumn, newRefreshedTypeId)
 }
 

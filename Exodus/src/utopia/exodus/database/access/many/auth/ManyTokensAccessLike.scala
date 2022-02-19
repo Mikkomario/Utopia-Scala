@@ -32,6 +32,12 @@ trait ManyTokensAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	def hashes(implicit connection: Connection) = pullColumn(model.hashColumn).map { v => v.getString }
 	
 	/**
+	  * parent token ids of the accessible tokens
+	  */
+	def parentTokenIds(implicit connection: Connection) = pullColumn(model.parentTokenIdColumn)
+		.flatMap { _.int }
+	
+	/**
 	  * owner ids of the accessible tokens
 	  */
 	def ownerIds(implicit connection: Connection) = pullColumn(model.ownerIdColumn).flatMap { _.int }
@@ -64,6 +70,12 @@ trait ManyTokensAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	def deprecationTimes(implicit connection: Connection) = 
 		pullColumn(model.deprecatedAfterColumn).flatMap { _.instant }
 	
+	/**
+	  * are single use only of the accessible tokens
+	  */
+	def areSingleUseOnly(implicit connection: Connection) = 
+		pullColumn(model.isSingleUseOnlyColumn).map { v => v.getBoolean }
+	
 	def ids(implicit connection: Connection) = pullColumn(index).flatMap { id => id.int }
 	
 	/**
@@ -73,6 +85,14 @@ trait ManyTokensAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	  * Updates the are single use only of the targeted tokens
+	  * @param newIsSingleUseOnly A new is single use only to assign
+	  * @return Whether any token was affected
+	  */
+	def areSingleUseOnly_=(newIsSingleUseOnly: Boolean)(implicit connection: Connection) = 
+		putColumn(model.isSingleUseOnlyColumn, newIsSingleUseOnly)
 	
 	/**
 	  * Updates the creation times of the targeted tokens
@@ -134,6 +154,14 @@ trait ManyTokensAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  */
 	def ownerIds_=(newOwnerId: Int)(implicit connection: Connection) = putColumn(model.ownerIdColumn, 
 		newOwnerId)
+	
+	/**
+	  * Updates the parent token ids of the targeted tokens
+	  * @param newParentTokenId A new parent token id to assign
+	  * @return Whether any token was affected
+	  */
+	def parentTokenIds_=(newParentTokenId: Int)(implicit connection: Connection) = 
+		putColumn(model.parentTokenIdColumn, newParentTokenId)
 	
 	/**
 	  * Updates the type ids of the targeted tokens

@@ -22,8 +22,8 @@ object TokenTypeFactory extends FromValidatedRowModelFactory[TokenType]
 	override def table = ExodusTables.tokenType
 	
 	override def fromValidatedModel(valid: Model) = 
-		TokenType(valid("id").getInt, TokenTypeData(valid("name").getString, valid("parentTypeId").int, 
+		TokenType(valid("id").getInt, TokenTypeData(valid("name").getString, 
 			valid("durationMinutes").long.map { FiniteDuration(_, TimeUnit.MINUTES) }, 
-			valid("created").getInstant))
+			valid("refreshedTypeId").int, valid("created").getInstant, valid("isSingleUseOnly").getBoolean))
 }
 

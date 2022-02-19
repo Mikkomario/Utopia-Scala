@@ -64,6 +64,12 @@ trait ManyTokenScopeLinksAccess
 	// OTHER	--------------------
 	
 	/**
+	  * @param tokenId Id of the linked token
+	  * @return An access point to token scope links concerning that token
+	  */
+	def withTokenId(tokenId: Int) = filter(model.withTokenId(tokenId).toCondition)
+	
+	/**
 	  * Updates the creation times of the targeted token scope links
 	  * @param newCreated A new created to assign
 	  * @return Whether any token scope link was affected

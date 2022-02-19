@@ -26,19 +26,24 @@ object TokenTypeModel extends DataInserter[TokenTypeModel, TokenType, TokenTypeD
 	val nameAttName = "name"
 	
 	/**
-	  * Name of the property that contains token type parent type id
-	  */
-	val parentTypeIdAttName = "parentTypeId"
-	
-	/**
 	  * Name of the property that contains token type duration
 	  */
 	val durationAttName = "durationMinutes"
 	
 	/**
+	  * Name of the property that contains token type refreshed type id
+	  */
+	val refreshedTypeIdAttName = "refreshedTypeId"
+	
+	/**
 	  * Name of the property that contains token type created
 	  */
 	val createdAttName = "created"
+	
+	/**
+	  * Name of the property that contains token type is single use only
+	  */
+	val isSingleUseOnlyAttName = "isSingleUseOnly"
 	
 	
 	// COMPUTED	--------------------
@@ -49,19 +54,24 @@ object TokenTypeModel extends DataInserter[TokenTypeModel, TokenType, TokenTypeD
 	def nameColumn = table(nameAttName)
 	
 	/**
-	  * Column that contains token type parent type id
-	  */
-	def parentTypeIdColumn = table(parentTypeIdAttName)
-	
-	/**
 	  * Column that contains token type duration
 	  */
 	def durationColumn = table(durationAttName)
 	
 	/**
+	  * Column that contains token type refreshed type id
+	  */
+	def refreshedTypeIdColumn = table(refreshedTypeIdAttName)
+	
+	/**
 	  * Column that contains token type created
 	  */
 	def createdColumn = table(createdAttName)
+	
+	/**
+	  * Column that contains token type is single use only
+	  */
+	def isSingleUseOnlyColumn = table(isSingleUseOnlyAttName)
 	
 	/**
 	  * The factory object used by this model type
@@ -74,7 +84,8 @@ object TokenTypeModel extends DataInserter[TokenTypeModel, TokenType, TokenTypeD
 	override def table = factory.table
 	
 	override def apply(data: TokenTypeData) = 
-		apply(None, Some(data.name), data.parentTypeId, data.duration, Some(data.created))
+		apply(None, Some(data.name), data.duration, data.refreshedTypeId, Some(data.created), 
+			Some(data.isSingleUseOnly))
 	
 	override def complete(id: Value, data: TokenTypeData) = TokenType(id.getInt, data)
 	
@@ -101,32 +112,42 @@ object TokenTypeModel extends DataInserter[TokenTypeModel, TokenType, TokenTypeD
 	def withId(id: Int) = apply(Some(id))
 	
 	/**
+	  * @param isSingleUseOnly Whether tokens of this type may only be used once (successfully)
+	  * @return A model containing only the specified is single use only
+	  */
+	def withIsSingleUseOnly(isSingleUseOnly: Boolean) = apply(isSingleUseOnly = Some(isSingleUseOnly))
+	
+	/**
 	  * @param name Name of this token type for identification. Not localized.
 	  * @return A model containing only the specified name
 	  */
 	def withName(name: String) = apply(name = Some(name))
 	
 	/**
-	  * @param parentTypeId Id of the type of token used to acquire this token, if applicable
-	  * @return A model containing only the specified parent type id
+	  * @param refreshedTypeId Id of the type of token that may be acquired by using this token type as a refresh token,
+	  * if applicable
+	  * @return A model containing only the specified refreshed type id
 	  */
-	def withParentTypeId(parentTypeId: Int) = apply(parentTypeId = Some(parentTypeId))
+	def withRefreshedTypeId(refreshedTypeId: Int) = apply(refreshedTypeId = Some(refreshedTypeId))
 }
 
 /**
   * Used for interacting with TokenTypes in the database
   * @param id token type database id
   * @param name Name of this token type for identification. Not localized.
-  * @param parentTypeId Id of the type of token used to acquire this token, if applicable
   * @param duration Duration that determines how long these tokens remain valid after issuing. None if
   *  these tokens don't expire automatically.
+  * @param refreshedTypeId Id of the type of token that may be acquired by using this token type as a refresh token, 
+	
+  * if applicable
   * @param created Time when this token type was first created
+  * @param isSingleUseOnly Whether tokens of this type may only be used once (successfully)
   * @author Mikko Hilpinen
   * @since 18.02.2022, v4.0
   */
 case class TokenTypeModel(id: Option[Int] = None, name: Option[String] = None, 
-	parentTypeId: Option[Int] = None, duration: Option[FiniteDuration] = None, 
-	created: Option[Instant] = None) 
+	duration: Option[FiniteDuration] = None, refreshedTypeId: Option[Int] = None, 
+	created: Option[Instant] = None, isSingleUseOnly: Option[Boolean] = None) 
 	extends StorableWithFactory[TokenType]
 {
 	// IMPLEMENTED	--------------------
@@ -135,8 +156,10 @@ case class TokenTypeModel(id: Option[Int] = None, name: Option[String] = None,
 	
 	override def valueProperties = {
 		import TokenTypeModel._
-		Vector("id" -> id, nameAttName -> name, parentTypeIdAttName -> parentTypeId, 
-			durationAttName -> duration.map { _.toUnit(TimeUnit.MINUTES) }, createdAttName -> created)
+		Vector("id" -> id, nameAttName -> name, 
+			durationAttName -> duration.map { _.toUnit(TimeUnit.MINUTES) }, 
+			refreshedTypeIdAttName -> refreshedTypeId, createdAttName -> created, 
+			isSingleUseOnlyAttName -> isSingleUseOnly)
 	}
 	
 	
@@ -155,15 +178,21 @@ case class TokenTypeModel(id: Option[Int] = None, name: Option[String] = None,
 	def withDuration(duration: FiniteDuration) = copy(duration = Some(duration))
 	
 	/**
+	  * @param isSingleUseOnly A new is single use only
+	  * @return A new copy of this model with the specified is single use only
+	  */
+	def withIsSingleUseOnly(isSingleUseOnly: Boolean) = copy(isSingleUseOnly = Some(isSingleUseOnly))
+	
+	/**
 	  * @param name A new name
 	  * @return A new copy of this model with the specified name
 	  */
 	def withName(name: String) = copy(name = Some(name))
 	
 	/**
-	  * @param parentTypeId A new parent type id
-	  * @return A new copy of this model with the specified parent type id
+	  * @param refreshedTypeId A new refreshed type id
+	  * @return A new copy of this model with the specified refreshed type id
 	  */
-	def withParentTypeId(parentTypeId: Int) = copy(parentTypeId = Some(parentTypeId))
+	def withRefreshedTypeId(refreshedTypeId: Int) = copy(refreshedTypeId = Some(refreshedTypeId))
 }
 

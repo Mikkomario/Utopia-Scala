@@ -28,7 +28,7 @@ object NewUser extends FromModelFactory[NewUser]
 			}
 			deviceData.map { deviceData =>
 				NewUser(valid("name").getString, valid("password").getString, languages, deviceData,
-					valid("email").string, valid("remember_me").getBoolean)
+					valid("email").string, valid("request_refresh_token", "remember_me").getBoolean)
 			}
 		}
 	}
@@ -44,12 +44,12 @@ object NewUser extends FromModelFactory[NewUser]
   * @param device Either Right: Existing device id or Left: Device name + language id (optional).
   *               If None, this user is not connected with any device initially.
   * @param email Email address to assign for this user
-  * @param rememberOnDevice Whether this user should receive a device key for this device, allowing future
-  *                         logins to be made automatically (default = false). Ignored if no device data is passed.
+  * @param requestRefreshToken Whether a refresh token should be generated and returned upon user creation
+  *                            (default = false)
   */
 case class NewUser(name: String, password: String, languages: Vector[NewLanguageProficiency],
                    device: Option[Either[NewDevice, Int]] = None, email: Option[String] = None,
-                   rememberOnDevice: Boolean = false)
+                   requestRefreshToken: Boolean = false)
 	extends ModelConvertible
 {
 	// COMPUTED	-----------------------------
@@ -70,6 +70,15 @@ case class NewUser(name: String, password: String, languages: Vector[NewLanguage
 			case Left(newDevice) => "device" -> (newDevice.toModel: Value)
 		}
 		Model(Vector[(String, Value)]("name" -> name, "email" -> email, "password" -> password,
-			"languages" -> languages.map { _.toModel }, "remember_me" -> rememberOnDevice) ++ deviceData)
+			"languages" -> languages.map { _.toModel }, "request_refresh_token" -> requestRefreshToken) ++ deviceData)
 	}
+	
+	
+	// OTHER    -----------------------------
+	
+	/**
+	  * @param email An email address
+	  * @return A copy of this model with that email address
+	  */
+	def withEmailAddress(email: String) = copy(email = Some(email))
 }
