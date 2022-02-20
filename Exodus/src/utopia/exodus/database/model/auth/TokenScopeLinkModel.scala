@@ -33,6 +33,16 @@ object TokenScopeLinkModel extends DataInserter[TokenScopeLinkModel, TokenScopeL
 	  */
 	val createdAttName = "created"
 	
+	/**
+	  * Name of the property that contains token scope link is directly accessible
+	  */
+	val isDirectlyAccessibleAttName = "isDirectlyAccessible"
+	
+	/**
+	  * Name of the property that contains token scope link grants forward
+	  */
+	val grantsForwardAttName = "grantsForward"
+	
 	
 	// COMPUTED	--------------------
 	
@@ -52,9 +62,28 @@ object TokenScopeLinkModel extends DataInserter[TokenScopeLinkModel, TokenScopeL
 	def createdColumn = table(createdAttName)
 	
 	/**
+	  * Column that contains token scope link is directly accessible
+	  */
+	def isDirectlyAccessibleColumn = table(isDirectlyAccessibleAttName)
+	
+	/**
+	  * Column that contains token scope link grants forward
+	  */
+	def grantsForwardColumn = table(grantsForwardAttName)
+	
+	/**
 	  * The factory object used by this model type
 	  */
 	def factory = TokenScopeLinkFactory
+	
+	/**
+	  * @return A model where 'isDirectlyAccessible' is set to true
+	  */
+	def directlyAccessible = withIsDirectlyAccessible(true)
+	/**
+	  * @return A model where 'grantsForward' is set to true
+	  */
+	def grantedForward = withGrantsForward(true)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -62,7 +91,8 @@ object TokenScopeLinkModel extends DataInserter[TokenScopeLinkModel, TokenScopeL
 	override def table = factory.table
 	
 	override def apply(data: TokenScopeLinkData) = 
-		apply(None, Some(data.tokenId), Some(data.scopeId), Some(data.created))
+		apply(None, Some(data.tokenId), Some(data.scopeId), Some(data.created), 
+			Some(data.isDirectlyAccessible), Some(data.grantsForward))
 	
 	override def complete(id: Value, data: TokenScopeLinkData) = TokenScopeLink(id.getInt, data)
 	
@@ -76,10 +106,23 @@ object TokenScopeLinkModel extends DataInserter[TokenScopeLinkModel, TokenScopeL
 	def withCreated(created: Instant) = apply(created = Some(created))
 	
 	/**
+	  * @param grantsForward Whether this scope is granted to tokens that are created using this token
+	  * @return A model containing only the specified grants forward
+	  */
+	def withGrantsForward(grantsForward: Boolean) = apply(grantsForward = Some(grantsForward))
+	
+	/**
 	  * @param id A token scope link id
 	  * @return A model with that id
 	  */
 	def withId(id: Int) = apply(Some(id))
+	
+	/**
+	  * @param isDirectlyAccessible Whether the linked scope is directly accessible using the linked token
+	  * @return A model containing only the specified is directly accessible
+	  */
+	def withIsDirectlyAccessible(isDirectlyAccessible: Boolean) = 
+		apply(isDirectlyAccessible = Some(isDirectlyAccessible))
 	
 	/**
 	  * @param scopeId Id of the enabled scope
@@ -100,11 +143,14 @@ object TokenScopeLinkModel extends DataInserter[TokenScopeLinkModel, TokenScopeL
   * @param tokenId Id of the linked token
   * @param scopeId Id of the enabled scope
   * @param created Time when this token scope link was first created
+  * @param isDirectlyAccessible Whether the linked scope is directly accessible using the linked token
+  * @param grantsForward Whether this scope is granted to tokens that are created using this token
   * @author Mikko Hilpinen
   * @since 18.02.2022, v4.0
   */
 case class TokenScopeLinkModel(id: Option[Int] = None, tokenId: Option[Int] = None, 
-	scopeId: Option[Int] = None, created: Option[Instant] = None) 
+	scopeId: Option[Int] = None, created: Option[Instant] = None, 
+	isDirectlyAccessible: Option[Boolean] = None, grantsForward: Option[Boolean] = None) 
 	extends StorableWithFactory[TokenScopeLink]
 {
 	// IMPLEMENTED	--------------------
@@ -113,7 +159,8 @@ case class TokenScopeLinkModel(id: Option[Int] = None, tokenId: Option[Int] = No
 	
 	override def valueProperties = {
 		import TokenScopeLinkModel._
-		Vector("id" -> id, tokenIdAttName -> tokenId, scopeIdAttName -> scopeId, createdAttName -> created)
+		Vector("id" -> id, tokenIdAttName -> tokenId, scopeIdAttName -> scopeId, createdAttName -> created, 
+			isDirectlyAccessibleAttName -> isDirectlyAccessible, grantsForwardAttName -> grantsForward)
 	}
 	
 	
@@ -124,6 +171,19 @@ case class TokenScopeLinkModel(id: Option[Int] = None, tokenId: Option[Int] = No
 	  * @return A new copy of this model with the specified created
 	  */
 	def withCreated(created: Instant) = copy(created = Some(created))
+	
+	/**
+	  * @param grantsForward A new grants forward
+	  * @return A new copy of this model with the specified grants forward
+	  */
+	def withGrantsForward(grantsForward: Boolean) = copy(grantsForward = Some(grantsForward))
+	
+	/**
+	  * @param isDirectlyAccessible A new is directly accessible
+	  * @return A new copy of this model with the specified is directly accessible
+	  */
+	def withIsDirectlyAccessible(isDirectlyAccessible: Boolean) = 
+		copy(isDirectlyAccessible = Some(isDirectlyAccessible))
 	
 	/**
 	  * @param scopeId A new scope id

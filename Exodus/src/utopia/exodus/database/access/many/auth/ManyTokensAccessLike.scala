@@ -9,6 +9,7 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
+import utopia.vault.sql.SqlExtensions._
 
 /**
   * A common trait for access points which target multiple tokens or similar instances at a time
@@ -77,8 +78,38 @@ trait ManyTokensAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  */
 	protected def model = TokenModel
 	
+	/**
+	  * @return A copy of this access point which only targets temporary tokens
+	  */
+	def temporary = filter(model.expiresColumn.isNotNull)
+	
 	
 	// OTHER	--------------------
+	
+	/**
+	  * @param userId Targeted user id
+	  * @return An access point to tokens which are owned by that user
+	  */
+	def ownedByUserWithId(userId: Int) = filter(model.withOwnerId(userId).toCondition)
+	
+	/**
+	  * @param parentTokenId Id of the linked parent token id
+	  * @return An access point to tokens that have been created using that token
+	  */
+	def createdUsingTokenWithId(parentTokenId: Int) = filter(model.withParentTokenId(parentTokenId).toCondition)
+	
+	/**
+	  * @param parentTokenIds A collection of token ids
+	  * @return An access point to tokens which were created using one of the specified tokens
+	  */
+	def createdUsingAnyOfTokens(parentTokenIds: Iterable[Int]) =
+		filter(model.parentTokenIdColumn in parentTokenIds)
+	
+	/**
+	  * @param tokenId Id of the token that should NOT be targeted
+	  * @return A copy of this access point where that token has been excluded
+	  */
+	def excludingTokenWithId(tokenId: Int) = filter(index <> tokenId)
 	
 	/**
 	  * Updates the are single use only of the targeted tokens

@@ -45,6 +45,18 @@ trait ManyTokenScopeLinksAccess
 	  */
 	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map { _.getInstant }
 	
+	/**
+	  * are directly accessible of the accessible token scope links
+	  */
+	def areDirectlyAccessible(implicit connection: Connection) = 
+		pullColumn(model.isDirectlyAccessibleColumn).map { v => v.getBoolean }
+	
+	/**
+	  * grant forward of the accessible token scope links
+	  */
+	def grantForward(implicit connection: Connection) = 
+		pullColumn(model.grantsForwardColumn).map { v => v.getBoolean }
+	
 	def ids(implicit connection: Connection) = pullColumn(index).flatMap { id => id.int }
 	
 	/**
@@ -64,10 +76,12 @@ trait ManyTokenScopeLinksAccess
 	// OTHER	--------------------
 	
 	/**
-	  * @param tokenId Id of the linked token
-	  * @return An access point to token scope links concerning that token
+	  * Updates the are directly accessible of the targeted token scope links
+	  * @param newIsDirectlyAccessible A new is directly accessible to assign
+	  * @return Whether any token scope link was affected
 	  */
-	def withTokenId(tokenId: Int) = filter(model.withTokenId(tokenId).toCondition)
+	def areDirectlyAccessible_=(newIsDirectlyAccessible: Boolean)(implicit connection: Connection) = 
+		putColumn(model.isDirectlyAccessibleColumn, newIsDirectlyAccessible)
 	
 	/**
 	  * Updates the creation times of the targeted token scope links
@@ -76,6 +90,14 @@ trait ManyTokenScopeLinksAccess
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
+	
+	/**
+	  * Updates the grant forward of the targeted token scope links
+	  * @param newGrantsForward A new grants forward to assign
+	  * @return Whether any token scope link was affected
+	  */
+	def grantForward_=(newGrantsForward: Boolean)(implicit connection: Connection) = 
+		putColumn(model.grantsForwardColumn, newGrantsForward)
 	
 	/**
 	  * Updates the scopes ids of the targeted token scope links
@@ -92,5 +114,11 @@ trait ManyTokenScopeLinksAccess
 	  */
 	def tokensIds_=(newTokenId: Int)(implicit connection: Connection) = putColumn(model.tokenIdColumn, 
 		newTokenId)
+	
+	/**
+	  * @param tokenId Id of the linked token
+	  * @return An access point to token scope links concerning that token
+	  */
+	def withTokenId(tokenId: Int) = filter(model.withTokenId(tokenId).toCondition)
 }
 

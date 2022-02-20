@@ -83,11 +83,12 @@ trait UniqueTokenAccess
 	
 	/**
 	  * @param connection Implicit DB Connection
-	  * @return Ids of the scopes accessible with this token
+	  * @return Ids of the scopes that are directly accessible using this token
 	  */
-	def scopeIds(implicit connection: Connection) =
+	def accessibleScopeIds(implicit connection: Connection) =
 		connection(Select(target join scopeLinkModel.table, scopeLinkModel.scopeIdColumn) +
-			globalCondition.map { Where(_) } + factory.defaultOrdering).rowIntValues.toSet
+			Where(mergeCondition(scopeLinkModel.directlyAccessible.toCondition)) + factory.defaultOrdering)
+			.rowIntValues.toSet
 	
 	
 	// IMPLEMENTED	--------------------
@@ -143,7 +144,15 @@ trait UniqueTokenAccess
 	  */
 	def hasScopeWithId(scopeId: Int)(implicit connection: Connection) = 
 		Exists(target join scopeLinkModel.table, 
-			mergeCondition(scopeLinkModel.withScopeId(scopeId).toCondition))
+			mergeCondition(scopeLinkModel.directlyAccessible.withScopeId(scopeId).toCondition))
+	
+	/**
+	  * @param userId A user id
+	  * @param connection Implicit DB Connection
+	  * @return Whether this token is owned by that user id
+	  */
+	def isOwnedByUserWithId(userId: Int)(implicit connection: Connection) =
+		exists(model.withOwnerId(userId).toCondition)
 	
 	/**
 	  * Updates the hashes of the targeted tokens
@@ -170,7 +179,7 @@ trait UniqueTokenAccess
 	  */
 	def havingScopeWithId(scopeId: Int)(implicit connection: Connection) = 
 		factory.findLinked(scopeLinkModel.table, 
-			mergeCondition(scopeLinkModel.withScopeId(scopeId).toCondition))
+			mergeCondition(scopeLinkModel.directlyAccessible.withScopeId(scopeId).toCondition))
 	
 	/**
 	  * Updates the are single use only of the targeted tokens

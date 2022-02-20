@@ -3,7 +3,7 @@ package utopia.exodus.rest.resource.description
 import utopia.access.http.Method.Get
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.many.organization.DbUserRoles
-import utopia.exodus.model.enumeration.ExodusScope.GeneralDataRead
+import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
@@ -26,7 +26,7 @@ object RolesNode extends LeafResource[AuthorizedContext]
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.authorizedForScope(GeneralDataRead) { (session, connection) =>
+		context.authorizedForScope(ReadGeneralData) { (session, connection) =>
 			implicit val c: Connection = connection
 			implicit val languageIds: LanguageIds = session.languageIds
 			// Reads all user roles and their allowed tasks

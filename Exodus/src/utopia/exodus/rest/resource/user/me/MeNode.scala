@@ -2,10 +2,11 @@ package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.Unauthorized
-import utopia.exodus.model.enumeration.ExodusScope.PersonalDataRead
+import utopia.exodus.model.enumeration.ExodusScope.ReadPersonalData
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, SessionUseCaseImplementation}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
+import utopia.metropolis.model.cached.LanguageIds
 import utopia.nexus.rest.scalable.FollowImplementation
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
@@ -26,13 +27,14 @@ object MeNode extends ExtendableSessionResource
 		session.userAccess match {
 			case Some(userAccess) =>
 				// Makes sure the client is authorized to read user data
-				if (session.access.hasScope(PersonalDataRead))
-					userAccess.withLinks match {
+				if (session.access.hasScope(ReadPersonalData)) {
+					implicit val languageIds: LanguageIds = session.languageIds
+					userAccess.detailed match {
 						case Some(user) => Result.Success(user.toModelWith(session.modelStyle))
 						case None =>
-							// Log.warning(s"User id ${session.userId} was authorized but couldn't be found from the database")
 							Result.Failure(Unauthorized, "User no longer exists")
 					}
+				}
 				else
 					Result.Failure(Unauthorized, "You're not allowed to read this user's personal data")
 			
@@ -42,6 +44,6 @@ object MeNode extends ExtendableSessionResource
 	
 	override protected val defaultUseCaseImplementations = Map(Get -> defaultGet)
 	override protected val defaultFollowImplementations =
-		Vector(MySettingsNode, MyOrganizationsNode, MyInvitationsNode, MyLanguagesNode, MyPasswordNode)
+		Vector(MySettingsNode, MyOrganizationsNode, MyInvitationsNode, MyLanguagesNode, MyPasswordNode, MySessionsNode)
 			.map { FollowImplementation.withChild(_) }
 }

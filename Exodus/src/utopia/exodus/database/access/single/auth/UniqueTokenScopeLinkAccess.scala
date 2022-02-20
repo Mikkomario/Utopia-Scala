@@ -37,6 +37,20 @@ trait UniqueTokenScopeLinkAccess
 	  */
 	def created(implicit connection: Connection) = pullColumn(model.createdColumn).instant
 	
+	/**
+	  * Whether the linked scope is directly accessible using the linked token. None if no instance (or value)
+	  *  was found.
+	  */
+	def isDirectlyAccessible(implicit connection: Connection) = 
+		pullColumn(model.isDirectlyAccessibleColumn).boolean
+	
+	/**
+	  * 
+		Whether this scope is granted to tokens that are created using this token. None if no instance (or value)
+	  *  was found.
+	  */
+	def grantsForward(implicit connection: Connection) = pullColumn(model.grantsForwardColumn).boolean
+	
 	def id(implicit connection: Connection) = pullColumn(index).int
 	
 	/**
@@ -59,6 +73,22 @@ trait UniqueTokenScopeLinkAccess
 	  */
 	def created_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
+	
+	/**
+	  * Updates the grant forward of the targeted token scope links
+	  * @param newGrantsForward A new grants forward to assign
+	  * @return Whether any token scope link was affected
+	  */
+	def grantsForward_=(newGrantsForward: Boolean)(implicit connection: Connection) = 
+		putColumn(model.grantsForwardColumn, newGrantsForward)
+	
+	/**
+	  * Updates the are directly accessible of the targeted token scope links
+	  * @param newIsDirectlyAccessible A new is directly accessible to assign
+	  * @return Whether any token scope link was affected
+	  */
+	def isDirectlyAccessible_=(newIsDirectlyAccessible: Boolean)(implicit connection: Connection) = 
+		putColumn(model.isDirectlyAccessibleColumn, newIsDirectlyAccessible)
 	
 	/**
 	  * Updates the scopes ids of the targeted token scope links

@@ -14,8 +14,8 @@ object ExodusScope
 	/**
 	  * All Exodus scope values
 	  */
-	val values = Vector[ExodusScope](GeneralDataRead, UserCreation, PersonalDataRead, PersonalActions,
-		OrganizationDataRead, OrganizationActions, PasswordReset, EmailChange, AccountDeletion)
+	val values = Vector[ExodusScope](ReadGeneralData, CreateUser, ReadPersonalData, PersonalActions,
+		ReadOrganizationData, OrganizationActions, ResetPassword, ChangeEmail, RevokeOtherTokens, DeleteAccount)
 	
 	
 	// NESTED   ---------------------------
@@ -23,21 +23,21 @@ object ExodusScope
 	/**
 	  * Scope that allows read access to general data, such as available languages
 	  */
-	case object GeneralDataRead extends ExodusScope
+	case object ReadGeneralData extends ExodusScope
 	{
 		override val id = 1
 	}
 	/**
 	  * Scope that allows user creation
 	  */
-	case object UserCreation extends ExodusScope
+	case object CreateUser extends ExodusScope
 	{
 		override val id = 2
 	}
 	/**
 	  * Scope that allows read access to user's personal data
 	  */
-	case object PersonalDataRead extends ExodusScope
+	case object ReadPersonalData extends ExodusScope
 	{
 		override val id = 3
 	}
@@ -51,7 +51,7 @@ object ExodusScope
 	/**
 	  * Scope that allows read access to organization data (in behalf of a user)
 	  */
-	case object OrganizationDataRead extends ExodusScope
+	case object ReadOrganizationData extends ExodusScope
 	{
 		override val id = 5
 	}
@@ -65,22 +65,38 @@ object ExodusScope
 	/**
 	  * Scope that enables replacing the user's password
 	  */
-	case object PasswordReset extends ExodusScope
+	case object ResetPassword extends ExodusScope
 	{
 		override val id = 7
 	}
 	/**
 	  * Scope that enables the user to change their email address
 	  */
-	case object EmailChange extends ExodusScope
+	case object ChangeEmail extends ExodusScope
 	{
 		override val id = 8
 	}
 	/**
-	  * Scope that enables a user to delete their account and all personal data
+	  * Scope that enables the user to log out from all devices and contexts.
+	  * This doesn't however, allow the user to revoke other refresh- or permanent access tokens.
 	  */
-	case object AccountDeletion extends ExodusScope
+	case object TerminateOtherSessions extends ExodusScope
 	{
 		override val id = 9
+	}
+	/**
+	  * Scope that enables the user to revoke their other refresh- and access tokens
+	  * (log out for all devices, revoke all refresh tokens & revoke all given access rights)
+	  */
+	case object RevokeOtherTokens extends ExodusScope
+	{
+		override val id = 10
+	}
+	/**
+	  * Scope that enables a user to delete their account and all personal data
+	  */
+	case object DeleteAccount extends ExodusScope
+	{
+		override val id = 10
 	}
 }

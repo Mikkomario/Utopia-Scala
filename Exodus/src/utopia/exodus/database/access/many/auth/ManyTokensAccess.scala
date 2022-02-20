@@ -22,6 +22,21 @@ object ManyTokensAccess
   */
 trait ManyTokensAccess extends ManyTokensAccessLike[Token, ManyTokensAccess] with ManyRowModelAccess[Token]
 {
+	// COMPUTED ------------------------
+	
+	/**
+	  * @return A copy of this access point which includes token type information
+	  */
+	def withTypeInfo = {
+		// Doesn't apply non-deprecated condition here in order to avoid applying it twice
+		val base = DbTypedTokens.includingHistory
+		globalCondition match {
+			case Some(condition) => base.filter(condition)
+			case None => base
+		}
+	}
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def factory = TokenFactory

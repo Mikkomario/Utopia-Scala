@@ -94,7 +94,7 @@ object InsertsWriter
 	                                (implicit naming: NamingRules) =
 	{
 		// Some inserts may need to be made separately because different properties are defined
-		instances.groupBy { _.valueAssignments.keySet }.toVector.sortBy { _._1.size }.reverseIterator
+		instances.groupBy { _.valueAssignments.keySet }.toVector.sortBy { _._1.size }
 			.foreach { case (properties, instances) =>
 				// Writes properties in alphabetical order
 				val orderedProperties = properties.toVector.map { p => p.name.columnName -> p }.sortBy { _._1 }

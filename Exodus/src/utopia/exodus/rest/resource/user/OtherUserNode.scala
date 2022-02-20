@@ -3,7 +3,7 @@ package utopia.exodus.rest.resource.user
 import utopia.access.http.Method.Get
 import utopia.access.http.Status.{Forbidden, NotFound}
 import utopia.citadel.database.access.single.user.DbUser
-import utopia.exodus.model.enumeration.ExodusScope.{OrganizationDataRead, PersonalDataRead}
+import utopia.exodus.model.enumeration.ExodusScope.{ReadOrganizationData, ReadPersonalData}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.TimeExtensions._
@@ -37,7 +37,7 @@ case class OtherUserNode(userId: Int) extends Resource[AuthorizedContext]
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		// GET acquires other user's current settings (simplified)
-		context.authorizedForScopes(OrganizationDataRead, PersonalDataRead) { (session, connection) =>
+		context.authorizedForScopes(ReadOrganizationData, ReadPersonalData) { (session, connection) =>
 			implicit val c: Connection = connection
 			// Requires the requesting user to belong to a same organization with that user
 			if (session.userAccess.forall { _.sharesOrganizationWithUserWithId(userId) }) {

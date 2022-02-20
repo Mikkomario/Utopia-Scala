@@ -15,7 +15,7 @@ case class FullToken(token: Token, tokenType: TokenType, scopes: Vector[TokenSco
 {
 	// IMPLEMENTED  -------------------------
 	
-	override def scopeIds = scopes.map { _.id }.toSet
+	override def scopeLinks = scopes.map { _.tokenLink }
 	
 	
 	// OTHER    -----------------------------

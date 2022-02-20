@@ -2,7 +2,7 @@ package utopia.exodus.database.access.many.auth
 
 import utopia.exodus.model.stored.auth.Token
 import utopia.flow.generic.ValueConversions._
-import utopia.vault.nosql.view.NonDeprecatedView
+import utopia.vault.nosql.view.{NonDeprecatedView, UnconditionalView}
 import utopia.vault.sql.SqlExtensions._
 
 /**
@@ -12,6 +12,14 @@ import utopia.vault.sql.SqlExtensions._
   */
 object DbTokens extends ManyTokensAccess with NonDeprecatedView[Token]
 {
+	// COMPUTED --------------------
+	
+	/**
+	  * @return A copy of this access point which also includes historical (revoked & expired) tokens
+	  */
+	def includingHistory = DbAllTokens
+	
+	
 	// OTHER	--------------------
 	
 	/**
@@ -22,6 +30,11 @@ object DbTokens extends ManyTokensAccess with NonDeprecatedView[Token]
 	
 	
 	// NESTED	--------------------
+	
+	/**
+	  * An access point to tokens, including those that have been revoked and those that have expired
+	  */
+	object DbAllTokens extends ManyTokensAccess with UnconditionalView
 	
 	class DbTokensSubset(targetIds: Set[Int]) extends ManyTokensAccess
 	{

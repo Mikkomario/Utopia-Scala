@@ -135,7 +135,7 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	                 customDuration: Option[Duration] = None, limitToDefaultDuration: Boolean = false)
 	                (implicit connection: Connection, uuidGenerator: UuidGenerator) =
 		insert(newTypeId, Some(parentToken.id), ownerIdLimit.orElse { parentToken.ownerId },
-			parentToken.scopeIds ++ additionalScopeIds,
+			parentToken.forwardedScopeIds ++ additionalScopeIds,
 			customModelStylePreference.orElse { parentToken.modelStylePreference }, customDuration,
 			limitToDefaultDuration)
 	

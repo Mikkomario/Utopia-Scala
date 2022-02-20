@@ -76,14 +76,19 @@ CREATE TABLE `email_validation_attempt`(
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Used for linking scopes to tokens using many-to-many connections, describing what actions each token enables
--- token_id: Id of the linked token
--- scope_id: Id of the enabled scope
--- created:  Time when this token scope link was first created
+-- token_id:               Id of the linked token
+-- scope_id:               Id of the enabled scope
+-- created:                Time when this token scope link was first created
+-- is_directly_accessible: Whether the linked scope is directly accessible using the linked token
+-- grants_forward:         Whether this scope is granted to tokens that are created using this token
 CREATE TABLE `token_scope_link`(
-	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	`token_id` INT NOT NULL, 
-	`scope_id` INT NOT NULL, 
-	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`token_id` INT NOT NULL,
+	`scope_id` INT NOT NULL,
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`is_directly_accessible` BOOLEAN NOT NULL DEFAULT FALSE,
+	`grants_forward` BOOLEAN NOT NULL DEFAULT FALSE,
+	INDEX tsl_combo_1_idx (token_id, is_directly_accessible),
 	CONSTRAINT tsl_t_token_ref_fk FOREIGN KEY tsl_t_token_ref_idx (token_id) REFERENCES `token`(`id`) ON DELETE CASCADE, 
 	CONSTRAINT tsl_s_scope_ref_fk FOREIGN KEY tsl_s_scope_ref_idx (scope_id) REFERENCES `scope`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;

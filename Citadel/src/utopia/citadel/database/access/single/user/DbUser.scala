@@ -73,7 +73,7 @@ object DbUser extends SingleRowModelAccess[User] with UnconditionalView with Ind
 		val describedLanguagePerId = sortedLanguageData.map { case (language, _) =>
 			language.id -> language.withDescriptions(languageDescriptions.getOrElse(language.id, Vector()).toSet)
 		}.toMap
-		val describedFamiliarityPerId = sortedLanguageData.map { _._2 }.toSet.map { f =>
+		val describedFamiliarityPerId = sortedLanguageData.map { _._2 }.toSet[LanguageFamiliarity].map { f =>
 			f.id -> f.withDescriptions(familiarityDescriptions.getOrElse(f.id, Vector()).toSet)
 		}.toMap
 		

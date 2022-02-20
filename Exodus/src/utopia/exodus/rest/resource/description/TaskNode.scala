@@ -4,7 +4,7 @@ import utopia.access.http.Method.Get
 import utopia.access.http.Status.{NotFound, Unauthorized}
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.single.organization.DbTask
-import utopia.exodus.model.enumeration.ExodusScope.GeneralDataRead
+import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, ExtendableSessionResourceFactory, SessionUseCaseImplementation}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
@@ -33,7 +33,7 @@ class TaskNode(val taskId: Int) extends ExtendableSessionResource
 		implicit val languageIds: LanguageIds = session.languageIds
 		
 		// Makes sure the request is authorized for this scope
-		if (session.access.hasScope(GeneralDataRead))
+		if (session.access.hasScope(ReadGeneralData))
 			// Reads task along with its descriptions
 			access.described match {
 				case Some(task) =>

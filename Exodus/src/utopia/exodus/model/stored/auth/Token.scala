@@ -1,7 +1,7 @@
 package utopia.exodus.model.stored.auth
 
 import utopia.exodus.database.access.single.auth.DbSingleToken
-import utopia.exodus.model.combined.auth.ScopedToken
+import utopia.exodus.model.combined.auth.{ScopedToken, TypedToken}
 import utopia.exodus.model.partial.auth.TokenData
 import utopia.vault.database.Connection
 import utopia.vault.model.template.Stored
@@ -30,6 +30,12 @@ case class Token(id: Int, data: TokenData) extends Stored[TokenData, Int]
 	
 	
 	// OTHER    ---------------------
+	
+	/**
+	  * @param tokenType Type information to include
+	  * @return A copy of this token with that type information included
+	  */
+	def withTypeInfo(tokenType: TokenType) = TypedToken(this, tokenType)
 	
 	/**
 	  * @param scopeLinks Scope links to attach to this token

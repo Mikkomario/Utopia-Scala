@@ -201,6 +201,10 @@
           },
           {
             "id": 9,
+            "name": "revoke-other-tokens"
+          },
+          {
+            "id": 10,
             "name": "delete-account"
           }
         ]
@@ -208,6 +212,7 @@
       {
         "name": "TokenScopeLink",
         "doc": "Used for linking scopes to tokens using many-to-many connections, describing what actions each token enables",
+        "combo_index": ["tokenId", "isDirectlyAccessible"],
         "props": [
           {
             "ref": "token",
@@ -220,6 +225,18 @@
           {
             "type": "creation",
             "index": false
+          },
+          {
+            "name": "isDirectlyAccessible",
+            "name_plural": "areDirectlyAccessible",
+            "type": "Boolean",
+            "doc": "Whether the linked scope is directly accessible using the linked token"
+          },
+          {
+            "name": "grantsForward",
+            "name_plural": "grantForward",
+            "type": "Boolean",
+            "doc": "Whether this scope is granted to tokens that are created using this token"
           }
         ]
       },

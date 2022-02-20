@@ -2,7 +2,7 @@ package utopia.exodus.model.partial.auth
 
 import java.time.Instant
 import utopia.citadel.database.access.single.user.DbUser
-import utopia.exodus.database.access.single.auth.DbTokenType
+import utopia.exodus.database.access.single.auth.{DbToken, DbTokenType}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
 import utopia.flow.datastructure.immutable.Model
@@ -32,14 +32,18 @@ case class TokenData(typeId: Int, hash: String, parentTokenId: Option[Int] = Non
 	// COMPUTED	--------------------
 	
 	/**
-	  * Whether this token has already been deprecated
+	  * Whether this token has already been deprecated or expired
 	  */
-	def isDeprecated = deprecatedAfter.isDefined
-	
+	def isDeprecated = deprecatedAfter.isDefined || expires.exists { Now >= _ }
 	/**
-	  * Whether this token is still valid (not deprecated)
+	  * Whether this token is still valid (not deprecated nor expired)
 	  */
 	def isValid = !isDeprecated
+	
+	/**
+	  * @return Whether this token is temporary (will expire at some point)
+	  */
+	def isTemporary = expires.isDefined
 	
 	/**
 	  * @return An access point to this token's type information in the DB
@@ -49,6 +53,10 @@ case class TokenData(typeId: Int, hash: String, parentTokenId: Option[Int] = Non
 	  * An access point to this token's owner's data. None if this token doesn't specify an owner.
 	  */
 	def userAccess = ownerId.map { DbUser(_) }
+	/**
+	  * @return An access point to this token's parent token's data. None if this token doesn't have a parent token.
+	  */
+	def parentAccess = parentTokenId.map { DbToken(_) }
 	
 	/**
 	  * The model style to use during a request handling, based on either a header (X-Style) value,

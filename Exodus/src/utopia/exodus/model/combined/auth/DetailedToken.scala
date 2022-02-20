@@ -1,6 +1,6 @@
 package utopia.exodus.model.combined.auth
 
-import utopia.exodus.model.stored.auth.{Token, TokenScopeLink, TokenType}
+import utopia.exodus.model.stored.auth.{Scope, Token, TokenScopeLink, TokenType}
 
 /**
   * Combines scope and type information to a token
@@ -10,7 +10,11 @@ import utopia.exodus.model.stored.auth.{Token, TokenScopeLink, TokenType}
 case class DetailedToken(token: Token, tokenType: TokenType, scopeLinks: Vector[TokenScopeLink] = Vector())
 	extends ScopedTokenLike with TypedTokenLike
 {
-	// IMPLEMENTED  -----------------------------
-	
-	override def scopeIds = scopeLinks.map { _.scopeId }.toSet
+	/**
+	  * @param scopePerId A map that contains scope information for each used scope id. Expects all scope that are
+	  *                   used in this token to be covered.
+	  * @return A copy of this token with appropriate scope link information included
+	  */
+	def withScopeInfo(scopePerId: Map[Int, Scope]) =
+		FullToken(token, tokenType, scopeLinks.map { link => link.withScopeInfo(scopePerId(link.scopeId)) })
 }

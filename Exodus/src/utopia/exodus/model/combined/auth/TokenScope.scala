@@ -28,6 +28,8 @@ case class TokenScope(scope: Scope, tokenLink: TokenScopeLink) extends Extender[
 	
 	override def toModel = scope.toModel + Constant("token_link", tokenLink.toModel)
 	
-	override def toSimpleModel = scope.toSimpleModel
+	override def toSimpleModel = scope.toSimpleModel ++ Vector(
+		Constant("is_directly_accessible", tokenLink.isDirectlyAccessible),
+		Constant("grants_forward", tokenLink.grantsForward))
 }
 

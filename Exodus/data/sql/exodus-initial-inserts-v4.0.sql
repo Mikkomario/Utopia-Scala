@@ -7,6 +7,7 @@
 --	Auth	----------
 
 -- Inserts 9 scopes
+-- TODO: Update
 INSERT INTO `scope` (`id`, `name`) VALUES
 	(1, 'read-general-data'),
 	(2, 'create-user'),

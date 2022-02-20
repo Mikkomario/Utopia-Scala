@@ -9,11 +9,6 @@ import utopia.exodus.model.stored.auth.{Token, TokenScopeLink, TokenType}
   */
 case class ScopedToken(token: Token, scopeLinks: Vector[TokenScopeLink]) extends ScopedTokenLike
 {
-	// IMPLEMENTED	--------------------
-	
-	override def scopeIds = scopeLinks.map { _.scopeId }.toSet
-	
-	
 	// OTHER    ------------------------
 	
 	/**

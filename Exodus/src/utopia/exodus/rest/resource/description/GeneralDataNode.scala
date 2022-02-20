@@ -2,7 +2,7 @@ package utopia.exodus.rest.resource.description
 
 import utopia.access.http.Method.Get
 import utopia.citadel.database.access.many.description.{DbDescriptionRoles, ManyDescribedAccess}
-import utopia.exodus.model.enumeration.ExodusScope.GeneralDataRead
+import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.generic.ValueConversions._
@@ -67,7 +67,7 @@ trait GeneralDataNode[+A <: ModelConvertible with SimplyDescribed] extends Resou
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		// Authorizes the request
-		context.authorizedForScope(GeneralDataRead) { (token, connection) =>
+		context.authorizedForScope(ReadGeneralData) { (token, connection) =>
 			implicit val c: Connection = connection
 			implicit val languageIds: LanguageIds = token.languageIds
 			// Pulls data in the correct styling

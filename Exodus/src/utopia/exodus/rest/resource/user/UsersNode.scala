@@ -9,7 +9,7 @@ import utopia.exodus.database.access.many.auth.DbScopes
 import utopia.exodus.database.access.single.auth.DbToken
 import utopia.exodus.database.model.user.UserPasswordModel
 import utopia.exodus.model.combined.auth.DetailedToken
-import utopia.exodus.model.enumeration.ExodusScope.UserCreation
+import utopia.exodus.model.enumeration.ExodusScope.CreateUser
 import utopia.exodus.model.enumeration.ExodusTokenType.{RefreshToken, SessionToken}
 import utopia.exodus.model.partial.user.UserPasswordData
 import utopia.exodus.rest.resource.user.me.MeNode
@@ -55,7 +55,7 @@ object UsersNode extends Resource[AuthorizedContext]
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.authorizedForScope(UserCreation) { (token, connection) =>
+		context.authorizedForScope(CreateUser) { (token, connection) =>
 			implicit val c: Connection = connection
 			// Reads user data from the post body
 			context.handlePost(NewUser) { userData =>

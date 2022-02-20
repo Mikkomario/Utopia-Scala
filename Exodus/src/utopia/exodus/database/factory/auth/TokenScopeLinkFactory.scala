@@ -21,6 +21,7 @@ object TokenScopeLinkFactory extends FromValidatedRowModelFactory[TokenScopeLink
 	
 	override def fromValidatedModel(valid: Model) = 
 		TokenScopeLink(valid("id").getInt, TokenScopeLinkData(valid("tokenId").getInt, 
-			valid("scopeId").getInt, valid("created").getInstant))
+			valid("scopeId").getInt, valid("created").getInstant, valid("isDirectlyAccessible").getBoolean, 
+			valid("grantsForward").getBoolean))
 }
 

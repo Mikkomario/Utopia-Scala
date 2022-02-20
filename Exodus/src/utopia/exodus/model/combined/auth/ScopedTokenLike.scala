@@ -1,7 +1,7 @@
 package utopia.exodus.model.combined.auth
 
 import utopia.exodus.model.partial.auth.TokenData
-import utopia.exodus.model.stored.auth.Token
+import utopia.exodus.model.stored.auth.{Token, TokenScopeLink}
 import utopia.flow.util.Extender
 
 /**
@@ -19,9 +19,9 @@ trait ScopedTokenLike extends Extender[TokenData]
 	def token: Token
 	
 	/**
-	  * @return Ids of the scopes accessible using this token
+	  * @return Links between this token and the associated scopes
 	  */
-	def scopeIds: Set[Int]
+	def scopeLinks: Vector[TokenScopeLink]
 	
 	
 	// COMPUTED -------------------------
@@ -30,6 +30,19 @@ trait ScopedTokenLike extends Extender[TokenData]
 	  * @return Id of this token
 	  */
 	def id = token.id
+	
+	/**
+	  * @return Ids of the scopes accessible using this token
+	  */
+	def accessibleScopeIds = scopeLinks.filter { _.isDirectlyAccessible }.map { _.scopeId }.toSet
+	/**
+	  * @return Ids of the scopes that are granted to tokens generated using this token
+	  */
+	def forwardedScopeIds = scopeLinks.filter { _.grantsForward }.map { _.scopeId }.toSet
+	/**
+	  * @return Ids of the scopes that are accessible and/or granted forward
+	  */
+	def allScopeIds = scopeLinks.map { _.scopeId }.toSet
 	
 	
 	// IMPLEMENTED  ---------------------

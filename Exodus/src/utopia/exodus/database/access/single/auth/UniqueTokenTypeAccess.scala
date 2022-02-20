@@ -12,6 +12,7 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.nosql.template.Indexed
+import utopia.vault.sql.Exists
 
 /**
   * A common trait for access points that return individual and distinct token types.
@@ -59,6 +60,19 @@ trait UniqueTokenTypeAccess
 	  * Factory used for constructing database the interaction models
 	  */
 	protected def model = TokenTypeModel
+	
+	/**
+	  * @param connection Implicit DB Connection
+	  * @return Whether this is a refresh token
+	  */
+	def isRefreshToken(implicit connection: Connection) =
+		Exists(target, mergeCondition(model.refreshedTypeIdColumn.isNotNull))
+	/**
+	  * @param connection Implicit DB Connection
+	  * @return Whether this is an access token
+	  */
+	def isAccessToken(implicit connection: Connection) =
+		Exists(target, mergeCondition(model.refreshedTypeIdColumn.isNull))
 	
 	
 	// IMPLEMENTED	--------------------

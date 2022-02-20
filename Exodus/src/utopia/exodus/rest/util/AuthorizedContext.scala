@@ -11,7 +11,7 @@ import utopia.exodus.database.access.single.auth.DbToken.DbTokenMatch
 import utopia.exodus.database.access.single.auth.{DbApiKey, DbDeviceToken, DbEmailValidationAttemptOld, DbSessionToken, DbToken}
 import utopia.exodus.database.access.single.user.DbUserPassword
 import utopia.exodus.model.combined.auth.ScopedToken
-import utopia.exodus.model.enumeration.ExodusScope.{OrganizationActions, OrganizationDataRead}
+import utopia.exodus.model.enumeration.ExodusScope.{OrganizationActions, ReadOrganizationData}
 import utopia.exodus.model.enumeration.ScopeIdWrapper
 import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, EmailValidationAttemptOld, SessionToken, Token}
 import utopia.exodus.rest.util.AuthorizedContext.acceptLanguageIdsHeaderName
@@ -358,7 +358,7 @@ abstract class AuthorizedContext extends Context
 	  *                       connection as parameters. Returns operation result.
 	  * @return An http response based either on the function result or authorization failure.
 	  */
-	def authorizedInOrganization(organizationId: Int, scopeId: Int = OrganizationDataRead.id)
+	def authorizedInOrganization(organizationId: Int, scopeId: Int = ReadOrganizationData.id)
 	                            (f: (Token, Int, Connection) => Result) =
 	{
 		// Validates the token and checks scope
