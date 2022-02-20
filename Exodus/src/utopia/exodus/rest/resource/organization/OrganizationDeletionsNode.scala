@@ -18,14 +18,15 @@ import utopia.vault.database.Connection
 case class OrganizationDeletionsNode(organizationId: Int) extends LeafResource[AuthorizedContext]
 {
 	override val name = "deletions"
-	
 	override val allowedMethods = Vector(Delete)
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
+	{
 		context.authorizedForTask(organizationId, CancelOrganizationDeletion.id) { (session, _, connection) =>
 			implicit val c: Connection = connection
 			// Cancels all deletions targeted towards this organization
-			val createdCancellations = DbOrganization(organizationId).deletions.notCancelled.cancelBy(session.userId)
+			val createdCancellations = DbOrganization(organizationId).deletions.notCancelled.cancel(session.ownerId)
 			Result.Success(createdCancellations.map { _.toModel })
 		}
+	}
 }

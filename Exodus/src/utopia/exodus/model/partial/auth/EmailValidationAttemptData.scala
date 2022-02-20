@@ -10,8 +10,7 @@ import utopia.flow.generic.ValueConversions._
   * @param emailAddress Address to which the validation email was sent
   * @param resendTokenHash Hashed token which may be used to send a copy of this email validation. None if
   *  resend is disabled.
-  * 
-	@param sendCount Number of times a validation email has been sent for this specific purpose up to this point.
+  * @param sendCount Number of times a validation email has been sent for this specific purpose up to this point.
   * @author Mikko Hilpinen
   * @since 18.02.2022, v4.0
   */

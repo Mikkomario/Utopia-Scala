@@ -53,6 +53,7 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	  * @param parentId Id of the token that was used to authorize this token's creation (if applicable)
 	  * @param ownerId Id of the owner of this token (if applicable)
 	  * @param scopeIds Ids of the scopes accessible using this token (default = empty)
+	  * @param forwardedScopeIds Ids of the scopes this token grants to its child tokens (default = empty)
 	  * @param duration Duration indicating how long this token is valid, if limited (default = None = not limited)
 	  * @param modelStylePreference Preferred model style to use during this session (optional)
 	  * @param isSingleUseOnly Whether this token is limited to a single use (default = false)
@@ -62,7 +63,8 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	  */
 	def insertCustom(typeId: Int, parentId: Option[Int] = None, ownerId: Option[Int] = None,
 	                 duration: Option[FiniteDuration] = None, scopeIds: Set[Int] = Set(),
-	                 modelStylePreference: Option[ModelStyle] = None, isSingleUseOnly: Boolean = false)
+	                 forwardedScopeIds: Set[Int] = Set(), modelStylePreference: Option[ModelStyle] = None,
+	                 isSingleUseOnly: Boolean = false)
 	                (implicit connection: Connection, uuidGenerator: UuidGenerator) =
 	{
 		// Generates the new token string
@@ -70,9 +72,12 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 		// Stores the token into the database
 		val insertedToken = model.insert(TokenData(typeId, Sha256Hasher(tokenString), parentId, ownerId,
 			modelStylePreference, duration.map { Now + _ }, isSingleUseOnly = isSingleUseOnly))
-		// Grants scopes (according to parent token scopes & custom extra scopes)
+		// Grants scopes
 		val scopeLinks = TokenScopeLinkModel.insert(
-			scopeIds.toVector.sorted.map { scopeId => TokenScopeLinkData(insertedToken.id, scopeId) })
+			(scopeIds ++ forwardedScopeIds).toVector.sorted.map { scopeId =>
+				TokenScopeLinkData(insertedToken.id, scopeId, isDirectlyAccessible = scopeIds.contains(scopeId),
+					grantsForward = forwardedScopeIds.contains(scopeId))
+			})
 		
 		// Returns the token in a detailed form. Also includes the non-hashed token string.
 		insertedToken.withScopeLinks(scopeLinks) -> tokenString
@@ -84,6 +89,7 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	  * @param parentId Id of the token that was used to authorize this token's creation (if applicable)
 	  * @param ownerId Id of the owner of this token (if applicable)
 	  * @param scopeIds Ids of the scopes accessible using this token (default = empty)
+	  * @param forwardedScopeIds Ids of the scopes this token grants to its child tokens (default = empty)
 	  * @param modelStylePreference Preferred model style to use during this session (optional)
 	  * @param customDuration Duration to overwrite the default duration with (optional)
 	  * @param limitToDefaultDuration Whether this token type's default duration should be used as a maximum value,
@@ -93,8 +99,9 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	  * @return A new token, along with the non-hashed token string
 	  */
 	def insert(typeId: Int, parentId: Option[Int] = None, ownerId: Option[Int] = None,
-	           scopeIds: Set[Int] = Set(), modelStylePreference: Option[ModelStyle] = None,
-	           customDuration: Option[Duration] = None, limitToDefaultDuration: Boolean = false)
+	           scopeIds: Set[Int] = Set(), forwardedScopeIds: Set[Int] = Set(),
+	           modelStylePreference: Option[ModelStyle] = None, customDuration: Option[Duration] = None,
+	           limitToDefaultDuration: Boolean = false)
 	          (implicit connection: Connection, uuidGenerator: UuidGenerator) =
 	{
 		// Reads token type information (not expected to fail)
@@ -109,7 +116,7 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 			case None => tokenType.duration
 		}
 		// Inserts the new token
-		val (token, tokenString) = insertCustom(typeId, parentId, ownerId, duration, scopeIds,
+		val (token, tokenString) = insertCustom(typeId, parentId, ownerId, duration, scopeIds, forwardedScopeIds,
 			modelStylePreference, tokenType.isSingleUseOnly)
 		// Returns the token in a detailed form. Also includes the non-hashed token string.
 		token.withTypeInfo(tokenType) -> tokenString
@@ -121,6 +128,7 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	  * @param newTypeId Id of this new token's type
 	  * @param ownerIdLimit Id of the new owner of this token, if different from the parent token's owner
 	  * @param additionalScopeIds Scopes to grant in addition to those granted by the parent token (default = empty)
+	  * @param forwardedScopeIds Ids of the scopes this token grants to its child tokens (default = empty)
 	  * @param customModelStylePreference Model style preference to overwrite that of the parent token (optional)
 	  * @param customDuration Duration to overwrite the default duration with (optional)
 	  * @param limitToDefaultDuration Whether this token type's default duration should be used as a maximum value,
@@ -130,12 +138,12 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	  * @return The generated token, along with the new non-hashed token string
 	  */
 	def refreshUsing(parentToken: ScopedTokenLike, newTypeId: Int, ownerIdLimit: Option[Int] = None,
-	                 additionalScopeIds: Set[Int] = Set(),
+	                 additionalScopeIds: Set[Int] = Set(), forwardedScopeIds: Set[Int] = Set(),
 	                 customModelStylePreference: Option[ModelStyle] = None,
 	                 customDuration: Option[Duration] = None, limitToDefaultDuration: Boolean = false)
 	                (implicit connection: Connection, uuidGenerator: UuidGenerator) =
 		insert(newTypeId, Some(parentToken.id), ownerIdLimit.orElse { parentToken.ownerId },
-			parentToken.forwardedScopeIds ++ additionalScopeIds,
+			parentToken.forwardedScopeIds ++ additionalScopeIds, forwardedScopeIds,
 			customModelStylePreference.orElse { parentToken.modelStylePreference }, customDuration,
 			limitToDefaultDuration)
 	

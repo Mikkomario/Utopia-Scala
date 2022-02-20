@@ -164,7 +164,7 @@ object MySessionsNode extends ResourceWithChildren[AuthorizedContext]
 				if (sessionRequest.requestRefreshToken)
 					userIdOrParent.leftOption.map { userId =>
 						DbToken.insert(RefreshToken.id, ownerId = Some(userId),
-							scopeIds = ExodusContext.defaultUserScopeIds,
+							forwardedScopeIds = ExodusContext.defaultUserScopeIds,
 							modelStylePreference = sessionRequest.modelStyle)
 					}
 				else
@@ -180,7 +180,7 @@ object MySessionsNode extends ResourceWithChildren[AuthorizedContext]
 						customDuration = sessionRequest.customDuration, limitToDefaultDuration = true)
 				case None =>
 					DbToken.insert(SessionToken.id, None, userIdOrParent.leftOption, ExodusContext.defaultUserScopeIds,
-						sessionRequest.modelStyle, sessionRequest.customDuration, limitToDefaultDuration = true)
+						Set(), sessionRequest.modelStyle, sessionRequest.customDuration, limitToDefaultDuration = true)
 			}
 			
 			// Reads scope information so that it may be included in the response

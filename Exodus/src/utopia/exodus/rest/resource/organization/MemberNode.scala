@@ -1,17 +1,16 @@
 package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.Delete
-import utopia.access.http.Status.Forbidden
+import utopia.access.http.Status.{Forbidden, Unauthorized}
 import utopia.citadel.database.access.id.many.DbUserRoleIds
 import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.citadel.model.enumeration.StandardUserRole.Owner
+import utopia.exodus.model.enumeration.ExodusScope.PersonalActions
 import utopia.exodus.model.enumeration.StandardTask.RemoveMember
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.flow.util.StringExtensions._
 import utopia.nexus.http.Path
-import utopia.nexus.rest.Resource
-import utopia.nexus.rest.ResourceSearchResult.{Error, Follow}
+import utopia.nexus.rest.ResourceWithChildren
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -22,29 +21,29 @@ import utopia.vault.database.Connection
   * @param organizationId Id of the targeted organization
   * @param userId Id of targeted user. None if self.
   */
-case class MemberNode(organizationId: Int, userId: Option[Int]) extends Resource[AuthorizedContext]
+case class MemberNode(organizationId: Int, userId: Option[Int]) extends ResourceWithChildren[AuthorizedContext]
 {
+	override val allowedMethods = Vector(Delete)
+	
 	override def name = userId match
 	{
 		case Some(id) => id.toString
 		case None => "me"
 	}
 	
-	override val allowedMethods = Vector(Delete)
+	override def children = Vector(MemberRolesNode(organizationId, userId))
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
 		// The user needs to be authorized for the task
-		context.authorizedForTask(organizationId, RemoveMember.id) { (session, membershipId, connection) =>
+		context.authorizedForTask(organizationId, RemoveMember.id) { (token, membershipId, connection) =>
 			implicit val c: Connection = connection
 			lazy val ownMembershipAccess = DbMembership(membershipId)
 			// Checks whether request targets self or other user
-			userId.filterNot { _ == session.userId } match
-			{
+			userId.filterNot { token.ownerId.contains(_) } match {
 				case Some(targetUserId) =>
 					// Finds targeted membership id
-					DbUser(targetUserId).membershipInOrganizationWithId(organizationId).id match
-					{
+					DbUser(targetUserId).membershipInOrganizationWithId(organizationId).id match {
 						// Case: Member of this organization
 						case Some(targetMembershipId) =>
 							val targetMembershipAccess = DbMembership(targetMembershipId)
@@ -72,34 +71,25 @@ case class MemberNode(organizationId: Int, userId: Option[Int]) extends Resource
 						case None => Result.Empty
 					}
 				case None =>
-					// A user may freely remove themselves from an organization,
-					// except that the owner must leave another owner behind
-					if (DbMembership(membershipId).hasRoleWithId(Owner.id))
-					{
-						if (DbOrganization(organizationId).ownerMemberships.ids.forall { _ == membershipId })
+					// Makes sure the request is authorized to target the current user, also
+					if (token.access.hasScope(PersonalActions)) {
+						// A user may freely remove themselves from an organization,
+						// except that the owner must leave another owner behind
+						if (DbMembership(membershipId).hasRoleWithId(Owner.id) &&
+							DbOrganization(organizationId).ownerMemberships.ids.forall { _ == membershipId })
+						{
 							Result.Failure(Forbidden,
 								"You must assign another user as organization owner before you leave.")
-						else
-						{
+						}
+						else {
 							ownMembershipAccess.end()
 							Result.Empty
 						}
 					}
 					else
-					{
-						ownMembershipAccess.end()
-						Result.Empty
-					}
+						Result.Failure(Unauthorized,
+							"Your current session doesn't authorize you to leave organizations")
 			}
 		}
-	}
-	
-	override def follow(path: Path)(implicit context: AuthorizedContext) =
-	{
-		if (path.head ~== "roles")
-			Follow(MemberRolesNode(organizationId, userId), path.tail)
-		else
-			Error(message = Some(
-				"Organization member only has sub-resource 'roles'"))
 	}
 }

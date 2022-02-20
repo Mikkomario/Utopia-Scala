@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method.Get
-import utopia.access.http.Status.Unauthorized
+import utopia.access.http.Status.{NotFound, Unauthorized}
 import utopia.exodus.model.enumeration.ExodusScope.ReadPersonalData
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, SessionUseCaseImplementation}
 import utopia.exodus.rest.util.AuthorizedContext
@@ -32,13 +32,12 @@ object MeNode extends ExtendableSessionResource
 					userAccess.detailed match {
 						case Some(user) => Result.Success(user.toModelWith(session.modelStyle))
 						case None =>
-							Result.Failure(Unauthorized, "User no longer exists")
+							Result.Failure(NotFound, "User no longer exists")
 					}
 				}
 				else
 					Result.Failure(Unauthorized, "You're not allowed to read this user's personal data")
-			
-			case None => Result.Failure(Unauthorized, "Your current session doesn't specify who 'me' is")
+			case None => Result.Failure(NotFound, "Your current session doesn't specify who 'me' is")
 		}
 	}
 	

@@ -185,26 +185,46 @@
           },
           {
             "id": 5,
-            "name": "read-organization-data"
+            "name": "join-organization"
           },
           {
             "id": 6,
-            "name": "organization-actions"
+            "name": "create-organization"
           },
           {
             "id": 7,
-            "name": "reset-password"
+            "name": "read-organization-data"
           },
           {
             "id": 8,
-            "name": "change-email"
+            "name": "organization-actions"
           },
           {
             "id": 9,
-            "name": "revoke-other-tokens"
+            "name": "request-password-reset"
           },
           {
             "id": 10,
+            "name": "change-known-password"
+          },
+          {
+            "id": 11,
+            "name": "replace-forgotten-password"
+          },
+          {
+            "id": 12,
+            "name": "change-email"
+          },
+          {
+            "id": 13,
+            "name": "terminate-other-sessions"
+          },
+          {
+            "id": 14,
+            "name": "revoke-other-tokens"
+          },
+          {
+            "id": 15,
             "name": "delete-account"
           }
         ]

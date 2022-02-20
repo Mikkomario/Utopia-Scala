@@ -74,22 +74,22 @@ case class DbSingleMembership(id: Int) extends UniqueMembershipAccess with Singl
 	/**
 	  * Adds a new user role to this membership. Please make sure the new role is not a duplicate of an existing role.
 	  * @param newRoleId Id of the new user role (must not be duplicate)
-	  * @param creatorId Id of the user who assigns this role
+	  * @param creatorId Id of the user who assigns this role, if known
 	  * @param connection Implicit DB Connection
 	  * @return Newly assigned role link
 	  */
-	def assignRoleWithId(newRoleId: Int, creatorId: Int)(implicit connection: Connection) =
-		MemberRoleLinkModel.insert(MemberRoleLinkData(id, newRoleId, Some(creatorId)))
+	def assignRoleWithId(newRoleId: Int, creatorId: Option[Int] = None)(implicit connection: Connection) =
+		MemberRoleLinkModel.insert(MemberRoleLinkData(id, newRoleId, creatorId))
 	/**
 	  * Adds multiple new user roles to this membership. Please make sure only new roles are added
 	  * (no duplicates with existing roles)
 	  * @param newRoleIds Ids of the roles to assign (mustn't be duplicates with existing roles)
-	  * @param creatorId Id of the user who assigns these roles
+	  * @param creatorId Id of the user who assigns these roles, if known
 	  * @param connection Implicit DB Connection
 	  * @return Newly assigned role links
 	  */
-	def assignRolesWithIds(newRoleIds: Set[Int], creatorId: Int)(implicit connection: Connection) =
-		MemberRoleLinkModel.insert(newRoleIds.toVector.sorted.map { roleId => MemberRoleLinkData(id, roleId, Some(creatorId)) })
+	def assignRolesWithIds(newRoleIds: Set[Int], creatorId: Option[Int] = None)(implicit connection: Connection) =
+		MemberRoleLinkModel.insert(newRoleIds.toVector.sorted.map { roleId => MemberRoleLinkData(id, roleId, creatorId) })
 	/**
 	  * Removes the specified roles from this membership
 	  * @param userRoleIds Targeted user role ids

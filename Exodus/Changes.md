@@ -6,19 +6,32 @@
   - Replaced **SessionToken**, **DeviceToken**, **ApiKey**, **EmailValidatedSession** and **EmailValidationAttempt** 
     (partially) with **Token**
   - New token system supports authentication scopes
+    - This change applies to all existing rest nodes - they now make sure the request is authorized in the 
+      applicable scope
+      - Cases where email validation was used as an authentication method are now rewritten using access scopes. 
+        This change affects request body parsing, also.
   - The difference between "public" and session-authenticated resources was removed. All resources are now authorized 
     using access tokens. Only the required scopes differ.
     - This includes all rest resources within the `description` package
   - The **AuthorizedContext** interface is also different now
-- Rewrote user creation (POST users)
-  - Response styling is now different and supports styling
+- Rewrote user creation (`POST users`)
+  - Response content is now different and supports styling
   - Authentication is based on scopes (only)
+- Removed user creation from `POST invitations/open/responses` (use `POST users` instead)
 - **ExodusContext** now requires a new parameter in `.setup(...)`, which lists the scopes granted to all users by 
   default
   - This is applied during login, user creation and refresh token acquisition
 - Replaced **PublicDescriptionsNode** with new **GeneralDataNode**
+### Deprecations
+- Deprecated all nodes under `invitations`
+  - These are replaced with `users/me/invitations`
+### New Features
+- Added `POST users/me/invitations/responses`, which answers all pending invitations at once 
+  (based on previous `POST invitations/open/responses`)
 ### Other Changes
 - Access tokens are now hashed in the database (using SHA256), so that they can no longer be read and used
+- `GET users/me/invitations` now lists invitations even when the requesting user doesn't have an account yet, 
+  provided that the request is made using an email-validated token
 
 ## v3.1 - 27.01.2022
 An update that introduces multiple fixes and functional changes to the user management interface, 

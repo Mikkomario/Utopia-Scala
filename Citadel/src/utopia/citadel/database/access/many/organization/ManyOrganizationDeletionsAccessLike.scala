@@ -107,7 +107,8 @@ trait ManyOrganizationDeletionsAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  * @param connection Implicit DB Connection
 	  * @return Inserted deletion cancellations
 	  */
-	def cancelBy(userId: Int)(implicit connection: Connection) = cancel(Some(userId))
+	def cancelBy(userId: Int)(implicit connection: Connection) =
+		cancel(Some(userId))
 	
 	/**
 	  * Updates the actualization of the targeted OrganizationDeletion instance(s)

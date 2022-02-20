@@ -3,6 +3,9 @@
 ## v2.1 (in development)
 ### Breaking Changes
 - **NewUser** no longer accepts device -related parameters
+- Removed email validation support from **UserSettingsUpdate**
+- Removed email validation support from **PasswordChange**
+  - Also, renamed `old_password` to `current_password` (`old_password` is still supported when parsing model data)
 ### Deprecations
 - Deprecated all client device -related models
 - Deprecated **UserWithLinks** in favor of **DetailedUser**

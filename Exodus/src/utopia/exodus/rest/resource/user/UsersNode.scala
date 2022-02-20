@@ -60,7 +60,7 @@ object UsersNode extends Resource[AuthorizedContext]
 			// Reads user data from the post body
 			context.handlePost(NewUser) { userData =>
 				// Looks whether user email information has been stored
-				val preparedEmail = token.access.emailValidationAttempt.emailAddress
+				val preparedEmail = token.pullValidatedEmailAddress
 				val completeUserData = preparedEmail match {
 					case Some(email) => userData.withEmailAddress(email)
 					case None => userData
@@ -93,7 +93,7 @@ object UsersNode extends Resource[AuthorizedContext]
 								ExodusContext.defaultUserScopeIds, modelStylePreference)
 							// Attaches scope information to acquired tokens, so that all necessary information may
 							// be returned
-							val scopeIds = newSessionToken.scopeIds ++ refreshToken.toVector.flatMap { _._1.scopeIds }
+							val scopeIds = newSessionToken.allScopeIds ++ refreshToken.flatMap { _._1.allScopeIds }
 							val scopePerId = DbScopes(scopeIds).pull.map { s => s.id -> s }.toMap
 							
 							// Returns generated user information, along with the new session (and refresh) token

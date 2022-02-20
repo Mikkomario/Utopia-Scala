@@ -1,12 +1,13 @@
 package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.Post
-import utopia.access.http.Status.{BadRequest, Forbidden}
+import utopia.access.http.Status.{BadRequest, Forbidden, Unauthorized}
 import utopia.citadel.database.access.id.single.DbUserId
 import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.citadel.database.model.organization.InvitationModel
 import utopia.exodus.database.access.single.auth.DbEmailValidationAttemptOld
+import utopia.exodus.model.enumeration.ExodusScope.OrganizationActions
 import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.OrganizationInvitation
 import utopia.exodus.model.enumeration.StandardTask.InviteMembers
 import utopia.exodus.rest.resource.scalable.{ExtendableOrganizationResource, ExtendableOrganizationResourceFactory, OrganizationUseCaseImplementation}
@@ -38,10 +39,11 @@ class OrganizationInvitationsNode(organizationId: Int) extends ExtendableOrganiz
 	override val name = "invitations"
 	
 	private val defaultPost = OrganizationUseCaseImplementation
-		.default(Post) { (session, membershipId, connection, context, _) =>
+		.default { (session, membershipId, connection, context, _) =>
 			implicit val c: Connection = connection
 			val membershipAccess = DbMembership(membershipId)
-			if (membershipAccess.allowsTaskWithId(InviteMembers.id)) {
+			// Makes sure the request is authorized
+			if (session.access.hasScope(OrganizationActions) && membershipAccess.allowsTaskWithId(InviteMembers.id)) {
 				// Parses the posted invitation
 				context.handlePost(NewInvitation) { newInvitation =>
 					newInvitation.validated match
@@ -101,9 +103,10 @@ class OrganizationInvitationsNode(organizationId: Int) extends ExtendableOrganiz
 												val invitation = InvitationModel.insert(InvitationData(organizationId,
 													newInvitation.startingRoleId, Now + newInvitation.duration,
 													recipientUserId, Some(recipientEmail), newInvitation.message.notEmpty,
-													Some(session.userId)))
+													session.ownerId))
 												// Records a new email validation attempt based on the invitation,
 												// if possible
+												// TODO: Use new email validation logic
 												ExodusContext.emailValidator.foreach { implicit validator =>
 													DbEmailValidationAttemptOld.start(newInvitation.recipientEmail,
 														OrganizationInvitation.id, invitation.recipientId)
@@ -123,10 +126,10 @@ class OrganizationInvitationsNode(organizationId: Int) extends ExtendableOrganiz
 				}
 			}
 			else
-				Result.Failure(Forbidden, "You're not allowed to invite users into this organization")
+				Result.Failure(Unauthorized, "You're not allowed to invite users into this organization")
 		}
 	
-	override protected val defaultUseCaseImplementations = Vector(defaultPost)
+	override protected val defaultUseCaseImplementations = Map(Post -> defaultPost)
 	
 	
 	// IMPLEMENTED  -----------------------

@@ -11,6 +11,7 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 1.12.2020, v1
   */
+// TODO: Rework this trait to support the new DB structure & logic
 trait EmailValidator
 {
 	/**
