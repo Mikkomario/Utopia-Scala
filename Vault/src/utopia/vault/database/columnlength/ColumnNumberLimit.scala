@@ -34,7 +34,11 @@ trait ColumnNumberLimit extends ColumnLengthLimit
 				}
 				else
 					Left(ColumnNumberLimit.fitting(number))
-			case None => Left(None)
+			case None =>
+				if (input.isEmpty)
+					Right(input)
+				else
+					Left(None)
 		}
 }
 

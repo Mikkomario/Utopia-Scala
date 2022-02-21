@@ -6,6 +6,9 @@
   factory and provide utility functions accordingly
 - You may now customize column maximum length handling logic via `ColumnLengthRules.loadFrom(...)`
   - (Added a new variation of the `.loadFrom(...)` method)
+### Bugfixes
+- Fixed an issue where column length limits would throw every time an empty value was being inserted
+- Fixed an issue where `globalCondition` was not applied to `readColumn(...)` in **ModelAccess**
 
 ## v1.12 - 27.01.2022
 This update contains a major refactoring of the factory and access traits, as well as some important fixes. 

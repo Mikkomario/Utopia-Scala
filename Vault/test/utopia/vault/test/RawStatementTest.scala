@@ -61,7 +61,7 @@ object RawStatementTest extends App
         
         println(lastResult.toJson)
         println(s"Previously ${creationTime.longOr()} (${creationTime.dataType}), now ${lastResult("created").longOr()} (${lastResult("created").dataType})")
-        assert(lastResult("created").longOr() == creationTime.longOr())
+        assert(lastResult("created").getLong / 1000 == creationTime.getLong / 1000)
         
         // Tests a bit more tricky version where data types may not be correct
         connection(s"INSERT INTO ${table.name} (name) VALUES (?)", Vector(32))

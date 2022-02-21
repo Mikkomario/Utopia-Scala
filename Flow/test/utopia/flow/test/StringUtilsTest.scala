@@ -45,7 +45,7 @@ object StringUtilsTest extends App
 	assert("Test".divideWith(".") == Vector("Test"))
 	assert("Foo---bar".divideWith("---") == Vector("Foo---", "bar"))
 	
-	assert(Regex.digit.divide("A1BAA3D") == Vector("A1", "BAA3", "D"))
+	assert(Regex.digit.separate("A1BAA3D") == Vector("A1", "BAA3", "D"))
 	assert(Regex.digit.extract("A1BAA3D") == (Vector("A", "BAA", "D"), Vector("1", "3")))
 	assert(Regex.parenthesis.extract("Some(more)text") == (Vector("Some", "text"), Vector("(more)")))
 	assert(Regex("a").ignoringWithin('(', ')').findAllFrom("a test (another test)").size == 1)
