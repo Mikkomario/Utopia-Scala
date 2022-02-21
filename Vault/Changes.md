@@ -8,6 +8,9 @@
   factory and provide utility functions accordingly
 - You may now customize column maximum length handling logic via `ColumnLengthRules.loadFrom(...)`
   - (Added a new variation of the `.loadFrom(...)` method)
+### Bugfixes
+- Fixed an issue where column length limits would throw every time an empty value was being inserted
+- Fixed an issue where `globalCondition` was not applied to `readColumn(...)` in **ModelAccess**
 ### Other Changes
 - You can now apply joins to `.pullColumn(Column)` in **DistinctReadModelAccess**
 - **NullDeprecatable** now extends **Indexed**

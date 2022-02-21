@@ -1,6 +1,7 @@
 package utopia.vault.test
 
 import utopia.flow.generic.DataType
+import utopia.vault.sql.Delete
 
 import scala.concurrent.ExecutionContext
 
@@ -15,6 +16,8 @@ object SpecialCharactersTest extends App
 	
 	implicit val exc: ExecutionContext = TestThreadPool.executionContext
 	TestConnectionPool { implicit connection =>
+		connection(Delete(TestTables.person))
+		
 		val newPerson = Person("ÄmpäriÖykkäri")
 		val id = newPerson.insert()
 		val readPerson = Person.get(id)

@@ -30,6 +30,9 @@ object DateTimeHandlingTest extends App
 	val cPool = new ConnectionPool(25, 5, 10.seconds)
 	
 	cPool { implicit connection =>
+		// Removes test data
+		connection(Delete(DTFactory.table))
+		
 		val baseTime = Instant.now()
 		// Inserts test data
 		val hourDiffs = Vector(-7, -2, -1, 0, 1, 2, 7)
@@ -63,8 +66,6 @@ object DateTimeHandlingTest extends App
 				case None => println("TARGET LOST")
 			}
 		}
-		// Removes test data
-		connection(Delete(DTFactory.table))
 	}
 	
 	println("Done")

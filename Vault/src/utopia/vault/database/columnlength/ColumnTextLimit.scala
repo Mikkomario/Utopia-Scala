@@ -27,7 +27,11 @@ trait ColumnTextLimit extends ColumnLengthLimit
 					Right(string.take(maxLength))
 				else
 					Left(ColumnTextLimit.fitting(length))
-			case None => Left(None)
+			case None =>
+				if (input.isEmpty)
+					Right(input)
+				else
+					Left(None)
 		}
 }
 

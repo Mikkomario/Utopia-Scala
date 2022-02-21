@@ -27,6 +27,8 @@ object ColumnLengthTest extends App
 	ColumnLengthRules.loadFrom("Vault/test/testData/lengthlimits.json").get
 	
 	Connection.doTransaction { implicit connection =>
+		Delete(Person.table).execute()
+		
 		def insert(name: String, age: Int) = Person(name, Some(age)).insert().getInt
 		val normalId = insert("test", 5)
 		val expandNameId = insert("1234567890123456789012345678901234567890M", 5)
@@ -45,8 +47,6 @@ object ColumnLengthTest extends App
 		Try {
 			insert("X" * 128, 1)
 		}.foreach { _ => throw new IllegalStateException("Too long insert succeeded") }
-		
-		Delete(Person.table).execute()
 	}
 	
 	println("Done!")
