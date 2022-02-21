@@ -8,15 +8,15 @@ import utopia.flow.time.Now
 
 /**
   * An enumeration for purposes an email validation may be used for
-  * @param created Time when this EmailValidationPurpose was first created
+  * @param name Name of this email validation purpose. For identification (not localized).
+  * @param created Time when this email validation purpose was first created
   * @author Mikko Hilpinen
-  * @since 2021-10-25
+  * @since 25.10.2021, v4.0
   */
-@deprecated("Will be removed in a future release", "v4.0")
-case class EmailValidationPurposeData(nameEn: String, created: Instant = Now) extends ModelConvertible
+case class EmailValidationPurposeData(name: String, created: Instant = Now) extends ModelConvertible
 {
 	// IMPLEMENTED	--------------------
 	
-	override def toModel = Model(Vector("name_en" -> nameEn, "created" -> created))
+	override def toModel = Model(Vector("name" -> name, "created" -> created))
 }
 

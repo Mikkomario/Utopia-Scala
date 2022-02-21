@@ -21,30 +21,33 @@ object ManyEmailValidationPurposesAccess
 }
 
 /**
-  * A common trait for access points which target multiple EmailValidationPurposes at a time
+  * A common trait for access points which target multiple email validation purposes at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-25
+  * @since 25.10.2021, v4.0
   */
-@deprecated("Will be removed in a future release", "v4.0")
-trait ManyEmailValidationPurposesAccess
-	extends ManyRowModelAccess[EmailValidationPurpose] with Indexed
-		with FilterableView[ManyEmailValidationPurposesAccess]
+trait ManyEmailValidationPurposesAccess 
+	extends ManyRowModelAccess[EmailValidationPurpose] with FilterableView[ManyEmailValidationPurposesAccess] 
+		with Indexed
 {
 	// COMPUTED	--------------------
+	
+	/**
+	  * names of the accessible email validation purposes
+	  */
+	def names(implicit connection: Connection) = pullColumn(model.nameColumn).map { v => v.getString }
+	
+	/**
+	  * creation times of the accessible email validation purposes
+	  */
+	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map { _.getInstant }
+	
+	def ids(implicit connection: Connection) = pullColumn(index).flatMap { id => id.int }
 	
 	/**
 	  * englishNames of the accessible EmailValidationPurposes
 	  */
 	def englishNames(implicit connection: Connection) = 
 		pullColumn(model.nameEnColumn).flatMap { value => value.string }
-	
-	/**
-	  * creationTimes of the accessible EmailValidationPurposes
-	  */
-	def creationTimes(implicit connection: Connection) = 
-		pullColumn(model.createdColumn).flatMap { value => value.instant }
-	
-	def ids(implicit connection: Connection) = pullColumn(index).flatMap { id => id.int }
 	
 	/**
 	  * Factory used for constructing database the interaction models
@@ -63,9 +66,9 @@ trait ManyEmailValidationPurposesAccess
 	// OTHER	--------------------
 	
 	/**
-	  * Updates the created of the targeted EmailValidationPurpose instance(s)
+	  * Updates the creation times of the targeted email validation purposes
 	  * @param newCreated A new created to assign
-	  * @return Whether any EmailValidationPurpose instance was affected
+	  * @return Whether any email validation purpose was affected
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
@@ -77,5 +80,12 @@ trait ManyEmailValidationPurposesAccess
 	  */
 	def englishNames_=(newNameEn: String)(implicit connection: Connection) = 
 		putColumn(model.nameEnColumn, newNameEn)
+	
+	/**
+	  * Updates the names of the targeted email validation purposes
+	  * @param newName A new name to assign
+	  * @return Whether any email validation purpose was affected
+	  */
+	def names_=(newName: String)(implicit connection: Connection) = putColumn(model.nameColumn, newName)
 }
 

@@ -5,18 +5,17 @@ import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.SqlExtensions._
 
 /**
-  * The root access point when targeting multiple EmailValidationPurposes at a time
+  * The root access point when targeting multiple email validation purposes at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-25
+  * @since 25.10.2021, v4.0
   */
-@deprecated("Will be removed in a future release", "v4.0")
 object DbEmailValidationPurposes extends ManyEmailValidationPurposesAccess with UnconditionalView
 {
 	// OTHER	--------------------
 	
 	/**
-	  * @param ids Ids of the targeted EmailValidationPurposes
-	  * @return An access point to EmailValidationPurposes with the specified ids
+	  * @param ids Ids of the targeted email validation purposes
+	  * @return An access point to email validation purposes with the specified ids
 	  */
 	def apply(ids: Set[Int]) = new DbEmailValidationPurposesSubset(ids)
 	

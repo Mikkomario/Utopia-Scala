@@ -6,6 +6,10 @@ import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, ModelConvertible, StringType, VectorType}
 import utopia.flow.util.CollectionExtensions._
+import utopia.metropolis.model.error.IllegalPostModelException
+import utopia.metropolis.util.MetropolisRegex
+
+import scala.util.{Failure, Success}
 
 object NewUser extends FromModelFactory[NewUser]
 {
@@ -13,9 +17,14 @@ object NewUser extends FromModelFactory[NewUser]
 	
 	override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
 		// Languages must be parseable
-		valid("languages").getVector.tryMap { v => NewLanguageProficiency(v.getModel) }.map { languages =>
-			NewUser(valid("name").getString, valid("password").getString, languages,
-				valid("email").string, valid("request_refresh_token", "remember_me").getBoolean)
+		valid("languages").getVector.tryMap { v => NewLanguageProficiency(v.getModel) }.flatMap { languages =>
+			// Also, email address must be valid (if specified)
+			val emailAddress = valid("email").string
+			if (emailAddress.forall { MetropolisRegex.email(_) })
+				Success(NewUser(valid("name").getString, valid("password").getString, languages,
+					emailAddress, valid("request_refresh_token", "remember_me").getBoolean))
+			else
+				Failure(new IllegalPostModelException(s"'${emailAddress.get}' is not a valid email address"))
 		}
 	}
 }

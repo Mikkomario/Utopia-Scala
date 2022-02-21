@@ -261,8 +261,43 @@
         ]
       },
       {
+        "name": "EmailValidationPurpose",
+        "doc": "An enumeration for purposes an email validation may be used for",
+        "props": [
+          {
+            "name": "name",
+            "length": 32,
+            "limit": "up to 128",
+            "doc": "Name of this email validation purpose. For identification (not localized)."
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ],
+        "instances": [
+          {
+            "id": 1,
+            "name": "user-creation"
+          },
+          {
+            "id": 2,
+            "name": "email-change"
+          },
+          {
+            "id": 3,
+            "name": "password-reset"
+          },
+          {
+            "id": 4,
+            "name": "organization-invitation"
+          }
+        ]
+      },
+      {
         "name": "EmailValidationAttempt",
         "doc": "Represents an attempted email validation. Provides additional information to an authentication token.",
+        "has_combos": true,
         "props": [
           {
             "ref": "token",
@@ -277,19 +312,9 @@
             "doc": "Address to which the validation email was sent"
           },
           {
-            "name": "resendTokenHash",
-            "name_plural": "resendTokenHashes",
-            "type": "Option[String]",
-            "length": 96,
-            "index": true,
-            "doc": "Hashed token which may be used to send a copy of this email validation. None if resend is disabled."
-          },
-          {
-            "name": "sendCount",
-            "type": "Int",
-            "default": 1,
-            "sql_default": 1,
-            "doc": "Number of times a validation email has been sent for this specific purpose up to this point."
+            "name": "purposeId",
+            "ref": "email_validation_purpose",
+            "doc": "Id of the purpose this email validation is for"
           }
         ]
       }

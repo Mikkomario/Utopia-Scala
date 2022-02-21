@@ -21,6 +21,6 @@ object EmailValidationAttemptFactory extends FromValidatedRowModelFactory[EmailV
 	
 	override def fromValidatedModel(valid: Model) = 
 		EmailValidationAttempt(valid("id").getInt, EmailValidationAttemptData(valid("tokenId").getInt, 
-			valid("emailAddress").getString, valid("resendTokenHash").string, valid("sendCount").getInt))
+			valid("emailAddress").getString, valid("purposeId").getInt))
 }
 

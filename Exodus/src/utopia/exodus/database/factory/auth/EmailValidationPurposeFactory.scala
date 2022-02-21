@@ -7,21 +7,20 @@ import utopia.flow.datastructure.immutable.Model
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
-  * Used for reading EmailValidationPurpose data from the DB
+  * Used for reading email validation purpose data from the DB
   * @author Mikko Hilpinen
-  * @since 2021-10-25
+  * @since 25.10.2021, v4.0
   */
-@deprecated("Will be removed in a future release", "v4.0")
 object EmailValidationPurposeFactory extends FromValidatedRowModelFactory[EmailValidationPurpose]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def table = ExodusTables.emailValidationPurpose
-	
 	override def defaultOrdering = None
 	
-	override def fromValidatedModel(valid: Model) =
-		EmailValidationPurpose(valid("id").getInt, EmailValidationPurposeData(valid("nameEn").getString, 
+	override def table = ExodusTables.emailValidationPurpose
+	
+	override def fromValidatedModel(valid: Model) = 
+		EmailValidationPurpose(valid("id").getInt, EmailValidationPurposeData(valid("name").getString, 
 			valid("created").getInstant))
 }
 

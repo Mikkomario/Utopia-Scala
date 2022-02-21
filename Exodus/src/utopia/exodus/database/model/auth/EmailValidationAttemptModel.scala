@@ -30,6 +30,11 @@ object EmailValidationAttemptModel
 	val emailAddressAttName = "emailAddress"
 	
 	/**
+	  * Name of the property that contains email validation attempt purpose id
+	  */
+	val purposeIdAttName = "purposeId"
+	
+	/**
 	  * Name of the property that contains email validation attempt resend token hash
 	  */
 	val resendTokenHashAttName = "resendTokenHash"
@@ -53,6 +58,16 @@ object EmailValidationAttemptModel
 	def emailAddressColumn = table(emailAddressAttName)
 	
 	/**
+	  * Column that contains email validation attempt purpose id
+	  */
+	def purposeIdColumn = table(purposeIdAttName)
+	
+	/**
+	  * The factory object used by this model type
+	  */
+	def factory = EmailValidationAttemptFactory
+	
+	/**
 	  * Column that contains email validation attempt resend token hash
 	  */
 	def resendTokenHashColumn = table(resendTokenHashAttName)
@@ -62,18 +77,13 @@ object EmailValidationAttemptModel
 	  */
 	def sendCountColumn = table(sendCountAttName)
 	
-	/**
-	  * The factory object used by this model type
-	  */
-	def factory = EmailValidationAttemptFactory
-	
 	
 	// IMPLEMENTED	--------------------
 	
 	override def table = factory.table
 	
 	override def apply(data: EmailValidationAttemptData) = 
-		apply(None, Some(data.tokenId), Some(data.emailAddress), data.resendTokenHash, Some(data.sendCount))
+		apply(None, Some(data.tokenId), Some(data.emailAddress), Some(data.purposeId))
 	
 	override def complete(id: Value, data: EmailValidationAttemptData) = EmailValidationAttempt(id.getInt, 
 		data)
@@ -94,8 +104,14 @@ object EmailValidationAttemptModel
 	def withId(id: Int) = apply(Some(id))
 	
 	/**
+	  * @param purposeId Id of the purpose this email validation is for
+	  * @return A model containing only the specified purpose id
+	  */
+	def withPurposeId(purposeId: Int) = apply(purposeId = Some(purposeId))
+	
+	/**
 	  * @param resendTokenHash Hashed token which may be used to send a copy of this email validation. None if
-	  *  resend is disabled.
+	  * resend is disabled.
 	  * @return A model containing only the specified resend token hash
 	  */
 	def withResendTokenHash(resendTokenHash: String) = apply(resendTokenHash = Some(resendTokenHash))
@@ -119,16 +135,12 @@ object EmailValidationAttemptModel
   * @param id email validation attempt database id
   * @param tokenId Id of the token sent via email
   * @param emailAddress Address to which the validation email was sent
-  * @param resendTokenHash Hashed token which may be used to send a copy of this email validation. None if
-  *  resend is disabled.
-  * 
-	@param sendCount Number of times a validation email has been sent for this specific purpose up to this point.
+  * @param purposeId Id of the purpose this email validation is for
   * @author Mikko Hilpinen
   * @since 18.02.2022, v4.0
   */
 case class EmailValidationAttemptModel(id: Option[Int] = None, tokenId: Option[Int] = None, 
-	emailAddress: Option[String] = None, resendTokenHash: Option[String] = None, 
-	sendCount: Option[Int] = None) 
+	emailAddress: Option[String] = None, purposeId: Option[Int] = None) 
 	extends StorableWithFactory[EmailValidationAttempt]
 {
 	// IMPLEMENTED	--------------------
@@ -138,7 +150,7 @@ case class EmailValidationAttemptModel(id: Option[Int] = None, tokenId: Option[I
 	override def valueProperties = {
 		import EmailValidationAttemptModel._
 		Vector("id" -> id, tokenIdAttName -> tokenId, emailAddressAttName -> emailAddress, 
-			resendTokenHashAttName -> resendTokenHash, sendCountAttName -> sendCount)
+			purposeIdAttName -> purposeId)
 	}
 	
 	
@@ -149,6 +161,12 @@ case class EmailValidationAttemptModel(id: Option[Int] = None, tokenId: Option[I
 	  * @return A new copy of this model with the specified email address
 	  */
 	def withEmailAddress(emailAddress: String) = copy(emailAddress = Some(emailAddress))
+	
+	/**
+	  * @param purposeId A new purpose id
+	  * @return A new copy of this model with the specified purpose id
+	  */
+	def withPurposeId(purposeId: Int) = copy(purposeId = Some(purposeId))
 	
 	/**
 	  * @param resendTokenHash A new resend token hash

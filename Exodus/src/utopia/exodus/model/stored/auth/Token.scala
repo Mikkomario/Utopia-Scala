@@ -2,7 +2,7 @@ package utopia.exodus.model.stored.auth
 
 import utopia.citadel.database.access.single.user.DbUserSettings
 import utopia.exodus.database.access.single.auth.DbSingleToken
-import utopia.exodus.model.combined.auth.{ScopedToken, TypedToken}
+import utopia.exodus.model.combined.auth.{EmailValidationToken, ScopedToken, TypedToken}
 import utopia.exodus.model.partial.auth.TokenData
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.database.Connection
@@ -69,5 +69,11 @@ case class Token(id: Int, data: TokenData) extends Stored[TokenData, Int]
 	  * @return A copy of this token which includes the specified token scope links
 	  */
 	def withScopeLinks(scopeLinks: Vector[TokenScopeLink]) = ScopedToken(this, scopeLinks)
+	
+	/**
+	  * @param attempt Email validation attempt data
+	  * @return A combination of this token and the specified email validation attempt data
+	  */
+	def withEmailValidationAttempt(attempt: EmailValidationAttempt) = EmailValidationToken(this, attempt)
 }
 

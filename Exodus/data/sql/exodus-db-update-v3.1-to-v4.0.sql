@@ -6,6 +6,8 @@
 -- Last generated: 2022-02-18
 --
 
+-- TODO: UPDATE
+
 -- Drops the tables which are no longer used, including email_validation_attempt, which changed drastically
 
 DELETE FROM `email_validated_session`;

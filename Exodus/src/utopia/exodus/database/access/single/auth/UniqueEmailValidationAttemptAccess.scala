@@ -32,19 +32,24 @@ trait UniqueEmailValidationAttemptAccess
 	def emailAddress(implicit connection: Connection) = pullColumn(model.emailAddressColumn).string
 	
 	/**
+	  * Id of the purpose this email validation is for. None if no instance (or value) was found.
+	  */
+	def purposeId(implicit connection: Connection) = pullColumn(model.purposeIdColumn).int
+	
+	def id(implicit connection: Connection) = pullColumn(index).int
+	
+	/**
 	  * 
 		Hashed token which may be used to send a copy of this email validation. None if resend is disabled.. None if
-	  *  no instance (or value) was found.
+	  * no instance (or value) was found.
 	  */
 	def resendTokenHash(implicit connection: Connection) = pullColumn(model.resendTokenHashColumn).string
 	
 	/**
 	  * Number of times a validation email has been sent for this specific purpose up to this point.. None if
-	  *  no instance (or value) was found.
+	  * no instance (or value) was found.
 	  */
 	def sendCount(implicit connection: Connection) = pullColumn(model.sendCountColumn).int
-	
-	def id(implicit connection: Connection) = pullColumn(index).int
 	
 	/**
 	  * Factory used for constructing database the interaction models
@@ -66,6 +71,14 @@ trait UniqueEmailValidationAttemptAccess
 	  */
 	def emailAddress_=(newEmailAddress: String)(implicit connection: Connection) = 
 		putColumn(model.emailAddressColumn, newEmailAddress)
+	
+	/**
+	  * Updates the purpose ids of the targeted email validation attempts
+	  * @param newPurposeId A new purpose id to assign
+	  * @return Whether any email validation attempt was affected
+	  */
+	def purposeId_=(newPurposeId: Int)(implicit connection: Connection) = 
+		putColumn(model.purposeIdColumn, newPurposeId)
 	
 	/**
 	  * Updates the resend token hashes of the targeted email validation attempts

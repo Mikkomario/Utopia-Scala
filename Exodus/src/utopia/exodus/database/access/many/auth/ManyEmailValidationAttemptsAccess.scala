@@ -25,81 +25,14 @@ object ManyEmailValidationAttemptsAccess
   * @since 18.02.2022, v4.0
   */
 trait ManyEmailValidationAttemptsAccess 
-	extends ManyRowModelAccess[EmailValidationAttempt] with FilterableView[ManyEmailValidationAttemptsAccess] 
-		with Indexed
+	extends ManyEmailValidationAttemptsAccessLike[EmailValidationAttempt, ManyEmailValidationAttemptsAccess] 
+		with ManyRowModelAccess[EmailValidationAttempt]
 {
-	// COMPUTED	--------------------
-	
-	/**
-	  * tokens ids of the accessible email validation attempts
-	  */
-	def tokensIds(implicit connection: Connection) = pullColumn(model.tokenIdColumn).map { v => v.getInt }
-	
-	/**
-	  * email addresses of the accessible email validation attempts
-	  */
-	def emailAddresses(implicit connection: Connection) = 
-		pullColumn(model.emailAddressColumn).map { v => v.getString }
-	
-	/**
-	  * resend token hashes of the accessible email validation attempts
-	  */
-	def resendTokenHashes(implicit connection: Connection) = 
-		pullColumn(model.resendTokenHashColumn).flatMap { _.string }
-	
-	/**
-	  * send counts of the accessible email validation attempts
-	  */
-	def sendCounts(implicit connection: Connection) = pullColumn(model.sendCountColumn).map { v => v.getInt }
-	
-	def ids(implicit connection: Connection) = pullColumn(index).flatMap { id => id.int }
-	
-	/**
-	  * Factory used for constructing database the interaction models
-	  */
-	protected def model = EmailValidationAttemptModel
-	
-	
 	// IMPLEMENTED	--------------------
 	
 	override def factory = EmailValidationAttemptFactory
 	
 	override def filter(additionalCondition: Condition): ManyEmailValidationAttemptsAccess = 
 		new ManyEmailValidationAttemptsAccess.ManyEmailValidationAttemptsSubView(this, additionalCondition)
-	
-	
-	// OTHER	--------------------
-	
-	/**
-	  * Updates the email addresses of the targeted email validation attempts
-	  * @param newEmailAddress A new email address to assign
-	  * @return Whether any email validation attempt was affected
-	  */
-	def emailAddresses_=(newEmailAddress: String)(implicit connection: Connection) = 
-		putColumn(model.emailAddressColumn, newEmailAddress)
-	
-	/**
-	  * Updates the resend token hashes of the targeted email validation attempts
-	  * @param newResendTokenHash A new resend token hash to assign
-	  * @return Whether any email validation attempt was affected
-	  */
-	def resendTokenHashes_=(newResendTokenHash: String)(implicit connection: Connection) = 
-		putColumn(model.resendTokenHashColumn, newResendTokenHash)
-	
-	/**
-	  * Updates the send counts of the targeted email validation attempts
-	  * @param newSendCount A new send count to assign
-	  * @return Whether any email validation attempt was affected
-	  */
-	def sendCounts_=(newSendCount: Int)(implicit connection: Connection) = 
-		putColumn(model.sendCountColumn, newSendCount)
-	
-	/**
-	  * Updates the tokens ids of the targeted email validation attempts
-	  * @param newTokenId A new token id to assign
-	  * @return Whether any email validation attempt was affected
-	  */
-	def tokensIds_=(newTokenId: Int)(implicit connection: Connection) = putColumn(model.tokenIdColumn, 
-		newTokenId)
 }
 

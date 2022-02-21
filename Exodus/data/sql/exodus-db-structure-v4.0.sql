@@ -59,20 +59,27 @@ CREATE TABLE `token`(
 	CONSTRAINT t_u_owner_ref_fk FOREIGN KEY t_u_owner_ref_idx (owner_id) REFERENCES `user`(`id`) ON DELETE SET NULL
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
+-- An enumeration for purposes an email validation may be used for
+-- name:    Name of this email validation purpose. For identification (not localized).
+-- created: Time when this email validation purpose was first created
+CREATE TABLE `email_validation_purpose`(
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`name` VARCHAR(32) NOT NULL,
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
 -- Represents an attempted email validation. Provides additional information to an authentication token.
--- token_id:          Id of the token sent via email
--- email_address:     Address to which the validation email was sent
--- resend_token_hash: Hashed token which may be used to send a copy of this email validation. None if resend is disabled.
--- send_count:        Number of times a validation email has been sent for this specific purpose up to this point.
+-- token_id:      Id of the token sent via email
+-- email_address: Address to which the validation email was sent
+-- purpose_id:    Id of the purpose this email validation is for
 CREATE TABLE `email_validation_attempt`(
-	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	`token_id` INT NOT NULL, 
-	`email_address` VARCHAR(64) NOT NULL, 
-	`resend_token_hash` VARCHAR(96), 
-	`send_count` INT NOT NULL DEFAULT 1, 
-	INDEX eva_email_address_idx (`email_address`), 
-	INDEX eva_resend_token_hash_idx (`resend_token_hash`), 
-	CONSTRAINT eva_t_token_ref_fk FOREIGN KEY eva_t_token_ref_idx (token_id) REFERENCES `token`(`id`) ON DELETE CASCADE
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`token_id` INT NOT NULL,
+	`email_address` VARCHAR(64) NOT NULL,
+	`purpose_id` INT NOT NULL,
+	INDEX eva_email_address_idx (`email_address`),
+	CONSTRAINT eva_t_token_ref_fk FOREIGN KEY eva_t_token_ref_idx (token_id) REFERENCES `token`(`id`) ON DELETE CASCADE,
+	CONSTRAINT eva_evp_purpose_ref_fk FOREIGN KEY eva_evp_purpose_ref_idx (purpose_id) REFERENCES `email_validation_purpose`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Used for linking scopes to tokens using many-to-many connections, describing what actions each token enables

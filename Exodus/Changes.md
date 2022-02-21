@@ -14,6 +14,8 @@
     using access tokens. Only the required scopes differ.
     - This includes all rest resources within the `description` package
   - The **AuthorizedContext** interface is also different now
+- Rewrote the **EmailValidator** trait and how email validations are handled
+  - Removed email validation resend feature altogether
 - Rewrote user creation (`POST users`)
   - Response content is now different and supports styling
   - Authentication is based on scopes (only)

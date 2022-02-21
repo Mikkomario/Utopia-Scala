@@ -78,7 +78,7 @@ object UsersNode extends Resource[AuthorizedContext]
 							val refreshToken = {
 								if (completeUserData.requestRefreshToken) {
 									Some(DbToken.refreshUsing(scopedToken, RefreshToken.id, Some(user.id),
-										ExodusContext.defaultUserScopeIds, modelStylePreference))
+										Set(), ExodusContext.defaultUserScopeIds, modelStylePreference))
 								}
 								else
 									None
@@ -90,7 +90,7 @@ object UsersNode extends Resource[AuthorizedContext]
 							}
 							val (newSessionToken, sessionTokenString) = DbToken.refreshUsing(parentToken,
 								refreshedTokenTypeId.getOrElse { SessionToken.id }, Some(user.id),
-								ExodusContext.defaultUserScopeIds, modelStylePreference)
+								ExodusContext.defaultUserScopeIds, Set(), modelStylePreference)
 							// Attaches scope information to acquired tokens, so that all necessary information may
 							// be returned
 							val scopeIds = newSessionToken.allScopeIds ++ refreshToken.flatMap { _._1.allScopeIds }
