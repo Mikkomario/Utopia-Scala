@@ -1,6 +1,5 @@
 package utopia.exodus.model.stored.auth
 
-import utopia.exodus.database.access.single.auth.DbSingleEmailValidationAttemptOld
 import utopia.exodus.model.partial.auth.EmailValidationAttemptDataOld
 import utopia.vault.model.template.StoredModelConvertible
 
@@ -14,12 +13,4 @@ import utopia.vault.model.template.StoredModelConvertible
 @deprecated("Replaced with a new version", "v4.0")
 case class EmailValidationAttemptOld(id: Int, data: EmailValidationAttemptDataOld)
 	extends StoredModelConvertible[EmailValidationAttemptDataOld]
-{
-	// COMPUTED	--------------------
-	
-	/**
-	  * An access point to this EmailValidationAttempt in the database
-	  */
-	def access = DbSingleEmailValidationAttemptOld(id)
-}
 

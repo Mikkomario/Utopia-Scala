@@ -44,12 +44,6 @@ trait ManyEmailValidationPurposesAccess
 	def ids(implicit connection: Connection) = pullColumn(index).flatMap { id => id.int }
 	
 	/**
-	  * englishNames of the accessible EmailValidationPurposes
-	  */
-	def englishNames(implicit connection: Connection) = 
-		pullColumn(model.nameEnColumn).flatMap { value => value.string }
-	
-	/**
 	  * Factory used for constructing database the interaction models
 	  */
 	protected def model = EmailValidationPurposeModel
@@ -72,14 +66,6 @@ trait ManyEmailValidationPurposesAccess
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
-	
-	/**
-	  * Updates the nameEn of the targeted EmailValidationPurpose instance(s)
-	  * @param newNameEn A new nameEn to assign
-	  * @return Whether any EmailValidationPurpose instance was affected
-	  */
-	def englishNames_=(newNameEn: String)(implicit connection: Connection) = 
-		putColumn(model.nameEnColumn, newNameEn)
 	
 	/**
 	  * Updates the names of the targeted email validation purposes

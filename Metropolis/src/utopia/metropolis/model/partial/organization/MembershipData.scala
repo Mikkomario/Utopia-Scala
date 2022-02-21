@@ -1,7 +1,7 @@
 package utopia.metropolis.model.partial.organization
 
 import java.time.Instant
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
+import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.{FromModelFactoryWithSchema, IntType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._

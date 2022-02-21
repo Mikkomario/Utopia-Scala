@@ -10,6 +10,13 @@ import utopia.exodus.model.stored.auth.{Scope, Token, TokenScopeLink, TokenType}
 case class DetailedToken(token: Token, tokenType: TokenType, scopeLinks: Vector[TokenScopeLink] = Vector())
 	extends ScopedTokenLike with TypedTokenLike
 {
+	// IMPLEMENTED  --------------------------
+	
+	override def id = token.id
+	
+	
+	// OTHER    -------------------------------
+	
 	/**
 	  * @param scopePerId A map that contains scope information for each used scope id. Expects all scope that are
 	  *                   used in this token to be covered.

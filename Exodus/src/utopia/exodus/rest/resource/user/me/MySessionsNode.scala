@@ -184,8 +184,9 @@ object MySessionsNode extends ResourceWithChildren[AuthorizedContext]
 			}
 			
 			// Reads scope information so that it may be included in the response
-			val scopePerId = DbScopes(newSessionToken.allScopeIds ++ newRefreshToken.flatMap { _._1.allScopeIds }).pull
-				.map { s => s.id -> s }.toMap
+			val scopePerId = DbScopes(newSessionToken.allScopeIds ++
+				newRefreshToken.iterator.flatMap { _._1.allScopeIds })
+				.pull.map { s => s.id -> s }.toMap
 			
 			// Forms the response
 			val style = sessionRequest.modelStyle

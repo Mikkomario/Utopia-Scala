@@ -16,7 +16,8 @@ object ExodusScope
 	  */
 	val values = Vector[ExodusScope](ReadGeneralData, CreateUser, ReadPersonalData, PersonalActions,
 		JoinOrganization, CreateOrganization, ReadOrganizationData, OrganizationActions, RequestPasswordReset,
-		ChangeKnownPassword, ChangeEmail, TerminateOtherSessions, RevokeOtherTokens, DeleteAccount)
+		ChangeKnownPassword, ReplaceForgottenPassword, ChangeEmail, TerminateOtherSessions, RevokeOtherTokens,
+		DeleteAccount)
 	
 	
 	// NESTED   ---------------------------

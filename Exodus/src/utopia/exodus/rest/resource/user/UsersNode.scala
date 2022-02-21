@@ -93,7 +93,8 @@ object UsersNode extends Resource[AuthorizedContext]
 								ExodusContext.defaultUserScopeIds, Set(), modelStylePreference)
 							// Attaches scope information to acquired tokens, so that all necessary information may
 							// be returned
-							val scopeIds = newSessionToken.allScopeIds ++ refreshToken.flatMap { _._1.allScopeIds }
+							val scopeIds = newSessionToken.allScopeIds ++
+								refreshToken.iterator.flatMap { _._1.allScopeIds }
 							val scopePerId = DbScopes(scopeIds).pull.map { s => s.id -> s }.toMap
 							
 							// Returns generated user information, along with the new session (and refresh) token

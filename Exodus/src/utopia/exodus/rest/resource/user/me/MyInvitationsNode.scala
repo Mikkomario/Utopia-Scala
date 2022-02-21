@@ -118,7 +118,7 @@ object MyInvitationsNode extends Resource[AuthorizedContext]
 				
 				def _joinAll(userId: Int) = invitations.map { invitation =>
 					DbUser(userId).membershipInOrganizationWithId(invitation.organizationId)
-						.start(invitation.startingRoleId, invitation.senderId.getOrElse(userId))
+						.start(invitation.startingRoleId, Some(invitation.senderId.getOrElse(userId)))
 				}
 				
 				// Checks whether the invitation is linked to an existing user, which greatly affects request handling

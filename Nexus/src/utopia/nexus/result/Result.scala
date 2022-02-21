@@ -50,7 +50,7 @@ object Result
     /**
      * This result may be returned when the API wants to return specific data
      */
-    case class Success(data: Value, status: Status = OK,
+    case class Success(data: Value = Value.empty, status: Status = OK,
             description: Option[String] = None, headers: Headers = Headers.empty) extends Result
 	
 	/**

@@ -20,16 +20,6 @@ trait UniqueEmailValidationPurposeAccess
 	extends SingleRowModelAccess[EmailValidationPurpose] 
 		with DistinctModelAccess[EmailValidationPurpose, Option[EmailValidationPurpose], Value] with Indexed
 {
-	// ABSTRACT	--------------------
-	
-	/**
-	  * Updates the nameEn of the targeted EmailValidationPurpose instance(s)
-	  * @param newNameEn A new nameEn to assign
-	  * @return Whether any EmailValidationPurpose instance was affected
-	  */
-	def nameEn_=(newNameEn: String)
-	
-	
 	// COMPUTED	--------------------
 	
 	/**
@@ -45,11 +35,6 @@ trait UniqueEmailValidationPurposeAccess
 	def created(implicit connection: Connection) = pullColumn(model.createdColumn).instant
 	
 	def id(implicit connection: Connection) = pullColumn(index).int
-	
-	/**
-	  * The nameEn of this instance. None if no instance (or value) was found.
-	  */
-	def nameEn(implicit connection: Connection) = pullColumn(model.nameEnColumn).string
 	
 	/**
 	  * Factory used for constructing database the interaction models

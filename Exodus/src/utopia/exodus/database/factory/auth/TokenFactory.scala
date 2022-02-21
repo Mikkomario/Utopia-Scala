@@ -31,9 +31,8 @@ object TokenFactory
 		table.validate(model).map{ valid => 
 			val modelStylePreference = valid("modelStyleId").int.flatMap(ModelStyle.findForId)
 			Token(valid("id").getInt, TokenData(valid("typeId").getInt, valid("hash").getString, 
-				valid("parentTokenId").int, valid("ownerId").int, valid("deviceId").int, 
-				modelStylePreference, valid("expires").instant, valid("created").getInstant, 
-				valid("deprecatedAfter").instant, valid("isSingleUseOnly").getBoolean))
+				valid("parentTokenId").int, valid("ownerId").int, modelStylePreference, valid("expires").instant,
+				valid("created").getInstant, valid("deprecatedAfter").instant, valid("isSingleUseOnly").getBoolean))
 		}
 	}
 }

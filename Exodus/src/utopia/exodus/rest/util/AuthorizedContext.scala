@@ -8,7 +8,7 @@ import utopia.citadel.database.access.single.organization.DbMembership
 import utopia.citadel.database.access.single.user.{DbUser, DbUserSettings}
 import utopia.citadel.util.CitadelContext._
 import utopia.exodus.database.access.single.auth.DbToken.DbTokenMatch
-import utopia.exodus.database.access.single.auth.{DbApiKey, DbDeviceToken, DbEmailValidationAttemptOld, DbSessionToken, DbToken}
+import utopia.exodus.database.access.single.auth.{DbApiKey, DbDeviceToken, DbSessionToken, DbToken}
 import utopia.exodus.database.access.single.user.DbUserPassword
 import utopia.exodus.model.combined.auth.ScopedToken
 import utopia.exodus.model.enumeration.ExodusScope.{OrganizationActions, ReadOrganizationData}
@@ -427,7 +427,7 @@ abstract class AuthorizedContext extends Context
 		authorizedWithoutScope { (token, connection) =>
 			implicit val c: Connection = connection
 			val scoped = token.withScopeLinksPulled
-			val missingScopes = scopeIds -- scoped.scopeIds
+			val missingScopes = scopeIds -- scoped.accessibleScopeIds
 			if (missingScopes.isEmpty)
 				f(scoped, connection)
 			else
@@ -513,42 +513,6 @@ abstract class AuthorizedContext extends Context
 			result
 		}
 	}
-	
-	/**
-	  * Authorizes this request using an email activation token from the bearer token authorization header.
-	  * A temporary email session token may also be used.
-	  * @param emailPurposeId Id of the purpose the email is used for (must match the purpose id the validation
-	  *                       attempt was first registered with)
-	  * @param f A function that is performed if the specified token was valid.
-	  *          Accepts an open email validation attempt and a database connection.
-	  *          Returns 1) a boolean indicating whether the validation should be closed and
-	  *          2) result to send back to the client.
-	  * @return A response based on the function result if authorization was successful. A failure response otherwise.
-	  */
-	@deprecated("Replaced with authorizedForScope", "v4.0")
-	def emailAuthorized(emailPurposeId: Int)(f: (EmailValidationAttemptOld, Connection) => (Boolean, Result)) =
-		request.headers.bearerAuthorization match {
-			case Some(token) =>
-				connectionPool.tryWith { implicit connection =>
-					DbEmailValidationAttemptOld.open.completeWithToken(token, emailPurposeId) { f(_, connection) }
-				} match
-				{
-					case Success(result) =>
-						result match
-						{
-							case Success(result) => result.toResponse(this)
-							case Failure(error) =>
-								Result.Failure(Unauthorized, error.getMessage).toResponse(this)
-						}
-					case Failure(error) =>
-						handleError(error, "Unexpected failure during request handling")
-						Result.Failure(InternalServerError, error.getMessage).toResponse(this)
-				}
-			case None =>
-				Result.Failure(Unauthorized,
-					"Please provide a bearer authorization header containing an email validation token")
-					.toResponse(this)
-		}
 	
 	/**
 	  * Parses a value from the request body and uses it to produce a response

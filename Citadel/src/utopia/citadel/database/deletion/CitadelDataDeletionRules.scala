@@ -1,8 +1,6 @@
 package utopia.citadel.database.deletion
 
-import utopia.citadel.database.CitadelTables
 import utopia.citadel.database.model.description.DescriptionModel
-import utopia.citadel.database.model.device.ClientDeviceUserModel
 import utopia.citadel.database.model.organization.{InvitationModel, MemberRoleLinkModel, MembershipModel}
 import utopia.citadel.database.model.user.UserSettingsModel
 import utopia.flow.time.TimeExtensions._
@@ -32,13 +30,14 @@ object CitadelDataDeletionRules
 	  *         namely: client device
 	  */
 	@deprecated("Please use unreferencedRules instead", "v2.0.1")
-	def unreferencedDeletionTables = Vector(CitadelTables.clientDevice)
+	def unreferencedDeletionTables = Vector()
 	
 	/**
 	  * @return Tables that should be targeted with "clear unreferenced data" -operation. Namely: client device.
 	  *         Client devide descriptions are not considered as references in this case.
 	  */
-	def unreferencedRules = Set(CitadelTables.clientDevice -> Set(CitadelTables.clientDeviceDescription.wrapped))
+	@deprecated("There are no unreferenced rules at this time")
+	def unreferencedRules = Set()
 	
 	/**
 	  * @return A set of deletion rules where all expired / deprecated items are deleted after 30 days
@@ -56,7 +55,6 @@ object CitadelDataDeletionRules
 	/**
 	  * Creates a set of deletion rules with custom history durations
 	  * @param userSettings Duration to keep old user settings (default = 30 days)
-	  * @param deviceUsers  Duration to keep old device users (default = 30 days)
 	  * @param memberships  Duration to keep ended memberships (default = 30 days)
 	  * @param memberRole   Duration to keep old member roles (default = 30 days)
 	  * @param invitation   Duration to keep expired invitations (default = 30 days)
@@ -64,7 +62,6 @@ object CitadelDataDeletionRules
 	  * @return A set of deletion rules for applicable tables
 	  */
 	def custom(userSettings: Duration = defaultHistoryDuration,
-	           deviceUsers: Duration = defaultHistoryDuration,
 	           memberships: Duration = defaultHistoryDuration,
 	           memberRole: Duration = defaultHistoryDuration,
 	           invitation: Duration = defaultHistoryDuration,
@@ -72,7 +69,6 @@ object CitadelDataDeletionRules
 	{
 		Vector(
 			deprecation(UserSettingsModel, userSettings),
-			deprecation(ClientDeviceUserModel, deviceUsers),
 			deprecation(MembershipModel, memberships),
 			deprecation(MemberRoleLinkModel, memberRole),
 			deprecation(InvitationModel, invitation),
@@ -87,8 +83,7 @@ object CitadelDataDeletionRules
 	  * @return A new set of deletion rules
 	  */
 	def sameForAll(historyDuration: FiniteDuration) =
-		custom(historyDuration, historyDuration, historyDuration, historyDuration, historyDuration,
-			historyDuration)
+		custom(historyDuration, historyDuration, historyDuration, historyDuration, historyDuration)
 	
 	/**
 	  * Creates a rule around (null) deprecation

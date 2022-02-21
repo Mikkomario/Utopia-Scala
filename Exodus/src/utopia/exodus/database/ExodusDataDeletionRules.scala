@@ -38,6 +38,7 @@ object ExodusDataDeletionRules
 	  * @param emailValidation Email validation history duration (default = 30 days)
 	  * @return Data deletion rules for Exodus-specific tables/resources
 	  */
+	// TODO: Rewrite this
 	def custom(session: Duration = defaultHistoryDuration, deviceKey: Duration = defaultHistoryDuration,
 	               emailValidation: Duration = defaultHistoryDuration) =
 		Vector(

@@ -61,7 +61,6 @@ object ExodusTables
 	/**
 	  * Table that contains EmailValidationPurposes (An enumeration for purposes an email validation may be used for)
 	  */
-	@deprecated("Will be removed in a future release", "v4.0")
 	def emailValidationPurpose = apply("email_validation_purpose")
 	
 	/**

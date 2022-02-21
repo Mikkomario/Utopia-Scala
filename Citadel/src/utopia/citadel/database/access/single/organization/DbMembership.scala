@@ -53,13 +53,14 @@ object DbMembership extends SingleRowModelAccess[Membership] with NonDeprecatedV
 	  * @param organizationId Id of the organization where the memberhip is starting
 	  * @param userId Id of the user who becomes a member
 	  * @param startingRoleId Id of the role the user will have in that organization
-	  * @param creatorId Id of the user who is adding the specified user to that organization
+	  * @param creatorId Id of the user who is adding the specified user to that organization (if known)
 	  * @param connection Implicit DB Connection
 	  * @return Newly started membership
 	  */
-	def start(organizationId: Int, userId: Int, startingRoleId: Int, creatorId: Int)(implicit connection: Connection) =
+	def start(organizationId: Int, userId: Int, startingRoleId: Int, creatorId: Option[Int] = None)
+	         (implicit connection: Connection) =
 	{
-		val membership = model.insert(MembershipData(organizationId, userId, Some(creatorId)))
+		val membership = model.insert(MembershipData(organizationId, userId, creatorId))
 		val role = apply(membership.id).assignRoleWithId(startingRoleId, creatorId)
 		MembershipWithRoles(membership, Set(role))
 	}
@@ -90,11 +91,11 @@ object DbMembership extends SingleRowModelAccess[Membership] with NonDeprecatedV
 		/**
 		  * Starts a new membership between this organization and user
 		  * @param startingRoleId Id of the user role assigned for the joining user
-		  * @param creatorId Id of the user who created / authorized this link
+		  * @param creatorId Id of the user who created / authorized this link (if known)
 		  * @param connection Implicit DB Connection
 		  * @return New membership, including role data
 		  */
-		def start(startingRoleId: Int, creatorId: Int)(implicit connection: Connection) =
+		def start(startingRoleId: Int, creatorId: Option[Int] = None)(implicit connection: Connection) =
 			DbMembership.start(organizationId, userId, startingRoleId, creatorId)
 	}
 }

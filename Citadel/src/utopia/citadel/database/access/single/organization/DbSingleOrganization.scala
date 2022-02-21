@@ -59,11 +59,12 @@ case class DbSingleOrganization(id: Int)
 	  * Adds a new member to this organization
 	  * @param userId Id of the user to add
 	  * @param startingRoleId Id of the role to assign to the user
-	  * @param creatorId Id of the user who added this user to this organization
+	  * @param creatorId Id of the user who added this user to this organization (if known)
 	  * @param connection Implicit DB Connection
 	  * @return Newly started membership
 	  */
-	def addMember(userId: Int, startingRoleId: Int, creatorId: Int)(implicit connection: Connection) =
+	def addMember(userId: Int, startingRoleId: Int, creatorId: Option[Int] = None)
+	             (implicit connection: Connection) =
 		DbMembership.start(id, userId, startingRoleId, creatorId)
 }
 

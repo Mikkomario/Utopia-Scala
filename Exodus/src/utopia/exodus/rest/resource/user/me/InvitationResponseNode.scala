@@ -79,7 +79,7 @@ case class InvitationResponseNode(invitationId: Int) extends LeafResource[Author
 													val membership = DbUser(userId)
 														.membershipInOrganizationWithId(invitation.organizationId)
 														.start(invitation.startingRoleId,
-															invitation.senderId.getOrElse(userId))
+															Some(invitation.senderId.getOrElse(userId)))
 													Result.Success(Model(Vector(
 														"invitation" -> invitationWithResponse.toModelWith(style),
 														"membership" -> membership.toModelWith(style))))

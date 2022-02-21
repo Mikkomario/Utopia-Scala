@@ -6,6 +6,8 @@
   the modular resources are now stored in Maps.
 ### New Features
 - Added **NotImplementedResource** trait (from **Exodus**)
+### Other Changes
+- Added default value `Value.empty` to `Result.Success(...)` constructor
 
 ## v1.6.2 - 27.01.2022
 This update introduces an important bugfix concerning modular resources

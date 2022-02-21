@@ -58,7 +58,7 @@ object DbOrganization extends SingleRowModelAccess[Organization] with Unconditio
 		val nameDescription = CitadelDescriptionLinkModel.organization
 			.insert(organization.id, DescriptionData(Name.id, languageId, organizationName, Some(founderId)))
 		// Adds the user to the organization (as owner)
-		val membership = DbMembership.start(organization.id, founderId, Owner.id, founderId)
+		val membership = DbMembership.start(organization.id, founderId, Owner.id, Some(founderId))
 		
 		// Returns the organization and the membership
 		DescribedOrganization(organization, Set(nameDescription)) -> membership
