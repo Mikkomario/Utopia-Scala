@@ -39,19 +39,6 @@ trait UniqueEmailValidationAttemptAccess
 	def id(implicit connection: Connection) = pullColumn(index).int
 	
 	/**
-	  * 
-		Hashed token which may be used to send a copy of this email validation. None if resend is disabled.. None if
-	  * no instance (or value) was found.
-	  */
-	def resendTokenHash(implicit connection: Connection) = pullColumn(model.resendTokenHashColumn).string
-	
-	/**
-	  * Number of times a validation email has been sent for this specific purpose up to this point.. None if
-	  * no instance (or value) was found.
-	  */
-	def sendCount(implicit connection: Connection) = pullColumn(model.sendCountColumn).int
-	
-	/**
 	  * Factory used for constructing database the interaction models
 	  */
 	protected def model = EmailValidationAttemptModel
@@ -79,22 +66,6 @@ trait UniqueEmailValidationAttemptAccess
 	  */
 	def purposeId_=(newPurposeId: Int)(implicit connection: Connection) = 
 		putColumn(model.purposeIdColumn, newPurposeId)
-	
-	/**
-	  * Updates the resend token hashes of the targeted email validation attempts
-	  * @param newResendTokenHash A new resend token hash to assign
-	  * @return Whether any email validation attempt was affected
-	  */
-	def resendTokenHash_=(newResendTokenHash: String)(implicit connection: Connection) = 
-		putColumn(model.resendTokenHashColumn, newResendTokenHash)
-	
-	/**
-	  * Updates the send counts of the targeted email validation attempts
-	  * @param newSendCount A new send count to assign
-	  * @return Whether any email validation attempt was affected
-	  */
-	def sendCount_=(newSendCount: Int)(implicit connection: Connection) = 
-		putColumn(model.sendCountColumn, newSendCount)
 	
 	/**
 	  * Updates the tokens ids of the targeted email validation attempts

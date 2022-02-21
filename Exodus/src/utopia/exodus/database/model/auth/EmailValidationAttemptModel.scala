@@ -34,16 +34,6 @@ object EmailValidationAttemptModel
 	  */
 	val purposeIdAttName = "purposeId"
 	
-	/**
-	  * Name of the property that contains email validation attempt resend token hash
-	  */
-	val resendTokenHashAttName = "resendTokenHash"
-	
-	/**
-	  * Name of the property that contains email validation attempt send count
-	  */
-	val sendCountAttName = "sendCount"
-	
 	
 	// COMPUTED	--------------------
 	
@@ -66,16 +56,6 @@ object EmailValidationAttemptModel
 	  * The factory object used by this model type
 	  */
 	def factory = EmailValidationAttemptFactory
-	
-	/**
-	  * Column that contains email validation attempt resend token hash
-	  */
-	def resendTokenHashColumn = table(resendTokenHashAttName)
-	
-	/**
-	  * Column that contains email validation attempt send count
-	  */
-	def sendCountColumn = table(sendCountAttName)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -108,20 +88,6 @@ object EmailValidationAttemptModel
 	  * @return A model containing only the specified purpose id
 	  */
 	def withPurposeId(purposeId: Int) = apply(purposeId = Some(purposeId))
-	
-	/**
-	  * @param resendTokenHash Hashed token which may be used to send a copy of this email validation. None if
-	  * resend is disabled.
-	  * @return A model containing only the specified resend token hash
-	  */
-	def withResendTokenHash(resendTokenHash: String) = apply(resendTokenHash = Some(resendTokenHash))
-	
-	/**
-	  * 
-		@param sendCount Number of times a validation email has been sent for this specific purpose up to this point.
-	  * @return A model containing only the specified send count
-	  */
-	def withSendCount(sendCount: Int) = apply(sendCount = Some(sendCount))
 	
 	/**
 	  * @param tokenId Id of the token sent via email
@@ -167,18 +133,6 @@ case class EmailValidationAttemptModel(id: Option[Int] = None, tokenId: Option[I
 	  * @return A new copy of this model with the specified purpose id
 	  */
 	def withPurposeId(purposeId: Int) = copy(purposeId = Some(purposeId))
-	
-	/**
-	  * @param resendTokenHash A new resend token hash
-	  * @return A new copy of this model with the specified resend token hash
-	  */
-	def withResendTokenHash(resendTokenHash: String) = copy(resendTokenHash = Some(resendTokenHash))
-	
-	/**
-	  * @param sendCount A new send count
-	  * @return A new copy of this model with the specified send count
-	  */
-	def withSendCount(sendCount: Int) = copy(sendCount = Some(sendCount))
 	
 	/**
 	  * @param tokenId A new token id
