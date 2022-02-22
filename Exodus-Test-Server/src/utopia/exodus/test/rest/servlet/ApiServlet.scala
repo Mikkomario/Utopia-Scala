@@ -5,6 +5,7 @@ import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import utopia.access.http.Method
 import utopia.access.http.Status.BadRequest
 import utopia.bunnymunch.jawn.JsonBunny
+import utopia.exodus.model.enumeration.ExodusScope.{ChangeKnownPassword, CreateOrganization, JoinOrganization, OrganizationActions, PersonalActions, ReadGeneralData, ReadOrganizationData, ReadPersonalData, RequestPasswordReset, RevokeOtherTokens, TerminateOtherSessions}
 import utopia.exodus.rest.resource.ExodusResources
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
@@ -44,12 +45,13 @@ class ApiServlet extends HttpServlet
 	
 	val dbSettings = JsonBunny.munchPath("settings/exodus-db-settings.json").map { _.getModel }
 	
-	// FIXME: Look up default user scopes (second argument list)
 	ExodusContext.setup(exc, connectionPool,
 		dbSettings.toOption.flatMap { _("db_name").string }.getOrElse("exodus_db")) { (error, message) =>
 		println(message)
 		error.printStackTrace()
-	}
+	} { Set(ReadGeneralData, ReadPersonalData, PersonalActions, ReadOrganizationData, OrganizationActions,
+		CreateOrganization, RequestPasswordReset, ChangeKnownPassword, TerminateOtherSessions, RevokeOtherTokens,
+		JoinOrganization) }
 	Connection.modifySettings { _.copy(driver = Some("org.mariadb.jdbc.Driver")) }
 	dbSettings match
 	{

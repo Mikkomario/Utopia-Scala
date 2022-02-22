@@ -2,8 +2,7 @@ package utopia.exodus.database
 
 import utopia.citadel.database.deletion.CitadelDataDeletionRules
 import CitadelDataDeletionRules.defaultHistoryDuration
-import CitadelDataDeletionRules.deprecation
-import utopia.exodus.database.model.auth.{DeviceTokenModel, EmailValidationAttemptModelOld, SessionTokenModel}
+import utopia.exodus.database.model.auth.TokenModel
 import utopia.flow.time.TimeExtensions._
 import utopia.vault.model.immutable.DataDeletionRule
 
@@ -33,25 +32,23 @@ object ExodusDataDeletionRules
 	
 	/**
 	  * Acquires only the rules that are Exodus-specific
-	  * @param session User session history duration (default = 30 days)
-	  * @param deviceKey Device auth key history duration (default = 30 days)
-	  * @param emailValidation Email validation history duration (default = 30 days)
+	  * @param token Authorization token history duration (default = 30 days)
 	  * @return Data deletion rules for Exodus-specific tables/resources
 	  */
-	// TODO: Rewrite this
-	def custom(session: Duration = defaultHistoryDuration, deviceKey: Duration = defaultHistoryDuration,
-	               emailValidation: Duration = defaultHistoryDuration) =
-		Vector(
-			session.finite.map { duration => DataDeletionRule(SessionTokenModel.table,
-				SessionTokenModel.expiresAttName, duration) },
-			deprecation(DeviceTokenModel, deviceKey),
-			deprecation(EmailValidationAttemptModelOld, emailValidation)).flatten
+	def custom(token: Duration = defaultHistoryDuration) = token.finite match {
+		case Some(duration) =>
+			val tokenModel = TokenModel
+			Vector(
+				DataDeletionRule(tokenModel.table, tokenModel.expiresAttName, duration),
+				DataDeletionRule(tokenModel.table, tokenModel.deprecatedAfterAttName, duration)
+			)
+		case None => Vector()
+	}
 	
 	/**
 	  * Uses the same history duration for all of the tables
 	  * @param historyDuration History duration to use for all Exodus-specific resources
 	  * @return Exodus-specific data deletion rules
 	  */
-	def sameForAll(historyDuration: FiniteDuration) =
-		custom(historyDuration, historyDuration, historyDuration)
+	def sameForAll(historyDuration: FiniteDuration) = custom(historyDuration)
 }

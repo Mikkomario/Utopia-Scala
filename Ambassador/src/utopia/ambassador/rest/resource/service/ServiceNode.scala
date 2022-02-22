@@ -11,6 +11,7 @@ import utopia.ambassador.model.combined.scope.DescribedScope
 import utopia.ambassador.rest.resource.service.auth.AuthNode
 import utopia.ambassador.rest.util.ServiceTarget
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
+import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Constant
 import utopia.flow.datastructure.template.MapLike
@@ -43,7 +44,7 @@ class ServiceNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirecto
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionTokenAuthorized { (session, connection) =>
+		context.authorizedForScope(ReadGeneralData) { (session, connection) =>
 			implicit val c: Connection = connection
 			// Reads the service data from the DB
 			target.access.pull match
