@@ -1,17 +1,26 @@
 -- 
 -- Database structure for Exodus models
 -- Version: v4.0
--- Last generated: 2022-02-18
+-- Last generated: 2022-02-22
 --
 
 --	Auth	----------
+
+-- An enumeration for purposes an email validation may be used for
+-- name:    Name of this email validation purpose. For identification (not localized).
+-- created: Time when this email validation purpose was first created
+CREATE TABLE `email_validation_purpose`(
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`name` VARCHAR(32) NOT NULL,
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents an access right requirement and/or category.
 -- name:    Technical name or identifier of this scope
 -- created: Time when this scope was first created
 CREATE TABLE `scope`(
-	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	`name` VARCHAR(32) NOT NULL, 
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`name` VARCHAR(32) NOT NULL,
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
@@ -47,7 +56,7 @@ CREATE TABLE `token`(
 	`hash` VARCHAR(96) NOT NULL,
 	`parent_token_id` INT,
 	`owner_id` INT,
-	`model_style_id` INT,
+	`model_style_id` TINYINT,
 	`expires` DATETIME,
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`deprecated_after` DATETIME,
@@ -57,15 +66,6 @@ CREATE TABLE `token`(
 	CONSTRAINT t_tt_type_ref_fk FOREIGN KEY t_tt_type_ref_idx (type_id) REFERENCES `token_type`(`id`) ON DELETE CASCADE,
 	CONSTRAINT t_t_parent_token_ref_fk FOREIGN KEY t_t_parent_token_ref_idx (parent_token_id) REFERENCES `token`(`id`) ON DELETE SET NULL,
 	CONSTRAINT t_u_owner_ref_fk FOREIGN KEY t_u_owner_ref_idx (owner_id) REFERENCES `user`(`id`) ON DELETE SET NULL
-)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-
--- An enumeration for purposes an email validation may be used for
--- name:    Name of this email validation purpose. For identification (not localized).
--- created: Time when this email validation purpose was first created
-CREATE TABLE `email_validation_purpose`(
-	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-	`name` VARCHAR(32) NOT NULL,
-	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents an attempted email validation. Provides additional information to an authentication token.
@@ -96,9 +96,10 @@ CREATE TABLE `token_scope_link`(
 	`is_directly_accessible` BOOLEAN NOT NULL DEFAULT FALSE,
 	`grants_forward` BOOLEAN NOT NULL DEFAULT FALSE,
 	INDEX tsl_combo_1_idx (token_id, is_directly_accessible),
-	CONSTRAINT tsl_t_token_ref_fk FOREIGN KEY tsl_t_token_ref_idx (token_id) REFERENCES `token`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT tsl_t_token_ref_fk FOREIGN KEY tsl_t_token_ref_idx (token_id) REFERENCES `token`(`id`) ON DELETE CASCADE,
 	CONSTRAINT tsl_s_scope_ref_fk FOREIGN KEY tsl_s_scope_ref_idx (scope_id) REFERENCES `scope`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
 
 --	User	----------
 

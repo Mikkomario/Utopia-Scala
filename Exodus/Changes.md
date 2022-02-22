@@ -16,18 +16,32 @@
   - The **AuthorizedContext** interface is also different now
 - Rewrote the **EmailValidator** trait and how email validations are handled
   - Removed email validation resend feature altogether
+- Removed **ClientDevice** dependencies from all classes, functions and rest nodes 
+  - Deprecated the remaining device-related rest nodes 
 - Rewrote user creation (`POST users`)
   - Response content is now different and supports styling
   - Authentication is based on scopes (only)
+- Removed invitations rest node hierarchy from **ExodusResources**
 - Removed user creation from `POST invitations/open/responses` (use `POST users` instead)
 - **ExodusContext** now requires a new parameter in `.setup(...)`, which lists the scopes granted to all users by 
   default
   - This is applied during login, user creation and refresh token acquisition
+- **ExodusResources** now only contains one valid property: `.all`
+- Removed `.emailAuthorized(...)` from **AuthorizedContext**
 - Replaced **PublicDescriptionsNode** with new **GeneralDataNode**
 ### Deprecations
 - Deprecated all nodes under `invitations`
   - These are replaced with `users/me/invitations`
+- Deprecated all rest nodes under `devices`
+- Deprecated all classes which are replaced with new versions (**ApiKey**, **DeviceKey**, **UserSession**, ...)
+- Deprecated following **AuthorizedContext** methods:
+  - `apiTokenAuthorized(...)`
+  - `sessionTokenAuthorized(...)`
+  - `deviceTokenAuthorized(...)`
+  - `basicOrDeviceTokenAuthorized(...)`
 ### New Features
+- Added session management through `users/me/sessions`
+- Added authentication scope system
 - Added `POST users/me/invitations/responses`, which answers all pending invitations at once 
   (based on previous `POST invitations/open/responses`)
 ### Other Changes

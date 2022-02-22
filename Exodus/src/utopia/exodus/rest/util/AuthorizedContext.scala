@@ -13,7 +13,7 @@ import utopia.exodus.database.access.single.user.DbUserPassword
 import utopia.exodus.model.combined.auth.ScopedToken
 import utopia.exodus.model.enumeration.ExodusScope.{OrganizationActions, ReadOrganizationData}
 import utopia.exodus.model.enumeration.ScopeIdWrapper
-import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, EmailValidationAttemptOld, SessionToken, Token}
+import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, SessionToken, Token}
 import utopia.exodus.rest.util.AuthorizedContext.acceptLanguageIdsHeaderName
 import utopia.exodus.util.ExodusContext.handleError
 import utopia.flow.datastructure.immutable.{Model, Value}
@@ -498,7 +498,6 @@ abstract class AuthorizedContext extends Context
 		result.toResponse(this)
 	}
 	
-	// TODO: Reject the token if it can only be used as a refresh token
 	private def _tokenAuthorized(pullToken: (DbTokenMatch, Connection) => Option[Token])
 	                            (f: (Token, Connection) => Result) = {
 		tokenAuthorized("token") { (token, connection) =>

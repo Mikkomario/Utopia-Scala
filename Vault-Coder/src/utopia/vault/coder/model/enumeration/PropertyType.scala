@@ -713,7 +713,8 @@ object PropertyType
 		
 		override def toScala =
 			if (isNullable) ScalaType.option(enumeration.reference) else enumeration.reference
-		override def toSql = if (isNullable) "INT" else "INT NOT NULL"
+		// Since there usually aren't a huge number of enumeration values, TINYINT is used
+		override def toSql = if (isNullable) "TINYINT" else "TINYINT NOT NULL"
 		override def baseDefault = if (isNullable) CodePiece("None") else CodePiece.empty
 		override def baseSqlDefault = ""
 		override def defaultPropertyName = enumeration.name.uncapitalize
