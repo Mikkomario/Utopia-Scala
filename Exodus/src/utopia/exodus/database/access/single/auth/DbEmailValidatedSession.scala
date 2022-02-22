@@ -12,6 +12,7 @@ import utopia.vault.nosql.view.{NonDeprecatedView, SubView}
   * @author Mikko Hilpinen
   * @since 24.11.2021, v3.1
   */
+@deprecated("Will be removed in a future release", "v4.0")
 object DbEmailValidatedSession 
 	extends SingleRowModelAccess[EmailValidatedSession] with NonDeprecatedView[EmailValidatedSession] 
 		with Indexed

@@ -5,6 +5,7 @@ import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, ModelConvertibl
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
 
+@deprecated("This class will be removed in a future release", "v2.1")
 object NewDevice extends FromModelFactoryWithSchema[NewDevice]
 {
 	// IMPLEMENTED	----------------------------
@@ -21,6 +22,7 @@ object NewDevice extends FromModelFactoryWithSchema[NewDevice]
   * @param name Name of this new device
   * @param languageId Id of the language used when naming this device
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 case class NewDevice(name: String, languageId: Int) extends ModelConvertible
 {
 	override def toModel = Model(Vector("name" -> name, "language_id" -> languageId))

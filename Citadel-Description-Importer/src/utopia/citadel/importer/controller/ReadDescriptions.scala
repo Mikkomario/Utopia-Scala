@@ -134,6 +134,7 @@ object ReadDescriptions
 		}
 	}
 	
+	// TODO: Remove client device support
 	private def targetFrom(value: Value) =
 	{
 		value.model match {

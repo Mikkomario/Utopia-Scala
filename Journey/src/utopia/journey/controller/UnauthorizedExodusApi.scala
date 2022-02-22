@@ -56,7 +56,8 @@ class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gatewa
 		
 		// TODO: Add support for email validation (current implementation expects email validation to not be used)
 		// TODO: Also support optional email (current implementation requires one)
-		val newUser = NewUser(userName, credentials.password, languages, Some(Left(device)),
+		// TODO: Also remove device management altogether
+		val newUser = NewUser(userName, credentials.password, languages,
 			Some(credentials.email), credentials.allowDeviceKeyUse)
 		
 		// Posts new user data to the server

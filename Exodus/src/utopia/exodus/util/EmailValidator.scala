@@ -1,9 +1,14 @@
 package utopia.exodus.util
 
-import utopia.access.http.Status
-import utopia.exodus.model.partial.auth.EmailValidationAttemptData
+import utopia.exodus.database.access.single.auth.DbEmailValidationAttempt
+import utopia.exodus.model.combined.auth.DetailedToken
 import utopia.exodus.model.stored.auth.EmailValidationAttempt
+import utopia.metropolis.model.enumeration.ModelStyle
+import utopia.metropolis.model.stored.organization.Invitation
 import utopia.vault.database.Connection
+
+import scala.concurrent.duration.Duration
+import scala.util.Try
 
 /**
   * A common trait for email validation logic implementations. Usually these validators send an email to the
@@ -13,28 +18,84 @@ import utopia.vault.database.Connection
   */
 trait EmailValidator
 {
-	/**
-	  * @return The maximum number of allowed validation resends
-	  */
-	def maximumResendsPerValidation: Int
+	// ABSTRACT -------------------------------
 	
 	/**
-	  * Attempts to validate the specified email address
-	  * @param email Targeted email address
-	  * @param purposeId Id of the purpose of this validation attempt
-	  * @param ownerId Id of the user who owns or wants to own the email address, if known (default = None)
-	  * @param connection Implicit database connection
-	  * @return Either:<br>
-	  *         Right) Email validation data to insert to the database or<br>
-	  *         Left) Response (failure) status and message / description
+	  * @param purposeId Id of the purpose the linked email validation is for
+	  * @return Id of the token type to apply to that validation's token
 	  */
-	def validate(email: String, purposeId: Int, ownerId: Option[Int] = None)
-				(implicit connection: Connection): Either[(Status, String), EmailValidationAttemptData]
+	def tokenTypeIdForPurposeWithId(purposeId: Int): Int
 	
 	/**
-	  * Reattempts the validation procedure
-	  * @param previous Previously attempted email validation
-	  * @param connection DB Connection (implicit)
+	  * Possibly modifies the scopes proposed for an email validation token
+	  * @param purposeId Id of the purpose of the linked email validation
+	  * @param proposedAccessScopeIds Proposed scope ids given to the token directly
+	  * @param proposedForwardedScopeIds Proposed scope ids to give to a secondary access token
+	  *                                  (acquired through using the email validation token as a refresh token)
+	  * @param connection Implicit DB Connection
+	  * @return Applied access scope ids + applied forwarded scope ids
 	  */
-	def resend(previous: EmailValidationAttempt)(implicit connection: Connection): Unit
+	def customizeScopes(purposeId: Int, proposedAccessScopeIds: Set[Int], proposedForwardedScopeIds: Set[Int])
+	                   (implicit connection: Connection): (Set[Int], Set[Int])
+	
+	/**
+	  * Possibly specifies a custom duration for an email validation token
+	  * @param purposeId Id of the purpose the linked email validation is made for
+	  * @param tokenTypeId Id of the applied token type
+	  * @return None if token type default duration should be used. Some(Duration, Boolean) if a custom duration
+	  *         should be used, where the first value specifies a custom duration and the second value specifies
+	  *         whether the custom value should be limited to token type default (as maximum).
+	  */
+	def customizeTokenDuration(purposeId: Int, tokenTypeId: Int): Option[(Duration, Boolean)]
+	
+	/**
+	  * Makes a new email validation attempt by sending an email to the targeted address
+	  * @param attempt Email validation attempt information
+	  * @param token Generated access token
+	  * @param tokenString A non-hashed token to send to the recipient
+	  * @param invitation A possible linked invitation, if applicable
+	  * @param connection Implicit DB Connection
+	  * @return Success or failure
+	  */
+	def send(attempt: EmailValidationAttempt, token: DetailedToken, tokenString: String,
+	         invitation: Option[Invitation] = None)(implicit connection: Connection): Try[Unit]
+	
+	
+	// OTHER    ---------------------------
+	
+	/**
+	  * Performs an email validation attempt
+	  * @param emailAddress Targeted email address (should be validated at this point)
+	  * @param purposeId Id of the purpose this validation attempt is for
+	  * @param proposedAccessScopeIds Proposed access scope ids to give to the generated email validation token
+	  *                               (default = empty)
+	  * @param proposedForwardedScopeIds Proposed scope ids to give to token(s) acquired through using the generated
+	  *                                  email validation token as a refresh token (default = empty)
+	  * @param parentTokenId Id of the token used to authorize this attempt, if known (default = empty)
+	  * @param modelStylePreference A model style preference to apply to requests made with the generated token(s)
+	  *                             (optional)
+	  * @param invitation A possible linked invitation, if applicable
+	  * @param connection Implicit DB Connection
+	  * @param uuidGenerator Implicit UUID generator
+	  * @return Success or failure
+	  */
+	def apply(emailAddress: String, purposeId: Int, proposedAccessScopeIds: Set[Int] = Set(),
+	          proposedForwardedScopeIds: Set[Int] = Set(), parentTokenId: Option[Int] = None,
+	          modelStylePreference: Option[ModelStyle] = None, invitation: Option[Invitation] = None)
+	         (implicit connection: Connection, uuidGenerator: UuidGenerator) =
+	{
+		// Customizes & specifies proposed values
+		val tokenTypeId = tokenTypeIdForPurposeWithId(purposeId)
+		val (accessScopeIds, forwardedScopeIds) = customizeScopes(purposeId, proposedAccessScopeIds,
+			proposedForwardedScopeIds)
+		val durationMod = customizeTokenDuration(purposeId, tokenTypeId)
+		
+		// Inserts a new email validation attempt to the DB
+		val (attempt, token, tokenString) = DbEmailValidationAttempt.insert(emailAddress, purposeId, accessScopeIds,
+			forwardedScopeIds, parentTokenId, modelStylePreference, durationMod.map { _._1 }, tokenTypeId,
+			durationMod.exists { _._2 })
+		
+		// Sends the email
+		send(attempt, token, tokenString, invitation)
+	}
 }

@@ -11,6 +11,7 @@ import utopia.vault.model.template.StoredModelConvertible
   * @author Mikko Hilpinen
   * @since 24.11.2021, v3.1
   */
+@deprecated("Will be removed in a future release", "v4.0")
 case class EmailValidatedSession(id: Int, data: EmailValidatedSessionData) 
 	extends StoredModelConvertible[EmailValidatedSessionData]
 {

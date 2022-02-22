@@ -15,6 +15,7 @@ import utopia.vault.nosql.storable.deprecation.DeprecatableAfter
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 object ClientDeviceUserModel 
 	extends DataInserter[ClientDeviceUserModel, ClientDeviceUser, ClientDeviceUserData] 
 		with DeprecatableAfter[ClientDeviceUserModel]
@@ -123,6 +124,7 @@ object ClientDeviceUserModel
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 case class ClientDeviceUserModel(id: Option[Int] = None, deviceId: Option[Int] = None, 
 	userId: Option[Int] = None, created: Option[Instant] = None, deprecatedAfter: Option[Instant] = None) 
 	extends StorableWithFactory[ClientDeviceUser]

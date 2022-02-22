@@ -1,23 +1,21 @@
 package utopia.exodus.database.access.many.auth
 
-import utopia.exodus.model.stored.auth.EmailValidationAttempt
 import utopia.flow.generic.ValueConversions._
-import utopia.vault.nosql.view.NonDeprecatedView
+import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.SqlExtensions._
 
 /**
-  * The root access point when targeting multiple EmailValidationAttempts at a time
+  * The root access point when targeting multiple email validation attempts at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-25
+  * @since 18.02.2022, v4.0
   */
-object DbEmailValidationAttempts 
-	extends ManyEmailValidationAttemptsAccess with NonDeprecatedView[EmailValidationAttempt]
+object DbEmailValidationAttempts extends ManyEmailValidationAttemptsAccess with UnconditionalView
 {
 	// OTHER	--------------------
 	
 	/**
-	  * @param ids Ids of the targeted EmailValidationAttempts
-	  * @return An access point to EmailValidationAttempts with the specified ids
+	  * @param ids Ids of the targeted email validation attempts
+	  * @return An access point to email validation attempts with the specified ids
 	  */
 	def apply(ids: Set[Int]) = new DbEmailValidationAttemptsSubset(ids)
 	

@@ -14,8 +14,7 @@ import utopia.metropolis.model.combined.description.SimplyDescribed
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.metropolis.model.post.NewDescription
 import utopia.nexus.http.Path
-import utopia.nexus.rest.Resource
-import utopia.nexus.rest.ResourceSearchResult.Error
+import utopia.nexus.rest.LeafResource
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -24,12 +23,11 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 10.5.2020, v1
   */
-case class OrganizationDescriptionsNode(organizationId: Int) extends Resource[AuthorizedContext]
+case class OrganizationDescriptionsNode(organizationId: Int) extends LeafResource[AuthorizedContext]
 {
 	// IMPLEMENTED	-----------------------------
 	
 	override val name = "descriptions"
-	
 	override val allowedMethods = Vector(Get, Put)
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
@@ -63,10 +61,9 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends Resource[Au
 					{
 						// Updates the organization's descriptions accordingly
 						val dbDescriptions = DbOrganizationDescriptions(organizationId)
-						val insertedDescriptions = dbDescriptions.update(newDescription, session.userId)
+						val insertedDescriptions = dbDescriptions.update(newDescription, session.ownerId)
 						// Returns new version of organization's descriptions (in specified language)
-						val otherDescriptions =
-						{
+						val otherDescriptions = {
 							val missingRoleIds = DbDescriptionRoleIds.all.toSet --
 								insertedDescriptions.map { _.description.roleId }.toSet
 							if (missingRoleIds.nonEmpty)
@@ -83,7 +80,4 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends Resource[Au
 			}
 		}
 	}
-	
-	override def follow(path: Path)(implicit context: AuthorizedContext) = Error(message =
-		Some("Organization descriptions doesn't have any sub-resources at this time"))
 }

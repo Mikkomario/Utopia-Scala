@@ -24,6 +24,7 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 case class SessionTokenData(userId: Int, token: String, expires: Instant, deviceId: Option[Int] = None, 
 	modelStylePreference: Option[ModelStyle], created: Instant = Now, loggedOut: Option[Instant] = None) 
 	extends ModelConvertible

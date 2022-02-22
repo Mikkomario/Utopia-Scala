@@ -15,6 +15,7 @@ object CitadelTables
 	/**
 	  * Table that contains ClientDeviceDescriptions (Links ClientDevices with their descriptions)
 	  */
+	@deprecated("This class will be removed in a future release", "v2.1")
 	lazy val clientDeviceDescription = DescriptionLinkTable(apply("client_device_description"), "deviceId")
 	/**
 	  * Table that contains DescriptionRoleDescriptions (Links DescriptionRoles with their descriptions)
@@ -50,11 +51,13 @@ object CitadelTables
 	  * Table that contains ClientDevices (Represents a device (e.g. a browser or a computer) a user uses to interact
 	  * with this service)
 	  */
+	@deprecated("This class will be removed in a future release", "v2.1")
 	def clientDevice = apply("client_device")
 	
 	/**
 	  * Table that contains ClientDeviceUsers (Links users to the devices they are using)
 	  */
+	@deprecated("This class will be removed in a future release", "v2.1")
 	def clientDeviceUser = apply("client_device_user")
 	
 	/**

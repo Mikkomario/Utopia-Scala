@@ -1,5 +1,24 @@
 # Utopia Metropolis - List of Changes
 
+## v2.1 (in development)
+### Breaking Changes
+- **NewUser** no longer accepts device -related parameters
+- Removed email validation support from **UserSettingsUpdate**
+- Removed email validation support from **PasswordChange**
+  - Also, renamed `old_password` to `current_password` (`old_password` is still supported when parsing model data)
+### Deprecations
+- Deprecated all client device -related models
+- Deprecated **UserWithLinks** in favor of **DetailedUser**
+- Deprecated **UserCreationResult**, as it is no longer valid since **Exodus** v4.0
+- Deprecated `NewInvitation.validated`, since data validity is now checked when parsing model data
+### New Features
+- Added **MetropolisRegex** object, which contains a regular expression for validating email addresses
+### Other Changes
+- Email address formatting is now checked when parsing post models
+- Changed `.toSimpleModel` implementation in **FullUserLanguage**
+- **NewUser**`.toModel` now contains property `request_refresh_token` instead of `remember_me`. `remember_me` is still 
+  supported in **Exodus** v4.0, however.
+
 ## v2.0.1 - 27.01.2022
 A minor style update, plus a scala version update
 ### Scala

@@ -12,6 +12,7 @@ import utopia.vault.nosql.view.UnconditionalView
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 object DbEmailValidationResend 
 	extends SingleRowModelAccess[EmailValidationResend] with UnconditionalView with Indexed
 {

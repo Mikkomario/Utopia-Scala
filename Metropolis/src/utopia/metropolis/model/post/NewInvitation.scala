@@ -1,21 +1,39 @@
 package utopia.metropolis.model.post
 
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
-import utopia.flow.generic.{FromModelFactoryWithSchema, IntType, ModelConvertible, StringType}
+import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
+import utopia.flow.datastructure.template
+import utopia.flow.datastructure.template.Property
+import utopia.flow.generic.{FromModelFactory, IntType, ModelConvertible, StringType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.time.Days
+import utopia.flow.time.TimeExtensions._
 import utopia.metropolis.model.error.IllegalPostModelException
+import utopia.metropolis.util.MetropolisRegex
 
 import scala.util.{Failure, Success}
 
-object NewInvitation extends FromModelFactoryWithSchema[NewInvitation]
+object NewInvitation extends FromModelFactory[NewInvitation]
 {
-	val schema = ModelDeclaration("recipient_email" -> StringType, "role_id" -> IntType)
+	private val schema = ModelDeclaration("recipient_email" -> StringType, "role_id" -> IntType)
 	
-	override protected def fromValidatedModel(model: Model) =
-		NewInvitation(model("recipient_email"), model("role_id"), model("message"),
-			Days(model("duration_days").intOr(7)))
+	override def apply(model: template.Model[Property]) = {
+		schema.validate(model).toTry.flatMap { model =>
+			// Makes sure the email address formatting is correct
+			val emailAddress = model("recipient_email").getString
+			if (MetropolisRegex.email(emailAddress)) {
+				// Also makes sure duration is positive
+				val rawDuration = model("duration_days").int
+				if (rawDuration.forall { _ > 0 })
+					Success(NewInvitation(emailAddress, model("role_id"), model("message"),
+						rawDuration.getOrElse(7).days))
+				else
+					Failure(new IllegalPostModelException(s"${rawDuration.get} days is an invalid invitation duration"))
+			}
+			else
+				Failure(new IllegalPostModelException(s"'$emailAddress' is not a valid email address"))
+		}
+	}
 }
 
 /**
@@ -36,6 +54,7 @@ case class NewInvitation(recipientEmail: String, startingRoleId: Int, message: S
 	  * Checks the parameters in this post model
 	  * @return Success(this) if this model is valid. Failure otherwise.
 	  */
+	@deprecated("Moved these checks to from model parsing instead", "v2.1")
 	def validated =
 	{
 		if (!recipientEmail.contains("@"))

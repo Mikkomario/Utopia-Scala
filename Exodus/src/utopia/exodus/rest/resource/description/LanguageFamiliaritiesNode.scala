@@ -4,32 +4,19 @@ import utopia.citadel.database.access.many.language.DbLanguageFamiliarities
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.language.DescribedLanguageFamiliarity
-import utopia.metropolis.model.enumeration.ModelStyle.Simple
-import utopia.metropolis.model.stored.language.LanguageFamiliarity
-import utopia.nexus.result.Result
+import utopia.nexus.rest.LeafResource
 import utopia.vault.database.Connection
-
-object LanguageFamiliaritiesNode extends PublicDescriptionsNodeFactory[LanguageFamiliaritiesNode]
-{
-	override def apply(authorization: (AuthorizedContext, => Result, Connection) => Result) =
-		new LanguageFamiliaritiesNode(authorization)
-}
 
 /**
   * Used for accessing language familiarity levels and their descriptions
   * @author Mikko Hilpinen
   * @since 25.7.2020, v1
   */
-class LanguageFamiliaritiesNode(authorization: (AuthorizedContext, => Result, Connection) => Result)
-	extends PublicDescriptionsNode[LanguageFamiliarity, DescribedLanguageFamiliarity]
+object LanguageFamiliaritiesNode
+	extends GeneralDataNode[DescribedLanguageFamiliarity] with LeafResource[AuthorizedContext]
 {
-	override protected def authorize(onAuthorized: => Result)(implicit context: AuthorizedContext, connection: Connection) =
-		authorization(context, onAuthorized, connection)
+	override def name = "language-familiarities"
 	
 	override protected def describedItems(implicit connection: Connection, languageIds: LanguageIds) =
 		DbLanguageFamiliarities.described
-	
-	override def defaultModelStyle = Simple
-	
-	override def name = "language-familiarities"
 }

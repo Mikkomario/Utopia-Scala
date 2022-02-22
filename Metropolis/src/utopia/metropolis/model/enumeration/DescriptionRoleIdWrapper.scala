@@ -5,10 +5,4 @@ package utopia.metropolis.model.enumeration
   * @author Mikko Hilpinen
   * @since 12.10.2021, v1.2.1
   */
-trait DescriptionRoleIdWrapper
-{
-	/**
-	  * @return Id of this description role
-	  */
-	def id: Int
-}
+trait DescriptionRoleIdWrapper extends IdWrapper

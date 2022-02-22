@@ -1,5 +1,7 @@
 package utopia.nexus.rest.scalable
 
+import utopia.access.http.Method
+import utopia.flow.util.CollectionExtensions._
 import utopia.nexus.rest.{Context, Resource}
 
 /**
@@ -11,7 +13,7 @@ abstract class ExtendableResource[C <: Context, P] extends ModularResource[C, P]
 {
 	// ATTRIBUTES   ------------------------------
 	
-	private var customUseCaseImplementations = Vector[UseCaseImplementation[C, P]]()
+	private var customUseCaseImplementations = Map[Method, Vector[UseCaseImplementation[C, P]]]()
 	private var customFollowImplementations = Vector[FollowImplementation[C]]()
 	
 	
@@ -20,7 +22,7 @@ abstract class ExtendableResource[C <: Context, P] extends ModularResource[C, P]
 	/**
 	 * @return The use case implementations provided by this resource by default (called in order)
 	 */
-	protected def defaultUseCaseImplementations: Seq[UseCaseImplementation[C, P]]
+	protected def defaultUseCaseImplementations: Map[Method, UseCaseImplementation[C, P]]
 	/**
 	 * @return The follow implementations provided by this resource by default (called in order)
 	 */
@@ -29,8 +31,12 @@ abstract class ExtendableResource[C <: Context, P] extends ModularResource[C, P]
 	
 	// IMPLEMENTED  ------------------------------
 	
-	override def useCaseImplementations =
-		customUseCaseImplementations.view ++ defaultUseCaseImplementations
+	override def useCaseImplementations = {
+		val default = defaultUseCaseImplementations
+			.map { case (method, implementation) => method -> Vector(implementation) }
+		customUseCaseImplementations.mergeWith(default) { _ ++ _ }
+	}
+	
 	override def followImplementations =
 		customFollowImplementations.view ++ defaultFollowImplementations
 	
@@ -40,10 +46,12 @@ abstract class ExtendableResource[C <: Context, P] extends ModularResource[C, P]
 	/**
 	 * Extends the capabilities of this node by adding a new use case implementation.
 	 * The new implementation will be the first one to use for the supported method.
-	 * @param useCaseImplementation A new use case implementation
+	 * @param method Method for which to add this use case
+	  * @param useCaseImplementation A new use case implementation
 	 */
-	def extendWith(useCaseImplementation: UseCaseImplementation[C, P]) =
-		customUseCaseImplementations = useCaseImplementation +: customUseCaseImplementations
+	def extendWith(method: Method, useCaseImplementation: UseCaseImplementation[C, P]) =
+		customUseCaseImplementations += (method ->
+			(useCaseImplementation +: customUseCaseImplementations.getOrElse(method, Vector())))
 	/**
 	 * Extends the capabilities of this node by adding a new follow implementation.
 	 * The new implementation will be the first one called.

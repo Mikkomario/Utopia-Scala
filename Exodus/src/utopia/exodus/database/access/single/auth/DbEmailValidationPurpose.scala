@@ -8,9 +8,9 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 
 /**
-  * Used for accessing individual EmailValidationPurposes
+  * Used for accessing individual email validation purposes
   * @author Mikko Hilpinen
-  * @since 2021-10-25
+  * @since 25.10.2021, v4.0
   */
 object DbEmailValidationPurpose 
 	extends SingleRowModelAccess[EmailValidationPurpose] with UnconditionalView with Indexed
@@ -31,8 +31,8 @@ object DbEmailValidationPurpose
 	// OTHER	--------------------
 	
 	/**
-	  * @param id Database id of the targeted EmailValidationPurpose instance
-	  * @return An access point to that EmailValidationPurpose
+	  * @param id Database id of the targeted email validation purpose
+	  * @return An access point to that email validation purpose
 	  */
 	def apply(id: Int) = DbSingleEmailValidationPurpose(id)
 }

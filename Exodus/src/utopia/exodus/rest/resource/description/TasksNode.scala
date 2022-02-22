@@ -1,16 +1,12 @@
 package utopia.exodus.rest.resource.description
 
-import utopia.access.http.Method.Get
-import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.many.organization.DbTasks
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
-import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
+import utopia.metropolis.model.combined.organization.DescribedTask
 import utopia.nexus.http.Path
 import utopia.nexus.rest.ResourceSearchResult.{Error, Follow}
-import utopia.nexus.rest.Resource
-import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
 /**
@@ -18,11 +14,12 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 21.5.2020, v1.0
   */
-object TasksNode extends Resource[AuthorizedContext]
+object TasksNode extends GeneralDataNode[DescribedTask]
 {
 	override val name = "tasks"
 	
-	override val allowedMethods = Vector(Get)
+	override protected def describedItems(implicit connection: Connection, languageIds: LanguageIds) =
+		DbTasks.described
 	
 	// Provides access to individual task nodes
 	override def follow(path: Path)(implicit context: AuthorizedContext) =
@@ -31,22 +28,4 @@ object TasksNode extends Resource[AuthorizedContext]
 			case Some(taskId) => Follow(TaskNode(taskId), path.tail)
 			case None => Error(message = Some(s"${path.head} is not a valid task id"))
 		}
-	
-	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
-	{
-		context.sessionTokenAuthorized { (session, connection) =>
-			implicit val c: Connection = connection
-			implicit val languageIds: LanguageIds = session.languageIds
-			// Reads described tasks
-			val tasks = DbTasks.described
-			// May use simpler model style
-			session.modelStyle match
-			{
-				case Full => Result.Success(tasks.map { _.toModel })
-				case Simple =>
-					val roles = DbDescriptionRoles.all
-					Result.Success(tasks.map { _.toSimpleModelUsing(roles) })
-			}
-		}
-	}
 }

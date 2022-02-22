@@ -11,6 +11,7 @@ import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 object EmailValidationResendFactory extends FromValidatedRowModelFactory[EmailValidationResend]
 {
 	// IMPLEMENTED	--------------------

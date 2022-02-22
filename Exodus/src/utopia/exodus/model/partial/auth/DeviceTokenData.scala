@@ -16,6 +16,7 @@ import utopia.flow.time.Now
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 case class DeviceTokenData(deviceId: Int, userId: Int, token: String, created: Instant = Now, 
 	deprecatedAfter: Option[Instant] = None) 
 	extends ModelConvertible

@@ -16,6 +16,7 @@ import utopia.vault.nosql.template.Indexed
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 trait UniqueClientDeviceUserAccess 
 	extends SingleRowModelAccess[ClientDeviceUser] 
 		with DistinctModelAccess[ClientDeviceUser, Option[ClientDeviceUser], Value] with Indexed

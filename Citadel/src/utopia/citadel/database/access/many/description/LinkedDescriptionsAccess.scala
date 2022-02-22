@@ -252,16 +252,16 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 		/**
 		  * Updates possibly multiple descriptions for this item (will replace old description versions)
 		  * @param newDescription New description to insert
-		  * @param authorId       Id of the user who wrote this description
+		  * @param authorId       Id of the user who wrote this description (if known)
 		  * @param connection     DB Connection (implicit)
 		  * @return Newly inserted description links
 		  */
-		def update(newDescription: NewDescription, authorId: Int)
+		def update(newDescription: NewDescription, authorId: Option[Int] = None)
 		          (implicit connection: Connection): Vector[LinkedDescription] =
 		{
 			// Updates each role + text pair separately
 			newDescription.descriptions.map { case (role, text) =>
-				update(DescriptionData(role, newDescription.languageId, text, Some(authorId)))
+				update(DescriptionData(role, newDescription.languageId, text, authorId))
 			}.toVector
 		}
 		/**

@@ -15,6 +15,7 @@ import scala.util.{Failure, Success}
   * @since 3.12.2020, v1
   * @tparam A Type of created resource
   */
+@deprecated("This trait will be removed in a future release", "v4.0")
 trait CustomAuthorizationResourceFactory[+A]
 {
 	// ABSTRACT	------------------------------

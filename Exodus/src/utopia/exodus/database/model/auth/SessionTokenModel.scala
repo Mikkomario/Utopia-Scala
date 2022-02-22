@@ -18,6 +18,7 @@ import utopia.vault.sql.SqlExtensions._
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 object SessionTokenModel 
 	extends DataInserter[SessionTokenModel, SessionToken, SessionTokenData] with Deprecatable
 {
@@ -172,6 +173,7 @@ object SessionTokenModel
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 case class SessionTokenModel(id: Option[Int] = None, userId: Option[Int] = None, 
 	token: Option[String] = None, expires: Option[Instant] = None, deviceId: Option[Int] = None, 
 	modelStylePreference: Option[ModelStyle] = None, created: Option[Instant] = None, 

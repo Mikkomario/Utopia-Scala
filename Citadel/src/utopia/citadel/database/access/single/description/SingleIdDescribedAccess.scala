@@ -127,11 +127,11 @@ trait SingleIdDescribedAccess[A, +D] extends SingleIntIdModelAccess[A]
 	/**
 	  * Inserts possibly multiple new descriptions for this item, replacing existing versions
 	  * @param newDescription New description of this item
-	  * @param authorId Id of the user who wrote the description
+	  * @param authorId Id of the user who wrote the description (if known)
 	  * @param connection Implicit DB connection
 	  * @return Description links that were inserted
 	  */
-	def describe(newDescription: NewDescription, authorId: Int)(implicit connection: Connection) =
+	def describe(newDescription: NewDescription, authorId: Option[Int] = None)(implicit connection: Connection) =
 		descriptions.update(newDescription, authorId)
 	
 	private def pullDescribed(pullDescriptions: => Iterable[LinkedDescription])(implicit connection: Connection) =

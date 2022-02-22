@@ -15,6 +15,7 @@ import utopia.vault.nosql.view.{NonDeprecatedView, SubView}
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 object DbDeviceToken 
 	extends SingleRowModelAccess[DeviceToken] with NonDeprecatedView[DeviceToken] with Indexed
 {

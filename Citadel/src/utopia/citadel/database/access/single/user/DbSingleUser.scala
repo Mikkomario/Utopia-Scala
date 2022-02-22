@@ -8,7 +8,7 @@ import utopia.citadel.database.access.single.device.DbClientDeviceUser
 import utopia.citadel.database.access.single.organization.DbMembership
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.organization.UserRoleWithRights
-import utopia.metropolis.model.combined.user.{MyOrganization, UserWithLinks}
+import utopia.metropolis.model.combined.user.{DetailedUser, MyOrganization, UserWithLinks}
 import utopia.metropolis.model.stored.user.User
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
@@ -35,6 +35,7 @@ case class DbSingleUser(id: Int) extends UniqueUserAccess with SingleIntIdModelA
 	/**
 	  * @return An access point to links between this user and the devices this user uses
 	  */
+	@deprecated("Device classes will be removed in a future release", "v2.1")
 	def deviceLinks = DbClientDeviceUsers.withUserId(id)
 	/**
 	  * @return An access point to this user's memberships
@@ -83,6 +84,7 @@ case class DbSingleUser(id: Int) extends UniqueUserAccess with SingleIntIdModelA
 	  * @param connection Implicit DB Connection
 	  * @return Ids of the devices this user is currently using
 	  */
+	@deprecated("Device classes will be removed in a future release", "v2.1")
 	def deviceIds(implicit connection: Connection) = deviceLinks.deviceIds
 	/**
 	  * @param connection Implicit DB Connection
@@ -94,9 +96,18 @@ case class DbSingleUser(id: Int) extends UniqueUserAccess with SingleIntIdModelA
 	  * @param connection Implicit DB Connection
 	  * @return This user, including language links and linked device ids
 	  */
+	@deprecated("Device classes will be removed in a future release. Please use .detailed instead.", "v2.1")
 	def withLinks(implicit connection: Connection) = settings.pull.map { settings =>
 		UserWithLinks(settings, languageLinks.pull, deviceIds)
 	}
+	
+	/**
+	  * @param connection Implicit DB Connection
+	  * @param languageIds Implicit requested language ids
+	  * @return This user's detailed data (settings + language information)
+	  */
+	def detailed(implicit connection: Connection, languageIds: LanguageIds) =
+		settings.pull.map { settings => DetailedUser(settings, languageLinks.detailed) }
 	
 	/**
 	  * @param connection Implicit DB Connection
@@ -136,6 +147,7 @@ case class DbSingleUser(id: Int) extends UniqueUserAccess with SingleIntIdModelA
 	  * @param deviceId A device id
 	  * @return This user's device use -link with that device
 	  */
+	@deprecated("Device classes will be removed in a future release", "v2.1")
 	def linkToDeviceWithId(deviceId: Int) = DbClientDeviceUser.linkBetween(deviceId, id)
 	
 	/**

@@ -11,6 +11,7 @@ import utopia.nexus.result.Result
   * @author Mikko Hilpinen
   * @since 8.12.2020, v1
   */
+@deprecated("Please use the copy in Nexus instead", "v4.0")
 trait NotImplementedResource[-C <: Context] extends Resource[C]
 {
 	override def allowedMethods = Vector()

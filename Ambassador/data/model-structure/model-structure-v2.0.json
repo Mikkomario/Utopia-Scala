@@ -1,6 +1,7 @@
 {
   "author": "Mikko Hilpinen",
   "project": "Ambassador",
+  "version": "v2.0",
   "package": "utopia.ambassador",
   "classes": {
     "service": [

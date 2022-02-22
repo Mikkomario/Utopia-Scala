@@ -31,6 +31,6 @@ case class UserLanguageLinkWithFamiliarity(languageLink: UserLanguageLink, famil
 	override def toModel = languageLink.toModel + Constant("familiarity", familiarity.toModel)
 	
 	override def toSimpleModel =
-		languageLink.toSimpleModel + Constant("familiarity", familiarity.toSimpleModel)
+		languageLink.toSimpleModel - "familiarity_id" + Constant("familiarity", familiarity.toSimpleModel)
 }
 

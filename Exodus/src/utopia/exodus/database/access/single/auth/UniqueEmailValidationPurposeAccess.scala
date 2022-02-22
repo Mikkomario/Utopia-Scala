@@ -12,9 +12,9 @@ import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.nosql.template.Indexed
 
 /**
-  * A common trait for access points that return individual and distinct EmailValidationPurposes.
+  * A common trait for access points that return individual and distinct email validation purposes.
   * @author Mikko Hilpinen
-  * @since 2021-10-25
+  * @since 25.10.2021, v4.0
   */
 trait UniqueEmailValidationPurposeAccess 
 	extends SingleRowModelAccess[EmailValidationPurpose] 
@@ -23,12 +23,14 @@ trait UniqueEmailValidationPurposeAccess
 	// COMPUTED	--------------------
 	
 	/**
-	  * The nameEn of this instance. None if no instance (or value) was found.
+	  * 
+		Name of this email validation purpose. For identification (not localized).. None if no instance (or value)
+	  *  was found.
 	  */
-	def nameEn(implicit connection: Connection) = pullColumn(model.nameEnColumn).string
+	def name(implicit connection: Connection) = pullColumn(model.nameColumn).string
 	
 	/**
-	  * Time when this EmailValidationPurpose was first created. None if no instance (or value) was found.
+	  * Time when this email validation purpose was first created. None if no instance (or value) was found.
 	  */
 	def created(implicit connection: Connection) = pullColumn(model.createdColumn).instant
 	
@@ -48,19 +50,18 @@ trait UniqueEmailValidationPurposeAccess
 	// OTHER	--------------------
 	
 	/**
-	  * Updates the created of the targeted EmailValidationPurpose instance(s)
+	  * Updates the creation times of the targeted email validation purposes
 	  * @param newCreated A new created to assign
-	  * @return Whether any EmailValidationPurpose instance was affected
+	  * @return Whether any email validation purpose was affected
 	  */
 	def created_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
 	
 	/**
-	  * Updates the nameEn of the targeted EmailValidationPurpose instance(s)
-	  * @param newNameEn A new nameEn to assign
-	  * @return Whether any EmailValidationPurpose instance was affected
+	  * Updates the names of the targeted email validation purposes
+	  * @param newName A new name to assign
+	  * @return Whether any email validation purpose was affected
 	  */
-	def nameEn_=(newNameEn: String)(implicit connection: Connection) = putColumn(model.nameEnColumn, 
-		newNameEn)
+	def name_=(newName: String)(implicit connection: Connection) = putColumn(model.nameColumn, newName)
 }
 

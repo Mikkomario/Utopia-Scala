@@ -5,11 +5,8 @@ import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import utopia.access.http.Method
 import utopia.access.http.Status.BadRequest
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.exodus.rest.resource.description.{DescriptionRolesNode, LanguageFamiliaritiesNode, LanguagesNode, RolesNode, TasksNode}
-import utopia.exodus.rest.resource.device.DevicesNode
-import utopia.exodus.rest.resource.email.EmailsNode
-import utopia.exodus.rest.resource.organization.OrganizationsNode
-import utopia.exodus.rest.resource.user.{QuestSessionsNode, UsersNode}
+import utopia.exodus.model.enumeration.ExodusScope.{ChangeKnownPassword, CreateOrganization, JoinOrganization, OrganizationActions, PersonalActions, ReadGeneralData, ReadOrganizationData, ReadPersonalData, RequestPasswordReset, RevokeOtherTokens, TerminateOtherSessions}
+import utopia.exodus.rest.resource.ExodusResources
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
 import utopia.flow.async.ThreadPool
@@ -52,7 +49,9 @@ class ApiServlet extends HttpServlet
 		dbSettings.toOption.flatMap { _("db_name").string }.getOrElse("exodus_db")) { (error, message) =>
 		println(message)
 		error.printStackTrace()
-	}
+	} { Set(ReadGeneralData, ReadPersonalData, PersonalActions, ReadOrganizationData, OrganizationActions,
+		CreateOrganization, RequestPasswordReset, ChangeKnownPassword, TerminateOtherSessions, RevokeOtherTokens,
+		JoinOrganization) }
 	Connection.modifySettings { _.copy(driver = Some("org.mariadb.jdbc.Driver")) }
 	dbSettings match
 	{
@@ -71,11 +70,7 @@ class ApiServlet extends HttpServlet
 	private implicit val serverSettings: ServerSettings = ServerSettings("http://localhost:9999")
 	private implicit val jsonParser: JsonParser = JsonBunny
 	
-	private val handler = new RequestHandler(Map("v1" -> Vector(
-			DescriptionRolesNode.public, LanguagesNode.public, LanguageFamiliaritiesNode.public, RolesNode, TasksNode,
-			UsersNode.forApiKey, DevicesNode, OrganizationsNode, QuestSessionsNode,
-			EmailsNode.forApiKey
-		)),
+	private val handler = new RequestHandler(Map("v1" -> ExodusResources.all),
 		Some(Path("exodus", "api")), r => AuthorizedContext(r))
 	
 	

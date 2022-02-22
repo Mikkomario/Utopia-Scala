@@ -2,39 +2,37 @@ package utopia.exodus.rest.resource.email
 
 import utopia.access.http.Method
 import utopia.access.http.Method.Post
-import utopia.access.http.Status.{BadRequest, Forbidden, NotFound, NotImplemented}
+import utopia.access.http.Status.{Accepted, BadRequest, Forbidden, InternalServerError, NotFound, NotImplemented}
 import utopia.citadel.database.access.id.single.DbUserId
 import utopia.citadel.database.access.many.user.DbManyUserSettings
-import utopia.exodus.database.access.single.auth.DbEmailValidationAttempt
-import utopia.exodus.model.enumeration.StandardEmailValidationPurpose.{EmailChange, PasswordReset, UserCreation}
-import utopia.exodus.rest.resource.CustomAuthorizationResourceFactory
+import utopia.exodus.model.enumeration.ExodusEmailValidationPurpose.{EmailChange, PasswordReset, UserCreation}
+import utopia.exodus.model.enumeration.ExodusScope
+import utopia.exodus.model.enumeration.ExodusScope.{ChangeEmail, CreateUser, PersonalActions, ReadGeneralData, ReadPersonalData, ReplaceForgottenPassword, RequestPasswordReset}
+import utopia.exodus.model.stored.auth.Token
+import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.{EmailValidator, ExodusContext}
-import utopia.flow.generic.ValueConversions._
-import utopia.nexus.http.{Path, Response}
+import utopia.metropolis.util.MetropolisRegex
+import utopia.nexus.http.Path
 import utopia.nexus.rest.{LeafResource, ResourceWithChildren}
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
-object EmailsNode extends CustomAuthorizationResourceFactory[EmailsNode]
-{
-	override def apply(authorize: (AuthorizedContext, Connection => Result) => Response) = new EmailsNode(authorize)
-}
+import scala.util.{Failure, Success}
 
 /**
   * A node used for performing email validations
   * @author Mikko Hilpinen
   * @since 1.12.2020, v1
   */
-class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Response)
-	extends ResourceWithChildren[AuthorizedContext]
+object EmailsNode extends ResourceWithChildren[AuthorizedContext]
 {
 	// ATTRIBUTES	---------------------------
 	
 	private val defaultSupportedMethods = Vector[Method](Post)
 	
 	override val name = "emails"
-	override val children = Vector(EmailResendsNode, EmailChangeNode, PasswordResetNode)
+	override val children = Vector(EmailChangeNode, PasswordResetNode)
 	
 	
 	// IMPLEMENTED	---------------------------
@@ -45,8 +43,8 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 	// POST used for validating new email addresses
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		handleRequest { (email, validator, connection) =>
-			sendEmailValidationForNewUser(email)(connection, validator)
+		handleRequest(CreateUser) { (email, validator, token, connection) =>
+			sendEmailValidationForNewUser(email, token)(connection, validator, context)
 		}
 	}
 	
@@ -54,48 +52,56 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 	// OTHER	------------------------------
 	
 	// Parameter function takes in an email address
-	private def handleRequest(f: (String, EmailValidator, Connection) => Result)(implicit context: AuthorizedContext) =
+	private def handleRequest(requiredScope: ExodusScope)(f: (String, EmailValidator, Token, Connection) => Result)
+	                         (implicit context: AuthorizedContext) =
 	{
 		// Email validation must be implemented
 		ExodusContext.emailValidator match
 		{
 			case Some(validator) =>
-				// Authorizes the request using specified authorization method
-				authorize(context, c => handleEmailUsing { email => f(email, validator, c) }(context, c))
+				context.authorizedForScope(requiredScope) { (token, connection) =>
+					handleEmailUsing { email => f(email, validator, token, connection) }(context)
+				}
 			case None => Result.Failure(NotImplemented, "Email validation features are not implemented").toResponse
 		}
 	}
 	
-	private def handleEmailUsing(f: String => Result)
-								(implicit context: AuthorizedContext, connection: Connection) =
+	private def handleEmailUsing(f: String => Result)(implicit context: AuthorizedContext) =
 	{
 		// The request body must contain either a json object with "email" property,
 		// or the email address as a string or value
 		context.handleValuePost { body =>
-			body.model.flatMap { _("email").string }.orElse(body.string)
-				.map { _.trim.toLowerCase }.filterNot { _.isEmpty } match
-			{
-				case Some(email) => f(email)
+			body("email").string.orElse(body.string) match {
+				case Some(rawEmail) =>
+					val email = rawEmail.trim.toLowerCase
+					if (email.isEmpty)
+						Result.Failure(BadRequest, "Email address must not be empty")
+					else if (MetropolisRegex.email(email))
+						f(email)
+					else
+						Result.Failure(BadRequest, s"'$email' is not a valid email address")
 				case None =>
 					Result.Failure(BadRequest,
-						"Please provide a json object body with property 'email' or pass the email address as the request body")
+						"Please either provide property 'email' within the request body, or the email address as a text/plain request body")
 			}
 		}
 	}
 	
-	private def sendEmailValidationForNewUser(email: String)
-	                                         (implicit connection: Connection, validator: EmailValidator) =
+	private def sendEmailValidationForNewUser(email: String, token: Token)
+	                                         (implicit connection: Connection, validator: EmailValidator,
+	                                          context: AuthorizedContext) =
 	{
 		if (DbManyUserSettings.containsEmail(email))
 			Result.Failure(Forbidden, "Specified email address is already in use")
-		else
-		{
+		else {
 			// Sends an email validation, if possible
-			DbEmailValidationAttempt.start(email, UserCreation.id) match
-			{
-				// On success returns the resend token
-				case Right(newValidation) => Result.Success(newValidation.resendToken)
-				case Left((status, message)) => Result.Failure(status, message)
+			validator(email, UserCreation, Set(UserCreation), Set(UserCreation, ReadGeneralData),
+				Some(token.id), context.modelStyle.orElse(token.modelStylePreference))
+			match {
+				case Success(_) => Result.Empty
+				case Failure(error) =>
+					ExodusContext.handleError(error, "Failed to send email for user creation")
+					Result.Failure(InternalServerError, error.getMessage)
 			}
 		}
 	}
@@ -116,24 +122,35 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 		
 		override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 		{
-			handleRequest { (email, validator, connection) =>
-				sendValidationForPasswordRecovery(email)(connection, validator)
+			handleRequest(RequestPasswordReset) { (email, validator, token, connection) =>
+				sendValidationForPasswordRecovery(email, token)(connection, validator, context)
 			}
 		}
 		
 		
 		// OTHER	-------------------------
 		
-		private def sendValidationForPasswordRecovery(email: String)
-													 (implicit connection: Connection, validator: EmailValidator) =
+		private def sendValidationForPasswordRecovery(email: String, token: Token)
+		                                             (implicit connection: Connection, validator: EmailValidator,
+		                                              context: AuthorizedContext) =
 		{
+			// Will yield a success regardless of whether the email exists or not
+			// (so that no personal information is given away)
+			// TODO: Either make all failure cases return Accepted or an error status (research)
 			DbUserId.forEmail(email) match {
 				case Some(userId) =>
-					DbEmailValidationAttempt.start(email, PasswordReset.id, Some(userId)) match
-					{
-						case Right(newValidation) => Result.Success(newValidation.resendToken)
-						case Left((status, message)) => Result.Failure(status, message)
-					}
+					// If, for some reason, the token is tied to a user other than that owning the email address, fails
+					if (token.ownerId.forall { _ == userId })
+						validator(email, PasswordReset, Set(ReplaceForgottenPassword), Set(), Some(token.id),
+							context.modelStyle.orElse(token.modelStylePreference)) match
+						{
+							case Success(_) => Result.Success(status = Accepted)
+							case Failure(error) =>
+								ExodusContext.handleError(error, "Failed to send an email for password recovery")
+								Result.Failure(InternalServerError, error.getMessage)
+						}
+					else
+						Result.Failure(Forbidden, "This email is not yours")
 				case None =>
 					Result.Failure(NotFound, "There doesn't exist any user account for the specified email address")
 			}
@@ -153,30 +170,23 @@ class EmailsNode(authorize: (AuthorizedContext, Connection => Result) => Respons
 		
 		override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 		{
-			// Request must be authorized with session key
-			context.sessionTokenAuthorized { (session, connection) =>
-				ExodusContext.emailValidator match
+			handleRequest(PersonalActions) { (email, validator, token, connection) =>
+				implicit val c: Connection = connection
+				// Makes sure the email address is not yet in use
+				if (DbManyUserSettings.containsEmail(email))
+					Result.Failure(Forbidden, "Specified email address is already in use")
+				else
 				{
-					case Some(validator) =>
-						implicit val c: Connection = connection
-						handleEmailUsing { email =>
-							// Makes sure the email address is not yet in use
-							if (DbManyUserSettings.containsEmail(email))
-								Result.Failure(Forbidden, "Specified email address is already in use")
-							else
-							{
-								// Places a new email validation
-								implicit val v: EmailValidator = validator
-								DbEmailValidationAttempt.start(email, EmailChange.id, Some(session.userId)) match
-								{
-									case Right(validation) =>
-										// Returns a resend token on success
-										Result.Success(validation.resendToken)
-									case Left((status, message)) => Result.Failure(status, message)
-								}
-							}
-						}
-					case None => Result.Failure(NotImplemented, "Email validation is not implemented")
+					// Places a new email validation
+					validator(email, EmailChange, Set(ChangeEmail),
+						Set(ChangeEmail, ReadPersonalData, PersonalActions, ReadGeneralData), Some(token.id),
+						context.modelStyle.orElse(token.modelStylePreference)) match
+					{
+						case Success(_) => Result.Success(status = Accepted)
+						case Failure(error) =>
+							ExodusContext.handleError(error, "Failed to send email for email change")
+							Result.Failure(InternalServerError, error.getMessage)
+					}
 				}
 			}
 		}

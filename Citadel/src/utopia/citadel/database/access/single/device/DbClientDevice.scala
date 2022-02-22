@@ -19,6 +19,7 @@ import utopia.vault.nosql.view.UnconditionalView
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 object DbClientDevice extends SingleRowModelAccess[ClientDevice] with UnconditionalView with Indexed
 {
 	// COMPUTED	--------------------

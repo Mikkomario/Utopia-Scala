@@ -13,6 +13,7 @@ import utopia.flow.time.Now
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 case class EmailValidationResendData(validationId: Int, created: Instant = Now) extends ModelConvertible
 {
 	// IMPLEMENTED	--------------------

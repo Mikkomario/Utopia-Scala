@@ -4,6 +4,7 @@ import utopia.flow.datastructure.immutable.Value
 import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
+import utopia.vault.nosql.template.Indexed
 import utopia.vault.sql.SqlExtensions._
 
 import java.time.Instant
@@ -15,7 +16,7 @@ import java.time.Instant
  * @author Mikko Hilpinen
  * @since 26.9.2021, v1.10
  */
-trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable
+trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable with Indexed
 {
 	// ABSTRACT   ----------------------------
 	
@@ -31,6 +32,7 @@ trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable
 	/**
 	 * @return Column that contains primary table index
 	 */
+	@deprecated("Replaced with .index", "v1.12.1")
 	def idColumn = table.primaryColumn.get
 	
 	/**
@@ -58,7 +60,7 @@ trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable
 	 * @return Whether the specified item was affected
 	 */
 	def deprecateId(id: Value)(implicit connection: Connection) =
-		nowDeprecated.updateWhere(idColumn <=> id && nonDeprecatedCondition) > 0
+		nowDeprecated.updateWhere(index <=> id && nonDeprecatedCondition) > 0
 	
 	/**
 	 * Deprecates multiple items
@@ -71,6 +73,6 @@ trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable
 		if (ids.isEmpty)
 			0
 		else
-			nowDeprecated.updateWhere(idColumn.in(ids) && nonDeprecatedCondition)
+			nowDeprecated.updateWhere(index.in(ids) && nonDeprecatedCondition)
 	}
 }

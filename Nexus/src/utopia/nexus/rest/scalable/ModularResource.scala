@@ -1,5 +1,6 @@
 package utopia.nexus.rest.scalable
 
+import utopia.access.http.Method
 import utopia.access.http.Status.NotImplemented
 import utopia.flow.util.CollectionExtensions._
 import utopia.nexus.http.{Path, Response}
@@ -27,9 +28,9 @@ trait ModularResource[-C <: Context, P] extends Resource[C]
 	protected def wrap(implementation: P => Result)(implicit context: C): Response
 	
 	/**
-	 * @return The use case implementations used in this resource
+	 * @return The use case implementations used in this resource, grouped by method
 	 */
-	def useCaseImplementations: Iterable[UseCaseImplementation[C, P]]
+	def useCaseImplementations: Map[Method, Iterable[UseCaseImplementation[C, P]]]
 	/**
 	 * @return The follow implementations used in this resource
 	 */
@@ -38,15 +39,15 @@ trait ModularResource[-C <: Context, P] extends Resource[C]
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def allowedMethods = useCaseImplementations.map { _.method }.toSet
+	override def allowedMethods = useCaseImplementations.keySet
 	
-	override def toResponse(remainingPath: Option[Path])(implicit context: C) =
-	{
+	override def toResponse(remainingPath: Option[Path])(implicit context: C) = {
+		// Handles the initial authorization & processing
 		wrap { param =>
+			// Finds the applicable use cases
 			val method = context.request.method
-			val useCaseIterator = useCaseImplementations.iterator.filter { _.method == method }
-			def nextResult(): Result = useCaseIterator.nextOption() match
-			{
+			val useCaseIterator = useCaseImplementations.get(method).iterator.flatten
+			def nextResult(): Result = useCaseIterator.nextOption() match {
 				case Some(implementation) => implementation(remainingPath, param) { nextResult() }
 				case None => Result.Failure(NotImplemented)
 			}

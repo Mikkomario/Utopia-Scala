@@ -1,6 +1,8 @@
 # Utopia Vault - List of Changes
 
 ## v1.12.1 (in development)
+### Deprecations
+- Deprecated **NullDeprecatable**`.idColumn` in favor of `.index`
 ### New Features
 - Added **ChronoRowFactoryView** and **SingleChronoRowModelAccess** traits which wrap a **FromRowFactoryWithTimestamp** 
   factory and provide utility functions accordingly
@@ -9,6 +11,9 @@
 ### Bugfixes
 - Fixed an issue where column length limits would throw every time an empty value was being inserted
 - Fixed an issue where `globalCondition` was not applied to `readColumn(...)` in **ModelAccess**
+### Other Changes
+- You can now apply joins to `.pullColumn(Column)` in **DistinctReadModelAccess**
+- **NullDeprecatable** now extends **Indexed**
 
 ## v1.12 - 27.01.2022
 This update contains a major refactoring of the factory and access traits, as well as some important fixes. 

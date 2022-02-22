@@ -47,8 +47,7 @@ class AuthNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirectors:
 	{
 		connectionPool.tryWith { implicit connection =>
 			// Reads server settings
-			target.settings match
-			{
+			target.settings match {
 				// Case: Settings found => processes the request
 				case Some(settings) => get(settings)
 				// Case: Settings not foun => fails

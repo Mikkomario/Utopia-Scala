@@ -2,6 +2,7 @@ package utopia.vault.nosql.access.template.model
 
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
+import utopia.vault.model.template.Joinable
 
 import scala.language.implicitConversions
 
@@ -34,11 +35,13 @@ trait DistinctReadModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 	/**
 	 * Reads all accessible values of a column
 	 * @param column Targeted column
+	  * @param joins Joins to apply to this query (default = empty)
 	 * @param connection DB Connection (implicit)
 	 * @return All accessible values of that column. May contain empty values.
 	 */
-	def pullColumn(column: Column)(implicit connection: Connection) =
-		readColumn(column, order = factory.defaultOrdering)
+	def pullColumn(column: Column, joins: Joinable*)(implicit connection: Connection) =
+		readColumn(column, order = factory.defaultOrdering, joins = joins)
+	
 	/**
 	 * Reads all accessible values of a column / attribute
 	 * @param attributeName Name of the targeted attribute
