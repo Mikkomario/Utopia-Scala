@@ -4,7 +4,7 @@ import utopia.citadel.database.factory.organization.OrganizationFactory
 import utopia.citadel.database.model.description.CitadelDescriptionLinkModel
 import utopia.citadel.database.model.organization.OrganizationModel
 import utopia.citadel.model.enumeration.CitadelDescriptionRole.Name
-import utopia.citadel.model.enumeration.StandardUserRole.Owner
+import utopia.citadel.model.enumeration.CitadelUserRole.Owner
 import utopia.metropolis.model.combined.organization.DescribedOrganization
 import utopia.metropolis.model.partial.description.DescriptionData
 import utopia.metropolis.model.partial.organization.OrganizationData

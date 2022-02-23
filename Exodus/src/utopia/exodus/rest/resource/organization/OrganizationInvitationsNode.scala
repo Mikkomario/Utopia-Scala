@@ -8,7 +8,7 @@ import utopia.citadel.database.access.single.user.DbUser
 import utopia.citadel.database.model.organization.InvitationModel
 import utopia.exodus.model.enumeration.ExodusEmailValidationPurpose.OrganizationInvitation
 import utopia.exodus.model.enumeration.ExodusScope.{CreateUser, JoinOrganization, OrganizationActions, ReadGeneralData, ReadOrganizationData, ReadPersonalData}
-import utopia.exodus.model.enumeration.StandardTask.InviteMembers
+import utopia.exodus.model.enumeration.ExodusTask.InviteMembers
 import utopia.exodus.rest.resource.scalable.{ExtendableOrganizationResource, ExtendableOrganizationResourceFactory, OrganizationUseCaseImplementation}
 import utopia.exodus.util.ExodusContext
 import utopia.flow.datastructure.immutable.Model

@@ -5,7 +5,7 @@ import utopia.access.http.Status.NotFound
 import utopia.citadel.database.access.id.many.DbDescriptionRoleIds
 import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbOrganizationDescriptions}
 import utopia.citadel.database.access.single.language.DbLanguage
-import utopia.exodus.model.enumeration.StandardTask.DocumentOrganization
+import utopia.exodus.model.enumeration.ExodusTask.DocumentOrganization
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._

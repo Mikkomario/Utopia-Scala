@@ -5,9 +5,9 @@ import utopia.access.http.Status.{BadRequest, Forbidden, NotFound, Unauthorized}
 import utopia.citadel.database.access.many.organization.DbUserRoleRights
 import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
 import utopia.citadel.database.access.single.user.DbUser
-import utopia.citadel.model.enumeration.StandardUserRole.Owner
+import utopia.citadel.model.enumeration.CitadelUserRole.Owner
 import utopia.exodus.model.enumeration.ExodusScope.PersonalActions
-import utopia.exodus.model.enumeration.StandardTask.ChangeRoles
+import utopia.exodus.model.enumeration.ExodusTask.ChangeRoles
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path

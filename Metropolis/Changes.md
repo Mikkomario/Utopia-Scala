@@ -13,6 +13,7 @@
 - Deprecated `NewInvitation.validated`, since data validity is now checked when parsing model data
 ### New Features
 - Added **MetropolisRegex** object, which contains a regular expression for validating email addresses
+- Added **IdWrapper** trait, as well as **TaskIdWrapper** and **UserRoleIdWrapper** traits
 ### Other Changes
 - Email address formatting is now checked when parsing post models
 - Changed `.toSimpleModel` implementation in **FullUserLanguage**

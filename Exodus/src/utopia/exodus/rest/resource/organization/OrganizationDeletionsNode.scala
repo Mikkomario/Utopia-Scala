@@ -2,7 +2,7 @@ package utopia.exodus.rest.resource.organization
 
 import utopia.access.http.Method.Delete
 import utopia.citadel.database.access.single.organization.DbOrganization
-import utopia.exodus.model.enumeration.StandardTask.CancelOrganizationDeletion
+import utopia.exodus.model.enumeration.ExodusTask.CancelOrganizationDeletion
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path

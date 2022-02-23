@@ -1,24 +1,20 @@
 package utopia.exodus.model.enumeration
 
+import utopia.metropolis.model.enumeration.TaskIdWrapper
+
 /**
   * An enumeration for different tasks handled by the standard Exodus server
   * @author Mikko Hilpinen
   * @since 25.7.2020, v1
   */
-sealed trait StandardTask
-{
-	/**
-	  * @return DB row id associated with this task type
-	  */
-	def id: Int
-}
+sealed trait ExodusTask extends TaskIdWrapper
 
-object StandardTask
+object ExodusTask
 {
 	/**
 	  * This task/right allows one to delete the whole organization
 	  */
-	case object DeleteOrganization extends StandardTask
+	case object DeleteOrganization extends ExodusTask
 	{
 		override val id = 1
 	}
@@ -26,7 +22,7 @@ object StandardTask
 	/**
 	  * This task allows one to adjust roles for other users (but not promote past own status)
 	  */
-	case object ChangeRoles extends StandardTask
+	case object ChangeRoles extends ExodusTask
 	{
 		override val id = 2
 	}
@@ -34,7 +30,7 @@ object StandardTask
 	/**
 	  * This task allows one to invite new members to the organization
 	  */
-	case object InviteMembers extends StandardTask
+	case object InviteMembers extends ExodusTask
 	{
 		override val id = 3
 	}
@@ -42,7 +38,7 @@ object StandardTask
 	/**
 	  * This task allows one to update organization description
 	  */
-	case object DocumentOrganization extends StandardTask
+	case object DocumentOrganization extends ExodusTask
 	{
 		override val id = 4
 	}
@@ -50,7 +46,7 @@ object StandardTask
 	/**
 	  * This task allows one to remove members from an organization
 	  */
-	case object RemoveMember extends StandardTask
+	case object RemoveMember extends ExodusTask
 	{
 		override val id = 5
 	}
@@ -58,7 +54,7 @@ object StandardTask
 	/**
 	  * This task allows one to cancel a pending organization deletion
 	  */
-	case object CancelOrganizationDeletion extends StandardTask
+	case object CancelOrganizationDeletion extends ExodusTask
 	{
 		override def id = 6
 	}

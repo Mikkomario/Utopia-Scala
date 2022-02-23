@@ -290,9 +290,14 @@ object ClassReader
 		val rawDoc = propModel("doc").string.filter { _.nonEmpty }
 		val doc = rawDoc.getOrElse { actualDataType.writeDefaultDescription(className, fullName) }
 		
+		val rawLimit = propModel("length_rule", "length_limit", "limit", "max_length", "length_max", "max")
+		val limit = rawLimit.int match {
+			case Some(max) => s"up to $max"
+			case None => rawLimit.getString
+		}
+		
 		Property(fullName, columnName.map { _.columnName }, actualDataType, doc, propModel("usage").getString,
-			propModel("default", "def").getString, propModel("sql_default", "sql_def").getString,
-			propModel("length_rule", "length_limit", "limit", "max_length", "length_max", "max").getString,
+			propModel("default", "def").getString, propModel("sql_default", "sql_def").getString, limit,
 			propModel("indexed", "index", "is_index").boolean)
 	}
 	

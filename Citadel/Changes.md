@@ -4,6 +4,7 @@
 ### Breaking Changes
 - `DbUser.insert(...)` now accepts different parameters and returns a **DetailedUser**, not **UserWithLinks**
 - In some functions, `creatorId` parameter is now optional where it was required previously
+- Renamed **StandardUserRole** to **CitadelUserRole**
 ### Deprecations
 - Deprecated all client device -related classes and functions
 

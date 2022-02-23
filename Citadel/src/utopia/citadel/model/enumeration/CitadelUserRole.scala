@@ -1,24 +1,20 @@
 package utopia.citadel.model.enumeration
 
+import utopia.metropolis.model.enumeration.UserRoleIdWrapper
+
 /**
-  * An enumeration for some standard (but not all) user roles. Used in the Exodus request handling.
+  * An enumeration for the standard user roles used in the Citadel project.
   * @author Mikko Hilpinen
   * @since 25.7.2020, v1.0
   */
-sealed trait StandardUserRole
-{
-	/**
-	  * @return Row id of this role in the DB
-	  */
-	def id: Int
-}
+sealed trait CitadelUserRole extends UserRoleIdWrapper
 
-object StandardUserRole
+object CitadelUserRole
 {
 	/**
 	  * Owners have read/write access to all data in an organization
 	  */
-	case object Owner extends StandardUserRole
+	case object Owner extends CitadelUserRole
 	{
 		override val id = 1
 	}
@@ -27,7 +23,7 @@ object StandardUserRole
 	  * Admins have most of the same rights as the owners, except that they can't change ownership or delete
 	  * an organization
 	  */
-	case object Admin extends StandardUserRole
+	case object Admin extends CitadelUserRole
 	{
 		override val id = 2
 	}

@@ -25,6 +25,15 @@
             "type": "creation",
             "index": false
           }
+        ],
+        "instances": [
+          {
+            "id": 1,
+            "isoCode": "en",
+            "name": {
+              "en": "English"
+            }
+          }
         ]
       },
       {
@@ -43,6 +52,36 @@
           {
             "type": "creation",
             "index": false
+          }
+        ],
+        "instances": [
+          {
+            "id": 1,
+            "order_index": 1,
+            "name": {
+              "en": "primary"
+            }
+          },
+          {
+            "id": 2,
+            "order_index": 5,
+            "name": {
+              "en": "fluent"
+            }
+          },
+          {
+            "id": 3,
+            "order_index": 10,
+            "name": {
+              "en": "sufficient"
+            }
+          },
+          {
+            "id": 4,
+            "order_index": 15,
+            "name": {
+              "en": "knows a little"
+            }
           }
         ]
       }
@@ -70,7 +109,7 @@
           {
             "name": "name",
             "length": 64,
-            "limit": "up to 128",
+            "limit": 128,
             "index": true,
             "doc": "Name used by this user"
           },
@@ -79,7 +118,7 @@
             "name_plural": "emailAddresses",
             "type": "Option[String]",
             "length": 128,
-            "limit": "up to 255",
+            "limit": 255,
             "index": true,
             "doc": "Email address of this user"
           },
@@ -101,13 +140,15 @@
             "child": "LanguageFamiliarity",
             "is_always_linked": true,
             "parent_alias": "languageLink",
-            "child_alias": "familiarity"
+            "child_alias": "familiarity",
+            "doc": "Includes language familiarity data in a user language link"
           },
           {
             "name": "UserLanguage",
             "child": "Language",
             "is_always_linked": true,
-            "parent_alias": "link"
+            "parent_alias": "link",
+            "doc": "Includes language data in a user language link"
           }
         ],
         "doc": "Links user with their language familiarity levels",
@@ -156,6 +197,16 @@
             "type": "creation",
             "index": false
           }
+        ],
+        "instances": [
+          {
+            "id": 1,
+            "json_key_singular": "name",
+            "json_key_plural": "names",
+            "name": {
+              "en": "name"
+            }
+          }
         ]
       },
       {
@@ -174,7 +225,7 @@
           {
             "name": "text",
             "length": 64,
-            "limit": "up to 1024",
+            "limit": 1024,
             "doc": "This description as text / written description"
           },
           {
@@ -221,6 +272,44 @@
             "type": "creation",
             "index": false
           }
+        ],
+        "instances": [
+          {
+            "id": 1,
+            "name": {
+              "en": "delete organization"
+            }
+          },
+          {
+            "id": 2,
+            "name": {
+              "en": "modify user roles"
+            }
+          },
+          {
+            "id": 3,
+            "name": {
+              "en": "invite users to organization"
+            }
+          },
+          {
+            "id": 4,
+            "name": {
+              "en": "edit organization info"
+            }
+          },
+          {
+            "id": 5,
+            "name": {
+              "en": "remove users from organization"
+            }
+          },
+          {
+            "id": 6,
+            "name": {
+              "en": "cancel organization deletion"
+            }
+          }
         ]
       },
       {
@@ -231,6 +320,20 @@
           {
             "type": "creation",
             "index": false
+          }
+        ],
+        "instances": [
+          {
+            "id": 1,
+            "name": {
+              "en": "owner"
+            }
+          },
+          {
+            "id": 2,
+            "name": {
+              "en": "admin"
+            }
           }
         ]
       },
@@ -250,6 +353,52 @@
           {
             "type": "creation",
             "index": false
+          }
+        ],
+        "instances": [
+          {
+            "role_id": 1,
+            "task_id": 1
+          },
+          {
+            "role_id": 1,
+            "task_id": 2
+          },
+          {
+            "role_id": 1,
+            "task_id": 3
+          },
+          {
+            "role_id": 1,
+            "task_id": 4
+          },
+          {
+            "role_id": 1,
+            "task_id": 5
+          },
+          {
+            "role_id": 1,
+            "task_id": 6
+          },
+          {
+            "role_id": 2,
+            "task_id": 2
+          },
+          {
+            "role_id": 2,
+            "task_id": 3
+          },
+          {
+            "role_id": 2,
+            "task_id": 4
+          },
+          {
+            "role_id": 2,
+            "task_id": 5
+          },
+          {
+            "role_id": 2,
+            "task_id": 6
           }
         ]
       },
@@ -320,8 +469,8 @@
       {
         "name": "Invitation",
         "combo": {
-          "child": "InvitationResponse",
           "name": "InvitationWithResponse",
+          "child": "InvitationResponse",
           "child_alias": "response"
         },
         "combo_index": ["expires", "recipientEmail"],
@@ -349,14 +498,14 @@
             "name": "recipientEmail",
             "name_plural": "recipientEmailAddresses",
             "length": 128,
-            "limit": "up to 255",
+            "limit": 255,
             "type": "Option[String]",
             "doc": "Email address of the invited user / the email address where this invitation is sent to"
           },
           {
             "name": "message",
             "length": 480,
-            "limit": "up to 1024",
+            "limit": 1024,
             "type": "Option[String]",
             "doc": "Message written by the sender to accompany this invitation"
           },
@@ -383,7 +532,7 @@
           {
             "name": "message",
             "length": 480,
-            "limit": "up to 1024",
+            "limit": 1024,
             "type": "Option[String]",
             "doc": "Attached written response"
           },
@@ -413,8 +562,8 @@
       {
         "name": "OrganizationDeletion",
         "combo": {
-          "children": "OrganizationDeletionCancellations",
           "name": "OrganizationDeletionWithCancellations",
+          "children": "OrganizationDeletionCancellations",
           "parent_alias": "deletion",
           "child_alias": "cancellations"
         },

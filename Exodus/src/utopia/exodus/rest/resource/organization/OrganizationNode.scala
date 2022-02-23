@@ -4,9 +4,9 @@ import utopia.access.http.Method.Delete
 import utopia.access.http.Status.{Forbidden, Unauthorized}
 import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
 import utopia.citadel.database.model.organization.OrganizationDeletionModel
-import utopia.citadel.model.enumeration.StandardUserRole.Owner
+import utopia.citadel.model.enumeration.CitadelUserRole.Owner
 import utopia.exodus.model.enumeration.ExodusScope.OrganizationActions
-import utopia.exodus.model.enumeration.StandardTask.DeleteOrganization
+import utopia.exodus.model.enumeration.ExodusTask.DeleteOrganization
 import utopia.exodus.rest.resource.scalable.{ExtendableOrganizationResource, ExtendableOrganizationResourceFactory, OrganizationUseCaseImplementation}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now

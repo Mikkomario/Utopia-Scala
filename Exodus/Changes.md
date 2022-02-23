@@ -29,6 +29,7 @@
 - **ExodusResources** now only contains one valid property: `.all`
 - Removed `.emailAuthorized(...)` from **AuthorizedContext**
 - Replaced **PublicDescriptionsNode** with new **GeneralDataNode**
+- Renamed **StandardTask** to **ExodusTask**
 ### Deprecations
 - Deprecated all nodes under `invitations`
   - These are replaced with `users/me/invitations`

@@ -4,7 +4,7 @@ import utopia.citadel.database.access.many.description.DbOrganizationDescription
 import utopia.citadel.database.access.many.organization.DbInvitations.DbCurrentAndPastInvitations
 import utopia.citadel.database.access.many.organization.{DbInvitations, DbMemberships, DbMembershipsWithRoles, DbOrganizationDeletions}
 import utopia.citadel.database.access.single.description.{DbOrganizationDescription, SingleIdDescribedAccess}
-import utopia.citadel.model.enumeration.StandardUserRole.Owner
+import utopia.citadel.model.enumeration.CitadelUserRole.Owner
 import utopia.metropolis.model.combined.organization.DescribedOrganization
 import utopia.metropolis.model.stored.organization.Organization
 import utopia.vault.database.Connection
