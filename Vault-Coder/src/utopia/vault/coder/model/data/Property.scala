@@ -93,4 +93,12 @@ case class Property(name: Name, customColumnName: Option[String], dataType: Prop
 	  * @return Name to use for this property in database model string literals
 	  */
 	def dbModelPropName(implicit naming: NamingRules) = naming.dbModelProp.convert(columnName, naming.column)
+	/**
+	  * @param naming Implicit naming rules
+	  * @return Name of this property in json models
+	  */
+	def jsonPropName(implicit naming: NamingRules) = dataType.columnNameSuffix match {
+		case Some(suffix) => (name + suffix).jsonPropName
+		case None => name.jsonPropName
+	}
 }

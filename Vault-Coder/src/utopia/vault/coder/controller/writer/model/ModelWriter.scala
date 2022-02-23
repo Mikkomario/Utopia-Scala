@@ -34,7 +34,7 @@ object ModelWriter
 		val dataClassName = (classToWrite.name + dataClassAppendix).className
 		val dataClassPackage = setup.modelPackage / s"partial.${ classToWrite.packageName }"
 		val propWrites = classToWrite.properties.map { prop =>
-			val propNameInModel = prop.name.jsonPropName.quoted
+			val propNameInModel = prop.jsonPropName.quoted
 			prop.toValueCode.withPrefix(propNameInModel + " -> ")
 		}
 		val propWriteCode = if (propWrites.isEmpty) CodePiece("Model.empty", Set(Reference.model)) else
