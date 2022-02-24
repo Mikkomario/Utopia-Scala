@@ -35,7 +35,7 @@ case class TokenTypeData(name: String, duration: Option[FiniteDuration] = None,
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = 
-		Model(Vector("name" -> name, "duration" -> duration.map { _.toUnit(TimeUnit.MINUTES) }, 
+		Model(Vector("name" -> name, "duration_minutes" -> duration.map { _.toUnit(TimeUnit.MINUTES) },
 			"refreshed_type_id" -> refreshedTypeId, "created" -> created, 
 			"is_single_use_only" -> isSingleUseOnly))
 }

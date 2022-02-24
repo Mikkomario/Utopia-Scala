@@ -83,16 +83,16 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration],
 		}
 		val (javaRefs, scalaRefs) = javaScalaRefs.divided
 		
-		def writeRefGroup(refs: Iterable[Reference]) = {
+		def writeRefGroup(refs: Set[Reference]) = {
 			if (refs.nonEmpty) {
-				refsBuilder ++= refs.map { target => s"import $target" }
+				refsBuilder ++= importTargetsFrom(refs).map { target => s"import $target" }
 				refsBuilder.addEmptyLine()
 			}
 		}
 		
-		writeRefGroup(customRefs)
-		writeRefGroup(scalaRefs)
-		writeRefGroup(javaRefs)
+		writeRefGroup(customRefs.toSet)
+		writeRefGroup(scalaRefs.toSet)
+		writeRefGroup(javaRefs.toSet)
 		
 		// Combines the two parts together. Splits the main code where possible.
 		refsBuilder.result() ++ mainCode.split

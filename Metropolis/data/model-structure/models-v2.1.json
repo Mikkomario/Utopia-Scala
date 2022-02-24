@@ -289,7 +289,7 @@
           {
             "id": 3,
             "name": {
-              "en": "invite users to organization"
+              "en": "invite users"
             }
           },
           {
@@ -301,7 +301,7 @@
           {
             "id": 5,
             "name": {
-              "en": "remove users from organization"
+              "en": "remove users"
             }
           },
           {

@@ -1,0 +1,1 @@
+{"description": {"text": "up to 1024"}, "description_role": {"jsonKeyPlural": "up to 48", "jsonKeySingular": "up to 48"}, "invitation": {"message": "up to 1024", "recipientEmail": "up to 255"}, "invitation_response": {"message": "up to 1024"}, "user_settings": {"email": "up to 255", "name": "up to 128"}}
