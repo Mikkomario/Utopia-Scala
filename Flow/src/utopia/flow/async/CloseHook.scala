@@ -2,7 +2,7 @@ package utopia.flow.async
 
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.collection.WeakList
+import utopia.flow.collection.{VolatileList, WeakList}
 import utopia.flow.time.{Now, WaitUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,15 +16,15 @@ object CloseHook
 {
 	// ATTRIBUTES    ----------------
     
+    private val additionalShutdownTime = 200.millis
+    
     /**
       * Maximum duration the shutdown process can take
       */
     var maxShutdownTime = 5.seconds
     
-    private val additionalShutdownTime = 200.millis
-    private var loops = WeakList[Breakable]()
-    private var hooks = Vector[() => Future[Any]]()
-    
+    private val breakables = Volatile(WeakList[Breakable]())
+    private val hooks = VolatileList[() => Future[Any]]()
     
     
     // INITIAL CODE -----------------
@@ -40,7 +40,12 @@ object CloseHook
       * weakly referenced.
       * @param breakable Breakable item
       */
-    def +=(breakable: Breakable) = loops :+= breakable
+    def +=(breakable: Breakable) = breakables.update { _ :+ breakable }
+    /**
+      * Removes a breakable from the list of breakables to stop when the JVM closes.
+      * @param breakable Breakable item to remove
+      */
+    def -=(breakable: Breakable) = breakables.update { _.filterNot { _ == breakable } }
     
     
     // OTHER    ---------------------
@@ -50,7 +55,7 @@ object CloseHook
       * @param onCloseAction Action that will be called asynchronously when the JVM is about to close (call by name)
       */
     def registerAction(onCloseAction: => Any)(implicit exc: ExecutionContext) =
-        hooks :+= { () => Future { onCloseAction } }
+        hooks +:= { () => Future { onCloseAction } }
     
     /**
       * Registers an asynchronous action to be perfomed when the JVM is about to close
@@ -64,15 +69,15 @@ object CloseHook
     def shutdown() =
     {
         // Stops all registered loops
-        val completions = loops.strong.map { _.stop() } ++ hooks.map { _() }
-        loops = WeakList()
-        hooks = Vector()
-        
+        val completions = breakables.getAndSet(WeakList()).strong.map { _.stop() } ++ hooks.popAll().map { _() }
         if (completions.nonEmpty)
         {
             // Waits until all of the completions are done
             val shutdownDeadline = Now + maxShutdownTime
-            completions.foreach { _.waitFor(shutdownDeadline - Now) }
+            completions.foreach { completion =>
+                if (shutdownDeadline.isInFuture)
+                    completion.waitFor(shutdownDeadline - Now)
+            }
             
             // Waits additional shutdown time
             WaitUtils.wait(additionalShutdownTime, new AnyRef())

@@ -33,6 +33,8 @@ object ButtonTest extends App
 {
 	private def run() =
 	{
+		implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
+		
 		implicit val defaultLanguageCode: String = "EN"
 		implicit val localizer: Localizer = NoLocalization
 		val basicFont = Font("Arial", 12, Plain, 2)
@@ -64,17 +66,13 @@ object ButtonTest extends App
 		val content = row.columnWith(Vector(bar), margin = 16.downscaling)
 
 		// Creates the frame and displays it
-
 		val actionLoop = new ActorLoop(actorHandler)
-		implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
-
 		val framing = content.framed(16.any x 8.any)
 		framing.background = Color.white
 		val frame = Frame.windowed(framing, "Button Test", User)
 		frame.setToExitOnClose()
 
-		actionLoop.registerToStopOnceJVMCloses()
-		actionLoop.startAsync()
+		actionLoop.runAsync()
 		StackHierarchyManager.startRevalidationLoop()
 		frame.startEventGenerators(actorHandler)
 		frame.visible = true

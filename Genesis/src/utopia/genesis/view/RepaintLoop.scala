@@ -5,11 +5,12 @@ import utopia.flow.time.TimeExtensions._
 import java.awt.Component
 import java.time.Instant
 import javax.swing.SwingUtilities
-import utopia.flow.async.Loop
-import utopia.flow.time.{Now, WaitUtils}
-import utopia.flow.time.WaitTarget.Until
+import utopia.flow.async.LoopingProcess
+import utopia.flow.time.Now
+import utopia.flow.time.WaitTarget.{Until, WaitDuration}
 import utopia.genesis.util.Fps
 
+import scala.concurrent.ExecutionContext
 import scala.ref.WeakReference
 
 /**
@@ -17,12 +18,14 @@ import scala.ref.WeakReference
   * @param comp The target component
   * @param maxFPS Maximum frames (paints) per second (default = 60)
   */
-class RepaintLoop(comp: Component, val maxFPS: Fps = Fps.default) extends Loop
+class RepaintLoop(comp: Component, val maxFPS: Fps = Fps.default)(implicit exc: ExecutionContext)
+	extends LoopingProcess
 {
 	// ATTRIBUTES	-----------------
 	
 	private val component = WeakReference(comp)
 	
+	private var hasDrawn = false // Set to true once the component has been drawn at least once
 	private var lastDrawTime = Instant.now()
 	
 	
@@ -34,35 +37,40 @@ class RepaintLoop(comp: Component, val maxFPS: Fps = Fps.default) extends Loop
 	
 	// IMPLEMENTED	-----------------
 	
+	// This process may be restarted as long as the component is available
+	override protected def isRestartable = component.get.isDefined
+	
 	/**
 	  * Paints the target component
 	  */
-	override def runOnce() =
+	override def iteration() =
 	{
-		// Waits until component is displayable
-		while (!isBroken && component.get.exists { c => !c.isDisplayable || !c.isShowing })
-		{
-			WaitUtils.wait(maxFPS.interval * 3, waitLock)
-		}
-		
-		lastDrawTime = Now
-		
-		if (component.get.exists { _.isDisplayable })
-		{
-			// Repaints the component in the swing event thread. Waits until paint is finished.
-			SwingUtilities.invokeAndWait(() => component.get.foreach { _.repaint() })
-		}
-		else if (component.get.isEmpty)
-		{
-			// Stops once the component is no longer held in memory
-			stop()
+		component.get match {
+			case Some(component) =>
+				// Case: Component can't be displayed
+				if (!component.isDisplayable) {
+					// Case: Component was removed => stops drawing
+					if (hasDrawn)
+						None
+					// Case: Component hasn't been attached yet => waits with increased delay
+					else
+						Some(WaitDuration(maxFPS.interval * 10))
+				}
+				// Case: Component is (temporarily) hidden => waits with increased delay
+				else if (!component.isShowing)
+					Some(WaitDuration(maxFPS.interval * 5))
+				// Case: Component may be drawn
+				else {
+					hasDrawn = true
+					lastDrawTime = Now
+					// Repaints the component in the swing event thread. Waits until paint is finished.
+					SwingUtilities.invokeAndWait { () => component.repaint() }
+					Some(Until(lastDrawTime + maxFPS.interval))
+				}
+			// Case: The component is no longer held in memory => stops
+			case None => None
 		}
 	}
-	
-	/**
-	  * The time between the end of the current run and the start of the next one
-	  */
-	override def nextWaitTarget = Until(lastDrawTime + maxFPS.interval)
 	
 	
 	// NESTED CLASSES	-----------------

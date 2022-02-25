@@ -1,5 +1,10 @@
 # Utopia Reflection - List of Changes
 
+## v2.0-alpha-7 (in development)
+### Breaking Changes
+- **SingleFrameSetup** and **MultiFrameSetup** now require the implicit **ExecutionContext** parameter at constructor 
+  instead of at `.start()`
+
 ## v2.0-alpha-6 - 27.01.2022
 Scala version update
 ### Scala

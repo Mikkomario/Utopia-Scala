@@ -62,8 +62,7 @@ object DropDownTest extends App
 	val frame = Frame.windowed(stack, "Drop Down Test", User)
 	frame.setToExitOnClose()
 
-	actionLoop.registerToStopOnceJVMCloses()
-	actionLoop.startAsync()
+	actionLoop.runAsync()
 	StackHierarchyManager.startRevalidationLoop()
 	frame.startEventGenerators(actorHandler)
 	frame.visible = true

@@ -5,19 +5,35 @@
 - `.divide(String)` in **Regex** now returns `Vector[Either[String, String]]` instead of `Vector[String]`
   - The previous implementation is now named `.separate(String)`
 - **Loop** is now an abstract class instead of a trait. This is because the trait contains attributes.
+### Deprecations
+- Deprecated most **WaitUtils** functions in favor of **Wait** and **Delay**
+- Deprecated **Loop**, **TryLoop**, **DailyTask** and **WeeklyTask** in favor of new 
+  **LoopingProcess** class and new **Loop** functions
+- Deprecated **SynchronizedLoops** in favor of **TimedTasks**
+- Deprecated **SingleWait** in favor of **Wait**
 ### New Features
 - Added **Sha256Hasher** utility tool
+- Created a new wait and loop system
+  - See: **Process**, **LoopingProcess**, **DelayedProcess**, **Wait**, **Delay** and **Loop**
+- Added two new wait target types: **DailyTime** and **WeeklyTime**
+- Created **TimedTasks**, which is an improved implementation of **SynchronizedLoops**
 - Added **SureFromModelFactory** trait
 ### New Methods
+- **CloseHook**
+  - Added `-=` for removing hooks
 - **Lazy** (object)
   - Added `.wrap(...)`, which calls `LazyWrapper.apply(...)`
 - **Loop**
   - Added `.startAsyncAfter(FiniteDuration)`, a delayed version of `.startAsync()`
+  - Added `.isRunning`
 - **ResettableLazy**
   - Added `.filter(...)` and `.filterNot(...)`, which are kind of conditional resets
 - **Value**
   - Added `.nonEmpty`, which has the same function as `.isDefined`
+- **VolatileFlag** (object)
+  - Added an `.apply()` function, like in other **Volatile** classes
 ### Other Changes
+- **WaitTarget**s can now be constructed implicitly from **Instant**, **Duration**, and **LocalTime**
 - Changed **Map**`.mergedWith(Map, ...)` to `.mergeWith(Map)(...)` (in **CollectionExtensions**)
   - Previous version was deprecated
 

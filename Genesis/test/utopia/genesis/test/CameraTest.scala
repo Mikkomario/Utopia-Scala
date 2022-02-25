@@ -62,7 +62,7 @@ object CameraTest extends App
     camera.drawHandler ++= Vector(grid, numbers)
     
 	// Starts the program
-	actorLoop.startAsync()
+	actorLoop.runAsync()
 	canvas.startAutoRefresh(Fps(120))
     frame.display()
 }

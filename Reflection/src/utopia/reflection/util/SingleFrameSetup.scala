@@ -12,32 +12,26 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 17.12.2019, v1+
   */
-class SingleFrameSetup(actorHandler: ActorHandler, private val frame: Frame[_])
+class SingleFrameSetup(actorHandler: ActorHandler, frame: Frame[_])(implicit exc: ExecutionContext)
 {
 	// ATTRIBUTES	--------------------
 	
-	private val actionLoop = new ActorLoop(actorHandler)
+	private lazy val actionLoop = new ActorLoop(actorHandler)
 	
 	private var started = false
-	
-	
-	// INITIAL CODE	--------------------
-	
-	actionLoop.registerToStopOnceJVMCloses()
 	
 	
 	// OTHER	-------------------------
 	
 	/**
 	  * Starts this setup and displays the frame
-	  * @param exc Implicit asynchronous execution context
 	  */
-	def start()(implicit exc: ExecutionContext) =
+	def start() =
 	{
 		if (!started)
 		{
 			started = true
-			actionLoop.startAsync()
+			actionLoop.runAsync()
 			StackHierarchyManager.startRevalidationLoop()
 			frame.setToExitOnClose()
 			frame.startEventGenerators(actorHandler)

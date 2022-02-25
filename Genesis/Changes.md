@@ -1,6 +1,11 @@
 # Utopia Reflection - List of Changes
 
-## v2.6.3 (in development)
+## v2.7 (in development)
+### Breaking Changes
+- **ActorLoop** and **RepaintLoop** now extend **LoopingProcess** instead of **Loop**
+  - This means that `.startAsync()` is no longer available (replaced with `.runAsync()`)
+  - Also, the implicit **ExecutionContext** parameter is now required during instance construction, 
+    instead of at loop start
 ### New Features
 - Added **Alignment** and **LinearAlignment** classes, based on existing **Reflection** solutions
 ### New Methods

@@ -67,15 +67,12 @@ object TextLabelStackTest extends App
 	val frame = Frame.windowed(framing, "TextLabel Stack Test", User)
 	frame.setToExitOnClose()
 
-	val buttonLoop = Loop(2.seconds) {
+	Loop.regularly(2.seconds, waitFirst = true) {
 		button.visible = !button.visible
 		// println(StackHierarchyManager.description)
 	}
-	buttonLoop.registerToStopOnceJVMCloses()
-	buttonLoop.startAsync()
 
-	actionLoop.registerToStopOnceJVMCloses()
-	actionLoop.startAsync()
+	actionLoop.runAsync()
 	StackHierarchyManager.startRevalidationLoop()
 	frame.startEventGenerators(actorHandler)
 	frame.visible = true

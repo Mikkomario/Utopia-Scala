@@ -1,10 +1,10 @@
 package utopia.reflection.test.swing
 
 import java.awt.event.KeyEvent
-import utopia.flow.async.{Loop, ThreadPool}
+import utopia.flow.async.{LoopingProcess, ThreadPool}
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitTarget
+import utopia.flow.time.WaitTarget.WaitDuration
 import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.mutable.ActorHandler
@@ -89,11 +89,9 @@ object ScrollViewTest extends App
 	frame.setToExitOnClose()
 	frame.addMouseButtonListener(MouseButtonStateListener() { event => println(event); None })
 	
-	actionLoop.registerToStopOnceJVMCloses()
-	actionLoop.startAsync()
+	actionLoop.runAsync()
 	StackHierarchyManager.startRevalidationLoop()
-	contentUpdateLoop.registerToStopOnceJVMCloses()
-	contentUpdateLoop.startAsync()
+	contentUpdateLoop.runAsync()
 	frame.startEventGenerators(actorHandler)
 	frame.visible = true
 	
@@ -104,7 +102,8 @@ object ScrollViewTest extends App
 	println(frame.mouseButtonHandler.debugString)
 }
 
-private class ContentUpdateLoop(val target: Refreshable[Vector[Int]]) extends Loop
+private class ContentUpdateLoop(val target: Refreshable[Vector[Int]])(implicit exc: ExecutionContext)
+	extends LoopingProcess
 {
 	// ATTRIBUTES	---------------------
 	
@@ -115,7 +114,9 @@ private class ContentUpdateLoop(val target: Refreshable[Vector[Int]]) extends Lo
 	
 	// IMPLEMENTED	--------------------
 	
-	override def runOnce() =
+	override protected def isRestartable = true
+	
+	override def iteration() =
 	{
 		val turnAround =
 		{
@@ -148,7 +149,7 @@ private class ContentUpdateLoop(val target: Refreshable[Vector[Int]]) extends Lo
 		}
 		else
 			nextWait = nextWait * 0.9
+		
+		Some(WaitDuration(nextWait))
 	}
-	
-	override def nextWaitTarget = WaitTarget.WaitDuration(nextWait)
 }

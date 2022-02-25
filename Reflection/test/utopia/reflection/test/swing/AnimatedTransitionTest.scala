@@ -1,7 +1,7 @@
 package utopia.reflection.test.swing
 
+import utopia.flow.async.Delay
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitUtils
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.shape.Axis.Y
 import utopia.reflection.component.drawing.immutable.BorderDrawer
@@ -47,10 +47,10 @@ object AnimatedTransitionTest extends App
 	new SingleFrameSetup(actorHandler, frame).start()
 	
 	// Displays the component after 0.5 seconds
-	WaitUtils.delayed(0.5.seconds) {
+	Delay(0.5.seconds) {
 		transitionWrapper.isShown = true
 		// Hides it again after 5 seconds
-		WaitUtils.delayed(5.seconds) {
+		Delay(5.seconds) {
 			// Closes frame once visibility has been changed
 			(transitionWrapper.isShown = false).foreach { _ => frame.close() }
 		}

@@ -106,9 +106,7 @@ class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = 
 			GlobalKeyboardEventHandler += keyStateHandler
 			GlobalKeyboardEventHandler += keyTypedHandler
 			
-			actorLoop.startAsync()
-			actorLoop.registerToStopOnceJVMCloses()
-			
+			actorLoop.runAsync()
 			canvas.startAutoRefresh(maxFPS)
 			
 			frame.setLocationRelativeTo(null)

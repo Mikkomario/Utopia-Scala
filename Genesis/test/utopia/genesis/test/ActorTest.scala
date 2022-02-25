@@ -2,9 +2,8 @@ package utopia.genesis.test
 
 import java.time.Duration
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.ThreadPool
+import utopia.flow.async.{ThreadPool, Wait}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitUtils
 import utopia.genesis.handling.immutable.ActorHandler
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable
@@ -14,6 +13,9 @@ import scala.concurrent.duration.FiniteDuration
 
 object ActorTest extends App
 {
+    implicit val context: ExecutionContext = new ThreadPool("Test", 2, 20, Duration.ofSeconds(10),
+        e => e.printStackTrace()).executionContext
+    
     class TestActor extends mutable.Actor
     {
         var timeCounted = Duration.ZERO
@@ -36,13 +38,12 @@ object ActorTest extends App
     assert(actor1.millisCounted == 0)
     assert(actor2.millisCounted == 0)
     
-    implicit val context: ExecutionContext = new ThreadPool("Test", 2, 20, Duration.ofSeconds(10),
-        e => e.printStackTrace()).executionContext
     
-    actorLoop.startAsync()
     
-    val waitDuration = Duration.ofSeconds(1)
-    WaitUtils.wait(waitDuration, this)
+    actorLoop.runAsync()
+    
+    val waitDuration = 1.seconds
+    Wait(waitDuration)
     
     actor2.isActive = false
     
@@ -58,7 +59,7 @@ object ActorTest extends App
     assert(millis2 > 500)
     assert(millis2 < 1500)
     
-    WaitUtils.wait(Duration.ofSeconds(1), this)
+    Wait(1.seconds)
     
     assert(actor1.millisCounted > millis1 + 500)
     assert(actor2.millisCounted < millis2 + 500)

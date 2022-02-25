@@ -73,8 +73,7 @@ object SwitchTest extends App
 	val frame = Frame.windowed(framing, "Switch Test", User)
 	frame.setToExitOnClose()
 
-	actionLoop.registerToStopOnceJVMCloses()
-	actionLoop.startAsync()
+	actionLoop.runAsync()
 	StackHierarchyManager.startRevalidationLoop()
 	frame.startEventGenerators(actorHandler)
 	frame.visible = true

@@ -69,8 +69,7 @@ object CalendarTest extends App
 	
 	println(s"Final connection status (from Frame): ${ frame.attachmentDescription }")
 	
-	actionLoop.registerToStopOnceJVMCloses()
-	actionLoop.startAsync()
+	actionLoop.runAsync()
 	StackHierarchyManager.startRevalidationLoop()
 	frame.startEventGenerators(actorHandler)
 	frame.visible = true

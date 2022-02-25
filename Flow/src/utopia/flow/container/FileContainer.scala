@@ -1,12 +1,12 @@
 package utopia.flow.container
 
 import java.nio.file.Path
-import utopia.flow.async.{Breakable, CloseHook, Volatile, VolatileFlag}
+import utopia.flow.async.AsyncExtensions._
+import utopia.flow.async.{CloseHook, DelayedProcess, Volatile}
 import utopia.flow.container.SaveTiming.{Delayed, Immediate, OnJvmClose, OnlyOnTrigger}
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.flow.parse.JsonParser
-import utopia.flow.time.WaitUtils
 import utopia.flow.util.FileExtensions._
 
 import scala.concurrent.duration.FiniteDuration
@@ -104,7 +104,6 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 		case Delayed(duration) =>
 			val listener = new DelayedSaveHandler(duration)
 			_current.addListener(listener)
-			listener.registerToStopOnceJVMCloses()
 		case OnJvmClose => CloseHook.registerAsyncAction { saveStatus() }
 		case OnlyOnTrigger => ()
 	}
@@ -129,32 +128,15 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 	// NESTED	--------------------------------
 	
 	private class DelayedSaveHandler(delay: FiniteDuration)(implicit exc: ExecutionContext)
-		extends ChangeListener[A] with Breakable
+		extends ChangeListener[A]
 	{
 		// ATTRIBUTES	------------------------
 		
-		private val waitLock = new AnyRef
-		private val waitingFlag = new VolatileFlag()
+		private lazy val saveProcess = DelayedProcess.hurriable(delay) { _ => saveStatus().waitFor() }
 		
 		
 		// IMPLEMENTED	------------------------
 		
-		override def onChangeEvent(event: ChangeEvent[A]) =
-		{
-			waitingFlag.runAndSet {
-				WaitUtils.delayed(delay, waitLock) {
-					waitingFlag.reset()
-					saveStatus()
-				}
-			}
-		}
-		
-		// When this handler is commanded to stop, skips the wait and performs the last save if one was queued
-		override def stop() =
-		{
-			_current.removeListener(this)
-			WaitUtils.notify(waitLock)
-			waitingFlag.futureWhere { !_ }
-		}
+		override def onChangeEvent(event: ChangeEvent[A]) = saveProcess.runAsync()
 	}
 }

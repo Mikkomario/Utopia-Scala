@@ -6,6 +6,7 @@ import utopia.flow.time.WeekDay
 import utopia.flow.time.WaitTarget.Until
 import utopia.flow.util.RichComparable._
 
+@deprecated("Replaced with LoopingProcess", "v1.15")
 object WeeklyTask
 {
 	// OTHER	--------------------------
@@ -16,6 +17,7 @@ object WeeklyTask
 	  * @param task Task that will be run
 	  * @return A loop that runs the task once a week at specified time
 	  */
+	@deprecated("Replaced with LoopingProcess.weekly(...)(...)", "v1.15")
 	def apply(weekDay: WeekDay, time: LocalTime)(task: => Unit): WeeklyTask = new TaskWrapper(weekDay, time, task)
 	
 	
@@ -33,6 +35,7 @@ object WeeklyTask
   * @author Mikko Hilpinen
   * @since 30.7.2020, v1.8
   */
+@deprecated("Replaced with LoopingProcess", "v1.15")
 trait WeeklyTask extends Loop
 {
 	// ABSTRACT	--------------------------

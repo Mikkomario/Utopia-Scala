@@ -92,11 +92,9 @@ object StackHierarchyTest extends App
 	frame.setToExitOnClose()
 
 	// The last item will pulse every second
-	val pulseLoop = Loop(1.seconds) { item.pulse() }
-	pulseLoop.registerToStopOnceJVMCloses()
-
+	Loop.regularly(1.seconds, waitFirst = true) { item.pulse() }
+	
 	// Start the program
-	pulseLoop.startAsync()
 	StackHierarchyManager.startRevalidationLoop()
 
 	frame.visible = true

@@ -1,6 +1,6 @@
 package utopia.reflection.container.swing.window
 
-import utopia.flow.time.WaitUtils
+import utopia.flow.async.Delay
 
 import javax.swing.JFrame
 import utopia.genesis.image.Image
@@ -175,10 +175,5 @@ class Frame[C <: Stackable with AwtContainerRelated](override val content: C,
       * @param exc Implicit execution context
      */
     def setToExitOnClose(delay: FiniteDuration = Duration.Zero)(implicit exc: ExecutionContext) =
-        closeFuture.onComplete { _ =>
-            if (delay > Duration.Zero)
-                WaitUtils.delayed(delay) { System.exit(0) }
-            else
-                System.exit(0)
-        }
+        closeFuture.onComplete { _ => Delay(delay) { System.exit(0) } }
 }

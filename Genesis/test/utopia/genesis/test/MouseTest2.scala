@@ -101,7 +101,7 @@ object MouseTest2 extends App
 	actorHandler += mouseEventGen
 	
     // Displays the frame
-	actorLoop.startAsync()
+	actorLoop.runAsync()
 	canvas.startAutoRefresh()
 	
     frame.display()

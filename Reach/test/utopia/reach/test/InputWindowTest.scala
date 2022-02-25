@@ -177,8 +177,7 @@ object InputWindowTest extends App
 	
 	// Starts events
 	val actionLoop = new ActorLoop(actorHandler)
-	actionLoop.registerToStopOnceJVMCloses()
-	actionLoop.startAsync()
+	actionLoop.runAsync()
 	StackHierarchyManager.startRevalidationLoop()
 	
 	// Displays a dialog

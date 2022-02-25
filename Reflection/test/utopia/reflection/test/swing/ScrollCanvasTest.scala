@@ -67,8 +67,7 @@ object ScrollCanvasTest extends App
 	val frame = Frame.windowed(framing, "Scroll Canvas Test", User)
 	frame.setToExitOnClose()
 	
-	actionLoop.registerToStopOnceJVMCloses()
-	actionLoop.startAsync()
+	actionLoop.runAsync()
 	StackHierarchyManager.startRevalidationLoop()
 	frame.startEventGenerators(actorHandler)
 	canvas.startDrawing(Fps(30))
