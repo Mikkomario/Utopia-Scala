@@ -3,7 +3,7 @@ package utopia.flow.async
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.{VolatileList, WeakList}
-import utopia.flow.time.{Now, WaitUtils}
+import utopia.flow.time.Now
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -80,7 +80,10 @@ object CloseHook
             }
             
             // Waits additional shutdown time
-            WaitUtils.wait(additionalShutdownTime, new AnyRef())
+            val lock = new AnyRef
+            lock.synchronized {
+                lock.wait(additionalShutdownTime.toMillis)
+            }
         }
     }
 }

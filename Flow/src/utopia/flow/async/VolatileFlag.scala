@@ -26,6 +26,11 @@ class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](init
     /**
       * @return Whether this flag isn't currently set
       */
+    def isNotSet = !isSet
+    /**
+      * @return Whether this flag isn't currently set
+      */
+    @deprecated("Please use .isNotSet instead", "v1.15")
     def notSet = !isSet
     
     

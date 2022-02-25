@@ -11,6 +11,7 @@
   **LoopingProcess** class and new **Loop** functions
 - Deprecated **SynchronizedLoops** in favor of **TimedTasks**
 - Deprecated **SingleWait** in favor of **Wait**
+- Deprecated **VolatileFlag**`.notSet` in favor of `.isNotSet`
 ### New Features
 - Added **Sha256Hasher** utility tool
 - Created a new wait and loop system

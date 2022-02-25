@@ -13,6 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * @author Mikko Hilpinen
  * @since 28.11.2019, v1.6.1+
  */
+@deprecated("Replaced with a new version", "v1.15")
 object WaitTest extends App
 {
 	private implicit val exc: ExecutionContext = new ThreadPool("Test").executionContext

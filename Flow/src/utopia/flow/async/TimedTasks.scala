@@ -59,6 +59,9 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 				}
 			}
 		}
+		// Purges the queue if hurried
+		if (shouldHurry)
+			queue.clear()
 	}
 	
 	
