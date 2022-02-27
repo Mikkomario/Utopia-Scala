@@ -272,7 +272,7 @@ CREATE TABLE `description_role_description`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	`role_id` INT NOT NULL,
 	`description_id` INT NOT NULL,
-	CONSTRAINT drd_dr_role_ref_fk FOREIGN KEY drd_dr_role_ref_idx (role_id) REFERENCES `description_role`(`description_id`) ON DELETE CASCADE,
+	CONSTRAINT drd_dr_role_ref_fk FOREIGN KEY drd_dr_role_ref_idx (role_id) REFERENCES `description_role`(`id`) ON DELETE CASCADE,
 	CONSTRAINT drd_d_description_ref_fk FOREIGN KEY drd_d_description_ref_idx (description_id) REFERENCES `description`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
@@ -283,7 +283,7 @@ CREATE TABLE `language_description`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	`language_id` INT NOT NULL,
 	`description_id` INT NOT NULL,
-	CONSTRAINT ld_l_language_ref_fk FOREIGN KEY ld_l_language_ref_idx (language_id) REFERENCES `language`(`description_id`) ON DELETE CASCADE,
+	CONSTRAINT ld_l_language_ref_fk FOREIGN KEY ld_l_language_ref_idx (language_id) REFERENCES `language`(`id`) ON DELETE CASCADE,
 	CONSTRAINT ld_d_description_ref_fk FOREIGN KEY ld_d_description_ref_idx (description_id) REFERENCES `description`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
@@ -294,7 +294,7 @@ CREATE TABLE `language_familiarity_description`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	`familiarity_id` INT NOT NULL,
 	`description_id` INT NOT NULL,
-	CONSTRAINT lfd_lf_familiarity_ref_fk FOREIGN KEY lfd_lf_familiarity_ref_idx (familiarity_id) REFERENCES `language_familiarity`(`description_id`) ON DELETE CASCADE,
+	CONSTRAINT lfd_lf_familiarity_ref_fk FOREIGN KEY lfd_lf_familiarity_ref_idx (familiarity_id) REFERENCES `language_familiarity`(`id`) ON DELETE CASCADE,
 	CONSTRAINT lfd_d_description_ref_fk FOREIGN KEY lfd_d_description_ref_idx (description_id) REFERENCES `description`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
@@ -305,7 +305,7 @@ CREATE TABLE `organization_description`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	`organization_id` INT NOT NULL,
 	`description_id` INT NOT NULL,
-	CONSTRAINT orgdes_o_organization_ref_fk FOREIGN KEY orgdes_o_organization_ref_idx (organization_id) REFERENCES `organization`(`description_id`) ON DELETE CASCADE,
+	CONSTRAINT orgdes_o_organization_ref_fk FOREIGN KEY orgdes_o_organization_ref_idx (organization_id) REFERENCES `organization`(`id`) ON DELETE CASCADE,
 	CONSTRAINT orgdes_d_description_ref_fk FOREIGN KEY orgdes_d_description_ref_idx (description_id) REFERENCES `description`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
@@ -316,7 +316,7 @@ CREATE TABLE `task_description`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	`task_id` INT NOT NULL,
 	`description_id` INT NOT NULL,
-	CONSTRAINT td_t_task_ref_fk FOREIGN KEY td_t_task_ref_idx (task_id) REFERENCES `task`(`description_id`) ON DELETE CASCADE,
+	CONSTRAINT td_t_task_ref_fk FOREIGN KEY td_t_task_ref_idx (task_id) REFERENCES `task`(`id`) ON DELETE CASCADE,
 	CONSTRAINT td_d_description_ref_fk FOREIGN KEY td_d_description_ref_idx (description_id) REFERENCES `description`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
@@ -327,7 +327,7 @@ CREATE TABLE `user_role_description`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	`role_id` INT NOT NULL,
 	`description_id` INT NOT NULL,
-	CONSTRAINT urd_ur_role_ref_fk FOREIGN KEY urd_ur_role_ref_idx (role_id) REFERENCES `user_role`(`description_id`) ON DELETE CASCADE,
+	CONSTRAINT urd_ur_role_ref_fk FOREIGN KEY urd_ur_role_ref_idx (role_id) REFERENCES `user_role`(`id`) ON DELETE CASCADE,
 	CONSTRAINT urd_d_description_ref_fk FOREIGN KEY urd_d_description_ref_idx (description_id) REFERENCES `description`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 

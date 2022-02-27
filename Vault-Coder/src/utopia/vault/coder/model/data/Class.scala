@@ -85,14 +85,13 @@ case class Class(name: Name, customTableName: Option[String], idName: Name, prop
 	  * @return Class that links descriptions with instances of this class. None if not applicable to this class.
 	  */
 	lazy val descriptionLinkClass = descriptionLinkName.map { linkColumnName =>
-		val idName = Name("descriptionId", CamelCase.lower)
 		val tableName = customTableName match {
 			case Some(n) => n: Name
 			case None => name
 		}
 		val props = Vector(
 			Property(linkColumnName, ClassReference(tableName, idName, idType), s"Id of the described $name"),
-			Property(idName, ClassReference("description"), "Id of the linked description")
+			Property(Name("descriptionId", CamelCase.lower), ClassReference("description"), "Id of the linked description")
 		)
 		Class(name + "description", props, "description",
 			description = s"Links ${name.plural} with their descriptions", author = author)
