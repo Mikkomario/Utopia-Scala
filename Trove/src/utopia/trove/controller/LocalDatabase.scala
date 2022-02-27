@@ -60,7 +60,7 @@ object LocalDatabase
 			 (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
 		// Starts the database first if not started already
-		start(dbName).flatMap { _ =>
+		start().flatMap { _ =>
 			connectionPool.tryWith { implicit connection =>
 				// Clears the version table, if available (and if targeting another db)
 				if (connection.existsTable(dbName, versionTableName))
@@ -109,16 +109,22 @@ object LocalDatabase
 			  defaultCollate: Option[String] = None)
 			 (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
+		// Can't have a default database before one exists
+		Connection.modifySettings { _.copy(defaultDBName = None) }
+		
 		// Table is cached once it has been used once
 		lazy val table = versionTable
 		
 		def fireEvent(event: => DatabaseSetupEvent) = listener.foreach { _.onDatabaseSetupEvent(event) }
 		
-		val result = start(dbName, defaultCharset, defaultCollate, listener).flatMap { _ =>
+		val result = start(defaultCharset, defaultCollate, listener).flatMap { _ =>
 			// Checks current database version, and whether database has been configured at all
 			connectionPool.tryWith { implicit connection =>
-				if (connection.existsTable(dbName, versionTableName))
+				if (connection.existsTable(dbName, versionTableName)) {
+					Connection.modifySettings { _.copy(defaultDBName = Some(dbName)) }
+					connection.dbName = dbName
 					DbDatabaseVersion(table).latest
+				}
 				else
 					None
 			}.flatMap { currentDbVersion =>
@@ -130,7 +136,9 @@ object LocalDatabase
 							if (currentDbVersion.isEmpty)
 								connectionPool.tryWith { _.createDatabase(dbName, defaultCharset, defaultCollate) } match
 								{
-									case Success(_) => SetupSucceeded(None)
+									case Success(_) =>
+										Connection.modifySettings { _.copy(defaultDBName = Some(dbName)) }
+										SetupSucceeded(None)
 									case Failure(error) => SetupFailed(error)
 								}
 							else
@@ -167,6 +175,7 @@ object LocalDatabase
 									connection.dropDatabase(dbName)
 									connection.createDatabase(dbName, defaultCharset, defaultCollate,
 										checkIfExists = false)
+									Connection.modifySettings { _.copy(defaultDBName = Some(dbName)) }
 									Vector()
 								}
 							}
@@ -263,7 +272,7 @@ object LocalDatabase
 			_statusPointer.futureWhere { _.isCompleted }.waitFor()
 	}
 	
-	private def start(dbName: String, charsetName: Option[String] = None, collateName: Option[String] = None,
+	private def start(charsetName: Option[String] = None, collateName: Option[String] = None,
 	                  listener: Option[DatabaseSetupListener] = None)
 	                 (implicit exc: ExecutionContext) =
 	{
@@ -284,7 +293,7 @@ object LocalDatabase
 				// Updates Vault connection settings
 				Connection.modifySettings { _.copy(
 					connectionTarget = configBuilder.getURL(""),
-					defaultDBName = Some(dbName), charsetName = charsetName.getOrElse(""),
+					charsetName = charsetName.getOrElse(""),
 					charsetCollationName = collateName.getOrElse("")) }
 				
 				listener.foreach { _.onDatabaseSetupEvent(DatabaseConfigured) }
