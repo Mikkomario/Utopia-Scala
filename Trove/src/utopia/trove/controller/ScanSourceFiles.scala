@@ -53,9 +53,10 @@ object ScanSourceFiles
 				}
 				comments.toOption.flatMap { comments =>
 					comments.get("version").orElse(comments.get("to")).map { versionString =>
-						val fileType = comments.get("type").map(SqlFileType.forString).getOrElse(Full)
-						DatabaseStructureSource(file, fileType, Version(versionString),
-							comments.get("from").orElse(comments.get("origin")).map(Version.apply))
+						val sourceVersion = comments.get("from").orElse(comments.get("origin")).map(Version.apply)
+						val fileType = comments.get("type").map(SqlFileType.forString)
+							.getOrElse { if (sourceVersion.isEmpty) Full else Changes }
+						DatabaseStructureSource(file, fileType, Version(versionString), sourceVersion)
 					}
 				}
 			}.sortBy { _.targetVersion }

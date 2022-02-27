@@ -14,6 +14,7 @@
 ### Other Changes
 - You can now apply joins to `.pullColumn(Column)` in **DistinctReadModelAccess**
 - **NullDeprecatable** now extends **Indexed**
+- Updated how database selection is managed in **Connection**
 
 ## v1.12 - 27.01.2022
 This update contains a major refactoring of the factory and access traits, as well as some important fixes. 

@@ -1,6 +1,6 @@
 package utopia.vault.database
 
-import utopia.flow.async.DailyTask
+import utopia.flow.async.LoopingProcess
 
 import java.time.{Instant, LocalTime}
 import utopia.flow.generic.ValueConversions._
@@ -55,7 +55,7 @@ object ClearOldData
 	             (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
 		val clearer = new ClearOldData(rules)
-		DailyTask(at) {
+		LoopingProcess.daily(at) { _ =>
 			connectionPool.tryWith { implicit connection => clearer() }.failure.foreach(onError)
 		}
 	}

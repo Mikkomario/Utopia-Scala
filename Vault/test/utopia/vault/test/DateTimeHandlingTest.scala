@@ -1,12 +1,11 @@
 package utopia.vault.test
 
-import utopia.flow.async.ThreadPool
+import utopia.flow.async.{ThreadPool, Wait}
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.DataType
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitUtils
 import utopia.vault.database.{Connection, ConnectionPool}
 import utopia.vault.model.enumeration.ComparisonOperator.{LargerOrEqual, SmallerOrEqual}
 import utopia.vault.model.immutable.StorableWithFactory
@@ -52,7 +51,7 @@ object DateTimeHandlingTest extends App
 		// Tests whether row update affects timestamp column
 		DTFactory.find(DTModel.withTimestamp(baseTime + 7.hours - 1.minutes).toConditionWithOperator(LargerOrEqual)).foreach { target =>
 			println("Waits a moment to ensure different update time...")
-			WaitUtils.wait(1.1.seconds, new AnyRef)
+			Wait(1.1.seconds)
 			println(s"Updating +7 hour version (id=${target.id})")
 			val wasUpdated = DTModel.withId(target.id).withDateTime(baseTime + 1.days).update()
 			println(if (wasUpdated) "Updated!" else "Update FAILED")

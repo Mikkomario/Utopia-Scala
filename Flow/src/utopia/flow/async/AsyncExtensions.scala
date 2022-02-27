@@ -1,7 +1,6 @@
 package utopia.flow.async
 
 import utopia.flow.time.WaitTarget
-import utopia.flow.time.SingleWait
 import utopia.flow.util.CollectionExtensions._
 
 import scala.collection.immutable.VectorBuilder
@@ -91,7 +90,7 @@ object AsyncExtensions
 			{
 				Future {
 					val resultPointer = VolatileOption[B]()
-					val wait = new SingleWait(WaitTarget.UntilNotified)
+					val wait = new Wait(WaitTarget.UntilNotified)
 					
 					// Both futures try to set the pointer and end the wait
 					f.foreach { r =>

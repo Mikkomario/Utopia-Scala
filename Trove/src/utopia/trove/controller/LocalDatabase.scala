@@ -60,7 +60,7 @@ object LocalDatabase
 			 (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
 		// Starts the database first if not started already
-		start().flatMap { _ =>
+		start(dbName).flatMap { _ =>
 			connectionPool.tryWith { implicit connection =>
 				// Clears the version table, if available (and if targeting another db)
 				if (connection.existsTable(dbName, versionTableName))
@@ -114,7 +114,7 @@ object LocalDatabase
 		
 		def fireEvent(event: => DatabaseSetupEvent) = listener.foreach { _.onDatabaseSetupEvent(event) }
 		
-		val result = start(defaultCharset, defaultCollate, listener).flatMap { _ =>
+		val result = start(dbName, defaultCharset, defaultCollate, listener).flatMap { _ =>
 			// Checks current database version, and whether database has been configured at all
 			connectionPool.tryWith { implicit connection =>
 				if (connection.existsTable(dbName, versionTableName))
@@ -185,9 +185,6 @@ object LocalDatabase
 									case Failure(error) => Left(UpdateFailed(error, source, version))
 								}
 							}.findMap { _.leftOption }
-							
-							// Sets up the default database name
-							Connection.modifySettings { _.copy(defaultDBName = Some(dbName)) }
 							
 							// Restores possible backup versions and records the new database version
 							if (versionsBackup.nonEmpty)
@@ -266,7 +263,7 @@ object LocalDatabase
 			_statusPointer.futureWhere { _.isCompleted }.waitFor()
 	}
 	
-	private def start(charsetName: Option[String] = None, collateName: Option[String] = None,
+	private def start(dbName: String, charsetName: Option[String] = None, collateName: Option[String] = None,
 	                  listener: Option[DatabaseSetupListener] = None)
 	                 (implicit exc: ExecutionContext) =
 	{
@@ -287,7 +284,7 @@ object LocalDatabase
 				// Updates Vault connection settings
 				Connection.modifySettings { _.copy(
 					connectionTarget = configBuilder.getURL(""),
-					defaultDBName = Some("test"), charsetName = charsetName.getOrElse(""),
+					defaultDBName = Some(dbName), charsetName = charsetName.getOrElse(""),
 					charsetCollationName = collateName.getOrElse("")) }
 				
 				listener.foreach { _.onDatabaseSetupEvent(DatabaseConfigured) }

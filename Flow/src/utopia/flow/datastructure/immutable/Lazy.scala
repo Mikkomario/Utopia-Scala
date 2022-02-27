@@ -1,5 +1,6 @@
 package utopia.flow.datastructure.immutable
 
+import utopia.flow.datastructure.mutable.DeprecatingLazy
 import utopia.flow.datastructure.template.LazyLike
 
 object Lazy
@@ -25,6 +26,14 @@ object Lazy
 	  *         generated item. A new item may be generated if the previous one is collected.
 	  */
 	def weak[A <: AnyRef](make: => A) = WeakLazy(make)
+	/**
+	 * Creates a new lazy container which may auto-reset itself under certain conditions
+	 * @param make A function for generating a new value
+	 * @param testValidity A function for testing whether a stored value is still valid (should be kept)
+	 * @tparam A Type of stored item
+	 * @return A new lazy container
+	 */
+	def deprecating[A](make: => A)(testValidity: A => Boolean) = DeprecatingLazy(make)(testValidity)
 	/**
 	  * @param make A function for creating an item when it is requested
 	  * @param test A function that returns whether a generated value (accepted as a parameter) should be stored (true)

@@ -1,22 +1,18 @@
 package utopia.vault.database
 
 import java.nio.file.Path
-
 import utopia.flow.generic.EnvironmentNotSetupException
+
 import java.sql.DriverManager
 import java.sql.Statement
 import java.sql.SQLException
+import utopia.flow.datastructure.immutable.{Constant, Lazy, Model, Value}
 
-import utopia.flow.datastructure.immutable.Value
 import java.sql.PreparedStatement
-
 import utopia.flow.parse.ValueConverterManager
+
 import java.sql.Types
 import java.sql.ResultSet
-
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.datastructure.immutable.Constant
-
 import scala.collection.immutable.HashSet
 import scala.util.{Failure, Success, Try}
 import utopia.flow.generic.IntType
@@ -24,6 +20,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.IterateLines
+import utopia.vault.database.Connection.settings
 import utopia.vault.model.immutable.{Result, Row, Table}
 import utopia.vault.sql.SqlSegment
 
@@ -82,27 +79,59 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
 {
     // ATTRIBUTES    -----------------
     
-    private var _dbName = initialDBName
+    // Name of the user-targeted, but not necessarily currently used, database
+    private var targetDbName = initialDBName.orElse { settings.defaultDBName }
+    // Name of the currently used database (from the connection's perspective)
+    private var usedDbName: Option[String] = None
+    
+    private val openConnectionPointer = Lazy.deprecating {
+        Try {
+            val settings = Connection.settings
+            // Sets up the driver
+            settings.driver.foreach { driver =>
+                if (Connection.driver.isEmpty)
+                    Connection.driver = Some(Class.forName(driver).newInstance())
+            }
+            val targetNoForwardSlash = {
+                val base = settings.connectionTarget
+                if (base.endsWith("/")) base.dropRight(1) else base
+            }
+            val fullTarget = targetDbName match {
+                case Some(dbName) => s"$targetNoForwardSlash/$dbName"
+                case None => targetNoForwardSlash
+            }
+            // Instantiates the connection
+            val connection = DriverManager.getConnection(fullTarget + settings.charsetString,
+                settings.user, settings.password)
+            
+            // Sets up used database, if possible
+            targetDbName match {
+                case Some(dbName) => _use(connection, dbName)
+                case None => usedDbName = None
+            }
+        
+            connection
+        }.getOrMap { e =>
+            throw NoConnectionException(s"Failed to open a database connection with settings ${
+                Connection.settings} and database '$targetDbName'", e)
+        }
+    } { !_.isClosed }
+    
     /**
      * The name of the database the connection is used for. This is either defined by<br>
      * a) specifying the database name upon connection creation<br>
      * b) specified after the connection has been instantiated by assigning a new value<br>
      * c) the default option specified in the connection settings
      */
-    def dbName = _dbName.orElse(Connection.settings.defaultDBName)
-    def dbName_=(databaseName: String) = 
-    {
-        if (!dbName.contains(databaseName))
-        {
-            // Performs a database change, if necessary
-            if (isOpen && !_dbName.contains(databaseName))
-                execute(s"USE $databaseName")
-            _dbName = Some(databaseName)
+    def dbName = targetDbName
+    def dbName_=(databaseName: String) = {
+        if (!targetDbName.contains(databaseName)) {
+            targetDbName = Some(databaseName)
+            openConnectionPointer.current.foreach { connection => _use(connection, databaseName) }
         }
     }
     
-    private var _connection: Option[java.sql.Connection] = None
-    private def connection = { open(); _connection.get }
+    private def connection = openConnectionPointer.value
     
     
     // COMPUTED PROPERTIES    -------
@@ -110,7 +139,28 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     /**
      * Whether the connection to the database has already been established
      */
-    def isOpen = _connection.exists { !_.isClosed }
+    def isOpen = openConnectionPointer.isInitialized
+    
+    // Returns a connection that targets a specific database
+    private def targetedConnection = {
+        val c = connection
+        usedDbName match {
+            case Some(_) => c
+            case None =>
+                targetDbName match {
+                    case Some(dbName) =>
+                        _use(c, dbName)
+                        c
+                    case None => throw NoConnectionException("Targeted database hasn't been specified")
+                }
+        }
+    }
+    
+    
+    // IMPLEMENTED  -----------------
+    
+    // Exceptions during closing are ignored
+    override def close() = Try { openConnectionPointer.popCurrent().foreach { _.close() } }
     
     
     // OPERATORS    -----------------
@@ -127,10 +177,14 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         // Changes database if necessary
         statement.databaseName.foreach { dbName = _ }
         // Executes the query
-        val result = apply(statement.sql, statement.values, selectedTables, statement.generatesKeys, statement.isSelect)
+        val c = statement.databaseName match {
+            case Some(dbName) => connectionTargeting(dbName)
+            case None => targetedConnection
+        }
+        val result = _apply(c, statement.sql, statement.values, selectedTables, statement.generatesKeys)
         
         // Fires database triggers / events, if necessary
-        dbName.foreach { databaseName =>
+        usedDbName.foreach { databaseName =>
             statement.events.foreach { _(result).foreach { event => Triggers.deliver(databaseName, event) } }
         }
         
@@ -148,7 +202,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      * are not parsed at all.
      * @param returnGeneratedKeys Whether the resulting Result object should contain any keys 
      * generated during the query (default = false)
-      * @param returnRows Whether rows should be returned from this query (default = true)
+     * @param requireTargetedDb Whether a database selection should be required at this point (default = false)
      * @return The results of the query, containing the read rows and keys. If 'selectedTables' 
      * parameter was empty, no rows are included. If 'returnGeneratedKeys' parameter was false, 
      * no keys are included. On update statements, includes number of updated rows.
@@ -156,62 +210,8 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      */
     @throws(classOf[DBException])
     def apply(sql: String, values: Seq[Value], selectedTables: Set[Table] = HashSet(), 
-            returnGeneratedKeys: Boolean = false, returnRows: Boolean = true) =
-    {
-        // Empty statements are not executed
-        if (sql.isEmpty)
-            Result.empty
-        else {
-            Try {
-                // Creates the statement
-                connection.prepareStatement(sql,
-                    if (returnGeneratedKeys) Statement.RETURN_GENERATED_KEYS else Statement.NO_GENERATED_KEYS)
-                    .consume { statement =>
-                        // Inserts provided values
-                        setValues(statement, values)
-                        // Executes the statement and retrieves the result (if available)
-                        val foundResult = statement.execute()
-                        // Case: Expecting generated keys
-                        if (returnGeneratedKeys)
-                            Result(Vector(), generatedKeysFromResult(statement, selectedTables))
-                        else {
-                            // Collects the result rows or update count from the first result
-                            var rows = {
-                                if (foundResult)
-                                    statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
-                                else
-                                    Vector()
-                            }
-                            var updateCount = if (foundResult) 0 else statement.getUpdateCount
-                            // Handles possible additional results
-                            var expectsMore = foundResult || updateCount >= 0
-                            while (expectsMore)
-                            {
-                                // Case: Additional result with more rows
-                                if (statement.getMoreResults)
-                                    rows ++= statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
-                                else
-                                {
-                                    val newUpdateCount = statement.getUpdateCount
-                                    // Case: No more results
-                                    if (newUpdateCount < 0)
-                                        expectsMore = false
-                                    // Case: Update count
-                                    else
-                                        updateCount += newUpdateCount
-                                }
-                            }
-                            Result(rows, updatedRowCount = updateCount max 0)
-                        }
-                }
-            } match
-            {
-                case Success(result) => result
-                case Failure(error) => throw new DBException(
-                    s"DB query failed.\nSql: $sql\nValues:[${values.mkString(", ")}]", error)
-            }
-        }
-    }
+            returnGeneratedKeys: Boolean = false, requireTargetedDb: Boolean = false) =
+        _apply(possiblyTargetedConnection(requireTargetedDb), sql, values, selectedTables, returnGeneratedKeys)
     
     
     // OTHER METHODS    -------------
@@ -308,62 +308,27 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     /**
      * Tries to execute a statement. Wraps the results in a try
      */
-    def tryExec(statement: SqlSegment) = Try(this(statement))
+    def tryExec(statement: SqlSegment) = Try(apply(statement))
     
     /**
      * Opens a new database connection. This is done automatically when the connection is used, too
      */
     @throws(classOf[EnvironmentNotSetupException])
     @throws(classOf[NoConnectionException])
-    def open() =
-    {
-        // Only opens a new connection if there is no open connection available
-        if (!isOpen)
-        {   
-            // Database name must be specified at this point
-            if (dbName.isEmpty)
-                throw NoConnectionException("Database name hasn't been specified")
-            
-            Try {
-                val settings = Connection.settings
-                // Sets up the driver
-                settings.driver.foreach { driver =>
-                    if (Connection.driver.isEmpty)
-                        Connection.driver = Some(Class.forName(driver).newInstance())
-                }
-                // Instantiates the connection
-                _connection = Some(DriverManager.getConnection(
-                    settings.connectionTarget + dbName.get + settings.charsetString,
-                    settings.user, settings.password))
-                // Specifies the database to use
-                execute(s"USE ${dbName.get}")
-                
-            }.failure.foreach { e => throw NoConnectionException(
-                s"Failed to open a database connection with settings ${Connection.settings} and database '$dbName'", e) }
-        }
-    }
-    
-    /**
-     * Closes this database connection. This should be called before the connection is discarded
-     */
-    override def close() =
-    {
-        // Exceptions during closing are ignored
-        Try { _connection.foreach { _.close() } }
-        _connection = None
-    }
+    @deprecated("This method will be removed. No manual connection management is necessary.", "v1.12.1")
+    def open(): Unit = openConnectionPointer.value
     
     /**
      * Executes a simple sql string. Does not retrieve any values from the query.
+     * @param requireTargetedDb Whether a database target should be required at this point (default = false)
      */
     @throws(classOf[EnvironmentNotSetupException])
     @throws(classOf[NoConnectionException])
     @throws(classOf[SQLException])
-    def execute(sql: String): Unit =
-    {
+    def execute(sql: String, requireTargetedDb: Boolean = false): Unit = {
         // Empty statements are not executed
         if (sql.nonEmpty)
-            connection.createStatement().consume { _.executeUpdate(sql) }
+            _executeWith(if (requireTargetedDb) targetedConnection else connection, sql)
     }
     
     /**
@@ -373,44 +338,15 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
      * @param sql The sql string. Slots for values are indicated with question marks (?)
      * @param values the values inserted to the query. There should be a matching amount of values 
      * and slots in the sql string.
+     * @param requireTargetedDb Whether targeted database should be specified at this point
      * @return A map for each row. The map contains column name + column value pairs. Only non-null 
      * values are included.
      */
     @throws(classOf[EnvironmentNotSetupException])
     @throws(classOf[NoConnectionException])
     @throws(classOf[SQLException])
-    def executeQuery(sql: String, values: Seq[Value] = Vector()) =
-    {
-        // Empty statements are not executed
-        if (sql.isEmpty)
-            Vector[Map[String, String]]()
-        else 
-        {
-            // Creates the statement
-            connection.prepareStatement(sql).consume { statement =>
-                // Inserts provided values
-                setValues(statement, values)
-    
-                // Executes the statement and retrieves the result
-                statement.executeQuery().consume { results =>
-                    val meta = results.getMetaData
-    
-                    val columnIndices = Vector.range(1, meta.getColumnCount + 1).map { index =>
-                        (meta.getColumnName(index), index) }
-    
-                    // Parses data out of the result
-                    val buffer = Vector.newBuilder[Map[String, String]]
-                    while (results.next())
-                    {
-                        buffer += columnIndices.flatMap { case (name, index) =>
-                            stringFromResult(results, index).map { (name, _) } }.toMap
-                    }
-    
-                    buffer.result()
-                }
-            }
-        }
-    }
+    def executeQuery(sql: String, values: Seq[Value] = Vector(), requireTargetedDb: Boolean = false) =
+        _executeQuery(possiblyTargetedConnection(requireTargetedDb), sql, values)
     
     /**
       * Checks whether a database with specified name exists
@@ -452,9 +388,12 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
             case Some(collate) => " DEFAULT COLLATE " + collate
             case None => ""
         }
-        execute(s"CREATE DATABASE$ifExistsStr $databaseName$charsetStr$collateStr")
-        if (useNewDb)
-            dbName = databaseName
+        val c = connection
+        _executeWith(c, s"CREATE DATABASE$ifExistsStr $databaseName$charsetStr$collateStr")
+        if (useNewDb) {
+            _use(c, databaseName)
+            targetDbName = Some(databaseName)
+        }
     }
     
     /**
@@ -463,17 +402,22 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
       * @param checkIfExists Whether database should be dropped only if it exists (default = true)
       */
     def dropDatabase(databaseName: String, checkIfExists: Boolean = true) =
+    {
         execute(s"DROP DATABASE${if (checkIfExists) " IF EXISTS " else " "}$databaseName")
+        usedDbName = usedDbName.filterNot { _ == databaseName }
+    }
     
     /**
       * Executes all statements read from the specified input file
       * @param inputPath Input file path
+     *  @param requireTargetedDb Whether a specific database target should be required at this point
       * @return Success if all of the statements in the file were properly executed. Failure otherwise.
       */
-    def executeStatementsFrom(inputPath: Path) = {
+    def executeStatementsFrom(inputPath: Path, requireTargetedDb: Boolean = false) = {
         // Reads the file and executes statements whenever one has been completely read
         IterateLines.fromPath(inputPath) { lines =>
             Try {
+                val c = possiblyTargetedConnection(requireTargetedDb)
                 var currentStatementBuilder = new StringBuilder()
                 lines.map { _.trim }.filterNot { s => s.isEmpty || s.startsWith("--") }.foreach { line =>
                     splitToStatements(line) match
@@ -485,9 +429,9 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                         case Left((statementEnd, completeStatements, statementStart)) =>
                             // Completes and executes current statement
                             currentStatementBuilder ++= statementEnd
-                            execute(currentStatementBuilder.result())
+                            _executeWith(c, currentStatementBuilder.result())
                             // Executes other complete statements on this line
-                            completeStatements.foreach(execute)
+                            completeStatements.foreach { _executeWith(c, _) }
                             // Starts building the next statement
                             currentStatementBuilder = new StringBuilder()
                             statementStart.foreach { s =>
@@ -499,6 +443,127 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
             }
         }.flatten
     }
+    
+    @throws(classOf[DBException])
+    private def _apply(connection: java.sql.Connection, sql: String, values: Seq[Value],
+                       selectedTables: Set[Table] = HashSet(), returnGeneratedKeys: Boolean = false) =
+    {
+        // Empty statements are not executed
+        if (sql.isEmpty)
+            Result.empty
+        else {
+            Try {
+                // Creates the statement
+                connection.prepareStatement(sql,
+                    if (returnGeneratedKeys) Statement.RETURN_GENERATED_KEYS else Statement.NO_GENERATED_KEYS)
+                    .consume { statement =>
+                        // Inserts provided values
+                        setValues(statement, values)
+                        // Executes the statement and retrieves the result (if available)
+                        val foundResult = statement.execute()
+                        // Case: Expecting generated keys
+                        if (returnGeneratedKeys)
+                            Result(Vector(), generatedKeysFromResult(statement, selectedTables))
+                        else {
+                            // Collects the result rows or update count from the first result
+                            var rows = {
+                                if (foundResult)
+                                    statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
+                                else
+                                    Vector()
+                            }
+                            var updateCount = if (foundResult) 0 else statement.getUpdateCount
+                            // Handles possible additional results
+                            var expectsMore = foundResult || updateCount >= 0
+                            while (expectsMore)
+                            {
+                                // Case: Additional result with more rows
+                                if (statement.getMoreResults)
+                                    rows ++= statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
+                                else
+                                {
+                                    val newUpdateCount = statement.getUpdateCount
+                                    // Case: No more results
+                                    if (newUpdateCount < 0)
+                                        expectsMore = false
+                                    // Case: Update count
+                                    else
+                                        updateCount += newUpdateCount
+                                }
+                            }
+                            Result(rows, updatedRowCount = updateCount max 0)
+                        }
+                    }
+            } match
+            {
+                case Success(result) => result
+                case Failure(error) => throw new DBException(
+                    s"DB query failed.\nSql: $sql\nValues:[${values.mkString(", ")}]", error)
+            }
+        }
+    }
+    
+    @throws(classOf[EnvironmentNotSetupException])
+    @throws(classOf[NoConnectionException])
+    @throws(classOf[SQLException])
+    private def _executeQuery(connection: java.sql.Connection, sql: String, values: Seq[Value] = Vector()) =
+    {
+        // Empty statements are not executed
+        if (sql.isEmpty)
+            Vector[Map[String, String]]()
+        else
+        {
+            // Creates the statement
+            connection.prepareStatement(sql).consume { statement =>
+                // Inserts provided values
+                setValues(statement, values)
+                
+                // Executes the statement and retrieves the result
+                statement.executeQuery().consume { results =>
+                    val meta = results.getMetaData
+                    
+                    val columnIndices = Vector.range(1, meta.getColumnCount + 1).map { index =>
+                        (meta.getColumnName(index), index) }
+                    
+                    // Parses data out of the result
+                    val buffer = Vector.newBuilder[Map[String, String]]
+                    while (results.next())
+                    {
+                        buffer += columnIndices.flatMap { case (name, index) =>
+                            stringFromResult(results, index).map { (name, _) } }.toMap
+                    }
+                    
+                    buffer.result()
+                }
+            }
+        }
+    }
+    
+    // Makes sure the connection targets the specified database
+    private def connectionTargeting(databaseName: String) = {
+        val c = connection
+        if (!usedDbName.contains(databaseName))
+            _use(c, databaseName)
+        c
+    }
+    
+    private def possiblyTargetedConnection(shouldTarget: Boolean) = {
+        if (shouldTarget)
+            targetedConnection
+        else {
+            val c = connection
+            targetDbName.filter { !usedDbName.contains(_) }.foreach { _use(c, _) }
+            c
+        }
+    }
+    
+    private def _use(connection: java.sql.Connection, dbName: String) = {
+        _executeWith(connection, s"USE $dbName")
+        usedDbName = Some(dbName)
+    }
+    
+    private def _executeWith(connection: java.sql.Connection, sql: String) =
+        connection.createStatement().consume { _.executeUpdate(sql) }
     
     private def splitToStatements(statementString: String) = {
         if (statementString.contains(';'))

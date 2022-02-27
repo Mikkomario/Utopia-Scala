@@ -66,7 +66,7 @@ object SqlWriter
 				}
 				
 				// Groups the classes by package and writes them
-				writeClasses2(writer, initials, classesByTableName.groupBy { _._2.packageName }, references)
+				writeClasses(writer, initials, classesByTableName.groupBy { _._2.packageName }, references)
 			}
 		}
 		else
@@ -76,7 +76,7 @@ object SqlWriter
 	// classesByPackageAndTableName: first key is package name (header) and second key is table name
 	// references: Keys and values are both table names
 	@tailrec
-	private def writeClasses2(writer: PrintWriter, initialsMap: Map[String, String],
+	private def writeClasses(writer: PrintWriter, initialsMap: Map[String, String],
 	                          classesByPackageAndTableName: Map[String, Map[String, Class]],
 	                          references: Map[String, Set[String]])
 	                        (implicit setup: ProjectSetup, naming: NamingRules): Unit =
@@ -98,28 +98,33 @@ object SqlWriter
 		else {
 			// Writes a single package, including as many classes as possible
 			// Prefers packages which can be finished off, also preferring larger class sets
-			// Package name -> (class map, writeable classes count, package may be finished)
+			// Package name -> (currently writeable classes, classes which are dependent from other remaining packages)
 			val packagesWithInfo = classesByPackageAndTableName.map { case (packageName, classesByTableName) =>
-				val writeableClassCount = classesByTableName
-					.count { case (tableName, _) => notReferencingTableNames.contains(tableName) }
-				packageName -> (classesByTableName, writeableClassCount,
-					writeableClassCount == classesByPackageAndTableName.size)
+				val packageClassTables = classesByTableName.keySet
+				// Writeable = Class only makes references inside this package
+				// Dependent = Class makes references to other remaining packages
+				val (writeableClasses, dependentClasses) = classesByTableName.divideBy { case (tableName, _) =>
+					references.get(tableName)
+						.exists { refs => ((refs & remainingTableNames) -- packageClassTables).nonEmpty }
+				}
+				packageName -> (writeableClasses, dependentClasses)
 			}
 			// Finds the next package to target and starts writing classes within that package
-			val (packageName, (classesByTableName, _, _)) = packagesWithInfo
-				.bestMatch(Vector(_._2._3)).maxBy { _._2._2 }
+			val (packageName, (writeableClasses, remainingPackageClasses)) = packagesWithInfo
+				.bestMatch(Vector(_._2._2.isEmpty)).maxBy { _._2._1.size }
 			val packageHeader = Name.interpret(packageName, CamelCase.lower).to(Text.allCapitalized).singular
 			writer.println(s"\n--\t$packageHeader\t${"-" * 10}\n")
-			val remainingPackageClasses = writePossibleClasses(writer, initialsMap, classesByTableName, references)
+			val allRemainingPackageClasses = writePossibleClasses(writer, initialsMap, writeableClasses, references) ++
+				remainingPackageClasses
 			// Prepares the next recursive iteration
 			val remainingClasses = {
-				if (remainingPackageClasses.isEmpty)
+				if (allRemainingPackageClasses.isEmpty)
 					classesByPackageAndTableName - packageName
 				else
-					classesByPackageAndTableName + (packageName -> remainingPackageClasses)
+					classesByPackageAndTableName + (packageName -> allRemainingPackageClasses)
 			}
 			if (remainingClasses.nonEmpty)
-				writeClasses2(writer, initialsMap, remainingClasses, references)
+				writeClasses(writer, initialsMap, remainingClasses, references)
 		}
 	}
 	

@@ -2,7 +2,7 @@ package utopia.citadel.util
 
 import utopia.flow.generic.{DataType, EnvironmentNotSetupException}
 import utopia.flow.time.TimeExtensions._
-import utopia.vault.database.ConnectionPool
+import utopia.vault.database.{Connection, ConnectionPool}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
@@ -74,6 +74,8 @@ object CitadelContext
 	{
 		DataType.setup()
 		data = Some(Data(executionContext, connectionPool, databaseName, descriptionRoleCacheDuration))
+		// Sets the specified database as the default database for the Connection interface, also
+		Connection.modifySettings { _.copy(defaultDBName = Some(databaseName)) }
 	}
 	
 	

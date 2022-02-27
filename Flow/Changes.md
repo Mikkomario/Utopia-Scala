@@ -18,6 +18,7 @@
   - See: **Process**, **LoopingProcess**, **DelayedProcess**, **Wait**, **Delay** and **Loop**
 - Added two new wait target types: **DailyTime** and **WeeklyTime**
 - Created **TimedTasks**, which is an improved implementation of **SynchronizedLoops**
+- Added **DeprecatingLazy** class, which is a **Lazy** implementation that may renew the value based on a condition
 - Added **SureFromModelFactory** trait
 ### New Methods
 - **CloseHook**
