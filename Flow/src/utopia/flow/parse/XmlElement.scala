@@ -261,12 +261,12 @@ case class XmlElement(name: String, value: Value = Value.emptyWithType(StringTyp
     /**
      * Finds the first child with the provided name
      */
-    def childWithName(name: String) = children.find(_.name.equalsIgnoreCase(name))
+    def childWithName(name: String) = children.find { _.name.equalsIgnoreCase(name) }
     
     /**
      * Finds the children with the provided name
      */
-    def childrenWithName(name: String) = children.filter(_.name.equalsIgnoreCase(name))
+    def childrenWithName(name: String) = children.filter { _.name.equalsIgnoreCase(name) }
     
     /**
      * Finds the value for an attribute with the specified name

@@ -71,7 +71,8 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends template.TreeLike[A
       * @param f A filter function
       * @return A new tree with all nodes filtered
       */
-    def filterContents(f: A => Boolean): NodeType = makeNode(content, children.filter { c => f(c.content) } map { _.filterContents(f) })
+    def filterContents(f: A => Boolean): NodeType =
+        makeNode(content, children.filter { c => f(c.content) } map { _.filterContents(f) })
     
     /**
       * Filters the direct children of this tree

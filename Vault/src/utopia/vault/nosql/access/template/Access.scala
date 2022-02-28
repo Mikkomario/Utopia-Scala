@@ -35,10 +35,14 @@ trait Access[+A] extends View
 	/**
 	  * Finds all items accessible through this access point that satisfy the specified (additional) search condition
 	  * @param condition  A search condition
-	  * @param ordering   Ordering applied (optional, None by default)
+	  * @param order Ordering applied (optional, default = factory default ordering)
+	  * @param joins Targets to join to the query (not selected, however)
+	  * @param joinType Join type to use (default = inner)
 	  * @param connection Implicit database connection
 	  * @return Read items
 	  */
-	def find(condition: Condition, ordering: Option[OrderBy] = None)(implicit connection: Connection) =
-		read(Some(mergeCondition(condition)), ordering)
+	def find(condition: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Vector(),
+	         joinType: JoinType = Inner)
+	        (implicit connection: Connection) =
+		read(Some(mergeCondition(condition)), order, joins, joinType)
 }
