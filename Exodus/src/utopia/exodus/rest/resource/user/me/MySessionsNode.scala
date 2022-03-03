@@ -108,6 +108,7 @@ object MySessionsNode extends ResourceWithChildren[AuthorizedContext]
 					token.access.deprecate()
 				// b) All sessions created using this session
 				if (includeCurrent || includePrevious) {
+					// TODO: This should be limited to temporary tokens
 					val childTokenIds = findTokenIdsUnder(Set(token.id))
 					if (childTokenIds.nonEmpty)
 						DbTokens(childTokenIds).deprecate()

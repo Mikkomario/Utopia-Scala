@@ -53,7 +53,7 @@ CREATE TABLE `token_type`(
 CREATE TABLE `token`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	`type_id` INT NOT NULL,
-	`hash` VARCHAR(96) NOT NULL,
+	`hash` VARCHAR(128) NOT NULL,
 	`parent_token_id` INT,
 	`owner_id` INT,
 	`model_style_id` TINYINT,
@@ -110,7 +110,7 @@ CREATE TABLE `token_scope_link`(
 CREATE TABLE `user_password`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`user_id` INT NOT NULL, 
-	`hash` VARCHAR(96) NOT NULL, 
+	`hash` VARCHAR(255) NOT NULL,
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
 	INDEX up_hash_idx (`hash`), 
 	CONSTRAINT up_u_user_ref_fk FOREIGN KEY up_u_user_ref_idx (user_id) REFERENCES `user`(`id`) ON DELETE CASCADE

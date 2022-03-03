@@ -101,7 +101,7 @@
           {
             "name": "hash",
             "name_plural": "hashes",
-            "length": 96,
+            "length": 128,
             "doc": "A hashed version of this token"
           },
           {
@@ -331,7 +331,7 @@
           {
             "name": "hash",
             "name_plural": "hashes",
-            "length": 96,
+            "length": 255,
             "index": true,
             "doc": "User's hashed password, including salt"
           },

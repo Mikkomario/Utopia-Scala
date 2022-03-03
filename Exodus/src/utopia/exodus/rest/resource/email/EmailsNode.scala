@@ -91,6 +91,7 @@ object EmailsNode extends ResourceWithChildren[AuthorizedContext]
 	                                         (implicit connection: Connection, validator: EmailValidator,
 	                                          context: AuthorizedContext) =
 	{
+		// TODO: This 403 status creates a security problem. Send another email instead.
 		if (DbManyUserSettings.containsEmail(email))
 			Result.Failure(Forbidden, "Specified email address is already in use")
 		else {
@@ -98,7 +99,7 @@ object EmailsNode extends ResourceWithChildren[AuthorizedContext]
 			validator(email, UserCreation, Set(UserCreation), Set(UserCreation, ReadGeneralData),
 				Some(token.id), context.modelStyle.orElse(token.modelStylePreference))
 			match {
-				case Success(_) => Result.Empty
+				case Success(_) => Result.Success(status = Accepted)
 				case Failure(error) =>
 					ExodusContext.handleError(error, "Failed to send email for user creation")
 					Result.Failure(InternalServerError, error.getMessage)
@@ -137,6 +138,7 @@ object EmailsNode extends ResourceWithChildren[AuthorizedContext]
 			// Will yield a success regardless of whether the email exists or not
 			// (so that no personal information is given away)
 			// TODO: Either make all failure cases return Accepted or an error status (research)
+			// TODO: Should send an email whether there exists an account or not
 			DbUserId.forEmail(email) match {
 				case Some(userId) =>
 					// If, for some reason, the token is tied to a user other than that owning the email address, fails
@@ -173,6 +175,7 @@ object EmailsNode extends ResourceWithChildren[AuthorizedContext]
 			handleRequest(PersonalActions) { (email, validator, token, connection) =>
 				implicit val c: Connection = connection
 				// Makes sure the email address is not yet in use
+				// TODO: This may raise a security issue
 				if (DbManyUserSettings.containsEmail(email))
 					Result.Failure(Forbidden, "Specified email address is already in use")
 				else

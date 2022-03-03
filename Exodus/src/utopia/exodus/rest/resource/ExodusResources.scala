@@ -1,6 +1,7 @@
 package utopia.exodus.rest.resource
 
 import utopia.exodus.rest.resource.description.{DescriptionRolesNode, LanguageFamiliaritiesNode, LanguagesNode, RolesNode, TasksNode}
+import utopia.exodus.rest.resource.email.EmailsNode
 import utopia.exodus.rest.resource.organization.OrganizationsNode
 import utopia.exodus.rest.resource.user.UsersNode
 
@@ -17,7 +18,7 @@ object ExodusResources
 	  * All root rest nodes introduced in Exodus
 	  */
 	val all = Vector(DescriptionRolesNode, LanguagesNode, LanguageFamiliaritiesNode, RolesNode, TasksNode,
-		UsersNode, OrganizationsNode)
+		UsersNode, OrganizationsNode, EmailsNode)
 	
 	/**
 	  * All publicly available resources (may be customized)

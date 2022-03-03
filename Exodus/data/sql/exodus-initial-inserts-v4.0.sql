@@ -34,10 +34,10 @@ INSERT INTO `scope` (`id`, `name`) VALUES
 -- Inserts 5 token types
 INSERT INTO `token_type` (`id`, `name`) VALUES
 	(1, 'api-key');
-INSERT INTO `token_type` (`id`, `duration`, `name`) VALUES
+INSERT INTO `token_type` (`id`, `duration_minutes`, `name`) VALUES
 	(2, 1320, 'session-token'),
 	(4, 15, 'email-validated-session');
 INSERT INTO `token_type` (`id`, `name`, `refreshed_type_id`) VALUES
 	(3, 'refresh-token', 2);
-INSERT INTO `token_type` (`id`, `duration`, `is_single_use_only`, `name`, `refreshed_type_id`) VALUES
+INSERT INTO `token_type` (`id`, `duration_minutes`, `is_single_use_only`, `name`, `refreshed_type_id`) VALUES
 	(5, 4320, TRUE, 'email-validation-token', 4);
