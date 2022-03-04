@@ -29,7 +29,8 @@ INSERT INTO `scope` (`id`, `name`) VALUES
 	(12, 'change-email'),
 	(13, 'terminate-other-sessions'),
 	(14, 'revoke-other-tokens'),
-	(15, 'delete-account');
+	(15, 'delete-account'),
+	(16, 'initiate-user-creation');
 
 -- Inserts 5 token types
 INSERT INTO `token_type` (`id`, `name`) VALUES

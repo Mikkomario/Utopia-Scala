@@ -1,7 +1,9 @@
 package utopia.exodus.database.access.many.auth
 
 import utopia.exodus.model.combined.auth.TypedToken
+import utopia.flow.generic.ValueConversions._
 import utopia.vault.nosql.view.{NonDeprecatedView, UnconditionalView}
+import utopia.vault.sql.SqlExtensions._
 
 /**
   * A root access point to tokens, including their type information
@@ -18,10 +20,24 @@ object DbTypedTokens extends ManyTypedTokensAccess with NonDeprecatedView[TypedT
 	def includingHistory = DbAllTypedTokens
 	
 	
+	// OTHER    ----------------------------
+	
+	/**
+	  * @param tokenIds Ids of targeted tokens
+	  * @return An access point to tokens with those ids
+	  */
+	def apply(tokenIds: Iterable[Int]) = new DbTypedTokensSubset(tokenIds)
+	
+	
 	// NESTED   ----------------------------
 	
 	/**
 	  * A root access point to tokens, whether they be active or not, where type information is included
 	  */
 	object DbAllTypedTokens extends ManyTypedTokensAccess with UnconditionalView
+	
+	class DbTypedTokensSubset(ids: Iterable[Int]) extends ManyTypedTokensAccess
+	{
+		override def globalCondition = Some(index in ids)
+	}
 }

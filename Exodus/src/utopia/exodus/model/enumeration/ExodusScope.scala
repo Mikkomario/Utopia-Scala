@@ -17,7 +17,7 @@ object ExodusScope
 	val values = Vector[ExodusScope](ReadGeneralData, CreateUser, ReadPersonalData, PersonalActions,
 		JoinOrganization, CreateOrganization, ReadOrganizationData, OrganizationActions, RequestPasswordReset,
 		ChangeKnownPassword, ReplaceForgottenPassword, ChangeEmail, TerminateOtherSessions, RevokeOtherTokens,
-		DeleteAccount)
+		DeleteAccount, InitiateUserCreation)
 	
 	
 	// NESTED   ---------------------------
@@ -84,4 +84,8 @@ object ExodusScope
 	  * Scope that enables a user to delete their account and all personal data
 	  */
 	case object DeleteAccount extends ExodusScope { override val id = 15 }
+	/**
+	  * Scope that enables the user to initiate the user creation process by making an email validation attempt
+	  */
+	case object InitiateUserCreation extends ExodusScope { override val id = 16 }
 }

@@ -2,7 +2,7 @@ package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method.{Delete, Post}
 import utopia.access.http.Status.Unauthorized
-import utopia.exodus.database.access.many.auth.{DbScopes, DbTokens}
+import utopia.exodus.database.access.many.auth.{DbScopes, DbTokens, DbTypedTokens}
 import utopia.exodus.database.access.single.auth.DbToken
 import utopia.exodus.model.combined.auth.DetailedToken
 import utopia.exodus.model.enumeration.ExodusScope.TerminateOtherSessions
@@ -108,10 +108,9 @@ object MySessionsNode extends ResourceWithChildren[AuthorizedContext]
 					token.access.deprecate()
 				// b) All sessions created using this session
 				if (includeCurrent || includePrevious) {
-					// TODO: This should be limited to temporary tokens
 					val childTokenIds = findTokenIdsUnder(Set(token.id))
 					if (childTokenIds.nonEmpty)
-						DbTokens(childTokenIds).deprecate()
+						DbTypedTokens(childTokenIds).accessTokens.deprecate()
 				}
 				// c) All temporary non-refresh sessions owned by this user (if applicable)
 				if (includeOther)

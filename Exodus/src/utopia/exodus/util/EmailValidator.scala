@@ -60,6 +60,20 @@ trait EmailValidator
 	def send(attempt: EmailValidationAttempt, token: DetailedToken, tokenString: String,
 	         invitation: Option[Invitation] = None)(implicit connection: Connection): Try[Unit]
 	
+	/**
+	  * Sends an email to the specified email address instead of sending an email validation token. This method is
+	  * called in situations where the recipient shouldn't be authorized for further action, but should simply be
+	  * informed about the failure of the linked action. For example, when attempting password recovery with an
+	  * email address that is not registered in the system, should inform the owner of that email address.
+	  * @param emailAddress Email address to which to send the message
+	  * @param purposeId Id of the original purpose of the email validation attempt
+	  * @param message A short description of the situation
+	  * @param connection Implicit DB Connection
+	  * @return A success or a failure
+	  */
+	def sendWithoutToken(emailAddress: String, purposeId: Int, message: String)
+	                    (implicit connection: Connection): Try[Unit]
+	
 	
 	// OTHER    ---------------------------
 	
