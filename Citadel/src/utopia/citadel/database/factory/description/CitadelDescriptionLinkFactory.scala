@@ -6,6 +6,7 @@ object CitadelDescriptionLinkFactory
 {
 	// ATTRIBUTES	--------------------
 	
+	@deprecated("Device-related classes will be removed", "v2.1")
 	lazy val clientDevice = DescriptionLinkFactory(CitadelTables.clientDeviceDescription)
 	lazy val descriptionRole = DescriptionLinkFactory(CitadelTables.descriptionRoleDescription)
 	lazy val language = DescriptionLinkFactory(CitadelTables.languageDescription)

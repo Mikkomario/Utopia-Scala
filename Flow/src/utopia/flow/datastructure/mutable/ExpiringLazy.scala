@@ -1,6 +1,6 @@
 package utopia.flow.datastructure.mutable
 
-import utopia.flow.async.ResettableVolatileLazy
+import utopia.flow.async.{ResettableVolatileLazy, Wait}
 import utopia.flow.datastructure.immutable.Lazy
 import utopia.flow.time.{Now, WaitUtils}
 import utopia.flow.time.TimeExtensions._
@@ -96,9 +96,8 @@ class ExpiringLazy[+A](generator: => A)(expirationPerItem: A => Duration)
 				if (!wasWaiting)
 				{
 					Future {
-						while (nextWaitThreshold.exists { Now < _ })
-						{
-							nextWaitThreshold.foreach { WaitUtils.waitUntil(_, waitLock) }
+						while (nextWaitThreshold.exists { Now < _ }) {
+							nextWaitThreshold.foreach { Wait(_, waitLock) }
 						}
 						_reset()
 					}

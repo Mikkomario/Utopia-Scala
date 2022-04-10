@@ -34,19 +34,24 @@ object MetropolisAccessExtensions
 		  */
 		def access = DbDescriptionRole(a.id)
 	}
+	@deprecated("Device-related classes will be removed", "v2.1")
 	implicit class AccessibleClientDevice(val a: ClientDevice) extends AnyVal
 	{
 		/**
 		  * @return An access point to this device in the database
 		  */
+		@deprecated("Device-related classes will be removed", "v2.1")
 		def access = DbClientDevice(a.id)
 	}
+	@deprecated("Device-related classes will be removed", "v2.1")
 	implicit class AccessibleClientDeviceUser(val a: ClientDeviceUser) extends AnyVal
 	{
 		/**
 		  * @return An access point to this client device user link in the database
 		  */
+		@deprecated("Device-related classes will be removed", "v2.1")
 		def access = DbClientDeviceUser(a.id)
+		@deprecated("Device-related classes will be removed", "v2.1")
 		def deviceAccess = DbClientDevice(a.deviceId)
 		def userAccess = DbUser(a.userId)
 	}

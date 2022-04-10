@@ -2,6 +2,7 @@ package utopia.exodus.database.access.many.auth
 
 import utopia.exodus.model.combined.auth.TypedToken
 import utopia.flow.generic.ValueConversions._
+import utopia.vault.database.Connection
 import utopia.vault.nosql.view.{NonDeprecatedView, UnconditionalView}
 import utopia.vault.sql.SqlExtensions._
 
@@ -36,8 +37,10 @@ object DbTypedTokens extends ManyTypedTokensAccess with NonDeprecatedView[TypedT
 	  */
 	object DbAllTypedTokens extends ManyTypedTokensAccess with UnconditionalView
 	
-	class DbTypedTokensSubset(ids: Iterable[Int]) extends ManyTypedTokensAccess
+	class DbTypedTokensSubset(_ids: Iterable[Int]) extends ManyTypedTokensAccess
 	{
-		override def globalCondition = Some(index in ids)
+		override def ids(implicit connection: Connection) = _ids.toVector
+		
+		override def globalCondition = Some(index in _ids)
 	}
 }

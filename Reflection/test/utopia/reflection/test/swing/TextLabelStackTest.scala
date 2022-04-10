@@ -35,6 +35,7 @@ object TextLabelStackTest extends App
 	// Sets up localization context
 	implicit val defaultLanguageCode: String = "EN"
 	implicit val localizer: Localizer = NoLocalization
+	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 
 	// Creates the labels
 	val basicFont = Font("Arial", 12, Plain, 2)
@@ -61,7 +62,6 @@ object TextLabelStackTest extends App
 	// Creates the frame and displays it
 	val actorHandler = ActorHandler()
 	val actionLoop = new ActorLoop(actorHandler)
-	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 
 	val framing = Framing.symmetric(stack, 24.downscaling.square)
 	val frame = Frame.windowed(framing, "TextLabel Stack Test", User)

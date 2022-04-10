@@ -33,6 +33,7 @@ object ScrollCanvasTest extends App
 	
 	implicit val language: String = "en"
 	implicit val localizer: Localizer = NoLocalization
+	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 	
 	// Creates the handlers
 	val actorHandler = ActorHandler()
@@ -60,7 +61,6 @@ object ScrollCanvasTest extends App
 	
 	// Creates the frame and displays it
 	val actionLoop = new ActorLoop(actorHandler)
-	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 	
 	val framing = canvas.framed(0.any x 0.any)
 	framing.background = Color.blue

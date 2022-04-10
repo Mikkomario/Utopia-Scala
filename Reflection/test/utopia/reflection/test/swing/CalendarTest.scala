@@ -37,6 +37,7 @@ object CalendarTest extends App
 	// Sets up localization context
 	implicit val defaultLanguageCode: String = "EN"
 	implicit val localizer: Localizer = NoLocalization
+	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 	
 	val basicFont = Font("Arial", 14, Plain, 2)
 	val smallFont = basicFont * 0.75
@@ -60,7 +61,6 @@ object CalendarTest extends App
 	// Creates the frame and displays it
 	val actorHandler = ActorHandler()
 	val actionLoop = new ActorLoop(actorHandler)
-	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 	
 	val framing = Framing.symmetric(calendar, 24.downscaling.square)
 	framing.background = Color.white

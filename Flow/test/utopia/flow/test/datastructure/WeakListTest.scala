@@ -1,8 +1,10 @@
 package utopia.flow.test.datastructure
 
+import utopia.flow.async.{ThreadPool, Wait}
 import utopia.flow.collection.WeakList
-import utopia.flow.time.WaitUtils
 import utopia.flow.time.TimeExtensions._
+
+import scala.concurrent.ExecutionContext
 
 /**
  * Tests WeakList use
@@ -11,6 +13,8 @@ import utopia.flow.time.TimeExtensions._
  */
 object WeakListTest extends App
 {
+	private implicit val exc: ExecutionContext = new ThreadPool("Test").executionContext
+	
 	val first = "First"
 	val second = "Second"
 	
@@ -31,6 +35,6 @@ object WeakListTest extends App
 	
 	val weak2 = addItem("Moi", weakList)
 	
-	WaitUtils.wait(5.seconds, new AnyRef())
+	Wait(5.seconds)
 	println(weak2.reduceOption { _ + ", " + _ })
 }

@@ -5,10 +5,10 @@ import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestNotSent.{RequestFailed, RequestWasDeprecated}
 import utopia.annex.model.response.{RequestNotSent, Response}
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.{ActionQueue, VolatileFlag}
+import utopia.flow.async.{ActionQueue, VolatileFlag, Wait}
 import utopia.flow.event.Changing
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.{Now, WaitUtils}
+import utopia.flow.time.Now
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -124,7 +124,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 			}
 			val targetTime = nextOfflineMinRequestTime
 			nextOfflineMinRequestTime = Now + nextOfflineDelay
-			WaitUtils.waitUntil(targetTime, new AnyRef)
+			Wait(targetTime)
 		}
 		
 		// May skip request sending altogether if the request gets deprecated

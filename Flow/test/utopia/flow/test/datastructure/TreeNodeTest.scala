@@ -45,8 +45,8 @@ object TreeNodeTest extends App
 	assert((root / 2).nodesBelow.map { _.content }.toSet == Set(3, 4, 5))
 	assert(root.leaves.map { _.content } == Vector(4, 5, 6))
 	assert(root.nodesBelow.contains(bottomNode))
-	assert(root.contains(bottomNode))
-	assert(root.contains(secondChild))
+	assert(root.containsNode(bottomNode))
+	assert(root.containsNode(secondChild))
 	assert(root.get(6).contains(secondChild))
 	assert(root.find { _.content == 4 }.contains(bottomNode))
 	

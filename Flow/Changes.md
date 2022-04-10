@@ -5,13 +5,18 @@
 - `.divide(String)` in **Regex** now returns `Vector[Either[String, String]]` instead of `Vector[String]`
   - The previous implementation is now named `.separate(String)`
 - **Loop** is now an abstract class instead of a trait. This is because the trait contains attributes.
+- Renamed `makeNode` in **TreeLike** (template) to `newNode`
+- Added an abstract `createCopy(...)` function to **TreeLike** (immutable) in order to separate between copy and create 
+  use-cases
 ### Deprecations
 - Deprecated most **WaitUtils** functions in favor of **Wait** and **Delay**
 - Deprecated **Loop**, **TryLoop**, **DailyTask** and **WeeklyTask** in favor of new 
   **LoopingProcess** class and new **Loop** functions
 - Deprecated **SynchronizedLoops** in favor of **TimedTasks**
 - Deprecated **SingleWait** in favor of **Wait**
+- Deprecated the **Async** object in favor of the new process classes
 - Deprecated **VolatileFlag**`.notSet` in favor of `.isNotSet`
+- Deprecated (immutable) **TreeLike**`.replace(...)` and `.findAndReplace(...)`
 ### New Features
 - Added **Sha256Hasher** utility tool
 - Created a new wait and loop system
@@ -20,6 +25,7 @@
 - Created **TimedTasks**, which is an improved implementation of **SynchronizedLoops**
 - Added **DeprecatingLazy** class, which is a **Lazy** implementation that may renew the value based on a condition
 - Added **SureFromModelFactory** trait
+- Added state tracking to **CloseHook**
 ### New Methods
 - **CloseHook**
   - Added `-=` for removing hooks
@@ -34,10 +40,12 @@
   - Added `.nonEmpty`, which has the same function as `.isDefined`
 - **VolatileFlag** (object)
   - Added an `.apply()` function, like in other **Volatile** classes
+- Added a number of new methods to **TreeLike** and **XmlElement**
 ### Other Changes
 - **WaitTarget**s can now be constructed implicitly from **Instant**, **Duration**, and **LocalTime**
 - Changed **Map**`.mergedWith(Map, ...)` to `.mergeWith(Map)(...)` (in **CollectionExtensions**)
   - Previous version was deprecated
+- Type parameter NodeType in **TreeLike** (template) is now covariant
 
 ## v1.14.1 - 27.01.2022
 This update introduces a number of quality-of-life improvements, and also some important fixes to json writing and 

@@ -1,9 +1,8 @@
 package utopia.disciple.test
 
 import utopia.disciple.controller.RequestRateLimiter
-import utopia.flow.async.{ThreadPool, Volatile}
+import utopia.flow.async.{ThreadPool, Volatile, Wait}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -22,24 +21,24 @@ object RequestRateLimiterTest extends App
 	// Makes sure requests before limit break are performed immediately
 	(1 to 5).foreach { i =>
 		limiter.push { Future { counter.update { _ + 1 } } }
-		WaitUtils.wait(0.02.seconds, waitLock)
+		Wait(0.02.seconds, waitLock)
 		assert(counter.value == i)
 	}
 	
 	// Makes sure the following requests are not performed immediately
 	(1 to 2).foreach { _ =>
 		limiter.push { Future { counter.update { _ + 1 } } }
-		WaitUtils.wait(0.02.seconds, waitLock)
+		Wait(0.02.seconds, waitLock)
 		assert(counter.value == 5)
 	}
 	
 	// Makes sure those requests get performed eventually
-	WaitUtils.wait(2.seconds, waitLock)
+	Wait(2.seconds, waitLock)
 	assert(counter.value == 7)
 	
 	// Makes sure the following request is again performed immediately
 	limiter.push { Future { counter.update { _ + 1 } } }
-	WaitUtils.wait(0.02.seconds, waitLock)
+	Wait(0.02.seconds, waitLock)
 	assert(counter.value == 8)
 	
 	println("Success...")

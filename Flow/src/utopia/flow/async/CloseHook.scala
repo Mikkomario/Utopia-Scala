@@ -18,19 +18,37 @@ object CloseHook
     
     private val additionalShutdownTime = 200.millis
     
+    private val _shutdownPointer = VolatileFlag()
+    private val breakables = Volatile(WeakList[Breakable]())
+    private val hooks = VolatileList[() => Future[Any]]()
+    
     /**
       * Maximum duration the shutdown process can take
       */
     var maxShutdownTime = 5.seconds
-    
-    private val breakables = Volatile(WeakList[Breakable]())
-    private val hooks = VolatileList[() => Future[Any]]()
     
     
     // INITIAL CODE -----------------
     
     // Registers all breakable items to stop
     Runtime.getRuntime.addShutdownHook(new Thread(() => shutdown()))
+    
+    
+    // COMPUTED ----------------------
+    
+    /**
+      * @return A pointer that contains true after the shutdown procedure has been initiated
+      */
+    def shutdownPointer = _shutdownPointer.valueView
+    
+    /**
+      * @return Whether the shutdown procedure has started
+      */
+    def isShutdown = _shutdownPointer.value
+    /**
+      * @return Whether the shutdown procedure has not been started
+      */
+    def nonShutdown = !isShutdown
     
     
     // OPERATORS    -----------------
@@ -68,6 +86,9 @@ object CloseHook
       */
     def shutdown() =
     {
+        // Updates the pointer
+        _shutdownPointer.set()
+        
         // Stops all registered loops
         val completions = breakables.getAndSet(WeakList()).strong.map { _.stop() } ++ hooks.popAll().map { _() }
         if (completions.nonEmpty)

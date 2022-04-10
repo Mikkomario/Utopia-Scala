@@ -1,6 +1,6 @@
 package utopia.disciple.controller
 
-import utopia.flow.async.{Breakable, Volatile}
+import utopia.flow.async.{Breakable, Volatile, Wait}
 import utopia.flow.collection.VolatileList
 import utopia.flow.time.{Now, WaitUtils}
 import utopia.flow.time.TimeExtensions._
@@ -120,7 +120,7 @@ class RequestRateLimiter(maxRequestAmount: Int, resetDuration: FiniteDuration) e
 					// This clearance process continues as long as there are pending requests to clear
 					while (pendingRequests.nonEmpty) {
 						// Waits the smallest possible time until performing the next request
-						nextAvailableRequestTime.foreach { WaitUtils.waitUntil(_, waitLock) }
+						nextAvailableRequestTime.foreach { Wait(_, waitLock) }
 						// Records request time and performs it asynchronously
 						requestTimes :+= Now
 						pendingRequests.pop().foreach { _(true) }

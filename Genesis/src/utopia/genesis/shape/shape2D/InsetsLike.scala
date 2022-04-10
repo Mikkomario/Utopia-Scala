@@ -273,14 +273,15 @@ trait InsetsLike[L, +S, +Repr] extends LinearScalable[Repr]
       * @param other Another insets
       * @return A combination of these two insets
       */
-    def +(other: InsetsLike[L, _, _]) = makeCopy(amounts.mergedWith[L](other.amounts, combine))
+    def +(other: InsetsLike[L, _, _]) = makeCopy(amounts.mergeWith[L](other.amounts)(combine))
     
     /**
       * Subtracts insets from each other
       * @param other Another insets
       * @return A subtraction of these two insets
       */
-    def -(other: InsetsLike[L, _, _]) = makeCopy(amounts.mergedWith[L](other.amounts, (a, b) => combine(a, multiply(b, -1))))
+    def -(other: InsetsLike[L, _, _]) =
+        makeCopy(amounts.mergeWith[L](other.amounts) { (a, b) => combine(a, multiply(b, -1)) })
     
     /**
       * @param direction Direction to drop from these insets

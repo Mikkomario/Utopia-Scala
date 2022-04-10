@@ -11,6 +11,7 @@ import scala.concurrent.duration.Duration
 * @author Mikko Hilpinen
 * @since 18.11.2018
 **/
+@deprecated("You should use the Process classes instead of this object", "v1.15")
 object Async
 {
     /**
@@ -21,6 +22,7 @@ object Async
      * @param operation the operation that will be performed
      * @return a future for the end of the repeat process
      */
+    @deprecated("Please use the LoopingProcess class instead", "v1.15")
 	def repeat(interval: Duration, checkContinue: () => Boolean, operation: () => Unit)(implicit ec: ExecutionContext) = Future
 	{
 	    val lock = new AnyRef()
@@ -37,6 +39,7 @@ object Async
 	 * @param interval the repeat interval
 	 * @param operation the operation that will be repeated
 	 */
+	@deprecated("Please use the LoopingProcess class instead", "v1.15")
 	def repeatForever(interval: Duration, operation: () => Unit)(implicit ec: ExecutionContext) = 
 	{
 	    Future
@@ -57,6 +60,7 @@ object Async
 	 * @param operation the operation that will be performed
 	 * @return A future of the operation's result
 	 */
+	@deprecated("Please use the DelayedOperation class instead", "v1.15")
 	def delayed[T](delay: Duration, operation: () => T)(implicit ec: ExecutionContext) = Future
 	{
 	    WaitUtils.wait(delay, new AnyRef())

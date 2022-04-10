@@ -1,6 +1,6 @@
 package utopia.flow.caching.multi
 
-import utopia.flow.async.Volatile
+import utopia.flow.async.{Volatile, Wait}
 import utopia.flow.collection.VolatileList
 import utopia.flow.time.{Now, WaitUtils}
 import utopia.flow.time.TimeExtensions._
@@ -97,7 +97,7 @@ class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Durati
 							.takeWhile { _.isDefined }.flatten
 							.foreach { case (waitTarget, targetKey) =>
 								// Waits until the wait target is reached (may be interrupted)
-								WaitUtils.waitUntil(waitTarget, waitLock)
+								Wait(waitTarget, waitLock)
 								// If target was reached, removes the key from the cache
 								// Otherwise finds a new target
 								if (Now >= waitTarget)
