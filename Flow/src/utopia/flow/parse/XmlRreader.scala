@@ -124,6 +124,9 @@ object XmlReader
  * @author Mikko Hilpinen
  * @since 24.1.2018
  */
+// TODO: Consider adding a version of this class which reads a pre-parsed xml DOM element.
+//  The benefits of sax parsing are then lost, but that would offer the same interface to both approaches
+// TODO: This class needs a lot more utility functions anyway
 class XmlReader(streamReader: Reader) extends AutoCloseable
 {
     // ATTRIBUTES    ------------------------
@@ -186,6 +189,7 @@ class XmlReader(streamReader: Reader) extends AutoCloseable
      * moved to the next sibling element or higher
      * @return the parsed element
      */
+    // TODO: Should expose _readElement() -kind of function, also
     def readElement() = if (isAtDocumentEnd) None else Some(_readElement()._1.toXmlElement)
     
     /**

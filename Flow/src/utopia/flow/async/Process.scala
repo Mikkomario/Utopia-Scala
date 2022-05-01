@@ -17,6 +17,8 @@ object Process
 	/**
 	  * Creates a new process based on a function call
 	  * @param waitLock Wait lock to use (optional)
+	  * @param shutdownReaction How this process should react to system shutdown events
+	  *                         (default = cancel pending process)
 	  * @param isRestartable Whether this process may be run multiple times (default = true)
 	  * @param f Wrapped function. Accepts a pointer which contains whether the function should hurry its completion
 	  *          (in case of a jvm shutdown or stop() call)
@@ -24,18 +26,20 @@ object Process
 	  * @tparam U Arbitrary function result type
 	  * @return A new process that uses the underlying function
 	  */
-	def apply[U](waitLock: AnyRef = new AnyRef, isRestartable: Boolean = true)
+	def apply[U](waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReaction = Cancel,
+	             isRestartable: Boolean = true)
 	            (f: => ChangingLike[Boolean] => U)
 	            (implicit exc: ExecutionContext): Process =
-		new FunctionProcess[U](waitLock, isRestartable)(f)
+		new FunctionProcess[U](waitLock, shutdownReaction, isRestartable)(f)
 	
 	
 	// NESTED   ----------------------------
 	
-	private class FunctionProcess[U](waitLock: AnyRef, override val isRestartable: Boolean)
+	private class FunctionProcess[U](waitLock: AnyRef, shutdownReaction: ShutdownReaction = Cancel,
+	                                 override val isRestartable: Boolean)
 	                                (f: => ChangingLike[Boolean] => U)
 	                                (implicit exc: ExecutionContext)
-		extends Process(waitLock, Some(Cancel))
+		extends Process(waitLock, Some(shutdownReaction))
 	{
 		override protected def runOnce() = f(hurryPointer)
 	}

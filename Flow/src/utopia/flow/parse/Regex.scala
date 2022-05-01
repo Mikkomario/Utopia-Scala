@@ -322,6 +322,22 @@ case class Regex(string: String)
 	}
 	
 	/**
+	  * Splits the specified string using this regular expression, lazily.
+	  * @param str String to split
+	  * @return A split result iterator based on the matches of this expression within that string.
+	  *         NB: Doesn't contain any empty strings.
+	  */
+	def splitIteratorIn(str: String) =
+	{
+		// Finds pattern breaks (lazily), adds string start and end
+		(breakIndexIteratorIn(str).pairedFrom(0) :+ str.length).zipWithIndex
+			// Ignores matches and empty parts (because start and end were added)
+			.filter { case (range, index) => index % 2 == 0 && range.first != range.second }
+			// Converts ranges to substrings
+			.map { case (Pair(first, end), _) => str.substring(first, end) }
+	}
+	
+	/**
 	  * Divides the specified string into matches and non-matches. Keeps the natural ordering.
 	  * All of the specified string will be covered in the result.<br>
 	  * For example, dividing "AxBxC" by "x" would yield [L("A"), R("x"), L("B"), R("x"), L("C")]
@@ -393,6 +409,12 @@ case class Regex(string: String)
 	  * @return An iterator that returns match end indices (exclusive) within that string
 	  */
 	def endIndexIteratorIn(str: String): Iterator[Int] = MatcherIterator.endIndices(pattern.matcher(str))
+	/**
+	  * @param str A string
+	  * @return An iterator that returns match start indices (inclusive)
+	  *         and match end indices (exclusive) within that string. I.e. all pattern ends (exclusive)
+	  */
+	def breakIndexIteratorIn(str: String): Iterator[Int] = MatcherIterator.breaks(pattern.matcher(str))
 }
 
 private object MatcherIterator
@@ -403,6 +425,7 @@ private object MatcherIterator
 	def endIndices(matcher: Matcher) = apply(matcher) { _.end() }
 	def ranges(matcher: Matcher) = apply(matcher) { m => m.start() until m.end() }
 	def matches(matcher: Matcher) = apply(matcher) { _.group() }
+	def breaks(matcher: Matcher) = apply(matcher) { m => Pair(m.start(), m.end()) }.flatten
 }
 
 private class MatcherIterator[+A](matcher: Matcher)(f: Matcher => A) extends Iterator[A]

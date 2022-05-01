@@ -1,5 +1,7 @@
 package utopia.flow.datastructure.template
 
+import utopia.flow.datastructure.mutable.PollableOnce
+
 /**
  * A common trait for lazily initialized value wrappers
  * @author Mikko Hilpinen
@@ -28,11 +30,15 @@ trait LazyLike[+A] extends Viewable[A]
 	  * @return Whether this lazily initialized wrapper has already been initialized
 	  */
 	def isInitialized = current.nonEmpty
-	
 	/**
 	  * @return Whether this lazily initialized wrapper hasn't been initialized yet
 	  */
 	def nonInitialized = current.isEmpty
+	
+	/**
+	  * @return A lazily initialized iterator based on the contents of this lazy container
+	  */
+	def iterator = PollableOnce { value }
 	
 	
 	// IMPLEMENTED	---------------------

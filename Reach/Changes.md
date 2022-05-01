@@ -1,5 +1,8 @@
 # Utopia Reach - List of Changes
 
+## v0.3.3 (in development)
+Reactions to changes in other modules
+
 ## v0.3.2 - 27.01.2022
 Minor supporting changes in response to Flow v1.14.1 deprecations, as well as a scala version update
 ### Scala

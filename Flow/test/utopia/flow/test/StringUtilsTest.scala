@@ -1,6 +1,7 @@
 package utopia.flow.test
 
 import utopia.flow.parse.Regex
+import utopia.flow.parse.Regex.stringToRegex
 import utopia.flow.util.StringExtensions._
 
 /**
@@ -38,7 +39,7 @@ object StringUtilsTest extends App
 	assert(s.untilFirst("is") == "Th")
 	assert(s.untilLast("is") == "This ")
 	
-	assert("a,b,\"c,d,e\",f,,h".splitIgnoringQuotations(",").toVector ==
+	assert("a,b,\"c,d,e\",f,,h".split(",".ignoringQuotations).toVector ==
 		Vector("a", "b", "\"c,d,e\"", "f", "", "h"))
 	
 	assert("Almost.There.No.More.".divideWith(".") == Vector("Almost.", "There.", "No.", "More."))
@@ -58,6 +59,8 @@ object StringUtilsTest extends App
 	println(control.stripControlCharacters)
 	
 	assert(control.stripControlCharacters == "\"This is a test string\"")
+	
+	assert("XtestXX2".splitIterator("X").toVector == Vector("test", "2"))
 	
 	println("Success!")
 }

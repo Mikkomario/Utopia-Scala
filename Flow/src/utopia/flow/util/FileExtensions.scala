@@ -49,6 +49,13 @@ object FileExtensions
 		 * @return File name portion of this path
 		 */
 		def fileName = p.getFileName.toOption.map { _.toString }.getOrElse("")
+		/**
+		  * @return File name portion of this path, without the extension portion (such as ".txt")
+		  */
+		def fileNameWithoutExtension = p.getFileName.toOption match {
+			case Some(part) => part.toString.untilLast(".")
+			case None => ""
+		}
 		
 		/**
 		 * @return The last modified time of this file (may fail). May not work properly for directories.

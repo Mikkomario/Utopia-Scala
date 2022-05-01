@@ -1,7 +1,8 @@
 package utopia.flow.util
 
-import utopia.flow.collection.{GroupIterator, LimitedLengthIterator, PollingIterator, TerminatingIterator}
+import utopia.flow.collection.{GroupIterator, LimitedLengthIterator, PairingIterator, PollingIterator, TerminatingIterator}
 import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.datastructure.mutable.PollableOnce
 
 import scala.language.implicitConversions
 import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
@@ -116,10 +117,13 @@ object CollectionExtensions
           * @param f A function that takes an item and performs an operation that may fail
           * @return Failure if any of the operations failed, success otherwise.
           */
-        def tryForeach[U](f: iter.A => Try[Unit]): Try[Unit] =
+        def tryForeach[U](f: iter.A => Try[U]): Try[Unit] =
         {
             val iterOps = iter(coll)
-            iterOps.iterator.map(f).find { _.isFailure }.getOrElse(Success[Unit](()))
+            iterOps.iterator.map(f).find { _.isFailure } match {
+                case Some(failure) => failure.map { _ => () }
+                case None => Success(())
+            }
         }
         
         /**
@@ -743,7 +747,6 @@ object CollectionExtensions
           */
         def paired = (1 until seq.size).map { i => Pair(seq(i - 1), seq(i)) }
     
-    
         /**
          * Drops items from the right as long as the specified condition returns true
          * @param f A function that tests whether items should be dropped
@@ -848,11 +851,9 @@ object CollectionExtensions
           * @return The last item in this iterator
           */
         @throws[NoSuchElementException]("If this iterator is empty")
-        def last =
-        {
+        def last = {
             var current = i.next()
-            while (i.hasNext)
-            {
+            while (i.hasNext) {
                 current = i.next()
             }
             current
@@ -860,20 +861,34 @@ object CollectionExtensions
         /**
           * @return The last item accessible in this iterator. None if this iterator didn't have any items remaining.
           */
-        def lastOption =
-        {
-            if (i.hasNext)
-                Some(last)
+        def lastOption = if (i.hasNext) Some(last) else None
+    
+        /**
+          * @return A paired copy of this iterator. An empty iterator if this iterator doesn't contain at least 2 items.
+          *         Consumes the first item within this iterator.
+          *         This iterator shouldn't be used after calling this function.
+          */
+        def paired = {
+            if (i.hasNext) {
+                val start = i.next()
+                new PairingIterator[A](start, i)
+            }
             else
-                None
+                Iterator.empty
         }
     
         /**
-         * @param item An item to prepend
+         * @param item An item to prepend (call-by-name)
          * @tparam B Type of that item
          * @return A copy of this iterator with that item prepended. This iterator is invalidated.
          */
-        def +:[B >: A](item: B) = Iterator.single(item) ++ i
+        def +:[B >: A](item: => B): Iterator[B] = PollableOnce(item) ++ i
+        /**
+          * @param item An item to append (call-by-name)
+          * @tparam B Type of that item
+          * @return A copy of this iterator with that item appended. This iterator is invalidated.
+          */
+        def :+[B >: A](item: => B): Iterator[B] = i ++ PollableOnce(item)
         
         /**
           * Checks whether there exists 'count' instances in this iterator that satisfy the specified predicate.
@@ -1088,7 +1103,19 @@ object CollectionExtensions
           * @return An iterator that returns groups of consecutive items, including the group identifiers
           */
         def groupBy[G](f: A => G) = GroupIterator(i)(f)
-        
+    
+        /**
+          * Performs the specified function for each item in this iterator, consuming this iterator.
+          * Collects failures without interrupting iteration.
+          * @param f A function that returns success or failure
+          * @tparam U Arbitrary function return type
+          * @return Collected failures
+          */
+        def foreachCatching[U](f: A => Try[U]) = {
+            val failuresBuilder = new VectorBuilder[Throwable]()
+            i.foreach { failuresBuilder ++= f(_).failure }
+            failuresBuilder.result()
+        }
         /**
           * Maps this iterator with a function that can fail. Handles failures by catching them.
           * @param f A mapping function
@@ -1096,11 +1123,9 @@ object CollectionExtensions
           * @tparam B Type of successful map result
           * @return Iterator of the mapped items
           */
-        def mapCatching[B](f: A => Try[B])(handleError: Throwable => Unit) =
-        {
+        def mapCatching[B](f: A => Try[B])(handleError: Throwable => Unit) = {
             i.flatMap { original =>
-                f(original) match
-                {
+                f(original) match {
                     case Success(item) => Some(item)
                     case Failure(error) =>
                         handleError(error)
@@ -1108,6 +1133,16 @@ object CollectionExtensions
                 }
             }
         }
+    
+        /**
+          * @param start The prepended pair start point (call-by-name).
+          *              This will be never called if this iterator is empty.
+          * @tparam B Type of pair parts
+          * @return A copy of this iterator that returns items as pairs, with the 'start' prepended.
+          *         E.g. If this iterator contained items [A, B, C] and start was X, the resulting iterator would
+          *         return [XA, AB, BC]
+          */
+        def pairedFrom[B >: A](start: => B) = new PairingIterator[B](start, i)
     }
     
     

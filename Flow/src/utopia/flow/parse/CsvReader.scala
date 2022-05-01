@@ -16,6 +16,8 @@ import scala.io.Codec
   */
 object CsvReader
 {
+	private lazy val defaultSeparator = Regex(";").ignoringQuotations
+	
 	/**
 	  * Iterates over the lines in a csv document. Doesn't search for or use headers.
 	  * @param path Path to the target document
@@ -25,11 +27,11 @@ object CsvReader
 	  * @tparam A Type of function result
 	  * @return Failure if file handling failed. Function result otherwise.
 	  */
-	def iterateRawRowsIn[A](path: Path, separator: String = ";")(f: Iterator[Vector[String]] => A)
+	def iterateRawRowsIn[A](path: Path, separator: Regex = defaultSeparator)(f: Iterator[Vector[String]] => A)
 	                       (implicit codec: Codec) =
 	{
 		IterateLines.fromPath(path) { linesIter => f(linesIter.filterNot { _.isEmpty }
-			.map { _.splitIgnoringQuotations(separator).toVector.map(processValue) }) }
+			.map { _.split(separator).toVector.map(processValue) }) }
 	}
 	
 	/**
@@ -43,14 +45,13 @@ object CsvReader
 	  * @param codec Implicit encoding context
 	  * @return Failure if file handling failed. function result otherwise.
 	  */
-	def iterateLinesIn[A](path: Path, separator: String = ";", ignoreEmptyStringValues: Boolean = false)
+	def iterateLinesIn[A](path: Path, separator: Regex = defaultSeparator, ignoreEmptyStringValues: Boolean = false)
 	                     (f: Iterator[Model] => A)(implicit codec: Codec) =
 	{
 		// Iterates all lines from the target path
 		IterateLines.fromPath(path) { linesIter =>
 			// The first line is interpreted as the headers list
-			val iter = linesIter.filterNot { _.isEmpty }
-				.map { _.splitIgnoringQuotations(separator).toVector.map(processValue) }
+			val iter = linesIter.filterNot { _.isEmpty }.map { _.split(separator).toVector.map(processValue) }
 			if (iter.hasNext)
 			{
 				val headers = iter.next()
@@ -81,7 +82,7 @@ object CsvReader
 	  * @param codec Implicit encoding context
 	  * @return Failure if file handling failed. Success otherwise.
 	  */
-	def foreachLine(path: Path, separator: String = ";", ignoreEmptyStringValues: Boolean = false)
+	def foreachLine(path: Path, separator: Regex = defaultSeparator, ignoreEmptyStringValues: Boolean = false)
 	               (f: Model => Unit)(implicit codec: Codec) =
 		iterateLinesIn(path, separator, ignoreEmptyStringValues) { _.foreach(f) }
 	

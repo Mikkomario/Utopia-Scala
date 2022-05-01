@@ -127,6 +127,8 @@ object AsyncExtensions
 	
 	implicit class TryFuture[A](val f: Future[Try[A]]) extends AnyVal
 	{
+		// TODO: Add a variation of currentSuccess
+		
 		/**
 		  * Waits for the result of this future (blocks) and returns it once it's ready
 		  * @param timeout the maximum wait duration. If timeout is reached, a failure will be returned
