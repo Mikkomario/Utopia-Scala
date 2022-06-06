@@ -1,6 +1,8 @@
 # Utopia Reflection - List of Changes
 
-## v2.7 (in development)
+## v2.7 - 06.06.2022
+This update mostly reflects changes in **Flow** update v1.15.  
+Alignment functionality was also moved to **Genesis** from **Reflection** and refactored somewhat.
 ### Breaking Changes
 - **ActorLoop** and **RepaintLoop** now extend **LoopingProcess** instead of **Loop**
   - This means that `.startAsync()` is no longer available (replaced with `.runAsync()`)

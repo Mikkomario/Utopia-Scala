@@ -1,6 +1,8 @@
 # Utopia Exodus - List of Changes
 
-## v4.0 (in development)
+## v4.0 - 06.06.2022
+This update represents a major overhaul to the **Exodus** library. The authorization system is completely rewritten. 
+Also, all device-related features are removed.
 ### Breaking Changes
 - Overhauled the authorization system:
   - Replaced **SessionToken**, **DeviceToken**, **ApiKey**, **EmailValidatedSession** and **EmailValidationAttempt** 

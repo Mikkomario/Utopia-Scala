@@ -1,6 +1,11 @@
 # Utopia Vault - List of Changes
 
-## v1.12.1 (in development)
+## v1.12.1 - 06.06.2022
+This update contains major bugfixes that fix problems introduced in v1.12 update 
+and also some older bugs appearing in edge-cases.
+
+In addition, new utility features were added. Most importantly column maximum length customization support, 
+better support for timestamped item access and support for joins when pulling column data.
 ### Deprecations
 - Deprecated **NullDeprecatable**`.idColumn` in favor of `.index`
 ### New Features

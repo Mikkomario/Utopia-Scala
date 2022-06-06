@@ -1,6 +1,7 @@
 # Utopia Trove - List of Changes
 
-## v1.1.2 (in development)
+## v1.1.2 - 06.06.2022
+This small update contains important bugfixes for use-cases that weren't previously encountered.
 ### Bugfixes
 - Used database name is now specified in more places to avoid related errors
 ### Other Changes

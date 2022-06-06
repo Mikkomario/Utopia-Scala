@@ -1,6 +1,11 @@
 # Utopia Flow - List of Changes
 
-## v1.15 (in development)
+## v1.15 - 06.06.2022
+This major update introduces a number of utility changes, including many breaking changes. 
+The biggest changes target the waiting and looping classes, which were completely rewritten in order to support 
+close hooks / jvm close events.
+
+The added SHA256 utility hasher object is also worth mentioning.
 ### Breaking Changes
 - **Loop** is now an abstract class instead of a trait. This is because the trait contains attributes.
 - Renamed `makeNode` in **TreeLike** (template) to `newNode`

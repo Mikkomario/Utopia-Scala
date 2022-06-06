@@ -1,6 +1,8 @@
 # Utopia Nexus - List of Changes
 
-## v1.7 (in development)
+## v1.7 - 06.06.2022
+This update mostly concerns modular rest resources, refactoring the associated base traits. 
+In addition, this update also includes some smaller quality-of-life improvements.
 ### Breaking Changes
 - Modular resources were updated so that use case implementations no longer specify methods. Instead, use cases within 
   the modular resources are now stored in Maps.

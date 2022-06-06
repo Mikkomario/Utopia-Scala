@@ -1,6 +1,7 @@
 # Utopia Disciple - List of Changes
 
-## v1.5.1 (in development)
+## v1.5.1 - 06.06.2022
+This update only introduces a single quality-of-life upgrade for specifying timeouts.
 ### New Methods
 - **Timeout**.type
   - Added `.uniform(FiniteDuration)` -method (utility constructor)
