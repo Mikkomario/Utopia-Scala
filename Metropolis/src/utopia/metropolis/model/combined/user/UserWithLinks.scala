@@ -8,6 +8,7 @@ import utopia.flow.generic.{FromModelFactory, IntType, ModelType}
 import utopia.metropolis.model.StyledModelConvertible
 import utopia.metropolis.model.stored.user.{UserLanguageLink, UserSettings}
 
+@deprecated("Device classes will be removed. Please use DetailedUser instead.", "v2.1")
 object UserWithLinks extends FromModelFactory[UserWithLinks]
 {
 	private val schema = ModelDeclaration("id" -> IntType, "settings" -> ModelType)
@@ -29,6 +30,7 @@ object UserWithLinks extends FromModelFactory[UserWithLinks]
   * @param languages Languages known to the user, with proficiency levels
   * @param deviceIds Ids of the devices known to the user
   */
+@deprecated("Device classes will be removed. Please use DetailedUser instead.", "v2.1")
 case class UserWithLinks(settings: UserSettings, languages: Vector[UserLanguageLink], deviceIds: Vector[Int])
 	extends StyledModelConvertible
 {

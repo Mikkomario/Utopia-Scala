@@ -139,8 +139,7 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 		canvas.addCustomDrawer(new CustomDraw())
 		
 		val repaintLoop = new RepaintLoop(canvas.component, maxFPS)
-		repaintLoop.registerToStopOnceJVMCloses()
-		repaintLoop.startAsync()
+		repaintLoop.runAsync()
 	}
 	
 	

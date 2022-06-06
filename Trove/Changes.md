@@ -1,5 +1,13 @@
 # Utopia Trove - List of Changes
 
+## v1.1.2 - 06.06.2022
+This small update contains important bugfixes for use-cases that weren't previously encountered.
+### Bugfixes
+- Used database name is now specified in more places to avoid related errors
+### Other Changes
+- When reading database structure & update documents, the default type is now `Update` in cases where 
+  `Origin` or `From` has been defined.
+
 ## v1.1.1 - 27.01.2022
 Important bugfixes and additions
 ### Scala

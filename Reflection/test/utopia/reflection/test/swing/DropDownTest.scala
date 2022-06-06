@@ -31,6 +31,7 @@ object DropDownTest extends App
 	// Sets up localization context
 	implicit val defaultLanguageCode: String = "EN"
 	implicit val localizer: Localizer = NoLocalization
+	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 
 	// Creates the labels
 	val basicFont = Font("Arial", 14, Plain, 2)
@@ -57,13 +58,11 @@ object DropDownTest extends App
 	// Creates the frame and displays it
 	val actorHandler = ActorHandler()
 	val actionLoop = new ActorLoop(actorHandler)
-	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 
 	val frame = Frame.windowed(stack, "Drop Down Test", User)
 	frame.setToExitOnClose()
 
-	actionLoop.registerToStopOnceJVMCloses()
-	actionLoop.startAsync()
+	actionLoop.runAsync()
 	StackHierarchyManager.startRevalidationLoop()
 	frame.startEventGenerators(actorHandler)
 	frame.visible = true

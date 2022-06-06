@@ -1,8 +1,9 @@
 package utopia.vault.coder.controller.writer.model
 
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{CombinationData, CombinationReferences, ProjectSetup}
-import utopia.vault.coder.model.scala.{DeclarationDate, Reference}
+import utopia.vault.coder.model.data.{CombinationData, CombinationReferences, NamingRules, ProjectSetup}
+import utopia.vault.coder.model.scala.DeclarationDate
+import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File}
 
@@ -26,20 +27,22 @@ object CombinedModelWriter
 	  * @return Combination related references. Failure if file writing failed.
 	  */
 	def apply(data: CombinationData, parentRef: Reference, parentDataRef: Reference, childRef: Reference)
-	         (implicit setup: ProjectSetup, codec: Codec) =
+	         (implicit setup: ProjectSetup, codec: Codec, naming: NamingRules) =
 	{
+		val constructorParams = data.combinationType.applyParamsWith(data.parentName, data.childName,
+			parentRef, childRef)
 		File(setup.combinedModelPackage/data.packageName,
-			ClassDeclaration(data.name.singular,
-				data.combinationType.applyParamsWith(data.parentName, data.childName, parentRef, childRef),
+			ClassDeclaration(data.name.className, constructionParams = constructorParams,
 				// Provides implicit access to the data model (because that's where most of the properties are)
-				Vector(Reference.extender(parentDataRef)),
+				extensions = Vector(Reference.extender(parentDataRef)),
 				properties = Vector(
 					// Provides direct access to parent.id
 					ComputedProperty("id", description = s"Id of this ${data.parentName} in the database")(
-						s"${data.parentName.uncapitalize}.id"),
-					ComputedProperty("wrapped", isOverridden = true)(s"${data.parentName.uncapitalize}.data")
-				), description = s"Combines ${data.parentName} with ${data.childName} data", author = data.author,
-				since = DeclarationDate.versionedToday, isCaseClass = true
+						s"${constructorParams.head.name}.id"),
+					ComputedProperty("wrapped", isOverridden = true)(s"${constructorParams.head.name}.data")
+				), description = data.description.notEmpty
+					.getOrElse(s"Combines ${data.parentName} with ${data.childName} data"),
+				author = data.author, since = DeclarationDate.versionedToday, isCaseClass = true
 			)
 		).write().map { comboRef => CombinationReferences(parentRef, childRef, comboRef) }
 	}

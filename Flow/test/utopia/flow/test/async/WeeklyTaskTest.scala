@@ -12,6 +12,7 @@ import java.time.{Instant, LocalTime}
  * @author Mikko Hilpinen
  * @since 29.9.2020, v1.9
  */
+@deprecated("Replaced with Loop & LoopingProcess and their tests", "v1.15")
 object WeeklyTaskTest extends App
 {
 	DataType.setup()

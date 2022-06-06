@@ -598,6 +598,12 @@ object TimeExtensions
 		// COMPUTED ----------------------
 		
 		/**
+		  * Alias for .getValue
+		  * @return The integer value of this month [1,12]
+		  */
+		def value = m.getValue
+		
+		/**
 		 * @return First day of this month
 		 */
 		def firstDay = apply(1)
@@ -669,6 +675,12 @@ object TimeExtensions
 	implicit class ExtendedYear(val y: Year) extends AnyVal with SelfComparable[Year]
 	{
 		// COMPUTED -------------------------
+		
+		/**
+		  * Alias for .getValue
+		  * @return Integer value of this year
+		  */
+		def value = y.getValue
 		
 		/**
 		  * @return The year following this one

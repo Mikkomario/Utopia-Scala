@@ -117,7 +117,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		{
 			// If needs to reset cached size while not in update mode, revalidates all segment containers and not
 			// just this one
-			if (isAttachedToMainHierarchy && isUpdatingFlag.notSet)
+			if (isAttachedToMainHierarchy && isUpdatingFlag.isNotSet)
 				updateContainers()
 		}
 		

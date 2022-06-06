@@ -1,8 +1,9 @@
 package utopia.vault.coder.controller.writer.database
 
-import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, Name, ProjectSetup}
-import utopia.vault.coder.model.scala.{DeclarationDate, Reference}
+import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup}
+import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
+import utopia.vault.coder.model.scala.DeclarationDate
+import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{File, ObjectDeclaration}
 
@@ -15,6 +16,8 @@ import scala.io.Codec
   */
 object DbDescriptionAccessWriter
 {
+	private val accessPrefix = Name("Db", "Db", CamelCase.capitalized)
+	
 	/**
 	  * Writes description-related database interaction objects
 	  * @param descriptionLinkClass Description link class based on which the objects are generated
@@ -28,10 +31,9 @@ object DbDescriptionAccessWriter
 	  */
 	def apply(descriptionLinkClass: Class, baseClassName: Name, linkModelsRef: Reference,
 	          descriptionFactoriesRef: Reference)
-	         (implicit setup: ProjectSetup, codec: Codec) =
+	         (implicit setup: ProjectSetup, codec: Codec, naming: NamingRules) =
 	{
-		val linkClassName = descriptionLinkClass.name.singular
-		val factoryPropertyName = baseClassName.singular.uncapitalize
+		val factoryPropertyName = baseClassName.propName
 		
 		val baseAccessProperties = Vector(
 			ComputedProperty("factory", Set(descriptionFactoriesRef), isOverridden = true)(
@@ -41,7 +43,8 @@ object DbDescriptionAccessWriter
 		)
 		// Next writes the individual description access point
 		File(setup.singleAccessPackage / descriptionLinkClass.packageName,
-			ObjectDeclaration(s"Db$linkClassName", Vector(Reference.linkedDescriptionAccess),
+			ObjectDeclaration((accessPrefix +: descriptionLinkClass.name).className,
+				Vector(Reference.linkedDescriptionAccess),
 				properties = baseAccessProperties, author = descriptionLinkClass.author,
 				description = s"Used for accessing individual $baseClassName descriptions",
 				since = DeclarationDate.versionedToday
@@ -49,7 +52,7 @@ object DbDescriptionAccessWriter
 		).write().flatMap { singleDescriptionAccessRef =>
 			// Finally writes the multiple descriptions access point
 			File(setup.manyAccessPackage / descriptionLinkClass.packageName,
-				ObjectDeclaration(s"Db${ descriptionLinkClass.name.plural }",
+				ObjectDeclaration((accessPrefix +: baseClassName).pluralClassName,
 					Vector(Reference.linkedDescriptionsAccess), properties = baseAccessProperties,
 					author = descriptionLinkClass.author,
 					description = s"Used for accessing multiple $baseClassName descriptions at a time",

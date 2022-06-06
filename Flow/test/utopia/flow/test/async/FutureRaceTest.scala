@@ -1,8 +1,7 @@
 package utopia.flow.test.async
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.ThreadPool
-import utopia.flow.time.WaitUtils
+import utopia.flow.async.{Delay, ThreadPool}
 import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -18,8 +17,8 @@ object FutureRaceTest extends App
 	val immediate = Future { 1 }
 	immediate.waitFor()
 	
-	val short = Future { WaitUtils.wait(1.seconds, new AnyRef); 2 }
-	val long = Future { WaitUtils.wait(3.seconds, new AnyRef); 3 }
+	val short = Delay(1.seconds) { 2 }
+	val long = Delay(3.seconds) { 3 }
 	
 	// Case 1: first one completed already
 	assert(immediate.raceWith(short).waitFor().get == 1)

@@ -2,9 +2,10 @@ package utopia.vault.coder.controller.writer.model
 
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Enum, ProjectSetup}
+import utopia.vault.coder.model.scala.datatype.{Extension, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ImmutableValue
 import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
-import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Parameter, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{DeclarationDate, Parameter}
 
 import scala.io.Codec
 

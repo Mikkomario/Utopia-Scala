@@ -1,5 +1,73 @@
 # Utopia Flow - List of Changes
 
+## v1.15 - 06.06.2022
+This major update introduces a number of utility changes, including many breaking changes. 
+The biggest changes target the waiting and looping classes, which were completely rewritten in order to support 
+close hooks / jvm close events.
+
+The added SHA256 utility hasher object is also worth mentioning.
+### Breaking Changes
+- **Loop** is now an abstract class instead of a trait. This is because the trait contains attributes.
+- Renamed `makeNode` in **TreeLike** (template) to `newNode`
+- Added an abstract `createCopy(...)` function to **TreeLike** (immutable) in order to separate between copy and create 
+  use-cases
+- **CsvReader** now accepts a separator of type **Regex** instead of **String**. 
+  Quotation ignoring is removed for non-default separators, as it should be present within the separator itself.
+- `.divide(String)` in **Regex** now returns `Vector[Either[String, String]]` instead of `Vector[String]`
+  - The previous implementation is now named `.separate(String)`
+- **PollableOnce** construction parameter is now call-by-name
+### Deprecations
+- Deprecated most **WaitUtils** functions in favor of **Wait** and **Delay**
+- Deprecated **Loop**, **TryLoop**, **DailyTask** and **WeeklyTask** in favor of new 
+  **LoopingProcess** class and new **Loop** functions
+- Deprecated **SynchronizedLoops** in favor of **TimedTasks**
+- Deprecated **SingleWait** in favor of **Wait**
+- Deprecated the **Async** object in favor of the new process classes
+- Deprecated **VolatileFlag**`.notSet` in favor of `.isNotSet`
+- Deprecated (immutable) **TreeLike**`.replace(...)` and `.findAndReplace(...)`
+### New Features
+- Added **Sha256Hasher** utility tool
+- Created a new wait and loop system
+  - See: **Process**, **LoopingProcess**, **DelayedProcess**, **Wait**, **Delay** and **Loop**
+- Added two new wait target types: **DailyTime** and **WeeklyTime**
+- Created **TimedTasks**, which is an improved implementation of **SynchronizedLoops**
+- Added **DeprecatingLazy** class, which is a **Lazy** implementation that may renew the value based on a condition
+- Added **SureFromModelFactory** trait
+- Added state tracking to **CloseHook**
+- Added **PairingIterator** class
+### New Methods
+- **CloseHook**
+  - Added `-=` for removing hooks
+- **Iterator** (**CollectionExtensions**)
+  - Added `.paired` and `.pairedFrom(...)`
+  - Added `.foreachCatching(...)`
+- **Lazy** (object)
+  - Added `.wrap(...)`, which calls `LazyWrapper.apply(...)`
+- **LazyLike**
+  - Added `.iterator`, which always returns a lazy single-item iterator
+- **Loop**
+  - Added `.startAsyncAfter(FiniteDuration)`, a delayed version of `.startAsync()`
+  - Added `.isRunning`
+- **Month** (**TimeExtensions**)
+  - Added `.value`, which is an alias for `.getValue`
+- **Regex**
+  - Added `.splitIteratorIn(String)` for lazy splitting
+- **ResettableLazy**
+  - Added `.filter(...)` and `.filterNot(...)`, which are kind of conditional resets
+- **Value**
+  - Added `.nonEmpty`, which has the same function as `.isDefined`
+- **VolatileFlag** (object)
+  - Added an `.apply()` function, like in other **Volatile** classes
+- **Year** (**TimeExtensions**)
+  - Added `.value`, which is an alias for `.getValue`
+- Added a number of new methods to **TreeLike** and **XmlElement**
+### Other Changes
+- **WaitTarget**s can now be constructed implicitly from **Instant**, **Duration**, and **LocalTime**
+- Changed **Map**`.mergedWith(Map, ...)` to `.mergeWith(Map)(...)` (in **CollectionExtensions**)
+  - Previous version was deprecated
+- Type parameter NodeType in **TreeLike** (template) is now covariant
+- `tryForeach` (in **CollectionExtensions**) now accepts a wider range of function result types
+
 ## v1.14.1 - 27.01.2022
 This update introduces a number of quality-of-life improvements, and also some important fixes to json writing and 
 regular expressions.

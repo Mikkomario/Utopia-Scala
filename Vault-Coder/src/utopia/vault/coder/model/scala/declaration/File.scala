@@ -6,7 +6,8 @@ import utopia.vault.coder.controller.CodeBuilder
 import utopia.vault.coder.controller.reader.ScalaParser
 import utopia.vault.coder.model.data.ProjectSetup
 import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
-import utopia.vault.coder.model.scala.{Package, Reference}
+import utopia.vault.coder.model.scala.{Package, datatype}
+import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.template.CodeConvertible
 
 import scala.collection.immutable.VectorBuilder
@@ -39,7 +40,7 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration],
 	/**
 	  * @return A reference to this file / primary instance in this file
 	  */
-	def reference = Reference(packagePath, declarations.head.name)
+	def reference = datatype.Reference(packagePath, declarations.head.name)
 	
 	
 	// IMPLEMENTED  ----------------------------------
@@ -67,18 +68,31 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration],
 		val referencesToWrite = (mainCode.references ++ extraReferences)
 			.filter { ref => ref.packagePath != packagePath || !ref.canBeGrouped }
 			.map { _.from(packagePath) }
-		// Those of the imports which can be grouped, are grouped
-		val (individualReferences, groupableReferences) = referencesToWrite.divideBy { _.canBeGrouped }
-		val importTargets = (individualReferences.toVector.map { _.toScala.text } ++
-			groupableReferences.groupBy { _.packagePath }.map { case (packagePath, refs) =>
-				if (refs.size > 1)
-					s"$packagePath.{${refs.map { _.target }.toVector.sorted.mkString(", ")}}"
-				else
-					s"$packagePath.${refs.head.target}"
-			}).sorted
-		refsBuilder ++= importTargets.map { target => s"import $target" }
-		if (importTargets.nonEmpty)
-			refsBuilder.addEmptyLine()
+		// Writes java.* and scala.* references separately
+		val (javaScalaRefs, customRefs) = referencesToWrite.divideWith { ref =>
+			ref.packagePath.parts.headOption match {
+				case Some(firstPart) =>
+					if (firstPart == "scala")
+						Left(Right(ref))
+					else if (firstPart == "java")
+						Left(Left(ref))
+					else
+						Right(ref)
+				case None => Right(ref)
+			}
+		}
+		val (javaRefs, scalaRefs) = javaScalaRefs.divided
+		
+		def writeRefGroup(refs: Set[Reference]) = {
+			if (refs.nonEmpty) {
+				refsBuilder ++= importTargetsFrom(refs).map { target => s"import $target" }
+				refsBuilder.addEmptyLine()
+			}
+		}
+		
+		writeRefGroup(customRefs.toSet)
+		writeRefGroup(scalaRefs.toSet)
+		writeRefGroup(javaRefs.toSet)
 		
 		// Combines the two parts together. Splits the main code where possible.
 		refsBuilder.result() ++ mainCode.split
@@ -132,5 +146,18 @@ case class File(packagePath: Package, declarations: Vector[InstanceDeclaration],
 			case None => this
 		}
 		fileToWrite.writeTo(ref.path).map { _ => ref }
+	}
+	
+	private def importTargetsFrom(references: Set[Reference]) =
+	{
+		// Those of the imports which can be grouped, are grouped
+		val (individualReferences, groupableReferences) = references.divideBy { _.canBeGrouped }
+		(individualReferences.toVector.map { _.toScala.text } ++
+			groupableReferences.groupBy { _.packagePath }.map { case (packagePath, refs) =>
+				if (refs.size > 1)
+					s"$packagePath.{${refs.map { _.target }.toVector.sorted.mkString(", ")}}"
+				else
+					s"$packagePath.${refs.head.target}"
+			}).sorted
 	}
 }

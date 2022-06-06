@@ -75,6 +75,6 @@ object MouseTest extends App
 	val actorLoop = new ActorLoop(actorHandler)
 	
 	frame.startEventGenerators(actorHandler)
-	actorLoop.startAsync()
+	actorLoop.runAsync()
 	frame.visible = true
 }

@@ -20,10 +20,11 @@ import java.nio.file.Path
   * @param mergeSourceRoots Paths to the source roots where existing versions are read from and merged (optional)
   * @param version Current project version
   * @param modelCanReferToDB Whether model classes are allowed to refer to database classes
+  * @param prefixSqlProperties Whether a prefix should be added to sql properties, making them unique
   */
 case class ProjectSetup(dbModuleName: String, modelPackage: Package, databasePackage: Package, sourceRoot: Path,
-                        mergeSourceRoots: Vector[Path], mergeConflictsFilePath: Path, version: Option[Version],
-                        modelCanReferToDB: Boolean)
+                        mergeSourceRoots: Vector[Path], mergeConflictsFilePath: Path,
+                        version: Option[Version], modelCanReferToDB: Boolean, prefixSqlProperties: Boolean)
 {
 	// ATTRIBUTES   ------------------------
 	

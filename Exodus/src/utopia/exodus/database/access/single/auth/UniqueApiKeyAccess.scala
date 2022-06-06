@@ -16,6 +16,7 @@ import utopia.vault.nosql.template.Indexed
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 trait UniqueApiKeyAccess 
 	extends SingleRowModelAccess[ApiKey] with DistinctModelAccess[ApiKey, Option[ApiKey], Value] with Indexed
 {

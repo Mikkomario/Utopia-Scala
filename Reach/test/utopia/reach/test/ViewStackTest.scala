@@ -46,5 +46,5 @@ object ViewStackTest extends App
 	new SingleFrameSetup(actorHandler, frame).start()
 	
 	// Updates the number within a background loop
-	Loop(1.seconds) { numberPointer.update { i => if (i >= 9) 1 else i + 1 } }.startAsync()
+	Loop.regularly(1.seconds, waitFirst = true) { numberPointer.update { i => if (i >= 9) 1 else i + 1 } }
 }

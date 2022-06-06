@@ -14,6 +14,7 @@ import utopia.vault.nosql.storable.DataInserter
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 object ApiKeyModel extends DataInserter[ApiKeyModel, ApiKey, ApiKeyData]
 {
 	// ATTRIBUTES	--------------------
@@ -102,6 +103,7 @@ object ApiKeyModel extends DataInserter[ApiKeyModel, ApiKey, ApiKeyData]
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 case class ApiKeyModel(id: Option[Int] = None, token: Option[String] = None, name: Option[String] = None, 
 	created: Option[Instant] = None) 
 	extends StorableWithFactory[ApiKey]

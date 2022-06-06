@@ -1,5 +1,15 @@
 package utopia.flow.async
 
+object VolatileFlag
+{
+    /**
+      * Creates a new volatile flag
+      * @param initialState Initial state of this flag
+      * @return A new volatile flag
+      */
+    def apply(initialState: Boolean = false) = new VolatileFlag(initialState)
+}
+
 /**
 * A volatile flag is used for marking singular events (flags) in a multi-threaded environment
 * @author Mikko Hilpinen
@@ -16,6 +26,11 @@ class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](init
     /**
       * @return Whether this flag isn't currently set
       */
+    def isNotSet = !isSet
+    /**
+      * @return Whether this flag isn't currently set
+      */
+    @deprecated("Please use .isNotSet instead", "v1.15")
     def notSet = !isSet
     
     

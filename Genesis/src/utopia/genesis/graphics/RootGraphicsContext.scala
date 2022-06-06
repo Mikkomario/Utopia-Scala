@@ -22,6 +22,7 @@ object RootGraphicsContext
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
   */
+// TODO: Remove this class
 class RootGraphicsContext(newGraphics: => ClosingGraphics) extends GraphicsContext
 {
 	// ATTRIBUTES   -----------------------------
@@ -44,15 +45,8 @@ class RootGraphicsContext(newGraphics: => ClosingGraphics) extends GraphicsConte
 	
 	// OTHER    ---------------------------------
 	
-	private def _openGraphics =
-	{
-		val default = graphicsPointer.value
-		if (default.isOpen)
-			default
-		else
-		{
-			graphicsPointer.reset()
-			graphicsPointer.value
-		}
+	private def _openGraphics = {
+		graphicsPointer.filter { _.isOpen }
+		graphicsPointer.value
 	}
 }

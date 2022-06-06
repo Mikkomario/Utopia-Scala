@@ -2,6 +2,8 @@ package utopia.exodus.util
 
 import utopia.access.http.Status
 import utopia.citadel.util.CitadelContext
+import utopia.flow.datastructure.immutable.Lazy
+import utopia.flow.datastructure.template.LazyLike
 import utopia.flow.generic.EnvironmentNotSetupException
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.metropolis.model.enumeration.ModelStyle.Full
@@ -79,6 +81,13 @@ object ExodusContext
 	  */
 	def uniqueUserNamesAreRequired = !userEmailIsRequired
 	
+	/**
+	  * @return Ids of the scopes granted to all new users. This may not (needs not) list scope ids available through
+	  *         the user creation context directly
+	  */
+	@throws[EnvironmentNotSetupException](".setup(...) hasn't been called yet")
+	def defaultUserScopeIds = get.userScopeIds.value
+	
 	
 	@throws[EnvironmentNotSetupException]("If .setup(...) hasn't been called yet")
 	private def get = data match
@@ -103,15 +112,19 @@ object ExodusContext
 	  *                         (default = false => allows users to omit an email address if they have
 	  *                         a unique user name)
 	  * @param handleErrors A function for handling thrown errors
+	  * @param defaultUserScopeIds Ids of the scopes available to all new users (lazy).
+	  *                             The scope ids available through the user creation context are also applied and
+	  *                             don't need to be listed here.
 	  */
 	def setup(executionContext: ExecutionContext, connectionPool: ConnectionPool, databaseName: String,
 	          defaultModelStyle: ModelStyle = Full, uuidGenerator: UuidGenerator = UuidGenerator.default,
 	          emailValidator: Option[EmailValidator] = None, requireUserEmail: Boolean = false)
-			 (handleErrors: (Throwable, String) => Unit) =
+			 (handleErrors: (Throwable, String) => Unit)(defaultUserScopeIds: => Set[Int]) =
 	{
 		CitadelContext.setup(executionContext, connectionPool, databaseName)
 		Status.setup()
-		data = Some(Data(defaultModelStyle, uuidGenerator, emailValidator, handleErrors, requireUserEmail))
+		data = Some(Data(defaultModelStyle, uuidGenerator, Lazy(defaultUserScopeIds), emailValidator, handleErrors,
+			requireUserEmail))
 	}
 	
 	/**
@@ -125,6 +138,6 @@ object ExodusContext
 	// NESTED	--------------------------------------
 	
 	private case class Data(defaultModelStyle: ModelStyle, uuidGenerator: UuidGenerator,
-	                        emailValidator: Option[EmailValidator],
+	                        userScopeIds: LazyLike[Set[Int]], emailValidator: Option[EmailValidator],
 	                        errorHandler: (Throwable, String) => Unit, userEmailIsRequired: Boolean)
 }

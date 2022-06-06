@@ -1,5 +1,11 @@
 # Utopia Annex - List of Changes
 
+## v1.1 - 06.06.2022
+This update reflects changes made in **Flow** update v1.15.
+### Breaking Changes
+- **ContainerUpdateLoop** now extends **LoopingProcess** instead of **Loop**
+  - This means that `.startAsync()` is no longer available (replaced with `.runAsync()`)
+
 ## v1.0.4 - 27.01.2022
 Dependency changes, according to Disciple update v1.5
 ### Scala

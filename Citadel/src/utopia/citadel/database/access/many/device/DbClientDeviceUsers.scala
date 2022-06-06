@@ -10,6 +10,7 @@ import utopia.vault.sql.SqlExtensions._
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 object DbClientDeviceUsers extends ManyClientDeviceUsersAccess with NonDeprecatedView[ClientDeviceUser]
 {
 	// COMPUTED --------------------

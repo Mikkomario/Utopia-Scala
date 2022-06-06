@@ -44,7 +44,7 @@ trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A
 	{
 		// Forms the query first
 		val statement = Select(joins.foldLeft(factory.target) { _.join(_, joinType) }, column) +
-			additionalCondition.map { Where(_) } + order.orElse(factory.defaultOrdering) + Limit(1)
+			mergeCondition(additionalCondition).map { Where(_) } + order.orElse(factory.defaultOrdering) + Limit(1)
 		// Applies the query and parses results
 		connection(statement).firstValue
 	}

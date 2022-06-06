@@ -1,0 +1,58 @@
+{
+  "author": "Mikko Hilpinen",
+  "project": "VaultTest",
+  "version": "v1.12.1",
+  "package": "utopia.vault.test",
+  "classes": {
+    "sales": [
+      {
+        "name": "SalesProduct",
+        "combo": {
+          "name": "SoldProduct",
+          "children": "Purchase",
+          "parent_alias": "product"
+        },
+        "props": [
+          {
+            "name": "name",
+            "length": 64
+          },
+          {
+            "name": "unitPrice",
+            "type": "Double"
+          },
+          {
+            "type": "creation"
+          },
+          {
+            "name": "vipOnly",
+            "name_plural": "vipsOnly",
+            "type": "Boolean"
+          }
+        ]
+      },
+      {
+        "name": "Purchase",
+        "props": [
+          {
+            "name": "productId",
+            "ref": "sales_product"
+          },
+          {
+            "name": "unitsBought",
+            "type": "Int",
+            "default": 1,
+            "sql_default": 1
+          },
+          {
+            "name": "estimatedDelivery",
+            "type": "Option[Date]"
+          },
+          {
+            "type": "creation"
+          }
+        ]
+      }
+    ]
+  }
+}

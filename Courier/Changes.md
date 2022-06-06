@@ -1,5 +1,11 @@
 # Utopia Courier - List of Changes
 
+## v1.0.3 - 06.06.2022
+This release introduces two very important bugfixes to email reading.
+### Bugfixes
+- Email iteration was not progressing but instead continuously handled the same message over and over again
+- Attachments were not always recognized because of a case-related problem (fixed)
+
 ## v1.0.2 - 27.01.2022
 Scala version update
 ### Scala

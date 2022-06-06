@@ -4,7 +4,7 @@ import utopia.citadel.database.access.many.description.DbOrganizationDescription
 import utopia.citadel.database.access.many.organization.DbInvitations.DbCurrentAndPastInvitations
 import utopia.citadel.database.access.many.organization.{DbInvitations, DbMemberships, DbMembershipsWithRoles, DbOrganizationDeletions}
 import utopia.citadel.database.access.single.description.{DbOrganizationDescription, SingleIdDescribedAccess}
-import utopia.citadel.model.enumeration.StandardUserRole.Owner
+import utopia.citadel.model.enumeration.CitadelUserRole.Owner
 import utopia.metropolis.model.combined.organization.DescribedOrganization
 import utopia.metropolis.model.stored.organization.Organization
 import utopia.vault.database.Connection
@@ -59,11 +59,12 @@ case class DbSingleOrganization(id: Int)
 	  * Adds a new member to this organization
 	  * @param userId Id of the user to add
 	  * @param startingRoleId Id of the role to assign to the user
-	  * @param creatorId Id of the user who added this user to this organization
+	  * @param creatorId Id of the user who added this user to this organization (if known)
 	  * @param connection Implicit DB Connection
 	  * @return Newly started membership
 	  */
-	def addMember(userId: Int, startingRoleId: Int, creatorId: Int)(implicit connection: Connection) =
+	def addMember(userId: Int, startingRoleId: Int, creatorId: Option[Int] = None)
+	             (implicit connection: Connection) =
 		DbMembership.start(id, userId, startingRoleId, creatorId)
 }
 

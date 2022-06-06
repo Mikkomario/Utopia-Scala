@@ -1,6 +1,6 @@
 package utopia.exodus.rest.resource.scalable
 
-import utopia.exodus.model.stored.auth.SessionToken
+import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.rest.util.AuthorizedContext.SessionParams
 import utopia.nexus.rest.scalable.ExtendableResource
@@ -14,7 +14,7 @@ import utopia.vault.database.Connection
  */
 abstract class ExtendableSessionResource extends ExtendableResource[AuthorizedContext, SessionParams]
 {
-	override protected def wrap(implementation: ((SessionToken, Connection)) => Result)
+	override protected def wrap(implementation: ((Token, Connection)) => Result)
 	                           (implicit context: AuthorizedContext) =
-		context.sessionTokenAuthorized { (session, connection) => implementation(session -> connection) }
+		context.authorizedWithoutScope { (session, connection) => implementation(session -> connection) }
 }

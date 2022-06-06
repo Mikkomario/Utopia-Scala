@@ -37,11 +37,9 @@ object CollectionViewTest extends App
 	new SingleFrameSetup(actorHandler, Frame.windowed(content, "Collection View Test", Program)).start()
 	
 	val random = new Random()
-	val createLabelLoop = Loop(1.seconds) {
+	Loop.regularly(1.seconds) {
 		val label = new EmptyLabel
 		label.background = Rgb(random.nextDouble(), random.nextDouble(), random.nextDouble())
 		collection += label.withStackSize(StackSize.any(Size(16 + random.nextInt(97), 64)))
 	}
-	createLabelLoop.registerToStopOnceJVMCloses()
-	createLabelLoop.startAsync()
 }

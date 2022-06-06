@@ -67,7 +67,5 @@ object TypeOrSearchTest extends App
 	
 	new SingleFrameSetup(actorHandler, frame).start()
 	
-	val testLoop = Loop(1.seconds) { println(AwtEventThread.debugString) }
-	testLoop.registerToStopOnceJVMCloses()
-	testLoop.startAsync()
+	Loop.regularly(1.seconds, waitFirst = true) { println(AwtEventThread.debugString) }
 }

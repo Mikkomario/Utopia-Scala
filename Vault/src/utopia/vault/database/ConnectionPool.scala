@@ -4,9 +4,9 @@ import java.time.Instant
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.async.{Breakable, NewThreadExecutionContext, Volatile, VolatileFlag}
+import utopia.flow.async.{Breakable, NewThreadExecutionContext, Volatile, VolatileFlag, Wait}
 import utopia.flow.collection.VolatileList
-import utopia.flow.time.{Now, WaitUtils}
+import utopia.flow.time.Now
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.duration.FiniteDuration
@@ -130,28 +130,22 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 				{
 					Future
 					{
-						var nextWait: Option[Instant] = Some(Now + connectionKeepAlive)
-						
-						// Closes connections as long as they are queued to be closed
-						while (nextWait.isDefined)
-						{
-							WaitUtils.waitUntil(nextWait.get, waitLock)
+						Iterator.unfold(Now + connectionKeepAlive) { waitTarget =>
+							Wait(waitTarget, waitLock)
 							
 							// Updates connection list and determines next close time
-							val (w, futures) = connections.pop
-							{
-								all =>
-									// Keeps connections that are still open
-									val (closing, open) = all.divideBy { _.isOpen }
-									val closeFutures = closing.map { _.tryClose() }
-									val lastLeaveTime = open.filterNot { _.isInUse }.map { _.lastLeaveTime }.minOption
-									
-									(lastLeaveTime.map { _ + connectionKeepAlive }, closeFutures) -> open
+							val (w, futures) = connections.pop { all =>
+								// Keeps connections that are still open
+								val (closing, open) = all.divideBy { _.isOpen }
+								val closeFutures = closing.map { _.tryClose() }
+								val lastLeaveTime = open.filterNot { _.isInUse }.map { _.lastLeaveTime }.minOption
+								
+								(lastLeaveTime.map { _ + connectionKeepAlive }, closeFutures) -> open
 							}
 							// Keeps track of thread closing futures in order to delay possible system exit
 							closeFutures.update { _.filterNot { _.isCompleted } ++ futures }
-							nextWait = w
-						}
+							w.map { w => () -> w }
+						}.foreach { _ => () }
 					}
 				}
 				else

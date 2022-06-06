@@ -1,10 +1,12 @@
 package utopia.vault.coder.controller.reader
 
-import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Parameters, Reference, ScalaDoc, Visibility}
+import utopia.vault.coder.model.scala.{DeclarationDate, Parameters, Visibility}
 import utopia.vault.coder.model.scala.code.{Code, CodeLine}
+import utopia.vault.coder.model.scala.datatype.{Extension, GenericType, Reference}
 import utopia.vault.coder.model.scala.declaration.DeclarationPrefix.{Case, Sealed}
 import utopia.vault.coder.model.scala.declaration.InstanceDeclarationType.{ClassD, ObjectD, TraitD}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, DeclarationPrefix, InstanceDeclaration, InstanceDeclarationType, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
+import utopia.vault.coder.model.scala.doc.ScalaDoc
 
 import scala.collection.immutable.VectorBuilder
 
@@ -14,8 +16,8 @@ import scala.collection.immutable.VectorBuilder
   * @since 2.11.2021, v1.3
   */
 class InstanceBuilder(visibility: Visibility, prefixes: Set[DeclarationPrefix], instanceType: InstanceDeclarationType,
-                      name: String, parameters: Option[Parameters], extensions: Vector[Extension], scalaDoc: ScalaDoc,
-                      commentsBefore: Vector[String])
+                      name: String, genericTypes: Seq[GenericType], parameters: Option[Parameters],
+                      extensions: Vector[Extension], scalaDoc: ScalaDoc, commentsBefore: Vector[String])
 	extends InstanceBuilderLike
 {
 	// ATTRIBUTES   ----------------------------
@@ -67,10 +69,10 @@ class InstanceBuilder(visibility: Visibility, prefixes: Set[DeclarationPrefix], 
 			case ObjectD => ObjectDeclaration(name, extensions, freeCode, propertiesBuilder.result(),
 				methodsBuilder.result().toSet, nestedBuilder.result().toSet, visibility, scalaDoc.description,
 				scalaDoc.author, commentsBefore, since, prefixes.contains(Case))
-			case ClassD => ClassDeclaration(name, parameters.getOrElse(Parameters.empty), extensions, freeCode,
-				propertiesBuilder.result(), methodsBuilder.result().toSet, nestedBuilder.result().toSet, visibility,
-				scalaDoc.description, scalaDoc.author, commentsBefore, since, prefixes.contains(Case))
-			case TraitD => TraitDeclaration(name, extensions, propertiesBuilder.result(),
+			case ClassD => ClassDeclaration(name, genericTypes, parameters.getOrElse(Parameters.empty), extensions,
+				freeCode, propertiesBuilder.result(), methodsBuilder.result().toSet, nestedBuilder.result().toSet,
+				visibility, scalaDoc.description, scalaDoc.author, commentsBefore, since, prefixes.contains(Case))
+			case TraitD => TraitDeclaration(name, genericTypes, extensions, propertiesBuilder.result(),
 				methodsBuilder.result().toSet, nestedBuilder.result().toSet, visibility, scalaDoc.description,
 				scalaDoc.author, commentsBefore, since, prefixes.contains(Sealed))
 		}

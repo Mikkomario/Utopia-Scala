@@ -268,27 +268,7 @@ case class Regex(string: String)
 	 *         (each separated part is returned as a separate string) + matches of this regex that were found from
 	 *         the string.
 	 */
-	def extract(str: String) =
-	{
-		val matcher = pattern.matcher(str)
-		val matchesBuilder = new VectorBuilder[String]()
-		val remainingBuilder = new VectorBuilder[String]()
-		
-		var lastEndIndex = 0
-		while (matcher.find())
-		{
-			val startIndex = matcher.start()
-			val endIndex = matcher.end()
-			if (startIndex > lastEndIndex)
-				remainingBuilder += str.substring(lastEndIndex, startIndex)
-			matchesBuilder += str.substring(startIndex, endIndex)
-			lastEndIndex = endIndex
-		}
-		if (str.length > lastEndIndex)
-			remainingBuilder += str.substring(lastEndIndex)
-		
-		remainingBuilder.result() -> matchesBuilder.result()
-	}
+	def extract(str: String) = divide(str).divided
 	
 	/**
 	 * @param str A target string
@@ -340,6 +320,51 @@ case class Regex(string: String)
 			firstPart +: middleParts :+ endPart
 		}
 	}
+	
+	/**
+	  * Splits the specified string using this regular expression, lazily.
+	  * @param str String to split
+	  * @return A split result iterator based on the matches of this expression within that string.
+	  *         NB: Doesn't contain any empty strings.
+	  */
+	def splitIteratorIn(str: String) =
+	{
+		// Finds pattern breaks (lazily), adds string start and end
+		(breakIndexIteratorIn(str).pairedFrom(0) :+ str.length).zipWithIndex
+			// Ignores matches and empty parts (because start and end were added)
+			.filter { case (range, index) => index % 2 == 0 && range.first != range.second }
+			// Converts ranges to substrings
+			.map { case (Pair(first, end), _) => str.substring(first, end) }
+	}
+	
+	/**
+	  * Divides the specified string into matches and non-matches. Keeps the natural ordering.
+	  * All of the specified string will be covered in the result.<br>
+	  * For example, dividing "AxBxC" by "x" would yield [L("A"), R("x"), L("B"), R("x"), L("C")]
+	  * @param str A string to divide
+	  * @return Parts of that string as a Vector.
+	  *         Each part is either: Left: A non-matched string part (outside match results) or Right: A match result
+	  */
+	def divide(str: String) = {
+		val matcher = pattern.matcher(str)
+		val builder = new VectorBuilder[Either[String, String]]()
+		
+		var lastEndIndex = 0
+		while (matcher.find())
+		{
+			val startIndex = matcher.start()
+			val endIndex = matcher.end()
+			if (startIndex > lastEndIndex)
+				builder += Left(str.substring(lastEndIndex, startIndex))
+			builder += Right(str.substring(startIndex, endIndex))
+			lastEndIndex = endIndex
+		}
+		if (str.length > lastEndIndex)
+			builder += Left(str.substring(lastEndIndex))
+		
+		builder.result()
+	}
+	
 	/**
 	 * Splits the specified string using this regex. Works much like the standard split operation, except that
 	 * this variation doesn't remove the splitting string from the results but instead keeps them at the ends of the
@@ -347,7 +372,7 @@ case class Regex(string: String)
 	 * @param str A string to split
 	 * @return Divided parts of the string
 	 */
-	def divide(str: String) =
+	def separate(str: String) =
 	{
 		val matcher = pattern.matcher(str)
 		val builder = new VectorBuilder[String]()
@@ -384,6 +409,12 @@ case class Regex(string: String)
 	  * @return An iterator that returns match end indices (exclusive) within that string
 	  */
 	def endIndexIteratorIn(str: String): Iterator[Int] = MatcherIterator.endIndices(pattern.matcher(str))
+	/**
+	  * @param str A string
+	  * @return An iterator that returns match start indices (inclusive)
+	  *         and match end indices (exclusive) within that string. I.e. all pattern ends (exclusive)
+	  */
+	def breakIndexIteratorIn(str: String): Iterator[Int] = MatcherIterator.breaks(pattern.matcher(str))
 }
 
 private object MatcherIterator
@@ -394,6 +425,7 @@ private object MatcherIterator
 	def endIndices(matcher: Matcher) = apply(matcher) { _.end() }
 	def ranges(matcher: Matcher) = apply(matcher) { m => m.start() until m.end() }
 	def matches(matcher: Matcher) = apply(matcher) { _.group() }
+	def breaks(matcher: Matcher) = apply(matcher) { m => Pair(m.start(), m.end()) }.flatten
 }
 
 private class MatcherIterator[+A](matcher: Matcher)(f: Matcher => A) extends Iterator[A]

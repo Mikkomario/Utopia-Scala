@@ -1,8 +1,8 @@
 package utopia.reach.window
+import utopia.flow.async.Delay
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.event.{AlwaysTrue, ChangingLike}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitUtils
 import utopia.genesis.shape.shape2D.Direction2D
 import utopia.reach.component.button.image.ImageButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
@@ -205,7 +205,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		
 		// Displays the pop-up and closes it automatically after a while
 		window.display()
-		WaitUtils.delayed(5.seconds) { window.close() }
+		Delay(5.seconds) { window.close() }
 	}
 	
 	private def groupsToComponent(factories: ContextualMixed[ColorContext],

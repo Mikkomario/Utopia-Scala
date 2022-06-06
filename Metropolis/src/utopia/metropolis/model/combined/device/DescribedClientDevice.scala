@@ -6,6 +6,7 @@ import utopia.metropolis.model.combined.description.{DescribedFromModelFactory, 
 import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.metropolis.model.stored.device.{ClientDevice, ClientDeviceUser}
 
+@deprecated("This class will be removed in a future release", "v2.1")
 object DescribedClientDevice extends DescribedFromModelFactory[ClientDevice, DescribedClientDevice]
 {
 	override protected def undescribedFactory = ClientDevice
@@ -17,6 +18,7 @@ object DescribedClientDevice extends DescribedFromModelFactory[ClientDevice, Des
   * @param descriptions Descriptions concerning the wrapped ClientDevice
   * @since 2021-10-23
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 case class DescribedClientDevice(clientDevice: ClientDevice, descriptions: Set[LinkedDescription])
 	extends DescribedWrapper[ClientDevice] with SimplyDescribed
 {

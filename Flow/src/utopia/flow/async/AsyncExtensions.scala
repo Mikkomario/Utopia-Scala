@@ -1,7 +1,6 @@
 package utopia.flow.async
 
 import utopia.flow.time.WaitTarget
-import utopia.flow.time.SingleWait
 import utopia.flow.util.CollectionExtensions._
 
 import scala.collection.immutable.VectorBuilder
@@ -29,12 +28,14 @@ object AsyncExtensions
      */
 	implicit class RichFuture[A](val f: Future[A]) extends AnyVal
 	{
+		// TODO: Add interruptible waiting
+		
 	    /**
 	     * Waits for the result of this future (blocks) and returns it once it's ready
 	     * @param timeout the maximum wait duration. If timeout is reached, a failure will be returned
 	     * @return The result of the future. A failure if this future failed or if timeout was reached
 	     */
-	    def waitFor(timeout: Duration = Duration.Inf) = Try(Await.ready(f, timeout).value.get).flatten
+	    def waitFor(timeout: Duration = Duration.Inf) = Try { Await.ready(f, timeout).value.get }.flatten
 		
 		/**
 		  * Creates a copy of this future that will either succeed or fail before the specified timeout duration
@@ -44,7 +45,8 @@ object AsyncExtensions
 		  * @return A future that contains the result of the original future or a failure if timeout was passed
 		  *         before receiving a result.
 		  */
-		def withTimeout(timeout: FiniteDuration)(implicit exc: ExecutionContext) = Future { waitFor(timeout) }
+		def withTimeout(timeout: FiniteDuration)(implicit exc: ExecutionContext) =
+			Future { waitFor(timeout) }
 		
 		/**
 		 * @return Whether this future is still "empty" (not completed)
@@ -88,7 +90,7 @@ object AsyncExtensions
 			{
 				Future {
 					val resultPointer = VolatileOption[B]()
-					val wait = new SingleWait(WaitTarget.UntilNotified)
+					val wait = new Wait(WaitTarget.UntilNotified)
 					
 					// Both futures try to set the pointer and end the wait
 					f.foreach { r =>
@@ -125,6 +127,8 @@ object AsyncExtensions
 	
 	implicit class TryFuture[A](val f: Future[Try[A]]) extends AnyVal
 	{
+		// TODO: Add a variation of currentSuccess
+		
 		/**
 		  * Waits for the result of this future (blocks) and returns it once it's ready
 		  * @param timeout the maximum wait duration. If timeout is reached, a failure will be returned

@@ -2,12 +2,13 @@ package utopia.vault.coder.controller.writer.model
 
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.controller.writer.database.AccessWriter
-import utopia.vault.coder.model.data.{Class, ProjectSetup}
+import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup}
+import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File}
-import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, Reference, declaration}
-import utopia.vault.coder.util.NamingUtils
+import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, declaration}
 
 import scala.io.Codec
 
@@ -18,6 +19,8 @@ import scala.io.Codec
   */
 object ModelWriter
 {
+	private val dataClassAppendix = Name("Data", "Data", CamelCase.capitalized)
+	
 	/**
 	  * Writes stored and partial model classes for a class template
 	  * @param classToWrite class being written
@@ -25,12 +28,13 @@ object ModelWriter
 	  * @param setup        Target project -specific settings (implicit)
 	  * @return Reference to the stored version, followed by a reference to the data version. Failure if writing failed.
 	  */
-	def apply(classToWrite: Class)(implicit codec: Codec, setup: ProjectSetup) =
+	def apply(classToWrite: Class)
+	         (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
 	{
-		val dataClassName = classToWrite.name.singular + "Data"
+		val dataClassName = (classToWrite.name + dataClassAppendix).className
 		val dataClassPackage = setup.modelPackage / s"partial.${ classToWrite.packageName }"
 		val propWrites = classToWrite.properties.map { prop =>
-			val propNameInModel = NamingUtils.camelToUnderscore(prop.name.singular).quoted
+			val propNameInModel = prop.jsonPropName.quoted
 			prop.toValueCode.withPrefix(propNameInModel + " -> ")
 		}
 		val propWriteCode = if (propWrites.isEmpty) CodePiece("Model.empty", Set(Reference.model)) else
@@ -41,12 +45,12 @@ object ModelWriter
 		File(dataClassPackage,
 			ClassDeclaration(dataClassName,
 				// Accepts a copy of each property. Uses default values where possible.
-				classToWrite.properties.map { prop =>
-					Parameter(prop.name.singular, prop.dataType.toScala, prop.default,
+				constructionParams = classToWrite.properties.map { prop =>
+					Parameter(prop.name.propName, prop.dataType.toScala, prop.default,
 						description = prop.description)
 				},
 				// Extends ModelConvertible
-				Vector(Reference.modelConvertible),
+				extensions = Vector(Reference.modelConvertible),
 				// Implements the toModel -property
 				properties = deprecationPropertiesFor(classToWrite) :+
 					ComputedProperty("toModel", propWriteCode.references, isOverridden = true)(propWriteCode.text),
@@ -64,8 +68,7 @@ object ModelWriter
 				)
 				// May provide a utility access method
 				val accessProperty = {
-					if (setup.modelCanReferToDB)
-					{
+					if (setup.modelCanReferToDB) {
 						val singleAccessRef = AccessWriter.singleIdReferenceFor(classToWrite)
 						Some(ComputedProperty("access", Set(singleAccessRef),
 							description = s"An access point to this ${ classToWrite.name } in the database")(
@@ -79,8 +82,8 @@ object ModelWriter
 				// ModelConvertible extension & implementation differs based on id type
 				// Also, the Stored extension differs based on whether Vault-dependency is allowed
 				if (classToWrite.useLongId)
-					ClassDeclaration(classToWrite.name.singular, constructionParams,
-						Vector(Reference.stored(dataClassRef, idType)),
+					ClassDeclaration(classToWrite.name.className, constructionParams = constructionParams,
+						extensions = Vector(Reference.stored(dataClassRef, idType)),
 						properties = Vector(
 							ComputedProperty("toModel", Set(Reference.valueConversions, Reference.constant),
 								isOverridden = true)("Constant(\"id\", id) + data.toModel"),
@@ -89,8 +92,8 @@ object ModelWriter
 				{
 					val parent = if (setup.modelCanReferToDB) Reference.storedModelConvertible(dataClassRef) else
 						Reference.metropolisStoredModelConvertible(dataClassRef)
-					declaration.ClassDeclaration(classToWrite.name.singular, constructionParams, Vector(parent),
-						properties = accessProperty.toVector,
+					declaration.ClassDeclaration(classToWrite.name.className, constructionParams = constructionParams,
+						extensions = Vector(parent), properties = accessProperty.toVector,
 						description = description, author = classToWrite.author, since = DeclarationDate.versionedToday,
 						isCaseClass = true)
 				}
@@ -100,14 +103,14 @@ object ModelWriter
 	}
 	
 	// Deprecation-supporting classes can have custom properties
-	private def deprecationPropertiesFor(classToWrite: Class) =
+	private def deprecationPropertiesFor(classToWrite: Class)(implicit naming: NamingRules) =
 	{
 		classToWrite.deprecationProperty match {
 			case Some(prop) =>
 				Vector(
 					ComputedProperty("isDeprecated",
 						description = s"Whether this ${ classToWrite.name } has already been deprecated")(
-						s"${ prop.name }.isDefined"),
+						s"${ prop.name.propName }.isDefined"),
 					ComputedProperty("isValid",
 						description = s"Whether this ${ classToWrite.name } is still valid (not deprecated)")(
 						"!isDeprecated")
@@ -120,7 +123,7 @@ object ModelWriter
 								description = s"Whether this ${
 									classToWrite.name
 								} is no longer valid because it has expired")(
-								s"${ prop.name } <= Now"),
+								s"${ prop.name.propName } <= Now"),
 							ComputedProperty("isValid",
 								description = s"Whether this ${ classToWrite.name } is still valid (hasn't expired yet)")(
 								"!hasExpired")

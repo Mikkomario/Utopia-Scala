@@ -1,9 +1,8 @@
 package utopia.flow.test.async
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.ThreadPool
+import utopia.flow.async.{ThreadPool, Wait}
 import utopia.flow.collection.VolatileList
-import utopia.flow.time.WaitUtils
 import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -24,7 +23,7 @@ object AsyncTest extends App
 	def makeFuture(index: Int) = Future {
 		println(s"Starting future $index")
 		starts :+= index
-		WaitUtils.wait(2.seconds, new AnyRef())
+		Wait(2.seconds)
 		println(s"Finishing future $index")
 		ends :+= index
 	}

@@ -25,6 +25,7 @@ object ManyEmailValidationResendsAccess
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 trait ManyEmailValidationResendsAccess
 	extends ManyRowModelAccess[EmailValidationResend] with Indexed with FilterableView[ManyEmailValidationResendsAccess]
 {

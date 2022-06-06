@@ -2,8 +2,8 @@ package utopia.flow.async
 
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.collection.WeakList
-import utopia.flow.time.{Now, WaitUtils}
+import utopia.flow.collection.{VolatileList, WeakList}
+import utopia.flow.time.Now
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -16,21 +16,39 @@ object CloseHook
 {
 	// ATTRIBUTES    ----------------
     
+    private val additionalShutdownTime = 200.millis
+    
+    private val _shutdownPointer = VolatileFlag()
+    private val breakables = Volatile(WeakList[Breakable]())
+    private val hooks = VolatileList[() => Future[Any]]()
+    
     /**
       * Maximum duration the shutdown process can take
       */
     var maxShutdownTime = 5.seconds
-    
-    private val additionalShutdownTime = 200.millis
-    private var loops = WeakList[Breakable]()
-    private var hooks = Vector[() => Future[Any]]()
-    
     
     
     // INITIAL CODE -----------------
     
     // Registers all breakable items to stop
     Runtime.getRuntime.addShutdownHook(new Thread(() => shutdown()))
+    
+    
+    // COMPUTED ----------------------
+    
+    /**
+      * @return A pointer that contains true after the shutdown procedure has been initiated
+      */
+    def shutdownPointer = _shutdownPointer.valueView
+    
+    /**
+      * @return Whether the shutdown procedure has started
+      */
+    def isShutdown = _shutdownPointer.value
+    /**
+      * @return Whether the shutdown procedure has not been started
+      */
+    def nonShutdown = !isShutdown
     
     
     // OPERATORS    -----------------
@@ -40,7 +58,12 @@ object CloseHook
       * weakly referenced.
       * @param breakable Breakable item
       */
-    def +=(breakable: Breakable) = loops :+= breakable
+    def +=(breakable: Breakable) = breakables.update { _ :+ breakable }
+    /**
+      * Removes a breakable from the list of breakables to stop when the JVM closes.
+      * @param breakable Breakable item to remove
+      */
+    def -=(breakable: Breakable) = breakables.update { _.filterNot { _ == breakable } }
     
     
     // OTHER    ---------------------
@@ -50,7 +73,7 @@ object CloseHook
       * @param onCloseAction Action that will be called asynchronously when the JVM is about to close (call by name)
       */
     def registerAction(onCloseAction: => Any)(implicit exc: ExecutionContext) =
-        hooks :+= { () => Future { onCloseAction } }
+        hooks +:= { () => Future { onCloseAction } }
     
     /**
       * Registers an asynchronous action to be perfomed when the JVM is about to close
@@ -63,19 +86,25 @@ object CloseHook
       */
     def shutdown() =
     {
-        // Stops all registered loops
-        val completions = loops.strong.map { _.stop() } ++ hooks.map { _() }
-        loops = WeakList()
-        hooks = Vector()
+        // Updates the pointer
+        _shutdownPointer.set()
         
+        // Stops all registered loops
+        val completions = breakables.getAndSet(WeakList()).strong.map { _.stop() } ++ hooks.popAll().map { _() }
         if (completions.nonEmpty)
         {
             // Waits until all of the completions are done
             val shutdownDeadline = Now + maxShutdownTime
-            completions.foreach { _.waitFor(shutdownDeadline - Now) }
+            completions.foreach { completion =>
+                if (shutdownDeadline.isInFuture)
+                    completion.waitFor(shutdownDeadline - Now)
+            }
             
             // Waits additional shutdown time
-            WaitUtils.wait(additionalShutdownTime, new AnyRef())
+            val lock = new AnyRef
+            lock.synchronized {
+                lock.wait(additionalShutdownTime.toMillis)
+            }
         }
     }
 }

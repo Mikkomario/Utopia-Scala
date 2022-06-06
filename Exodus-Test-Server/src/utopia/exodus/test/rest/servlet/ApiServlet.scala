@@ -5,14 +5,13 @@ import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import utopia.access.http.Method
 import utopia.access.http.Status.BadRequest
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.exodus.rest.resource.description.{DescriptionRolesNode, LanguageFamiliaritiesNode, LanguagesNode, RolesNode, TasksNode}
-import utopia.exodus.rest.resource.device.DevicesNode
-import utopia.exodus.rest.resource.email.EmailsNode
-import utopia.exodus.rest.resource.organization.OrganizationsNode
-import utopia.exodus.rest.resource.user.{QuestSessionsNode, UsersNode}
+import utopia.citadel.util.CitadelContext
+import utopia.exodus.model.enumeration.ExodusScope.{ChangeKnownPassword, CreateOrganization, JoinOrganization, OrganizationActions, PersonalActions, ReadGeneralData, ReadOrganizationData, ReadPersonalData, RequestPasswordReset, RevokeOtherTokens, TerminateOtherSessions}
+import utopia.exodus.rest.resource.ExodusResources
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
 import utopia.flow.async.ThreadPool
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.DataType
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.StringExtensions.ExtendedString
@@ -23,7 +22,9 @@ import utopia.vault.database.{Connection, ConnectionPool}
 import utopia.vault.util.ErrorHandling
 import utopia.vault.util.ErrorHandlingPrinciple.Custom
 import utopia.nexus.servlet.HttpExtensions._
+import utopia.vault.database.columnlength.ColumnLengthRules
 
+import java.nio.file.Paths
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
@@ -46,36 +47,39 @@ class ApiServlet extends HttpServlet
 	private implicit val exc: ExecutionContext = new ThreadPool("Exodus-Test-Server").executionContext
 	private implicit val connectionPool: ConnectionPool = new ConnectionPool()
 	
-	val dbSettings = JsonBunny.munchPath("settings/exodus-db-settings.json").map { _.getModel }
+	val dbSettingsRead = JsonBunny.munchPath("settings/exodus-db-settings.json").map { _.getModel }
+	val dbSettings = dbSettingsRead.getOrElse(Model.empty)
 	
 	ExodusContext.setup(exc, connectionPool,
-		dbSettings.toOption.flatMap { _("db_name").string }.getOrElse("exodus_db")) { (error, message) =>
+		dbSettings("db_name", "db").stringOr("exodus_db")) { (error, message) =>
 		println(message)
 		error.printStackTrace()
-	}
-	Connection.modifySettings { _.copy(driver = Some("org.mariadb.jdbc.Driver")) }
-	dbSettings match
+	} { Set(ReadGeneralData, ReadPersonalData, PersonalActions, ReadOrganizationData, OrganizationActions,
+		CreateOrganization, RequestPasswordReset, ChangeKnownPassword, TerminateOtherSessions, RevokeOtherTokens,
+		JoinOrganization) }
+	Connection.modifySettings { _.copy(driver = Some("org.mariadb.jdbc.Driver"), charsetName = "utf8",
+		charsetCollationName = "utf8_general_ci") }
+	dbSettingsRead match
 	{
 		case Success(settings) => Connection.modifySettings { _.copy(password = settings("password").getString) }
 		case Failure(error) =>
 			println("Database settings read failed (error below). Continues with no password and database name 'exodus-test'")
-			error.printStackTrace()
+			println(error.getMessage)
 	}
-	// TODO: Change this once more advanced logging systems are available and in production
 	ErrorHandling.defaultPrinciple = Custom { _.printStackTrace() }
+	
+	// Applies length rules
+	Paths.get("length-rules/exodus")
+		.iterateChildren { _.filter { _.fileType == "json" }
+			.foreach { rules => ColumnLengthRules.loadFrom(rules, CitadelContext.databaseName) } }
 	
 	
 	// ATTRIBUTES	----------------------------
 	
-	// TODO: When going to production, read these from settings and maybe use parameter encoding
 	private implicit val serverSettings: ServerSettings = ServerSettings("http://localhost:9999")
 	private implicit val jsonParser: JsonParser = JsonBunny
 	
-	private val handler = new RequestHandler(Map("v1" -> Vector(
-			DescriptionRolesNode.public, LanguagesNode.public, LanguageFamiliaritiesNode.public, RolesNode, TasksNode,
-			UsersNode.forApiKey, DevicesNode, OrganizationsNode, QuestSessionsNode,
-			EmailsNode.forApiKey
-		)),
+	private val handler = new RequestHandler(Map("v1" -> ExodusResources.all),
 		Some(Path("exodus", "api")), r => AuthorizedContext(r))
 	
 	
@@ -103,12 +107,15 @@ class ApiServlet extends HttpServlet
 	
 	private def handleRequest(request: HttpServletRequest, response: HttpServletResponse) =
 	{
-		request.toRequest match
-		{
+		request.toRequest match {
 			case Some(parseRequest) =>
 				val newResponse = handler(parseRequest)
+				println(s"Responded to ${parseRequest.method} ${
+					parseRequest.path.map { _.toString }.getOrElse("") } with ${newResponse.status}\n")
 				newResponse.update(response)
-			case None => response.setStatus(BadRequest.code)
+			case None =>
+				println("Failed to parse request")
+				response.setStatus(BadRequest.code)
 		}
 	}
 }

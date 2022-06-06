@@ -16,6 +16,7 @@ import scala.util.Try
   * @constructor Creates a new synchronized loop by combining the specified loops
   * @param loops The loops to synchronize together. <b>None of the loops should be started at this point</b>.
   */
+@deprecated("Replaced with TimedTasks", "v1.15")
 class SynchronizedLoops(loops: IterableOnce[Loop]) extends Loop
 {
 	// ATTRIBUTES	-----------------------

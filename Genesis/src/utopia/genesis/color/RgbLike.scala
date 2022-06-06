@@ -103,7 +103,7 @@ trait RgbLike[Repr <: RgbLike[Repr]]
 	  * @param other Another RGB
 	  * @return A combination of these two RGB's
 	  */
-	def +(other: Rgb) = withRatios(ratios.mergedWith(other.ratios, _ + _))
+	def +(other: Rgb) = withRatios(ratios.mergeWith(other.ratios) { _ + _ })
 	
 	/**
 	  * Combines this RGB with another by subtracting the color values

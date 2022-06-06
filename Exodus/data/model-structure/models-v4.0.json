@@ -1,0 +1,350 @@
+{
+  "author": "Mikko Hilpinen",
+  "project": "Exodus",
+  "version": "v4.0",
+  "package": "utopia.exodus",
+  "referenced_enums": ["utopia.metropolis.model.enumeration.ModelStyle"],
+  "classes": {
+    "auth": [
+      {
+        "name": "TokenType",
+        "doc": "An enumeration for different types of authentication tokens available",
+        "props": [
+          {
+            "name": "name",
+            "length": 32,
+            "limit": "up to 128",
+            "doc": "Name of this token type for identification. Not localized."
+          },
+          {
+            "name": "duration",
+            "type": "Option[Duration[minutes]]",
+            "doc": "Duration that determines how long these tokens remain valid after issuing. None if these tokens don't expire automatically."
+          },
+          {
+            "name": "refreshedTypeId",
+            "type": "Option[Int]",
+            "ref": "token_type",
+            "doc": "Id of the type of token that may be acquired by using this token type as a refresh token, if applicable"
+          },
+          {
+            "type": "creation",
+            "index": false
+          },
+          {
+            "name": "isSingleUseOnly",
+            "name_plural": "areSingleUseOnly",
+            "type": "Boolean",
+            "doc": "Whether tokens of this type may only be used once (successfully)"
+          }
+        ],
+        "instances": [
+          {
+            "id": 1,
+            "name": "api-key"
+          },
+          {
+            "id": 2,
+            "name": "session-token",
+            "duration": 1320
+          },
+          {
+            "id": 3,
+            "name": "refresh-token",
+            "refreshed_type_id": 2
+          },
+          {
+            "id": 4,
+            "name": "email-validated-session",
+            "duration": 15
+          },
+          {
+            "id": 5,
+            "name": "email-validation-token",
+            "duration": 4320,
+            "refreshed_type_id": 4,
+            "is_single_use_only": true
+          }
+        ]
+      },
+      {
+        "name": "Token",
+        "doc": "Tokens used for authenticating requests",
+        "combo_index": ["deprecatedAfter", "expires", "hash"],
+        "combos": [
+          {
+            "name": "TypedToken",
+            "child": "TokenType",
+            "is_always_linked": true,
+            "doc": "Adds type information to a token"
+          },
+          {
+            "name": "ScopedToken",
+            "children": "TokenScopeLink",
+            "child_alias": "scopeLink",
+            "doc": "Includes available scope links (ids) to an access token"
+          },
+          {
+            "name": "EmailValidationToken",
+            "child": "EmailValidationAttempt",
+            "is_always_linked": true,
+            "child_alias": "validation",
+            "doc": "A token with email validation information included"
+          }
+        ],
+        "props": [
+          {
+            "name": "typeId",
+            "ref": "token_type",
+            "doc": "Id of the token type applicable to this token"
+          },
+          {
+            "name": "hash",
+            "name_plural": "hashes",
+            "length": 128,
+            "doc": "A hashed version of this token"
+          },
+          {
+            "name": "parentTokenId",
+            "ref": "token",
+            "type": "Option[Int]",
+            "doc": "Id of the token that was used to acquire this token, if applicable & still known"
+          },
+          {
+            "name": "ownerId",
+            "type": "Option[Int]",
+            "ref": "user",
+            "doc": "Id of the user who owns this token, if applicable"
+          },
+          {
+            "name": "modelStylePreference",
+            "column": "model_style_id",
+            "type": "Option[Enum[ModelStyle]]",
+            "doc": "Model style preferred during this session"
+          },
+          {
+            "name": "expires",
+            "name_plural": "expirationTimes",
+            "type": "Option[Instant]",
+            "doc": "Time when this token expires, if applicable"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this token was issued"
+          },
+          {
+            "type": "deprecation",
+            "doc": "Time when this token was revoked or replaced"
+          },
+          {
+            "name": "isSingleUseOnly",
+            "name_plural": "areSingleUseOnly",
+            "type": "Boolean",
+            "doc": "Whether this token may only be used once (successfully)"
+          }
+        ]
+      },
+      {
+        "name": "Scope",
+        "doc": "Represents an access right requirement and/or category.",
+        "combo": {
+          "name": "TokenScope",
+          "child": "TokenScopeLink",
+          "is_always_linked": true,
+          "child_alias": "tokenLink",
+          "doc": "An access scope that is tied to a specific access token"
+        },
+        "props": [
+          {
+            "name": "name",
+            "length": 32,
+            "limit": "up to 96",
+            "doc": "Technical name or identifier of this scope"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ],
+        "instances": [
+          {
+            "id": 1,
+            "name": "read-general-data"
+          },
+          {
+            "id": 2,
+            "name": "create-user"
+          },
+          {
+            "id": 3,
+            "name": "read-personal-data"
+          },
+          {
+            "id": 4,
+            "name": "personal-actions"
+          },
+          {
+            "id": 5,
+            "name": "join-organization"
+          },
+          {
+            "id": 6,
+            "name": "create-organization"
+          },
+          {
+            "id": 7,
+            "name": "read-organization-data"
+          },
+          {
+            "id": 8,
+            "name": "organization-actions"
+          },
+          {
+            "id": 9,
+            "name": "request-password-reset"
+          },
+          {
+            "id": 10,
+            "name": "change-known-password"
+          },
+          {
+            "id": 11,
+            "name": "replace-forgotten-password"
+          },
+          {
+            "id": 12,
+            "name": "change-email"
+          },
+          {
+            "id": 13,
+            "name": "terminate-other-sessions"
+          },
+          {
+            "id": 14,
+            "name": "revoke-other-tokens"
+          },
+          {
+            "id": 15,
+            "name": "delete-account"
+          },
+          {
+            "id": 16,
+            "name": "initiate-user-creation"
+          }
+        ]
+      },
+      {
+        "name": "TokenScopeLink",
+        "doc": "Used for linking scopes to tokens using many-to-many connections, describing what actions each token enables",
+        "combo_index": ["tokenId", "isDirectlyAccessible"],
+        "props": [
+          {
+            "ref": "token",
+            "doc": "Id of the linked token"
+          },
+          {
+            "ref": "scope",
+            "doc": "Id of the enabled scope"
+          },
+          {
+            "type": "creation",
+            "index": false
+          },
+          {
+            "name": "isDirectlyAccessible",
+            "name_plural": "areDirectlyAccessible",
+            "type": "Boolean",
+            "doc": "Whether the linked scope is directly accessible using the linked token"
+          },
+          {
+            "name": "grantsForward",
+            "name_plural": "grantForward",
+            "type": "Boolean",
+            "doc": "Whether this scope is granted to tokens that are created using this token"
+          }
+        ]
+      },
+      {
+        "name": "EmailValidationPurpose",
+        "doc": "An enumeration for purposes an email validation may be used for",
+        "props": [
+          {
+            "name": "name",
+            "length": 32,
+            "limit": "up to 128",
+            "doc": "Name of this email validation purpose. For identification (not localized)."
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ],
+        "instances": [
+          {
+            "id": 1,
+            "name": "user-creation"
+          },
+          {
+            "id": 2,
+            "name": "email-change"
+          },
+          {
+            "id": 3,
+            "name": "password-reset"
+          },
+          {
+            "id": 4,
+            "name": "organization-invitation"
+          }
+        ]
+      },
+      {
+        "name": "EmailValidationAttempt",
+        "doc": "Represents an attempted email validation. Provides additional information to an authentication token.",
+        "has_combos": true,
+        "props": [
+          {
+            "ref": "token",
+            "doc": "Id of the token sent via email"
+          },
+          {
+            "name": "emailAddress",
+            "name_plural": "emailAddresses",
+            "length": 64,
+            "limit": "up to 160",
+            "index": true,
+            "doc": "Address to which the validation email was sent"
+          },
+          {
+            "name": "purposeId",
+            "ref": "email_validation_purpose",
+            "doc": "Id of the purpose this email validation is for"
+          }
+        ]
+      }
+    ],
+    "user": [
+      {
+        "name": "UserPassword",
+        "doc": "Represents a hashed user password",
+        "props": [
+          {
+            "ref": "user",
+            "doc": "Id of the user who owns this password"
+          },
+          {
+            "name": "hash",
+            "name_plural": "hashes",
+            "length": 255,
+            "index": true,
+            "doc": "User's hashed password, including salt"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      }
+    ]
+  }
+}

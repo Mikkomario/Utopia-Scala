@@ -72,14 +72,17 @@ object ConsoleExtensions
 		 * @param default The default value to use when answer can't be interpreted (default = false)
 		 * @return Answer given by the user (or the default)
 		 */
-		def ask(question: String, default: => Boolean = false) =
-			readNonEmptyLine(question + s" (y/n - default=${if (default) "yes" else "no"})") match
+		def ask(question: String, default: Boolean = false) =
+		{
+			val yesNo = if (default) "Y/n" else "y/N"
+			readNonEmptyLine(question + s" $yesNo") match
 			{
 				case Some(answer) =>
 					val firstChar = answer.head.toLower
 					if (firstChar == 'y') true else if (firstChar == 'n') false else default
 				case None => default
 			}
+		}
 		
 		/**
 		 * @return An iterator that reads new lines

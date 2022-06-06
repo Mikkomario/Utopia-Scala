@@ -43,7 +43,6 @@ object CanvasTest extends App
 	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
 	
 	val repaintLoop = new RepaintLoop(canvas)
-	repaintLoop.registerToStopOnceJVMCloses()
-	repaintLoop.startAsync()
+	repaintLoop.runAsync()
     frame.display()
 }

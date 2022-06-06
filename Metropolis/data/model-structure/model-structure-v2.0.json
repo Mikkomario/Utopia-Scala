@@ -29,13 +29,13 @@
       {
         "name": "LanguageFamiliarity",
         "name_plural": "LanguageFamiliarities",
-        "description_link": "familiarity_id",
+        "description_link": "familiarityId",
         "doc": "Represents a language skill level",
         "props": [
           {
             "name": "orderIndex",
             "name_plural": "orderIndices",
-            "type": "Int",
+            "type": "Int(Tiny)",
             "index": true,
             "doc": "Index used for ordering between language familiarities, where lower values mean higher familiarity"
           },
@@ -49,7 +49,7 @@
     "user": [
       {
         "name": "User",
-        "doc": "Represents a program user",
+        "doc": "Represents a software user",
         "props": [
           {
             "type": "creation",
@@ -69,14 +69,16 @@
           {
             "name": "name",
             "length": 64,
+            "limit": "up to 128",
             "index": true,
             "doc": "Name used by this user"
           },
           {
             "name": "email",
             "name_plural": "emailAddresses",
-            "length": 128,
             "type": "Option[String]",
+            "length": 128,
+            "limit": "up to 255",
             "index": true,
             "doc": "Email address of this user"
           },
@@ -133,18 +135,20 @@
       {
         "name": "DescriptionRole",
         "doc": "An enumeration for different roles or purposes a description can serve",
-        "description_link": "role_id",
+        "description_link": "roleId",
         "props": [
           {
             "name": "jsonKeySingular",
             "name_plural": "singularJsonKeys",
             "length": 32,
+            "limit": "up to 48",
             "doc": "Key used in json documents for a singular value (string) of this description role"
           },
           {
             "name": "jsonKeyPlural",
             "name_plural": "pluralJsonKeys",
             "length": 32,
+            "limit": "up to 48",
             "doc": "Key used in json documents for multiple values (array) of this description role"
           },
           {
@@ -168,7 +172,8 @@
           },
           {
             "name": "text",
-            "length": 255,
+            "length": 64,
+            "limit": "up to 1024",
             "doc": "This description as text / written description"
           },
           {
@@ -249,6 +254,7 @@
       },
       {
         "name": "Membership",
+        "has_combos": true,
         "doc": "Lists organization members, including membership history",
         "props": [
           {
@@ -282,6 +288,7 @@
       {
         "name": "MemberRoleLink",
         "table_name": "member_role",
+        "has_combos": true,
         "doc": "Links an organization membership to the roles that member has within that organization",
         "props": [
           {
@@ -341,12 +348,14 @@
             "name": "recipientEmail",
             "name_plural": "recipientEmailAddresses",
             "length": 128,
+            "limit": "up to 255",
             "type": "Option[String]",
             "doc": "Email address of the invited user / the email address where this invitation is sent to"
           },
           {
             "name": "message",
-            "length": 1028,
+            "length": 480,
+            "limit": "up to 1024",
             "type": "Option[String]",
             "doc": "Message written by the sender to accompany this invitation"
           },
@@ -372,7 +381,8 @@
           },
           {
             "name": "message",
-            "length": 1028,
+            "length": 480,
+            "limit": "up to 1024",
             "type": "Option[String]",
             "doc": "Attached written response"
           },

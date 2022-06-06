@@ -2,7 +2,8 @@ package utopia.vault.coder.model.scala.declaration
 
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.Visibility.Public
-import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Visibility}
+import utopia.vault.coder.model.scala.datatype.{Extension, GenericType}
+import utopia.vault.coder.model.scala.{DeclarationDate, Visibility}
 
 /**
   * Used for declaring objects in scala files
@@ -21,7 +22,11 @@ case class ObjectDeclaration(name: String, extensions: Vector[Extension] = Vecto
 	
 	override protected def constructorParams = None
 	
-	override protected def makeCopy(visibility: Visibility, extensions: Vector[Extension], creationCode: Code,
+	// Objects can't have generic type parameters since they're never abstract
+	override def genericTypes = Vector()
+	
+	override protected def makeCopy(visibility: Visibility, genericTypes: Seq[GenericType],
+	                                extensions: Vector[Extension], creationCode: Code,
 	                                properties: Vector[PropertyDeclaration], methods: Set[MethodDeclaration],
 	                                nested: Set[InstanceDeclaration], description: String, author: String,
 	                                headerComments: Vector[String], since: DeclarationDate) =

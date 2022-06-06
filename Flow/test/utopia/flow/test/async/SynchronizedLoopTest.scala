@@ -15,6 +15,7 @@ import scala.concurrent.duration.Duration
  * @author Mikko Hilpinen
  * @since 3.4.2020, v1.7
  */
+@deprecated("Replaced with TimedTasks and their tests", "v1.15")
 object SynchronizedLoopTest extends App
 {
 	DataType.setup()

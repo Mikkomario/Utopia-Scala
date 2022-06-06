@@ -25,7 +25,7 @@ object PollableOnce
   * @author Mikko Hilpinen
   * @since 11.9.2021, v1.11.2
   */
-class PollableOnce[+A](value: A) extends Iterator[A]
+class PollableOnce[+A](value: => A) extends Iterator[A]
 {
 	// ATTRIBUTES   --------------------------
 	

@@ -47,55 +47,73 @@ The input .json file should contain a single object with following properties:
   - If your project contains multiple modules, name the Vault-dependent module
 - **"author": String (optional)** - Author of this project's model structure
 - **"base_package" / "package": String (optional)** - Contains the package prefix common to all generated files 
-  (e.g. "utopia.vault.coder")
+  (e.g. `"utopia.vault.coder"`)
 - **"model_package": String (optional)** - Package where all the model classes are written
   - Defaults to base_package.model
 - **"database_package" / "db_package": String (optional)** - Package where all the database -related classes are written
   - Defaults to base_package.database
+- **"database_name" / "db_name" / "database" / "db": String (optional)** - Name of the target database
 - **"models_without_vault": Boolean (optional)** - Whether model classes can't contain database references 
-  (Metropolis-style project) (default = false)
+  (Metropolis-style project) (default = `false`)
+- **"prefix_columns": Boolean (optional)** - Whether sql column names should have a table-name -based prefix 
+  (default = `false`)
+- **"naming": Object (optional)** - An object where you can specify custom naming schemes for the generated documents
+  - See details from below
 - **"enumerations" / "enums": Object (optional)** - Contains a property for each introduced enumeration. 
   Each property should have a string array value where each item represents a possible enumeration value.
 - **"referenced_enumerations" / "referenced_enums": [String]** - Paths to enumerations from other projects
-  - Enumeration paths should include the full reference: E.g. "utopia.vault.coder.model.enumeration.PropertyType"
+  - Enumeration paths should include the full reference: E.g. `"utopia.vault.coder.model.enumeration.PropertyType"`
 - **"classes" / "class": Object** - Contains a property for each introduced sub-package, the value of each 
   sub-package property should be a class object or an array of **class objects** (see structure below).
 
 ### Class Object Structure
 Class objects should contain following properties:
-- **"name": String (optional)** - Name of this class as it appears in the Scala code (e.g. "TestClass")
+- **"name": String (optional)** - Name of this class (e.g. `"TestClass"`)
   - If not specified, the name is parsed from the specified table name
-- **"name_plural": String (optional)** - Plural version of the class name (e.g. "TestClasses"). 
-  By default, "s" is added to the end of the "name" property in order to form the plural name.
-- **"table_name" / "table": String (optional)** - Name of the SQL table generated for this class (e.g. "test_class")
-  - If not specified, the class name is converted to 'under_score' format and used as the table name
-  - Either this or "name" must be provided
-- **"use_long_id": Boolean (optional)** - Whether Long should be used in the id property instead of Int. 
-  Defaults to false.
+- **"name_plural": String (optional)** - Plural version of the class name (e.g. `"TestClasses"`). 
+  By default, `"s"` is added to the end of the `"name"` property in order to form the plural name.
+- **"table_name" / "table": String (optional)** - Name of the SQL table generated for this class (e.g. `"test_class"`)
+  - If not specified, the class name will be parsed into a table name
+  - Either this or `"name"` must be provided
+- **"id": String (optional)** - Name of this class' id (primary key) property
+  - Default is `"id"`
+- **"use_long_id": Boolean (optional)** - Whether Long should be used in the id property instead of `Int`. 
+  Defaults to `false`.
 - **"doc": String (optional)** - A description of this class, which is written to class documentation
 - **"author": String (optional)** - Author of this class. If omitted, the project author will be used.
 - **"combinations" / "combos": [Object]** - An array of **combination objects** for this class (see structure below)
   - Alternatively, you can specify a **"combination"** or **"combo"** -property with only a single 
     **combination object** as a value. Please don't specify both, however. 
-- **"description_link_column" / "description_link" / "desc_link": String (optional)** - Specifies the name of 
-  the column in a description link table that refers to this class (e.g. "test_class_id")
+- **"has_combos" / "generic_access" / "tree_inheritance": Boolean (optional)** - Determines whether a more generic 
+  access point (**ManyXAccessLike**) will be written for this class
+  - If omitted or *null*, a more generic access point will be written if this declaration includes any combo classes 
+- **"description_link" / "desc_link": String (optional)** - Specifies the name of 
+  the property in a description link table that refers to this class (e.g. `"testClassId"`)
   - Please note that if you specify this value, localized description support is added for this class
     - This requires the implementing project to use **Utopia Citadel**
 - **described: Boolean (optional)** - Determines whether this class should have localized description support, 
   which is a **Utopia Citadel** -specific feature
   - Defaults to `false`
-  - This value is ignored if "description_link_column" is specified
-  - If set to `true`, "description_link_column" value will be autogenerated based on the table name of this class
+  - This value is ignored if `"description_link_column"` is specified
+  - If set to `true`, `"description_link"` value will be autogenerated based on the name of this class
 - **"properties" / "props": [Object]** - An array of **property objects** for this class (see structure below)
 - **"combo_indices" / "indices": [[String]]** - An array of multiple key indices, each written as an array of property names
-  - Alternatively you can provide **"combo_index"** or **"index"** property that contains a single multiple 
+  - Alternatively, you can provide `combo_index` or `index` property that contains a single multiple 
     key index array
+- **"instances": [Object]** - An array of **instance objects** for this class
+  - Instance objects may contain an optional `id` property, which specifies the database row id. 
+  - Other properties should be based on class property names.
+    - E.g. if the class contains a property with name "testProperty", you may specify a 
+      "testProperty" or "test_property" -property in the instance object.
+    - Instance objects should specify at least all properties which don't have a sql default value and can't be null.
+  - Alternatively, you may provide `instance` property that contains a single instance object. 
+    - This will, however, overwrite any value of the `instances` property
 
 #### Combination Object Structure
 Each combination object should contains following properties:
 - **"child" / "children": String** - Name of the linked child class
-  - NB: If you use the name "children" and don't otherwise specify combination type, 1-n -linking will be used. 
-    For "child" property name, combination type 1- 0-1 will be used instead.
+  - NB: If you use the name `"children"` and don't otherwise specify combination type, 1-n -linking will be used. 
+    For `"child"` property name, combination type 1- 0-1 will be used instead.
 - **"type": String (optional)** - Type of this combination, from one of the options below:
   - **"one" / "link"** => Uses 1 to 1 linking (child must always be present)
   - **"option" / "optional"** => Uses 1 to 0-1 -linking where there can be cases without a child
@@ -103,70 +121,121 @@ Each combination object should contains following properties:
     - If you use this combination type, you may specify `"is_always_linked": Boolean` -property to specify how to treat 
       the 0 children case (default = not always linked => 0 children case is valid)
   - If you omit this property, the combination type is interpreted based on child property name, 
-    the referred child format and the "isAlwaysLinked" property.
+    the referred child format and the `"is_always_linked"` property.
 - **"is_always_linked" / "always_linked": Boolean (optional)** - Applies to 1-n links, determining whether to always 
   expect there to be children in queries
 - **"name": String (optional)** - Name of the combined class
   - If omitted, "ParentWithChild" (or "ParentWithChildren") -type of naming will be used
 - **"parent_alias" / "alias_parent": String (optional)** - Name to use for the parent class within this 
   combination class
-  - Also affects combination naming if "name" is not specified
+  - Also affects combination naming if `"name"` is not specified
 - **"child_alias" / "alias_child": String (optional)** - Name to use for the child / children in the combined class
-  - Also affects combination naming if "name" is not specified
+  - Also affects combination naming if `"name"` is not specified
+- **"doc": String (optional)** - A description of this combined model (used in documentation)
 
 #### Property Object Structure
 Each property object should contain following properties:
-- **"name": String (optional)** - Name of this property as it appears in the Scala code (e.g. "testProperty")
-  - If not specified, a camelCased column name is used. Alternatively the name is based on the data type used. 
+- **"name": String (optional)** - Name of this property (e.g. `"testProperty"`)
+  - If not specified, column name will be parsed into a property name. 
+    Alternatively the name is based on the data type used. 
     See data type list below for the default names.
-- **"name_plural": String (optional)** - The plural form of this property's name (e.g. "testProperties"). 
-  By default, "s" is added to the end of the standard property name in order to form the plural form.
-- **"references" / "ref": String (optional)** - Name of the database table referenced by this property. 
-  Omit or leave empty if this property doesn't reference any other class.
+- **"name_plural": String (optional)** - The plural form of this property's name (e.g. `"testProperties"`). 
+  By default, `"s"` is added to the end of the standard property name in order to form the plural form.
+- **"references" / "ref": String (optional)** - Name of the database table referenced by this property.
+  - Omit or leave empty if this property doesn't reference any other class.
+  - You may specify the referenced column / property in parentheses after the table name. E.g. `"table_name(column_name)"`
+    - If column prefixing is used, a prefix will automatically be added to the referenced column name
 - **"type": String (optional)** - The data type of this property. The following options are accepted:
-  - **"text" / "string" / "varchar"** - Results in a String / Varchar type (default name: "name" / "text")
-  - **"int"** - Results in Int numeric type (default name: "index")
-  - **"long" / "bigint" / "number"** - Results in Long numeric type (default name: "number")
-  - **"double"** - Results in Double numeric type (default name: "amount")
-  - **"boolean" / "flag"** - Results in Boolean type (true / false) (default name: "flag")
-  - **"datetime" / "timestamp"** - Results in Instant / Datetime type (default name: "timestamp")
-  - **"date" / "LocalDate"** - Results in LocalDate / Date type (default name: "date")
-  - **"time" / "LocalTime"** - Results in LocalTime / Time type (default name: "time")
-  - **"days"** - Results in Days type (default name: "duration")
-  - **"duration[X]"** - Results in a time duration type (default name: "duration")
+  - **"text" / "string" / "varchar"** - Results in a `String` / Varchar type (default name: `"name"` / `"text"`)
+    - You may specify the maximum string length in either parentheses at the end of the type (e.g. `"String(32)"`) or 
+      via the `"length"` property (optional feature).
+  - **"int"** - Results in `Int` numeric type (default name: `"index"`)
+    - You may specify the maximum allowed value in either parentheses at the end of the type 
+      (e.g. `"Int(tiny)"` OR `"Int(100)"`) (optional feature)
+  - **"long" / "bigint" / "number"** - Results in `Long` numeric type (default name: `"number"`)
+  - **"double"** - Results in `Double` numeric type (default name: `"amount"`)
+  - **"boolean" / "flag"** - Results in `Boolean` type (true / false) (default name: `"flag"`)
+  - **"datetime" / "timestamp" / "instant"** - Results in `Instant` / Datetime type (default name: `"timestamp"`)
+  - **"date" / "LocalDate"** - Results in `LocalDate` / Date type (default name: `"date"`)
+  - **"time" / "LocalTime"** - Results in `LocalTime` / Time type (default name: `"time"`)
+  - **"days"** - Results in `Days` type (default name: `"duration"`)
+  - **"duration[X]"** - Results in a `FiniteDuration` type (default name: `"duration"`)
     - **X** determines the unit used when storing the duration to the database. Available options are:
       - **h / hour / hours** - Stores as hours (int)
       - **m / min / minute / minutes** - Stores as minutes (int)
       - **s / second / seconds** - Stores as seconds (int)
       - **ms** - Stores as milliseconds (bigint, default)
-  - **"creation" / "created"** - Results in Instant / Timestamp type and is used as the row creation time 
-    (default name: "created")
+  - **"creation" / "created"** - Results in `Instant` / Timestamp type and is used as the row creation time 
+    (default name: `"created"`)
     - Enables creation time -based indexing (if indexed)
     - Indexes by default
-  - **"deprecation" / "deprecated"** - Results in Instant / Timestamp type that is null / None while the item is 
-    active (default name: "deprecatedAfter")
+  - **"deprecation" / "deprecated"** - Results in `Instant` / Timestamp type that is null / None while the item is 
+    active (default name: `"deprecatedAfter"`)
     - Enables item deprecation
     - Indexes by default
-  - **"expiration" / "expires"** - Results in Instant / Timestamp type that represents item expiration time 
-    (default name: "expires")
+  - **"expiration" / "expires"** - Results in `Instant` / Timestamp type that represents item expiration time 
+    (default name: `"expires"`)
     - Enables (timed) item deprecation
     - Indexes by default
-  - **"option[X]"** - Results in Option / nullable type where the underlying type is determined by what X is
-  - **"enum[X]"** - Results in an enumeration value choice. Replace X with the enumeration of your choice 
+  - **"option[X]"** - Results in `Option` / nullable type where the underlying type is determined by what `X` is
+  - **"enum[X]"** - Results in an enumeration value choice. Replace `X` with the enumeration of your choice 
     (must be specified in the "enumerations" -property). Uses the enumeration's name as the default property name.
     - Can be wrapped in option
-  - If omitted or empty, defaults to Int for references and String if the length property is present
+  - If omitted or empty, defaults to `Int` for references and `String` if the `"length"` property is present
 - **"index" / "indexed": Boolean (optional)** - Set to true if you want to force indexing and false if you want 
   to disable it
   - Omit or leave as null if you want the indexing to be determined by the data type
   - References will always create an index, regardless of this value
-- **"length": Int (optional)** - Determines maximum text length if type "text" is used
+- **"length": Int (optional)** - Determines maximum text length if `String` type is used
+  - Also applies to `Int` type, in which case this property limits the number of digits in an integer
+- **"length_rule" / "limit" / "max_length" / "max": String (optional)** - Rule to apply to situations where the current 
+  column maximum length would be exceeded.
+  - Available options are:
+    - `"throw"` - Throws a runtime error
+    - `"crop"` - Limits the input so that it fits to the column maximum length
+    - `"expand"` - Expands the column maximum length indefinitely
+    - `"expand to X"` / `"to X"` - Expands the column maximum length until the specified limit `X`
+  - These are only applicable to `String` and `Int` types
 - **"default" / "def": String (optional)** - The default value assigned for this property in the data model
   - If empty or omitted, data type -specific default will be used, if there is one
 - **"sql_default" / "sql_def": String (optional)** - The default value assigned for this property in the database
   - If empty or omitted, data type -specific default will be used, if there is one
 - **"doc": String (optional)** - Description of this property (used in documentation)
 - **"usage": String (optional)** - Additional description about the use of this property
+
+## Naming object structure
+If you want to specify custom naming schemes, you may do so in a naming object.
+
+Naming rules are interpreted as follows:
+- `"camel"` or `"camelCase"` => camel case property naming. E.g. "wordOfLife"
+- `"Camel"` or `"CamelCase"` => camel case class naming. E.g. "WordOfLife"
+- `"underscore"` => lower case words separated by an underscore. E.g. "word_of_life"
+- `"text"` => lower case words separated with a whitespace. E.g. "word of life"
+- `"Text"` => capitalized words separated with a whitespace. E.g. "Word Of Life"
+
+Below are listed the properties which you may customize:
+- `"database_name"` / `"database"` / `"db_name"` / `"db"` / `"sql"` => database name
+  - Default is `"underscore"`
+- `"table"` / `"sql"` / `"db"` => sql table naming
+  - Default is `"underscore"`
+- `"column"` / `"col"` / `"sql"` / `"db"` => sql column naming
+  - Default is `"underscore"`
+- `"db_prop"` / `"db_model_prop"` / `"db_model"` / `"db"` / `"prop"` / `"model"` => database model & factory string literals
+  - Default is `"camelCase"`
+- `"json"` / `"model"` => generated json objects
+  - Default is `"underscore"`
+- `"class"` / `"instance"` / `"object"` => class / object / trait names
+  - Default is `"CamelCase"`
+  - Changing this is not recommended
+- `"property"` / `"prop"` / `"attribute"` / `"att"` / `"code"` => property and parameter names in Scala code
+  - Default is `"camelCase"`
+  - Changing this is not recommended
+
+Please note that if you specify a generic property such as `"db"`, the rule may be applied to multiple targets, 
+unless overridden by a more specific property elsewhere.
+
+Please also note that not all styles are suitable for all use cases.
+E.g. Using `"text"` style within code will result in build errors.
 
 ## Root Path Aliases
 In case you're using certain root paths often, you may ease application use by aliasing those paths.  
@@ -182,6 +251,8 @@ You may then refer to a root alias instead of the full root path when using the 
 This application will produce the following documents 
 (where **X** is replaced by class name, **P** by class-related package name and **S** is replaced with project name):
 - **S-database-structure.sql** -document that contains create table sql statements
+- **S-length-rules.json** -document that contains all listed column length rules
+  - Use `ColumnLengthRules.loadFrom(...)` in **Vault** in your code to apply this file to your project
 - **S-merge-conflicts-yyyy-mm-dd-hh-mm.txt** -document that lists merge conflicts that occurred (if there were any)
 - project root package
   - model
@@ -218,6 +289,9 @@ This application will produce the following documents
             - Only generated for classes which support descriptions
       - many
         - **P**
+          - **ManyXsAccessLike.scala** - A trait common to access points that return multiple instances 
+            of **X** or its variations at a time
+            - Only generated for classes with combinations or when explicitly requested
           - **ManyXsAccess.scala** - A trait common to access points that return multiple instances of **X** at a time
           - **DbXs.scala** - The root access point for multiple instances of **X**
         - description

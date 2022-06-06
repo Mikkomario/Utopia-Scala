@@ -19,6 +19,7 @@ import utopia.flow.time.TimeExtensions._
   * @author Mikko Hilpinen
   * @since 24.11.2021, v3.1
   */
+@deprecated("Will be removed in a future release", "v4.0")
 case class EmailValidatedSessionData(validationId: Int, token: String = ExodusContext.uuidGenerator.next(),
                                      expires: Instant = Now + 1.hours,
                                      created: Instant = Now, closedAfter: Option[Instant] = None)

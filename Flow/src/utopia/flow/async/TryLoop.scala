@@ -6,6 +6,7 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Try}
 
+@deprecated("Replaced with Loop.tryRepeatedly(...)(...)", "v1.15")
 object TryLoop
 {
 	/**
@@ -18,6 +19,7 @@ object TryLoop
 	 * @tparam A Type of operation result
 	 * @return Asynchronous future of the final operation result (contains a failure if max attempts was reached)
 	 */
+	@deprecated("Replaced with Loop.tryRepeatedly(...)(...)", "v1.15")
 	def attempt[A](durationBetweenAttempts: Duration, maxAttempts: Int)(operation: Try[A])
 	              (implicit exc: ExecutionContext) =
 	{
@@ -45,6 +47,7 @@ object TryLoop
  * @author Mikko Hilpinen
  * @since 10.3.2020, v1.6.1
  */
+@deprecated("Replaced with Loop.tryRepeatedly(...)(...)", "v1.15")
 class TryLoop[A](val durationBetweenAttempts: Duration, maxAttempts: Int)(operation: => Try[A])
 	extends Loop
 {

@@ -3,6 +3,7 @@ package utopia.metropolis.model.stored.device
 import utopia.metropolis.model.partial.device.ClientDeviceData
 import utopia.metropolis.model.stored.{StoredFromModelFactory, StoredModelConvertible}
 
+@deprecated("This class will be removed in a future release", "v2.1")
 object ClientDevice extends StoredFromModelFactory[ClientDevice, ClientDeviceData]
 {
 	override def dataFactory = ClientDeviceData
@@ -15,5 +16,6 @@ object ClientDevice extends StoredFromModelFactory[ClientDevice, ClientDeviceDat
   * @author Mikko Hilpinen
   * @since 2021-10-23
   */
+@deprecated("This class will be removed in a future release", "v2.1")
 case class ClientDevice(id: Int, data: ClientDeviceData) extends StoredModelConvertible[ClientDeviceData]
 

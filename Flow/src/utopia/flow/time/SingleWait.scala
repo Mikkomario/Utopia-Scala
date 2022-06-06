@@ -11,6 +11,7 @@ import scala.concurrent.Promise
 * @author Mikko Hilpinen
 * @since 31.3.2019
 **/
+@deprecated("Replaced with Wait", "v1.15")
 class SingleWait(val target: WaitTarget) extends Runnable with Breakable
 {
     // ATTRIBUTES    --------------------

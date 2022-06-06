@@ -1,7 +1,8 @@
 package utopia.vault.coder.controller.reader
 
-import utopia.vault.coder.model.scala.{Package, Reference}
+import utopia.vault.coder.model.scala.Package
 import utopia.vault.coder.model.scala.code.CodeLine
+import utopia.vault.coder.model.scala.datatype.Reference
 import utopia.vault.coder.model.scala.declaration.{File, InstanceDeclaration, MethodDeclaration, PropertyDeclaration}
 
 import scala.collection.immutable.VectorBuilder

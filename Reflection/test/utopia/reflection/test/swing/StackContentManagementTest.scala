@@ -43,11 +43,9 @@ object StackContentManagementTest extends App
 	new SingleFrameSetup(actorHandler, frame).start()
 	
 	var nextNumber = 8
-	val updateLoop = Loop(1.seconds) {
+	Loop.regularly(1.seconds) {
 		val index = (math.random() * manager.content.size).toInt
 		manager.content = manager.content.inserted(nextNumber, index)
 		nextNumber += 2
 	}
-	updateLoop.registerToStopOnceJVMCloses()
-	updateLoop.startAsync()
 }

@@ -1,11 +1,9 @@
 package utopia.reflection.container.stack
 
-import utopia.flow.async.Loop
+import utopia.flow.async.LoopingProcess
 import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.immutable.GraphEdge
 import utopia.flow.datastructure.mutable.GraphNode
-import utopia.flow.time.WaitUtils
-import utopia.flow.time.WaitTarget.WaitDuration
 import utopia.flow.util.Counter
 import utopia.genesis.util.Fps
 import utopia.reflection.component.swing.template.AwtComponentRelated
@@ -15,7 +13,7 @@ import utopia.reflection.util.AwtEventThread
 import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.FiniteDuration
 
 /**
   * Stack hierarchy manager tracks stack component hierarchies and updates the components when necessary
@@ -53,10 +51,7 @@ object StackHierarchyManager
 	/**
 	  * @return A string description of the stack hierarchy
 	  */
-	def description =
-	{
-		s"[${graph.values.map(nodeToString).mkString(", ")}]"
-	}
+	def description = s"[${graph.values.map(nodeToString).mkString(", ")}]"
 	
 	/**
 	  * @return Pulls an awt component from the registered components, provided that any are available
@@ -136,7 +131,7 @@ object StackHierarchyManager
 		validationQueue :+= item
 		
 		// Informs validation loop
-		validationLoop.foreach { l => WaitUtils.notify(l.waitLock) }
+		validationLoop.foreach { _.runAsync() }
 	}
 	
 	/**
@@ -150,7 +145,7 @@ object StackHierarchyManager
 		
 		// Informs validation loop
 		if (items.nonEmpty)
-			validationLoop.foreach { l => WaitUtils.notify(l.waitLock) }
+			validationLoop.foreach { _.runAsync() }
 	}
 	
 	/**
@@ -160,12 +155,11 @@ object StackHierarchyManager
 	  */
 	def startRevalidationLoop(vps: Fps = Fps(30))(implicit context: ExecutionContext) =
 	{
-		if (validationLoop.isEmpty)
-		{
+		if (validationLoop.isEmpty) {
 			val loop = new RevalidateLoop(vps.interval)
 			validationLoop = Some(loop)
-			loop.startAsync()
-			loop.registerToStopOnceJVMCloses()
+			if (waitsRevalidation)
+				loop.runAsync()
 		}
 	}
 	
@@ -384,59 +378,64 @@ object StackHierarchyManager
 		
 		newId
 	}
-}
-
-private object StackId
-{
-	def root(index: Int) = StackId(Vector(index))
-}
-
-private case class StackId(parts: Vector[Int])
-{
-	def length = parts.size
 	
-	def head = parts.head
 	
-	def last = parts.last
+	// NESTED   --------------------------------
 	
-	def tail = if (parts.size < 2) None else Some(StackId(parts.tail))
-	
-	def isMasterId = parts.size < 2
-	
-	def masterId = parts.head
-	
-	def parentId = if (parts.size == 1) None else Some(StackId(parts.dropRight(1)))
-	
-	def apply(index: Int) = parts(index)
-	
-	def +(index: Int) = StackId(parts :+ index)
-	
-	def +(other: StackId) = StackId(parts ++ other.parts)
-	
-	def isChildOf(other: StackId) =
+	private object StackId
 	{
-		if (parts.size <= other.parts.size)
-			false
-		else
-			other.parts.indices.forall { i => apply(i) == other(i) }
+		def root(index: Int) = StackId(Vector(index))
 	}
 	
-	def dropUntil(index: Int) = StackId(parts.dropWhile { _ != index })
-	
-	override def toString = parts.mkString(":")
-}
-
-private class RevalidateLoop(val validationInterval: Duration) extends Loop
-{
-	override def runOnce() =
+	private case class StackId(parts: Vector[Int])
 	{
-		// Performs the validation in Swing graphics thread
-		AwtEventThread.blocking { StackHierarchyManager.revalidate() }
+		def length = parts.size
 		
-		// May wait until next item needs validation
-		if (!StackHierarchyManager.waitsRevalidation)
-			WaitUtils.waitUntilNotified(waitLock)
+		def head = parts.head
+		
+		def last = parts.last
+		
+		def tail = if (parts.size < 2) None else Some(StackId(parts.tail))
+		
+		def isMasterId = parts.size < 2
+		
+		def masterId = parts.head
+		
+		def parentId = if (parts.size == 1) None else Some(StackId(parts.dropRight(1)))
+		
+		def apply(index: Int) = parts(index)
+		
+		def +(index: Int) = StackId(parts :+ index)
+		
+		def +(other: StackId) = StackId(parts ++ other.parts)
+		
+		def isChildOf(other: StackId) =
+		{
+			if (parts.size <= other.parts.size)
+				false
+			else
+				other.parts.indices.forall { i => apply(i) == other(i) }
+		}
+		
+		def dropUntil(index: Int) = StackId(parts.dropWhile { _ != index })
+		
+		override def toString = parts.mkString(":")
 	}
 	
-	override def nextWaitTarget = WaitDuration(validationInterval)
+	private class RevalidateLoop(validationInterval: FiniteDuration)(implicit exc: ExecutionContext) extends LoopingProcess
+	{
+		override protected def isRestartable = true
+		
+		override def iteration() =
+		{
+			// Performs the validation in Swing graphics thread
+			AwtEventThread.blocking { StackHierarchyManager.revalidate() }
+			
+			// Only continues as long as more items need revalidation
+			if (StackHierarchyManager.waitsRevalidation)
+				Some(validationInterval)
+			else
+				None
+		}
+	}
 }

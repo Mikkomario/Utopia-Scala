@@ -5,6 +5,7 @@ import utopia.ambassador.controller.implementation.AcquireTokens
 import utopia.ambassador.controller.template.AuthRedirector
 import utopia.ambassador.database.access.many.service.DbAuthServices
 import utopia.ambassador.rest.util.ServiceTarget
+import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.template.MapLike
 import utopia.flow.generic.ValueConversions._
@@ -41,7 +42,7 @@ class ServicesNode(tokenAcquirer: AcquireTokens, redirectors: MapLike[Int, AuthR
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionTokenAuthorized { (_, connection) =>
+		context.authorizedForScope(ReadGeneralData) { (_, connection) =>
 			implicit val c: Connection = connection
 			// Returns simple service data
 			Result.Success(DbAuthServices.pull.map { _.toModel })

@@ -25,6 +25,7 @@ object ManyApiKeysAccess
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 trait ManyApiKeysAccess extends ManyRowModelAccess[ApiKey] with Indexed with FilterableView[ManyApiKeysAccess]
 {
 	// COMPUTED	--------------------

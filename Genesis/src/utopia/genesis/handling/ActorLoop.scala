@@ -1,13 +1,15 @@
 package utopia.genesis.handling
 
 import java.time.Instant
-
-import utopia.flow.async.Loop
+import utopia.flow.async.LoopingProcess
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.WaitTarget.Until
 import utopia.genesis.util.Fps
 
-class ActorLoop(private val handler: ActorHandler, val apsRange: Range = 15 to 60) extends Loop
+import scala.concurrent.ExecutionContext
+
+class ActorLoop(handler: ActorHandler, val apsRange: Range = 15 to 60)(implicit exc: ExecutionContext)
+	extends LoopingProcess
 {
 	// ATTRIBUTES	-------------------
 	
@@ -15,31 +17,31 @@ class ActorLoop(private val handler: ActorHandler, val apsRange: Range = 15 to 6
 	  * Minimum actions per second
 	  */
 	val minAPS = Fps(apsRange.start)
-	
 	/**
 	  * Maximum actions per second
 	  */
 	val maxAPS = Fps(apsRange.end)
 	
+	private var lastActStarted = Instant.now()
+	
+	
+	// COMPUTED -----------------------
+	
 	/**
 	  * @return The minimum interval between act calls
 	  */
 	def minInterval = maxAPS.interval
-	
 	/**
 	  * @return The maximum interval passed to act calls (actual interval may be longer)
 	  */
 	def maxInterval = minAPS.interval
 	
-	private var lastActStarted = Instant.now()
-	
 	
 	// IMPLEMENTED	-------------------
 	
-	/**
-	  * Calls act(...) of all associated Actors
-	  */
-	override def runOnce() =
+	override protected def isRestartable = true
+	
+	override protected def iteration() =
 	{
 		val actStarted = Instant.now()
 		// MaxAPS may affect calculations so that the real time lapse is not used
@@ -48,10 +50,7 @@ class ActorLoop(private val handler: ActorHandler, val apsRange: Range = 15 to 6
 		lastActStarted = actStarted
 		
 		handler.act(sinceLastAct)
+		
+		Some(Until(lastActStarted + minInterval))
 	}
-	
-	/**
-	  * The time between the end of the current run and the start of the next one
-	  */
-	override def nextWaitTarget = Until(lastActStarted + minInterval)
 }

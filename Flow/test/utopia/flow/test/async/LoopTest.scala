@@ -12,6 +12,7 @@ import scala.concurrent.ExecutionContext
 /**
  * Tests loops
  */
+@deprecated("Replaced with LoopTest2", "v1.15")
 object LoopTest extends App
 {
 	// Makes sure WaitTarget / Until is working

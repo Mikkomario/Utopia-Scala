@@ -18,6 +18,7 @@ import utopia.vault.nosql.template.Indexed
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 trait UniqueSessionTokenAccess 
 	extends SingleRowModelAccess[SessionToken] 
 		with DistinctModelAccess[SessionToken, Option[SessionToken], Value] with Indexed

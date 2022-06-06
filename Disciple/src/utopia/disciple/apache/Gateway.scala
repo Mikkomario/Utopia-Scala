@@ -138,6 +138,7 @@ class Gateway(jsonParsers: Vector[JsonParser] = Vector(JSONReader), maxConnectio
 	  */
 	private implicit val _defaultResponseEncoding: Codec = defaultResponseEncoding
 	
+	// TODO: SSL handling should be configurable. Now there is no way to modify connectionManager from outside.
     private lazy val connectionManager = new PoolingHttpClientConnectionManager()
 	connectionManager.setDefaultMaxPerRoute(maxConnectionsPerRoute)
 	connectionManager.setMaxTotal(maxConnectionsTotal)

@@ -38,13 +38,14 @@ class Tree[A](var content: A, initialChildren: Vector[Tree[A]] = Vector()) exten
     
     // IMPLEMENTED PROPERTIES    -----
     
-    override protected def setChildren(newChildren: Vector[Tree[A]]) = _children = newChildren
-    
     def children = _children
     
-    /**
-      * @param content Content for the child node
-      * @return A new node
-      */
-    override protected def makeNode(content: A) = new Tree(content)
+    // Creates a new child node and attaches it to this tree
+    override protected def newNode(content: A) = {
+        val node = new Tree(content)
+        _children :+= node
+        node
+    }
+    
+    override protected def setChildren(newChildren: Vector[Tree[A]]) = _children = newChildren
 }

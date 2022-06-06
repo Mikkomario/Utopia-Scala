@@ -1,6 +1,20 @@
 # Utopia Reflection - List of Changes
 
-## v.2.6.2 - 27.01.2022
+## v2.7 - 06.06.2022
+This update mostly reflects changes in **Flow** update v1.15.  
+Alignment functionality was also moved to **Genesis** from **Reflection** and refactored somewhat.
+### Breaking Changes
+- **ActorLoop** and **RepaintLoop** now extend **LoopingProcess** instead of **Loop**
+  - This means that `.startAsync()` is no longer available (replaced with `.runAsync()`)
+  - Also, the implicit **ExecutionContext** parameter is now required during instance construction, 
+    instead of at loop start
+### New Features
+- Added **Alignment** and **LinearAlignment** classes, based on existing **Reflection** solutions
+### New Methods
+- **Bounds**.type
+  - Added a new constructor variant
+
+## v2.6.2 - 27.01.2022
 Scala version update
 ### Scala
 This module now uses Scala v2.13.7

@@ -109,6 +109,9 @@ object LocalDatabase
 			  defaultCollate: Option[String] = None)
 			 (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
+		// Can't have a default database before one exists
+		Connection.modifySettings { _.copy(defaultDBName = None) }
+		
 		// Table is cached once it has been used once
 		lazy val table = versionTable
 		
@@ -117,8 +120,11 @@ object LocalDatabase
 		val result = start(defaultCharset, defaultCollate, listener).flatMap { _ =>
 			// Checks current database version, and whether database has been configured at all
 			connectionPool.tryWith { implicit connection =>
-				if (connection.existsTable(dbName, versionTableName))
+				if (connection.existsTable(dbName, versionTableName)) {
+					Connection.modifySettings { _.copy(defaultDBName = Some(dbName)) }
+					connection.dbName = dbName
 					DbDatabaseVersion(table).latest
+				}
 				else
 					None
 			}.flatMap { currentDbVersion =>
@@ -130,7 +136,9 @@ object LocalDatabase
 							if (currentDbVersion.isEmpty)
 								connectionPool.tryWith { _.createDatabase(dbName, defaultCharset, defaultCollate) } match
 								{
-									case Success(_) => SetupSucceeded(None)
+									case Success(_) =>
+										Connection.modifySettings { _.copy(defaultDBName = Some(dbName)) }
+										SetupSucceeded(None)
 									case Failure(error) => SetupFailed(error)
 								}
 							else
@@ -167,6 +175,7 @@ object LocalDatabase
 									connection.dropDatabase(dbName)
 									connection.createDatabase(dbName, defaultCharset, defaultCollate,
 										checkIfExists = false)
+									Connection.modifySettings { _.copy(defaultDBName = Some(dbName)) }
 									Vector()
 								}
 							}
@@ -185,9 +194,6 @@ object LocalDatabase
 									case Failure(error) => Left(UpdateFailed(error, source, version))
 								}
 							}.findMap { _.leftOption }
-							
-							// Sets up the default database name
-							Connection.modifySettings { _.copy(defaultDBName = Some(dbName)) }
 							
 							// Restores possible backup versions and records the new database version
 							if (versionsBackup.nonEmpty)
@@ -287,7 +293,7 @@ object LocalDatabase
 				// Updates Vault connection settings
 				Connection.modifySettings { _.copy(
 					connectionTarget = configBuilder.getURL(""),
-					defaultDBName = Some("test"), charsetName = charsetName.getOrElse(""),
+					charsetName = charsetName.getOrElse(""),
 					charsetCollationName = collateName.getOrElse("")) }
 				
 				listener.foreach { _.onDatabaseSetupEvent(DatabaseConfigured) }

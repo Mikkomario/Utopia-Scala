@@ -1,12 +1,11 @@
 package utopia.annex.controller
 
 import java.time.Instant
-
 import utopia.access.http.Status
 import utopia.access.http.Status.NotModified
 import utopia.annex.model.response.{Response, ResponseBody}
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.Loop
+import utopia.flow.async.LoopingProcess
 import utopia.flow.container.FileContainer
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
@@ -21,13 +20,9 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
-abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc: ExecutionContext) extends Loop
+abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc: ExecutionContext)
+	extends LoopingProcess
 {
-	// ATTRIBUTES	----------------------
-	
-	private var nextRequestWaitModifier = 0.0
-	
-	
 	// ABSTRACT	--------------------------
 	
 	/**
@@ -63,23 +58,22 @@ abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc:
 	
 	// IMPLEMENTED	-----------------------
 	
-	override def runOnce() =
+	override protected def isRestartable = true
+	
+	override def iteration() =
 	{
 		val newRequestTime = Instant.now()
 		val lastRequestTime = requestTimeContainer.current.instant
 		
 		// Prepares and performs the request
-		nextRequestWaitModifier = makeRequest(lastRequestTime).waitForResult() match
-		{
+		val waitModifier = makeRequest(lastRequestTime).waitForResult() match {
 			case Success(response) =>
-				response match
-				{
+				response match {
 					case Response.Success(status, body) =>
 						// Updates last update time locally
 						requestTimeContainer.current = Some(newRequestTime)
 						// If there was new data, updates container
-						if (status != NotModified)
-						{
+						if (status != NotModified) {
 							container.pointer.update { old => merge(old, body) }
 							0.75
 						}
@@ -94,8 +88,7 @@ abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc:
 				}
 			case Failure(_) => 2
 		}
+		Some(WaitDuration(standardUpdateInterval * waitModifier))
 	}
-	
-	override def nextWaitTarget = WaitDuration(standardUpdateInterval * nextRequestWaitModifier)
 }
 

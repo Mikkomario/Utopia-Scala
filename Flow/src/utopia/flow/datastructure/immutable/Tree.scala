@@ -5,11 +5,16 @@ package utopia.flow.datastructure.immutable
  * @author Mikko Hilpinen
  * @since 4.11.2016
  */
-case class Tree[A](override val content: A, override val children: Vector[Tree[A]] = Vector()) extends TreeLike[A, Tree[A]]
+case class Tree[A](override val content: A, override val children: Vector[Tree[A]] = Vector())
+    extends TreeLike[A, Tree[A]]
 {
     // IMPLEMENTED    ---------------
     
-    override protected def makeNode(content: A, children: Vector[Tree[A]]) = Tree(content, children)
+    override def repr = this
+    
+    override protected def createCopy(content: A, children: Vector[Tree[A]]) = Tree(content, children)
+    
+    override protected def newNode(content: A) = Tree(content)
     
     
     // OTHER METHODS    -------------

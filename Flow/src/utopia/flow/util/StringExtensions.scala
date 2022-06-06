@@ -2,6 +2,7 @@ package utopia.flow.util
 
 import utopia.flow.datastructure.mutable.ResettableLazy
 import CollectionExtensions._
+import utopia.flow.parse.Regex
 
 /**
  * Contains some utility extensions that extend the capabilities of standard strings
@@ -16,6 +17,7 @@ object StringExtensions
 	 * Extends standard scala string
 	 * @param s String to extend
 	 */
+	// TODO: Add a split function that accepts a Regex instance (also other such functions)
 	implicit class ExtendedString(val s: String) extends AnyVal
 	{
 		/**
@@ -190,6 +192,15 @@ object StringExtensions
 		 */
 		def afterFirst(str: String) = optionIndexOf(str).map { i => s.drop(i + str.length) }.getOrElse("")
 		/**
+		  * @param regex A regular expression
+		  * @return A portion of this string that appears after the first match of the specified regular expression.
+		  *         Empty string if no matches were found.
+		  */
+		def afterFirstMatch(regex: Regex) = regex.endIndexIteratorIn(s).nextOption() match {
+			case Some(end) => s.drop(end)
+			case None => ""
+		}
+		/**
 		 * @param str A string
 		 * @return A portion of this string that comes after the last occurrence of specified string (empty string if
 		 *         specified string is not a substring of this string), (case-sensitive)
@@ -218,6 +229,15 @@ object StringExtensions
 		 */
 		def untilFirst(str: String) = optionIndexOf(str).map(s.take).getOrElse(s)
 		/**
+		  * @param regex A regular expression
+		  * @return A portion of this string that appears before the first match of the specified regular expression.
+		  *         If no matches were found, returns this string.
+		  */
+		def untilFirstMatch(regex: Regex) = regex.startIndexIteratorIn(s).nextOption() match {
+			case Some(start) => s.take(start)
+			case None => s
+		}
+		/**
 		 * @param str A string
 		 * @return A portion of this string that comes before the last occurrence of specified string
 		 *         (returns this string if specified string is not a substring of this string), (case-sensitive)
@@ -241,6 +261,18 @@ object StringExtensions
 		}*/
 		
 		/**
+		  * @param regex A regular expression to split with
+		  * @return Parts of this string that didn't match the regular expression
+		  */
+		def split(regex: Regex) = regex.split(s)
+		/**
+		  * @param regex A regular expression to split with
+		  * @return An iterator that returns parts of this string that didn't match the regular expression.
+		  *         Empty parts are not included.
+		  */
+		def splitIterator(regex: Regex) = regex.splitIteratorIn(s)
+		
+		/**
 		 * Splits this string into two at the first occurrence of specified substring. Eg. "apple".splitAtFirst("p") = "a" -> "ple"
 		 * @param str A separator string where this string will be split
 		 * @return Part of this string until specified string -> part of this string after specified string (empty if string was not found)
@@ -248,6 +280,17 @@ object StringExtensions
 		def splitAtFirst(str: String) = optionIndexOf(str) match
 		{
 			case Some(index) => s.take(index) -> s.drop(index + str.length)
+			case None => s -> ""
+		}
+		/**
+		  * Splits this string into two at the first regular expression match.
+		  * @param regex A regular expression used to separate this string
+		  * @return Part of this string until the regular expression match ->
+		  *         part of this string after the regular expression match. If no match was made,
+		  *         the first part is this whole string and the second part is empty
+		  */
+		def splitAtFirstMatch(regex: Regex) = regex.firstRangeFrom(s) match {
+			case Some(range) => s.take(range.start) -> s.drop(range.end)
 			case None => s -> ""
 		}
 		/**
@@ -267,6 +310,7 @@ object StringExtensions
 		 * @param regex A regular expression
 		 * @return Each part of this string which was separated with such an expression
 		 */
+		@deprecated("Please use .split(Regex), combining it with .ignoringQuotations (in Regex)", "v1.15")
 		def splitIgnoringQuotations(regex: String) =
 			s.split(regex + "(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)")
 		

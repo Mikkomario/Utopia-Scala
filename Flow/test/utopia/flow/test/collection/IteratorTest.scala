@@ -1,5 +1,6 @@
 package utopia.flow.test.collection
 
+import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.datastructure.mutable.PollableOnce
 import utopia.flow.util.CollectionExtensions._
 
@@ -53,6 +54,8 @@ object IteratorTest extends App
 	assert(mappedIter3.poll == -2)
 	assert(mappedIter3.next() == -2)
 	assert(mappedIter3.next() == -3)
+	
+	assert((1 to 3).iterator.pairedFrom(0).toVector == Vector(Pair(0, 1), Pair(1, 2), Pair(2, 3)))
 	
 	println("Success!")
 }

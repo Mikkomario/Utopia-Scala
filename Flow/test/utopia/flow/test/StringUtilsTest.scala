@@ -1,6 +1,7 @@
 package utopia.flow.test
 
 import utopia.flow.parse.Regex
+import utopia.flow.parse.Regex.stringToRegex
 import utopia.flow.util.StringExtensions._
 
 /**
@@ -38,14 +39,14 @@ object StringUtilsTest extends App
 	assert(s.untilFirst("is") == "Th")
 	assert(s.untilLast("is") == "This ")
 	
-	assert("a,b,\"c,d,e\",f,,h".splitIgnoringQuotations(",").toVector ==
+	assert("a,b,\"c,d,e\",f,,h".split(",".ignoringQuotations).toVector ==
 		Vector("a", "b", "\"c,d,e\"", "f", "", "h"))
 	
 	assert("Almost.There.No.More.".divideWith(".") == Vector("Almost.", "There.", "No.", "More."))
 	assert("Test".divideWith(".") == Vector("Test"))
 	assert("Foo---bar".divideWith("---") == Vector("Foo---", "bar"))
 	
-	assert(Regex.digit.divide("A1BAA3D") == Vector("A1", "BAA3", "D"))
+	assert(Regex.digit.separate("A1BAA3D") == Vector("A1", "BAA3", "D"))
 	assert(Regex.digit.extract("A1BAA3D") == (Vector("A", "BAA", "D"), Vector("1", "3")))
 	assert(Regex.parenthesis.extract("Some(more)text") == (Vector("Some", "text"), Vector("(more)")))
 	assert(Regex("a").ignoringWithin('(', ')').findAllFrom("a test (another test)").size == 1)
@@ -58,6 +59,8 @@ object StringUtilsTest extends App
 	println(control.stripControlCharacters)
 	
 	assert(control.stripControlCharacters == "\"This is a test string\"")
+	
+	assert("XtestXX2".splitIterator("X").toVector == Vector("test", "2"))
 	
 	println("Success!")
 }

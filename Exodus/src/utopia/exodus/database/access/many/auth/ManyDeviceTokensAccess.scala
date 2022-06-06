@@ -25,6 +25,7 @@ object ManyDeviceTokensAccess
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 trait ManyDeviceTokensAccess
 	extends ManyRowModelAccess[DeviceToken] with Indexed with FilterableView[ManyDeviceTokensAccess]
 {

@@ -12,6 +12,7 @@ import utopia.vault.nosql.view.{SubView, UnconditionalView}
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 object DbApiKey extends SingleRowModelAccess[ApiKey] with UnconditionalView with Indexed
 {
 	// COMPUTED	--------------------

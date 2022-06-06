@@ -11,7 +11,7 @@ import scala.collection.immutable.VectorBuilder
  * @author Mikko Hilpinen
  * @since 1.11.2016
  */
-trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
+trait TreeLike[A, +NodeType <: TreeLike[A, NodeType]] extends Node[A]
 {
     // ABSTRACT   --------------------
     
@@ -21,10 +21,11 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
     def children: Vector[NodeType]
     
     /**
+      * Creates a new (child) node
       * @param content Content for the child node
-      * @return A new node
+      * @return A new (child) node
       */
-    protected def makeNode(content: A): NodeType
+    protected def newNode(content: A): NodeType
     
     
     // COMPUTED PROPERTIES    --------
@@ -32,7 +33,7 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
     /**
       * @return An iterator that goes over all the nodes below this node. Will not include this node.
       */
-    def nodesBelowIterator: Iterator[NodeType] = new TreeIterator
+    def nodesBelowIterator: Iterator[NodeType] = children.iterator.flatMap { _.nodesBelowIterator }
     
     /**
       * @return An iterator that goes over all content within this tree, including this node's contents.
@@ -131,7 +132,7 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
       * @param content The searched content
       * @return Either an existing node or a made-up one
       */
-    def /(content: A) = get(content) getOrElse makeNode(content)
+    def /(content: A) = get(content) getOrElse newNode(content)
     
     
     // OTHER METHODS    ------------
@@ -156,7 +157,7 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
      * @param node A node that may exist below this node
      * @return Whether the provided node exists below this node
      */
-    def contains(node: TreeLike[_, _]): Boolean = { children.contains(node) || children.exists { _.contains(node) } }
+    def containsNode(node: Any): Boolean = { children.contains(node) || children.exists { _.containsNode(node) } }
     /**
       * Checks whether this node or any of this node's children contains the specified content
       * @param content The searched content
@@ -208,27 +209,6 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends Node[A]
                 Vector(child)
             else
                 child.findBranches(filter)
-        }
-    }
-    
-    
-    // NESTED   -----------------------------
-    
-    private class TreeIterator extends Iterator[NodeType]
-    {
-        // ATTRIBUTES   --------------------
-        
-        private val targets = children
-        private var currentIteratorIndex = -1
-        private var currentIterator: Iterator[NodeType] = Iterator.empty
-        
-        override def hasNext = currentIterator.hasNext || currentIteratorIndex < targets.size - 1
-    
-        override def next() = currentIterator.nextOption().getOrElse {
-            currentIteratorIndex += 1
-            val nextChild = targets(currentIteratorIndex)
-            currentIterator = nextChild.nodesBelowIterator
-            nextChild
         }
     }
 }

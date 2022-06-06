@@ -78,8 +78,7 @@ object SegmentedRowTest extends App
 	val frame = Frame.windowed(stack, "Segmented Row Test", User)
 	frame.setToExitOnClose()
 
-	actionLoop.registerToStopOnceJVMCloses()
-	actionLoop.startAsync()
+	actionLoop.runAsync()
 	StackHierarchyManager.startRevalidationLoop()
 	frame.startEventGenerators(actorHandler)
 	frame.visible = true

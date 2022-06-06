@@ -2,7 +2,7 @@ package utopia.courier.controller.write
 
 import utopia.courier.model.write.WriteSettings
 import utopia.courier.model.{Authentication, Email}
-import utopia.flow.async.TryLoop
+import utopia.flow.async.Loop
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 
@@ -61,7 +61,7 @@ class EmailSender(settings: WriteSettings, defaultMaxSendAttemptsPerMessage: Int
 	def send(email: Email, maxAttempts: Int = defaultMaxSendAttemptsPerMessage,
 	          durationBetweenAttempts: FiniteDuration = defaultDurationBetweenAttempts)
 	         (implicit exc: ExecutionContext) =
-		TryLoop.attempt(durationBetweenAttempts, maxAttempts) { sendBlocking(email) }
+		Loop.tryRepeatedly(durationBetweenAttempts, maxAttempts) { sendBlocking(email) }
 	
 	/**
 	  * Sends an email in the current thread, blocking for the duration of the operation

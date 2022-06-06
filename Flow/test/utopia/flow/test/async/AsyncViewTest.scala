@@ -1,9 +1,8 @@
 package utopia.flow.test.async
 
-import utopia.flow.async.ThreadPool
+import utopia.flow.async.{ThreadPool, Wait}
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.ChangeListener
-import utopia.flow.time.WaitUtils
 import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.ExecutionContext
@@ -25,7 +24,7 @@ object AsyncViewTest extends App
 	val delayed = original.delayedBy(delay)
 	// Pointer that slowly adds 1 to the original pointer value and performs a single calculation at a time
 	val mirror = original.mapAsync(0) { i =>
-		WaitUtils.wait(delay, new AnyRef)
+		Wait(delay)
 		i + 1
 	}
 	
@@ -34,7 +33,7 @@ object AsyncViewTest extends App
 	assert(delayed.value == 0)
 	assert(mirror.value == 0)
 	
-	WaitUtils.wait(delay * 1.2, waitLock)
+	Wait(delay * 1.2, waitLock)
 	
 	// Delayed view should now be initialized
 	assert(mirror.value == 1)
@@ -45,13 +44,13 @@ object AsyncViewTest extends App
 	assert(delayed.value == 0)
 	assert(mirror.value == 1)
 	
-	WaitUtils.wait(delay * 0.5, waitLock)
+	Wait(delay * 0.5, waitLock)
 	
 	// Makes sure other pointers haven't reacted even after a short delay
 	assert(delayed.value == 0)
 	assert(mirror.value == 1)
 	
-	WaitUtils.wait(delay * 0.7, waitLock)
+	Wait(delay * 0.7, waitLock)
 	
 	// Makes sure the other pointers have been updated after long enough delay
 	assert(delayed.value == 1)
@@ -71,7 +70,7 @@ object AsyncViewTest extends App
 	assert(mirror.value == 2)
 	assert(eventsReceived == 0)
 	
-	WaitUtils.wait(delay * 1.2, waitLock)
+	Wait(delay * 1.2, waitLock)
 	delayed.removeListener(receiveListener)
 	
 	// Makes sure the delayed pointer has reacted only once and that the mirror pointer is yet to fully
@@ -80,7 +79,7 @@ object AsyncViewTest extends App
 	assert(mirror.value == 3)
 	assert(eventsReceived == 1)
 	
-	WaitUtils.wait(delay, waitLock)
+	Wait(delay, waitLock)
 	
 	// Makes sure the mirror pointer also eventually completes
 	assert(delayed.value == 4)

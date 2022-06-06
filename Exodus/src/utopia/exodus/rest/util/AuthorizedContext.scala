@@ -6,11 +6,14 @@ import utopia.access.http.error.ContentTypeException
 import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.citadel.database.access.single.organization.DbMembership
 import utopia.citadel.database.access.single.user.{DbUser, DbUserSettings}
-import utopia.citadel.util.CitadelContext.connectionPool
 import utopia.citadel.util.CitadelContext._
-import utopia.exodus.database.access.single.auth.{DbApiKey, DbDeviceToken, DbEmailValidationAttempt, DbSessionToken}
+import utopia.exodus.database.access.single.auth.DbToken.DbTokenMatch
+import utopia.exodus.database.access.single.auth.{DbApiKey, DbDeviceToken, DbSessionToken, DbToken}
 import utopia.exodus.database.access.single.user.DbUserPassword
-import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, EmailValidationAttempt, SessionToken}
+import utopia.exodus.model.combined.auth.ScopedToken
+import utopia.exodus.model.enumeration.ExodusScope.{OrganizationActions, ReadOrganizationData}
+import utopia.exodus.model.enumeration.ScopeIdWrapper
+import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, SessionToken, Token}
 import utopia.exodus.rest.util.AuthorizedContext.acceptLanguageIdsHeaderName
 import utopia.exodus.util.ExodusContext.handleError
 import utopia.flow.datastructure.immutable.{Model, Value}
@@ -21,7 +24,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle
-import utopia.nexus.http.{Request, ServerSettings}
+import utopia.nexus.http.{Request, Response, ServerSettings}
 import utopia.nexus.rest.Context
 import utopia.nexus.result.{Result, ResultParser, UseRawJSON}
 import utopia.vault.database.Connection
@@ -41,14 +44,14 @@ object AuthorizedContext
 	// TYPES    ---------------------------------
 	
 	/**
-	 * Parameter provided in organization session authorization
-	 * (session + membership id + DB connection)
-	 */
-	type OrganizationParams = (SessionToken, Int, Connection)
+	  * Parameter provided in organization session authorization
+	  * (session + membership id + DB connection)
+	  */
+	type OrganizationParams = (Token, Int, Connection)
 	/**
-	 * Parameters provided in session authorization (session + DB connection)
-	 */
-	type SessionParams = (SessionToken, Connection)
+	  * Parameters provided in session authorization (session + DB connection)
+	  */
+	type SessionParams = (Token, Connection)
 	
 	
 	// OTHER    ---------------------------------
@@ -63,7 +66,7 @@ object AuthorizedContext
 	  * @return A new request context
 	  */
 	def apply(request: Request, resultParser: ResultParser = UseRawJSON)
-			 (implicit serverSettings: ServerSettings, jsonParser: JsonParser): AuthorizedContext =
+	         (implicit serverSettings: ServerSettings, jsonParser: JsonParser): AuthorizedContext =
 		new AuthorizedContextImplementation(request, resultParser)
 	
 	
@@ -157,6 +160,28 @@ abstract class AuthorizedContext extends Context
 				Vector()
 		}
 	}
+	/**
+	  * Reads preferred language ids list either from the Accept-Language header(s)
+	  * @param connection DB Connection (implicit)
+	  * @return Ids of the requested languages in order from most to least preferred.
+	  *         Empty if no headers were specified.
+	  */
+	def requestedLanguageIds(implicit connection: Connection): LanguageIds =
+	{
+		// Checks whether X-Accepted-Language-Ids is provided
+		val acceptedIds = request.headers.commaSeparatedValues(acceptLanguageIdsHeaderName).flatMap { _.int }
+		if (acceptedIds.nonEmpty)
+			LanguageIds(acceptedIds)
+		else
+		{
+			// Reads languages list from the headers (if present)
+			val languagesFromHeaders = requestedLanguages
+			if (languagesFromHeaders.nonEmpty)
+				LanguageIds(languagesFromHeaders.map { _.id })
+			else
+				LanguageIds(Vector())
+		}
+	}
 	
 	/**
 	  * @return The model style specified in this request (if specified)
@@ -176,19 +201,11 @@ abstract class AuthorizedContext extends Context
 	  */
 	def languageIds(userId: => Int)(implicit connection: Connection): LanguageIds =
 	{
-		// Checks whether X-Accepted-Language-Ids is provided
-		val acceptedIds = request.headers.commaSeparatedValues(acceptLanguageIdsHeaderName).flatMap { _.int }
-		if (acceptedIds.nonEmpty)
-			LanguageIds(acceptedIds)
+		val requested = requestedLanguageIds
+		if (requested.nonEmpty)
+			requested
 		else
-		{
-			// Reads languages list from the headers (if present) or from the user data
-			val languagesFromHeaders = requestedLanguages
-			if (languagesFromHeaders.nonEmpty)
-				LanguageIds(languagesFromHeaders.map { _.id })
-			else
-				DbUser(userId).languageIds
-		}
+			DbUser(userId).languageIds
 	}
 	/**
 	  * Reads preferred language ids list either from the Accept-Language header or from the user data
@@ -233,6 +250,7 @@ abstract class AuthorizedContext extends Context
 	  *          Accepts device token + database connection. Produces a http result.
 	  * @return Function result or a result indicating that the request was unauthorized. Wrapped as a response.
 	  */
+	@deprecated("This will be removed in a future release", "v4.0")
 	def deviceTokenAuthorized(f: (DeviceToken, Connection) => Result) =
 	{
 		tokenAuthorized("device authentication token") { (token, connection) =>
@@ -246,6 +264,7 @@ abstract class AuthorizedContext extends Context
 	  *          Produces a http result.
 	  * @return Function result or a result indicating that the request was unauthorized. Wrapped as a response.
 	  */
+	@deprecated("This will be removed in a future release", "v4.0")
 	def sessionTokenAuthorized(f: (SessionToken, Connection) => Result) =
 	{
 		tokenAuthorized("session token") { (token, connection) =>
@@ -262,6 +281,7 @@ abstract class AuthorizedContext extends Context
 	  *          database connection. Produces an http result.
 	  * @return Function result or a result indicating that the request was unauthorized. Wrapped as a response.
 	  */
+	@deprecated("This will be removed in a future release", "v4.0")
 	def basicOrDeviceTokenAuthorized(requiredDeviceId: Int)(f: (Int, Boolean, Connection) => Result) =
 	{
 		// Checks whether basic or device authorization should be used
@@ -301,6 +321,7 @@ abstract class AuthorizedContext extends Context
 	  * @param connection Implicit database connection
 	  * @return Function result if the request was authorized, otherwise an authorization failure
 	  */
+	@deprecated("This will be removed in a future release", "v4.0")
 	def apiKeyAuthorizedWithConnection(f: ApiKey => Result)(implicit connection: Connection) =
 	{
 		// Checks the bearer auth token
@@ -322,27 +343,30 @@ abstract class AuthorizedContext extends Context
 	  * @param f A function called if the request is authorized (accepts valid api key and database connection)
 	  * @return Function result if the request was authorized, otherwise an authorization failure
 	  */
+	@deprecated("This will be removed in a future release", "v4.0")
 	def apiKeyAuthorized(f: (ApiKey, Connection) => Result) =
 		tokenAuthorized("api key") { (key, connection) => DbApiKey(key).pull(connection) }(f)
 	
 	/**
-	  * Performs the specified function if the user is authorized (using a session token)
-	  * and a member of the specified organization
+	  * Performs the specified function if the user is authorized (using a token),
+	  * a member of the specified organization and has access to the specified scope
+	  * (where default is organization data read access)
 	  * @param organizationId Id of the organization the user is supposed to be a member of
+	  * @param scopeId Id of the targeted scope (default = organization data read access)
 	  * @param f              Function called when the user is fully authorized.
 	  *                       Takes user session, membership id and database
 	  *                       connection as parameters. Returns operation result.
 	  * @return An http response based either on the function result or authorization failure.
 	  */
-	def authorizedInOrganization(organizationId: Int)(f: (SessionToken, Int, Connection) => Result) =
+	def authorizedInOrganization(organizationId: Int, scopeId: Int = ReadOrganizationData.id)
+	                            (f: (Token, Int, Connection) => Result) =
 	{
-		// Authorizes the request using a session key token
-		sessionTokenAuthorized { (session, connection) =>
+		// Validates the token and checks scope
+		authorizedForScopeWithId(scopeId) { (token, connection) =>
 			implicit val c: Connection = connection
 			// Makes sure the user belongs to the target organization
-			session.userAccess.membershipInOrganizationWithId(organizationId).id match
-			{
-				case Some(membershipId) => f(session, membershipId, connection)
+			token.userAccess.flatMap { _.membershipInOrganizationWithId(organizationId).id } match {
+				case Some(membershipId) => f(token, membershipId, connection)
 				case None => Result.Failure(Unauthorized, "You're not a member of this organization")
 			}
 		}
@@ -350,19 +374,22 @@ abstract class AuthorizedContext extends Context
 	
 	/**
 	  * Performs the specified function if:<br>
-	  * 1) The request can be authorized using a valid session token<br>
-	  * 2) The authorized user is a member of the specified organization and<br>
-	  * 3) The user has the right/authorization to perform the specified task within that organization
+	  * 1) The request can be authorized using a valid token<br>
+	  * 2) The token includes the specified scope (where default is organization data write access)<br>
+	  * 3) The authorized user is a member of the specified organization and<br>
+	  * 4) The user has the right/authorization to perform the specified task within that organization
 	  * @param organizationId Id of the targeted organization
 	  * @param taskId Id of the task the user is trying to perform
+	  * @param scopeId Id of the targeted scope (default = organization data write access)
 	  * @param f Function called when the user is fully authorized. Takes user session, membership id and database
 	  *          connection as parameters. Returns operation result.
 	  * @return An http response based either on the function result or authorization failure (401 or 403).
 	  */
-	def authorizedForTask(organizationId: Int, taskId: Int)(f: (SessionToken, Int, Connection) => Result) =
+	def authorizedForTask(organizationId: Int, taskId: Int, scopeId: Int = OrganizationActions.id)
+	                     (f: (Token, Int, Connection) => Result) =
 	{
 		// Makes sure the user belongs to the organization and that they have a valid session key authorization
-		authorizedInOrganization(organizationId) { (session, membershipId, connection) =>
+		authorizedInOrganization(organizationId, scopeId) { (session, membershipId, connection) =>
 			implicit val c: Connection = connection
 			// Makes sure the user has a right to perform the required task
 			if (DbMembership(membershipId).allowsTaskWithId(taskId))
@@ -372,6 +399,70 @@ abstract class AuthorizedContext extends Context
 					"You haven't been granted the right to perform this task within this organization")
 		}
 	}
+	
+	/**
+	  * Searches the bearer token authorization header for a valid token that may access the specified scope
+	  * @param scopeId Id of the scope being accessed
+	  * @param f A function called if the token was valid. Accepts the matching token and a database connection.
+	  * @return Function response if the request was authorized. Failure response otherwise.
+	  */
+	def authorizedForScopeWithId(scopeId: Int)(f: (Token, Connection) => Result) =
+		_tokenAuthorized { _.havingScopeWithId(scopeId)(_) }(f)
+	/**
+	  * Searches the bearer token authorization header for a valid token that may access the specified scope
+	  * @param scope The scope being accessed
+	  * @param f A function called if the token was valid. Accepts the matching token and a database connection.
+	  * @return Function response if the request was authorized. Failure response otherwise.
+	  */
+	def authorizedForScope(scope: ScopeIdWrapper)(f: (Token, Connection) => Result) =
+		authorizedForScopeWithId(scope.id)(f)
+	
+	/**
+	  * Searches the bearer token authorization header for a valid token that may access the specified scopes
+	  * @param scopeIds Ids of the targeted scopes
+	  * @param f A function called if the token is valid. Accepts the matching token and a database connection.
+	  * @return Function response if the request was authorized. Failure response otherwise.
+	  */
+	def authorizedForScopesWithIds(scopeIds: Set[Int])(f: (ScopedToken, Connection) => Result) =
+		authorizedWithoutScope { (token, connection) =>
+			implicit val c: Connection = connection
+			val scoped = token.withScopeLinksPulled
+			val missingScopes = scopeIds -- scoped.accessibleScopeIds
+			if (missingScopes.isEmpty)
+				f(scoped, connection)
+			else
+				Result.Failure(Unauthorized,
+					s"You lack access to following scopes: [${missingScopes.toVector.sorted.mkString(", ")}]")
+		}
+	/**
+	  * Searches the bearer token authorization header for a valid token that may access the specified scopes
+	  * @param firstScopeId Id of the targeted scope
+	  * @param secondScopeId Id of another targeted scope
+	  * @param moreScopeIds Ids of additional targeted scopes
+	  * @param f A function called if the token is valid. Accepts the matching token and a database connection.
+	  * @return Function response if the request was authorized. Failure response otherwise.
+	  */
+	def authorizedForScopesWithIds(firstScopeId: Int, secondScopeId: Int, moreScopeIds: Int*)
+	                              (f: (ScopedToken, Connection) => Result): Response =
+		authorizedForScopesWithIds(moreScopeIds.toSet + firstScopeId + secondScopeId)(f)
+	/**
+	  * Searches the bearer token authorization header for a valid token that may access the specified scopes
+	  * @param firstScope A targeted scope
+	  * @param secondScope Another targeted scope
+	  * @param moreScopes Additional targeted scopes
+	  * @param f A function called if the token is valid. Accepts the matching token and a database connection.
+	  * @return Function response if the request was authorized. Failure response otherwise.
+	  */
+	def authorizedForScopes(firstScope: ScopeIdWrapper, secondScope: ScopeIdWrapper, moreScopes: ScopeIdWrapper*)
+	                       (f: (ScopedToken, Connection) => Result): Response =
+		authorizedForScopesWithIds((Vector(firstScope, secondScope) ++ moreScopes).map { _.id }.toSet)(f)
+	
+	/**
+	  * Searches the bearer token authorization header for a valid token
+	  * @param f A function called if the token was valid. Accepts the matching token and a database connection.
+	  * @return Function response if the request was authorized. Failure response otherwise.
+	  */
+	def authorizedWithoutScope(f: (Token, Connection) => Result) = _tokenAuthorized { _.pull(_) }(f)
 	
 	/**
 	  * Authorizes a request using bearer token authorization
@@ -407,40 +498,20 @@ abstract class AuthorizedContext extends Context
 		result.toResponse(this)
 	}
 	
-	/**
-	  * Authorizes this request using an email activation token from the bearer token authorization header.
-	  * A temporary email session token may also be used.
-	  * @param emailPurposeId Id of the purpose the email is used for (must match the purpose id the validation
-	  *                       attempt was first registered with)
-	  * @param f A function that is performed if the specified token was valid.
-	  *          Accepts an open email validation attempt and a database connection.
-	  *          Returns 1) a boolean indicating whether the validation should be closed and
-	  *          2) result to send back to the client.
-	  * @return A response based on the function result if authorization was successful. A failure response otherwise.
-	  */
-	def emailAuthorized(emailPurposeId: Int)(f: (EmailValidationAttempt, Connection) => (Boolean, Result)) =
-		request.headers.bearerAuthorization match {
-			case Some(token) =>
-				connectionPool.tryWith { implicit connection =>
-					DbEmailValidationAttempt.open.completeWithToken(token, emailPurposeId) { f(_, connection) }
-				} match
-				{
-					case Success(result) =>
-						result match
-						{
-							case Success(result) => result.toResponse(this)
-							case Failure(error) =>
-								Result.Failure(Unauthorized, error.getMessage).toResponse(this)
-						}
-					case Failure(error) =>
-						handleError(error, "Unexpected failure during request handling")
-						Result.Failure(InternalServerError, error.getMessage).toResponse(this)
-				}
-			case None =>
-				Result.Failure(Unauthorized,
-					"Please provide a bearer authorization header containing an email validation token")
-					.toResponse(this)
+	private def _tokenAuthorized(pullToken: (DbTokenMatch, Connection) => Option[Token])
+	                            (f: (Token, Connection) => Result) = {
+		tokenAuthorized("token") { (token, connection) =>
+			pullToken(DbToken.matching(token), connection)
+		} { (token, connection) =>
+			val result = f(token, connection)
+			// Closes a single-use token on success
+			if (token.isSingleUseOnly && result.isSuccess) {
+				implicit val c: Connection = connection
+				token.access.deprecate()
+			}
+			result
 		}
+	}
 	
 	/**
 	  * Parses a value from the request body and uses it to produce a response

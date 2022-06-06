@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.reader
 
-import utopia.vault.coder.model.scala.Reference
 import utopia.vault.coder.model.scala.code.{Code, CodeLine}
+import utopia.vault.coder.model.scala.datatype.Reference
 
 object ReadCodeBlock
 {

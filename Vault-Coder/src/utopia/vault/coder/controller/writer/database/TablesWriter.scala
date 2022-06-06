@@ -2,11 +2,12 @@ package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, ProjectSetup}
+import utopia.vault.coder.model.data.{Class, NamingRules, ProjectSetup}
 import utopia.vault.coder.model.scala.Visibility.Private
+import utopia.vault.coder.model.scala.datatype.{Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, LazyValue}
 import utopia.vault.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration}
-import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{DeclarationDate, Parameter}
 
 import scala.io.Codec
 import scala.util.Success
@@ -25,7 +26,7 @@ object TablesWriter
 	  * @param setup   Target project -specific settings (implicit)
 	  * @return Reference to the written object. Failure if writing failed.
 	  */
-	def apply(classes: Iterable[Class])(implicit codec: Codec, setup: ProjectSetup) =
+	def apply(classes: Iterable[Class])(implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
 	{
 		val objectName = setup.dbModuleName + "Tables"
 		// If there are no classes to write, omits this document (e.g. when only writing enumerations or something)
@@ -55,8 +56,9 @@ object TablesWriter
 						}
 					},
 					// Defines a private apply method but leaves the implementation open
-					methods = Set(MethodDeclaration("apply", applyReferences, Private, Some(Reference.table),
-						isLowMergePriority = true)(Parameter("tableName", ScalaType.string))(
+					methods = Set(MethodDeclaration("apply", applyReferences, visibility = Private,
+						explicitOutputType = Some(Reference.table), isLowMergePriority = true)(
+						Parameter("tableName", ScalaType.string))(
 						applyImplementation.head, applyImplementation.tail: _*)),
 					description = "Used for accessing the database tables introduced in this project",
 					author = classes.map { _.author }.toSet.filter { _.nonEmpty }.mkString(", "),
@@ -66,20 +68,20 @@ object TablesWriter
 		}
 	}
 	
-	private def tablePropertyFrom(c: Class) =
-		ComputedProperty(c.name.singular.uncapitalize, description = tablePropertyDescriptionFrom(c))(
+	private def tablePropertyFrom(c: Class)(implicit naming: NamingRules) =
+		ComputedProperty(c.name.propName, description = tablePropertyDescriptionFrom(c))(
 			s"apply(${ c.tableName.quoted })")
-	private def descriptionLinkTablePropertyFrom(c: Class) =
+	private def descriptionLinkTablePropertyFrom(c: Class)(implicit naming: NamingRules) =
 	{
 		val linkProp = c.properties.head
-		LazyValue(c.name.singular.uncapitalize, Set(Reference.descriptionLinkTable),
+		LazyValue(c.name.propName, Set(Reference.descriptionLinkTable),
 			description = tablePropertyDescriptionFrom(c))(
-			s"DescriptionLinkTable(apply(${c.tableName.quoted}), ${linkProp.name.singular.quoted})")
+			s"DescriptionLinkTable(apply(${c.tableName.quoted}), ${linkProp.name.propName.quoted})")
 	}
 	
 	private def tablePropertyDescriptionFrom(c: Class) =
 	{
-		val baseDescription = s"Table that contains ${ c.name.plural }"
+		val baseDescription = s"Table that contains ${ c.name.pluralText }"
 		if (c.description.isEmpty)
 			baseDescription
 		else

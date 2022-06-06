@@ -9,6 +9,7 @@ import utopia.ambassador.model.stored.scope.Scope
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.single.organization.DbTask
 import utopia.citadel.database.access.single.user.DbUser
+import utopia.exodus.model.enumeration.ExodusScope.ReadPersonalData
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
@@ -33,7 +34,7 @@ case class TaskAccessTestNode(taskId: Int) extends LeafResource[AuthorizedContex
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionTokenAuthorized { (session, connection) =>
+		context.authorizedForScope(ReadPersonalData) { (session, connection) =>
 			implicit val c: Connection = connection
 			// Reads the scopes required by the targeted task
 			val scopes = DbTask(taskId).scopes.pull
@@ -42,7 +43,11 @@ case class TaskAccessTestNode(taskId: Int) extends LeafResource[AuthorizedContex
 				val (alternative, required) = scopes.divideBy { _.isRequired }
 				val alternativeGroups = alternative.groupBy { _.serviceId }
 				// Reads the scopes currently accessible for the user
-				val readyScopeIds = DbUser(session.userId).accessibleScopeIds
+				// (whic is only possible when the session is tied to a user)
+				val readyScopeIds = session.ownerId match {
+					case Some(userId) => DbUser(userId).accessibleScopeIds
+					case None => Set[Int]()
+				}
 				
 				// Checks whether there are any required and provides a description of them for the client
 				val remainingRequiredScopes = required.filterNot { scope => readyScopeIds.contains(scope.id) }

@@ -1,13 +1,14 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, ProjectSetup}
+import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup, Property}
+import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.scala
 import utopia.vault.coder.model.scala.code.CodePiece
+import utopia.vault.coder.model.scala.datatype.{Extension, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
-import utopia.vault.coder.model.scala.{DeclarationDate, Extension, Parameter, Reference, ScalaType}
-import utopia.vault.coder.util.NamingUtils
+import utopia.vault.coder.model.scala.{DeclarationDate, Parameter}
 
 import _root_.scala.io.Codec
 
@@ -18,7 +19,50 @@ import _root_.scala.io.Codec
   */
 object DbModelWriter
 {
+	// ATTRIBUTES   -------------------------------------
+	
+	/**
+	  * Suffix added to class name in order to make it a database model class name
+	  */
+	val classNameSuffix = Name("Model", "Models", CamelCase.capitalized)
+	/**
+	  * Suffix added to class property names in order to make them property name attributes
+	  */
+	val attNameSuffix = Name("AttName", "AttNames", CamelCase.capitalized)
+	/**
+	  * Suffix added to class property names in order to make them column attributes
+	  */
+	val columnNameSuffix = Name("Column", "Columns", CamelCase.capitalized)
+	
+	private val withMethodPrefix = Name("with", "with", CamelCase.lower)
+	
+	
 	// OTHER    -----------------------------------------
+	
+	/**
+	  * @param propName a property name
+	  * @param naming Naming rules to apply
+	  * @return Name of the property that refers to this property's db property name
+	  */
+	def attNameFrom(propName: Name)(implicit naming: NamingRules) = (propName + attNameSuffix).propName
+	/**
+	  * @param prop A property
+	  * @param naming Naming rules to apply
+	  * @return Name of the property that refers to this property's db property name
+	  */
+	def attNameFrom(prop: Property)(implicit naming: NamingRules): String = attNameFrom(prop.name)
+	/**
+	  * @param propName A property name
+	  * @param naming Naming rules to apply
+	  * @return Name of the property that refers to this property's column
+	  */
+	def columnNameFrom(propName: Name)(implicit naming: NamingRules) = (propName + columnNameSuffix).propName
+	/**
+	  * @param prop A property
+	  * @param naming Naming rules to apply
+	  * @return Name of the property that refers to this property's column
+	  */
+	def columnNameFrom(prop: Property)(implicit naming: NamingRules): String = columnNameFrom(prop.name)
 	
 	/**
 	  * Generates the DB model class and the associated companion object
@@ -31,10 +75,10 @@ object DbModelWriter
 	  * @return Reference to the generated class. Failure if writing failed.
 	  */
 	def apply(classToWrite: Class, modelRef: Reference, dataRef: Reference, factoryRef: Reference)
-	         (implicit codec: Codec, setup: ProjectSetup) =
+	         (implicit codec: Codec, setup: ProjectSetup, naming: NamingRules) =
 	{
 		val parentPackage = setup.dbModelPackage / classToWrite.packageName
-		val className = classToWrite.name.singular + "Model"
+		val className = (classToWrite.name + classNameSuffix).className
 		val deprecation = DeprecationStyle.of(classToWrite)
 		
 		// The generated file contains the model class and the associated companion object
@@ -43,13 +87,14 @@ object DbModelWriter
 				factoryExtensionsFor(className, modelRef, dataRef, deprecation),
 				// Contains xAttName and xColumn for each property, as well as factory and table -properties
 				properties = classToWrite.properties.flatMap { prop =>
+					val attName = attNameFrom(prop)
 					Vector(
-						ImmutableValue(s"${ prop.name }AttName",
+						ImmutableValue(attName,
 							description = s"Name of the property that contains ${ classToWrite.name } ${ prop.name }")(
-							NamingUtils.underscoreToCamel(prop.columnName).uncapitalize.quoted),
-						ComputedProperty(s"${ prop.name }Column",
+							prop.dbModelPropName.quoted),
+						ComputedProperty(columnNameFrom(prop),
 							description = s"Column that contains ${ classToWrite.name } ${ prop.name }")(
-							s"table(${ prop.name }AttName)")
+							s"table($attName)")
 					)
 				} ++ Vector(
 					ComputedProperty("factory", Set(factoryRef),
@@ -62,9 +107,11 @@ object DbModelWriter
 					MethodDeclaration("apply", isOverridden = true)(Parameter("data", dataRef))(
 						s"apply(${
 							("None" +: classToWrite.properties.map { prop =>
-								if (prop.dataType.isNullable) s"data.${ prop.name }" else s"Some(data.${ prop.name })"
-							})
-								.mkString(", ")
+								if (prop.dataType.isNullable)
+									s"data.${ prop.name.propName }"
+								else
+									s"Some(data.${ prop.name.propName })"
+							}).mkString(", ")
 						})"),
 					MethodDeclaration("complete", Set(modelRef), isOverridden = true)(
 						Vector(Parameter("id", Reference.value), Parameter("data", dataRef)))(
@@ -73,26 +120,27 @@ object DbModelWriter
 						Parameter("id", classToWrite.idType.toScala, description = s"A ${ classToWrite.name } id"))(
 						"apply(Some(id))")
 				) ++ classToWrite.properties.map { prop =>
-					MethodDeclaration(s"with${ prop.name.singular.capitalize }",
+					val paramName = prop.name.propName
+					MethodDeclaration(withMethodNameFor(prop),
 						returnDescription = s"A model containing only the specified ${ prop.name }")(
-						scala.Parameter(prop.name.singular, prop.dataType.notNull.toScala, description = prop.description))(
-						s"apply(${ prop.name } = Some(${ prop.name }))")
+						scala.Parameter(paramName, prop.dataType.notNull.toScala, description = prop.description))(
+						s"apply($paramName = Some($paramName))")
 				} ++ deprecation.iterator.flatMap { _.methods },
 				description = s"Used for constructing $className instances and for inserting ${
-					classToWrite.name
-				}s to the database", author = classToWrite.author, since = DeclarationDate.versionedToday
+					classToWrite.name.pluralText
+				} to the database", author = classToWrite.author, since = DeclarationDate.versionedToday
 			),
 			ClassDeclaration(className,
 				// Accepts a copy of all properties where each is wrapped in option (unless already an option)
-				Parameter("id", classToWrite.idType.nullable.toScala, "None",
+				constructionParams = Parameter("id", classToWrite.idType.nullable.toScala, "None",
 					description = s"${ classToWrite.name } database id") +:
 					classToWrite.properties.map { prop =>
 						val inputType = prop.dataType.nullable
 						val defaultValue = inputType.baseDefault.notEmpty.getOrElse(CodePiece("None"))
-						Parameter(prop.name.singular, inputType.toScala, defaultValue, description = prop.description)
+						Parameter(prop.name.propName, inputType.toScala, defaultValue, description = prop.description)
 					},
 				// Extends StorableWithFactory[A]
-				Vector(Reference.storableWithFactory(modelRef)),
+				extensions = Vector(Reference.storableWithFactory(modelRef)),
 				// Implements the required properties: factory & valueProperties
 				properties = Vector(
 					ComputedProperty("factory", isOverridden = true)(s"$className.factory"),
@@ -100,11 +148,12 @@ object DbModelWriter
 				),
 				// adds withX(...) -methods for convenience
 				methods = classToWrite.properties.map { prop =>
-					MethodDeclaration(s"with${ prop.name.singular.capitalize }",
+					val paramName = prop.name.propName
+					MethodDeclaration(withMethodNameFor(prop),
 						returnDescription = s"A new copy of this model with the specified ${ prop.name }")(
-						Parameter(prop.name.singular, prop.dataType.notNull.toScala,
+						Parameter(paramName, prop.dataType.notNull.toScala,
 							description = s"A new ${ prop.name }"))(
-						s"copy(${ prop.name } = Some(${ prop.name }))")
+						s"copy($paramName = Some($paramName))")
 				}.toSet,
 				description = s"Used for interacting with ${ classToWrite.name.plural } in the database",
 				author = classToWrite.author, since = DeclarationDate.versionedToday, isCaseClass = true)
@@ -125,22 +174,27 @@ object DbModelWriter
 		}
 	}
 	
-	private def valuePropertiesPropertyFor(classToWrite: Class, className: String) =
+	private def valuePropertiesPropertyFor(classToWrite: Class, className: String)
+	                                      (implicit naming: NamingRules) =
 	{
+		val quotedId = classToWrite.idDatabasePropName.quoted
 		if (classToWrite.properties.isEmpty)
 			ComputedProperty("valueProperties", Set(Reference.valueConversions), isOverridden = true)(
-				s"Vector(${ "\"id\" -> id" })"
+				s"Vector($quotedId -> id)"
 			)
 		else {
 			val propsPart = classToWrite.properties
-				.map { prop => prop.nullable.toValueCode.withPrefix(s"${ prop.name }AttName -> ") }
+				.map { prop => prop.nullable.toValueCode.withPrefix(s"${ attNameFrom(prop) } -> ") }
 				.reduceLeft { _.append(_, ", ") }
 			ComputedProperty("valueProperties", propsPart.references + Reference.valueConversions, isOverridden = true)(
 				s"import $className._",
-				s"Vector(${ "\"id\" -> id" }, $propsPart)"
+				s"Vector($quotedId -> id, $propsPart)"
 			)
 		}
 	}
+	
+	private def withMethodNameFor(prop: Property)(implicit naming: NamingRules) =
+		(withMethodPrefix + prop.name).propName
 	
 	
 	// NESTED   --------------------------------------
@@ -149,7 +203,7 @@ object DbModelWriter
 	{
 		def extensionFor(dbModelClass: ScalaType): Extension
 		
-		def properties: Vector[PropertyDeclaration]
+		def properties(implicit naming: NamingRules): Vector[PropertyDeclaration]
 		
 		def methods: Set[MethodDeclaration]
 	}
@@ -161,19 +215,20 @@ object DbModelWriter
 				.map { deprecationProp =>
 					c.expirationProperty match {
 						case Some(expirationProp) =>
-							CombinedDeprecation(expirationProp.name.singular, deprecationProp.name.singular)
-						case None => NullDeprecates(deprecationProp.name.singular)
+							CombinedDeprecation(expirationProp.name, deprecationProp.name)
+						case None => NullDeprecates(deprecationProp)
 					}
 				}
-				.orElse { c.expirationProperty.map { prop => Expires(prop.name.singular) } }
+				.orElse { c.expirationProperty.map { prop => Expires(prop) } }
 	}
 	
-	private case class NullDeprecates(propertyName: String) extends DeprecationStyle
+	private case class NullDeprecates(prop: Property) extends DeprecationStyle
 	{
 		// ATTRIBUTES   -----------------------------
 		
+		private val camelPropName = prop.name.to(CamelCase.lower).singular
 		// Whether this deprecation matches the expected default
-		val isDefault = propertyName == "deprecatedAfter"
+		val isDefault = camelPropName == "deprecatedAfter"
 		
 		
 		// IMPLEMENTED  -----------------------------
@@ -181,33 +236,34 @@ object DbModelWriter
 		override def extensionFor(dbModelClass: ScalaType) =
 			(if (isDefault) Reference.deprecatableAfter else Reference.nullDeprecatable)(dbModelClass)
 		
-		override def properties = if (isDefault) Vector() else Vector(
-			ImmutableValue("deprecationAttName", isOverridden = true)(propertyName.quoted)
-		)
+		override def properties(implicit naming: NamingRules) =
+			if (isDefault) Vector() else Vector(
+				ImmutableValue("deprecationAttName", isOverridden = true)(prop.dbModelPropName.quoted))
 		// withDeprecatedAfter(...) must be provided separately for custom property names
 		override def methods = if (isDefault) Set() else Set(
 			MethodDeclaration("withDeprecatedAfter", isOverridden = true)(
-				Parameter("deprecationTime", Reference.instant))(s"with${ propertyName.capitalize }(deprecationTime)")
+				Parameter("deprecationTime", Reference.instant))(s"with${ camelPropName.capitalize }(deprecationTime)")
 		)
 	}
 	
-	private case class Expires(propertyName: String) extends DeprecationStyle
+	private case class Expires(prop: Property) extends DeprecationStyle
 	{
 		override def extensionFor(dbModelClass: ScalaType) = Reference.expiring
 		
-		override def properties = Vector(ImmutableValue("deprecationAttName", isOverridden = true)(propertyName.quoted))
+		override def properties(implicit naming: NamingRules) =
+			Vector(ImmutableValue("deprecationAttName", isOverridden = true)(prop.dbModelPropName.quoted))
 		override def methods = Set()
 	}
 	
-	private case class CombinedDeprecation(expirationPropName: String, deprecationPropName: String)
+	private case class CombinedDeprecation(expirationPropName: Name, deprecationPropName: Name)
 		extends DeprecationStyle
 	{
 		override def extensionFor(dbModelClass: ScalaType) = Reference.deprecatable
 		
-		override def properties = Vector(
+		override def properties(implicit naming: NamingRules) = Vector(
 			ComputedProperty("nonDeprecatedCondition", Set(Reference.valueConversions, Reference.sqlExtensions,
 				Reference.now), isOverridden = true)(
-				s"${deprecationPropName}Column.isNull && ${expirationPropName}Column > Now")
+				s"${columnNameFrom(deprecationPropName)}.isNull && ${columnNameFrom(expirationPropName)} > Now")
 		)
 		override def methods = Set()
 	}

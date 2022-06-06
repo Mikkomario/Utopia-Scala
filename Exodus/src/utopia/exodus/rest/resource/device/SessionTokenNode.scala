@@ -18,6 +18,7 @@ import utopia.vault.database.Connection
   * @author Mikko Hilpinen
   * @since 3.5.2020, v1
   */
+@deprecated("This rest tree will be removed in a future release", "v4.0")
 case class SessionTokenNode(deviceId: Int) extends LeafResource[AuthorizedContext]
 {
 	override val name = "session-token"

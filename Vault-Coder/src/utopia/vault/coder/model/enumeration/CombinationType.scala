@@ -1,9 +1,9 @@
 package utopia.vault.coder.model.enumeration
 
-import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.CombinationReferences
+import utopia.vault.coder.model.data.{CombinationReferences, Name, NamingRules}
+import utopia.vault.coder.model.scala.datatype.{Extension, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.MethodDeclaration
-import utopia.vault.coder.model.scala.{Extension, Parameter, Parameters, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{Parameter, Parameters}
 
 /**
   * Used for determining, how models should be combined with each other
@@ -13,6 +13,11 @@ import utopia.vault.coder.model.scala.{Extension, Parameter, Parameters, Referen
 sealed trait CombinationType
 {
 	// ABSTRACT -----------------------------
+	
+	/**
+	  * @return Whether this combination connects multiple children to a single parent
+	  */
+	def isOneToMany: Boolean
 	
 	/**
 	  * @return Reference to the parent factory trait for this combination type
@@ -27,6 +32,14 @@ sealed trait CombinationType
 	protected def childParamTypeFrom(childRef: Reference): ScalaType
 	
 	protected def secondApplyParameterFrom(childRef: Reference): Parameter
+	
+	
+	// COMPUTED -----------------------------
+	
+	/**
+	  * @return Whether this combination type only connects up to one child per parent
+	  */
+	def isOneToOne = !isOneToMany
 	
 	
 	// OTHER    -----------------------------
@@ -45,9 +58,10 @@ sealed trait CombinationType
 	  * @param childRef References to the child model
 	  * @return Parameters that the combined model constructor (and the factory apply method) should take
 	  */
-	def applyParamsWith(parentName: String, childName: String, parentRef: Reference, childRef: Reference) =
-		Parameters(Parameter(parentName.uncapitalize, parentRef),
-			Parameter(childName.uncapitalize, childParamTypeFrom(childRef)))
+	def applyParamsWith(parentName: Name, childName: Name, parentRef: Reference, childRef: Reference)
+	                   (implicit naming: NamingRules) =
+		Parameters(Parameter(parentName.propName, parentRef),
+			Parameter(if (isOneToMany) childName.pluralPropName else childName.propName, childParamTypeFrom(childRef)))
 	
 	/**
 	  * @param parentName Name of the parent parameter
@@ -55,10 +69,13 @@ sealed trait CombinationType
 	  * @param references Combination-related references
 	  * @return An apply method implementation for the factory implementation
 	  */
-	def factoryApplyMethodWith(parentName: String, childName: String, references: CombinationReferences) =
-		MethodDeclaration("apply", Set(references.combined), isOverridden = true)(
-			applyParamsWith(parentName, childName, references.parent, references.child))(
-			s"${references.combined.target}(${parentName.uncapitalize}, ${childName.uncapitalize})")
+	def factoryApplyMethodWith(parentName: Name, childName: Name, references: CombinationReferences)
+	                          (implicit naming: NamingRules) =
+	{
+		val params = applyParamsWith(parentName, childName, references.parent, references.child)
+		MethodDeclaration("apply", Set(references.combined), isOverridden = true)(params)(
+			s"${references.combined.target}(${params.head.name}, ${params(1).name})")
+	}
 }
 
 object CombinationType
@@ -91,6 +108,8 @@ object CombinationType
 		
 		override def shouldSpecifyWhetherAlwaysLinked = false
 		
+		override def isOneToMany = false
+		
 		override protected def childParamTypeFrom(childRef: Reference) = childRef
 		
 		override protected def secondApplyParameterFrom(childRef: Reference) = Parameter("child", childRef)
@@ -103,6 +122,8 @@ object CombinationType
 		override def parentTraitRef = Reference.possiblyCombiningFactory
 		
 		override def shouldSpecifyWhetherAlwaysLinked = false
+		
+		override def isOneToMany = false
 		
 		override protected def childParamTypeFrom(childRef: Reference) = ScalaType.option(childRef)
 		
@@ -117,6 +138,8 @@ object CombinationType
 		override def parentTraitRef = Reference.multiCombiningFactory
 		
 		override def shouldSpecifyWhetherAlwaysLinked = true
+		
+		override def isOneToMany = true
 		
 		override protected def childParamTypeFrom(childRef: Reference) = ScalaType.vector(childRef)
 		

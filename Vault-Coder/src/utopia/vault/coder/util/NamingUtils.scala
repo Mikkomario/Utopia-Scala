@@ -17,6 +17,7 @@ object NamingUtils
 	  * @param underscoreName A name in underscore format
 	  * @return A name in CamelCase format (capitalized)
 	  */
+	@deprecated("Please use NamingConvention or Name instead", "v1.4.1")
 	def underscoreToCamel(underscoreName: String) = underscoreName.split('_').map { _.capitalize }.mkString
 	
 	/**
@@ -24,6 +25,7 @@ object NamingUtils
 	  * @param camelName A cameCase property name
 	  * @return and underscore_style property name
 	  */
+	@deprecated("Please use NamingConvention or Name instead", "v1.4.1")
 	def camelToUnderscore(camelName: String) =
 	{
 		val upperCaseRanges = Regex.upperCaseLetter.oneOrMoreTimes.rangesFrom(camelName)

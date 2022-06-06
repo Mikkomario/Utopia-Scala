@@ -71,6 +71,11 @@ case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Ve
 	  */
 	def isImplicitOnly = lists.isEmpty && implicits.nonEmpty
 	
+	/**
+	  * @return The first parameter in this list
+	  */
+	def head = apply(0)
+	
 	
 	// IMPLEMENTED  -------------------------------
 	
@@ -93,6 +98,18 @@ case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Ve
 	
 	
 	// OTHER    ---------------------------------
+	
+	/**
+	  * @param listIndex Index of the targeted parameter list
+	  * @param paramIndex Index of the targeted parameter in that list
+	  * @return Targeted parameter
+	  */
+	def apply(listIndex: Int, paramIndex: Int) = lists(listIndex)(paramIndex)
+	/**
+	  * @param paramIndex Index of the targeted parameter (in the first parameter list)
+	  * @return Targeted parameter
+	  */
+	def apply(paramIndex: Int): Parameter = apply(0, paramIndex)
 	
 	/**
 	  * Combines two parameter groups

@@ -15,6 +15,7 @@ object DailyTask
 	  * @param f Function that will be run
 	  * @return A new daily task
 	  */
+	@deprecated("Replaced with LoopingProcess.daily(...)(...)", "v1.15")
 	def apply(triggerTime: LocalTime)(f: => Unit): DailyTask = new DailyTaskWrapper(triggerTime)(f)
 	
 	
@@ -31,6 +32,7 @@ object DailyTask
   * @author Mikko Hilpinen
   * @since 3.4.2020, v1.7
   */
+@deprecated("Replaced with LoopingProcess and Loop", "v1.15")
 trait DailyTask extends Loop
 {
 	// ABSTRACT	----------------------

@@ -1,5 +1,26 @@
 # Utopia Vault - List of Changes
 
+## v1.12.1 - 06.06.2022
+This update contains major bugfixes that fix problems introduced in v1.12 update 
+and also some older bugs appearing in edge-cases.
+
+In addition, new utility features were added. Most importantly column maximum length customization support, 
+better support for timestamped item access and support for joins when pulling column data.
+### Deprecations
+- Deprecated **NullDeprecatable**`.idColumn` in favor of `.index`
+### New Features
+- Added **ChronoRowFactoryView** and **SingleChronoRowModelAccess** traits which wrap a **FromRowFactoryWithTimestamp** 
+  factory and provide utility functions accordingly
+- You may now customize column maximum length handling logic via `ColumnLengthRules.loadFrom(...)`
+  - (Added a new variation of the `.loadFrom(...)` method)
+### Bugfixes
+- Fixed an issue where column length limits would throw every time an empty value was being inserted
+- Fixed an issue where `globalCondition` was not applied to `readColumn(...)` in **ModelAccess**
+### Other Changes
+- You can now apply joins to `.pullColumn(Column)` in **DistinctReadModelAccess**
+- **NullDeprecatable** now extends **Indexed**
+- Updated how database selection is managed in **Connection**
+
 ## v1.12 - 27.01.2022
 This update contains a major refactoring of the factory and access traits, as well as some important fixes. 
 New important features include database events (triggers).
@@ -20,6 +41,7 @@ This module now uses Scala v2.13.7
 ### New Features
 - Added database update events (on data insertions, updates and deletions)
   - See **Triggers** for more information
+- Added column length limit management to **Insert** and **Update** (See **ColumnLengthRules**)
 - **ClearUnreferencedData** now accepts a set of tables to ignore when checking for references, which is useful for 
   more customized use-cases
 ### New Methods

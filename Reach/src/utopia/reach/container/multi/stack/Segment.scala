@@ -129,7 +129,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 			super.resetCachedSize()
 			// If needs to reset cached size while not in update mode, revalidates all segment containers and not
 			// just this one
-			if (parentHierarchy.isLinked && isUpdatingFlag.notSet)
+			if (parentHierarchy.isLinked && isUpdatingFlag.isNotSet)
 				updateContainers()
 		}
 		

@@ -1,5 +1,11 @@
 # Utopia Reflection - List of Changes
 
+## v2.0-alpha-7 - 06.06.2022
+This update reflects changes made in **Genesis** v2.7 update (which follow **Flow** v1.15 update)
+### Breaking Changes
+- **SingleFrameSetup** and **MultiFrameSetup** now require the implicit **ExecutionContext** parameter at constructor 
+  instead of at `.start()`
+
 ## v2.0-alpha-6 - 27.01.2022
 Scala version update
 ### Scala

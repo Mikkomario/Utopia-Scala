@@ -21,6 +21,7 @@ import scala.concurrent.duration.FiniteDuration
   * @author Mikko Hilpinen
   * @since 2021-10-25
   */
+@deprecated("Will be removed in a future release", "v4.0")
 object DbSessionToken 
 	extends SingleRowModelAccess[SessionToken] with NonDeprecatedView[SessionToken] with Indexed
 {

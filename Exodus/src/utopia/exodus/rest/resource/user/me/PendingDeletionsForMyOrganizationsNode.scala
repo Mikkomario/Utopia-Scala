@@ -2,11 +2,11 @@ package utopia.exodus.rest.resource.user.me
 
 import utopia.access.http.Method.Get
 import utopia.citadel.database.access.many.organization.DbOrganizations
+import utopia.exodus.model.enumeration.ExodusScope.ReadOrganizationData
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.generic.ValueConversions._
 import utopia.nexus.http.Path
-import utopia.nexus.rest.Resource
-import utopia.nexus.rest.ResourceSearchResult.Error
+import utopia.nexus.rest.LeafResource
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -15,23 +15,32 @@ import utopia.vault.database.Connection
  * @author Mikko Hilpinen
  * @since 16.5.2020, v1
  */
-object PendingDeletionsForMyOrganizationsNode extends Resource[AuthorizedContext]
+object PendingDeletionsForMyOrganizationsNode extends LeafResource[AuthorizedContext]
 {
-	override val name = "pending"
+	// ATTRIBUTES   ------------------------
 	
+	override val name = "pending"
 	override val allowedMethods = Vector(Get)
+	
+	
+	// IMPLEMENTED  ------------------------
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
-		context.sessionTokenAuthorized { (session, connection) =>
+		context.authorizedForScope(ReadOrganizationData) { (token, connection) =>
 			implicit val c: Connection = connection
 			// Reads all user organization ids and pending deletions targeted towards those ids
-			val organizationIds = session.userAccess.memberships.organizationIds
-			val pendingDeletions = DbOrganizations(organizationIds.toSet).deletions.notCancelled.pull
+			val organizationIds = token.userAccess match {
+				case Some(access) => access.memberships.organizationIds
+				case None => Vector()
+			}
+			val pendingDeletions = {
+				if (organizationIds.nonEmpty)
+					DbOrganizations(organizationIds.toSet).deletions.notCancelled.pull
+				else
+					Vector()
+			}
 			Result.Success(pendingDeletions.map { _.toModel })
 		}
 	}
-	
-	override def follow(path: Path)(implicit context: AuthorizedContext) = Error(message = Some(
-		"pending deletions doesn't have any sub-nodes at this time"))
 }

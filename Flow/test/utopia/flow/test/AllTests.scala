@@ -1,6 +1,6 @@
 package utopia.flow.test
 
-import utopia.flow.test.async.{AsyncTest, AsyncViewTest, FutureRaceTest, LoopTest, VolatileTest}
+import utopia.flow.test.async.{AsyncTest, AsyncViewTest, FutureRaceTest, LoopTest2, VolatileTest}
 import utopia.flow.test.collection.CollectionTest
 import utopia.flow.test.datastructure.{CacheTest, GraphTest, TreeNodeTest, WeakListTest}
 import utopia.flow.test.generic.{DataTypeTest, ModelConvertibleTest, ModelDeclarationTest, ModelTest, ValueAccessorTest}
@@ -41,7 +41,7 @@ object AllTests extends App
 	run(AsyncTest)
 	run(AsyncViewTest)
 	run(FutureRaceTest)
-	run(LoopTest)
+	run(LoopTest2)
 	
 	println("All test completed")
 }

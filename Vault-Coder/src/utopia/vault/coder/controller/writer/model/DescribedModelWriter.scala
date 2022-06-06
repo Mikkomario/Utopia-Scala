@@ -1,11 +1,12 @@
 package utopia.vault.coder.controller.writer.model
 
-import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, ProjectSetup}
+import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup}
+import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.scala.Visibility.Protected
+import utopia.vault.coder.model.scala.datatype.{Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration}
-import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, Parameters, Reference, ScalaType}
+import utopia.vault.coder.model.scala.{DeclarationDate, Parameter, Parameters}
 
 import scala.io.Codec
 
@@ -16,6 +17,8 @@ import scala.io.Codec
   */
 object DescribedModelWriter
 {
+	private val classPrefix = Name("Described", "Described", CamelCase.capitalized)
+	
 	/**
 	  * Writes a described model class for the specified class
 	  * @param classToWrite Class based on which the model class is generated
@@ -25,10 +28,10 @@ object DescribedModelWriter
 	  * @return Reference to the written file. Failure if file writing failed.
 	  */
 	def apply(classToWrite: Class, modelRef: Reference)
-	         (implicit setup: ProjectSetup, codec: Codec) =
+	         (implicit setup: ProjectSetup, codec: Codec, naming: NamingRules) =
 	{
-		val className = s"Described${ classToWrite.name }"
-		val modelParamName = classToWrite.name.singular.uncapitalize
+		val className = (classPrefix +: classToWrite.name).className
+		val modelParamName = classToWrite.name.propName
 		
 		File(setup.combinedModelPackage/classToWrite.packageName,
 			ObjectDeclaration(className, Vector(Reference.describedFactory(modelRef, ScalaType.basic(className)))),
@@ -45,10 +48,11 @@ object DescribedModelWriter
 			),*/
 			// Class combines the model with its descriptions
 			ClassDeclaration(className,
-				Parameters(Parameter(modelParamName, modelRef, description = s"${classToWrite.name} to wrap"),
+				constructionParams = Parameters(Parameter(modelParamName, modelRef,
+					description = s"${classToWrite.name} to wrap"),
 					Parameter("descriptions", ScalaType.set(Reference.linkedDescription),
 						description = s"Descriptions concerning the wrapped ${classToWrite.name}")),
-				Vector(Reference.describedWrapper(modelRef), Reference.simplyDescribed),
+				extensions = Vector(Reference.describedWrapper(modelRef), Reference.simplyDescribed),
 				properties = Vector(ComputedProperty("wrapped", isOverridden = true)(modelParamName)),
 				methods = Set(MethodDeclaration("simpleBaseModel", visibility = Protected, isOverridden = true,
 					isLowMergePriority = true)(Parameter("roles", ScalaType.iterable(Reference.descriptionRole)))(

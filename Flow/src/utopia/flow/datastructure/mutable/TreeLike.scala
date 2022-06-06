@@ -15,7 +15,7 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends template.TreeLike[A
     // ABSTRACT ---------------------
     
     /**
-      * Updates the childs of this treelike
+      * Updates the children of this treelike
       * @param newChildren The new children
       */
     protected def setChildren(newChildren: Vector[NodeType]): Unit
@@ -33,8 +33,7 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends template.TreeLike[A
     {   
         // Makes sure the child doesn't already exist in the direct children
         // And that this node won't end up under a child node
-        if (!children.contains(child) && !child.contains(this))
-        {
+        if (this != child && !children.contains(child) && !child.containsNode(this)) {
             setChildren(children :+ child)
             true
         }
@@ -62,8 +61,20 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends template.TreeLike[A
     def clear() = setChildren(Vector())
     
     /**
+      * Removes the direct children of this node that match the specified function
+      * @param f A function that returns true for children that should be removed
+      */
+    def clearChildrenWhere(f: NodeType => Boolean) = setChildren(children.filterNot(f))
+    /**
+      * Removes all children (direct and indirect) based on the specified function result
+      * @param f A function that returns true for children that should be removed
+      */
+    def clearNestedWhere(f: NodeType => Boolean): Unit =
+        setChildren(children.filterNot(f).map { c => c.clearNestedWhere(f); c })
+    
+    /**
      * Removes a node from the direct children under this node
      * @param child The node that is removed from under this node
      */
-    def removeChild(child: Tree[A]) = setChildren(children.filterNot { _ == child })
+    def removeChild(child: TreeLike[A, _]) = setChildren(children.filterNot { _ == child })
 }

@@ -1,6 +1,6 @@
 package utopia.vault.database
 
-import utopia.flow.async.DailyTask
+import utopia.flow.async.LoopingProcess
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.model.immutable.{Reference, Table}
 import utopia.vault.sql.{Condition, Delete, Join, JoinType, SqlTarget, Where}
@@ -31,9 +31,7 @@ object ClearUnreferencedData
 	                 (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
 		val deleter = new ClearUnreferencedData(tables.map { _ -> Set() })
-		DailyTask(at) {
-			connectionPool.tryWith { implicit c => deleter()  }.failure.foreach(onError)
-		}
+		LoopingProcess.daily(at) { _ => connectionPool.tryWith { implicit c => deleter()  }.failure.foreach(onError) }
 	}
 }
 

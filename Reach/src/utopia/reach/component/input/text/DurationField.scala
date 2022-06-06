@@ -1,5 +1,6 @@
 package utopia.reach.component.input.text
 
+import utopia.flow.async.Delay
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.WaitUtils
@@ -189,8 +190,9 @@ class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration 
 							val targetField = inputFields(sourceIndex + 1)
 							sourceField.textPointer.addListener { event =>
 								// Focus transfer is slightly delayed to avoid duplicate key event triggering
-								if (event.newValue.length == maxLength && event.oldValue.length != maxLength && sourceField.hasFocus)
-									WaitUtils.delayed(focusTransferDelay) { targetField.requestFocus() }
+								if (event.newValue.length == maxLength &&
+									event.oldValue.length != maxLength && sourceField.hasFocus)
+									Delay(focusTransferDelay) { targetField.requestFocus() }
 							}
 						}
 					}

@@ -1,5 +1,9 @@
 # Utopia Ambassador - List of Changes
 
+## v2.1 - 06.06.2022
+This update reflects some changes in the **Exodus** v4.0 update, meaning that request authorization is not based on 
+scopes. See the **AmbassadorScope** object.
+
 ## v2.0.1 - 27.01.2022
 Scala version update
 ### Scala

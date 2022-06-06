@@ -14,6 +14,7 @@ import utopia.vault.nosql.template.Deprecatable
   * @author Mikko Hilpinen
   * @since 24.11.2021, v3.1
   */
+@deprecated("Will be removed in a future release", "v4.0")
 object EmailValidatedSessionFactory 
 	extends FromValidatedRowModelFactory[EmailValidatedSession] 
 		with FromRowFactoryWithTimestamps[EmailValidatedSession] with Deprecatable

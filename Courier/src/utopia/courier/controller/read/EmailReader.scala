@@ -7,6 +7,7 @@ import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.AutoCloseWrapper
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.StringExtensions._
 
 import java.io.InputStream
 import java.nio.file.Path
@@ -178,8 +179,7 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 								val folderSize = folder.getMessageCount
 								val maxReadIndex = if (maxMessageCount < 0) folderSize else
 									(skipMessageCount + maxMessageCount) min folderSize
-								val sourceIterator =
-								{
+								val sourceIterator = {
 									if (skipMessageCount >= folderSize)
 										Iterator.empty
 									else
@@ -212,13 +212,12 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 	
 	// NESTED   -------------------------------------
 	
-	private class MessageIterator(rawSource: RawMessageIterator) extends Iterator[Try[A]]
+	private class MessageIterator(source: RawMessageIterator) extends Iterator[Try[A]]
 	{
 		// ATTRIBUTES   ---------------------------
 		
-		private val source = rawSource.pollable
 		private val nextMaterials = ResettableLazy {
-			source.pollToNextWhere {
+			source.nextWhere {
 				case Success(msg) => msg.isDefined
 				case Failure(_) => true
 			}.map { _.map { _.get } }
@@ -271,7 +270,7 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 		// OTHER    --------------------------------
 		
 		def popMessages() = {
-			val (skipped, rawFailed) = rawSource.popMessages()
+			val (skipped, rawFailed) = source.popMessages()
 			val failed = processFailedMessage.orElse(rawFailed)
 			processFailedMessage = None
 			(processedMessagesBuilder.result(), skipped, failed)
@@ -296,7 +295,8 @@ class EmailReader[A](settings: ReadSettings, makeBuilder: LazyEmailHeadersView =
 									// Handles attachments or other part content
 									val disposition = part.getDisposition
 									// Case: Attachment => Attaches it using the builder
-									if (disposition != null && (disposition == Part.ATTACHMENT || disposition == Part.INLINE))
+									if (disposition != null &&
+										((disposition ~== Part.ATTACHMENT) || (disposition ~== Part.INLINE)))
 									{
 										// Doesn't know the stream encoding, unfortunately
 										part.getInputStream.consume { stream =>

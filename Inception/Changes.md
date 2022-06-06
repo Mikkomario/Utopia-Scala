@@ -1,5 +1,10 @@
 # Utopia Inception - List of Changes
 
+## v2.3.2 - 06.06.2022
+This very minor update changes **Handler** type variance.
+### Other Changes
+- The **Handler** base trait type parameter is now **covariant** instead of invariant.
+
 ## v2.3.1 - 27.01.2022
 Scala version update
 ### Scala

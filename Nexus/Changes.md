@@ -1,5 +1,16 @@
 # Utopia Nexus - List of Changes
 
+## v1.7 - 06.06.2022
+This update mostly concerns modular rest resources, refactoring the associated base traits. 
+In addition, this update also includes some smaller quality-of-life improvements.
+### Breaking Changes
+- Modular resources were updated so that use case implementations no longer specify methods. Instead, use cases within 
+  the modular resources are now stored in Maps.
+### New Features
+- Added **NotImplementedResource** trait (from **Exodus**)
+### Other Changes
+- Added default value `Value.empty` to `Result.Success(...)` constructor
+
 ## v1.6.2 - 27.01.2022
 This update introduces an important bugfix concerning modular resources
 ### Scala

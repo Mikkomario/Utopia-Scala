@@ -1,7 +1,7 @@
 package utopia.flow.collection
 
 import scala.collection.immutable.VectorBuilder
-import scala.collection.{Factory, IterableFactory, IterableOps, SpecificIterableFactory, mutable}
+import scala.collection.{Factory, IterableOps, SpecificIterableFactory, mutable}
 import scala.ref.WeakReference
 
 object WeakList

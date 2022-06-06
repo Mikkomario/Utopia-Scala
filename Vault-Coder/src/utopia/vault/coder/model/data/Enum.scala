@@ -1,6 +1,7 @@
 package utopia.vault.coder.model.data
 
-import utopia.vault.coder.model.scala.{Package, Reference}
+import utopia.vault.coder.model.scala.Package
+import utopia.vault.coder.model.scala.datatype.Reference
 
 /**
   * Represents a custom (user-defined) enumeration

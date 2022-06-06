@@ -1,6 +1,6 @@
 package utopia.vault.coder.model.scala.template
 
-import utopia.vault.coder.model.scala.Reference
+import utopia.vault.coder.model.scala.datatype.Reference
 
 /**
   * Common trait for codes / pieces of code that (may) refer to external classes
