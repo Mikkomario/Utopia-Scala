@@ -1274,6 +1274,14 @@ object CollectionExtensions
     implicit class RichMap[K, V](val m: Map[K, V]) extends AnyVal
     {
         /**
+          * Maps the keys of this map
+          * @param f A mapping function
+          * @tparam K2 Type of the new keys to use
+          * @return A copy of this map with updated keys
+          */
+        def mapKeys[K2](f: K => K2) = m.map { case (k, v) => f(k) -> v }
+        
+        /**
           * Merges this map with another map. If value is present only in one map, it is preserved as is.
           * @param another Another map
           * @param merge A merge function used when both maps contain a value

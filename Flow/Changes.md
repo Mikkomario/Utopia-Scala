@@ -1,5 +1,12 @@
 # Utopia Flow - List of Changes
 
+## v1.15.1 (in development)
+### New Methods
+- **Map** (**CollectionExtensions**)
+  - Added `.mapKeys(...)`
+- **String** (**StringExtensions**)
+  - Added `.filterWith(Regex)` and `.filterNotWith(Regex)`
+
 ## v1.15 - 06.06.2022
 This major update introduces a number of utility changes, including many breaking changes. 
 The biggest changes target the waiting and looping classes, which were completely rewritten in order to support 

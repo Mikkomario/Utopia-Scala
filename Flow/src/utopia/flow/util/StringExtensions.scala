@@ -347,6 +347,17 @@ object StringExtensions
 		}
 		
 		/**
+		  * @param regex A regular expression to filter with
+		  * @return A copy of this string that only contains segments accepted by that regular expression
+		  */
+		def filterWith(regex: Regex) = regex.filter(s)
+		/**
+		  * @param regex A regular expression to filter with
+		  * @return A copy of this string without any segments accepted by the specified regular expression
+		  */
+		def filterNotWith(regex: Regex) = regex.filterNot(s)
+		
+		/**
 		 * A comparison of two strings in a case-insensitive manner
 		 * @param another Another string
 		 * @return Whether this string equals the other string when case is ignored
