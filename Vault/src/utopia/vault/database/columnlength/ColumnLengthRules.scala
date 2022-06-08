@@ -131,10 +131,10 @@ object ColumnLengthRules
 					case "crop" => Some(TryCrop)
 					case "expand" => Some(TryExpand.infinitely)
 					case _ =>
-						if (value.startsWith("expand") || value.startsWith("to"))
+						if (value.startsWith("expand") || value.startsWith("to") || value.startsWith("up to"))
 							value.afterLast(" ").long.map { TryExpand upTo _ }
 						else
-							None
+							value.long.map { TryExpand upTo _ }
 				}
 				limit.map { Vector(dbName, tableName, propName) -> _ }
 			}

@@ -2,11 +2,14 @@ package utopia.vault.database.columnlength
 
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.StringType
+import utopia.flow.util.CollectionExtensions._
 import utopia.vault.database.ConnectionPool
+import utopia.vault.database.columnlength.ColumnLengthRule.CombiningRule
 import utopia.vault.model.error.MaxLengthExceededException
 import utopia.vault.model.immutable.Column
 
 import scala.concurrent.ExecutionContext
+import scala.util.Try
 
 /**
   * Rules applied to situations where column maximum length is exceeded
@@ -15,6 +18,8 @@ import scala.concurrent.ExecutionContext
   */
 trait ColumnLengthRule
 {
+	// ABSTRACT ---------------------------------
+	
 	/**
 	  * Tests a case where updating or inserting a column value.
 	  * Testing doesn't have to be limited to length-exceeding cases.
@@ -26,6 +31,15 @@ trait ColumnLengthRule
 	  * @throws Exception May throw an exception if the value is not accepted
 	  */
 	def apply(databaseName: String, column: Column, lengthLimit: ColumnLengthLimit, proposedValue: Value): Value
+	
+	
+	// OTHER    --------------------------------
+	
+	/**
+	  * @param backupRule A rule to use if this rule throws
+	  * @return A copy of this rule that uses the second rule in case this one fails
+	  */
+	def recoverWith(backupRule: ColumnLengthRule): ColumnLengthRule = new CombiningRule(this, backupRule)
 }
 
 object ColumnLengthRule
@@ -120,6 +134,17 @@ object ColumnLengthRule
 						case None => throw new MaxLengthExceededException(
 							s"${ column.columnNameWithTable } can't fit $proposedValue and can't be expanded")
 					}
+			}
+		}
+	}
+	
+	// Combines two lenght rules, uses the second one if the first one throws
+	private class CombiningRule(primary: ColumnLengthRule, secondary: ColumnLengthRule) extends ColumnLengthRule
+	{
+		override def apply(databaseName: String, column: Column, lengthLimit: ColumnLengthLimit, proposedValue: Value) =
+		{
+			Try { primary(databaseName, column, lengthLimit, proposedValue) }.getOrMap { error =>
+				Try { secondary(databaseName, column, lengthLimit, proposedValue) }.getOrElse { throw error }
 			}
 		}
 	}

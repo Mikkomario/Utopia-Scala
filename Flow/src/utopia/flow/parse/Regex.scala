@@ -250,10 +250,17 @@ case class Regex(string: String)
 	def apply(str: String) = str.matches(string)
 	
 	/**
+	  * Replaces all occurrences of this regular expression with a string
+	  * @param str String to modify
+	  * @param replacement A string that this expression is replaced with
+	  * @return Modified string
+	  */
+	def replaceAll(str: String, replacement: String) = pattern.matcher(str).replaceAll(replacement)
+	/**
 	  * @param str A string
 	  * @return A version of the string that only contains items NOT accepted by this regex
 	  */
-	def filterNot(str: String) = pattern.matcher(str).replaceAll("")
+	def filterNot(str: String) = replaceAll(str, "")
 	/**
 	  * @param str A string
 	  * @return A version of the string that only contains items accepted by this regex

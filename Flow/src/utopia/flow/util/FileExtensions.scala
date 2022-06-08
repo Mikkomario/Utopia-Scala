@@ -707,6 +707,7 @@ object FileExtensions
 		  * @tparam U Arbitrary result type
 		  * @return This path. Failure if the writing process, or the function, threw an exception.
 		  */
+		// TODO: Add a variant of this function that appends
 		def writeUsing[U](writer: PrintWriter => U)(implicit codec: Codec) = writeWith { stream =>
 			stream.consume { new OutputStreamWriter(_, codec.charSet).consume { new PrintWriter(_).consume(writer) } }
 		}

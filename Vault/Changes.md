@@ -1,5 +1,12 @@
 # Utopia Vault - List of Changes
 
+## v1.12.2 (in development)
+### New Methods
+- **ColumnLengthRule**
+  - Added `.recoverWith(ColumnLengthRule)`
+### Bugfixes
+- Expanded `ColumnLengthRules.loadFrom(...)` logic to support current (v1.5) Vault Coder syntax
+
 ## v1.12.1 - 06.06.2022
 This update contains major bugfixes that fix problems introduced in v1.12 update 
 and also some older bugs appearing in edge-cases.

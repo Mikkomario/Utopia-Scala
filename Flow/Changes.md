@@ -4,6 +4,8 @@
 ### New Methods
 - **Map** (**CollectionExtensions**)
   - Added `.mapKeys(...)`
+- **Regex**
+  - Added `.replaceAll(String, String)`
 - **String** (**StringExtensions**)
   - Added `.filterWith(Regex)` and `.filterNotWith(Regex)`
 

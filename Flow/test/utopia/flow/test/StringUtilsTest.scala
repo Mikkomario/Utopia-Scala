@@ -62,5 +62,7 @@ object StringUtilsTest extends App
 	
 	assert("XtestXX2".splitIterator("X").toVector == Vector("test", "2"))
 	
+	println("YV- 2716".filterWith(Regex.alphaNumeric))
+	
 	println("Success!")
 }
