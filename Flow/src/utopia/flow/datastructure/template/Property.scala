@@ -3,6 +3,7 @@ package utopia.flow.datastructure.template
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.DataType
 import utopia.flow.parse.JsonConvertible
+import utopia.flow.util.StringExtensions._
 
 /**
  * Properties are named and contain a value in a certain data type
@@ -28,5 +29,9 @@ trait Property extends JsonConvertible with Viewable[Value]
     
     override def toString = s"$name: ${value.description}"
     
-    override def toJson = "\"" + name + "\": " + value.toJson
+    override def appendToJson(jsonBuilder: StringBuilder) = {
+        jsonBuilder ++= name.quoted
+        jsonBuilder ++= ": "
+        value.appendToJson(jsonBuilder)
+    }
 }

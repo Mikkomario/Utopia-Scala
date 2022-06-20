@@ -1,6 +1,10 @@
 # Utopia Flow - List of Changes
 
-## v1.15.1 (in development)
+## v1.16 (in development)
+### Breaking Changes
+- **JsonConvertible** now requires implementation of `appendToJson(StringBuilder): Unit`
+  - Please notice that all existing implementations have been modified to include this function, so this should be 
+    a problem only in custom implementations, and even then a minor one
 ### New Features
 - **XmlElement** now supports namespaces, which are provided implicitly
 ### New Methods
@@ -10,6 +14,8 @@
   - Added `.replaceAll(String, String)`
 - **String** (**StringExtensions**)
   - Added `.filterWith(Regex)` and `.filterNotWith(Regex)`
+### Other Changes
+- Optimized json conversion (see breaking changes)
 
 ## v1.15 - 06.06.2022
 This major update introduces a number of utility changes, including many breaking changes. 

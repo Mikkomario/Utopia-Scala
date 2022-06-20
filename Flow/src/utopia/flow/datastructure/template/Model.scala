@@ -35,15 +35,10 @@ trait Model[+Attribute <: Property] extends MapLike[String, Value] with JsonConv
     
     // COMP. PROPERTIES    --------
     
-    override def toString = toJson
-    
-    override def toJson = if (isEmpty) "{}" else s"{${attributes.map { _.toJson }.mkString(", ") }}"
-    
     /**
       * @return The attributes of this model
       */
-    def attributes =
-    {
+    def attributes = {
         val allAttributes = attributeMap
         attributeOrder.flatMap(allAttributes.get)
     }
@@ -91,6 +86,21 @@ trait Model[+Attribute <: Property] extends MapLike[String, Value] with JsonConv
      * @return The value of the attribute with the provided name
      */
     override def apply(attName: String): Value = get(attName).value
+    
+    override def appendToJson(jsonBuilder: StringBuilder) = {
+        if (isEmpty)
+            jsonBuilder ++= "{}"
+        else {
+            jsonBuilder ++= "{"
+            val atts = attributes
+            atts.head.appendToJson(jsonBuilder)
+            atts.tail.foreach { att =>
+                jsonBuilder ++= ", "
+                att.appendToJson(jsonBuilder)
+            }
+            jsonBuilder ++= "}"
+        }
+    }
     
     
     // OTHER METHODS    -----------

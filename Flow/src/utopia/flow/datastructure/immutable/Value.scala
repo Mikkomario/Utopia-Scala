@@ -40,8 +40,6 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
     
     // COMP. PROPERTIES    -----
     
-    override def toJson = JsonValueConverter(this).getOrElse("null")
-    
     /**
      * The description of this value, describing both content and data type
      */
@@ -69,10 +67,17 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
     
     // IMPLEMENTED METHODS    ---
     
+    override def toJson = JsonValueConverter(this).getOrElse("null")
+    
     /**
      * The contents of this value cast to a string
      */
     override def toString = string.getOrElse("")
+    
+    override def appendToJson(jsonBuilder: StringBuilder) = JsonValueConverter(this) match {
+        case Some(json) => jsonBuilder ++= json
+        case None => jsonBuilder ++= "null"
+    }
     
     
     // OPERATORS    -------------

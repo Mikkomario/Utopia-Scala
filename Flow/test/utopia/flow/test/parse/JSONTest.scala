@@ -72,7 +72,9 @@ object JSONTest extends App
 	assert(readModel2("age").dataType == IntType)
 	assert(readModel2("length").getDouble == 76.24)
 	
-	assert(readModel2 == JSONReader(readModel2.toJson).get.getModel)
+	val readModel2Converted = JSONReader(readModel2.toJson).get.getModel
+	println(readModel2Converted)
+	assert(readModel2 == readModel2Converted)
 	
 	// Tests more difficult data types
 	val prop4 = Constant("test4", v)

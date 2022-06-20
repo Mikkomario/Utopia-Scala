@@ -23,4 +23,6 @@ trait ModelConvertible extends JsonConvertible
     override def toJson = toModel.toJson
     
     override def toString = toModel.toString
+    
+    override def appendToJson(jsonBuilder: StringBuilder) = toModel.appendToJson(jsonBuilder)
 }

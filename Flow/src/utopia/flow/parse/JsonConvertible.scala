@@ -10,13 +10,31 @@ trait JsonConvertible
     // ABSTRACT    -----------------------
     
     /**
-      * @return A json representation fo this instance
+      * Appends the json representation of this item to the specified string builder
+      * @param jsonBuilder A string builder that will contain the resulting json string
       */
-    def toJson: String
+    def appendToJson(jsonBuilder: StringBuilder): Unit
+    
+    
+    // COMPUTED -------------------------
     
     /**
-     * A JSON Representation of this instance
-     */
+      * @return A json representation fo this instance
+      */
+    def toJson: String = {
+        val builder = new StringBuilder()
+        appendToJson(builder)
+        builder.result()
+    }
+    
+    /**
+      * A JSON Representation of this instance
+      */
     @deprecated("Replaced with toJson", "v1.8")
     def toJSON = toJson
+    
+    
+    // IMPLEMENTED  ---------------------
+    
+    override def toString = toJson
 }
