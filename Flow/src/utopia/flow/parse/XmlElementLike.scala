@@ -57,23 +57,10 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
     /**
      * Prints an xml string from this element. Character data is represented as is.
      */
-    def toXml: String = 
-    {
-        val namePart = nameWithNamespace
-        val attsPart = attributesString match {
-            case Some(str) => " " + str
-            case None => ""
-        }
-        
-        // Case: Empty element
-        // Eg. <foo att1="2"/>
-        if (isEmptyElement)
-            s"<$namePart$attsPart/>"
-        // Case: Contains content
-        // Eg. <foo att1="2">Test value</foo>
-        // Or <foo><bar/></foo>
-        else
-            s"<$namePart$attsPart>${ text.getOrElse("") }${ children.map { _.toXml }.mkString }</$namePart>"
+    def toXml: String = {
+        val builder = new StringBuilder()
+        appendToXml(builder)
+        builder.result()
     }
     
     /**
@@ -221,6 +208,33 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
      * Finds the value for an attribute with the specified name
      */
     def valueForAttribute(attName: String) = attributes(attName)
+    
+    /**
+      * Prints an xml string from this element. Character data is represented as is.
+      * @param xmlBuilder Builder for building the final xml string
+      */
+    def appendToXml(xmlBuilder: StringBuilder): Unit =
+    {
+        val namePart = nameWithNamespace
+        val attsPart = attributesString match {
+            case Some(str) => " " + str
+            case None => ""
+        }
+        
+        // Case: Empty element
+        // Eg. <foo att1="2"/>
+        if (isEmptyElement)
+            xmlBuilder ++= s"<$namePart$attsPart/>"
+        // Case: Contains content
+        // Eg. <foo att1="2">Test value</foo>
+        // Or <foo><bar/></foo>
+        else {
+            xmlBuilder ++= s"<$namePart$attsPart>"
+            text.foreach { xmlBuilder ++= _ }
+            children.foreach { _.appendToXml(xmlBuilder) }
+            xmlBuilder ++= s"</$namePart>"
+        }
+    }
     
     private def groupChildren(children: Vector[XmlElementLike[_]]): Value =
     {

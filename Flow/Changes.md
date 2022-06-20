@@ -16,6 +16,7 @@
   - Added `.filterWith(Regex)` and `.filterNotWith(Regex)`
 ### Other Changes
 - Optimized json conversion (see breaking changes)
+- Optimized **XmlElement**`.toXml`, also
 
 ## v1.15 - 06.06.2022
 This major update introduces a number of utility changes, including many breaking changes. 
