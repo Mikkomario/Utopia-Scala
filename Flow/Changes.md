@@ -1,6 +1,8 @@
 # Utopia Flow - List of Changes
 
 ## v1.15.1 (in development)
+### New Features
+- **XmlElement** now supports namespaces, which are provided implicitly
 ### New Methods
 - **Map** (**CollectionExtensions**)
   - Added `.mapKeys(...)`

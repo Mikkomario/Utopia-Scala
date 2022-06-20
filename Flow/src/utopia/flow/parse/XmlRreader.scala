@@ -12,6 +12,7 @@ import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.StringType
 
 import java.nio.file.Path
+import javax.xml.XMLConstants
 import scala.collection.immutable.VectorBuilder
 import scala.util.Try
 import scala.util.Success
@@ -330,7 +331,8 @@ class XmlReader(streamReader: Reader) extends AutoCloseable
     
     private def _readElement(): (UnfinishedElement, Int) =
     {
-        val element = new UnfinishedElement(reader.getLocalName, parseAttributes())
+        val name = reader.getName
+        val element = new UnfinishedElement(name.getNamespaceURI, name.getLocalPart, parseAttributes())
         var depthChange = _toNextElementStart(Some(element))
         
         while (depthChange > 0)
@@ -384,12 +386,15 @@ private case object ElementEnd extends XmlReadEvent
 private case object Text extends XmlReadEvent
 private case object DocumentEnd extends XmlReadEvent
 
-private class UnfinishedElement(val name: String, val attributes: Map[String, String])
+private class UnfinishedElement(namespace: String, name: String, attributes: Map[String, String])
 {
     // ATTRIBUTES    -----------------------
     
     var children = Vector[UnfinishedElement]()
     var text = ""
+    
+    private implicit val _namespace: Namespace =
+        if (namespace == XMLConstants.NULL_NS_URI) Namespace.empty else Namespace(namespace)
     
     
     // COMPUTED PROPERTIES    --------------

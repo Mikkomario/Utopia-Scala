@@ -15,7 +15,7 @@ object XmlElementBuilder
 	  * @return A builder based on that xml element
 	  */
 	def apply[X <: XmlElementLike[X]](element: X): XmlElementBuilder = {
-		val builder = new XmlElementBuilder(element.name, element.value, element.attributes)
+		val builder = new XmlElementBuilder(element.name, element.value, element.attributes)(element.namespace)
 		builder.children = element.children.map { apply(_) }
 		builder
 	}
@@ -27,7 +27,7 @@ object XmlElementBuilder
   * @since 10.4.2022, v1.15
   */
 class XmlElementBuilder(initialName: String, initialValue: Value = Value.emptyWithType(StringType),
-                        initialAttributes: Model = Model.empty)
+                        initialAttributes: Model = Model.empty)(implicit initialNamespace: Namespace)
 	extends XmlElementLike[XmlElementBuilder] with mutable.TreeLike[String, XmlElementBuilder]
 {
 	// ATTRIBUTES   --------------------------------
@@ -36,6 +36,7 @@ class XmlElementBuilder(initialName: String, initialValue: Value = Value.emptyWi
 	var value = initialValue
 	var attributes = initialAttributes
 	var children = Vector[XmlElementBuilder]()
+	var namespace = initialNamespace
 	
 	
 	// IMPLEMENTED  --------------------------------
@@ -44,7 +45,7 @@ class XmlElementBuilder(initialName: String, initialValue: Value = Value.emptyWi
 	
 	override protected def newNode(content: String) = {
 		// Adds the node as a new child
-		val node = new XmlElementBuilder(content)
+		val node = new XmlElementBuilder(content)(namespace)
 		children :+= node
 		node
 	}
@@ -57,7 +58,7 @@ class XmlElementBuilder(initialName: String, initialValue: Value = Value.emptyWi
 	/**
 	  * @return An immutable xml element based on this builder's current state
 	  */
-	def result(): XmlElement = XmlElement(name, value, attributes, children.map { _.result() })
+	def result(): XmlElement = XmlElement(name, value, attributes, children.map { _.result() })(namespace)
 	
 	/**
 	  * Adds a new child node under this node
@@ -100,7 +101,7 @@ class XmlElementBuilder(initialName: String, initialValue: Value = Value.emptyWi
 	def buildNewChild[A](childName: String, childValue: Value = Value.emptyWithType(StringType))
 	                    (f: XmlElementBuilder => A) =
 	{
-		val builder = new XmlElementBuilder(childName, childValue)
+		val builder = new XmlElementBuilder(childName, childValue)(namespace)
 		val result = f(builder)
 		children :+= builder
 		result

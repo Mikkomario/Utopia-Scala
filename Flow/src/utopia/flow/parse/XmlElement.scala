@@ -6,6 +6,7 @@ import utopia.flow.datastructure.immutable.{Constant, Model, TreeLike, Value}
 import utopia.flow.generic.StringType
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.datastructure.template.Property
+import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 
 import scala.collection.immutable.VectorBuilder
@@ -16,7 +17,28 @@ object XmlElement extends FromModelFactory[XmlElement]
     def apply(model: template.Model[Property]): Try[XmlElement] =
     {
         // If the name is not provided by user, it is read from the model
-        model("name").string.map { name => Success(apply(name, model)) }.getOrElse(
+        model("name").string
+            .toTry { new NoSuchElementException(s"Cannot parse XmlElement from $model without a 'name' property") }
+            .map { name =>
+                // Checks namespace specifications
+                val (actualName, namespace) = {
+                    model("namespace").string match {
+                        case Some(explicitNamespace) => name -> Namespace(explicitNamespace)
+                        case None =>
+                            if (name.contains(":")) {
+                                val (namespacePart, namePart) = name.splitAtFirst(":")
+                                namePart -> Namespace(namespacePart)
+                            }
+                            else
+                                name -> Namespace.empty
+                    }
+                }
+                apply(actualName, model)(namespace)
+            }
+        
+        model("name").string.map { name =>
+            Success(apply(name, model))
+        }.getOrElse(
             Failure(new NoSuchElementException(s"Cannot parse XmlElement from $model without 'name' property")))
     }
     
@@ -29,9 +51,10 @@ object XmlElement extends FromModelFactory[XmlElement]
      * - attributes: Element attributes (model)<br>
      * Unused attributes are converted into children or attributes if some of the primary attributes 
      * were missing.
+      * @param namespace Namespace of this element
      */
-    // TODO: Handle vector value types
-    def apply(name: String, model: template.Model[Property]): XmlElement = 
+    // TODO: Handle vector value types and instead of model, accept value
+    def apply(name: String, model: template.Model[Property])(implicit namespace: Namespace): XmlElement =
     {
         // Value is either in 'value' or 'text' attribute
         val valueAttribute = model.findExisting("value")
@@ -49,8 +72,20 @@ object XmlElement extends FromModelFactory[XmlElement]
         val children = specifiedChildren.getOrElse
         {
             // Expects model type but parses other types as well
-            val modelChildren = unspecifiedAttributes.flatMap(att => att.value.model.map { (att.name, _) }).map {
-                case (attName, attValue) => XmlElement(attName, attValue) }
+            val modelChildren = unspecifiedAttributes
+                .flatMap(att => att.value.model.map { (att.name, _) })
+                .map { case (attName, attValue) =>
+                    // Attribute name may specify namespace
+                    val (name, childNamespace) = {
+                        if (attName.contains(':')) {
+                            val (namespacePart, namePart) = attName.splitAtFirst(":")
+                            namePart -> Namespace(namespacePart)
+                        }
+                        else
+                            attName -> namespace
+                    }
+                    XmlElement(name, attValue)(childNamespace)
+                }
             
             // Other types are parsed into simple xml elements
             val nonModelChildren = unspecifiedAttributes.filterNot { att => modelChildren.exists {
@@ -80,9 +115,11 @@ object XmlElement extends FromModelFactory[XmlElement]
       * @param name Name of this element
       * @param attributes Attributes assigned to this element (default = empty)
       * @param fill A function that adds child elements to the provided buffer
+      * @param namespace Namespace of this element (implicit)
       * @return A new xml element
       */
-    def build(name: String, attributes: Model = Model.empty)(fill: VectorBuilder[XmlElement] => Unit) =
+    def build(name: String, attributes: Model = Model.empty)
+             (fill: VectorBuilder[XmlElement] => Unit)(implicit namespace: Namespace) =
     {
         val buffer = new VectorBuilder[XmlElement]()
         fill(buffer)
@@ -94,9 +131,14 @@ object XmlElement extends FromModelFactory[XmlElement]
  * XML Elements are used for representing XML data
  * @author Mikko Hilpinen
  * @since 13.1.2017 (v1.3)
+  * @param name Name of this element
+  * @param value A simple value wrapped directly within this element
+  * @param attributes Attributes assigned to this element
+  * @param children Elements appearing within this element
+  * @param namespace Namespace of this element
  */
 case class XmlElement(name: String, value: Value = Value.emptyWithType(StringType), attributes: Model = Model.empty,
-                      override val children: Vector[XmlElement] = Vector())
+                      override val children: Vector[XmlElement] = Vector())(implicit override val namespace: Namespace)
     extends XmlElementLike[XmlElement] with TreeLike[String, XmlElement]
 {
     // IMPLEMENTED  ----------------------------

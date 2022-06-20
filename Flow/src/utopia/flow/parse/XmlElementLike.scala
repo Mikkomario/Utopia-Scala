@@ -31,9 +31,18 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
       * @return Attributes assigned to this xml element, as a model
       */
     def attributes: Model
+    /**
+      * @return Namespace of this element (which may be empty)
+      */
+    def namespace: Namespace
     
     
     // COMPUTED PROPERTIES    ------------------
+    
+    /**
+      * @return Name of this element, including the possible namespace
+      */
+    def nameWithNamespace = if (namespace.isEmpty) name else s"$namespace:$name"
     
     /**
      * The text inside this xml element. None if the element doesn't contain any text
@@ -50,6 +59,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
      */
     def toXml: String = 
     {
+        val namePart = nameWithNamespace
         val attsPart = attributesString match {
             case Some(str) => " " + str
             case None => ""
@@ -58,12 +68,12 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         // Case: Empty element
         // Eg. <foo att1="2"/>
         if (isEmptyElement)
-            s"<$name$attsPart/>"
+            s"<$namePart$attsPart/>"
         // Case: Contains content
         // Eg. <foo att1="2">Test value</foo>
         // Or <foo><bar/></foo>
         else
-            s"<$name$attsPart>${ text.getOrElse("") }${ children.map { _.toXml }.mkString }</$name>"
+            s"<$namePart$attsPart>${ text.getOrElse("") }${ children.map { _.toXml }.mkString }</$namePart>"
     }
     
     /**
@@ -91,7 +101,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
                 if (base.contains("name"))
                     base
                 else
-                    base + Constant("name", name)
+                    base + nameProperty
         }
     }
     
