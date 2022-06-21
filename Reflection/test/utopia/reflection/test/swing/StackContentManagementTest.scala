@@ -10,7 +10,7 @@ import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.controller.data.ContainerContentManager
 import utopia.reflection.test.TestContext
-import utopia.reflection.util.SingleFrameSetup
+import utopia.reflection.util.{AwtEventThread, SingleFrameSetup}
 import utopia.reflection.shape.LengthExtensions._
 
 /**
@@ -30,8 +30,10 @@ object StackContentManagementTest extends App
 	val background = colorScheme.gray
 	val manager = baseContext.inContextWithBackground(background).forTextComponents.use { implicit txc =>
 		ContainerContentManager.forStatelessItems[Int, ItemLabel[Int]](stack, Vector(1, 4, 6)) { i =>
+			println(s"Creating a new label ($i)")
 			val label = ItemLabel.contextual(i)
 			label.addContentListener { e => println(s"Label content changed: $e") }
+			println(s"\tLabel created ($i)")
 			label
 		}
 	}
@@ -42,10 +44,14 @@ object StackContentManagementTest extends App
 	frame.setToCloseOnEsc()
 	new SingleFrameSetup(actorHandler, frame).start()
 	
+	println("Starting the loop")
 	var nextNumber = 8
 	Loop.regularly(1.seconds) {
-		val index = (math.random() * manager.content.size).toInt
-		manager.content = manager.content.inserted(nextNumber, index)
-		nextNumber += 2
+			println(s"Updating content by adding $nextNumber")
+			val index = (math.random() * manager.content.size).toInt
+			println(s"\tInserts $nextNumber to index $index")
+			manager.content = manager.content.inserted(nextNumber, index)
+			nextNumber += 2
+			println("\tNumbers updated")
 	}
 }

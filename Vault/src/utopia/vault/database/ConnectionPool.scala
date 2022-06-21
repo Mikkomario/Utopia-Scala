@@ -32,8 +32,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 	private val timeoutCompletion: Volatile[Future[Any]] = new Volatile(Future.successful(()))
 	private val closeFutures = VolatileList[Future[Unit]]()
 	
-	private val maxClientThresholds =
-	{
+	private val maxClientThresholds = {
 		var currentMax = 1
 		var start = 0
 		
@@ -64,29 +63,27 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 	
 	// COMPUTED	---------------------------
 	
-	private def connection = connections.pop
-	{
-		all =>
-			// Returns the first reusable connection, if no such connection exists, creates a new connection
-			// Tries to use the connection with least clients
-			val reusable = if (all.nonEmpty) Some(all.minBy { _.currentClientCount }).filter {
-				_.tryJoin(maxClientPerConnectionWhen(all.size)) } else None
-			
-			reusable.map { _ -> all } getOrElse
-				{
-					val newConnection = new ReusableConnection()
-					newConnection -> (all :+ newConnection)
-				}
+	private def connection = connections.pop { all =>
+		// Returns the first reusable connection, if no such connection exists, creates a new connection
+		// Tries to use the connection with least clients
+		val reusable = if (all.nonEmpty) Some(all.minBy { _.currentClientCount }).filter {
+			_.tryJoin(maxClientPerConnectionWhen(all.size)) } else None
+		
+		reusable match {
+			case Some(conn) => conn -> all
+			case None =>
+				val newConnection = new ReusableConnection()
+				newConnection -> (all :+ newConnection)
+		}
 	}
 	
 	
 	// IMPLEMENTED	-----------------------
 	
-	override def stop() =
-	{
+	override def stop() = {
 		// Closes all current connections (may have to wait for clients to exit)
-		(connections.map { c: ReusableConnection => c.stop() } ++ closeFutures).futureCompletion(
-			new NewThreadExecutionContext("Closing connection pool"))
+		(connections.map { c: ReusableConnection => c.stop() } ++ closeFutures)
+			.futureCompletion(new NewThreadExecutionContext("Closing connection pool"))
 	}
 	
 	
@@ -122,34 +119,30 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 	private def closeUnusedConnections()(implicit context: ExecutionContext) =
 	{
 		// Makes sure connection closing is active
-		timeoutCompletion.update
-		{
-			old =>
-				// Will not create another future if one is active already
-				if (old.isCompleted)
-				{
-					Future
-					{
-						Iterator.unfold(Now + connectionKeepAlive) { waitTarget =>
-							Wait(waitTarget, waitLock)
+		timeoutCompletion.update { old =>
+			// Will not create another future if one is active already
+			if (old.isCompleted) {
+				Future {
+					Iterator.unfold(Now + connectionKeepAlive) { waitTarget =>
+						Wait(waitTarget, waitLock)
+						
+						// Updates connection list and determines next close time
+						val (w, futures) = connections.pop { all =>
+							// Keeps connections that are still open
+							val (closing, open) = all.divideBy { _.isOpen }
+							val closeFutures = closing.map { _.tryClose() }
+							val lastLeaveTime = open.filterNot { _.isInUse }.map { _.lastLeaveTime }.minOption
 							
-							// Updates connection list and determines next close time
-							val (w, futures) = connections.pop { all =>
-								// Keeps connections that are still open
-								val (closing, open) = all.divideBy { _.isOpen }
-								val closeFutures = closing.map { _.tryClose() }
-								val lastLeaveTime = open.filterNot { _.isInUse }.map { _.lastLeaveTime }.minOption
-								
-								(lastLeaveTime.map { _ + connectionKeepAlive }, closeFutures) -> open
-							}
-							// Keeps track of thread closing futures in order to delay possible system exit
-							closeFutures.update { _.filterNot { _.isCompleted } ++ futures }
-							w.map { w => () -> w }
-						}.foreach { _ => () }
-					}
+							(lastLeaveTime.map { _ + connectionKeepAlive }, closeFutures) -> open
+						}
+						// Keeps track of thread closing futures in order to delay possible system exit
+						closeFutures.update { _.filterNot { _.isCompleted } ++ futures }
+						w.map { w => () -> w }
+					}.foreach { _ => () }
 				}
-				else
-					old
+			}
+			else
+				old
 		}
 	}
 	
@@ -188,63 +181,40 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 		
 		def tryAndLeave[B](f: Connection => B)(implicit context: ExecutionContext) = Try(doAndLeave(f))
 		
-		def doAndLeave[B](f: Connection => B)(implicit context: ExecutionContext) =
-		{
-			try
-			{
-				f(connection)
-			}
-			finally
-			{
-				leave()
-			}
+		def doAndLeave[B](f: Connection => B)(implicit context: ExecutionContext) = {
+			try { f(connection) }
+			finally { leave() }
 		}
 		
-		def tryJoin(currentMaxCapacity: Int) = clientCount.pop
-		{
-			currentCount =>
-				if (currentCount >= currentMaxCapacity || closed.isSet)
-					false -> currentCount
-				else
-					true -> (currentCount + 1)
+		def tryJoin(currentMaxCapacity: Int) = clientCount.pop { currentCount =>
+			if (currentCount >= currentMaxCapacity || closed.isSet)
+				false -> currentCount
+			else
+				true -> (currentCount + 1)
 		}
 		
-		def leave()(implicit context: ExecutionContext) =
-		{
+		def leave()(implicit context: ExecutionContext) = {
 			_lastLeaveTime = Now
-			clientCount.update
-			{
-				currentCount =>
-					if (currentCount == 1)
-					{
-						if (closed.isSet)
-							closeConnection()
-						else
-							closeUnusedConnections()
-					}
-					
-					currentCount - 1
+			clientCount.update { currentCount =>
+				if (currentCount == 1) {
+					if (closed.isSet)
+						closeConnection()
+					else
+						closeUnusedConnections()
+				}
+				currentCount - 1
 			}
 		}
 		
-		def tryClose() =
-		{
-			clientCount.lock
-			{
-				count =>
-					if (count <= 0)
-						closeConnection()
-			}
+		def tryClose() = {
+			clientCount.lock { count => if (count <= 0) closeConnection() }
 			closed.set()
 			connectionClosePromise.future
 		}
 		
-		private def closeConnection() =
-		{
-			connectionClosePromise.synchronized
-			{
-				if (!connectionClosePromise.isCompleted)
-				{
+		private def closeConnection() = {
+			connectionClosePromise.synchronized {
+				if (!connectionClosePromise.isCompleted) {
 					connection.close()
 					connectionClosePromise.success(())
 				}

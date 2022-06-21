@@ -64,12 +64,9 @@ class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](init
      * If this flag is not set, performs the operation and then sets this flag. 
      * Locks this flag during the operation.
      */
-    def runAndSet[U](action: => U) = update
-    {
-        status => 
-            if (!status)
-                action
-            true
+    def runAndSet[U](action: => U) = updateIf { !_ } { _ =>
+        action
+        true
     }
     
     /**

@@ -1,7 +1,7 @@
 package utopia.flow.async
 
 import utopia.flow.datastructure.mutable.Settable
-import utopia.flow.event.{ChangeDependency, ChangeListener, Changing}
+import utopia.flow.event.{ChangeDependency, ChangeEvent, ChangeListener, Changing}
 
 object Volatile
 {
@@ -42,51 +42,35 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
     // IMPLEMENTED  ----------------
     
     override def value = this.synchronized { _value }
-    
-    override def value_=(newValue: A) = this.synchronized { setValue(newValue) }
+    override def value_=(newValue: A) = lockAndSet { _ => () -> newValue }
     
     override def isChanging = true
     
     /**
       * Safely updates the value in this container
       */
-    override def update(mutate: A => A) = this.synchronized { setValue(mutate(_value)) }
-    
+    override def update(mutate: A => A) = lockAndSet { v => () -> mutate(v) }
     /**
       * Safely updates the value in this container, then returns it
       */
-    override def updateAndGet(mutate: A => A) = this.synchronized {
-        setValue(mutate(_value))
-        _value
-    }
+    override def updateAndGet(mutate: A => A) = lockSetAndGet(mutate)
     
     /**
       * Updates a value in this container. Also returns a result value.
       */
-    def pop[B](mutate: A => (B, A)) = this.synchronized
-    {
-        val (result, next) = mutate(_value)
-        setValue(next)
-        result
-    }
+    def pop[B](mutate: A => (B, A)) = lockAndSet(mutate)
     
     /**
       * Reads the current value of this volatile container and then changes it
       * @param newValue the new value for this volatile container
       * @return the value before the assignment
       */
-    override def getAndSet(newValue: A) = pop { v => v -> newValue }
-    
+    override def getAndSet(newValue: A) = lockAndSet { v => v -> newValue }
     /**
       * @param mutate An updating function for the current value of this volatile container
       * @return The value previous to the update
       */
-    override def getAndUpdate(mutate: A => A) = this.synchronized
-    {
-        val result = _value
-        setValue(mutate(_value))
-        result
-    }
+    override def getAndUpdate(mutate: A => A) = lockAndSet { v => v -> mutate(v) }
     
     
     // OTHER    --------------------
@@ -102,46 +86,30 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
       * @param condition Condition checked on the value
       * @param newValue New value set for this volatile, if the condition is met. The value is call by name, so it's
       *                 only evaluated if the condition is met.
+      * @return The value of this volatile container after the update
       */
-    def setIf(condition: A => Boolean)(newValue: => A) = this.synchronized
-    {
-        if (condition(_value))
-            setValue(newValue)
-    }
+    def setIf(condition: A => Boolean)(newValue: => A) = updateIf(condition) { _ => newValue }
     
     /**
      * Updates this volatile only if specified condition is met
      * @param condition A condition for updating
-     * @param mutate A mutating function
+     * @param mutate A mutating function (only called if condition applies)
+      * @return Value of this volatile container after the update
      */
-    def updateIf(condition: A => Boolean)(mutate: A => A) = this.synchronized
-    {
-        if (condition(_value))
-            setValue(mutate(_value))
-    }
-    
+    def updateIf(condition: A => Boolean)(mutate: A => A) = lockSetAndGet { v => if (condition(v)) mutate(v) else v }
     /**
      * Updates this volatile only if specified condition is met
      * @param condition A condition for updating
-     * @param mutate A mutating function
+     * @param mutate A mutating function (only called if condition applies)
      * @return Value of this volatile after operation
      */
-    def updateIfAndGet(condition: A => Boolean)(mutate: A => A) = this.synchronized
-    {
-        if (condition(_value))
-            setValue(mutate(_value))
-        _value
-    }
+    @deprecated("Replaced with updateIf, that now performs the exact same operation", "v1.16")
+    def updateIfAndGet(condition: A => Boolean)(mutate: A => A) = updateIf(condition)(mutate)
     
     /**
      * Updates a value in this container. Returns the state before the update.
      */
-    def takeAndUpdate[B](taker: A => B)(updater: A => A) = this.synchronized
-    {
-        val result = taker(_value)
-        setValue(updater(_value))
-        result
-    }
+    def takeAndUpdate[B](taker: A => B)(updater: A => A) = lockAndSet { v => taker(v) -> updater(v) }
     
     /**
      * Locks the value in this container from outside sources during the operation. Use with caution.
@@ -150,12 +118,32 @@ class Volatile[A](@volatile private var _value: A) extends Changing[A] with Sett
      */
     def lock[U](operation: A => U) = this.synchronized { operation(_value) }
     
-    // Call this only in a synchronized block
-    private def setValue(newValue: A) =
-    {
-        val oldValue = _value
-        _value = newValue
-        fireChangeEvent(oldValue)
+    private def lockSetAndGet(operation: A => A) = lockAndSet { v =>
+        val newVal = operation(v)
+        newVal -> newVal
+    }
+    
+    private def lockAndSet[U](operation: A => (U, A)) = {
+        // Locks during operation & value change
+        val (result, changeEvent) = this.synchronized {
+            // Performs the operation, acquires new value and final result
+            val (result, newValue) = operation(_value)
+            // Updates the value (if necessary), acquires a change event to fire
+            val changeEvent = {
+                if (newValue == _value)
+                    None
+                else {
+                    val oldValue = _value
+                    _value = newValue
+                    Some(ChangeEvent(oldValue, newValue))
+                }
+            }
+            result -> changeEvent
+        }
+        // Fires the change event, if necessary
+        changeEvent.foreach(fireEvent)
+        // Returns the custom result
+        result
     }
     
     

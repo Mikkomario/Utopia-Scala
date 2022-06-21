@@ -211,9 +211,9 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: ChangingLike[Vector[A]]] e
 			// May also update the state of identical items, in case their mutable state was altered (optional)
 			if (!contentIsStateless)
 			{
-				(identicalStart.iterator ++ identicalEnd.iterator).filterNot {
-					case (display, value) => itemsAreEqual(display.content, value) }.foreach {
-					case (display, value) => display.content = value }
+				(identicalStart.iterator ++ identicalEnd.iterator)
+					.filterNot { case (display, value) => itemsAreEqual(display.content, value) }
+					.foreach { case (display, value) => display.content = value }
 			}
 		}
 		

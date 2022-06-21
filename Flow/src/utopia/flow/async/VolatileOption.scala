@@ -42,8 +42,9 @@ class VolatileOption[A](initialValue: Option[A]) extends Volatile[Option[A]](ini
     /**
      * Sets the item in this option
      * @param newValue the item item to be set
+      * @return value after the update (i.e. 'newValue')
      */
-    def setOne(newValue: A) = value = Some(newValue)
+    def setOne(newValue: A) = pop { _ => newValue -> Some(newValue) }
     
     /**
      * Clears any items from this option
@@ -58,32 +59,42 @@ class VolatileOption[A](initialValue: Option[A]) extends Volatile[Option[A]](ini
     /**
      * Sets a new value this option, but only if there is no current value
       * @param newValue New value for this option (call by name)
+      * @return Value after update
      */
-    def setIfEmpty(newValue: => Option[A]) = updateIf { _.isEmpty } { _ => newValue }
+    def setIfEmpty(newValue: => Option[A]) = setIf { _.isEmpty } (newValue)
     
     /**
      * Sets a new value to this option (only if empty), then returns the resulting value
      * @param newValue A new value for this option (call by name)
      * @return This option's value after operation
      */
-    def setIfEmptyAndGet(newValue: => Option[A]) = updateIfAndGet { _.isEmpty } { _ => newValue }
+    @deprecated("Replaced with setIfEmpty, that now performs the exact same function", "v1.16")
+    def setIfEmptyAndGet(newValue: => Option[A]) = setIfEmpty(newValue)
     
     /**
      * Sets a new value this option, but only if there is no current value
+      * @return Value after the update
      */
-    def setOneIfEmpty(newValue: => A) = setIfEmpty(Some(newValue))
+    def setOneIfEmpty(newValue: => A) = pop {
+        case Some(v) => v -> Some(v)
+        case None =>
+            val newVal = newValue
+            newVal -> Some(newVal)
+    }
     
     /**
      * Sets a new value to this option, then returns that value
      */
-    def setOneAndGet(newValue: A) = pop { _ => newValue -> Some(newValue) }
+    @deprecated("SetOne now behaves exactly as this function", "v1.16")
+    def setOneAndGet(newValue: A) = setOne(newValue)
     
     /**
      * Sets a new value to this option (only if empty), then returns the resulting value of this option
      * @param newValue A new value for this option (call by name)
      * @return This option's value after operation
      */
-    def setOneIfEmptyAndGet(newValue: => A) = updateIfAndGet { _.isEmpty } { _ => Some(newValue) }.get
+    @deprecated("SetOneIfEmpty now behaves exactly as this function", "v1.16")
+    def setOneIfEmptyAndGet(newValue: => A) = setOneIfEmpty(newValue)
     
     
     // NESTED   ---------------------

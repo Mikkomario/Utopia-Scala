@@ -6,6 +6,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.CollectionExtensions._
 
 import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration.Duration
@@ -36,7 +37,25 @@ object AwtEventThread
 	def debugString =
 	{
 		val now = Instant.now()
-		s"[${tasks.updateAndGet { _.dropWhile { _.endTime.exists { now - _ > taskKeepDuration } } }.mkString(", ")}]"
+		val currentTasks = tasks.updateAndGet { _.dropWhile { _.endTime.exists { now - _ > taskKeepDuration } } }
+		val (active, waiting) = currentTasks.divideBy { _.isWaiting }
+		val (running, completed) = active.divideBy { _.endTime.isDefined }
+		
+		val waitingString = {
+			if (waiting.isEmpty)
+				""
+			else if (waiting.size == 1)
+				s"Waiting(${waiting.head.waitTime.description})"
+			else
+				s"${waiting.size} waiting (${waiting.map { _.waitTime }.max.description})"
+		}
+		val runningString = running.headOption match {
+			case Some(task) => s"Running(${task.runTime.description})"
+			case None => ""
+		}
+		val completedString = s"${completed.size} completed recently"
+		
+		Vector(waitingString, runningString, completedString).filter { _.nonEmpty }.mkString(", ")
 	}
 	
 	
@@ -140,12 +159,12 @@ object AwtEventThread
 		
 		override def toString = endTime match
 		{
-			case Some(ended) => s"Task completed in ${runTime.description} ${(Now - ended).description} ago"
+			case Some(_) => s"Completed(${runTime.description})"
 			case None =>
 				if (isWaiting)
-					s"Task that has been waiting for ${waitTime.description}"
+					s"Wait(${waitTime.description})"
 				else
-					s"Task that has been running for ${runTime.description}"
+					s"RUN(${runTime.description})"
 		}
 		
 		override def run() =

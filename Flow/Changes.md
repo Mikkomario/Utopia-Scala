@@ -5,6 +5,9 @@
 - **JsonConvertible** now requires implementation of `appendToJson(StringBuilder): Unit`
   - Please notice that all existing implementations have been modified to include this function, so this should be 
     a problem only in custom implementations, and even then a minor one
+### Deprecations
+- Deprecated some `...andGet(...)` -functions from **Volatile** classes, because of changes made to the base function 
+  versions
 ### New Features
 - **XmlElement** now supports namespaces, which are provided implicitly
 ### New Methods
@@ -14,6 +17,11 @@
   - Added `.replaceAll(String, String)`
 - **String** (**StringExtensions**)
   - Added `.filterWith(Regex)` and `.filterNotWith(Regex)`
+### Bugfixes
+- **TreeLike**`.nodesBelowIterator` now works as expected. The previous version (in v1.15) yielded an empty iterator, 
+  causing problems in multiple dependent functions
+- **Volatile** classes now fire change events only **after** unlocking themselves. 
+  The previous implementation led to deadlocks in reactive systems (such as **Reflection**)
 ### Other Changes
 - Optimized json conversion (see breaking changes)
 - Optimized **XmlElement**`.toXml`, also

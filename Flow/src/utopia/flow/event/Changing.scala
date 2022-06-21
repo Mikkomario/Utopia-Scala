@@ -1,7 +1,8 @@
 package utopia.flow.event
 
 import utopia.flow.async.DelayedView
-import utopia.flow.datastructure.template.ListenableLazyLike
+import utopia.flow.datastructure.immutable.{Lazy, View}
+import utopia.flow.datastructure.template.{ListenableLazyLike, Viewable}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext
@@ -112,13 +113,18 @@ trait Changing[A] extends ChangingLike[A]
 	  * Fires a change event for all the listeners. Informs possible dependencies before informing any listeners.
 	  * @param oldValue The old value of this changing element (call-by-name)
 	  */
-	protected def fireChangeEvent(oldValue: => A) =
+	protected def fireChangeEvent(oldValue: => A) = _fireEvent(Lazy { ChangeEvent(oldValue, value) })
+	/**
+	  * Fires a change event for all the listeners. Informs possible dependencies before informing any listeners.
+	  * @param event A change event to fire (should be lazily initialized)
+	  */
+	protected def fireEvent(event: ChangeEvent[A]) = _fireEvent(View(event))
+	private def _fireEvent(event: Viewable[ChangeEvent[A]]) =
 	{
-		lazy val event = ChangeEvent(oldValue, value)
 		// Informs the dependencies first
-		val afterEffects = dependencies.flatMap { _.beforeChangeEvent(event) }
+		val afterEffects = dependencies.flatMap { _.beforeChangeEvent(event.value) }
 		// Then the listeners
-		listeners.foreach { _.onChangeEvent(event) }
+		listeners.foreach { _.onChangeEvent(event.value) }
 		// Finally performs the after-effects defined by the dependencies
 		afterEffects.foreach { _() }
 	}

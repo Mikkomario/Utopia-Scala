@@ -58,10 +58,15 @@ trait CollectionViewLike[C <: ComponentLike, Collection <: MultiContainer[C], Co
 	
 	override def updateLayout() =
 	{
+		// FIXME: Deadlock within this function
+		println("Updating collection layout")
+		
 		// Goes through the collections in order and makes sure that...
 		// a) Each one contains as many components as possible, and that...
 		// b) Each of them is filled up to or below the maximum
-		val maxCapacity = components.map(spaceOf).maxOption.map { _ max collectionMaxCapacity }.getOrElse(collectionMaxCapacity)
+		val maxCapacity = components.map(spaceOf)
+			.maxOption.map { _ max collectionMaxCapacity }
+			.getOrElse(collectionMaxCapacity)
 		collections.paired.foreach { case Pair(coll, nextColl) =>
 			// Also, empty collections are removed
 			if (coll.isEmpty)
@@ -104,7 +109,11 @@ trait CollectionViewLike[C <: ComponentLike, Collection <: MultiContainer[C], Co
 		// The last collection may be kept, removed or split into 2 or more collections
 		collections.lastOption.foreach { handleLastCollection(_, maxCapacity) }
 		
+		println("Super.updateLayout")
+		
 		super.updateLayout()
+		
+		println("Layout update done")
 	}
 	
 	override protected def componentsOf(wrapper: Collection) = wrapper.components

@@ -33,7 +33,7 @@ trait TreeLike[A, +NodeType <: TreeLike[A, NodeType]] extends Node[A]
     /**
       * @return An iterator that goes over all the nodes below this node. Will not include this node.
       */
-    def nodesBelowIterator: Iterator[NodeType] = children.iterator.flatMap { _.nodesBelowIterator }
+    def nodesBelowIterator: Iterator[NodeType] = children.iterator.flatMap { c => c +: c.nodesBelowIterator }
     
     /**
       * @return An iterator that goes over all content within this tree, including this node's contents.
@@ -87,7 +87,12 @@ trait TreeLike[A, +NodeType <: TreeLike[A, NodeType]] extends Node[A]
     /**
       * @return The leaf nodes anywhere <b>under</b> this node. Leaves are nodes that do not have any children
       */
-    def leaves: Vector[NodeType] = children.flatMap { c => if (c.isEmpty) Vector(c) else c.leaves }
+    def leaves: Vector[NodeType] = leavesBelowIterator.toVector
+    /**
+      * @return An iterator that contains all leaf nodes that appear <b>under</b> this node.
+      *         Leaves are nodes that don't have any children.
+      */
+    def leavesBelowIterator = nodesBelowIterator.filter { _.isEmpty }
     
     /**
       * @return All content within this node and the nodes under

@@ -170,14 +170,6 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		}
 	}
 	
-	// TODO: REMOVE TEST PRINTS
-	println("Registering listeners")
-	SelectionDrawer.selectedAreaPointer.addListener { e => println(s"Selected area: $e") }
-	SelectionDrawer.hoverAreaPointer.addListener { e => println(s"Hover area: $e") }
-	manager.valuePointer.addListener { e => println(s"Selected value (manager): $e") }
-	valuePointer.addListener { e => println(s"Selected value (local): $e") }
-	manager.selectedDisplayPointer.addListener { e => println(s"Selected display: $e") }
-	
 	// Repaints selected area when focus changes
 	focusPointer.addAnyChangeListener { SelectionDrawer.selectedAreaPointer.value.foreach { repaintArea(_) } }
 	
@@ -327,16 +319,11 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			def draw(pointer: Viewable[Option[Bounds]], highlightLevel: Double) =
 				pointer.value.foreach { area => drawer.onlyFill(bg.highlightedBy(highlightLevel)).draw(area) }
 			
-			// TODO: Remove test prints
 			// Checks whether currently selected area and the mouse area overlap
 			if (manager.selectedDisplay.exists(LocalMouseListener.currentDisplayUnderCursor.contains))
-			{
-				println("Drawing overlap state")
 				draw(selectedAreaPointer, if (LocalMouseListener.isPressed) 0.225 else if (hasFocus) 0.15 else 0.075)
-			}
 			else
 			{
-				println(s"Drawing normal state (focus = $hasFocus)")
 				if (hasFocus)
 					draw(selectedAreaPointer, 0.15)
 				draw(hoverAreaPointer, if (LocalMouseListener.isPressed) 0.225 else 0.075)

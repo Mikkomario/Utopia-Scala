@@ -127,7 +127,7 @@ private class WorkerThread(name: String, val maxIdleDuration: Duration, initialT
             // Finds the next task to perform, may fail if maximum idle duration is reached
             val next = nextTask orElse 
             {
-                val nextFuture = waitingTask.setOneAndGet(Promise()).future
+                val nextFuture = waitingTask.setOne(Promise()).future
                 nextFuture.waitFor(maxIdleDuration).toOption
             }
             
@@ -161,16 +161,13 @@ private class WorkerThread(name: String, val maxIdleDuration: Duration, initialT
         if (!ended.isSet)
         {
             // If this thread is waiting for another task, provides it
-            waitingTask.lock
-            {
-                opt =>
-                    if (opt.exists { !_.isCompleted })
-                    {
-                        opt.get.success(task)
+            waitingTask.lock { opt =>
+                opt.filterNot { _.isCompleted } match {
+                    case Some(waitingThread) =>
+                        waitingThread.success(task)
                         true
-                    }
-                    else
-                        false
+                    case None => false
+                }
             }
         }
         else

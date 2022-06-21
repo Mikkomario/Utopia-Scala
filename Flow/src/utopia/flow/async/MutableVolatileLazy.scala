@@ -30,7 +30,7 @@ class MutableVolatileLazy[A](generator: => A) extends MutableLazyLike[A]
 	
 	override def reset() = wrapped.clear()
 	
-	override def value = wrapped.setOneIfEmptyAndGet { generator }
+	override def value = wrapped.setOneIfEmpty { generator }
 	
 	override def current = wrapped.value
 }

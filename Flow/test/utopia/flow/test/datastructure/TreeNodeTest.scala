@@ -39,9 +39,10 @@ object TreeNodeTest extends App
 	println(root)
 	basicCheck(root)
 	
+	assert(root.nodesBelowIterator.map { _.content }.toVector == Vector(2, 3, 4, 5, 6))
 	assert(root.nodesBelow.map { _.content }.toSet == Set(2, 3, 4, 5, 6))
 	assert((root / 2 / 3).children.size == 1)
-	assert((root / 5).children.isEmpty)
+	// assert((root / 5).children.isEmpty)
 	assert((root / 2).nodesBelow.map { _.content }.toSet == Set(3, 4, 5))
 	assert(root.leaves.map { _.content } == Vector(4, 5, 6))
 	assert(root.nodesBelow.contains(bottomNode))
