@@ -18,6 +18,7 @@ trait StackLike[C <: Stackable] extends MultiStackContainer[C] with StackSizeCal
 {
 	// ATTRIBUTES    --------------------
     
+    // FIXME: What is a variable doing in a trait?
     private var _components = Vector[StackItem[C]]()
     
     

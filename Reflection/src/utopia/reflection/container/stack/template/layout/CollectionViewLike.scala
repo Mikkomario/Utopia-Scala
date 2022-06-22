@@ -58,15 +58,13 @@ trait CollectionViewLike[C <: ComponentLike, Collection <: MultiContainer[C], Co
 	
 	override def updateLayout() =
 	{
-		// FIXME: Deadlock within this function
-		println("Updating collection layout")
-		
 		// Goes through the collections in order and makes sure that...
 		// a) Each one contains as many components as possible, and that...
 		// b) Each of them is filled up to or below the maximum
-		val maxCapacity = components.map(spaceOf)
-			.maxOption.map { _ max collectionMaxCapacity }
-			.getOrElse(collectionMaxCapacity)
+		val maxCapacity = components.map(spaceOf).maxOption match {
+			case Some(largestComponentSpace) => largestComponentSpace max collectionMaxCapacity
+			case None => collectionMaxCapacity
+		}
 		collections.paired.foreach { case Pair(coll, nextColl) =>
 			// Also, empty collections are removed
 			if (coll.isEmpty)
@@ -76,14 +74,11 @@ trait CollectionViewLike[C <: ComponentLike, Collection <: MultiContainer[C], Co
 				// Takes items from the next collection as long as there is space
 				var usedCapacity = capacityUsedIn(coll)
 				var canAdd = usedCapacity < maxCapacity
-				while (canAdd)
-				{
-					nextColl.components.headOption match
-					{
+				while (canAdd) {
+					nextColl.components.headOption match {
 						case Some(nextComponent) =>
 							val nextComponentSpaceRequirement = spaceOf(nextComponent) + betweenComponentsSpace
-							if (usedCapacity + nextComponentSpaceRequirement < maxCapacity)
-							{
+							if (usedCapacity + nextComponentSpaceRequirement < maxCapacity) {
 								usedCapacity += nextComponentSpaceRequirement
 								nextColl -= nextComponent
 								coll += nextComponent
@@ -93,10 +88,8 @@ trait CollectionViewLike[C <: ComponentLike, Collection <: MultiContainer[C], Co
 						case None => canAdd = false
 					}
 				}
-				
 				// Conversely, pushes items from this collection as long as it's too big
-				while (usedCapacity > maxCapacity && coll.count > 1)
-				{
+				while (usedCapacity > maxCapacity && coll.count > 1) {
 					coll.components.lastOption.foreach { pushedComponent =>
 						coll -= pushedComponent
 						nextColl.insert(pushedComponent, 0)
@@ -109,11 +102,7 @@ trait CollectionViewLike[C <: ComponentLike, Collection <: MultiContainer[C], Co
 		// The last collection may be kept, removed or split into 2 or more collections
 		collections.lastOption.foreach { handleLastCollection(_, maxCapacity) }
 		
-		println("Super.updateLayout")
-		
 		super.updateLayout()
-		
-		println("Layout update done")
 	}
 	
 	override protected def componentsOf(wrapper: Collection) = wrapper.components

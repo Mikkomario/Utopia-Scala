@@ -255,21 +255,19 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
                 val b = bounds.size.perpendicularTo(direction)
                 var lastStart = 0.0
                 var lastComponentBottom = components.head.maxCoordinateAlong(direction)
-                components.tail.foreach
-                {
-                    c =>
-                        val componentPosition = c.coordinateAlong(direction)
-            
-                        val margin = (componentPosition - lastComponentBottom) / 2
-                        val lastSegmentLength = lastComponentBottom - lastStart + margin
-            
-                        // Draws the previous segment area
-                        drawers.next().draw(Bounds(Point(lastStart, 0, direction) + bounds.position,
-                            Size(lastSegmentLength, b, direction)))
-            
-                        // Prepares for the next segment
-                        lastStart = componentPosition - margin
-                        lastComponentBottom = componentPosition + c.lengthAlong(direction)
+                components.tail.foreach { c =>
+                    val componentPosition = c.coordinateAlong(direction)
+        
+                    val margin = (componentPosition - lastComponentBottom) / 2
+                    val lastSegmentLength = lastComponentBottom - lastStart + margin
+        
+                    // Draws the previous segment area
+                    drawers.next().draw(Bounds(Point(lastStart, 0, direction) + bounds.position,
+                        Size(lastSegmentLength, b, direction)))
+        
+                    // Prepares for the next segment
+                    lastStart = componentPosition - margin
+                    lastComponentBottom = componentPosition + c.lengthAlong(direction)
                 }
     
                 // Draws the last segment

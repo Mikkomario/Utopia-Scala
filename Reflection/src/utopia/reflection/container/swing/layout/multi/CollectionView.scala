@@ -8,7 +8,7 @@ import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.{Fit, Leading}
 import utopia.reflection.container.stack.template.layout.CollectionViewLike
 import utopia.reflection.container.swing.AwtContainerRelated
-import utopia.reflection.container.swing.layout.multi.Stack.{AwtStackable, row}
+import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.shape.stack.StackLength
 
 object CollectionView
@@ -45,15 +45,8 @@ class CollectionView[C <: AwtStackable](rowAxis: Axis2D, initialRowSplitThreshol
 {
 	// ATTRIBUTES	-----------------------
 	
-	protected val container =
-	{
-		val layout =
-		{
-			if (forceEqualRowLength)
-				Fit
-			else
-				Leading
-		}
+	protected val container = {
+		val layout = if (forceEqualRowLength) Fit else Leading
 		new Stack[Stack[C]](rowAxis.perpendicular, margin, layout = layout)
 	}
 	

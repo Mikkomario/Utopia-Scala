@@ -94,15 +94,12 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 	  *         (component shown status may have been altered during the transition so that the returned state
 	  *         doesn't always match 'newState')
 	  */
-	def visibility_=(newState: Visibility) =
-	{
-		if (newState != targetState)
-		{
+	def visibility_=(newState: Visibility) = {
+		if (newState != targetState) {
 			// If this component is already transitioning, simply alters the target state.
 			// Otherwise starts a new transition
 			targetState = newState
 			lastTransition.setIf { _.isCompleted } { startTransition(newState) }
-			lastTransition.value
 		}
 		else
 			Future.successful(newState)
@@ -173,8 +170,7 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 			AwtEventThread.blocking {
 				// At transition end, may start a new transition if the target state was changed during
 				// the first transition
-				if (targetState == target)
-				{
+				if (targetState == target) {
 					// Case: Target state reached
 					// Switches to original component or clears this panel
 					if (target.isVisible)
@@ -184,8 +180,7 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 					
 					Future.successful(target)
 				}
-				else
-				{
+				else {
 					// Case: Target state was switched
 					// Starts a new transition
 					startTransition(targetState)

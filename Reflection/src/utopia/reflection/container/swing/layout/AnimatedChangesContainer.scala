@@ -74,60 +74,60 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 	override protected def removeWrapper(wrapper: AnimatedVisibility[C], index: Int) =
 	{
 		// Marks the wrapper as ready for removal
-		wrappersList.update { old =>
-			// Also starts the hiding process
-			(wrapper.isShown = false).foreach { newState =>
-				// If someone made the wrapper visible again, will not remove it
-				if (newState.isNotVisible)
-				{
-					// Removes the wrapper from the container once animation has finished
-					wrappersList.update { old =>
-						container -= wrapper
-						old.filterNot { case (w, removing) => removing && w == wrapper } }
-				}
+		wrappersList.update { _.mapIndex(index) { case (w, _) => w -> true } }
+		// Also starts the hiding process
+		(wrapper.isShown = false).foreach { newState =>
+			// If someone made the wrapper visible again, will not remove it
+			if (newState.isNotVisible)
+			{
+				// Removes the wrapper from the container once animation has finished
+				wrappersList.update { old =>
+					container -= wrapper
+					old.filterNot { case (w, removing) => removing && w == wrapper } }
 			}
-			
-			old.mapIndex(index) { case (w, _) => w -> true }
 		}
 	}
 	
 	override protected def add(component: C, index: Int) =
 	{
-		wrappersList.update { old =>
+		// The wrapper to display is created during update, but the visibility change is activated after the update
+		// (In order to avoid deadlock-situations)
+		val wrapperToShow = wrappersList.pop { old =>
 			// If the component was being removed from the container, cancels the removal
 			// (may still need to reposition the wrapper)
-			old.indexWhereOption { _._1.display == component } match
-			{
+			old.indexWhereOption { _._1.display == component } match {
+				// Case: Component was already in the container
 				case Some(wrapperIndex) =>
 					val (wrapper, wasRemoving) = old(wrapperIndex)
-					if (wasRemoving)
-						wrapper.isShown = true
 					
 					// Checks the "projected" index of the wrapper (index in system where removing components don't count)
 					val removingCountBeforeWrapper = old.take(wrapperIndex).count { _._2 }
 					val projectedWrapperIndex = wrapperIndex - removingCountBeforeWrapper
 					
-					// Case: Same index is kept -> may update removal status
-					if (index == projectedWrapperIndex)
-					{
-						if (wasRemoving)
-							old.updated(wrapperIndex, wrapper -> false)
-						else
-							old
+					val newState = {
+						// Case: Same index is kept -> may update removal status
+						if (index == projectedWrapperIndex) {
+							if (wasRemoving)
+								old.updated(wrapperIndex, wrapper -> false)
+							else
+								old
+						}
+						// Case: Wrapper position was changed -> Needs to remove from and then add to container
+						else {
+							// Calculates the targeted index in the real system (where removing components are being counted)
+							val newWrapperIndex = trueIndex(index, old)
+							
+							container -= wrapper
+							container.insert(wrapper, newWrapperIndex)
+							
+							// Will have to take into account the wrapper's removal's effect on indexing
+							val indexMod = if (wrapperIndex < newWrapperIndex) -1 else 0
+							old.withoutIndex(wrapperIndex).inserted(wrapper -> false, newWrapperIndex + indexMod)
+						}
 					}
-					// Case: Wrapper position was changed -> Needs to remove from and then add to container
-					else
-					{
-						// Calculates the targeted index in the real system (where removing components are being counted)
-						val newWrapperIndex = trueIndex(index, old)
-						
-						container -= wrapper
-						container.insert(wrapper, newWrapperIndex)
-						
-						// Will have to take into account the wrapper's removal's effect on indexing
-						val indexMod = if (wrapperIndex < newWrapperIndex) -1 else 0
-						old.withoutIndex(wrapperIndex).inserted(wrapper -> false, newWrapperIndex + indexMod)
-					}
+					val wrapperToShow = if (wasRemoving) Some(wrapper) else None
+					wrapperToShow -> newState
+				// Case: New component
 				case None =>
 					// Wraps the component in an animation
 					val wrapper = new AnimatedVisibility[C](component, actorHandler, transitionAxis,
@@ -136,10 +136,10 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 					// Also, Starts the appearance animation
 					val newWrapperIndex = trueIndex(index, old)
 					container.insert(wrapper, newWrapperIndex)
-					wrapper.isShown = true
-					old.inserted(wrapper -> false, newWrapperIndex)
+					Some(wrapper) -> old.inserted(wrapper -> false, newWrapperIndex)
 			}
 		}
+		wrapperToShow.foreach { _.isShown = true }
 	}
 	
 	

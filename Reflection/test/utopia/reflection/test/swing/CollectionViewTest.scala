@@ -13,7 +13,7 @@ import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.shape.stack.StackSize
 import utopia.reflection.test.TestContext
-import utopia.reflection.util.{AwtEventThread, SingleFrameSetup}
+import utopia.reflection.util.SingleFrameSetup
 import utopia.reflection.shape.LengthExtensions._
 
 import scala.util.Random
@@ -38,13 +38,8 @@ object CollectionViewTest extends App
 	
 	val random = new Random()
 	Loop.regularly(1.seconds) {
-		println("Creating a new label")
 		val label = new EmptyLabel
-		println("Setting label background")
 		label.background = Rgb(random.nextDouble(), random.nextDouble(), random.nextDouble())
-		println("Adding label to the collection")
-		// FIXME: Deadlock
 		collection += label.withStackSize(StackSize.any(Size(16 + random.nextInt(97), 64)))
-		println("Done!")
 	}
 }
