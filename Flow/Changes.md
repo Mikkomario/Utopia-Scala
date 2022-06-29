@@ -10,7 +10,10 @@
   versions
 ### New Features
 - **XmlElement** now supports namespaces, which are provided implicitly
+- Added to- & from- model conversion to **DateRange**
 ### New Methods
+- **LocalDate** (**TimeExtensions**)
+  - Added `.monthOfYear: Int`
 - **Map** (**CollectionExtensions**)
   - Added `.mapKeys(...)`
 - **Regex**
@@ -25,6 +28,7 @@
 ### Other Changes
 - Optimized json conversion (see breaking changes)
 - Optimized **XmlElement**`.toXml`, also
+- Changed `.toString` implementation in **DateRange**
 
 ## v1.15 - 06.06.2022
 This major update introduces a number of utility changes, including many breaking changes. 

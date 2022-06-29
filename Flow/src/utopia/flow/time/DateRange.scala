@@ -1,12 +1,22 @@
 package utopia.flow.time
 
 import TimeExtensions._
+import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
+import utopia.flow.generic.{FromModelFactoryWithSchema, LocalDateType, ModelConvertible}
+import utopia.flow.generic.ValueConversions._
+import utopia.flow.time.DateRange.dateFormat
 
 import java.time.LocalDate
-import scala.math.Ordering.Implicits.infixOrderingOps
+import java.time.format.DateTimeFormatter
 
-object DateRange
+object DateRange extends FromModelFactoryWithSchema[DateRange]
 {
+	private lazy val dateFormat = DateTimeFormatter.ofPattern("dd.MM.uuuu")
+	override lazy val schema = ModelDeclaration("start" -> LocalDateType, "end" -> LocalDateType)
+	
+	override protected def fromValidatedModel(model: Model) =
+		apply(model("start").getLocalDate, model("end").getLocalDate)
+	
 	/**
 	  * Creates an inclusive date range
 	  * @param first The first day to include
@@ -44,6 +54,12 @@ object DateRange
 		else
 			apply(start, end)
 	}
+	
+	/**
+	 * @param date The date to wrap
+	 * @return A date range that only contains that date
+	 */
+	def single(date: LocalDate) = apply(date, date + 1)
 }
 
 /**
@@ -53,7 +69,7 @@ object DateRange
   * @param start The first included date
   * @param end The first <b>excluded</b> date
   */
-case class DateRange(start: LocalDate, end: LocalDate) extends Iterable[LocalDate]
+case class DateRange(start: LocalDate, end: LocalDate) extends Iterable[LocalDate] with ModelConvertible
 {
 	// ATTRIBUTES   -----------------------
 	
@@ -96,7 +112,18 @@ case class DateRange(start: LocalDate, end: LocalDate) extends Iterable[LocalDat
 	
 	// IMPLEMENTED ------------------------
 	
-	override def toString() = s"$start until $end"
+	override def toString = {
+		if (isEmpty)
+			"-"
+		else if (head == last)
+			head.format(dateFormat)
+		else if (head.month == last.month)
+			s"${head.dayOfMonth}-${last.dayOfMonth}.${head.monthOfYear}.${head.year}"
+		else if (head.year == last.year)
+			s"${head.dayOfMonth}.${head.monthOfYear}-${last.dayOfMonth}.${last.monthOfYear}.${head.year}"
+		else
+			s"${head.format(dateFormat)}-${last.format(dateFormat)}"
+	}
 	
 	override def isEmpty = start == end
 	
@@ -116,6 +143,8 @@ case class DateRange(start: LocalDate, end: LocalDate) extends Iterable[LocalDat
 		else
 			Iterator.iterate(last) { _.previous }.takeWhile { _ >= start }
 	}
+	
+	override def toModel = Model(Vector("start" -> start, "end" -> end))
 	
 	
 	// OTHER    ------------------------

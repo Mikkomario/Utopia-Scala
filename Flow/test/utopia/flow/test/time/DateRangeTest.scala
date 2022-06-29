@@ -63,5 +63,8 @@ object DateRangeTest extends App
 	assert(!testYear(summer).head.overlapsWith(february2020))
 	assert(testYear(summer).head.overlapWith(february2020).isEmpty)
 	
+	println(february2020)
+	println(febToMarchInclusive)
+	
 	println("Success!")
 }

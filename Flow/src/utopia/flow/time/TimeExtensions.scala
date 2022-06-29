@@ -394,6 +394,10 @@ object TimeExtensions
 		  */
 		def dayOfMonth = d.getDayOfMonth
 		/**
+		 * @return The month of year of this date [1, 12]
+		 */
+		def monthOfYear = d.getMonthValue
+		/**
 		  * @return Week day of this date
 		  */
 		def weekDay: WeekDay = d.getDayOfWeek

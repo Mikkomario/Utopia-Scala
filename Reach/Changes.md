@@ -1,5 +1,8 @@
 # Utopia Reach - List of Changes
 
+## v0.3.4 (in development)
+Rebuild is needed after changes in Flow v1.16
+
 ## v0.3.3 - 06.06.2022
 Reactions to changes in other modules (**Flow** & **Genesis**)
 

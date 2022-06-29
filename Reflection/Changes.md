@@ -1,5 +1,9 @@
 # Utopia Reflection - List of Changes
 
+## v2.0-alpha-8 (in development)
+### Bugfixes
+- Fixed deadlock issues related to animated components
+
 ## v2.0-alpha-7 - 06.06.2022
 This update reflects changes made in **Genesis** v2.7 update (which follow **Flow** v1.15 update)
 ### Breaking Changes
