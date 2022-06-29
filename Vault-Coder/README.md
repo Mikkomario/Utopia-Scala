@@ -8,9 +8,9 @@ See the required document structure below.
 
 Once you have created a specification document, run the application using the following command line command: 
 `java -jar Vault-Coder.jar <root> <input> <output> <filter> <group> <merge>`
-- `<root>` argument specifies the path (beginning) that is common for both the input and the output
+- `<root>` (`project`) argument specifies **either** the path (beginning) that is common for both the input and the output
   - This argument is optional
-  - You may also pass a **root path alias** here. See more details about this below.
+  - You may also pass a previously stored **project name** here, in which case you may omit `input` and `output` 
 - `<input>` (`in`) points towards your specification .json file or to a directory that holds such files
   - This argument is optional, but if `<root>` is not specified, this value is requested during application use
   - If `<root>` is specified, this path should be relative to it
