@@ -1,7 +1,7 @@
 package utopia.vault.coder.model.scala.declaration
 
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.controller.CodeBuilder
+import utopia.vault.coder.controller.writer.CodeBuilder
 import utopia.vault.coder.model.merging.{MergeConflict, Mergeable}
 import utopia.vault.coder.model.scala.code.Code
 import utopia.vault.coder.model.scala.doc.ScalaDocKeyword.Return

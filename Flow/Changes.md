@@ -5,17 +5,24 @@
 - **JsonConvertible** now requires implementation of `appendToJson(StringBuilder): Unit`
   - Please notice that all existing implementations have been modified to include this function, so this should be 
     a problem only in custom implementations, and even then a minor one
+- **ModelConvertible** is now a sub-trait of **ValueConvertible**
+  - May cause some minor build errors in cases where your classes inherited both
 ### Deprecations
 - Deprecated some `...andGet(...)` -functions from **Volatile** classes, because of changes made to the base function 
   versions
 ### New Features
 - **XmlElement** now supports namespaces, which are provided implicitly
 - Added to- & from- model conversion to **DateRange**
+- Added **ObjectMapFileContainer** class
 ### New Methods
+- **Iterable** (**CollectionExtensions**)
+  - Added `.areAllEqual: Boolean`
 - **LocalDate** (**TimeExtensions**)
   - Added `.monthOfYear: Int`
 - **Map** (**CollectionExtensions**)
   - Added `.mapKeys(...)`
+- **Path** (**FileExtensions**)
+  - Added `.commonParentWith(...)`
 - **Regex**
   - Added `.replaceAll(String, String)`
 - **String** (**StringExtensions**)

@@ -1,15 +1,15 @@
-package utopia.vault.coder.controller
+package utopia.vault.coder.controller.reader
 
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.vault.coder.model.enumeration.BasicPropertyType.{IntNumber, Text}
-import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, EnumValue, Optional}
 import utopia.flow.datastructure.immutable.{Model, ModelValidationFailedException}
+import utopia.flow.util.{UncertainBoolean, Version}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.{UncertainBoolean, Version}
 import utopia.vault.coder.model.data.{Class, CombinationData, Enum, Instance, Name, NamingRules, ProjectData, Property}
+import utopia.vault.coder.model.enumeration.BasicPropertyType.{IntNumber, Text}
 import utopia.vault.coder.model.enumeration.CombinationType.{Combined, MultiCombined, PossiblyCombined}
 import utopia.vault.coder.model.enumeration.IntSize.Default
+import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, EnumValue, Optional}
 import utopia.vault.coder.model.enumeration.{BasicPropertyType, CombinationType, NamingConvention, PropertyType}
 import utopia.vault.coder.model.scala.Package
 
@@ -34,19 +34,16 @@ object ClassReader
 		val root = v.getModel
 		val author = root("author").getString
 		val basePackage = Package(root("base_package", "package").getString)
-		val modelPackage = root("model_package", "package_model").string match
-		{
+		val modelPackage = root("model_package", "package_model").string match {
 			case Some(pack) => Package(pack)
-			case None => basePackage/"model"
+			case None => basePackage / "model"
 		}
-		val dbPackage = root("db_package", "database_package", "package_db", "package_database").string match
-		{
+		val dbPackage = root("db_package", "database_package", "package_db", "package_database").string match {
 			case Some(pack) => Package(pack)
-			case None => basePackage/"database"
+			case None => basePackage / "database"
 		}
 		val projectName = root("name", "project").stringOr {
-			basePackage.parts.lastOption match
-			{
+			basePackage.parts.lastOption match {
 				case Some(lastPart) => lastPart.capitalize
 				case None =>
 					dbPackage.parent.parts.lastOption
@@ -59,10 +56,12 @@ object ClassReader
 		implicit val namingRules: NamingRules = NamingRules(root("naming").getModel).value
 		
 		val databaseName = root("database_name", "database", "db_name", "db").string
-			.map { rawDbName => namingRules.database.convert(rawDbName,
-				NamingConvention.of(rawDbName, namingRules.database)) }
+			.map { rawDbName =>
+				namingRules.database.convert(rawDbName,
+					NamingConvention.of(rawDbName, namingRules.database))
+			}
 			.filter { _.nonEmpty }
-		val enumPackage = modelPackage/"enumeration"
+		val enumPackage = modelPackage / "enumeration"
 		val enumerations = root("enumerations", "enums").getModel.attributes.map { enumAtt =>
 			Enum(enumAtt.name.capitalize, enumAtt.value.getVector.flatMap { _.string }.map { _.capitalize },
 				enumPackage, author)
@@ -75,8 +74,7 @@ object ClassReader
 			}
 		val allEnumerations = enumerations ++ referencedEnumerations
 		val classes = root("classes", "class").getModel.attributes.tryMap { packageAtt =>
-			packageAtt.value.model match
-			{
+			packageAtt.value.model match {
 				case Some(classModel) =>
 					classFrom(classModel, packageAtt.name, allEnumerations, author).map { Vector(_) }
 				case None =>
@@ -150,10 +148,9 @@ object ClassReader
 		val tableName = classModel("table_name", "table").string.filter { _.nonEmpty }
 			.map { Name.interpret(_, naming.table) }
 		
-		if (rawClassName.isEmpty && tableName.isEmpty )
+		if (rawClassName.isEmpty && tableName.isEmpty)
 			Failure(new ModelValidationFailedException("'name', 'table_name' or 'table' is required in a class model"))
-		else
-		{
+		else {
 			// Determines class name
 			val className = rawClassName.getOrElse { tableName.get }
 			val fullName = classModel("name_plural", "plural_name").string match {
@@ -170,34 +167,38 @@ object ClassReader
 			// The indices in the document are given as property names, but here they are converted to column names
 			val comboIndexColumnNames: Vector[Vector[String]] = classModel("index", "combo_index")
 				.vector.map[Vector[Vector[Name]]] { v =>
-					Vector(v.flatMap { _.string }.map { s => Name.interpret(s, naming.classProp) })
-				}
+				Vector(v.flatMap { _.string }.map { s => Name.interpret(s, naming.classProp) })
+			}
 				.orElse {
 					classModel("indices", "combo_indices").vector
-						.map { vectors => vectors.map[Vector[Name]] { vector =>
-							vector.getVector.flatMap { _.string }.map { s => Name.interpret(s, naming.classProp) } }
+						.map { vectors =>
+							vectors.map[Vector[Name]] { vector =>
+								vector.getVector.flatMap { _.string }.map { s => Name.interpret(s, naming.classProp) }
+							}
 						}
 				}
 				.getOrElse(Vector())
-				.map { combo => combo.flatMap { propName =>
-					properties.find { _.name ~== propName }.map { _.columnName } } }
+				.map { combo =>
+					combo.flatMap { propName =>
+						properties.find { _.name ~== propName }.map { _.columnName }
+					}
+				}
 				.filter { _.nonEmpty }
 			
 			// Checks whether descriptions are supported for this class
 			val descriptionLinkColumnName: Option[Name] =
 				classModel("description_link", "desc_link", "description_link_column")
 					.string match {
-						case Some(n) => Some(Name.interpret(n, naming.classProp))
-						case None =>
-							if (classModel("described", "is_described").getBoolean)
-								Some(className + "id")
-							else
-								None
-					}
+					case Some(n) => Some(Name.interpret(n, naming.classProp))
+					case None =>
+						if (classModel("described", "is_described").getBoolean)
+							Some(className + "id")
+						else
+							None
+				}
 			
 			// Reads combination-related information
-			val comboInfo = (classModel("combination", "combo").model match
-			{
+			val comboInfo = (classModel("combination", "combo").model match {
 				case Some(comboModel) => Vector(comboModel)
 				case None => classModel("combinations", "combos").getVector.flatMap { _.model }
 			}).flatMap { comboModel =>
@@ -242,10 +243,8 @@ object ClassReader
 		val length = propModel("length", "len").int
 		val baseDataType = propModel("type").string.flatMap { typeName =>
 			val lowerTypeName = typeName.toLowerCase
-			val enumType =
-			{
-				if (lowerTypeName.contains("enum"))
-				{
+			val enumType = {
+				if (lowerTypeName.contains("enum")) {
 					val enumName = lowerTypeName.afterFirst("enum")
 						.afterFirst("[").untilFirst("]")
 					enumerations.find { _.name.toLowerCase == enumName }
@@ -253,14 +252,12 @@ object ClassReader
 				else
 					None
 			}
-			enumType match
-			{
+			enumType match {
 				case Some(enumType) => Some(EnumValue(enumType, lowerTypeName.contains("option")))
 				case None => PropertyType.interpret(typeName, length, rawName)
 			}
 		}
-		val actualDataType = tableReference match
-		{
+		val actualDataType = tableReference match {
 			case Some((tableName, columnName)) =>
 				ClassReference(tableName, columnName.getOrElse(Class.defaultIdName), baseDataType.findMap {
 					case b: BasicPropertyType => Some(b)
@@ -269,8 +266,7 @@ object ClassReader
 				}.getOrElse(IntNumber(Default)), isNullable = baseDataType.exists { _.isNullable })
 			case None =>
 				baseDataType.getOrElse {
-					length match
-					{
+					length match {
 						case Some(length) => Text(length)
 						case None => IntNumber(Default)
 					}
@@ -281,8 +277,7 @@ object ClassReader
 		val name: Name = rawName.map { Name.interpret(_, naming.classProp) }
 			.orElse { columnName }
 			.getOrElse { actualDataType.defaultPropertyName }
-		val fullName = propModel("name_plural", "plural_name").string match
-		{
+		val fullName = propModel("name_plural", "plural_name").string match {
 			case Some(pluralName) => name.copy(plural = pluralName)
 			case None => name
 		}
@@ -292,7 +287,7 @@ object ClassReader
 		
 		val rawLimit = propModel("length_rule", "length_limit", "limit", "max_length", "length_max", "max")
 		val limit = rawLimit.int match {
-			case Some(max) => s"up to $max"
+			case Some(max) => s"to $max"
 			case None => rawLimit.getString
 		}
 		
@@ -301,7 +296,8 @@ object ClassReader
 			propModel("indexed", "index", "is_index").boolean)
 	}
 	
-	private def instanceFrom(model: Model, parentClass: Class)(implicit naming: NamingRules) = {
+	private def instanceFrom(model: Model, parentClass: Class)(implicit naming: NamingRules) =
+	{
 		// Matches model properties against class properties
 		val properties = model.attributesWithValue.flatMap { att =>
 			val attName = Name.interpret(att.name, naming.classProp)

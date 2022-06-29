@@ -1,6 +1,7 @@
 package utopia.flow.generic
 
-import utopia.flow.datastructure.immutable.Model
+import utopia.flow.datastructure.immutable.{Model, Value}
+import ValueConversions._
 import utopia.flow.parse.JsonConvertible
 
 /**
@@ -8,7 +9,7 @@ import utopia.flow.parse.JsonConvertible
  * @author Mikko Hilpinen
  * @since 23.6.2017
  */
-trait ModelConvertible extends JsonConvertible
+trait ModelConvertible extends JsonConvertible with ValueConvertible
 {
     // ABSTRACT METHODS & PROPERTIES    -----------------
     
@@ -19,6 +20,8 @@ trait ModelConvertible extends JsonConvertible
     
     
     // IMPLEMENTED    ---------------------------
+    
+    override implicit def toValue: Value = toModel
     
     override def toJson = toModel.toJson
     

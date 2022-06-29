@@ -101,6 +101,13 @@ object FileExtensions
 		 * @return A parent path for this path. Return this path if already a root path
 		 */
 		def parent = parentOption.getOrElse(p)
+		/**
+		  * @return An iterator that returns all parents of this path, from closest to furthest
+		  */
+		def parentsIterator = parentOption match {
+			case Some(parent) => Iterator.unfold(parent) { _.parentOption.map { p => p -> p } }
+			case None => Iterator.empty
+		}
 		
 		/**
 		 * @return All children (files and directories) directly under this directory (empty vector if not directory). May fail.
@@ -256,6 +263,42 @@ object FileExtensions
 			case Some(parent) => parent.iterateChildren { children => f(children.filterNot { _ == p }) }
 			case None => Try { f(Iterator.empty) }
 		}
+		
+		/**
+		  * Seeks the lowest common parent with another path
+		  * @param other Another path
+		  * @return
+		  * 1: The (root) path common to both of these paths, None if there is no common path<br>
+		  * 2: This path, relative to the common root path<br>
+		  * 3: The other path, relative to the common root path
+		  */
+		def commonParentWith(other: Path): (Option[Path], Path, Path) = {
+			val (common, relative, otherRelative) = commonParentWith(Vector(other))
+			(common, relative, otherRelative.head)
+		}
+		/**
+		  * Seeks the lowest common parent with another path
+		  * @param others Other paths
+		  * @return
+		  * 1: The (root) path common to all of these paths, None if there is no common path<br>
+		  * 2: This path, relative to the common root path<br>
+		  * 3: The other paths, relative to the common root path
+		  */
+		def commonParentWith(others: Seq[Path]) = {
+			val allParents = (p +: others).map { _.parentsIterator.toVector.reverse }
+			val commonParents = (0 until allParents.map { _.size }.min)
+				.iterator.map { i => allParents.map { _(i) } }
+				.takeWhile { _.areAllEqual }
+				.map { _.head }
+				.toVector
+			commonParents.lastOption match {
+				case Some(lowestCommonParent) =>
+					(Some(lowestCommonParent), lowestCommonParent.relativize(p), others.map(lowestCommonParent.relativize))
+				case None => (None, p, others)
+			}
+		}
+		def commonParentWith(other: Path, second: Path, more: Path*): (Option[Path], Path, Seq[Path]) =
+			commonParentWith(Vector(other, second) ++ more)
 		
 		/**
 		 * @param childFileName Name of a child file

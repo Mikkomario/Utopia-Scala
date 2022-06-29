@@ -2,7 +2,7 @@ package utopia.vault.coder.util
 
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.controller.CodeBuilder
+import utopia.vault.coder.controller.writer.CodeBuilder
 import utopia.vault.coder.model.data.{Class, NamingRules, Property}
 import utopia.vault.coder.model.enumeration.PropertyType.EnumValue
 import utopia.vault.coder.model.scala.Visibility.Public

@@ -1,4 +1,4 @@
-package utopia.vault.coder.controller
+package utopia.vault.coder.controller.writer
 
 import utopia.flow.datastructure.mutable.{Pointer, ResettableLazy}
 import utopia.vault.coder.model.scala.code

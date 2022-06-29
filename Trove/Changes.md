@@ -1,5 +1,9 @@
 # Utopia Trove - List of Changes
 
+## v1.1.3
+### Other Changes
+- Updated **DatabaseVersion**`.toString` implementation
+
 ## v1.1.2 - 06.06.2022
 This small update contains important bugfixes for use-cases that weren't previously encountered.
 ### Bugfixes

@@ -176,6 +176,19 @@ object CollectionExtensions
     implicit class RichIterableOnce[A](val i: IterableOnce[A]) extends AnyVal
     {
         /**
+          * @return Whether all items within this collection are considered equal (comparing with ==)
+          */
+        def areAllEqual = {
+            val iter = i.iterator
+            if (iter.hasNext) {
+                val first = iter.next()
+                iter.forall { _ == first }
+            }
+            else
+                true
+        }
+        
+        /**
          * Checks whether there exists at least 'requiredCount' items in this collection where the specified
          * condition 'f' returns true. Compared to .count -function, this function is more optimized since it stops
          * counting once the required amount has been reached.

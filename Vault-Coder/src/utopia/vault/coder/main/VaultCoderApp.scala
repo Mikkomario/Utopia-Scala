@@ -1,5 +1,7 @@
 package utopia.vault.coder.main
 
+import utopia.flow.async.ThreadPool
+import utopia.flow.container.ObjectMapFileContainer
 import utopia.flow.generic.DataType
 import utopia.flow.parse.{JSONReader, JsonParser}
 import utopia.flow.time.Today
@@ -8,14 +10,16 @@ import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments}
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.controller.ClassReader
+import utopia.flow.util.Version
+import utopia.vault.coder.controller.reader
 import utopia.vault.coder.controller.writer.database.{AccessWriter, ColumnLengthRulesWriter, CombinedFactoryWriter, DbDescriptionAccessWriter, DbModelWriter, DescriptionLinkInterfaceWriter, FactoryWriter, InsertsWriter, SqlWriter, TablesWriter}
 import utopia.vault.coder.controller.writer.model.{CombinedModelWriter, DescribedModelWriter, EnumerationWriter, ModelWriter}
-import utopia.vault.coder.model.data.{Class, ClassReferences, Filter, NamingRules, ProjectData, ProjectSetup}
+import utopia.vault.coder.model.data.{Class, ClassReferences, Filter, NamingRules, ProjectData, ProjectPaths, ProjectSetup}
 import utopia.vault.coder.model.scala.datatype.Reference
 
 import java.nio.file.{Path, Paths}
 import java.time.LocalTime
+import scala.concurrent.ExecutionContext
 import scala.io.{Codec, StdIn}
 import scala.util.{Failure, Success, Try}
 
@@ -31,8 +35,10 @@ object VaultCoderApp extends App
 	
 	implicit val codec: Codec = Codec.UTF8
 	implicit val jsonParser: JsonParser = JSONReader
+	implicit val exc: ExecutionContext = new ThreadPool("vault-coder").executionContext
+	lazy val projects = new ObjectMapFileContainer("projects.json", ProjectPaths)
 	val arguments = CommandArguments(Vector(
-		ArgumentSchema("root", "path", help = "Common directory path for both input and output"),
+		ArgumentSchema("project", "root", help = "Common directory path OR the name of an existing project"),
 		ArgumentSchema("input", "in",
 			help = "Path to file or directory where data is read from (relative to root, if root is specified)"),
 		ArgumentSchema("output", "out",
@@ -40,7 +46,7 @@ object VaultCoderApp extends App
 		ArgumentSchema("target", "filter",
 			help = "Search filter applied to written classes and/or enums (case-insensitive)"),
 		ArgumentSchema("type", "group", help = "Specifies the group of items to write (all, class, enums or package)"),
-		ArgumentSchema("merge", help = "Source origin where merge input files are read from"),
+		ArgumentSchema("merge", help = "Source origin where merge input files are read from (relative to root, if root is specified)"),
 		ArgumentSchema.flag("all", "A", help = "Flag for selecting group 'all'"),
 		ArgumentSchema.flag("single", "S", help = "Flag for limiting filter results to exact matches"),
 		ArgumentSchema.flag("merging", "M", help = "Flag for enabling merge mode")),
@@ -58,7 +64,13 @@ object VaultCoderApp extends App
 	}
 	
 	// Checks if the specified root path is an alias
-	val rootPath = arguments("root").string.map { s => Roots(s).getOrElse { s: Path } }
+	val rootInput = arguments("root").string
+	lazy val project = rootInput.flatMap(projects.get)
+	val root = project match {
+		case Some(p) => Right(p)
+		case None => Left(rootInput.map { s => Roots(s).getOrElse { s: Path } })
+	}
+	val rootPath = root.leftOption.flatten
 	rootPath.filter { _.notExists }.foreach { p =>
 		println(s"Specified root path (${p.toAbsolutePath}) doesn't exist. Please try again.")
 		System.exit(0)
@@ -70,45 +82,84 @@ object VaultCoderApp extends App
 		case None => endPath
 	}
 	
-	lazy val inputPath: Path = arguments("input").string.map(path).getOrElse {
-		rootPath match
-		{
-			case Some(root) =>
-				println(s"Please type a directory or a .json file path relative to ${root.toAbsolutePath}")
-				val foundJsonFiles = root.allChildrenIterator.flatMap { _.toOption }
-					.filter { p => p.isRegularFile && p.fileType == "json" }.take(5).toVector
-				if (foundJsonFiles.nonEmpty)
-				{
-					println("Some .json files that were found:")
-					foundJsonFiles.foreach { p => println("- " + root.relativize(p)) }
+	lazy val modelsPath: Path = project match {
+		case Some(p) => p.modelsDirectory
+		case None =>
+			arguments("input").string.map(path).getOrElse {
+				rootPath match {
+					case Some(root) =>
+						println(s"Please type a models directory or a .json file path relative to ${root.toAbsolutePath}")
+						val foundJsonFiles = root.allChildrenIterator.flatMap { _.toOption }
+							.filter { _.fileType == "json" }.take(10).toVector
+						if (foundJsonFiles.nonEmpty) {
+							if (foundJsonFiles.map { _.parent }.areAllEqual)
+								println(s"Suggested directory: ${root.relativize(foundJsonFiles.head.parent)}")
+							else {
+								println("Some .json files that were found:")
+								foundJsonFiles.foreach { p => println("\t- " + root.relativize(p)) }
+							}
+						}
+						root/StdIn.readLine()
+					case None =>
+						println("Please type the models directory or a .json file path")
+						println(s"The path may be absolute or relative to ${"".toAbsolutePath}")
+						StdIn.readLine(): Path
 				}
-				root/StdIn.readLine()
-			case None =>
-				println("Please type a directory or a .json file path")
-				println(s"The path may be absolute or relative to ${Paths.get("").toAbsolutePath}")
-				StdIn.readLine()
+			}
+	}
+	lazy val inputPath: Path = {
+		if (modelsPath.fileType == "json")
+			modelsPath
+		else {
+			modelsPath.children match {
+				case Success(children) =>
+					val jsonChildren = children.filter { _.fileType == "json" }
+					if (jsonChildren.nonEmpty)
+						jsonChildren.flatMap { p => Version.findFrom(p.fileName).map { _ -> p } }.maxByOption { _._1 }
+							.map { _._2 }.getOrElse { modelsPath }
+					else {
+						val subDirectories = children.filter { _.isDirectory }
+						subDirectories.flatMap { p => Version.findFrom(p.fileName).map { _ -> p } }
+							.maxByOption { _._1 }.map { _._2 }
+							.getOrElse {
+								println("Please specify the models.json file to read (or a directory containing multiple of such files)")
+								println(s"Instruction: Specify the path relative to $modelsPath")
+								if (subDirectories.isEmpty)
+									println(s"Warning: No suitable files were found from $modelsPath")
+								else {
+									println("Available subdirectories:")
+									subDirectories.foreach { p => println(s"\t- ${p.fileName}") }
+								}
+								modelsPath/StdIn.readLine()
+							}
+					}
+				case Failure(_) =>
+					println("Please specify the models.json file to read (or a directory containing multiple of such files)")
+					println(s"Instruction: Specify the path relative to $modelsPath")
+					modelsPath/StdIn.readLine()
+			}
 		}
 	}
-	lazy val outputPath: Path = arguments("output").string.map(path).getOrElse {
-		rootPath match
-		{
-			case Some(root) =>
-				println(s"Please specify the output directory path relative to ${root.toAbsolutePath}")
-				root/StdIn.readLine()
-			case None =>
-				println("Please specify the output directory path")
-				println(s"The path may be absolute or relative to ${Paths.get("").toAbsolutePath}")
-				StdIn.readLine()
+	lazy val outputPath: Path = project.map { _.outputDirectory }
+		.orElse { arguments("output").string.map(path) }
+		.getOrElse {
+			rootPath match {
+				case Some(root) =>
+					println(s"Please specify the output directory path relative to ${root.toAbsolutePath}")
+					root/StdIn.readLine()
+				case None =>
+					println("Please specify the output directory path")
+					println(s"The path may be absolute or relative to ${Paths.get("").toAbsolutePath}")
+					StdIn.readLine()
+			}
 		}
-	}
 	
 	// Options for target type selection
 	val _class = 1
 	val _package = 2
 	val _enums = 3
 	val _all = 4
-	val specifiedTargetType =
-	{
+	val specifiedTargetType = {
 		if (arguments("all").getBoolean)
 			Some(_all)
 		else
@@ -122,8 +173,7 @@ object VaultCoderApp extends App
 					None
 			}
 	}
-	lazy val filter = (arguments("filter").string match
-	{
+	lazy val filter = (arguments("filter").string match {
 		case Some(filter) => filter.notEmpty
 		case None =>
 			if (specifiedTargetType.exists { _ != _all })
@@ -134,8 +184,7 @@ object VaultCoderApp extends App
 			// The filter may be more or less inclusive, based on the "single" flag
 	}).map { filterText => Filter(filterText, arguments("single").getBoolean) }
 	lazy val targetType = specifiedTargetType.getOrElse {
-		filter match
-		{
+		filter match {
 			case Some(filter) =>
 				println(s"What kind of items do you want to target with filter '$filter'?")
 				println("Available options: class | package | all")
@@ -153,36 +202,35 @@ object VaultCoderApp extends App
 		}
 	}
 	
-	lazy val mainMergeRoot = arguments("merge").string match {
-		case Some(mergeRoot) =>
-			val mergeRootPath = path(mergeRoot)
-			if (mergeRootPath.exists)
-				Some(mergeRootPath)
-			else
-			{
-				println(s"Specified merge source root path ${mergeRootPath.toAbsolutePath} doesn't exist")
-				None
-			}
-		case None =>
-			if (arguments("merging").getBoolean)
-			{
-				println("Please specify path to the existing source root directory (src)")
-				println(s"Hint: Path may be absolute or relative to ${rootPath.getOrElse(Paths.get("")).toAbsolutePath}")
-				StdIn.readNonEmptyLine().flatMap { input =>
-					val mergeRoot = path(input)
-					if (mergeRoot.exists)
-						Some(mergeRoot)
-					else
-					{
-						println(s"Specified path ${mergeRoot.toAbsolutePath} doesn't exist")
-						None
+	lazy val mainMergeRoot = project.map { _.src }.orElse {
+		arguments("merge").string match {
+			case Some(mergeRoot) =>
+				val mergeRootPath = path(mergeRoot)
+				if (mergeRootPath.exists)
+					Some(mergeRootPath)
+				else {
+					println(s"Specified merge source root path ${mergeRootPath.toAbsolutePath} doesn't exist")
+					None
+				}
+			case None =>
+				if (arguments("merging").getBoolean) {
+					println("Please specify path to the existing source root directory (src)")
+					println(s"Hint: Path may be absolute or relative to ${rootPath.getOrElse(Paths.get("")).toAbsolutePath}")
+					StdIn.readNonEmptyLine().flatMap { input =>
+						val mergeRoot = path(input)
+						if (mergeRoot.exists)
+							Some(mergeRoot)
+						else {
+							println(s"Specified path ${mergeRoot.toAbsolutePath} doesn't exist")
+							None
+						}
 					}
 				}
-			}
-			else
-				None
+				else
+					None
+		}
 	}
-	lazy val alternativeMergeRoot: Option[Path] = {
+	lazy val alternativeMergeRoot: Option[Path] = project.map { _.altSrc }.getOrElse {
 		if (mainMergeRoot.isDefined) {
 			println("If you want, please specify the alternative merge source path for the other part of the project")
 			println(s"The path may be absolute or relative to ${rootPath.getOrElse(Paths.get("")).toAbsolutePath}")
@@ -204,79 +252,108 @@ object VaultCoderApp extends App
 	println()
 	println(s"Reading class data from ${inputPath.toAbsolutePath}...")
 	
-	if (inputPath.notExists)
-		println("Looks like no data can be found from that location. Please try again with different input.")
-	else if (inputPath.isDirectory)
-		inputPath.children.flatMap { filePaths =>
-			val jsonFilePaths = filePaths.filter { _.fileType.toLowerCase == "json" }
-			println(s"Found ${jsonFilePaths.size} json file(s) from the input directory (${inputPath.fileName})")
-			jsonFilePaths.tryMap { ClassReader(_) }
-		} match {
-			// Groups read results that target the same project
-			case Success(data) =>
-				val groupedData = data.groupBy { p => (p.projectName, p.modelPackage, p.databasePackage) }
-					.map { case ((pName, modelPackage, dbPackage), data) =>
-						data.reduce { (a, b) =>
-							val version = a.version match {
-								case Some(aV) =>
-									b.version match {
-										case Some(bV) => Some(aV max bV)
-										case None => Some(aV)
-									}
-								case None => b.version
-							}
-							ProjectData(pName, modelPackage, dbPackage, a.databaseName.orElse { b.databaseName },
-								a.enumerations ++ b.enumerations, a.classes ++ b.classes,
-								a.combinations ++ b.combinations, a.instances ++ b.instances, a.namingRules, version,
-								a.modelCanReferToDB && b.modelCanReferToDB, a.prefixColumnNames && b.prefixColumnNames)
-						}
-					}
-				filterAndWrite(groupedData)
-			case Failure(error) =>
-				error.printStackTrace()
-				println("Class reading failed. Please make sure all of the files are in correct format.")
+	val didSucceed: Boolean = {
+		if (inputPath.notExists) {
+			println(s"Looks like no data can be found from $inputPath. Please try again with different input.")
+			false
 		}
-	else
-	{
-		if (inputPath.fileType.toLowerCase != "json")
-			println(s"Warning: Expect file type is .json. Specified file is of type .${inputPath.fileType}")
-		
-		ClassReader(inputPath) match
+		else if (inputPath.isDirectory)
+			inputPath.children.flatMap { filePaths =>
+				val jsonFilePaths = filePaths.filter { _.fileType.toLowerCase == "json" }
+				println(s"Found ${jsonFilePaths.size} json file(s) from the input directory (${inputPath.fileName})")
+				jsonFilePaths.tryMap { reader.ClassReader(_) }
+			} match {
+				// Groups read results that target the same project
+				case Success(data) =>
+					val groupedData = data.groupBy { p => (p.projectName, p.modelPackage, p.databasePackage) }
+						.map { case ((pName, modelPackage, dbPackage), data) =>
+							data.reduce { (a, b) =>
+								val version = a.version match {
+									case Some(aV) =>
+										b.version match {
+											case Some(bV) => Some(aV max bV)
+											case None => Some(aV)
+										}
+									case None => b.version
+								}
+								ProjectData(pName, modelPackage, dbPackage, a.databaseName.orElse { b.databaseName },
+									a.enumerations ++ b.enumerations, a.classes ++ b.classes,
+									a.combinations ++ b.combinations, a.instances ++ b.instances, a.namingRules, version,
+									a.modelCanReferToDB && b.modelCanReferToDB, a.prefixColumnNames && b.prefixColumnNames)
+							}
+						}
+					filterAndWrite(groupedData)
+				case Failure(error) =>
+					error.printStackTrace()
+					println("Class reading failed. Please make sure all of the files are in correct format.")
+					false
+			}
+		else
 		{
-			case Success(data) => filterAndWrite(Some(data))
-			case Failure(error) =>
-				error.printStackTrace()
-				println("Class reading failed. Please make sure the file is in correct format.")
+			if (inputPath.fileType.toLowerCase != "json")
+				println(s"Warning: Expect file type is .json. Specified file is of type .${inputPath.fileType}")
+			
+			reader.ClassReader(inputPath) match {
+				case Success(data) => filterAndWrite(Some(data))
+				case Failure(error) =>
+					error.printStackTrace()
+					println("Class reading failed. Please make sure the file is in correct format.")
+					false
+			}
 		}
 	}
 	
-	def filterAndWrite(data: Iterable[ProjectData]): Unit =
+	// May store the project settings for future use
+	if (didSucceed && project.isEmpty &&
+		StdIn.ask("Do you want to save these settings to speed up program use next time?"))
 	{
+		println("What name do you want to give to this project?")
+		rootInput.foreach { i => println(s"Default: $i") }
+		StdIn.readNonEmptyLine().orElse(rootInput) match {
+			case Some(projectName) =>
+				mainMergeRoot
+					.orElse { StdIn.readNonEmptyLine(
+						s"Please specify the project source directory (absolute or relative to ${"".toAbsolutePath})")
+						.map { p => p: Path } } match
+				{
+					case Some(src) =>
+						val altSrc = alternativeMergeRoot.orElse {
+							if (StdIn.ask("Do you want to specify an alternative source directory?"))
+								StdIn.readNonEmptyLine(
+									s"Please specify the alternative project source director (absolute or relative to ${"".toAbsolutePath})")
+									.map { p => p: Path }
+							else
+								None
+						}
+						projects(projectName) = ProjectPaths(modelsPath, outputPath, src, altSrc)
+						println(s"Saved the project. You may now refer to it as '$projectName'")
+					case None => println("Project saving cancelled")
+				}
+			case None => println("Project saving cancelled")
+		}
+	}
+	
+	def filterAndWrite(data: Iterable[ProjectData]): Boolean = {
 		println()
 		// Applies filters
-		val filteredData =
-		{
+		val filteredData = {
 			if (targetType == _class)
-				filter match
-				{
+				filter match {
 					case Some(filter) => data.map { _.filterByClassName(filter) }
 					case None => data.map { _.onlyClasses }
 				}
 			else if (targetType == _package)
-				filter match
-				{
+				filter match {
 					case Some(filter) => data.map { _.filterByPackage(filter) }
 					case None => data
 				}
 			else if (targetType == _enums)
-				filter match
-				{
+				filter match {
 					case Some(filter) => data.map { _.filterByEnumName(filter) }
 					case None => data.map { _.onlyEnumerations }
 				}
 			else
-				filter match
-				{
+				filter match {
 					case Some(filter) => data.map { _.filter(filter) }
 					case None => data
 				}
@@ -317,10 +394,13 @@ object VaultCoderApp extends App
 			}
 		} match
 		{
-			case Success(_) => println("All documents successfully written!")
+			case Success(_) =>
+				println("All documents successfully written!")
+				filteredData.exists { _.nonEmpty }
 			case Failure(error) =>
 				error.printStackTrace()
 				println("Failed to write the documents. Please see error details above.")
+				false
 		}
 	}
 	

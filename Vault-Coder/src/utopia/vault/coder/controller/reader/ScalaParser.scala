@@ -6,7 +6,7 @@ import utopia.flow.parse.Regex
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.IterateLines
-import utopia.vault.coder.controller.CodeBuilder
+import utopia.vault.coder.controller.writer.CodeBuilder
 import utopia.vault.coder.model.reader.ReadCodeBlock
 import utopia.vault.coder.model.scala.datatype.ScalaTypeCategory.{CallByName, Standard}
 import utopia.vault.coder.model.scala.datatype.TypeVariance.Invariance

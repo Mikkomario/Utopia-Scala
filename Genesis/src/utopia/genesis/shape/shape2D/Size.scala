@@ -141,7 +141,7 @@ case class Size(override val dimensions2D: Pair[Double])
             Size(dimensions.head, 0)
     }
     
-    def toValue = new Value(Some(this), SizeType)
+    override def toValue = new Value(Some(this), SizeType)
     
     def toModel = Model.fromMap(HashMap("width" -> width, "height" -> height))
     

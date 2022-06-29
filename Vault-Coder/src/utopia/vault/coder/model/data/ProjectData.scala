@@ -33,6 +33,7 @@ case class ProjectData(projectName: String, modelPackage: Package, databasePacka
 	  * @return Whether this data set is completely empty
 	  */
 	def isEmpty = enumerations.isEmpty && classes.isEmpty && combinations.isEmpty
+	def nonEmpty = !isEmpty
 	
 	/**
 	  * @return A copy of this project data with only classes remaining

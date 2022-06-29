@@ -1,5 +1,12 @@
 # Utopia Vault Coder
 
+## v1.5.1 (in development)
+### New Features
+- The application may now store project paths to a local file so that they don't need to be repeated every time 
+  the program is used
+### Bugfixes
+- Extending column length rules are now written as "to X" instead of "up to X"
+
 ## v1.5 - 06.06.2022
 This update adds a number of quality improvements both to input and output. Various edge cases are also supported, 
 such as customizing naming conventions and referring to custom column names. These are useful when dealing with 
