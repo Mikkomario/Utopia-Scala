@@ -6,7 +6,7 @@ import utopia.flow.datastructure.mutable.PollableOnce
 
 import scala.language.implicitConversions
 import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
-import scala.collection.generic.{IsIterableOnce, IsSeq}
+import scala.collection.generic.{IsIterable, IsIterableOnce, IsSeq}
 import scala.collection.immutable.{HashSet, VectorBuilder}
 import scala.util.{Failure, Success, Try}
 
@@ -168,6 +168,23 @@ object CollectionExtensions
             val iterOps = iter(coll)
             buildFrom.fromSpecific(coll)(TerminatingIterator(iterOps.iterator)(endCondition))
         }
+    
+        /**
+          * Divides the items in this collection into two groups, based on boolean result
+          * @param f A function that separates the items
+          * @param bf an implicit buildFrom for the resulting collection type
+          * @tparam To type of the resulting collection
+          * @return The 'false' group, followed by the 'true' group
+          */
+        def divideBy[To](f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, To]) =
+        {
+            val falseBuilder = bf.newBuilder(coll)
+            val trueBuilder = bf.newBuilder(coll)
+        
+            iter(coll).iterator.foreach { a => if (f(a)) trueBuilder += a else falseBuilder += a }
+        
+            falseBuilder.result() -> trueBuilder.result()
+        }
     }
     
     implicit def iterableOnceOperations[Repr](coll: Repr)(implicit iter: IsIterableOnce[Repr]): IterableOnceOperations[Repr, iter.type] =
@@ -215,7 +232,7 @@ object CollectionExtensions
           * @return The first item that was mapped to Some. None if all items were mapped to None.
           */
         def findMap[B](map: A => Option[B]) = i.iterator.map(map).find { _.isDefined }.flatten
-        
+    
         /**
           * Divides / maps the items in this collection to two groups
           * @param f A function for separating / mapping the items
@@ -225,8 +242,8 @@ object CollectionExtensions
           */
         def divideWith[L, R](f: A => Either[L, R]) =
         {
-            val lBuilder = new VectorBuilder[L]
-            val rBuilder = new VectorBuilder[R]
+            val lBuilder = new VectorBuilder[L]()
+            val rBuilder = new VectorBuilder[R]()
             i.iterator.map(f).foreach {
                 case Left(l) => lBuilder += l
                 case Right(r) => rBuilder += r
@@ -234,24 +251,25 @@ object CollectionExtensions
             lBuilder.result() -> rBuilder.result()
         }
         /**
-         * Divides / maps the items in this collection to two groups
-         * @param f A function for separating / mapping the items
-         * @tparam L Type of left group items
-         * @tparam R Type of right group items
-         * @return Left group and right group
-         */
+          * Divides / maps the items in this collection to two groups
+          * @param f A function for separating / mapping the items
+          * @tparam L Type of left group items
+          * @tparam R Type of right group items
+          * @return Left group and right group
+          */
         @deprecated("Please use .divideWith(...) instead", "v1.4.1")
         def dividedWith[L, R](f: A => Either[L, R]) = divideWith[L, R](f)
         /**
-         * Divides the contents of this collection into two groups. Each item may represent 0-n items in the
-         * resulting group(s)
-         * @param f A function that accepts an item in this collection and returns 0-n grouped items
-         *          (Left(x) for a left group item x and Right(y) for a right group item y)
-         * @tparam L Type of left group items
-         * @tparam R Type of right group items
-         * @return Collected left group items and collected right group items as two separate vectors
-         */
-        def flatDivideWith[L, R](f: A => IterableOnce[Either[L, R]]) = {
+          * Divides the contents of this collection into two groups. Each item may represent 0-n items in the
+          * resulting group(s)
+          * @param f A function that accepts an item in this collection and returns 0-n grouped items
+          *          (Left(x) for a left group item x and Right(y) for a right group item y)
+          * @tparam L Type of left group items
+          * @tparam R Type of right group items
+          * @return Collected left group items and collected right group items as two separate vectors
+          */
+        def flatDivideWith[L, R](f: A => IterableOnce[Either[L, R]]) =
+        {
             val lBuilder = new VectorBuilder[L]()
             val rBuilder = new VectorBuilder[R]()
             i.iterator.flatMap(f).foreach {
@@ -311,20 +329,48 @@ object CollectionExtensions
     
     // ITERABLE ----------------------------------------
     
-    implicit class RichIterableLike[A, CC[X], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
+    class IterableOperations[Repr, I <: IsIterable[Repr]](coll: Repr, iter: I)
     {
         /**
-          * Divides the items in this Iterable into two groups, based on boolean result
-          * @param f A function that separates the items
-          * @param factory An implicit factory
-          * @return The 'false' group, followed by the 'true' group
+          * Finds the item or items with the maximum value, based on a mapping function. Works like maxBy, except that
+          * multiple values are returned in cases where items map to the same (maximum) value.
+          * @param f A function that maps items to comparable values
+          * @param bf An implicit buildfrom for the resulting collection
+          * @param ord Implicit ordering for the mapped values
+          * @tparam B Compared type (map result type)
+          * @tparam To Type of the resulting collection
+          * @return A version of this collection that only contains the items that mapped to the largest available value
           */
-        def divideBy(f: A => Boolean)(implicit factory: Factory[A, Repr]) =
-        {
-            val groups = t.groupBy(f)
-            groups.getOrElse(false, factory.newBuilder.result()) -> groups.getOrElse(true, factory.newBuilder.result())
+        def maxGroupBy[B, To](f: iter.A => B)(implicit bf: BuildFrom[Repr, iter.A, To], ord: Ordering[B]): To = {
+            val iterOps = iter(coll)
+            if (iterOps.isEmpty)
+                bf.fromSpecific(coll)(Iterator.empty)
+            else {
+                val pairs = iterOps.iterator.map { a => a -> f(a) }.toVector
+                val maxValue = pairs.map { _._2 }.max
+                bf.fromSpecific(coll)(pairs.iterator.filter { _._2 == maxValue }.map { _._1 })
+            }
         }
-        
+        /**
+          * Finds the item or items with the minimum value, based on a mapping function. Works like minBy, except that
+          * multiple values are returned in cases where items map to the same (minimum) value.
+          * @param f A function that maps items to comparable values
+          * @param bf An implicit buildfrom for the resulting collection
+          * @param ord Implicit ordering for the mapped values
+          * @tparam B Compared type (map result type)
+          * @tparam To Type of the resulting collection
+          * @return A version of this collection that only contains the items that mapped to the smallest available value
+          */
+        def minGroupBy[B, To](f: iter.A => B)(implicit bf: BuildFrom[Repr, iter.A, To], ord: Ordering[B]) =
+            maxGroupBy(f)(bf, ord.reverse)
+    }
+    
+    implicit def iterableOperations[Repr](coll: Repr)
+                                         (implicit iter: IsIterable[Repr]): IterableOperations[Repr, iter.type] =
+        new IterableOperations(coll, iter)
+    
+    implicit class RichIterableLike[A, CC[X], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
+    {
         /**
           * Performs an operation for each item in this collection. Stops if an operation fails.
           * @param f A function that takes an item and performs an operation that may fail
@@ -1346,8 +1392,7 @@ object CollectionExtensions
          * Divides this collection to two separate collections, one for left items and one for right items
          * @return Left items + right items
          */
-        def divided =
-        {
+        def divided = {
             val lBuilder = new VectorBuilder[L]
             val rBuilder = new VectorBuilder[R]
             i.iterator.foreach {
@@ -1364,7 +1409,15 @@ object CollectionExtensions
          * Divides this collection to two separate collections, one for failures and one for successes
          * @return Failures + successes
          */
-        def divided = i.divideWith { _.toEither }
+        def divided = {
+            val successesBuilder = new VectorBuilder[A]
+            val failuresBuilder = new VectorBuilder[Throwable]
+            i.iterator.foreach {
+                case Success(a) => successesBuilder += a
+                case Failure(error) => failuresBuilder += error
+            }
+            failuresBuilder.result() -> successesBuilder.result()
+        }
     }
     
     /**

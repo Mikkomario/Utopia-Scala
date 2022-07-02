@@ -17,6 +17,7 @@
 ### New Methods
 - **Iterable** (**CollectionExtensions**)
   - Added `.areAllEqual: Boolean`
+  - Added `.maxGroupBy(...)`
 - **LocalDate** (**TimeExtensions**)
   - Added `.monthOfYear: Int`
 - **Map** (**CollectionExtensions**)
@@ -34,6 +35,8 @@
   The previous implementation led to deadlocks in reactive systems (such as **Reflection**)
 ### Other Changes
 - Optimized json conversion (see breaking changes)
+- `.divideBy(...)` in **IterableOnce** through **CollectionExtensions** now returns collections based on the implicit 
+  builder, not always **Vector** types
 - Optimized **XmlElement**`.toXml`, also
 - Changed `.toString` implementation in **DateRange**
 
