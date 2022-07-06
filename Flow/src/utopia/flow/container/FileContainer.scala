@@ -2,16 +2,19 @@ package utopia.flow.container
 
 import java.nio.file.Path
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.{CloseHook, DelayedProcess, Volatile}
+import utopia.flow.async.ProcessState.NotStarted
+import utopia.flow.async.ShutdownReaction.DelayShutdown
+import utopia.flow.async.{CloseHook, DelayedProcess, Process, Volatile, VolatileOption}
 import utopia.flow.container.SaveTiming.{Delayed, Immediate, OnJvmClose, OnlyOnTrigger}
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.flow.parse.JsonParser
+import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 
 import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 /**
   * This container mirrors the stored value in a local file. Remember to call setupAutoSave(...)
@@ -49,7 +52,7 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 	  * Currently stored item (as a volatile pointer)
 	  */
 	protected lazy val _current = new Volatile(fromFile)
-	private val saveCompletion = Volatile(Future.successful[Try[Unit]](Success(())))
+	private val saveProcess = VolatileOption[Process]()
 	
 	
 	// COMPUTED	-------------------------------
@@ -65,6 +68,19 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 	  */
 	def pointer = _current
 	
+	/**
+	  * @return If there is a save process running, returns the completion of that process. Otherwise returns a
+	  *         completed future with the current process state.
+	  */
+	def activeSaveCompletionFuture = saveProcess.value match {
+		case Some(process) =>
+			if (process.state.isRunning)
+				process.completionFuture
+			else
+				Future.successful(process.state)
+		case None => Future.successful(NotStarted)
+	}
+	
 	
 	// OTHER	-------------------------------
 	
@@ -79,18 +95,10 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 	  * @param exc Implicit execution context
 	  * @return A future of the eventual save completion
 	  */
-	def saveStatus()(implicit exc: ExecutionContext) =
-	{
-		// Will only perform one saving at a time
-		val newSavePromise = Promise[Try[Unit]]()
-		saveCompletion.getAndSet(newSavePromise.future).onComplete { _ =>
-			// Saves current status to file as json
-			val dataToSave = toValue(_current.value)
-			fileLocation.createParentDirectories()
-			// Completes the promise so that the next save process can start
-			newSavePromise.success(fileLocation.writeJson(dataToSave).map { _ => () })
-		}
-		newSavePromise.future
+	def saveStatus()(implicit exc: ExecutionContext) = {
+		val process = saveProcess.value.getOrElse { Process(shutdownReaction = DelayShutdown) { _ => _save() } }
+		process.runAsync(loopIfRunning = true)
+		process.completionFuture
 	}
 	
 	/**
@@ -98,22 +106,37 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 	  * @param saveLogic Logic to use with autosave
 	  * @param exc Implicit execution context
 	  */
-	protected def setupAutoSave(saveLogic: SaveTiming)(implicit exc: ExecutionContext) = saveLogic match
-	{
-		case Immediate => _current.addListener { _ => saveStatus() }
-		case Delayed(duration) =>
-			val listener = new DelayedSaveHandler(duration)
-			_current.addListener(listener)
-		case OnJvmClose => CloseHook.registerAsyncAction { saveStatus() }
-		case OnlyOnTrigger => ()
+	protected def setupAutoSave(saveLogic: SaveTiming)(implicit exc: ExecutionContext) = {
+		val listen = saveLogic match {
+			case Immediate =>
+				saveProcess.setOne(Process(shutdownReaction = DelayShutdown) { _ => _save() })
+				true
+			case Delayed(duration) =>
+				saveProcess.setOne(DelayedProcess.hurriable(duration) { _ => _save() })
+				true
+			case OnJvmClose =>
+				CloseHook.registerAsyncAction { Future { _save().failure.foreach { _.printStackTrace() } } }
+				saveProcess.clear()
+				false
+			case OnlyOnTrigger =>
+				saveProcess.clear()
+				false
+		}
+		if (listen)
+			_current.addListenerAndSimulateEvent(empty) { _ =>
+				saveProcess.lock { _.foreach { _.runAsync(loopIfRunning = true) } }
+			}
 	}
 	
-	private def fromFile =
-	{
-		if (fileLocation.exists)
-		{
-			jsonParser(fileLocation.toFile) match
-			{
+	private def _save() = {
+		// Saves current status to file as json
+		val dataToSave = toValue(_current.value)
+		fileLocation.createParentDirectories().flatMap { _.writeJson(dataToSave) }
+	}
+	
+	private def fromFile = {
+		if (fileLocation.exists) {
+			jsonParser(fileLocation.toFile) match {
 				case Success(value) => fromValue(value)
 				case Failure(_) =>
 					// Read errors are ignored here

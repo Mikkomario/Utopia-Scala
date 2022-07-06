@@ -1,10 +1,12 @@
 package utopia.vault.coder.main
 
+import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.ThreadPool
 import utopia.flow.container.ObjectMapFileContainer
 import utopia.flow.generic.DataType
 import utopia.flow.parse.{JSONReader, JsonParser}
 import utopia.flow.time.Today
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.util.FileExtensions._
@@ -326,7 +328,10 @@ object VaultCoderApp extends App
 								None
 						}
 						projects(projectName) = ProjectPaths(modelsPath, outputPath, src, altSrc)
-						println(s"Saved the project. You may now refer to it as '$projectName'")
+						projects.activeSaveCompletionFuture.waitFor(3.seconds) match {
+							case Success(_) => println(s"Saved the project. You may now refer to it as '$projectName'")
+							case Failure(_) => println("Couldn't save the project.")
+						}
 					case None => println("Project saving cancelled")
 				}
 			case None => println("Project saving cancelled")

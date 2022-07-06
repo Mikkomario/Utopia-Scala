@@ -89,6 +89,17 @@ object ProcessState
 		override def broken = Stopping
 	}
 	/**
+	  * State where the process is running, and is requested to rerun afterwards
+	  */
+	case object Looping extends ProcessState
+	{
+		override def hasStarted = true
+		override def isBroken = false
+		override def isRunning = true
+		
+		override def broken = Stopping
+	}
+	/**
 	  * State where the process has been broken and is in the process of terminating
 	  */
 	case object Stopping extends ProcessState

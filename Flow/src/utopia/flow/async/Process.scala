@@ -1,6 +1,6 @@
 package utopia.flow.async
 
-import utopia.flow.async.ProcessState.{Cancelled, Completed, NotStarted, Running, Stopped}
+import utopia.flow.async.ProcessState.{Cancelled, Completed, Looping, NotStarted, Running, Stopped}
 import utopia.flow.async.ShutdownReaction.Cancel
 import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.event.ChangingLike
@@ -174,14 +174,22 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 			val reaction = shutdownReaction.map { new ShutDownAction(_) }
 			reaction.foreach { CloseHook += _ }
 			// Runs this process (catches and prints errors)
-			Try { runOnce() }.failure.foreach { error =>
-				System.err.println(s"$this process failed")
-				error.printStackTrace()
-			}
-			// Updates the state afterwards
-			_statePointer.update { currentState =>
-				if (currentState.isBroken) Stopped else Completed
-			}
+			Iterator.continually {
+				Try { runOnce() }.failure.foreach { error =>
+					System.err.println(s"$this process failed")
+					error.printStackTrace()
+				}
+				// Updates the state afterwards
+				_statePointer.updateAndGet { currentState =>
+					// For looping processes, continues one more run
+					if (currentState == Looping)
+						Running
+					else if (currentState.isBroken)
+						Stopped
+					else
+						Completed
+				}
+			}.takeWhile { _.isNotFinal }.foreach { _ => () }
 			reaction.foreach { CloseHook -= _ }
 		}
 	}
@@ -203,8 +211,20 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	/**
 	  * Runs this process asynchronously
 	  */
-	def runAsync() = {
-		if (isStartable)
+	def runAsync(loopIfRunning: Boolean = false) = {
+		// Checks whether this process should run. Applies the looping, if necessary
+		val shouldRun = _statePointer.pop { state =>
+			// Case: Final state => reruns if allowed
+			if (state.isFinal)
+				isRestartable -> state
+			// Case: Not started => starts
+			else if (state.isNotRunning)
+				true -> state
+			// Case: Running => loops or skips
+			else
+				false -> (if (loopIfRunning) Looping else state)
+		}
+		if (shouldRun)
 			exc.execute(this)
 	}
 	

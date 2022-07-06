@@ -37,7 +37,8 @@
 - Optimized json conversion (see breaking changes)
 - `.divideBy(...)` in **IterableOnce** through **CollectionExtensions** now returns collections based on the implicit 
   builder, not always **Vector** types
-- Optimized **XmlElement**`.toXml`, also
+- **FileContainer** saving now utilizes shutdown hooks to complete the save even on jvm exit
+- Optimized **XmlElement**`.toXml`
 - Changed `.toString` implementation in **DateRange**
 
 ## v1.15 - 06.06.2022
