@@ -169,6 +169,10 @@ Each property object should contain following properties:
     (default name: `"created"`)
     - Enables creation time -based indexing (if indexed)
     - Indexes by default
+  - **"updated"** - Results in `Instant` / Timestamp type that matches the last time a database row is modified. 
+    Similar to `"created"`, except more suitable for mutable items.
+    - Enables time-based indexing (if indexed)
+    - Indexed by default
   - **"deprecation" / "deprecated"** - Results in `Instant` / Timestamp type that is null / None while the item is 
     active (default name: `"deprecatedAfter"`)
     - Enables item deprecation

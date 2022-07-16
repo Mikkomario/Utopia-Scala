@@ -3,7 +3,7 @@ package utopia.vault.coder.model.data
 import utopia.vault.coder.model.enumeration.BasicPropertyType.{IntNumber, LongNumber}
 import utopia.vault.coder.model.enumeration.IntSize.Default
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
-import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, CreationTime, Deprecation, EnumValue, Expiration}
+import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, CreationTime, Deprecation, EnumValue, Expiration, UpdateTime}
 
 object Class
 {
@@ -119,7 +119,7 @@ case class Class(name: Name, customTableName: Option[String], idName: Name, prop
 	  * @return Whether this class records a row / instance creation time that is also an index
 	  */
 	def recordsIndexedCreationTime = properties.exists { p => p.dataType match {
-		case CreationTime => p.isIndexed
+		case CreationTime | UpdateTime => p.isIndexed
 		case _ => false
 	} }
 	

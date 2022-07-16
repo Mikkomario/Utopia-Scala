@@ -337,9 +337,9 @@ object PropertyType
 	  * @return A property type matching that specification. None if no match was found.
 	  */
 	def interpret(typeName: String, length: Option[Int] = None, propertyName: Option[String] = None) =
-		typeName.toLowerCase match
-		{
+		typeName.toLowerCase match {
 			case "creation" | "created" => Some(CreationTime)
+			case "updated" | "modification" | "update" => Some(UpdateTime)
 			case "deprecation" | "deprecated" => Some(Deprecation)
 			case "expiration" | "expired" => Some(Expiration)
 			case "value" => Some(GenericValue(length.getOrElse(255)))
@@ -352,14 +352,11 @@ object PropertyType
 	
 	private def _interpret(typeName: String, length: Option[Int], propertyName: Option[String],
 	                       isNullable: Boolean): Option[PropertyType] =
-		typeName match
-		{
+		typeName match {
 			case "days" => Some(if (isNullable) OptionalDayCount else DayCount)
 			case other =>
-				if (typeName.contains("duration"))
-				{
-					val notNull = typeName.afterFirst("[").untilLast("]") match
-					{
+				if (typeName.contains("duration")) {
+					val notNull = typeName.afterFirst("[").untilLast("]") match {
 						case "s" | "second" | "seconds" => TimeDuration.seconds
 						case "m" | "min" | "minute" | "minutes" => TimeDuration.minutes
 						case "h" | "hour" | "hours" => TimeDuration.hours
@@ -410,6 +407,32 @@ object PropertyType
 		
 		override def writeDefaultDescription(className: Name, propName: Name) =
 			s"Time when this $className was first created"
+	}
+	
+	/**
+	  * Property that always sets to the instance creation time
+	  */
+	case object UpdateTime extends PropertyType
+	{
+		override def toSql = "TIMESTAMP NOT NULL"
+		override def toScala = Reference.instant
+		override def isNullable = false
+		override def baseDefault = Reference.now.targetCode
+		override def baseSqlDefault = "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+		override def defaultPropertyName = Name("lastUpdated", "lastUpdateTimes", CamelCase.lower)
+		override def columnNameSuffix = None
+		override def createsIndexByDefault = true
+		
+		override def notNull = this
+		override def nullable = Optional(DateTime)
+		
+		override def fromValueCode(valueCode: String) = CodePiece(s"$valueCode.getInstant")
+		override def toValueCode(instanceCode: String) =
+			CodePiece(instanceCode, Set(Reference.valueConversions))
+		override def fromValuesCode(valuesCode: String) = CodePiece(s"$valuesCode.map { _.getInstant }")
+		
+		override def writeDefaultDescription(className: Name, propName: Name) =
+			s"Time when this $className was last updated"
 	}
 	
 	/**
