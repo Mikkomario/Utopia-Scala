@@ -358,6 +358,20 @@ object StringExtensions
 		def filterNotWith(regex: Regex) = regex.filterNot(s)
 		
 		/**
+		  * Replaces all matches of the specified regular expression with the specified string
+		  * @param regex A regular expression to search for
+		  * @param replacement Replacement string
+		  * @return A copy of this string where the replacements have been made
+		  */
+		def replaceAll(regex: Regex, replacement: => String) = regex.replaceAll(s, replacement)
+		/**
+		  * An alias for replaceAll
+		  * (used to distinguish between the Java implementation and this extension implementation,
+		  * which use the same name)
+		  */
+		def replaceEachMatchOf(regex: Regex, replacement: => String) = replaceAll(regex, replacement)
+		
+		/**
 		 * A comparison of two strings in a case-insensitive manner
 		 * @param another Another string
 		 * @return Whether this string equals the other string when case is ignored

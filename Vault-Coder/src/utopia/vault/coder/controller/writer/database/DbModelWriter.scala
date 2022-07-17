@@ -136,7 +136,7 @@ object DbModelWriter
 					description = s"${ classToWrite.name } database id") +:
 					classToWrite.properties.map { prop =>
 						val inputType = prop.dataType.nullable
-						val defaultValue = inputType.baseDefault.notEmpty.getOrElse(CodePiece("None"))
+						val defaultValue = inputType.defaultValue.notEmpty.getOrElse(CodePiece("None"))
 						Parameter(prop.name.propName, inputType.toScala, defaultValue, description = prop.description)
 					},
 				// Extends StorableWithFactory[A]

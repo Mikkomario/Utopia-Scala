@@ -1,7 +1,8 @@
 package utopia.flow.parse
 
-import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.datastructure.immutable.{Lazy, Pair}
 import utopia.flow.datastructure.mutable.ResettableLazy
+import utopia.flow.datastructure.template.Viewable
 import utopia.flow.util.CollectionExtensions._
 
 import java.util.regex.{Matcher, Pattern}
@@ -252,10 +253,30 @@ case class Regex(string: String)
 	/**
 	  * Replaces all occurrences of this regular expression with a string
 	  * @param str String to modify
-	  * @param replacement A string that this expression is replaced with
+	  * @param replacement A string that this expression is replaced with (call-by-name)
 	  * @return Modified string
 	  */
-	def replaceAll(str: String, replacement: String) = pattern.matcher(str).replaceAll(replacement)
+	def replaceAll(str: String, replacement: => String): String = replaceAll(str, Lazy { replacement })
+	/**
+	  * Replaces all occurrences of this regular expression within a string
+	  * @param str String to modify
+	  * @param replacement A string to replace the possible occurrences of this regular expression (lazy)
+	  * @return A modified string
+	  */
+	// Implementation is based on Matcher.replaceAll(String)
+	// The main point of this function is to allow for the lazy initiation of the replacement
+	def replaceAll(str: String, replacement: Viewable[String]) = {
+		val matcher = pattern.matcher(str)
+		val findResultsIterator = Iterator.continually { matcher.find() }.takeWhile { r => r }
+		if (findResultsIterator.hasNext) {
+			val resultBuffer = new StringBuffer()
+			findResultsIterator.foreach { _ => matcher.appendReplacement(resultBuffer, replacement.value) }
+			matcher.appendTail(resultBuffer)
+			resultBuffer.toString
+		}
+		else
+			str
+	}
 	/**
 	  * @param str A string
 	  * @return A version of the string that only contains items NOT accepted by this regex

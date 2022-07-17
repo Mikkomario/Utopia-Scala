@@ -1,5 +1,8 @@
 package utopia.vault.coder.model.scala.datatype
 
+import utopia.flow.parse.Regex
+import utopia.flow.util.StringExtensions._
+import utopia.vault.coder.model.scala.Package
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.datatype.ScalaTypeCategory.{CallByName, Standard}
 import utopia.vault.coder.model.scala.template.ScalaConvertible
@@ -9,6 +12,8 @@ import scala.language.implicitConversions
 object ScalaType
 {
 	// ATTRIBUTES   ---------------------------
+	
+	private lazy val typeParamsSeparator = Regex.escape(',').ignoringWithin('[', ']')
 	
 	val string = basic("String")
 	val int = basic("Int")
@@ -57,6 +62,29 @@ object ScalaType
 	  * @return A data type based on that reference
 	  */
 	def apply(reference: Reference): ScalaType = apply(Right(reference))
+	
+	/**
+	  * Parses a scala type from a string, which may be a reference and/or a generic type
+	  * @param typeString A string representing a scala data type
+	  * @return Data type parsed from that string
+	  */
+	def apply(typeString: String): ScalaType = {
+		val (beforeTypes, typesPart) = typeString.splitAtFirst("[")
+		val basePart = {
+			if (Package.separatorRegex.existsIn(beforeTypes))
+				Right(Reference(beforeTypes))
+			else
+				Left(beforeTypes)
+		}
+		// Case: Standard (ie. non-generic) data type
+		if (typesPart.isEmpty)
+			apply(basePart)
+		// Case: Generic data type => parses the type parameters, also (recursive)
+		else {
+			val typeParamStrings = typesPart.untilLast("]").split(typeParamsSeparator).toVector.map { _.trim }
+			apply(basePart, typeParamStrings.map(apply))
+		}
+	}
 	
 	/**
 	  * Creates a generic type

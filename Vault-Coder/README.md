@@ -58,13 +58,16 @@ The input .json file should contain a single object with following properties:
 - **"prefix_columns": Boolean (optional)** - Whether sql column names should have a table-name -based prefix 
   (default = `false`)
 - **"naming": Object (optional)** - An object where you can specify custom naming schemes for the generated documents
-  - See details from below
+  - See [Naming Object Structure](#naming-object-structure) for more details
+- **"types" / "data_types": Object (optional)** - Contains a custom data type object for each key. 
+  The keys may be used within the property declarations to reference these data types.
+  - See [Data Type Object Structure](#data-type-object-structure) for more details
 - **"enumerations" / "enums": Object (optional)** - Contains a property for each introduced enumeration. 
   Each property should have a string array value where each item represents a possible enumeration value.
 - **"referenced_enumerations" / "referenced_enums": [String]** - Paths to enumerations from other projects
   - Enumeration paths should include the full reference: E.g. `"utopia.vault.coder.model.enumeration.PropertyType"`
 - **"classes" / "class": Object** - Contains a property for each introduced sub-package, the value of each 
-  sub-package property should be a class object or an array of **class objects** (see structure below).
+  sub-package property should be a class object or an array of **class objects** (see [structure](#class-object-structure) below).
 
 ### Class Object Structure
 Class objects should contain following properties:
@@ -81,7 +84,8 @@ Class objects should contain following properties:
   Defaults to `false`.
 - **"doc": String (optional)** - A description of this class, which is written to class documentation
 - **"author": String (optional)** - Author of this class. If omitted, the project author will be used.
-- **"combinations" / "combos": [Object]** - An array of **combination objects** for this class (see structure below)
+- **"combinations" / "combos": [Object]** - An array of **combination objects** for this class 
+  (see [structure](#combination-object-structure) below)
   - Alternatively, you can specify a **"combination"** or **"combo"** -property with only a single 
     **combination object** as a value. Please don't specify both, however. 
 - **"has_combos" / "generic_access" / "tree_inheritance": Boolean (optional)** - Determines whether a more generic 
@@ -108,30 +112,6 @@ Class objects should contain following properties:
     - Instance objects should specify at least all properties which don't have a sql default value and can't be null.
   - Alternatively, you may provide `instance` property that contains a single instance object. 
     - This will, however, overwrite any value of the `instances` property
-
-#### Combination Object Structure
-Each combination object should contains following properties:
-- **"child" / "children": String** - Name of the linked child class
-  - NB: If you use the name `"children"` and don't otherwise specify combination type, 1-n -linking will be used. 
-    For `"child"` property name, combination type 1- 0-1 will be used instead.
-- **"type": String (optional)** - Type of this combination, from one of the options below:
-  - **"one" / "link"** => Uses 1 to 1 linking (child must always be present)
-  - **"option" / "optional"** => Uses 1 to 0-1 -linking where there can be cases without a child
-  - **"multi" / "many"** => Uses 1-n -linking
-    - If you use this combination type, you may specify `"is_always_linked": Boolean` -property to specify how to treat 
-      the 0 children case (default = not always linked => 0 children case is valid)
-  - If you omit this property, the combination type is interpreted based on child property name, 
-    the referred child format and the `"is_always_linked"` property.
-- **"is_always_linked" / "always_linked": Boolean (optional)** - Applies to 1-n links, determining whether to always 
-  expect there to be children in queries
-- **"name": String (optional)** - Name of the combined class
-  - If omitted, "ParentWithChild" (or "ParentWithChildren") -type of naming will be used
-- **"parent_alias" / "alias_parent": String (optional)** - Name to use for the parent class within this 
-  combination class
-  - Also affects combination naming if `"name"` is not specified
-- **"child_alias" / "alias_child": String (optional)** - Name to use for the child / children in the combined class
-  - Also affects combination naming if `"name"` is not specified
-- **"doc": String (optional)** - A description of this combined model (used in documentation)
 
 #### Property Object Structure
 Each property object should contain following properties:
@@ -185,6 +165,7 @@ Each property object should contain following properties:
   - **"enum[X]"** - Results in an enumeration value choice. Replace `X` with the enumeration of your choice 
     (must be specified in the "enumerations" -property). Uses the enumeration's name as the default property name.
     - Can be wrapped in option
+  - Any custom data type alias - Results in that custom data type being used
   - If omitted or empty, defaults to `Int` for references and `String` if the `"length"` property is present
 - **"index" / "indexed": Boolean (optional)** - Set to true if you want to force indexing and false if you want 
   to disable it
@@ -200,14 +181,82 @@ Each property object should contain following properties:
     - `"expand"` - Expands the column maximum length indefinitely
     - `"expand to X"` / `"to X"` - Expands the column maximum length until the specified limit `X`
   - These are only applicable to `String` and `Int` types
-- **"default" / "def": String (optional)** - The default value assigned for this property in the data model
+- **"default" / "def": Code (optional)** - The default value assigned for this property in the data model
+  - See [Code Object Structure](#code-object-structure) for specifics
   - If empty or omitted, data type -specific default will be used, if there is one
 - **"sql_default" / "sql_def": String (optional)** - The default value assigned for this property in the database
-  - If empty or omitted, data type -specific default will be used, if there is one
+  - If empty or omitted, data type -specific default will be used, if there is one. 
+    - A specified default (code) value may also be used, provided it doesn't use any references and is a simple value 
+      (such as a string literal, integer or a boolean value)
 - **"doc": String (optional)** - Description of this property (used in documentation)
 - **"usage": String (optional)** - Additional description about the use of this property
 
-## Naming object structure
+#### Combination Object Structure
+Each combination object should contains following properties:
+- **"child" / "children": String** - Name of the linked child class
+  - NB: If you use the name `"children"` and don't otherwise specify combination type, 1-n -linking will be used.
+    For `"child"` property name, combination type 1- 0-1 will be used instead.
+- **"type": String (optional)** - Type of this combination, from one of the options below:
+  - **"one" / "link"** => Uses 1 to 1 linking (child must always be present)
+  - **"option" / "optional"** => Uses 1 to 0-1 -linking where there can be cases without a child
+  - **"multi" / "many"** => Uses 1-n -linking
+    - If you use this combination type, you may specify `"is_always_linked": Boolean` -property to specify how to treat
+      the 0 children case (default = not always linked => 0 children case is valid)
+  - If you omit this property, the combination type is interpreted based on child property name,
+    the referred child format and the `"is_always_linked"` property.
+- **"is_always_linked" / "always_linked": Boolean (optional)** - Applies to 1-n links, determining whether to always
+  expect there to be children in queries
+- **"name": String (optional)** - Name of the combined class
+  - If omitted, "ParentWithChild" (or "ParentWithChildren") -type of naming will be used
+- **"parent_alias" / "alias_parent": String (optional)** - Name to use for the parent class within this
+  combination class
+  - Also affects combination naming if `"name"` is not specified
+- **"child_alias" / "alias_child": String (optional)** - Name to use for the child / children in the combined class
+  - Also affects combination naming if `"name"` is not specified
+- **"doc": String (optional)** - A description of this combined model (used in documentation)
+
+### Code Object Structure
+There are two ways to write Scala-code within the input document:
+1. By passing a string
+2. By passing a json object
+
+When you pass the code as a string, no additional import statements will be added to the resulting code. 
+This works for simple use-cases, such as those where you pass an integer or a boolean value.
+
+When you need to use imports, you must pass a json object with following properties:
+- **"code": String** - The resulting piece of code
+- **"references": [String]** - A json array of the references made within the code. 
+  The references should include the full class path of the referred items.
+  - Alternatively you may specify **"reference"** -property with just a single reference as a string
+
+### Data Type Object Structure
+When specifying a custom data type object, you need to specify the following properties:
+- **"type": String** - A reference to this data type, including the full class-path as well as possible type parameters.
+- **"sql": String** - An sql representation of this data type. For example, `"VARCHAR(32)"`. 
+  - This value shouldn't include any `NOT NULL` or `DEFAULT` -statements.
+- **"from_value": Code** - Code that accepts a **Value**, which should appear as `$v` within the code, 
+  and returns an instance of this type.
+  - For example, for Scala **Int** type, this would be `"$v.getInt"`
+- **"option_from_value": Code** - Code that accepts a **Value** (`$v`) and returns an **Option** possibly containing an 
+  instance of this type
+  - For example, for Scala **Int** type, this would be `$v.int`
+- **"to_value": Code** - Code that accepts an instance of this type and yields a **Value**
+  - The instance parameter should be referenced with `$v` 
+  - For example, for Scala **Int** type, this would be 
+    `{ "code": "$v", "reference": "utopia.flow.generic.ValueConversions._" }`
+- **"option_to_value": Code (optional)** - Code that takes an option that may contain an instance of this type and 
+  converts it to a value
+  - If omitted or null, `$v.map { v => `to_value`(v) }.getOrElse(Value.empty)` will be used
+- **"default": Code (optional)** - Default Scala-value for properties using this data type
+- **"sql_default": String (optional)** - Default value for this data type within sql-documents
+- **"prop_name" / "default_name": String (optional)** - Default property name generated for properties using this data 
+  type (when they don't specify a name)
+  - By default, the name of this data type is used
+- **"column_suffix" / "col_suffix" / "suffix": String (optional)** - A custom suffix applied to generated sql property 
+  names. Should not include a possible separator prefix, such as `_`
+- **"index" / "is_index": Boolean** - Whether this data type creates a database index by default (default = false)
+
+### Naming object structure
 If you want to specify custom naming schemes, you may do so in a naming object.
 
 Naming rules are interpreted as follows:

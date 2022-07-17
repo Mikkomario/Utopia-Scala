@@ -40,7 +40,7 @@ object SqlWriter
 			val classesByTableName = allClasses.map { c => c.tableName -> c }.toMap
 			val references = classesByTableName.map { case (tableName, c) =>
 				val refs = c.properties.flatMap { _.dataType match {
-					case ClassReference(referencedTableName, _, _, _) =>
+					case ClassReference(referencedTableName, _, _) =>
 						// References to the class' own table are ignored
 						Some(referencedTableName.tableName).filterNot { _ == tableName }
 					case _ => None
@@ -161,7 +161,7 @@ object SqlWriter
 		val tableName = classToWrite.tableName
 		lazy val classInitials = initialsMap(tableName)
 		def prefixColumn(column: Property): String = prefixColumnName(column.columnName, column.dataType match {
-			case ClassReference(table, _, _, _) => Some(table.tableName)
+			case ClassReference(table, _, _) => Some(table.tableName)
 			case _ => None
 		})
 		def prefixColumnName(colName: String, referredTableName: => Option[String] = None): String = {
@@ -218,7 +218,7 @@ object SqlWriter
 			}
 			val foreignKeyDeclarations = namedProps.flatMap { case (prop, name) =>
 				prop.dataType match {
-					case ClassReference(rawReferencedTableName, rawColumnName, _, isNullable) =>
+					case ClassReference(rawReferencedTableName, rawColumnName, referenceType) =>
 						val refTableName = rawReferencedTableName.tableName
 						val refInitials = initialsMap(refTableName)
 						val refColumnName = {
@@ -240,7 +240,7 @@ object SqlWriter
 						}
 						Some(s"CONSTRAINT ${ constraintNameBase }_fk FOREIGN KEY ${
 							constraintNameBase }_idx ($name) REFERENCES `$refTableName`(`$refColumnName`) ON DELETE ${
-							if (isNullable) "SET NULL" else "CASCADE"
+							if (referenceType.isNullable) "SET NULL" else "CASCADE"
 						}")
 					case _ => None
 				}

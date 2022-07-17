@@ -12,7 +12,7 @@ object Property
 	  * @param dataType Type of this property
 	  * @param description Description of this property (Default = empty)
 	  * @param useDescription Description on how this property is used (Default = empty)
-	  * @param customDefault Default value passed for this property (empty if no default (default))
+	  * @param customDefault Default value passed for this property, as code (empty if no default (default))
 	  * @param customSqlDefault Default value passed for this property in the SQL table creation (empty if no default)
 	  * @param lengthRule String that represents the rule applied to this property when it comes to length limit handling.
 	  *                   Empty if no specific rule is used.
@@ -21,7 +21,7 @@ object Property
 	  * @return A new property
 	  */
 	def apply(name: Name, dataType: PropertyType, description: String = "", useDescription: String = "",
-	          customDefault: String = "", customSqlDefault: String = "", lengthRule: String = "",
+	          customDefault: CodePiece = CodePiece.empty, customSqlDefault: String = "", lengthRule: String = "",
 	          customIndexing: Option[Boolean] = None): Property =
 		apply(name, None, dataType, description, useDescription, customDefault, customSqlDefault, lengthRule,
 			customIndexing)
@@ -44,7 +44,7 @@ object Property
   *                       None if user didn't specify, which results in data type -based indexing
   */
 case class Property(name: Name, customColumnName: Option[String], dataType: PropertyType, description: String,
-                    useDescription: String, customDefault: String, customSqlDefault: String, lengthRule: String,
+                    useDescription: String, customDefault: CodePiece, customSqlDefault: String, lengthRule: String,
                     customIndexing: Option[Boolean])
 {
 	// COMPUTED ----------------------------
@@ -57,15 +57,14 @@ case class Property(name: Name, customColumnName: Option[String], dataType: Prop
 	/**
 	  * @return The default value assigned for this property. Empty if no default is provided.
 	  */
-	def default = customDefault.notEmpty match
-	{
-		case Some(default) => CodePiece(default)
-		case None => dataType.baseDefault
-	}
+	def default = customDefault.notEmpty.getOrElse(dataType.defaultValue)
 	/**
 	  * @return The default value assigned for this property in the SQL document / table creation
 	  */
-	def sqlDefault = customSqlDefault.notEmpty.getOrElse(dataType.baseSqlDefault)
+	def sqlDefault = customSqlDefault.notEmpty.getOrElse {
+		// Custom default value may also be applied to SQL in some cases
+		customDefault.toSql.getOrElse(dataType.baseSqlDefault)
+	}
 	
 	/**
 	  * @return Code for this property converted to a value. Expects ValueConversions to be imported.

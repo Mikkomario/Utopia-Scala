@@ -2,15 +2,16 @@ package utopia.vault.coder.controller.reader
 
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.datastructure.immutable.{Model, ModelValidationFailedException}
+import utopia.flow.generic.DataTypeException
 import utopia.flow.util.{UncertainBoolean, Version}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, CombinationData, Enum, Instance, Name, NamingRules, ProjectData, Property}
+import utopia.vault.coder.model.data.{Class, CombinationData, CustomPropertyType, Enum, Instance, Name, NamingRules, ProjectData, Property}
 import utopia.vault.coder.model.enumeration.BasicPropertyType.{IntNumber, Text}
 import utopia.vault.coder.model.enumeration.CombinationType.{Combined, MultiCombined, PossiblyCombined}
 import utopia.vault.coder.model.enumeration.IntSize.Default
-import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, EnumValue, Optional}
-import utopia.vault.coder.model.enumeration.{BasicPropertyType, CombinationType, NamingConvention, PropertyType}
+import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, EnumValue}
+import utopia.vault.coder.model.enumeration.{CombinationType, NamingConvention, PropertyType}
 import utopia.vault.coder.model.scala.Package
 
 import java.nio.file.Path
@@ -32,117 +33,130 @@ object ClassReader
 	  */
 	def apply(path: Path) = JsonBunny(path).flatMap { v =>
 		val root = v.getModel
-		val author = root("author").getString
-		val basePackage = Package(root("base_package", "package").getString)
-		val modelPackage = root("model_package", "package_model").string match {
-			case Some(pack) => Package(pack)
-			case None => basePackage / "model"
-		}
-		val dbPackage = root("db_package", "database_package", "package_db", "package_database").string match {
-			case Some(pack) => Package(pack)
-			case None => basePackage / "database"
-		}
-		val projectName = root("name", "project").stringOr {
-			basePackage.parts.lastOption match {
-				case Some(lastPart) => lastPart.capitalize
-				case None =>
-					dbPackage.parent.parts.lastOption
-						.orElse { dbPackage.parts.lastOption }
-						.getOrElse { "Project" }
-						.capitalize
-			}
-		}
 		
-		implicit val namingRules: NamingRules = NamingRules(root("naming").getModel).value
-		
-		val databaseName = root("database_name", "database", "db_name", "db").string
-			.map { rawDbName =>
-				namingRules.database.convert(rawDbName,
-					NamingConvention.of(rawDbName, namingRules.database))
+		// Parses custom data types (must succeed)
+		root("data_types", "types").getModel.attributes.tryMap { c =>
+			c.value.model
+				.toTry { DataTypeException(
+					s"Custom data types must be presented as json objects. '$v' is not a model.") }
+				.flatMap(CustomPropertyType.apply)
+				.map { c.name.toLowerCase -> _ }
+		}.flatMap { customTypes =>
+			val customTypesMap = customTypes.toMap
+			val author = root("author").getString
+			val basePackage = Package(root("base_package", "package").getString)
+			val modelPackage = root("model_package", "package_model").string match {
+				case Some(pack) => Package(pack)
+				case None => basePackage / "model"
 			}
-			.filter { _.nonEmpty }
-		val enumPackage = modelPackage / "enumeration"
-		val enumerations = root("enumerations", "enums").getModel.attributes.map { enumAtt =>
-			Enum(enumAtt.name.capitalize, enumAtt.value.getVector.flatMap { _.string }.map { _.capitalize },
-				enumPackage, author)
-		}
-		val referencedEnumerations = root("referenced_enums", "referenced_enumerations").getVector
-			.flatMap { _.string }
-			.map { enumPath =>
-				val (packagePart, enumName) = enumPath.splitAtLast(".")
-				Enum(enumName, Vector(), packagePart)
+			val dbPackage = root("db_package", "database_package", "package_db", "package_database").string match {
+				case Some(pack) => Package(pack)
+				case None => basePackage / "database"
 			}
-		val allEnumerations = enumerations ++ referencedEnumerations
-		val classes = root("classes", "class").getModel.attributes.tryMap { packageAtt =>
-			packageAtt.value.model match {
-				case Some(classModel) =>
-					classFrom(classModel, packageAtt.name, allEnumerations, author).map { Vector(_) }
-				case None =>
-					packageAtt.value.getVector.flatMap { _.model }
-						.tryMap { classFrom(_, packageAtt.name, allEnumerations, author) }
-			}
-		}.map { _.flatten }
-		
-		classes.map { classData =>
-			val classes = classData.map { _._1 }
-			// Processes the proposed combinations
-			val combinations = classData.flatMap { case (parentClass, combos, _) =>
-				combos.flatMap { combo =>
-					// Finds the child class (child name match)
-					classes.find { c => c.name.variants.exists { _ ~== combo.childName } }.map { childClass =>
-						// Determines the combination type
-						val combinationType = combo.comboTypeName.notEmpty.flatMap(CombinationType.interpret)
-							.getOrElse {
-								if (combo.childrenDefinedAsPlural)
-									MultiCombined
-								else if (!(combo.childName ~== childClass.name.singular) &&
-									(combo.childName ~== childClass.name.plural))
-									MultiCombined
-								else if (combo.alwaysLinked.isTrue)
-									Combined
-								else
-									PossiblyCombined
-							}
-						// Determines combination name
-						val childAlias = combo.childAlias.notEmpty.map { alias =>
-							if (combinationType.isOneToMany)
-								Name(alias, alias, NamingConvention.of(alias, namingRules.className))
-							else
-								Name.interpret(alias, namingRules.className)
-						}
-						val parentAlias = combo.parentAlias.notEmpty
-							.map { alias => Name.interpret(alias, namingRules.className) }
-						val comboName = combo.name.notEmpty match {
-							case Some(n) => Name.interpret(n, namingRules.className)
-							case None =>
-								val childPart = childAlias.getOrElse(childClass.name)
-								val base = parentClass.name + "with"
-								if (combinationType.isOneToMany)
-									base + childPart.plural
-								else
-									base + childPart
-						}
-						val isAlwaysLinked = combo.alwaysLinked.getOrElse {
-							combinationType match {
-								case Combined => true
-								case _ => false
-							}
-						}
-						CombinationData(combinationType, comboName, parentClass, childClass, parentAlias,
-							childAlias, combo.doc, isAlwaysLinked)
-					}
+			val projectName = root("name", "project").stringOr {
+				basePackage.parts.lastOption match {
+					case Some(lastPart) => lastPart.capitalize
+					case None =>
+						dbPackage.parent.parts.lastOption
+							.orElse { dbPackage.parts.lastOption }
+							.getOrElse { "Project" }
+							.capitalize
 				}
 			}
-			// Returns class instances, also
-			val instances = classData.flatMap { _._3 }
-			ProjectData(projectName, modelPackage, dbPackage, databaseName, enumerations, classes, combinations,
-				instances, namingRules, root("version").string.map { Version(_) },
-				!root("models_without_vault").getBoolean, root("prefix_columns").getBoolean)
+			
+			implicit val namingRules: NamingRules = NamingRules(root("naming").getModel).value
+			
+			val databaseName = root("database_name", "database", "db_name", "db").string
+				.map { rawDbName =>
+					namingRules.database.convert(rawDbName,
+						NamingConvention.of(rawDbName, namingRules.database))
+				}
+				.filter { _.nonEmpty }
+			val enumPackage = modelPackage / "enumeration"
+			val enumerations = root("enumerations", "enums").getModel.attributes.map { enumAtt =>
+				Enum(enumAtt.name.capitalize, enumAtt.value.getVector.flatMap { _.string }.map { _.capitalize },
+					enumPackage, author)
+			}
+			val referencedEnumerations = root("referenced_enums", "referenced_enumerations").getVector
+				.flatMap { _.string }
+				.map { enumPath =>
+					val (packagePart, enumName) = enumPath.splitAtLast(".")
+					Enum(enumName, Vector(), packagePart)
+				}
+			val allEnumerations = enumerations ++ referencedEnumerations
+			
+			val classes = root("classes", "class").getModel.attributes.tryMap { packageAtt =>
+				packageAtt.value.model match {
+					case Some(classModel) =>
+						classFrom(classModel, packageAtt.name, allEnumerations, customTypesMap, author).map { Vector(_) }
+					case None =>
+						packageAtt.value.getVector.flatMap { _.model }
+							.tryMap { classFrom(_, packageAtt.name, allEnumerations, customTypesMap, author) }
+				}
+			}.map { _.flatten }
+			
+			classes.map { classData =>
+				val classes = classData.map { _._1 }
+				// Processes the proposed combinations
+				val combinations = classData.flatMap { case (parentClass, combos, _) =>
+					combos.flatMap { combo =>
+						// Finds the child class (child name match)
+						classes.find { c => c.name.variants.exists { _ ~== combo.childName } }.map { childClass =>
+							// Determines the combination type
+							val combinationType = combo.comboTypeName.notEmpty.flatMap(CombinationType.interpret)
+								.getOrElse {
+									if (combo.childrenDefinedAsPlural)
+										MultiCombined
+									else if (!(combo.childName ~== childClass.name.singular) &&
+										(combo.childName ~== childClass.name.plural))
+										MultiCombined
+									else if (combo.alwaysLinked.isTrue)
+										Combined
+									else
+										PossiblyCombined
+								}
+							// Determines combination name
+							val childAlias = combo.childAlias.notEmpty.map { alias =>
+								if (combinationType.isOneToMany)
+									Name(alias, alias, NamingConvention.of(alias, namingRules.className))
+								else
+									Name.interpret(alias, namingRules.className)
+							}
+							val parentAlias = combo.parentAlias.notEmpty
+								.map { alias => Name.interpret(alias, namingRules.className) }
+							val comboName = combo.name.notEmpty match {
+								case Some(n) => Name.interpret(n, namingRules.className)
+								case None =>
+									val childPart = childAlias.getOrElse(childClass.name)
+									val base = parentClass.name + "with"
+									if (combinationType.isOneToMany)
+										base + childPart.plural
+									else
+										base + childPart
+							}
+							val isAlwaysLinked = combo.alwaysLinked.getOrElse {
+								combinationType match {
+									case Combined => true
+									case _ => false
+								}
+							}
+							CombinationData(combinationType, comboName, parentClass, childClass, parentAlias,
+								childAlias, combo.doc, isAlwaysLinked)
+						}
+					}
+				}
+				// Returns class instances, also
+				val instances = classData.flatMap { _._3 }
+				ProjectData(projectName, modelPackage, dbPackage, databaseName, enumerations, classes, combinations,
+					instances, namingRules, root("version").string.map { Version(_) },
+					!root("models_without_vault").getBoolean, root("prefix_columns").getBoolean)
+			}
 		}
 	}
 	
 	private def classFrom(classModel: Model, packageName: String, enumerations: Iterable[Enum],
-	                      defaultAuthor: String)(implicit naming: NamingRules) =
+	                      customTypes: Map[String, PropertyType], defaultAuthor: String)
+	                     (implicit naming: NamingRules) =
 	{
 		val rawClassName = classModel("name").string.filter { _.nonEmpty }.map { Name.interpret(_, naming.className) }
 		val tableName = classModel("table_name", "table").string.filter { _.nonEmpty }
@@ -160,7 +174,7 @@ object ClassReader
 			
 			// Reads properties
 			val properties = classModel("properties", "props").getVector.flatMap { _.model }
-				.map { propertyFrom(_, enumerations, fullName) }
+				.map { propertyFrom(_, enumerations, fullName, customTypes) }
 			val idName = classModel("id").string.map { Name.interpret(_, naming.classProp) }
 			
 			// Finds the combo indices
@@ -228,7 +242,8 @@ object ClassReader
 		}
 	}
 	
-	private def propertyFrom(propModel: Model, enumerations: Iterable[Enum], className: Name)
+	private def propertyFrom(propModel: Model, enumerations: Iterable[Enum], className: Name,
+	                         customTypes: Map[String, PropertyType])
 	                        (implicit naming: NamingRules) =
 	{
 		val rawName = propModel("name").string.filter { _.nonEmpty }
@@ -243,29 +258,37 @@ object ClassReader
 		val length = propModel("length", "len").int
 		val baseDataType = propModel("type").string.flatMap { typeName =>
 			val lowerTypeName = typeName.toLowerCase
-			val enumType = {
-				if (lowerTypeName.contains("enum")) {
-					val enumName = lowerTypeName.afterFirst("enum")
-						.afterFirst("[").untilFirst("]")
-					enumerations.find { _.name.toLowerCase == enumName }
+			// Checks for a custom data type
+			customTypes.get(lowerTypeName).orElse {
+				// Checks for an enumeration reference
+				val enumType = {
+					if (lowerTypeName.contains("enum")) {
+						val enumName = lowerTypeName.afterFirst("enum")
+							.afterFirst("[").untilFirst("]")
+						enumerations.find { _.name.toLowerCase == enumName }
+					}
+					else
+						None
 				}
-				else
-					None
-			}
-			enumType match {
-				case Some(enumType) => Some(EnumValue(enumType, lowerTypeName.contains("option")))
-				case None => PropertyType.interpret(typeName, length, rawName)
+				enumType match {
+					// Case: Enumeration reference
+					case Some(enumType) =>
+						val baseType = EnumValue(enumType)
+						Some(if (lowerTypeName.contains("option")) baseType.nullable else baseType)
+					// Case: Standard data type
+					case None => PropertyType.interpret(typeName, length, rawName)
+				}
 			}
 		}
+		// Applies the possible table reference
 		val actualDataType = tableReference match {
+			// Case: Reference type
 			case Some((tableName, columnName)) =>
-				ClassReference(tableName, columnName.getOrElse(Class.defaultIdName), baseDataType.findMap {
-					case b: BasicPropertyType => Some(b)
-					case Optional(wrapped) => Some(wrapped)
-					case _ => None
-				}.getOrElse(IntNumber(Default)), isNullable = baseDataType.exists { _.isNullable })
+				ClassReference(tableName, columnName.getOrElse(Class.defaultIdName), baseDataType.getOrElse(IntNumber()))
+			// Case: Other type
 			case None =>
 				baseDataType.getOrElse {
+					// The default type is string for properties with a specified maximum length and int for others
 					length match {
 						case Some(length) => Text(length)
 						case None => IntNumber(Default)
@@ -292,7 +315,7 @@ object ClassReader
 		}
 		
 		Property(fullName, columnName.map { _.columnName }, actualDataType, doc, propModel("usage").getString,
-			propModel("default", "def").getString, propModel("sql_default", "sql_def").getString, limit,
+			propModel("default", "def"), propModel("sql_default", "sql_def").getString, limit,
 			propModel("indexed", "index", "is_index").boolean)
 	}
 	

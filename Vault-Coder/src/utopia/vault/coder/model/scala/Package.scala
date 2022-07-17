@@ -1,7 +1,10 @@
 package utopia.vault.coder.model.scala
 
+import utopia.flow.parse.Regex
 import utopia.flow.util.FileExtensions._
+import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.ProjectSetup
+import utopia.vault.coder.model.scala.Package.separatorRegex
 import utopia.vault.coder.model.scala.template.ScalaConvertible
 
 import java.nio.file.Path
@@ -11,6 +14,11 @@ import scala.language.implicitConversions
 object Package
 {
 	// ATTRIBUTES   ---------------------------
+	
+	/**
+	  * A regular expression that matches package separators (ie. '.')
+	  */
+	val separatorRegex = Regex.escape('.')
 	
 	val empty = apply(Vector())
 	
@@ -78,7 +86,8 @@ object Package
 	  * @param path Package path (E.g. "utopia.vault.coder")
 	  * @return That path as a package
 	  */
-	def apply(path: String): Package = apply(path.split('.').toVector.filter { s => (s: StringOps).nonEmpty })
+	def apply(path: String): Package =
+		apply(path.split(separatorRegex).toVector.filter { s => (s: StringOps).nonEmpty })
 }
 
 /**
@@ -122,7 +131,7 @@ case class Package(parts: Vector[String]) extends ScalaConvertible
 	  * @param more Extension to this package
 	  * @return A sub-package of this package
 	  */
-	def /(more: String) = Package(parts ++ more.split('.').filter { _.nonEmpty })
+	def /(more: String) = Package(parts ++ more.split(separatorRegex).filter { _.nonEmpty })
 	
 	/**
 	  * @param sourceRoot Source root directory

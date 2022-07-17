@@ -7,6 +7,7 @@ import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.template.ScalaConvertible
 
 import java.nio.file.Path
+import scala.collection.StringOps
 
 object Reference
 {
@@ -121,6 +122,29 @@ object Reference
 	// OTHER    -------------------------------
 	
 	/**
+	  * Converts a string into a reference
+	  * @param ref A string representing a reference
+	  * @return A reference parsed from that string
+	  */
+	def apply(ref: String): Reference = {
+		// Case: Empty reference
+		if (ref.isEmpty)
+			apply(empty, "")
+		else {
+			val parts = ref.split(separatorRegex).toVector.filter { s => (s: StringOps).nonEmpty }
+			// Case: Extensions reference or import all -reference
+			if (parts.last == "_" && parts.size > 1)
+				extensions(Package(parts.dropRight(2)), parts(parts.size - 2))
+			// Case: Single property reference or a sub-reference
+			else if (parts.last.head.isLower && parts.size > 1)
+				apply(Package(parts.dropRight(2)), parts(parts.size - 2), parts.last)
+			// Case: Standard reference
+			else
+				apply(Package(parts.dropRight(1)), parts.last)
+		}
+	}
+	
+	/**
 	  * Creates a reference to implicit extensions
 	  * @param packagePath Package leading to the target
 	  * @param target File / object that contains the implicits
@@ -178,8 +202,7 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	  * @param newTarget Another target under this reference
 	  * @return Reference to that sub-item
 	  */
-	def /(newTarget: String) = subReference.notEmpty match
-	{
+	def /(newTarget: String) = subReference.notEmpty match {
 		case Some(oldSubRef) => copy(subReference = s"$oldSubRef.$newTarget")
 		case None => copy(subReference = newTarget)
 	}
@@ -194,8 +217,7 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	  * @param sourceRoot Root directory
 	  * @return Path to the referenced file
 	  */
-	def pathIn(sourceRoot: Path) =
-	{
+	def pathIn(sourceRoot: Path) = {
 		val (packagePart, classPart) = importTarget.splitAtLast(".")
 		// Case: There are no two parts in the target => Uses the only part as the file name
 		if (classPart.isEmpty)
@@ -208,8 +230,7 @@ case class Reference(packagePath: Package, importTarget: String, subReference: S
 	
 	// IMPLEMENTED  ----------------------------
 	
-	override def toScala =
-	{
+	override def toScala = {
 		if (importTarget.isEmpty)
 			packagePath.toScala
 		else if (packagePath.isEmpty)

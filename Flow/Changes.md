@@ -12,8 +12,10 @@
   versions
 ### New Features
 - **XmlElement** now supports namespaces, which are provided implicitly
+- Added **FromValueFactory** -trait that also provides implicit **Value** unwraps
 - Added to- & from- model conversion to **DateRange**
 - Added **ObjectMapFileContainer** class
+- Added **FromModelFactoryWithDefault** -trait
 ### New Methods
 - **Iterable** (**CollectionExtensions**)
   - Added `.areAllEqual: Boolean`
@@ -28,6 +30,7 @@
   - Added `.replaceAll(String, String)`
 - **String** (**StringExtensions**)
   - Added `.filterWith(Regex)` and `.filterNotWith(Regex)`
+  - Added `.replaceAll(Regex, => String)`
 ### Bugfixes
 - **TreeLike**`.nodesBelowIterator` now works as expected. The previous version (in v1.15) yielded an empty iterator, 
   causing problems in multiple dependent functions
@@ -37,6 +40,7 @@
 - Optimized json conversion (see breaking changes)
 - `.divideBy(...)` in **IterableOnce** through **CollectionExtensions** now returns collections based on the implicit 
   builder, not always **Vector** types
+- **Regex**`.replaceAll` now accepts the replacement parameter as call-by-name
 - **FileContainer** saving now utilizes shutdown hooks to complete the save even on jvm exit
 - Optimized **XmlElement**`.toXml`
 - Changed `.toString` implementation in **DateRange**

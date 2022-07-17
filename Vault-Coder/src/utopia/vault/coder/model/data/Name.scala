@@ -1,18 +1,34 @@
 package utopia.vault.coder.model.data
 
+import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.FromValueFactory
 import utopia.flow.util.SelfComparable
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.enumeration.NamingConvention
-import utopia.vault.coder.model.enumeration.NamingConvention.Text
+import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Text}
 
 import scala.language.implicitConversions
 
-object Name
+object Name extends FromValueFactory[Name]
 {
 	// IMPLICIT -----------------------------
 	
 	// Implicitly converts strings
 	implicit def stringToName(name: String): Name = apply(name)
+	
+	
+	// IMPLEMENTED  -------------------------
+	
+	override def default = Name("", "", CamelCase.lower)
+	
+	override def fromValue(value: Value) =
+		value.model.filter { m => m.containsNonEmpty("singular") } match {
+			case Some(model) =>
+				val singular = model("singular").getString
+				Some(apply(singular, model("plural").stringOr { pluralize(singular) },
+					model("style").string.flatMap(NamingConvention.forName).getOrElse { NamingConvention.of(singular) }))
+			case None => value.string.map(apply)
+		}
 	
 	
 	// OTHER    -----------------------------
@@ -29,7 +45,7 @@ object Name
 	  * @return Name based on the specified string
 	  */
 	def apply(singular: String, style: NamingConvention): Name =
-		apply(singular, singular + "s", style)
+		apply(singular, pluralize(singular), style)
 	
 	/**
 	  * @param singular A singular version of this name
@@ -38,6 +54,31 @@ object Name
 	  */
 	def interpret(singular: String, expectedStyle: NamingConvention): Name =
 		apply(singular, NamingConvention.of(singular, expectedStyle))
+	
+	private def pluralize(singular: String) = {
+		// Case: Empty string => remains empty
+		if (singular.isEmpty)
+			""
+		else
+			singular.last.toLower match {
+				// Case: Ends with an 's' => prepends with 'many'
+				case 's' =>
+					val style = NamingConvention.of(singular)
+					style.combine(style.convert("many", Text.lower), singular)
+				case 'y' =>
+					// Case: Ends with a y => replaces 'y' with 'ies'
+					if (singular.last.isLower)
+						singular.dropRight(1) + "ies"
+					// Case: Ends with a Y (separate) => adds an 's'
+					else if (singular.length == 1 || singular(singular.length - 2).isLower)
+						singular + 's'
+					// Case: Ends with a Y (with other upper-case characters before that) => replaces 'Y' with 'IES'
+					else
+						singular.dropRight(1) + "IES"
+				// Default => appends 's'
+				case _ => singular + 's'
+			}
+	}
 }
 
 /**
