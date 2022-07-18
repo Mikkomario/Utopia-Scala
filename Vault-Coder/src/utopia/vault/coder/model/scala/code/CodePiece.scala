@@ -10,7 +10,8 @@ import scala.language.implicitConversions
 
 object CodePiece extends FromValueFactory[CodePiece]
 {
-	val empty = CodePiece("")
+	val empty = apply("")
+	val none = apply("None")
 	
 	implicit def textToCode(text: String): CodePiece = apply(text)
 	
@@ -117,6 +118,7 @@ case class CodePiece(text: String, references: Set[Reference] = Set())
 	  * @return A copy of this code piece with more text included
 	  */
 	def +(more: String) = copy(text + more)
+	def +:(prefix: String) = copy(prefix + text)
 	
 	/**
 	  * Applies a mapping function to the text portion of this code piece

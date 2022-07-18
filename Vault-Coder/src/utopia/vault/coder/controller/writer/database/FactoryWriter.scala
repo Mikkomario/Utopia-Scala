@@ -81,9 +81,8 @@ object FactoryWriter
 			s"${ tablesRef.target }.${ classToWrite.name.propName }")
 		// Timestamp-based factories also specify a creation time property name
 		if (classToWrite.recordsIndexedCreationTime)
-			classToWrite.creationTimeProperty.foreach { createdProp =>
-				builder += ComputedProperty("creationTimePropertyName", isOverridden = true)(
-					createdProp.dbModelPropName.quoted)
+			classToWrite.timestampProperty.foreach { createdProp =>
+				builder += ComputedProperty("creationTimePropertyName", isOverridden = true)(createdProp.modelName.quoted)
 			}
 		// Non-timestamp-based factories need to specify default ordering
 		else
@@ -111,9 +110,10 @@ object FactoryWriter
 		val fromModelMethod = {
 			if (classToWrite.refersToEnumerations)
 				ClassMethodFactory.classFromModel(classToWrite, "table.validate(model)"){
-					_.dbModelPropName }(_modelFromAssignments)
+					_.dbProperties.map { _.modelName } }(_modelFromAssignments)
 			else
-				ClassMethodFactory.classFromValidatedModel(classToWrite){ _.dbModelPropName }(_modelFromAssignments)
+				ClassMethodFactory
+					.classFromValidatedModel(classToWrite){ _.dbProperties.map { _.modelName } }(_modelFromAssignments)
 		}
 		
 		Set(fromModelMethod)

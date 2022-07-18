@@ -175,15 +175,17 @@ case class Name(singular: String, plural: String, style: NamingConvention)
 	  */
 	def +(string: Name) = {
 		val sameStyle = string.to(style)
-		Name(style.combine(singular, sameStyle.singular), style.combine(plural, sameStyle.plural), style)
+		// The leftmost name is no longer pluralized in the combination
+		Name(style.combine(singular, sameStyle.singular), style.combine(singular, sameStyle.plural), style)
 	}
-	def +(string: String): Name = this + (string: Name)
+	def +(string: String): Name = if (string.isEmpty) this else this + (string: Name)
 	
 	def +:(string: Name) = {
 		val sameStyle = string.to(style)
 		Name(style.combine(sameStyle.singular, singular), style.combine(sameStyle.plural, plural), style)
 	}
-	def +:(string: String): Name = string +: this
+	def +:(string: String): Name = if (string.isEmpty) this else string +: this
+	def ++(strings: IterableOnce[String]): Name = strings.iterator.foldLeft(this) { _ + _ }
 	
 	/**
 	  * @param style A naming convention

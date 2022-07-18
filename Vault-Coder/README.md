@@ -65,7 +65,7 @@ The input .json file should contain a single object with following properties:
 - **"enumerations" / "enums": Object (optional)** - Contains a property for each introduced enumeration. 
   Each property should have a string array value where each item represents a possible enumeration value.
 - **"referenced_enumerations" / "referenced_enums": [String]** - Paths to enumerations from other projects
-  - Enumeration paths should include the full reference: E.g. `"utopia.vault.coder.model.enumeration.PropertyType"`
+  - Enumeration paths should include the full reference: E.g. `"utopia.vault.coder.model.datatype.PropertyType"`
 - **"classes" / "class": Object** - Contains a property for each introduced sub-package, the value of each 
   sub-package property should be a class object or an array of **class objects** (see [structure](#class-object-structure) below).
 
@@ -237,6 +237,8 @@ When specifying a custom data type object, you need to specify the following pro
 - **"from_value": Code** - Code that accepts a **Value**, which should appear as `$v` within the code, 
   and returns an instance of this type.
   - For example, for Scala **Int** type, this would be `"$v.getInt"`
+  - If fromValue-conversion is not guaranteed to succeed, this code may return a **Try**. In this case, 
+    remember to specify the `from_value_can_fail` -property.
 - **"option_from_value": Code** - Code that accepts a **Value** (`$v`) and returns an **Option** possibly containing an 
   instance of this type
   - For example, for Scala **Int** type, this would be `$v.int`
@@ -255,6 +257,9 @@ When specifying a custom data type object, you need to specify the following pro
 - **"column_suffix" / "col_suffix" / "suffix": String (optional)** - A custom suffix applied to generated sql property 
   names. Should not include a possible separator prefix, such as `_`
 - **"index" / "is_index": Boolean** - Whether this data type creates a database index by default (default = false)
+- **"from_value_can_fail" / "yields_try" / "try": Boolean (optional)** - Whether the code passed to `from_value` yields 
+  an instance of **Try** instead of an instance of this type. I.e. Whether fromValue-conversion can fail. 
+  (default = false)
 
 ### Naming object structure
 If you want to specify custom naming schemes, you may do so in a naming object.

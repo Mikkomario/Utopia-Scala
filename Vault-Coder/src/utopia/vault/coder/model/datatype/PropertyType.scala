@@ -1,16 +1,17 @@
-package utopia.vault.coder.model.enumeration
+package utopia.vault.coder.model.datatype
 
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, Enum, Name}
-import utopia.vault.coder.model.enumeration.BasicPropertyType.{DateTime, IntNumber}
+import utopia.vault.coder.model.datatype.BasicPropertyType.{DateTime, IntNumber}
+import utopia.vault.coder.model.datatype.PropertyType.TimeDuration.{fromValueReferences, toValueReferences}
+import utopia.vault.coder.model.enumeration.IntSize
 import utopia.vault.coder.model.enumeration.IntSize.Default
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
-import utopia.vault.coder.model.enumeration.PropertyType.TimeDuration.{fromValueReferences, toValueReferences}
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.datatype.{Reference, ScalaType}
-import utopia.vault.coder.model.scala.template.{ScalaTypeConvertible, ValueTypeConvertible}
+import utopia.vault.coder.model.scala.template.{ScalaTypeConvertible, ValueConvertibleType}
 
 import java.util.concurrent.TimeUnit
 
@@ -19,14 +20,20 @@ import java.util.concurrent.TimeUnit
   * @author Mikko Hilpinen
   * @since 29.8.2021, v0.1
   */
-trait PropertyType extends ScalaTypeConvertible with ValueTypeConvertible with SqlTypeConvertible
+trait PropertyType extends ScalaTypeConvertible with ValueConvertibleType
 {
 	// ABSTRACT -------------------------
 	
 	/**
-	  * @return The basic property type information used by this type
+	  * @return The SQL / database representations of this type. Many if this property spans multiple columns.
 	  */
-	def baseType: BasePropertyType
+	def sqlConversions: Vector[SqlTypeConversion]
+	
+	/**
+	  * @return A non-empty default value for (construction) parameters of this type.
+	  *         Empty code if no such value is available.
+	  */
+	def nonEmptyDefaultValue: CodePiece
 	
 	/**
 	  * @return Property name to use for this type by default (when no name is specified elsewhere)
@@ -34,18 +41,35 @@ trait PropertyType extends ScalaTypeConvertible with ValueTypeConvertible with S
 	def defaultPropertyName: Name
 	
 	/**
-	  * @return Whether this property type allows NULL (SQL) and None (Scala) values
+	  * @return Whether the conversion from a Value may fail, meaning that fromValueCode
+	  *         yields instances of Try instead of instances of this type.
 	  */
-	def isNullable: Boolean
+	def yieldsTryFromValue: Boolean
 	
 	/**
-	  * @return A nullable (optional) copy of this property type
+	  * @return An optional copy of this property type (one that accepts None or other such empty value)
 	  */
-	def nullable: PropertyType
+	def optional: PropertyType
 	/**
-	  * @return A non-nullable copy of this data type
+	  * @return A non-optional (ie. concrete) version of this data type
 	  */
-	def notNull: PropertyType
+	def concrete: PropertyType
+	
+	/**
+	  * Writes a code that reads this an instance of this type from a value.
+	  * @param valueCode Code for accessing a value
+	  * @param multipleValues True if the 'valueCode' refers to a Vector of Values. Default = false.
+	  *                       This should only be true for multi-column types where a single item is parsed from
+	  *                       multiple column values.
+	  * @return Code for accessing a value and converting it to this type (in scala)
+	  */
+	def fromValueCode(valueCode: String, multipleValues: Boolean = false): CodePiece
+	/**
+	  * Writes a code that reads a vector of instances of this type from a vector of values
+	  * @param valuesCode Code that returns a vector of values
+	  * @return Code for accessing the specified values and converting them to a vector of this type's instances in Scala
+	  */
+	def fromValuesCode(valuesCode: String): CodePiece
 	
 	/**
 	  * Writes a default documentation / description for a property
@@ -56,40 +80,107 @@ trait PropertyType extends ScalaTypeConvertible with ValueTypeConvertible with S
 	def writeDefaultDescription(className: Name, propName: Name): String
 	
 	
-	// COMPUTED ----------------------
+	// COMPUTED ------------------------
 	
 	/**
-	  * @return Converts this property type into SQL
+	  * @return Whether this type matches a single database-column only
 	  */
-	def toSql: String = {
-		val base = baseType.toBaseSql
-		if (isNullable) base else s"$base NOT NULL"
-	}
+	def isSingleColumn = sqlConversions.size == 1
+	/**
+	  * @return Whether this type matches multiple database-columns
+	  */
+	def isMultiColumn = sqlConversions.size > 1
+	
+	/**
+	  * @return Whether this property type accepts empty values (is optional)
+	  */
+	def isOptional = emptyValue.nonEmpty
+	/**
+	  * @return Whether this property type doesn't have an "empty" value (ie. must always be specified)
+	  */
+	def isConcrete = emptyValue.isEmpty
+	
+	/**
+	  * @return Code that returns a default value that may be used with this property type
+	  */
+	def defaultValue: CodePiece = nonEmptyDefaultValue.notEmpty.getOrElse(emptyValue)
+	
+	
+	// IMPLEMENTED  --------------------
+	
+	override def toScala = scalaType
+}
+
+trait SingleColumnPropertyType extends PropertyType
+{
+	// ABSTRACT ------------------------
+	
+	/**
+	  * @return The SQL data type that matches this property type
+	  */
+	def sqlConversion: SqlTypeConversion
+	
+	
+	// IMPLEMENTED  --------------------
+	
+	override def sqlConversions = Vector(sqlConversion)
+}
+
+trait DirectlySqlConvertiblePropertyType extends SingleColumnPropertyType
+{
+	// ABSTRACT -----------------------
+	
+	/**
+	  * @return The sql type this type converts to
+	  */
+	def sqlType: SqlPropertyType
+	
+	
+	// IMPLEMENTED  -------------------
+	
+	override def sqlConversion = DirectSqlTypeConversion(this, sqlType)
+	
+	override def optional = this
 }
 
 /**
   * A common trait for property type implementations that are concrete (ie. not null) and can be wrapped in a
   * Scala.Option
   */
-trait ConcretePropertyType extends PropertyType with BasePropertyType
+trait ConcretePropertyType extends SingleColumnPropertyType
 {
 	// ABSTRACT ------------------------
 	
+	def sqlType: SqlPropertyType
+	
+	/**
+	  * Writes code that takes a Value and outputs an instance of this type within an Option
+	  * @param valueCode Reference to the value to convert
+	  * @return Code that converts that value into an Option
+	  */
 	def optionFromValueCode(valueCode: String): CodePiece
+	/**
+	  * Writes code that takes an Option (which may contain an instance of this type) and yields a Value
+	  * @param optionCode Reference to the option to convert
+	  * @return Code that converts an Option to a Value
+	  */
 	def optionToValueCode(optionCode: String): CodePiece
 	
 	
 	// IMPLEMENTED  --------------------
 	
-	override def baseType = this
+	override def sqlConversion = OptionWrappingSqlConversion
 	
-	override def isNullable = false
+	override def optional = OptionWrapped
+	override def concrete = this
 	
-	override def nullable = OptionWrapped
-	override def notNull = this
-	
-	override def fromValuesCode(valuesCode: String) =
-		fromValueCode("v").mapText { fromValue => s"$valuesCode.map { v => $fromValue }" }
+	override def fromValuesCode(valuesCode: String) = {
+		val instanceCode = fromValueCode("v")
+		if (instanceCode.isEmpty)
+			instanceCode.copy(text = valuesCode)
+		else
+			instanceCode.mapText { fromValue => s"$valuesCode.map { v => $fromValue }" }
+	}
 	
 	
 	// NESTED   -----------------------
@@ -97,34 +188,38 @@ trait ConcretePropertyType extends PropertyType with BasePropertyType
 	/**
 	  * An option-wrapped version of the parent type
 	  */
-	object OptionWrapped extends PropertyType
+	object OptionWrapped extends DirectlySqlConvertiblePropertyType
 	{
-		override def baseType = ConcretePropertyType.this
+		override def scalaType = ScalaType.option(ConcretePropertyType.this.scalaType)
+		override def sqlType = ConcretePropertyType.this.sqlType.copy(defaultValue = "", isNullable = true)
 		
-		override def isNullable = true
+		override def yieldsTryFromValue = false
 		
-		override def toScala = ScalaType.option(baseType.toScala)
+		override def nonEmptyDefaultValue = CodePiece.empty
+		override def emptyValue = CodePiece.none
 		
 		override def defaultPropertyName = ConcretePropertyType.this.defaultPropertyName
 		
-		override def columnNameSuffix = ConcretePropertyType.this.columnNameSuffix
-		
-		override def baseSqlDefault = ""
-		
-		override def createsIndexByDefault = ConcretePropertyType.this.createsIndexByDefault
-		
-		override def nullable = baseType
-		override def notNull = this
-		
-		override def defaultValue = CodePiece("None")
+		override def concrete = ConcretePropertyType.this
 		
 		override def writeDefaultDescription(className: Name, propName: Name) =
 			ConcretePropertyType.this.writeDefaultDescription(className, propName)
 		
-		override def fromValueCode(valueCode: String) = optionFromValueCode(valueCode)
+		override def fromValueCode(valueCode: String, multipleValues: Boolean = false) =
+			optionFromValueCode(valueCode)
 		override def fromValuesCode(valuesCode: String) =
 			fromValueCode("v").mapText { fromValue => s"$valuesCode.flatMap { v => $fromValue }" }
+		
 		override def toValueCode(instanceCode: String) = optionToValueCode(instanceCode)
+	}
+	
+	object OptionWrappingSqlConversion extends SqlTypeConversion
+	{
+		override def origin = scalaType
+		override def intermediate = OptionWrapped
+		override def target = sqlType
+		
+		override def midConversion(originCode: String) = s"Some($originCode)"
 	}
 }
 
@@ -143,11 +238,10 @@ sealed trait BasicPropertyType extends ConcretePropertyType
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def columnNameSuffix = None
+	override def yieldsTryFromValue = false
 	
-	override def createsIndexByDefault = false
-	
-	override def fromValueCode(valueCode: String) = CodePiece(s"$valueCode.get${fromValuePropName.capitalize}")
+	override def fromValueCode(valueCode: String, multipleValues: Boolean = false) =
+		CodePiece(s"$valueCode.get${fromValuePropName.capitalize}")
 	override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(Reference.valueConversions))
 	
 	override def optionFromValueCode(valueCode: String) = s"$valueCode.$fromValuePropName"
@@ -225,7 +319,7 @@ object BasicPropertyType
 			_findWith(Vector(
 				v => v.fromValuePropName.toLowerCase == lowerName,
 				v => v.toScala.toString.toLowerCase == lowerName,
-				v => v.toBaseSql.toLowerCase == lowerName,
+				v => v.sqlType.baseTypeSql.toLowerCase == lowerName,
 				v => v.defaultPropertyName.variants.exists { _.toLowerCase == lowerName }
 			)).orElse {
 				// Attempts to find with property name also
@@ -250,10 +344,13 @@ object BasicPropertyType
 	  */
 	case object LongNumber extends BasicPropertyType
 	{
-		override def toBaseSql = "BIGINT"
-		override def toScala = ScalaType.long
-		override def defaultValue = CodePiece.empty
-		override def baseSqlDefault = ""
+		override val sqlType = SqlPropertyType("BIGINT")
+		
+		override def scalaType = ScalaType.long
+		
+		override def nonEmptyDefaultValue = CodePiece.empty
+		override def emptyValue = CodePiece.empty
+		
 		override def fromValuePropName = "long"
 		override def defaultPropertyName = "number"
 	}
@@ -263,10 +360,13 @@ object BasicPropertyType
 	  */
 	case object DoubleNumber extends BasicPropertyType
 	{
-		override def toBaseSql = "DOUBLE"
-		override def toScala = ScalaType.double
-		override def defaultValue = CodePiece.empty
-		override def baseSqlDefault = ""
+		override val sqlType = SqlPropertyType("DOUBLE")
+		
+		override def scalaType = ScalaType.double
+		
+		override def nonEmptyDefaultValue = CodePiece.empty
+		override def emptyValue = CodePiece.empty
+		
 		override def fromValuePropName = "double"
 		override def defaultPropertyName = "amount"
 	}
@@ -276,10 +376,13 @@ object BasicPropertyType
 	  */
 	case object Bool extends BasicPropertyType
 	{
-		override def toBaseSql = "BOOLEAN"
-		override def toScala = ScalaType.boolean
-		override def defaultValue = "false"
-		override def baseSqlDefault = "FALSE"
+		override val sqlType = SqlPropertyType("BOOLEAN", "FALSE")
+		
+		override def scalaType = ScalaType.boolean
+		
+		override def nonEmptyDefaultValue = "false"
+		override def emptyValue = CodePiece.empty
+		
 		override def fromValuePropName = "boolean"
 		override def defaultPropertyName = "flag"
 	}
@@ -289,10 +392,13 @@ object BasicPropertyType
 	  */
 	case object DateTime extends BasicPropertyType
 	{
-		override def toBaseSql = "DATETIME"
-		override def toScala = Reference.instant
-		override def defaultValue = Reference.now.targetCode
-		override def baseSqlDefault = ""
+		override val sqlType = SqlPropertyType("DATETIME")
+		
+		override def scalaType = Reference.instant
+		
+		override def nonEmptyDefaultValue = Reference.now.targetCode
+		override def emptyValue = CodePiece.empty
+		
 		override def fromValuePropName = "instant"
 		override def defaultPropertyName = "timestamp"
 	}
@@ -302,10 +408,13 @@ object BasicPropertyType
 	  */
 	case object Date extends BasicPropertyType
 	{
-		override def toBaseSql = "DATE"
-		override def toScala = Reference.localDate
-		override def defaultValue = Reference.today.targetCode
-		override def baseSqlDefault = ""
+		override val sqlType = SqlPropertyType("DATE")
+		
+		override def scalaType = Reference.localDate
+		
+		override def nonEmptyDefaultValue = Reference.today.targetCode
+		override def emptyValue = CodePiece.empty
+		
 		override def fromValuePropName = "localDate"
 		override def defaultPropertyName = "date"
 	}
@@ -315,10 +424,13 @@ object BasicPropertyType
 	  */
 	case object Time extends BasicPropertyType
 	{
-		override def toBaseSql = "TIME"
-		override def toScala = Reference.localTime
-		override def defaultValue = Reference.now.targetCode
-		override def baseSqlDefault = ""
+		override val sqlType = SqlPropertyType("TIME")
+		
+		override def scalaType = Reference.localTime
+		
+		override def nonEmptyDefaultValue = Reference.now.targetCode
+		override def emptyValue = CodePiece.empty
+		
 		override def fromValuePropName = "localTime"
 		override def defaultPropertyName = "time"
 	}
@@ -328,10 +440,14 @@ object BasicPropertyType
 	  * @param length Content max length (default = 255)
 	  */
 	case class Text(length: Int = 255) extends BasicPropertyType {
-		override def toBaseSql = s"VARCHAR($length)"
-		override def toScala = ScalaType.string
-		override def defaultValue = CodePiece.empty
-		override def baseSqlDefault = ""
+		
+		override val sqlType = SqlPropertyType(s"VARCHAR($length)")
+		override val emptyValue = "\"\""
+		
+		override def scalaType = ScalaType.string
+		
+		override def nonEmptyDefaultValue = CodePiece.empty
+		
 		override def fromValuePropName = "string"
 		override def defaultPropertyName = if (length < 100) "name" else "text"
 	}
@@ -341,13 +457,16 @@ object BasicPropertyType
 	  */
 	case class IntNumber(size: IntSize = Default, maxValue: Option[Int] = None) extends BasicPropertyType
 	{
-		override def toBaseSql = maxValue match {
+		override lazy val sqlType = SqlPropertyType(maxValue match {
 			case Some(max) => s"${size.toSql}(${max.toString.length})"
 			case None => size.toSql
-		}
-		override def toScala = ScalaType.int
-		override def defaultValue = CodePiece.empty
-		override def baseSqlDefault = ""
+		})
+		
+		override def scalaType = ScalaType.int
+		
+		override def nonEmptyDefaultValue = CodePiece.empty
+		override def emptyValue = CodePiece.empty
+		
 		override def fromValuePropName = "int"
 		override def defaultPropertyName = Name("index", "indices", CamelCase.lower)
 	}
@@ -368,19 +487,32 @@ trait PropertyTypeWrapper extends PropertyType
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def baseType = wrapped.baseType
-	override def isNullable = wrapped.isNullable
+	override def scalaType = wrapped.scalaType
+	override def sqlConversions = wrapped.sqlConversions
 	
-	override def toScala = wrapped.toScala
-	override def defaultValue = wrapped.defaultValue
+	override def yieldsTryFromValue = wrapped.yieldsTryFromValue
 	
-	override def columnNameSuffix = wrapped.columnNameSuffix
-	override def baseSqlDefault = wrapped.baseSqlDefault
-	override def createsIndexByDefault = wrapped.createsIndexByDefault
+	override def emptyValue = wrapped.emptyValue
+	override def nonEmptyDefaultValue = wrapped.nonEmptyDefaultValue
 	
-	override def fromValueCode(valueCode: String) = wrapped.fromValueCode(valueCode)
+	override def fromValueCode(valueCode: String, multipleValues: Boolean = false) =
+		wrapped.fromValueCode(valueCode, multipleValues)
 	override def fromValuesCode(valuesCode: String) = wrapped.fromValuesCode(valuesCode)
 	override def toValueCode(instanceCode: String) = wrapped.toValueCode(instanceCode)
+}
+
+trait SingleColumnPropertyTypeWrapper extends PropertyTypeWrapper with SingleColumnPropertyType
+{
+	// ABSTRACT --------------------------
+	
+	override protected def wrapped: SingleColumnPropertyType
+	
+	
+	// IMPLEMENTED  ----------------------
+	
+	override def sqlConversion = wrapped.sqlConversion
+	
+	override def sqlConversions = super[SingleColumnPropertyType].sqlConversions
 }
 
 object PropertyType
@@ -402,7 +534,7 @@ object PropertyType
 			case "value" => Some(GenericValue(length.getOrElse(255)))
 			case other =>
 				if (other.contains("option"))
-					_interpret(other.afterFirst("[").untilLast("]"), length, propertyName).map { _.nullable }
+					_interpret(other.afterFirst("[").untilLast("]"), length, propertyName).map { _.optional }
 				else
 					_interpret(other, length, propertyName)
 		}
@@ -439,31 +571,24 @@ object PropertyType
 	/**
 	  * Property that always sets to the instance creation time
 	  */
-	case object CreationTime extends PropertyType with BasePropertyType
+	case object CreationTime extends ConcretePropertyType
 	{
-		override def baseType = this
+		override lazy val sqlType = SqlPropertyType("TIMESTAMP", "CURRENT_TIMESTAMP", indexByDefault = true)
+		override lazy val defaultPropertyName = Name("created", "creationTimes", CamelCase.lower)
 		
-		override def toBaseSql = "TIMESTAMP"
-		override def toScala = Reference.instant
+		override def scalaType = Reference.instant
 		
-		override def defaultValue = Reference.now.targetCode
-		override def baseSqlDefault = "CURRENT_TIMESTAMP"
+		override def yieldsTryFromValue = false
 		
-		override def defaultPropertyName = Name("created", "creationTimes", CamelCase.lower)
-		override def columnNameSuffix = None
+		override def emptyValue = CodePiece.empty
+		override def nonEmptyDefaultValue = Reference.now.targetCode
 		
-		override def createsIndexByDefault = true
-		
-		override def isNullable = false
-		
-		override def notNull = this
-		// A nullable variant of creation time isn't considered a standard creation time anymore
-		override def nullable = DateTime.OptionWrapped
-		
-		override def fromValueCode(valueCode: String) = CodePiece(s"$valueCode.getInstant")
+		override def fromValueCode(valueCode: String, multipleValues: Boolean = false) =
+			CodePiece(s"$valueCode.getInstant")
 		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(Reference.valueConversions))
-		override def fromValuesCode(valuesCode: String) = CodePiece(s"$valuesCode.map { _.getInstant }")
-		
+		override def optionFromValueCode(valueCode: String) = s"$valueCode.instant"
+		override def optionToValueCode(optionCode: String) =
+			CodePiece(optionCode, Set(Reference.valueConversions))
 		override def writeDefaultDescription(className: Name, propName: Name) =
 			s"Time when this $className was added to the database"
 	}
@@ -471,17 +596,16 @@ object PropertyType
 	/**
 	  * Property that always sets to the instance creation time
 	  */
-	case object UpdateTime extends PropertyTypeWrapper
+	case object UpdateTime extends SingleColumnPropertyTypeWrapper
 	{
+		override lazy val sqlConversion =
+			wrapped.sqlConversion.modifyTarget(defaultValue = "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+		override lazy val defaultPropertyName = Name("lastUpdated", "lastUpdateTimes", CamelCase.lower)
+		
 		override protected def wrapped = CreationTime
 		
-		override def baseSqlDefault = "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
-		
-		override def defaultPropertyName = Name("lastUpdated", "lastUpdateTimes", CamelCase.lower)
-		
-		override def notNull = this
-		// A nullable variant of creation time isn't considered a standard update time anymore
-		override def nullable = DateTime.OptionWrapped
+		override def optional = DateTime.optional
+		override def concrete = this
 		
 		override def writeDefaultDescription(className: Name, propName: Name) =
 			s"Time when this $className was last updated"
@@ -491,15 +615,15 @@ object PropertyType
 	  * Property that is null until the instance is deprecated, after which the property contains a timestamp of that
 	  * deprecation event
 	  */
-	case object Deprecation extends PropertyTypeWrapper
+	case object Deprecation extends SingleColumnPropertyTypeWrapper
 	{
+		override lazy val sqlConversion = wrapped.sqlConversion.modifyTarget(indexByDefault = true)
+		override lazy val defaultPropertyName = Name("deprecatedAfter", "deprecationTimes", CamelCase.lower)
+		
 		protected def wrapped = DateTime.OptionWrapped
 		
-		override def defaultPropertyName = Name("deprecatedAfter", "deprecationTimes", CamelCase.lower)
-		override def createsIndexByDefault = true
-		
-		override def nullable = this
-		override def notNull = Expiration
+		override def optional = this
+		override def concrete = Expiration
 		
 		override def writeDefaultDescription(className: Name, propName: Name) =
 			s"Time when this $className became deprecated. None while this $className is still valid."
@@ -508,15 +632,15 @@ object PropertyType
 	/**
 	  * Contains a time threshold for instance deprecation
 	  */
-	case object Expiration extends PropertyTypeWrapper
+	case object Expiration extends SingleColumnPropertyTypeWrapper
 	{
+		override lazy val sqlConversion = wrapped.sqlConversion.modifyTarget(indexByDefault = true)
+		override lazy val defaultPropertyName = Name("expires", "expirationTimes", CamelCase.lower)
+		
 		protected def wrapped = DateTime
 		
-		override def defaultPropertyName = Name("expires", "expirationTimes", CamelCase.lower)
-		override def createsIndexByDefault = true
-		
-		override def nullable = Deprecation
-		override def notNull = this
+		override def optional = Deprecation
+		override def concrete = this
 		
 		override def writeDefaultDescription(className: Name, propName: Name) =
 			s"Time when this $className expires / becomes invalid"
@@ -527,17 +651,19 @@ object PropertyType
 	  */
 	case object DayCount extends ConcretePropertyType
 	{
-		override def toScala = Reference.days
-		override def toBaseSql = "INT"
+		override val sqlType = SqlPropertyType("INT", "0", "days")
+		override lazy val nonEmptyDefaultValue = CodePiece("Days.zero", Set(Reference.days))
+		
+		override def yieldsTryFromValue = false
+		
+		override def scalaType = Reference.days
+		
+		override def emptyValue = CodePiece.empty
 		
 		override def defaultPropertyName = "duration"
-		override def columnNameSuffix = Some("days")
-		override def defaultValue = CodePiece("Days.zero", Set(Reference.days))
-		override def baseSqlDefault = "0"
 		
-		override def createsIndexByDefault = false
-		
-		override def fromValueCode(valueCode: String) = CodePiece(s"Days($valueCode.getInt)", Set(Reference.days))
+		override def fromValueCode(valueCode: String, multipleValues: Boolean = false) =
+			CodePiece(s"Days($valueCode.getInt)", Set(Reference.days))
 		override def toValueCode(instanceCode: String) =
 			CodePiece(s"$instanceCode.length", Set(Reference.valueConversions))
 		
@@ -549,26 +675,23 @@ object PropertyType
 		override def writeDefaultDescription(className: Name, propName: Name) = ""
 	}
 	
-	case class GenericValue(length: Int = 255) extends PropertyType with BasePropertyType
+	case class GenericValue(length: Int = 255) extends DirectlySqlConvertiblePropertyType
 	{
-		override def baseType = this
+		override lazy val sqlType = SqlPropertyType(s"VARCHAR($length)")
 		
-		override def toScala = Reference.value
-		override def toBaseSql = s"VARCHAR($length)"
+		override def scalaType = Reference.value
 		
-		// Values are at the same time nullable (have an empty value) and not nullable (aren't wrapped in option)
-		override def isNullable = true
+		override def yieldsTryFromValue = false
+		
+		override def nonEmptyDefaultValue = CodePiece.empty
+		override def emptyValue = CodePiece("Value.empty", Set(Reference.value))
+		
+		override def concrete = this
 		
 		override def defaultPropertyName = "value"
-		override def defaultValue = CodePiece("Value.empty", Set(Reference.value))
-		override def columnNameSuffix = None
-		override def baseSqlDefault = ""
-		override def createsIndexByDefault = false
 		
-		override def nullable = this
-		override def notNull = this
-		
-		override def fromValueCode(valueCode: String) = valueCode
+		override def fromValueCode(valueCode: String, multipleValues: Boolean = false) =
+			if (multipleValues) CodePiece(valueCode, Set(Reference.valueConversions)) else valueCode
 		override def fromValuesCode(valuesCode: String) = valuesCode
 		override def toValueCode(instanceCode: String) = instanceCode
 		
@@ -593,16 +716,10 @@ object PropertyType
 	  */
 	case class TimeDuration(unit: TimeUnit) extends ConcretePropertyType
 	{
-		private def unitConversionCode = s".toUnit(TimeUnit.${unit.name})"
-		
-		override def toScala = Reference.finiteDuration
-		override def toBaseSql = unit match {
+		override lazy val sqlType = SqlPropertyType(unit match {
 			case TimeUnit.NANOSECONDS | TimeUnit.MICROSECONDS | TimeUnit.MILLISECONDS => "BIGINT"
 			case _ => "INT"
-		}
-		
-		override def defaultPropertyName = "duration"
-		override def columnNameSuffix = Some(unit match {
+		}, "0", unit match {
 			case TimeUnit.NANOSECONDS => "nanos"
 			case TimeUnit.MICROSECONDS => "microseconds"
 			case TimeUnit.MILLISECONDS => "millis"
@@ -612,12 +729,19 @@ object PropertyType
 			case TimeUnit.DAYS => "days"
 			case _ => unit.toString.toLowerCase
 		})
-		override def defaultValue = CodePiece("Duration.Zero", Set(Reference.duration))
-		override def baseSqlDefault = "0"
 		
-		override def createsIndexByDefault = false
+		private def unitConversionCode = s".toUnit(TimeUnit.${unit.name})"
 		
-		override def fromValueCode(valueCode: String) =
+		override def scalaType = Reference.finiteDuration
+		
+		override def yieldsTryFromValue = false
+		
+		override def nonEmptyDefaultValue = CodePiece("Duration.Zero", Set(Reference.duration))
+		override def emptyValue = CodePiece.empty
+		
+		override def defaultPropertyName = "duration"
+		
+		override def fromValueCode(valueCode: String, multipleValues: Boolean = false) =
 			CodePiece(s"FiniteDuration($valueCode.getLong, TimeUnit.${unit.name})", fromValueReferences)
 		override def toValueCode(instanceCode: String) =
 			CodePiece(instanceCode + unitConversionCode, toValueReferences)
@@ -641,12 +765,15 @@ object PropertyType
 	{
 		override protected def wrapped = referencedType
 		
-		override def defaultPropertyName: Name = referencedTableName + "id"
-		// Index is created when foreign key is generated
-		override def createsIndexByDefault = false
+		override def sqlConversions =
+			super.sqlConversions.map { _.modifyTarget(indexByDefault = false) }
 		
-		override def notNull = if (isNullable) copy(referencedType = referencedType.notNull) else this
-		override def nullable = if (isNullable) this else copy(referencedType = referencedType.nullable)
+		override def optional =
+			if (referencedType.isOptional) this else copy(referencedType = referencedType.optional)
+		override def concrete =
+			if (referencedType.isConcrete) this else copy(referencedType = referencedType.concrete)
+		
+		override def defaultPropertyName: Name = referencedTableName + "id"
 		
 		override def writeDefaultDescription(className: Name, propName: Name) =
 			s"${referencedColumnName.toText.singular.capitalize} of the $referencedTableName linked with this $className"
@@ -660,17 +787,18 @@ object PropertyType
 	{
 		// IMPLEMENTED  ---------------------------
 		
-		override def toScala = enumeration.reference
 		// Since there usually aren't a huge number of enumeration values, TINYINT is used
-		override def toBaseSql = "TINYINT"
-		override def defaultValue = CodePiece.empty
-		override def baseSqlDefault = ""
-		override def defaultPropertyName = enumeration.name.uncapitalize
-		override def columnNameSuffix = Some("id")
-		override def createsIndexByDefault = false
+		override def sqlType = SqlPropertyType("TINYINT", columnNameSuffix = "id")
+		override def scalaType = enumeration.reference
 		
-		// Returns a Try (bug?)
-		override def fromValueCode(valueCode: String) =
+		override def yieldsTryFromValue = true
+		
+		override def nonEmptyDefaultValue = CodePiece.empty
+		override def emptyValue = CodePiece.empty
+		
+		override def defaultPropertyName = enumeration.name.uncapitalize
+		
+		override def fromValueCode(valueCode: String, multipleValues: Boolean = false) =
 			CodePiece(s"${enumeration.name}.forId($valueCode.getInt)", Set(enumeration.reference))
 		override def fromValuesCode(valuesCode: String) =
 			CodePiece(s"$valuesCode.flatMap { _.int }.flatMap(${enumeration.name}.findForId)",

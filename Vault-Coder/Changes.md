@@ -1,16 +1,20 @@
 # Utopia Vault Coder
 
-## v1.5.1 (in development)
+## v1.6 (in development)
+### Breaking Changes
+- Plural name combinations only pluralize the last part anymore. E.g. when the previous version would return 
+  "instancesIds", the current version returns "instanceIds"
 ### New Features
 - Added support for custom data types (see README for details)
 - Added support for imports within the property default declaration
 - The application may now store project paths to a local file so that they don't need to be repeated every time 
   the program is used
-- Added update time data type (updated)
+- Added update time data type (i.e. updated)
 ### Bugfixes
 - Extending column length rules are now written as "to X" instead of "up to X"
 ### Other
 - A specified property default value may now automatically be applied to sql as well, under certain conditions
+- There may be some changes to the output code layout
 
 ## v1.5 - 06.06.2022
 This update adds a number of quality improvements both to input and output. Various edge cases are also supported, 

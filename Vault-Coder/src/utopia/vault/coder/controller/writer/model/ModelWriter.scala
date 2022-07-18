@@ -46,7 +46,7 @@ object ModelWriter
 			ClassDeclaration(dataClassName,
 				// Accepts a copy of each property. Uses default values where possible.
 				constructionParams = classToWrite.properties.map { prop =>
-					Parameter(prop.name.propName, prop.dataType.toScala, prop.default,
+					Parameter(prop.name.propName, prop.dataType.toScala, prop.defaultValue,
 						description = prop.description)
 				},
 				// Extends ModelConvertible

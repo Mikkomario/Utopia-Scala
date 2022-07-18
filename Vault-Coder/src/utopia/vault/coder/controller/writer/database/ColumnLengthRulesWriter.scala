@@ -32,9 +32,9 @@ object ColumnLengthRulesWriter
 	{
 		// Generates the table & column rule properties to write
 		val ruleProps = classes.flatMap { classToWrite =>
-			val ruleProps = classToWrite.properties.flatMap { prop =>
-				prop.lengthRule.notEmpty.map { rule => Constant(prop.name.propName, rule) }
-			}
+			val ruleProps = classToWrite.dbProperties.flatMap { prop =>
+				prop.overrides.lengthRule.notEmpty.map { rule => Constant(prop.modelName, rule) }
+			}.toVector
 			if (ruleProps.nonEmpty)
 				Some(Constant(classToWrite.tableName, Model.withConstants(ruleProps.sortBy { _.name })))
 			else

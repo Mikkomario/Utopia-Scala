@@ -7,7 +7,7 @@ import utopia.flow.datastructure.immutable.Value
  * @author Mikko Hilpinen
  * @since 19.6.2017
  */
-trait ValueConvertible
+trait ValueConvertible extends Any
 {
     // ABSTRACT METHODS / PROPERTIES    ------------------
     

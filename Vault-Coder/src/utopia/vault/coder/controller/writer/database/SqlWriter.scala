@@ -4,9 +4,10 @@ import utopia.flow.time.Today
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup, Property}
+import utopia.vault.coder.model.data.{Class, DbProperty, Name, NamingRules, ProjectSetup}
+import utopia.vault.coder.model.datatype.PropertyType
 import utopia.vault.coder.model.enumeration.NamingConvention.{CamelCase, Text}
-import utopia.vault.coder.model.enumeration.PropertyType.ClassReference
+import utopia.vault.coder.model.datatype.PropertyType.ClassReference
 
 import java.io.PrintWriter
 import java.nio.file.Path
@@ -160,10 +161,11 @@ object SqlWriter
 	{
 		val tableName = classToWrite.tableName
 		lazy val classInitials = initialsMap(tableName)
-		def prefixColumn(column: Property): String = prefixColumnName(column.columnName, column.dataType match {
-			case ClassReference(table, _, _) => Some(table.tableName)
-			case _ => None
-		})
+		def prefixColumn(column: DbProperty, parentType: PropertyType): String =
+			prefixColumnName(column.columnName, parentType match {
+				case ClassReference(table, _, _) => Some(table.tableName)
+				case _ => None
+			})
 		def prefixColumnName(colName: String, referredTableName: => Option[String] = None): String = {
 			if (setup.prefixSqlProperties) {
 				referredTableName.flatMap(initialsMap.get) match {
@@ -175,48 +177,49 @@ object SqlWriter
 				colName
 		}
 		val idName = prefixColumnName(classToWrite.idName.columnName)
-		val namedProps = classToWrite.properties.map { prop => prop -> prefixColumn(prop) }
+		// [(Property -> [(DbProperty -> Full Column Name)])]
+		val namedProps = classToWrite.properties
+			.map { prop => prop -> prop.dbProperties.map { dbProp => dbProp -> prefixColumn(dbProp, prop.dataType) } }
+		val columns = namedProps.flatMap { _._2 }
 		
 		classToWrite.description.notEmpty.foreach { desc => writer.println(s"-- $desc") }
 		// Writes property documentation
-		val maxPropNameLength = namedProps.map { _._2.length }.maxOption.getOrElse(0)
-		namedProps.foreach { case (prop, name) =>
-			if (prop.description.nonEmpty || prop.useDescription.nonEmpty) {
-				val propIntroduction = (name + ":").padTo(maxPropNameLength + 1, ' ')
-				if (prop.description.nonEmpty) {
-					writer.println(s"-- $propIntroduction ${ prop.description }")
-					if (prop.useDescription.nonEmpty)
-						writer.println(s"-- \t${ prop.useDescription }")
+		val maxColumnNameLength: Int = columns.map { _._2.length }.maxOption.getOrElse(0)
+		namedProps.foreach { case (prop, columns) =>
+			if (prop.description.nonEmpty) {
+				// If spans multiple columns, introduces all of them with the same description
+				val name = {
+					if (columns.size == 1)
+						columns.head._2
+					else
+						s"${prop.name} (${columns.map { _._2 }.mkString(", ")})"
 				}
-				else
-					writer.println(s"-- $propIntroduction ${ prop.useDescription }")
+				val propIntroduction = (name + ":").padTo(maxColumnNameLength + 1, ' ')
+				writer.println(s"-- $propIntroduction ${ prop.description }")
 			}
 		}
 		// Writes the table
 		writer.println(s"CREATE TABLE `$tableName`(")
-		val idBase = s"\t`$idName` ${ classToWrite.idType.toSql } PRIMARY KEY AUTO_INCREMENT"
-		if (namedProps.isEmpty)
+		val idBase = s"\t`$idName` ${ classToWrite.idType.sqlType.toSql } PRIMARY KEY AUTO_INCREMENT"
+		if (columns.isEmpty)
 			writer.println(idBase)
 		else {
 			writer.println(idBase + ", ")
 			
-			val propertyDeclarations = namedProps.map { case (prop, name) =>
-				val defaultPart = prop.sqlDefault.notEmpty match {
-					case Some(default) => s" DEFAULT $default"
-					case None => ""
-				}
-				s"`$name` ${ prop.dataType.toSql }$defaultPart"
+			val propertyDeclarations = columns.map { case (prop, name) =>
+				val defaultPart = prop.default.mapIfNotEmpty { " DEFAULT " + _ }
+				s"`$name` ${ prop.sqlType.baseTypeSql }${ prop.sqlType.notNullPart }$defaultPart"
 			}
 			val comboIndexColumnNames = classToWrite.comboIndexColumnNames.map { _.map { prefixColumnName(_) } }
 			val firstComboIndexColumns = comboIndexColumnNames.filter { _.size > 1 }.map { _.head }.toSet
-			val individualIndexDeclarations = namedProps
+			val individualIndexDeclarations = columns
 				.filter { case (prop, name) => prop.isIndexed && !firstComboIndexColumns.contains(name) }
 				.map { case (_, name) => s"INDEX ${ classInitials }_${ name }_idx (`$name`)" }
 			val comboIndexDeclarations = comboIndexColumnNames.filter { _.size > 1 }
 				.zipWithIndex.map { case (colNames, index) =>
 				s"INDEX ${ classInitials }_combo_${ index + 1 }_idx (${ colNames.mkString(", ") })"
 			}
-			val foreignKeyDeclarations = namedProps.flatMap { case (prop, name) =>
+			val foreignKeyDeclarations = namedProps.flatMap { case (prop, columns) =>
 				prop.dataType match {
 					case ClassReference(rawReferencedTableName, rawColumnName, referenceType) =>
 						val refTableName = rawReferencedTableName.tableName
@@ -228,8 +231,12 @@ object SqlWriter
 							else
 								base
 						}
+						val columnName = columns.headOption match {
+							case Some((_, name)) => name
+							case None => prop.name.columnName
+						}
 						val constraintNameBase = {
-							val nameWithoutId = name.replace("_id", "")
+							val nameWithoutId = columnName.replace("_id", "")
 							val base = {
 								if (setup.prefixSqlProperties)
 									nameWithoutId
@@ -239,8 +246,8 @@ object SqlWriter
 							base + "_ref"
 						}
 						Some(s"CONSTRAINT ${ constraintNameBase }_fk FOREIGN KEY ${
-							constraintNameBase }_idx ($name) REFERENCES `$refTableName`(`$refColumnName`) ON DELETE ${
-							if (referenceType.isNullable) "SET NULL" else "CASCADE"
+							constraintNameBase }_idx ($columnName) REFERENCES `$refTableName`(`$refColumnName`) ON DELETE ${
+							if (referenceType.sqlConversions.forall { _.target.isNullable }) "SET NULL" else "CASCADE"
 						}")
 					case _ => None
 				}

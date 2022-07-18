@@ -2,6 +2,7 @@
 
 ## v1.16 (in development)
 ### Breaking Changes
+- **String** to **Value** conversion now returns an empty value for empty strings
 - **JsonConvertible** now requires implementation of `appendToJson(StringBuilder): Unit`
   - Please notice that all existing implementations have been modified to include this function, so this should be 
     a problem only in custom implementations, and even then a minor one
@@ -29,6 +30,7 @@
 - **Regex**
   - Added `.replaceAll(String, String)`
 - **String** (**StringExtensions**)
+  - Added `.nonEmptyOrElse(=> String)` and `.mapIfNotEmpty(...)` to help to work around possibly empty strings
   - Added `.filterWith(Regex)` and `.filterNotWith(Regex)`
   - Added `.replaceAll(Regex, => String)`
 ### Bugfixes

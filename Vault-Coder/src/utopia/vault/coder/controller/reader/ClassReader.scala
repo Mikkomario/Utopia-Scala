@@ -6,13 +6,15 @@ import utopia.flow.generic.DataTypeException
 import utopia.flow.util.{UncertainBoolean, Version}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, CombinationData, CustomPropertyType, Enum, Instance, Name, NamingRules, ProjectData, Property}
-import utopia.vault.coder.model.enumeration.BasicPropertyType.{IntNumber, Text}
+import utopia.vault.coder.model.data.{Class, CombinationData, DbPropertyOverrides, Enum, Instance, Name, NamingRules, ProjectData, Property}
+import utopia.vault.coder.model.datatype.BasicPropertyType.{IntNumber, Text}
+import utopia.vault.coder.model.datatype.{CustomPropertyType, PropertyType}
 import utopia.vault.coder.model.enumeration.CombinationType.{Combined, MultiCombined, PossiblyCombined}
 import utopia.vault.coder.model.enumeration.IntSize.Default
-import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, EnumValue}
-import utopia.vault.coder.model.enumeration.{CombinationType, NamingConvention, PropertyType}
+import utopia.vault.coder.model.datatype.PropertyType.{ClassReference, EnumValue}
+import utopia.vault.coder.model.enumeration.{CombinationType, NamingConvention}
 import utopia.vault.coder.model.scala.Package
+import utopia.vault.coder.model.scala.code.CodePiece
 
 import java.nio.file.Path
 import scala.util.{Failure, Success}
@@ -194,7 +196,7 @@ object ClassReader
 				.getOrElse(Vector())
 				.map { combo =>
 					combo.flatMap { propName =>
-						properties.find { _.name ~== propName }.map { _.columnName }
+						properties.view.flatMap { _.dbProperties }.find { _.name ~== propName }.map { _.columnName }
 					}
 				}
 				.filter { _.nonEmpty }
@@ -274,7 +276,7 @@ object ClassReader
 					// Case: Enumeration reference
 					case Some(enumType) =>
 						val baseType = EnumValue(enumType)
-						Some(if (lowerTypeName.contains("option")) baseType.nullable else baseType)
+						Some(if (lowerTypeName.contains("option")) baseType.optional else baseType)
 					// Case: Standard data type
 					case None => PropertyType.interpret(typeName, length, rawName)
 				}
@@ -314,9 +316,14 @@ object ClassReader
 			case None => rawLimit.getString
 		}
 		
-		Property(fullName, columnName.map { _.columnName }, actualDataType, doc, propModel("usage").getString,
-			propModel("default", "def"), propModel("sql_default", "sql_def").getString, limit,
-			propModel("indexed", "index", "is_index").boolean)
+		// May use the default value in sql, also
+		val default: CodePiece = propModel("default", "def")
+		val sqlDefault = propModel("sql_default", "sql_def").stringOr { default.toSql.getOrElse("") }
+		// TODO: Add support for custom db-property naming and multi-column types
+		Property(fullName, actualDataType, default,
+			Vector(DbPropertyOverrides(None, columnName.map { _.columnName }.getOrElse(""), sqlDefault, limit,
+				propModel("indexed", "index", "is_index").boolean)),
+			doc)
 	}
 	
 	private def instanceFrom(model: Model, parentClass: Class)(implicit naming: NamingRules) =

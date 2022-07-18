@@ -17,7 +17,6 @@ object StringExtensions
 	 * Extends standard scala string
 	 * @param s String to extend
 	 */
-	// TODO: Add a split function that accepts a Regex instance (also other such functions)
 	implicit class ExtendedString(val s: String) extends AnyVal
 	{
 		/**
@@ -62,6 +61,17 @@ object StringExtensions
 		  * @return A copy of this string where the first character is in lower case
 		  */
 		def uncapitalize = if (s.isEmpty) s else s"${s.head.toLower}${s.drop(1)}"
+		
+		/**
+		  * @param default The string returned if this string is empty
+		  * @return This string, if not empty, otherwise the 'default' string
+		  */
+		def nonEmptyOrElse(default: => String) = if (s.isEmpty) default else s
+		/**
+		  * @param f A mapping function
+		  * @return This string if empty, otherwise a mapped copy of this string
+		  */
+		def mapIfNotEmpty(f: String => String) = if (s.isEmpty) s else f(s)
 		
 		/**
 		  * @param range A range

@@ -2,7 +2,7 @@ package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup}
+import utopia.vault.coder.model.data.{Class, DbProperty, Name, NamingRules, ProjectSetup, Property}
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.scala.Visibility.{Private, Protected}
 import utopia.vault.coder.model.scala.datatype.TypeVariance.Covariance
@@ -145,7 +145,7 @@ object AccessWriter
 	                             (implicit naming: NamingRules, codec: Codec, setup: ProjectSetup) =
 	{
 		val uniqueAccessName = ((uniqueAccessPrefix +: classToWrite.name) + accessTraitSuffix).className
-		val pullIdCode = classToWrite.idType.nullable.fromValueCode(s"pullColumn(index)")
+		val pullIdCode = classToWrite.idType.optional.fromValueCode(s"pullColumn(index)")
 		
 		File(singleAccessPackage,
 			TraitDeclaration(uniqueAccessName,
@@ -154,17 +154,21 @@ object AccessWriter
 					Reference.distinctModelAccess(modelRef, ScalaType.option(modelRef), Reference.value),
 					Reference.indexed),
 				// Provides computed accessors for individual properties
-				properties = baseProperties ++ classToWrite.properties.map { prop =>
-					val pullCode = prop.dataType.nullable
-						.fromValueCode(s"pullColumn(model.${ DbModelWriter.columnNameFrom(prop) })")
-					ComputedProperty(prop.name.propName, pullCode.references,
-						description = prop.description.notEmpty.getOrElse(s"The ${ prop.name } of this instance") +
-							". None if no instance (or value) was found.", implicitParams = Vector(connectionParam))(
-						pullCode.text)
+				properties = baseProperties ++ classToWrite.properties.flatMap { prop =>
+					// Only single-column properties are pulled
+					prop.onlyDbVariant.map { dbProp =>
+						val pullCode = prop.dataType.optional
+							.fromValueCode(s"pullColumn(model.${ DbModelWriter.columnNameFrom(dbProp) })")
+						ComputedProperty(dbProp.name.propName, pullCode.references,
+							description = prop.description.nonEmptyOrElse(s"The ${ dbProp.name } of this ${
+								classToWrite.name }") + s". None if no ${ classToWrite.name } (or value) was found.",
+							implicitParams = Vector(connectionParam))(
+							pullCode.text)
+					}
 				} :+ ComputedProperty("id", pullIdCode.references, implicitParams = Vector(connectionParam))(
 					pullIdCode.text),
 				// Contains setters for each property (singular)
-				methods = propertySettersFor(classToWrite, connectionParam) { _.propName } ++ deprecationMethod,
+				methods = propertySettersFor(classToWrite) { _.propName } ++ deprecationMethod,
 				description = s"A common trait for access points that return individual and distinct ${
 					classToWrite.name.pluralText
 				}.", author = classToWrite.author, since = DeclarationDate.versionedToday
@@ -270,18 +274,21 @@ object AccessWriter
 		val traitNameBase = (manyPrefix +: classToWrite.name) + accessTraitSuffix
 		
 		// Properties and methods that will be written to the highest trait (which may vary)
+		val idsPullCode = classToWrite.idType.fromValuesCode("pullColumn(index)")
 		val highestTraitProperties = modelProperty +:
-			classToWrite.properties.map { prop =>
-				val pullCode = prop.dataType
-					.fromValuesCode(s"pullColumn(model.${ DbModelWriter.columnNameFrom(prop) })")
-				ComputedProperty(prop.name.pluralPropName, pullCode.references,
-					description = s"${ prop.name.pluralText } of the accessible ${
-						classToWrite.name.pluralText }",
-					implicitParams = Vector(connectionParam))(pullCode.text)
+			classToWrite.properties.flatMap { prop =>
+				// Only single-column properties are pulled
+				prop.onlyDbVariant.map { dbProp =>
+					val pullCode = prop.dataType
+						.fromValuesCode(s"pullColumn(model.${ DbModelWriter.columnNameFrom(dbProp) })")
+					ComputedProperty(prop.name.pluralPropName, pullCode.references,
+						description = s"${ prop.name.pluralText } of the accessible ${
+							classToWrite.name.pluralText }",
+						implicitParams = Vector(connectionParam))(pullCode.text)
+				}
 			} :+
-			ComputedProperty("ids", implicitParams = Vector(connectionParam))(
-				s"pullColumn(index).flatMap { id => ${ classToWrite.idType.nullable.fromValueCode("id") } }")
-		val highestTraitMethods = propertySettersFor(classToWrite, connectionParam) { _.pluralPropName } ++ deprecationMethod
+			ComputedProperty("ids", idsPullCode.references, implicitParams = Vector(connectionParam))(idsPullCode.text)
+		val highestTraitMethods = propertySettersFor(classToWrite) { _.pluralPropName } ++ deprecationMethod
 		
 		// Writes the more generic trait version (-Like) first, if one is requested
 		val parentRef = {
@@ -429,18 +436,34 @@ object AccessWriter
 		).write()
 	}
 	
-	private def propertySettersFor(classToWrite: Class, connectionParam: Parameter)
-	                              (nameFromPropName: Name => String)
+	private def propertySettersFor(classToWrite: Class)
+	                              (methodNameFromPropName: Name => String)
 	                              (implicit naming: NamingRules) =
-		classToWrite.properties.map { prop =>
-			val paramName = (newPrefix +: prop.name).propName
-			val paramType = prop.dataType.notNull
-			val valueConversionCode = paramType.toValueCode(paramName)
-			MethodDeclaration(s"${ nameFromPropName(prop.name) }_=", valueConversionCode.references,
-				description = s"Updates the ${ prop.name.pluralText } of the targeted ${ classToWrite.name.pluralText }",
-				returnDescription = s"Whether any ${ classToWrite.name } was affected")(
-				Parameter(paramName, paramType.toScala, description = s"A new ${ prop.name } to assign")
-					.withImplicits(connectionParam))(
-				s"putColumn(model.${ DbModelWriter.columnNameFrom(prop) }, $valueConversionCode)")
+	{
+		classToWrite.properties.flatMap { prop =>
+			prop.dbProperties.map { dbProp => setter(prop, dbProp, classToWrite.name)(methodNameFromPropName) }
 		}.toSet
+	}
+	
+	private def setter(prop: Property, dbProp: DbProperty, className: Name)
+	                  (methodNameFromPropName: Name => String)
+	                  (implicit naming: NamingRules) =
+	{
+		val paramName = (newPrefix +: dbProp.name).propName
+		val paramType = if (prop.isSingleColumn) prop.dataType.toScala else dbProp.conversion.origin
+		val valueConversionCode = {
+			if (prop.isSingleColumn)
+				prop.dataType.toValueCode(paramName)
+			else {
+				val midConversion = dbProp.conversion.midConversion(paramName)
+				dbProp.conversion.intermediate.toValueCode(midConversion.text).referringTo(midConversion.references)
+			}
+		}
+		MethodDeclaration(s"${ methodNameFromPropName(dbProp.name) }_=", valueConversionCode.references,
+				description = s"Updates the ${ prop.name.pluralText } of the targeted ${ className.pluralText }",
+				returnDescription = s"Whether any $className was affected")(
+				Parameter(paramName, paramType, description = s"A new ${ dbProp.name } to assign")
+					.withImplicits(connectionParam))(
+				s"putColumn(model.${ DbModelWriter.columnNameFrom(dbProp) }, $valueConversionCode)")
+	}
 }

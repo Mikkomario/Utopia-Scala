@@ -1,9 +1,10 @@
 package utopia.vault.coder.model.data
 
-import utopia.vault.coder.model.enumeration.BasicPropertyType.{IntNumber, LongNumber}
+import utopia.flow.util.CollectionExtensions._
+import utopia.vault.coder.model.datatype.BasicPropertyType.{IntNumber, LongNumber}
 import utopia.vault.coder.model.enumeration.IntSize.Default
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
-import utopia.vault.coder.model.enumeration.PropertyType.{ClassReference, CreationTime, Deprecation, EnumValue, Expiration, UpdateTime}
+import utopia.vault.coder.model.datatype.PropertyType.{ClassReference, CreationTime, Deprecation, EnumValue, Expiration, UpdateTime}
 
 object Class
 {
@@ -90,8 +91,10 @@ case class Class(name: Name, customTableName: Option[String], idName: Name, prop
 			case None => name
 		}
 		val props = Vector(
-			Property(linkColumnName, ClassReference(tableName, idName, idType), s"Id of the described $name"),
-			Property(Name("descriptionId", CamelCase.lower), ClassReference("description"), "Id of the linked description")
+			Property(linkColumnName, ClassReference(tableName, idName, idType),
+				description = s"Id of the described $name"),
+			Property(Name("descriptionId", CamelCase.lower), ClassReference("description"),
+				description = "Id of the linked description")
 		)
 		Class(name + "description", props, "description",
 			description = s"Links ${name.plural} with their descriptions", author = author)
@@ -99,6 +102,11 @@ case class Class(name: Name, customTableName: Option[String], idName: Name, prop
 	
 	
 	// COMPUTED ------------------------------------
+	
+	/**
+	  * @return Database-matching properties associated with this class
+	  */
+	def dbProperties = properties.view.flatMap { _.dbProperties }
 	
 	/**
 	  * @return Whether this class uses integer type ids
@@ -142,10 +150,7 @@ case class Class(name: Name, customTableName: Option[String], idName: Name, prop
 	/**
 	  * @return The property in this class which contains instance creation time. None if no such property is present.
 	  */
-	def creationTimeProperty = properties.find { _.dataType match {
-		case CreationTime => true
-		case _ => false
-	} }
+	def timestampProperty = dbProperties.find { _.sqlType.baseTypeSql == "TIMESTAMP" }
 	
 	/**
 	  * @return Property in this class which contains instance deprecation time. None if no such property is present.

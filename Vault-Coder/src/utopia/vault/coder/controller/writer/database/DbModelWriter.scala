@@ -1,10 +1,9 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, Name, NamingRules, ProjectSetup, Property}
+import utopia.vault.coder.model.data.{Class, DbProperty, Name, Named, NamingRules, ProjectSetup, Property}
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.vault.coder.model.scala
-import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.datatype.{Extension, Reference, ScalaType}
 import utopia.vault.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
 import utopia.vault.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
@@ -50,7 +49,7 @@ object DbModelWriter
 	  * @param naming Naming rules to apply
 	  * @return Name of the property that refers to this property's db property name
 	  */
-	def attNameFrom(prop: Property)(implicit naming: NamingRules): String = attNameFrom(prop.name)
+	def attNameFrom(prop: DbProperty)(implicit naming: NamingRules): String = attNameFrom(prop.name)
 	/**
 	  * @param propName A property name
 	  * @param naming Naming rules to apply
@@ -62,7 +61,7 @@ object DbModelWriter
 	  * @param naming Naming rules to apply
 	  * @return Name of the property that refers to this property's column
 	  */
-	def columnNameFrom(prop: Property)(implicit naming: NamingRules): String = columnNameFrom(prop.name)
+	def columnNameFrom(prop: DbProperty)(implicit naming: NamingRules): String = columnNameFrom(prop.name)
 	
 	/**
 	  * Generates the DB model class and the associated companion object
@@ -81,64 +80,62 @@ object DbModelWriter
 		val className = (classToWrite.name + classNameSuffix).className
 		val deprecation = DeprecationStyle.of(classToWrite)
 		
+		val optionalIdType = classToWrite.idType.optional
+		
+		// Converts each property to the "intermediate" state
+		val applyParametersCode = ("None" +: classToWrite.properties.flatMap { prop =>
+			val propAccessCode = s"data.${prop.name.propName}"
+			prop.dataType.sqlConversions
+				.map { conversion => conversion.midConversion(propAccessCode) }
+		}).mkString(", ")
+		
 		// The generated file contains the model class and the associated companion object
 		File(parentPackage,
 			ObjectDeclaration(className,
 				factoryExtensionsFor(className, modelRef, dataRef, deprecation),
 				// Contains xAttName and xColumn for each property, as well as factory and table -properties
-				properties = classToWrite.properties.flatMap { prop =>
+				properties = classToWrite.dbProperties.flatMap { prop =>
 					val attName = attNameFrom(prop)
 					Vector(
 						ImmutableValue(attName,
 							description = s"Name of the property that contains ${ classToWrite.name } ${ prop.name }")(
-							prop.dbModelPropName.quoted),
+							prop.modelName.quoted),
 						ComputedProperty(columnNameFrom(prop),
 							description = s"Column that contains ${ classToWrite.name } ${ prop.name }")(
 							s"table($attName)")
 					)
-				} ++ Vector(
+				}.toVector ++ Vector(
 					ComputedProperty("factory", Set(factoryRef),
 						description = "The factory object used by this model type")(factoryRef.target),
 					ComputedProperty("table", isOverridden = true)("factory.table")
 				) ++ deprecation.iterator.flatMap { _.properties },
 				// Implements .apply(...) and .complete(id, data)
-				// Also includes withX(...) methods for each property
 				methods = Set(
 					MethodDeclaration("apply", isOverridden = true)(Parameter("data", dataRef))(
-						s"apply(${
-							("None" +: classToWrite.properties.map { prop =>
-								if (prop.dataType.isNullable)
-									s"data.${ prop.name.propName }"
-								else
-									s"Some(data.${ prop.name.propName })"
-							}).mkString(", ")
-						})"),
+						s"apply($applyParametersCode)"),
 					MethodDeclaration("complete", Set(modelRef), isOverridden = true)(
 						Vector(Parameter("id", Reference.value), Parameter("data", dataRef)))(
 						s"${ modelRef.target }(id.get${ if (classToWrite.useLongId) "Long" else "Int" }, data)"),
 					MethodDeclaration("withId", returnDescription = "A model with that id")(
 						Parameter("id", classToWrite.idType.toScala, description = s"A ${ classToWrite.name } id"))(
 						"apply(Some(id))")
-				) ++ classToWrite.properties.map { prop =>
-					val paramName = prop.name.propName
-					MethodDeclaration(withMethodNameFor(prop),
-						returnDescription = s"A model containing only the specified ${ prop.name }")(
-						scala.Parameter(paramName, prop.dataType.notNull.toScala, description = prop.description))(
-						s"apply($paramName = Some($paramName))")
-				} ++ deprecation.iterator.flatMap { _.methods },
+					// Also includes withX(...) methods for each property
+				) ++ classToWrite.properties.flatMap { withPropertyMethods(_) } ++
+					deprecation.iterator.flatMap { _.methods },
 				description = s"Used for constructing $className instances and for inserting ${
 					classToWrite.name.pluralText
 				} to the database", author = classToWrite.author, since = DeclarationDate.versionedToday
 			),
 			ClassDeclaration(className,
-				// Accepts a copy of all properties where each is wrapped in option (unless already an option)
-				constructionParams = Parameter("id", classToWrite.idType.nullable.toScala, "None",
+				// Accepts a copy of all properties where each appears in the "intermediate "(db property) state
+				constructionParams = Parameter("id", optionalIdType.toScala, optionalIdType.emptyValue,
 					description = s"${ classToWrite.name } database id") +:
-					classToWrite.properties.map { prop =>
-						val inputType = prop.dataType.nullable
-						val defaultValue = inputType.defaultValue.notEmpty.getOrElse(CodePiece("None"))
-						Parameter(prop.name.propName, inputType.toScala, defaultValue, description = prop.description)
-					},
+					classToWrite.dbProperties.map { prop =>
+						val inputType = prop.conversion.intermediate
+						val defaultValue = inputType.emptyValue
+						// TODO: Parameter descriptions are missing
+						Parameter(prop.name.propName, inputType.scalaType, defaultValue)
+					}.toVector,
 				// Extends StorableWithFactory[A]
 				extensions = Vector(Reference.storableWithFactory(modelRef)),
 				// Implements the required properties: factory & valueProperties
@@ -147,14 +144,8 @@ object DbModelWriter
 					valuePropertiesPropertyFor(classToWrite, className)
 				),
 				// adds withX(...) -methods for convenience
-				methods = classToWrite.properties.map { prop =>
-					val paramName = prop.name.propName
-					MethodDeclaration(withMethodNameFor(prop),
-						returnDescription = s"A new copy of this model with the specified ${ prop.name }")(
-						Parameter(paramName, prop.dataType.notNull.toScala,
-							description = s"A new ${ prop.name }"))(
-						s"copy($paramName = Some($paramName))")
-				}.toSet,
+				methods = classToWrite.properties.flatMap { withPropertyMethods(_, "copy",
+					"A new copy of this model with the specified ") }.toSet,
 				description = s"Used for interacting with ${ classToWrite.name.plural } in the database",
 				author = classToWrite.author, since = DeclarationDate.versionedToday, isCaseClass = true)
 		).write()
@@ -183,8 +174,8 @@ object DbModelWriter
 				s"Vector($quotedId -> id)"
 			)
 		else {
-			val propsPart = classToWrite.properties
-				.map { prop => prop.nullable.toValueCode.withPrefix(s"${ attNameFrom(prop) } -> ") }
+			val propsPart = classToWrite.dbProperties
+				.map { prop => prop.toValueCode.withPrefix(s"${ attNameFrom(prop) } -> ") }
 				.reduceLeft { _.append(_, ", ") }
 			ComputedProperty("valueProperties", propsPart.references + Reference.valueConversions, isOverridden = true)(
 				s"import $className._",
@@ -193,8 +184,50 @@ object DbModelWriter
 		}
 	}
 	
-	private def withMethodNameFor(prop: Property)(implicit naming: NamingRules) =
-		(withMethodPrefix + prop.name).propName
+	private def withMethodNameFor(prop: Named)(implicit naming: NamingRules): String = withMethodNameFor(prop.name)
+	private def withMethodNameFor(name: Name)(implicit naming: NamingRules) = (withMethodPrefix + name).propName
+	
+	private def withPropertyMethods(property: Property, calledMethodName: String = "apply",
+	                                returnDescriptionStart: String = "A model containing only the specified ")
+	                               (implicit naming: NamingRules) =
+	{
+		val concreteProp = property.concrete
+		concreteProp.oneOrManyDbVariants match {
+			// Case: The property matches a single column => generates one withX -method
+			case Left(dbProp) => Some(withDbPropertyMethod(dbProp, concreteProp.description,
+				calledMethodName = calledMethodName, returnDescriptionStart = returnDescriptionStart))
+			// Case: The property matches multiple columns => generates partial and full withX method
+			// variants
+			case Right(dbProps) =>
+				val extraDescription = s" which is part of ${ concreteProp.name }"
+				dbProps.map { withDbPropertyMethod(_, returnDescriptionAppendix = extraDescription,
+					calledMethodName = calledMethodName, returnDescriptionStart = returnDescriptionStart) } :+
+					withMethod(concreteProp, dbProps, concreteProp.dataType.toScala, concreteProp.description,
+						s" (sets all ${dbProps.size} values)", calledMethodName,
+						returnDescriptionStart)
+		}
+	}
+	private def withDbPropertyMethod(property: DbProperty, paramDescription: String = "",
+	                                 returnDescriptionAppendix: String = "", calledMethodName: String = "apply",
+	                                 returnDescriptionStart: String = "A model containing only the specified ")
+	                                (implicit naming: NamingRules) =
+		withMethod(property, Vector(property), property.conversion.origin, paramDescription, returnDescriptionAppendix,
+			calledMethodName, returnDescriptionStart)
+	private def withMethod(source: Named, properties: Seq[DbProperty], parameterType: ScalaType,
+	                       paramDescription: String = "", returnDescriptionAppendix: String = "",
+	                       calledMethodName: String = "apply",
+	                       returnDescriptionStart: String = "A model containing only the specified ")
+	                      (implicit naming: NamingRules) =
+	{
+		val paramName = source.name.propName
+		val constructionParamsCode = properties
+			.map { prop => s"${prop.name.propName} = " +: prop.conversion.midConversion(paramName) }
+			.reduceLeft { _.append(_, ", ") }
+		MethodDeclaration(withMethodNameFor(source), constructionParamsCode.references,
+			returnDescription = s"$returnDescriptionStart${ source.name }$returnDescriptionAppendix")(
+			scala.Parameter(paramName, parameterType, description = paramDescription))(
+			s"$calledMethodName($constructionParamsCode)")
+	}
 	
 	
 	// NESTED   --------------------------------------
@@ -238,7 +271,7 @@ object DbModelWriter
 		
 		override def properties(implicit naming: NamingRules) =
 			if (isDefault) Vector() else Vector(
-				ImmutableValue("deprecationAttName", isOverridden = true)(prop.dbModelPropName.quoted))
+				ImmutableValue("deprecationAttName", isOverridden = true)(prop.dbProperties.head.modelName.quoted))
 		// withDeprecatedAfter(...) must be provided separately for custom property names
 		override def methods = if (isDefault) Set() else Set(
 			MethodDeclaration("withDeprecatedAfter", isOverridden = true)(
@@ -251,7 +284,7 @@ object DbModelWriter
 		override def extensionFor(dbModelClass: ScalaType) = Reference.expiring
 		
 		override def properties(implicit naming: NamingRules) =
-			Vector(ImmutableValue("deprecationAttName", isOverridden = true)(prop.dbModelPropName.quoted))
+			Vector(ImmutableValue("deprecationAttName", isOverridden = true)(prop.dbProperties.head.modelName.quoted))
 		override def methods = Set()
 	}
 	

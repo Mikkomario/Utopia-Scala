@@ -29,52 +29,52 @@ object ValueConversions
         builder.result()
     }*/
     
-    implicit class ValueOfString(val s: String) extends ValueConvertible
+    implicit class ValueOfString(val s: String) extends AnyVal with ValueConvertible
     {
-        def toValue = new Value(Some(s), StringType)
+        def toValue = new Value(if (s.isEmpty) None else Some(s), StringType)
     }
     
-    implicit class ValueOfInt(val i: Int) extends ValueConvertible
+    implicit class ValueOfInt(val i: Int) extends AnyVal with ValueConvertible
     {
         def toValue = new Value(Some(i), IntType)
     }
     
-    implicit class ValueOfDouble(val d: Double) extends ValueConvertible
+    implicit class ValueOfDouble(val d: Double) extends AnyVal with ValueConvertible
     {
         def toValue = new Value(Some(d), DoubleType)
     }
     
-    implicit class ValueOfFloat(val f: Float) extends ValueConvertible
+    implicit class ValueOfFloat(val f: Float) extends AnyVal with ValueConvertible
     {
         def toValue = new Value(Some(f), FloatType)
     }
     
-    implicit class ValueOfLong(val l: Long) extends ValueConvertible
+    implicit class ValueOfLong(val l: Long) extends AnyVal with ValueConvertible
     {
         def toValue = new Value(Some(l), LongType)
     }
     
-    implicit class ValueOfBoolean(val b: Boolean) extends ValueConvertible
+    implicit class ValueOfBoolean(val b: Boolean) extends AnyVal with ValueConvertible
     {
         def toValue = new Value(Some(b), BooleanType)
     }
     
-    implicit class ValueOfInstant(val i: Instant) extends ValueConvertible
+    implicit class ValueOfInstant(val i: Instant) extends AnyVal with ValueConvertible
     {
         def toValue = new Value(Some(i), InstantType)
     }
     
-    implicit class ValueOfLocalDate(val d: LocalDate) extends ValueConvertible
+    implicit class ValueOfLocalDate(val d: LocalDate) extends AnyVal with ValueConvertible
     {
         def toValue = new Value(Some(d), LocalDateType)
     }
     
-    implicit class ValueOfLocalTime(val t: LocalTime) extends ValueConvertible
+    implicit class ValueOfLocalTime(val t: LocalTime) extends AnyVal with ValueConvertible
     {
         def toValue = new Value(Some(t), LocalTimeType)
     }
     
-    implicit class ValueOfLocalDateTime(val d: LocalDateTime) extends ValueConvertible
+    implicit class ValueOfLocalDateTime(val d: LocalDateTime) extends AnyVal with ValueConvertible
     {
         def toValue = new Value(Some(d), LocalDateTimeType)
     }
