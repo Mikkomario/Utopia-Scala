@@ -114,6 +114,9 @@ Class objects should contain following properties:
     - This will, however, overwrite any value of the `instances` property
 
 #### Property Object Structure
+The following guide assumes a standard single-column data type. For multi-column (i.e. combined) data types, 
+see the additional instructions under [multi-column properties](#multi-column-properties).
+
 Each property object should contain following properties:
 - **"name": String (optional)** - Name of this property (e.g. `"testProperty"`)
   - If not specified, column name will be parsed into a property name. 
@@ -173,13 +176,14 @@ Each property object should contain following properties:
   - References will always create an index, regardless of this value
 - **"length": Int (optional)** - Determines maximum text length if `String` type is used
   - Also applies to `Int` type, in which case this property limits the number of digits in an integer
-- **"length_rule" / "limit" / "max_length" / "max": String (optional)** - Rule to apply to situations where the current 
-  column maximum length would be exceeded.
+- **"length_rule" / "limit" / "max_length" / "max": String / Int (optional)** - Rule to apply to situations where 
+  the current column maximum length would be exceeded.
   - Available options are:
     - `"throw"` - Throws a runtime error
     - `"crop"` - Limits the input so that it fits to the column maximum length
     - `"expand"` - Expands the column maximum length indefinitely
     - `"expand to X"` / `"to X"` - Expands the column maximum length until the specified limit `X`
+    - `X` - Expands the column maximum length until the specified limit `X`
   - These are only applicable to `String` and `Int` types
 - **"default" / "def": Code (optional)** - The default value assigned for this property in the data model
   - See [Code Object Structure](#code-object-structure) for specifics
@@ -189,7 +193,23 @@ Each property object should contain following properties:
     - A specified default (code) value may also be used, provided it doesn't use any references and is a simple value 
       (such as a string literal, integer or a boolean value)
 - **"doc": String (optional)** - Description of this property (used in documentation)
-- **"usage": String (optional)** - Additional description about the use of this property
+
+##### Multi-Column Properties
+There are certain situations where you want to use a data type that's represented using two or more columns within the 
+database. In such a situation, you need to apply the following changes when writing a property:
+- Use a custom multi-column data type
+  - Currently, there are no inbuilt multi-column data types
+- Specify the **"parts"** -property
+  - **"parts"** -property should contain a **json object -array** where each object may contain **zero or more** of 
+    following properties:
+    - **"name": String, "name_plural": String and "column": String** - Like in the main property object, you may use these 
+      properties to specify a custom name for each part of the resulting property. While this is optional, 
+      it is **highly recommended**.
+      - The same rules that apply to the main object apply here. For example, the missing properties may be filled 
+        with a value in any of these properties.
+    - **"index": Boolean, "length_rule": String / Int, "sql_default": String** - These behave exactly as described above, 
+      except that they only apply to this specific column.
+- **Don't** include the **"index", "length_rule" or "sql_default"** -properties within the main property object
 
 #### Combination Object Structure
 Each combination object should contains following properties:
@@ -230,6 +250,9 @@ When you need to use imports, you must pass a json object with following propert
   - Alternatively you may specify **"reference"** -property with just a single reference as a string
 
 ### Data Type Object Structure
+The following section assumes you're creating a data type that matches to a single database column. If you're 
+creating a multi-column data type, please check the [Multi-Column Data Types](#multi-column-data-types) -section as well.
+
 When specifying a custom data type object, you need to specify the following properties:
 - **"type": String** - A reference to this data type, including the full class-path as well as possible type parameters.
 - **"sql": String** - An sql representation of this data type. For example, `"VARCHAR(32)"`. 
@@ -249,7 +272,9 @@ When specifying a custom data type object, you need to specify the following pro
 - **"option_to_value": Code (optional)** - Code that takes an option that may contain an instance of this type and 
   converts it to a value
   - If omitted or null, `$v.map { v => `to_value`(v) }.getOrElse(Value.empty)` will be used
-- **"default": Code (optional)** - Default Scala-value for properties using this data type
+- **"empty" / "empty_value": Code (optional)** - An "empty" instance of this type. Omit if not applicable.
+- **"default" / "default_value": Code (optional)** - Default Scala-value for properties using this data type. 
+  Omit if not applicable or if same as **"empty"**.
 - **"sql_default": String (optional)** - Default value for this data type within sql-documents
 - **"prop_name" / "default_name": String (optional)** - Default property name generated for properties using this data 
   type (when they don't specify a name)
@@ -260,6 +285,41 @@ When specifying a custom data type object, you need to specify the following pro
 - **"from_value_can_fail" / "yields_try" / "try": Boolean (optional)** - Whether the code passed to `from_value` yields 
   an instance of **Try** instead of an instance of this type. I.e. Whether fromValue-conversion can fail. 
   (default = false)
+
+#### Multi-Column Data Types
+In the following examples, we're using an imaginary example data type **Weight** that consists of two parts:
+1. The numeric weight amount: `amount: Double`
+2. The unit in which the weight amount was given, such as kilograms or pounds, which is represented by some custom 
+  enumeration. I.e. `unit: example.enumerations.WeightUnit`. This is stored in the database as a simple integer matching 
+  an enumeration's `.id`-property.
+
+When specifying a data type that is represented using two or more database columns, you must also do the following:
+- Specify the **"parts"** -property
+  - You must pass a **json object array** where each object contains the following properties:
+    - **"type": String** - The Scala type of this part of the parent type **as it appears in the database model**, 
+      i.e. in "optional" form.
+      - In our example, these would be `"Option[Double]"` and `"Option[example.enumerations.WeightUnit]"`
+    - "sql": String** - The data type listed in the SQL document
+      - In our example, these would be `"DOUBLE"` and `"TINYINT"`
+    - **"extract": Code** - Code that takes an instance of the full data type and returns an instance of this part's 
+      type (in the form listed in the **"type"** property)
+      - In our example, these would be `"Some($v.amount)"` and `"Some($v.unit)"`
+    - **"extract_from_option": Code** - Code that's used in situations where the original data type is wrapped in **Option**.
+      - In our example, these would be `"$v.map { _.amount }"` and `"$v.map { _.unit }"`
+    - **"to_value": Code (optional)** - Code that takes an instance of this part 
+      (in the database model state, i.e. optional state) and converts it to a **Value**
+      - If omitted, a direct value conversion is assumed (using `utopia.flow.generic.ValueConversions`)
+      - In our example, the first value would be omitted and the second would read `"$v.map { _.id }"` 
+        (and import `utopia.flow.generic.ValueConversions`)
+    - **"optional" / "nullable" / "allows_null": Boolean (optional)** - Whether this part allows a NULL value in the 
+      database (i.e. is optional)
+      - False by default
+    - **"empty" / "empty_value": Code (optional)** - The empty or "none" state of this part's "optional" state
+      - Default is "None"
+    - **"sql_default", "column_suffix" and "index"** as they appear above (all are optional), except that they now only 
+      apply to this part / column
+- **Don't** specify the following properties in the main data type object: 
+  **"sql", "sql_default", "column_suffix" and "index"**
 
 ### Naming object structure
 If you want to specify custom naming schemes, you may do so in a naming object.

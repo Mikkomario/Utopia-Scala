@@ -6,6 +6,8 @@
   "instancesIds", the current version returns "instanceIds"
 ### New Features
 - Added support for custom data types (see README for details)
+- Added support for multi-column data types, although no inbuilt multi-column data type exists at this time 
+  (see README for details)
 - Added support for imports within the property default declaration
 - The application may now store project paths to a local file so that they don't need to be repeated every time 
   the program is used

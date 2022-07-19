@@ -1,63 +1,104 @@
 {
-	"author": "Mikko Hilpinen",
-	"base_package": "utopia.vault.coder.test",
-	"enumerations": {
-		"MeetingType": ["Online", "Offline"]
-	},
-	"classes": {
-		"test": [
-			{
-				"name": "client",
-				"properties": [
-					{
-						"name": "phoneHash",
-						"name_plural": "phoneHashes",
-						"type": "text",
-						"length": 255,
-						"doc": "Hashed phone number of the client",
-						"usage": "Used for recognizing clients without storing full phone number"
-					}
-				],
-				"doc": "Represents a young service customer"
-			},
-			{
-				"name": "meeting",
-				"properties": [
-					{
-						"name": "hostId",
-						"references": "user",
-						"doc": "Id of the employee who is organizing / hosting this meeting",
-						"usage": "Meetings are specific for a single employee, using this link"
-					},
-					{
-						"name": "participantId",
-						"references": "client",
-						"doc": "Id of the client who is invited to this meeting"
-					},
-					{
-						"name": "time",
-						"type": "datetime",
-						"doc": "Meeting start time"
-					},
-					{
-						"name": "meetingType",
-						"column_name": "type_id",
-						"type": "enum[MeetingType]",
-						"doc": "Type of this meeting"
-					},
-					{
-						"name": "created",
-						"name_plural": "creationTimes",
-						"type": "creation"
-					},
-					{
-						"name": "cancelled",
-						"name_plural": "cancellationTimes",
-						"type": "deprecation"
-					}
-				],
-				"doc": "Represents a scheduled meeting between a host and a client"
-			}
-		]
-	}
+  "author": "Mikko Hilpinen",
+  "base_package": "utopia.vault.coder.test",
+  "naming": {
+    "json": "camelCase"
+  },
+  "types": {
+    "Weight": {
+      "type": "utopia.vault.coder.test.model.cached.Weight",
+      "from_value": {
+        "code": "Weight.ofKilos($v.getDouble)",
+        "reference": "utopia.vault.coder.test.model.cached.Weight"
+      },
+      "option_from_value": {
+        "code": "$v.double.map(Weight.ofKilos)",
+        "reference": "utopia.vault.coder.test.model.cached.Weight"
+      },
+      "to_value": {
+        "code": "$v.toKilos",
+        "reference": "utopia.flow.generic.ValueConversions._"
+      },
+      "prop_name": "weight",
+      "parts": [
+        {
+          "name": "amount",
+          "column": "weight_amount",
+          "type": "Option[Double]",
+          "sql": "DOUBLE",
+          "extract": "Some($v.amount)",
+          "extract_from_option": "$v.map { _.amount }"
+        },
+        {
+          "name": "unit",
+          "column": "weight_unit_id",
+          "type": "Option[utopia.vault.coder.test.model.enumeration.WeightUnit]",
+          "sql": "TINYINT",
+          "extract": "Some($v.unit)",
+          "extract_from_option": "$v.map { _.unit }",
+          "to_value": {
+            "code": "$v.map { _.id }",
+            "reference": "utopia.flow.generic.ValueConversions._"
+          }
+        }
+      ]
+    }
+  },
+  "enumerations": {
+    "WeightUnit": ["Kilogram", "Pound"]
+  },
+  "classes": {
+    "test": [
+      {
+        "name": "Manufacturer",
+        "doc": "Represents a car manufacturer",
+        "props": [
+          {
+            "name": "name",
+            "length": 64,
+            "max": 128,
+            "doc": "Name of this manufacturer"
+          },
+          {
+            "name": "identifier",
+            "length": 12,
+            "index": true,
+            "doc": "The unique identifier of this manufacturer company"
+          }
+        ]
+      },
+      {
+        "name": "Car",
+        "doc": "Represents a car",
+        "props": [
+          {
+            "name": "registration",
+            "length": 8,
+            "doc": "The registration code of this car"
+          },
+          {
+            "ref": "Manufacturer",
+            "type": "Option[Int]",
+            "doc": "Id of the manufacturer that produced this car, if known"
+          },
+          {
+            "name": "weight",
+            "type": "Option[Weight]",
+            "doc": "Weight of this car, if known",
+            "parts": [
+              {
+                "name": "weightAmount"
+              },
+              {
+                "name": "weightUnit"
+              }
+            ]
+          },
+          {
+            "type": "creation"
+          }
+        ]
+      }
+    ]
+  }
 }

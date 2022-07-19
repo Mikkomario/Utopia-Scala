@@ -310,20 +310,57 @@ object ClassReader
 		val rawDoc = propModel("doc").string.filter { _.nonEmpty }
 		val doc = rawDoc.getOrElse { actualDataType.writeDefaultDescription(className, fullName) }
 		
-		val rawLimit = propModel("length_rule", "length_limit", "limit", "max_length", "length_max", "max")
+		val default: CodePiece = propModel("default", "def")
+		// A property either lists database-interaction information within itself (single-column use-case) or
+		// within a special property named "parts" (multi-column use-case)
+		val partModels = propModel("parts").getVector.flatMap { _.model }
+		val dbPropertyOverrides = {
+			if (partModels.isEmpty && actualDataType.isSingleColumn)
+				Vector(dbPropertyOverridesFrom(propModel, default))
+			else
+				partModels.map { dbPropertyOverridesFrom(_, readName = true) }
+		}
+		
+		Property(fullName, actualDataType, default, dbPropertyOverrides, doc)
+	}
+	
+	private def dbPropertyOverridesFrom(model: Model, default: CodePiece = CodePiece.empty, readName: Boolean = false)
+	                                   (implicit naming: NamingRules) =
+	{
+		// Reads the custom column name
+		val rawColumnName = model("column_name", "column", "col").string
+		val columnName = rawColumnName.map { Name.interpret(_, naming.column) }
+		val finalColumnName = columnName match {
+			case Some(name) => name.columnName
+			case None => ""
+		}
+		
+		// Name-processing may be skipped
+		val name = {
+			if (readName) {
+				val rawName = model("name").string
+				val name = rawName.map { Name.interpret(_, naming.classProp) }.orElse { columnName }
+				name.map { name =>
+					model("name_plural", "plural_name").string match {
+						case Some(pluralName) => name.copy(plural = pluralName)
+						case None => name
+					}
+				}
+			}
+			else
+				None
+		}
+		
+		// A custom default value may be carried over to sql under some circumstances
+		val sqlDefault = model("sql_default", "sql_def").stringOr { default.toSql.getOrElse("") }
+		
+		val rawLimit = model("length_rule", "length_limit", "limit", "max_length", "length_max", "max")
 		val limit = rawLimit.int match {
 			case Some(max) => s"to $max"
 			case None => rawLimit.getString
 		}
 		
-		// May use the default value in sql, also
-		val default: CodePiece = propModel("default", "def")
-		val sqlDefault = propModel("sql_default", "sql_def").stringOr { default.toSql.getOrElse("") }
-		// TODO: Add support for custom db-property naming and multi-column types
-		Property(fullName, actualDataType, default,
-			Vector(DbPropertyOverrides(None, columnName.map { _.columnName }.getOrElse(""), sqlDefault, limit,
-				propModel("indexed", "index", "is_index").boolean)),
-			doc)
+		DbPropertyOverrides(name, finalColumnName, sqlDefault, limit, model("indexed", "index", "is_index").boolean)
 	}
 	
 	private def instanceFrom(model: Model, parentClass: Class)(implicit naming: NamingRules) =
