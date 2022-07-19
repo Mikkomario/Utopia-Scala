@@ -61,10 +61,14 @@ object Name extends FromValueFactory[Name]
 			""
 		else
 			singular.last.toLower match {
-				// Case: Ends with an 's' => prepends with 'many'
+				// Case: Ends with an 's' => prepends with 'many' or replaces double 's' with 'sses'
 				case 's' =>
-					val style = NamingConvention.of(singular)
-					style.combine(style.convert("many", Text.lower), singular)
+					if (singular.length == 1 || singular(singular.length - 2) == 's')
+						singular + "ses"
+					else {
+						val style = NamingConvention.of(singular)
+						style.combine(style.convert("many", Text.lower), singular)
+					}
 				case 'y' =>
 					// Case: Ends with a y => replaces 'y' with 'ies'
 					if (singular.last.isLower)
