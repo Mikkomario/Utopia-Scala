@@ -318,6 +318,12 @@ When specifying a data type that is represented using two or more database colum
       - Default is "None"
     - **"sql_default", "column_suffix" and "index"** as they appear above (all are optional), except that they now only 
       apply to this part / column
+- Specify **"from_value"** and **"option_from_value"** -properties in a way that **accepts multiple values** 
+  (one for each part). The values should be referenced with `$v1`, `$v2`, `$v3` and so on.
+  - In our example, these would read `"WeightUnit.forId($v2.getInt).map { unit => Weight($v1.getDouble, unit) }"` 
+    (which is a slightly complex implementation due to the use of enumerations) and 
+    `"$v2.int.flatMap(WeightUnit.findForId).flatMap { unit => $v1.double.map { Weight(_, unit) } }"`, both of which would also 
+    be modified to include the appropriate references
 - **Don't** specify the following properties in the main data type object: 
   **"sql", "sql_default", "column_suffix" and "index"**
 

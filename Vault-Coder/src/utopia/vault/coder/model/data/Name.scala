@@ -176,7 +176,9 @@ case class Name(singular: String, plural: String, style: NamingConvention)
 	def +(string: Name) = {
 		val sameStyle = string.to(style)
 		// The leftmost name is no longer pluralized in the combination
-		Name(style.combine(singular, sameStyle.singular), style.combine(singular, sameStyle.plural), style)
+		// (except when the rightmost part is indistinguishable)
+		val pluralFirstPart = if (sameStyle.singular == sameStyle.plural) plural else singular
+		Name(style.combine(singular, sameStyle.singular), style.combine(pluralFirstPart, sameStyle.plural), style)
 	}
 	def +(string: String): Name = if (string.isEmpty) this else this + (string: Name)
 	

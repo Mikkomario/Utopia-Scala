@@ -1,6 +1,5 @@
 package utopia.vault.coder.model.data
 
-import utopia.flow.util.CollectionExtensions._
 import utopia.vault.coder.model.datatype.BasicPropertyType.{IntNumber, LongNumber}
 import utopia.vault.coder.model.enumeration.IntSize.Default
 import utopia.vault.coder.model.enumeration.NamingConvention.CamelCase
@@ -142,10 +141,16 @@ case class Class(name: Name, customTableName: Option[String], idName: Name, prop
 	/**
 	  * @return Whether this class refers to one or more enumerations in its properties
 	  */
+	@deprecated("Deprecated for removal. Check whether conversion may fail instead.", "v1.6")
 	def refersToEnumerations = properties.exists { _.dataType match {
 		case _: EnumValue => true
 		case _ => false
 	} }
+	
+	/**
+	  * @return Whether a conversion from a database-originated model may fail due to a property parsing failure
+	  */
+	def fromDbModelConversionMayFail = properties.exists { _.dataType.yieldsTryFromValue }
 	
 	/**
 	  * @return The property in this class which contains instance creation time. None if no such property is present.

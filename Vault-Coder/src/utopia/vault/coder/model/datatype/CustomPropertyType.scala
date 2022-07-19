@@ -104,7 +104,7 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 					.filter { _.nonEmpty }.getOrElse(CodePiece.none)
 				apply(ScalaType(model("type")), sqlTypeFrom(model), model("extract"), model("extract_from_option"),
 					toValueInput.notEmpty
-						.getOrElse { CodePiece(parameterIndicatorRegex.string, Set(Reference.valueConversions)) },
+						.getOrElse { CodePiece("$v", Set(Reference.valueConversions)) },
 					emptyValue)
 				}
 			}
@@ -112,7 +112,7 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 	
 	case class CustomPartConversion(midType: ScalaType, sqlType: SqlPropertyType, extractPart: CodePiece,
 	                                extractPartFromOption: CodePiece,
-	                                partToValue: CodePiece = CodePiece(parameterIndicatorRegex.string, Set(Reference.valueConversions)),
+	                                partToValue: CodePiece = CodePiece("$v", Set(Reference.valueConversions)),
 	                                emptyMidValue: CodePiece = CodePiece.none)
 }
 
@@ -124,8 +124,10 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
   * @param conversion Either Left: The underlying SQL data type (just the type) behind this data type
   *                   (single-column use-case) or Right: The parts (column-representations) that form this combined
   *                   data type (multi-column use-case)
-  * @param fromValue Code that takes a Value (represented by $v) and returns an instance of this type
-  * @param optionFromValue Code that takes a Value ($v) and returns an option containing an instance of this type
+  * @param fromValue Code that takes a Value (represented by $v) and returns an instance of this type.
+  *                  For multi-column data types, the values are represented by $v1, $v2, $v3 and so on.
+  * @param optionFromValue Code that takes a Value ($v) and returns an option containing an instance of this type.
+  *                        For multi-column data types, the values are represented by $v1, $v2, $v3 and so on.
   * @param toValue Code that takes an instance of this type (represented by $v) and returns a Value
   * @param optionToValue Code that takes an option (with this instance) ($v) and returns a Value
   *                      (default = empty = autogenerate)
@@ -162,12 +164,13 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 	override def defaultPropertyName =
 		defaultPropName.getOrElse { Name.interpret(scalaType.toString, CamelCase.capitalized) }
 	
-	override def fromValueCode(valueCode: String) = finalizeCode(fromValue, valueCode)
+	override def fromValueCode(valueCodes: Vector[String]): CodePiece = fromValueCode(fromValue, valueCodes)
+	// TODO: Current version doesn't support multi-column types, hence the Vector("v")
 	override def fromValuesCode(valuesCode: String) =
-		fromValueCode("v").mapText { fromValue => s"$valuesCode.map { v => $fromValue }" }
+		fromValueCode(Vector("v")).mapText { fromValue => s"$valuesCode.map { v => $fromValue }" }
 	override def toValueCode(instanceCode: String) = finalizeCode(toValue, instanceCode)
 	
-	private def optionFromValueCode(valueCode: String) = finalizeCode(optionFromValue, valueCode)
+	private def optionFromValueCode(valueCodes: Vector[String]): CodePiece = fromValueCode(optionFromValue, valueCodes)
 	private def optionToValueCode(optionCode: String) = optionToValue.notEmpty match {
 		// Case: Using a user-defined conversion
 		case Some(toValue) => finalizeCode(toValue, optionCode)
@@ -186,8 +189,23 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 	
 	// OTHER    ----------------------------
 	
-	private def finalizeCode(userCode: CodePiece, parameterCode: String) =
-		userCode.mapText { _.replaceAll(valueRegex, parameterCode) }
+	private def fromValueCode(userCode: CodePiece, valueCodes: Vector[String]) = {
+		// Case: Parsing from multiple parameters (multiple parts)
+		if (valueCodes.size > 1)
+			valueCodes.zipWithIndex.foldLeft(userCode) { case (code, (valueCode, index)) =>
+				finalizeCode(code, valueCode, valueRegex + (index + 1).toString)
+			}
+		else
+			valueCodes.headOption match {
+				// Case: Parsing from a single part
+				case Some(valueCode) => finalizeCode(userCode, valueCode)
+				// Case: No values provided (shouldn't arrive here)
+				case None => emptyValue
+			}
+	}
+	
+	private def finalizeCode(userCode: CodePiece, parameterCode: String, parameterRegex: Regex = valueRegex) =
+		userCode.mapText { _.replaceAll(parameterRegex, parameterCode) }
 	
 	
 	// NESTED   ----------------------------
@@ -196,7 +214,7 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 	{
 		override lazy val scalaType = ScalaType.option(CustomPropertyType.this.scalaType)
 		override lazy val sqlConversions = conversion match {
-			case Left(targetType) => Vector(DirectSqlTypeConversion(OptionWrappedMidType, targetType))
+			case Left(targetType) => Vector(DirectSqlTypeConversion(OptionWrappedMidType, targetType.nullable))
 			case Right(parts) => parts.map { new PartToSqlConversion(_, extractFromOption = true) }
 		}
 		
@@ -211,9 +229,10 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 		override def concrete = CustomPropertyType.this
 		
 		override def toValueCode(instanceCode: String) = optionToValueCode(instanceCode)
-		override def fromValueCode(valueCode: String) = optionFromValueCode(valueCode)
+		override def fromValueCode(valueCodes: Vector[String]) = optionFromValueCode(valueCodes)
+		// TODO: No multi-column support exists here either
 		override def fromValuesCode(valuesCode: String) =
-			fromValueCode("v").mapText { fromValue => s"$valuesCode.flatMap { v => $fromValue }" }
+			fromValueCode(Vector("v")).mapText { fromValue => s"$valuesCode.flatMap { v => $fromValue }" }
 		
 		override def writeDefaultDescription(className: Name, propName: Name) =
 			CustomPropertyType.this.writeDefaultDescription(className, propName)
@@ -243,7 +262,7 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 		override def origin =
 			if (extractFromOption) OptionWrapped.scalaType else CustomPropertyType.this.scalaType
 		override def intermediate: ValueConvertibleType = IntermediateState
-		override def target = part.sqlType
+		override def target = if (extractFromOption) part.sqlType.nullable else part.sqlType
 		
 		override def midConversion(originCode: String) =
 			finalizeCode(if (extractFromOption) part.extractPartFromOption else part.extractPart, originCode)

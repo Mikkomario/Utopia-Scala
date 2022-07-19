@@ -8,15 +8,26 @@
     "Weight": {
       "type": "utopia.vault.coder.test.model.cached.Weight",
       "from_value": {
-        "code": "Weight.ofKilos($v.getDouble)",
-        "reference": "utopia.vault.coder.test.model.cached.Weight"
+        "code": "WeightUnit.forId($v2.getInt).map { unit => Weight($v1.getDouble, unit) }",
+        "references": [
+          "utopia.vault.coder.test.model.cached.Weight",
+          "utopia.vault.coder.test.model.enumeration.WeightUnit"
+        ]
       },
+      "try": true,
       "option_from_value": {
-        "code": "$v.double.map(Weight.ofKilos)",
-        "reference": "utopia.vault.coder.test.model.cached.Weight"
+        "code": "$v2.int.flatMap(WeightUnit.findForId).flatMap { unit => $v1.double.map { Weight(_, unit) } }",
+        "references": [
+          "utopia.vault.coder.test.model.cached.Weight",
+          "utopia.vault.coder.test.model.enumeration.WeightUnit"
+        ]
       },
       "to_value": {
         "code": "$v.toKilos",
+        "reference": "utopia.flow.generic.ValueConversions._"
+      },
+      "option_to_value": {
+        "code": "$v.map { _.toKilos }",
         "reference": "utopia.flow.generic.ValueConversions._"
       },
       "prop_name": "weight",

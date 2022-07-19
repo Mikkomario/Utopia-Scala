@@ -199,12 +199,19 @@ object DbModelWriter
 			// Case: The property matches multiple columns => generates partial and full withX method
 			// variants
 			case Right(dbProps) =>
-				val extraDescription = s" which is part of ${ concreteProp.name }"
+				// TODO: The current system doesn't know what the concrete variants of the "parts" are and so can't
+				//  write a function that accepts a concrete variant of such a type
+				/*
+				val extraDescription = s", which is part of the property ${ concreteProp.name }"
 				dbProps.map { withDbPropertyMethod(_, returnDescriptionAppendix = extraDescription,
 					calledMethodName = calledMethodName, returnDescriptionStart = returnDescriptionStart) } :+
 					withMethod(concreteProp, dbProps, concreteProp.dataType.toScala, concreteProp.description,
 						s" (sets all ${dbProps.size} values)", calledMethodName,
 						returnDescriptionStart)
+				 */
+				Vector(withMethod(concreteProp, dbProps, concreteProp.dataType.toScala, concreteProp.description,
+					s" (sets all ${dbProps.size} values)", calledMethodName,
+					returnDescriptionStart))
 		}
 	}
 	private def withDbPropertyMethod(property: DbProperty, paramDescription: String = "",

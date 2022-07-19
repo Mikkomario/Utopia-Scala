@@ -57,11 +57,13 @@ trait PropertyType extends ScalaTypeConvertible with ValueConvertibleType
 	def concrete: PropertyType
 	
 	/**
-	  * Writes a code that reads this an instance of this type from a value.
-	  * @param valueCode Code for accessing a value
+	  * Writes a code that reads this an instance of this type from a value or a sequence of values
+	  * (which still represent a single instance).
+	  * @param valueCodes Code for accessing the parameter values. The number of proposed values must match the number
+	  *                   of parts or components used by this type.
 	  * @return Code for accessing a value and converting it to this type (in scala)
 	  */
-	def fromValueCode(valueCode: String): CodePiece
+	def fromValueCode(valueCodes: Vector[String]): CodePiece
 	/**
 	  * Writes a code that reads a vector of instances of this type from a vector of values
 	  * @param valuesCode Code that returns a vector of values
@@ -118,10 +120,22 @@ trait SingleColumnPropertyType extends PropertyType
 	  */
 	def sqlConversion: SqlTypeConversion
 	
+	/**
+	  * Writes a code that reads this an instance of this type from a value.
+	  * @param valueCode Code for accessing a value
+	  * @return Code for accessing a value and converting it to this type (in scala)
+	  */
+	def fromValueCode(valueCode: String): CodePiece
+	
 	
 	// IMPLEMENTED  --------------------
 	
 	override def sqlConversions = Vector(sqlConversion)
+	
+	override def fromValueCode(valueCodes: Vector[String]): CodePiece = valueCodes.headOption match {
+		case Some(valueCode) => fromValueCode(valueCode)
+		case None => emptyValue
+	}
 }
 
 trait DirectlySqlConvertiblePropertyType extends SingleColumnPropertyType
@@ -208,6 +222,8 @@ trait ConcreteSingleColumnPropertyType extends SingleColumnPropertyType
 			fromValueCode("v").mapText { fromValue => s"$valuesCode.flatMap { v => $fromValue }" }
 		
 		override def toValueCode(instanceCode: String) = optionToValueCode(instanceCode)
+		
+		override def toString = s"Option[$concrete]"
 	}
 	
 	object OptionWrappingSqlConversion extends SqlTypeConversion
@@ -435,6 +451,7 @@ object BasicPropertyType
 	  * String / text property type with a certain length
 	  * @param length Content max length (default = 255)
 	  */
+	// TODO: This may need to be a custom data type (not wrapped in option)
 	case class Text(length: Int = 255) extends BasicPropertyType {
 		
 		override val sqlType = SqlPropertyType(s"VARCHAR($length)")
@@ -491,7 +508,7 @@ trait PropertyTypeWrapper extends PropertyType
 	override def emptyValue = wrapped.emptyValue
 	override def nonEmptyDefaultValue = wrapped.nonEmptyDefaultValue
 	
-	override def fromValueCode(valueCode: String) = wrapped.fromValueCode(valueCode)
+	override def fromValueCode(valueCodes: Vector[String]) = wrapped.fromValueCode(valueCodes)
 	override def fromValuesCode(valuesCode: String) = wrapped.fromValuesCode(valuesCode)
 	override def toValueCode(instanceCode: String) = wrapped.toValueCode(instanceCode)
 }
@@ -506,8 +523,9 @@ trait SingleColumnPropertyTypeWrapper extends PropertyTypeWrapper with SingleCol
 	// IMPLEMENTED  ----------------------
 	
 	override def sqlConversion = wrapped.sqlConversion
-	
 	override def sqlConversions = super[SingleColumnPropertyType].sqlConversions
+	
+	override def fromValueCode(valueCode: String) = wrapped.fromValueCode(valueCode)
 }
 
 object PropertyType

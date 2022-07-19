@@ -129,14 +129,6 @@ object ClassMethodFactory
 		}
 	
 	private def propFromValidModelCode(prop: Property, modelName: String = "valid")
-	                                  (propNamesInModel: Property => Vector[String]) = {
-		val names = propNamesInModel(prop)
-		// Case: Reads instance from a single value / db-property
-		if (names.size == 1)
-			prop.dataType.fromValueCode(s"$modelName(${names.head.quoted})")
-		// Case: Reads instance from multiple values / db-properties
-		else
-			prop.dataType.fromValueCode(
-				s"Vector(${names.map { name => s"$modelName(${name.quoted})" }.mkString(", ")})")
-	}
+	                                  (propNamesInModel: Property => Vector[String]) =
+		prop.dataType.fromValueCode(propNamesInModel(prop).map { name => s"$modelName(${name.quoted})" })
 }

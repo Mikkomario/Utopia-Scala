@@ -260,26 +260,33 @@ object ClassReader
 		val length = propModel("length", "len").int
 		val baseDataType = propModel("type").string.flatMap { typeName =>
 			val lowerTypeName = typeName.toLowerCase
+			val innermostTypeName = lowerTypeName.afterLast("[").notEmpty match {
+				case Some(afterBracket) => afterBracket.untilFirst("]")
+				case None => lowerTypeName
+			}
 			// Checks for a custom data type
-			customTypes.get(lowerTypeName).orElse {
-				// Checks for an enumeration reference
-				val enumType = {
-					if (lowerTypeName.contains("enum")) {
-						val enumName = lowerTypeName.afterFirst("enum")
-							.afterFirst("[").untilFirst("]")
-						enumerations.find { _.name.toLowerCase == enumName }
+			customTypes.get(innermostTypeName) match {
+				case Some(customType) =>
+					Some(if (lowerTypeName.untilFirst("[").contains("option")) customType.optional else customType)
+				case None =>
+					// Checks for an enumeration reference
+					val enumType = {
+						if (lowerTypeName.contains("enum")) {
+							val enumName = lowerTypeName.afterFirst("enum")
+								.afterFirst("[").untilFirst("]")
+							enumerations.find { _.name.toLowerCase == enumName }
+						}
+						else
+							None
 					}
-					else
-						None
-				}
-				enumType match {
-					// Case: Enumeration reference
-					case Some(enumType) =>
-						val baseType = EnumValue(enumType)
-						Some(if (lowerTypeName.contains("option")) baseType.optional else baseType)
-					// Case: Standard data type
-					case None => PropertyType.interpret(typeName, length, rawName)
-				}
+					enumType match {
+						// Case: Enumeration reference
+						case Some(enumType) =>
+							val baseType = EnumValue(enumType)
+							Some(if (lowerTypeName.contains("option")) baseType.optional else baseType)
+						// Case: Standard data type
+						case None => PropertyType.interpret(typeName, length, rawName)
+					}
 			}
 		}
 		// Applies the possible table reference

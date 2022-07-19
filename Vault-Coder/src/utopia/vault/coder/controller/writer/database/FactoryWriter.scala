@@ -55,7 +55,7 @@ object FactoryWriter
 		val builder = new VectorBuilder[Extension]()
 		
 		// If no enumerations are included, the inheritance is more specific (=> uses automatic validation)
-		if (classToWrite.refersToEnumerations)
+		if (classToWrite.fromDbModelConversionMayFail)
 			builder += Reference.fromRowModelFactory(modelRef)
 		else
 			builder += Reference.fromValidatedRowModelFactory(modelRef)
@@ -108,7 +108,7 @@ object FactoryWriter
 					.withinParenthesis
 		
 		val fromModelMethod = {
-			if (classToWrite.refersToEnumerations)
+			if (classToWrite.fromDbModelConversionMayFail)
 				ClassMethodFactory.classFromModel(classToWrite, "table.validate(model)"){
 					_.dbProperties.map { _.modelName } }(_modelFromAssignments)
 			else

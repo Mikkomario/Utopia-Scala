@@ -158,7 +158,7 @@ object AccessWriter
 					// Only single-column properties are pulled
 					prop.onlyDbVariant.map { dbProp =>
 						val pullCode = prop.dataType.optional
-							.fromValueCode(s"pullColumn(model.${ DbModelWriter.columnNameFrom(dbProp) })")
+							.fromValueCode(Vector(s"pullColumn(model.${ DbModelWriter.columnNameFrom(dbProp) })"))
 						ComputedProperty(dbProp.name.propName, pullCode.references,
 							description = prop.description.nonEmptyOrElse(s"The ${ dbProp.name } of this ${
 								classToWrite.name }") + s". None if no ${ classToWrite.name } (or value) was found.",
@@ -440,8 +440,11 @@ object AccessWriter
 	                              (methodNameFromPropName: Name => String)
 	                              (implicit naming: NamingRules) =
 	{
+		// TODO: Because of a technical limitation where accepted parameter type is not available, only single-column
+		//  properties are written
 		classToWrite.properties.flatMap { prop =>
-			prop.dbProperties.map { dbProp => setter(prop, dbProp, classToWrite.name)(methodNameFromPropName) }
+			prop.onlyDbVariant.map { dbProp => setter(prop, dbProp, classToWrite.name)(methodNameFromPropName) }
+			// prop.dbProperties.map { dbProp => setter(prop, dbProp, classToWrite.name)(methodNameFromPropName) }
 		}.toSet
 	}
 	
