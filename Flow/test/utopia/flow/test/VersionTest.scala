@@ -26,8 +26,10 @@ object VersionTest extends App
 	assert(v2.patch == 1)
 	assert(v2.suffix == "alpha")
 	
-	def testMatch(from: String, expected: String) =
-		assert(Version.findFrom(from).exists { _.toString == expected })
+	def testMatch(from: String, expected: String) = {
+		assert(Version.findFrom(from).exists { _.toString == expected },
+			s"Found: ${Version.findFrom(from)}, expected: Some($expected)")
+	}
 	
 	testMatch("Some text v2.1", "v2.1")
 	testMatch("Something something 2.2 more", "v2.2")
@@ -35,6 +37,7 @@ object VersionTest extends App
 	testMatch("1-Apple", "v1.0-Apple")
 	testMatch("Text v3.2.1-alpha-update and more text", "v3.2.1-alpha-update")
 	testMatch("1 Apple and 2 Oranges v2.0-beta, right?", "v2.0-beta")
+	testMatch("afuel-models-v10.15.1.json", "v10.15.1")
 	
 	def testNotFound(from: String) = assert(Version.findFrom(from).isEmpty)
 	

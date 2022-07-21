@@ -12,6 +12,7 @@
 - The application may now store project paths to a local file so that they don't need to be repeated every time 
   the program is used
 - Added update time data type (i.e. updated)
+- The application moves the last build results to a "last-build" -directory before exporting new files
 ### Bugfixes
 - Extending column length rules are now written as "to X" instead of "up to X"
 ### Other

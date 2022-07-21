@@ -117,8 +117,9 @@ object VaultCoderApp extends App
 				case Success(children) =>
 					val jsonChildren = children.filter { _.fileType == "json" }
 					if (jsonChildren.nonEmpty)
-						jsonChildren.flatMap { p => Version.findFrom(p.fileName).map { _ -> p } }.maxByOption { _._1 }
-							.map { _._2 }.getOrElse { modelsPath }
+						jsonChildren.flatMap { p => Version.findFrom(p.fileName.untilLast(".")).map { _ -> p } }
+							.maxByOption { _._1 }.map { _._2 }
+							.getOrElse { modelsPath }
 					else {
 						val subDirectories = children.filter { _.isDirectory }
 						subDirectories.flatMap { p => Version.findFrom(p.fileName).map { _ -> p } }
@@ -320,7 +321,10 @@ object VaultCoderApp extends App
 				{
 					case Some(src) =>
 						val altSrc = alternativeMergeRoot.orElse {
-							if (StdIn.ask("Do you want to specify an alternative source directory?"))
+							// Only requests the alternative merge root if the main merge root was not specified
+							// during program startup (i.e. no alternative merge root was asked above)
+							if (mainMergeRoot.isEmpty &&
+								StdIn.ask("Do you want to specify an alternative source directory?"))
 								StdIn.readNonEmptyLine(
 									s"Please specify the alternative project source director (absolute or relative to ${"".toAbsolutePath})")
 									.map { p => p: Path }
@@ -373,6 +377,19 @@ object VaultCoderApp extends App
 		println(s"Writing class and enumeration data to ${outputPath.toAbsolutePath}...")
 		
 		outputPath.asExistingDirectory.flatMap { directory =>
+			// Moves the previously written files to a backup directory (which is cleared first)
+			val backupDirectory = directory/"last-build"
+			if (backupDirectory.exists)
+				backupDirectory.deleteContents().failure.foreach { e => println(
+					s"WARNING: failed to clear $backupDirectory before backup. Error message: ${e.getMessage}") }
+			else
+				backupDirectory.createDirectories().failure.foreach { _.printStackTrace() }
+			directory.tryIterateChildren {
+				_.filterNot { _ == backupDirectory }.map { _.moveTo(backupDirectory) }.toVector.toTry }
+				.failure
+				.foreach { e => println(
+					s"WARNING: Failed to back up some previously built files. Error message: ${e.getMessage}") }
+			
 			// Handles one project at a time
 			filteredData.tryForeach { data =>
 				// Makes sure there is something to write

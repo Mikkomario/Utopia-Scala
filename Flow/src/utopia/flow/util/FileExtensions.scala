@@ -618,17 +618,15 @@ object FileExtensions
 		 * @return Whether any files were deleted (false if this file didn't exist).
 		 *         May contain a failure if some of the files couldn't be deleted.
 		 */
-		def delete(allowDeletionOfDirectoryContents: Boolean = true): Try[Boolean] =
-		{
+		def delete(allowDeletionOfDirectoryContents: Boolean = true): Try[Boolean] = {
 			if (notExists)
 				Success(false)
 			// In case of a directory, may need to clear contents first
-			else if (isDirectory)
-			{
+			else if (isDirectory) {
 				// If any of child deletion fails, the whole process is interrupted
 				// Deletes this directory once the children have been removed
 				if (allowDeletionOfDirectoryContents)
-					children.flatMap { _.tryMap { _.delete() } }.flatMap { _ => Try { Files.deleteIfExists(p) }}
+					deleteContents().flatMap { dir => Try { Files.deleteIfExists(dir) }}
 				else
 					Failure(new DirectoryNotEmptyException(
 						s"Targeted directory $p is not empty and recursive deletion is disabled"))
@@ -642,11 +640,19 @@ object FileExtensions
 					}
 				}
 		}
-		
+		/**
+		  * Deletes all files from under this directory
+		  * @return Success containing this directory if all deletions succeeded.
+		  *         Failure if one or more of the deletions failed.
+		  */
+		def deleteContents() =
+			iterateChildren { _.map { _.delete() }.toVector.find { _.isFailure }.getOrElse { Success(()) } }
+				.flatten.map { _ => p }
 		/**
 		 * Deletes all child paths from under this directory. Stops deletion if any deletion fails.
 		 * @return Whether any files were deleted. May contain failure.
 		 */
+		@deprecated("Please use deleteContents instead", "v1.16")
 		def deleteChildren() = children.flatMap { _.tryMap { _.delete() } }.map { _.contains(true) }
 		
 		/**

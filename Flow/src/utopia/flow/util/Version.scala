@@ -12,7 +12,7 @@ object Version
 	 * A regular expression for finding version numbers (including the suffix part)
 	 */
 	// v-prefix is optional and suffix is optional, but can't contain a whitespace
-	val regex = Regex("v").noneOrOnce + Regex.digit +
+	val regex = Regex("v").noneOrOnce + Regex.digit.oneOrMoreTimes +
 		(Regex.escape('.') + Regex.digit.oneOrMoreTimes).withinParenthesis.zeroOrMoreTimes +
 		(Regex.escape('-') + (Regex.alphaNumeric || Regex.escape('-')).withinParenthesis.oneOrMoreTimes)
 			.withinParenthesis.noneOrOnce

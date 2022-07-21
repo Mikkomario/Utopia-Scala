@@ -21,12 +21,15 @@
 - **Iterable** (**CollectionExtensions**)
   - Added `.areAllEqual: Boolean`
   - Added `.maxGroupBy(...)`
+- **IterableOnce** (**CollectionExtensions**)
+  - Added a number of utility methods for iterables of tries
 - **LocalDate** (**TimeExtensions**)
   - Added `.monthOfYear: Int`
 - **Map** (**CollectionExtensions**)
   - Added `.mapKeys(...)`
 - **Path** (**FileExtensions**)
   - Added `.commonParentWith(...)`
+  - Added `.deleteContents()` -which deletes all directory contents
 - **Regex**
   - Added `.replaceAll(String, String)`
 - **String** (**StringExtensions**)
@@ -38,6 +41,7 @@
   causing problems in multiple dependent functions
 - **Volatile** classes now fire change events only **after** unlocking themselves. 
   The previous implementation led to deadlocks in reactive systems (such as **Reflection**)
+- **Version** finding didn't work for version numbers that started with a number larger than 9. Fixed.
 ### Other Changes
 - Optimized json conversion (see breaking changes)
 - `.divideBy(...)` in **IterableOnce** through **CollectionExtensions** now returns collections based on the implicit 

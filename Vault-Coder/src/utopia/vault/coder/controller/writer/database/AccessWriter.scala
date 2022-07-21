@@ -442,7 +442,7 @@ object AccessWriter
 	{
 		// TODO: Because of a technical limitation where accepted parameter type is not available, only single-column
 		//  properties are written
-		classToWrite.properties.flatMap { prop =>
+		classToWrite.properties.map { _.concrete }.flatMap { prop =>
 			prop.onlyDbVariant.map { dbProp => setter(prop, dbProp, classToWrite.name)(methodNameFromPropName) }
 			// prop.dbProperties.map { dbProp => setter(prop, dbProp, classToWrite.name)(methodNameFromPropName) }
 		}.toSet
