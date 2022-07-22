@@ -139,6 +139,8 @@ object NamingConvention
 					val base = fromParts(parts)
 					if (firstCapitalized == capitalized)
 						base
+					else if (capitalized)
+						base.capitalize
 					else
 						base.uncapitalize
 				case CamelCase(wasCapitalized) =>

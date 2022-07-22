@@ -69,6 +69,8 @@ object Name extends FromValueFactory[Name]
 						singular
 					else {
 						val style = NamingConvention.of(singular)
+						println(s"Adding 'many' with style: $style")
+						println(style.convert("many", Text.lower))
 						style.combine(style.convert("many", Text.lower), singular)
 					}
 				case 'y' =>
