@@ -1,5 +1,6 @@
 package utopia.vault.coder.model.scala
 
+import utopia.flow.util.CollectionExtensions._
 import utopia.vault.coder.model.merging.MergeConflict
 import utopia.vault.coder.model.scala.code.CodePiece
 import utopia.vault.coder.model.scala.template.{ScalaConvertible, ScalaDocConvertible}
@@ -81,12 +82,10 @@ case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Ve
 	
 	override def documentation = (lists.flatten ++ implicits).flatMap { _.documentation }
 	
-	override def toScala =
-	{
+	override def toScala = {
 		if (isEmpty)
 			"()"
-		else
-		{
+		else {
 			val basePart = lists.map(parameterListFrom).reduceLeftOption { _ + _ }.getOrElse(CodePiece.empty)
 			if (implicits.isEmpty)
 				basePart
@@ -132,8 +131,7 @@ case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Ve
 	  * @param description Description to attach to the conflict, if one is found
 	  * @return A possible conflict between these parameter sets
 	  */
-	def conflictWith(other: Parameters, description: => String = "") =
-	{
+	def conflictWith(other: Parameters, description: => String = "") = {
 		val my = toString
 		val their = other.toString
 		if (my == their)
@@ -142,11 +140,20 @@ case class Parameters(lists: Vector[Vector[Parameter]] = Vector(), implicits: Ve
 			Some(MergeConflict.line(their, my, description))
 	}
 	
-	private def parameterListFrom(list: Seq[Parameter]) =
-	{
+	private def parameterListFrom(list: Seq[Parameter]) = {
 		if (list.isEmpty)
 			CodePiece("()")
-		else
-			list.map { _.toScala }.reduceLeft { _.append(_, ", ") }.withinParenthesis
+		else {
+			// Doesn't specify default parameters if there are non-default parameters remaining on the right
+			val modifiedList = list.lastIndexWhereOption { _.hasNoDefault } match {
+				case Some(lastNonDefaultIndex) =>
+					if (lastNonDefaultIndex > 0)
+						list.take(lastNonDefaultIndex).map { _.withoutDefault } ++ list.drop(lastNonDefaultIndex)
+					else
+						list
+				case None => list
+			}
+			modifiedList.map { _.toScala }.reduceLeft { _.append(_, ", ") }.withinParenthesis
+		}
 	}
 }

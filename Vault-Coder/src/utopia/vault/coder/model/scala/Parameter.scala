@@ -16,6 +16,23 @@ case class Parameter(name: String, dataType: ScalaType, default: CodePiece = Cod
                      prefix: Option[DeclarationStart] = None, description: String = "")
 	extends ScalaConvertible with ScalaDocConvertible
 {
+	// COMPUTED -------------------------------
+	
+	/**
+	  * @return Whether this parameter has a default value
+	  */
+	def hasDefault = default.nonEmpty
+	/**
+	  * @return Whether this parameter doesn't have a default value
+	  */
+	def hasNoDefault = !hasDefault
+	
+	/**
+	  * @return A copy of this parameter without a default value
+	  */
+	def withoutDefault = if (hasDefault) copy(default = CodePiece.empty) else this
+	
+	
 	// IMPLEMENTED  ---------------------------
 	
 	override def toScala =
