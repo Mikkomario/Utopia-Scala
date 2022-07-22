@@ -65,6 +65,8 @@ object Name extends FromValueFactory[Name]
 				case 's' =>
 					if (singular.length == 1 || singular(singular.length - 2) == 's')
 						singular + "ses"
+					else if (singular.startsWithIgnoreCase("many"))
+						singular
 					else {
 						val style = NamingConvention.of(singular)
 						style.combine(style.convert("many", Text.lower), singular)
@@ -186,11 +188,8 @@ case class Name(singular: String, plural: String, style: NamingConvention)
 	}
 	def +(string: String): Name = if (string.isEmpty) this else this + (string: Name)
 	
-	def +:(string: Name) = {
-		val sameStyle = string.to(style)
-		Name(style.combine(sameStyle.singular, singular), style.combine(sameStyle.plural, plural), style)
-	}
-	def +:(string: String): Name = if (string.isEmpty) this else string +: this
+	def +:(string: Name) = string.to(style) + this
+	def +:(string: String): Name = if (string.isEmpty) this else (string: Name) +: this
 	def ++(strings: IterableOnce[String]): Name = strings.iterator.foldLeft(this) { _ + _ }
 	
 	/**

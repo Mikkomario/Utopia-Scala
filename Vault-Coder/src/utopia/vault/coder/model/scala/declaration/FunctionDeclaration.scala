@@ -132,10 +132,8 @@ trait FunctionDeclaration[+Repr]
 	
 	override def mergeWith(other: FunctionDeclaration[_]) =
 	{
-		val (priority, lowPriority) =
-		{
-			if (isLowMergePriority)
-			{
+		val (priority, lowPriority) = {
+			if (isLowMergePriority) {
 				if (other.isLowMergePriority) this -> other else other -> this
 			}
 			else
@@ -159,7 +157,15 @@ trait FunctionDeclaration[+Repr]
 				explicitOutputType.get.toString,
 				s"$name implementations specify different return types$prioString")
 		
-		makeCopy(visibility min other.visibility,
+		val newVisibility = {
+			if (other.isLowMergePriority)
+				visibility
+			else if (isLowMergePriority)
+				other.visibility
+			else
+				visibility min other.visibility
+		}
+		makeCopy(newVisibility,
 			priority.genericTypes ++
 				lowPriority.genericTypes.filterNot { t => priority.genericTypes.exists { _.name == t.name } },
 			priority.params, priority.bodyCode, priority.explicitOutputType.orElse(lowPriority.explicitOutputType),

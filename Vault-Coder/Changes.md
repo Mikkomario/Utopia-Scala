@@ -6,6 +6,7 @@
   - This update requires using of **Flow** v1.16, which alter string-to-value conversion
 - Plural name combinations only pluralize the last part anymore. E.g. when the previous version would return 
   "instancesIds", the current version returns "instanceIds"
+- Modified visibility writing logic in low merge priority -situations
 ### New Features
 - Added support for custom data types (see README for details)
 - Added support for multi-column data types, although no inbuilt multi-column data type exists at this time 
