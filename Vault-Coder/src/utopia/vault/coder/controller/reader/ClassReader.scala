@@ -7,11 +7,11 @@ import utopia.flow.util.{UncertainBoolean, Version}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, CombinationData, DbPropertyOverrides, Enum, Instance, Name, NamingRules, ProjectData, Property}
-import utopia.vault.coder.model.datatype.BasicPropertyType.{IntNumber, Text}
+import utopia.vault.coder.model.datatype.BasicPropertyType.IntNumber
 import utopia.vault.coder.model.datatype.{CustomPropertyType, PropertyType}
 import utopia.vault.coder.model.enumeration.CombinationType.{Combined, MultiCombined, PossiblyCombined}
 import utopia.vault.coder.model.enumeration.IntSize.Default
-import utopia.vault.coder.model.datatype.PropertyType.{ClassReference, EnumValue}
+import utopia.vault.coder.model.datatype.PropertyType.{ClassReference, EnumValue, Text}
 import utopia.vault.coder.model.enumeration.{CombinationType, NamingConvention}
 import utopia.vault.coder.model.scala.Package
 import utopia.vault.coder.model.scala.code.CodePiece

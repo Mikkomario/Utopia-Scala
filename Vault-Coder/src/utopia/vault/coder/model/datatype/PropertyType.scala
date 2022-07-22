@@ -283,12 +283,7 @@ object BasicPropertyType
 		def _findWith(searches: Iterable[BasicPropertyType => Boolean]) =
 			searches.findMap { search => objectValues.find(search) }
 		
-		if (lowerName.startsWith("text") || lowerName.startsWith("string") || lowerName.startsWith("varchar")) {
-			// Text length may be specified within parentheses after the type (E.g. "String(3)")
-			val length = lowerName.afterFirst("(").untilFirst(")").int.orElse(specifiedLength).getOrElse(255)
-			Some(Text(length))
-		}
-		else if (lowerName.contains("int")) {
+		if (lowerName.contains("int")) {
 			// Int size may be specified in parentheses after the type name
 			// E.g. "Int(Tiny)" => TINYINT or "INT(320)" => SMALLINT
 			val lengthPart = lowerName.afterFirst("(").untilFirst(")").notEmpty
@@ -338,9 +333,6 @@ object BasicPropertyType
 				propertyName.map { _.toLowerCase }.flatMap { lowerName =>
 					if (lowerName.startsWith("is") || lowerName.startsWith("was"))
 						Some(Bool)
-					else if (lowerName.contains("name"))
-						Some(Text(lowerName.afterFirst("(").untilFirst(")").int
-							.orElse(specifiedLength).getOrElse(255)))
 					else
 						objectValues.filter { _.defaultPropertyName.variants.exists(_.contains(lowerName)) }
 							.maxByOption { _.defaultPropertyName.singular.length }
@@ -447,11 +439,7 @@ object BasicPropertyType
 		override def defaultPropertyName = "time"
 	}
 	
-	/**
-	  * String / text property type with a certain length
-	  * @param length Content max length (default = 255)
-	  */
-	// TODO: This may need to be a custom data type (not wrapped in option)
+	/*
 	case class Text(length: Int = 255) extends BasicPropertyType {
 		
 		override val sqlType = SqlPropertyType(s"VARCHAR($length)")
@@ -463,7 +451,7 @@ object BasicPropertyType
 		
 		override def fromValuePropName = "string"
 		override def defaultPropertyName = if (length < 100) "name" else "text"
-	}
+	}*/
 	
 	/**
 	  * Standard integer property type
@@ -538,39 +526,37 @@ object PropertyType
 	  * @param propertyName Name specified for the property in question (optional)
 	  * @return A property type matching that specification. None if no match was found.
 	  */
-	def interpret(typeName: String, length: Option[Int] = None, propertyName: Option[String] = None) =
+	def interpret(typeName: String, length: Option[Int] = None, propertyName: Option[String] = None): Option[PropertyType] =
 		typeName.toLowerCase match {
 			case "creation" | "created" => Some(CreationTime)
 			case "updated" | "modification" | "update" => Some(UpdateTime)
 			case "deprecation" | "deprecated" => Some(Deprecation)
 			case "expiration" | "expired" => Some(Expiration)
 			case "value" => Some(GenericValue(length.getOrElse(255)))
-			case other =>
-				if (other.contains("option"))
-					_interpret(other.afterFirst("[").untilLast("]"), length, propertyName).map { _.optional }
-				else
-					_interpret(other, length, propertyName)
-		}
-	
-	// Returns a concrete type
-	private def _interpret(typeName: String, length: Option[Int], propertyName: Option[String]) =
-		typeName match {
 			case "days" => Some(DayCount)
 			case other =>
-				if (typeName.contains("duration")) {
+				if (other.startsWith("text") || other.startsWith("string") || other.startsWith("varchar")) {
+					// Text length may be specified within parentheses after the type (E.g. "String(3)")
+					val appliedLength: Int = other.afterFirst("(").untilFirst(")").int
+						.orElse(length).getOrElse(255)
+					Some(Text(appliedLength))
+				}
+				if (other.startsWith("option"))
+					interpret(other.afterFirst("[").untilLast("]"), length, propertyName).map { _.optional }
+				else if (other.startsWith("duration"))
 					Some(typeName.afterFirst("[").untilLast("]") match {
 						case "s" | "second" | "seconds" => TimeDuration.seconds
 						case "m" | "min" | "minute" | "minutes" => TimeDuration.minutes
 						case "h" | "hour" | "hours" => TimeDuration.hours
 						case _ => TimeDuration.millis
 					})
-				}
 				else
 					BasicPropertyType.interpret(other, length, propertyName)
 						.orElse {
 							// If nothing else works, attempts to find the match with the specified property name
 							propertyName.map { _.toLowerCase }.flatMap { lowerName =>
-								val options = Vector(CreationTime, Deprecation, Expiration,
+								val options = Vector(Text(length.getOrElse(255)), CreationTime, UpdateTime,
+									Deprecation, Expiration,
 									GenericValue(length.getOrElse(255)), DayCount) ++ TimeDuration.values
 								options.filter { _.defaultPropertyName.variants.exists { _.contains(lowerName) } }
 									.maxByOption { _.defaultPropertyName.singular.length }
@@ -686,9 +672,46 @@ object PropertyType
 		override def writeDefaultDescription(className: Name, propName: Name) = ""
 	}
 	
+	object Text
+	{
+		private val emptyValue = "\"\""
+	}
+	
+	// This text is never wrapped in an option. An empty string is considered an empty value.
+	case class Text(length: Int = 255) extends DirectlySqlConvertiblePropertyType {
+		
+		override val sqlType = {
+			val typeName = {
+				if (length > 16777215)
+					"LONGTEXT"
+				else if (length > 65535)
+					"MEDIUMTEXT"
+				else
+					s"VARCHAR($length)"
+			}
+			SqlPropertyType(typeName, isNullable = true)
+		}
+		
+		override def scalaType = ScalaType.string
+		
+		override def emptyValue = Text.emptyValue
+		override def nonEmptyDefaultValue = CodePiece.empty
+		
+		override def defaultPropertyName = if (length < 100) "name" else "text"
+		
+		override def concrete = this
+		
+		override def yieldsTryFromValue = false
+		override def fromValueCode(valueCode: String) = s"$valueCode.getString"
+		override def fromValuesCode(valuesCode: String) = s"$valuesCode.flatMap { _.string }"
+		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(Reference.valueConversions))
+		
+		override def writeDefaultDescription(className: Name, propName: Name) = ""
+	}
+	
 	case class GenericValue(length: Int = 255) extends DirectlySqlConvertiblePropertyType
 	{
-		override lazy val sqlType = SqlPropertyType(s"VARCHAR($length)")
+		override lazy val sqlType = SqlPropertyType(s"VARCHAR($length)", isNullable = true)
 		
 		override def scalaType = Reference.value
 		

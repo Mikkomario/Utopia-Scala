@@ -2,6 +2,8 @@
 
 ## v1.6 (in development)
 ### Breaking Changes
+- String / Text data type is no longer wrapped in **Option** and defaults to an empty string
+  - This update requires using of **Flow** v1.16, which alter string-to-value conversion
 - Plural name combinations only pluralize the last part anymore. E.g. when the previous version would return 
   "instancesIds", the current version returns "instanceIds"
 ### New Features
@@ -17,6 +19,7 @@
 - Extending column length rules are now written as "to X" instead of "up to X"
 ### Other
 - A specified property default value may now automatically be applied to sql as well, under certain conditions
+- Very long strings are now written as TEXT, MEDIUMTEXT or LONGTEXT in the database
 - There may be some changes to the output code layout
 
 ## v1.5 - 06.06.2022
