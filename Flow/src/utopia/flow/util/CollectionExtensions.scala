@@ -1,7 +1,7 @@
 package utopia.flow.util
 
-import utopia.flow.collection.{GroupIterator, LimitedLengthIterator, PairingIterator, PollingIterator, TerminatingIterator}
-import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.collection.{GroupIterator, LazyVector, LimitedLengthIterator, PairingIterator, PollingIterator, TerminatingIterator}
+import utopia.flow.datastructure.immutable.{Lazy, Pair}
 import utopia.flow.datastructure.mutable.PollableOnce
 
 import scala.language.implicitConversions
@@ -231,6 +231,14 @@ object CollectionExtensions
 		  * @return The first item that was mapped to Some. None if all items were mapped to None.
 		  */
 		def findMap[B](map: A => Option[B]) = i.iterator.map(map).find { _.isDefined }.flatten
+		
+		/**
+		  * Lazily maps the contents of this iterable entity.
+		  * @param f A mapping function
+		  * @tparam B Mapping result type
+		  * @return A lazily initialized collection containing the mapping results
+		  */
+		def lazyMap[B](f: A => B) = new LazyVector[B](i.iterator.map { a => Lazy { f(a) } }.toSeq)
 		
 		/**
 		  * Divides / maps the items in this collection to two groups

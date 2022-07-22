@@ -14,6 +14,7 @@
 ### New Features
 - **XmlElement** now supports namespaces, which are provided implicitly
 - Added **FromValueFactory** -trait that also provides implicit **Value** unwraps
+- Added **LazyVector** class
 - Added to- & from- model conversion to **DateRange**
 - Added **ObjectMapFileContainer** class
 - Added **FromModelFactoryWithDefault** -trait
@@ -22,6 +23,7 @@
   - Added `.areAllEqual: Boolean`
   - Added `.maxGroupBy(...)`
 - **IterableOnce** (**CollectionExtensions**)
+  - Added `.lazyMap(...)`
   - Added a number of utility methods for iterables of tries
 - **LocalDate** (**TimeExtensions**)
   - Added `.monthOfYear: Int`
