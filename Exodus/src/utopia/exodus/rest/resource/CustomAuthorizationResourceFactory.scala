@@ -38,14 +38,13 @@ trait CustomAuthorizationResourceFactory[+A]
 	  */
 	def public = apply { (context, f) =>
 		import utopia.citadel.util.CitadelContext._
-		import utopia.exodus.util.ExodusContext.handleError
+		import utopia.exodus.util.ExodusContext.logger
 		implicit val c: AuthorizedContext = context
 		
-		connectionPool.tryWith(f) match
-		{
+		connectionPool.tryWith(f) match {
 			case Success(result) => result.toResponse
 			case Failure(error) =>
-				handleError(error, s"Unexpected error during handling of request: ${
+				logger(error, s"Unexpected error during handling of request: ${
 					context.request.method} ${context.request.targetUrl}")
 				Result.Failure(InternalServerError, error.getMessage).toResponse
 		}

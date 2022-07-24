@@ -15,7 +15,7 @@ import utopia.exodus.model.enumeration.ExodusScope.{OrganizationActions, ReadOrg
 import utopia.exodus.model.enumeration.ScopeIdWrapper
 import utopia.exodus.model.stored.auth.{ApiKey, DeviceToken, SessionToken, Token}
 import utopia.exodus.rest.util.AuthorizedContext.acceptLanguageIdsHeaderName
-import utopia.exodus.util.ExodusContext.handleError
+import utopia.exodus.util.ExodusContext.logger
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.FromModelFactory
 import utopia.flow.generic.ValueConversions._
@@ -236,7 +236,7 @@ abstract class AuthorizedContext extends Context
 						case None => Result.Failure(Unauthorized, "Invalid email or password")
 					}
 				}.getOrMap { e =>
-					handleError(e, "Unexpected failure during request handling")
+					logger(e, "Unexpected failure during request handling")
 					Result.Failure(InternalServerError, e.getMessage)
 				}
 			case None => Result.Failure(Unauthorized, "Please provide a basic auth header with user email and password")
@@ -490,7 +490,7 @@ abstract class AuthorizedContext extends Context
 						case None => Result.Failure(Unauthorized, s"Invalid or expired $tokenTypeName")
 					}
 				}.getOrMap { e =>
-					handleError(e, "Unexpected failure during request handling")
+					logger(e, "Unexpected failure during request handling")
 					Result.Failure(InternalServerError, e.getMessage)
 				}
 			case None => Result.Failure(Unauthorized, s"Please provided a bearer auth hearer with a $tokenTypeName")

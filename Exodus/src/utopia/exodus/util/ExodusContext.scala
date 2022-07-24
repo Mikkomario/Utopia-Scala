@@ -5,6 +5,7 @@ import utopia.citadel.util.CitadelContext
 import utopia.flow.datastructure.immutable.Lazy
 import utopia.flow.datastructure.template.LazyLike
 import utopia.flow.generic.EnvironmentNotSetupException
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.metropolis.model.enumeration.ModelStyle.Full
 import utopia.vault.database.ConnectionPool
@@ -25,6 +26,14 @@ object ExodusContext
 	
 	
 	// COMPUTED	-------------------------------------
+	
+	/**
+	  * @return Logger to use in this context
+	  */
+	def logger: Logger = data match {
+		case Some(d) => d.logger
+		case None => SysErrLogger
+	}
 	
 	/**
 	  * @return Execution context used in this project (implicit)
@@ -111,19 +120,19 @@ object ExodusContext
 	  * @param requireUserEmail Whether all users should be required to register (and keep) email addresses
 	  *                         (default = false => allows users to omit an email address if they have
 	  *                         a unique user name)
-	  * @param handleErrors A function for handling thrown errors
 	  * @param defaultUserScopeIds Ids of the scopes available to all new users (lazy).
 	  *                             The scope ids available through the user creation context are also applied and
 	  *                             don't need to be listed here.
+	  * @param logger Implicit logger to use
 	  */
 	def setup(executionContext: ExecutionContext, connectionPool: ConnectionPool, databaseName: String,
 	          defaultModelStyle: ModelStyle = Full, uuidGenerator: UuidGenerator = UuidGenerator.default,
 	          emailValidator: Option[EmailValidator] = None, requireUserEmail: Boolean = false)
-			 (handleErrors: (Throwable, String) => Unit)(defaultUserScopeIds: => Set[Int]) =
+	         (defaultUserScopeIds: => Set[Int])(implicit logger: Logger) =
 	{
 		CitadelContext.setup(executionContext, connectionPool, databaseName)
 		Status.setup()
-		data = Some(Data(defaultModelStyle, uuidGenerator, Lazy(defaultUserScopeIds), emailValidator, handleErrors,
+		data = Some(Data(defaultModelStyle, uuidGenerator, Lazy(defaultUserScopeIds), emailValidator, logger,
 			requireUserEmail))
 	}
 	
@@ -132,13 +141,13 @@ object ExodusContext
 	  * @param error An error that occurred
 	  * @param message An error message
 	  */
-	def handleError(error: Throwable, message: String) = data.foreach { _.errorHandler(error, message) }
+	@deprecated("Please use logger instead", "v4.1")
+	def handleError(error: Throwable, message: String) = logger(error, message)
 	
 	
 	// NESTED	--------------------------------------
 	
-	// TODO: Use Logger here
 	private case class Data(defaultModelStyle: ModelStyle, uuidGenerator: UuidGenerator,
 	                        userScopeIds: LazyLike[Set[Int]], emailValidator: Option[EmailValidator],
-	                        errorHandler: (Throwable, String) => Unit, userEmailIsRequired: Boolean)
+	                        logger: Logger, userEmailIsRequired: Boolean)
 }

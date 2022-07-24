@@ -13,7 +13,7 @@ import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.ambassador.rest.util.{AuthUtils, ServiceTarget}
 import utopia.citadel.util.CitadelContext._
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.exodus.util.ExodusContext.handleError
+import utopia.exodus.util.ExodusContext.logger
 import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.flow.collection.LazyVector
 import utopia.flow.datastructure.template.MapLike
@@ -57,7 +57,7 @@ class AuthNode(target: ServiceTarget, tokenAcquirer: AcquireTokens, redirectors:
 			}
 		}.getOrMap { error =>
 			// Case: Unexpected error => fails
-			handleError(error, "Unexpected failure during an oauth redirect process")
+			logger(error, "Unexpected failure during an oauth redirect process")
 			Result.Failure(InternalServerError, error.getMessage)
 		}.toResponse
 	}

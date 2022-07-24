@@ -19,7 +19,7 @@ import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.citadel.database.access.single.organization.DbTask
 import utopia.disciple.http.request.{Request, StringBody}
 import utopia.disciple.model.error.RequestFailedException
-import utopia.exodus.util.ExodusContext.handleError
+import utopia.exodus.util.ExodusContext.logger
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.datastructure.template.MapLike
@@ -234,7 +234,7 @@ class AcquireTokens(configurations: MapLike[Int, TokenInterfaceConfiguration])
 					{
 						case Some(scope) => scope.split(" ").toVector.map { _.trim }.filter { _.nonEmpty }
 						case None =>
-							handleError(new NoSuchElementException(
+							logger(new NoSuchElementException(
 								s"No 'scope' attribute in response body. Available properties: [${
 									response.body.attributesWithValue.map { _.name }.mkString(", ")}]"),
 								"No scope attribute in token response body")

@@ -13,7 +13,7 @@ import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.ambassador.rest.util.{AuthUtils, ServiceTarget}
 import utopia.citadel.util.CitadelContext._
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.exodus.util.ExodusContext.{handleError, uuidGenerator}
+import utopia.exodus.util.ExodusContext.{logger, uuidGenerator}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.time.Now
 import utopia.flow.util.CollectionExtensions._
@@ -95,7 +95,7 @@ class AuthResponseNode(target: ServiceTarget, tokenAcquirer: AcquireTokens)
 				case None => Result.Failure(NotFound, s"$target is not valid or is unavailable")
 			}
 		}.getOrMap { error =>
-			handleError(error, s"Unexpected failure during $target auth response handling")
+			logger(error, s"Unexpected failure during $target auth response handling")
 			Result.Failure(InternalServerError, error.getMessage)
 		}.toResponse
 	}
@@ -132,7 +132,7 @@ class AuthResponseNode(target: ServiceTarget, tokenAcquirer: AcquireTokens)
 								completeWithRedirectResult(settings, redirect.id, Some(preparation), grantLevel)
 							// Case: Failed to acquire access tokens
 							case Failure(error) =>
-								handleError(error, s"Authentication to service $serviceId failed")
+								logger(error, s"Authentication to service $serviceId failed")
 								completeWithRedirectResult(settings, redirect.id, Some(preparation), AccessFailed,
 									error.getMessage)
 						}

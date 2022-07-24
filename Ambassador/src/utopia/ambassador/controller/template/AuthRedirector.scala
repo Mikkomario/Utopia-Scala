@@ -3,8 +3,8 @@ package utopia.ambassador.controller.template
 import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.ambassador.model.stored.service.AuthServiceSettings
-import utopia.exodus.util.ExodusContext.handleError
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.exodus.util.ExodusContext.logger
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.database.Connection
@@ -70,7 +70,7 @@ trait AuthRedirector
 					allAttributes.map { att => att.name -> URLEncoder.encode(att.value.getString, codecName) }
 				}.getOrMap { error =>
 					// If encoding fails, defaults to no encoding
-					handleError(error, s"Failed to encode oauth query parameters to $codecName")
+					logger(error, s"Failed to encode oauth query parameters to $codecName")
 					allAttributes.map { att => att.name -> att.value.getString }
 				}
 			// Case: No encoding is used

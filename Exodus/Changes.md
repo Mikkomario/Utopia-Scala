@@ -1,5 +1,11 @@
 # Utopia Exodus - List of Changes
 
+## v4.1 (in development)
+### Breaking Changes
+- Changed `ExodusContext.setup(...)` -parameters to accept an implicit **Logger** instead of a function
+### Deprecations
+- Deprecated `ExodusContext.handleError(Throwable, String)` in favor of `ExodusContext.logger`
+
 ## v4.0 - 06.06.2022
 This update represents a major overhaul to the **Exodus** library. The authorization system is completely rewritten. 
 Also, all device-related features are removed.
