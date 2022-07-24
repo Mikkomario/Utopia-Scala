@@ -24,7 +24,8 @@
   - Added `.areAllEqual: Boolean`
   - Added `.maxGroupBy(...)`
 - **IterableOnce** (**CollectionExtensions**)
-  - Added `.lazyMap(...)`
+  - Added `.lazyMap(...)` and .`lazyFlatMap(...)` which yield a **LazyIterable**, 
+    as well as `.caching` which yields a **CachingIterable**
   - Added a number of utility methods for iterables of tries
 - **LocalDate** (**TimeExtensions**)
   - Added `.monthOfYear: Int`

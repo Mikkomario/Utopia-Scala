@@ -2,6 +2,8 @@
 
 ## v1.2.4 (in development)
 New Build / Supports changes in **Flow** v1.16
+### New Features
+- Added **Api** class which wraps a **RequestHandler** instance as a **HttpServlet**
 
 ## v1.2.3 - 27.01.2022
 Scala version update
