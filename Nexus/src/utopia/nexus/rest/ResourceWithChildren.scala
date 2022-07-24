@@ -21,11 +21,9 @@ trait ResourceWithChildren[-C <: Context] extends Resource[C]
 	
 	// IMPLEMENTED	---------------------
 	
-	override def follow(path: Path)(implicit context: C) =
-	{
+	override def follow(path: Path)(implicit context: C) = {
 		val c = children
-		c.find { _.name ~== path.head } match
-		{
+		c.find { _.name ~== path.head } match {
 			case Some(next) => Follow(next, path.tail)
 			case None =>
 				Error(message = Some(s"${path.head} is not a child node of $name. Available options: [${

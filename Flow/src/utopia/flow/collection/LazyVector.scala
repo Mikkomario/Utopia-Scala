@@ -1,28 +1,26 @@
 package utopia.flow.collection
 
-import utopia.flow.collection.LazyVector.LazyVectorBuilder
 import utopia.flow.datastructure.immutable.Lazy
 import utopia.flow.datastructure.template.LazyLike
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.{IndexedSeqOps, SeqFactory, mutable}
-import scala.collection.immutable.VectorBuilder
 
-object LazyVector extends SeqFactory[LazyVector]
+object LazyVector extends SeqFactory[LazyVector] with LazyFactory[LazyVector]
 {
 	// ATTRIBUTES   ------------------------
 	
 	/**
 	  * An empty lazily initialized vector
 	  */
-	private val _empty = apply()
+	private val _empty = new LazyVector(Vector.empty)
 	
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def empty[A] = _empty
+	override def empty[A]: LazyVector[A] = _empty
 	
-	override def newBuilder[A] = new LazyVectorBuilder[A]()
+	override def newBuilder[A] = LazyBuilder[A]().precalculated
 	
 	override def from[A](source: IterableOnce[A]) = source match {
 		case l: LazyVector[A] => l
@@ -34,28 +32,35 @@ object LazyVector extends SeqFactory[LazyVector]
 	// OTHER    ---------------------------
 	
 	/**
-	  * Wraps another sequence of items
-	  * @param seq A sequence of pre-initialized items
-	  * @tparam A Type of stored items
-	  * @return Those items wrapped in a lazy vector
-	  */
-	def wrap[A](seq: IndexedSeq[A]) = new LazyVector[A](seq.map(Lazy.wrap))
-	
-	/**
 	  * Wraps a sequence of lazily initialized items
 	  * @param items Items to wrap
 	  * @tparam A Type of underlying items
 	  * @return A new lazy vector
 	  */
-	def from[A](items: IndexedSeq[LazyLike[A]]) = new LazyVector[A](items)
-	
+	def apply[A](items: IndexedSeq[LazyLike[A]]) = new LazyVector[A](items)
+	/**
+	  * @tparam A Type of vector contents
+	  * @return Creates a new empty lazy vector
+	  */
+	def apply[A]() = empty[A]
 	/**
 	  * Creates a new lazy vector from lazy items
-	  * @param items Lazy items
 	  * @tparam A Type of wrapped items
 	  * @return A new lazy vector
 	  */
-	def from[A](items: LazyLike[A]*): LazyVector[A] = from(items.toIndexedSeq)
+	def apply[A](items: LazyLike[A]*): LazyVector[A] = apply(items.toIndexedSeq)
+	
+	override def apply[A](items: IterableOnce[LazyLike[A]]) = items match {
+		case s: IndexedSeq[LazyLike[A]] => new LazyVector[A](s)
+		case i => new LazyVector[A](i.iterator.toIndexedSeq)
+	}
+	
+	/**
+	  * @param item A single item (call-by-name / lazily initialized)
+	  * @tparam A Type of that item
+	  * @return A lazily initialized vector that contains that item
+	  */
+	override def single[A](item: => A) = apply(Vector(Lazy(item)))
 	
 	/**
 	  * Creates a new lazily initialized vector
@@ -63,65 +68,7 @@ object LazyVector extends SeqFactory[LazyVector]
 	  * @tparam A Type of vector contents
 	  * @return A new lazily initialized vector containing those lazily initialized items
 	  */
-	def apply[A](items: (() => A)*) = new LazyVector[A](items.toVector.map { i => Lazy(i()) })
-	
-	
-	// NESTED   -------------------------------
-	
-	/**
-	  * A builder for lazy vectors
-	  * @tparam A Type of resulting items
-	  */
-	//noinspection ScalaUnusedExpression
-	class LazyVectorBuilder[A] extends mutable.Builder[A, LazyVector[A]]
-	{
-		// ATTRIBUTES   ----------------------
-		
-		private val builder = new VectorBuilder[LazyLike[A]]()
-		
-		
-		// IMPLEMENTED  ----------------------
-		
-		override def knownSize = builder.knownSize
-		
-		override def clear() = builder.clear()
-		
-		override def result(): LazyVector[A] = LazyVector.from(builder.result())
-		
-		override def addOne(elem: A) = {
-			builder.addOne(Lazy.wrap(elem))
-			this
-		}
-		
-		override def sizeHint(size: Int) = builder.sizeHint(size)
-		
-		override def addAll(xs: IterableOnce[A]) = {
-			builder.addAll(xs.iterator.map(Lazy.wrap))
-			this
-		}
-		
-		
-		// OTHER    ---------------------------
-		
-		/**
-		  * Adds an item to this vector (which resolves lazily)
-		  * @param item An item to add (call-by-name)
-		  * @return This builder
-		  */
-		def +=(item: => A) = {
-			builder += Lazy(item)
-			this
-		}
-		/**
-		  * Adds a lazily initialized item to this vector
-		  * @param item A lazy item to add
-		  * @return This builder
-		  */
-		def +=(item: LazyLike[A]) = {
-			builder += item
-			this
-		}
-	}
+	def fromFunctions[A](items: IndexedSeq[() => A]) = new LazyVector[A](items.map { i => Lazy(i()) })
 }
 
 /**
@@ -129,7 +76,8 @@ object LazyVector extends SeqFactory[LazyVector]
   * @author Mikko Hilpinen
   * @since 22.7.2022, v1.16
   */
-class LazyVector[+A] private(wrapped: IndexedSeq[LazyLike[A]]) extends IndexedSeqOps[A, LazyVector, LazyVector[A]] with IndexedSeq[A]
+class LazyVector[+A] private(wrapped: IndexedSeq[LazyLike[A]])
+	extends IndexedSeqOps[A, LazyVector, LazyVector[A]] with IndexedSeq[A] with LazySeqLike[A, LazyVector]
 {
 	// COMPUTED ------------------------------
 	
@@ -143,19 +91,21 @@ class LazyVector[+A] private(wrapped: IndexedSeq[LazyLike[A]]) extends IndexedSe
 	
 	override def length = wrapped.length
 	
+	override protected def factory = LazyVector
+	override protected def lazyContents = wrapped
+	
 	override def iterator = wrapped.iterator.map { _.value }
 	
 	override def iterableFactory = LazyVector
-	
 	override def empty = LazyVector.empty
-	
 	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, LazyVector[A]] =
-		new LazyVectorBuilder[A]()
+		LazyVector.newBuilder
+	
+	override def reverse = new LazyVector(wrapped.reverse)
 	
 	override def apply(i: Int) = wrapped(i).value
 	
 	override def slice(from: Int, until: Int): LazyVector[A] = new LazyVector[A](wrapped.slice(from, until))
-	
 	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) = LazyVector.from(coll)
 	
 	/**
@@ -165,4 +115,18 @@ class LazyVector[+A] private(wrapped: IndexedSeq[LazyLike[A]]) extends IndexedSe
 	  * @return A lazily mapped copy of this collection
 	  */
 	override def map[B](f: A => B) = new LazyVector[B](wrapped.map { l => Lazy { f(l.value) } })
+	
+	override def prepended[B >: A](elem: B) = new LazyVector[B](wrapped.prepended(Lazy.wrap(elem)))
+	
+	override def take(n: Int) = new LazyVector(wrapped.take(n))
+	override def takeRight(n: Int) = new LazyVector(wrapped.takeRight(n))
+	override def drop(n: Int) = new LazyVector(wrapped.drop(n))
+	override def dropRight(n: Int) = new LazyVector(wrapped.dropRight(n))
+	
+	override def appended[B >: A](elem: B) = new LazyVector[B](wrapped.appended(Lazy.wrap(elem)))
+	override def prependedAll[B >: A](prefix: IterableOnce[B]) =
+		new LazyVector[B](wrapped.prependedAll(prefix.iterator.map(Lazy.wrap)))
+	override def appendedAll[B >: A](suffix: IterableOnce[B]) =
+		new LazyVector[B](wrapped.appendedAll(suffix.iterator.map(Lazy.wrap)))
+	override def padTo[B >: A](len: Int, elem: B) = new LazyVector[B](wrapped.padTo(len, Lazy.wrap(elem)))
 }

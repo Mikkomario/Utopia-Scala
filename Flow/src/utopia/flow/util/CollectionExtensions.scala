@@ -1,8 +1,9 @@
 package utopia.flow.util
 
-import utopia.flow.collection.{GroupIterator, LazyVector, LimitedLengthIterator, PairingIterator, PollingIterator, TerminatingIterator}
+import utopia.flow.collection.{CachingIterable, GroupIterator, LazyIterable, LazyVector, LimitedLengthIterator, PairingIterator, PollingIterator, TerminatingIterator}
 import utopia.flow.datastructure.immutable.{Lazy, Pair}
 import utopia.flow.datastructure.mutable.PollableOnce
+import utopia.flow.datastructure.template.LazyLike
 
 import scala.language.implicitConversions
 import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
@@ -205,6 +206,11 @@ object CollectionExtensions
 		}
 		
 		/**
+		  * @return A version of this collection that caches iteration results
+		  */
+		def caching = CachingIterable.from(i)
+		
+		/**
 		  * Checks whether there exists at least 'requiredCount' items in this collection where the specified
 		  * condition 'f' returns true. Compared to .count -function, this function is more optimized since it stops
 		  * counting once the required amount has been reached.
@@ -233,12 +239,19 @@ object CollectionExtensions
 		def findMap[B](map: A => Option[B]) = i.iterator.map(map).find { _.isDefined }.flatten
 		
 		/**
-		  * Lazily maps the contents of this iterable entity.
+		  * Lazily maps the contents of this collection.
 		  * @param f A mapping function
 		  * @tparam B Mapping result type
 		  * @return A lazily initialized collection containing the mapping results
 		  */
-		def lazyMap[B](f: A => B) = LazyVector.from[B](i.iterator.map { a => Lazy { f(a) } }.toIndexedSeq)
+		def lazyMap[B](f: A => B) = LazyIterable[B](i.iterator.map { a => Lazy { f(a) } })
+		/**
+		  * Lazily maps the contents of this collection
+		  * @param f A mapping function that returns 0-n lazily initialized items for each element
+		  * @tparam B Type of the lazily initialized items
+		  * @return A lazily initialized collection containing the mapping results
+		  */
+		def lazyFlatMap[B](f: A => IterableOnce[LazyLike[B]]) = LazyIterable[B](i.iterator.flatMap(f))
 		
 		/**
 		  * Divides / maps the items in this collection to two groups
@@ -948,6 +961,16 @@ object CollectionExtensions
 				(beginning :+ item) ++ end
 			}
 		}
+	}
+	
+	implicit class RichIndexedSeq[A](val s: IndexedSeq[A]) extends AnyVal
+	{
+		/**
+		  * @param f A mapping function
+		  * @tparam B Type of the map results
+		  * @return A copy of this collection with lazily mapped items
+		  */
+		def lazyMap[B](f: A => B) = LazyVector(s.map { a => Lazy(f(a)) })
 	}
 	
 	

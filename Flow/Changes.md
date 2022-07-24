@@ -14,7 +14,8 @@
 ### New Features
 - **XmlElement** now supports namespaces, which are provided implicitly
 - Added **FromValueFactory** -trait that also provides implicit **Value** unwraps
-- Added **LazyVector** class
+- Added **LazyVector**, **LazyIterable** and **CachingIterable** classes for lazy iteration
+- Added **CompoundingVectorBuilder** class that allows one to check the current vector state while building
 - Added to- & from- model conversion to **DateRange**
 - Added **ObjectMapFileContainer** class
 - Added **FromModelFactoryWithDefault** -trait
