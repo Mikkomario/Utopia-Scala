@@ -1,5 +1,8 @@
 # Utopia Nexus for Tomcat - List of changes
 
+## v1.2.4 (in development)
+New Build / Supports changes in **Flow** v1.16
+
 ## v1.2.3 - 27.01.2022
 Scala version update
 ### Scala

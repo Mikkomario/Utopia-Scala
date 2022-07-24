@@ -238,7 +238,7 @@ object CollectionExtensions
 		  * @tparam B Mapping result type
 		  * @return A lazily initialized collection containing the mapping results
 		  */
-		def lazyMap[B](f: A => B) = new LazyVector[B](i.iterator.map { a => Lazy { f(a) } }.toSeq)
+		def lazyMap[B](f: A => B) = LazyVector.from[B](i.iterator.map { a => Lazy { f(a) } }.toIndexedSeq)
 		
 		/**
 		  * Divides / maps the items in this collection to two groups

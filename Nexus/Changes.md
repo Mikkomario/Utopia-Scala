@@ -1,5 +1,8 @@
 # Utopia Nexus - List of Changes
 
+## v1.7.1 (in development)
+New Build / Supports changes in **Flow** v1.16
+
 ## v1.7 - 06.06.2022
 This update mostly concerns modular rest resources, refactoring the associated base traits. 
 In addition, this update also includes some smaller quality-of-life improvements.

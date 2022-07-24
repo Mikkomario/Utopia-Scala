@@ -1,5 +1,8 @@
 # Utopia Disciple - List of Changes
 
+## v1.5.2 (in development)
+New Build / Supports changes in **Flow** v1.16
+
 ## v1.5.1 - 06.06.2022
 This update only introduces a single quality-of-life upgrade for specifying timeouts.
 ### New Methods

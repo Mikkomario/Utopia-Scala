@@ -1,5 +1,8 @@
 # Utopia BunnyMunch - List of Changes
 
+## v1.0.2 (in development)
+Rebuild required after **Flow** v1.16
+
 ## v1.0.1 - 27.01.2022
 Scala version update
 ### Scala

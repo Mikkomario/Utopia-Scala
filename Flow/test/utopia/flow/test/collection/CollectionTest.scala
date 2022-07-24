@@ -43,5 +43,16 @@ object CollectionTest extends App
 	assert(numbers.existsCount(3) { _ < 4 })
 	assert(!numbers.existsCount(2) { _ > 4 })
 	
+	/*
+	def lazyNumber(i: Int) = {
+		println(s"generating $i")
+		i
+	}
+	val lv = LazyVector(() => lazyNumber(1), () => lazyNumber(2), () => lazyNumber(3))
+	val lv2 = lv.map { -_ }
+	
+	println(lv2(2))
+	 */
+	
 	println("Success!")
 }
