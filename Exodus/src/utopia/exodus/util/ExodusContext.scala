@@ -137,6 +137,7 @@ object ExodusContext
 	
 	// NESTED	--------------------------------------
 	
+	// TODO: Use Logger here
 	private case class Data(defaultModelStyle: ModelStyle, uuidGenerator: UuidGenerator,
 	                        userScopeIds: LazyLike[Set[Int]], emailValidator: Option[EmailValidator],
 	                        errorHandler: (Throwable, String) => Unit, userEmailIsRequired: Boolean)

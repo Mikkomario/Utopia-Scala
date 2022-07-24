@@ -12,6 +12,7 @@
 - Deprecated some `...andGet(...)` -functions from **Volatile** classes, because of changes made to the base function 
   versions
 ### New Features
+- Added **Logger** trait and 2 basic implementations (**SysErrLogger** and **FileLogger**)
 - **XmlElement** now supports namespaces, which are provided implicitly
 - Added **FromValueFactory** -trait that also provides implicit **Value** unwraps
 - Added **LazyVector**, **LazyIterable** and **CachingIterable** classes for lazy iteration

@@ -9,6 +9,7 @@ import utopia.nexus.rest.RequestHandler
 import HttpExtensions._
 import utopia.access.http.StatusGroup.ServerError
 import utopia.flow.parse.JsonParser
+import utopia.flow.util.logging.Logger
 
 import javax.servlet.annotation.MultipartConfig
 import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
@@ -18,17 +19,17 @@ import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
   * @author Mikko Hilpinen
   * @since 24.7.2022, v1.2.4
   * @param requestHandler A handler that deals with incoming requests
-  * @param logWarning A function for logging request-related warning messages
   * @param serverSettings Implicit server settings to use
   * @param jsonParser Implicit json parser to use
+  * @param logger A logging implementation to handle request-related warnings
   */
 @MultipartConfig(
 	fileSizeThreshold   = 1048576,  // 1 MB
 	maxFileSize         = 10485760, // 10 MB
 	maxRequestSize      = 20971520, // 20 MB
 )
-class Api(requestHandler: RequestHandler[_])(logWarning: String => Unit)
-         (implicit serverSettings: ServerSettings, jsonParser: JsonParser)
+class Api(requestHandler: RequestHandler[_])
+         (implicit serverSettings: ServerSettings, jsonParser: JsonParser, logger: Logger)
 	extends HttpServlet
 {
 	// ATTRIBUTES	--------------------------
@@ -69,12 +70,12 @@ class Api(requestHandler: RequestHandler[_])(logWarning: String => Unit)
 						case Some(p) => p.toString
 						case None => ""
 					}
-					logWarning(s"${request.method} $pathString yielded ${response.status}")
+					logger(s"${request.method} $pathString yielded ${response.status}")
 				}
 				// Returns the response
 				response.update(res)
 			case None =>
-				logWarning(s"WARNING: Failed to process incoming request ${req.getMethod} ${req.getRequestURI}")
+				logger(s"WARNING: Failed to process incoming request ${req.getMethod} ${req.getRequestURI}")
 				res.setStatus(BadRequest.code)
 		}
 	}
