@@ -7,6 +7,7 @@ import utopia.flow.async.{CloseHook, ThreadPool, Wait}
 import utopia.flow.generic.DataType
 import utopia.flow.time.{Now, WaitUtils}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -18,6 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 object WaitTest2 extends App
 {
 	DataType.setup()
+	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("test").executionContext
 	
 	println("Running WaitTest2...")

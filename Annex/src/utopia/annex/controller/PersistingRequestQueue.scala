@@ -1,14 +1,14 @@
 package utopia.annex.controller
 
 import java.nio.file.Path
-
 import utopia.annex.model.request.ApiRequest
 import utopia.flow.async.ActionQueue
 import utopia.flow.container.SaveTiming.OnJvmClose
-import utopia.flow.container.{FileContainer, ModelsFileContainer, ObjectsFileContainer, SaveTiming}
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.container.{FileContainer, ModelsFileContainer, SaveTiming}
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
@@ -31,7 +31,7 @@ object PersistingRequestQueue
 	  */
 	def apply(master: QueueSystem, fileLocation: Path, handlers: Iterable[PersistedRequestHandler],
 			  width: Int = 1, saveLogic: SaveTiming = OnJvmClose)
-			 (implicit exc: ExecutionContext, jsonParser: JsonParser): (PersistingRequestQueue, Vector[Throwable]) =
+			 (implicit exc: ExecutionContext, jsonParser: JsonParser, logger: Logger): (PersistingRequestQueue, Vector[Throwable]) =
 	{
 		val queue = new SimpleQueue(fileLocation, master, width, saveLogic)
 		val errors = queue.start(handlers)
@@ -43,7 +43,7 @@ object PersistingRequestQueue
 	
 	private class SimpleQueue(fileLocation: Path, override val master: QueueSystem, width: Int = 1,
 							  saveLogic: SaveTiming = OnJvmClose)
-							 (implicit val exc: ExecutionContext, jsonParser: JsonParser)
+							 (implicit val exc: ExecutionContext, jsonParser: JsonParser, logger: Logger)
 		extends PersistingRequestQueue
 	{
 		// ATTRIBUTES	----------------

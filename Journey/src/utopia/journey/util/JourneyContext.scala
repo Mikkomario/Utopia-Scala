@@ -1,11 +1,10 @@
 package utopia.journey.util
 
 import java.nio.file.Path
-
-import utopia.flow.async.ThreadPool
 import utopia.flow.generic.{DataType, EnvironmentNotSetupException}
-import utopia.flow.parse.{JSONReader, JsonParser}
+import utopia.flow.parse.JsonParser
 import utopia.flow.util.FileExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
@@ -24,6 +23,14 @@ object JourneyContext
 	
 	
 	// COMPUTED	-------------------------------
+	
+	/**
+	  * @return Logger to use in recoding encountered errors
+	  */
+	implicit def logger: Logger = settings match {
+		case Success(s) => s.logger
+		case _ => SysErrLogger
+	}
 	
 	/**
 	  * @return Json parser configured in these settings
@@ -59,17 +66,14 @@ object JourneyContext
 	/**
 	  * Sets up these settings. Will overwrite any existing settings if setup was already called before.
 	  * @param containersDirectory Directory where locally generated .json files will be stored (default = ./data)
-	  * @param jsonParser Parser used when parsing json data (default = JSONReader, which performs sub-optimally
-	  *                   but doesn't require any imports)
-	  * @param executionContext Execution context used in handling background operation threads
-	  *                         (default = new thread pool with default settings)
+	  * @param exc Execution context used in handling background operation threads
+	  * @param jsonParser Parser used when parsing json data
 	  */
-	def setup(containersDirectory: Path = "data", jsonParser: JsonParser = JSONReader,
-			  executionContext: ExecutionContext = new ThreadPool("Journey").executionContext,
-			  errorHandler: (Option[Throwable], String) => Unit = defaultErrorHandler) =
+	def setup(containersDirectory: Path = "data")
+	         (implicit exc: ExecutionContext, jsonParser: JsonParser, logger: Logger) =
 	{
 		DataType.setup()
-		settings = Success(Settings(executionContext, jsonParser, containersDirectory, errorHandler))
+		settings = Success(Settings(executionContext, jsonParser, logger, containersDirectory))
 	}
 	
 	/**
@@ -77,27 +81,15 @@ object JourneyContext
 	  * @param error Error that occurred
 	  * @param message Additional error message (optional)
 	  */
-	def log(error: Throwable, message: String = "") = settings match
-	{
-		case Success(s) => s.errorHandler(Some(error), message)
-		case Failure(_) => defaultErrorHandler(Some(error), message)
-	}
+	@deprecated("Please use .logger instead", "v0.2")
+	def log(error: Throwable, message: String = "") = logger(error, message)
 	
 	/**
 	  * Records an error message
 	  * @param message An error message
 	  */
-	def log(message: String) =
-	{
-		if (message.nonEmpty)
-		{
-			settings match
-			{
-				case Success(s) => s.errorHandler(None, message)
-				case Failure(_) => defaultErrorHandler(None, message)
-			}
-		}
-	}
+	@deprecated("Please use .logger instead", "v0.2")
+	def log(message: String) = logger(message)
 	
 	private def defaultErrorHandler(error: Option[Throwable], message: String) =
 	{
@@ -109,6 +101,6 @@ object JourneyContext
 	
 	// NESTED	-------------------------------
 	
-	private case class Settings(exc: ExecutionContext, jsonParser: JsonParser, containersDirectory: Path,
-								errorHandler: (Option[Throwable], String) => Unit)
+	private case class Settings(exc: ExecutionContext, jsonParser: JsonParser, logger: Logger,
+	                            containersDirectory: Path)
 }

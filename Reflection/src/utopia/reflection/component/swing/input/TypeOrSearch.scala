@@ -2,6 +2,7 @@ package utopia.reflection.component.swing.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.ChangingLike
+import utopia.flow.util.logging.Logger
 import utopia.reflection.color.ColorRole.{Gray, Secondary}
 import utopia.reflection.color.ColorShade
 import utopia.reflection.color.ColorShade.Light
@@ -54,7 +55,7 @@ object TypeOrSearch
 	          searchDelay: Duration = Duration.Zero)
 	         (optionsForInput: String => Seq[String])
 	         (implicit context: TextContext, scrollingContext: ScrollingContextLike,
-	          animationContext: AnimationContextLike, exc: ExecutionContext) = new TypeOrSearch(context,
+	          animationContext: AnimationContextLike, exc: ExecutionContext, logger: Logger) = new TypeOrSearch(context,
 		optimalTextFieldWidth, addButtonText, addButtonIcon, selectButtonText, selectButtonIcon,
 		optimalSelectionAreaLength, textFieldPrompt, preferredTextFieldShade, searchDelay)(optionsForInput)
 }
@@ -84,7 +85,7 @@ class TypeOrSearch
  textFieldPrompt: LocalizedString = LocalizedString.empty, preferredTextFieldShade: ColorShade = Light,
  searchDelay: Duration = Duration.Zero)
 (optionsForInput: String => Seq[String])
-(implicit scrollingContext: ScrollingContextLike, animationContext: AnimationContextLike, exc: ExecutionContext)
+(implicit scrollingContext: ScrollingContextLike, animationContext: AnimationContextLike, exc: ExecutionContext, logger: Logger)
 	extends StackableAwtComponentWrapperWrapper with PoolWithPointer[Vector[String], ChangingLike[Vector[String]]]
 {
 	// ATTRIBUTES   ----------------------------

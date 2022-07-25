@@ -3,6 +3,7 @@ package utopia.flow.test.datastructure
 import utopia.flow.async.{ThreadPool, Wait}
 import utopia.flow.collection.WeakList
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.ExecutionContext
 
@@ -13,6 +14,7 @@ import scala.concurrent.ExecutionContext
  */
 object WeakListTest extends App
 {
+	implicit val logger: Logger = SysErrLogger
 	private implicit val exc: ExecutionContext = new ThreadPool("Test").executionContext
 	
 	val first = "First"

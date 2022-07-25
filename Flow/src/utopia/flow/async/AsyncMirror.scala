@@ -1,6 +1,7 @@
 package utopia.flow.async
 
 import utopia.flow.event.{ChangeDependency, ChangeListener, Changing, ChangingLike}
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -12,23 +13,22 @@ object AsyncMirror
 	  * @param source A source pointer
 	  * @param placeHolder Value initially placed in this pointer
 	  * @param synchronousMap A mapping function that returns a try
-	  * @param errorHandler A function called for caught errors
 	  * @param exc Implicit execution context
+	  * @param logger Implicit logger to record encountered errors with
 	  * @tparam Origin Original pointer value type
 	  * @tparam Reflection Successful mapping result type
 	  * @return A new asynchronously mirroring pointer
 	  */
 	def trying[Origin, Reflection](source: ChangingLike[Origin], placeHolder: Reflection)
-	                                (synchronousMap: Origin => Try[Reflection])(errorHandler: Throwable => Unit)
-	                                (implicit exc: ExecutionContext) =
+	                                (synchronousMap: Origin => Try[Reflection])
+	                                (implicit exc: ExecutionContext, logger: Logger) =
 	{
 		if (source.isChanging)
 			new AsyncMirror[Origin, Try[Reflection], Reflection](source, placeHolder)(synchronousMap)({ (previous, result) =>
-				result.flatten match
-				{
+				result.flatten match {
 					case Success(value) => value
 					case Failure(error) =>
-						errorHandler(error)
+						logger(error)
 						previous
 				}
 			})
@@ -41,15 +41,15 @@ object AsyncMirror
 	  * @param source A source pointer
 	  * @param placeHolder Value initially placed in this pointer
 	  * @param synchronousMap A mapping function that is expected to throw exceptions once in a while
-	  * @param errorHandler A function called for caught errors
 	  * @param exc Implicit execution context
+	  * @param logger Implicit logger to record encountered errors with
 	  * @tparam Origin Original pointer value type
 	  * @tparam Reflection Successful mapping result type
 	  * @return A new asynchronously mirroring pointer
 	  */
 	def catching[Origin, Reflection](source: ChangingLike[Origin], placeHolder: Reflection)
-	                                (synchronousMap: Origin => Reflection)(errorHandler: Throwable => Unit)
-	                                (implicit exc: ExecutionContext) =
+	                                (synchronousMap: Origin => Reflection)
+	                                (implicit exc: ExecutionContext, logger: Logger) =
 	{
 		if (source.isChanging)
 			new AsyncMirror[Origin, Reflection, Reflection](source, placeHolder)(synchronousMap)({ (previous, result) =>
@@ -57,7 +57,7 @@ object AsyncMirror
 				{
 					case Success(value) => value
 					case Failure(error) =>
-						errorHandler(error)
+						logger(error)
 						previous
 				}
 			})
@@ -72,13 +72,15 @@ object AsyncMirror
 	  * @param synchronousMap A mapping function that is expected to always succeed (if/when it throws,
 	  *                       errors are only printed but otherwise ignored)
 	  * @param exc Implicit execution context
+	  * @param logger Implicit logger to record encountered errors with
 	  * @tparam Origin Original pointer value type
 	  * @tparam Reflection Successful mapping result type
 	  * @return A new asynchronously mirroring pointer
 	  */
 	def apply[Origin, Reflection](source: ChangingLike[Origin], placeHolder: Reflection)
-	                             (synchronousMap: Origin => Reflection)(implicit exc: ExecutionContext) =
-		catching[Origin, Reflection](source, placeHolder)(synchronousMap) { _.printStackTrace() }
+	                             (synchronousMap: Origin => Reflection)
+	                             (implicit exc: ExecutionContext, logger: Logger) =
+		catching[Origin, Reflection](source, placeHolder)(synchronousMap)
 }
 
 /**

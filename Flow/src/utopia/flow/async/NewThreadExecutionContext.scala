@@ -1,5 +1,7 @@
 package utopia.flow.async
 
+import utopia.flow.util.logging.Logger
+
 import scala.concurrent.ExecutionContext
 
 /**
@@ -8,10 +10,8 @@ import scala.concurrent.ExecutionContext
  * very few operations.
  * @author Mikko Hilpinen
  * @since 31.12.2019, v1.6.1
- * @param errorHandler A function called when execution fails
  */
-class NewThreadExecutionContext(val name: String = "NewThreadExc",
-								val errorHandler: Throwable => Unit = _.printStackTrace()) extends ExecutionContext
+class NewThreadExecutionContext(val name: String = "NewThreadExc")(implicit logger: Logger) extends ExecutionContext
 {
 	private val threadCounter = new Volatile[Int](0)
 	
@@ -24,5 +24,5 @@ class NewThreadExecutionContext(val name: String = "NewThreadExc",
 		thread.start()
 	}
 	
-	override def reportFailure(cause: Throwable) = errorHandler(cause)
+	override def reportFailure(cause: Throwable) = logger(cause)
 }

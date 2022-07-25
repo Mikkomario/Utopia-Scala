@@ -6,6 +6,7 @@ import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.event.ChangingLike
 import utopia.flow.time.{WaitTarget, WaitUtils}
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -23,13 +24,14 @@ object Process
 	  * @param f Wrapped function. Accepts a pointer which contains whether the function should hurry its completion
 	  *          (in case of a jvm shutdown or stop() call)
 	  * @param exc Implicit execution context
+	  * @param logger Implicit logger for exceptions that reach the process function
 	  * @tparam U Arbitrary function result type
 	  * @return A new process that uses the underlying function
 	  */
 	def apply[U](waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReaction = Cancel,
 	             isRestartable: Boolean = true)
 	            (f: => ChangingLike[Boolean] => U)
-	            (implicit exc: ExecutionContext): Process =
+	            (implicit exc: ExecutionContext, logger: Logger): Process =
 		new FunctionProcess[U](waitLock, shutdownReaction, isRestartable)(f)
 	
 	
@@ -38,7 +40,7 @@ object Process
 	private class FunctionProcess[U](waitLock: AnyRef, shutdownReaction: ShutdownReaction = Cancel,
 	                                 override val isRestartable: Boolean)
 	                                (f: => ChangingLike[Boolean] => U)
-	                                (implicit exc: ExecutionContext)
+	                                (implicit exc: ExecutionContext, logger: Logger)
 		extends Process(waitLock, Some(shutdownReaction))
 	{
 		override protected def runOnce() = f(hurryPointer)
@@ -52,7 +54,7 @@ object Process
   */
 abstract class Process(protected val waitLock: AnyRef = new AnyRef,
                        val shutdownReaction: Option[ShutdownReaction] = None)
-                      (implicit exc: ExecutionContext)
+                      (implicit exc: ExecutionContext, logger: Logger)
 	extends Runnable with Breakable
 {
 	// ATTRIBUTES   ------------------------------
@@ -175,10 +177,7 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 			reaction.foreach { CloseHook += _ }
 			// Runs this process (catches and prints errors)
 			Iterator.continually {
-				Try { runOnce() }.failure.foreach { error =>
-					System.err.println(s"$this process failed")
-					error.printStackTrace()
-				}
+				Try { runOnce() }.failure.foreach { logger(_, "Asynchronous process threw an uncatched exception") }
 				// Updates the state afterwards
 				_statePointer.updateAndGet { currentState =>
 					// For looping processes, continues one more run

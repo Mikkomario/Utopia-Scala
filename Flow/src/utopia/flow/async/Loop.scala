@@ -5,6 +5,7 @@ import utopia.flow.time.{WaitTarget, WaitUtils, WeekDay}
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import utopia.flow.time.WaitTarget.WaitDuration
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import java.time.LocalTime
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -30,7 +31,8 @@ object Loop
       * @param exc Implicit execution context
       * @return The loop that was just started
       */
-    def after(delay: WaitTarget)(f: => Option[WaitTarget])(implicit exc: ExecutionContext) = {
+    def after(delay: WaitTarget)(f: => Option[WaitTarget])(implicit exc: ExecutionContext, logger: Logger) =
+    {
         val loop = LoopingProcess(delay) { _ => f }
         loop.runAsync()
         loop
@@ -43,7 +45,8 @@ object Loop
       * @param exc Implicit execution context
       * @return The loop that was just started
       */
-    def apply(f: => Option[WaitTarget])(implicit exc: ExecutionContext): LoopingProcess = after(WaitTarget.zero)(f)
+    def apply(f: => Option[WaitTarget])(implicit exc: ExecutionContext, logger: Logger): LoopingProcess =
+        after(WaitTarget.zero)(f)
     
     /**
       * Starts a new infinite looping process
@@ -57,7 +60,7 @@ object Loop
       */
     def regularly[U](interval: FiniteDuration, waitLock: AnyRef = new AnyRef, waitFirst: Boolean = false)
                  (f: => U)
-                 (implicit exc: ExecutionContext) =
+                 (implicit exc: ExecutionContext, logger: Logger) =
     {
         val loop = LoopingProcess.static(interval, waitLock, waitFirst = waitFirst) { _ =>
             f
@@ -74,7 +77,7 @@ object Loop
       * @param exc Implicit execution context
       * @return The loop process that was just started
       */
-    def daily[U](runTime: LocalTime)(f: => U)(implicit exc: ExecutionContext) =
+    def daily[U](runTime: LocalTime)(f: => U)(implicit exc: ExecutionContext, logger: Logger) =
     {
         val loop = LoopingProcess.daily(runTime) { _ => f }
         loop.runAsync()
@@ -89,7 +92,8 @@ object Loop
       * @param exc Implicit execution context
       * @return The loop process that was just started
       */
-    def weekly[U](day: WeekDay, time: LocalTime)(f: => U)(implicit exc: ExecutionContext) = {
+    def weekly[U](day: WeekDay, time: LocalTime)(f: => U)(implicit exc: ExecutionContext, logger: Logger) =
+    {
         val loop = LoopingProcess.weekly(day, time) { _ => f }
         loop.runAsync()
         loop
@@ -112,6 +116,8 @@ object Loop
                         (f: => Try[A])
                         (implicit exc: ExecutionContext) =
     {
+        implicit val logger: Logger = SysErrLogger
+        
         // The delay between attempts may be modified between attempts
         val intervalIterator = {
             if (intervalModifier == 1.0)
@@ -139,6 +145,7 @@ object Loop
     
     // NESTED   -----------------------------
     
+    @deprecated("Please use LoopingProcess instead", "v1.16")
     private class SimpleLoop(val nextWaitTarget: WaitTarget, val operation: () => Unit) extends Loop
     {
         def runOnce() = operation()

@@ -3,7 +3,7 @@ package utopia.reach.component.input.text
 import utopia.flow.async.Delay
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WaitUtils
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.genesis.shape.Axis.X
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -99,6 +99,8 @@ class DurationField(parentHierarchy: ComponentHierarchy, initialValue: Duration 
 	extends ReachComponentWrapper with InputWithPointer[Duration, ChangingLike[Duration]] with ManyFocusableWrapper
 {
 	// ATTRIBUTES	-------------------------------
+	
+	implicit val logger: Logger = SysErrLogger
 	
 	// Makes sure the passed duration argument is positive
 	if (maxValue <= Duration.Zero)

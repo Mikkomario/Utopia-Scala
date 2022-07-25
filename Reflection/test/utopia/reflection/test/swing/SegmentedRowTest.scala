@@ -1,6 +1,5 @@
 package utopia.reflection.test.swing
 
-import utopia.flow.async.ThreadPool
 import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.ActorLoop
@@ -18,8 +17,7 @@ import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
 import utopia.reflection.shape.LengthExtensions._
-
-import scala.concurrent.ExecutionContext
+import utopia.reflection.test.TestContext._
 
 /**
   * This is a simple test implementation of segmented rows
@@ -73,7 +71,6 @@ object SegmentedRowTest extends App
 	// Creates the frame and displays it
 	val actorHandler = ActorHandler()
 	val actionLoop = new ActorLoop(actorHandler)
-	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 
 	val frame = Frame.windowed(stack, "Segmented Row Test", User)
 	frame.setToExitOnClose()

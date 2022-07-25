@@ -4,6 +4,7 @@ import utopia.flow.async.{ThreadPool, Wait}
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.ChangeListener
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.ExecutionContext
 
@@ -14,6 +15,7 @@ import scala.concurrent.ExecutionContext
  */
 object AsyncViewTest extends App
 {
+	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("AsyncViewTest").executionContext
 	val delay = 0.1.seconds
 	val waitLock = new AnyRef

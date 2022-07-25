@@ -2,7 +2,7 @@ package utopia.genesis.test
 
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.async.ThreadPool
+import utopia.flow.test.TestContext._
 import utopia.genesis.color.Color
 import utopia.genesis.handling.{Actor, Drawable}
 import utopia.genesis.shape.path.{BezierPath, CircularPath, CompoundPath, CubicBezier, Path}
@@ -10,7 +10,6 @@ import utopia.genesis.shape.shape2D.{Circle, Line, Point, Size}
 import utopia.genesis.util.{DefaultSetup, Drawer}
 import utopia.inception.handling.immutable.Handleable
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
 /**
@@ -20,8 +19,6 @@ import scala.concurrent.duration.FiniteDuration
   */
 object BezierPathTest extends App
 {
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
-	
 	// Sets up the program
 	val gameWorldSize = Size(800, 600)
 	val setup = new DefaultSetup(gameWorldSize, "Key Test")

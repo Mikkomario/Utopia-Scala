@@ -2,6 +2,7 @@ package utopia.flow.datastructure.mutable
 
 import scala.concurrent.duration.Duration
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
 
@@ -30,9 +31,8 @@ object ResettableLazy
 	  * @tparam A Type of wrapped item
 	  * @return A new lazy container with automated reset
 	  */
-	def expiringAfter[A](threshold: Duration)(make: => A)(implicit exc: ExecutionContext) =
-		threshold.finite match
-		{
+	def expiringAfter[A](threshold: Duration)(make: => A)(implicit exc: ExecutionContext, logger: Logger) =
+		threshold.finite match {
 			case Some(finite) => ExpiringLazy.after(finite)(make)
 			case None => apply(make)
 		}

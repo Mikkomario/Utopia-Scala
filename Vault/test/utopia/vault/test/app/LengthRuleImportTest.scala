@@ -1,13 +1,11 @@
 package utopia.vault.test.app
 
-import utopia.flow.async.ThreadPool
 import utopia.flow.generic.DataType
 import utopia.flow.parse.{JSONReader, JsonParser}
 import utopia.flow.util.FileExtensions._
+import utopia.flow.test.TestContext._
 import utopia.vault.database.ConnectionPool
 import utopia.vault.database.columnlength.ColumnLengthRules
-
-import scala.concurrent.ExecutionContext
 
 /**
   * Tests length rule loading
@@ -17,7 +15,6 @@ import scala.concurrent.ExecutionContext
 object LengthRuleImportTest extends App
 {
 	implicit val jsonParser: JsonParser = JSONReader
-	implicit val exc: ExecutionContext = new ThreadPool("test").executionContext
 	implicit val cPool: ConnectionPool = new ConnectionPool()
 	
 	DataType.setup()

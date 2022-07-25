@@ -8,6 +8,13 @@
     a problem only in custom implementations, and even then a minor one
 - **ModelConvertible** is now a sub-trait of **ValueConvertible**
   - May cause some minor build errors in cases where your classes inherited both
+- The following classes now use **Logger**:
+  - **AsyncMirror** and **ChangingLike**`.mapAsync` -variants
+  - All **FileContainer** variants
+  - **Iterator**`.mapCatching(...)` (**CollectionExtensions**)
+  - **Process**, **DelayedProcess**, **LoopingProcess**, **Delay** and **Loop** functions
+  - **ThreadPool** and **NewThreadExecutionContext**
+  - **TimedTasks**
 ### Deprecations
 - Deprecated some `...andGet(...)` -functions from **Volatile** classes, because of changes made to the base function 
   versions

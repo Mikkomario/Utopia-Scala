@@ -1,6 +1,5 @@
 package utopia.reflection.test.swing
 
-import utopia.flow.async.ThreadPool
 import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.ActorLoop
@@ -10,14 +9,13 @@ import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.test.TestContext._
 
 import scala.collection.immutable.HashMap
-import scala.concurrent.ExecutionContext
 
 /**
   * This is a simple test implementation of drop downs
@@ -27,11 +25,6 @@ import scala.concurrent.ExecutionContext
 object DropDownTest extends App
 {
 	GenesisDataType.setup()
-
-	// Sets up localization context
-	implicit val defaultLanguageCode: String = "EN"
-	implicit val localizer: Localizer = NoLocalization
-	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 
 	// Creates the labels
 	val basicFont = Font("Arial", 14, Plain, 2)

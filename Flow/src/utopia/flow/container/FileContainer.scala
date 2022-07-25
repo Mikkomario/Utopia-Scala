@@ -11,6 +11,7 @@ import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.flow.parse.JsonParser
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -25,7 +26,7 @@ import scala.util.{Failure, Success}
   * @param jsonParser A parser used for handling json reading (implicit)
   * @tparam A Type of item stored in this container
   */
-abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonParser)
+abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonParser, logger: Logger)
 {
 	// ABSTRACT	-------------------------------
 	
@@ -115,7 +116,8 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 				saveProcess.setOne(DelayedProcess.hurriable(duration) { _ => _save() })
 				true
 			case OnJvmClose =>
-				CloseHook.registerAsyncAction { Future { _save().failure.foreach { _.printStackTrace() } } }
+				CloseHook.registerAsyncAction { Future {
+					_save().failure.foreach { logger(_, "Failed to save FileContainer status on jvm shutdown") } } }
 				saveProcess.clear()
 				false
 			case OnlyOnTrigger =>

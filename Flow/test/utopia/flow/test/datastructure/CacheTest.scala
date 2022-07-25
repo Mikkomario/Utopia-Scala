@@ -7,6 +7,7 @@ import utopia.flow.caching.single.{ClearableSingleCache, ExpiringSingleCache, Si
 import utopia.flow.datastructure.mutable.Pointer
 import utopia.flow.time.WaitUtils
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
@@ -87,6 +88,7 @@ object CacheTest extends App
 	assert(successSingle() != result3)
 	
 	// Single async cache
+	implicit val logger: Logger = SysErrLogger
 	implicit val asyncContext: ExecutionContext = new ThreadPool("CacheTest").executionContext
 	val asyncRequestTime = 0.05.seconds
 	

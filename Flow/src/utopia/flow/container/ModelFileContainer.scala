@@ -1,11 +1,11 @@
 package utopia.flow.container
 
 import java.nio.file.Path
-
 import utopia.flow.container.SaveTiming.Immediate
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.JsonParser
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
 
@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContext
   * @param exc Execution context, used in some save features
   */
 class ModelFileContainer(fileLocation: Path, saveLogic: SaveTiming = Immediate)
-						(implicit jsonParser: JsonParser, exc: ExecutionContext)
+						(implicit jsonParser: JsonParser, exc: ExecutionContext, logger: Logger)
 	extends FileContainer[Model](fileLocation)
 {
 	// INITIAL CODE	-------------------------------

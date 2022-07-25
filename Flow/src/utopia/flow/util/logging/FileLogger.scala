@@ -32,6 +32,8 @@ class FileLogger(private var dir: Path = "log", copyToSysErr: Boolean = false)
 	
 	// COMPUTED -----------------------------
 	
+	private implicit def backupLogger: Logger = SysErrLogger
+	
 	/**
 	 * @return The directory where log files are added
 	 */

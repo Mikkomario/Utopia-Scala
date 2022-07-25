@@ -5,6 +5,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.Delay
 import utopia.flow.event.ChangingLike
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.reflection.component.context.{AnimationContextLike, TextContext}
 import utopia.reflection.component.swing.display.LoadingView
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
@@ -43,7 +44,7 @@ class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: ChangingLike
 	  * @param exc Implicit execution context
 	  * @return A future that completes when the loading process has been completed
 	  */
-	def display(parentWindow: Option[java.awt.Window] = None)(implicit exc: ExecutionContext) =
+	def display(parentWindow: Option[java.awt.Window] = None)(implicit exc: ExecutionContext, logger: Logger) =
 	{
 		// Presents the window only if there is some loading still to be done
 		if (progressPointer.value.progress < 1)
@@ -81,7 +82,8 @@ class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: ChangingLike
 	  * @param exc Implicit execution context
 	  * @return A future that completes when the loading process has been completed
 	  */
-	def displayOver(window: java.awt.Window)(implicit exc: ExecutionContext) = display(Some(window))
+	def displayOver(window: java.awt.Window)(implicit exc: ExecutionContext, logger: Logger) =
+		display(Some(window))
 	
 	/**
 	  * Displays this window during the loading process
@@ -89,5 +91,6 @@ class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: ChangingLike
 	  * @param exc Implicit execution context
 	  * @return A future that completes when the loading process has been completed
 	  */
-	def displayOver(window: Window[_])(implicit exc: ExecutionContext): Future[Unit] = displayOver(window.component)
+	def displayOver(window: Window[_])(implicit exc: ExecutionContext, logger: Logger): Future[Unit] =
+		displayOver(window.component)
 }

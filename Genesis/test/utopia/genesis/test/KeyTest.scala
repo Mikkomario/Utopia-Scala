@@ -1,19 +1,16 @@
 package utopia.genesis.test
 
+import utopia.flow.test.TestContext._
 import utopia.genesis.shape.Axis._
 import utopia.genesis.event.KeyStateEvent
-import java.awt.event.KeyEvent
-
 import utopia.genesis.util.{DefaultSetup, Drawer}
 import utopia.genesis.shape.shape2D.{Bounds, Line, Point, Size}
-import java.awt.Color
-
-import utopia.flow.async.ThreadPool
 import utopia.genesis.event.KeyTypedEvent
 import utopia.genesis.handling.{Drawable, KeyStateListener, KeyTypedListener}
 import utopia.inception.handling.immutable.Handleable
 
-import scala.concurrent.ExecutionContext
+import java.awt.Color
+import java.awt.event.KeyEvent
 
 /**
  * This is an interactive test for keyboard interactions. The square character should move according
@@ -24,8 +21,6 @@ import scala.concurrent.ExecutionContext
  */
 object KeyTest extends App
 {
-    implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
-    
     private class TestObject(startPosition: Point) extends KeyStateListener with Handleable
     {
         // ATTRIBUTES    -----------------

@@ -1,6 +1,6 @@
 package utopia.reflection.test.swing
 
-import utopia.flow.async.{Loop, ThreadPool}
+import utopia.flow.async.Loop
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
@@ -15,13 +15,11 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
 import utopia.reflection.shape.LengthExtensions._
-
-import scala.concurrent.ExecutionContext
+import utopia.reflection.test.TestContext._
 
 /**
   * This is a simple test implementation of text labels in a stack
@@ -31,11 +29,6 @@ import scala.concurrent.ExecutionContext
 object TextLabelStackTest extends App
 {
 	GenesisDataType.setup()
-
-	// Sets up localization context
-	implicit val defaultLanguageCode: String = "EN"
-	implicit val localizer: Localizer = NoLocalization
-	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 
 	// Creates the labels
 	val basicFont = Font("Arial", 12, Plain, 2)

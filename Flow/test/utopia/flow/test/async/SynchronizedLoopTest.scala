@@ -5,6 +5,7 @@ import utopia.flow.generic.DataType
 import utopia.flow.time.WaitTarget.WaitDuration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.WaitUtils
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import java.time.LocalTime
 import scala.concurrent.ExecutionContext
@@ -19,6 +20,7 @@ import scala.concurrent.duration.Duration
 object SynchronizedLoopTest extends App
 {
 	DataType.setup()
+	implicit val logger: Logger = SysErrLogger
 	
 	class Printloop(text: String, time: Duration) extends Loop
 	{

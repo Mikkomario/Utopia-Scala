@@ -1,6 +1,6 @@
 package utopia.genesis.test
 
-import utopia.flow.async.ThreadPool
+import utopia.flow.test.TestContext._
 import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.Drawable
@@ -11,8 +11,6 @@ import utopia.genesis.shape.shape3D.Matrix3D
 import utopia.genesis.util.{DefaultSetup, Drawer}
 import utopia.inception.handling.immutable.Handleable
 
-import scala.concurrent.ExecutionContext
-
 /**
   * Used for testing use of transformations in drawing
   * @author Mikko Hilpinen
@@ -20,8 +18,6 @@ import scala.concurrent.ExecutionContext
   */
 object TransformationDrawTest extends App
 {
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
-	
 	GenesisDataType.setup()
 	
 	val gameWorldSize = Size(700, 200)

@@ -2,20 +2,17 @@ package utopia.genesis.test
 
 import java.time.Duration
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.{ThreadPool, Wait}
+import utopia.flow.async.Wait
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.test.TestContext._
 import utopia.genesis.handling.immutable.ActorHandler
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
 object ActorTest extends App
 {
-    implicit val context: ExecutionContext = new ThreadPool("Test", 2, 20, Duration.ofSeconds(10),
-        e => e.printStackTrace()).executionContext
-    
     class TestActor extends mutable.Actor
     {
         var timeCounted = Duration.ZERO

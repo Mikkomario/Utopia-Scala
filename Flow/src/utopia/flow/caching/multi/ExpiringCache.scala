@@ -22,7 +22,8 @@ object ExpiringCache
 	  * @return A new cache that clears values automatically
 	  */
 	def apply[K, V](request: K => V)(calculateExpiration: (K, V) => Duration)
-	               (implicit exc: ExecutionContext) = new ExpiringCache[K, V](request)(calculateExpiration)
+	               (implicit exc: ExecutionContext) =
+		new ExpiringCache[K, V](request)(calculateExpiration)
 	
 	/**
 	  * Creates a new expiring cache

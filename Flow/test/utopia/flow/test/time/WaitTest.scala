@@ -5,6 +5,7 @@ import utopia.flow.async.ThreadPool
 import utopia.flow.time.{SingleWait, WaitUtils}
 import utopia.flow.time.WaitTarget.WaitDuration
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -16,6 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @deprecated("Replaced with a new version", "v1.15")
 object WaitTest extends App
 {
+	implicit val logger: Logger = SysErrLogger
 	private implicit val exc: ExecutionContext = new ThreadPool("Test").executionContext
 	
 	var singleWaitCompleted = false

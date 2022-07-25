@@ -11,6 +11,7 @@ import utopia.flow.parse.JsonParser
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments, CommandArgumentsSchema}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.vault.database.{Connection, ConnectionPool}
 
 import java.nio.file.Path
@@ -26,6 +27,7 @@ object DescriptionImporterApp extends App
 {
 	DataType.setup()
 	
+	implicit val logger: Logger = SysErrLogger
 	implicit val jsonParser: JsonParser = JsonBunny
 	implicit val executionContext: ExecutionContext = new ThreadPool("Description-Importer").executionContext
 	val connectionPool = new ConnectionPool()

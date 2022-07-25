@@ -4,7 +4,7 @@ import utopia.genesis.view.Canvas
 import utopia.genesis.view.MainFrame
 import java.awt.Font
 
-import utopia.flow.async.ThreadPool
+import utopia.flow.test.TestContext._
 import utopia.genesis.util.{Drawer, Fps}
 import utopia.genesis.shape.shape2D.{Bounds, Size}
 import utopia.genesis.view.CanvasMouseEventGenerator
@@ -13,13 +13,8 @@ import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler}
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 
-import scala.concurrent.ExecutionContext
-
-
 object CameraTest extends App
 {
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
-	
     class GridNumberDrawer(private val grid: GridDrawer) extends Drawable with Handleable
     {
         private val font = new Font("Arial", 0, 14)

@@ -1,7 +1,7 @@
 package utopia.reflection.test.swing
 
 import java.awt.event.KeyEvent
-import utopia.flow.async.{LoopingProcess, ThreadPool}
+import utopia.flow.async.LoopingProcess
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.WaitTarget.WaitDuration
@@ -22,11 +22,12 @@ import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
 import utopia.reflection.controller.data.ContainerSelectionManager
-import utopia.reflection.localization.{DisplayFunction, Localizer, NoLocalization}
+import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.{StackInsets, StackLengthLimit}
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
+import utopia.reflection.test.TestContext._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
@@ -39,11 +40,6 @@ import scala.concurrent.duration.Duration
 object ScrollViewTest extends App
 {
 	GenesisDataType.setup()
-	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
-	
-	// Sets up localization context
-	implicit val defaultLanguageCode: String = "EN"
-	implicit val localizer: Localizer = NoLocalization
 	
 	// Label creation function
 	val basicFont = Font("Arial", 12, Plain, 2)

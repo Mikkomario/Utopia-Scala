@@ -2,6 +2,7 @@ package utopia.reflection.container.swing.window.interaction
 
 import utopia.flow.async.Delay
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.genesis.shape.shape2D.{Direction2D, Point}
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.swing.button.ImageButton
@@ -98,6 +99,7 @@ trait InputWindow[+A] extends InteractionWindow[A]
 	
 	override protected def buttonBlueprints =
 	{
+		implicit val logger: Logger = SysErrLogger
 		implicit val exc: ExecutionContext = executionContext
 		
 		val okButton = new DialogButtonBlueprint[A](okButtonText, okButtonIcon, ButtonColor.secondary)(() =>

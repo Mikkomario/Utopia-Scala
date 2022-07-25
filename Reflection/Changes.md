@@ -1,6 +1,13 @@
 # Utopia Reflection - List of Changes
 
 ## v2.0-alpha-8 (in development)
+### Breaking Changes
+- The following classes require an implicit **Logger** parameter
+  - **LoadingWindow**
+  - **ScrollCanvas**
+  - **SingleFrameSetup** and **MultiFrameSetup**
+  - `StackHierarchyManager.startRevalidationLoop(...)`
+  - **TypeOrSearch**
 ### Bugfixes
 - Fixed deadlock issues related to animated components
 

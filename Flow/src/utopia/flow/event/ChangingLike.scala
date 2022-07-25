@@ -2,6 +2,7 @@ package utopia.flow.event
 
 import utopia.flow.async.AsyncMirror
 import utopia.flow.datastructure.template.{ListenableLazyLike, Viewable}
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.concurrent.duration.Duration
@@ -238,27 +239,25 @@ trait ChangingLike[+A] extends Viewable[A]
 	  * Creates an asynchronously mapping view of this changing item
 	  * @param placeHolderResult Value placed in the view before the first value has been calculated
 	  * @param f A synchronous mapping function that catches errors, returning a try
-	  * @param errorHandler A function called for all received errors
 	  * @param exc Implicit execution context
 	  * @tparam B Successful mapping result type
 	  * @return An asynchronously mapped view of this changing item
 	  */
-	def tryMapAsync[B](placeHolderResult: B)(f: A => Try[B])(errorHandler: Throwable => Unit)
-					  (implicit exc: ExecutionContext) =
-		AsyncMirror.trying(this, placeHolderResult)(f)(errorHandler)
+	def tryMapAsync[B](placeHolderResult: B)(f: A => Try[B])
+					  (implicit exc: ExecutionContext, logger: Logger) =
+		AsyncMirror.trying(this, placeHolderResult)(f)
 	
 	/**
 	  * Creates an asynchronously mapping view of this changing item
 	  * @param placeHolderResult Value placed in the view before the first value has been calculated
 	  * @param f A synchronous mapping function that may throw errors
-	  * @param errorHandler A function called for all catched errors
 	  * @param exc Implicit execution context
 	  * @tparam B Successful mapping result type
 	  * @return An asynchronously mapped view of this changing item
 	  */
-	def mapAsyncCatching[B](placeHolderResult: B)(f: A => B)(errorHandler: Throwable => Unit)
-						   (implicit exc: ExecutionContext) =
-		AsyncMirror.catching(this, placeHolderResult)(f)(errorHandler)
+	def mapAsyncCatching[B](placeHolderResult: B)(f: A => B)
+						   (implicit exc: ExecutionContext, logger: Logger) =
+		AsyncMirror.catching(this, placeHolderResult)(f)
 	
 	/**
 	  * Creates an asynchronously mapping view of this changing item
@@ -269,7 +268,7 @@ trait ChangingLike[+A] extends Viewable[A]
 	  * @tparam B Mapping result type
 	  * @return An asynchronously mapped view of this changing item
 	  */
-	def mapAsync[B](placeHolderResult: B)(f: A => B)(implicit exc: ExecutionContext) =
+	def mapAsync[B](placeHolderResult: B)(f: A => B)(implicit exc: ExecutionContext, logger: Logger) =
 		AsyncMirror(this, placeHolderResult)(f)
 	
 	/**

@@ -7,6 +7,7 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.AutoClose._
 import utopia.flow.util.FileExtensions._
+import utopia.flow.util.logging.Logger
 
 import java.io.{FileOutputStream, OutputStream, OutputStreamWriter, PrintWriter}
 import java.nio.file.Path
@@ -27,7 +28,7 @@ object KeptOpenWriter
 	  * @return A new writer wrapper
 	  */
 	def apply(path: Path, keepOpenDuration: FiniteDuration)
-	         (implicit codec: Codec, exc: ExecutionContext) =
+	         (implicit codec: Codec, exc: ExecutionContext, logger: Logger) =
 	{
 		val existingPathPointer = Lazy { path.createDirectories() }
 		new KeptOpenWriter(keepOpenDuration)(new FileOutputStream(existingPathPointer.value.get.toFile, true))
@@ -41,7 +42,7 @@ object KeptOpenWriter
   * @since 24.7.2022, v1.16
   */
 class KeptOpenWriter(keepOpenDuration: FiniteDuration)(generate: => OutputStream)
-                    (implicit codec: Codec, exc: ExecutionContext)
+                    (implicit codec: Codec, exc: ExecutionContext, logger: Logger)
 {
 	// ATTRIBUTES   ----------------------------
 	

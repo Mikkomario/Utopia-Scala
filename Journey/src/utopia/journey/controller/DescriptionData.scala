@@ -13,6 +13,7 @@ import utopia.flow.util.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.Now
+import utopia.flow.util.logging.Logger
 import utopia.journey.util.JourneyContext._
 import utopia.metropolis.model.combined.description.DescribedDescriptionRole
 import utopia.metropolis.model.combined.language.DescribedLanguage

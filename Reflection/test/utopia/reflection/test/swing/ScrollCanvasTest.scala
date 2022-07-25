@@ -2,7 +2,6 @@ package utopia.reflection.test.swing
 
 import java.awt.event.KeyEvent
 
-import utopia.flow.async.ThreadPool
 import utopia.genesis.color.Color
 import utopia.genesis.event._
 import utopia.genesis.generic.GenesisDataType
@@ -17,10 +16,8 @@ import utopia.reflection.component.swing.display.ScrollCanvas
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.LengthExtensions._
-
-import scala.concurrent.ExecutionContext
+import utopia.reflection.test.TestContext._
 
 /**
   * This is a simple test implementation of scroll view
@@ -30,10 +27,6 @@ import scala.concurrent.ExecutionContext
 object ScrollCanvasTest extends App
 {
 	GenesisDataType.setup()
-	
-	implicit val language: String = "en"
-	implicit val localizer: Localizer = NoLocalization
-	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 	
 	// Creates the handlers
 	val actorHandler = ActorHandler()

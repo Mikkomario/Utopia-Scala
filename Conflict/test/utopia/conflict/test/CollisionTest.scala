@@ -1,14 +1,13 @@
 package utopia.conflict.test
 
 import utopia.conflict.test.TestCollisionGroups.Obstacle
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Polygon, Size, Vector2D}
 import utopia.conflict.collision.Extensions._
 import utopia.conflict.util.DefaultSetup
-import utopia.flow.async.ThreadPool
+import utopia.flow.test.TestContext._
+import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Polygon, Size, Vector2D}
 import utopia.genesis.shape.shape2D.transform.AffineTransformation
 
 import scala.collection.immutable.HashSet
-import scala.concurrent.ExecutionContext
 
 /**
  * This test visually displays collision data with interactive elements
@@ -17,8 +16,6 @@ import scala.concurrent.ExecutionContext
  */
 object CollisionTest extends App
 {
-    implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
-    
     // Sets up the program
     val worldSize = Size(800, 600)
     
@@ -28,7 +25,7 @@ object CollisionTest extends App
     val simplePolygon = Polygon(Point(-32, -32), Point(0, 64), Point(32, 32), Point.origin)
     val transformedPolygon = AffineTransformation(worldSize.toVector / 2, scaling = Vector2D(2, 2)).transform(simplePolygon)
     
-    val nonConvexPolygon = Polygon(Point(-32, -32), Point(-0.5, 0), Point(-32, 32), Point(32, 32), Point(0.5, 0), Point(32, -32))
+    val nonConvexPolygon = Polygon(Point(-32, -32), Point(-0.5), Point(-32, 32), Point(32, 32), Point(0.5), Point(32, -32))
     
     val obstacle1 = new TestPolygonObstacle(transformedPolygon)
     val obstacle2 = new TestPolygonObstacle(Circle(Point(96, 228), 64).toPolygon(12))

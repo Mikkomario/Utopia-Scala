@@ -1,6 +1,7 @@
 package utopia.conflict.util
 
 import utopia.conflict.handling.mutable.{CollidableHandler, CollisionHandler}
+import utopia.flow.util.logging.Logger
 import utopia.genesis.shape.shape2D.Size
 import utopia.genesis.util.{Fps, Setup}
 
@@ -12,7 +13,7 @@ import scala.concurrent.ExecutionContext
   * @since 20.4.2019, v1+
   */
 class DefaultSetup(initialGameWorldSize: Size, title: String, maxFPS: Fps = Fps.default)
-				  (implicit context: ExecutionContext) extends Setup
+				  (implicit context: ExecutionContext, logger: Logger) extends Setup
 {
 	// ATTRIBUTES	------------------
 	

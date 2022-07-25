@@ -2,6 +2,7 @@ package utopia.flow.async
 
 import utopia.flow.async.ShutdownReaction.Cancel
 import utopia.flow.time.WaitTarget
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -28,7 +29,7 @@ object Delay
 	  */
 	def apply[A](target: WaitTarget, lock: AnyRef = new AnyRef, shutdownReaction: ShutdownReaction = Cancel)
 	            (f: => A)
-	            (implicit exc: ExecutionContext) =
+	            (implicit exc: ExecutionContext, logger: Logger) =
 	{
 		if (target.isPositive) {
 			val resultPointer = VolatileOption[Try[A]]()

@@ -5,6 +5,7 @@ import utopia.flow.collection.VolatileList
 import utopia.flow.datastructure.immutable.GraphEdge
 import utopia.flow.datastructure.mutable.GraphNode
 import utopia.flow.util.Counter
+import utopia.flow.util.logging.Logger
 import utopia.genesis.util.Fps
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.layout.stack.Stackable
@@ -153,7 +154,7 @@ object StackHierarchyManager
 	  * @param vps The maximum validations per second value (default = 30)
 	  * @param context The asynchronous execution context
 	  */
-	def startRevalidationLoop(vps: Fps = Fps(30))(implicit context: ExecutionContext) =
+	def startRevalidationLoop(vps: Fps = Fps(30))(implicit context: ExecutionContext, logger: Logger) =
 	{
 		if (validationLoop.isEmpty) {
 			val loop = new RevalidateLoop(vps.interval)
@@ -422,7 +423,8 @@ object StackHierarchyManager
 		override def toString = parts.mkString(":")
 	}
 	
-	private class RevalidateLoop(validationInterval: FiniteDuration)(implicit exc: ExecutionContext) extends LoopingProcess
+	private class RevalidateLoop(validationInterval: FiniteDuration)(implicit exc: ExecutionContext, logger: Logger)
+		extends LoopingProcess
 	{
 		override protected def isRestartable = true
 		

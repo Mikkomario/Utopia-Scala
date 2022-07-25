@@ -1,10 +1,10 @@
 package utopia.flow.container
 
 import java.nio.file.Path
-
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.parse.JsonParser
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.util.logging.Logger
 
 import scala.util.Try
 
@@ -16,7 +16,7 @@ import scala.util.Try
   * @param jsonParser A parser used for handling json reading (implicit)
   * @tparam A Type of individual items stored in this container
   */
-abstract class MultiFileContainer[A](fileLocation: Path)(implicit jsonParser: JsonParser)
+abstract class MultiFileContainer[A](fileLocation: Path)(implicit jsonParser: JsonParser, logger: Logger)
 	extends FileContainer[Vector[A]](fileLocation)
 {
 	// ABSTRACT --------------------------------

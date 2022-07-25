@@ -4,11 +4,12 @@ import java.time.Instant
 import utopia.flow.async.LoopingProcess
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.WaitTarget.Until
+import utopia.flow.util.logging.Logger
 import utopia.genesis.util.Fps
 
 import scala.concurrent.ExecutionContext
 
-class ActorLoop(handler: ActorHandler, val apsRange: Range = 15 to 60)(implicit exc: ExecutionContext)
+class ActorLoop(handler: ActorHandler, val apsRange: Range = 15 to 60)(implicit exc: ExecutionContext, logger: Logger)
 	extends LoopingProcess
 {
 	// ATTRIBUTES	-------------------

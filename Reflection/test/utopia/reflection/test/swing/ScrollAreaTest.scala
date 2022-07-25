@@ -3,7 +3,6 @@ package utopia.reflection.test.swing
 import java.awt.event.KeyEvent
 import java.util.concurrent.TimeUnit
 
-import utopia.flow.async.ThreadPool
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
@@ -18,13 +17,12 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.localization.{DisplayFunction, Localizer, NoLocalization}
+import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.stack.{StackInsets, StackLengthLimit}
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
 import utopia.reflection.shape.LengthExtensions._
-
-import scala.concurrent.ExecutionContext
+import utopia.reflection.test.TestContext._
 
 /**
   * This is a simple test implementation of scroll Area
@@ -34,11 +32,6 @@ import scala.concurrent.ExecutionContext
 object ScrollAreaTest extends App
 {
 	GenesisDataType.setup()
-
-	// Sets up localization context
-	implicit val defaultLanguageCode: String = "EN"
-	implicit val localizer: Localizer = NoLocalization
-	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 
 	// Creates the labels
 	val basicFont = Font("Arial", 12, Plain, 2)

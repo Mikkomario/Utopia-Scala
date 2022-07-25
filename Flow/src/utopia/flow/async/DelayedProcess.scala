@@ -4,6 +4,7 @@ import utopia.flow.async.ShutdownReaction.{Cancel, DelayShutdown, SkipDelay}
 import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.event.ChangingLike
 import utopia.flow.time.WaitTarget
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
 
@@ -27,7 +28,7 @@ object DelayedProcess
 	def apply[U](waitTarget: WaitTarget, waitLock: AnyRef = new AnyRef,
 	             shutdownReaction: Option[ShutdownReaction] = None, isRestartable: Boolean = true)
 	            (f: => ChangingLike[Boolean] => U)
-	            (implicit exc: ExecutionContext): DelayedProcess =
+	            (implicit exc: ExecutionContext, logger: Logger): DelayedProcess =
 		new DelayedFunction(waitTarget, waitLock, shutdownReaction, isRestartable)(f)
 	
 	/**
@@ -44,7 +45,7 @@ object DelayedProcess
 	  */
 	def hurriable[U](waitTarget: WaitTarget, waitLock: AnyRef = new AnyRef, isRestartable: Boolean = true)
 	                (f: => ChangingLike[Boolean] => U)
-	                (implicit exc: ExecutionContext) =
+	                (implicit exc: ExecutionContext, logger: Logger) =
 		apply(waitTarget, waitLock, Some(SkipDelay), isRestartable = isRestartable)(f)
 	
 	/**
@@ -59,7 +60,7 @@ object DelayedProcess
 	  * @return A new delayed process instance
 	  */
 	def rigid[U](waitTarget: WaitTarget, waitLock: AnyRef = new AnyRef, isRestartable: Boolean = true)
-	            (f: => U)(implicit exc: ExecutionContext) =
+	            (f: => U)(implicit exc: ExecutionContext, logger: Logger) =
 		apply(waitTarget, waitLock, Some(DelayShutdown), isRestartable = isRestartable) { _ => f }
 	
 	/**
@@ -76,7 +77,7 @@ object DelayedProcess
 	  */
 	def skippable[U](waitTarget: WaitTarget, waitLock: AnyRef = new AnyRef, isRestartable: Boolean = true)
 	                (f: => ChangingLike[Boolean] => U)
-	                (implicit exc: ExecutionContext) =
+	                (implicit exc: ExecutionContext, logger: Logger) =
 		apply(waitTarget, waitLock, Some(Cancel), isRestartable = isRestartable)(f)
 	
 	
@@ -86,7 +87,7 @@ object DelayedProcess
 	                                 shutdownReaction: Option[ShutdownReaction] = None,
 	                                 override val isRestartable: Boolean)
 	                                (f: => ChangingLike[Boolean] => U)
-	                                (implicit exc: ExecutionContext)
+	                                (implicit exc: ExecutionContext, logger: Logger)
 		extends DelayedProcess(waitLock, shutdownReaction)
 	{
 		override protected def nextDelayTarget = waitTarget
@@ -101,7 +102,7 @@ object DelayedProcess
   * @since 24.2.2022, v1.15
   */
 abstract class DelayedProcess(waitLock: AnyRef = new AnyRef, shutdownReaction: Option[ShutdownReaction] = None)
-                             (implicit exc: ExecutionContext)
+                             (implicit exc: ExecutionContext, logger: Logger)
 	extends Process(waitLock, shutdownReaction)
 {
 	// ATTRIBUTES   ----------------------

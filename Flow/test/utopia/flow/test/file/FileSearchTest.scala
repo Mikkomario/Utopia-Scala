@@ -6,6 +6,7 @@ import utopia.flow.filesearch.Guild
 import utopia.flow.generic.DataType
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.ExecutionContext
 
@@ -17,6 +18,7 @@ import scala.concurrent.ExecutionContext
 object FileSearchTest extends App
 {
 	DataType.setup()
+	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("File Search Test").executionContext
 	val resultFuture = Guild.explore(".") { dir =>
 		dir.children.flatMap {

@@ -1,7 +1,11 @@
 # Utopia Annex - List of Changes
 
-## v1.1.1 (in development)
+## v1.2 (in development)
 New Build / Supports changes in **Flow** v1.16
+### Breaking Changes
+- The following classes require an implicit **Logger** parameter:
+  - **ContainerUpdateLoop**
+  - **PersistingRequestQueue**
 
 ## v1.1 - 06.06.2022
 This update reflects changes made in **Flow** update v1.15.

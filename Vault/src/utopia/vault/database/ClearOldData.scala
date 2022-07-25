@@ -8,6 +8,7 @@ import utopia.flow.time.Now
 import utopia.vault.sql.SqlExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.vault.model.error.NoReferenceFoundException
 import utopia.vault.model.immutable.{DataDeletionRule, Reference, Table}
 import utopia.vault.sql.{Condition, Delete, Join, SqlTarget, Where}
@@ -44,19 +45,18 @@ object ClearOldData
 	  * Constructs a daily task / loop for deleting old data
 	  * @param rules Deletion rules to use
 	  * @param at The time when the data deletion is performed each day (local) (default = at midnight)
-	  * @param onError A function that will handle possible database errors (E.g. no connection)
-	  *                (default = prints stack trace)
 	  * @param exc Implicit execution context (for connection management)
 	  * @param connectionPool Connection pool to use (implicit) for a connection for each daily operation
+	  * @param logger A logger implementation to handle thrown errors with
 	  * @return A new task / loop (not yet active or looping)
 	  */
-	def dailyLoop(rules: Iterable[DataDeletionRule], at: LocalTime = LocalTime.MIDNIGHT,
-	              onError: Throwable => Unit = _.printStackTrace())
-	             (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
+	def dailyLoop(rules: Iterable[DataDeletionRule], at: LocalTime = LocalTime.MIDNIGHT)
+	             (implicit exc: ExecutionContext, connectionPool: ConnectionPool, logger: Logger) =
 	{
 		val clearer = new ClearOldData(rules)
 		LoopingProcess.daily(at) { _ =>
-			connectionPool.tryWith { implicit connection => clearer() }.failure.foreach(onError)
+			connectionPool.tryWith { implicit connection => clearer() }
+				.failure.foreach { logger(_, "ClearOldData call failed") }
 		}
 	}
 }

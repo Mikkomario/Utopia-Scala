@@ -5,7 +5,6 @@ import java.time.format.TextStyle
 import java.time.{DayOfWeek, Month, Year}
 import java.util.Locale
 
-import utopia.flow.async.ThreadPool
 import utopia.genesis.color.Color
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.ActorLoop
@@ -17,13 +16,12 @@ import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.localization.{DisplayFunction, Localizer, NoLocalization}
+import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
 import utopia.reflection.shape.LengthExtensions._
-
-import scala.concurrent.ExecutionContext
+import utopia.reflection.test.TestContext._
 
 /**
   * Tests calendar component visually
@@ -33,11 +31,6 @@ import scala.concurrent.ExecutionContext
 object CalendarTest extends App
 {
 	GenesisDataType.setup()
-	
-	// Sets up localization context
-	implicit val defaultLanguageCode: String = "EN"
-	implicit val localizer: Localizer = NoLocalization
-	implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
 	
 	val basicFont = Font("Arial", 14, Plain, 2)
 	val smallFont = basicFont * 0.75

@@ -4,6 +4,7 @@ import utopia.flow.async.ShutdownReaction.Cancel
 import utopia.flow.event.ChangingLike
 import utopia.flow.time.WaitTarget.WeeklyTime
 import utopia.flow.time.{WaitTarget, WeekDay}
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
 import java.time.LocalTime
@@ -28,7 +29,7 @@ object LoopingProcess
 	def apply(startDelay: WaitTarget = WaitTarget.zero, waitLock: AnyRef = new AnyRef,
 	          shutdownReaction: ShutdownReaction = Cancel, isRestartable: Boolean = true)
 	         (f: => ChangingLike[Boolean] => Option[WaitTarget])
-	         (implicit exc: ExecutionContext): LoopingProcess =
+	         (implicit exc: ExecutionContext, logger: Logger): LoopingProcess =
 		new FunctionalLoop(startDelay, waitLock, shutdownReaction, isRestartable)(f)
 	
 	/**
@@ -46,7 +47,7 @@ object LoopingProcess
 	def static[U](interval: FiniteDuration, waitLock: AnyRef = new AnyRef, waitFirst: Boolean = false,
 	              isRestartable: Boolean = true)
 	             (f: => ChangingLike[Boolean] => U)
-	             (implicit exc: ExecutionContext) =
+	             (implicit exc: ExecutionContext, logger: Logger) =
 		apply(if (waitFirst) interval else WaitTarget.zero, waitLock, isRestartable = isRestartable) { p =>
 			f(p)
 			Some(interval)
@@ -63,7 +64,7 @@ object LoopingProcess
 	  */
 	def daily[U](runTime: LocalTime, isRestartable: Boolean = true)
 	            (f: => ChangingLike[Boolean] => U)
-	            (implicit exc: ExecutionContext) =
+	            (implicit exc: ExecutionContext, logger: Logger) =
 		apply(runTime, isRestartable = isRestartable) { p =>
 			f(p)
 			Some(runTime)
@@ -82,7 +83,7 @@ object LoopingProcess
 	  */
 	def weekly[U](day: WeekDay, time: LocalTime, isRestartable: Boolean = true)
 	             (f: => ChangingLike[Boolean] => U)
-	             (implicit exc: ExecutionContext) =
+	             (implicit exc: ExecutionContext, logger: Logger) =
 	{
 		val target = WeeklyTime(day, time)
 		apply(target, isRestartable = isRestartable) { p =>
@@ -97,7 +98,7 @@ object LoopingProcess
 	private class FunctionalLoop(startDelay: WaitTarget, waitLock: AnyRef, shutdownReaction: ShutdownReaction,
 	                             override val isRestartable: Boolean)
 	                            (f: => ChangingLike[Boolean] => Option[WaitTarget])
-	                            (implicit exc: ExecutionContext)
+	                            (implicit exc: ExecutionContext, logger: Logger)
 		extends LoopingProcess(startDelay, waitLock, shutdownReaction)
 	{
 		override protected def iteration() = f(hurryPointer)
@@ -113,7 +114,7 @@ object LoopingProcess
   **/
 abstract class LoopingProcess(startDelay: WaitTarget = WaitTarget.zero, waitLock: AnyRef = new AnyRef,
                               shutdownReaction: ShutdownReaction = Cancel)
-                             (implicit exc: ExecutionContext)
+                             (implicit exc: ExecutionContext, logger: Logger)
 	extends Process(waitLock, Some(shutdownReaction))
 {
 	// ABSTRACT    -----------------

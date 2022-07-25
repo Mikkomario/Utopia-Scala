@@ -10,6 +10,7 @@ import utopia.flow.container.FileContainer
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.WaitTarget.WaitDuration
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
@@ -20,7 +21,7 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
-abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc: ExecutionContext)
+abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc: ExecutionContext, logger: Logger)
 	extends LoopingProcess
 {
 	// ABSTRACT	--------------------------

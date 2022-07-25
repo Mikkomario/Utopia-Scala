@@ -3,6 +3,7 @@ package utopia.flow.test.async
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.{Delay, ThreadPool}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -13,6 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 object FutureRaceTest extends App
 {
+	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("test-main").executionContext
 	val immediate = Future { 1 }
 	immediate.waitFor()

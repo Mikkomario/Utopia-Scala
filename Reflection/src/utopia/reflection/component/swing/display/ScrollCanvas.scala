@@ -1,6 +1,7 @@
 package utopia.reflection.component.swing.display
 
 import utopia.flow.async.VolatileFlag
+import utopia.flow.util.logging.Logger
 import utopia.genesis.color.Color
 import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.mutable.ActorHandler
@@ -134,10 +135,9 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 	  * @param maxFPS The largest frames per second rate allowed (default = 60 Hrz)
 	  * @param context The asynchronous execution context (implicit)
 	  */
-	def startDrawing(maxFPS: Fps = Fps.default)(implicit context: ExecutionContext) = started.runAndSet
+	def startDrawing(maxFPS: Fps = Fps.default)(implicit context: ExecutionContext, logger: Logger) = started.runAndSet
 	{
 		canvas.addCustomDrawer(new CustomDraw())
-		
 		val repaintLoop = new RepaintLoop(canvas.component, maxFPS)
 		repaintLoop.runAsync()
 	}

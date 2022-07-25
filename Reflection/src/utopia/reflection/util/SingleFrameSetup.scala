@@ -1,5 +1,6 @@
 package utopia.reflection.util
 
+import utopia.flow.util.logging.Logger
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.reflection.container.stack.StackHierarchyManager
@@ -12,7 +13,7 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 17.12.2019, v1+
   */
-class SingleFrameSetup(actorHandler: ActorHandler, frame: Frame[_])(implicit exc: ExecutionContext)
+class SingleFrameSetup(actorHandler: ActorHandler, frame: Frame[_])(implicit exc: ExecutionContext, logger: Logger)
 {
 	// ATTRIBUTES	--------------------
 	

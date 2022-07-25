@@ -7,6 +7,7 @@ import utopia.flow.generic.{DataType, FromModelFactoryWithSchema, ModelConvertib
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.{JSONReader, JsonParser}
 import utopia.flow.util.FileExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.ExecutionContext
 
@@ -18,6 +19,7 @@ import scala.concurrent.ExecutionContext
 object ContainerTest extends App
 {
 	DataType.setup()
+	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("test").executionContext
 	implicit val jsonParser: JsonParser = JSONReader
 	

@@ -3,14 +3,12 @@ package utopia.genesis.test
 import utopia.genesis.util.{DefaultSetup, DepthRange, Drawer}
 import java.awt.Color
 
-import utopia.flow.async.ThreadPool
+import utopia.flow.test.TestContext._
 import utopia.genesis.event.MouseMoveEvent
 import utopia.genesis.handling.{Drawable, MouseMoveListener}
 import utopia.genesis.shape.shape2D.{Circle, Point, ShapeConvertible, Size}
 import utopia.genesis.shape.shape3D.Vector3D
 import utopia.inception.handling.immutable.Handleable
-
-import scala.concurrent.ExecutionContext
 
 /**
  * This test tests the drawer's clipping functionality
@@ -19,8 +17,6 @@ import scala.concurrent.ExecutionContext
  */
 object ClippingTest extends App
 {
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
-	
     class HiddenShapeDrawer(val shapes: Iterable[ShapeConvertible]) extends Drawable with MouseMoveListener with Handleable
     {
         override val drawDepth = DepthRange.foreground

@@ -1,6 +1,7 @@
 package utopia.genesis.util
 
 import utopia.flow.async.VolatileFlag
+import utopia.flow.util.logging.Logger
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler, KeyStateHandler, KeyTypedHandler}
@@ -16,7 +17,8 @@ import scala.concurrent.ExecutionContext
   * @since 20.4.2019, v2+
   */
 class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = Fps.default)
-				  (implicit context: ExecutionContext) extends Setup
+				  (implicit context: ExecutionContext, logger: Logger)
+	extends Setup
 {
 	// ATTRIBUTES	--------------------
 	

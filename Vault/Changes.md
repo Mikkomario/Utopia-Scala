@@ -1,6 +1,8 @@
 # Utopia Vault - List of Changes
 
-## v1.12.2 (in development)
+## v1.13 (in development)
+### Breaking Changes
+- `ClearOldData.daily(...)` and `ClearUnreferencedData.loopDailyFrom(...)` now require an implicit **Logger** parameter
 ### New Methods
 - **ColumnLengthRule**
   - Added `.recoverWith(ColumnLengthRule)`

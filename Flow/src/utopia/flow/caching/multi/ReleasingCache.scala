@@ -16,7 +16,8 @@ object ReleasingCache
 	  * @tparam V Type of values stored
 	  * @return A new cache
 	  */
-	def apply[K, V <: AnyRef](request: K => V)(calculateReferenceLength: (K, V) => Duration)
+	def apply[K, V <: AnyRef](request: K => V)
+	                         (calculateReferenceLength: (K, V) => Duration)
 	                         (implicit exc: ExecutionContext) =
 		new ReleasingCache[K, V](request)(calculateReferenceLength)
 	
@@ -29,7 +30,9 @@ object ReleasingCache
 	  * @tparam V Type of values stored
 	  * @return A new cache
 	  */
-	def after[K, V <: AnyRef](referenceLength: FiniteDuration)(request: K => V)(implicit exc: ExecutionContext) =
+	def after[K, V <: AnyRef](referenceLength: FiniteDuration)
+	                         (request: K => V)
+	                         (implicit exc: ExecutionContext) =
 		new ReleasingCache[K, V](request)((_, _) => referenceLength)
 }
 

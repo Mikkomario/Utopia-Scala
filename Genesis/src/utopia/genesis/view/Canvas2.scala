@@ -1,6 +1,7 @@
 package utopia.genesis.view
 
 import utopia.flow.util.AutoClose._
+import utopia.flow.util.logging.Logger
 import utopia.genesis.graphics.Drawer3
 import utopia.genesis.handling.DrawableHandler2
 import utopia.genesis.shape.shape2D.{Bounds, Size}
@@ -97,7 +98,7 @@ class Canvas2(val drawHandler: DrawableHandler2, originalGameWorldSize: Size,
       * @param maxFPS The maximum frames (draws) per second
       * @param context Asynchronous execution context
       */
-    def startAutoRefresh(maxFPS: Fps = Fps.default)(implicit context: ExecutionContext): Unit =
+    def startAutoRefresh(maxFPS: Fps = Fps.default)(implicit context: ExecutionContext, logger: Logger): Unit =
     {
         if (refreshLoop.isEmpty)
         {

@@ -13,6 +13,7 @@ import utopia.flow.util.FileExtensions._
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.Version
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.vault.coder.controller.reader
 import utopia.vault.coder.controller.writer.database.{AccessWriter, ColumnLengthRulesWriter, CombinedFactoryWriter, DbDescriptionAccessWriter, DbModelWriter, DescriptionLinkInterfaceWriter, FactoryWriter, InsertsWriter, SqlWriter, TablesWriter}
 import utopia.vault.coder.controller.writer.model.{CombinedModelWriter, DescribedModelWriter, EnumerationWriter, ModelWriter}
@@ -35,6 +36,7 @@ object VaultCoderApp extends App
 {
 	DataType.setup()
 	
+	implicit val logger: Logger = SysErrLogger
 	implicit val codec: Codec = Codec.UTF8
 	implicit val jsonParser: JsonParser = JSONReader
 	implicit val exc: ExecutionContext = new ThreadPool("vault-coder").executionContext

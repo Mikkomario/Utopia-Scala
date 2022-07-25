@@ -1,6 +1,7 @@
 package utopia.reflection.test
 
 import utopia.flow.async.ThreadPool
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.view.GlobalKeyboardEventHandler
@@ -30,6 +31,7 @@ object TestContext
 	
 	val baseContext: BaseContext = BaseContext(actorHandler, font, colorScheme, margins)
 	
+	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("Reflection").executionContext
 	GlobalKeyboardEventHandler.specifyExecutionContext(exc)
 	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)

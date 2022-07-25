@@ -2,6 +2,7 @@ package utopia.flow.async
 
 import utopia.flow.time.{Now, WaitTarget}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
@@ -14,8 +15,7 @@ object Wait
 	  * @param lock Wait lock to use (optional)
 	  * @param exc Implicit execution context
 	  */
-	def apply(target: WaitTarget, lock: AnyRef = new AnyRef)(implicit exc: ExecutionContext) =
-	{
+	def apply(target: WaitTarget, lock: AnyRef = new AnyRef)(implicit exc: ExecutionContext) = {
 		if (target.isPositive)
 			new Wait(target, lock).run()
 	}
@@ -29,7 +29,7 @@ object Wait
 class Wait(val target: WaitTarget, val lock: AnyRef = new AnyRef,
            override val shutdownReaction: Option[ShutdownReaction] = None, override val isRestartable: Boolean = true)
           (implicit exc: ExecutionContext)
-	extends Process(lock)
+	extends Process(lock)(exc, SysErrLogger)
 {
 	// IMPLEMENTED  ---------------------------
 	

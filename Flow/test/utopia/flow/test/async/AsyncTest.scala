@@ -4,6 +4,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.{ThreadPool, Wait}
 import utopia.flow.collection.VolatileList
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -13,8 +14,9 @@ import scala.concurrent.{ExecutionContext, Future}
 object AsyncTest extends App
 {
 	// Creates the thread pool and the execution context
+	implicit val logger: Logger = SysErrLogger
 	implicit val context: ExecutionContext = new ThreadPool("test-main", 3, 6,
-		2.seconds, e => e.printStackTrace()).executionContext
+		2.seconds).executionContext
 	
 	val starts = VolatileList[Int]()
 	val ends = VolatileList[Int]()

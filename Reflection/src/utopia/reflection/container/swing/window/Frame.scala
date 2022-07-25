@@ -1,6 +1,7 @@
 package utopia.reflection.container.swing.window
 
 import utopia.flow.async.Delay
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import javax.swing.JFrame
 import utopia.genesis.image.Image
@@ -174,6 +175,8 @@ class Frame[C <: Stackable with AwtContainerRelated](override val content: C,
       * @param delay Delay after window closing before closing the JVM
       * @param exc Implicit execution context
      */
-    def setToExitOnClose(delay: FiniteDuration = Duration.Zero)(implicit exc: ExecutionContext) =
+    def setToExitOnClose(delay: FiniteDuration = Duration.Zero)(implicit exc: ExecutionContext) = {
+        implicit val logger: Logger = SysErrLogger
         closeFuture.onComplete { _ => Delay(delay) { System.exit(0) } }
+    }
 }

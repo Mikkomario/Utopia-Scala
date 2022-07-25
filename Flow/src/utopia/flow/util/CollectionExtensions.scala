@@ -4,6 +4,7 @@ import utopia.flow.collection.{CachingIterable, GroupIterator, LazyIterable, Laz
 import utopia.flow.datastructure.immutable.{Lazy, Pair}
 import utopia.flow.datastructure.mutable.PollableOnce
 import utopia.flow.datastructure.template.LazyLike
+import utopia.flow.util.logging.Logger
 
 import scala.language.implicitConversions
 import collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
@@ -1260,16 +1261,16 @@ object CollectionExtensions
 		/**
 		  * Maps this iterator with a function that can fail. Handles failures by catching them.
 		  * @param f A mapping function
-		  * @param handleError Function called for each encountered error
+		  * @param logger A logger that will receive possibly thrown exceptions
 		  * @tparam B Type of successful map result
 		  * @return Iterator of the mapped items
 		  */
-		def mapCatching[B](f: A => Try[B])(handleError: Throwable => Unit) = {
+		def mapCatching[B](f: A => Try[B])(implicit logger: Logger) = {
 			i.flatMap { original =>
 				f(original) match {
 					case Success(item) => Some(item)
 					case Failure(error) =>
-						handleError(error)
+						logger(error)
 						None
 				}
 			}

@@ -2,7 +2,6 @@ package utopia.reflection.test.swing
 
 import java.nio.file.Paths
 
-import utopia.flow.async.ThreadPool
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.color.Color
 import utopia.genesis.handling.ActorLoop
@@ -21,8 +20,7 @@ import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.Font
 import utopia.reflection.text.FontStyle.Plain
 import utopia.reflection.shape.LengthExtensions._
-
-import scala.concurrent.ExecutionContext
+import utopia.reflection.test.TestContext._
 
 /**
   * Used for visually testing buttons
@@ -33,8 +31,6 @@ object ButtonTest extends App
 {
 	private def run() =
 	{
-		implicit val context: ExecutionContext = new ThreadPool("Reflection").executionContext
-		
 		implicit val defaultLanguageCode: String = "EN"
 		implicit val localizer: Localizer = NoLocalization
 		val basicFont = Font("Arial", 12, Plain, 2)

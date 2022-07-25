@@ -1,9 +1,9 @@
 package utopia.flow.container
 
 import java.nio.file.Path
-
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.parse.JsonParser
+import utopia.flow.util.logging.Logger
 
 /**
   * A common parent class for containers which store 0 to 1 items
@@ -12,7 +12,7 @@ import utopia.flow.parse.JsonParser
   * @param fileLocation Path to where the data is stored
   * @param jsonParser A parser that will be used for parsing read json data
   */
-abstract class OptionFileContainer[A](fileLocation: Path)(implicit jsonParser: JsonParser)
+abstract class OptionFileContainer[A](fileLocation: Path)(implicit jsonParser: JsonParser, logger: Logger)
 	extends FileContainer[Option[A]](fileLocation)
 {
 	// ABSTRACT	---------------------------------

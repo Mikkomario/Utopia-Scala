@@ -7,6 +7,7 @@ import utopia.flow.time.{Now, Today, WaitUtils, WeekDay}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.WaitTarget.{DailyTime, WeeklyTime}
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.logging.Logger
 
 import java.time.{Instant, LocalTime}
 import scala.concurrent.ExecutionContext
@@ -19,7 +20,7 @@ import scala.util.Try
   * @since 24.2.2022, v1.15
   */
 class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReaction = Cancel)
-                (implicit exc: ExecutionContext)
+                (implicit exc: ExecutionContext, logger: Logger)
 	extends Process(waitLock, Some(shutdownReaction))
 {
 	// ATTRIBUTES   ----------------------------
@@ -46,7 +47,7 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 						// Performs the task
 						// Catches any thrown exceptions and prints them
 						Try { nextTask() }.getOrMap { error =>
-							error.printStackTrace()
+							logger(error, "TimedTasks operation threw an exception")
 							None
 						}.foreach { nextTime =>
 							// Pushes the task back to the queue

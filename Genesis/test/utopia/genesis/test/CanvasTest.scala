@@ -2,15 +2,13 @@ package utopia.genesis.test
 
 import java.awt.Color
 
-import utopia.flow.async.ThreadPool
+import utopia.flow.test.TestContext._
 import utopia.genesis.handling.Drawable
 import utopia.genesis.handling.immutable.DrawableHandler
 import utopia.genesis.view.{Canvas, MainFrame, RepaintLoop}
 import utopia.genesis.util.Drawer
 import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, ShapeConvertible, Size}
 import utopia.inception.handling.HandlerType
-
-import scala.concurrent.ExecutionContext
 
 /**
  * This test tests the basic canvas drawing
@@ -39,8 +37,6 @@ object CanvasTest extends App
 	
 	val canvas = new Canvas(handler, gameWorldSize)
 	val frame = new MainFrame(canvas, gameWorldSize, "CanvastTest")
-	
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
 	
 	val repaintLoop = new RepaintLoop(canvas)
 	repaintLoop.runAsync()

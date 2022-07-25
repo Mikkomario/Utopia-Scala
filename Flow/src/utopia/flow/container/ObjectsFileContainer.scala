@@ -1,12 +1,12 @@
 package utopia.flow.container
 
 import java.nio.file.Path
-
 import utopia.flow.container.SaveTiming.Immediate
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.{FromModelFactory, ModelConvertible}
 import utopia.flow.parse.JsonParser
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
 
@@ -24,7 +24,7 @@ import scala.concurrent.ExecutionContext
   */
 class ObjectsFileContainer[A <: ModelConvertible](fileLocation: Path,
 												  val factory: FromModelFactory[A], saveLogic: SaveTiming = Immediate)
-												 (implicit jsonParser: JsonParser, exc: ExecutionContext)
+												 (implicit jsonParser: JsonParser, exc: ExecutionContext, logger: Logger)
 	extends MultiFileContainer[A](fileLocation)
 {
 	// INITIAL CODE	-------------------------------

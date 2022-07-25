@@ -7,6 +7,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.{Breakable, NewThreadExecutionContext, Volatile, VolatileFlag, Wait}
 import utopia.flow.collection.VolatileList
 import utopia.flow.time.Now
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.duration.FiniteDuration
@@ -82,6 +83,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 	
 	override def stop() = {
 		// Closes all current connections (may have to wait for clients to exit)
+		implicit val logger: Logger = SysErrLogger
 		(connections.map { c: ReusableConnection => c.stop() } ++ closeFutures)
 			.futureCompletion(new NewThreadExecutionContext("Closing connection pool"))
 	}

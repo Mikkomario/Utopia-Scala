@@ -3,6 +3,7 @@ import utopia.flow.async.Delay
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.event.{AlwaysTrue, ChangingLike}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.genesis.shape.shape2D.Direction2D
 import utopia.reach.component.button.image.ImageButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
@@ -176,6 +177,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	
 	private def showWarningFor(field: RowField, message: LocalizedString): Unit =
 	{
+		implicit val logger: Logger = SysErrLogger
 		implicit val exc: ExecutionContext = executionContext
 		val popupContext = warningPopupContext
 		field.requestFocus(forceFocusLeave = true)

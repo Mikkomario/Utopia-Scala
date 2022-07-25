@@ -1,10 +1,11 @@
 package utopia.disciple.test
 
 import utopia.disciple.controller.RequestRateLimiter
-import utopia.flow.async.{ThreadPool, Volatile, Wait}
+import utopia.flow.async.{Volatile, Wait}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.test.TestContext._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 /**
   * Tests RequestRateLimiter
@@ -13,7 +14,6 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 object RequestRateLimiterTest extends App
 {
-	implicit val exc: ExecutionContext = new ThreadPool("Disciple-Test").executionContext
 	val limiter = new RequestRateLimiter(5, 2.seconds)
 	val counter = Volatile(0)
 	val waitLock = new AnyRef

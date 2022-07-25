@@ -1,5 +1,6 @@
 package utopia.flow.event
 
+import utopia.flow.async.SynchronousExecutionContext
 import utopia.flow.datastructure.immutable.Lazy
 
 import scala.concurrent.duration.Duration
@@ -30,7 +31,8 @@ case class Fixed[+A](override val value: A) extends ChangingLike[A]
 	
 	override def addDependency(dependency: => ChangeDependency[A]) = ()
 	
-	override def futureWhere(valueCondition: A => Boolean)(implicit exc: ExecutionContext) =
+	override def futureWhere(valueCondition: A => Boolean)
+	                        (implicit exc: ExecutionContext = SynchronousExecutionContext) =
 	{
 		// Will return either a completed future or a future that never completes
 		if (valueCondition(value))
@@ -43,7 +45,9 @@ case class Fixed[+A](override val value: A) extends ChangingLike[A]
 	
 	override def lazyMap[B](f: A => B) = Lazy.listenable { f(value) }
 	
-	override def delayedBy(threshold: Duration)(implicit exc: ExecutionContext) = this
+	override def delayedBy(threshold: Duration)
+	                      (implicit exc: ExecutionContext = SynchronousExecutionContext) =
+		this
 }
 
 /**

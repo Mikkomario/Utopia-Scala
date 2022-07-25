@@ -2,7 +2,6 @@ package utopia.reflection.test.swing
 
 import java.awt.Color
 
-import utopia.flow.async.ThreadPool
 import utopia.flow.generic.DataType
 import utopia.genesis.event.{MouseEvent, MouseMoveEvent}
 import utopia.genesis.handling.mutable.ActorHandler
@@ -13,10 +12,8 @@ import utopia.reflection.component.swing.label.Label
 import utopia.reflection.component.template.layout.Area
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
-import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.stack.{StackLength, StackSize}
-
-import scala.concurrent.ExecutionContext
+import utopia.reflection.test.TestContext._
 
 /**
   * This app tests mouse listening in components
@@ -26,10 +23,6 @@ import scala.concurrent.ExecutionContext
 object MouseTest extends App
 {
 	DataType.setup()
-	
-	implicit val language: String = "en"
-	implicit val localizer: Localizer = NoLocalization
-	implicit val context: ExecutionContext = new ThreadPool("Mouse Test").executionContext
 	
 	private class MouseEnterExitListener(val area: Area) extends MouseMoveListener with Handleable
 	{

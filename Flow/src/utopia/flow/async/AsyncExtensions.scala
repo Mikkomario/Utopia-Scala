@@ -2,6 +2,7 @@ package utopia.flow.async
 
 import utopia.flow.time.WaitTarget
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.logging.Logger
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -86,8 +87,7 @@ object AsyncExtensions
 				f
 			else if (other.isCompleted)
 				other
-			else
-			{
+			else {
 				Future {
 					val resultPointer = VolatileOption[B]()
 					val wait = new Wait(WaitTarget.UntilNotified)

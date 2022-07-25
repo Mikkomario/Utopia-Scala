@@ -3,7 +3,7 @@ package utopia.reflection.test.swing
 import java.awt.Color
 
 import javax.swing.JLabel
-import utopia.flow.async.{Loop, ThreadPool}
+import utopia.flow.async.Loop
 import utopia.flow.generic.DataType
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.shape.shape2D.Size
@@ -13,10 +13,8 @@ import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.stack.{StackLength, StackSize}
-
-import scala.concurrent.ExecutionContext
+import utopia.reflection.test.TestContext._
 
 /**
   * This test creates a simple stack and sees whether the components are positioned properly
@@ -26,10 +24,6 @@ import scala.concurrent.ExecutionContext
 object StackHierarchyTest extends App
 {
 	DataType.setup()
-
-	implicit val language: String = "en"
-	implicit val localizer: Localizer = NoLocalization
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
 
 	private class ChangingWrapper extends JStackableWrapper with StackLeaf
 	{

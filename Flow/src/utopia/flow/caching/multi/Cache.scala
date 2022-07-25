@@ -32,7 +32,8 @@ object Cache
 	  * @tparam V Type of values used
 	  * @return A new cache
 	  */
-	def expiring[K, V](request: K => V)(calculateExpiration: (K, V) => Duration)(implicit exc: ExecutionContext) =
+	def expiring[K, V](request: K => V)(calculateExpiration: (K, V) => Duration)
+	                  (implicit exc: ExecutionContext) =
 		ExpiringCache(request)(calculateExpiration)
 	
 	/**
@@ -43,7 +44,8 @@ object Cache
 	  * @tparam V Type of values used
 	  * @return A new cache
 	  */
-	def expiringAfter[K, V](threshold: FiniteDuration)(request: K => V)(implicit exc: ExecutionContext) =
+	def expiringAfter[K, V](threshold: FiniteDuration)(request: K => V)
+	                       (implicit exc: ExecutionContext) =
 		ExpiringCache.after(threshold)(request)
 	
 	/**
@@ -67,7 +69,9 @@ object Cache
 	  * @tparam V Type of values used
 	  * @return A new cache
 	  */
-	def releasingAfter[K, V <: AnyRef](threshold: FiniteDuration)(request: K => V)(implicit exc: ExecutionContext) =
+	def releasingAfter[K, V <: AnyRef](threshold: FiniteDuration)
+	                                  (request: K => V)
+	                                  (implicit exc: ExecutionContext) =
 		ReleasingCache.after(threshold)(request)
 }
 

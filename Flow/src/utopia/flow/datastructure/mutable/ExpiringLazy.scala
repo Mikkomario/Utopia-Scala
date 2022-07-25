@@ -4,6 +4,7 @@ import utopia.flow.async.{ResettableVolatileLazy, Wait}
 import utopia.flow.datastructure.immutable.Lazy
 import utopia.flow.time.{Now, WaitUtils}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.Logger
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
@@ -58,7 +59,8 @@ object ExpiringLazy
   * @since 16.5.2021, v1.10
   */
 class ExpiringLazy[+A](generator: => A)(expirationPerItem: A => Duration)
-                      (implicit exc: ExecutionContext) extends ResettableLazyLike[A]
+                      (implicit exc: ExecutionContext)
+	extends ResettableLazyLike[A]
 {
 	// ATTRIBUTES   --------------------------
 	

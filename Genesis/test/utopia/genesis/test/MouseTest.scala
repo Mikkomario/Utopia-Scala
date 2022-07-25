@@ -1,10 +1,8 @@
 package utopia.genesis.test
 
+import utopia.flow.test.TestContext._
 import utopia.genesis.shape.shape2D.{Circle, Line, Point, Size}
 import utopia.genesis.util.Drawer
-
-import java.awt.Color
-import utopia.flow.async.ThreadPool
 import utopia.genesis.event.MouseMoveEvent
 import utopia.genesis.shape.Axis._
 import utopia.genesis.view.Canvas
@@ -19,7 +17,7 @@ import utopia.genesis.shape.shape2D.transform.{AffineTransformation, LinearTrans
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 
-import scala.concurrent.ExecutionContext
+import java.awt.Color
 
 /**
  * This is a visual test for mouse event features. In the test, the two lines should point to the
@@ -31,8 +29,6 @@ import scala.concurrent.ExecutionContext
  */
 object MouseTest extends App
 {
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
-	
     class TestObject(position: Point, radius: Double) extends Drawable with
             MouseMoveListener with MouseButtonStateListener with MouseWheelListener with Handleable
 	{

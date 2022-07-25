@@ -1,15 +1,13 @@
 package utopia.genesis.test
 
 import java.nio.file.Paths
-import utopia.flow.async.ThreadPool
+import utopia.flow.test.TestContext._
 import utopia.genesis.handling.Drawable
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape1D.{Angle, Rotation}
 import utopia.genesis.shape.shape2D.{Bounds, Matrix2D, Point, Size}
 import utopia.genesis.util.{DefaultSetup, Drawer}
 import utopia.inception.handling.immutable.Handleable
-
-import scala.concurrent.ExecutionContext
 
 /**
   * This test tests image drawing
@@ -18,8 +16,6 @@ import scala.concurrent.ExecutionContext
   */
 object ImageTest extends App
 {
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
-	
 	// Generates the images
 	val original = Image.readFrom(Paths.get("Genesis/test-images/mushrooms.png")).get
 		.withMaxSourceResolution(Size(128, 128)).withSize(Size(100, 100)).withCenterOrigin

@@ -2,8 +2,8 @@ package utopia.flow.test.async
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.{ActionQueue, ThreadPool, Wait}
-import utopia.flow.time.WaitUtils
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{ExecutionContext, Future}
@@ -17,6 +17,7 @@ import scala.util.Random
 object ActionQueueTest extends App
 {
 	// Tests with limited thread availablility
+	implicit val logger: Logger = SysErrLogger
 	implicit val context: ExecutionContext = new ThreadPool("Test", 2, 4).executionContext
 	
 	val queue = new ActionQueue(5)

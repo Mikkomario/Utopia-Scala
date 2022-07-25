@@ -1,20 +1,17 @@
 package utopia.genesis.test
 
-import utopia.flow.async.ThreadPool
+import utopia.flow.test.TestContext._
 import utopia.genesis.color.Color
 import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.graphics.{DrawSettings, Drawer3, StrokeSettings}
-import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler, DrawableHandler2}
-import utopia.genesis.handling.{ActorLoop, Drawable, Drawable2, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
+import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler2}
+import utopia.genesis.handling.{ActorLoop, Drawable2, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
 import utopia.genesis.shape.Axis._
 import utopia.genesis.shape.shape2D.transform.{AffineTransformation, LinearTransformation}
 import utopia.genesis.shape.shape2D.{Circle, Line, Point, Size}
-import utopia.genesis.util.Drawer
-import utopia.genesis.view.{Canvas, Canvas2, CanvasMouseEventGenerator, CanvasMouseEventGenerator2, MainFrame}
+import utopia.genesis.view.{Canvas2, CanvasMouseEventGenerator2, MainFrame}
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
-
-import scala.concurrent.ExecutionContext
 
 /**
  * This is a visual test for mouse event features. In the test, the two lines should point to the
@@ -26,8 +23,6 @@ import scala.concurrent.ExecutionContext
  */
 object MouseTest2 extends App
 {
-	implicit val context: ExecutionContext = new ThreadPool("Test").executionContext
-	
     class TestObject(position: Point, radius: Double) extends Drawable2 with
             MouseMoveListener with MouseButtonStateListener with MouseWheelListener with Handleable
 	{

@@ -2,6 +2,11 @@
 
 ## v2.7.1 (in development)
 Reacting to changes in Flow v1.16
+### Breaking Changes
+- The following classes require an implicit **Logger** -parameter:
+  - **ActorLoop** and **RepaintLoop**
+  - **Canvas**`.startAutoRefresh(...)`
+  - **DefaultSetup**
 
 ## v2.7 - 06.06.2022
 This update mostly reflects changes in **Flow** update v1.15.  

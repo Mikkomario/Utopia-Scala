@@ -1,5 +1,9 @@
 # Utopia Conflict - List of Changes
 
+## v1.4 (in development)
+### Breaking Changes
+- **DefaultSetup** now requires an implicit **Logger** parameter
+
 ## v1.3.2 - 27.01.2022
 Scala version update
 ### Scala

@@ -2,7 +2,6 @@ package utopia.reflection.test.swing
 
 import java.nio.file.Paths
 
-import utopia.flow.async.ThreadPool
 import utopia.genesis.color.Color
 import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.Size
@@ -10,10 +9,8 @@ import utopia.reflection.component.swing.label.ImageLabel
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.User
-import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.stack.StackLength
-
-import scala.concurrent.ExecutionContext
+import utopia.reflection.test.TestContext._
 
 /**
   * Tests image labels within stack
@@ -24,8 +21,6 @@ object ImageLabelTest extends App
 {
 	private def run() =
 	{
-		implicit val context: ExecutionContext = new ThreadPool("ImageLabelTest").executionContext
-
 		val originalImage = Image.readFrom(Paths.get("Reflection/test-images/mushrooms.png")).get.withSize(Size(128, 128))
 			.downscaled
 		val smaller = originalImage.withSize(Size(64, 64))
@@ -40,8 +35,6 @@ object ImageLabelTest extends App
 		val smallStack = small1.rowWith(Vector(small2, small3))
 		val mainStack = big.columnWith(Vector(smallStack), StackLength.fixed(0))
 
-		implicit val language: String = "en"
-		implicit val localizer: Localizer = NoLocalization
 		val frame = Frame.windowed(mainStack, "Switch Test", User)
 		frame.setToExitOnClose()
 
