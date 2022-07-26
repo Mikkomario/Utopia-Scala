@@ -24,6 +24,8 @@
 - Added **FromValueFactory** -trait that also provides implicit **Value** unwraps
 - Added **LazyVector**, **LazyIterable** and **CachingIterable** classes for lazy iteration
 - Added **CompoundingVectorBuilder** class that allows one to check the current vector state while building
+- Added **MappingCacheView** and **KeyMappingCache** classes, corresponding with new `.mapValuesView(...)` and 
+  `.mapKeys(...)` -functions in **CacheLike**
 - Added to- & from- model conversion to **DateRange**
 - Added **ObjectMapFileContainer** class
 - Added **FromModelFactoryWithDefault** -trait
