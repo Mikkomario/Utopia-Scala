@@ -10,6 +10,7 @@ import utopia.flow.container.FileContainer
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.time.WaitTarget.WaitDuration
+import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -47,9 +48,9 @@ abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc:
 	/**
 	  * @param oldData Old container content
 	  * @param readData Content read from a server response
-	  * @return Content that should be stored in the container
+	  * @return Content that should be stored in the container + scheduled duration until the next check
 	  */
-	protected def merge(oldData: A, readData: ResponseBody): A
+	protected def merge(oldData: A, readData: ResponseBody): (A, FiniteDuration)
 	
 	/**
 	  * @return Normal interval between updates
@@ -74,22 +75,18 @@ abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc:
 						// Updates last update time locally
 						requestTimeContainer.current = Some(newRequestTime)
 						// If there was new data, updates container
-						if (status != NotModified) {
-							container.pointer.update { old => merge(old, body) }
-							0.75
-						}
+						if (status != NotModified && body.nonEmpty)
+							Right(container.pointer.pop { old => merge(old, body).swap })
 						else
-							1
+							Left(1)
 					case Response.Failure(status, message) =>
 						handleFailureResponse(status, message)
-						if (status.isTemporary)
-							5
-						else
-							15
+						Left(if (status.isTemporary) 5 else 15)
 				}
-			case Failure(_) => 2
+			case Failure(_) => Left(2)
 		}
-		Some(WaitDuration(standardUpdateInterval * waitModifier))
+		val waitDuration = waitModifier.rightOrMap { standardUpdateInterval * _ }
+		Some(WaitDuration(waitDuration))
 	}
 }
 
