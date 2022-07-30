@@ -8,6 +8,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.nexus.http.{Path, Request, Response}
 import Path._
+import utopia.flow.util.logging.Logger
 import utopia.nexus.rest.ResourceSearchResult.{Error, Follow, Ready, Redirected}
 import utopia.nexus.result.Result
 
@@ -21,11 +22,14 @@ object RequestHandler
      * @param childResources Resources per api version
      * @param path Base path of this handler (before the version number) (optional)
      * @param makeContext A function for creating a new request context
+      * @param logger Implicit logging implementation to use in case of server errors
      * @tparam C Type of request context used
      * @return A new request handler
      */
     def apply[C <: Context](childResources: Map[String, Iterable[Resource[C]]], path: Option[Path] = None)
-                           (makeContext: Request => C) = new RequestHandler[C](childResources, path, makeContext)
+                           (makeContext: Request => C)
+                           (implicit logger: Logger) =
+        new RequestHandler[C](childResources, path, makeContext)
 }
 
 /**
@@ -35,7 +39,7 @@ object RequestHandler
  * @since 9.9.2017
  */
 class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resource[C]]], path: Option[Path] = None,
-                                    makeContext: Request => C)
+                                    makeContext: Request => C)(implicit logger: Logger)
 {
     // COMPUTED PROPERTIES    -------------
     
@@ -75,7 +79,11 @@ class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resourc
                                             .withModifiedHeaders { _.withCurrentDate.withAllowedMethods(allowed.toSeq) }
                                 case Left(error) => error.toResult.toResponse
                             }
-                        }.getOrMap { error => Result.Failure(InternalServerError, error.getMessage).toResponse }
+                        }.getOrMap { error =>
+                            // In addition to sending error data forward, logs it
+                            logger(error, s"Failed to handle ${request.method} ${request.path}")
+                            Result.Failure(InternalServerError, error.getMessage).toResponse
+                        }
                     }
                 // Case: Targeting an API version
                 case None => makeContext(request).consume { implicit c => get(version) }

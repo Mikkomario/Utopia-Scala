@@ -1,23 +1,18 @@
 package utopia.nexus.test
 
-import utopia.flow.generic.ValueConversions._
+import utopia.access.http.Method
 import utopia.access.http.Method._
+import utopia.access.http.Status._
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.DataType
+import utopia.flow.generic.ValueConversions._
+import utopia.flow.parse.JSONReader
+import utopia.flow.test.TestContext._
+import utopia.nexus.http.{Path, Request, Response, ServerSettings}
 import utopia.nexus.rest.{BaseContext, FilesResource, RequestHandler}
-import utopia.nexus.http.Path
-import utopia.nexus.http.ServerSettings
-
-import java.nio.file.Paths
-import utopia.nexus.http.Request
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.datastructure.immutable.Constant
-import utopia.nexus.http.Response
 
 import java.io.ByteArrayOutputStream
-import utopia.flow.parse.JSONReader
-import utopia.flow.datastructure.immutable.Value
-import utopia.access.http.Method
-import utopia.access.http.Status._
+import java.nio.file.Paths
 
 /**
  * This test makes sure the rest test resource and the request handler are working
