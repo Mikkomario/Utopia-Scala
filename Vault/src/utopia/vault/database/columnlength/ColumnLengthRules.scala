@@ -30,6 +30,11 @@ object ColumnLengthRules
 	private var specifics = DeepMap.empty[String, ColumnLengthRule]
 	
 	
+	// IMPLEMENTED  --------------------------------
+	
+	override def toString = specifics.toString
+	
+	
 	// OTHER    ------------------------------------
 	
 	/**

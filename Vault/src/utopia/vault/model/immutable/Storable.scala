@@ -251,33 +251,28 @@ trait Storable extends ModelConvertible
      */
     def insert()(implicit connection: Connection) = 
     {
-        try
-        {
+        try {
             val primaryColumn = table.primaryColumn
             // If table uses auto-increment index or no index at all, inserts without index
             // Otherwise requires a specified index
-            if (primaryColumn.isDefined)
-            {
+            if (primaryColumn.isDefined) {
                 if (table.usesAutoIncrement)
                     Insert(table, toModel - primaryColumn.get.name).generatedKeys.headOption
                         .getOrElse(Value.emptyWithType(primaryColumn.get.dataType))
-                else
-                {
+                else {
                     val i = index
                     if (i.isDefined)
                         Insert(table, toModel)
                     i
                 }
             }
-            else
-            {
+            else {
                 Insert(table, toModel)
                 Value.empty
             }
         }
-        catch
-        {
-            case e: DBException => e.rethrow(s"Failed to insert storable: $toJson")
+        catch {
+            case e: DBException => e.rethrow(s"Failed to insert storable: $toJson. Message: ${e.getMessage}")
         }
     }
     

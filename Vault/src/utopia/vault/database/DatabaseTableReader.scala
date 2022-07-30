@@ -48,7 +48,7 @@ object DatabaseTableReader
         }
         // Registers read column length limits
         ColumnLengthLimits.update(databaseName, tableName,
-            readColumns.flatMap { case (col, limit) => limit.map { col.columnName -> _ } })
+            readColumns.flatMap { case (col, limit) => limit.map { col.name -> _ } })
         
         Table(tableName, databaseName, readColumns.map { _._1 })
     }

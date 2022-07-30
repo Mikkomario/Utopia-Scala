@@ -125,7 +125,7 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
 	// OTHER METHODS    ------------------------
 	
 	/**
-	  * Finds a column with the provided property name. Returns None if no such column exists in
+	  * Finds a column with the provided database model property name. Returns None if no such column exists in
 	  * this table
 	  */
 	def find(propertyName: String) = columnsByAttName.get(propertyName.toLowerCase)
@@ -152,7 +152,7 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
 	  */
 	def contains(column: Column) = columns.contains(column)
 	/**
-	  * checks whether this table contains a column matching the provided property name
+	  * checks whether this table contains a column matching the provided database model property name
 	  */
 	def contains(propertyName: String) = columnsByAttName.contains(propertyName.toLowerCase)
 	

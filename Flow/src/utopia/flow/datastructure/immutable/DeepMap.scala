@@ -1,6 +1,7 @@
 package utopia.flow.datastructure.immutable
 
 import utopia.flow.datastructure.template.MapLike
+import utopia.flow.generic.{AnyType, ModelConvertible, ValueConvertible}
 import utopia.flow.util.CollectionExtensions._
 
 object DeepMap
@@ -133,7 +134,7 @@ object DeepMap
   * @since 25.12.2021, v1.14.1
   */
 case class DeepMap[K, +V] private(private val wrapped: Map[K, Either[DeepMap[K, V], V]])
-	extends MapLike[Iterable[K], V] with Iterable[(Vector[K], V)]
+	extends MapLike[Iterable[K], V] with Iterable[(Vector[K], V)] with ModelConvertible
 {
 	// COMPUTED -------------------------------
 	
@@ -148,6 +149,23 @@ case class DeepMap[K, +V] private(private val wrapped: Map[K, Either[DeepMap[K, 
 	
 	
 	// IMPLEMENTED  ---------------------------
+	
+	override def toModel: Model = {
+		val constants = wrapped.map { case (key, value) =>
+			val v = value match {
+				case Left(map) => map.toValue
+				case Right(value) =>
+					value match {
+						case v: Value => v
+						case v: ValueConvertible => v.toValue
+						// TODO: Could be more advanced / precise
+						case v => Value(Some(v), AnyType)
+					}
+			}
+			Constant(key.toString, v)
+		}
+		Model.withConstants(constants)
+	}
 	
 	override def iterator: Iterator[(Vector[K], V)] = wrapped.iterator.flatMap { case (key, value) =>
 		value match {

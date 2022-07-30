@@ -1,0 +1,38 @@
+{
+  "project": "VaultTest",
+  "version": "v1.13",
+  "author": "Mikko Hilpinen",
+  "package": "utopia.vault.test",
+  "prefix_columns": true,
+  "naming": {
+    "column": "camelCase",
+    "db_prop": "camelCase"
+  },
+  "classes": {
+    "operation": [
+      {
+        "name": "ElectronicSignature",
+        "table": "electronic_signature",
+        "doc": "Represents a received e-signature",
+        "combo_index": ["issuerName","serialNumber"],
+        "props": [
+          {
+            "name": "issuerName",
+            "length": 32,
+            "max": 480,
+            "doc": "Name of the certificate issuer, as specified in the signature"
+          },
+          {
+            "name": "serialNumber",
+            "length": 24,
+            "max": 320,
+            "doc": "Serial number of the certificate, as specified in the signature"
+          },
+          {
+            "type": "creation"
+          }
+        ]
+      }
+    ]
+  }
+}

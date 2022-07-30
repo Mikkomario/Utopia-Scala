@@ -21,6 +21,11 @@ object VaultTestTables
 	  */
 	def salesProduct = apply("sales_product")
 	
+	/**
+	  * Table that contains electronic signatures (Represents a received e-signature)
+	  */
+	def electronicSignature = apply("electronic_signature")
+	
 	
 	// OTHER	--------------------
 	

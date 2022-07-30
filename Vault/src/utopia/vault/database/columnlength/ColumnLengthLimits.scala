@@ -17,6 +17,11 @@ object ColumnLengthLimits
 	private val limits = Volatile(DeepMap.empty[String, ColumnLengthLimit])
 	
 	
+	// IMPLEMENTED  ------------------------------
+	
+	override def toString = limits.value.toString
+	
+	
 	// OTHER    ----------------------------------
 	
 	/**

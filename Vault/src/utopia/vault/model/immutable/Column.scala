@@ -13,7 +13,7 @@ import scala.util.{Failure, Success}
  * Columns represent database columns and can be used as templates for different properties
  * @author Mikko Hilpinen
  * @since 8.3.2017
-  * @param propertyName Name of the property represented by this column
+  * @param propertyName Name of the database model property represented by this column
   * @param columnName Name of this column as it appears in the database
   * @param tableName Name of the table where this column belongs
   * @param dataType Data type accepted by this column

@@ -49,6 +49,8 @@ object ColumnLengthRule
 	  */
 	object Throw extends ColumnLengthRule
 	{
+		override def toString = "throw"
+		
 		override def apply(databaseName: String, column: Column, lengthLimit: ColumnLengthLimit, proposedValue: Value) =
 			lengthLimit.test(proposedValue).toOption
 				.getOrElse { throw new MaxLengthExceededException(
@@ -60,6 +62,8 @@ object ColumnLengthRule
 	  */
 	object TryCrop extends ColumnLengthRule
 	{
+		override def toString = "crop"
+		
 		override def apply(databaseName: String, column: Column, lengthLimit: ColumnLengthLimit, proposedValue: Value) =
 		{
 			lengthLimit.test(proposedValue, allowCrop = true).toOption
@@ -95,6 +99,11 @@ object ColumnLengthRule
 	                    (implicit exc: ExecutionContext, connectionPool: ConnectionPool)
 		extends ColumnLengthRule
 	{
+		override def toString = maximum match {
+			case Some(max) => s"expand up to $max"
+			case None => "expand indefinitely"
+		}
+		
 		override def apply(databaseName: String, column: Column, lengthLimit: ColumnLengthLimit, proposedValue: Value) =
 		{
 			lengthLimit.test(proposedValue) match {
@@ -141,6 +150,8 @@ object ColumnLengthRule
 	// Combines two lenght rules, uses the second one if the first one throws
 	private class CombiningRule(primary: ColumnLengthRule, secondary: ColumnLengthRule) extends ColumnLengthRule
 	{
+		override def toString = s"$primary or $secondary"
+		
 		override def apply(databaseName: String, column: Column, lengthLimit: ColumnLengthLimit, proposedValue: Value) =
 		{
 			Try { primary(databaseName, column, lengthLimit, proposedValue) }.getOrMap { error =>

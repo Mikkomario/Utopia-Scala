@@ -40,8 +40,7 @@ object Insert
             // handling to the ErrorHandling object
             val usedPropertyNames = rows.flatMap { _.attributesWithValue.map { _.name } }.toSet
             val (nonMatchingProperties, matchingProperties) = usedPropertyNames.divideWith { propertyName =>
-                table.find(propertyName) match
-                {
+                table.find(propertyName) match {
                     case Some(column) => Right(propertyName -> column)
                     case None => Left(propertyName)
                 }
@@ -55,8 +54,7 @@ object Insert
             val propertiesToInsert = matchingProperties.filterNot { _._2.usesAutoIncrement }
             
             val columnNames = propertiesToInsert.map { _._2.sqlColumnName }.mkString(", ")
-            val singleRowValuesSql =
-            {
+            val singleRowValuesSql = {
                 if (propertiesToInsert.nonEmpty)
                     "(?" + ", ?" * (propertiesToInsert.size - 1) + ")"
                 else
