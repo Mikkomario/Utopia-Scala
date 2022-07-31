@@ -6,6 +6,11 @@ object Namespace
 	  * The empty namespace (i.e. no namespace)
 	  */
 	implicit val empty: Namespace = Namespace("")
+	
+	/**
+	  * Namespace used to define other namespaces
+	  */
+	val namespaceDeclaration = Namespace("xmlns")
 }
 
 /**

@@ -5,6 +5,7 @@ import utopia.flow.datastructure.template
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.ModelConvertible
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.StringExtensions._
 
 import scala.collection.immutable.VectorBuilder
 
@@ -162,9 +163,12 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         }
     }
     
-    // Eg. 'att1="abc" att2="3"'. None if empty
-    private def attributesString = attributes.attributes.map { a =>
-            s"${a.name}=${"\""}${a.value.getString}${"\""}" }.reduceOption { _ + " " + _ }
+    // Eg. 'att1="abc" att2="3"'
+    private def attributesString =
+        attributeMap.flatMap { case (namespace, model) => model.attributes.map { att =>
+            val attName = if (namespace.isEmpty) att.name else s"${namespace.name}:${att.name}"
+            s"$attName=${att.value.getString.quoted}"
+        } }.mkString(" ")
     
     
     // IMPLEMENTED  ----------------------------
@@ -280,10 +284,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
     def appendToXml(xmlBuilder: StringBuilder): Unit =
     {
         val namePart = name.toString
-        val attsPart = attributesString match {
-            case Some(str) => " " + str
-            case None => ""
-        }
+        val attsPart = attributesString.mapIfNotEmpty { " " + _ }
         
         // Case: Empty element
         // Eg. <foo att1="2"/>

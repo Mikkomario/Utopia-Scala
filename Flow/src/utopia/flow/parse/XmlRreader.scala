@@ -344,11 +344,18 @@ class XmlReader(streamReader: Reader) extends AutoCloseable
     }
     
     private def parseAttributes() = {
+        // Reads attributes
         val attCount = reader.getAttributeCount
-        (0 until attCount).map { i =>
+        val attributes = (0 until attCount).map { i =>
             val name = reader.getAttributeName(i)
             Namespace(name.getPrefix)(name.getLocalPart) -> reader.getAttributeValue(i)
         }.toMap
+        // Also reads namespace declarations
+        val namespaceCount = reader.getNamespaceCount
+        val namespaces = (0 until namespaceCount).map { i =>
+            Namespace.namespaceDeclaration(reader.getNamespacePrefix(i)) -> reader.getNamespaceURI(i)
+        }.toMap
+        attributes ++ namespaces
     }
     
     // Updates openElement text, returns the depth change
