@@ -17,7 +17,8 @@ object XmlToStringTest extends App
 	implicit val ns: Namespace = Namespace("test")
 	
 	val elem1 = XmlElement("CamelCaseName", "CamelCaseValue")
-	val elem2 = XmlElement("ALLCAPSNAME", attributes = Model(Vector("CamelCaseAttribute" -> "CamelCaseAttValue")))
+	val elem2 = XmlElement.namespaced("ALLCAPSNAME",
+		attributes = Model(Vector("CamelCaseAttribute" -> "CamelCaseAttValue")))
 	val elem3 = XmlElement("Parent", children = Vector(elem1, elem2))
 	
 	val xml1 = elem1.toXml

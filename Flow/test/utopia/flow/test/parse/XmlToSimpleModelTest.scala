@@ -28,7 +28,7 @@ object XmlToSimpleModelTest extends App
 	printElement(value)
 	
 	val testAtts = Model(Vector("a" -> 1, "b" -> 2))
-	val attributes = XmlElement("Attributes", attributes = testAtts)
+	val attributes = XmlElement.local("Attributes", attributes = testAtts)
 	printElement(attributes)
 	
 	val wrapper = XmlElement("Wrapper", children = Vector(value))

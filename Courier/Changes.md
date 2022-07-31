@@ -1,5 +1,8 @@
 # Utopia Courier - List of Changes
 
+## v1.0.4 (in development)
+New Build for Flow v1.16
+
 ## v1.0.3 - 06.06.2022
 This release introduces two very important bugfixes to email reading.
 ### Bugfixes

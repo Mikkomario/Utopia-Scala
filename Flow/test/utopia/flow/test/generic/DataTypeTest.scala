@@ -47,7 +47,7 @@ object DataTypeTest extends App
 	val lTime = LocalTime.now().toValue
 	val lDT = LocalDateTime.now().toValue
 	val vector = Vector(i, d, f, l).toValue
-	val model = Model("attributeName", i).toValue
+	val model = Model.from("attributeName" -> i).toValue
 	
 	/*
     DataType.values.foreach { fromType => DataType.values.foreach { toType =>

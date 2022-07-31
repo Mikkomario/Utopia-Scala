@@ -35,4 +35,19 @@ case class Namespace(name: String)
 	// IMPLEMENTED  ---------------------
 	
 	override def toString = name
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	  * @param string A string
+	  * @return That string in this namespace
+	  */
+	def apply(string: String) = NamespacedString(string)(this)
+	
+	/**
+	  * @param other Another namespace
+	  * @return This namespace if not empty. Otherwise the other namespace.
+	  */
+	def orElse(other: => Namespace) = if (isEmpty) other else this
 }

@@ -25,7 +25,19 @@ trait Property extends JsonConvertible with Viewable[Value]
     def dataType: DataType
     
     
-    // COMP. PROPERTIES    -----
+    // COMPUTED -----------
+    
+    /**
+      * @return Whether this property has no value
+      */
+    def isEmpty = value.isEmpty
+    /**
+      * @return Whether this property has a non-empty value
+      */
+    def nonEmpty = value.isDefined
+    
+    
+    // IMPLEMENTED    -----
     
     override def toString = s"$name: ${value.description}"
     

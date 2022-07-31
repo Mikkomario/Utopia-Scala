@@ -3,11 +3,6 @@
 ## v1.16 (in development)
 ### Breaking Changes
 - **String** to **Value** conversion now returns an empty value for empty strings
-- **JsonConvertible** now requires implementation of `appendToJson(StringBuilder): Unit`
-  - Please notice that all existing implementations have been modified to include this function, so this should be 
-    a problem only in custom implementations, and even then a minor one
-- **ModelConvertible** is now a sub-trait of **ValueConvertible**
-  - May cause some minor build errors in cases where your classes inherited both
 - The following classes now use **Logger**:
   - **AsyncMirror** and **ChangingLike**`.mapAsync` -variants
   - All **FileContainer** variants
@@ -15,14 +10,26 @@
   - **Process**, **DelayedProcess**, **LoopingProcess**, **Delay** and **Loop** functions
   - **ThreadPool** and **NewThreadExecutionContext**
   - **TimedTasks**
+- **XmlElement** now uses namespaces, which causes a number of breaking errors and changes
+- Altered the **Model** class in following breaking ways:
+  - The `new` constructor is now private
+  - Removed constructors that took a key and a value parameter
+  - Altered the tuple constructor variant and renamed it to `.from(...)`
+  - `--` now accepts a collection of keys, not constants
+    - The previous implementation is available as `.withoutAttributes(...)`
+- **JsonConvertible** now requires implementation of `appendToJson(StringBuilder): Unit`
+  - Please notice that all existing implementations have been modified to include this function, so this should be 
+    a problem only in custom implementations, and even then a minor one
+- **ModelConvertible** is now a sub-trait of **ValueConvertible**
+  - May cause some minor build errors in cases where your classes inherited both
 ### Deprecations
 - Deprecated some `...andGet(...)` -functions from **Volatile** classes, because of changes made to the base function 
   versions
 ### New Features
 - Added **Logger** trait and 2 basic implementations (**SysErrLogger** and **FileLogger**)
-- **XmlElement** now supports namespaces, which are provided implicitly
 - Added **FromValueFactory** -trait that also provides implicit **Value** unwraps
 - Added **LazyVector**, **LazyIterable** and **CachingIterable** classes for lazy iteration
+- Added the **FoldingIterator** class
 - Added **CompoundingVectorBuilder** class that allows one to check the current vector state while building
 - Added **MappingCacheView** and **KeyMappingCache** classes, corresponding with new `.mapValuesView(...)` and 
   `.mapKeys(...)` -functions in **CacheLike**
@@ -30,26 +37,35 @@
 - Added **ObjectMapFileContainer** class
 - Added **FromModelFactoryWithDefault** -trait
 ### New Methods
+- **Constant**
+  - Added `.mapValue(...)`
 - **Iterable** (**CollectionExtensions**)
   - Added `.areAllEqual: Boolean`
   - Added `.maxGroupBy(...)`
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.lazyMap(...)` and .`lazyFlatMap(...)` which yield a **LazyIterable**, 
     as well as `.caching` which yields a **CachingIterable**
+  - Added `.foldLeftIterator(...)` and `.reduceLeftIterator(...)` functions
   - Added a number of utility methods for iterables of tries
 - **LocalDate** (**TimeExtensions**)
   - Added `.monthOfYear: Int`
 - **Map** (**CollectionExtensions**)
   - Added `.mapKeys(...)`
+- **Model**
+  - Added `.map(...)`, `.mapKeys(...)` and `.mapValues(...)`
 - **Path** (**FileExtensions**)
   - Added `.commonParentWith(...)`
   - Added `.deleteContents()` -which deletes all directory contents
+- **Property**
+  - Added `.isEmpty` and `.nonEmpty`
 - **Regex**
   - Added `.replaceAll(String, String)`
 - **String** (**StringExtensions**)
   - Added `.nonEmptyOrElse(=> String)` and `.mapIfNotEmpty(...)` to help to work around possibly empty strings
   - Added `.filterWith(Regex)` and `.filterNotWith(Regex)`
   - Added `.replaceAll(Regex, => String)`
+- **TreeLike**
+  - Added `.apply(...)` which acts like / but supports multiple parameters (i.e. a path)
 ### Bugfixes
 - **TreeLike**`.nodesBelowIterator` now works as expected. The previous version (in v1.15) yielded an empty iterator, 
   causing problems in multiple dependent functions
@@ -64,6 +80,7 @@
 - **FileContainer** saving now utilizes shutdown hooks to complete the save even on jvm exit
 - Optimized **XmlElement**`.toXml`
 - Changed `.toString` implementation in **DateRange**
+- **SimpleConstantGenerator** may now be passed as an object to apply the default version
 
 ## v1.15 - 06.06.2022
 This major update introduces a number of utility changes, including many breaking changes. 

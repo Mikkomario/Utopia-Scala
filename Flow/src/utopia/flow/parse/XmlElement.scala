@@ -14,47 +14,38 @@ import scala.util.{Failure, Success, Try}
 
 object XmlElement extends FromModelFactory[XmlElement]
 {
-    def apply(model: template.Model[Property]): Try[XmlElement] =
-    {
-        // If the name is not provided by user, it is read from the model
-        model("name").string
-            .toTry { new NoSuchElementException(s"Cannot parse XmlElement from $model without a 'name' property") }
-            .map { name =>
-                // Checks namespace specifications
-                val (actualName, namespace) = {
-                    model("namespace").string match {
-                        case Some(explicitNamespace) => name -> Namespace(explicitNamespace)
-                        case None =>
-                            if (name.contains(":")) {
-                                val (namespacePart, namePart) = name.splitAtFirst(":")
-                                namePart -> Namespace(namespacePart)
-                            }
-                            else
-                                name -> Namespace.empty
-                    }
-                }
-                apply(actualName, model)(namespace)
-            }
-        
+    // IMPLEMENTED  -----------------------
+    
+    def apply(model: template.Model[Property]): Try[XmlElement] = {
         model("name").string.map { name =>
-            Success(apply(name, model))
+            val namespacedName = {
+                if (name.contains(':')) {
+                    val (nsPart, namePart) = name.splitAtFirst(":")
+                    Namespace(nsPart)(namePart)
+                }
+                else
+                    Namespace.empty(name)
+            }
+            Success(apply(namespacedName, model))
         }.getOrElse(
             Failure(new NoSuchElementException(s"Cannot parse XmlElement from $model without 'name' property")))
     }
     
+    
+    // OTHER    --------------------------
+    
     /**
      * Parses an xml element from a model
-     * @param name the name for the xml element
+     * @param name the name for the xml element (namespaced)
      * @param model the model that contains the element attributes. The following attribute names are used:<br>
      * - value / text: Element value<br>
      * - children: Element children (array of models)<br>
      * - attributes: Element attributes (model)<br>
      * Unused attributes are converted into children or attributes if some of the primary attributes 
      * were missing.
-      * @param namespace Namespace of this element
      */
     // TODO: Handle vector value types and instead of model, accept value
-    def apply(name: String, model: template.Model[Property])(implicit namespace: Namespace): XmlElement =
+    def apply(name: NamespacedString, model: template.Model[Property]): XmlElement =
     {
         // Value is either in 'value' or 'text' attribute
         val valueAttribute = model.findExisting("value")
@@ -69,22 +60,21 @@ object XmlElement extends FromModelFactory[XmlElement]
         // Children are either read from 'children' attribute or from the unused attributes
         val specifiedChildren = model.findExisting("children").map { _.value.getVector.flatMap(
                 _.model).flatMap { apply(_).toOption } }
-        val children = specifiedChildren.getOrElse
-        {
+        val children = specifiedChildren.getOrElse {
             // Expects model type but parses other types as well
             val modelChildren = unspecifiedAttributes
                 .flatMap(att => att.value.model.map { (att.name, _) })
                 .map { case (attName, attValue) =>
                     // Attribute name may specify namespace
-                    val (name, childNamespace) = {
+                    val childName = {
                         if (attName.contains(':')) {
                             val (namespacePart, namePart) = attName.splitAtFirst(":")
-                            namePart -> Namespace(namespacePart)
+                            Namespace(namespacePart)(namePart)
                         }
                         else
-                            attName -> namespace
+                            name.namespace(attName)
                     }
-                    XmlElement(name, attValue)(childNamespace)
+                    XmlElement(childName, attValue)
                 }
             
             // Other types are parsed into simple xml elements
@@ -96,34 +86,64 @@ object XmlElement extends FromModelFactory[XmlElement]
         
         // Attributes are either read from 'attributes' attribute or from the unused attributes
         val specifiedAttributes = model.findExisting("attributes").map { _.value.getModel }
-        val attributes = specifiedAttributes.getOrElse
-        {
+        val attributes = specifiedAttributes.getOrElse {
             if (specifiedChildren.isDefined)
                 Model.withConstants(unspecifiedAttributes.map { att => Constant(att.name, att.value) })
+            // If unused attributes were parsed into children, doesn't parse them into attributes
             else
-            {
-                // If unused attributes were parsed into children, doesn't parse them into attributes
                 Model.empty
-            }
         }
+        // Processes attribute namespaces, also
+        val namespacedAttributes = attributes.attributes.map { c =>
+            if (c.name.contains(':')) {
+                val (namespacePart, namePart) = c.name.splitAtFirst(":")
+                Namespace(namespacePart) -> c.withName(namePart)
+            }
+            else
+                Namespace.empty -> c
+        }.asMultiMap.view.mapValues { Model.withConstants(_) }.toMap
         
-        new XmlElement(name, value, attributes, children)
+        new XmlElement(name, value, namespacedAttributes, children)
     }
     
     /**
-      * Builds an xml element using a separate function
-      * @param name Name of this element
-      * @param attributes Attributes assigned to this element (default = empty)
-      * @param fill A function that adds child elements to the provided buffer
-      * @param namespace Namespace of this element (implicit)
+      * Creates a new xml element where name and attributes are tied to a single namespace
+      * @param name Name of this element (namespaced)
+      * @param value Value directly within this element (default = empty)
+      * @param attributes Attributes within this element (namespaced) (default = empty)
+      * @param children Children under this element (default = empty)
+      * @param namespace Implicit namespace to use for the name and attributes of this element
       * @return A new xml element
       */
-    def build(name: String, attributes: Model = Model.empty)
-             (fill: VectorBuilder[XmlElement] => Unit)(implicit namespace: Namespace) =
+    def namespaced(name: String, value: Value = Value.emptyWithType(StringType), attributes: Model = Model.empty,
+                   children: Vector[XmlElement] = Vector())
+                  (implicit namespace: Namespace) =
+        apply(namespace(name), value, Map(namespace -> attributes), children)
+    /**
+      * Creates a new xml element without namespacing
+      * @param name Name of this element
+      * @param value Value directly within this element (default = empty)
+      * @param attributes Attributes within this element (default = empty)
+      * @param children Children under this element (default = empty)
+      * @return A new xml element
+      */
+    def local(name: String, value: Value = Value.emptyWithType(StringType), attributes: Model = Model.empty,
+              children: Vector[XmlElement] = Vector()) =
+        namespaced(name, value, attributes, children)(Namespace.empty)
+    
+    /**
+      * Builds an xml element using a separate function
+      * @param name Name of this element (namespaced)
+      * @param attributes Attributes assigned to this element (default = empty)
+      * @param fill A function that adds child elements to the provided buffer
+      * @return A new xml element
+      */
+    def build(name: NamespacedString, attributes: Map[Namespace, Model] = Map.empty)
+             (fill: VectorBuilder[XmlElement] => Unit) =
     {
         val buffer = new VectorBuilder[XmlElement]()
         fill(buffer)
-        apply(name, attributes = attributes, children = buffer.result())
+        apply(name, attributeMap = attributes, children = buffer.result())
     }
 }
 
@@ -131,16 +151,22 @@ object XmlElement extends FromModelFactory[XmlElement]
  * XML Elements are used for representing XML data
  * @author Mikko Hilpinen
  * @since 13.1.2017 (v1.3)
-  * @param name Name of this element
+  * @param name Name of this element (namespaced)
   * @param value A simple value wrapped directly within this element
-  * @param attributes Attributes assigned to this element
+  * @param attributeMap A map that contains attribute models for different namespaces (default = empty)
   * @param children Elements appearing within this element
-  * @param namespace Namespace of this element
  */
-case class XmlElement(name: String, value: Value = Value.emptyWithType(StringType), attributes: Model = Model.empty,
-                      override val children: Vector[XmlElement] = Vector())(implicit override val namespace: Namespace)
+case class XmlElement(name: NamespacedString, value: Value = Value.emptyWithType(StringType),
+                      attributeMap: Map[Namespace, Model] = Map.empty,
+                      override val children: Vector[XmlElement] = Vector())
     extends XmlElementLike[XmlElement] with TreeLike[String, XmlElement]
 {
+    // ATTRIBUTES   ----------------------------
+    
+    // Caches the attributes model
+    override lazy val attributes = super.attributes
+    
+    
     // IMPLEMENTED  ----------------------------
     
     override def repr = this
@@ -170,26 +196,40 @@ case class XmlElement(name: String, value: Value = Value.emptyWithType(StringTyp
     def withText(text: String) = withValue(if (text.isEmpty) Value.emptyWithType(StringType) else text)
     
     /**
+      * @param attributeMap New set of attributes for this element
+      * @return A copy of this element with those attributes
+      */
+    def withAttributes(attributeMap: Map[Namespace, Model]) = copy(attributeMap = attributeMap)
+    /**
       * @param attributes New set of attributes for this element
       * @return A copy of this element with those attributes
       */
-    def withAttributes(attributes: Model) = copy(attributes = attributes)
+    def withAttributes(attributes: Model)(implicit namespace: Namespace): XmlElement =
+        withAttributes(Map(namespace -> attributes))
     /**
       * @param newAttributes Additional attributes for this element
       * @return A copy of this element with those attributes added
       */
-    def withAttributesAdded(newAttributes: Model) = withAttributes(attributes ++ newAttributes)
+    def withAttributesAdded(newAttributes: Model)(implicit namespace: Namespace) =
+        withAttributes(attributeMap.appendOrMerge(namespace, newAttributes) { _ ++ _ })
     /**
       * @param attribute A new attribute for this element
       * @return A copy of this element with specified attribute added
       */
-    def withAttribute(attribute: Constant) = withAttributes(attributes + attribute)
+    def withAttribute(attribute: Constant)(implicit namespace: Namespace) = {
+        val newModel = attributeMap.get(namespace) match {
+            case Some(model) => model + attribute
+            case None => Model.withConstants(Vector(attribute))
+        }
+        withAttributes(attributeMap + (namespace -> newModel))
+    }
     /**
       * @param attName Attribute name
       * @param value Attribute value
       * @return A copy of this element with specified attribute added
       */
-    def withAttribute(attName: String, value: Value): XmlElement = withAttribute(Constant(attName, value))
+    def withAttribute(attName: NamespacedString, value: Value): XmlElement =
+        withAttribute(Constant(attName.local, value))(attName.namespace)
     
     /**
       * @param children New set of children

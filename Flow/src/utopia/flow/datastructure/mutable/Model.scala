@@ -192,7 +192,7 @@ class Model[Attribute <: Variable](val attributeGenerator: PropertyGenerator[Att
      * generator that generates instances of Constant
      */
     def immutableCopy(generator: PropertyGenerator[Constant] = new SimpleConstantGenerator()) =
-        new immutable.Model(attributes.map { att => generator(att.name, Some(att.value)) }, generator)
+        immutable.Model.withConstants(attributes.map { att => generator(att.name, Some(att.value)) }, generator)
     
     protected def generateAttribute(attName: String, value: Option[Value]) = 
     {

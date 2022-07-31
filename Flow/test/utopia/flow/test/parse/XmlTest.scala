@@ -19,12 +19,12 @@ object XmlTest extends App
 	DataType.setup()
 	
 	// Creates the xml elements
-	val grandChild1 = new XmlElement("c", "Test & Values", Model(Vector("att1" -> 1, "att2" -> "b")))
-	val grandChild2 = new XmlElement("d", 123456)
-	val grandChild3 = new XmlElement("e")
+	val grandChild1 = XmlElement.local("c", "Test & Values", Model(Vector("att1" -> 1, "att2" -> "b")))
+	val grandChild2 = XmlElement.local("d", 123456)
+	val grandChild3 = XmlElement.local("e")
 	
-	val child = new XmlElement(name = "b", children = Vector(grandChild1, grandChild2, grandChild3))
-	val root = new XmlElement(name = "a", attributes = Model(Vector("id" -> 34)), children = Vector(child))
+	val child = XmlElement.local(name = "b", children = Vector(grandChild1, grandChild2, grandChild3))
+	val root = XmlElement.local(name = "a", attributes = Model(Vector("id" -> 34)), children = Vector(child))
 	
 	// Tests some basic XmlElement methods
 	assert(root.childWithName("b").contains(child))

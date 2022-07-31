@@ -7,7 +7,6 @@ import javax.xml.stream.XMLOutputFactory
 import java.io.OutputStreamWriter
 import scala.util.Try
 import javax.xml.stream.XMLStreamException
-import scala.collection.immutable.HashMap
 import java.io.File
 import java.io.FileOutputStream
 import utopia.flow.util.AutoClose._
@@ -108,15 +107,14 @@ class XmlWriter(stream: OutputStream, val charset: Charset = StandardCharsets.UT
 {
     // ATTRIBUTES    --------------------------
     
-    private val writer = XMLOutputFactory.newInstance().createXMLStreamWriter(
-            new OutputStreamWriter(stream, charset))
+    private val writer = XMLOutputFactory.newInstance()
+        .createXMLStreamWriter(new OutputStreamWriter(stream, charset))
     
     
     // IMPLEMENTED METHODS    -----------------
     
     @throws(classOf[XMLStreamException])
-    override def close() = 
-    {
+    override def close() = {
         writer.flush()
         writer.close()
     }
@@ -128,8 +126,7 @@ class XmlWriter(stream: OutputStream, val charset: Charset = StandardCharsets.UT
      * Writes a complete xml document
      * @param contentWriter a function that is used for writing the contents of the document
      */
-    def writeDocument[U](contentWriter: => U) =
-    {
+    def writeDocument[U](contentWriter: => U) = {
         writer.writeStartDocument(charset.name(), "1.0")
         contentWriter
         writer.writeEndDocument()
@@ -142,13 +139,13 @@ class XmlWriter(stream: OutputStream, val charset: Charset = StandardCharsets.UT
      * @param text the text written to element (optional)
      * @param contentWriter the function that is used for writing the element contents
      */
-    def writeElement(elementName: String, attributes: IterableOnce[(String, String)] = HashMap(),
-            text: Option[String] = None)(contentWriter: => Unit = ()) =
+    def writeElement(elementName: NamespacedString, attributes: IterableOnce[(NamespacedString, String)] = Map(),
+            text: String = "")(contentWriter: => Unit = ()) =
     {
         // Writes element start, attributes & text
-        writer.writeStartElement(elementName)
-        attributes.iterator.foreach{ case (key, value) => writer.writeAttribute(key, value) }
-        text.foreach(writeCharacters)
+        writer.writeStartElement(elementName.toString)
+        attributes.iterator.foreach { case (key, value) => writer.writeAttribute(key.toString, value) }
+        writeCharacters(text)
         // Writes other content
         contentWriter
         // finally closes the element
@@ -160,9 +157,8 @@ class XmlWriter(stream: OutputStream, val charset: Charset = StandardCharsets.UT
      * @param elementName the name of the element
      * @param text the text written inside the element
      */
-    def writeTextElement(elementName: String, text: String) = 
-    {
-        writer.writeStartElement(elementName)
+    def writeTextElement(elementName: NamespacedString, text: String) = {
+        writer.writeStartElement(elementName.toString)
         writer.writeCharacters(text)
         writer.writeEndElement()
     }
@@ -172,10 +168,9 @@ class XmlWriter(stream: OutputStream, val charset: Charset = StandardCharsets.UT
      * @param elementName the name of the element
      * @param attributes the attributes written to the element (optional)
      */
-    def writeEmptyElement(elementName: String, attributes: Map[String, String] = HashMap()) = 
-    {
-        writer.writeStartElement(elementName)
-        attributes.foreach{ case (key, value) => writer.writeAttribute(key, value) }
+    def writeEmptyElement(elementName: NamespacedString, attributes: Map[NamespacedString, String] = Map()) = {
+        writer.writeStartElement(elementName.toString)
+        attributes.foreach{ case (key, value) => writer.writeAttribute(key.toString, value) }
         writer.writeEndElement()
     }
     
@@ -183,21 +178,24 @@ class XmlWriter(stream: OutputStream, val charset: Charset = StandardCharsets.UT
      * Writes a complete xml element tree to the document
      * @param element the element tree that is written
      */
-    def write(element: XmlElement): Unit = writeElement(element.name, 
-            element.attributes.attributes.map { a => a.name -> a.value.getString }, element.text) {
-        element.children.foreach(write) }
-    
-    private def writeCharacters(text: String) = 
-    {
-        // CDATA is used if necessary
-        if (text.exists(charIsIllegal))
-            writer.writeCData(text) 
-        else 
-            writer.writeCharacters(text)
+    def write(element: XmlElement): Unit = {
+        val attributes = element.attributeMap.flatMap { case (namespace, model) =>
+            model.attributes.map { c => namespace(c.name) -> c.value.getString }
+        }
+        writeElement(element.name, attributes, element.text) { element.children.foreach(write) }
     }
     
-    private def charIsIllegal(c: Char) = 
-    {
+    private def writeCharacters(text: String) = {
+        if (text.nonEmpty) {
+            // CDATA is used if necessary
+            if (text.exists(charIsIllegal))
+                writer.writeCData(text)
+            else
+                writer.writeCharacters(text)
+        }
+    }
+    
+    private def charIsIllegal(c: Char) = {
         val i = c.toInt
         // Character is not allowed if it lies in an invalid char range or is specifically invalid
         XmlWriter.invalidCharRanges.find { _.end >= i }.exists { _.start <= i } ||

@@ -139,6 +139,17 @@ trait TreeLike[A, +NodeType <: TreeLike[A, NodeType]] extends Node[A]
       */
     def /(content: A) = get(content) getOrElse newNode(content)
     
+    /**
+      * Finds or generates a node under this one
+      * @param content Searched (direct) content
+      * @param more Additional search path, where each item represents underlying targeted content
+      * @return Node at the end of the specified content path. May be generated.
+      */
+    def apply(content: A, more: A*) = {
+        val path = content +: more
+        path.foldLeft(this) { _ / _ }
+    }
+    
     
     // OTHER METHODS    ------------
     

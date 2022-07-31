@@ -1,6 +1,6 @@
 # Utopia Reflection - List of Changes
 
-## v2.7.1 (in development)
+## v2.8 (in development)
 Reacting to changes in Flow v1.16
 ### Breaking Changes
 - The following classes require an implicit **Logger** -parameter:

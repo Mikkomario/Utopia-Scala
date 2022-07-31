@@ -75,7 +75,7 @@ object ModelTest extends App
 	
 	// 4) Immutable model with a default value
 	val generator3 = new SimpleConstantGenerator(0)
-	val model5 = new immutable.Model(constants, generator3)
+	val model5 = immutable.Model.withConstants(constants, generator3)
 	
 	assert(model5 != model3)
 	assert(model5("nonexisting").content.get == 0)

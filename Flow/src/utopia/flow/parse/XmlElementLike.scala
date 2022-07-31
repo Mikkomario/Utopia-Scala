@@ -20,39 +20,45 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
     // ABSTRACT --------------------------------
     
     /**
+      * @return "This" instance
+      */
+    def repr: Repr
+    /**
       * @return Name of this xml element
       */
-    def name: String
+    def name: NamespacedString
     /**
       * @return Value within this xml element
       */
     def value: Value
     /**
-      * @return Attributes assigned to this xml element, as a model
+      * @return Namespaced attributes assigned to this xml element.
+      *         Keys are namespaces, values are models that represent attribute sets.
       */
-    def attributes: Model
-    /**
-      * @return Namespace of this element (which may be empty)
-      */
-    def namespace: Namespace
+    def attributeMap: Map[Namespace, Model]
     
     
     // COMPUTED PROPERTIES    ------------------
     
     /**
-      * @return Name of this element, including the possible namespace
+      * @return The local name of this xml element
       */
-    def nameWithNamespace = if (namespace.isEmpty) name else s"$namespace:$name"
+    def localName = name.local
     
     /**
-     * The text inside this xml element. None if the element doesn't contain any text
+      * @return Attributes assigned to this xml element, as a model
+      */
+    def attributes: Model = attributeMap.valuesIterator.reduceLeftOption { _ ++ _ }.getOrElse(Model.empty)
+    
+    /**
+     * The text inside this xml element. Empty if this element doesn't contain any text
      */
-    def text = value.string
+    def text = value.getString
     
     /**
       * @return Whether this is an empty xml element (e.g. <test/>). Empty elements may still contain attributes.
       */
-    def isEmptyElement = children.isEmpty && text.forall { _.isEmpty }
+    def isEmptyElement = children.isEmpty && value.isEmpty
     
     /**
      * Prints an xml string from this element. Character data is represented as is.
@@ -68,13 +74,12 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
       */
     def toSimpleModel =
     {
-        val nameProperty = Constant("name", name)
-        toConstants match
-        {
+        val nameProperty = Constant("name", localName)
+        toConstants match {
             // Case: This element consists of a single property
             case Left(constant) =>
                 // Doesn't use element name as a property key. Uses 'value' instead.
-                if (constant.name == name)
+                if (constant.name == localName)
                     Model.withConstants(Vector(nameProperty, constant.withName("value")))
                 // Specifies element name if possible
                 else if (constant.name == "name")
@@ -99,7 +104,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         {
             // Case: Empty element with no attributes => Converts to name value pair
             if (attributes.isEmpty)
-                Left(Constant(name, value))
+                Left(Constant(localName, value))
             // Case: Empty element with attributes => returns those
             else if (text.isEmpty)
                 Right(attributes.attributes)
@@ -110,13 +115,11 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         // Case: Wraps a single child => Attempts to convert it into a single property
         else if (children.size == 1)
         {
-            val childName = children.head.name
-            children.head.toConstants match
-            {
+            val childName = children.head.localName
+            children.head.toConstants match {
                 // Case: The wrapped element consists of a single property
                 case Left(childProperty) =>
-                    val actualProperty =
-                    {
+                    val actualProperty = {
                         if (childProperty.name == childName)
                             childProperty
                         else
@@ -128,21 +131,19 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
             }
         }
         // Case: All children have the same name and can therefore be expressed as a single array
-        else if (children.map { _.name }.toSet.size == 1)
-        {
+        else if (children.map { _.localName }.toSet.size == 1) {
             // val childName = children.head.name
-            val childrenProperty = Constant(name, groupChildren(children))
+            val childrenProperty = Constant(localName, groupChildren(children))
             propertyWithAttributes(childrenProperty)
         }
         else
         {
-            val childConstants = children.map { _.name }.distinct.map { childName =>
+            val childConstants = children.map { _.localName }.distinct.map { childName =>
                 val children = childrenWithName(childName)
                 if (children.size > 1)
                     Constant(childName, groupChildren(children))
                 else
-                    children.head.toConstants match
-                    {
+                    children.head.toConstants match {
                         case Left(constant) =>
                             if (constant.name == childName)
                                 constant
@@ -169,14 +170,14 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
     // IMPLEMENTED  ----------------------------
     
     /**
-      * @return The "content" of this xml element, as it appears in a tree. I.e. the name of this xml element.
+      * @return The "content" of this xml element, as it appears in a tree. I.e. the local name of this xml element.
       */
-    override def content = name
+    override def content = localName
     
     override def toModel: Model =
     {
-        val atts = new VectorBuilder[(String, Value)]
-        atts += ("name" -> name)
+        val atts = new VectorBuilder[(String, Value)]()
+        atts += ("name" -> name.toString)
         
         if (!value.isEmpty)
             atts += ("value" -> value)
@@ -186,8 +187,17 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
             atts += ("children" -> children.map(_.toModel).toVector)
         
         // Attributes are also only included if necessary
-        if (!attributes.isEmpty)
-            atts += ("attributes" -> attributes)
+        val attributesModel = attributeMap
+            .map { case (namespace, model) =>
+                if (namespace.isEmpty)
+                    model
+                else
+                    model.mapKeys { n => namespace(n).toString }
+            }
+            .reduceOption { _ ++ _ }
+            .getOrElse(Model.empty)
+        if (attributesModel.nonEmpty)
+            atts += ("attributes" -> attributesModel)
         
         Model(atts.result())
     }
@@ -198,16 +208,70 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
     /**
      * Finds the first child with the provided name
      */
-    def childWithName(name: String) = children.find { _.name.equalsIgnoreCase(name) }
+    def childWithName(name: String) = children.find { _.name ~== name }
     /**
      * Finds the children with the provided name
      */
-    def childrenWithName(name: String) = children.filter { _.name.equalsIgnoreCase(name) }
+    def childrenWithName(name: String) = children.filter { _.name ~== name }
     
+    /**
+      * Finds the value of the specified attribute within this element. If a non-namespaced name is given, namespaced
+      * attributes are searched, also (non-namespace-specific use-case).
+      * @param attName Name of the targeted attribute
+      * @return Value for that attribute, or an empty value
+      */
+    def valueOfAttribute(attName: NamespacedString) = attName.namespaceOption match {
+        case Some(namespace) =>
+            attributeMap.get(namespace) match {
+                case Some(model) => model(attName.local)
+                case None => Value.empty
+            }
+        case None =>
+            // Prefers the no namespace -attribute set
+            attributeMap.get(Namespace.empty).map { _(attName.local) }.filter { _.isDefined }
+                .orElse {
+                    attributeMap.iterator.filterNot { _._1.isEmpty }.map { _._2(attName.local) }.find { _.isDefined }
+                }
+                .getOrElse(Value.empty)
+    }
     /**
      * Finds the value for an attribute with the specified name
      */
-    def valueForAttribute(attName: String) = attributes(attName)
+    @deprecated("Renamed to valueOfAttribute", "v1.16")
+    def valueForAttribute(attName: NamespacedString) = valueOfAttribute(attName)
+    /**
+      * Finds the value under a child element
+      * @param childName Name of the targeted (direct) child element
+      * @return Value of that child element. Empty value if no such child existed
+      */
+    def valueOfChild(childName: String) = childWithName(childName) match {
+        case Some(c) => c.value
+        case None => Value.empty
+    }
+    /**
+      * Finds the value under a child element
+      * @param firstChildName Name of the direct child element
+      * @param secondChildName Name of the indirect child element
+      * @param more Names of additional targeted child elements (i.e. path)
+      * @return Value of the child element at the end of the specified path. Empty value if no such child was found.
+      */
+    def valueOfChild(firstChildName: String, secondChildName: String, more: String*) = {
+        val path = Vector(firstChildName, secondChildName) ++ more
+        path.foldLeftIterator(Some(repr): Option[Repr]) { (elem, next) => elem.flatMap { _.childWithName(next) } }
+            .takeTo { _.isEmpty }
+            .last
+        match {
+            case Some(elem) => elem.value
+            case None => Value.empty
+        }
+    }
+    /**
+      * @param key Targeted attribute or child name
+      * @return Value under that attribute or child. Empty value if neither is found.
+      */
+    def valueOf(key: NamespacedString) = {
+        valueOfAttribute(key).orElse { valueOfChild(key.local) }
+    }
     
     /**
       * Prints an xml string from this element. Character data is represented as is.
@@ -215,7 +279,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
       */
     def appendToXml(xmlBuilder: StringBuilder): Unit =
     {
-        val namePart = nameWithNamespace
+        val namePart = name.toString
         val attsPart = attributesString match {
             case Some(str) => " " + str
             case None => ""
@@ -230,7 +294,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         // Or <foo><bar/></foo>
         else {
             xmlBuilder ++= s"<$namePart$attsPart>"
-            text.foreach { xmlBuilder ++= _ }
+            xmlBuilder ++= text
             children.foreach { _.appendToXml(xmlBuilder) }
             xmlBuilder ++= s"</$namePart>"
         }

@@ -1,10 +1,10 @@
 package utopia.flow.parse
 
-import utopia.flow.datastructure.immutable.{Constant, Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.datastructure.mutable
 import utopia.flow.generic.StringType
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.StringExtensions._
+import utopia.flow.util.CollectionExtensions._
 
 object XmlElementBuilder
 {
@@ -15,7 +15,7 @@ object XmlElementBuilder
 	  * @return A builder based on that xml element
 	  */
 	def apply[X <: XmlElementLike[X]](element: X): XmlElementBuilder = {
-		val builder = new XmlElementBuilder(element.name, element.value, element.attributes)(element.namespace)
+		val builder = new XmlElementBuilder(element.name, element.value, element.attributeMap)
 		builder.children = element.children.map { apply(_) }
 		builder
 	}
@@ -26,26 +26,27 @@ object XmlElementBuilder
   * @author Mikko Hilpinen
   * @since 10.4.2022, v1.15
   */
-class XmlElementBuilder(initialName: String, initialValue: Value = Value.emptyWithType(StringType),
-                        initialAttributes: Model = Model.empty)(implicit initialNamespace: Namespace)
+class XmlElementBuilder(initialName: NamespacedString, initialValue: Value = Value.emptyWithType(StringType),
+                        initialAttributeMap: Map[Namespace, Model] = Map())
 	extends XmlElementLike[XmlElementBuilder] with mutable.TreeLike[String, XmlElementBuilder]
 {
 	// ATTRIBUTES   --------------------------------
 	
 	var name = initialName
 	var value = initialValue
-	var attributes = initialAttributes
+	var attributeMap = initialAttributeMap
 	var children = Vector[XmlElementBuilder]()
-	var namespace = initialNamespace
 	
 	
 	// IMPLEMENTED  --------------------------------
+	
+	override def repr = this
 	
 	def text_=(newText: String) = value = newText
 	
 	override protected def newNode(content: String) = {
 		// Adds the node as a new child
-		val node = new XmlElementBuilder(content)(namespace)
+		val node = new XmlElementBuilder(name.namespace(content))
 		children :+= node
 		node
 	}
@@ -58,7 +59,7 @@ class XmlElementBuilder(initialName: String, initialValue: Value = Value.emptyWi
 	/**
 	  * @return An immutable xml element based on this builder's current state
 	  */
-	def result(): XmlElement = XmlElement(name, value, attributes, children.map { _.result() })(namespace)
+	def result(): XmlElement = XmlElement(name, value, attributeMap, children.map { _.result() })
 	
 	/**
 	  * Adds a new child node under this node
@@ -76,19 +77,29 @@ class XmlElementBuilder(initialName: String, initialValue: Value = Value.emptyWi
 	  * @param attName Name of the specified / updated attribute
 	  * @param newValue New value to assign to this attribute
 	  */
-	def update(attName: String, newValue: Value) = setAttribute(attName, newValue)
+	def update(attName: NamespacedString, newValue: Value) = setAttribute(attName, newValue)
 	/**
 	  * Specifies an attribute value
 	  * @param attName Name of the specified attribute
 	  * @param newValue New value assigned for this attribute
 	  */
-	def setAttribute(attName: String, newValue: Value) = attributes += Constant(attName, newValue)
+	def setAttribute(attName: NamespacedString, newValue: Value) = {
+		if (attributeMap.contains(attName.namespace))
+			attributeMap = attributeMap.mapValue(attName.namespace) { _ + (attName.local -> newValue) }
+		else
+			attributeMap += (attName.namespace -> Model.from(attName.local -> newValue))
+	}
 	
 	/**
 	  * Removes an attribute value
 	  * @param attName Name of the attribute to remove
 	  */
-	def clearAttribute(attName: String) = attributes -= attName
+	def clearAttribute(attName: NamespacedString) = {
+		if (attName.hasNamespace)
+			attributeMap = attributeMap.mapValue(attName.namespace) { _ - attName.local }
+		else
+			attributeMap = attributeMap.view.mapValues { _ - attName.local }.toMap
+	}
 	
 	/**
 	  * Adds a new child to this element builder
@@ -98,10 +109,10 @@ class XmlElementBuilder(initialName: String, initialValue: Value = Value.emptyWi
 	  * @tparam A Function result type
 	  * @return Result value of the specified function
 	  */
-	def buildNewChild[A](childName: String, childValue: Value = Value.emptyWithType(StringType))
+	def buildNewChild[A](childName: NamespacedString, childValue: Value = Value.emptyWithType(StringType))
 	                    (f: XmlElementBuilder => A) =
 	{
-		val builder = new XmlElementBuilder(childName, childValue)(namespace)
+		val builder = new XmlElementBuilder(childName, childValue)
 		val result = f(builder)
 		children :+= builder
 		result

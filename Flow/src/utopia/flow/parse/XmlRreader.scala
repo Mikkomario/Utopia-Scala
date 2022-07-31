@@ -7,12 +7,10 @@ import java.io.{File, FileInputStream, InputStream, InputStreamReader, Reader}
 import java.nio.charset.Charset
 import javax.xml.stream.XMLInputFactory
 import java.nio.charset.StandardCharsets
-import utopia.flow.datastructure.immutable.Model
-import utopia.flow.datastructure.immutable.Value
+import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.generic.StringType
 
 import java.nio.file.Path
-import javax.xml.XMLConstants
 import scala.collection.immutable.VectorBuilder
 import scala.util.Try
 import scala.util.Success
@@ -155,14 +153,15 @@ class XmlReader(streamReader: Reader) extends AutoCloseable
     
     /**
      * The attributes in the current element in model format. An empty model if at the end of 
-     * the document.
+     * the document. Doesn't include namespace information.
      */
-    def currentElementAttributes = 
-    {
+    def currentElementAttributes = {
         if (isAtDocumentEnd) 
             Model.empty 
         else 
-            Model(parseAttributes().view.mapValues(XmlReader.valueFromString))
+            Model.withConstants(parseAttributes().map { case (attName, attValue) =>
+                Constant(attName.local, XmlReader.valueFromString(attValue))
+            })
     }
     
     private def currentEvent = 
@@ -329,10 +328,9 @@ class XmlReader(streamReader: Reader) extends AutoCloseable
         depth
     }
     
-    private def _readElement(): (UnfinishedElement, Int) =
-    {
+    private def _readElement(): (UnfinishedElement, Int) = {
         val name = reader.getName
-        val element = new UnfinishedElement(name.getNamespaceURI, name.getLocalPart, parseAttributes())
+        val element = new UnfinishedElement(Namespace(name.getPrefix)(name.getLocalPart), parseAttributes())
         var depthChange = _toNextElementStart(Some(element))
         
         while (depthChange > 0)
@@ -345,11 +343,12 @@ class XmlReader(streamReader: Reader) extends AutoCloseable
         element -> depthChange
     }
     
-    private def parseAttributes() = 
-    {
+    private def parseAttributes() = {
         val attCount = reader.getAttributeCount
-        (0 until attCount).toVector.map(
-                i => reader.getAttributeLocalName(i) -> reader.getAttributeValue(i)).toMap
+        (0 until attCount).map { i =>
+            val name = reader.getAttributeName(i)
+            Namespace(name.getPrefix)(name.getLocalPart) -> reader.getAttributeValue(i)
+        }.toMap
     }
     
     // Updates openElement text, returns the depth change
@@ -386,23 +385,21 @@ private case object ElementEnd extends XmlReadEvent
 private case object Text extends XmlReadEvent
 private case object DocumentEnd extends XmlReadEvent
 
-private class UnfinishedElement(namespace: String, name: String, attributes: Map[String, String])
+private class UnfinishedElement(name: NamespacedString, attributes: Map[NamespacedString, String])
 {
     // ATTRIBUTES    -----------------------
     
     var children = Vector[UnfinishedElement]()
     var text = ""
     
-    private implicit val _namespace: Namespace =
-        if (namespace == XMLConstants.NULL_NS_URI) Namespace.empty else Namespace(namespace)
-    
     
     // COMPUTED PROPERTIES    --------------
     
-    def toXmlElement: XmlElement = 
-    {
-        val attributesModel = Model(attributes.view.mapValues(XmlReader.valueFromString))
+    def toXmlElement: XmlElement = {
+        val attMap = attributes.groupMap { _._1.namespace } { case (name, str) =>
+            Constant(name.local, XmlReader.valueFromString(str))
+        }.view.mapValues { Model.withConstants(_) }.toMap
         new XmlElement(name, if (text.isEmpty) Value.emptyWithType(StringType) else
-                XmlReader.valueFromString(text), attributesModel, children.map(_.toXmlElement))
+                XmlReader.valueFromString(text), attMap, children.map(_.toXmlElement))
     }
 }

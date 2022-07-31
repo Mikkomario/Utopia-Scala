@@ -1,6 +1,6 @@
 package utopia.flow.util
 
-import utopia.flow.collection.{CachingIterable, GroupIterator, LazyIterable, LazyVector, LimitedLengthIterator, PairingIterator, PollingIterator, TerminatingIterator}
+import utopia.flow.collection.{CachingIterable, FoldingIterator, GroupIterator, LazyIterable, LazyVector, LimitedLengthIterator, PairingIterator, PollingIterator, TerminatingIterator}
 import utopia.flow.datastructure.immutable.{Lazy, Pair}
 import utopia.flow.datastructure.mutable.PollableOnce
 import utopia.flow.datastructure.template.LazyLike
@@ -337,6 +337,19 @@ object CollectionExtensions
 			}
 			lBuilder.result() -> rBuilder.result()
 		}
+		
+		/**
+		  * @param start Fold starting value
+		  * @param f A fold function
+		  * @tparam V Type of fold function return values
+		  * @return An iterator that folds the items in this collection and returns every iteration result
+		  */
+		def foldLeftIterator[V](start: V)(f: (V, A) => V) = new FoldingIterator[A, V](start, i.iterator)(f)
+		/**
+		  * @param f A reduce function
+		  * @return An iterator that reduces the items in this collection and returns every iteration result
+		  */
+		def reduceLeftIterator(f: (A, A) => A) = FoldingIterator.reduce(i.iterator)(f)
 	}
 	
 	implicit class TriesIterableOnce[A](val tries: IterableOnce[Try[A]]) extends AnyVal
@@ -1422,6 +1435,15 @@ object CollectionExtensions
 		  * @return A copy of this map with updated keys
 		  */
 		def mapKeys[K2](f: K => K2) = m.map { case (k, v) => f(k) -> v }
+		/**
+		  * Maps an individual key within this map
+		  * @param key Targeted key (must exist)
+		  * @param f A mapping function for the value in the specified key
+		  * @tparam V2 Map function result type
+		  * @return A copy of this map with that key mapped
+		  */
+		@throws[NoSuchElementException]("If this map didn't contain the specified key")
+		def mapValue[V2 >: V](key: K)(f: V => V2) = m + (key -> f(m(key)))
 		
 		/**
 		  * Merges this map with another map. If value is present only in one map, it is preserved as is.
@@ -1431,8 +1453,7 @@ object CollectionExtensions
 		  * @return A map with merged values
 		  */
 		@deprecated("Please use .mergeWith(Map)(...) instead", "v1.15")
-		def mergedWith[V2 >: V](another: Map[K, V2], merge: (V, V2) => V2) =
-		{
+		def mergedWith[V2 >: V](another: Map[K, V2], merge: (V, V2) => V2) = {
 			val myKeys = m.keySet
 			val theirKeys = another.keySet
 			val onlyInMe = myKeys.diff(theirKeys)
@@ -1453,8 +1474,7 @@ object CollectionExtensions
 		  * @tparam V2 The resulting value type
 		  * @return A map with merged values
 		  */
-		def mergeWith[V2 >: V](another: Map[K, V2])(merge: (V, V2) => V2) =
-		{
+		def mergeWith[V2 >: V](another: Map[K, V2])(merge: (V, V2) => V2) = {
 			val myKeys = m.keySet
 			val theirKeys = another.keySet
 			val onlyInMe = myKeys.diff(theirKeys)
@@ -1466,6 +1486,22 @@ object CollectionExtensions
 			val ourPart = inBoth.map { k => k -> merge(m(k), another(k)) }.toMap
 			
 			myPart ++ theirPart ++ ourPart
+		}
+		
+		/**
+		  * Appends or merges a single key value pair into this map
+		  * @param key Key to add or modify
+		  * @param value Value to add
+		  * @param merge A merge function called if this map already contained a value for that key.
+		  *              Accepts the existing map value and the new value and returns the merged (i.e. resulting) value.
+		  * @tparam V2 Type of resulting values
+		  * @return A modified copy of this map
+		  */
+		def appendOrMerge[V2 >: V](key: K, value: V2)(merge: (V, V2) => V2) = {
+			m.get(key) match {
+				case Some(existing) => m + (key -> merge(existing, value))
+				case None => m + (key -> value)
+			}
 		}
 	}
 	
