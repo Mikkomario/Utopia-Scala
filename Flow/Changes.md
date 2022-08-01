@@ -11,12 +11,15 @@
   - **ThreadPool** and **NewThreadExecutionContext**
   - **TimedTasks**
 - **XmlElement** now uses namespaces, which causes a number of breaking errors and changes
+- **XmlElement**.text now returns a **String**, not an **Option**
 - Altered the **Model** class in following breaking ways:
   - The `new` constructor is now private
   - Removed constructors that took a key and a value parameter
   - Altered the tuple constructor variant and renamed it to `.from(...)`
   - `--` now accepts a collection of keys, not constants
     - The previous implementation is available as `.withoutAttributes(...)`
+- **TreeLike** now requires a new function `.containsDirect(...)` in order to support custom equality testing
+- **Iterable**`.bestMatch(...)` may cause a build error, due to new function variants
 - **JsonConvertible** now requires implementation of `appendToJson(StringBuilder): Unit`
   - Please notice that all existing implementations have been modified to include this function, so this should be 
     a problem only in custom implementations, and even then a minor one
@@ -33,6 +36,8 @@
 - Added **CompoundingVectorBuilder** class that allows one to check the current vector state while building
 - Added **MappingCacheView** and **KeyMappingCache** classes, corresponding with new `.mapValuesView(...)` and 
   `.mapKeys(...)` -functions in **CacheLike**
+- Added **EqualsFunction** trait
+- Added **ScopeUsable** trait (from **Reflection**)
 - Added to- & from- model conversion to **DateRange**
 - Added **ObjectMapFileContainer** class
 - Added **FromModelFactoryWithDefault** -trait
@@ -42,6 +47,8 @@
 - **Iterable** (**CollectionExtensions**)
   - Added `.areAllEqual: Boolean`
   - Added `.maxGroupBy(...)`
+  - Added `.containsEqual(...)`
+  - Added new `.bestMatch(...)` variants
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.lazyMap(...)` and .`lazyFlatMap(...)` which yield a **LazyIterable**, 
     as well as `.caching` which yields a **CachingIterable**
@@ -78,6 +85,7 @@
   builder, not always **Vector** types
 - **Regex**`.replaceAll` now accepts the replacement parameter as call-by-name
 - **FileContainer** saving now utilizes shutdown hooks to complete the save even on jvm exit
+- **Iterable**`.containsAll(...)` (via **CollectionExtensions**) now accepts an implicit **EqualsFunction** parameter
 - Optimized **XmlElement**`.toXml`
 - Changed `.toString` implementation in **DateRange**
 - **SimpleConstantGenerator** may now be passed as an object to apply the default version

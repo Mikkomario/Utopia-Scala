@@ -16,7 +16,7 @@ import scala.collection.immutable.VectorBuilder
  * @since 13.1.2017 (v1.3)
  */
 trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
-    extends template.TreeLike[String, Repr] with ModelConvertible
+    extends template.TreeLike[NamespacedString, Repr] with ModelConvertible
 {
     // ABSTRACT --------------------------------
     
@@ -174,9 +174,9 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
     // IMPLEMENTED  ----------------------------
     
     /**
-      * @return The "content" of this xml element, as it appears in a tree. I.e. the local name of this xml element.
+      * @return The "content" of this xml element, as it appears in a tree. I.e. the name of this xml element.
       */
-    override def content = localName
+    override def content = name
     
     override def toModel: Model =
     {
@@ -205,6 +205,8 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         
         Model(atts.result())
     }
+    
+    override def containsDirect(content: NamespacedString) = this.content ~== content
     
     
     // OTHER METHODS    ------------------------

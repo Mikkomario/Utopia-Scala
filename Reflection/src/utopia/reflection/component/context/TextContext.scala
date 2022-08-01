@@ -1,5 +1,6 @@
 package utopia.reflection.component.context
 
+import utopia.flow.util.ScopeUsable
 import utopia.genesis.color.ColorContrastStandard.Enhanced
 import utopia.genesis.color.{Color, ColorContrastStandard}
 import utopia.genesis.shape.shape2D.Direction2D

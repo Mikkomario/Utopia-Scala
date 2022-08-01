@@ -5,21 +5,5 @@ package utopia.reflection.component.context
   * @author Mikko Hilpinen
   * @since 28.4.2020, v1.2
   */
-trait ScopeUsable[+Repr]
-{
-	// ABSTRACT	----------------------------
-	
-	/**
-	  * @return A representation of this item
-	  */
-	def repr: Repr
-	
-	
-	// OTHER	----------------------------
-	
-	/**
-	  * @param f A function called for this item
-	  * @tparam R Function result
-	  */
-	def use[R](f: Repr => R) = f(repr)
-}
+@deprecated("This class was copied to Flow and should be used from there instead", "v2.0")
+trait ScopeUsable[+Repr] extends utopia.flow.util.ScopeUsable[Repr]

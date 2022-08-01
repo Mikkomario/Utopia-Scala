@@ -92,7 +92,7 @@ object StackLength
 			val newMax = lengths.flatMap { _.max }.minOption
 			
 			// May pick the smaller optimal length in case the larger optimal is easily shrank
-			val newOptimal = lengths.bestMatch(Vector(l => !l.priority.shrinksFirst)).map { _.optimal }.max
+			val newOptimal = lengths.bestMatch { l => !l.priority.shrinksFirst }.map { _.optimal }.max
 			// Uses the strictest available priority
 			val newPriority = lengths.map { _.priority }.reduce { _ max _ }
 			

@@ -145,6 +145,27 @@ object XmlElement extends FromModelFactory[XmlElement]
         fill(buffer)
         apply(name, attributeMap = attributes, children = buffer.result())
     }
+    /**
+      * Builds an xml element using a separate function
+      * @param name Name of this element
+      * @param attributes Attributes assigned to this element (default = empty)
+      * @param fill A function that adds child elements to the provided buffer
+      * @param namespace Namespace to apply to element name and attributes
+      * @return A new xml element
+      */
+    def buildNamespaced(name: String, attributes: Model = Model.empty)
+                       (fill: VectorBuilder[XmlElement] => Unit)
+                       (implicit namespace: Namespace) =
+        build(namespace(name), Map(namespace -> attributes))(fill)
+    /**
+      * Builds an xml element using a separate function
+      * @param name Name of this element
+      * @param attributes Attributes assigned to this element (default = empty)
+      * @param fill A function that adds child elements to the provided buffer
+      * @return A new xml element
+      */
+    def buildLocal(name: String, attributes: Model = Model.empty)(fill: VectorBuilder[XmlElement] => Unit) =
+        buildNamespaced(name, attributes)(fill)(Namespace.empty)
 }
 
 /**
@@ -159,7 +180,7 @@ object XmlElement extends FromModelFactory[XmlElement]
 case class XmlElement(name: NamespacedString, value: Value = Value.emptyWithType(StringType),
                       attributeMap: Map[Namespace, Model] = Map.empty,
                       override val children: Vector[XmlElement] = Vector())
-    extends XmlElementLike[XmlElement] with TreeLike[String, XmlElement]
+    extends XmlElementLike[XmlElement] with TreeLike[NamespacedString, XmlElement]
 {
     // ATTRIBUTES   ----------------------------
     
@@ -171,9 +192,9 @@ case class XmlElement(name: NamespacedString, value: Value = Value.emptyWithType
     
     override def repr = this
     
-    override protected def newNode(content: String) = XmlElement(content)
+    override protected def newNode(content: NamespacedString) = XmlElement(content)
     
-    override protected def createCopy(content: String, children: Vector[XmlElement]) =
+    override protected def createCopy(content: NamespacedString, children: Vector[XmlElement]) =
         copy(name = content, children = children)
     
     
@@ -292,7 +313,7 @@ case class XmlElement(name: NamespacedString, value: Value = Value.emptyWithType
       * @tparam U Arbitrary function result
       * @return A copy of this element where the changes made to the mutable element copies have been applied
       */
-    def editPath[U](path: Seq[String])(f: XmlElementBuilder => U): XmlElement = mapPath(path) { e =>
+    def editPath[U](path: Seq[NamespacedString])(f: XmlElementBuilder => U): XmlElement = mapPath(path) { e =>
         val builder = e.mutableCopy()
         f(builder)
         builder.result()

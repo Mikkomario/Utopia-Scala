@@ -27,19 +27,16 @@ abstract class Explorer[R](val origin: Mine[R], private var _currentRoute: Vecto
 	
 	// OTHER	-----------------------
 	
-	protected def backtrack() =
-	{
+	protected def backtrack() = {
 		if (isAtOrigin)
 			false
-		else
-		{
+		else {
 			_currentRoute = _currentRoute.dropRight(1)
 			true
 		}
 	}
 	
-	protected def findDeadEnd() =
-	{
+	protected def findDeadEnd() = {
 		// May need to backtrack a little first
 		if (findUnexploredRoot())
 		{
@@ -51,8 +48,7 @@ abstract class Explorer[R](val origin: Mine[R], private var _currentRoute: Vecto
 			false
 	}
 	
-	protected def findUnexploredRoot() =
-	{
+	protected def findUnexploredRoot() = {
 		// Backtracks to an incomplete passage
 		while (currentLocation.status.isStarted && backtrack()) {
 			// Condition moves this explorer
@@ -60,11 +56,9 @@ abstract class Explorer[R](val origin: Mine[R], private var _currentRoute: Vecto
 		!currentLocation.status.isStarted
 	}
 	
-	protected def goDeeper(): Boolean =
-	{
+	protected def goDeeper(): Boolean = {
 		// Finds the next path, preferring those that haven't been explored yet
-		currentLocation.pathWays.filter { _.isExplorable }.bestMatch(Vector(!_.status.isTraversed)).headOption match
-		{
+		currentLocation.pathWays.filter { _.isExplorable }.bestMatch { !_.status.isTraversed }.headOption match {
 			case Some(nextPath) =>
 				goDeeper(nextPath)
 				true
@@ -72,8 +66,7 @@ abstract class Explorer[R](val origin: Mine[R], private var _currentRoute: Vecto
 		}
 	}
 	
-	protected def goDeeper(path: Mine[R]) =
-	{
+	protected def goDeeper(path: Mine[R]) = {
 		path.declareTraversed()
 		_currentRoute :+= path
 	}

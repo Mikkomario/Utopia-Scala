@@ -16,9 +16,21 @@ trait TreeLike[A, +NodeType <: TreeLike[A, NodeType]] extends Node[A]
     // ABSTRACT   --------------------
     
     /**
+      * @return "This" instance
+      */
+    def repr: NodeType
+    
+    /**
      * The child nodes directly under this node
      */
     def children: Vector[NodeType]
+    
+    /**
+      * Tests whether this node directly contains the specified content
+      * @param content Content to test
+      * @return Whether this node's content matches the specified content
+      */
+    def containsDirect(content: A): Boolean
     
     /**
       * Creates a new (child) node
@@ -147,7 +159,7 @@ trait TreeLike[A, +NodeType <: TreeLike[A, NodeType]] extends Node[A]
       */
     def apply(content: A, more: A*) = {
         val path = content +: more
-        path.foldLeft(this) { _ / _ }
+        path.foldLeft(repr) { _ / _ }
     }
     
     
@@ -159,14 +171,15 @@ trait TreeLike[A, +NodeType <: TreeLike[A, NodeType]] extends Node[A]
       * @return The first child with the provided content or None if there is no direct child with
       * such content
       */
-    def get(content: A) = children.find { _.content == content }
+    def get(content: A) = children.find { _.containsDirect(content) }
     
     /**
       * Performs a search over the whole tree structure
       * @param filter A predicate for finding a node
       * @return The first child that satisfies the predicate. None if no such child was found.
       */
-    def find(filter: NodeType => Boolean): Option[NodeType] = children.find(filter) orElse children.findMap { _.find(filter) }
+    def find(filter: NodeType => Boolean): Option[NodeType] =
+        children.find(filter) orElse children.findMap { _.find(filter) }
     
     /**
      * Checks whether a node exists below this node
@@ -179,7 +192,7 @@ trait TreeLike[A, +NodeType <: TreeLike[A, NodeType]] extends Node[A]
       * @param content The searched content
       * @return Whether this node or any node under this node contains the specified content
       */
-    def contains(content: A): Boolean = this.content == content || children.exists { _.contains(content) }
+    def contains(content: A): Boolean = containsDirect(content) || children.exists { _.contains(content) }
     
     /**
      * Finds the first child node from this entire tree that matches the specified condition. Returns the whole path
@@ -188,8 +201,7 @@ trait TreeLike[A, +NodeType <: TreeLike[A, NodeType]] extends Node[A]
      * @return Path to the first node matching the specified condition, if such a node exists. The resulting path
       *         won't include this node.
      */
-    def findWithPath(filter: NodeType => Boolean): Option[Vector[A]] =
-    {
+    def findWithPath(filter: NodeType => Boolean): Option[Vector[A]] = {
         children.find(filter).map { c => Vector(c.content) }
             .orElse { children.findMap { c => c.findWithPath(filter).map { c.content +: _ } } }
     }
@@ -218,8 +230,7 @@ trait TreeLike[A, +NodeType <: TreeLike[A, NodeType]] extends Node[A]
      * @param filter A function that tests a branch to see whether it should be accepted in the result
      * @return All the branches which were accepted by the specified filter.
      */
-    def findBranches(filter: NodeType => Boolean): Vector[NodeType] =
-    {
+    def findBranches(filter: NodeType => Boolean): Vector[NodeType] = {
         children.flatMap { child =>
             if (filter(child))
                 Vector(child)

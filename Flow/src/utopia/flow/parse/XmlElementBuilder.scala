@@ -28,7 +28,7 @@ object XmlElementBuilder
   */
 class XmlElementBuilder(initialName: NamespacedString, initialValue: Value = Value.emptyWithType(StringType),
                         initialAttributeMap: Map[Namespace, Model] = Map())
-	extends XmlElementLike[XmlElementBuilder] with mutable.TreeLike[String, XmlElementBuilder]
+	extends XmlElementLike[XmlElementBuilder] with mutable.TreeLike[NamespacedString, XmlElementBuilder]
 {
 	// ATTRIBUTES   --------------------------------
 	
@@ -44,9 +44,9 @@ class XmlElementBuilder(initialName: NamespacedString, initialValue: Value = Val
 	
 	def text_=(newText: String) = value = newText
 	
-	override protected def newNode(content: String) = {
+	override protected def newNode(content: NamespacedString) = {
 		// Adds the node as a new child
-		val node = new XmlElementBuilder(name.namespace(content))
+		val node = new XmlElementBuilder(content)
 		children :+= node
 		node
 	}

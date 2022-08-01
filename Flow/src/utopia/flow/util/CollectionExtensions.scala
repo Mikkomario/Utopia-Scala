@@ -455,7 +455,7 @@ object CollectionExtensions
 	                                     (implicit iter: IsIterable[Repr]): IterableOperations[Repr, iter.type] =
 		new IterableOperations(coll, iter)
 	
-	implicit class RichIterableLike[A, CC[X], Repr](val t: IterableOps[A, CC, Repr]) extends AnyVal
+	implicit class RichIterableLike[A, CC[X], Repr <: Iterable[_]](val t: IterableOps[A, CC, Repr]) extends AnyVal
 	{
 		/**
 		  * Performs an operation for each item in this collection. Stops if an operation fails.
@@ -490,8 +490,7 @@ object CollectionExtensions
 		/**
 		  * @return Duplicate items within this Iterable
 		  */
-		def duplicates: Set[A] =
-		{
+		def duplicates: Set[A] = {
 			var foundResults = HashSet[A]()
 			var checked = HashSet[A]()
 			t.foreach { item => if (checked.contains(item)) foundResults += item else checked += item }
@@ -504,28 +503,14 @@ object CollectionExtensions
 		  * @tparam B Ordering type
 		  * @return Maximum item or None if this Iterable was empty
 		  */
-		def maxOption[B >: A](implicit cmp: Ordering[B]): Option[A] =
-		{
-			if (t.isEmpty)
-				None
-			else
-				Some(t.max(cmp))
-		}
-		
+		def maxOption[B >: A](implicit cmp: Ordering[B]): Option[A] = if (t.isEmpty) None else Some(t.max(cmp))
 		/**
 		  * Finds the minimum value in this Iterable
 		  * @param cmp Ordering (implicit)
 		  * @tparam B Ordering type
 		  * @return Minimum item or None if this Iterable was empty
 		  */
-		def minOption[B >: A](implicit cmp: Ordering[B]): Option[A] =
-		{
-			if (t.isEmpty)
-				None
-			else
-				Some(t.min(cmp))
-		}
-		
+		def minOption[B >: A](implicit cmp: Ordering[B]): Option[A] = if (t.isEmpty) None else Some(t.min(cmp))
 		/**
 		  * Finds the maximum value based on map result
 		  * @param map A mapping function
@@ -534,13 +519,7 @@ object CollectionExtensions
 		  * @return Maximum item based on map result. None if this Iterable was empty
 		  */
 		def maxByOption[B](map: A => B)(implicit cmp: Ordering[B]): Option[A] =
-		{
-			if (t.isEmpty)
-				None
-			else
-				Some(t.maxBy(map))
-		}
-		
+			if (t.isEmpty) None else Some(t.maxBy(map))
 		/**
 		  * Finds the minimum value based on map result
 		  * @param map A mapping function
@@ -549,21 +528,15 @@ object CollectionExtensions
 		  * @return Minimum item based on map result. None if this Iterable was empty
 		  */
 		def minByOption[B](map: A => B)(implicit cmp: Ordering[B]): Option[A] =
-		{
-			if (t.isEmpty)
-				None
-			else
-				Some(t.minBy(map))
-		}
+			if (t.isEmpty) None else Some(t.minBy(map))
 		
 		/**
 		  * Finds the item(s) that best match the specified conditions
 		  * @param matchers Search conditions used. The conditions that are introduced first are considered more
 		  *                 important than those which are introduced the last.
-		  * @tparam That Target collection type
 		  * @return The items in this collection that best match the specified conditions
 		  */
-		def bestMatch[That](matchers: Seq[A => Boolean]): Vector[A] =
+		def bestMatch(matchers: Seq[A => Boolean]): Vector[A] =
 		{
 			// If there is only a single option, that is the best match. If there are 0 options, there's no best match
 			// If there are no matchers left, cannot make a distinction between items
@@ -572,7 +545,7 @@ object CollectionExtensions
 			else
 			{
 				val nextMatcher = matchers.head
-				val matched = t.filter(nextMatcher.apply)
+				val matched = t.filter(nextMatcher)
 				
 				// If matcher found some results, limits to those. if not, cannot use that group
 				if (matched.nonEmpty)
@@ -580,6 +553,18 @@ object CollectionExtensions
 				else
 					bestMatch(matchers.drop(1))
 			}
+		}
+		def bestMatch(firstMatcher: A => Boolean, secondMatcher: A => Boolean, more: (A => Boolean)*): Vector[A] =
+			bestMatch(Vector(firstMatcher, secondMatcher) ++ more)
+		/**
+		  * Filters this collection with the specified filter function, but if the results would be empty, returns
+		  * this collection instead
+		  * @param matcher A filter / matcher function
+		  * @return Filtered results, or this collection if resulting collection was empty
+		  */
+		def bestMatch(matcher: A => Boolean) = {
+			val matched = t.filter(matcher)
+			if (matched.isEmpty) t.toVector else matched.toVector
 		}
 		
 		/**
@@ -635,11 +620,21 @@ object CollectionExtensions
 		}
 		
 		/**
+		  * Checks whether this collection contains an item equal to the specified item
+		  * @param item A searched item
+		  * @param equals Equals function to use (implicit)
+		  * @tparam B Type of searched item
+		  * @return Whether this collection contains an equal item
+		  */
+		def containsEqual[B >: A](item: B)(implicit equals: EqualsFunction[B]) = t.exists { equals(_, item) }
+		/**
 		  * @param items Items to test
-		  * @tparam O Type of items collection
+		  * @param equals Equals function to use (implicit)
+		  * @tparam B Type of items collection
 		  * @return Whether this collection of items contains all of the specified items
 		  */
-		def containsAll[O >: A](items: Iterable[O]) = items.forall { item => t.exists { _ == item } }
+		def containsAll[B >: A](items: Iterable[B])(implicit equals: EqualsFunction[B] = EqualsFunction.default) =
+			items.forall { containsEqual(_) }
 	}
 	
 	

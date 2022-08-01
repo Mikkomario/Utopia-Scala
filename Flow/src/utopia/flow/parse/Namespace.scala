@@ -1,11 +1,18 @@
 package utopia.flow.parse
 
+import utopia.flow.util.{EqualsFunction, ScopeUsable}
+import utopia.flow.util.StringExtensions._
+
 object Namespace
 {
 	/**
 	  * The empty namespace (i.e. no namespace)
 	  */
 	implicit val empty: Namespace = Namespace("")
+	/**
+	  * Approximate equality function for namespaces
+	  */
+	implicit val approxEquals: EqualsFunction[Namespace] = _ ~== _
 	
 	/**
 	  * Namespace used to define other namespaces
@@ -18,7 +25,7 @@ object Namespace
   * @author Mikko Hilpinen
   * @since 20.6.2022, v1.15.1
   */
-case class Namespace(name: String)
+case class Namespace(name: String) extends ScopeUsable[Namespace]
 {
 	// COMPUTED -------------------------
 	
@@ -39,6 +46,8 @@ case class Namespace(name: String)
 	
 	// IMPLEMENTED  ---------------------
 	
+	override def repr = this
+	
 	override def toString = name
 	
 	
@@ -55,4 +64,12 @@ case class Namespace(name: String)
 	  * @return This namespace if not empty. Otherwise the other namespace.
 	  */
 	def orElse(other: => Namespace) = if (isEmpty) other else this
+	
+	/**
+	  * Checks whether this namespace resembles the other namespace (case-insensitive).
+	  * Empty namespace resembles every namespace.
+	  * @param other Another namespace
+	  * @return Whether these two namespaces resemble each other
+	  */
+	def ~==(other: Namespace) = if (isEmpty || other.isEmpty) true else name ~== other.name
 }

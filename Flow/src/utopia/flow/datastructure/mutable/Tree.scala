@@ -1,15 +1,18 @@
 package utopia.flow.datastructure.mutable
 
 import utopia.flow.datastructure.immutable
+import utopia.flow.util.EqualsFunction
 
 object Tree
 {
-    def apply[T](content: T, children: Vector[Tree[T]] = Vector()) = new Tree(content, children)
+    def apply[T](content: T, children: Vector[Tree[T]] = Vector())(implicit equals: EqualsFunction[T]) =
+        new Tree(content, children)
     
-    def apply[T](content: T, child: Tree[T]) = new Tree(content, Vector(child))
+    def apply[T](content: T, child: Tree[T])(implicit equals: EqualsFunction[T]) =
+        new Tree(content, Vector(child))
     
-    def apply[T](content: T, firstC: Tree[T], secondC: Tree[T], more: Tree[T]*) = new Tree(content,
-        Vector(firstC, secondC) ++ more)
+    def apply[T](content: T, firstC: Tree[T], secondC: Tree[T], more: Tree[T]*)(implicit equals: EqualsFunction[T]) =
+        new Tree(content, Vector(firstC, secondC) ++ more)
 }
 
 /**
@@ -20,7 +23,8 @@ object Tree
  * @author Mikko Hilpinen
  * @since 1.11.2016
  */
-class Tree[A](var content: A, initialChildren: Vector[Tree[A]] = Vector()) extends TreeLike[A, Tree[A]]
+class Tree[A](var content: A, initialChildren: Vector[Tree[A]] = Vector())(implicit equals: EqualsFunction[A])
+    extends TreeLike[A, Tree[A]]
 {
     // ATTRIBUTES    -----------------
     
@@ -38,7 +42,11 @@ class Tree[A](var content: A, initialChildren: Vector[Tree[A]] = Vector()) exten
     
     // IMPLEMENTED PROPERTIES    -----
     
+    override def repr = this
+    
     def children = _children
+    
+    override def containsDirect(content: A) = equals(this.content, content)
     
     // Creates a new child node and attaches it to this tree
     override protected def newNode(content: A) = {

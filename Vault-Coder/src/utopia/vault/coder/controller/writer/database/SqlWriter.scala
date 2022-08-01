@@ -112,7 +112,7 @@ object SqlWriter
 			}
 			// Finds the next package to target and starts writing classes within that package
 			val (packageName, (writeableClasses, remainingPackageClasses)) = packagesWithInfo
-				.bestMatch(Vector(_._2._2.isEmpty)).maxBy { _._2._1.size }
+				.bestMatch { _._2._2.isEmpty }.maxBy { _._2._1.size }
 			val packageHeader = Name.interpret(packageName, CamelCase.lower).to(Text.allCapitalized).singular
 			writer.println(s"\n--\t$packageHeader\t${"-" * 10}\n")
 			val allRemainingPackageClasses = writePossibleClasses(writer, initialsMap, writeableClasses, references) ++

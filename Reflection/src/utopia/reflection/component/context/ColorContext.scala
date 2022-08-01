@@ -1,5 +1,6 @@
 package utopia.reflection.component.context
 
+import utopia.flow.util.ScopeUsable
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorScheme, ColorSet, ColorShade, ComponentColor}
 import utopia.reflection.localization.Localizer

@@ -64,7 +64,7 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends template.TreeLike[A
       * @param removedContent The content to be removed
       * @return A tree without the specified content
       */
-    def -(removedContent: A) = filterContents { _ != removedContent }
+    def -(removedContent: A) = filterChildren { !_.containsDirect(removedContent) }
     
     
     // OTHER METHODS    -------------
@@ -100,10 +100,10 @@ trait TreeLike[A, NodeType <: TreeLike[A, NodeType]] extends template.TreeLike[A
         path.headOption match {
             case Some(nextStep) =>
                 if (path.size == 1)
-                    mapChildren { c => if (c.content == nextStep) f(c) else c }
+                    mapChildren { c => if (c.containsDirect(nextStep)) f(c) else c }
                 else {
                     val remaining = path.tail
-                    mapChildren { c => if (c.content == nextStep) c.mapPath(remaining)(f) else c }
+                    mapChildren { c => if (c.containsDirect(nextStep)) c.mapPath(remaining)(f) else c }
                 }
             case None => f(repr)
         }
