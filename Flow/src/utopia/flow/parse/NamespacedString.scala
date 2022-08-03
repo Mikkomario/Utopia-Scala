@@ -3,6 +3,8 @@ package utopia.flow.parse
 import utopia.flow.util.{EqualsFunction, Equatable}
 import utopia.flow.util.StringExtensions._
 
+import scala.language.implicitConversions
+
 object NamespacedString
 {
 	/**
@@ -17,6 +19,20 @@ object NamespacedString
 	  * @return A namespaced string
 	  */
 	implicit def autoConvert(local: String)(implicit namespace: Namespace): NamespacedString = apply(local)(namespace)
+	
+	/**
+	 * Parses a namespaced string from a string which may or may not contain a namespace prefix.
+	 * @param string A string which might contain a namespace prefix (e.g. "ns:local")
+	 * @return A namespaced string from that string
+	 */
+	def parseFrom(string: String) = {
+		if (string.contains(':')) {
+			val (nsPart, localPart) = string.splitAtFirst(":")
+			apply(localPart)(Namespace(nsPart))
+		}
+		else
+			apply(string)(Namespace.empty)
+	}
 }
 
 /**

@@ -212,6 +212,13 @@ object CollectionExtensions
 		def caching = CachingIterable.from(i)
 		
 		/**
+		  * Checks whether the specified condition matches none of the items in this collection
+		  * @param f A testing function / condition
+		  * @return Whether the specified function returns false for all items in this collection
+		  */
+		def forNone(f: A => Boolean) = i.iterator.forall { !f(_) }
+		
+		/**
 		  * Checks whether there exists at least 'requiredCount' items in this collection where the specified
 		  * condition 'f' returns true. Compared to .count -function, this function is more optimized since it stops
 		  * counting once the required amount has been reached.

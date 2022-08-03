@@ -53,6 +53,7 @@
   - Added `.lazyMap(...)` and .`lazyFlatMap(...)` which yield a **LazyIterable**, 
     as well as `.caching` which yields a **CachingIterable**
   - Added `.foldLeftIterator(...)` and `.reduceLeftIterator(...)` functions
+  - Added `.forNone(...)`, which is same as `.forAll(...)` with inverted check function
   - Added a number of utility methods for iterables of tries
 - **LocalDate** (**TimeExtensions**)
   - Added `.monthOfYear: Int`
