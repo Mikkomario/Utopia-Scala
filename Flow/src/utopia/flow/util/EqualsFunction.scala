@@ -11,7 +11,7 @@ object EqualsFunction
 	/**
 	  * The default equals function (i.e. ==), which works for any item
 	  */
-	implicit val default: EqualsFunction[Any] = apply { _ == _ }
+	val default: EqualsFunction[Any] = apply { _ == _ }
 	
 	/**
 	  * A case-insensitive string equality function

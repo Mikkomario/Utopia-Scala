@@ -36,7 +36,7 @@
 - Added **CompoundingVectorBuilder** class that allows one to check the current vector state while building
 - Added **MappingCacheView** and **KeyMappingCache** classes, corresponding with new `.mapValuesView(...)` and 
   `.mapKeys(...)` -functions in **CacheLike**
-- Added **EqualsFunction** trait
+- Added **EqualsFunction**, **ApproximatelyEquatable** and **EqualsExtensions** for custom equality testing
 - Added **ScopeUsable** trait (from **Reflection**)
 - Added to- & from- model conversion to **DateRange**
 - Added **ObjectMapFileContainer** class
@@ -84,6 +84,7 @@
 - Optimized json conversion (see breaking changes)
 - `.divideBy(...)` in **IterableOnce** through **CollectionExtensions** now returns collections based on the implicit 
   builder, not always **Vector** types
+- **Pair** now extends **IndexedSeq** and **IndexedSeqOps**
 - **Regex**`.replaceAll` now accepts the replacement parameter as call-by-name
 - **FileContainer** saving now utilizes shutdown hooks to complete the save even on jvm exit
 - **Iterable**`.containsAll(...)` (via **CollectionExtensions**) now accepts an implicit **EqualsFunction** parameter

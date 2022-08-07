@@ -4,6 +4,9 @@ import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
 
 import scala.annotation.switch
+import scala.annotation.unchecked.uncheckedVariance
+import scala.collection.{IndexedSeqOps, mutable}
+import scala.collection.immutable.VectorBuilder
 import scala.language.implicitConversions
 
 object Pair
@@ -46,7 +49,7 @@ object Pair
  * @since 21.9.2021, v1.12
  */
 // Currently cannot extend Reversible because of repr conflict in Iterable
-case class Pair[+A](first: A, second: A) extends Seq[A] // with Reversible[Pair[A]]
+case class Pair[+A](first: A, second: A) extends IndexedSeq[A] with IndexedSeqOps[A, IndexedSeq, IndexedSeq[A]] // with Reversible[Pair[A]]
 {
 	// COMPUTED --------------------------
 	
@@ -99,6 +102,16 @@ case class Pair[+A](first: A, second: A) extends Seq[A] // with Reversible[Pair[
 	override def lastOption = Some(second)
 	
 	override def isEmpty = false
+	
+	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) = Vector.from(coll)
+	
+	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, Vector[A]] = new VectorBuilder[A]()
+	
+	override def empty = Vector.empty[A]
+	
+	protected override def reversed = reverse
+	
+	override def knownSize = 2
 	
 	/**
 	  * @param item An item

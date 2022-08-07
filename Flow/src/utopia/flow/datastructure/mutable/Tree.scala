@@ -23,7 +23,8 @@ object Tree
  * @author Mikko Hilpinen
  * @since 1.11.2016
  */
-class Tree[A](var content: A, initialChildren: Vector[Tree[A]] = Vector())(implicit equals: EqualsFunction[A])
+class Tree[A](var content: A, initialChildren: Vector[Tree[A]] = Vector())
+             (implicit equals: EqualsFunction[A] = EqualsFunction.default)
     extends TreeLike[A, Tree[A]]
 {
     // ATTRIBUTES    -----------------
