@@ -5,6 +5,9 @@ import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.{XmlElement, XmlReader}
 import utopia.flow.time.Now
 import utopia.flow.util.FileExtensions._
+import utopia.flow.util.StringFrom
+
+import java.nio.charset.StandardCharsets
 
 /**
   * Tests xml reading / parsing
@@ -15,9 +18,10 @@ object XmlReadTest extends App
 {
 	DataType.setup()
 	
-	val xml = XmlReader.parseFile("Flow/data/test-data/example.xml").get
+	println(StringFrom.path("Flow/test/test.xml", StandardCharsets.UTF_8).get.takeWhile { _ != '<' }.length)
+	val xml = XmlReader.parseFile("Flow/test/test.xml").get
 	println(xml.toXml)
-	
+	/*
 	val xml2 = xml.mutableCopy()
 	val order = xml2/"FuelFlightLeg"/"Fuel"/"FuelOrder"
 	order.name.namespace.use { implicit ns =>
@@ -34,5 +38,5 @@ object XmlReadTest extends App
 			XmlElement("Acknowledged", true)
 		))
 	}
-	println(mapped.toXml)
+	println(mapped.toXml)*/
 }

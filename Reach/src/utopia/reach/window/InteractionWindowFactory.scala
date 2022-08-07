@@ -32,6 +32,7 @@ import scala.util.Try
   * @author Mikko Hilpinen
   * @since 1.3.2021, v0.1
   */
+// TODO: Should allow for changing buttons
 trait InteractionWindowFactory[A]
 {
 	// ABSTRACT	-----------------------
