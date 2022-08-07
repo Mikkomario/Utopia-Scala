@@ -111,8 +111,7 @@ class OrganizationInvitationsNode(organizationId: Int) extends ExtendableOrganiz
 												session.modelStylePreference.orElse(context.modelStyle),
 												Some(invitation))
 											result.failure.foreach { error =>
-												ExodusContext.handleError(error,
-													"Failed to send an organization invitation")
+												ExodusContext.logger(error, "Failed to send an organization invitation")
 											}
 											result.isSuccess
 										}

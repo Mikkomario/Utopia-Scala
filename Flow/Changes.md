@@ -32,6 +32,7 @@
 - Added **Logger** trait and 2 basic implementations (**SysErrLogger** and **FileLogger**)
 - Added **FromValueFactory** -trait that also provides implicit **Value** unwraps
 - Added **LazyVector**, **LazyIterable** and **CachingIterable** classes for lazy iteration
+- Added **FiniteDuration** and **Days** as new data types to the generic value system
 - Added the **FoldingIterator** class
 - Added **CompoundingVectorBuilder** class that allows one to check the current vector state while building
 - Added **MappingCacheView** and **KeyMappingCache** classes, corresponding with new `.mapValuesView(...)` and 

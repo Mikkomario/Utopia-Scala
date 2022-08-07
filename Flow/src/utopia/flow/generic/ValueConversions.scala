@@ -1,12 +1,13 @@
 package utopia.flow.generic
 
 import utopia.flow.datastructure.immutable.Value
-import java.time.Instant
 
+import java.time.Instant
 import scala.language.implicitConversions
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.LocalDateTime
+import scala.concurrent.duration.FiniteDuration
 
 /**
  * This object offers implicit conversions from basic data types to the valueConvertible trait 
@@ -77,6 +78,11 @@ object ValueConversions
     implicit class ValueOfLocalDateTime(val d: LocalDateTime) extends AnyVal with ValueConvertible
     {
         def toValue = new Value(Some(d), LocalDateTimeType)
+    }
+    
+    implicit class ValueOfDuration(val d: FiniteDuration) extends AnyVal with ValueConvertible
+    {
+        override implicit def toValue: Value = new Value(Some(d), DurationType)
     }
     
     implicit class ValueOfVector[V](val v: Vector[V])(implicit f: V => Value) extends ValueConvertible

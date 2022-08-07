@@ -112,6 +112,7 @@ object ConversionHandler
     private def nodeForType(dataType: DataType) = conversionGraph.getOrElseUpdate(dataType,
         new ConversionNode(dataType))
     
+    // TODO: When multiple routes have equal cost, should check the return routes, also
     private def optimalRouteTo(sourceType: DataType, targetType: DataType) = 
         optimalRoutes.getOrElseUpdate(sourceType -> targetType,
             {

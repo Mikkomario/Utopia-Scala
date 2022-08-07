@@ -1,5 +1,7 @@
 package utopia.flow.time
 
+import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.{DaysType, ValueConvertible}
 import utopia.flow.util.SelfComparable
 
 import java.time.{LocalDate, Period}
@@ -45,7 +47,7 @@ object Days
   * @author Mikko Hilpinen
   * @since 27.6.2021, v1.10
   */
-case class Days(length: Int) extends SelfComparable[Days]
+case class Days(length: Int) extends SelfComparable[Days] with ValueConvertible
 {
 	// COMPUTED -----------------------------
 	
@@ -74,6 +76,8 @@ case class Days(length: Int) extends SelfComparable[Days]
 	override def repr = this
 	
 	override def toString = if (length == 1) "a day" else s"$length days"
+	
+	override implicit def toValue: Value = new Value(Some(this), DaysType)
 	
 	override def compareTo(o: Days) = length.compareTo(o.length)
 	

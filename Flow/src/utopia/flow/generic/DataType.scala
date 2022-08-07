@@ -57,6 +57,14 @@ object LocalTimeType extends DataType("LocalTime", classOf[java.time.LocalTime])
  */
 object LocalDateTimeType extends DataType("LocalDateTime", classOf[java.time.LocalDateTime])
 /**
+  * Duration type represents a length of time, measured in milliseconds (or other such precise unit)
+  */
+object DurationType extends DataType("Duration", classOf[scala.concurrent.duration.FiniteDuration])
+/**
+  * Days type represents a length of time, measured in days
+  */
+object DaysType extends DataType("Days", classOf[utopia.flow.time.Days])
+/**
  * Vector type stands for a vector of values. Only Vectors with exact parameter type of Value
  * are accepted
  */
@@ -91,7 +99,7 @@ object DataType
         {
             isSetup = true
             introduceTypes(AnyType, StringType, IntType, DoubleType, FloatType, LongType, 
-                    BooleanType, InstantType, LocalDateType, LocalTimeType, LocalDateTimeType, 
+                    BooleanType, InstantType, LocalDateType, LocalTimeType, LocalDateTimeType, DurationType, DaysType, 
                     VectorType, ModelType)
             ConversionHandler.addCaster(BasicValueCaster)
         }

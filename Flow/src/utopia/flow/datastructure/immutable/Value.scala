@@ -2,16 +2,17 @@ package utopia.flow.datastructure.immutable
 
 import utopia.flow.datastructure.immutable.Value.emptyWithType
 import utopia.flow.datastructure.template.Node
-import utopia.flow.generic.{AnyType, BooleanType, ConversionHandler, DataType, DataTypeException, DoubleType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, StringType, VectorType}
+import utopia.flow.generic.{AnyType, BooleanType, ConversionHandler, DataType, DataTypeException, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, StringType, VectorType}
 import utopia.flow.parse.JsonValueConverter
 import utopia.flow.parse.JsonConvertible
-import utopia.flow.time.Today
+import utopia.flow.time.{Days, Today}
 import utopia.flow.util.CollectionExtensions._
 
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.LocalDateTime
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object Value
 {
@@ -189,6 +190,14 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
      */
     def localDateTime = objectValue(LocalDateTimeType).map { _.asInstanceOf[LocalDateTime]}
     /**
+      * @return Duration value of this value or None if this value can't be cast into a Duration
+      */
+    def duration = objectValue(DurationType).map { _.asInstanceOf[FiniteDuration] }
+    /**
+      * @return Days value of this value or None if this value can't be cast to days
+      */
+    def days = objectValue(DaysType).map { _.asInstanceOf[Days] }
+    /**
      * The vector value of this value or None if the value can't be casted
      */
     def vector = objectValue(VectorType).map { _.asInstanceOf[Vector[Value]]}
@@ -238,6 +247,11 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
      * The current contents of this value as a local date time or the default value (current time)
      */
     def localDateTimeOr(default: => LocalDateTime = LocalDateTime.now()) = localDateTime.getOrElse(default)
+    /**
+      * @return This value as a duration, or the specified default (default = zero)
+      */
+    def durationOr(default: => FiniteDuration = Duration.Zero) = duration.getOrElse(default)
+    def daysOr(default: => Days = Days.zero) = days.getOrElse(default)
     /**
      * The contents of this value casted to a vector, or if that fails, the default value (empty
      * vector)
@@ -289,6 +303,8 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
       * The current contents of this value as a local date time or current time
       */
     def getLocalDateTime = localDateTimeOr()
+    def getDuration = durationOr()
+    def getDays = daysOr()
     /**
       * The contents of this value casted to a vector, or if that fails, empty value vector
       */
@@ -308,6 +324,8 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
     def tryLocalDate = getTry("LocalDate") { _.localDate }
     def tryLocalTime = getTry("LocalTime") { _.localTime }
     def tryLocalDateTime = getTry("LocalDateTime") { _.localDateTime }
+    def tryDuration = getTry("Duration") { _.duration }
+    def tryDays = getTry("Days") { _.days }
     def tryVector = getTry("Vector[Value]") { _.vector }
     def tryModel = getTry("Model") { _.model }
     
