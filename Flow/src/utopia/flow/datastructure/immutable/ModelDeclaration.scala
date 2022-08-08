@@ -132,7 +132,10 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
      * @param propertyName The name of the property
      * @return the declaration for the property, if one exists
      */
-    def find(propertyName: String) = declarations.find { _.name ~== propertyName }
+    def find(propertyName: String) = {
+        val lowerName = propertyName.toLowerCase
+        declarations.find { _.names.exists { _.toLowerCase == lowerName } }
+    }
     /**
      * @param childName Name of the child property (case-sensitive)
      * @return A child model declaration for that name, if one exists
@@ -162,7 +165,10 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
       * Returns whether this declaration declares a property with the specified name (case-insensitive)
       * @param propertyName Property name
       */
-    def contains(propertyName: String) = declarations.exists { _.name.equalsIgnoreCase(propertyName) }
+    def contains(propertyName: String) = {
+        val lowerName = propertyName.toLowerCase
+        declarations.exists { _.names.exists { _.toLowerCase == lowerName } }
+    }
     /**
      * @param childName Name of the targeted child (case-sensitive)
      * @return Whether this declaration contains a child declaration for that name
@@ -178,7 +184,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
     def isProbablyValid(model: template.Model[Property]) =
     {
         // Checks whether there are any missing or empty required properties
-        declarations.filterNot { _.hasDefault }.forall { declaration => model(declaration.name).isDefined } &&
+        declarations.filterNot { _.hasDefault }.forall { declaration => model(declaration.names).isDefined } &&
             childDeclarations.keys.forall { childName => model.containsNonEmpty(childName) }
     }
     
@@ -192,7 +198,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
     def validate(model: template.Model[Property]): ModelValidationResult =
     {
         // First checks for missing attributes
-        val missing = declarations.filterNot { d => model.containsNonEmpty(d.name) }
+        val missing = declarations.filter { d => d.names.forNone(model.containsNonEmpty) }
         val (missingNonDefaults, missingDefaults) = missing.divideBy { _.defaultValue.isDefined }
         
         // Declarations with default values are replaced with their defaults
@@ -207,15 +213,14 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
             val castFailedBuilder = new VectorBuilder[(Constant, DataType)]()
     
             model.attributesWithValue.foreach { att =>
-                find(att.name) match
-                {
+                find(att.name) match {
                     case Some(declaration) =>
-                        att.value.castTo(declaration.dataType) match
-                        {
+                        att.value.castTo(declaration.dataType) match {
                             // Case: Casting succeeded
-                            case Some(castValue) => castBuilder += Constant(att.name, castValue)
+                            case Some(castValue) => castBuilder += Constant(declaration.name, castValue)
                             // Case: Casting failed
-                            case None => castFailedBuilder += (Constant(att.name, att.value) -> declaration.dataType)
+                            case None =>
+                                castFailedBuilder += (Constant(declaration.name, att.value) -> declaration.dataType)
                         }
                     // Case: No declaration for this property => keeps it (unless it is later used for a child)
                     case None =>
@@ -235,7 +240,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
                 
                 if (emptyValues.nonEmpty)
                     ModelValidationResult.missing(model,
-                        declarations.filter { d => emptyValues.exists { _.name ~== d.name } })
+                        declarations.filter { d => emptyValues.exists { c => d.names.exists { _ ~== c.name } } })
                 else
                 {
                     val resultConstants = keepBuilder.result() ++ castValues ++ missingDefaults.map {

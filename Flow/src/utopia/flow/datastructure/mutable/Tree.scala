@@ -1,7 +1,7 @@
 package utopia.flow.datastructure.mutable
 
 import utopia.flow.datastructure.immutable
-import utopia.flow.util.EqualsFunction
+import utopia.flow.operator.EqualsFunction
 
 object Tree
 {

@@ -2,7 +2,7 @@ package utopia.flow.datastructure.immutable
 
 import utopia.flow.datastructure.immutable.Value.emptyWithType
 import utopia.flow.datastructure.template.Node
-import utopia.flow.generic.{AnyType, BooleanType, ConversionHandler, DataType, DataTypeException, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, StringType, VectorType}
+import utopia.flow.generic.{AnyType, BooleanType, ConversionHandler, DataType, DataTypeException, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
 import utopia.flow.parse.JsonValueConverter
 import utopia.flow.parse.JsonConvertible
 import utopia.flow.time.{Days, Today}
@@ -13,6 +13,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.LocalDateTime
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.util.Try
 
 object Value
 {
@@ -149,186 +150,76 @@ case class Value(content: Option[Any], dataType: DataType) extends Node[Option[A
      */
     def objectValue(ofType: DataType): Option[Any] = withType(ofType).content
     
-    /**
-     * The string value of this value or None if the value can't be casted
-     */
     def string: Option[String] = objectValue(StringType).map { _.asInstanceOf[String]}
-    /**
-     * The integer value of this value or None if the value can't be casted
-     */
     def int: Option[Int] = objectValue(IntType).map { _.asInstanceOf[Int] }
-    /**
-     * The double value of this value or None if the value can't be casted
-     */
     def double: Option[Double] = objectValue(DoubleType).map { _.asInstanceOf[Double]}
-    /**
-     * The float value of this value or None if the value can't be casted
-     */
     def float = objectValue(FloatType).map { _.asInstanceOf[Float]}
-    /**
-     * The long value of this value or None if the value can't be casted
-     */
     def long = objectValue(LongType).map { _.asInstanceOf[Long]}
-    /**
-     * The boolean value of this value or None if the value can't be casted
-     */
     def boolean = objectValue(BooleanType).map { _.asInstanceOf[Boolean]}
-    /**
-     * The instant value of this value or None if the value can't be casted
-     */
     def instant = objectValue(InstantType).map { _.asInstanceOf[Instant]}
-    /**
-     * The local date value of this value or None if the value can't be casted
-     */
     def localDate = objectValue(LocalDateType).map { _.asInstanceOf[LocalDate]}
-    /**
-     * The local time value of this value or None if the value can't be casted
-     */
     def localTime = objectValue(LocalTimeType).map { _.asInstanceOf[LocalTime]}
-    /**
-     * The local date time value of this value or None if the value can't be casted
-     */
     def localDateTime = objectValue(LocalDateTimeType).map { _.asInstanceOf[LocalDateTime]}
-    /**
-      * @return Duration value of this value or None if this value can't be cast into a Duration
-      */
     def duration = objectValue(DurationType).map { _.asInstanceOf[FiniteDuration] }
-    /**
-      * @return Days value of this value or None if this value can't be cast to days
-      */
     def days = objectValue(DaysType).map { _.asInstanceOf[Days] }
-    /**
-     * The vector value of this value or None if the value can't be casted
-     */
     def vector = objectValue(VectorType).map { _.asInstanceOf[Vector[Value]]}
-    /**
-     * The model value of this value or None if the value can't be casted
-     */
+    def pair = objectValue(PairType).map { _.asInstanceOf[Pair[Value]] }
     def model = objectValue(ModelType).map { _.asInstanceOf[Model]}
     
-    /**
-     * The contents of this value casted to a string, or if that fails, the default value
-     */
     def stringOr(default: => String = "") = string.getOrElse(default)
-    /**
-     * The contents of this value casted to an integer, or if that fails, the default value 0
-     */
     def intOr(default: => Int = 0) = int.getOrElse(default)
-    /**
-     * The contents of this value casted to a double, or if that fails, the default value 0
-     */
     def doubleOr(default: => Double = 0) = double.getOrElse(default)
-    /**
-     * The contents of this value casted to a float, or if that fails, the default value 0
-     */
     def floatOr(default: => Float = 0) = float.getOrElse(default)
-    /**
-     * The contents of this value casted to a long, or if that fails, the default value 0
-     */
     def longOr(default: => Long = 0) = long.getOrElse(default)
-    /**
-     * The contents of this value casted to a boolean, or if that fails, the default value false
-     */
     def booleanOr(default: => Boolean = false) = boolean.getOrElse(default)
-    /**
-     * The contents of this value casted to an instant, or if that fails, the default value
-     * (current instant)
-     */
     def instantOr(default: => Instant = Instant.now()) = instant.getOrElse(default)
-    /**
-     * The current contents of this value as a local date or the default value (current date)
-     */
     def localDateOr(default: => LocalDate = Today) = localDate.getOrElse(default)
-    /**
-     * The current contents of this value as a local time or the default value (current time)
-     */
     def localTimeOr(default: => LocalTime = LocalTime.now()) = localTime.getOrElse(default)
-    /**
-     * The current contents of this value as a local date time or the default value (current time)
-     */
     def localDateTimeOr(default: => LocalDateTime = LocalDateTime.now()) = localDateTime.getOrElse(default)
-    /**
-      * @return This value as a duration, or the specified default (default = zero)
-      */
     def durationOr(default: => FiniteDuration = Duration.Zero) = duration.getOrElse(default)
     def daysOr(default: => Days = Days.zero) = days.getOrElse(default)
-    /**
-     * The contents of this value casted to a vector, or if that fails, the default value (empty
-     * vector)
-     */
     def vectorOr(default: => Vector[Value] = Vector[Value]()) = vector.getOrElse(default)
-    /**
-     * The contents of this value casted to a model, or if that fails, the default value (empty
-     * model)
-     */
+    def pairOr(default: => Pair[Value] = Pair.twice(Value.empty)) = pair.getOrElse(default)
     def modelOr(default: => Model = Model.empty) = model.getOrElse(default)
     
-    /**
-      * The contents of this value casted to a string, or if that fails, an empty string
-      */
     def getString = stringOr()
-    /**
-      * The contents of this value casted to an integer, or if that fails, 0
-      */
     def getInt = intOr()
-    /**
-      * The contents of this value casted to a double, or if that fails, 0.0
-      */
     def getDouble = doubleOr()
-    /**
-      * The contents of this value casted to a float, or if that fails, 0
-      */
     def getFloat = floatOr()
-    /**
-      * The contents of this value casted to a long, or if that fails, 0
-      */
     def getLong = longOr()
-    /**
-      * The contents of this value casted to a boolean, or if that fails, false
-      */
     def getBoolean = booleanOr()
-    /**
-      * The contents of this value casted to an instant, or if that fails, current instant
-      */
     def getInstant = instantOr()
-    /**
-      * The current contents of this value as a local date or current date
-      */
     def getLocalDate = localDateOr()
-    /**
-      * The current contents of this value as a local time or current time
-      */
     def getLocalTime = localTimeOr()
-    /**
-      * The current contents of this value as a local date time or current time
-      */
     def getLocalDateTime = localDateTimeOr()
     def getDuration = durationOr()
     def getDays = daysOr()
-    /**
-      * The contents of this value casted to a vector, or if that fails, empty value vector
-      */
     def getVector = vectorOr()
-    /**
-      * The contents of this value casted to a model, or if that fails, empty model
-      */
+    def getPair = pairOr()
     def getModel = modelOr()
     
-    def trySting = getTry("String") { _.string }
-    def tryInt = getTry("Int") { _.int }
-    def tryDouble = getTry("Double") { _.double }
-    def tryFloat = getTry("Float") { _.float }
-    def tryLong = getTry("Long") { _.long }
-    def tryBoolean = getTry("Boolean") { _.boolean }
-    def tryInstant = getTry("Instant") { _.instant }
-    def tryLocalDate = getTry("LocalDate") { _.localDate }
-    def tryLocalTime = getTry("LocalTime") { _.localTime }
-    def tryLocalDateTime = getTry("LocalDateTime") { _.localDateTime }
-    def tryDuration = getTry("Duration") { _.duration }
-    def tryDays = getTry("Days") { _.days }
-    def tryVector = getTry("Vector[Value]") { _.vector }
-    def tryModel = getTry("Model") { _.model }
+    def trySting = getTry(string)("String")
+    def tryInt = getTry(int)("Int")
+    def tryDouble = getTry(double)("Double")
+    def tryFloat = getTry(float)("Float")
+    def tryLong = getTry(long)("Long")
+    def tryBoolean = getTry(boolean)("Boolean")
+    def tryInstant = getTry(instant)("Instant")
+    def tryLocalDate = getTry(localDate)("LocalDate")
+    def tryLocalTime = getTry(localTime)("LocalTime")
+    def tryLocalDateTime = getTry(localDateTime)("LocalDateTime")
+    def tryDuration = getTry(duration)("Duration")
+    def tryDays = getTry(days)("Days")
+    def tryVector = getTry(vector)("Vector[Value]")
+    def tryPair = getTry(pair)("Pair")
+    def tryModel = getTry(model)("Model")
     
-    private def getTry[A](dataType: => String)(f: Value => Option[A]) =
-        f(this).toTry { DataTypeException(s"Can't cast $description to $dataType") }
+    def tryVectorWith[A](f: Value => Try[A]) = tryVector.flatMap { _.tryMap(f) }
+    def tryPairWith[A](f: Value => Try[A]) =
+        tryPair.flatMap { p => f(p.first).flatMap { first => f(p.second).map { Pair(first, _) } } }
+    def tryTupleWith[F, S](first: Value => Try[F])(second: Value => Try[S]): Try[(F, S)] =
+        tryPair.flatMap { p => first(p.first).flatMap { f => second(p.second).map { f -> _ } } }
+    
+    private def getTry[A](value: Option[A])(dataType: => String) =
+        value.toTry { DataTypeException(s"Can't cast $description to $dataType") }
 }

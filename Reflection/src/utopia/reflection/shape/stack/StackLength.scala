@@ -1,6 +1,6 @@
 package utopia.reflection.shape.stack
 
-import utopia.flow.util.Equatable
+import utopia.flow.operator.Equatable
 import utopia.flow.util.CollectionExtensions._
 import utopia.reflection.shape.stack.LengthPriority.{Expanding, Low, Normal, Shrinking}
 

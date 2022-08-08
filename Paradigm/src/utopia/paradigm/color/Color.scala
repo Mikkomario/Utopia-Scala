@@ -1,10 +1,13 @@
 package utopia.paradigm.color
 
+import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.mutable.Pointer
-import utopia.flow.util.ApproximatelyEquatable
-import utopia.flow.util.EqualsExtensions._
+import utopia.flow.generic.ValueConvertible
+import utopia.flow.operator.ApproximatelyEquatable
+import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.RgbChannel
+import utopia.paradigm.generic.ColorType
 
 import scala.language.implicitConversions
 import scala.util.Try
@@ -186,8 +189,8 @@ object Color
   * @author Mikko Hilpinen
   * @since Genesis 24.4.2019, v1+
   */
-case class Color private(private val data: Either[Hsl, Rgb], alpha: Double) extends RgbLike[Color] with HslLike[Color]
-	with ApproximatelyEquatable[Color]
+case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
+	extends RgbLike[Color] with HslLike[Color] with ApproximatelyEquatable[Color] with ValueConvertible
 {
 	// ATTRIBUTES	----------------------
 	
@@ -238,6 +241,8 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double) exte
 	
 	
 	// IMPLEMENTED	----------------------
+	
+	override implicit def toValue: Value = new Value(Some(this), ColorType)
 	
 	override def ~==(other: Color) =
 	{

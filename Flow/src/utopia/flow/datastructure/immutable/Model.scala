@@ -1,7 +1,6 @@
 package utopia.flow.datastructure.immutable
 
 import utopia.flow.datastructure.template
-import utopia.flow.util.Equatable
 import utopia.flow.generic.SimpleConstantGenerator
 import utopia.flow.generic.PropertyGenerator
 import utopia.flow.datastructure.mutable
@@ -9,6 +8,7 @@ import utopia.flow.datastructure.mutable.Variable
 import utopia.flow.generic.SimpleVariableGenerator
 import utopia.flow.generic.ValueConvertible
 import utopia.flow.generic.ModelType
+import utopia.flow.operator.Equatable
 
 object Model
 {

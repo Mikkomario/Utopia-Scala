@@ -14,6 +14,7 @@ import scala.collection.immutable.VectorBuilder
   * @author Mikko Hilpinen
   * @since Genesis 14.4.2019, v2+
   */
+// TODO: Handle cases where there are 0 corners
 trait Polygonic extends ShapeConvertible with Projectable with Area2D with Transformable[Polygonic] with Bounded
 {
 	// ABSTRACT	----------------

@@ -1,16 +1,21 @@
 package utopia.paradigm.shape.shape2d
 
-import utopia.flow.datastructure.immutable.Pair
+import utopia.flow.datastructure.immutable.{Model, Pair, Value}
+import utopia.flow.datastructure.template
+import utopia.flow.datastructure.template.Property
+import utopia.flow.generic.{ModelConvertible, SureFromModelFactory, ValueConvertible}
+import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions.RichSeqLike
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.generic.Vector2DType
 import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.shape.shape3d.Vector3D
 
 import scala.concurrent.duration.Duration
 
-object Vector2D
+object Vector2D extends SureFromModelFactory[Vector2D]
 {
 	// ATTRIBUTES	---------------------------
 	
@@ -26,6 +31,12 @@ object Vector2D
 	  * A (1,0) vector
 	  */
 	val unit = Vector2D(1)
+	
+	
+	// IMPLEMENTED  --------------------------
+	
+	override def parseFrom(model: template.Model[Property]) =
+		apply(model("x").getDouble, model("y").getDouble)
 	
 	
 	// OTHER	------------------------------
@@ -60,7 +71,8 @@ object Vector2D
   * @author Mikko Hilpinen
   * @since Genesis 14.7.2020, v2.3
   */
-case class Vector2D(override val dimensions2D: Pair[Double]) extends Vector2DLike[Vector2D] with TwoDimensional[Double]
+case class Vector2D(override val dimensions2D: Pair[Double])
+	extends Vector2DLike[Vector2D] with TwoDimensional[Double] with ValueConvertible with ModelConvertible
 {
 	// COMPUTED	---------------------------------
 	
@@ -86,6 +98,10 @@ case class Vector2D(override val dimensions2D: Pair[Double]) extends Vector2DLik
 	// IMPLEMENTED	-----------------------------
 	
 	override def in2D = this
+	
+	override implicit def toValue: Value = new Value(Some(this), Vector2DType)
+	
+	override def toModel = Model.from("x" -> x, "y" -> y)
 	
 	override def buildCopy(vector: Vector2D) = vector
 	

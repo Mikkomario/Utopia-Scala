@@ -2,6 +2,7 @@ package utopia.flow.datastructure.template
 
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.parse.JsonConvertible
+import utopia.flow.util.CollectionExtensions._
 
 /**
  * Models are used for storing named values
@@ -108,13 +109,22 @@ trait Model[+Attribute <: Property] extends MapLike[String, Value] with JsonConv
     /**
       * Finds an attribute value in this model, possibly searching from alternative properties.
       * May generate one or more new attributes.
+      * @param attNames Names of the targeted attributes (ordered)
+      * @return The first attribute value which was non-empty. Empty value if all searches resulted in empty values.
+      */
+    def apply(attNames: IterableOnce[String]): Value =
+        attNames.iterator.map(apply).find { _.isDefined }.getOrElse(Value.empty)
+    
+    /**
+      * Finds an attribute value in this model, possibly searching from alternative properties.
+      * May generate one or more new attributes.
       * @param attName Name of the primary target attribute
       * @param secondaryAttName Name of the secondary target attribute
       * @param moreAttNames Name of the additional backup attributes
       * @return The first attribute value which was non-empty. Empty value if all searches resulted in empty values.
       */
     def apply(attName: String, secondaryAttName: String, moreAttNames: String*): Value =
-        (Vector(attName, secondaryAttName) ++ moreAttNames).view.map(apply).find { _.isDefined }.getOrElse(Value.empty)
+        apply(Vector(attName, secondaryAttName) ++ moreAttNames)
     
     /**
      * Finds an existing attribute from this model. No new attributes will be generated
@@ -123,6 +133,7 @@ trait Model[+Attribute <: Property] extends MapLike[String, Value] with JsonConv
      * exists
      */
     def findExisting(attName: String) = attributeMap.get(attName.toLowerCase())
+    def findExisting(attNames: IterableOnce[String]): Option[Attribute] = attNames.findMap(findExisting)
     
     /**
      * Finds an attribute from this model. Generating one if necessary.

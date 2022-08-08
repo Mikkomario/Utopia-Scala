@@ -2,7 +2,7 @@ package utopia.flow.generic
 
 import utopia.flow.datastructure.template.Property
 import utopia.flow.datastructure.immutable.Value
-import utopia.flow.util.Equatable
+import utopia.flow.operator.Equatable
 
 /**
  * This is a simple implementation of a property generator trait. The generator uses a default 

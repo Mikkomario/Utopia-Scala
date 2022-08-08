@@ -1,6 +1,7 @@
 package utopia.flow.test.datastructure
 
 import utopia.flow.datastructure.mutable.Tree
+import utopia.flow.operator.EqualsFunction
 import utopia.flow.util.CollectionExtensions._
 
 /**
@@ -10,6 +11,8 @@ import utopia.flow.util.CollectionExtensions._
  */
 object TreeNodeTest extends App
 {
+	implicit val equals: EqualsFunction[Any] = EqualsFunction.default
+	
 	private def basicCheck(tree: utopia.flow.datastructure.template.TreeLike[_, _]) =
 	{
 		assert(tree.children.size == 2)

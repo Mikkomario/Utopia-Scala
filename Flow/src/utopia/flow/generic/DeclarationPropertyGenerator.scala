@@ -3,7 +3,7 @@ package utopia.flow.generic
 import utopia.flow.datastructure.template.Property
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.immutable.ModelDeclaration
-import utopia.flow.util.Equatable
+import utopia.flow.operator.Equatable
 
 /**
  * This property generator implementation uses a model declaration when creating new properties

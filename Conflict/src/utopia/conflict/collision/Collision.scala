@@ -1,6 +1,6 @@
 package utopia.conflict.collision
 
-import utopia.flow.util.Equatable
+import utopia.flow.operator.Equatable
 import utopia.genesis.shape.shape2D.transform.{AffineTransformable, LinearTransformable}
 import utopia.genesis.shape.shape2D.{Matrix2D, Point, Vector2D}
 import utopia.genesis.shape.shape3D.Matrix3D

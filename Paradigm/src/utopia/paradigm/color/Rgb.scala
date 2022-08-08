@@ -1,15 +1,21 @@
 package utopia.paradigm.color
 
-import utopia.flow.util.ApproximatelyEquatable
-import utopia.flow.util.EqualsExtensions._
+import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.datastructure.template
+import utopia.flow.datastructure.template.Property
+import utopia.flow.generic.{ModelConvertible, SureFromModelFactory, ValueConvertible}
+import utopia.flow.generic.ValueConversions._
+import utopia.flow.operator.ApproximatelyEquatable
+import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.RgbChannel
 import utopia.paradigm.enumeration.RgbChannel.{Blue, Green, Red}
+import utopia.paradigm.generic.RgbType
 
 import scala.collection.immutable.HashMap
 import scala.language.implicitConversions
 
-object Rgb
+object Rgb extends SureFromModelFactory[Rgb]
 {
 	// ATTRIBUTES	-------------------
 	
@@ -17,6 +23,11 @@ object Rgb
 	  * Maximum for 'value'
 	  */
 	val maxValue = 255
+	
+	/**
+	  * Black RGB color (0, 0, 0)
+	  */
+	val black = apply(0, 0, 0)
 	
 	
 	// IMPLICIT	-----------------------
@@ -27,6 +38,21 @@ object Rgb
 	  * @return A color
 	  */
 	implicit def rgbToColor(rgb: Rgb): Color = Color(Right(rgb), 1.0)
+	
+	
+	// IMPLEMENTED  -------------------
+	
+	override def parseFrom(model: template.Model[Property]) = {
+		val r = model("red", "r").getDouble
+		val g = model("green", "g").getDouble
+		val b = model("blue", "b").getDouble
+		// The values may be specified in either 0-1 range (default) or 0-255 range
+		// Expects all to be listed in the same range system
+		if (Vector(r, g, b).exists { _ > 1 })
+			withValues(r.toInt, g.toInt, b.toInt)
+		else
+			apply(r, g, b)
+	}
 	
 	
 	// OPERATORS	-------------------
@@ -57,14 +83,12 @@ object Rgb
 	  * @return A new RGB Color
 	  */
 	def red(ratio: Double) = Rgb(Red, ratio)
-	
 	/**
 	  * Creates a green color
 	  * @param ratio Ratio / saturation [0, 1]
 	  * @return A new RGB Color
 	  */
 	def green(ratio: Double) = Rgb(Green, ratio)
-	
 	/**
 	  * Creates a blue color
 	  * @param ratio Ratio / saturation [0, 1]
@@ -118,15 +142,14 @@ object Rgb
   * @since Genesis 24.4.2019, v1+
   */
 case class Rgb private(override val ratios: Map[RgbChannel, Double])
-	extends RgbLike[Rgb] with ApproximatelyEquatable[RgbLike[_]]
+	extends RgbLike[Rgb] with ApproximatelyEquatable[RgbLike[_]] with ValueConvertible with ModelConvertible
 {
 	// COMPUTED	------------------------
 	
 	/**
 	  * @return A HSL representation of this RGB color
 	  */
-	def toHSL =
-	{
+	def toHSL = {
 		val r = red
 		val g = green
 		val b = blue
@@ -161,8 +184,23 @@ case class Rgb private(override val ratios: Map[RgbChannel, Double])
 		Hsl(Angle.ofDegrees(hue), saturation, luminosity)
 	}
 	
+	/**
+	  * @return A vector that contains the red, green and blue ratios of this RGB, in that order,
+	  *         where each value is between 0 and 1
+	  */
+	def toVector = Vector(red, green, blue)
+	/**
+	  * @return A vector that contains the red, green and blue values of this RGB, in that order,
+	  *         where each value is between 0 and 255
+	  */
+	def valuesVector = Vector(redValue, greenValue, blueValue)
+	
 	
 	// IMPLEMENTED	--------------------
+	
+	override implicit def toValue: Value = new Value(Some(this), RgbType)
+	
+	override def toModel = Model.from("red" -> red, "green" -> green, "blue" -> blue)
 	
 	override def ~==(other: RgbLike[_]) = RgbChannel.values.forall { c => ratio(c) ~== other.ratio(c) }
 	

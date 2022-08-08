@@ -18,7 +18,9 @@
   - Altered the tuple constructor variant and renamed it to `.from(...)`
   - `--` now accepts a collection of keys, not constants
     - The previous implementation is available as `.withoutAttributes(...)`
+- **Tree** implementations now require an implicit **EqualsFunction** parameter
 - **TreeLike** now requires a new function `.containsDirect(...)` in order to support custom equality testing
+- Moved **Equatable** to `utopia.flow.operator`
 - **Iterable**`.bestMatch(...)` may cause a build error, due to new function variants
 - **JsonConvertible** now requires implementation of `appendToJson(StringBuilder): Unit`
   - Please notice that all existing implementations have been modified to include this function, so this should be 
@@ -32,12 +34,14 @@
 - Added **Logger** trait and 2 basic implementations (**SysErrLogger** and **FileLogger**)
 - Added **FromValueFactory** -trait that also provides implicit **Value** unwraps
 - Added **LazyVector**, **LazyIterable** and **CachingIterable** classes for lazy iteration
-- Added **FiniteDuration** and **Days** as new data types to the generic value system
+- Added **Pair**, **FiniteDuration** and **Days** as new data types to the generic value system
+- PropertyDeclarations and model validating now support alternative property names
 - Added the **FoldingIterator** class
 - Added **CompoundingVectorBuilder** class that allows one to check the current vector state while building
 - Added **MappingCacheView** and **KeyMappingCache** classes, corresponding with new `.mapValuesView(...)` and 
   `.mapKeys(...)` -functions in **CacheLike**
-- Added **EqualsFunction**, **ApproximatelyEquatable** and **EqualsExtensions** for custom equality testing
+- Added **EqualsFunction**, **ApproximatelyEquatable**, **EqualsExtensions** and **ApproximatelyZeroable** for custom 
+  equality testing
 - Added **ScopeUsable** trait (from **Reflection**)
 - Added to- & from- model conversion to **DateRange**
 - Added **ObjectMapFileContainer** class
@@ -45,6 +49,8 @@
 ### New Methods
 - **Constant**
   - Added `.mapValue(...)`
+- **Duration** (**TimeExtensions**)
+  - Added `.isInfinite`
 - **Iterable** (**CollectionExtensions**)
   - Added `.areAllEqual: Boolean`
   - Added `.maxGroupBy(...)`
@@ -75,6 +81,8 @@
   - Added `.replaceAll(Regex, => String)`
 - **TreeLike**
   - Added `.apply(...)` which acts like / but supports multiple parameters (i.e. a path)
+- **Value**
+  - Added `.tryVectorWith(...)`, `.tryPairWith(...)` and `.tryTupleWith(...)(...)`
 ### Bugfixes
 - **TreeLike**`.nodesBelowIterator` now works as expected. The previous version (in v1.15) yielded an empty iterator, 
   causing problems in multiple dependent functions

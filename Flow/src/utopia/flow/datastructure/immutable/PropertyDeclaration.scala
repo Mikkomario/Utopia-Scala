@@ -7,12 +7,33 @@ object PropertyDeclaration
     /**
       * Creates a new declaration
       * @param name Property name
+      * @param alternativeNames Alternative names for this property
       * @param dataType Property data type (primary)
       * @param defaultValue The default value set for the property (default = None)
       * @return A new property declaration
       */
-    def apply(name: String, dataType: DataType, defaultValue: Option[Value]): PropertyDeclaration =
-        PropertyDeclarationImpl(name, dataType, defaultValue)
+    def apply(name: String, alternativeNames: Vector[String], dataType: DataType, defaultValue: Option[Value]): PropertyDeclaration =
+        PropertyDeclarationImpl(name, alternativeNames, dataType, defaultValue)
+    
+    /**
+      * Creates a new declaration
+      * @param name Property name
+      * @param alternativeNames Alternative names for this property
+      * @param defaultValue The default value set for the property
+      * @return A new property declaration
+      */
+    def apply(name: String, alternativeNames: Vector[String], defaultValue: Value): PropertyDeclaration =
+        apply(name, alternativeNames, defaultValue.dataType, Some(defaultValue))
+    
+    /**
+      * Creates a new declaration
+      * @param name Property name
+      * @param alternativeNames Alternative names for this property
+      * @param dataType Property data type (primary)
+      * @return A new property declaration
+      */
+    def apply(name: String, alternativeNames: Vector[String], dataType: DataType): PropertyDeclaration =
+        apply(name, alternativeNames, dataType, None)
     
     /**
       * Creates a new declaration
@@ -21,8 +42,8 @@ object PropertyDeclaration
       * @param defaultValue The default value set for the property
       * @return A new property declaration
       */
-    def apply(name: String, dataType: DataType, defaultValue: Value): PropertyDeclaration = apply(name, dataType,
-        Some(defaultValue))
+    def apply(name: String, dataType: DataType, defaultValue: Value): PropertyDeclaration =
+        apply(name, Vector(), dataType, Some(defaultValue))
     
     /**
       * Creates a new declaration
@@ -30,7 +51,7 @@ object PropertyDeclaration
       * @param dataType Property data type (primary)
       * @return A new property declaration
       */
-    def apply(name: String, dataType: DataType): PropertyDeclaration = apply(name, dataType, None)
+    def apply(name: String, dataType: DataType): PropertyDeclaration = apply(name, Vector(), dataType, None)
     
     /**
       * Creates a new declaration
@@ -39,6 +60,13 @@ object PropertyDeclaration
       * @return A new property declaration
       */
     def apply(name: String, defaultValue: Value): PropertyDeclaration = apply(name, defaultValue.dataType, defaultValue)
+    
+    
+    // NESTED   ----------------------
+    
+    private case class PropertyDeclarationImpl(override val name: String, override val alternativeNames: Vector[String],
+                                               override val dataType: DataType,
+                                               override val defaultValue: Option[Value]) extends PropertyDeclaration
 }
 
 /**
@@ -55,6 +83,10 @@ trait PropertyDeclaration extends Equals
       */
     def name: String
     /**
+      * @return Alternative names for this property
+      */
+    def alternativeNames: Vector[String]
+    /**
       * @return Primary data type for the value in this property
       */
     def dataType: DataType
@@ -62,6 +94,14 @@ trait PropertyDeclaration extends Equals
       * @return A default value for this property
       */
     def defaultValue: Option[Value]
+    
+    
+    // COMPUTED ----------------------
+    
+    /**
+      * @return All name variations of the declared property
+      */
+    def names = name +: alternativeNames
     
     
     // IMPLEMENTED  ------------------
@@ -77,6 +117,3 @@ trait PropertyDeclaration extends Equals
       */
     def hasDefault = defaultValue.isDefined
 }
-
-private case class PropertyDeclarationImpl(override val name: String, override val dataType: DataType,
-                                           override val defaultValue: Option[Value]) extends PropertyDeclaration

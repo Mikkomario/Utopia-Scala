@@ -1,10 +1,13 @@
 package utopia.paradigm.angular
 
+import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.ValueConvertible
 import utopia.flow.operator.{Combinable, LinearScalable}
 import utopia.flow.util.SelfComparable
-import utopia.flow.util.EqualsExtensions._
+import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
+import utopia.paradigm.generic.AngleType
 
 object Angle
 {
@@ -121,7 +124,7 @@ object Angle
  * @since Genesis 30.6.2017
  */
 case class Angle private(radians: Double)
-    extends LinearScalable[Angle] with Combinable[Angle, Rotation] with SelfComparable[Angle]
+    extends LinearScalable[Angle] with Combinable[Angle, Rotation] with SelfComparable[Angle] with ValueConvertible
 {
     // ATTRIBUTES    ------------------
     
@@ -185,6 +188,8 @@ case class Angle private(radians: Double)
     // IMPLEMENTED  ------------------
     
     override def repr = this
+    
+    override implicit def toValue: Value = new Value(Some(this), AngleType)
     
     override def toString = f"$degrees%1.2f degrees"
     

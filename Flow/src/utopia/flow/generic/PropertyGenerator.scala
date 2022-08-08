@@ -2,7 +2,7 @@ package utopia.flow.generic
 
 import utopia.flow.datastructure.template.Property
 import utopia.flow.datastructure.immutable.Value
-import utopia.flow.util.Equatable
+import utopia.flow.operator.Equatable
 
 /**
  * Property generators are used for generating properties of different types

@@ -26,7 +26,6 @@ trait Zeroable[+Repr] extends Any
 	  * @return Whether this item is not of zero length
 	  */
 	def nonZero = !isZero
-	
 	/**
 	  * @return This item if not zero. None otherwise.
 	  */

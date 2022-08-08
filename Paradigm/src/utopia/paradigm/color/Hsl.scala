@@ -1,13 +1,27 @@
 package utopia.paradigm.color
 
-import utopia.flow.util.ApproximatelyEquatable
-import utopia.flow.util.EqualsExtensions._
+import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, PropertyDeclaration, Value}
+import utopia.flow.generic.{DoubleType, FromModelFactoryWithSchema, ModelConvertible, ValueConvertible}
+import utopia.flow.generic.ValueConversions._
+import utopia.flow.operator.ApproximatelyEquatable
+import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.Angle
+import utopia.paradigm.generic.{AngleType, HslType}
+import utopia.paradigm.generic.ParadigmValue._
 
 import scala.language.implicitConversions
 
-object Hsl
+object Hsl extends FromModelFactoryWithSchema[Hsl]
 {
+	// ATTRIBUTES   ----------------
+	
+	override val schema = ModelDeclaration(Vector(
+		PropertyDeclaration("hue", Vector("h"), AngleType),
+		PropertyDeclaration("saturation", Vector("s"), DoubleType),
+		PropertyDeclaration("luminosity", Vector("luminance", "l"), DoubleType)
+	))
+	
+	
 	// IMPLICIT	--------------------
 	
 	/**
@@ -16,6 +30,12 @@ object Hsl
 	  * @return A color
 	  */
 	implicit def hslToColor(hsl: Hsl): Color = Color(Left(hsl), 1.0)
+	
+	
+	// IMPLEMENTED  ----------------
+	
+	override protected def fromValidatedModel(model: Model) =
+		apply(model("hue").getAngle, model("saturation").getDouble, model("luminosity").getDouble)
 	
 	
 	// OPERATORS	----------------
@@ -45,7 +65,7 @@ object Hsl
   * @param luminosity Color luminosity [0, 1] where 0 is black and 1 is white
   */
 case class Hsl private(override val hue: Angle, override val saturation: Double, override val luminosity: Double)
-	extends HslLike[Hsl] with ApproximatelyEquatable[HslLike[_]]
+	extends HslLike[Hsl] with ApproximatelyEquatable[HslLike[_]] with ValueConvertible with ModelConvertible
 {
 	// COMPUTED	------------------
 	
@@ -76,6 +96,10 @@ case class Hsl private(override val hue: Angle, override val saturation: Double,
 	
 	
 	// IMPLEMENTED	--------------
+	
+	override implicit def toValue: Value = new Value(Some(this), HslType)
+	
+	override def toModel = Model.from("hue" -> hue, "saturation" -> saturation, "luminosity" -> luminosity)
 	
 	/**
 	  * Checks whether the two instances are approximately equal

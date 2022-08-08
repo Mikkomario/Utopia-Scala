@@ -57,6 +57,8 @@ case class Column(propertyName: String, columnName: String, tableName: String, o
     
     def name = propertyName
     
+    override def alternativeNames = Vector(columnName)
+    
     override def toString = s"$columnName $dataType ${ if (isPrimary) "PRIMARY KEY " else ""} ${
         if (usesAutoIncrement) "AUTO_INCREMENT " else ""}"
     

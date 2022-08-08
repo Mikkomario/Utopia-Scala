@@ -1,20 +1,34 @@
 package utopia.paradigm.motion.motion3d
 
+import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.ValueConvertible
 import utopia.flow.time.TimeExtensions._
+import utopia.paradigm.generic.Velocity3DType
+import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.paradigm.motion.motion2d.Velocity2D
-import utopia.paradigm.motion.template.VelocityLike
+import utopia.paradigm.motion.template.{ChangeFromModelFactory, ModelConvertibleChange, VelocityLike}
 import utopia.paradigm.shape.shape3d.{ThreeDimensional, Vector3D}
 import utopia.paradigm.shape.template.{Dimensional, VectorLike}
 
 import scala.concurrent.duration.{Duration, TimeUnit}
 
-object Velocity3D
+object Velocity3D extends ChangeFromModelFactory[Velocity3D, Vector3D]
 {
+	// ATTRIBUTES   ------------------------
+	
 	/**
 	  * A zero velocity
 	  */
 	val zero = Velocity3D(Vector3D.zero, 1.seconds)
+	
+	
+	// IMPLEMENTED  -----------------------
+	
+	override protected def amountFromValue(value: Value) = value.tryVector3D
+	
+	
+	// OTHER    ---------------------------
 	
 	/**
 	  * @param amount Distance vector traversed in 1 time unit
@@ -39,8 +53,9 @@ object Velocity3D
   * @param transition The amount of transition over 'duration'
   * @param duration The duration of change
   */
-case class Velocity3D(transition: Vector3D, override val duration: Duration) extends VelocityLike[Vector3D, Velocity3D]
-	with ThreeDimensional[LinearVelocity]
+case class Velocity3D(transition: Vector3D, override val duration: Duration)
+	extends VelocityLike[Vector3D, Velocity3D] with ModelConvertibleChange[Vector3D, Velocity3D]
+		with ThreeDimensional[LinearVelocity] with ValueConvertible
 {
 	// ATTRIBUTES   -------------
 	
@@ -59,6 +74,9 @@ case class Velocity3D(transition: Vector3D, override val duration: Duration) ext
 	// IMPLEMENTED	-------------
 	
 	override protected def zeroTransition = Vector3D.zero
+	override protected def zeroAmount = zeroTransition
+	
+	override implicit def toValue: Value = new Value(Some(this), Velocity3DType)
 	
 	override protected def buildCopy(transition: Vector3D, duration: Duration) = copy(transition, duration)
 	

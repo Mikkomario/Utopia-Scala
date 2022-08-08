@@ -245,6 +245,11 @@ object TimeExtensions
 		// COMPUTED -------------------------------
 		
 		/**
+		  * @return Whether this duration is an infinite duration
+		  */
+		def isInfinite = !d.isFinite
+		
+		/**
 		  * @return A finite version of this duration. None for infinite durations.
 		  */
 		def finite = if (d.isFinite) Some(FiniteDuration(d.length, d.unit)) else None

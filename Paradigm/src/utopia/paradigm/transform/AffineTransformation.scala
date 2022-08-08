@@ -1,14 +1,21 @@
 package utopia.paradigm.transform
 
-import utopia.flow.util.ApproximatelyEquatable
+import utopia.flow.datastructure.immutable
+import utopia.flow.datastructure.immutable.{Constant, Value}
+import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.generic.{ModelConvertible, SureFromModelFactory, ValueConvertible}
+import utopia.flow.generic.ValueConversions._
+import utopia.flow.operator.ApproximatelyEquatable
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.transform.{AnimatedAffineTransformable, AnimatedAffineTransformation, AnimatedLinearTransformable}
+import utopia.paradigm.generic.AffineTransformationType
+import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.shape2d.{Matrix2D, Point, Vector2D, Vector2DLike}
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.shape.template.Dimensional
 
-object AffineTransformation
+object AffineTransformation extends SureFromModelFactory[AffineTransformation]
 {
     // ATTRIBUTES   --------------------------
     
@@ -16,6 +23,12 @@ object AffineTransformation
       * An identity transformation which doesn't have any effect
       */
     val identity = apply(Vector2D.zero, LinearTransformation.identity)
+    
+    
+    // IMPLEMENTED  --------------------------
+    
+    override def parseFrom(model: Model[Property]) =
+        apply(model("translation", "position").getVector2D, LinearTransformation.parseFrom(model))
     
     
     // OTHER    ------------------------------
@@ -48,7 +61,7 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
     extends LinearTransformationLike[AffineTransformation] with JavaAffineTransformConvertible
         with AffineTransformable[Matrix3D] with ApproximatelyEquatable[AffineTransformation]
         with LinearTransformable[Matrix3D] with AnimatedLinearTransformable[AnimatedAffineTransformation]
-        with AnimatedAffineTransformable[AnimatedAffineTransformation]
+        with AnimatedAffineTransformable[AnimatedAffineTransformation] with ValueConvertible with ModelConvertible
 {
     // ATTRIBUTES   -----------------
     
@@ -73,23 +86,13 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
     
     // IMPLEMENTED  -----------------
     
-    override def toString =
-    {
-        if (translation.nonZero)
-        {
-            val translationSegment = s"Translation $translation"
-            if (linear.isIdentity)
-                translationSegment
-            else
-                s"$translationSegment & $linear"
-        }
-        else
-            linear.toString
-    }
-    
     override def scaling = linear.scaling
     
     override def shear = linear.shear
+    
+    override implicit def toValue: Value = new Value(Some(this), AffineTransformationType)
+    
+    override def toModel: immutable.Model = linear.toModel + Constant("translation", translation)
     
     override protected def buildCopy(scaling: Vector2D, rotation: Rotation, shear: Vector2D) =
         copy(linear = LinearTransformation(scaling, rotation, shear))

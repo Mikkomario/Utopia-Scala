@@ -1,16 +1,23 @@
 package utopia.paradigm.transform
 
-import utopia.flow.util.ApproximatelyEquatable
+import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.datastructure.template
+import utopia.flow.datastructure.template.Property
+import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.{ModelConvertible, SureFromModelFactory, ValueConvertible}
+import utopia.flow.operator.ApproximatelyEquatable
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.transform.{AnimatedAffineTransformable, AnimatedAffineTransformation, AnimatedLinearTransformable, AnimatedLinearTransformation}
+import utopia.paradigm.generic.LinearTransformationType
+import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2D}
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.shape.template.Dimensional
 
 import scala.collection.immutable.VectorBuilder
 
-object LinearTransformation
+object LinearTransformation extends SureFromModelFactory[LinearTransformation]
 {
     // ATTRIBUTES   -----------------------------
     
@@ -18,6 +25,12 @@ object LinearTransformation
       * Identity transformation which doesn't have any effect
       */
     val identity = apply()
+    
+    
+    // IMPLEMENTED  -----------------------------
+    
+    override def parseFrom(model: template.Model[Property]) =
+        apply(model("scaling").vector2DOr(Vector2D.identity), model("rotation").getRotation, model("shear").getVector2D)
     
     
     // OTHER    ---------------------------------
@@ -54,6 +67,7 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity, rotation:
     with JavaAffineTransformConvertible with LinearTransformable[Matrix2D] with AffineTransformable[Matrix3D]
     with AnimatedLinearTransformable[AnimatedLinearTransformation]
     with AnimatedAffineTransformable[AnimatedAffineTransformation] with ApproximatelyEquatable[LinearTransformation]
+    with ValueConvertible with ModelConvertible
 {
     // ATTRIBUTES   -----------------
     
@@ -105,6 +119,10 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity, rotation:
         
         segments.result().reduceOption { _ + " & " + _ }.getOrElse("Identity transform")
     }
+    
+    override implicit def toValue: Value = new Value(Some(this), LinearTransformationType)
+    
+    override def toModel = Model.from("scaling" -> scaling, "rotation" -> rotation, "shear" -> shear)
     
     override protected def buildCopy(scaling: Vector2D, rotation: Rotation, shear: Vector2D) =
         LinearTransformation(scaling, rotation, shear)

@@ -1,6 +1,6 @@
-package utopia.flow.util
+package utopia.flow.operator
 
-import utopia.flow.util.EqualsFunction.NotEqualsWrapper
+import utopia.flow.operator.EqualsFunction.NotEqualsWrapper
 
 import scala.language.implicitConversions
 
@@ -20,7 +20,7 @@ object EqualsFunction
 	/**
 	  * A double equality function that rounds to 7th decimal place
 	  */
-	lazy val approxDouble = apply[Double] { (a, b) => (a - b).abs < 0.0000001 }
+	lazy val approxDouble = apply[Double] { (a, b) =>  a == b || (a - b).abs < 0.0000001 }
 	
 	
 	// OTHER    ---------------------------

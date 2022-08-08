@@ -1,6 +1,6 @@
 package utopia.flow.parse
 
-import utopia.flow.util.{EqualsFunction, Equatable}
+import utopia.flow.operator.{EqualsFunction, Equatable}
 import utopia.flow.util.StringExtensions._
 
 import scala.language.implicitConversions

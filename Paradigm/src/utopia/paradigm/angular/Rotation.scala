@@ -1,10 +1,13 @@
 package utopia.paradigm.angular
 
-import utopia.flow.operator.{Combinable, LinearScalable, Zeroable}
-import utopia.flow.util.{ApproximatelyEquatable, SelfComparable}
-import utopia.flow.util.EqualsExtensions._
+import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.ValueConvertible
+import utopia.flow.operator.{ApproximatelyEquatable, Combinable, LinearScalable, Zeroable}
+import utopia.flow.util.SelfComparable
+import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.enumeration.RotationDirection
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
+import utopia.paradigm.generic.RotationType
 
 object Rotation
 {
@@ -106,6 +109,7 @@ object Rotation
 case class Rotation private(radians: Double, direction: RotationDirection = Clockwise)
 	extends LinearScalable[Rotation] with Combinable[Rotation, Rotation]
 		with Zeroable[Rotation] with SelfComparable[Rotation] with ApproximatelyEquatable[Rotation]
+		with ValueConvertible
 {
 	// PROPS    --------------------------
 	
@@ -125,19 +129,16 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	  *         clockwise
 	  */
 	def clockwiseRadians = radians * direction.modifier
-	
 	/**
 	  * @return A degree double value of this rotation to clockwise direction. Negative if this rotation is counter
 	  *         clockwise
 	  */
 	def clockwiseDegrees = degrees * direction.modifier
-	
 	/**
 	  * @return A radian double value of this rotation to counter clockwise direction. Negative if this direction is
 	  *         clockwise.
 	  */
 	def counterClockwiseRadians = -clockwiseRadians
-	
 	/**
 	  * @return A degree double value of this rotation to counter clockwise direction. Negative if this direction is
 	  *         counter clockwise.
@@ -153,7 +154,6 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	  * @return Whether this rotation is towards the clockwise direction
 	  */
 	def isClockwise = direction == Clockwise
-	
 	/**
 	  * @return Whether this rotation is towards the counter clockwise direction
 	  */
@@ -163,27 +163,22 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	  * @return Sine of this rotation (clockwise) angle
 	  */
 	def sine = math.sin(clockwiseRadians)
-	
 	/**
 	  * @return Arc sine of this rotation (clockwise) angle
 	  */
 	def arcSine = math.asin(clockwiseRadians)
-	
 	/**
 	  * @return Cosine of this rotation (clockwise) angle
 	  */
 	def cosine = math.cos(clockwiseRadians)
-	
 	/**
 	  * @return Arc cosine of this rotation (clockwise) angle
 	  */
 	def arcCosine = math.acos(clockwiseRadians)
-	
 	/**
 	  * @return Tangent (tan) of this rotation (clockwise) angle
 	  */
 	def tangent = math.tan(clockwiseRadians)
-	
 	/**
 	  * @return Arc tangent (atan) of this rotation (clockwise) angle
 	  */
@@ -196,6 +191,8 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	  * @return Whether this rotation is exactly zero
 	  */
 	override def isZero = radians == 0
+	
+	override implicit def toValue: Value = new Value(Some(this), RotationType)
 	
 	override def compareTo(o: Rotation) = clockwiseRadians.compareTo(o.clockwiseRadians)
 	

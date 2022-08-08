@@ -6,8 +6,8 @@ import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.operator.{Combinable, LinearScalable}
-import utopia.flow.util.EqualsExtensions._
-import utopia.paradigm.angular.Angle
+import utopia.flow.operator.EqualsExtensions._
+import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.generic.CircleType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.template.Dimensional
@@ -110,6 +110,18 @@ case class Circle(origin: Point, radius: Double)
      * Checks whether the other circle is contained within this circle's area
      */
     def contains(other: Circle) = origin.distanceFrom(other.origin) <= radius - other.radius
+    
+    /**
+      * Converts this circle to a "circular" polygon, such as a hexagon
+      * @param sidesCount Number of sides in the resulting polygon
+      * @param startAngle Angle of the first corner (default = 270 degrees = up)
+      * @return A polygon based on this circle
+      */
+    def toPolygon(sidesCount: Int, startAngle: Angle = Angle.up) = {
+        val increment = Rotation.clockwiseCircle / sidesCount
+        Polygon(Iterator.iterate(startAngle) { _ + increment }.take(sidesCount - 1)
+            .map { angle => origin + Vector2D.lenDir(radius, angle) }.toVector)
+    }
     
     /**
      * Checks whether the two circles intersect with each other

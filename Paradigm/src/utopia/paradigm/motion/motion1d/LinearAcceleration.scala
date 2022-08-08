@@ -1,23 +1,28 @@
 package utopia.paradigm.motion.motion1d
 
-import utopia.flow.operator.DoubleLike
+import utopia.flow.datastructure.immutable.Value
+import utopia.flow.generic.ValueConvertible
+import utopia.flow.operator.{ApproximatelyZeroable, DoubleLike}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.ApproximatelyEquatable
 import utopia.paradigm.angular.Angle
+import utopia.paradigm.generic.LinearAccelerationType
+import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion2d.Acceleration2D
 import utopia.paradigm.motion.motion3d.Acceleration3D
-import utopia.paradigm.motion.template.Change
+import utopia.paradigm.motion.template.{Change, ChangeFromModelFactory, ModelConvertibleChange}
 import utopia.paradigm.shape.shape2d.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 
 import scala.concurrent.duration.{Duration, TimeUnit}
 
-object LinearAcceleration
+object LinearAcceleration extends ChangeFromModelFactory[LinearAcceleration, LinearVelocity]
 {
 	/**
 	  * A acceleration with 0 amount
 	  */
 	val zero = LinearAcceleration(LinearVelocity.zero, 1.seconds)
+	
+	override protected def amountFromValue(value: Value) = value.tryLinearVelocity
 	
 	/**
 	  * @param velocityChange Amount of change in velocity in 1 unit of time
@@ -34,19 +39,20 @@ object LinearAcceleration
   * @since Genesis 13.9.2019, v2.1+
   */
 case class LinearAcceleration(override val amount: LinearVelocity, override val duration: Duration)
-	extends Change[LinearVelocity, LinearAcceleration] with DoubleLike[LinearAcceleration]
-		with ApproximatelyEquatable[LinearAcceleration]
+	extends ModelConvertibleChange[LinearVelocity, LinearAcceleration] with DoubleLike[LinearAcceleration]
+		with ApproximatelyZeroable[Change[LinearVelocity, _], LinearAcceleration] with ValueConvertible
 {
 	// IMPLEMENTED	-------------------
 	
 	override def length = perMilliSecond.length
 	
-	/**
-	  * @return Whether this is a zero acceleration that doesn't actually affect velocity
-	  */
-	override def isZero = amount.amount == 0
+	override def isAboutZero = amount.isAboutZero || duration.isInfinite
 	
 	override def repr = this
+	
+	override implicit def toValue: Value = new Value(Some(this), LinearAccelerationType)
+	
+	override protected def zeroAmount = LinearVelocity.zero
 	
 	override def *(mod: Double) = LinearAcceleration(amount * mod, duration)
 	
@@ -62,7 +68,7 @@ case class LinearAcceleration(override val amount: LinearVelocity, override val 
 	
 	override protected def zero = LinearAcceleration.zero
 	
-	override def ~==(other: LinearAcceleration) = perMilliSecond ~== other.perMilliSecond
+	override def ~==(other: Change[LinearVelocity, _]) = perMilliSecond ~== other.perMilliSecond
 	
 	
 	// OTHER	-----------------------

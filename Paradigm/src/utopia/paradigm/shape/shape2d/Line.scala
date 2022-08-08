@@ -6,7 +6,7 @@ import utopia.flow.datastructure.template.Property
 import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.operator.LinearMeasurable
-import utopia.flow.util.EqualsExtensions._
+import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.generic.LineType
 import utopia.paradigm.path.LinearPathLike

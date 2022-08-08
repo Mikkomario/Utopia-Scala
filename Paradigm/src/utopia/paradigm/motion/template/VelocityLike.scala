@@ -1,6 +1,7 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.operator.{Combinable, LinearScalable, Zeroable}
+import utopia.flow.operator.{ApproximatelyZeroable, Combinable, LinearScalable}
+import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.shape.shape2d.Vector2DLike
 import utopia.paradigm.shape.template.{Dimensional, VectorProjectable}
@@ -14,7 +15,8 @@ import scala.concurrent.duration.Duration
   */
 trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Transition, Repr]]
 	extends Change[Transition, Repr] with LinearScalable[Repr] with Combinable[Repr, Change[Dimensional[Double], _]]
-		with Zeroable[Repr] with Dimensional[LinearVelocity] with VectorProjectable[Repr]
+		with ApproximatelyZeroable[Change[Dimensional[Double], _], Repr] with Dimensional[LinearVelocity]
+		with VectorProjectable[Repr]
 {
 	// ABSTRACT	-----------------
 	
@@ -53,7 +55,10 @@ trait VelocityLike[Transition <: Vector2DLike[Transition], +Repr <: Change[Trans
 	/**
 	  * @return Whether this velocity is actually stationary (zero)
 	  */
-	override def isZero = transition.isZero
+	override def isZero = transition.isZero || duration.isInfinite
+	override def isAboutZero = transition.isAboutZero || duration.isInfinite
+	
+	override def ~==(other: Change[Dimensional[Double], _]) = perMilliSecond ~== other.perMilliSecond
 	
 	override def amount = transition
 	

@@ -1,8 +1,7 @@
 package utopia.paradigm.shape.template
 
-import utopia.flow.operator.{Combinable, LinearMeasurable, LinearScalable, Zeroable}
-import utopia.flow.util.{ApproximatelyEquatable, EqualsFunction}
-import utopia.flow.util.EqualsExtensions._
+import utopia.flow.operator.{ApproximatelyZeroable, Combinable, EqualsFunction, LinearMeasurable, LinearScalable}
+import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
@@ -38,8 +37,8 @@ object VectorLike
   */
 trait VectorLike[+Repr <: VectorLike[Repr]]
 	extends LinearScalable[Repr] with Combinable[Repr, Dimensional[Double]] with LinearMeasurable
-		with Dimensional[Double] with VectorProjectable[Repr] with Zeroable[Repr]
-		with ApproximatelyEquatable[Dimensional[Double]]
+		with Dimensional[Double] with VectorProjectable[Repr]
+		with ApproximatelyZeroable[Dimensional[Double], Repr]
 {
 	// ABSTRACT	---------------------
 	
@@ -53,7 +52,9 @@ trait VectorLike[+Repr <: VectorLike[Repr]]
 	
 	// IMPLEMENTED	-----------------
 	
-	override def isZero = dimensions.forall { _ == 0 }
+	override def isZero = dimensions.forall { _ == 0.0 }
+	
+	override def isAboutZero = dimensions.forall { _ ~== 0.0 }
 	
 	override protected def zeroDimension = 0.0
 	

@@ -4,6 +4,7 @@ import utopia.flow.collection.{CachingIterable, FoldingIterator, GroupIterator, 
 import utopia.flow.datastructure.immutable.{Lazy, Pair}
 import utopia.flow.datastructure.mutable.PollableOnce
 import utopia.flow.datastructure.template.LazyLike
+import utopia.flow.operator.EqualsFunction
 import utopia.flow.util.logging.Logger
 
 import scala.language.implicitConversions

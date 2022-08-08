@@ -1,111 +1,122 @@
 package utopia.paradigm.generic
 
 import utopia.flow.datastructure.immutable.Value
-import utopia.paradigm.shape.shape2d.{Bounds, Circle, Line, Point, Size}
-import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.flow.generic.DataTypeException
+import utopia.flow.util.CollectionExtensions._
+import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.color.{Color, Hsl, Rgb}
+import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
+import utopia.paradigm.motion.motion2d.{Acceleration2D, Velocity2D}
+import utopia.paradigm.motion.motion3d.{Acceleration3D, Velocity3D}
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Line, Matrix2D, Point, Polygon, Polygonic, Size, Vector2D}
+import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
+import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
 
 object ParadigmValue
 {
-    implicit class GValue(val v: Value) extends AnyVal
+    implicit class PValue(val v: Value) extends AnyVal
     {
-        /**
-         * A 3D vector value of this value. None if the value couldn't be casted.
-         */
+        def vector2D = v.objectValue(Vector2DType).map { _.asInstanceOf[Vector2D] }
         def vector3D = v.objectValue(Vector3DType).map { _.asInstanceOf[Vector3D] }
-        
-        /**
-         * A 2D point value of this value. None if this value couldn't be casted
-         */
         def point = v.objectValue(PointType).map { _.asInstanceOf[Point] }
-        
-        /**
-         * A line value of this value. None if the value couldn't be casted.
-         */
-        def line = v.objectValue(LineType).map { _.asInstanceOf[Line] }
-        
-        /**
-         * A size value of this value. None if this value couldn't be casted
-         */
         def size = v.objectValue(SizeType).map { _.asInstanceOf[Size] }
-        
-        /**
-         * A circle value of this value. None if the value couldn't be casted.
-         */
+        def line = v.objectValue(LineType).map { _.asInstanceOf[Line] }
         def circle = v.objectValue(CircleType).map { _.asInstanceOf[Circle] }
-        
-        /**
-         * A bounds value of this value. None if the value couldn't be casted.
-         */
+        def polygon = v.objectValue(PolygonType).map { _.asInstanceOf[Polygonic] }
         def bounds = v.objectValue(BoundsType).map { _.asInstanceOf[Bounds] }
+        def angle = v.objectValue(AngleType).map { _.asInstanceOf[Angle] }
+        def rotation = v.objectValue(RotationType).map { _.asInstanceOf[Rotation] }
+        def matrix2D = v.objectValue(Matrix2DType).map { _.asInstanceOf[Matrix2D] }
+        def matrix3D = v.objectValue(Matrix3DType).map { _.asInstanceOf[Matrix3D] }
+        def linearTransformation =
+            v.objectValue(LinearTransformationType).map { _.asInstanceOf[LinearTransformation] }
+        def affineTransformation = v.objectValue(AffineTransformationType).map { _.asInstanceOf[AffineTransformation] }
+        def linearVelocity = v.objectValue(LinearVelocityType).map { _.asInstanceOf[LinearVelocity] }
+        def velocity2D = v.objectValue(Velocity2DType).map { _.asInstanceOf[Velocity2D] }
+        def velocity3D = v.objectValue(Velocity3DType).map { _.asInstanceOf[Velocity3D] }
+        def linearAcceleration = v.objectValue(LinearAccelerationType).map { _.asInstanceOf[LinearAcceleration] }
+        def acceleration2D = v.objectValue(Acceleration2DType).map { _.asInstanceOf[Acceleration2D] }
+        def acceleration3D = v.objectValue(Acceleration3DType).map { _.asInstanceOf[Acceleration3D] }
+        def rgb = v.objectValue(RgbType).map { _.asInstanceOf[Rgb] }
+        def hsl = v.objectValue(HslType).map { _.asInstanceOf[Hsl] }
+        def color = v.objectValue(ColorType).map { _.asInstanceOf[Color] }
         
-        /**
-         * The vector value of this value, or the provided default value in case the value couldn't
-         * be cast.
-         * @param default The default vector value. Defaults to a zero vector.
-         */
+        def vector2DOr(default: => Vector2D = Vector2D.zero) = vector2D.getOrElse(default)
         def vector3DOr(default: => Vector3D = Vector3D.zero) = vector3D.getOrElse(default)
-        
-        /**
-         * The point value of this value, or the provided default value in case casting failed
-         */
         def pointOr(default: => Point = Point.origin) = point.getOrElse(default)
-        
-        /**
-         * The line value of this value, or the provided default value in case the value couldn't
-         * be cast.
-         * @param default The default line value. Defaults to a line from zero to zero.
-         */
-        def lineOr(default: => Line = Line.zero) = line.getOrElse(default)
-        
-        /**
-         * The size value of this value, or the provided default value if casting failed
-         */
         def sizeOr(default: => Size = Size.zero) = size.getOrElse(default)
-        
-        /**
-         * The circle value of this value, or the provided default value in case the value couldn't
-         * be cast.
-         * @param default The default circle value. Defaults to a circle at zero origin with zero
-         * radius.
-         */
+        def lineOr(default: => Line = Line.zero) = line.getOrElse(default)
         def circleOr(default: => Circle = Circle(Point.origin, 0)) = circle.getOrElse(default)
-        
-        /**
-         * The bounds value of this value, or the provided default value in case the value
-         * couldn't be cast.
-         * @param default the default bounds value. Defaults to bounds with zero position and
-         * size.
-         */
+        def polygonOr(default: => Polygonic = Polygon(Vector())) = polygon.getOrElse(default)
         def boundsOr(default: => Bounds = Bounds.zero) = bounds.getOrElse(default)
+        def angleOr(default: => Angle = Angle.zero) = angle.getOrElse(default)
+        def rotationOr(default: => Rotation = Rotation.zero) = rotation.getOrElse(default)
+        def matrix2DOr(default: => Matrix2D = Matrix2D.identity) = matrix2D.getOrElse(default)
+        def matrix3DOr(default: => Matrix3D = Matrix3D.identity) = matrix3D.getOrElse(default)
+        def linearTransformationOr(default: => LinearTransformation = LinearTransformation.identity) =
+            linearTransformation.getOrElse(default)
+        def affineTransformationOr(default: => AffineTransformation = AffineTransformation.identity) =
+            affineTransformation.getOrElse(default)
+        def linearVelocityOr(default: => LinearVelocity = LinearVelocity.zero) = linearVelocity.getOrElse(default)
+        def velocity2DOr(default: => Velocity2D = Velocity2D.zero) = velocity2D.getOrElse(default)
+        def velocity3DOr(default: => Velocity3D = Velocity3D.zero) = velocity3D.getOrElse(default)
+        def linearAccelerationOr(default: => LinearAcceleration = LinearAcceleration.zero) =
+            linearAcceleration.getOrElse(default)
+        def acceleration2DOr(default: => Acceleration2D = Acceleration2D.zero) = acceleration2D.getOrElse(default)
+        def acceleration3DOr(default: => Acceleration3D = Acceleration3D.zero) = acceleration3D.getOrElse(default)
+        def rgbOr(default: => Rgb = Rgb.black) = rgb.getOrElse(default)
+        def hslOr(default: => Hsl = Hsl(Angle.zero, 0.0, 0.0)) = hsl.getOrElse(default)
+        def colorOr(default: => Color = Color.black) = color.getOrElse(default)
     
-        /**
-          * @return 3D Vector o this value or a zero vector
-          */
+        def getVector2D = vector2DOr()
         def getVector3D = vector3DOr()
-    
-        /**
-          * @return Point of this value or a (0, 0) point
-          */
         def getPoint = pointOr()
-    
-        /**
-          * @return Size of this value or 0 size
-          */
         def getSize = sizeOr()
-    
-        /**
-          * @return Line of this value or a 0 -> 0 line
-          */
         def getLine = lineOr()
-    
-        /**
-          * @return Circle of this value or a 0 sized circle
-          */
         def getCircle = circleOr()
-    
-        /**
-          * @return Bounds of this value or a 0 bounds
-          */
+        def getPolygon = polygonOr()
         def getBounds = boundsOr()
+        def getAngle = angleOr()
+        def getRotation = rotationOr()
+        def getMatrix2D = matrix2DOr()
+        def getMatrix3D = matrix3DOr()
+        def getLinearTransformation = linearTransformationOr()
+        def getAffineTransformation = affineTransformationOr()
+        def getLinearVelocity = linearVelocityOr()
+        def getVelocity2D = velocity2DOr()
+        def getVelocity3D = velocity3DOr()
+        def getLinearAcceleration = linearAccelerationOr()
+        def getAcceleration2D = acceleration2DOr()
+        def getAcceleration3D = acceleration3DOr()
+        def getRgb = rgbOr()
+        def getHsl = hslOr()
+        def getColor = colorOr()
+        
+        def tryVector2D = getTry(vector2D)("Vector2D")
+        def tryVector3D = getTry(vector3D)("Vector3D")
+        def tryPoint = getTry(point)("Point")
+        def trySize = getTry(size)("Size")
+        def tryLine = getTry(line)("Line")
+        def tryCircle = getTry(circle)("Circle")
+        def tryPolygon = getTry(polygon)("Polygon")
+        def tryBounds = getTry(bounds)("Bounds")
+        def tryAngle = getTry(angle)("Angle")
+        def tryRotation = getTry(rotation)("Rotation")
+        def tryMatrix2D = getTry(matrix2D)("Matrix2D")
+        def tryMatrix3D = getTry(matrix3D)("Matrix3D")
+        def tryLinearTransformation = getTry(linearTransformation)("LinearTransformation")
+        def tryAffineTransformation = getTry(affineTransformation)("AffineTransformation")
+        def tryLinearVelocity = getTry(linearVelocity)("LinearVelocity")
+        def tryVelocity2D = getTry(velocity2D)("Velocity2D")
+        def tryVelocity3D = getTry(velocity3D)("Velocity3D")
+        def tryLinearAcceleration = getTry(linearAcceleration)("LinearAcceleration")
+        def tryAcceleration2D = getTry(acceleration2D)("Acceleration2D")
+        def tryAcceleration3D = getTry(acceleration3D)("Acceleration3D")
+        def tryRgb = getTry(rgb)("RGB")
+        def tryHsl = getTry(hsl)("HSL")
+        def tryColor = getTry(color)("Color")
+        
+        private def getTry[A](a: Option[A])(dataTypeName: => String) =
+            a.toTry { DataTypeException(s"${v.description} can't be cast to $dataTypeName") }
     }
 }

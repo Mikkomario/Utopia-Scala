@@ -4,7 +4,7 @@ import utopia.flow.datastructure.immutable.PropertyDeclaration
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.immutable.ModelDeclaration
 import utopia.flow.datastructure.mutable.Variable
-import utopia.flow.util.Equatable
+import utopia.flow.operator.Equatable
 
 /**
  * This variable generator uses property declarations when generating new variables

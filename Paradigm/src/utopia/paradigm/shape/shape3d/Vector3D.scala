@@ -3,9 +3,9 @@ package utopia.paradigm.shape.shape3d
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{FromModelFactory, ModelConvertible, ValueConvertible}
+import utopia.flow.generic.{ModelConvertible, SureFromModelFactory, ValueConvertible}
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.util.EqualsExtensions._
+import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
@@ -14,9 +14,8 @@ import utopia.paradigm.motion.motion3d.Velocity3D
 import utopia.paradigm.shape.shape2d.{Point, Size, Vector2D, Vector2DLike}
 
 import scala.concurrent.duration.Duration
-import scala.util.Success
 
-object Vector3D extends FromModelFactory[Vector3D]
+object Vector3D extends SureFromModelFactory[Vector3D]
 {
     // ATTRIBUTES    --------------------
     
@@ -34,10 +33,10 @@ object Vector3D extends FromModelFactory[Vector3D]
     val unit = Vector3D(1)
     
     
-    // OPERATORS    ---------------------
-    
-    override def apply(model: template.Model[Property]) = Success(Vector3D(
-            model("x").getDouble, model("y").getDouble, model("z").getDouble))
+    // IMPLEMENTED    ---------------------
+	
+	override def parseFrom(model: template.Model[Property]) =
+		Vector3D(model("x").getDouble, model("y").getDouble, model("z").getDouble)
     
     
     // OTHER METHODS    -----------------

@@ -1,13 +1,11 @@
 package utopia.flow.generic
 
-import utopia.flow.generic.ConversionReliability.PERFECT
-import utopia.flow.generic.ConversionReliability.DATA_LOSS
-import utopia.flow.generic.ConversionReliability.DANGEROUS
-import utopia.flow.generic.ConversionReliability.MEANING_LOSS
+import utopia.flow.generic.ConversionReliability.{CONTEXT_LOSS, DANGEROUS, DATA_LOSS, MEANING_LOSS, PERFECT}
 import ValueConversions._
-import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.datastructure.immutable.{Model, Pair, Value}
 import utopia.flow.time.Days
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.StringExtensions._
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, ZoneId, ZonedDateTime}
@@ -20,6 +18,7 @@ import scala.util.Try
  * @author Mikko Hilpinen
  * @since 19.11.2016
  */
+// TODO: Add casting from String to Duration, which seeks for a unit
 object BasicValueCaster extends ValueCaster
 {
     // ATTRIBUTES    --------------
@@ -33,14 +32,14 @@ object BasicValueCaster extends ValueCaster
         Conversion(DoubleType, IntType, DATA_LOSS),
         Conversion(LongType, IntType, DATA_LOSS),
         Conversion(FloatType, IntType, DATA_LOSS),
-        Conversion(BooleanType, IntType, PERFECT),
-        Conversion(DaysType, IntType, PERFECT),
+        Conversion(BooleanType, IntType, CONTEXT_LOSS),
+        Conversion(DaysType, IntType, CONTEXT_LOSS),
         Conversion(StringType, IntType, DANGEROUS),
         // Conversions to Double
         Conversion(IntType, DoubleType, PERFECT),
         Conversion(FloatType, DoubleType, PERFECT),
         Conversion(LongType, DoubleType, PERFECT),
-        Conversion(DurationType, DoubleType, PERFECT),
+        Conversion(DurationType, DoubleType, CONTEXT_LOSS),
         Conversion(StringType, DoubleType, DANGEROUS),
         // Conversions to Float
         Conversion(IntType, FloatType, PERFECT),
@@ -52,45 +51,51 @@ object BasicValueCaster extends ValueCaster
         Conversion(DoubleType, LongType, DATA_LOSS),
         Conversion(FloatType, LongType, DATA_LOSS),
         Conversion(InstantType, LongType, DATA_LOSS),
-        Conversion(DurationType, LongType, PERFECT),
+        Conversion(DurationType, LongType, CONTEXT_LOSS),
         Conversion(StringType, LongType, DANGEROUS),
         // Conversions to Boolean
         Conversion(IntType, BooleanType, MEANING_LOSS),
-        Conversion(StringType, BooleanType, MEANING_LOSS),
+        Conversion(StringType, BooleanType, DANGEROUS),
         // Conversions to Instant
         Conversion(LongType, InstantType, PERFECT),
         Conversion(LocalDateTimeType, InstantType, PERFECT),
-        Conversion(DurationType, InstantType, PERFECT),
+        Conversion(DurationType, InstantType, MEANING_LOSS),
         Conversion(DaysType, InstantType, MEANING_LOSS),
         Conversion(StringType, InstantType, DANGEROUS),
         // Conversions to LocalDate
         Conversion(LocalDateTimeType, LocalDateType, DATA_LOSS),
-        Conversion(DaysType, LocalDateType, PERFECT),
+        Conversion(DaysType, LocalDateType, MEANING_LOSS),
         Conversion(StringType, LocalDateType, DANGEROUS),
         // Conversions to LocalTime
         Conversion(LocalDateTimeType, LocalTimeType, DATA_LOSS),
-        Conversion(DurationType, LocalTimeType, DATA_LOSS),
+        Conversion(DurationType, LocalTimeType, MEANING_LOSS),
         Conversion(StringType, LocalTimeType, DANGEROUS),
         // Conversions to LocalDateTime
         Conversion(InstantType, LocalDateTimeType, DATA_LOSS),
         Conversion(LocalDateType, LocalDateTimeType, PERFECT),
         Conversion(StringType, LocalDateTimeType, DANGEROUS),
+        Conversion(PairType, LocalDateTimeType, DANGEROUS),
         // Conversions to Duration
         Conversion(DaysType, DurationType, PERFECT),
-        Conversion(LocalTimeType, DurationType, PERFECT),
+        Conversion(LocalTimeType, DurationType, CONTEXT_LOSS),
         Conversion(LongType, DurationType, PERFECT),
         Conversion(IntType, DurationType, PERFECT),
         Conversion(DoubleType, DurationType, PERFECT),
-        Conversion(InstantType, DurationType, PERFECT),
+        Conversion(InstantType, DurationType, CONTEXT_LOSS),
         Conversion(ModelType, DurationType, DANGEROUS),
         // Conversions to Days
         Conversion(DurationType, DaysType, DATA_LOSS),
         Conversion(IntType, DaysType, PERFECT),
-        Conversion(LocalDateType, DaysType, PERFECT),
+        Conversion(LocalDateType, DaysType, CONTEXT_LOSS),
         // Conversions to Vector
         Conversion(AnyType, VectorType, MEANING_LOSS),
+        Conversion(PairType, VectorType, CONTEXT_LOSS),
+        // Conversions to Pair
+        Conversion(VectorType, PairType, DANGEROUS),
+        Conversion(LocalDateTimeType, PairType, CONTEXT_LOSS),
+        Conversion(StringType, PairType, DANGEROUS),
         // Conversions to Model
-        Conversion(DurationType, ModelType, PERFECT)
+        Conversion(DurationType, ModelType, CONTEXT_LOSS)
     )
     
     
@@ -111,7 +116,11 @@ object BasicValueCaster extends ValueCaster
             case LocalDateType => localDateOf(value)
             case LocalTimeType => localTimeOf(value)
             case LocalDateTimeType => localDateTimeOf(value)
+            case DurationType => durationOf(value)
+            case DaysType => daysOf(value)
             case VectorType => vectorOf(value)
+            case PairType => pairOf(value)
+            case ModelType => modelOf(value)
             case _ => None
         }
         
@@ -188,7 +197,26 @@ object BasicValueCaster extends ValueCaster
         value.dataType match 
         {
             case IntType => Some(value.getInt != 0)
-            case StringType => Some(value.getString.toLowerCase() == "true")
+            case StringType =>
+                val s = value.getString.toLowerCase
+                if (s == "true")
+                    Some(true)
+                else if (s == "false")
+                    Some(false)
+                else if (s == "yes")
+                    Some(true)
+                else if (s == "no")
+                    Some(false)
+                else if (s == "y")
+                    Some(true)
+                else if (s == "n")
+                    Some(false)
+                else if (s == "1")
+                    Some(true)
+                else if (s == "0")
+                    Some(false)
+                else
+                    None
             case _ => None
         }
     
@@ -241,6 +269,9 @@ object BasicValueCaster extends ValueCaster
             case InstantType => Some(LocalDateTime.ofInstant(value.getInstant, ZoneId.systemDefault()))
             case LocalDateType => Some(value.getLocalDate.atStartOfDay())
             case StringType => Try(LocalDateTime.parse(value.toString())).toOption
+            case PairType =>
+                val p = value.getPair
+                p.first.localDate.flatMap { date => p.second.localTime.map { LocalDateTime.of(date, _) } }
             case _ => None
         }
     
@@ -273,8 +304,9 @@ object BasicValueCaster extends ValueCaster
         case _ => None
     }
     
-    private def vectorOf(value: Value) = value.dataType match
+    private def vectorOf(value: Value): Option[Vector[Value]] = value.dataType match
     {
+        case PairType => Some(value.getPair.toVector)
         case StringType =>
             val s = value.getString
             if ((s.startsWith("[") && s.endsWith("]")) || (s.startsWith("(") && s.endsWith(")")))
@@ -286,6 +318,37 @@ object BasicValueCaster extends ValueCaster
             else
                 Some(Vector(value))
         case _ => Some(Vector(value))
+    }
+    
+    private def pairOf(value: Value) = value.dataType match {
+        case LocalDateTimeType =>
+            val dt = value.getLocalDateTime
+            Some(Pair[Value](dt.toLocalDate, dt.toLocalTime))
+        case VectorType =>
+            val v = value.getVector
+            if (v.size >= 2) Some(Pair(v.head, v(1))) else None
+        case StringType =>
+            val s = value.getString
+            val containsComma = s.contains(',')
+            if (containsComma && ((s.startsWith("(") && s.endsWith(")")) || (s.startsWith("[") && s.endsWith("]")))) {
+                val v = splitToValueVector(s.drop(1).dropRight(1), ',')
+                Some(Pair(v.head, v(1)))
+            }
+            else if (s.contains('&')) {
+                val (start, end) = s.splitAtFirst("&")
+                Some(Pair[Value](start, end))
+            }
+            else if (containsComma) {
+                val v = splitToValueVector(s, ',')
+                Some(Pair(v.head, v(1)))
+            }
+            else if (s.contains(';')) {
+                val v = splitToValueVector(s, ';')
+                Some(Pair(v.head, v(1)))
+            }
+            else
+                None
+        case _ => None
     }
     
     private def modelOf(value: Value) = value.dataType match {

@@ -1,6 +1,7 @@
 package utopia.flow.parse
 
-import utopia.flow.util.{EqualsFunction, ScopeUsable}
+import utopia.flow.operator.EqualsFunction
+import utopia.flow.util.ScopeUsable
 import utopia.flow.util.StringExtensions._
 
 object Namespace

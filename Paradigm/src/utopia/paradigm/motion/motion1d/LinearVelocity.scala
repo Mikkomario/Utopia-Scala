@@ -1,10 +1,15 @@
 package utopia.paradigm.motion.motion1d
 
-import utopia.flow.operator.DoubleLike
+import utopia.flow.datastructure.immutable.{Model, ModelDeclaration, ModelValidationFailedException, Value}
+import utopia.flow.datastructure.template
+import utopia.flow.datastructure.template.Property
+import utopia.flow.generic.{DoubleType, FromModelFactory, ModelConvertible, ValueConvertible}
+import utopia.flow.generic.ValueConversions._
+import utopia.flow.operator.{ApproximatelyZeroable, DoubleLike}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.ApproximatelyEquatable
-import utopia.flow.util.EqualsExtensions._
+import utopia.flow.operator.EqualsExtensions._
 import utopia.paradigm.angular.Angle
+import utopia.paradigm.generic.LinearVelocityType
 import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.motion.motion3d.Velocity3D
 import utopia.paradigm.motion.template.Change
@@ -12,13 +17,38 @@ import utopia.paradigm.shape.shape2d.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 
 import scala.concurrent.duration.{Duration, TimeUnit}
+import scala.util.{Failure, Success}
 
-object LinearVelocity
+object LinearVelocity extends FromModelFactory[LinearVelocity]
 {
+	// ATTRIBUTES   ---------------------------
+	
+	private val schema = ModelDeclaration("amount" -> DoubleType)
+	
 	/**
 	  * A zero speed
 	  */
-	val zero = LinearVelocity(0, 1.seconds)
+	val zero: LinearVelocity = LinearVelocity(0, 1.seconds)
+	
+	
+	// IMPLEMENTED  ---------------------------
+	
+	override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { model =>
+		val amount = model("amount").getDouble
+		model("duration").duration match {
+			case Some(duration) => Success(apply(amount, duration))
+			case None =>
+				if (amount ~== 0.0)
+					Success(zero)
+				else
+					Failure(new ModelValidationFailedException(
+						s"Required property 'duration' is missing. Specified properties: [${
+							model.attributesWithValue.map { _.name }.mkString(", ") }]"))
+		}
+	}
+	
+	
+	// OTHER    -------------------------------
 	
 	/**
 	  * @param amount Amount of distance travelled in 1 unit of time
@@ -34,7 +64,8 @@ object LinearVelocity
   * @since Genesis 11.9.2019, v2.1+
   */
 case class LinearVelocity(override val amount: Double, override val duration: Duration)
-	extends Change[Double, LinearVelocity] with DoubleLike[LinearVelocity] with ApproximatelyEquatable[LinearVelocity]
+	extends Change[Double, LinearVelocity] with DoubleLike[LinearVelocity]
+		with ApproximatelyZeroable[LinearVelocity, LinearVelocity] with ModelConvertible with ValueConvertible
 {
 	// IMPLEMENTED	--------------------
 	
@@ -43,24 +74,32 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	/**
 	  * @return Whether this velocity has 0 amount and doesn't move items
 	  */
-	override def isZero = amount == 0
+	override def isZero = amount == 0.0 || duration.isInfinite
+	override def isAboutZero = (amount ~== 0.0) || duration.isInfinite
 	
 	override def repr = this
 	
-	override def *(mod: Double) = LinearVelocity(amount * mod, duration)
-	
 	override def toString = s"$perMilliSecond/ms"
-	
-	def +(another: LinearVelocity) = LinearVelocity(amount + another(duration), duration)
-	
-	override def compareTo(o: LinearVelocity) = perMilliSecond.compareTo(o.perMilliSecond)
-	
-	def -(another: LinearVelocity) = this + (-another)
 	
 	// The amount and the duration may cancel each other out
 	override def isPositive = nonZero && (if (amount > 0) duration >= Duration.Zero else duration < Duration.Zero)
 	
 	override protected def zero = LinearVelocity.zero
+	
+	override implicit def toValue: Value = new Value(Some(this), LinearVelocityType)
+	
+	override def toModel = duration.finite match {
+		case Some(duration) => Model.from("amount" -> amount, "duration" -> duration)
+		case None => Model.from("amount" -> 0.0)
+	}
+	
+	override def +(another: LinearVelocity) = LinearVelocity(amount + another(duration), duration)
+	
+	override def compareTo(o: LinearVelocity) = perMilliSecond.compareTo(o.perMilliSecond)
+	
+	def -(another: LinearVelocity) = this + (-another)
+	
+	override def *(mod: Double) = LinearVelocity(amount * mod, duration)
 	
 	override def ~==(other: LinearVelocity) = perMilliSecond ~== other.perMilliSecond
 	

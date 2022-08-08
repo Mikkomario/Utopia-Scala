@@ -1,6 +1,7 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.operator.Combinable
+import utopia.flow.operator.{ApproximatelyZeroable, Combinable}
+import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.shape.shape2d.Vector2DLike
@@ -19,7 +20,7 @@ import scala.concurrent.duration.Duration
 trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
 	+Repr <: Change[V, _] /*with Arithmetic[Change[V, _], Repr]*/ ]
 	extends Change[V, Repr] with Combinable[Repr, Change[V, _]] with Dimensional[LinearAcceleration]
-		with VectorProjectable[Repr]
+		with VectorProjectable[Repr] with ApproximatelyZeroable[Change[Change[Dimensional[Double], _], _], Repr]
 {
 	// ABSTRACT	-----------------------
 	
@@ -38,11 +39,6 @@ trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
 	override protected def zeroDimension = LinearAcceleration.zero
 	
 	/**
-	  * @return Whether this acceleration doesn't actually affect velocity in any way (is zero acceleration)
-	  */
-	def isZero = amount.isZero
-	
-	/**
 	  * @return Direction of this acceleration
 	  */
 	def direction = amount.direction
@@ -54,6 +50,15 @@ trait AccelerationLike[X <: Vector2DLike[X], V <: VelocityLike[X, V],
 	
 	
 	// IMPLEMENTED	-------------------
+	
+	/**
+	  * @return Whether this acceleration doesn't actually affect velocity in any way (is zero acceleration)
+	  */
+	override def isZero = amount.isZero || duration.isInfinite
+	override def isAboutZero = amount.isAboutZero || duration.isInfinite
+	
+	override def ~==(other: Change[Change[Dimensional[Double], _], _]) =
+		perMilliSecond ~== other.perMilliSecond
 	
 	override def *(mod: Double) = buildCopy(amount * mod)
 	

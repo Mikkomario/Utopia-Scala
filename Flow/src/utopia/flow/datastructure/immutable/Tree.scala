@@ -1,6 +1,6 @@
 package utopia.flow.datastructure.immutable
 
-import utopia.flow.util.EqualsFunction
+import utopia.flow.operator.EqualsFunction
 
 /**
  * This TreeNode implementation is immutable and safe to reference from multiple places

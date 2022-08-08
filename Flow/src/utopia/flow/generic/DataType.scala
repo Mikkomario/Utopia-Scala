@@ -64,6 +64,7 @@ object DurationType extends DataType("Duration", classOf[scala.concurrent.durati
   * Days type represents a length of time, measured in days
   */
 object DaysType extends DataType("Days", classOf[utopia.flow.time.Days])
+object PairType extends DataType("Pair", classOf[utopia.flow.datastructure.immutable.Pair[Value]])
 /**
  * Vector type stands for a vector of values. Only Vectors with exact parameter type of Value
  * are accepted
@@ -99,8 +100,8 @@ object DataType
         {
             isSetup = true
             introduceTypes(AnyType, StringType, IntType, DoubleType, FloatType, LongType, 
-                    BooleanType, InstantType, LocalDateType, LocalTimeType, LocalDateTimeType, DurationType, DaysType, 
-                    VectorType, ModelType)
+                    BooleanType, InstantType, LocalDateType, LocalTimeType, LocalDateTimeType, DurationType, DaysType,
+                    VectorType, PairType, ModelType)
             ConversionHandler.addCaster(BasicValueCaster)
         }
     }
