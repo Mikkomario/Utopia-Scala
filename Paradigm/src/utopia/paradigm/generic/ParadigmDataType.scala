@@ -3,7 +3,6 @@ package utopia.paradigm.generic
 import utopia.flow.generic.DataType
 import utopia.flow.generic.EnvironmentNotSetupException
 import utopia.flow.generic.ConversionHandler
-import utopia.flow.parse.JsonValueConverter
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.color.{Color, Hsl, Rgb}
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}

@@ -1,9 +1,10 @@
 package utopia.flow.generic
 
 import utopia.flow.datastructure.mutable.GraphNode
-import utopia.flow.generic.ConversionReliability.NO_CONVERSION
-import scala.collection.mutable
 import utopia.flow.datastructure.immutable.Value
+import utopia.flow.util.CollectionExtensions._
+
+import scala.collection.mutable
 
 /**
  * This object oversees all value conversion operations
@@ -76,6 +77,15 @@ object ConversionHandler
         }
     }
     
+    /**
+      * Finds the conversion route used to cast values from a single type to another
+      * @param originType The input value data type
+      * @param targetType The output value data type
+      * @return A route used to cast the value from the origin to target data type. None if no valid route was found.
+      */
+    def conversionRouteBetween(originType: DataType, targetType: DataType) =
+        optimalRouteTo(originType, targetType).map { route => route.steps.map { _.conversion }.toVector }
+    
     private def _cast(value: Value, targetTypes: IterableOnce[DataType]) =
     {
         val routes = targetTypes.iterator.flatMap { optimalRouteTo(value.dataType, _) }.toVector
@@ -112,13 +122,32 @@ object ConversionHandler
     private def nodeForType(dataType: DataType) = conversionGraph.getOrElseUpdate(dataType,
         new ConversionNode(dataType))
     
-    // TODO: When multiple routes have equal cost, should check the return routes, also
-    private def optimalRouteTo(sourceType: DataType, targetType: DataType) = 
-        optimalRoutes.getOrElseUpdate(sourceType -> targetType,
-            {
-                val route = nodeForType(sourceType).cheapestRouteTo(nodeForType(targetType)) { _.content.cost }
-                route.map { r => ConversionRoute(r.map { _.content }) }
-            })
+    private def optimalRouteTo(sourceType: DataType, targetType: DataType): Option[ConversionRoute] =
+        optimalRoutes.getOrElseUpdate(sourceType -> targetType, {
+            val origin = nodeForType(sourceType)
+            val target = nodeForType(targetType)
+            // Prefers direct routes
+            val directEdges = origin.edgesTo(target)
+            if (directEdges.nonEmpty)
+                Some(ConversionRoute(Vector(directEdges.map { _.content }.minBy { _.cost })))
+            else {
+                // If multiple cheapest routes are found, considers the return route, also
+                val routes = origin.cheapestRoutesTo(target) { _.content.cost }.minGroupBy { _.size }
+                if (routes.size > 1) {
+                    // (Route, Number of irrevokable steps, return cost)
+                    val routesWithReturnCosts = routes.map { route =>
+                        val returnRoutes = route.dropRight(1)
+                            .map { edge => edge.end.cheapestRouteTo(origin) { _.content.cost } }
+                        (route, returnRoutes.count { _.isEmpty },
+                            returnRoutes.flatten.foldLeft(0) { _ + _.foldLeft(0) { _ + _.content.cost } })
+                    }
+                    val bestRoute = routesWithReturnCosts.minGroupBy { _._2 }.minBy { _._3 }._1
+                    Some(ConversionRoute(bestRoute.map { _.content }))
+                }
+                else
+                    routes.headOption.map { r => ConversionRoute(r.map { _.content }) }
+            }
+        })
     
     
     // NESTED CLASSES    ---------------
@@ -129,13 +158,13 @@ object ConversionHandler
         
         lazy val cost = steps.foldLeft(0) { _ + _.cost }
         
-        lazy val reliability =
-        {
+        /*
+        lazy val reliability = {
             if (steps.isEmpty)
                 NO_CONVERSION
             else
                 steps.map { _.reliability }.min
-        }
+        }*/
         
         
         // IMPLEMENTED METHODS    -----

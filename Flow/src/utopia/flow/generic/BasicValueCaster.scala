@@ -3,6 +3,7 @@ package utopia.flow.generic
 import utopia.flow.generic.ConversionReliability.{CONTEXT_LOSS, DANGEROUS, DATA_LOSS, MEANING_LOSS, PERFECT}
 import ValueConversions._
 import utopia.flow.datastructure.immutable.{Model, Pair, Value}
+import utopia.flow.parse.JSONReader
 import utopia.flow.time.Days
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
@@ -28,6 +29,9 @@ object BasicValueCaster extends ValueCaster
         // Any type can be converted to a string using .toString, although some conversions may be considered more
         // plausible
         Conversion(AnyType, StringType, DATA_LOSS),
+        Conversion(IntType, StringType, CONTEXT_LOSS),
+        Conversion(DoubleType, StringType, CONTEXT_LOSS),
+        Conversion(LongType, StringType, CONTEXT_LOSS),
         Conversion(InstantType, StringType, CONTEXT_LOSS),
         Conversion(ModelType, StringType, CONTEXT_LOSS),
         // Conversions to Int
@@ -54,6 +58,7 @@ object BasicValueCaster extends ValueCaster
         Conversion(FloatType, LongType, DATA_LOSS),
         Conversion(InstantType, LongType, DATA_LOSS),
         Conversion(DurationType, LongType, CONTEXT_LOSS),
+        Conversion(DaysType, LongType, CONTEXT_LOSS),
         Conversion(StringType, LongType, DANGEROUS),
         // Conversions to Boolean
         Conversion(IntType, BooleanType, MEANING_LOSS),
@@ -96,9 +101,11 @@ object BasicValueCaster extends ValueCaster
         // Conversions to Pair
         Conversion(VectorType, PairType, DANGEROUS),
         Conversion(LocalDateTimeType, PairType, CONTEXT_LOSS),
+        Conversion(LocalTimeType, PairType, CONTEXT_LOSS),
         Conversion(StringType, PairType, DANGEROUS),
         // Conversions to Model
-        Conversion(DurationType, ModelType, CONTEXT_LOSS)
+        Conversion(DurationType, ModelType, CONTEXT_LOSS),
+        Conversion(StringType, ModelType, DANGEROUS)
     )
     
     
@@ -192,6 +199,7 @@ object BasicValueCaster extends ValueCaster
             case FloatType => Some(value.getFloat.toLong)
             case InstantType => Some(value.getInstant.toEpochMilli)
             case DurationType => Some(value.getDuration.toMillis)
+            case DaysType => Some(value.getDays.length.toLong)
             case StringType => Try { value.stringOr("0").toDouble.toLong }.toOption
             case _ => None
         }
@@ -336,10 +344,13 @@ object BasicValueCaster extends ValueCaster
         case _ => Some(Vector(value))
     }
     
-    private def pairOf(value: Value) = value.dataType match {
+    private def pairOf(value: Value): Option[Pair[Value]] = value.dataType match {
         case LocalDateTimeType =>
             val dt = value.getLocalDateTime
             Some(Pair[Value](dt.toLocalDate, dt.toLocalTime))
+        case LocalTimeType =>
+            val t = value.getLocalTime
+            Some(Pair(t.getHour, t.getMinute))
         case VectorType =>
             val v = value.getVector
             if (v.size >= 2) Some(Pair(v.head, v(1))) else None
@@ -367,7 +378,7 @@ object BasicValueCaster extends ValueCaster
         case _ => None
     }
     
-    private def modelOf(value: Value) = value.dataType match {
+    private def modelOf(value: Value): Option[Model] = value.dataType match {
         case DurationType =>
             val d = value.getDuration
             val unitString = d.unit match {
@@ -383,6 +394,7 @@ object BasicValueCaster extends ValueCaster
                 case None => d.toMillis
             }
             Some(Model.from("value" -> len, "unit" -> unitString.getOrElse[String]("ms")))
+        case StringType => JSONReader.apply(value.getString).toOption.filter { _.isOfType(ModelType) }.map { _.getModel }
         case _ => None
     }
     

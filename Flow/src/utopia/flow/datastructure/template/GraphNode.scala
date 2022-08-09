@@ -168,6 +168,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
      * contents, for example)
      * @return The cheapest route found, if any exist
      */
+    // TODO: optimize
     def cheapestRouteTo(node: AnyNode)(costOf: Edge => Double): Option[Route] =
 	    cheapestRoutesTo(node)(costOf).headOption
 	
@@ -180,59 +181,60 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[N
 	 * @return The cheapest routes found, if any exist
 	 */
 	def cheapestRoutesTo(node: AnyNode)(costOf: Edge => Double): Set[Route] =
-		cheapestRoutesTo(node, 0.0, None, Set())(costOf)._1
+		cheapestRoutesTo(node, 0.0, None, Set(this))(costOf) match {
+			case Some((routes, _)) => routes
+			case None => Set()
+		}
 	
+	// visitedNodes is expected to contain "this" node already
 	private def cheapestRoutesTo(node: AnyNode, currentCost: Double, currentMinCost: Option[Double],
-	                             visitedNodes: Set[AnyNode])(costOf: Edge => Double): (Set[Route], Option[Double]) =
+	                              visitedNodes: Set[AnyNode])
+	                             (costOf: Edge => Double): Option[(Set[Route], Double)] =
 	{
-		// Checks available route options
-		val newVisitedNodes = visitedNodes + this
-		val availableEdges = leavingEdges.filterNot { e => newVisitedNodes.contains(e.end) }
-		
-		// Traverses each route fully before moving to the next one
-		val (newMinCost, newBestRoutes) = availableEdges.foldLeft[(Option[Double], Set[Route])](
-			(currentMinCost, Set())) { case ((minCost, bestRoutes), edge) =>
-			// Calculates next step cost
-			val stepCost = currentCost + costOf(edge)
-			// Will not continue to search the route if the minimum cost is exceeded
-			if (minCost.exists { _ < stepCost })
-				minCost -> bestRoutes
-			else
-			{
-				// Checks whether already arrived to the destination
-				if (edge.end == node)
-				{
-					// Case: Both options are as good => combines them
-					if (minCost.contains(stepCost))
-						minCost -> (bestRoutes + Vector(edge))
-					// Case: New route is better
-					else
-						Some(stepCost) -> Set(Vector(edge))
-				}
-				else
-				{
-					// Checks whether that route turns out to be better than the current best routes
-					val (newBestRoutes, newMinCost) = edge.end.cheapestRoutesTo(
-						node, stepCost, minCost, newVisitedNodes)(costOf)
-					newMinCost match
-					{
-						// Case: Better or similar routes found
-						case Some(newMinCost) =>
-							val fullNewBestRoutes = newBestRoutes.map { edge +: _ }
-							// Case: New routes are better than the previously cached
-							if (minCost.forall { _ > newMinCost })
-								Some(newMinCost) -> fullNewBestRoutes
-							// Case: Both options are as good
-							else
-								minCost -> (bestRoutes ++ fullNewBestRoutes)
-						// Case: No better routes found
-						case None => minCost -> bestRoutes
+		// Checks whether already arrived
+		if (this == node)
+			Some(Set[Route](Vector()) -> currentCost)
+		else {
+			// Checks available route options
+			val availableEdges = leavingEdges.filterNot { e => visitedNodes.contains(e.end) }
+			// Doesn't even consider moving to edges which are directly accessible from this node
+			// (because why make the round-trip?)
+			val newVisitedNodes = visitedNodes ++ availableEdges.map { _.end }
+			
+			// Orders the available edges in order to maximize the probability of finding a good route
+			// Traverses each route fully before moving to the next one
+			availableEdges.toVector.map { e => e -> costOf(e) }
+				.sortedWith(Ordering.by { _._2 }, Ordering.by { _._1.end.leavingEdges.size })
+				.foldLeft[Option[(Set[Route], Double)]](currentMinCost.map { Set[Route]() -> _ }) { case (bestRouteData, (edge, edgeCost)) =>
+				val minCost = bestRouteData.map { _._2 }
+				// Calculates next step cost
+				val stepCost = currentCost + edgeCost
+				// Will not continue to search the route if the minimum cost is exceeded
+				if (minCost.exists { _ < stepCost })
+					bestRouteData
+				else {
+					// Finds the routes from the linked node
+					val routeResult = edge.end.cheapestRoutesTo(node, stepCost, minCost, newVisitedNodes)(costOf)
+					// Remembers the route check results
+					// cachedPaths.getOrElseUpdate(edge.end, mutable.HashMap()) += ((node: AnyRef) -> routeResult)
+					// Checks whether the new route(s) are better than the previously found best routes
+					routeResult match {
+						// Case: Some routes were found that are better or as good as the ones found before
+						case Some((newRoutes, newCost)) =>
+							val fullNewRoutes = newRoutes.map { edge +: _ }
+							bestRouteData.filter { _._2 <= newCost } match {
+								// Case: The previously found routes are as good as the new ones => Combines
+								case Some((oldBestRoutes, bestCost)) =>
+									Some((oldBestRoutes ++ fullNewRoutes) -> bestCost)
+								// Case: The new routes are better => Overwrites
+								case None => Some(fullNewRoutes -> newCost)
+							}
+						// Case: No routes were found
+						case None => bestRouteData
 					}
 				}
-			}
+			}.filter { _._1.nonEmpty }
 		}
-		
-		newBestRoutes -> newMinCost
 	}
     
     /**

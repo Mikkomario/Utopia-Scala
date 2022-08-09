@@ -1,6 +1,5 @@
 package utopia.flow.generic
 
-import scala.collection.immutable.HashSet
 import utopia.flow.datastructure.mutable.Tree
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.immutable.Model
@@ -81,7 +80,7 @@ object DataType
     // ATTRIBUTES    ----------
     
     private var isSetup = false
-    private var _values = HashSet[DataType]()
+    private var _values = Set[DataType]()
     /**
      * Each data type ever created
      */
@@ -166,8 +165,7 @@ case class DataType(name: String, supportedClass: Class[_], superType: Option[Da
     /**
      * Finds out whether this data type is a subType of another data type
      */
-    def isOfType(other: DataType): Boolean = {this == other || superType.contains(other) || 
-            (superType.isDefined && superType.get.isOfType(other))}
+    def isOfType(other: DataType): Boolean = this == other || superType.exists { _.isOfType(other) }
     
     /**
      * Checks whether this data type supports an instance

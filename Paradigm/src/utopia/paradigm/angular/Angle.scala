@@ -136,6 +136,8 @@ case class Angle private(radians: Double)
     
     // COMPUTED PROPERTIES    --------
     
+    def circles = radians / (2 * math.Pi)
+    
     /**
       * This angle in radians. Between 0 and 2*Pi
       */

@@ -1,6 +1,6 @@
 package utopia.paradigm.generic
 
-import utopia.flow.generic.{Conversion, DataType, DoubleType, IntType, LocalTimeType, ModelType, PairType, StringType, ValueCaster, ValueConvertible, VectorType}
+import utopia.flow.generic.{Conversion, DataType, DoubleType, DurationType, IntType, LocalTimeType, ModelType, PairType, StringType, ValueCaster, ValueConvertible, VectorType}
 import utopia.flow.datastructure.immutable.{Model, Pair, Value}
 import utopia.flow.generic.ConversionReliability._
 import utopia.flow.generic.ValueConversions._
@@ -19,7 +19,9 @@ import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
 import utopia.paradigm.shape.template.VectorLike
 import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
 
+import java.time.LocalTime
 import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.FiniteDuration
 
 /**
  * This object handles casting of Genesis-specific data types
@@ -42,6 +44,10 @@ object ParadigmValueCaster extends ValueCaster
         Conversion(RotationType, DoubleType, CONTEXT_LOSS),
         Conversion(LinearVelocityType, DoubleType, CONTEXT_LOSS),
         Conversion(LinearAccelerationType, DoubleType, CONTEXT_LOSS),
+        // Conversions to LocalTime
+        Conversion(AngleType, LocalTimeType, MEANING_LOSS),
+        // Conversions to Duration
+        Conversion(RotationType, DurationType, MEANING_LOSS),
         // Conversions to Vector
         Conversion(Vector2DType, VectorType, CONTEXT_LOSS),
         Conversion(Vector3DType, VectorType, CONTEXT_LOSS),
@@ -95,9 +101,11 @@ object ParadigmValueCaster extends ValueCaster
         // Conversions to Vector3D
         Conversion(VectorType, Vector3DType, DANGEROUS),
         Conversion(Vector2DType, Vector3DType, PERFECT),
+        Conversion(Velocity3DType, Vector3DType, CONTEXT_LOSS),
         Conversion(Acceleration3DType, Vector3DType, CONTEXT_LOSS),
         Conversion(ModelType, Vector3DType, DANGEROUS),
         Conversion(RgbType, Vector3DType, CONTEXT_LOSS),
+        Conversion(HslType, Vector3DType, CONTEXT_LOSS),
         // Conversions to Point
         Conversion(Vector2DType, PointType, PERFECT),
         Conversion(SizeType, PointType, PERFECT),
@@ -138,12 +146,20 @@ object ParadigmValueCaster extends ValueCaster
         Conversion(AffineTransformationType, Matrix3DType, DATA_LOSS),
         // Conversions to Angle
         Conversion(DoubleType, AngleType, PERFECT),
-        Conversion(LocalTimeType, AngleType, CONTEXT_LOSS),
+        Conversion(LocalTimeType, AngleType, DATA_LOSS),
         Conversion(Vector2DType, AngleType, DATA_LOSS),
+        Conversion(Vector3DType, AngleType, MEANING_LOSS),
         Conversion(RotationType, AngleType, DATA_LOSS),
+        Conversion(Velocity2DType, AngleType, DATA_LOSS),
+        Conversion(Velocity3DType, AngleType, MEANING_LOSS),
+        Conversion(Acceleration2DType, AngleType, DATA_LOSS),
+        Conversion(Acceleration3DType, AngleType, MEANING_LOSS),
         Conversion(HslType, AngleType, DATA_LOSS),
         Conversion(StringType, AngleType, DANGEROUS),
+        // Conversions to Rotation
         Conversion(DoubleType, RotationType, PERFECT),
+        Conversion(DurationType, RotationType, CONTEXT_LOSS),
+        Conversion(AngleType, RotationType, CONTEXT_LOSS),
         Conversion(LinearTransformationType, RotationType, DATA_LOSS),
         Conversion(StringType, RotationType, DANGEROUS),
         // Conversions to LinearVelocity
@@ -192,11 +208,12 @@ object ParadigmValueCaster extends ValueCaster
         Conversion(LinearTransformationType, AffineTransformationType, PERFECT),
         Conversion(ModelType, AffineTransformationType, DANGEROUS),
         // Conversions to RGB
-        Conversion(Vector3DType, RgbType, MEANING_LOSS),
+        Conversion(Vector3DType, RgbType, DATA_LOSS),
         Conversion(HslType, RgbType, PERFECT),
         Conversion(ColorType, RgbType, PERFECT),
         Conversion(ModelType, RgbType, DANGEROUS),
         // Conversions to HSL
+        Conversion(Vector3DType, HslType, DATA_LOSS),
         Conversion(AngleType, HslType, CONTEXT_LOSS),
         Conversion(RgbType, HslType, PERFECT),
         Conversion(ColorType, HslType, PERFECT),
@@ -217,6 +234,8 @@ object ParadigmValueCaster extends ValueCaster
         {
             case IntType => intOf(value)
             case DoubleType => doubleOf(value)
+            case LocalTimeType => localTimeOf(value)
+            case DurationType => durationOf(value)
             case VectorType => vectorOf(value)
             case PairType => pairOf(value)
             case ModelType => modelOf(value)
@@ -264,6 +283,22 @@ object ParadigmValueCaster extends ValueCaster
         case RotationType => Some(value.getRotation.clockwiseRadians)
         case LinearVelocityType => Some(value.getLinearVelocity.perMilliSecond)
         case LinearAccelerationType => Some(value.getLinearAcceleration.perMilliSecond.perMilliSecond)
+        case _ => None
+    }
+    
+    private def localTimeOf(value: Value): Option[LocalTime] = value.dataType match {
+        case AngleType =>
+            val angle = value.getAngle.degrees
+            val clockAngle = if (angle > 270) angle - 270 else angle + 90
+            Some(LocalTime.MIDNIGHT + (clockAngle * 2).minutes)
+        case _ => None
+    }
+    
+    private def durationOf(value: Value): Option[FiniteDuration] = value.dataType match {
+        case RotationType =>
+            // Each 360 degree rotation represents 24 hours
+            val rot = value.getRotation.clockwiseCircles
+            Some((rot * 24).hours)
         case _ => None
     }
     
@@ -353,6 +388,9 @@ object ParadigmValueCaster extends ValueCaster
         case RgbType =>
             val rgb = value.getRgb
             Some(Vector3D(rgb.red, rgb.green, rgb.blue))
+        case HslType =>
+            val hsl = value.getHsl
+            Some(Vector2D.lenDir(hsl.saturation, hsl.hue).withZ(hsl.luminosity - 0.5))
         case _ => None
     }
     
@@ -430,9 +468,14 @@ object ParadigmValueCaster extends ValueCaster
     
     private def angleOf(value: Value): Option[Angle] = value.dataType match {
         case DoubleType => Some(Angle.ofRadians(value.getDouble))
-        case LocalTimeType => Some(Angle.up + Rotation.ofCircles(value.getLocalTime.toDuration.toPreciseHours / 24.0))
+        case LocalTimeType => Some(Angle.up + Rotation.ofCircles(value.getLocalTime.toDuration.toPreciseHours / 12))
         case Vector2DType => Some(value.getVector2D.direction)
+        case Vector3DType => Some(value.getVector3D.direction)
         case RotationType => Some(value.getRotation.toAngle)
+        case Velocity2DType => Some(value.getVelocity2D.direction)
+        case Velocity3DType => Some(value.getVelocity3D.direction)
+        case Acceleration2DType => Some(value.getAcceleration2D.direction)
+        case Acceleration3DType => Some(value.getAcceleration3D.direction)
         case HslType => Some(value.getHsl.hue)
         case StringType =>
             val s = value.getString
@@ -452,6 +495,8 @@ object ParadigmValueCaster extends ValueCaster
     
     private def rotationOf(value: Value): Option[Rotation] = value.dataType match {
         case DoubleType => Some(Rotation.ofRadians(value.getDouble))
+        case DurationType => Some(Rotation.ofCircles(value.getDuration.toPreciseHours / 24))
+        case AngleType => Some(value.getAngle.toRotation)
         case LinearTransformationType => Some(value.getLinearTransformation.rotation)
         case StringType =>
             val s = value.getString
@@ -561,6 +606,9 @@ object ParadigmValueCaster extends ValueCaster
     }
     
     private def hslOf(value: Value): Option[Hsl] = value.dataType match {
+        case Vector3DType =>
+            val v = value.getVector3D
+            Some(Hsl(v.direction, v.in2D.length, v.z + 0.5))
         case AngleType => Some(Hsl(value.getAngle, 1, 0.5))
         case RgbType => Some(value.getRgb.toHSL)
         case ColorType => Some(value.getColor.hsl)

@@ -144,6 +144,9 @@ case class Rotation private(radians: Double, direction: RotationDirection = Cloc
 	  *         counter clockwise.
 	  */
 	def counterClockwiseDegrees = -clockwiseDegrees
+	// TODO: Document
+	def clockwiseCircles = (radians / (2 * math.Pi)) * direction.modifier
+	def counterClockwiseCircles = -clockwiseCircles
 	
 	/**
 	 * This rotation as an angle from origin (right)
