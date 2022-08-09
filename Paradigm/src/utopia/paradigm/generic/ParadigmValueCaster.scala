@@ -52,39 +52,160 @@ object ParadigmValueCaster extends ValueCaster
         Conversion(Matrix2DType, VectorType, CONTEXT_LOSS),
         Conversion(Matrix3DType, VectorType, CONTEXT_LOSS),
         Conversion(RgbType, VectorType, CONTEXT_LOSS),
-        // TODO: Continue with to Pair, and then downwards
+        // Conversions to Pair
+        Conversion(Vector2DType, PairType, CONTEXT_LOSS),
+        Conversion(Vector3DType, PairType, DATA_LOSS),
+        Conversion(PointType, PairType, CONTEXT_LOSS),
+        Conversion(SizeType, PairType, CONTEXT_LOSS),
+        Conversion(LineType, PairType, CONTEXT_LOSS),
+        Conversion(BoundsType, PairType, CONTEXT_LOSS),
+        Conversion(Matrix2DType, PairType, CONTEXT_LOSS),
+        Conversion(LinearVelocityType, PairType, CONTEXT_LOSS),
+        Conversion(Velocity2DType, PairType, CONTEXT_LOSS),
+        Conversion(Velocity3DType, PairType, CONTEXT_LOSS),
+        Conversion(LinearAccelerationType, PairType, CONTEXT_LOSS),
+        Conversion(Acceleration2DType, PairType, CONTEXT_LOSS),
+        Conversion(Acceleration3DType, PairType, CONTEXT_LOSS),
         // Conversions to Model
-        Conversion(Vector3DType, ModelType, PERFECT),
-        Conversion(PointType, ModelType, PERFECT),
-        Conversion(SizeType, ModelType, PERFECT),
-        Conversion(LineType, ModelType, PERFECT),
-        Conversion(CircleType, ModelType, PERFECT),
-        Conversion(BoundsType, ModelType, PERFECT),
+        Conversion(Vector2DType, ModelType, CONTEXT_LOSS),
+        Conversion(Vector3DType, ModelType, CONTEXT_LOSS),
+        Conversion(PointType, ModelType, CONTEXT_LOSS),
+        Conversion(SizeType, ModelType, CONTEXT_LOSS),
+        Conversion(LineType, ModelType, CONTEXT_LOSS),
+        Conversion(CircleType, ModelType, CONTEXT_LOSS),
+        Conversion(BoundsType, ModelType, CONTEXT_LOSS),
+        Conversion(LinearVelocityType, ModelType, CONTEXT_LOSS),
+        Conversion(Velocity2DType, ModelType, CONTEXT_LOSS),
+        Conversion(Velocity3DType, ModelType, CONTEXT_LOSS),
+        Conversion(LinearAccelerationType, ModelType, CONTEXT_LOSS),
+        Conversion(Acceleration2DType, ModelType, CONTEXT_LOSS),
+        Conversion(Acceleration3DType, ModelType, CONTEXT_LOSS),
+        Conversion(RgbType, ModelType, CONTEXT_LOSS),
+        Conversion(HslType, ModelType, CONTEXT_LOSS),
+        // Conversions to Vector2D
+        Conversion(VectorType, Vector2DType, DANGEROUS),
+        Conversion(PairType, Vector2DType, DANGEROUS),
+        Conversion(Vector3DType, Vector2DType, DATA_LOSS),
+        Conversion(PointType, Vector2DType, CONTEXT_LOSS),
+        Conversion(SizeType, Vector2DType, CONTEXT_LOSS),
+        Conversion(LineType, Vector2DType, DATA_LOSS),
+        Conversion(Velocity2DType, Vector2DType, CONTEXT_LOSS),
+        Conversion(Acceleration2DType, Vector2DType, CONTEXT_LOSS),
+        Conversion(ModelType, Vector2DType, DANGEROUS),
         // Conversions to Vector3D
-        Conversion(PointType, Vector3DType, PERFECT),
-        Conversion(SizeType, Vector3DType, PERFECT),
-        Conversion(VectorType, Vector3DType, MEANING_LOSS),
-        Conversion(ModelType, Vector3DType, MEANING_LOSS),
-        Conversion(LineType, Vector3DType, DATA_LOSS),
+        Conversion(VectorType, Vector3DType, DANGEROUS),
+        Conversion(Vector2DType, Vector3DType, PERFECT),
+        Conversion(Acceleration3DType, Vector3DType, CONTEXT_LOSS),
+        Conversion(ModelType, Vector3DType, DANGEROUS),
+        Conversion(RgbType, Vector3DType, CONTEXT_LOSS),
         // Conversions to Point
-        Conversion(Vector3DType, PointType, DATA_LOSS),
+        Conversion(Vector2DType, PointType, PERFECT),
         Conversion(SizeType, PointType, PERFECT),
-        Conversion(VectorType, PointType, MEANING_LOSS),
-        Conversion(ModelType, PointType, MEANING_LOSS),
+        Conversion(BoundsType, PointType, DATA_LOSS),
+        Conversion(ModelType, PointType, DANGEROUS),
         // Conversions to Size
-        Conversion(Vector3DType, SizeType, DATA_LOSS),
-        Conversion(PointType, SizeType, PERFECT),
-        Conversion(VectorType, SizeType, MEANING_LOSS),
-        Conversion(ModelType, SizeType, MEANING_LOSS),
+        Conversion(Vector2DType, SizeType, PERFECT),
+        Conversion(PointType, SizeType, CONTEXT_LOSS),
+        Conversion(BoundsType, SizeType, DATA_LOSS),
+        Conversion(ModelType, SizeType, DANGEROUS),
         // Conversions to Line
-        Conversion(BoundsType, LineType, DATA_LOSS),
-        Conversion(VectorType, LineType, MEANING_LOSS),
-        Conversion(ModelType, LineType, MEANING_LOSS),
+        Conversion(PairType, LineType, DANGEROUS),
+        Conversion(BoundsType, LineType, MEANING_LOSS),
+        Conversion(Matrix2DType, LineType, MEANING_LOSS),
+        Conversion(ModelType, LineType, DANGEROUS),
         // Conversions to Circle
-        Conversion(ModelType, CircleType, MEANING_LOSS),
+        Conversion(PairType, CircleType, DANGEROUS),
+        Conversion(ModelType, CircleType, DANGEROUS),
+        // Conversion to Polygon
+        Conversion(VectorType, PolygonType, DANGEROUS),
+        Conversion(LineType, PolygonType, MEANING_LOSS),
+        Conversion(CircleType, PolygonType, DATA_LOSS),
         // Conversions to Bounds
-        Conversion(LineType, BoundsType, DATA_LOSS),
-        Conversion(ModelType, BoundsType, MEANING_LOSS)
+        Conversion(PairType, BoundsType, DANGEROUS),
+        Conversion(PolygonType, BoundsType, DATA_LOSS),
+        Conversion(LineType, BoundsType, MEANING_LOSS),
+        Conversion(CircleType, BoundsType, DATA_LOSS),
+        Conversion(ModelType, BoundsType, DANGEROUS),
+        // Conversions to Matrix2D
+        Conversion(PairType, Matrix2DType, DANGEROUS),
+        Conversion(LineType, Matrix2DType, CONTEXT_LOSS),
+        Conversion(BoundsType, Matrix2DType, MEANING_LOSS),
+        Conversion(Matrix3DType, Matrix2DType, DATA_LOSS),
+        Conversion(RotationType, Matrix2DType, CONTEXT_LOSS),
+        Conversion(LinearTransformationType, Matrix2DType, DATA_LOSS),
+        Conversion(VectorType, Matrix3DType, DANGEROUS),
+        Conversion(Matrix2DType, Matrix3DType, PERFECT),
+        Conversion(AffineTransformationType, Matrix3DType, DATA_LOSS),
+        // Conversions to Angle
+        Conversion(DoubleType, AngleType, PERFECT),
+        Conversion(LocalTimeType, AngleType, CONTEXT_LOSS),
+        Conversion(Vector2DType, AngleType, DATA_LOSS),
+        Conversion(RotationType, AngleType, DATA_LOSS),
+        Conversion(HslType, AngleType, DATA_LOSS),
+        Conversion(StringType, AngleType, DANGEROUS),
+        Conversion(DoubleType, RotationType, PERFECT),
+        Conversion(LinearTransformationType, RotationType, DATA_LOSS),
+        Conversion(StringType, RotationType, DANGEROUS),
+        // Conversions to LinearVelocity
+        Conversion(DoubleType, LinearVelocityType, PERFECT),
+        Conversion(PairType, LinearVelocityType, DANGEROUS),
+        Conversion(LinearAccelerationType, LinearVelocityType, CONTEXT_LOSS),
+        Conversion(Velocity2DType, LinearVelocityType, DATA_LOSS),
+        Conversion(Velocity3DType, LinearVelocityType, DATA_LOSS),
+        Conversion(ModelType, LinearVelocityType, DANGEROUS),
+        // Conversions to Velocity2D
+        Conversion(PairType, Velocity2DType, DANGEROUS),
+        Conversion(Vector2DType, Velocity2DType, PERFECT),
+        Conversion(Velocity3DType, Velocity2DType, DATA_LOSS),
+        Conversion(Acceleration2DType, Velocity2DType, CONTEXT_LOSS),
+        Conversion(ModelType, Velocity2DType, DANGEROUS),
+        // Conversions to Velocity3D
+        Conversion(PairType, Velocity3DType, DANGEROUS),
+        Conversion(Vector3DType, Velocity3DType, PERFECT),
+        Conversion(Velocity2DType, Velocity3DType, PERFECT),
+        Conversion(Acceleration3DType, Velocity3DType, CONTEXT_LOSS),
+        Conversion(ModelType, Velocity3DType, DANGEROUS),
+        // Conversions to LinearAcceleration
+        Conversion(DoubleType, LinearAccelerationType, PERFECT),
+        Conversion(PairType, LinearAccelerationType, DANGEROUS),
+        Conversion(LinearVelocityType, LinearAccelerationType, CONTEXT_LOSS),
+        Conversion(Acceleration2DType, LinearAccelerationType, DATA_LOSS),
+        Conversion(Acceleration3DType, LinearAccelerationType, DATA_LOSS),
+        Conversion(ModelType, LinearAccelerationType, DANGEROUS),
+        // Conversions to Acceleration2D
+        Conversion(PairType, Acceleration2DType, DANGEROUS),
+        Conversion(Vector2DType, Acceleration2DType, PERFECT),
+        Conversion(Velocity2DType, Acceleration2DType, CONTEXT_LOSS),
+        Conversion(Acceleration3DType, Acceleration2DType, DATA_LOSS),
+        Conversion(ModelType, Acceleration2DType, DANGEROUS),
+        // Conversions to Acceleration3D
+        Conversion(PairType, Acceleration3DType, DANGEROUS),
+        Conversion(Vector3DType, Acceleration3DType, PERFECT),
+        Conversion(Velocity3DType, Acceleration3DType, CONTEXT_LOSS),
+        Conversion(Acceleration2DType, Acceleration3DType, PERFECT),
+        Conversion(ModelType, Acceleration3DType, DANGEROUS),
+        // Conversions to LinearTransformation
+        Conversion(RotationType, LinearTransformationType, PERFECT),
+        Conversion(AffineTransformationType, LinearTransformationType, DATA_LOSS),
+        Conversion(ModelType, LinearTransformationType, DANGEROUS),
+        // Conversions to AffineTransformation
+        Conversion(LinearTransformationType, AffineTransformationType, PERFECT),
+        Conversion(ModelType, AffineTransformationType, DANGEROUS),
+        // Conversions to RGB
+        Conversion(Vector3DType, RgbType, MEANING_LOSS),
+        Conversion(HslType, RgbType, PERFECT),
+        Conversion(ColorType, RgbType, PERFECT),
+        Conversion(ModelType, RgbType, DANGEROUS),
+        // Conversions to HSL
+        Conversion(AngleType, HslType, CONTEXT_LOSS),
+        Conversion(RgbType, HslType, PERFECT),
+        Conversion(ColorType, HslType, PERFECT),
+        Conversion(ModelType, HslType, DANGEROUS),
+        // Conversions to Color
+        Conversion(StringType, ColorType, DANGEROUS),
+        Conversion(IntType, ColorType, MEANING_LOSS),
+        Conversion(RgbType, ColorType, PERFECT),
+        Conversion(HslType, ColorType, PERFECT)
     )
     
     
@@ -94,14 +215,34 @@ object ParadigmValueCaster extends ValueCaster
     {
         val newContent = toType match 
         {
+            case IntType => intOf(value)
+            case DoubleType => doubleOf(value)
             case VectorType => vectorOf(value)
+            case PairType => pairOf(value)
             case ModelType => modelOf(value)
+            case Vector2DType => vector2DOf(value)
             case Vector3DType => vector3DOf(value)
             case PointType => pointOf(value)
             case SizeType => sizeOf(value)
             case LineType => lineOf(value)
             case CircleType => circleOf(value)
+            case PolygonType => polygonOf(value)
             case BoundsType => boundsOf(value)
+            case AngleType => angleOf(value)
+            case RotationType => rotationOf(value)
+            case Matrix2DType => matrix2DOf(value)
+            case Matrix3DType => matrix3DOf(value)
+            case LinearTransformationType => linearTransformationOf(value)
+            case AffineTransformationType => affineTransformationOf(value)
+            case LinearVelocityType => linearVelocityOf(value)
+            case Velocity2DType => velocity2DOf(value)
+            case Velocity3DType => velocity3DOf(value)
+            case LinearAccelerationType => linearAccelerationOf(value)
+            case Acceleration2DType => acceleration2DOf(value)
+            case Acceleration3DType => acceleration3DOf(value)
+            case RgbType => rgbOf(value)
+            case HslType => hslOf(value)
+            case ColorType => colorOf(value)
             case _ => None
         }
         
@@ -151,6 +292,9 @@ object ParadigmValueCaster extends ValueCaster
         case LineType =>
             val l = value.getLine
             Some(Pair(l.start, l.end))
+        case BoundsType =>
+            val b = value.getBounds
+            Some(Pair(b.position, b.size))
         case Matrix2DType => Some(value.getMatrix2D.dimensions.map { v => v })
         case LinearVelocityType =>
             val v = value.getLinearVelocity
@@ -298,8 +442,8 @@ object ParadigmValueCaster extends ValueCaster
             else {
                 val (numPart, typePart) = s.splitAt(firstLetterIndex)
                 typePart.toLowerCase.take(3) match {
-                    case "rad" => numPart.double.map(Angle.ofRadians)
-                    case "deg" => numPart.double.map(Angle.ofDegrees)
+                    case "rad" => numPart.trim.double.map(Angle.ofRadians)
+                    case "deg" => numPart.trim.double.map(Angle.ofDegrees)
                     case _ => None
                 }
             }
@@ -317,8 +461,8 @@ object ParadigmValueCaster extends ValueCaster
             else {
                 val (numPart, typePart) = s.splitAt(firstLetterIndex)
                 typePart.toLowerCase.take(3) match {
-                    case "rad" => numPart.double.map { Rotation.ofRadians(_) }
-                    case "deg" => numPart.double.map { Rotation.ofDegrees(_) }
+                    case "rad" => numPart.trim.double.map { Rotation.ofRadians(_) }
+                    case "deg" => numPart.trim.double.map { Rotation.ofDegrees(_) }
                     case _ => None
                 }
             }

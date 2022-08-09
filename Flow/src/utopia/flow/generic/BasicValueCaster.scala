@@ -18,7 +18,6 @@ import scala.util.Try
  * @author Mikko Hilpinen
  * @since 19.11.2016
  */
-// TODO: Add casting from String to Duration, which seeks for a unit
 object BasicValueCaster extends ValueCaster
 {
     // ATTRIBUTES    --------------
@@ -26,8 +25,11 @@ object BasicValueCaster extends ValueCaster
     private val alternativeDateFormat = DateTimeFormatter.ofPattern("dd.MM.uuuu")
     
     override lazy val conversions = Set(
-        // Any type can be converted to a string using .toString
+        // Any type can be converted to a string using .toString, although some conversions may be considered more
+        // plausible
         Conversion(AnyType, StringType, DATA_LOSS),
+        Conversion(InstantType, StringType, CONTEXT_LOSS),
+        Conversion(ModelType, StringType, CONTEXT_LOSS),
         // Conversions to Int
         Conversion(DoubleType, IntType, DATA_LOSS),
         Conversion(LongType, IntType, DATA_LOSS),
@@ -83,6 +85,7 @@ object BasicValueCaster extends ValueCaster
         Conversion(DoubleType, DurationType, PERFECT),
         Conversion(InstantType, DurationType, CONTEXT_LOSS),
         Conversion(ModelType, DurationType, DANGEROUS),
+        Conversion(StringType, DurationType, DANGEROUS),
         // Conversions to Days
         Conversion(DurationType, DaysType, DATA_LOSS),
         Conversion(IntType, DaysType, PERFECT),
@@ -285,16 +288,29 @@ object BasicValueCaster extends ValueCaster
         case ModelType =>
             val model = value.getModel
             model("value").long.flatMap { v =>
-                model("unit").string.map { _.toLowerCase }.flatMap {
-                    case "ms" | "millis" | "milliseconds" => Some(TimeUnit.MILLISECONDS)
-                    case "s" | "seconds" => Some(TimeUnit.SECONDS)
-                    case "m" | "mins" | "minutes" => Some(TimeUnit.MINUTES)
-                    case "h" | "hours" => Some(TimeUnit.HOURS)
-                    case "d" | "days" => Some(TimeUnit.DAYS)
-                    case _ => None
-                }.map { FiniteDuration(v, _) }
+                model("unit").string.flatMap(timeUnitFrom).map { FiniteDuration(v, _) }
+            }
+        case StringType =>
+            val s = value.getString
+            val firstLetterIndex = s.indexWhere { _.isLetter }
+            if (firstLetterIndex < 0)
+                s.double.map { _.millis }
+            else {
+                val (numPart, unitPart) = s.splitAt(firstLetterIndex)
+                timeUnitFrom(unitPart.trim)
+                    .flatMap { unit => numPart.trim.double.map { a => FiniteDuration(a.toLong, unit) } }
             }
         case _ => None
+    }
+    private def timeUnitFrom(str: String) = {
+        str.toLowerCase match {
+            case "ms" | "millis" | "milliseconds" => Some(TimeUnit.MILLISECONDS)
+            case "s" | "sec" | "seconds" => Some(TimeUnit.SECONDS)
+            case "m" | "min" | "mins" | "minutes" => Some(TimeUnit.MINUTES)
+            case "h" | "hour" | "hours" => Some(TimeUnit.HOURS)
+            case "d" | "day" | "days" => Some(TimeUnit.DAYS)
+            case _ => None
+        }
     }
     
     private def daysOf(value: Value): Option[Days] = value.dataType match {

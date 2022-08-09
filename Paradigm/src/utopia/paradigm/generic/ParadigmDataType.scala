@@ -63,7 +63,6 @@ object ParadigmDataType
             AffineTransformationType, LinearVelocityType, LinearAccelerationType, Velocity2DType, Acceleration2DType,
             Velocity3DType, Acceleration3DType, RgbType, HslType, ColorType)
         ConversionHandler.addCaster(ParadigmValueCaster)
-        JsonValueConverter.introduce(ParadigmJsonValueConverter)
     }
 }
 
