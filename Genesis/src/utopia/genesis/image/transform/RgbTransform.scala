@@ -1,6 +1,6 @@
 package utopia.genesis.image.transform
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 
 /**
   * This filter transforms RGB color channel values

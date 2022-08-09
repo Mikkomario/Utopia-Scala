@@ -1,6 +1,6 @@
 package utopia.reflection.test.swing
 
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.swing.layout.SegmentGroup
@@ -19,7 +19,7 @@ import utopia.reflection.shape.LengthExtensions._
   */
 object SegmentRowsTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 
 	import TestContext._
 

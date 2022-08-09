@@ -1,14 +1,13 @@
 package utopia.genesis.test
 
-import utopia.genesis.generic.GenesisValue._
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Line, Point, Size, Transformation}
-import utopia.genesis.generic.{BoundsType, CircleType, GenesisDataType, LineType, PointType, SizeType, TransformationType, Vector3DType}
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Line, Point, Size}
+import utopia.paradigm.generic.{BoundsType, CircleType, LineType, ParadigmDataType, PointType, SizeType, Vector3DType}
+import utopia.paradigm.generic.ParadigmValue._
 import utopia.flow.generic.VectorType
 import utopia.flow.generic.ModelType
 import utopia.flow.datastructure.immutable.Model
 import utopia.flow.parse.{JSONReader, JsonParser}
-import utopia.genesis.shape.shape1D.Rotation
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.paradigm.shape.shape3d.Vector3D
 
 /**
  * This is a unit test for the new data type implementations
@@ -17,7 +16,7 @@ import utopia.genesis.shape.shape3D.Vector3D
  */
 object DataTypeTest extends App
 {
-    GenesisDataType.setup()
+    ParadigmDataType.setup()
     
 	private implicit val jsonParser: JsonParser = JSONReader
 	
@@ -29,7 +28,6 @@ object DataTypeTest extends App
     val line = Line(point1, point2)
     val circle = Circle(point2, 12.25)
     val rectangle = Bounds(point2, size1)
-    val transformation = Transformation(vector2.in2D, vector2.in2D, Rotation.ofRadians(math.Pi), vector1.in2D)
     
     val v1 = vector1.toValue
     val v2 = vector2.toValue
@@ -39,7 +37,6 @@ object DataTypeTest extends App
     val l = line.toValue
     val c = circle.toValue
     val r = rectangle.toValue
-    val t = transformation.toValue
     
     assert(v1.vectorOr().size == 3)
     assert(v1(0).doubleOr() == 1)
@@ -78,11 +75,6 @@ object DataTypeTest extends App
     assert(r("size") == s1)
     // assert(r.vector3DOr() ~== v1.vector3DOr())
     
-    assert(t("translation") == v2)
-    assert(t("scaling") == v2)
-    assert(t("rotation").doubleOr() == math.Pi)
-    assert(t("shear") == v1)
-    
     assert(v1.castTo(VectorType).get.castTo(Vector3DType).get == v1)
     assert(v1.castTo(ModelType).get.castTo(Vector3DType).get == v1)
 	
@@ -100,10 +92,7 @@ object DataTypeTest extends App
     assert(r.castTo(LineType).get.castTo(BoundsType).get == r)
     assert(r.castTo(ModelType).get.castTo(BoundsType).get == r)
     
-    assert(t.castTo(ModelType).get.castTo(TransformationType).get == t)
-    
-    val model = Model(Vector(("vector", v1), ("Point", p1), ("Size", s1), ("line", l), ("circle", c), ("rectangle", r),
-            ("transformation", t)))
+    val model = Model(Vector(("vector", v1), ("Point", p1), ("Size", s1), ("line", l), ("circle", c), ("rectangle", r)))
     println(model.toJson)
     
     // Tests JSON parsing

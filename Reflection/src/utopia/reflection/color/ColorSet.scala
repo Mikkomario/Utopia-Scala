@@ -1,8 +1,8 @@
 package utopia.reflection.color
 
 import utopia.flow.datastructure.immutable.Lazy
-import utopia.genesis.color.Color
-import utopia.genesis.color.ColorContrastStandard.Minimum
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.reflection.color.ColorShade.{Dark, Light, Standard}
 import utopia.reflection.component.context.ColorContextLike
 

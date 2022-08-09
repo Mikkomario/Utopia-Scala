@@ -8,7 +8,7 @@ import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
 import utopia.reflection.localization.LocalString._
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.shape2D.{Point, Size}
+import utopia.paradigm.shape.shape2d.{Point, Size}
 import utopia.genesis.util.Screen
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.Mortal

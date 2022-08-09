@@ -2,7 +2,7 @@ package utopia.reflection.component.swing.label
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.template.DrawLevel.Normal

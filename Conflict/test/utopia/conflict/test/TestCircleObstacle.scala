@@ -6,7 +6,7 @@ import utopia.conflict.handling.Collidable
 import scala.collection.immutable.HashSet
 import utopia.conflict.test.TestCollisionGroups.Obstacle
 import utopia.genesis.handling.Drawable
-import utopia.genesis.shape.shape2D.Circle
+import utopia.paradigm.shape.shape2d.Circle
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.immutable.Handleable
 

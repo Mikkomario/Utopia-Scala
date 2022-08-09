@@ -1,6 +1,6 @@
 package utopia.reach.container
 
-import utopia.genesis.shape.shape2D.{Bounds, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.{Bounds, Size, Vector2D}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.cursor.ReachCursorManager
 import utopia.reach.focus.ReachFocusManager

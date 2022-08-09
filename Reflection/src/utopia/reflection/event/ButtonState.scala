@@ -1,6 +1,6 @@
 package utopia.reflection.event
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 
 object ButtonState
 {

@@ -5,7 +5,7 @@ import java.awt.FontMetrics
 import utopia.genesis.event._
 import utopia.genesis.handling.mutable._
 import utopia.genesis.handling.{MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
-import utopia.genesis.shape.shape2D.Point
+import utopia.paradigm.shape.shape2d.Point
 import utopia.inception.handling.Handleable
 import utopia.reflection.component.template.layout.Area
 import utopia.reflection.text.Font

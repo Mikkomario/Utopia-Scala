@@ -8,7 +8,7 @@ import java.awt.Color
 import utopia.conflict.collision.CollisionShape
 import utopia.conflict.handling.Collidable
 import utopia.genesis.handling.Drawable
-import utopia.genesis.shape.shape2D.{Line, Polygonic}
+import utopia.paradigm.shape.shape2d.{Line, Polygonic}
 import utopia.inception.handling.immutable.Handleable
 
 /**

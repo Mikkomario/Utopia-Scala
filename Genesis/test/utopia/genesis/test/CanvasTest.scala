@@ -7,7 +7,7 @@ import utopia.genesis.handling.Drawable
 import utopia.genesis.handling.immutable.DrawableHandler
 import utopia.genesis.view.{Canvas, MainFrame, RepaintLoop}
 import utopia.genesis.util.Drawer
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, ShapeConvertible, Size}
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, ShapeConvertible, Size}
 import utopia.inception.handling.HandlerType
 
 /**

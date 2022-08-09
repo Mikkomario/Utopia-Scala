@@ -4,8 +4,8 @@ import utopia.flow.datastructure.immutable.View
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.datastructure.template.Viewable
 import utopia.flow.event.{Changing, ChangingLike, Fixed}
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Bounds, Point, Vector2D}
+import utopia.paradigm.color.Color
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Vector2D}
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.{DrawLevel, SelectableTextDrawerLike}

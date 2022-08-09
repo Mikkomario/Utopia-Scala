@@ -1,6 +1,6 @@
 package utopia.reflection.component.context
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.localization.Localizer
 import utopia.reflection.shape.Alignment

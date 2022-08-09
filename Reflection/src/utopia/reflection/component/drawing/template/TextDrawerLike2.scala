@@ -1,8 +1,8 @@
 package utopia.reflection.component.drawing.template
 
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.transform.AffineTransformation
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.color.Color
+import utopia.paradigm.transform.AffineTransformation
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.{Font, MeasuredText}

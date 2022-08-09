@@ -2,13 +2,13 @@ package utopia.reach.test
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.FileExtensions._
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.event.KeyStateEvent
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.image.Image
-import utopia.genesis.shape.Axis.X
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.shape.shape2d.Size
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.label.image.{ImageLabel, ViewImageLabel}
@@ -32,7 +32,7 @@ import java.awt.event.KeyEvent
 object ImageViewStackTest extends App
 {
 	System.setProperty("sun.java2d.noddraw", true.toString)
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	import utopia.reflection.test.TestContext._
 	import TestCursors._
 	

@@ -1,7 +1,7 @@
 package utopia.reach.test
 
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.Point
+import utopia.paradigm.shape.shape2d.Point
 import utopia.reflection.image.SingleColorIcon
 import utopia.flow.util.FileExtensions._
 import utopia.reach.cursor.CursorType.{Default, Interactive, Text}

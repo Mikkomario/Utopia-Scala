@@ -1,11 +1,10 @@
 package utopia.genesis.test
 
 import scala.math.Ordering.Double.TotalOrdering
-import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.shape.shape2D.{Circle, Line, Point, Vector2D}
-import utopia.genesis.util.Extensions._
-import utopia.genesis.shape.Axis._
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.flow.operator.EqualsExtensions._
+import utopia.paradigm.shape.shape2d.{Circle, Line, Point, Vector2D}
+import utopia.paradigm.enumeration.Axis._
+import utopia.paradigm.generic.ParadigmDataType
 
 /**
  * This test makes sure circle and line class projection and collision algorithms are working 
@@ -14,12 +13,12 @@ import utopia.genesis.shape.shape3D.Vector3D
  */
 object CollisionTest extends App
 {
-    GenesisDataType.setup()
+    ParadigmDataType.setup()
     
     val circle1 = Circle(Point.origin, 2)
-    val circle2 = Circle(Point(3, 0), 2)
+    val circle2 = Circle(Point(3), 2)
     
-    assert(circle1.projectedOver(X) == Line(Point(-2, 0), Point(2, 0)))
+    assert(circle1.projectedOver(X) == Line(Point(-2), Point(2)))
     
     val mtv1 = circle1.collisionMtvWith(circle2)
     
@@ -44,7 +43,7 @@ object CollisionTest extends App
     val line1 = Line(Point(1.5, -3), Point(1.5, 3))
     
     assert(line1.projectedOver(Y) == Line(Point(0, -3), Point(0, 3)))
-    assert(line1.projectedOver(X) == Line(Point(1.5, 0), Point(1.5, 0)))
+    assert(line1.projectedOver(X) == Line(Point(1.5), Point(1.5)))
     assert(line1.collisionAxes.size == 2)
     assert(line1.collisionAxes.exists { _ isParallelWith X })
     
@@ -56,7 +55,7 @@ object CollisionTest extends App
     val collisionPoints2 = line1.circleIntersection(circle1).sortBy { _.y }
     
     println(collisionPoints2)
-    assert(collisionPoints2 ~== collisionPoints1)
+    assert(collisionPoints2.hasEqualContentWith(collisionPoints1) { _ ~== _ })
     
     println("Success!")
 }

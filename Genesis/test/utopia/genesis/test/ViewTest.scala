@@ -2,7 +2,7 @@ package utopia.genesis.test
 
 import utopia.genesis.view.MainFrame
 import javax.swing.JPanel
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.shape.shape2d.Size
 
 object ViewTest extends App
 {

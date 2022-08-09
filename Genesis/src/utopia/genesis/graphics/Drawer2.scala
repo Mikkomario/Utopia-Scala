@@ -1,7 +1,7 @@
 package utopia.genesis.graphics
 
-import utopia.genesis.shape.shape2D.{Bounds, Polygonic}
-import utopia.genesis.shape.shape2D.transform.{AffineTransformable, LinearTransformable}
+import utopia.paradigm.shape.shape2d.{Bounds, Polygonic}
+import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
 
 /**
   * Used for drawing. These drawer instances are available only for a limited time, after which they are closed.

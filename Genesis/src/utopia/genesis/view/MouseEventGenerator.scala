@@ -6,7 +6,7 @@ import utopia.flow.async.{ActionQueue, VolatileOption}
 import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
 import utopia.genesis.handling.Actor
-import utopia.genesis.shape.shape2D.Point
+import utopia.paradigm.shape.shape2d.Point
 import utopia.inception.handling.mutable.Killable
 import utopia.inception.handling.{HandlerType, Mortal}
 
@@ -46,18 +46,18 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
     /**
       * @return A handler that distributes generated mouse move events
       */
-    def moveHandler = _moveHandler.setOneIfEmptyAndGet { MouseMoveHandler() }
+    def moveHandler = _moveHandler.setOneIfEmpty { MouseMoveHandler() }
     /**
       * @return A handler that distributes generated mouse button state events
       */
-    def buttonHandler = _buttonHandler.setOneIfEmptyAndGet {
+    def buttonHandler = _buttonHandler.setOneIfEmpty {
         component.foreach { _.addMouseListener(MouseEventReceiver) }
         MouseButtonStateHandler()
     }
     /**
       * @return A handler that distributes generated mouse wheel events
       */
-    def wheelHandler = _wheelHandler.setOneIfEmptyAndGet {
+    def wheelHandler = _wheelHandler.setOneIfEmpty {
         component.foreach { _.addMouseWheelListener(MouseWheelEventReceiver) }
         MouseWheelHandler()
     }

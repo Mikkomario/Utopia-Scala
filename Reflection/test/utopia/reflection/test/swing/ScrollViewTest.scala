@@ -5,12 +5,12 @@ import utopia.flow.async.LoopingProcess
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.WaitTarget.WaitDuration
-import utopia.genesis.color.Color
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.color.Color
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{ActorLoop, KeyStateListener, MouseButtonStateListener}
-import utopia.genesis.shape.Axis._
-import utopia.genesis.shape.shape1D.Rotation
+import utopia.paradigm.enumeration.Axis._
+import utopia.paradigm.angular.Rotation
 import utopia.genesis.view.GlobalMouseEventHandler
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.drawing.template.{CustomDrawer, DrawLevel}
@@ -39,7 +39,7 @@ import scala.concurrent.duration.Duration
   */
 object ScrollViewTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	
 	// Label creation function
 	val basicFont = Font("Arial", 12, Plain, 2)

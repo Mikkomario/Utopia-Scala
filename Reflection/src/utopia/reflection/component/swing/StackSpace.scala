@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing
 
-import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.swing.template.JWrapper

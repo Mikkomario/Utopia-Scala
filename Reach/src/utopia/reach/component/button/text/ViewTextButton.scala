@@ -2,8 +2,8 @@ package utopia.reach.component.button.text
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.Point
+import utopia.paradigm.color.Color
+import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel

@@ -1,8 +1,8 @@
 package utopia.reflection.test.swing
 
 import utopia.flow.generic.DataType
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.color.Color
+import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame

@@ -1,6 +1,6 @@
 package utopia.genesis.image.transform
 
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.shape.shape2d.Size
 
 object Blur
 {

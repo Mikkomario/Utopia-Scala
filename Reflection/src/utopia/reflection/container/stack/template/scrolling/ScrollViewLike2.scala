@@ -1,6 +1,6 @@
 package utopia.reflection.container.stack.template.scrolling
 
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.template.layout.stack.Stackable2
 /**
   * Scroll views are containers that allow horizontal or vertical content scrolling

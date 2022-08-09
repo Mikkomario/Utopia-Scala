@@ -1,7 +1,7 @@
 package utopia.genesis.handling
 
 import java.awt.Shape
-import utopia.genesis.shape.shape3D.Matrix3D
+import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.genesis.util.Drawer
 
 /**

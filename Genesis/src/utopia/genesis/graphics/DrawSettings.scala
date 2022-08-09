@@ -1,6 +1,6 @@
 package utopia.genesis.graphics
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.flow.util.CollectionExtensions._
 
 import java.awt.Paint

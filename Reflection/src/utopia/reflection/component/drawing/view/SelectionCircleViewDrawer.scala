@@ -1,8 +1,8 @@
 package utopia.reflection.component.drawing.view
 
 import utopia.flow.datastructure.template.Viewable
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Bounds, Circle}
+import utopia.paradigm.color.Color
+import utopia.paradigm.shape.shape2d.{Bounds, Circle}
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.CustomDrawer
 import utopia.reflection.component.drawing.template.DrawLevel.Background

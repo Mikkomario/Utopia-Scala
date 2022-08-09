@@ -1,7 +1,7 @@
 package utopia.reflection.component.drawing.template
 
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackInsets

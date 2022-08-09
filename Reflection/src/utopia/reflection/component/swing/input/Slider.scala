@@ -5,14 +5,14 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.genesis.animation.Animation
-import utopia.genesis.animation.AnimationLike.AnyAnimation
-import utopia.genesis.color.Color
+import utopia.paradigm.animation.Animation
+import utopia.paradigm.animation.AnimationLike.AnyAnimation
+import utopia.paradigm.color.Color
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
 import utopia.genesis.handling.{Actor, KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.path.{ProjectilePath, SegmentedPath}
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Size}
+import utopia.paradigm.path.{ProjectilePath, SegmentedPath}
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size}
 import utopia.genesis.util.Drawer
 import utopia.genesis.view.GlobalMouseEventHandler
 import utopia.inception.handling.HandlerType

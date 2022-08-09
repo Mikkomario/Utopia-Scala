@@ -1,8 +1,8 @@
 package utopia.reflection.test.swing
 
 import utopia.flow.util.FileExtensions._
-import utopia.genesis.color.Color
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.color.Color
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.image.Image
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.input.SearchFrom
@@ -21,7 +21,7 @@ import utopia.reflection.shape.LengthExtensions._
   */
 object SearchFromFieldTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 
 	import TestContext._
 

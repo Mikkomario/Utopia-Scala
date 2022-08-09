@@ -2,9 +2,10 @@ package utopia.reflection.shape
 
 import javax.swing.BorderFactory
 import javax.swing.border.{EmptyBorder, MatteBorder}
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.Direction2D.{Down, Up}
-import utopia.genesis.shape.shape2D.{Direction2D, Insets, Size}
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Direction2D
+import utopia.paradigm.enumeration.Direction2D.{Down, Up}
+import utopia.paradigm.shape.shape2d.{Insets, Size}
 
 object Border
 {

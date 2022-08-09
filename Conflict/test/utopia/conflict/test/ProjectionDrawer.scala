@@ -1,13 +1,13 @@
 package utopia.conflict.test
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.util.Drawer
 import utopia.genesis.event.MouseButtonStateEvent
 import utopia.genesis.event.MouseButton
 import utopia.genesis.event.MouseMoveEvent
 import utopia.genesis.handling.mutable.MouseButtonStateListener
 import utopia.genesis.handling.{Drawable, MouseMoveListener}
-import utopia.genesis.shape.shape2D.{Line, Point, Projectable}
+import utopia.paradigm.shape.shape2d.{Line, Point, Projectable}
 
 /**
  * This object visually displays shape projection on a line drawn by the user

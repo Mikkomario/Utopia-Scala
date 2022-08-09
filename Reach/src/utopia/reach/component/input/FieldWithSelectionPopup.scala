@@ -3,12 +3,12 @@ package utopia.reach.component.input
 import utopia.flow.datastructure.mutable.{PointerWithEvents, ResettableLazy}
 import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
-import utopia.genesis.shape.Axis.Y
-import utopia.genesis.shape.shape2D.Direction2D.Down
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.enumeration.Direction2D.Down
+import utopia.paradigm.shape.shape2d.Size
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}

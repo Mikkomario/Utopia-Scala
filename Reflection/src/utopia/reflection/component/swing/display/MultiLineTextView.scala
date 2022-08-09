@@ -3,8 +3,8 @@ package utopia.reflection.component.swing.display
 import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.genesis.color.Color
-import utopia.genesis.shape.Axis.{X, Y}
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper

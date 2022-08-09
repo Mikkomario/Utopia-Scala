@@ -2,14 +2,14 @@ package utopia.reflection.test.swing
 
 import java.awt.event.KeyEvent
 import java.util.concurrent.TimeUnit
-
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.genesis.color.Color
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.color.Color
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{ActorLoop, KeyStateListener}
-import utopia.genesis.shape.shape1D.{LinearAcceleration, Rotation}
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.angular.Rotation
+import utopia.paradigm.motion.motion1d.LinearAcceleration
+import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.container.stack.StackHierarchyManager
@@ -31,7 +31,7 @@ import utopia.reflection.test.TestContext._
   */
 object ScrollAreaTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 
 	// Creates the labels
 	val basicFont = Font("Arial", 12, Plain, 2)

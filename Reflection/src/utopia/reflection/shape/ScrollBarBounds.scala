@@ -1,7 +1,7 @@
 package utopia.reflection.shape
 
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.Bounds
 
 /**
   * This class represents a set of bounds for scroll bar

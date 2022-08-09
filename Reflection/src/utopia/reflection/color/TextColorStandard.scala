@@ -1,6 +1,6 @@
 package utopia.reflection.color
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 
 /**
  * Specifies the standard or default text color so that its legible on a specific background

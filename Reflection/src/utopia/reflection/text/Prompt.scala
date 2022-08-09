@@ -1,7 +1,7 @@
 package utopia.reflection.text
 
 import scala.language.implicitConversions
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.localization.LocalizedString
 

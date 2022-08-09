@@ -1,8 +1,8 @@
 package utopia.reach.container.layered
 
-import utopia.genesis.shape.Axis.Y
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.Alignment.Center

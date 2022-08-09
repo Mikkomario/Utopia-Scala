@@ -2,10 +2,10 @@ package utopia.reflection.component.swing.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener}
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.MouseButtonStateListener
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.color.ComponentColor

@@ -3,10 +3,10 @@ package utopia.genesis.test
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.test.TestContext._
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.handling.{Actor, Drawable}
-import utopia.genesis.shape.path.{BezierPath, CircularPath, CompoundPath, CubicBezier, Path}
-import utopia.genesis.shape.shape2D.{Circle, Line, Point, Size}
+import utopia.paradigm.path.{BezierPath, CircularPath, CompoundPath, CubicBezier, Path}
+import utopia.paradigm.shape.shape2d.{Circle, Line, Point, Size}
 import utopia.genesis.util.{DefaultSetup, Drawer}
 import utopia.inception.handling.immutable.Handleable
 

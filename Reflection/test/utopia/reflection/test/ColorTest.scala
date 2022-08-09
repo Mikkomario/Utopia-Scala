@@ -1,6 +1,6 @@
 package utopia.reflection.test
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.color.ColorSet
 import utopia.reflection.color.TextColorStandard.{Dark, Light}
 

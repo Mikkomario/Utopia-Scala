@@ -8,7 +8,7 @@ import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEven
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateListener, MouseMoveListener}
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable

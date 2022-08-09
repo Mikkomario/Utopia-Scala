@@ -1,9 +1,9 @@
 package utopia.conflict.collision
 
 import utopia.flow.operator.Equatable
-import utopia.genesis.shape.shape2D.transform.{AffineTransformable, LinearTransformable}
-import utopia.genesis.shape.shape2D.{Matrix2D, Point, Vector2D}
-import utopia.genesis.shape.shape3D.Matrix3D
+import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
+import utopia.paradigm.shape.shape2d.{Matrix2D, Point, Vector2D}
+import utopia.paradigm.shape.shape3d.Matrix3D
 
 /**
  * Collision instances contain information about a collision event

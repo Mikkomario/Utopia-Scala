@@ -1,7 +1,7 @@
 package utopia.reach.component.label.image
 
 import utopia.flow.datastructure.immutable.Pair
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy

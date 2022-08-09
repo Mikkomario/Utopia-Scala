@@ -3,7 +3,7 @@ package utopia.reach.component.template
 import utopia.flow.datastructure.immutable.View
 import utopia.flow.datastructure.template.Viewable
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.reach.cursor.{Cursor, CursorType}
 import utopia.reflection.color.ColorShadeVariant
 

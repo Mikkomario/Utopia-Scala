@@ -2,7 +2,7 @@ package utopia.reach.component.template
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reflection.component.template.layout.stack.CachingStackable2
 
 /**

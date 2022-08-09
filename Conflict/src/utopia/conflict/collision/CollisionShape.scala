@@ -1,9 +1,9 @@
 package utopia.conflict.collision
 
-import utopia.genesis.shape.shape2D._
+import utopia.paradigm.shape.shape2d._
 import utopia.conflict.collision.Extensions._
-import utopia.genesis.shape.shape2D.transform.Transformable
-import utopia.genesis.shape.shape3D.Matrix3D
+import utopia.paradigm.transform.Transformable
+import utopia.paradigm.shape.shape3d.Matrix3D
 
 object CollisionShape
 {

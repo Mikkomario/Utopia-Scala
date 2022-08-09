@@ -1,10 +1,10 @@
 package utopia.reflection.container.swing.layout.wrapper
 
 import utopia.flow.async.Volatile
-import utopia.genesis.animation.Animation
+import utopia.paradigm.animation.Animation
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.genesis.shape.path.SPath
+import utopia.paradigm.path.SPath
 import utopia.genesis.util.Fps
 import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.label.EmptyLabel

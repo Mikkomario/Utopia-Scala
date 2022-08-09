@@ -1,7 +1,7 @@
 package utopia.reflection.container.swing.layout.multi
 
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis2D
 import utopia.genesis.util.Fps
 import utopia.reflection.component.context.{AnimationContextLike, BaseContextLike}
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper

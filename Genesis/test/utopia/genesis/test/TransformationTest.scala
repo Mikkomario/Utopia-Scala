@@ -1,10 +1,10 @@
 package utopia.genesis.test
 
-import utopia.genesis.shape.shape1D.Rotation
-import utopia.genesis.shape.shape2D.transform.{AffineTransformation, LinearTransformation}
-import utopia.genesis.shape.shape2D.{Matrix2D, Vector2D}
-import utopia.genesis.shape.shape3D.Matrix3D
-import utopia.genesis.util.Extensions._
+import utopia.flow.operator.EqualsExtensions._
+import utopia.paradigm.angular.Rotation
+import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
+import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2D}
+import utopia.paradigm.shape.shape3d.Matrix3D
 
 /**
  * This test tests the basic transformation class features
@@ -20,7 +20,7 @@ object TransformationTest extends App
     
 	assert((-translation).position.x == -10)
 	assert((-scaling).scaling.x == 0.5)
-	assert((-rotation).rotation.clockwiseDegrees ~== -90)
+	assert((-rotation).rotation.clockwiseDegrees ~== -90.0)
 	
 	assert(translation.toMatrix.inverse.get(translation.toMatrix) == Matrix3D.identity)
 	assert(scaling.toMatrix.inverse.get(scaling.toMatrix) == Matrix2D.identity)

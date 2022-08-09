@@ -2,8 +2,8 @@ package utopia.genesis.event
 
 import utopia.inception.util.Filter
 import utopia.genesis.event.MouseButton._
-import utopia.genesis.shape.shape2D.{Area2D, Bounds, Point}
-import utopia.genesis.shape.template.VectorLike
+import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Point}
+import utopia.paradigm.shape.template.VectorLike
 
 object MouseEvent
 {

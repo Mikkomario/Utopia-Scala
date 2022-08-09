@@ -2,12 +2,12 @@ package utopia.genesis.util
 
 import java.awt.{AlphaComposite, BasicStroke, Font, Graphics, Graphics2D, Image, Paint, RenderingHints, Shape, Stroke, Toolkit}
 import java.awt.geom.AffineTransform
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Bounds, JavaAffineTransformConvertible, Matrix2D, Point, ShapeConvertible, Size, MultiDimensional}
+import utopia.paradigm.color.Color
+import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, MultiDimensional, Point, ShapeConvertible, Size}
 import utopia.flow.util.NullSafe._
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.shape.shape2D.transform.{AffineTransformable, AffineTransformation, LinearTransformable}
-import utopia.genesis.shape.shape3D.{Matrix3D, Vector3D}
+import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
+import utopia.paradigm.transform.{AffineTransformable, AffineTransformation, JavaAffineTransformConvertible, LinearTransformable}
 
 import scala.util.Try
 

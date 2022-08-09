@@ -1,7 +1,7 @@
 package utopia.reflection.color
 
 import scala.language.implicitConversions
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.color.TextColorStandard.{Dark, Light}
 
 object ComponentColor

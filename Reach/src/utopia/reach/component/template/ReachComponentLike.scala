@@ -4,7 +4,7 @@ import utopia.flow.datastructure.immutable.Tree
 import utopia.flow.event.ChangingLike
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.template.DrawLevel.{Background, Foreground, Normal}

@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.template
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.color.Color
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
 
 /**

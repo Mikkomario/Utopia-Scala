@@ -4,9 +4,9 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.Fixed
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.Matrix2D
+import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.reach.component.input.selection.DropDown
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.wrapper.Open
@@ -28,7 +28,7 @@ import utopia.reflection.util.SingleFrameSetup
   */
 object DropDownTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	System.setProperty("sun.java2d.noddraw", true.toString)
 	
 	import utopia.reflection.test.TestContext._

@@ -1,15 +1,15 @@
 package utopia.genesis.test
 
 import utopia.flow.test.TestContext._
-import utopia.genesis.color.Color
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.color.Color
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.Drawable
-import utopia.genesis.shape.shape1D.Rotation
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Matrix2D, Parallelogramic, Point, ShapeConvertible, Size}
-import utopia.genesis.shape.shape2D.transform.{AffineTransformation, Transformable}
-import utopia.genesis.shape.shape3D.Matrix3D
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Matrix2D, Parallelogramic, Point, ShapeConvertible, Size}
+import utopia.paradigm.transform.{AffineTransformation, Transformable}
+import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.genesis.util.{DefaultSetup, Drawer}
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.angular.Rotation
 
 /**
   * Used for testing use of transformations in drawing
@@ -18,7 +18,7 @@ import utopia.inception.handling.immutable.Handleable
   */
 object TransformationDrawTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	
 	val gameWorldSize = Size(700, 200)
 	val setup = new DefaultSetup(gameWorldSize, "Transformation Test")

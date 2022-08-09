@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing.template
 
 import javax.swing.JComponent
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 
 object JWrapper
 {

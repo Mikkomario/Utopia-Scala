@@ -2,7 +2,7 @@ package utopia.reflection.container.stack.segmented
 
 import utopia.flow.async.VolatileFlag
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.template.ComponentWrapper
 import utopia.reflection.component.template.layout.stack.{Stackable, StackableWrapper}
 import utopia.reflection.container.stack.template.layout.StackLike

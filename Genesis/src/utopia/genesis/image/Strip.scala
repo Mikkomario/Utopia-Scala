@@ -1,7 +1,7 @@
 package utopia.genesis.image
 
-import utopia.genesis.animation.Animation
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.paradigm.animation.Animation
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.genesis.util.Fps
 
 /**

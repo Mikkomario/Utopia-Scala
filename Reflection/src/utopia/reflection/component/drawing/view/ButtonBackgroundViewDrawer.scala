@@ -1,8 +1,8 @@
 package utopia.reflection.component.drawing.view
 
 import utopia.flow.event.ChangingLike
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.color.Color
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.DrawLevel.Background
 import utopia.reflection.component.drawing.template.{BorderDrawerLike, DrawLevel}

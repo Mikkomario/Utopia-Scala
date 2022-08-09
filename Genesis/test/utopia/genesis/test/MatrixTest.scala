@@ -1,8 +1,8 @@
 package utopia.genesis.test
 
-import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.shape.shape2D.{Matrix2D, Vector2D}
-import utopia.genesis.shape.shape3D.{Matrix3D, Vector3D}
+import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.shape.shape2d.{Matrix2D, Vector2D}
+import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
 
 /**
   * A test for 2x2 and 3x3 matrix operations
@@ -11,7 +11,7 @@ import utopia.genesis.shape.shape3D.{Matrix3D, Vector3D}
   */
 object MatrixTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	
 	// Testing matrix multiplication
 	val m1 = Matrix3D(

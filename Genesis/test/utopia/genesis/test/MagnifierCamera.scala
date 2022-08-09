@@ -1,13 +1,13 @@
 package utopia.genesis.test
 
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Circle, Point}
+import utopia.paradigm.color.Color
+import utopia.paradigm.shape.shape2d.{Circle, Point}
 import utopia.genesis.util.DepthRange
 import utopia.genesis.util.Drawer
 import utopia.genesis.event.MouseMoveEvent
 import utopia.genesis.handling.mutable.DrawableHandler
 import utopia.genesis.handling.{Camera, Drawable, MouseMoveListener}
-import utopia.genesis.shape.shape2D.transform.LinearTransformation
+import utopia.paradigm.transform.LinearTransformation
 import utopia.inception.handling.mutable.Handleable
 
 /**

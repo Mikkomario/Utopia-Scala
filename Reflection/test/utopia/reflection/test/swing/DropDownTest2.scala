@@ -1,7 +1,7 @@
 package utopia.reflection.test.swing
 
 import utopia.flow.util.FileExtensions._
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.image.Image
 import utopia.reflection.component.swing.input.DropDown
 import utopia.reflection.component.swing.label.TextLabel
@@ -22,7 +22,7 @@ import scala.collection.immutable.HashMap
   */
 object DropDownTest2 extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	
 	import TestContext._
 	

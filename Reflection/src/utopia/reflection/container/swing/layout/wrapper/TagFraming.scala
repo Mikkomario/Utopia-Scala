@@ -2,7 +2,7 @@ package utopia.reflection.container.swing.layout.wrapper
 
 import utopia.flow.datastructure.mutable.{PointerWithEvents, ResettableLazy}
 import utopia.flow.event.Fixed
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.view.RoundedBackgroundViewDrawer
 import utopia.reflection.component.swing.template.SwingComponentRelated

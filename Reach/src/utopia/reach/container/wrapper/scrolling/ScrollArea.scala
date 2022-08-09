@@ -2,9 +2,9 @@ package utopia.reach.container.wrapper.scrolling
 
 import utopia.flow.event.ChangeListener
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.LinearAcceleration
-import utopia.genesis.shape.shape2D.{Bounds, Size}
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.motion.motion1d.LinearAcceleration
+import utopia.paradigm.shape.shape2d.{Bounds, Size}
 import utopia.genesis.util.Drawer
 import utopia.reach.component.factory.ContextInsertableComponentFactoryFactory.ContextualBuilderContentFactory
 import utopia.reach.component.factory.{BuilderFactory, ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, SimpleFilledBuilderFactory}

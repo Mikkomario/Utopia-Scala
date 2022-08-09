@@ -1,10 +1,10 @@
 package utopia.reflection.util
 
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.LinearAcceleration
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.genesis.util.Drawer
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.drawing.template.ScrollBarDrawerLike

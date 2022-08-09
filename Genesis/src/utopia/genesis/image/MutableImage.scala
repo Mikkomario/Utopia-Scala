@@ -2,14 +2,14 @@ package utopia.genesis.image
 
 import utopia.flow.datastructure.mutable.MutableLazy
 import utopia.flow.util.AutoClose._
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.graphics.Drawer3
 import utopia.genesis.image.transform.{Blur, HueAdjust, ImageTransform, IncreaseContrast, Invert, Sharpen, Threshold}
-import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.{Angle, Rotation}
-import utopia.genesis.shape.shape2D.{Area2D, Bounds, Point, Size, Vector2D}
-import utopia.genesis.shape.template.Dimensional
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Point, Size, Vector2D}
+import utopia.paradigm.shape.template.Dimensional
 import utopia.genesis.util.Drawer
 
 import java.awt.image.{BufferedImage, BufferedImageOp}

@@ -2,12 +2,12 @@ package utopia.genesis.util
 
 import utopia.flow.async.VolatileFlag
 import utopia.flow.util.logging.Logger
-import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler, KeyStateHandler, KeyTypedHandler}
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.shape.shape2d.Size
 import utopia.genesis.view.{Canvas, CanvasMouseEventGenerator, GlobalKeyboardEventHandler, GlobalMouseEventHandler, MainFrame}
 import utopia.inception.handling.mutable.HandlerRelay
+import utopia.paradigm.generic.ParadigmDataType
 
 import scala.concurrent.ExecutionContext
 
@@ -66,7 +66,7 @@ class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = 
 	// INITIAL CODE	-------------------
 	
 	// Sets up data types, if not already
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	
 	// Registers generators
 	actorHandler += mouseEventGenerator

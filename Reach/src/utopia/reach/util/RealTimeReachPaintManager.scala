@@ -4,8 +4,8 @@ import utopia.flow.async.{Volatile, VolatileOption}
 import utopia.flow.operator.Sign
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.image.Image
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Vector2D}
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reflection.color.ColorShadeVariant

@@ -3,11 +3,11 @@ package utopia.reflection.test.swing
 import java.nio.file.Paths
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.button.{ButtonImageSet, ImageAndTextButton, ImageButton, TextButton}
 import utopia.reflection.component.swing.display.ProgressBar
 import utopia.reflection.container.stack.StackHierarchyManager

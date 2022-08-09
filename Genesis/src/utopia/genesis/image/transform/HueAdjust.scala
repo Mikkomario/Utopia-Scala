@@ -1,7 +1,7 @@
 package utopia.genesis.image.transform
 
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape1D.Angle
+import utopia.paradigm.color.Color
+import utopia.paradigm.angular.Angle
 
 /**
   * This color transform adjusts hue for a specific range of colors

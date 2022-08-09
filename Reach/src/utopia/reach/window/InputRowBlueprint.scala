@@ -1,7 +1,7 @@
 package utopia.reach.window
 
 import utopia.flow.event.{AlwaysTrue, ChangingLike}
-import utopia.genesis.shape.shape2D.HorizontalDirection
+import utopia.paradigm.enumeration.HorizontalDirection
 import utopia.reach.component.factory.{ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reflection.container.template.window.ManagedField

@@ -6,8 +6,8 @@ import java.awt.Color
 import utopia.flow.test.TestContext._
 import utopia.genesis.event.MouseMoveEvent
 import utopia.genesis.handling.{Drawable, MouseMoveListener}
-import utopia.genesis.shape.shape2D.{Circle, Point, ShapeConvertible, Size}
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.paradigm.shape.shape2d.{Circle, Point, ShapeConvertible, Size}
+import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.inception.handling.immutable.Handleable
 
 /**

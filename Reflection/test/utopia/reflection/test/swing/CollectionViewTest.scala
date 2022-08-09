@@ -2,10 +2,11 @@ package utopia.reflection.test.swing
 
 import utopia.flow.async.Loop
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.color.{Color, Rgb}
-import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.shape.Axis.X
-import utopia.genesis.shape.shape2D.{Direction2D, Size}
+import utopia.paradigm.color.{Color, Rgb}
+import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.enumeration.Direction2D
+import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.container.swing.layout.multi.AnimatedCollectionView
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
@@ -25,7 +26,7 @@ import scala.util.Random
   */
 object CollectionViewTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	
 	import TestContext._
 	

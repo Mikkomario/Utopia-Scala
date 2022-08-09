@@ -3,7 +3,7 @@ package utopia.genesis.graphics
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.flow.util.Extender
-import utopia.genesis.shape.shape2D.JavaAffineTransformConvertible
+import utopia.paradigm.transform.JavaAffineTransformConvertible
 
 import java.awt.Graphics2D
 import scala.concurrent.ExecutionContext

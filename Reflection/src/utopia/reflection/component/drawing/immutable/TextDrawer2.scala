@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.immutable
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.{DrawLevel, TextDrawerLike2}
 import utopia.reflection.shape.stack.StackInsets

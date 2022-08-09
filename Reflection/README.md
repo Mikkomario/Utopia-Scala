@@ -96,7 +96,7 @@ Automatic container content management
 The following code-template is an easy way to get started with your App and tests:
 
     // Set up typeless values
-    GenesisDataType.setup()
+    ParadigmDataType.setup()
 
     // Set up localization context
     implicit val localizer: Localizer = NoLocalization // You can specify your own Localizer here

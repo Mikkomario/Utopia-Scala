@@ -1,6 +1,6 @@
 package utopia.reflection.test.swing
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.component.template.layout.stack.StackLeaf

@@ -26,7 +26,7 @@ Dynamic custom components
 
 ## Implementation Hints
 It is recommended to call `System.setProperty("sun.java2d.noddraw", true.toString)` and 
-`GenesisDataType.setup()` at the program startup.
+`ParadigmDataType.setup()` at the program startup.
 
 You will need to create a **ReachCanvas** instance, place it in a **Frame** or other 
 **Utopia Reflection** container. It is also recommended to use **SingleFrameSetup** or other similar 

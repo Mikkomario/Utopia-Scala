@@ -1,6 +1,6 @@
 package utopia.reflection.test.swing
 
-import utopia.genesis.animation.Animation
+import utopia.paradigm.animation.Animation
 import utopia.reflection.color.ColorRole.Gray
 import utopia.reflection.component.context.ColorContext
 import utopia.reflection.component.swing.input.Slider

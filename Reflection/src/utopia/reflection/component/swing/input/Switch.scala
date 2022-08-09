@@ -2,13 +2,13 @@ package utopia.reflection.component.swing.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener}
-import utopia.genesis.animation.Animation
-import utopia.genesis.animation.AnimationLike.AnyAnimation
-import utopia.genesis.color.Color
+import utopia.paradigm.animation.Animation
+import utopia.paradigm.animation.AnimationLike.AnyAnimation
+import utopia.paradigm.color.Color
 import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{Actor, ActorHandlerType, MouseButtonStateListener}
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Point}
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.HandlerType
 import utopia.reflection.color.TextColorStandard.{Dark, Light}

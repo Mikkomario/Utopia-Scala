@@ -1,6 +1,6 @@
 package utopia.reflection.container.swing.layout.multi
 
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}

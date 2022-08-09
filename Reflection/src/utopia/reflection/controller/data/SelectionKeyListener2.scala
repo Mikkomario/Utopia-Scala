@@ -5,8 +5,8 @@ import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.{Actor, ActorHandlerType, KeyStateListener}
-import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.Axis2D
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
 

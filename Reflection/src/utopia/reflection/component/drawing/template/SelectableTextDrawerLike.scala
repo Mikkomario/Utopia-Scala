@@ -1,9 +1,9 @@
 package utopia.reflection.component.drawing.template
 
 import utopia.flow.datastructure.mutable.Settable
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.transform.AffineTransformation
-import utopia.genesis.shape.shape2D.{Bounds, Point, Vector2D}
+import utopia.paradigm.color.Color
+import utopia.paradigm.transform.AffineTransformation
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.reflection.shape.stack.StackInsets
 import utopia.reflection.text.{Font, MeasuredText}

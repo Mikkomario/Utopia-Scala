@@ -2,9 +2,9 @@ package utopia.reflection.shape.stack
 
 import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.operator.{Combinable, LinearScalable}
-import utopia.genesis.shape.Axis._
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.{Insets, MultiDimensional, Size, TwoDimensional}
+import utopia.paradigm.enumeration.Axis._
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.{Insets, MultiDimensional, Size, TwoDimensional}
 import utopia.reflection.shape.stack.LengthPriority.Low
 
 object StackSize

@@ -1,8 +1,8 @@
 package utopia.reflection.container.swing.layout.multi
 
-import utopia.genesis.color.Color
-import utopia.genesis.shape.Axis.X
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.swing.template.{AwtComponentRelated, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.StackableWrapper

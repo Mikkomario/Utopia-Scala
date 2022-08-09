@@ -5,8 +5,8 @@ import java.time.format.TextStyle
 import java.time.{DayOfWeek, Month, Year}
 import java.util.Locale
 
-import utopia.genesis.color.Color
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.color.Color
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
@@ -30,7 +30,7 @@ import utopia.reflection.test.TestContext._
   */
 object CalendarTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	
 	val basicFont = Font("Arial", 14, Plain, 2)
 	val smallFont = basicFont * 0.75

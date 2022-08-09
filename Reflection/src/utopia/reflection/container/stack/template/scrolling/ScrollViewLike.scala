@@ -1,6 +1,6 @@
 package utopia.reflection.container.stack.template.scrolling
 
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.template.layout.stack.Stackable
 import utopia.reflection.shape.stack.StackLengthLimit
 

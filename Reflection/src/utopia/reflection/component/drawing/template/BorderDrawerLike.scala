@@ -1,7 +1,7 @@
 package utopia.reflection.component.drawing.template
 
-import utopia.genesis.shape.Axis.Y
-import utopia.genesis.shape.shape2D.{Bounds, Insets, Size}
+import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.shape.shape2d.{Bounds, Insets, Size}
 import utopia.genesis.util.Drawer
 import utopia.reflection.shape.Border
 

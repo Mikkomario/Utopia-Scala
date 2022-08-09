@@ -1,9 +1,9 @@
 package utopia.genesis.animation.animator
 
-import utopia.genesis.animation.{Animation, TimedAnimation}
+import utopia.paradigm.animation.{Animation, TimedAnimation}
 import utopia.genesis.graphics.Drawer3
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape3D.Matrix3D
+import utopia.paradigm.shape.shape3d.Matrix3D
 
 object TransformingImageAnimator2
 {

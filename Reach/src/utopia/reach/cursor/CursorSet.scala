@@ -1,6 +1,6 @@
 package utopia.reach.cursor
 
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.shape.shape2d.Bounds
 
 /**
   * A set of cursors to use in an application

@@ -2,7 +2,7 @@ package utopia.reflection.test
 
 import utopia.flow.async.ThreadPool
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.reflection.color.{ColorScheme, ColorSet}
@@ -21,7 +21,7 @@ import scala.concurrent.ExecutionContext
   */
 object TestContext
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	
 	val actorHandler = ActorHandler()
 	val colorScheme = ColorScheme.twoTone(ColorSet.fromHexes("#212121", "#484848", "#000000").get,

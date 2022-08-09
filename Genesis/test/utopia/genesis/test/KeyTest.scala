@@ -1,10 +1,10 @@
 package utopia.genesis.test
 
 import utopia.flow.test.TestContext._
-import utopia.genesis.shape.Axis._
+import utopia.paradigm.enumeration.Axis._
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.util.{DefaultSetup, Drawer}
-import utopia.genesis.shape.shape2D.{Bounds, Line, Point, Size}
+import utopia.paradigm.shape.shape2d.{Bounds, Line, Point, Size}
 import utopia.genesis.event.KeyTypedEvent
 import utopia.genesis.handling.{Drawable, KeyStateListener, KeyTypedListener}
 import utopia.inception.handling.immutable.Handleable

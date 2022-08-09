@@ -2,12 +2,12 @@ package utopia.reflection.test.swing
 
 import java.awt.event.KeyEvent
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.event._
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable._
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Size}
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size}
 import utopia.genesis.util.{Drawer, Fps}
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
@@ -26,7 +26,7 @@ import utopia.reflection.test.TestContext._
   */
 object ScrollCanvasTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	
 	// Creates the handlers
 	val actorHandler = ActorHandler()

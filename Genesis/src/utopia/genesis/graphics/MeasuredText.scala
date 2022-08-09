@@ -6,8 +6,9 @@ import utopia.flow.parse.Regex
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.graphics.TextDrawHeight.LineHeight
-import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.shape2D.{Alignment, Bounds, Direction2D, Line, Point, Size, Vector2D}
+import utopia.paradigm.enumeration.{Alignment, Direction2D}
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.shape.shape2d.{Bounds, Line, Point, Size, Vector2D}
 
 import scala.collection.immutable.VectorBuilder
 

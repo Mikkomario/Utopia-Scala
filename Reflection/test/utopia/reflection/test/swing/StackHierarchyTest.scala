@@ -6,7 +6,7 @@ import javax.swing.JLabel
 import utopia.flow.async.Loop
 import utopia.flow.generic.DataType
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.template.{JStackableWrapper, JWrapper}
 import utopia.reflection.component.template.layout.stack.StackLeaf
 import utopia.reflection.container.stack.StackHierarchyManager

@@ -2,10 +2,11 @@ package utopia.reach.component.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{AlwaysFalse, AlwaysTrue, ChangeListener, ChangingLike, Fixed}
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
-import utopia.genesis.shape.Axis.X
-import utopia.genesis.shape.shape2D.{Direction2D, Insets}
+import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.enumeration.Direction2D
+import utopia.paradigm.shape.shape2d.Insets
 import utopia.reflection.color.ColorRole.{Error, Secondary}
 import utopia.reflection.color.{ColorRole, ColorScheme, ComponentColor}
 import utopia.reflection.component.context.TextContextLike

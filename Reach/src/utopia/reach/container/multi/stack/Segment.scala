@@ -2,9 +2,9 @@ package utopia.reach.container.multi.stack
 
 import utopia.flow.async.VolatileFlag
 import utopia.flow.datastructure.mutable.ResettableLazy
-import utopia.genesis.shape.Axis.Y
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.genesis.util.Drawer
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ReachComponent, ReachComponentLike}

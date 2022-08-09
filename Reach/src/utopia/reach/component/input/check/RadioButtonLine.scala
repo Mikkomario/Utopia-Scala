@@ -4,7 +4,7 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.genesis.event.ConsumeEvent
 import utopia.genesis.handling.MouseButtonStateListener
-import utopia.genesis.shape.Axis.X
+import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel

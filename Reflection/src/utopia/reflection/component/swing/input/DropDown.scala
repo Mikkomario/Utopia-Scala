@@ -1,11 +1,11 @@
 package utopia.reflection.component.swing.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.Direction2D.Up
-import utopia.genesis.shape.shape2D.Insets
+import utopia.paradigm.enumeration.Direction2D.Up
+import utopia.paradigm.shape.shape2d.Insets
 import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.drawing.immutable.{BackgroundDrawer, BorderDrawer, TextDrawContext}
 import utopia.reflection.component.drawing.template.CustomDrawer

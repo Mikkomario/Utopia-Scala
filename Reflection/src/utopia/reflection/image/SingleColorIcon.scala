@@ -1,7 +1,7 @@
 package utopia.reflection.image
 
 import utopia.flow.caching.multi.WeakCache
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
 import utopia.reflection.color.{ColorSet, ColorShade, ColorShadeVariant, ComponentColor}
 import utopia.reflection.color.TextColorStandard.{Dark, Light}

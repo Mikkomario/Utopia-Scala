@@ -4,8 +4,8 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
-import utopia.genesis.shape.Axis.Y
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.enumeration.Axis2D
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}

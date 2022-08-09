@@ -1,8 +1,8 @@
 package utopia.reflection.container.stack.template.layout
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reflection.component.template.layout.stack.{StackSizeCalculating, Stackable, StackableWrapper}
 import utopia.reflection.component.template.layout.{Area, AreaOfItems}
 import utopia.reflection.container.stack.template.MultiStackContainer

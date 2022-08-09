@@ -1,9 +1,9 @@
 package utopia.reflection.component.swing.label
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
-import utopia.genesis.shape.Axis.{X, Y}
+import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.reflection.component.context.TextContextLike
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}

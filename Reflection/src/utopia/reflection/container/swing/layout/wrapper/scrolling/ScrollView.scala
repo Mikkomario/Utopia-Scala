@@ -1,10 +1,10 @@
 package utopia.reflection.container.swing.layout.wrapper.scrolling
 
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.Axis.Y
-import utopia.genesis.shape.shape2D.Bounds
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.LinearAcceleration
+import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.shape.shape2d.Bounds
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.reflection.component.context.ScrollingContextLike
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.ScrollBarDrawerLike

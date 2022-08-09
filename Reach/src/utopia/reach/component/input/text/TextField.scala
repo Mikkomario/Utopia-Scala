@@ -6,9 +6,9 @@ import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.Regex
 import utopia.flow.util.StringExtensions._
-import utopia.genesis.color.Color
-import utopia.genesis.color.ColorContrastStandard.Minimum
-import utopia.genesis.shape.Axis.X
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
+import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.Field

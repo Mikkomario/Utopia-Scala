@@ -2,11 +2,11 @@ package utopia.reflection.test.swing
 
 import utopia.flow.async.Loop
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.color.Color
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.color.Color
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackHierarchyManager
@@ -28,7 +28,7 @@ import utopia.reflection.test.TestContext._
   */
 object TextLabelStackTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 
 	// Creates the labels
 	val basicFont = Font("Arial", 12, Plain, 2)

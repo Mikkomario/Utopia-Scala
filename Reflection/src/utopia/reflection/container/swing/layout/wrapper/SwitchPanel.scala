@@ -1,6 +1,6 @@
 package utopia.reflection.container.swing.layout.wrapper
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.{CachingStackable, Stackable}

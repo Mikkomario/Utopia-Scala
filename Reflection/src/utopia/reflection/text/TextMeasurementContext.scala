@@ -1,6 +1,6 @@
 package utopia.reflection.text
 
-import utopia.genesis.shape.shape2D.{Bounds, Line, Point, Size}
+import utopia.paradigm.shape.shape2d.{Bounds, Line, Point, Size}
 import utopia.reflection.shape.Alignment
 
 /**

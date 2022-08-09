@@ -1,8 +1,8 @@
 package utopia.genesis.graphics
 
-import utopia.genesis.shape.shape2D.{Bounds, Matrix2D, Polygonic}
-import utopia.genesis.shape.shape2D.transform.{AffineTransformable, LinearTransformable}
-import utopia.genesis.shape.shape3D.Matrix3D
+import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Polygonic}
+import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
+import utopia.paradigm.shape.shape3d.Matrix3D
 
 import java.awt.{AlphaComposite, Font}
 

@@ -1,8 +1,8 @@
 package utopia.reflection.component.swing.input
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.genesis.color.Color
-import utopia.genesis.shape.Axis.X
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Axis.X
 import utopia.reflection.color.{ColorRole, ColorSet}
 import utopia.reflection.component.context.{AnimationContextLike, TextContext}
 import utopia.reflection.component.swing.button.ImageButton

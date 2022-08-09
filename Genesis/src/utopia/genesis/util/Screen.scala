@@ -1,9 +1,10 @@
 package utopia.genesis.util
 
+import utopia.paradigm.measurement
+import utopia.paradigm.measurement.Distance
+import utopia.paradigm.shape.shape2d.{Insets, Size, Vector2D}
+
 import java.awt.{GraphicsConfiguration, Toolkit}
-
-import utopia.genesis.shape.shape2D.{Insets, Size, Vector2D}
-
 import scala.util.Try
 
 /**
@@ -58,7 +59,7 @@ object Screen
 	 */
 	def ppi =
 	{
-		val base = Try { Ppi(toolkit.getScreenResolution) }.getOrElse(Ppi.zero)
+		val base = Try { measurement.Ppi(toolkit.getScreenResolution) }.getOrElse(measurement.Ppi.zero)
 		screenSizeMod match
 		{
 			case Some(scaling) => base / scaling.maxDimension
@@ -70,6 +71,12 @@ object Screen
 	
 	
 	// OTHER    --------------------------
+	
+	/**
+	  * @param pixelsCount Amount of pixels
+	  * @return A distance based on that amount of pixels on this screen
+	  */
+	def pixels(pixelsCount: Double) = Distance.ofPixels(pixelsCount)(ppi)
 	
 	/**
 	 * The insets of this screen in the specified graphics configuration. This value is correct only when applying

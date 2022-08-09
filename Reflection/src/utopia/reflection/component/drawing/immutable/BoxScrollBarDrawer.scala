@@ -1,7 +1,7 @@
 package utopia.reflection.component.drawing.immutable
 
-import utopia.genesis.color.Color
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Axis2D
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
 import utopia.reflection.shape.ScrollBarBounds

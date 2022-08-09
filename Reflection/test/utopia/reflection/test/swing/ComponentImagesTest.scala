@@ -1,6 +1,6 @@
 package utopia.reflection.test.swing
 
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.reflection.component.drawing.immutable.BorderDrawer
 import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
 import utopia.reflection.container.swing.window.Frame
@@ -18,7 +18,7 @@ import utopia.reflection.shape.LengthExtensions._
   */
 object ComponentImagesTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 
 	// Creates component context
 

@@ -2,13 +2,13 @@ package utopia.reach.component.input.check
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{AlwaysTrue, ChangingLike}
-import utopia.genesis.animation.Animation
-import utopia.genesis.animation.AnimationLike.AnyAnimation
-import utopia.genesis.color.Color
+import utopia.paradigm.animation.Animation
+import utopia.paradigm.animation.AnimationLike.AnyAnimation
+import utopia.paradigm.color.Color
 import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{Actor, KeyStateListener}
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Size, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType

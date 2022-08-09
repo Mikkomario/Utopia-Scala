@@ -5,14 +5,14 @@ import utopia.flow.time.Now
 import java.time.Instant
 import scala.math.Ordering.Double.TotalOrdering
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.animation.TimedAnimation
+import utopia.paradigm.animation.TimedAnimation
 import utopia.genesis.animation.animator.{Animator, SpriteDrawer, TransformingImageAnimator}
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.{Image, Strip}
-import utopia.genesis.shape.shape1D.Rotation
-import utopia.genesis.shape.shape2D.transform.AffineTransformation
-import utopia.genesis.shape.shape2D.{Bounds, Matrix2D, Point}
+import utopia.paradigm.angular.Rotation
+import utopia.paradigm.transform.AffineTransformation
+import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point}
 import utopia.genesis.util.{Drawer, Fps}
 import utopia.inception.handling.HandlerType
 import utopia.reflection.component.context.BaseContextLike

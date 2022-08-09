@@ -2,9 +2,9 @@ package utopia.genesis.graphics
 
 import utopia.flow.datastructure.immutable.Lazy
 import utopia.flow.datastructure.template.LazyLike
-import utopia.genesis.shape.shape2D.{Matrix2D, Polygonic}
-import utopia.genesis.shape.shape2D.transform.{AffineTransformable, LinearTransformable}
-import utopia.genesis.shape.shape3D.Matrix3D
+import utopia.paradigm.shape.shape2d.{Matrix2D, Polygonic}
+import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
+import utopia.paradigm.shape.shape3d.Matrix3D
 
 object LazyClip
 {

@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.template
 
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis2D
 import utopia.genesis.util.Drawer
 import utopia.reflection.shape.ScrollBarBounds
 

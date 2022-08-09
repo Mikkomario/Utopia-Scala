@@ -5,7 +5,7 @@ import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.CombinedOrdering
-import utopia.genesis.shape.shape2D.Point
+import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.focus.FocusEvent.{FocusEntering, FocusGained, FocusLeaving, FocusLost}

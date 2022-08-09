@@ -2,7 +2,7 @@ package utopia.reflection.component.drawing.view
 
 import utopia.flow.datastructure.template.Viewable
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.template
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.drawing.template.DrawLevel.Background

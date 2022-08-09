@@ -3,7 +3,7 @@ package utopia.reflection.container.swing.layout.wrapper
 import utopia.flow.async.VolatileFlag
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.path.ProjectilePath
+import utopia.paradigm.path.ProjectilePath
 import utopia.genesis.util.Fps
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.context.AnimationContextLike

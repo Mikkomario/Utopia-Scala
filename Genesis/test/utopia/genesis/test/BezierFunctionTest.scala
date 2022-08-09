@@ -1,7 +1,7 @@
 package utopia.genesis.test
 
-import utopia.genesis.shape.path.BezierFunction
-import utopia.genesis.shape.shape2D.Point
+import utopia.paradigm.path.BezierFunction
+import utopia.paradigm.shape.shape2d.Point
 
 /**
  * Tests bezier function

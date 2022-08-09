@@ -1,7 +1,7 @@
 package utopia.reach.test
 
 import utopia.flow.event.Fixed
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.reach.component.input.text.TextField
 import utopia.reach.container.ReachCanvas
 import utopia.reflection.component.swing.button.TextButton
@@ -20,7 +20,7 @@ object ReachWithinReflectionTest extends App
 {
 	System.setProperty("sun.java2d.noddraw", true.toString)
 	
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	import utopia.reflection.test.TestContext._
 	import TestCursors._
 	

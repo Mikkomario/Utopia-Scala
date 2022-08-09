@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing.label
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}

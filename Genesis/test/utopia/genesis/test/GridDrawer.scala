@@ -4,8 +4,8 @@ import java.awt.Color
 
 import utopia.genesis.util.Drawer
 import utopia.genesis.handling.Drawable
-import utopia.genesis.shape.shape2D.{Line, Size}
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.paradigm.shape.shape2d.{Line, Size}
+import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.inception.handling.mutable.Handleable
 
 /**

@@ -1,7 +1,7 @@
 package utopia.reflection.shape.stack.modifier
 
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.shape.stack.StackSize
 
 /**

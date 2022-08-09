@@ -1,8 +1,8 @@
 package utopia.reflection.util
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.shape1D.LinearAcceleration
+import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.ComponentLike

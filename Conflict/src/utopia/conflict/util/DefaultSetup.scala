@@ -2,7 +2,7 @@ package utopia.conflict.util
 
 import utopia.conflict.handling.mutable.{CollidableHandler, CollisionHandler}
 import utopia.flow.util.logging.Logger
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.shape.shape2d.Size
 import utopia.genesis.util.{Fps, Setup}
 
 import scala.concurrent.ExecutionContext

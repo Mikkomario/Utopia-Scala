@@ -1,6 +1,6 @@
 package utopia.reflection.container.stack.segmented
 
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.shape.stack.StackLength
 
 /**

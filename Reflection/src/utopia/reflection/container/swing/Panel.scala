@@ -4,7 +4,7 @@ import java.awt.{Container, Graphics}
 
 import javax.swing.{JComponent, JPanel}
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reflection.component.drawing.mutable.{CustomDrawable, CustomDrawableWrapper}
 import utopia.reflection.component.swing.template.{AwtComponentRelated, CustomDrawComponent, JWrapper}
 import utopia.reflection.component.template.ComponentLike

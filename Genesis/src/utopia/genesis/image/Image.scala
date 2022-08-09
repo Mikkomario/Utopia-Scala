@@ -6,19 +6,18 @@ import utopia.flow.util.NullSafe._
 import utopia.flow.datastructure.immutable.{Lazy, LazyWrapper}
 import utopia.flow.datastructure.template.LazyLike
 import utopia.flow.operator.LinearScalable
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.graphics.Drawer3
 import utopia.genesis.image.transform.{Blur, HueAdjust, IncreaseContrast, Invert, Sharpen, Threshold}
-import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.{Angle, Rotation}
-import utopia.genesis.shape.shape2D.{Area2D, Bounds, Direction2D, Insets, Matrix2D, Point, Size, Vector2D}
-import utopia.genesis.shape.template.{Dimensional, VectorLike}
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.{Axis2D, Direction2D}
+import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.shape.shape2d.{Area2D, Bounds, Insets, Matrix2D, Point, Size, Vector2D}
+import utopia.paradigm.shape.template.{Dimensional, VectorLike}
 import utopia.genesis.util.Drawer
 
 import scala.math.Ordering.Double.TotalOrdering
 import scala.util.{Failure, Success, Try}
-
 import java.awt.image.{BufferedImage, BufferedImageOp}
 import java.io.FileNotFoundException
 import java.nio.file.{Files, Path}

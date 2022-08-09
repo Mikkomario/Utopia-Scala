@@ -3,11 +3,12 @@ package utopia.genesis.test
 import utopia.flow.test.TestContext._
 import utopia.genesis.animation.animator.{SpriteDrawer, TransformingImageAnimator}
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.{Size, Transformation, Vector2D}
+import utopia.paradigm.shape.shape2d.{Size, Vector2D}
 import utopia.genesis.util.DefaultSetup
 import utopia.flow.util.FileExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.shape.shape2D.transform.AffineTransformation
+import utopia.genesis.shape.shape2D.Transformation
+import utopia.paradigm.transform.AffineTransformation
 
 /**
   * Testing animation and sprite drawing

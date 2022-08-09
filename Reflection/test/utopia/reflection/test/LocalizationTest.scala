@@ -1,6 +1,6 @@
 package utopia.reflection.test
 
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.reflection.localization.{LocalString, LocalizedString, Localizer}
 
 import scala.collection.immutable.HashMap
@@ -12,7 +12,7 @@ import scala.collection.immutable.HashMap
   */
 object LocalizationTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	
 	implicit val sourceLanguageCode: String = "EN"
 	implicit private val localizer: Localizer = UpperCaseLocalizer

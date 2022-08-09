@@ -1,10 +1,10 @@
 package utopia.reflection.container.swing.layout.multi
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.color.Color
-import utopia.genesis.shape.Axis._
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Axis._
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper

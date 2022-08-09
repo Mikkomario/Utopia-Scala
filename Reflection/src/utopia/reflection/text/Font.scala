@@ -1,7 +1,7 @@
 package utopia.reflection.text
 
 import utopia.flow.util.FileExtensions._
-import utopia.genesis.util.Distance
+import utopia.genesis.util.Screen
 
 import scala.language.implicitConversions
 import java.awt
@@ -80,7 +80,7 @@ case class Font(name: String, baseSize: Int, style: FontStyle = FontStyle.Plain,
 	/**
 	  * @return The size of this font, with scaling applied
 	  */
-	def size = Distance.ofScreenPixels(baseSize * scaling)
+	def size = Screen.pixels(baseSize * scaling)
 	
 	/**
 	  * @return Whether this font is with bold style

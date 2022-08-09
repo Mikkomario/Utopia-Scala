@@ -1,7 +1,7 @@
 package utopia.reach.component.hierarchy
 
 import utopia.flow.event.ChangingLike
-import utopia.genesis.shape.shape2D.{Bounds, Vector2D}
+import utopia.paradigm.shape.shape2d.{Bounds, Vector2D}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
 import utopia.reach.util.Priority

@@ -2,13 +2,13 @@ package utopia.genesis.test
 
 import java.util.concurrent.TimeUnit
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.shape.Axis.X
-import utopia.genesis.shape.shape3D.{Vector3D, Velocity3D}
-import utopia.genesis.shape.shape1D.{Angle, LinearAcceleration, LinearVelocity}
-import utopia.genesis.shape.shape2D.Vector2D
-import utopia.genesis.shape.shape2D.movement.Velocity2D
-
-import scala.concurrent.duration.TimeUnit
+import utopia.paradigm.angular.Angle
+import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
+import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.paradigm.shape.shape2d.Vector2D
+import utopia.paradigm.motion.motion2d.Velocity2D
+import utopia.paradigm.motion.motion3d.Velocity3D
 
 /**
   * Used for testing velocity-related classes

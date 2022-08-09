@@ -3,8 +3,8 @@ package utopia.reach.test
 import utopia.flow.async.Loop
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.shape.Axis.X
+import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.container.multi.stack.ViewStack
 import utopia.reach.container.ReachCanvas
@@ -23,7 +23,7 @@ import utopia.reflection.util.SingleFrameSetup
 object ViewStackTest extends App
 {
 	System.setProperty("sun.java2d.noddraw", true.toString)
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	import utopia.reflection.test.TestContext._
 	import TestCursors._
 	

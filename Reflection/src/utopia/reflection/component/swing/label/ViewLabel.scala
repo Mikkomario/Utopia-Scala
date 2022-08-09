@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing.label
 
 import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.{BackgroundSensitive, TextContextLike}
 import utopia.reflection.component.drawing.immutable.TextDrawContext

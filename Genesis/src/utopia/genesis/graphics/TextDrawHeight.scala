@@ -1,6 +1,6 @@
 package utopia.genesis.graphics
 
-import utopia.genesis.shape.shape2D.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.{Bounds, Point}
 
 /**
   * Settings that specify line height when drawing text

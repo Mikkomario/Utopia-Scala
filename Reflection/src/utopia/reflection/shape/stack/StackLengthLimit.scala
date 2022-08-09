@@ -1,8 +1,8 @@
 package utopia.reflection.shape.stack
 
-import utopia.genesis.shape.Axis._
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.enumeration.Axis._
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.Size
 
 import scala.collection.immutable.HashMap
 

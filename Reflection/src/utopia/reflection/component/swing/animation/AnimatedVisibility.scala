@@ -3,7 +3,7 @@ package utopia.reflection.component.swing.animation
 import utopia.flow.async.Volatile
 import utopia.flow.async.AsyncExtensions._
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis2D
 import utopia.genesis.util.Fps
 import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}

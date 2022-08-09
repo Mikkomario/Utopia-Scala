@@ -1,9 +1,10 @@
 package utopia.reflection.component.context
 
 import utopia.flow.util.ScopeUsable
-import utopia.genesis.color.ColorContrastStandard.Enhanced
-import utopia.genesis.color.{Color, ColorContrastStandard}
-import utopia.genesis.shape.shape2D.Direction2D
+import utopia.paradigm.enumeration.Direction2D
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.ColorContrastStandard
+import utopia.paradigm.enumeration.ColorContrastStandard.Enhanced
 import utopia.reflection.color.ColorShade.Standard
 import utopia.reflection.color.{ColorRole, ColorSet, ColorShade, ComponentColor}
 import utopia.reflection.container.swing.window.interaction.ButtonColor
@@ -19,11 +20,11 @@ import utopia.reflection.shape.LengthExtensions._
   * @since 27.4.2020, v1.2
   */
 case class TextContext(base: ColorContext, localizer: Localizer = NoLocalization,
-					   textAlignment: Alignment = Alignment.Left, fontOverride: Option[Font] = None,
-					   promptFontOverride: Option[Font] = None, textColorOverride: Option[Color] = None,
-					   textInsetsOverride: Option[StackInsets] = None,
-					   betweenLinesMarginOverride: Option[StackLength] = None,
-					   allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false)
+                       textAlignment: Alignment = Alignment.Left, fontOverride: Option[Font] = None,
+                       promptFontOverride: Option[Font] = None, textColorOverride: Option[Color] = None,
+                       textInsetsOverride: Option[StackInsets] = None,
+                       betweenLinesMarginOverride: Option[StackLength] = None,
+                       allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false)
 	extends TextContextLike with ColorContextWrapper with BackgroundSensitive[TextContext] with ScopeUsable[TextContext]
 {
 	// ATTRIBUTES	--------------------------

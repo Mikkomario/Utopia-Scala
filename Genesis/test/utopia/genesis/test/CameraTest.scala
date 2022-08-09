@@ -6,7 +6,7 @@ import java.awt.Font
 
 import utopia.flow.test.TestContext._
 import utopia.genesis.util.{Drawer, Fps}
-import utopia.genesis.shape.shape2D.{Bounds, Size}
+import utopia.paradigm.shape.shape2d.{Bounds, Size}
 import utopia.genesis.view.CanvasMouseEventGenerator
 import utopia.genesis.handling.{ActorLoop, Drawable}
 import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler}

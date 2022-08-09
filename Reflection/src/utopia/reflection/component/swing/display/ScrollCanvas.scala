@@ -2,12 +2,12 @@ package utopia.reflection.component.swing.display
 
 import utopia.flow.async.VolatileFlag
 import utopia.flow.util.logging.Logger
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
-import utopia.genesis.shape.shape1D.LinearAcceleration
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.paradigm.motion.motion1d.LinearAcceleration
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.genesis.util.{Drawer, Fps}
 import utopia.genesis.view.RepaintLoop
 import utopia.inception.handling.immutable.Handleable

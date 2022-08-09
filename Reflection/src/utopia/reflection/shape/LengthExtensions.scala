@@ -1,7 +1,7 @@
 package utopia.reflection.shape
 
-import utopia.genesis.shape.shape2D.Insets
-import utopia.genesis.util.{Distance, Ppi}
+import utopia.paradigm.measurement.{Distance, Ppi}
+import utopia.paradigm.shape.shape2d.Insets
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 
 /**

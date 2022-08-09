@@ -1,7 +1,7 @@
 package utopia.reflection.component.template.layout.stack
 
-import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.shape.stack.modifier.{StackLengthModifier, StackSizeModifier}
 
 /**

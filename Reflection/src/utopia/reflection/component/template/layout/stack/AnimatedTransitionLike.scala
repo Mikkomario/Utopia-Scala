@@ -3,11 +3,11 @@ package utopia.reflection.component.template.layout.stack
 import java.time.Instant
 import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.animation.{Animation, AnimationLike}
+import utopia.paradigm.animation.{Animation, AnimationLike}
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.{Drawer, Fps}
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.drawing.mutable.{CustomDrawable, CustomDrawableWrapper}

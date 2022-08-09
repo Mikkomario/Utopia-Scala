@@ -6,16 +6,16 @@ import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event._
 import utopia.genesis.handling._
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.Axis._
-import utopia.genesis.shape._
-import utopia.genesis.shape.shape1D.LinearAcceleration
-import utopia.genesis.shape.shape2D.movement.Velocity2D
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
-import utopia.genesis.shape.shape3D.Vector3D
-import utopia.genesis.shape.template.VectorLike
+import utopia.paradigm.enumeration.Axis._
+import utopia.paradigm.motion.motion2d.Velocity2D
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
+import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.paradigm.shape.template.VectorLike
 import utopia.genesis.util.Drawer
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.reflection.component.drawing.template.DrawLevel.Foreground
 import utopia.reflection.component.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.reflection.component.template.layout.stack.{CachingStackable2, Stackable2}

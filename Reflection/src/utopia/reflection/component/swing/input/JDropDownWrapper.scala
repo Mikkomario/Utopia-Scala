@@ -7,7 +7,7 @@ import javax.swing.{JComboBox, JList, ListCellRenderer}
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.template.input.SelectableWithPointers
 import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf}

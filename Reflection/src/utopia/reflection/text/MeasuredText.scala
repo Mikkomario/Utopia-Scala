@@ -3,8 +3,9 @@ package utopia.reflection.text
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.shape2D.{Bounds, Direction2D, Line, Point}
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.Direction2D
+import utopia.paradigm.shape.shape2d.{Bounds, Line, Point}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 
@@ -20,6 +21,7 @@ import scala.collection.immutable.VectorBuilder
   * @param alignment Alignment used when placing text on multiple lines (default = left)
   * @param allowLineBreaks Whether line breaks should be applied (default = true)
   */
+@deprecated("Moved to Genesis", "v2.0")
 case class MeasuredText(text: LocalizedString, context: TextMeasurementContext, alignment: Alignment = Alignment.Left,
 						allowLineBreaks: Boolean = true)
 {

@@ -4,13 +4,13 @@ import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter
 import utopia.flow.async.{VolatileFlag, VolatileOption}
 import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.operator.Sign.{Negative, Positive}
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyStatus, KeyTypedEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
 import utopia.genesis.image.Image
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.{Insets, Point, Size, Vector2D}
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.{Insets, Point, Size, Vector2D}
 import utopia.genesis.util.Screen
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler, MouseEventGenerator}
 import utopia.inception.handling.immutable.Handleable

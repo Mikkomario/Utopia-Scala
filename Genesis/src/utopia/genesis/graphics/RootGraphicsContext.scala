@@ -1,9 +1,8 @@
 package utopia.genesis.graphics
 
 import utopia.flow.datastructure.mutable.ResettableLazy
-import utopia.genesis.shape.shape2D.Matrix2D
-import utopia.genesis.shape.shape3D.Matrix3D
-
+import utopia.paradigm.shape.shape2d.Matrix2D
+import utopia.paradigm.shape.shape3d.Matrix3D
 import scala.concurrent.ExecutionContext
 
 object RootGraphicsContext

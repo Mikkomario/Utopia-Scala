@@ -7,10 +7,15 @@ package utopia.flow.operator
   */
 trait ApproximatelyEquatable[-A] extends Any
 {
+	// ABSTRACT ---------------------
+	
 	/**
 	  * Checks whether the two instances are approximately equal
 	  */
 	def ~==(other: A): Boolean
+	
+	
+	// OTHER    ---------------------
 	
 	/**
 	  * Checks whether the two instances are <b>not</b> approximately equal

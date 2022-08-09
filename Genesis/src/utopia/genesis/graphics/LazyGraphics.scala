@@ -2,10 +2,10 @@ package utopia.genesis.graphics
 
 import utopia.flow.datastructure.immutable.Lazy
 import utopia.flow.datastructure.template.LazyLike
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Bounds, Matrix2D, Polygonic, Size}
-import utopia.genesis.shape.shape2D.transform.{AffineTransformable, LinearTransformable}
-import utopia.genesis.shape.shape3D.Matrix3D
+import utopia.paradigm.color.Color
+import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Polygonic, Size}
+import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
+import utopia.paradigm.shape.shape3d.Matrix3D
 
 import java.awt.{Font, Graphics2D, Toolkit}
 import scala.util.Try

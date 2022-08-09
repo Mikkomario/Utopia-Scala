@@ -2,10 +2,10 @@ package utopia.reflection.test.swing
 
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.FileExtensions._
-import utopia.genesis.animation.Animation
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.animation.Animation
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape1D.Rotation
+import utopia.paradigm.angular.Rotation
 import utopia.reflection.component.context.BaseContext
 import utopia.reflection.component.swing.label.AnimationLabel
 import utopia.reflection.container.swing.window.Frame
@@ -21,7 +21,7 @@ import utopia.reflection.shape.LengthExtensions._
   */
 object AnimatedLabelTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 
 	import TestContext._
 

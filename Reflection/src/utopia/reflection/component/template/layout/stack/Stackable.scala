@@ -1,13 +1,13 @@
 package utopia.reflection.component.template.layout.stack
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.stack.{StackHierarchyManager, StackLayout}
 import utopia.reflection.shape.Alignment
-import utopia.genesis.shape.Axis._
-import utopia.genesis.shape.shape2D.Direction2D
+import utopia.paradigm.enumeration.Axis._
+import utopia.paradigm.enumeration.Direction2D
 import utopia.genesis.util.Fps
 import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.template.AwtComponentRelated

@@ -1,6 +1,6 @@
 package utopia.reflection.test.swing
 
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.reflection.component.swing.display.MultiLineTextView
 import utopia.reflection.component.swing.input.{JDropDownWrapper, TextField}
 import utopia.reflection.container.swing.layout.multi.Stack
@@ -19,7 +19,7 @@ import utopia.reflection.shape.LengthExtensions._
   */
 object MultiLineTextViewTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 
 	import TestContext._
 

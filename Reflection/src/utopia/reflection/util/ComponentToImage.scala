@@ -4,9 +4,9 @@ import java.awt.Frame
 import java.awt.image.BufferedImage
 
 import javax.swing.CellRendererPane
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.layout.Area
 import utopia.reflection.component.template.layout.stack.Stackable

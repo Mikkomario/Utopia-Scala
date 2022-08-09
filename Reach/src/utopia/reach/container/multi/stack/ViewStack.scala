@@ -2,8 +2,8 @@ package utopia.reach.container.multi.stack
 
 import utopia.flow.datastructure.mutable.ResettableLazy
 import utopia.flow.event.{AlwaysFalse, AlwaysTrue, ChangeListener, ChangingLike, Fixed}
-import utopia.genesis.shape.Axis.Y
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}

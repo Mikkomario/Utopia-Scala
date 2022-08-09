@@ -1,7 +1,7 @@
 package utopia.reflection.test.swing
 
-import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.shape.shape2D.Point
+import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.shape.shape2d.Point
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.input.{TabSelection, TextField}
 import utopia.reflection.component.swing.label.TextLabel
@@ -23,7 +23,7 @@ import utopia.reflection.shape.LengthExtensions._
   */
 object TextFieldTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	
 	import TestContext._
 	

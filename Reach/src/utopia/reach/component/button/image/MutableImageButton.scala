@@ -1,7 +1,7 @@
 package utopia.reach.component.button.image
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.genesis.shape.shape2D.Point
+import utopia.paradigm.shape.shape2d.Point
 import utopia.reach.component.button.MutableButtonLike
 import utopia.reach.component.factory.ComponentFactoryFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy

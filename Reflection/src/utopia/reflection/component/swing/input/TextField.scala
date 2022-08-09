@@ -10,9 +10,9 @@ import utopia.flow.event.ChangingLike
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.Regex
 import utopia.flow.util.StringExtensions._
-import utopia.genesis.color.Color
-import utopia.genesis.shape.Axis.X
-import utopia.genesis.shape.shape2D.{Bounds, Insets, Point, Size}
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.shape.shape2d.{Bounds, Insets, Point, Size}
 import utopia.reflection.color.ColorSet
 import utopia.reflection.color.ColorShade.{Dark, Light}
 import utopia.reflection.component.context.ButtonContextLike

@@ -4,7 +4,7 @@ import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.event.{AlwaysTrue, ChangingLike}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.genesis.shape.shape2D.Direction2D
+import utopia.paradigm.enumeration.Direction2D
 import utopia.reach.component.button.image.ImageButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
 import utopia.reach.component.label.text.TextLabel

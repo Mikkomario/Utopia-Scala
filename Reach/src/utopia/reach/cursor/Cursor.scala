@@ -1,8 +1,8 @@
 package utopia.reach.cursor
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reflection.color.ColorShade.{Dark, Light}
 import utopia.reflection.color.{ColorShadeVariant, TextColorStandard}
 import utopia.reflection.color.ComponentColor.autoGenerateFromConvertible

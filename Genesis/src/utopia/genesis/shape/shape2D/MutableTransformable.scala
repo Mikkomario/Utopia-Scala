@@ -1,10 +1,11 @@
 package utopia.genesis.shape.shape2D
 
-import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.shape1D.{Angle, Rotation}
-import utopia.genesis.shape.shape3D.Vector3D
-import utopia.genesis.shape.Axis
-import utopia.genesis.shape.template.VectorLike
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.paradigm.enumeration.Axis
+import utopia.paradigm.shape.shape2d.{Point, Vector2D}
+import utopia.paradigm.shape.template.VectorLike
 
 /**
   * A common trait for mutable items that have a mutating transformation state

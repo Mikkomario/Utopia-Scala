@@ -1,8 +1,8 @@
 package utopia.genesis.graphics
 
 import utopia.flow.datastructure.immutable.Lazy
-import utopia.genesis.shape.shape2D.{Matrix2D, Polygonic}
-import utopia.genesis.shape.shape3D.Matrix3D
+import utopia.paradigm.shape.shape2d.{Matrix2D, Polygonic}
+import utopia.paradigm.shape.shape3d.Matrix3D
 
 /**
   * A drawer that relies on the state of the drawer above it

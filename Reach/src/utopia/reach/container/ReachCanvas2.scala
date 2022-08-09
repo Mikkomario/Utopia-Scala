@@ -5,7 +5,7 @@ import utopia.flow.collection.VolatileList
 import utopia.flow.event.ChangingLike
 import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.handling.mutable.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size, Vector2D}
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size, Vector2D}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.util.{Priority, RealTimeReachPaintManager}

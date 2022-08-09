@@ -31,4 +31,21 @@ object EqualsExtensions
 		  */
 		def !~==[B >: A](other: B)(implicit equals: EqualsFunction[B]): Boolean = equals.not(a, other)
 	}
+	
+	implicit class ApproxEqualsCollection[+A](val c: Iterable[A]) extends AnyVal
+	{
+		/**
+		  * Checks whether another collection has identical contents, when using the specified equals function
+		  * @param other Another collection
+		  * @param equals An equals function
+		  * @tparam B Type of the items in the other collection
+		  * @return Whether these collections have identical items, when using the specified equals function
+		  */
+		def hasEqualContentWith[B >: A](other: Iterable[B])(implicit equals: EqualsFunction[B]) = {
+			if (c.size == other.size)
+				c.forall { a => other.exists { _ ~== a } }
+			else
+				false
+		}
+	}
 }

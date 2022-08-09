@@ -1,7 +1,7 @@
 package utopia.reach.test
 
 import utopia.flow.datastructure.mutable.{Pointer, PointerWithEvents}
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.KeyStateListener
 import utopia.reach.component.button.text.TextButton

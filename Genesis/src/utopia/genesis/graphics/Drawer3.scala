@@ -1,7 +1,7 @@
 package utopia.genesis.graphics
 
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.{Bounds, MultiDimensional, Point, ShapeConvertible}
+import utopia.paradigm.color.Color
+import utopia.paradigm.shape.shape2d.{Bounds, MultiDimensional, Point, ShapeConvertible}
 
 import java.awt.{Font, Graphics2D, RenderingHints, Shape}
 

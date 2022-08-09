@@ -1,8 +1,8 @@
 package utopia.reflection.shape.stack
 
-import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.{Direction2D, Insets, InsetsFactory, InsetsLike}
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.{Axis2D, Direction2D}
+import utopia.paradigm.shape.shape2d.{Insets, InsetsFactory, InsetsLike}
 import utopia.reflection.shape.Alignment
 
 object StackInsets extends InsetsFactory[StackLength, StackSize, StackInsets, StackInsets]

@@ -1,6 +1,6 @@
 package utopia.reflection.component.swing.button
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.immutable.TextDrawContext
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.context.ButtonContextLike

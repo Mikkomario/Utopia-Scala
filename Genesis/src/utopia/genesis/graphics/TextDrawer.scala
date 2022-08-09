@@ -1,8 +1,9 @@
 package utopia.genesis.graphics
 
-import utopia.genesis.color.Color
-import utopia.genesis.shape.shape2D.Alignment.TopLeft
-import utopia.genesis.shape.shape2D.{Alignment, Bounds, Point}
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.TopLeft
+import utopia.paradigm.shape.shape2d.{Bounds, Point}
 
 import java.awt.Font
 

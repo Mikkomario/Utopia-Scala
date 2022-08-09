@@ -2,9 +2,9 @@ package utopia.reach.component.wrapper
 
 import scala.language.implicitConversions
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
-import utopia.genesis.color.Color
-import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.context.BaseContextLike
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.template.CustomDrawer

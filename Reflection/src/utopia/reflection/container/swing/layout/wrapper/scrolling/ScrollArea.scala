@@ -1,9 +1,9 @@
 package utopia.reflection.container.swing.layout.wrapper.scrolling
 
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.shape2D.Bounds
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape1D.LinearAcceleration
+import utopia.paradigm.shape.shape2d.Bounds
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.reflection.component.context.ScrollingContextLike
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.drawing.template.ScrollBarDrawerLike
@@ -42,13 +42,13 @@ object ScrollArea
   * @since 18.5.2019, v1+
   */
 class ScrollArea[C <: Stackable with AwtComponentRelated](override val content: C, actorHandler: ActorHandler,
-														  scrollBarDrawer: ScrollBarDrawerLike,
-														  override val scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,
-														  scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
-														  override val friction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,
-														  override val lengthLimits: Map[Axis2D, StackLengthLimit] = HashMap(),
-														  override val limitsToContentSize: Boolean = false,
-														  override val scrollBarIsInsideContent: Boolean = false)
+                                                          scrollBarDrawer: ScrollBarDrawerLike,
+                                                          override val scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,
+                                                          scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
+                                                          override val friction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,
+                                                          override val lengthLimits: Map[Axis2D, StackLengthLimit] = HashMap(),
+                                                          override val limitsToContentSize: Boolean = false,
+                                                          override val scrollBarIsInsideContent: Boolean = false)
 	extends ScrollAreaLike[C] with AwtComponentWrapperWrapper with CustomDrawableWrapper with AwtContainerRelated
 		with SwingComponentRelated
 {

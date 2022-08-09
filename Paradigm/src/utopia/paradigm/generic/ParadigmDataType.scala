@@ -68,5 +68,5 @@ object ParadigmDataType
 sealed trait ParadigmDataType
 {
     if (!ParadigmDataType.isSetup)
-        throw EnvironmentNotSetupException("GenesisDataType.setup() must be called before using this data type.")
+        throw EnvironmentNotSetupException("ParadigmDataType.setup() must be called before using this data type.")
 }

@@ -3,7 +3,7 @@ package utopia.reflection.component.swing
 import java.awt.Graphics
 
 import javax.swing.JLabel
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 import utopia.reflection.component.swing.template.CustomDrawComponent
 import utopia.reflection.util.AwtEventThread
 

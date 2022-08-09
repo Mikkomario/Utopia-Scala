@@ -1,6 +1,6 @@
 package utopia.reach.component.template
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.drawing.mutable.MutableCustomDrawable
 import utopia.reflection.component.drawing.template.CustomDrawer

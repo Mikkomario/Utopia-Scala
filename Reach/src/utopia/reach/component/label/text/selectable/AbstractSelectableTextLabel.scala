@@ -5,13 +5,14 @@ import utopia.flow.event.{ChangeListener, ChangingLike, Fixed}
 import utopia.flow.operator.Sign
 import utopia.flow.operator.Sign.{Negative, Positive}
 import utopia.flow.util.StringExtensions._
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.event._
 import utopia.genesis.handling._
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.shape2D.{Direction2D, Point}
+import utopia.paradigm.shape.shape2d.Point
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
+import utopia.paradigm.enumeration.Direction2D
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.{CursorDefining, CustomDrawReachComponent}

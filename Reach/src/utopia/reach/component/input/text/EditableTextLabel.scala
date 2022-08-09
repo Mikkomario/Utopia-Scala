@@ -3,7 +3,7 @@ package utopia.reach.component.input.text
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.flow.parse.Regex
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateListener, KeyTypedHandlerType, KeyTypedListener}

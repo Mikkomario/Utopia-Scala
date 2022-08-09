@@ -10,9 +10,9 @@ import java.awt.Graphics
 import java.awt.event.{ComponentAdapter, ComponentEvent}
 import utopia.genesis.view.ScalingPolicy.Crop
 import utopia.genesis.util.{Drawer, Fps}
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.shape.shape2d.Size
 import utopia.genesis.handling.DrawableHandler
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.paradigm.shape.shape3d.Vector3D
 
 import scala.concurrent.{ExecutionContext, Future}
 

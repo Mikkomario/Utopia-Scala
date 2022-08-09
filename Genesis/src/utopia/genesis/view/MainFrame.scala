@@ -11,9 +11,9 @@ import scala.collection.immutable.HashMap
 import java.awt.event.{ComponentAdapter, ComponentEvent}
 import java.awt.Component
 
-import utopia.genesis.shape.shape2D.Size
-import utopia.genesis.shape.shape2D.Point
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.shape.shape2d.Size
+import utopia.paradigm.shape.shape2d.Point
+import utopia.paradigm.shape.shape2d.Bounds
 
 /**
  * This class is used for displaying game contents in a frame. The implementation supports

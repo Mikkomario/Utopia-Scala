@@ -7,8 +7,8 @@ import utopia.flow.event.{ChangingLike, Fixed}
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
-import utopia.genesis.shape.shape2D.Direction2D.{Down, Up}
-import utopia.genesis.shape.shape2D.{Bounds, Point}
+import utopia.paradigm.enumeration.Direction2D.{Down, Up}
+import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.genesis.util.Drawer
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType

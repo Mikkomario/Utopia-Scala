@@ -4,10 +4,10 @@ import java.nio.file.Paths
 import utopia.flow.test.TestContext._
 import utopia.genesis.handling.Drawable
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape1D.{Angle, Rotation}
-import utopia.genesis.shape.shape2D.{Bounds, Matrix2D, Point, Size}
+import utopia.paradigm.shape.shape2d.{Bounds, Matrix2D, Point, Size}
 import utopia.genesis.util.{DefaultSetup, Drawer}
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.angular.{Angle, Rotation}
 
 /**
   * This test tests image drawing

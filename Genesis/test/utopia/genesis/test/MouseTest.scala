@@ -1,10 +1,10 @@
 package utopia.genesis.test
 
 import utopia.flow.test.TestContext._
-import utopia.genesis.shape.shape2D.{Circle, Line, Point, Size}
+import utopia.paradigm.shape.shape2d.{Circle, Line, Point, Size}
 import utopia.genesis.util.Drawer
 import utopia.genesis.event.MouseMoveEvent
-import utopia.genesis.shape.Axis._
+import utopia.paradigm.enumeration.Axis._
 import utopia.genesis.view.Canvas
 import utopia.genesis.view.MainFrame
 import utopia.genesis.view.CanvasMouseEventGenerator
@@ -13,7 +13,7 @@ import utopia.genesis.event.MouseEvent
 import utopia.genesis.event.MouseWheelEvent
 import utopia.genesis.handling.mutable.{ActorHandler, DrawableHandler}
 import utopia.genesis.handling.{ActorLoop, Drawable, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
-import utopia.genesis.shape.shape2D.transform.{AffineTransformation, LinearTransformation}
+import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 

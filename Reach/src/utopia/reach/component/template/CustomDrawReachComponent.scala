@@ -1,7 +1,7 @@
 package utopia.reach.component.template
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.{CustomDrawable2, CustomDrawer, DrawLevel}
 import utopia.reach.component.hierarchy.ComponentHierarchy

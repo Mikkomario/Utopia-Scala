@@ -2,8 +2,8 @@ package utopia.reflection.test.swing
 
 import utopia.flow.async.Delay
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.shape.Axis.Y
+import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.enumeration.Axis.Y
 import utopia.reflection.component.drawing.immutable.BorderDrawer
 import utopia.reflection.component.swing.animation.AnimatedVisibility
 import utopia.reflection.component.swing.label.TextLabel
@@ -21,7 +21,7 @@ import utopia.reflection.shape.LengthExtensions._
   */
 object AnimatedTransitionTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	
 	// Imports contexts
 	

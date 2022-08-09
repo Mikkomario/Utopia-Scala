@@ -1,13 +1,13 @@
 package utopia.genesis.test
 
-import utopia.genesis.util.Extensions._
-import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.shape.shape1D.Angle
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.flow.operator.EqualsExtensions._
+import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.angular.Angle
+import utopia.paradigm.shape.shape3d.Vector3D
 
 object VectorTest extends App
 {
-    GenesisDataType.setup()
+    ParadigmDataType.setup()
     
     val v1 = Vector3D(1, 1)
     

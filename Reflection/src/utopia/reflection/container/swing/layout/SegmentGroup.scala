@@ -1,8 +1,8 @@
 package utopia.reflection.container.swing.layout
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.shape.Axis.X
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.container.stack.StackLayout
 import utopia.reflection.container.stack.StackLayout.Fit
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable

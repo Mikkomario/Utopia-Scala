@@ -2,13 +2,13 @@ package utopia.reflection.component.swing.display
 
 import utopia.flow.async.VolatileFlag
 import utopia.flow.event.{ChangeEvent, ChangeListener, ChangingLike}
-import utopia.genesis.animation.AnimationLike.AnyAnimation
-import utopia.genesis.animation.Animation
-import utopia.genesis.color.Color
+import utopia.paradigm.animation.AnimationLike.AnyAnimation
+import utopia.paradigm.animation.Animation
+import utopia.paradigm.color.Color
 import utopia.genesis.handling.Actor
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.Axis.X
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.context.{AnimationContextLike, ColorContextLike}

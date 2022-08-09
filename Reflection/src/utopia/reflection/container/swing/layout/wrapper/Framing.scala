@@ -1,6 +1,6 @@
 package utopia.reflection.container.swing.layout.wrapper
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.color.ComponentColor
 import utopia.reflection.component.context.BackgroundSensitive
 import utopia.reflection.component.drawing.immutable.RoundedBackgroundDrawer

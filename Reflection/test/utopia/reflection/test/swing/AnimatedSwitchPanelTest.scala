@@ -4,7 +4,7 @@ import java.awt.event.KeyEvent
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.genesis.handling.KeyStateListener
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.shape.shape2d.Size
 import utopia.reflection.component.swing.label.{EmptyLabel, TextLabel}
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.wrapper.AnimatedSwitchPanel

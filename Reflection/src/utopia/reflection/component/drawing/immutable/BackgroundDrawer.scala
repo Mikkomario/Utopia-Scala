@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.immutable
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.template.DrawLevel.Background
 import utopia.reflection.component.drawing.template.{BackgroundDrawerLike, DrawLevel}
 

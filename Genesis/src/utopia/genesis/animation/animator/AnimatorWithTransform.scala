@@ -1,6 +1,6 @@
 package utopia.genesis.animation.animator
 
-import utopia.genesis.animation.transform.AnimatedTransform
+import utopia.paradigm.animation.transform.AnimatedTransform
 
 /**
   * This animator applies an animated transformation over the original item. The original item may be static or animated.

@@ -1,10 +1,10 @@
 package utopia.reflection.test.swing
 
-import utopia.genesis.color.Color
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.color.Color
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.shape.Axis.{X, Y}
+import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackHierarchyManager
@@ -26,7 +26,7 @@ import utopia.reflection.test.TestContext._
   */
 object SegmentedRowTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 
 	// Sets up localization context
 	implicit val defaultLanguageCode: String = "EN"

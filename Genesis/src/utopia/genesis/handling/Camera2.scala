@@ -1,8 +1,8 @@
 package utopia.genesis.handling
 
 import utopia.genesis.graphics.Drawer3
-import utopia.genesis.shape.shape2D.Polygonic
-import utopia.genesis.shape.shape3D.Matrix3D
+import utopia.paradigm.shape.shape2d.Polygonic
+import utopia.paradigm.shape.shape3d.Matrix3D
 
 /**
  * Cameras are used for viewing the game world from a different angle

@@ -1,6 +1,6 @@
 package utopia.reflection.component.swing.label
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.util.ComponentContext
 
 object EmptyLabel

@@ -1,6 +1,6 @@
 package utopia.reflection.component.template.layout
 
-import utopia.genesis.shape.shape2D.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.{Bounds, Point}
 
 /**
   * A common trait for various containers that have a specific area reserved for each item

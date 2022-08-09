@@ -1,9 +1,9 @@
 package utopia.conflict.collision
 
-import utopia.genesis.shape.shape1D.Angle
+import utopia.paradigm.angular.Angle
 
 import scala.math.Ordering.Double.TotalOrdering
-import utopia.genesis.shape.shape2D.{Circle, Line, Polygon, Polygonic, Vector2D}
+import utopia.paradigm.shape.shape2d.{Circle, Line, Polygon, Polygonic, Vector2D}
 
 /**
  * This object contains extensions that are used in the conflict project

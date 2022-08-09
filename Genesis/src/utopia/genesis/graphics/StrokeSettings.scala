@@ -1,7 +1,7 @@
 package utopia.genesis.graphics
 
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 
 import java.awt.{BasicStroke, Graphics2D, Paint}
 

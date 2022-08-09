@@ -1,12 +1,12 @@
 package utopia.genesis.event
 
-import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.Axis2D
 
 import java.awt.event.KeyEvent
-import utopia.genesis.shape.shape2D.Direction2D
-import utopia.genesis.shape.shape2D.Direction2D.{Down, Up}
 import utopia.inception.util.Filter
+import utopia.paradigm.enumeration.Direction2D
+import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 
 object KeyStateEvent
 {

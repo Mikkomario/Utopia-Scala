@@ -6,7 +6,7 @@ import utopia.flow.generic.DataType
 import utopia.genesis.event.{MouseEvent, MouseMoveEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling._
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.shape.shape2d.Size
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.swing.label.Label
 import utopia.reflection.component.template.layout.Area

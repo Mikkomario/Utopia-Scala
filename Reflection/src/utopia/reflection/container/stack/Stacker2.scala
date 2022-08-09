@@ -1,8 +1,8 @@
 package utopia.reflection.container.stack
 
 import utopia.flow.datastructure.mutable.Pointer
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.reflection.component.template.layout.stack.Stackable2
 import utopia.reflection.container.stack.StackLayout.{Fit, Leading, Trailing}
 import utopia.reflection.shape.stack.{StackLength, StackSize}

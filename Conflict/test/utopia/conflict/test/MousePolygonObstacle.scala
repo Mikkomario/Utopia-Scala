@@ -8,8 +8,8 @@ import utopia.conflict.test.TestCollisionGroups.UserInput
 import utopia.genesis.util.Drawer
 import utopia.genesis.event.MouseMoveEvent
 import utopia.genesis.handling.{Drawable, MouseMoveListener}
-import utopia.genesis.shape.shape2D.transform.AffineTransformation
-import utopia.genesis.shape.shape2D.Polygonic
+import utopia.paradigm.transform.AffineTransformation
+import utopia.paradigm.shape.shape2d.Polygonic
 import utopia.inception.handling.immutable.Handleable
 
 /**

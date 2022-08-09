@@ -5,10 +5,10 @@ import java.awt.event.MouseEvent
 
 import utopia.flow.datastructure.mutable.MutableLazy
 import utopia.flow.util.NullSafe._
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus}
 import utopia.genesis.handling.mutable._
-import utopia.genesis.shape.shape2D.{Point, Size}
+import utopia.paradigm.shape.shape2d.{Point, Size}
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.component.template.layout.stack.{CachingStackable, StackLeaf, Stackable}
 import utopia.reflection.event.{ResizeEvent, ResizeListener}

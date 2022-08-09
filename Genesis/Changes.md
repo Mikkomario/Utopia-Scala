@@ -1,8 +1,9 @@
 # Utopia Reflection - List of Changes
 
-## v2.8 (in development)
-Reacting to changes in Flow v1.16
+## v3.0 (in development)
 ### Breaking Changes
+- Moved a number of classes to the new **Paradigm** module
+- Removed the **Extensions** object
 - The following classes require an implicit **Logger** -parameter:
   - **ActorLoop** and **RepaintLoop**
   - **Canvas**`.startAutoRefresh(...)`

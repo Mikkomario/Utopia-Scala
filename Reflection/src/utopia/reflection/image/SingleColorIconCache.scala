@@ -5,7 +5,7 @@ import utopia.flow.caching.multi.ReleasingCache
 import utopia.flow.util.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.image.Image
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.shape.shape2d.Size
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration

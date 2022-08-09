@@ -1,7 +1,7 @@
 package utopia.reflection.test.swing
 
-import utopia.genesis.color.Color
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.color.Color
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.reflection.component.swing.input.JDropDownWrapper
@@ -24,7 +24,7 @@ import scala.collection.immutable.HashMap
   */
 object DropDownTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 
 	// Creates the labels
 	val basicFont = Font("Arial", 14, Plain, 2)

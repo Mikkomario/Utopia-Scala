@@ -1,8 +1,8 @@
 package utopia.reach.test
 
-import utopia.genesis.color.Hsl
-import utopia.genesis.shape.shape1D.Angle
-import utopia.genesis.shape.shape2D.Size
+import utopia.paradigm.color.Hsl
+import utopia.paradigm.angular.Angle
+import utopia.paradigm.shape.shape2d.Size
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.multi.stack.Stack

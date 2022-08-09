@@ -1,6 +1,6 @@
 package utopia.reflection.container.swing.layout.wrapper
 
-import utopia.genesis.shape.shape2D.Direction2D
+import utopia.paradigm.enumeration.Direction2D
 import utopia.reflection.component.drawing.mutable.CustomDrawableWrapper
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.layout.Alignable

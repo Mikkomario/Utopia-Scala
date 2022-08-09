@@ -1,15 +1,16 @@
 package utopia.reach.test
 
-import utopia.flow.datastructure.immutable.{Constant, Model}
+import utopia.flow.datastructure.immutable.Model
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
 import utopia.flow.util.FileExtensions._
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.ActorLoop
 import utopia.genesis.image.Image
-import utopia.genesis.util.DistanceExtensions._
+import utopia.genesis.util.ScreenExtensions._
+import utopia.paradigm.measurement.DistanceExtensions._
 import utopia.reach.component.factory.ContextualMixed
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.OpenComponent
@@ -39,7 +40,7 @@ import utopia.reflection.shape.LengthExtensions._
   */
 object InputWindowTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	System.setProperty("sun.java2d.noddraw", true.toString)
 	
 	import utopia.reflection.test.TestContext._

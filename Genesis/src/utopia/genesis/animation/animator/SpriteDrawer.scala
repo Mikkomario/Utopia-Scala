@@ -1,9 +1,10 @@
 package utopia.genesis.animation.animator
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.genesis.animation.TimedAnimation
+import utopia.paradigm.animation.TimedAnimation
 import utopia.genesis.image.{Image, Strip}
-import utopia.genesis.shape.shape2D.{Point, MutableTransformable, Transformation}
+import utopia.genesis.shape.shape2D.{MutableTransformable, Transformation}
+import utopia.paradigm.shape.shape2d.Point
 import utopia.genesis.util.Drawer
 
 import scala.concurrent.duration.Duration

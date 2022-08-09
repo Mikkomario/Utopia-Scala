@@ -1,10 +1,10 @@
 package utopia.genesis.event
 
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.shape.shape1D.LinearVelocity
+import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.inception.util.Filter
-import utopia.genesis.shape.shape2D.Point
-import utopia.genesis.shape.shape2D.Area2D
+import utopia.paradigm.shape.shape2d.Point
+import utopia.paradigm.shape.shape2d.Area2D
 
 import scala.concurrent.duration.FiniteDuration
 

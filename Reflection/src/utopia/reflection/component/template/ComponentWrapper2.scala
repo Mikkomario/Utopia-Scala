@@ -1,6 +1,6 @@
 package utopia.reflection.component.template
 
-import utopia.genesis.shape.shape2D.{Point, Size}
+import utopia.paradigm.shape.shape2d.{Point, Size}
 import utopia.reflection.text.Font
 
 /**

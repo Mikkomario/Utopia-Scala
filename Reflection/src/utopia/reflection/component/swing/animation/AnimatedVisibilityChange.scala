@@ -1,9 +1,9 @@
 package utopia.reflection.component.swing.animation
 
-import utopia.genesis.animation.Animation
-import utopia.genesis.shape.path.ProjectilePath
-import utopia.genesis.shape.shape2D.Size
-import utopia.genesis.shape.Axis2D
+import utopia.paradigm.animation.Animation
+import utopia.paradigm.path.ProjectilePath
+import utopia.paradigm.shape.shape2d.Size
+import utopia.paradigm.enumeration.Axis2D
 import utopia.genesis.util.Fps
 import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.template.layout.stack.{AnimatedTransitionLike, Stackable}

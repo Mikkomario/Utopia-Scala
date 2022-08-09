@@ -1,6 +1,6 @@
 package utopia.reflection.component.drawing.mutable
 
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.drawing.template.{CustomDrawable2, CustomDrawer, DrawLevel}

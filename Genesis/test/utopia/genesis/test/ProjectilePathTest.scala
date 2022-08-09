@@ -1,7 +1,7 @@
 package utopia.genesis.test
 
 import utopia.flow.util.{Counter, Generator}
-import utopia.genesis.shape.path.ProjectilePath
+import utopia.paradigm.path.ProjectilePath
 
 /**
   * Simply prints projectile path results

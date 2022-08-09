@@ -4,8 +4,8 @@ import utopia.flow.util.AutoClose._
 import utopia.flow.util.logging.Logger
 import utopia.genesis.graphics.Drawer3
 import utopia.genesis.handling.DrawableHandler2
-import utopia.genesis.shape.shape2D.{Bounds, Size}
-import utopia.genesis.shape.shape3D.Vector3D
+import utopia.paradigm.shape.shape2d.{Bounds, Size}
+import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.genesis.util.Fps
 import utopia.genesis.view.ScalingPolicy.{Crop, Project}
 

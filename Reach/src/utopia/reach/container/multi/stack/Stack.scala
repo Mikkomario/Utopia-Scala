@@ -2,9 +2,9 @@ package utopia.reach.container.multi.stack
 
 import utopia.flow.datastructure.immutable.Pair
 import utopia.flow.operator.Sign.Positive
-import utopia.genesis.shape.Axis.{X, Y}
-import utopia.genesis.shape.Axis2D
-import utopia.genesis.shape.shape2D.Direction2D.{Down, Up}
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.reach.component.factory.{ComponentFactoryFactory, ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}

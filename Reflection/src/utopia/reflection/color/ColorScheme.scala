@@ -1,6 +1,6 @@
 package utopia.reflection.color
 
-import utopia.genesis.color.Rgb
+import utopia.paradigm.color.Rgb
 import utopia.reflection.color.ColorRole.{Error, Gray, Info, Primary, Secondary, Success, Tertiary, Warning}
 import utopia.reflection.color.ColorScheme.{defaultError, defaultSuccess, defaultWarning}
 

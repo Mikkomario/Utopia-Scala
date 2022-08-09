@@ -2,11 +2,11 @@ package utopia.reflection.component.template
 
 import java.awt.FontMetrics
 
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.event._
 import utopia.genesis.handling.mutable._
 import utopia.genesis.handling.{KeyStateListener, KeyTypedListener, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
-import utopia.genesis.shape.shape2D.{Bounds, Point}
+import utopia.paradigm.shape.shape2d.{Bounds, Point}
 import utopia.inception.handling.Handleable
 import utopia.reflection.component.template.layout.Area
 import utopia.reflection.event.ResizeListener

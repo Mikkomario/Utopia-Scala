@@ -1,10 +1,10 @@
 package utopia.conflict.test
 
-import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.shape.Axis._
-import utopia.genesis.shape.shape2D.{Bounds, Line, Point, Polygon, Size, Vector2D}
+import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.enumeration.Axis._
+import utopia.paradigm.shape.shape2d.{Bounds, Line, Point, Polygon, Size, Vector2D}
 import utopia.conflict.collision.Extensions._
-import utopia.genesis.shape.shape1D.RotationDirection.{Clockwise, Counterclockwise}
+import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
 
 /**
  * This test tests the basic polygon features
@@ -13,17 +13,17 @@ import utopia.genesis.shape.shape1D.RotationDirection.{Clockwise, Counterclockwi
  */
 object PolygonTest extends App
 {
-    GenesisDataType.setup()
+    ParadigmDataType.setup()
     
     // Square
-    val polygon = Polygon(Vector(Point.origin, Point(3, 0), Point(3, 3), Point(0, 3)))
+    val polygon = Polygon(Vector(Point.origin, Point(3), Point(3, 3), Point(0, 3)))
     
     // Tests basic vertex and edge accessing
     assert(polygon.corners.size == 4)
-    assert(polygon.vertex(1) == Point(3, 0))
+    assert(polygon.vertex(1) == Point(3))
     assert(polygon.vertex(4) == polygon.vertex(0))
     assert(polygon.vertex(-1) == polygon.vertex(3))
-    assert(polygon.side(0) == Line(Point.origin, Point(3, 0)))
+    assert(polygon.side(0) == Line(Point.origin, Point(3)))
     assert(polygon.side(3) == Line(Point(0, 3), Point.origin))
     assert(polygon.sides.size == 4)
     
@@ -49,7 +49,7 @@ object PolygonTest extends App
 	assert(part2.corners.size == 3)
     assert(part1 != part2)
     
-    assert(polygon.projectedOver(X) == Line(Point.origin, Point(3, 0)))
+    assert(polygon.projectedOver(X) == Line(Point.origin, Point(3)))
     assert(polygon.projectedOver(Y) == Line(Point.origin, Point(0, 3)))
     
     assert(polygon.containsProjection(Point(0.3, 0.1), X.toUnitVector))
@@ -65,7 +65,7 @@ object PolygonTest extends App
 	assert(!polygon.contains(Point(1.5, 4)))
     
     // Sand glass
-    val polygon2 = Polygon(Vector(Point.origin, Point(0.5, 1), Point(0, 2), Point(2, 2), Point(1.5, 1), Point(2, 0)))
+    val polygon2 = Polygon(Vector(Point.origin, Point(0.5, 1), Point(0, 2), Point(2, 2), Point(1.5, 1), Point(2)))
     
     assert(polygon2.rotationDirection == Counterclockwise)
     assert(!polygon2.isConvex)
@@ -76,7 +76,7 @@ object PolygonTest extends App
     assert(parts2.forall { _.isConvex })
     assert(parts2.forall { _.corners.size == 4 })
     
-    assert(polygon.projectedOver(X) == Line(Point.origin, Point(3, 0)))
+    assert(polygon.projectedOver(X) == Line(Point.origin, Point(3)))
     assert(polygon.projectedOver(Y) == Line(Point.origin, Point(0, 3)))
     
     // Tests collision recognition

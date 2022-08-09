@@ -1,6 +1,6 @@
 package utopia.reach.component.template
 
-import utopia.genesis.shape.shape2D.Bounds
+import utopia.paradigm.shape.shape2d.Bounds
 import utopia.genesis.util.Drawer
 import utopia.reflection.component.drawing.template.DrawLevel
 import utopia.reflection.component.template.layout.stack.StackableWrapper2

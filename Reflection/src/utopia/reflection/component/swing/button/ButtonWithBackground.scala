@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing.button
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.reflection.component.drawing.mutable.CustomDrawable
 import utopia.reflection.component.drawing.view.BorderViewDrawer
 import utopia.reflection.event.ButtonState

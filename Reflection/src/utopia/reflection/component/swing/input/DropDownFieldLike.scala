@@ -3,12 +3,12 @@ package utopia.reflection.component.swing.input
 import java.awt.event.KeyEvent
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.genesis.color.Color
+import utopia.paradigm.color.Color
 import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateHandlerType, KeyStateListener, MouseButtonStateHandlerType, MouseButtonStateListener}
-import utopia.genesis.shape.Axis.Y
-import utopia.genesis.shape.shape2D.Point
+import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.shape.shape2d.Point
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.drawing.template.CustomDrawer

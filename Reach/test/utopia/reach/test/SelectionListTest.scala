@@ -1,7 +1,7 @@
 package utopia.reach.test
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.genesis.generic.GenesisDataType
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.genesis.handling.KeyTypedListener
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.reach.component.input.selection.SelectionList
@@ -21,7 +21,7 @@ import utopia.reflection.util.SingleFrameSetup
   */
 object SelectionListTest extends App
 {
-	GenesisDataType.setup()
+	ParadigmDataType.setup()
 	System.setProperty("sun.java2d.noddraw", true.toString)
 	
 	import utopia.reflection.test.TestContext._

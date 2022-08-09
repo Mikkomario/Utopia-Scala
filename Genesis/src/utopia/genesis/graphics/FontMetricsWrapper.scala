@@ -1,6 +1,6 @@
 package utopia.genesis.graphics
 
-import utopia.genesis.shape.shape2D.{Bounds, Point, Size}
+import utopia.paradigm.shape.shape2d.{Bounds, Point, Size}
 
 import java.awt.FontMetrics
 import scala.collection.immutable.VectorBuilder

@@ -1,14 +1,14 @@
 package utopia.genesis.test
 
-import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Line, Point, Size, Vector2D}
+import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Line, Point, Size, Vector2D}
 
 /**
  * This test is for some intersection methods and other shape (line, circle) specific methods
  */
 object ShapeTest extends App
 {
-    GenesisDataType.setup()
+    ParadigmDataType.setup()
     
     val line1 = Line(Point.origin, Point(10))
     val line2 = Line(Point(0, 1), Point(2, -1))

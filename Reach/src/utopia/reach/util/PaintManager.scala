@@ -1,6 +1,6 @@
 package utopia.reach.util
 
-import utopia.genesis.shape.shape2D.{Bounds, Vector2D}
+import utopia.paradigm.shape.shape2d.{Bounds, Vector2D}
 import utopia.genesis.util.Drawer
 import utopia.reach.util.Priority.Normal
 import utopia.reflection.color.ColorShadeVariant

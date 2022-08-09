@@ -4,8 +4,8 @@ import utopia.conflict.test.TestCollisionGroups.Obstacle
 import utopia.conflict.collision.Extensions._
 import utopia.conflict.util.DefaultSetup
 import utopia.flow.test.TestContext._
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Point, Polygon, Size, Vector2D}
-import utopia.genesis.shape.shape2D.transform.AffineTransformation
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point, Polygon, Size, Vector2D}
+import utopia.paradigm.transform.AffineTransformation
 
 import scala.collection.immutable.HashSet
 

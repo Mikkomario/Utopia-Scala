@@ -2,8 +2,8 @@ package utopia.reach.component.input.check
 
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.event.{AlwaysTrue, ChangingLike, Fixed}
-import utopia.genesis.color.ColorContrastStandard.Minimum
-import utopia.genesis.shape.shape2D.{Bounds, Circle, Point}
+import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
+import utopia.paradigm.shape.shape2d.{Bounds, Circle, Point}
 import utopia.genesis.util.Drawer
 import utopia.reach.component.factory.{ContextInsertableComponentFactory, ContextInsertableComponentFactoryFactory, ContextualComponentFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
