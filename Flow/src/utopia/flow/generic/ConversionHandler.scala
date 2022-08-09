@@ -122,6 +122,7 @@ object ConversionHandler
     private def nodeForType(dataType: DataType) = conversionGraph.getOrElseUpdate(dataType,
         new ConversionNode(dataType))
     
+    // TODO: Should make String and Model extremely unfavorable mid-steps in conversions (and pair a little unfavorable too)
     private def optimalRouteTo(sourceType: DataType, targetType: DataType): Option[ConversionRoute] =
         optimalRoutes.getOrElseUpdate(sourceType -> targetType, {
             val origin = nodeForType(sourceType)

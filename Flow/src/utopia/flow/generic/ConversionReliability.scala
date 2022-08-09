@@ -57,7 +57,7 @@ object ConversionReliability
 	 * value may also be lost. A conversion from a String "Jones" to a double would be this kind 
 	 * of conversion conversion ("Jones" -> ).
 	 */
-    case object DANGEROUS extends ConversionReliability(65)
+    case object DANGEROUS extends ConversionReliability(83)
     
     
     // OTHER METHODS    -------------

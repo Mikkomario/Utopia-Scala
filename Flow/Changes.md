@@ -97,6 +97,7 @@
 - **Regex**`.replaceAll` now accepts the replacement parameter as call-by-name
 - **FileContainer** saving now utilizes shutdown hooks to complete the save even on jvm exit
 - **Iterable**`.containsAll(...)` (via **CollectionExtensions**) now accepts an implicit **EqualsFunction** parameter
+- Optimized `GraphNode.cheapestRoutesTo(...)`
 - Optimized **XmlElement**`.toXml`
 - Changed `.toString` implementation in **DateRange**
 - **SimpleConstantGenerator** may now be passed as an object to apply the default version
